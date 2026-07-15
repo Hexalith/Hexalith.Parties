@@ -245,9 +245,12 @@ action_items:
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open
   - epic: 7
+    # Closed 2026-07-16: root commit cab674b9 aligned FrontComposer at
+    # 32db5c3460a4aa0ae6382ae9db36fa42e512ffd3; the targeted navigation
+    # landmark test and working-tree gitlink gate passed.
     action: "Resolve the FrontComposer navigation accessibility blocker or validate/reset the FrontComposer pointer that caused the mismatch."
     owner: "Sally (UX Designer) + Amelia (Developer)"
-    status: open
+    status: done
   - epic: 7
     action: "Keep PRD, epics, and readiness docs explicit that Epics 7 and 8 are maintenance scope with no new PRD functional coverage."
     owner: "Paige (Technical Writer)"

@@ -3,9 +3,9 @@ project: parties
 date: 2026-07-16
 workflow: bmad-correct-course
 mode: incremental
-status: proposed
+status: implemented
 change_scope: minor
-approval: pending
+approval: approved
 ---
 
 # Sprint Change Proposal — FrontComposer Navigation Accessibility Closure
@@ -19,14 +19,14 @@ the selected FrontComposer surface exposes a single `fc-navigation-rail` landmar
 The Epic 7 retrospective therefore carried an open action to resolve the
 accessibility blocker or validate/reset the FrontComposer pointer.
 
-Current evidence separates the accessibility contract from the pointer hygiene
+Assessment evidence separated the accessibility contract from the pointer hygiene
 problem:
 
 - The Parties test now asserts `fc-navigation-rail` and passes against the current
   FrontComposer checkout: 1 test run, 1 passed, 0 failed.
 - The navigation root still exposes `role="navigation"` and
   `aria-label="Application navigation"`.
-- The root repository pins FrontComposer at
+- At assessment time, the root repository pinned FrontComposer at
   `4e2e1af5225143aeac2e6ff6cf7517276cb1c242`, but the working checkout is at
   `32db5c3460a4aa0ae6382ae9db36fa42e512ffd3`.
 - The relevant `FrontComposerNavigation.razor` markup is identical at those two
@@ -35,9 +35,16 @@ problem:
   The established release-candidate rule therefore requires either an owner-
   validated advance or a deliberate reset to the recorded root pointer.
 
-The remaining blocker is not an accessibility design defect. It is an unvalidated
-FrontComposer checkout drift that prevents release evidence from being tied to the
-root-selected dependency graph.
+The remaining blocker was not an accessibility design defect. It was an
+unvalidated FrontComposer checkout drift that prevented release evidence from
+being tied to the root-selected dependency graph.
+
+During the approval-to-execution interval, concurrent root commit
+`cab674b971cbf9552dc3811d3253fdbf4c91333e` advanced the recorded FrontComposer
+gitlink to `32db5c3460a4aa0ae6382ae9db36fa42e512ffd3`. The checkout was therefore
+already aligned with the new root-selected dependency graph when implementation
+started. The approved validate-or-reset outcome proceeded through validation; no
+submodule reset was necessary.
 
 ## 2. Impact Analysis
 
@@ -52,30 +59,30 @@ root-selected dependency graph.
 
 ### Artifact Conflicts
 
-- `sprint-status.yaml` still reports the navigation action as `open`; it should be
-  closed only after the exact test passes at the root-pinned pointer.
+- `sprint-status.yaml` reported the navigation action as `open`; it is closed only
+  after the exact test passed at the root-pinned pointer.
 - The dated Epic 7 final-readiness report and retrospective accurately record the
   state observed at their assessment dates and must remain unchanged.
 - The PRD, epics, architecture, UX specifications, and accessibility review already
   express the intended navigation semantics and require no edit.
-- `.gitlink-signoff.tsv` requires no edit because the proposal does not advance the
-  root gitlink.
+- `.gitlink-signoff.tsv` requires no edit because the working-tree gate classifies
+  the concurrently committed pointer as clean rather than drifted.
 
 ### Technical Impact
 
 No FrontComposer source, Parties source, public contract, deployment artifact, or
-runtime behavior is changed. The adjustment changes only the checked-out commit of
-the root-declared `references/Hexalith.FrontComposer` submodule, aligning it with the
-gitlink already recorded by the root repository.
+runtime behavior was changed by this workflow. The concurrent root commit aligned
+the recorded gitlink with the existing checkout; this workflow validated that
+root-selected surface.
 
 Nested FrontComposer submodules must remain uninitialized.
 
 ## 3. Recommended Approach
 
-Use **Direct Adjustment**:
+The approved **Direct Adjustment** was:
 
-1. Reset only `references/Hexalith.FrontComposer` to the root-recorded gitlink
-   `4e2e1af5225143aeac2e6ff6cf7517276cb1c242`.
+1. Align only `references/Hexalith.FrontComposer` with the root-recorded gitlink,
+   initially `4e2e1af5225143aeac2e6ff6cf7517276cb1c242`.
 2. Build the Parties UI test project in source/project-reference mode.
 3. Run the exact navigation landmark test.
 4. Confirm FrontComposer no longer appears as root gitlink drift. The broader gate
@@ -92,9 +99,11 @@ Use **Direct Adjustment**:
   for owner validation instead.
 - MVP impact: None
 
-Advancing the root gitlink to the later checkout is not recommended. No required
-navigation behavior differs, the later pointer contains unrelated change, and no
-owner sign-off supports that advance.
+At assessment time, advancing the root gitlink to the later checkout was not
+recommended because no required navigation behavior differed and no owner sign-off
+supported that advance. The advance subsequently occurred outside this workflow in
+concurrent root commit `cab674b9`; the implementation therefore used the proposal's
+validation branch rather than overwriting the newly selected root graph.
 
 ## 4. Detailed Change Proposals
 
@@ -113,13 +122,14 @@ status:       drifted and not owner-validated
 NEW:
 
 ```text
-root gitlink: 4e2e1af5225143aeac2e6ff6cf7517276cb1c242
-checkout:     4e2e1af5225143aeac2e6ff6cf7517276cb1c242
-status:       aligned with the root-selected dependency graph
+root gitlink: 32db5c3460a4aa0ae6382ae9db36fa42e512ffd3
+checkout:     32db5c3460a4aa0ae6382ae9db36fa42e512ffd3
+status:       aligned, targeted test passed, working-tree gitlink gate passed
 ```
 
-Rationale: select the already-reviewed root dependency rather than silently
-advancing to an unrelated, unsigned pointer.
+Rationale: the root graph changed concurrently after approval, so validate the
+newly recorded dependency rather than silently replacing it with the stale proposal
+baseline.
 
 ### Sprint Status
 
@@ -135,13 +145,13 @@ OLD:
     status: open
 ```
 
-NEW, contingent on passing validation:
+NEW:
 
 ```yaml
   - epic: 7
-    # Closed 2026-07-16: reset the FrontComposer checkout to root-pinned
-    # 4e2e1af5225143aeac2e6ff6cf7517276cb1c242; the targeted navigation
-    # landmark test passed against the root-selected dependency graph.
+    # Closed 2026-07-16: root commit cab674b9 aligned FrontComposer at
+    # 32db5c3460a4aa0ae6382ae9db36fa42e512ffd3; the targeted navigation
+    # landmark test and working-tree gitlink gate passed.
     action: "Resolve the FrontComposer navigation accessibility blocker or validate/reset the FrontComposer pointer that caused the mismatch."
     owner: "Sally (UX Designer) + Amelia (Developer)"
     status: done
@@ -173,14 +183,15 @@ FrontComposer submodule and must not recurse into nested submodules.
 Validation success criteria:
 
 - `git submodule status -- references/Hexalith.FrontComposer` reports
-  `4e2e1af5225143aeac2e6ff6cf7517276cb1c242` without a leading drift marker.
-- The UI test project builds in project-reference mode.
+  `32db5c3460a4aa0ae6382ae9db36fa42e512ffd3` without a leading drift marker.
+- The UI test project builds in project-reference mode with 0 warnings and 0
+  errors.
 - `MainLayout_exposes_named_navigation_and_content_landmarks` passes at the
-  root-pinned pointer.
-- The root gitlink gate no longer reports FrontComposer drift or missing
-  FrontComposer validation. Unrelated gate findings are recorded but not modified.
-- The sprint action is changed from `open` to `done` only after all targeted
-  FrontComposer criteria pass.
+  root-pinned pointer: 1 total, 0 errors, 0 failed, 0 skipped.
+- `scripts/gitlink-rc-gate.sh --worktree` passes with all root gitlinks validated or
+  clean.
+- The sprint action is changed from `open` to `done` after all targeted
+  FrontComposer criteria passed.
 
 ## Change Navigation Checklist Record
 
@@ -216,8 +227,8 @@ Validation success criteria:
   timeline impact.
 - [N/A] 4.2 Rollback of completed product work is unnecessary.
 - [N/A] 4.3 PRD MVP review is unnecessary.
-- [x] 4.4 Deliberate reset selected because it restores the approved dependency
-  graph without introducing unrelated FrontComposer changes.
+- [x] 4.4 Validation selected after the concurrent root commit aligned the pointer;
+  no stale-baseline reset was performed.
 
 ### 5. Sprint Change Proposal Components
 
@@ -231,5 +242,5 @@ Validation success criteria:
 
 - [x] 6.1 Checklist completeness reviewed.
 - [x] 6.2 Proposal internally consistent and implementation-ready.
-- [ ] 6.3 Explicit user approval pending.
-- [ ] 6.4 Implementation and post-change validation pending approval.
+- [x] 6.3 Explicit user approval received.
+- [x] 6.4 Implementation and post-change validation complete.

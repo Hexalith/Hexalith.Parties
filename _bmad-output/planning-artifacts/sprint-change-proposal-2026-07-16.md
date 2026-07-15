@@ -6,8 +6,10 @@ workflow: bmad-correct-course
 mode: batch
 mode_note: "Batch assumed after no mode preference was supplied; no implementation edits are applied before approval."
 scope_classification: moderate
-status: proposed
-approval_required: true
+status: approved
+approval_required: false
+approved_at: 2026-07-16T00:29:58+02:00
+handoff_status: documented
 trigger: >
   Keep projection rollback-only paths until Epic 8 proves EventStore SDK
   projection/query parity, GDPR processing-record reads, rebuild behavior, and
@@ -69,7 +71,7 @@ the separate Parties deletion gate.
   named owner has approved a final `available` decision or exact source/package/
   container identity for Parties consumption.
 - The Parties superproject gitlink and checked-out EventStore commit now both
-  equal `54949fa91148c728b64fc8994322b95d53a550cf`. Checkout consistency is
+  equal `82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7`. Checkout consistency is
   necessary but not sufficient: no Story 1.20 approved runtime identity exists,
   so this current SHA is not approved migration evidence.
 - All 18 grouped rollback-only artifacts listed below are present.
@@ -229,7 +231,7 @@ Revalidated 2026-07-16. The historical EventStore Story 1.8 packet remains
 in `review`, EventStore Epic 1 remains `in-progress`, and no Story 1.20 closure
 packet exists. No named owner-approved `available` decision or approved runtime
 identity is available. The Parties gitlink and checked-out EventStore commit
-both equal 54949fa..., but that SHA has not been approved by a Story 1.20
+both equal 82ed167c..., but that SHA has not been approved by a Story 1.20
 closure packet. The absence of an approved identity keeps Story 8.6 blocked.
 Status remains `needs-additive-api`.
 ```
@@ -237,8 +239,8 @@ Status remains `needs-additive-api`.
 Replace the validation-cell hard-coded old pin result with both current checks:
 
 ```text
-git ls-tree HEAD references/Hexalith.EventStore -> 54949fa...
-git -C references/Hexalith.EventStore rev-parse HEAD -> 54949fa...
+git ls-tree HEAD references/Hexalith.EventStore -> 82ed167c...
+git -C references/Hexalith.EventStore rev-parse HEAD -> 82ed167c...
 Result: gitlink and checkout match, but no Story 1.20 packet has approved this
 SHA as the migration runtime identity.
 ```
@@ -271,7 +273,7 @@ Section: open Epic 7 projection-retention action.
 # 10 fallback branches remain intact. Story 8.6 is blocked; the 8.3 row remains
 # needs-additive-api. EventStore active closure Story 1.20 is ready-for-dev,
 # predecessor 1.19 is in review, and no owner-approved available packet exists.
-# Parties gitlink and checkout both equal 54949fa..., but no Story 1.20 packet
+# Parties gitlink and checkout both equal 82ed167c..., but no Story 1.20 packet
 # has approved that SHA, so no source migration or rollback-only deletion is
 # authorized.
 ```
@@ -365,20 +367,23 @@ and consumer work.
 | 3.1 PRD | [N/A] Skip | MVP/product requirements unchanged. |
 | 3.2 Architecture | [x] Done | Existing I3/I8/I9/I10 already govern. |
 | 3.3 UX | [N/A] Skip | No user-facing change. |
-| 3.4 Other artifacts | [!] Action-needed | Matrix and sprint tracking require approval-dependent factual updates. |
+| 3.4 Other artifacts | [x] Done | Matrix and sprint tracking received the approved factual updates. |
 | 4.1 Direct adjustment | [x] Viable | Selected; tracking/handoff only now. |
 | 4.2 Potential rollback | [x] Not viable | Retained local code is the rollback path. |
 | 4.3 MVP review | [x] Not viable | Epic 8 is post-MVP maintenance. |
 | 4.4 Recommended path | [x] Done | Two sequential evidence gates. |
 | 5.1-5.5 Proposal components | [x] Done | Issue, impact, edits, scope, and handoff are explicit. |
 | 6.1-6.2 Final review | [x] Done | Proposal is consistent with current repo and owner evidence. |
-| 6.3 Explicit approval | [!] Action-needed | Awaiting Administrator approval. |
-| 6.4 Sprint-status update | [!] Action-needed | Apply only after approval. |
-| 6.5 Handoff | [!] Action-needed | Route after approval. |
+| 6.3 Explicit approval | [x] Done | Administrator approved the proposal on 2026-07-16. |
+| 6.4 Sprint-status update | [x] Done | Approved rollback-retention and owner-gate updates applied. |
+| 6.5 Handoff | [x] Done | Responsibilities remain routed to EventStore owners, Winston, Amelia, Murat, and the Product Owner. |
 
-## Approval Request
+## Approval Record
 
-Approve this proposal to apply only the Story 8.3 matrix and sprint-tracking
-updates in §§4.2-4.4. Until approval and later EventStore owner delivery, the
-runtime state remains unchanged: Story 8.6 is blocked, the prerequisite row is
-`needs-additive-api`, and every rollback-only path stays.
+Administrator approved this proposal on 2026-07-16 at 00:29:58 +02:00. The
+authorized Story 8.3 matrix and sprint-tracking updates in §§4.2-4.4 were
+applied, and the responsibilities in §5 remain the execution handoff. No
+production source, test, dependency, package, submodule-content, or gitlink
+change was authorized or applied by this workflow. Story 8.6 remains `blocked`,
+the prerequisite row remains `needs-additive-api`, and every rollback-only path
+stays until the two independent proof gates pass.
