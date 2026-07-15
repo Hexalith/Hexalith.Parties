@@ -2,7 +2,7 @@
 title: 'Fix package-mode HFC0001 CI failure'
 type: 'bugfix'
 created: '2026-07-16'
-status: 'in-review'
+status: 'done'
 review_loop_iteration: 0
 baseline_commit: 'a88f458e42975bc705343d5db8bf962334c9cfda'
 context:
@@ -69,3 +69,32 @@ FrontComposer `3.1.1` adds `ProjectionQuery` and `QueryRequest.Create` while ret
 - `dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj --no-restore --configuration Release -warnaserror -m:1` followed by its built xUnit v3 assembly filtered to `PartiesAdminPortalApiClientTests` -- expected: focused tests pass.
 - `dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj --no-restore --configuration Release -warnaserror -m:1` followed by its built xUnit v3 assembly filtered to `AdminPortalQueryContractTests` -- expected: focused tests pass.
 - `dotnet build Hexalith.Parties.slnx --no-restore --configuration Release -warnaserror -m:1` -- expected: exact failed CI gate passes without HFC0001.
+
+## Suggested Review Order
+
+**Canonical Query Composition**
+
+- List requests separate projection criteria from routing and cache metadata.
+  [`PartiesAdminPortalApiClient.cs:96`](../../src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs#L96)
+
+- Search requests preserve paging, filters, and search text canonically.
+  [`PartiesAdminPortalApiClient.cs:135`](../../src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs#L135)
+
+- Detail requests retain aggregate, entity, and projection-actor routing.
+  [`PartiesAdminPortalApiClient.cs:224`](../../src/Hexalith.Parties.AdminPortal/Services/PartiesAdminPortalApiClient.cs#L224)
+
+**Compatibility Cleanup**
+
+- Dependency source selection no longer controls query API syntax.
+  [`Directory.Build.props:33`](../../Directory.Build.props#L33)
+
+**Regression Coverage**
+
+- Representative serialization locks the flat JSON wire contract.
+  [`PartiesAdminPortalApiClientTests.cs:404`](../../tests/Hexalith.Parties.AdminPortal.Tests/Services/PartiesAdminPortalApiClientTests.cs#L404)
+
+- Admin tests assert canonical criteria for list, search, paging, and detail.
+  [`PartiesAdminPortalApiClientTests.cs:388`](../../tests/Hexalith.Parties.AdminPortal.Tests/Services/PartiesAdminPortalApiClientTests.cs#L388)
+
+- Client contract tests compile only against the canonical criteria surface.
+  [`AdminPortalQueryContractTests.cs:42`](../../tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalQueryContractTests.cs#L42)
