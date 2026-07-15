@@ -157,7 +157,7 @@ Likely UPDATE/rebind surfaces after the gates open:
 
 - `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`
 - `src/Hexalith.Parties/Domain/PartyDomainProcessor.cs`
-- `src/Hexalith.Parties/Projections/PartyProjectionUpdateOrchestrator.cs`
+- `src/Hexalith.Parties/Domain/PartyProjectionUpdateOrchestrator.cs`
 - `src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj`
 - Parties/project package references only where the approved owner artifact requires them
 - local adapter/policy tests and `tests/Hexalith.Parties.IntegrationTests/Security/EncryptionPipelineIntegrationTests.cs`

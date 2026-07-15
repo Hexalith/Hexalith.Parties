@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-16T00:29:58+02:00
+# last_updated: 2026-07-16T00:34:27+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -42,7 +42,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-16T00:29:58+02:00
+last_updated: 2026-07-16T00:34:27+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -246,8 +246,8 @@ action_items:
     # typed-unreadable outcomes + no-leak diagnostics, Art.20 export + Art.30
     # processing-record semantics, erasure certificate/report parity, and proven
     # rollback (spine I8/I3) in the 8.3 matrix G5 row; routed to Hexalith.EventStore
-    # owners as G5. Revalidated 2026-07-16: both root-pinned EventStore v3.61.0
-    # and the user-owned v3.67.0 checkout lack the G5 engine; all 18 spec-8-7 MOVE-listed
+    # owners as G5. Revalidated 2026-07-16 after repository synchronization:
+    # EventStore gitlink/checkout 82ed167c match but still lack G5; all 18 MOVE-listed
     # src/Hexalith.Parties.Security crypto/key files (+ 5 KEEP domain files + the
     # EventStorePartyPayloadProtectionAdapter seam) remain intact; Story 8.7 is blocked.
     action: "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback."
