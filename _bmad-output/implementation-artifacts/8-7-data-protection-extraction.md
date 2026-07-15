@@ -3,11 +3,13 @@ story_key: 8-7-data-protection-extraction
 story_id: "8.7"
 epic: "8"
 created: 2026-07-16T00:23:38+02:00
+revalidated: 2026-07-16T00:32:11+02:00
 source_status: backlog
 target_status: blocked
-baseline_commit: a35b151
-eventstore_root_pin_at_creation: 1fb4be1acd6e57df0ce276f3db9c8d1d867eda1f
-eventstore_checkout_at_creation: 54949fa91148c728b64fc8994322b95d53a550cf
+baseline_commit_at_story_start: a35b151
+baseline_commit_at_revalidation: 6091d41
+eventstore_root_pin_at_revalidation: 82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7
+eventstore_checkout_at_revalidation: 82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7
 ---
 
 # Story 8.7: Data-protection extraction
@@ -41,7 +43,7 @@ so that Parties keeps GDPR policy without owning reusable crypto infrastructure.
 
 - [ ] Satisfy both start gates before editing production source (AC: 1, 2, 12)
   - [x] Inspect the Story 8.3 G5 row. At story creation it remains `needs-additive-api`; no approved G5 provider or proof is recorded.
-  - [x] Record provenance observed at story creation: root commit `a35b151` pins EventStore `1fb4be1acd6e57df0ce276f3db9c8d1d867eda1f` (`v3.61.0`), while the user-owned checkout is `54949fa91148c728b64fc8994322b95d53a550cf` (`v3.67.0`). Neither contains G5; do not treat the checkout drift as an approved pin or modify it during story creation.
+  - [x] Record provenance after concurrent `/pushall` activity: the root gitlink and checkout both equal `82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7` (`v3.67.0-1-g82ed167c`). The synchronized checkout still contains no G5 engine, `pdenc-v2`, `IPersonalDataPolicy`, or `IErasureStateProvider`, and no owner-approved G5 packet authorizes it.
   - [x] Confirm Story 8.6 is `blocked` and record that the authoritative sequence conflicts with the draft Story 8.7 spec's “independent of 8.6” note.
   - [x] Mark Story 8.7 blocked and halt before production code, package, or submodule edits.
   - [ ] Before implementation resumes, update the existing G5 row with the named owner/reviewer, exact approved release or root gitlink, producer and consumer proof, frozen compatibility identities, and rollback instructions; change its status only when the review gate is genuinely satisfied.
@@ -96,7 +98,7 @@ so that Parties keeps GDPR policy without owning reusable crypto infrastructure.
 
 - Epic 8 is Class C post-MVP maintenance with zero new PRD functional coverage. This story preserves completed behavior and corrects the domain/platform ownership boundary. [Source: `_bmad-output/planning-artifacts/epics.md#Story-8.7-Data-protection-extraction`]
 - The Story 8.7 draft spec is explicitly `blocked-prerequisite`. The existing Story 8.3 G5 `Payload protection engine package` row remains `needs-additive-api`; the 2026-07-11 owner-routing proposal says routing is not delivery or approval. [Source: `_bmad-output/implementation-artifacts/spec-8-7-data-protection-extraction.md`; `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md#EventStore-Owner-Routing--2026-07-11`]
-- The root-approved EventStore gitlink at creation is `1fb4be1...` (`v3.61.0`), while the user-owned checkout is `54949fa...` (`v3.67.0`). Both expose provider-neutral contracts and typed outcomes but no shared payload engine, `IPersonalDataPolicy`, `IErasureStateProvider`, or `pdenc-v2`. ASP.NET Core Data Protection in EventStore backs opaque query cursors and is not G5. Do not modify or bless the drifted gitlink in this story-creation session.
+- After concurrent `/pushall` synchronization, the root-approved EventStore gitlink and checkout both equal `82ed167c...` (`v3.67.0-1-g82ed167c`). This removes checkout drift but does not open G5: the synchronized tree still exposes provider-neutral contracts and typed outcomes but no shared payload engine, `IPersonalDataPolicy`, `IErasureStateProvider`, or `pdenc-v2`, and no owner-approved G5 closure packet exists. ASP.NET Core Data Protection in EventStore backs opaque query cursors and is not G5.
 - `epics.md`, Epic 8 context, the architecture spine, and the approved 2026-07-11 proposal retain `8.6 -> 8.7`; the draft spec calls 8.7 independent of 8.6. Treat story preparation and owner work as parallel-capable, but treat Parties source consumption as sequence-gated until an approved artifact resolves the conflict.
 - Production KMS remains a release prerequisite before regulated EU personal data is processed, but the approved deletion guardrail says it is not the G5 story-start blocker. The actual start blockers are owner-approved G5 parity/provenance and the consuming-story sequence.
 
@@ -188,7 +190,7 @@ The existing local provider cannot read v2 today. A DI-only rollback test perfor
 - Story 8.6 followed the same deletion-safety rule: it recorded the exact observed EventStore checkout, halted at `needs-additive-api`, edited no production source, and retained every rollback path. Apply that discipline here; do not infer approval from later producer commits or the visible checkout.
 - Recent root history is primarily gitlink/provenance reconciliation and owner-routing planning. It reinforces exact root-pin evidence before consuming submodule APIs; it does not deliver G5.
 - EventStore projection producer work demonstrates a useful owner-side pattern for G5: additive contracts, canonical/fingerprint goldens, structured outcomes instead of ambiguous exceptions, adversarial follow-up tests, and a real persisted-backend lane. G5 must still have its own named approval and payload-specific proofs.
-- Preserve all current user-owned gitlink drift and unrelated worktree changes. Only root-declared submodules may be initialized or updated, and nested submodules must not be initialized.
+- Preserve all concurrent user-owned commits and unrelated worktree changes. Only root-declared submodules may be initialized or updated, and nested submodules must not be initialized.
 
 ### Testing and Validation Guidance
 
@@ -253,7 +255,8 @@ GPT-5 Codex
 
 - 2026-07-16T00:23:38+02:00 - Loaded sprint status and selected requested story `8-7-data-protection-extraction` from `_bmad-output/implementation-artifacts/sprint-status.yaml` (`backlog`).
 - 2026-07-16T00:23:38+02:00 - Inspected the Story 8.3 G5 row; it remains `needs-additive-api` and owner routing explicitly remains non-delivery.
-- 2026-07-16T00:23:38+02:00 - Recorded root EventStore gitlink `1fb4be1acd6e57df0ce276f3db9c8d1d867eda1f` and user-owned checkout `54949fa91148c728b64fc8994322b95d53a550cf`; neither contains the required G5 engine.
+- 2026-07-16T00:23:38+02:00 - Initial provenance inspection found an older root gitlink and newer user-owned checkout; neither contained the required G5 engine.
+- 2026-07-16T00:32:11+02:00 - Revalidated after concurrent `/pushall`: root gitlink and checkout both equal `82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7`; the synchronized tree still lacks G5 and has no owner-approved G5 packet.
 - 2026-07-16T00:23:38+02:00 - Confirmed Story 8.6 is blocked and the approved Epic 8 sequence remains authoritative despite the draft 8.7 spec's contradictory design note.
 - 2026-07-16T00:23:38+02:00 - Halted before production, dependency, or submodule edits; all local crypto/key rollback files and registrations remain intact.
 
