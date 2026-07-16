@@ -10,10 +10,17 @@ using Xunit;
 
 namespace Hexalith.Parties.Tests.Search;
 
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class LocalSearchPerformanceCollection
+{
+    public const string Name = "Local search performance";
+}
+
 /// <summary>
 /// Performance benchmark tests for local fuzzy fallback search.
 /// Verifies NFR2/NFR4 compliance: search latency &lt; 500ms at scale.
 /// </summary>
+[Collection(LocalSearchPerformanceCollection.Name)]
 public class LocalFuzzySearchPerformanceBenchmarkTests(ITestOutputHelper output)
 {
     private readonly LocalFuzzyPartySearchProvider _provider = new();

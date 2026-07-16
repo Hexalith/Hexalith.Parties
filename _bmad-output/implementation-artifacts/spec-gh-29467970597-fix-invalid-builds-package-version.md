@@ -76,6 +76,8 @@ Memories pointer change.
 - `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs` --
   isolates gateway contract tests from newly registered Dapr-backed projection
   collaborators while preserving message identity and status lifecycle proof.
+- `tests/Hexalith.Parties.Tests/Search/LocalFuzzySearchPerformanceBenchmarkTests.cs`
+  -- runs strict wall-clock search benchmarks without parallel test contention.
 - `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`
   -- records the accepted G4/G8/G11 ownership, proof, and rollback invariants
   exercised by the fitness tests.
@@ -109,6 +111,10 @@ Memories pointer change.
   fitness contracts with the approved G4/G8/G11 planning changes, make fixed-
   string evidence validation independent of runner-installed `rg`, and replace
   Dapr-backed gateway test collaborators with isolated no-op/in-memory seams.
+- [x] Preserve the 500 ms local-search hard gate while removing intra-process
+  benchmark noise exposed by Release run `29484894219`; the performance
+  collection runs non-parallel instead of relaxing the threshold or skipping
+  the test.
 - [ ] Require the resulting Parties remote Actions run to pass the complete
   clean-checkout workflow.
 - [x] Close the invalid-version deferred entry without changing the two Memories
@@ -145,6 +151,11 @@ Memories pointer change.
   The follow-up aligns the fitness contract with approved G4/G8/G11 routing,
   replaces the external `rg` dependency with an equivalent bounded in-process
   fixed-string search, and restores gateway isolation without skipping tests.
+- 2026-07-16 -- CI run `29484894277` passed the repaired Tier 1 and Tier 2 jobs.
+  Concurrent Release run `29484894219` then exposed the strict 10K local-search
+  wall-clock benchmark competing with the other 575 tests: it measured 632 ms
+  remotely versus 89–239 ms in local full-suite runs. The benchmark retains its
+  500 ms limit and now runs in a non-parallel xUnit collection.
 
 ## Design Notes
 

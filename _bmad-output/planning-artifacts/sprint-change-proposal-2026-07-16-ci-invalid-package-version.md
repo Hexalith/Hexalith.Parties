@@ -424,6 +424,13 @@ inside isolated gateway tests. The implementation reconciles those contracts
 and test seams without changing production behavior or skipping any gate; the
 exact local Tier 2 sequence now passes 650 tests.
 
+Release evidence: combined Release run `29484894219` passed the first eleven
+test projects and then measured the strict 10K local-search benchmark at 632 ms
+while it competed with the other tests in the same assembly. Local full-suite
+measurements were 89–239 ms and CI passed the same hard gate. The implementation
+therefore isolates the wall-clock benchmark in a non-parallel xUnit collection;
+the 500 ms threshold and release test inventory remain unchanged.
+
 | Item | Status | Finding |
 | --- | --- | --- |
 | 1.1 Triggering story/work | [x] Done | CI/package-validation bugfix stream plus root submodule adoption exposed the recorded Builds defect. |
