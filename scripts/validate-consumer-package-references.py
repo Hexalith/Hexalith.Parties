@@ -12,6 +12,8 @@ import zipfile
 from pathlib import Path
 from xml.etree import ElementTree
 
+from msbuild_properties import MsbuildPropertyResolutionError, resolve_hexalith_commons_version
+
 
 PACKAGE_IDS = [
     "Hexalith.Parties.Contracts",
@@ -23,9 +25,18 @@ PACKAGE_IDS = [
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-SUPPORT_PACKAGE_PROJECTS = [
-    ("references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj", "2.27.0"),
-    ("references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/Hexalith.Commons.Http.csproj", "2.27.0"),
+COMMONS_SUPPORT_PACKAGE_PROJECTS = [
+    "references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj",
+    "references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/Hexalith.Commons.Http.csproj",
+]
+COMMONS_SUPPORT_PACKAGE_IDS = frozenset(
+    {
+        "Hexalith.Commons.Http",
+        "Hexalith.Commons.UniqueIds",
+    }
+)
+
+OTHER_SUPPORT_PACKAGE_PROJECTS = [
     ("references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj", "3.47.0"),
     ("references/Hexalith.EventStore/src/Hexalith.EventStore.Client/Hexalith.EventStore.Client.csproj", "3.47.0"),
     ("references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj", "1.7.0"),
@@ -35,24 +46,38 @@ SUPPORT_PACKAGE_PROJECTS = [
 ]
 
 
+def support_package_projects(commons_version: str) -> list[tuple[str, str]]:
+    """Return support projects with Commons packages aligned to the central version."""
+    return [
+        *((project, commons_version) for project in COMMONS_SUPPORT_PACKAGE_PROJECTS),
+        *OTHER_SUPPORT_PACKAGE_PROJECTS,
+    ]
+
+
+def package_identity(package_path: Path) -> tuple[str, str]:
+    """Read a package id and version from its single nuspec."""
+    with zipfile.ZipFile(package_path) as package:
+        nuspec_names = [name for name in package.namelist() if name.endswith(".nuspec")]
+        if len(nuspec_names) != 1:
+            raise ValueError(f"{package_path.name}: expected exactly one .nuspec file")
+
+        root = ElementTree.fromstring(package.read(nuspec_names[0]))
+        ns = {"n": root.tag.split("}")[0].strip("{")} if root.tag.startswith("{") else {}
+        id_element = root.find(".//n:metadata/n:id", ns) if ns else root.find(".//metadata/id")
+        version_element = root.find(".//n:metadata/n:version", ns) if ns else root.find(".//metadata/version")
+        if id_element is None or version_element is None or not id_element.text or not version_element.text:
+            raise ValueError(f"{package_path.name}: missing id or version metadata")
+        return id_element.text.strip(), version_element.text.strip()
+
+
 def package_versions(package_directory: Path) -> dict[str, str]:
     versions: dict[str, str] = {}
     for package_path in package_directory.glob("*.nupkg"):
         if ".symbols." in package_path.name or package_path.name.endswith(".snupkg"):
             continue
 
-        with zipfile.ZipFile(package_path) as package:
-            nuspec_names = [name for name in package.namelist() if name.endswith(".nuspec")]
-            if len(nuspec_names) != 1:
-                raise ValueError(f"{package_path.name}: expected exactly one .nuspec file")
-
-            root = ElementTree.fromstring(package.read(nuspec_names[0]))
-            ns = {"n": root.tag.split("}")[0].strip("{")} if root.tag.startswith("{") else {}
-            id_element = root.find(".//n:metadata/n:id", ns) if ns else root.find(".//metadata/id")
-            version_element = root.find(".//n:metadata/n:version", ns) if ns else root.find(".//metadata/version")
-            if id_element is None or version_element is None or not id_element.text or not version_element.text:
-                raise ValueError(f"{package_path.name}: missing id or version metadata")
-            versions[id_element.text.strip()] = version_element.text.strip()
+        package_id, version = package_identity(package_path)
+        versions[package_id] = version
 
     missing = sorted(set(PACKAGE_IDS) - set(versions))
     if missing:
@@ -63,6 +88,36 @@ def package_versions(package_directory: Path) -> dict[str, str]:
         raise ValueError(f"Expected Parties packages to share one version, found {sorted(distinct_versions)}")
 
     return versions
+
+
+def validate_commons_support_packages(package_directory: Path, commons_version: str) -> None:
+    """Require one exact central-version package for each Commons support identity."""
+    packages: dict[str, list[tuple[Path, str]]] = {
+        package_id: [] for package_id in COMMONS_SUPPORT_PACKAGE_IDS
+    }
+    for package_path in package_directory.glob("*.nupkg"):
+        if ".symbols." in package_path.name or package_path.name.endswith(".snupkg"):
+            continue
+
+        package_id, version = package_identity(package_path)
+        if package_id in packages:
+            packages[package_id].append((package_path, version))
+
+    for package_id, artifacts in packages.items():
+        if len(artifacts) != 1:
+            names = sorted(path.name for path, _ in artifacts)
+            raise ValueError(
+                f"Expected exactly one {package_id} {commons_version} support package, "
+                f"found {names or '<none>'}"
+            )
+
+        package_path, metadata_version = artifacts[0]
+        expected_filename = f"{package_id}.{commons_version}.nupkg"
+        if metadata_version != commons_version or package_path.name != expected_filename:
+            raise ValueError(
+                f"Expected exact {package_id} support package {expected_filename} with metadata version "
+                f"{commons_version}, found {package_path.name} with metadata version {metadata_version}"
+            )
 
 
 def run_dotnet(args: list[str], working_directory: Path) -> None:
@@ -83,9 +138,9 @@ def assert_package_only(project_file: Path, required_package_ids: list[str]) -> 
             raise ValueError(f"{project_file}: missing PackageReference for {package_id}")
 
 
-def pack_support_packages(output_directory: Path) -> Path:
+def pack_support_packages(output_directory: Path, commons_version: str) -> Path:
     output_directory.mkdir(parents=True, exist_ok=True)
-    for project, version in SUPPORT_PACKAGE_PROJECTS:
+    for project, version in support_package_projects(commons_version):
         project_path = REPO_ROOT / project
         if not project_path.exists():
             raise ValueError(f"Support package project not found: {project_path}")
@@ -110,6 +165,7 @@ def pack_support_packages(output_directory: Path) -> Path:
             check=True,
         )
 
+    validate_commons_support_packages(output_directory, commons_version)
     return output_directory
 
 
@@ -232,6 +288,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    commons_version = resolve_hexalith_commons_version(REPO_ROOT)
     package_directory = args.package_directory.resolve()
     versions = package_versions(package_directory)
     version = versions["Hexalith.Parties.Contracts"]
@@ -240,7 +297,7 @@ def main() -> int:
     if work_directory.exists():
         shutil.rmtree(work_directory)
     work_directory.mkdir(parents=True)
-    support_feed = pack_support_packages(work_directory / "support-packages")
+    support_feed = pack_support_packages(work_directory / "support-packages", commons_version)
     write_nuget_config(work_directory, [package_directory, support_feed], args.nuget_source)
 
     validate_consumer(write_client_consumer(work_directory, version))
@@ -253,6 +310,6 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (ValueError, subprocess.CalledProcessError) as exc:
+    except (MsbuildPropertyResolutionError, ValueError, subprocess.CalledProcessError) as exc:
         print(f"Consumer package validation failed: {exc}", file=sys.stderr)
         raise SystemExit(1)

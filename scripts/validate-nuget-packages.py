@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from xml.etree import ElementTree
 
+from msbuild_properties import MsbuildPropertyResolutionError, resolve_hexalith_commons_version
+
 
 EXPECTED_PACKAGE_IDS = frozenset(
     {
@@ -41,10 +43,6 @@ FORBIDDEN_DEPENDENCY_FRAGMENTS = (
     ".Samples",
     ".AppHost",
 )
-
-EXPECTED_DEPENDENCY_VERSIONS = {
-    "Hexalith.Commons.Http": "$(HexalithCommonsVersion)",
-}
 
 REQUIRED_COMMONS_HTTP_DEPENDENCY_PACKAGES = frozenset(
     {
@@ -130,7 +128,11 @@ def validate_dependency_boundaries(package_path: Path, metadata: PackageMetadata
         )
 
 
-def validate_expected_dependency_versions(package_path: Path, metadata: PackageMetadata) -> None:
+def validate_expected_dependency_versions(
+    package_path: Path,
+    metadata: PackageMetadata,
+    expected_dependency_versions: dict[str, str],
+) -> None:
     """Validate dependency versions that are coupled to source ProjectReference packaging."""
     dependency_versions = {
         dependency.package_id: sorted(
@@ -139,7 +141,7 @@ def validate_expected_dependency_versions(package_path: Path, metadata: PackageM
         for dependency in metadata.dependencies
     }
 
-    for dependency_id, expected_version in EXPECTED_DEPENDENCY_VERSIONS.items():
+    for dependency_id, expected_version in expected_dependency_versions.items():
         versions = dependency_versions.get(dependency_id, [])
         if versions and versions != [expected_version]:
             raise ValueError(
@@ -148,7 +150,7 @@ def validate_expected_dependency_versions(package_path: Path, metadata: PackageM
 
     if metadata.package_id in REQUIRED_COMMONS_HTTP_DEPENDENCY_PACKAGES:
         versions = dependency_versions.get("Hexalith.Commons.Http", [])
-        expected_version = EXPECTED_DEPENDENCY_VERSIONS["Hexalith.Commons.Http"]
+        expected_version = expected_dependency_versions["Hexalith.Commons.Http"]
         if versions != [expected_version]:
             raise ValueError(
                 f"{package_path.name}: expected Hexalith.Commons.Http dependency version {expected_version}, "
@@ -161,6 +163,11 @@ def main() -> int:
     parser.add_argument("package_directory", type=Path, help="Directory containing .nupkg files.")
     args = parser.parse_args()
 
+    commons_version = resolve_hexalith_commons_version()
+    expected_dependency_versions = {
+        "Hexalith.Commons.Http": commons_version,
+        "Hexalith.Commons.UniqueIds": commons_version,
+    }
     package_directory = args.package_directory
     packages = sorted(
         path
@@ -181,7 +188,7 @@ def main() -> int:
         if not metadata.has_license:
             raise ValueError(f"{package.name}: missing license metadata")
         validate_dependency_boundaries(package, metadata)
-        validate_expected_dependency_versions(package, metadata)
+        validate_expected_dependency_versions(package, metadata, expected_dependency_versions)
 
     if package_ids != EXPECTED_PACKAGE_IDS:
         missing = sorted(EXPECTED_PACKAGE_IDS - package_ids)
@@ -202,6 +209,6 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except ValueError as exc:
+    except (MsbuildPropertyResolutionError, ValueError) as exc:
         print(f"Package validation failed: {exc}", file=sys.stderr)
         raise SystemExit(1)

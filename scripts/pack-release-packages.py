@@ -8,6 +8,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from msbuild_properties import MsbuildPropertyResolutionError, resolve_hexalith_commons_version
+
 
 PACKAGE_PROJECTS = [
     "src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj",
@@ -28,6 +30,7 @@ def main() -> int:
     parser.add_argument("version", help="Package version to apply.")
     args = parser.parse_args()
 
+    commons_version = resolve_hexalith_commons_version()
     output_directory = args.output_directory
     output_directory.mkdir(parents=True, exist_ok=True)
     for package in output_directory.glob("*.nupkg"):
@@ -47,7 +50,7 @@ def main() -> int:
                 "--output",
                 str(output_directory),
                 f"-p:HexalithPartiesPackageVersion={args.version}",
-                "-p:HexalithCommonsHttpPackageVersion=$(HexalithCommonsVersion)",
+                f"-p:HexalithCommonsHttpPackageVersion={commons_version}",
                 "/m:1",
                 "/nr:false",
             ],
@@ -60,6 +63,9 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
+    except MsbuildPropertyResolutionError as exc:
+        print(f"Package packing failed: {exc}", file=sys.stderr)
+        raise SystemExit(1)
     except subprocess.CalledProcessError as exc:
         print(f"Package packing failed with exit code {exc.returncode}.", file=sys.stderr)
         raise SystemExit(exc.returncode)
