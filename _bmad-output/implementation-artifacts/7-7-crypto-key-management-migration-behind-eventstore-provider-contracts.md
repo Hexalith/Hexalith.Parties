@@ -197,7 +197,7 @@ Run smallest reliable checks first, then broaden:
 
 ### Latest Technical Information
 
-- No external package or framework upgrade is required for Story 7.7. Use the pinned local stack from project context: .NET SDK `10.0.302`, `net10.0`, EventStore project references under `references/`, xUnit v3, Shouldly, and NSubstitute.
+- No external package or framework upgrade is required for Story 7.7. Use the pinned local stack from project context: .NET SDK `10.0.301`, `net10.0`, EventStore project references under `references/`, xUnit v3, Shouldly, and NSubstitute.
 - The relevant current source of truth is the checked-out EventStore contracts and tests under `references/Hexalith.EventStore`, plus the accepted 7.6 ADR. Do not change package versions for this story unless an owner-approved provider package is explicitly part of the migration.
 
 ### Rollback Plan

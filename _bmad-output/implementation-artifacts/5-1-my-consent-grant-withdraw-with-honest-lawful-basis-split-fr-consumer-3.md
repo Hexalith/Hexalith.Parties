@@ -208,7 +208,7 @@ so that I decide what I am opted into without being misled.
 - Microsoft Learn's current Blazor forms guidance says `EditForm` supports `Model`/`EditContext`, `OnSubmit`, `OnValidSubmit`, and `OnInvalidSubmit`, and `FormName` should be unique. Use the same pattern if a consent form wrapper is needed. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/forms/?view=aspnetcore-10.0`]
 - Microsoft Learn's Blazor lifecycle guidance says an async lifecycle method must leave the component in a valid render state before awaiting incomplete work. Apply this to consent load/save state. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/components/lifecycle?view=aspnetcore-10.0`]
 - Microsoft Learn's Blazor DI guidance describes server-side Scoped services as circuit-scoped and warns against singleton capture of scoped services. Keep consent adapters Scoped and compatible with `ValidateScopes=true`. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/fundamentals/dependency-injection?view=aspnetcore-10.0`]
-- No package upgrade is required. Use the pinned local stack: .NET SDK `10.0.302`, FluentUI Blazor `5.0.0-rc.3`, xUnit v3, bUnit, Shouldly, and NSubstitute. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
+- No package upgrade is required. Use the pinned local stack: .NET SDK `10.0.300`, FluentUI Blazor `5.0.0-rc.3`, xUnit v3, bUnit, Shouldly, and NSubstitute. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
 
 ### Project Structure Notes
 

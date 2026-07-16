@@ -167,7 +167,7 @@ Use focused checks to isolate failures, but final readiness needs broad evidence
 
 ### Latest Technical Information
 
-- No external framework or package upgrade is required for Story 7.8. Use the pinned local stack from project context: .NET SDK `10.0.302`, `net10.0`, Dapr `1.18.4`, Aspire `13.4.6`, xUnit v3, Shouldly, NSubstitute, and root project references under `references/`.
+- No external framework or package upgrade is required for Story 7.8. Use the pinned local stack from project context: .NET SDK `10.0.301`, `net10.0`, Dapr `1.18.4`, Aspire `13.4.6`, xUnit v3, Shouldly, NSubstitute, and root project references under `references/`.
 - Do not browse for or adopt newer package versions as part of this final gate unless a release owner explicitly changes the strategy. This story closes the approved Epic 7 project-reference migration; it is not a dependency-upgrade story.
 
 ### Rollback Plan

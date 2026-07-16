@@ -30,13 +30,13 @@
     { "step": "step_8", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "Single-part architecture.md regenerated: versions refreshed; §8 strengthened with LocalDevKeyStorageBackend production-data-loss risk; §13 gotchas expanded with index-rebuild key bug, README MCP-tools error, Aspire SDK skew, AdminPortal stubs, unenforced Pact gate. No per-part files (monolith)." },
     { "step": "step_9", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "Supporting docs refreshed: project-overview.md, data-models.md (22 cmds/43 events re-verified), api-contracts.md (5 MCP tools re-verified), component-inventory.md (index-bug pointer + version refresh). Also refreshed _bmad-output/project-context.md version table. No project-parts.json/integration-architecture.md (single-part)." },
     { "step": "step_10", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "index.md regenerated; Known discrepancies section expanded (5 items incl. LocalDev KMS risk, README MCP error, index-rebuild bug, Aspire skew, submodule status). Zero '(To be generated)' markers." },
-    { "step": "step_11", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "Validation: 8 generated docs + index present; zero incomplete markers; no stale version stragglers (10.0.302 = correct SDK pin); all internal .md links resolve; state file valid JSON; checklist satisfied for single-part backend." },
+    { "step": "step_11", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "Validation: 8 generated docs + index present; zero incomplete markers; no stale version stragglers (10.0.300 = correct SDK pin); all internal .md links resolve; state file valid JSON; checklist satisfied for single-part backend." },
     { "step": "step_12", "status": "completed", "timestamp": "2026-06-02T16:30:05Z", "summary": "Finalized. workflow.on_complete resolved empty — no terminal instruction." }
   ],
   "current_step": "completed",
   "findings": {
     "project_classification": "Monolith / single cohesive .NET 10 solution; backend event-sourced party domain service with embedded Blazor UI; behind a Hexalith.EventStore gateway.",
-    "technology_stack": ".NET 10 (SDK 10.0.302) + Aspire 13.4.0 + DAPR 1.18/1.17 + Hexalith.EventStore + Blazor/FluentUI 5.0-rc.3; CPM on; TreatWarningsAsErrors; MinVer.",
+    "technology_stack": ".NET 10 (SDK 10.0.300) + Aspire 13.4.0 + DAPR 1.18/1.17 + Hexalith.EventStore + Blazor/FluentUI 5.0-rc.3; CPM on; TreatWarningsAsErrors; MinVer.",
     "domain": "Single Party aggregate (Person|Organization); 22 commands; 43 events (24 state-change + 19 rejection); CQRS read models PartyDetail & PartyIndexEntry; markers IEventPayload / IRejectionEvent.",
     "api": "EventStore gateway POST /api/v1/commands & /api/v1/queries (Domain=party); typed client (Command/Query/AdminPortalGdpr); parties-mcp = exactly 5 stateless HTTP tools.",
     "new_discrepancies": [

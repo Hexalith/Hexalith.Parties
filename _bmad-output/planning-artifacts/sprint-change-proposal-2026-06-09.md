@@ -45,7 +45,7 @@ frontmatter_added: 2026-06-21
 
 **Direct Adjustment** — bump only where a newer in-scope version exists and the project's pinning conventions allow it. Constraints respected:
 
-- **.NET 10 floor held** — `Microsoft.Extensions.*` / `Microsoft.AspNetCore.*` stay on `10.0.8` stable; the `11.0.0-preview` family is a .NET 11 preview gated out by `global.json` (SDK `10.0.302`).
+- **.NET 10 floor held** — `Microsoft.Extensions.*` / `Microsoft.AspNetCore.*` stay on `10.0.8` stable; the `11.0.0-preview` family is a .NET 11 preview gated out by `global.json` (SDK `10.0.300`).
 - **Dapr skew preserved** — `1.18.0-rc02` (Actors/Client) vs `1.17.9` (AspNetCore) is intentional; not aligned.
 - **Aspire SDK ↔ Hosting kept matched** — both moved to `13.4.3` together.
 - **xUnit stays on v3 stable** (`3.2.2`); v4 is a major pre-release, out of scope for "latest release."

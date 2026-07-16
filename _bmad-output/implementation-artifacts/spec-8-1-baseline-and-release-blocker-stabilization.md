@@ -35,7 +35,7 @@ warnings: []
 |----------|--------------|---------------------------|----------------|
 | Unit lane inventory | `scripts/test.ps1 -Lane unit` | Runs every unit-style test project, including `Hexalith.Parties.Authentication.Tests` and `Hexalith.Parties.ConsumerPortal.Tests` | If a project fails, the lane fails and the test summary records the blocker |
 | Aggregate lanes | `scripts/test.ps1 -Lane all` or `-Lane coverage` | Iterates explicit project lists instead of invoking solution-level `dotnet test` | Any blocked project is visible by path; no solution-level false green |
-| CI shard inventory | GitHub Actions test matrix | Uses SDK `10.0.302` and includes all 15 .NET test projects across shards | Missing projects or stale SDK pins are treated as baseline drift |
+| CI shard inventory | GitHub Actions test matrix | Uses SDK `10.0.301` and includes all 15 .NET test projects across shards | Missing projects or stale SDK pins are treated as baseline drift |
 | Release blocker evidence | Build/test/package/deploy checks fail because of known drift or environment limits | The blocker remains visible with the exact command, observed result, and required owner/environment | Do not edit submodules or weaken gates to hide the blocker |
 
 </intent-contract>
@@ -55,7 +55,7 @@ warnings: []
 
 **Execution:**
 - [x] `scripts/test.ps1` -- add `Hexalith.Parties.ConsumerPortal.Tests` to the unit project list, replace `all` and `coverage` solution-level execution with explicit per-project loops, and pass coverage arguments through the same per-project helper -- prevents skipped tests and false-green solution lanes.
-- [x] `.github/workflows/test.yml` -- update all .NET setup steps to SDK `10.0.302`, add `Hexalith.Parties.Authentication.Tests` and `Hexalith.Parties.ConsumerPortal.Tests` to CI shards, and keep per-project `dotnet test` execution -- aligns CI with `global.json` and the full test inventory.
+- [x] `.github/workflows/test.yml` -- update all .NET setup steps to SDK `10.0.301`, add `Hexalith.Parties.Authentication.Tests` and `Hexalith.Parties.ConsumerPortal.Tests` to CI shards, and keep per-project `dotnet test` execution -- aligns CI with `global.json` and the full test inventory.
 - [x] `docs/development-guide.md`, `docs/ci.md`, and `docs/index.md` -- replace solution-level test guidance with lane/per-project guidance, and document direct xUnit v3 executable filtering, `-m:1` build guidance, `MinVerVersionOverride=1.0.0`, and network-enabled package-test limitations -- gives later Epic 8 stories repeatable validation instructions.
 - [x] `_bmad-output/implementation-artifacts/tests/test-summary.md` -- append a Story 8.1 section listing corrected lanes, commands run, unresolved release blockers, and owner/environment decisions for gitlink drift, package validation, deploy validation, UI accessibility, production KMS, and the missing Epic 8 architecture spine -- makes blockers auditable instead of implicit.
 - [x] `_bmad-output/implementation-artifacts/sprint-status.yaml` -- update Epic 8/Story 8.1 status consistently with the completed stabilization artifact -- keeps BMAD tracking aligned with implementation.
@@ -63,7 +63,7 @@ warnings: []
 **Acceptance Criteria:**
 - Given the local lane runner, when the unit lane inventory is inspected, then `tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj` is included with the other unit test projects.
 - Given the local lane runner, when `all` or `coverage` is inspected, then neither lane invokes `dotnet test` against `Hexalith.Parties.slnx`.
-- Given the CI workflow, when the test matrix is inspected, then SDK setup matches `global.json` `10.0.302` and all 15 .NET test projects are assigned to a shard.
+- Given the CI workflow, when the test matrix is inspected, then SDK setup matches `global.json` `10.0.301` and all 15 .NET test projects are assigned to a shard.
 - Given current release blockers, when validation cannot pass because of submodule drift, sandbox network denial, deploy environment gaps, or owner decisions, then the exact blocker and rerun path are recorded without weakening build/test gates.
 
 ## Spec Change Log
@@ -148,7 +148,7 @@ Summary: Story 8.1 stabilized the baseline by making local and CI test inventori
 
 Files changed:
 - `scripts/test.ps1` -- added ConsumerPortal tests, explicit all/coverage project loops, per-project execution, duplicate detection, and inventory validation.
-- `.github/workflows/test.yml` -- aligned setup-dotnet with SDK `10.0.302`, added missing Authentication/ConsumerPortal shards, and added a matrix-scoped lint inventory guard with duplicate detection.
+- `.github/workflows/test.yml` -- aligned setup-dotnet with SDK `10.0.301`, added missing Authentication/ConsumerPortal shards, and added a matrix-scoped lint inventory guard with duplicate detection.
 - `README.md`, `docs/development-guide.md`, `docs/ci.md`, `docs/index.md`, `docs/getting-started.md`, `docs/project-overview.md`, `docs/architecture.md`, `docs/source-tree-analysis.md`, `docs/component-inventory.md` -- updated SDK, test-lane, test-count, submodule, and package-validation guidance.
 - `tests/README.md` -- removed solution-level test execution guidance and aligned the lane inventory with all current test projects.
 - `src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj` -- updated missing-submodule error guidance to the baseline root-submodule command.
@@ -167,7 +167,7 @@ Verification performed:
 - Python inventory comparison for the `scripts/test.ps1` PowerShell lane arrays and the `.github/workflows/test.yml` test-matrix project blocks against `tests/**/*.csproj` passed.
 - Stale solution-level/project-option test guidance check returned no matches.
 - Stale SDK/test-count/root-submodule guidance check returned no matches in the corrected guidance surfaces.
-- Active guidance stale-command scan across README, docs, src, tests, scripts, and CI returned no matches for the old two-submodule command, SDK `10.0.302`, solution-level `dotnet test`, or `dotnet test --project` guidance, excluding the historical `docs/project-scan-report.json` artifact.
+- Active guidance stale-command scan across README, docs, src, tests, scripts, and CI returned no matches for the old two-submodule command, SDK `10.0.300`, solution-level `dotnet test`, or `dotnet test --project` guidance, excluding the historical `docs/project-scan-report.json` artifact.
 - Final follow-up stale count/CI wording scan returned no active-doc matches; only the historical `docs/project-scan-report.json` scan artifact retains old counts.
 - `git diff --check` passed.
 - `bash scripts/check-no-warning-override.sh` passed.

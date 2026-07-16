@@ -178,7 +178,7 @@ Run the smallest reliable lane first, then broaden:
 
 ### Latest Technical Information
 
-- No external package or framework upgrade is required for Story 7.6. Use the pinned local stack from project context: .NET SDK `10.0.302`, `net10.0`, EventStore project references under `references/`, xUnit v3, Shouldly, and NSubstitute.
+- No external package or framework upgrade is required for Story 7.6. Use the pinned local stack from project context: .NET SDK `10.0.301`, `net10.0`, EventStore project references under `references/`, xUnit v3, Shouldly, and NSubstitute.
 - The relevant "latest" source of truth is the checked-out EventStore contracts in `references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Security/`, not public web docs. Do not change package versions for this story.
 
 ### Rollback Plan

@@ -108,7 +108,7 @@ The current build already marks the three target projects as SDK-container publi
 The workflow should:
 
 - run after the quality gate succeeds, or as a separate tag/manual workflow that repeats restore/build before publish;
-- use .NET SDK `10.0.302`;
+- use .NET SDK `10.0.301`;
 - check out root submodules under `references/` without recursive submodule initialization;
 - resolve the image tag from MinVer or a `v*` tag, dropping the leading `v` for image tags;
 - authenticate to `registry.hexalith.com` using GitHub Actions secrets for the infra-confirmed Zot API key;
@@ -184,7 +184,7 @@ NEW:
 Add a workflow with a narrow job:
 
 - checkout with root submodules only;
-- setup .NET `10.0.302`;
+- setup .NET `10.0.301`;
 - restore/build the three target projects or the solution;
 - resolve a MinVer image tag;
 - authenticate to Zot with `ZOT_REGISTRY_USERNAME` / `ZOT_REGISTRY_API_KEY`;

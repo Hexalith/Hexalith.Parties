@@ -91,8 +91,8 @@ dependency-publishing story is settled.
 
 **Additional CI drift** (`.github/workflows/test.yml`): the 4 test shards enumerate 13 of 15 test
 projects — **`Hexalith.Parties.Authentication.Tests` and `Hexalith.Parties.ConsumerPortal.Tests`
-are never run in CI**; jobs pin `dotnet-version: 10.0.302` while `global.json` demands
-`10.0.302`; `scripts/test.ps1` omits ConsumerPortal.Tests from every lane.
+are never run in CI**; jobs pin `dotnet-version: 10.0.300` while `global.json` demands
+`10.0.301`; `scripts/test.ps1` omits ConsumerPortal.Tests from every lane.
 
 **Baseline remediation (Phase 0, before any refactor)**: keep the `Update`-style MCP pin, make
 CI restore+build configuration-consistent, and decide the package story: either publish
