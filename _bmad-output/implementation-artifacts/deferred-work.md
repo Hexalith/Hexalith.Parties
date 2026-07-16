@@ -28,7 +28,9 @@ status: open
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
   summary: Correct and validate the advanced Hexalith.Builds checkout before adopting its package-version changes.
-  evidence: Incidental review of unrelated worktree gitlink drift found checkout `63d3221` supplies `v1.16.3` as a NuGet version and also advances the Tenants version, so a fresh restore can fail or broaden dependency scope if that checkout is adopted without owner validation.
+  evidence: Checkout `63d3221` supplied `v1.16.3` as a NuGet version and caused Actions runs `29467970597` and `29468665570` to fail during restore. Builds `v4.18.11` corrected the value to `1.16.3`; commit `6516faf` adds the evaluated central-version release guard and fixtures, and the Parties gitlink/signoff adopt that exact commit.
+  status: resolved
+  resolved_by: `_bmad-output/implementation-artifacts/spec-gh-29467970597-fix-invalid-builds-package-version.md`; Hexalith.Builds `6516faffa84c6762f85823fca5ad9eb4e6fde5de`
 - source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
   summary: Add a persisted-LRU eviction regression test for the advanced Hexalith.Memories checkout.
   evidence: Incidental review found the new workflow recency field is tested across serialization and eviction separately, but not after serialize/restore at the 256-entry limit; a restored actor could evict a recently refreshed workflow and reapply a delayed transition.

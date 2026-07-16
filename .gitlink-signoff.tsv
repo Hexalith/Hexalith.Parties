@@ -28,5 +28,10 @@ references/Hexalith.PolymorphicSerializations|ca1086497c58d0e3ae3c4795655f853b62
 #     submodule already on the v3.60.0 line). Supersedes the 2026-07-07 Builds
 #     entry (94989b0, v4.16.3-28). ---
 references/Hexalith.Builds|2b7aec1fd1ba254900ccf715bd8fec5d54f0c37e|validated-advance|v4.17.5-1-g2b7aec1|jpiquot|2026-07-12
+# --- 2026-07-16 CI restore repair (bmad-correct-course): Builds v4.18.11
+#     contains the owner-authored v1.16.3 -> 1.16.3 source correction; 6516faf
+#     adds the pre-release evaluated central-version guard and fixtures approved
+#     for parent adoption. ---
+references/Hexalith.Builds|6516faffa84c6762f85823fca5ad9eb4e6fde5de|validated-advance|v4.18.11-1-g6516faf|jpiquot|2026-07-16
 references/Hexalith.Tenants|8d1a5bd760310a724dd35649aea478d364a2c89a|validated-advance|v2.3.0-9-g8d1a5bd|jpiquot|2026-07-07
 references/Hexalith.EventStore|1627190e515c1189a48acf3c5b599500fa6c8ba1|validated-advance|v3.45.0|jpiquot|2026-07-07

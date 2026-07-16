@@ -1,0 +1,173 @@
+---
+title: 'Fix invalid Builds package version blocking CI restore'
+type: 'bugfix'
+created: '2026-07-16'
+status: 'in-progress'
+review_loop_iteration: 0
+baseline_commit: 'c715eae7114d8befe1ba120793d269661dd7bc4f'
+source_run: 'https://github.com/Hexalith/Hexalith.Parties/actions/runs/29467970597'
+context:
+  - '{project-root}/_bmad-output/planning-artifacts/sprint-change-proposal-2026-07-16-ci-invalid-package-version.md'
+  - '{project-root}/_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md'
+  - '{project-root}/_bmad-output/implementation-artifacts/deferred-work.md'
+---
+
+# Fix invalid Builds package version blocking CI restore
+
+<frozen-after-approval reason="human-owned intent — do not modify unless human renegotiates">
+
+## Intent
+
+**Problem:** Parties Actions run `29467970597` and its successor fail during
+solution restore because the consumed `Hexalith.Builds` catalog supplies
+`v1.16.3` as a NuGet version. NuGet rejects the Git-tag prefix, so build,
+package-consumer validation, and every test tier are skipped.
+
+**Approach:** Consume the source correction released in `Hexalith.Builds`
+`v4.18.11`, add a fail-closed Builds release guard for every evaluated central
+package version, then advance the Parties Builds gitlink with owner signoff and
+prove the complete local and remote CI ladders.
+
+## Boundaries & Constraints
+
+**Always:** Fix shared package metadata in its owning Builds repository; validate
+the evaluated package catalog before semantic release; retain exact restore,
+Release warnings-as-errors, package-consumer, and test gates; update the parent
+gitlink only to an immutable pushed Builds commit; preserve unrelated worktree
+changes; initialize root-declared submodules only.
+
+**Ask First:** Changes to Parties product behavior, public APIs, package
+inventory, dependency routing beyond the invalid version, another root
+submodule, or PRD/epic/UX scope.
+
+**Never:** Keep a root-only hardcoded version override; weaken or skip restore,
+package, or test gates; accept blank or unresolved versions; treat a tag name as
+a NuGet package version; initialize nested submodules; overwrite the concurrent
+Memories pointer change.
+
+## I/O & Edge-Case Matrix
+
+| Scenario | Input / State | Expected Output / Behavior | Error Handling |
+|----------|---------------|---------------------------|----------------|
+| Original regression | Evaluated version is `v1.16.3` or `V1.16.3` | Builds release stops before `Create Release` | Diagnostic identifies the package and removes ambiguity about the `v` prefix |
+| Valid stable version | Evaluated version is `1.16.3` | Validator accepts it and Parties restore resolves the published package | Any later restore failure remains fatal |
+| Valid prerelease/legacy version | Evaluated version is SemVer prerelease/build metadata or a valid four-part NuGet version | Validator accepts existing catalog syntax | No normalization changes are made by the validator |
+| Invalid evaluation | Version is blank, unresolved, malformed, or evaluator JSON is invalid | Validator fails closed | Bounded actionable diagnostic; no release step |
+| Parent adoption | Builds guard commit is pushed and shared workflow passes | Parties gitlink and signoff reference the exact immutable SHA | Mismatched or unsigned pointer fails the RC gate |
+
+</frozen-after-approval>
+
+## Code Map
+
+- `references/Hexalith.Builds/Props/Directory.Packages.props` -- owning catalog;
+  `v4.18.11` contains the source normalization to `1.16.3`.
+- `references/Hexalith.Builds/Tools/validate-central-package-versions.ps1` --
+  evaluates all central `PackageVersion` items and rejects unsafe values.
+- `references/Hexalith.Builds/Tools/test-central-package-version-validator.ps1`
+  -- fixture coverage for valid and invalid evaluation paths and workflow order.
+- `references/Hexalith.Builds/.github/workflows/build-release.yml` -- runs both
+  central-version gates before Dapr validation and semantic release.
+- `.gitlink-signoff.tsv` -- owner-authorized immutable Builds pointer.
+- `_bmad-output/implementation-artifacts/deferred-work.md` -- closes the exact
+  warning that predicted this restore failure while retaining Memories entries.
+
+## Tasks & Acceptance
+
+**Execution:**
+
+- [x] Consume Builds `v4.18.11`, where commit `7cd855c` normalizes the shared
+  PolymorphicSerializations version from `v1.16.3` to `1.16.3`.
+- [x] Add a central-version validator that evaluates all `PackageVersion` items
+  and rejects tag prefixes, blanks, unresolved expressions, and malformed
+  NuGet versions.
+- [x] Add fixture tests for valid stable, prerelease, and four-part versions;
+  exact lowercase/uppercase tag-prefix regressions; blank, unresolved, and
+  malformed versions; malformed/failed evaluator output; and workflow order.
+- [x] Wire both scripts before semantic release and preserve the existing Dapr
+  validation gates.
+- [x] Require a successful Builds workflow for guard commit `6516faf` (release
+  run `29480773799`, including both new and both existing validation steps).
+- [x] Advance the Parties Builds gitlink and signoff to the pushed guard commit.
+- [x] Pass the affected local CI path: restore, serial Release build with
+  warnings-as-errors, package generation/metadata/consumer validation, all
+  Tier 1 projects, Sample tests, and CI contract tests.
+- [ ] Require the resulting Parties remote Actions run to pass the complete
+  clean-checkout workflow.
+- [x] Close the invalid-version deferred entry without changing the two Memories
+  review entries.
+
+**Acceptance Criteria:**
+
+- Given the original tag-shaped version, when the Builds release gate evaluates
+  it, then validation fails before semantic release with a package-specific
+  diagnostic.
+- Given the fixed Builds catalog, when Parties restores without property
+  overrides, then every solution project restores successfully.
+- Given the parent change, when the RC gitlink gate runs against the prior root
+  commit, then the exact Builds SHA has real-owner `validated-advance` evidence.
+- Given the repaired root commit, when GitHub Actions runs, then restore, Release
+  build, package-consumer validation, CI contracts, unit tests, and integration
+  tests pass without gate weakening.
+
+## Spec Change Log
+
+- 2026-07-16 -- During proposal approval, Builds commit `7cd855c` and release
+  `v4.18.11` landed the source normalization concurrently. Implementation keeps
+  that immutable fix, adds the approved preventive guard in `6516faf`, and does
+  not duplicate or rewrite the released correction.
+
+## Design Notes
+
+The validator uses MSBuild evaluation rather than XML text matching so property
+indirection is resolved exactly as consuming repositories see it. The accepted
+grammar covers NuGet's one-to-four numeric components plus prerelease/build
+metadata; tag prefixes remain explicitly rejected. The hidden evaluator seam is
+test-only and lets malformed process output be exercised through the production
+boundary.
+
+## Verification
+
+**Commands:**
+
+- `pwsh -NoProfile -File ./Tools/validate-central-package-versions.ps1` in
+  Builds -- expected: all evaluated catalog entries pass.
+- `pwsh -NoProfile -File ./Tools/test-central-package-version-validator.ps1`
+  in Builds -- expected: all focused fixtures pass.
+- Existing Builds Dapr validator and fixture commands -- expected: no regression.
+- `actionlint .github/workflows/build-release.yml` -- expected: workflow valid.
+- `scripts/gitlink-rc-gate.sh --diff origin/main` after the parent commit --
+  expected: exact Builds bump is signed and accepted.
+- `dotnet restore Hexalith.Parties.slnx` -- expected: success without overrides.
+- `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore
+  -warnaserror` -- expected: zero warnings and errors.
+- `python3 scripts/pack-release-packages.py ./nupkgs 0.0.0-ci-test && python3
+  scripts/validate-nuget-packages.py ./nupkgs && python3
+  scripts/validate-consumer-package-references.py ./nupkgs` -- expected: package
+  generation, metadata, and both package-only consumers pass.
+- CI contract, unit, and integration test lanes -- expected: all pass.
+- Builds run `29480773799` and the resulting Parties Actions run -- expected:
+  successful conclusions.
+
+**Observed local results:**
+
+- Restore succeeds without the diagnostic property override that was required
+  to isolate the original failure.
+- The documented serial Release build (`-m:1`) succeeds with zero warnings and
+  errors. An initial parallel attempt encountered two EventStore output-file
+  locks; the prescribed serial parity command removed that local contention.
+- All 9 Parties packages, NuGet metadata, and both package-only consumers pass.
+- All 11 Tier 1 projects pass (1,649 tests); Sample passes 58 tests; CI contracts
+  pass 16 tests.
+- `Hexalith.Parties.Tests` separately reports seven Story 8.3 prerequisite-matrix
+  fitness failures against unchanged root planning evidence and then exceeds the
+  shared job's 15-minute boundary. These assertions are outside the Builds
+  catalog/gitlink change; the pushed clean-checkout run is retained as the
+  authoritative full-workflow result rather than masking them here.
+
+## Suggested Review Order
+
+1. Confirm the released source normalization at Builds `7cd855c`.
+2. Review validator failure semantics and fixture matrix at `6516faf`.
+3. Confirm release-workflow ordering before `Create Release`.
+4. Confirm the Parties gitlink and signoff use the same immutable SHA.
+5. Review exact local and remote CI evidence before closing this spec.
