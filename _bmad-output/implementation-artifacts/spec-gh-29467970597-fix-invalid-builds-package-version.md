@@ -88,6 +88,11 @@ Memories pointer change.
 - [x] Require a successful Builds workflow for guard commit `6516faf` (release
   run `29480773799`, including both new and both existing validation steps).
 - [x] Advance the Parties Builds gitlink and signoff to the pushed guard commit.
+- [x] Correct the post-restore MTP runner contract exposed by Parties run
+  `29482004796`: retain VSTest as the shared default, add explicit
+  `microsoft-testing-platform` routing, emit MTP-native TRX, and use xUnit v3
+  trait filters for Aspire/performance lanes. Builds run `29482625063` passes
+  the new shared-workflow contract gate and publishes `v4.19.0`.
 - [x] Pass the affected local CI path: restore, serial Release build with
   warnings-as-errors, package generation/metadata/consumer validation, all
   Tier 1 projects, Sample tests, and CI contract tests.
@@ -115,6 +120,12 @@ Memories pointer change.
   `v4.18.11` landed the source normalization concurrently. Implementation keeps
   that immutable fix, adds the approved preventive guard in `6516faf`, and does
   not duplicate or rewrite the released correction.
+- 2026-07-16 -- Clean Parties run `29482004796` passed the repaired restore,
+  Release build, and package-consumer gates, then failed before executing Tier 1
+  because the shared workflow passed unsupported VSTest `--logger`/`--collect`
+  options to an MTP-selected repository. Builds `v4.19.0` adds an explicit,
+  backward-compatible test-platform contract and a 20-assertion release guard;
+  Parties opts into MTP without removing tests or evidence.
 
 ## Design Notes
 
@@ -163,6 +174,10 @@ boundary.
   shared job's 15-minute boundary. These assertions are outside the Builds
   catalog/gitlink change; the pushed clean-checkout run is retained as the
   authoritative full-workflow result rather than masking them here.
+- Parties run `29482004796` confirms the original repair remotely: Restore,
+  Release Build, and package-consumer validation all pass. Its Tier 1 command
+  exits before test discovery because VSTest-only arguments are rejected by
+  MTP; that follow-up is corrected in Builds `v4.19.0` and the caller workflows.
 
 ## Suggested Review Order
 

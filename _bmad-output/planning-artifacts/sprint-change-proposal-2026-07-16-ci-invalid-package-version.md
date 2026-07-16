@@ -409,6 +409,13 @@ commit `7cd855c` and release `v4.18.11` landed the source normalization. The
 approved implementation retains that correction and adds the preventive release
 guard at pushed Builds commit `6516faf` before parent adoption.
 
+Post-adoption evidence: Parties run `29482004796` passed Restore, Release Build,
+and package-consumer validation, then exposed a separate shared runner-contract
+defect: VSTest-only evidence arguments were sent to Microsoft.Testing.Platform.
+The implementation therefore adds an explicit backward-compatible test-platform
+route in Builds `v4.19.0` and opts Parties into MTP-native TRX/trait arguments;
+no test tier is removed or weakened.
+
 | Item | Status | Finding |
 | --- | --- | --- |
 | 1.1 Triggering story/work | [x] Done | CI/package-validation bugfix stream plus root submodule adoption exposed the recorded Builds defect. |

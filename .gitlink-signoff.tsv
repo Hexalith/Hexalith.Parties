@@ -33,5 +33,10 @@ references/Hexalith.Builds|2b7aec1fd1ba254900ccf715bd8fec5d54f0c37e|validated-ad
 #     adds the pre-release evaluated central-version guard and fixtures approved
 #     for parent adoption. ---
 references/Hexalith.Builds|6516faffa84c6762f85823fca5ad9eb4e6fde5de|validated-advance|v4.18.11-1-g6516faf|jpiquot|2026-07-16
+# --- 2026-07-16 MTP CI follow-up: clean run 29482004796 proved restore/build/
+#     package green, then exposed VSTest-only arguments in the shared test lanes.
+#     Builds v4.19.0 adds the backward-compatible test-platform contract and
+#     keeps VSTest as the default while Parties opts into MTP-native evidence. ---
+references/Hexalith.Builds|640b59c1434e4e1e079771c401e11048772c7a27|validated-advance|v4.19.0|jpiquot|2026-07-16
 references/Hexalith.Tenants|8d1a5bd760310a724dd35649aea478d364a2c89a|validated-advance|v2.3.0-9-g8d1a5bd|jpiquot|2026-07-07
 references/Hexalith.EventStore|1627190e515c1189a48acf3c5b599500fa6c8ba1|validated-advance|v3.45.0|jpiquot|2026-07-07

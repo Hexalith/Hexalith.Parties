@@ -23,6 +23,11 @@ The shared CI workflow restores and builds `Hexalith.Parties.slnx`, initializes 
 
 Coverage is intentionally not enabled yet in `ci.yml`; the local `coverage` lane is still blocked under the current Microsoft.Testing.Platform/xUnit v3 setup until an MTP-compatible coverage path is configured.
 
+Both CI and release explicitly select the shared workflow's
+`microsoft-testing-platform` command contract. Test evidence uses the xUnit v3
+MTP-native TRX reporter; VSTest-only `--logger` and `--collect` options are not
+passed to Parties test executables.
+
 ## Release
 
 Release runs on pushes to `main` through semantic-release. The release workflow:

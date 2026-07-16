@@ -15,6 +15,7 @@ jobs:
     with:
       solution: Hexalith.Parties.slnx
       dapr-version: '1.18.0'
+      test-platform: microsoft-testing-platform
       publish-containers: true
       container-projects: |
         src/Hexalith.Parties/Hexalith.Parties.csproj|parties

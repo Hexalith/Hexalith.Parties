@@ -9,6 +9,7 @@ public sealed class PartiesContainerPublishWorkflowTests
 
         workflow.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main");
         workflow.ShouldContain("solution: Hexalith.Parties.slnx");
+        workflow.ShouldContain("test-platform: microsoft-testing-platform");
         workflow.ShouldContain("run-consumer-validation: true");
         workflow.ShouldContain("run-coverage-gate: false");
         workflow.ShouldContain("tests/Hexalith.Parties.Contracts.Tests");
@@ -27,6 +28,13 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain("tests/Hexalith.Parties.Ci.Tests");
         workflow.ShouldContain("aspire-test-project: tests/Hexalith.Parties.IntegrationTests");
         workflow.ShouldNotContain("submodules: recursive");
+
+        string sharedWorkflow = CiTestPaths.ReadRepoFile("references/Hexalith.Builds/.github/workflows/domain-ci.yml");
+        sharedWorkflow.ShouldContain("default: 'vstest'");
+        sharedWorkflow.ShouldContain("inputs.test-platform == 'microsoft-testing-platform'");
+        sharedWorkflow.ShouldContain("--report-xunit-trx");
+        sharedWorkflow.ShouldContain("--filter-not-trait");
+        sharedWorkflow.ShouldContain("--filter-trait");
     }
 
     [Fact]
@@ -35,6 +43,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml");
 
         workflow.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@main");
+        workflow.ShouldContain("test-platform: microsoft-testing-platform");
         workflow.ShouldContain("publish-containers: true");
         workflow.ShouldContain("src/Hexalith.Parties/Hexalith.Parties.csproj|parties");
         workflow.ShouldContain("src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj|parties-mcp");
@@ -46,6 +55,11 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldNotContain("|tenants");
         workflow.ShouldNotContain("|memories");
         workflow.ShouldNotContain(":latest");
+
+        string sharedWorkflow = CiTestPaths.ReadRepoFile("references/Hexalith.Builds/.github/workflows/domain-release.yml");
+        sharedWorkflow.ShouldContain("default: 'vstest'");
+        sharedWorkflow.ShouldContain("inputs.test-platform == 'microsoft-testing-platform'");
+        sharedWorkflow.ShouldContain("--report-xunit-trx");
     }
 
     [Fact]
