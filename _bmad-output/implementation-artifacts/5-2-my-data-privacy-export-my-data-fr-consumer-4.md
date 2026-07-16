@@ -208,7 +208,7 @@ so that I can keep it or move it elsewhere.
 - Microsoft Learn's current Blazor file-download guidance says small files, typically under 250 MB, can be downloaded by streaming to the client with JS interop, while large files should use a URL-based approach. Story 5.2 should use the stream/JS interop pattern for the current in-memory JSON bytes and avoid adding a public URL endpoint. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/file-downloads?view=aspnetcore-10.0`]
 - The same guidance warns that the stream approach reads content into a JS `ArrayBuffer`, so the UI must not use it for arbitrarily large future exports; the architecture's future slow/large async path should converge on a URL/download-ready contract only when an authoritative backend contract exists. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/file-downloads?view=aspnetcore-10.0`]
 - Microsoft Learn's current file-download example revokes the object URL after triggering the anchor click. The Consumer helper must do the same to avoid client memory leaks. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/file-downloads?view=aspnetcore-10.0`]
-- No package upgrade is required. Use the pinned local stack: .NET SDK `10.0.300`, FluentUI Blazor `5.0.0-rc.3`, xUnit v3, bUnit, Shouldly, and NSubstitute. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
+- No package upgrade is required. Use the pinned local stack: .NET SDK `10.0.302`, FluentUI Blazor `5.0.0-rc.3`, xUnit v3, bUnit, Shouldly, and NSubstitute. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
 
 ### Project Structure Notes
 

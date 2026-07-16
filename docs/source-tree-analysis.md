@@ -8,7 +8,7 @@ Hexalith.Parties/
 ├── Directory.Build.props              # net10.0, Nullable, ImplicitUsings, TreatWarningsAsErrors=true, MinVer
 ├── Directory.Build.targets            # shared MSBuild targets
 ├── Directory.Packages.props           # central package versions (ManagePackageVersionsCentrally)
-├── global.json                        # .NET SDK pin 10.0.301 (rollForward latestPatch)
+├── global.json                        # .NET SDK pin 10.0.302 (rollForward latestPatch)
 ├── aspire.config.json                 # points Aspire tooling at the AppHost csproj
 ├── .config/dotnet-tools.json          # local tools (aspirate 9.1.0)
 ├── .gitmodules                        # root-level Hexalith submodules under references/

@@ -164,7 +164,7 @@ so that my self-service pages are reachable and protected.
 
 - Current ASP.NET Core Blazor docs state that routable components from an RCL must have the RCL assembly disclosed to the app router through `Router.AdditionalAssemblies`; this matches the existing AdminPortal pattern and is required for ConsumerPortal. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/components/class-libraries?view=aspnetcore-10.0#make-routable-components-available-from-the-rcl`]
 - The same Microsoft Learn RCL guidance confirms components and static assets from an RCL are consumed through project references/assemblies; CSS isolation is bundled automatically. Use normal RCL patterns rather than custom static-asset plumbing unless ConsumerPortal adds global non-isolated CSS. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/components/class-libraries?view=aspnetcore-10.0`]
-- No package upgrade is required. Use the pinned local stack: .NET 10 SDK `10.0.300`, FluentUI Blazor `5.0.0-rc.3`, FrontComposer Shell, xUnit v3, Shouldly, NSubstitute, and bUnit. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
+- No package upgrade is required. Use the pinned local stack: .NET 10 SDK `10.0.302`, FluentUI Blazor `5.0.0-rc.3`, FrontComposer Shell, xUnit v3, Shouldly, NSubstitute, and bUnit. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
 
 ### Project Structure Notes
 

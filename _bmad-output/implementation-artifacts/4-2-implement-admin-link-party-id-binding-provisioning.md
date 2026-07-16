@@ -161,7 +161,7 @@ so that consumers can be provisioned and the Consumer area becomes reachable.
 
 ### Latest Technical Information
 
-- No package upgrade or external dependency research is required for this story. Use the pinned local stack: .NET 10 SDK `10.0.300`, FluentUI Blazor `5.0.0-rc.3`, Microsoft OIDC packages `10.0.8`, xUnit v3, Shouldly, NSubstitute, and bUnit. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
+- No package upgrade or external dependency research is required for this story. Use the pinned local stack: .NET 10 SDK `10.0.302`, FluentUI Blazor `5.0.0-rc.3`, Microsoft OIDC packages `10.0.8`, xUnit v3, Shouldly, NSubstitute, and bUnit. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
 - Keycloak/tache requirements are local contract requirements from the accepted ADR and committed realm import: user attribute `party_id` -> claim `party_id`, single-valued, emitted to token surfaces used by the host. Do not add a generic Keycloak library or version bump unless implementation proves it is necessary and central package management is updated deliberately. [Source: `_bmad-output/planning-artifacts/adr-consumer-party-id-binding.md#Selected-Mechanism`]
 
 ### Project Structure Notes

@@ -126,8 +126,8 @@ so that Parties keeps only domain folds, query semantics, and tenant guardrails.
 
 ### Technical Stack and Current External Facts
 
-- Local project rules win over external versions: use .NET SDK `10.0.301`, `net10.0`, C# 14, Dapr packages pinned by the repo, Fluent UI Blazor pinned by the repo, xUnit v3, Shouldly, NSubstitute, and Microsoft Testing Platform.
-- Official .NET 10 release notes currently list SDK `10.0.301` as the June 2026 servicing SDK and .NET 10 LTS support through November 14, 2028; do not upgrade as part of this story. [Source: https://github.com/dotnet/core/blob/main/release-notes/10.0/README.md]
+- Local project rules win over external versions: use .NET SDK `10.0.302`, `net10.0`, C# 14, Dapr packages pinned by the repo, Fluent UI Blazor pinned by the repo, xUnit v3, Shouldly, NSubstitute, and Microsoft Testing Platform.
+- Official .NET 10 release notes currently list SDK `10.0.302` as the June 2026 servicing SDK and .NET 10 LTS support through November 14, 2028; do not upgrade as part of this story. [Source: https://github.com/dotnet/core/blob/main/release-notes/10.0/README.md]
 - Dapr official support policy supports the current and previous two minor versions; Dapr 1.18 is current-era, but this repo's Dapr package pin remains authoritative and must not be independently bumped. [Source: https://docs.dapr.io/operations/support/support-release-policy/]
 - xUnit v3 supports Microsoft Testing Platform and direct test executable execution; use the repo's direct EXE approach for focused `-class` runs because `dotnet test --filter` can silently run zero tests in this workspace. [Source: https://xunit.net/docs/getting-started/v3/microsoft-testing-platform]
 

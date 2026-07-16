@@ -20,7 +20,7 @@
 | **Test** | `pwsh -NoProfile -File scripts/test.ps1 -Lane {unit\|integration\|topology\|ci\|all\|coverage}` or `dotnet test tests/<Project>/<Project>.csproj`. Blocked-lane triage: add `-ContinueOnFailure` (report every failing project) and `-ResultsDirectory TestResults` (inspectable TRX) — see the fallback validation ladder in [development-guide.md](./development-guide.md) |
 | **Entry points** | AppHost `Program.cs` (dev) · `Hexalith.Parties/Program.cs` → `/process` · `Hexalith.Parties.Mcp/Program.cs` → `/mcp` |
 | **Domain logic** | `src/Hexalith.Parties/Domain/PartyAggregate.cs` |
-| **Prereqs** | .NET 10 SDK 10.0.301, Docker Desktop; root build submodules under `references/` |
+| **Prereqs** | .NET 10 SDK 10.0.302, Docker Desktop; root build submodules under `references/` |
 
 ## Generated documentation (this scan)
 

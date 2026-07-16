@@ -6,7 +6,7 @@
 
 | Tool | Version |
 |------|---------|
-| .NET SDK | **10.0.301** (pinned in `global.json`, rollForward latestPatch) |
+| .NET SDK | **10.0.302** (pinned in `global.json`, rollForward latestPatch) |
 | Docker Desktop | latest (must be running before Aspire) |
 | Node.js | **24+** for the Playwright accessibility workspace under `tests/e2e` |
 | Git | recent |

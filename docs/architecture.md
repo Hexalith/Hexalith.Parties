@@ -13,7 +13,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Attribute | Value |
 |-----------|-------|
 | Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), 15 source projects + 16 test/e2e folders |
-| Primary language | C# / **.NET 10** (SDK pinned `10.0.301`) |
+| Primary language | C# / **.NET 10** (SDK pinned `10.0.302`) |
 | Architecture style | Event sourcing + CQRS + DAPR actors, gateway-fronted (EventStore) |
 | Orchestration | .NET Aspire 13.4 (`dotnet aspire run`) |
 | Eventing | DAPR pub/sub (Redis local; Kafka/RabbitMQ/Service Bus in prod) |
@@ -51,7 +51,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 
 | Category | Technology | Version |
 |----------|-----------|---------|
-| Runtime | .NET | `net10.0` (SDK `10.0.301`, rollForward latestPatch) |
+| Runtime | .NET | `net10.0` (SDK `10.0.302`, rollForward latestPatch) |
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.4.0` (AppHost **SDK** still pinned `13.3.3` — skew, see note) |
 | Actors & pub/sub | `Dapr.Actors` / `Dapr.Client` | `1.18.0-rc02` |
 | | `Dapr.AspNetCore` / `Dapr.Actors.AspNetCore` | `1.17.9` |

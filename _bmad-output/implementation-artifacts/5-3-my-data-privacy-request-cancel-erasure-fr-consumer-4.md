@@ -232,7 +232,7 @@ so that I understand exactly what will happen.
 - Microsoft Learn's current Blazor lifecycle guidance says a component must be left in a valid render state before awaiting incomplete lifecycle work. Use this for erasure status load/request/cancel flows so `/me/privacy` never renders a broken intermediate state. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/components/lifecycle?view=aspnetcore-10.0`]
 - Microsoft Learn's Blazor DI guidance keeps server-side Scoped services circuit-scoped. Keep erasure adapters Scoped and compatible with `ValidateScopes=true`; never capture self-scoped services from singletons. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/fundamentals/dependency-injection?view=aspnetcore-10.0`]
 - Microsoft Learn's current Blazor download guidance from Story 5.2 remains relevant because `/me/privacy` keeps export behavior: stream downloads are for relatively small files and object URLs must be revoked. Do not change export download architecture in this erasure story. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/file-downloads?view=aspnetcore-10.0`]
-- No package upgrade is required. Use the pinned local stack: .NET SDK `10.0.300`, FluentUI Blazor `5.0.0-rc.3`, xUnit v3, bUnit, Shouldly, and NSubstitute. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
+- No package upgrade is required. Use the pinned local stack: .NET SDK `10.0.302`, FluentUI Blazor `5.0.0-rc.3`, xUnit v3, bUnit, Shouldly, and NSubstitute. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
 
 ### Project Structure Notes
 

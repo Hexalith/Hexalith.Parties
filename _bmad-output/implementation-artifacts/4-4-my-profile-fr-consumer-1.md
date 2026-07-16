@@ -177,7 +177,7 @@ so that I know what is held about me.
 - Microsoft Learn's current Blazor lifecycle guidance says a component awaiting incomplete async work in `OnInitializedAsync` must first leave itself in a valid render state. Apply that to `/me`: set loading state before awaiting profile data. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/components/lifecycle?view=aspnetcore-10.0`]
 - Blazor DI supports `@inject` property injection and constructor injection for services registered in the app service collection. Use normal DI for the ConsumerPortal profile data port; keep service lifetimes compatible with the host's Scoped self-scope accessor. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/fundamentals/dependency-injection?view=aspnetcore-10.0`]
 - Microsoft Learn's RCL guidance confirms CSS isolation is bundled automatically for library components and routable RCL components must be disclosed through `Router.AdditionalAssemblies`. Story 4.3 already wired the assembly; Story 4.4 should use ordinary RCL component/CSS patterns, not custom static asset plumbing. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/components/class-libraries?view=aspnetcore-10.0`]
-- No package upgrade is required. Use the pinned local stack: .NET 10 SDK `10.0.300`, FluentUI Blazor `5.0.0-rc.3`, FrontComposer Shell, xUnit v3, Shouldly, NSubstitute, and bUnit. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
+- No package upgrade is required. Use the pinned local stack: .NET 10 SDK `10.0.302`, FluentUI Blazor `5.0.0-rc.3`, FrontComposer Shell, xUnit v3, Shouldly, NSubstitute, and bUnit. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
 
 ### Project Structure Notes
 

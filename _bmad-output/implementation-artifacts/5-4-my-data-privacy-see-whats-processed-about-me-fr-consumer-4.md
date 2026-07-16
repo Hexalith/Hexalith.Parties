@@ -159,7 +159,7 @@ so that I have transparency over my data.
 - Microsoft Learn's current Blazor lifecycle guidance says a component must be left in a valid render state before awaiting incomplete lifecycle work. Use this for processing-record load so `/me/privacy` renders a bounded intermediate state. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/components/lifecycle?view=aspnetcore-10.0`]
 - Microsoft Learn's Blazor DI guidance says server-side Scoped services are circuit-scoped and not reconstructed during client-side navigation. Keep the processing adapter Scoped and do not capture it from singletons. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/fundamentals/dependency-injection?view=aspnetcore-10.0`]
 - Microsoft Learn's routing guidance confirms route templates are component-level concerns. Keep the full consent surface at the existing `/me/consent` route and link to it directly; do not create a duplicate privacy sub-route for consent. [Source: `https://learn.microsoft.com/en-us/aspnet/core/blazor/fundamentals/routing?view=aspnetcore-10.0`]
-- No package upgrade is required. Use the pinned local stack: .NET SDK `10.0.300`, FluentUI Blazor `5.0.0-rc.3`, xUnit v3, bUnit, Shouldly, and NSubstitute. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
+- No package upgrade is required. Use the pinned local stack: .NET SDK `10.0.302`, FluentUI Blazor `5.0.0-rc.3`, xUnit v3, bUnit, Shouldly, and NSubstitute. [Source: `_bmad-output/project-context.md#Technology-Stack--Versions`]
 
 ### Project Structure Notes
 

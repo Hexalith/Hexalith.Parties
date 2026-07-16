@@ -243,7 +243,7 @@ builder.Services.AddHexalithDomain<PartiesUiDomainMarker>();
 
 **Architectural Decisions Provided by the Starter (inherited, not re-decided):**
 
-- **Language & Runtime:** C# / .NET 10 (`net10.0`, SDK `10.0.300`); `Microsoft.NET.Sdk.Web` host; **Interactive Server** render mode (the Counter.Web / eventstore-admin-ui precedent — WASM vs Server confirmed in step-04).
+- **Language & Runtime:** C# / .NET 10 (`net10.0`, SDK `10.0.302`); `Microsoft.NET.Sdk.Web` host; **Interactive Server** render mode (the Counter.Web / eventstore-admin-ui precedent — WASM vs Server confirmed in step-04).
 - **Styling:** FluentUI V5 (Fluent 2) design tokens via the shell; theme through `IThemeService` / design-token API; **brand-delta only** (no Tailwind/CSS framework; never hard-code or redeclare Fluent custom properties).
 - **Build Tooling:** .NET SDK build under solution-wide `TreatWarningsAsErrors`; Central Package Management (no `Version=` in csproj); FrontComposer **SourceTools** incremental generator wired as an analyzer (generates Feature/Actions/Reducers/Registration + command forms from `[Projection]`/`[Command]`; never hand-edit generated output).
 - **State Management:** Fluxor (`Fluxor.Blazor.Web`) — single-writer-per-slice discipline (ADR-007); effects own persistence/JS interop, reducers pure; scoped-lifetime discipline (ADR-030, `ValidateScopes=true`).

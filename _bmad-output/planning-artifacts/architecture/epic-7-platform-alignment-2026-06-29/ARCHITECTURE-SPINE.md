@@ -137,7 +137,7 @@ erasure, and operational signals are unchanged or intentionally versioned.
 
 | Name | Version |
 | --- | --- |
-| .NET SDK | 10.0.301 in Parties project context |
+| .NET SDK | 10.0.302 in Parties project context |
 | Target framework | net10.0 |
 | Dapr packages | 1.18.4 in Parties |
 | Aspire packages | 13.4.6 in Parties |

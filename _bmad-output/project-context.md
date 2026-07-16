@@ -19,7 +19,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ## Technology Stack & Versions
 
 **Runtime & build (pinned — do not bump casually):**
-- C# / **.NET 10** — `net10.0` TFM, SDK `10.0.301` pinned in `global.json` (`rollForward: latestPatch`).
+- C# / **.NET 10** — `net10.0` TFM, SDK `10.0.302` pinned in `global.json` (`rollForward: latestPatch`).
   `global.json` also sets `test.runner: Microsoft.Testing.Platform` (MTP) — tests run under MTP, not the
   classic VSTest host (affects how the test EXEs are invoked).
 - **Central Package Management is ON.** All versions live in `Directory.Packages.props`. Project
