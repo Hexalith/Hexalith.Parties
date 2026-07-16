@@ -3,6 +3,9 @@
   <PropertyGroup>
     <PackageId>Hexalith.Parties.ConsumerPortal</PackageId>
     <Description>FrontComposer-hosted Blazor consumer portal for Hexalith.Parties.</Description>
+    <!-- NU5104: this package intentionally composes FrontComposer.Shell 4.0.0, whose public
+         dependency graph is pinned to Fluent UI v5 RC until that upstream surface reaches GA. -->
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

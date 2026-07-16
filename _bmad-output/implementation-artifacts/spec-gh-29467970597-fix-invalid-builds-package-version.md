@@ -78,6 +78,10 @@ Memories pointer change.
   collaborators while preserving message identity and status lifecycle proof.
 - `tests/Hexalith.Parties.Tests/Search/LocalFuzzySearchPerformanceBenchmarkTests.cs`
   -- runs strict wall-clock search benchmarks without parallel test contention.
+- `src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj` and
+  `src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj`
+  -- scope the documented NU5104 exception to the two published RCLs whose
+  FrontComposer dependency graph intentionally carries Fluent UI v5 RC.
 - `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`
   -- records the accepted G4/G8/G11 ownership, proof, and rollback invariants
   exercised by the fitness tests.
@@ -115,6 +119,11 @@ Memories pointer change.
   benchmark noise exposed by Release run `29484894219`; the performance
   collection runs non-parallel instead of relaxing the threshold or skipping
   the test.
+- [x] Correct stable package preparation exposed by Release run `29485587073`:
+  retain the FrontComposer/Fluent UI v5 dependency contract and scope the
+  existing ecosystem NU5104 policy to the AdminPortal and ConsumerPortal
+  packages instead of dropping packages, mislabeling versions, or weakening
+  warnings-as-errors globally.
 - [ ] Require the resulting Parties remote Actions run to pass the complete
   clean-checkout workflow.
 - [x] Close the invalid-version deferred entry without changing the two Memories
@@ -156,6 +165,13 @@ Memories pointer change.
   wall-clock benchmark competing with the other 575 tests: it measured 632 ms
   remotely versus 89–239 ms in local full-suite runs. The benchmark retains its
   500 ms limit and now runs in a non-parallel xUnit collection.
+- 2026-07-16 -- CI run `29485584044` passed build/test and Aspire Tier 3, and
+  Release run `29485587073` passed all 14 test projects, proving the benchmark
+  isolation. Semantic-release then exposed stable package preparation failing
+  with NU5104 for the published portal RCLs because FrontComposer 4.0.0 pins
+  Fluent UI v5 RC. The portal projects now mirror FrontComposer's narrow,
+  documented exception; a local stable `1.0.0` pack and both package-only
+  consumers pass with zero build warnings or errors.
 
 ## Design Notes
 
@@ -197,6 +213,9 @@ boundary.
   errors. An initial parallel attempt encountered two EventStore output-file
   locks; the prescribed serial parity command removed that local contention.
 - All 9 Parties packages, NuGet metadata, and both package-only consumers pass.
+- The exact semantic-release stable version `1.0.0` also packs and validates all
+  9 packages after the portal-scoped NU5104 policy; both isolated consumers
+  restore/build with zero warnings and errors.
 - All 11 Tier 1 projects pass (1,649 tests); Sample passes 58 tests; CI contracts
   pass 16 tests.
 - `Hexalith.Parties.Tests` passes all 576 tests in about six seconds after the
@@ -212,6 +231,11 @@ boundary.
   build, package-consumer validation, and all 1,649 Tier 1 tests pass. Its Tier 2
   timeout is the direct regression evidence for the isolated gateway and matrix
   follow-up now passing locally; a new clean run remains the closure gate.
+- Parties CI run `29485584044` is fully successful, including build/test and
+  Aspire Tier 3. Its concurrent Release run `29485587073` passes the full test
+  inventory and fails only during semantic-release's stable package preparation;
+  the portal-scoped packaging follow-up now passes the exact local release
+  command, and the next clean Release run remains the closure gate.
 
 ## Suggested Review Order
 

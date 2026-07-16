@@ -431,6 +431,15 @@ measurements were 89–239 ms and CI passed the same hard gate. The implementati
 therefore isolates the wall-clock benchmark in a non-parallel xUnit collection;
 the 500 ms threshold and release test inventory remain unchanged.
 
+Follow-up release evidence: CI run `29485584044` and CodeQL run `29485587422`
+are fully successful. Release run `29485587073` passes all 14 test projects,
+proving the benchmark isolation, then exposes NU5104 while semantic-release
+packs stable portal RCLs that intentionally compose FrontComposer 4.0.0 and its
+Fluent UI v5 RC dependency graph. Parties mirrors FrontComposer's existing
+narrow project-level exception on AdminPortal and ConsumerPortal only; local
+stable `1.0.0` packing, nine-package validation, and both package-only consumer
+builds now pass without a global warning override or package inventory change.
+
 | Item | Status | Finding |
 | --- | --- | --- |
 | 1.1 Triggering story/work | [x] Done | CI/package-validation bugfix stream plus root submodule adoption exposed the recorded Builds defect. |
@@ -444,7 +453,7 @@ the 500 ms threshold and release test inventory remain unchanged.
 | 3.1 PRD conflict | [N/A] Skip | No product/MVP impact. |
 | 3.2 Architecture conflict | [x] Done | Existing shared ownership and gitlink governance apply; no architecture edit. |
 | 3.3 UX conflict | [N/A] Skip | No UI/UX impact. |
-| 3.4 Other artifacts | [!] Action-needed | Builds catalog/validation, incident spec, parent gitlink/signoff, deferred ledger, and CI evidence. |
+| 3.4 Other artifacts | [x] Done | Builds catalog/validation, incident spec, parent gitlink/signoff, deferred ledger, portal packaging policy, and CI evidence are updated. |
 | 4.1 Direct adjustment | [x] Viable | Low effort/risk; durable shared-source fix. |
 | 4.2 Potential rollback | [x] Not recommended | Emergency fallback only; discards later advances and leaves shared main broken. |
 | 4.3 MVP review | [x] Not viable | Not applicable to build metadata. |
@@ -458,4 +467,4 @@ the 500 ms threshold and release test inventory remain unchanged.
 | 6.2 Proposal accuracy | [x] Done | Root cause is directly reproduced and corrected-value restore is proven. |
 | 6.3 User approval | [x] Done | Administrator approved implementation on 2026-07-16. |
 | 6.4 Sprint-status update | [N/A] Skip | No epic/story rows added, removed, or renumbered. |
-| 6.5 Next steps/handoff | [!] Action-needed | Confirm on approval, then route to implementation in dependency order. |
+| 6.5 Next steps/handoff | [!] Action-needed | Monitor the final clean CI, Release, and CodeQL runs, then record closure evidence. |
