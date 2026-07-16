@@ -2,7 +2,7 @@
 title: 'Fix invalid Builds package version blocking CI restore'
 type: 'bugfix'
 created: '2026-07-16'
-status: 'in-progress'
+status: 'done'
 review_loop_iteration: 0
 baseline_commit: 'c715eae7114d8befe1ba120793d269661dd7bc4f'
 source_run: 'https://github.com/Hexalith/Hexalith.Parties/actions/runs/29467970597'
@@ -124,7 +124,7 @@ Memories pointer change.
   existing ecosystem NU5104 policy to the AdminPortal and ConsumerPortal
   packages instead of dropping packages, mislabeling versions, or weakening
   warnings-as-errors globally.
-- [ ] Require the resulting Parties remote Actions run to pass the complete
+- [x] Require the resulting Parties remote Actions run to pass the complete
   clean-checkout workflow.
 - [x] Close the invalid-version deferred entry without changing the two Memories
   review entries.
@@ -172,6 +172,10 @@ Memories pointer change.
   Fluent UI v5 RC. The portal projects now mirror FrontComposer's narrow,
   documented exception; a local stable `1.0.0` pack and both package-only
   consumers pass with zero build warnings or errors.
+- 2026-07-16 -- Final commit `1faf5e4` passes CI `29486616841`, Release
+  `29486616856`, and CodeQL `29486616859`. Semantic-release publishes `v1.0.0`
+  with all nine NuGet assets and the configured Parties container set. The
+  original restore failure and every follow-up gate are closed.
 
 ## Design Notes
 
@@ -230,12 +234,15 @@ boundary.
 - Parties run `29482841788` confirms Builds `v4.19.0` remotely: restore, Release
   build, package-consumer validation, and all 1,649 Tier 1 tests pass. Its Tier 2
   timeout is the direct regression evidence for the isolated gateway and matrix
-  follow-up now passing locally; a new clean run remains the closure gate.
+  follow-up subsequently proven by the final clean run.
 - Parties CI run `29485584044` is fully successful, including build/test and
   Aspire Tier 3. Its concurrent Release run `29485587073` passes the full test
   inventory and fails only during semantic-release's stable package preparation;
-  the portal-scoped packaging follow-up now passes the exact local release
-  command, and the next clean Release run remains the closure gate.
+  the portal-scoped packaging follow-up passes the exact local release command.
+- Final Parties CI run `29486616841` passes clean restore, build, package-
+  consumer validation, Tier 1, Tier 2, and Aspire Tier 3. Release run
+  `29486616856` passes the full test inventory and semantic-release, publishing
+  `v1.0.0`; CodeQL run `29486616859` is also successful.
 
 ## Suggested Review Order
 

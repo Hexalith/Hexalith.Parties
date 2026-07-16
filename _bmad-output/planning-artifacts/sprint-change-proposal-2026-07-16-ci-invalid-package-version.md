@@ -9,7 +9,7 @@ status: approved
 approval_required: false
 approved_by: Administrator
 approved_at: 2026-07-16
-implementation_status: in_progress
+implementation_status: complete
 trigger: >
   GitHub Actions run 29467970597 fails during dotnet restore because
   Hexalith.Builds supplies the NuGet-invalid version string v1.16.3 for
@@ -17,6 +17,10 @@ trigger: >
 related:
   - https://github.com/Hexalith/Hexalith.Parties/actions/runs/29467970597
   - https://github.com/Hexalith/Hexalith.Parties/actions/runs/29468665570
+  - https://github.com/Hexalith/Hexalith.Parties/actions/runs/29486616841
+  - https://github.com/Hexalith/Hexalith.Parties/actions/runs/29486616856
+  - https://github.com/Hexalith/Hexalith.Parties/actions/runs/29486616859
+  - https://github.com/Hexalith/Hexalith.Parties/releases/tag/v1.0.0
   - _bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md
   - _bmad-output/implementation-artifacts/deferred-work.md
   - docs/ci.md
@@ -440,6 +444,12 @@ narrow project-level exception on AdminPortal and ConsumerPortal only; local
 stable `1.0.0` packing, nine-package validation, and both package-only consumer
 builds now pass without a global warning override or package inventory change.
 
+Closure evidence: root commit `1faf5e4` passes CI run `29486616841` (clean
+restore/build, package-consumer validation, Tier 1, Tier 2, and Aspire Tier 3),
+Release run `29486616856` (all 14 test projects plus successful semantic-release),
+and CodeQL run `29486616859`. Release `v1.0.0` is published with all nine NuGet
+assets and the configured Parties container set.
+
 | Item | Status | Finding |
 | --- | --- | --- |
 | 1.1 Triggering story/work | [x] Done | CI/package-validation bugfix stream plus root submodule adoption exposed the recorded Builds defect. |
@@ -467,4 +477,4 @@ builds now pass without a global warning override or package inventory change.
 | 6.2 Proposal accuracy | [x] Done | Root cause is directly reproduced and corrected-value restore is proven. |
 | 6.3 User approval | [x] Done | Administrator approved implementation on 2026-07-16. |
 | 6.4 Sprint-status update | [N/A] Skip | No epic/story rows added, removed, or renumbered. |
-| 6.5 Next steps/handoff | [!] Action-needed | Monitor the final clean CI, Release, and CodeQL runs, then record closure evidence. |
+| 6.5 Next steps/handoff | [x] Done | Final CI, Release, CodeQL, and published `v1.0.0` evidence recorded. |
