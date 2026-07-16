@@ -22,7 +22,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["EventStore client envelopes/freshness/error codes"] = ["8.6", "8.8", "8.9", "8.10"],
         ["Tenant claims transformation"] = ["8.4", "8.8", "8.10"],
         ["Aspire publish helpers"] = ["8.5", "8.8", "8.10"],
-        ["FrontComposer UI primitives"] = ["8.8", "8.9", "8.10"],
+        ["FrontComposer UI primitives"] = ["8.9", "8.10"],
         ["Commons HTTP helpers"] = ["8.8", "8.10"],
         ["Builds shared props/targets"] = ["8.8", "8.10"],
     };
@@ -57,9 +57,9 @@ public sealed class PlatformApiPrerequisitesTests
         ["EventStore client envelopes/freshness/error codes"] = ["IEventStoreGatewayClient", "QueryResponseMetadata", "QueryProblemReasonCodes", "GatewayProblemDetailsExtensions"],
         ["Tenant claims transformation"] = [PartiesClaimTypes.EventStoreTenant, "AggregateIdentity.IsValid(string)", "UniqueIdHelper.IsValidUlid(string)"],
         ["Aspire publish helpers"] = ["AddEventStoreDomainModule", "WithJwtBearerSecurity", "WithEventStoreJwtAuthentication(audience)", "AddEventStoreGatewayClient"],
-        ["FrontComposer UI primitives"] = ["FcAggregateListPage", "FcDestructiveConfirmationDialog", "ProjectionSubscriptionService"],
+        ["FrontComposer UI primitives"] = ["FcEntityPicker", "FcDestructiveConfirmationDialog", "FileDownload", "JsonDownload"],
         ["Commons HTTP helpers"] = ["HttpClientRegistration", "BoundedProblemDetailsReader", "HttpCorrelation"],
-        ["MCP, deep-link, and search probes"] = ["FrontComposerMcpDescriptorRegistry", "FrontComposerMcpTool", "tenant header relay"],
+        ["MCP, deep-link, and search probes"] = ["GetContext()", "IFrontComposerMcpTenantToolGate", "TryAddWithoutValidation", "BuildCorrelationLink", "GetRichSearchCapabilityAsync"],
         ["Builds shared props/targets"] = ["TreatWarningsAsErrors", "Directory.Packages.props"],
         ["Package publishing/source-mode CI"] = ["Hexalith.Commons.Http", "Hexalith.Commons.ServiceDefaults", "Hexalith.Tenants.Client", "Hexalith.Tenants.Testing"],
     };
@@ -84,7 +84,11 @@ public sealed class PlatformApiPrerequisitesTests
         ["Hexalith.EventStore"] = ["references/Hexalith.EventStore/"],
         ["Hexalith.EventStore.Aspire"] = ["references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/"],
         ["Hexalith.Commons"] = ["references/Hexalith.Commons/"],
+        ["Hexalith.Commons.Http"] = ["references/Hexalith.Commons/"],
         ["Hexalith.FrontComposer"] = ["references/Hexalith.FrontComposer/"],
+        ["Hexalith.FrontComposer.Contracts.UI"] = ["references/Hexalith.FrontComposer/"],
+        ["Hexalith.FrontComposer.Mcp"] = ["references/Hexalith.FrontComposer/"],
+        ["Hexalith.FrontComposer.Shell"] = ["references/Hexalith.FrontComposer/"],
         ["Hexalith.Builds"] = ["references/Hexalith.Builds/"],
         ["Hexalith.Tenants"] = ["references/Hexalith.Tenants/"],
         ["platform AppHost owners"] = ["references/Hexalith.FrontComposer/"],
@@ -264,6 +268,26 @@ public sealed class PlatformApiPrerequisitesTests
         "references/Hexalith.Tenants/",
     ];
 
+    private static readonly IReadOnlyDictionary<string, string[]> AdditionalContextEvidencePrefixes =
+        new Dictionary<string, string[]>(StringComparer.Ordinal)
+        {
+            ["Aspire publish helpers"] =
+            [
+                "src/Hexalith.Parties.AppHost/",
+                "src/Hexalith.Parties.Client/",
+            ],
+            ["FrontComposer UI primitives"] =
+            [
+                "src/Hexalith.Parties.AdminPortal/",
+                "src/Hexalith.Parties.ConsumerPortal/",
+                "src/Hexalith.Parties.Picker/",
+            ],
+            ["MCP, deep-link, and search probes"] =
+            [
+                "src/Hexalith.Parties.AdminPortal/",
+            ],
+        };
+
     [Fact]
     public void Matrix_ContainsRequiredRowsAndRequiredGapRows()
     {
@@ -356,7 +380,8 @@ public sealed class PlatformApiPrerequisitesTests
             {
                 bool isOwnerOrContextEvidence =
                     expectedPrefixes.Any(path => IsUnderPathPrefix(evidencePath, path)) ||
-                    AllowedContextEvidencePrefixes.Any(path => IsUnderPathPrefix(evidencePath, path));
+                    AllowedContextEvidencePrefixes.Any(path => IsUnderPathPrefix(evidencePath, path)) ||
+                    AdditionalContextPrefixes(row.Surface).Any(path => IsUnderPathPrefix(evidencePath, path));
 
                 isOwnerOrContextEvidence.ShouldBeTrue($"{row.Surface}: {evidencePath}");
             }
@@ -493,12 +518,12 @@ public sealed class PlatformApiPrerequisitesTests
 
         foreach (MatrixRow row in ReadRows().Values)
         {
-            (string Pattern, string[] Paths)[] commands = ExtractRgCommands(row.ValidationEvidence).ToArray();
+            (string Pattern, string[] Paths, bool ExpectMatch)[] commands = ExtractRgCommands(row.ValidationEvidence).ToArray();
             commands.ShouldNotBeEmpty(row.Surface);
 
-            foreach ((string pattern, string[] paths) in commands)
+            foreach ((string pattern, string[] paths, bool expectMatch) in commands)
             {
-                RunRg(root, pattern, paths);
+                AssertFixedStringSearch(root, pattern, paths, expectMatch);
             }
         }
     }
@@ -723,15 +748,24 @@ public sealed class PlatformApiPrerequisitesTests
 
     private static IEnumerable<string> OwnerSegments(string owner)
     {
-        foreach (string segment in owner.Split(" and ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        foreach (string rawGroup in owner.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
-            OwnerPrefixes.ContainsKey(segment).ShouldBeTrue($"Unknown owner segment: {segment}");
-            yield return segment;
+            string group = Regex.Replace(rawGroup, @"\s*\([^)]*\)\s*$", string.Empty, RegexOptions.CultureInvariant).Trim();
+            foreach (string segment in group.Split(" and ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                OwnerPrefixes.ContainsKey(segment).ShouldBeTrue($"Unknown owner segment: {segment}");
+                yield return segment;
+            }
         }
     }
 
     private static IEnumerable<string> ExcludedPrefixes(string ownerSegment)
         => ExcludedOwnerPrefixes.TryGetValue(ownerSegment, out string[]? prefixes)
+            ? prefixes
+            : [];
+
+    private static IEnumerable<string> AdditionalContextPrefixes(string surface)
+        => AdditionalContextEvidencePrefixes.TryGetValue(surface, out string[]? prefixes)
             ? prefixes
             : [];
 
@@ -892,38 +926,71 @@ public sealed class PlatformApiPrerequisitesTests
             $@"(?<![A-Za-z0-9]){Regex.Escape(token)}(?![A-Za-z0-9])",
             RegexOptions.CultureInvariant);
 
-    private static IEnumerable<(string Pattern, string[] Paths)> ExtractRgCommands(string validationEvidence)
+    private static IEnumerable<(string Pattern, string[] Paths, bool ExpectMatch)> ExtractRgCommands(string validationEvidence)
     {
         foreach (Match match in Regex.Matches(
             validationEvidence,
-            @"`rg\s+-n\s+-F\s+'(?<pattern>[^']+)'\s+(?<paths>[^`]+)`",
+            @"`rg\s+-n\s+-F\s+'(?<pattern>[^']+)'\s+(?<paths>[^`]+)`(?<noMatch>\s*\(expected no matches\))?",
             RegexOptions.CultureInvariant))
         {
             string[] paths = match.Groups["paths"].Value
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-            yield return (match.Groups["pattern"].Value, paths);
+            yield return (match.Groups["pattern"].Value, paths, !match.Groups["noMatch"].Success);
         }
     }
 
-    private static void RunRg(string root, string pattern, string[] paths)
+    private static void AssertFixedStringSearch(string root, string pattern, string[] paths, bool expectMatch)
     {
-        using var process = CreateProcess(root, "rg");
-        process.StartInfo.ArgumentList.Add("-n");
-        process.StartInfo.ArgumentList.Add("-F");
-        process.StartInfo.ArgumentList.Add(pattern);
+        string normalizedRoot = Path.GetFullPath(root);
+        List<string> matches = [];
 
         foreach (string path in paths)
         {
-            process.StartInfo.ArgumentList.Add(path);
+            string normalizedPath = NormalizeEvidencePath(normalizedRoot, path);
+            string fullPath = Path.Combine(normalizedRoot, normalizedPath);
+            (File.Exists(fullPath) || Directory.Exists(fullPath)).ShouldBeTrue(path);
+
+            IEnumerable<string> files = File.Exists(fullPath)
+                ? [fullPath]
+                : EnumerateSearchFiles(fullPath);
+
+            foreach (string file in files)
+            {
+                if (File.ReadAllText(file).Contains(pattern, StringComparison.Ordinal))
+                {
+                    matches.Add(Path.GetRelativePath(normalizedRoot, file).Replace(Path.DirectorySeparatorChar, '/'));
+                }
+            }
         }
 
-        process.Start().ShouldBeTrue();
-        string output = process.StandardOutput.ReadToEnd();
-        string error = process.StandardError.ReadToEnd();
-        process.WaitForExit();
+        bool hasMatches = matches.Count > 0;
+        hasMatches.ShouldBe(
+            expectMatch,
+            $"rg -n -F '{pattern}' {string.Join(' ', paths)}{Environment.NewLine}{string.Join(Environment.NewLine, matches)}");
+    }
 
-        process.ExitCode.ShouldBe(0, $"rg -n -F '{pattern}' {string.Join(' ', paths)}{Environment.NewLine}{output}{error}");
+    private static IEnumerable<string> EnumerateSearchFiles(string directory)
+    {
+        var pending = new Stack<string>();
+        pending.Push(directory);
+
+        while (pending.TryPop(out string? current))
+        {
+            foreach (string childDirectory in Directory.EnumerateDirectories(current))
+            {
+                string name = Path.GetFileName(childDirectory);
+                if (name is not ".git" and not "bin" and not "obj" and not "node_modules" and not "TestResults")
+                {
+                    pending.Push(childDirectory);
+                }
+            }
+
+            foreach (string file in Directory.EnumerateFiles(current))
+            {
+                yield return file;
+            }
+        }
     }
 
     private static string ToSearchableText(MatrixRow row)

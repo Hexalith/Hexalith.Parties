@@ -70,6 +70,15 @@ Memories pointer change.
 - `.gitlink-signoff.tsv` -- owner-authorized immutable Builds pointer.
 - `_bmad-output/implementation-artifacts/deferred-work.md` -- closes the exact
   warning that predicted this restore failure while retaining Memories entries.
+- `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs` --
+  keeps the Story 8.3 matrix contract portable and aligned with the approved
+  G4/G8/G11 routing decisions.
+- `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs` --
+  isolates gateway contract tests from newly registered Dapr-backed projection
+  collaborators while preserving message identity and status lifecycle proof.
+- `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`
+  -- records the accepted G4/G8/G11 ownership, proof, and rollback invariants
+  exercised by the fitness tests.
 
 ## Tasks & Acceptance
 
@@ -96,6 +105,10 @@ Memories pointer change.
 - [x] Pass the affected local CI path: restore, serial Release build with
   warnings-as-errors, package generation/metadata/consumer validation, all
   Tier 1 projects, Sample tests, and CI contract tests.
+- [x] Correct the Tier 2 failures exposed by clean run `29482841788`: reconcile
+  fitness contracts with the approved G4/G8/G11 planning changes, make fixed-
+  string evidence validation independent of runner-installed `rg`, and replace
+  Dapr-backed gateway test collaborators with isolated no-op/in-memory seams.
 - [ ] Require the resulting Parties remote Actions run to pass the complete
   clean-checkout workflow.
 - [x] Close the invalid-version deferred entry without changing the two Memories
@@ -126,6 +139,12 @@ Memories pointer change.
   options to an MTP-selected repository. Builds `v4.19.0` adds an explicit,
   backward-compatible test-platform contract and a 20-assertion release guard;
   Parties opts into MTP without removing tests or evidence.
+- 2026-07-16 -- Clean Parties run `29482841788` proved the MTP route by passing
+  all 1,649 Tier 1 tests, then exposed seven prerequisite-matrix fitness
+  mismatches and Dapr-backed projection activation in isolated gateway tests.
+  The follow-up aligns the fitness contract with approved G4/G8/G11 routing,
+  replaces the external `rg` dependency with an equivalent bounded in-process
+  fixed-string search, and restores gateway isolation without skipping tests.
 
 ## Design Notes
 
@@ -169,15 +188,19 @@ boundary.
 - All 9 Parties packages, NuGet metadata, and both package-only consumers pass.
 - All 11 Tier 1 projects pass (1,649 tests); Sample passes 58 tests; CI contracts
   pass 16 tests.
-- `Hexalith.Parties.Tests` separately reports seven Story 8.3 prerequisite-matrix
-  fitness failures against unchanged root planning evidence and then exceeds the
-  shared job's 15-minute boundary. These assertions are outside the Builds
-  catalog/gitlink change; the pushed clean-checkout run is retained as the
-  authoritative full-workflow result rather than masking them here.
+- `Hexalith.Parties.Tests` passes all 576 tests in about six seconds after the
+  accepted planning rows and fitness expectations were reconciled and the
+  gateway factory replaced Dapr-backed projection activation, activity, index,
+  and hosted-service collaborators with isolated test seams. The exact shared
+  Tier 2 sequence also passes Sample (58) and CI contracts (16): 650 tests total.
 - Parties run `29482004796` confirms the original repair remotely: Restore,
   Release Build, and package-consumer validation all pass. Its Tier 1 command
   exits before test discovery because VSTest-only arguments are rejected by
   MTP; that follow-up is corrected in Builds `v4.19.0` and the caller workflows.
+- Parties run `29482841788` confirms Builds `v4.19.0` remotely: restore, Release
+  build, package-consumer validation, and all 1,649 Tier 1 tests pass. Its Tier 2
+  timeout is the direct regression evidence for the isolated gateway and matrix
+  follow-up now passing locally; a new clean run remains the closure gate.
 
 ## Suggested Review Order
 

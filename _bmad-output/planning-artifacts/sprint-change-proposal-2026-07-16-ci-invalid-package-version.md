@@ -416,6 +416,14 @@ The implementation therefore adds an explicit backward-compatible test-platform
 route in Builds `v4.19.0` and opts Parties into MTP-native TRX/trait arguments;
 no test tier is removed or weakened.
 
+Second post-adoption evidence: Parties run `29482841788` passed restore, build,
+package-consumer validation, and all 1,649 Tier 1 tests through the new MTP
+route. Tier 2 then exposed accepted G4/G8/G11 planning edits that had outpaced
+their fitness contract plus newly registered Dapr-backed projection activation
+inside isolated gateway tests. The implementation reconciles those contracts
+and test seams without changing production behavior or skipping any gate; the
+exact local Tier 2 sequence now passes 650 tests.
+
 | Item | Status | Finding |
 | --- | --- | --- |
 | 1.1 Triggering story/work | [x] Done | CI/package-validation bugfix stream plus root submodule adoption exposed the recorded Builds defect. |

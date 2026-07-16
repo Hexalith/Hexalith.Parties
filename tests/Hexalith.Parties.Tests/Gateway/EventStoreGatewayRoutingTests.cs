@@ -12,6 +12,7 @@ using FluentValidation;
 
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Events;
+using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Configuration;
 using Hexalith.EventStore.Indexes;
@@ -494,7 +495,9 @@ public sealed class EventStoreGatewayRoutingTests
                 EventCount: 1,
                 RejectionEventType: rejectionType.FullName,
                 FailureReason: null,
-                TimeoutDuration: null),
+                TimeoutDuration: null,
+                MessageId: command.MessageId,
+                CorrelationId: command.CorrelationId),
         };
         using var factory = new EventStoreGatewayTestFactory(customCommandRouter: rejectingRouter);
         using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["commands:*"]);
@@ -887,14 +890,16 @@ public sealed class EventStoreGatewayRoutingTests
                 CorrelationId: command.CorrelationId,
                 EventCount: 1,
                 ResultPayload: "this is not valid json {"),
-            StatusFactory = _ => new CommandStatusRecord(
+            StatusFactory = command => new CommandStatusRecord(
                 CommandStatus.Completed,
                 DateTimeOffset.UtcNow,
                 "agg-malformed",
                 EventCount: 1,
                 RejectionEventType: null,
                 FailureReason: null,
-                TimeoutDuration: null),
+                TimeoutDuration: null,
+                MessageId: command.MessageId,
+                CorrelationId: command.CorrelationId),
         };
         using var factory = new EventStoreGatewayTestFactory(customCommandRouter: malformedRouter);
         using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["commands:*"]);
@@ -926,14 +931,16 @@ public sealed class EventStoreGatewayRoutingTests
                 CorrelationId: command.CorrelationId,
                 EventCount: 1,
                 ResultPayload: null),
-            StatusFactory = _ => new CommandStatusRecord(
+            StatusFactory = command => new CommandStatusRecord(
                 CommandStatus.Completed,
                 DateTimeOffset.UtcNow,
                 "agg-no-payload",
                 EventCount: 1,
                 RejectionEventType: null,
                 FailureReason: null,
-                TimeoutDuration: null),
+                TimeoutDuration: null,
+                MessageId: command.MessageId,
+                CorrelationId: command.CorrelationId),
         };
         using var factory = new EventStoreGatewayTestFactory(customCommandRouter: noPayloadRouter);
         using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["commands:*"]);
@@ -1012,20 +1019,30 @@ public sealed class EventStoreGatewayRoutingTests
 
             _ = builder.ConfigureTestServices(services =>
             {
-                // Disable EventStore hosted services that interfere with isolated gateway tests
-                // (admin index priming, Dapr rate-limit sync, projection discovery scan), but
-                // preserve EventStoreAuthorizationStartupValidator so auth-wiring regressions
-                // still fail fast at host build.
+                // Disable EventStore hosted services that require Dapr or mutate shared indexes in
+                // isolated gateway tests. Preserve EventStoreAuthorizationStartupValidator so
+                // auth-wiring regressions still fail fast at host build. Factory registrations do
+                // not expose their implementation type, so all such hosted services are removed.
                 foreach (ServiceDescriptor descriptor in services
                     .Where(d => d.ServiceType == typeof(IHostedService)
-                        && d.ImplementationType is { } implType
-                        && (implType == typeof(AdminOperationalIndexHostedService)
-                            || implType == typeof(DaprRateLimitConfigSync)
-                            || implType == typeof(ProjectionDiscoveryHostedService)))
+                        && !string.Equals(
+                            d.ImplementationType?.Name,
+                            "EventStoreAuthorizationStartupValidator",
+                            StringComparison.Ordinal))
                     .ToArray())
                 {
                     services.Remove(descriptor);
                 }
+
+                services.RemoveAll<ICommandActivityTracker>();
+                services.RemoveAll<IStreamActivityTracker>();
+                services.RemoveAll<ICommandCorrelationIndex>();
+
+                services.RemoveAll<IProjectionActivationOutbox>();
+                services.AddSingleton<IProjectionActivationOutbox, NoOpProjectionActivationOutbox>();
+
+                services.RemoveAll<IProjectionUpdateOrchestrator>();
+                services.AddSingleton<IProjectionUpdateOrchestrator, NoOpProjectionUpdateOrchestrator>();
 
                 services.RemoveAll<ICommandStatusStore>();
                 services.AddSingleton<ICommandStatusStore>(StatusStore);
@@ -1095,6 +1112,34 @@ public sealed class EventStoreGatewayRoutingTests
         }
     }
 
+    private sealed class NoOpProjectionActivationOutbox : IProjectionActivationOutbox
+    {
+        public Task EnsureAsync(AggregateIdentity identity, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public Task<ProjectionActivationWorkItem?> GetAsync(
+            AggregateIdentity identity,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult<ProjectionActivationWorkItem?>(null);
+
+        public Task CompleteAsync(
+            ProjectionActivationWorkItem workItem,
+            CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public Task<IReadOnlyList<ProjectionActivationWorkItem>> GetDueAsync(
+            DateTimeOffset dueUtc,
+            int maximumCount,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<ProjectionActivationWorkItem>>([]);
+
+        public Task DeferAsync(
+            ProjectionActivationWorkItem workItem,
+            DateTimeOffset nextDueUtc,
+            CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+    }
+
     private sealed class DirectPartiesCommandRouter : ICommandRouter
     {
         private readonly PartyDomainProcessor _invoker = CreateInvoker();
@@ -1112,6 +1157,21 @@ public sealed class EventStoreGatewayRoutingTests
         {
             ArgumentNullException.ThrowIfNull(command);
 
+            await _statusStore.WriteStatusAsync(
+                command.Tenant,
+                command.MessageId,
+                new CommandStatusRecord(
+                    CommandStatus.Received,
+                    DateTimeOffset.UtcNow,
+                    command.AggregateId,
+                    EventCount: null,
+                    RejectionEventType: null,
+                    FailureReason: null,
+                    TimeoutDuration: null,
+                    MessageId: command.MessageId,
+                    CorrelationId: command.CorrelationId),
+                cancellationToken).ConfigureAwait(false);
+
             CommandEnvelope envelope = command.ToCommandEnvelope();
             DomainResult result = await _invoker.ProcessAsync(envelope, currentState: null, cancellationToken).ConfigureAwait(false);
             _domainResults.Add(result);
@@ -1122,7 +1182,7 @@ public sealed class EventStoreGatewayRoutingTests
 
             await _statusStore.WriteStatusAsync(
                 command.Tenant,
-                command.CorrelationId,
+                command.MessageId,
                 new CommandStatusRecord(
                     result.IsRejection ? CommandStatus.Rejected : CommandStatus.Completed,
                     DateTimeOffset.UtcNow,
@@ -1130,7 +1190,9 @@ public sealed class EventStoreGatewayRoutingTests
                     EventCount: result.Events.Count,
                     RejectionEventType: rejectionEventType,
                     FailureReason: null,
-                    TimeoutDuration: null),
+                    TimeoutDuration: null,
+                    MessageId: command.MessageId,
+                    CorrelationId: command.CorrelationId),
                 cancellationToken).ConfigureAwait(false);
 
             return new CommandProcessingResult(
