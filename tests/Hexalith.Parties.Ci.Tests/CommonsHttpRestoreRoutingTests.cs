@@ -291,6 +291,60 @@ for project, version in module.support_package_projects("9.8.7"):
     }
 
     [Fact]
+    public void ConsumerSupportProjectsAreDirectSolutionMembers()
+    {
+        const string probe = """
+import importlib.util
+import sys
+from pathlib import Path
+
+scripts_directory = Path(sys.argv[1])
+script_file = scripts_directory / "validate-consumer-package-references.py"
+spec = importlib.util.spec_from_file_location("consumer_solution_inventory_probe", script_file)
+if spec is None or spec.loader is None:
+    raise SystemExit(f"Could not load {script_file}")
+module = importlib.util.module_from_spec(spec)
+sys.path.insert(0, str(scripts_directory))
+sys.modules["consumer_solution_inventory_probe"] = module
+spec.loader.exec_module(module)
+
+for project, _ in module.support_package_projects("0.0.0"):
+    print(project)
+""";
+
+        (int exitCode, string standardOutput, string standardError) = RunPython(
+            "-c",
+            probe,
+            CiTestPaths.RepoFile("scripts"));
+        string[] supportProjectPaths = standardOutput
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(static path => path.Replace('\\', '/'))
+            .ToArray();
+        HashSet<string> solutionProjectPaths = XDocument
+            .Load(CiTestPaths.RepoFile("Hexalith.Parties.slnx"))
+            .Descendants("Project")
+            .Select(static element => element.Attribute("Path")?.Value)
+            .Where(static path => !string.IsNullOrWhiteSpace(path))
+            .Select(static path => path!.Replace('\\', '/'))
+            .ToHashSet(StringComparer.Ordinal);
+        string[] omittedProjectPaths = supportProjectPaths
+            .Where(path => !solutionProjectPaths.Contains(path))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        exitCode.ShouldBe(0, standardError);
+        supportProjectPaths.Length.ShouldBe(8);
+        supportProjectPaths
+            .Distinct(StringComparer.Ordinal)
+            .Count()
+            .ShouldBe(supportProjectPaths.Length, "Support package projects must not be duplicated.");
+        omittedProjectPaths.ShouldBeEmpty(
+            $"Every support project returned by validate-consumer-package-references.py must be a direct "
+            + $"Hexalith.Parties.slnx project so the Release configuration is applied. Omitted paths:{Environment.NewLine}"
+            + string.Join(Environment.NewLine, omittedProjectPaths.Select(static path => $"- {path}")));
+    }
+
+    [Fact]
     public void SyntheticCentralVersionFlowsThroughEveryPackageScriptMainPath()
     {
         const string probe = """
@@ -456,6 +510,16 @@ def write_package(output_directory, package_id, file_version, metadata_version):
         package.writestr(f"{package_id}.nuspec", nuspec)
 
 def fake_pack(command, **kwargs):
+    if command[:2] != ["dotnet", "pack"]:
+        raise SystemExit(f"Support package packing must invoke dotnet pack: {command!r}")
+    if "--no-build" not in command:
+        raise SystemExit(f"Support package packing must use --no-build: {command!r}")
+    if command.count("--configuration") != 1:
+        raise SystemExit(f"Support package packing must declare exactly one configuration: {command!r}")
+    configuration = command[command.index("--configuration") + 1]
+    if configuration != "Release":
+        raise SystemExit(f"Support package packing must use Release, found {configuration!r}")
+
     project_name = Path(command[2]).stem
     if project_name not in module.COMMONS_SUPPORT_PACKAGE_IDS:
         return subprocess.CompletedProcess(command, 0)

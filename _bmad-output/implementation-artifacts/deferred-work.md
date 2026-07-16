@@ -25,3 +25,13 @@ source_spec: `spec-8-3-platform-api-prerequisites.md`
 severity: low
 reason: Review budget (3 cycles) was exhausted with the story finalized (status: done, verify green) while the review pass kept recommending an independent follow-up. The work was committed by bmad-loop run 20260707-072046-c4fb; this entry preserves the lingering follow-up recommendation for a deliberate later review.
 status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
+  summary: Correct and validate the advanced Hexalith.Builds checkout before adopting its package-version changes.
+  evidence: Incidental review of unrelated worktree gitlink drift found checkout `63d3221` supplies `v1.16.3` as a NuGet version and also advances the Tenants version, so a fresh restore can fail or broaden dependency scope if that checkout is adopted without owner validation.
+- source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
+  summary: Add a persisted-LRU eviction regression test for the advanced Hexalith.Memories checkout.
+  evidence: Incidental review found the new workflow recency field is tested across serialization and eviction separately, but not after serialize/restore at the 256-entry limit; a restored actor could evict a recently refreshed workflow and reapply a delayed transition.
+- source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
+  summary: Add an intermediate-state migration test for the advanced Hexalith.Memories checkout.
+  evidence: Incidental review found no test for persisted state containing `AppliedTransitionSequences` while lacking the newer `AppliedTransitionWorkflowOrder`, leaving the immediate predecessor format's eviction queue reconstruction unverified.
