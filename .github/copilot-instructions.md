@@ -6,6 +6,19 @@ and its root-declared submodules. It contains shared safeguards only; repository
 documentation and configuration remain authoritative for repository-specific
 rules.
 
+## Required Hexalith LLM Baseline
+
+Before working in a Hexalith repository, locate, read, and follow
+`hexalith-llm-instructions.md`.
+
+- If the current repository contains that file at its root, read that copy.
+- Otherwise, if the repository is checked out as a submodule, use
+  `git rev-parse --show-superproject-working-tree` to locate its enclosing
+  superproject, then read
+  `<superproject>/references/Hexalith.AI.Tools/hexalith-llm-instructions.md`.
+- Do not initialize or update a nested submodule to locate this file. If no
+  permitted location exists, stop and report the missing baseline as a blocker.
+
 ## Working in a Repository
 
 - Work from the repository that owns the change.
