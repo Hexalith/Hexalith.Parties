@@ -58,18 +58,7 @@
     <PackageTags>parties;crm;dapr;eventsourcing;cqrs;dotnet</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageVersion Condition="'$(HexalithPartiesPackageVersion)' != ''">$(HexalithPartiesPackageVersion)</PackageVersion>
-    <MinVerVersionOverride Condition="'$(HexalithPartiesPackageVersion)' != ''">$(HexalithPartiesPackageVersion)</MinVerVersionOverride>
   </PropertyGroup>
-
-  <!-- MinVer: Git tag-based SemVer versioning -->
-  <PropertyGroup>
-    <MinVerTagPrefix>v</MinVerTagPrefix>
-    <MinVerDefaultPreReleaseIdentifiers>preview.0</MinVerDefaultPreReleaseIdentifiers>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="MinVer" PrivateAssets="All" />
-  </ItemGroup>
 
   <ItemGroup Condition="'$(IsPackable)' == 'true'">
     <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
