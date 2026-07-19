@@ -58,6 +58,7 @@ public sealed class ClientPackageTests : IDisposable
             "Microsoft.Extensions.Configuration.Binder",
             "Microsoft.Extensions.DependencyInjection",
             "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Microsoft.Extensions.Diagnostics.Abstractions",
             "Microsoft.Extensions.Http",
             "Microsoft.Extensions.Logging.Abstractions",
             "Microsoft.Extensions.Options",
