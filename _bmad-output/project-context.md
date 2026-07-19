@@ -22,9 +22,11 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - C# / **.NET 10** — `net10.0` TFM, SDK `10.0.302` pinned in `global.json` (`rollForward: latestPatch`).
   `global.json` also sets `test.runner: Microsoft.Testing.Platform` (MTP) — tests run under MTP, not the
   classic VSTest host (affects how the test EXEs are invoked).
-- **Central Package Management is ON.** All versions live in `Directory.Packages.props`. Project
-  `.csproj` files use `<PackageReference Include="..." />` with **NO `Version` attribute** — adding a
-  `Version=` to a csproj is a build error. Add/upgrade versions in `Directory.Packages.props` only.
+- **Central Package Management is ON.** Authoritative versions live in the imported
+  `references/Hexalith.Builds/Props/Directory.Packages.props` catalog; the Parties
+  `Directory.Packages.props` file is a versionless import wrapper. Project `.csproj` files use
+  `<PackageReference Include="..." />` with **NO `Version` attribute** — adding a `Version=` to a
+  csproj is a build error. Add or upgrade versions in the Builds catalog only.
 - The solution is `Hexalith.Parties.slnx` — the **XML solution format**, not a classic `.sln`.
 
 **Core stack:**
