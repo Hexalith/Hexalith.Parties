@@ -36,8 +36,8 @@ _This file contains critical rules and patterns that AI agents must follow when 
 | Mediation | MediatR | `14.1.0` |
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.9` |
 | Token model | Microsoft.IdentityModel.Tokens | `8.19.1` (pinned — see constraints) |
-| MCP | ModelContextProtocol / .AspNetCore | `1.4.0` / `1.4.0` |
-| UI | FluentUI Blazor / CustomElements | `5.0.0-rc.3-26138.1` / `10.0.9` |
+| MCP | ModelContextProtocol / .AspNetCore | `1.4.1` / `1.4.1` |
+| UI | FluentUI Blazor / CustomElements | `5.0.0-rc.3-26138.1` / `10.0.10` |
 | Serialization | MessagePack | `3.1.7` |
 | Testing | xUnit **v3** / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `3.2.2` / `4.3.0` / `6.0.0-rc.1` / `2.8.4-preview` / `4.12.0` / `18.0.0` |
 
