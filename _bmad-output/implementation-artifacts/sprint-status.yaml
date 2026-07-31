@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-31T15:45:08+02:00
+# last_updated: 2026-07-31T23:33:05+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -42,7 +42,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-31T15:45:08+02:00
+last_updated: 2026-07-31T23:33:05+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -331,6 +331,16 @@ action_items:
     owner: "Winston (Architect) + Administrator"
     status: done
   - epic: 8
+    # Delivery course correction approved by Administrator on 2026-07-31:
+    # _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-31-g7-g9-owner-api-delivery.md.
+    # Story 8.3 now carries the structured named-approval, coherent exact-identity,
+    # producer-consumer parity, switch-back, and retirement-rollback receipt.
+    # Revalidated baseline only (not delivery): EventStore root gitlink/checkout
+    # 9b9c776791c149cab26c795a476d23d3d11f7796 with selected packages 3.86.0,
+    # and Commons root gitlink/checkout f2b5f1b12b478dce902756876138a60cde4fde65
+    # with selected package 2.29.0, still lack the required public G7/G9 APIs.
+    # No platform API/release, Parties consumer, or independent test approval is
+    # recorded. Keep this action open and deferred 8.4 deletion/8.8 blocked.
     action: "Deliver G7/G9 owner APIs before Parties migration: EventStore.Contracts public `eventstore:tenant` constant plus AggregateIdentity.IsValid(string); lightweight Hexalith.EventStore.Authentication reusable tenant transformation; Commons UniqueIdHelper.IsValidUlid(string). Record named approvals, exact release or root-submodule pins, producer-consumer parity, and rollback in Story 8.3 before deleting Hexalith.Parties.Authentication. Blocks deferred 8.4 deletion/8.8."
     owner: "Hexalith.EventStore & Hexalith.Commons owners + Amelia (Developer) + Murat (Test Architect)"
     status: open

@@ -1,10 +1,10 @@
 # Epic 8 Context: Domain-Focus Refactoring and Platform Extraction (Class C)
 
-<!-- Generated from planning artifacts. Regenerate with compile-epic-context if planning docs change. -->
+<!-- Compiled from planning artifacts. Edit freely. Regenerate with compile-epic-context if planning docs change. -->
 
 ## Goal
 
-Epic 8 removes remaining generic platform infrastructure from Hexalith.Parties so the module conforms to the Hexalith domain-module contract: Parties keeps domain aggregates, contracts, validators, projection/query semantics, GDPR policy, typed domain clients, domain UI, MCP tool definitions, sample code, and a thin AppHost, while reusable platform mechanics move to Commons, EventStore, FrontComposer, Builds, or platform/ops owners. This is approved post-MVP maintenance only; it adds no PRD functional requirements and must not be reported as MVP feature delivery.
+Epic 8 removes reusable platform infrastructure from Hexalith.Parties after ownership, compatibility, rollback, and validation are proven, leaving the module focused on aggregates, contracts, validators, domain projection/query semantics, Parties-specific GDPR policy, typed domain clients, domain UI, MCP tool definitions, and samples. It is approved post-MVP maintenance that improves domain boundaries, observability, build quality, and maintainability; it adds no PRD functional requirements and must not be reported as feature delivery.
 
 ## Stories
 
@@ -15,47 +15,38 @@ Epic 8 removes remaining generic platform infrastructure from Hexalith.Parties s
 - Story 8.5: EventStore domain-service SDK host cutover
 - Story 8.6: Projection and query SDK migration
 - Story 8.7: Data-protection extraction
-- Story 8.8: Client, MCP, AppHost, build, and deploy cleanup
+- Story 8.8: Client, MCP, AppHost, build, and runtime-boundary cleanup
 - Story 8.9: UI FrontComposer and Fluent consolidation
 - Story 8.10: Final readiness, documentation, and retirement gate
+- Story 8.12: Parties-only Zot container publish CI
+- Story 8.13: Retire legacy in-repo deployment artifacts
 
 ## Requirements & Constraints
 
-Epic 8 must preserve completed product behavior from Epics 1-5 and must not change PRD FR coverage. It supports domain-boundary correctness, observability, build quality, brand discipline, and long-term maintainability.
+Preserve completed command/query behavior, tenant isolation, self-scoped consumer authorization, public Client and Contracts shapes, the Picker/AdminPortal/ConsumerPortal packages, and all GDPR legal semantics. Protected data must remain compatible with encrypted, redacted, legacy-unprotected, key-zeroed, and typed-unreadable states without diagnostic leakage; exports, processing records, erasure reports, and certificates must continue to behave consistently.
 
-Before deletion-heavy refactoring starts, the repository needs a trustworthy build/test baseline. Current release readiness is blocked until the full solution build, package compatibility lanes, UI accessibility lane, deploy validation test assembly, and drifted gitlinks are fixed, owner-validated, reset, or explicitly pinned with evidence. `scripts/test.ps1` must not omit ConsumerPortal tests or treat solution-level `dotnet test` lanes as a reliable green signal. Later stories must record direct xUnit v3 assembly execution guidance, sequential build guidance, MinVer override guidance, and sandbox/package-test network limitations where those affect validation.
+Deletion-heavy stories require a declared prerequisite set, touched repositories, rollback path, explicit non-goals, validation lanes, and a parity checklist before development. Broad projection/query, data-protection, and runtime-boundary changes must be split or hard-gated. Local projection, query, crypto, AppHost, and release-recovery paths remain available until their replacements have both parity evidence and a proven rollback; rollback-only code must not be deleted merely because the forward path compiles.
 
-Structural migration must be deletion-safe. Local rollback paths for projection, query, crypto, and release recovery stay in place until replacement APIs have parity evidence and rollback behavior is proven. Existing public package contracts, command/query behavior, self-scoped authorization, GDPR legal semantics, UI behavior, protected payload compatibility, exports, processing records, erasure reports, and no-leak diagnostics must remain stable or be intentionally versioned.
-
-Identifier cleanup must stop rejecting valid ULID-compatible aggregate IDs while retaining replay compatibility for existing GUID-shaped IDs. Command, message, and correlation ID creation should use approved Commons unique ID helpers where identifier semantics require them.
-
-Epic 8 architecture spine (approved/reconciled 2026-07-07):
-`_bmad-output/planning-artifacts/architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md`.
-Specs 8.6-8.10 MUST satisfy that spine's §4 per-spec readiness gate — prerequisites,
-touched repos/submodules, rollback path, validation lanes + parity evidence,
-non-goals, and a parity-evidence checklist — before a dev session. Broad stories
-8.6/8.7/8.8 are split or hard-gated at spec-creation time.
+No Parties migration may consume an unapproved or unidentified dependency. Each prerequisite must be owner-approved as an additive API or proven already available, and every `available` item must identify the exact released package version or root-declared submodule gitlink selected by the consumer. The actual dependency mode and identity must match that record; a status label, source path, or checked-out file is not consumption evidence.
 
 ## Technical Decisions
 
-Hexalith.Parties should consume platform primitives instead of carrying parallel implementations. The target state replaces local service defaults, tenant-claim transformation, domain-service invoker, projection/query actors, projection rebuild service, generic crypto/key-management engine, command envelopes, paging/freshness models, ProblemDetails scrubbing, MCP plumbing, AppHost security/module helpers, build-root probing, and platform-owned deployment assets when approved shared surfaces exist.
+Runtime traffic continues through the deny-by-default EventStore gateway and DAPR `POST /process`; migration must not add public actor-host APIs. The host uses the EventStore domain-service SDK shape, retaining only domain registrations, Parties policy, and payload-protection hooks that the platform cannot own. The target state has no domain-owned AppHost: the current AppHost may remain as a migration/rollback surface until an approved integrated platform topology proves security, publish, topology, and rollback parity.
 
-The domain-service host target is the EventStore SDK host shape: `AddEventStoreDomainService` and `UseEventStoreDomainService`, with Parties retaining only domain registrations, Parties-specific policy, and payload-protection hooks that cannot yet be shared. Projection and query migration targets are `IDomainProjectionHandler`, `IDomainQueryHandler`, `IReadModelStore`, `ReadModelWritePolicy`, and `IQueryCursorCodec`.
+Projection folds target `IDomainProjectionHandler`; queries target `IDomainQueryHandler`; read-model writes use `IReadModelStore` with `ReadModelWritePolicy`; cursors use `IQueryCursorCodec`. Before `AddEventStoreDataProtection`, `DaprXmlRepository`, or the cursor-codec path is consumed, the EventStore DataProtection prerequisite identity must match the selected EventStore release or root gitlink.
 
-Platform API prerequisites must be additive or explicitly proven already available before Parties source migration consumes them. The prerequisite set covers EventStore projection/query support, DataProtection, client envelopes/freshness/error codes, tenant claims transformation, Aspire publish helpers, FrontComposer UI primitives, Commons HTTP helpers, and Builds shared props/targets.
+Projection/query parity must cover replay from zero, per-actor sequence checkpoints, set-based idempotency, duplicate and out-of-order delivery, stale/degraded last-known reads with freshness metadata, erased-party exclusion, GDPR processing-record reads, and rebuild output verified against aggregate replay. A full rebuild must be executed and verified before local actors, companion sequence keys, rebuild services, adapters, or remoting fallback control flow are deleted. Rollback must replace the EventStore SDK path, not merely prove that retained local code is safe in isolation.
 
-Build and package discipline remains unchanged: .NET 10, `.slnx` only, Central Package Management, warnings as errors, xUnit v3, Shouldly, NSubstitute, bUnit, Playwright accessibility evidence where UI is touched, and root-level submodules only.
+Generic crypto, key storage/wrapping/rotation, retry, circuit-breaker, and unreadable-payload mechanics move behind EventStore/shared security contracts; Parties retains domain policy and erasure orchestration. Shared envelopes, freshness/paging models, ProblemDetails scrubbing, MCP plumbing, security/module helpers, build-root logic, and runtime concerns move only when their owning platform surfaces meet the same identity and parity gates. Runtime deployment orchestration remains externally owned; this repository retains workload source, CI, and Parties container publication.
 
 ## UX & Interaction Patterns
 
-Epic 8 does not introduce new UX scope. UI work is conformance work: replace local FrontComposer-like status, freshness, optimistic reconcile, grid/list, picker, fixture, and specimen primitives only when replacement behavior preserves the approved FrontComposer and Fluent UI V5/Fluent 2 contract.
+UI work is conformance-only. FrontComposer and Fluent UI V5/Fluent 2 remain authoritative, local parallel status/freshness/reconcile/navigation/picker primitives are removed only with behavior proof, and legacy FAST/v4 tokens must be purged. Preserve WCAG 2.2 AA behavior, keyboard/pointer parity, visible focus, forced-colors and reduced-motion support, semantic controls, typed destructive confirmation, polite/assertive live-region separation, non-color state cues, and no focus stealing during optimistic updates.
 
-Production UI styles must purge legacy FAST/v4 token usage and keep Fluent 2 inheritance discipline. Raw teal accent is non-text only; primary filled actions bind to the AA-safe Fluent brand background. Accessibility contracts remain binding: WCAG 2.2 AA target, keyboard and pointer parity, functional skip links, visible focus rings, forced-colors and reduced-motion support, semantic controls, typed confirmation for destructive actions, split polite/assertive live regions, and no focus stealing for non-blocking optimistic updates.
-
-GDPR copy and interactions must remain honest: no consent dark patterns, no over-promised export latency, erasure copy must distinguish cancellation before deletion starts from permanent completed deletion, and stale reads should render last-known values with quiet freshness cues instead of blanking or throwing.
+Stale or degraded reads show last-known values and freshness cues rather than blanking or throwing. GDPR interactions must avoid consent dark patterns, distinguish cancellable pending erasure from permanent completed erasure, and avoid promising unsupported export timing.
 
 ## Cross-Story Dependencies
 
-Epic sequencing is `8.1 -> 8.2 -> 8.3 -> 8.4 -> 8.5 -> 8.6 -> 8.7 -> 8.8 -> 8.9 -> 8.10`. Story 8.2 may start after the baseline is established if it does not depend on unresolved submodule release work. Stories 8.5 through 8.7 require platform API readiness from Story 8.3. Story 8.10 runs last and must close or explicitly defer remaining work with owners, proof requirements, rollback paths, and validation evidence.
+The recorded main sequence is `8.1 -> 8.2 -> 8.3 -> 8.4 -> 8.5 -> 8.6 -> 8.7 -> 8.8 -> 8.9 -> 8.10`; Stories 8.5-8.7 depend on the platform readiness established by Story 8.3, and Story 8.10 closes or explicitly defers remaining work with owners and evidence. Epic 8 starts from Epic 7 readiness, adapters, compatibility harnesses, and rollback records rather than rewriting that completed history.
 
-Epic 8 depends on Epic 7 readiness evidence, which left useful adapters, compatibility harnesses, rollback plans, and known blockers in place. Do not rewrite Epic 7 history or treat Epic 8 as feature delivery; use Epic 7 evidence as the starting point for stronger domain-boundary cleanup.
+Story 8.12 publishes only the Parties-owned images with immutable version tags and no runtime deployment. Story 8.13 retires legacy in-repository deployment artifacts only once that publication path exists, leaving production manifests, DAPR components, ingress, secrets, scans, signatures, and promotion gates to the external deployment owner.

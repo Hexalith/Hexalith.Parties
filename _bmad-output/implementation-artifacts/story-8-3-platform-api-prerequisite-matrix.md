@@ -110,6 +110,91 @@ The row therefore remains `needs-additive-api`. The current Parties AppHost and
 typed-client registrations remain the rollback path; routing and ownership approval
 do not authorize deletion.
 
+## G7/G9 Owner API Delivery Receipt — 2026-07-31
+
+The delivery course correction was approved by Administrator on 2026-07-31 at
+23:33:05+02:00:
+`_bmad-output/planning-artifacts/sprint-change-proposal-2026-07-31-g7-g9-owner-api-delivery.md`.
+This approval defines the delivery gate; it is not platform-owner API approval,
+release approval, consumer parity, or deletion authorization.
+
+**Receipt status:** incomplete. The tenant-claims row remains
+`needs-additive-api`; deferred Story 8.4 Authentication deletion and the G7/G9
+slice of Story 8.8 remain blocked.
+
+### Revalidated baseline — not delivery proof
+
+| Dependency mode | Exact identity | Result |
+| --- | --- | --- |
+| EventStore root gitlink and matching clean checkout | `9b9c776791c149cab26c795a476d23d3d11f7796` selected by Parties `6f572e37b7520a259947075eebd520f2dd3ed721` | Missing public `EventStoreClaimTypes.Tenant`, `AggregateIdentity.IsValid(string)`, and a separately packable `Hexalith.EventStore.Authentication`; cannot be selected as the delivery receipt. |
+| EventStore package mode | `Hexalith.EventStore.Contracts` `3.86.0`; no selected `Hexalith.EventStore.Authentication` package | Required public/package surfaces are not available; cannot be selected as the delivery receipt. |
+| Commons root gitlink and matching clean checkout | `f2b5f1b12b478dce902756876138a60cde4fde65` selected by Parties `6f572e37b7520a259947075eebd520f2dd3ed721` | Missing `UniqueIdHelper.IsValidUlid(string)`; cannot be selected as the delivery receipt. |
+| Commons package mode | `Hexalith.Commons.UniqueIds` `2.29.0` | Required predicate is not available; cannot be selected as the delivery receipt. |
+| Parties retained rollback source | `Hexalith.Parties.Authentication` and its focused tests at Parties `6f572e37b7520a259947075eebd520f2dd3ed721`; governed files are clean relative to that commit | Retained and buildable pending adoption, parity, and exercised switch-back. |
+
+### Named approval ledger
+
+A role or persona label alone is not an approval. Each completed field must record
+the actual approver name or accountable handle, role, timestamp with UTC offset,
+review/decision reference, and accepted identity/scope.
+
+| Approval | Status | Required record before row transition |
+| --- | --- | --- |
+| EventStore API boundary and behavior | Pending | Named API owner acceptance of the public claim constant, aggregate-ID predicate, lightweight transformer, Gateway composition, dependency boundary, tests, and exact producer identity. |
+| EventStore release or root pin | Pending | Named release/root-pin owner acceptance of coherent released packages or an exact root-declared EventStore gitlink plus selecting Parties parent commit. |
+| Commons API and release or root pin | Pending | Named Commons API/release owner acceptance of the strict non-throwing ULID predicate, tests, and coherent released package or exact root gitlink. |
+| Parties consumer adoption | Pending | Named Parties owner acceptance of exact selected identities, compatibility alias, supported dependency modes, host/UI composition, and parity evidence. |
+| Independent test and rollback | Pending | Named test owner acceptance of producer-consumer results, negative/boundary coverage, switch-back, and forward restore. |
+
+Administrator's approval of the course correction is recorded above and does not
+substitute for any pending platform, release, consumer, or test approval.
+
+### Exact delivery identity ledger
+
+No delivery identity is selected yet. Record one coherent path for each owner;
+never combine source observed at one commit with packages built from another.
+
+| Owner | Released-package path | Root-gitlink path | Selected identity |
+| --- | --- | --- | --- |
+| EventStore | Exact versions, feed/source, and available hashes for both `Hexalith.EventStore.Contracts` and `Hexalith.EventStore.Authentication`; package/API inventory must contain the public constant, predicate, and transformer. | Exact 40-character EventStore gitlink plus the exact Parties parent commit selecting it; checkout must match and contain all three public surfaces and the packable project. | Pending |
+| Commons | Exact `Hexalith.Commons.UniqueIds` version, feed/source, available hash, and API inventory containing `UniqueIdHelper.IsValidUlid(string)`. | Exact 40-character Commons gitlink plus the exact Parties parent commit selecting it; checkout must match and contain the public predicate. | Pending |
+
+If a root-gitlink delivery supports only source mode, package-mode adoption and
+deletion remain blocked unless source-only CI/release consumption is separately
+approved and recorded.
+
+### Producer-consumer parity ledger
+
+All entries are pending until exact commands, results, test counts, artifact paths,
+and producer/consumer identities are recorded.
+
+| Evidence group | Status | Minimum evidence |
+| --- | --- | --- |
+| EventStore producer | Pending | Public/package API inventory; dependency fitness; safe bounded logs; canonical, `tenants`, `tenant_id`, `tid`, mixed, multiple, duplicate, blank, malformed, missing, and repeated-transform cases; Gateway composition; aggregate-ID predicate/constructor parity for semantic, ULID-shaped, GUID-shaped, length, character, and null/blank boundaries. |
+| Commons producer | Pending | Public/package API inventory; valid upper/lowercase ULIDs; first-character range; excluded Crockford characters; length, null/blank, non-ASCII, regex-shaped parser-invalid boundaries; unchanged generation/conversion behavior. |
+| Parties consumer | Pending | Shared-versus-local truth table; domain-service host transient and UI host scoped composition/order; authorization outcomes; no sensitive logs; compatibility alias; correct separation of permissive aggregate/Party semantic validation from strict ULID validation; every supported source/package build and package/API lane. |
+
+### Rollout and rollback ledger
+
+1. **Adopt without deletion — pending.** Select the approved identities and switch
+   both Parties hosts through a reversible selector or compatibility adapter while
+   keeping `Hexalith.Parties.Authentication` and its focused tests buildable.
+2. **Forward parity — pending.** Run and record producer-consumer, authorization,
+   identifier, package/API, and supported source/package evidence.
+3. **Switch-back — pending.** Run both hosts on the shared path, switch both to the
+   retained local path, rerun focused authentication/authorization checks, restore
+   the shared path, and rerun them. A theoretical revert is not execution proof.
+4. **Retirement rollback — pending.** Record the exact later retirement commit,
+   trigger conditions, non-destructive `git revert <retirement-commit>` procedure,
+   dependency re-pin/restore commands, results, and forward-restore procedure.
+5. **Delete separately — blocked.** Only a complete receipt and named independent
+   acceptance authorize an isolated removal of implementation, tests,
+   registrations, solution/project references, CI/scripts, and package inventory.
+
+The row may change to `available` only when every approval, exact identity,
+producer-consumer, and rollback entry above is complete. That transition unblocks
+only the G7/G9 authentication slice; all other Story 8.8 prerequisites remain.
+
 ## Residual Blockers Preserved
 
 - Full `Hexalith.Parties.Tests` Release source-mode remains blocked by the Story 8.1 `Hexalith.Memories` Release guard: `Release builds must use NuGet package references for external Hexalith libraries. Remove -p:UseHexalithProjectReferences=true or build Debug for source-debugging.`
