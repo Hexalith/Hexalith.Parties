@@ -250,10 +250,13 @@ action_items:
     # typed-unreadable outcomes + no-leak diagnostics, Art.20 export + Art.30
     # processing-record semantics, erasure certificate/report parity, and proven
     # rollback (spine I8/I3) in the 8.3 matrix G5 row; routed to Hexalith.EventStore
-    # owners as G5. Revalidated 2026-07-16 after repository synchronization:
-    # EventStore gitlink/checkout 82ed167c match but still lack G5; all 18 MOVE-listed
-    # src/Hexalith.Parties.Security crypto/key files (+ 5 KEEP domain files + the
-    # EventStorePartyPayloadProtectionAdapter seam) remain intact; Story 8.7 is blocked.
+    # owners as G5. Revalidated 2026-07-31 at root gitlink/checkout e4618d91
+    # (`v3.86.0`): EventStore Story 8.1's proposed specification remains
+    # draft-not-authorized; Story 8.2 is backlog and its required proof packet is
+    # absent. No approved runtime G5 engine, pdenc-v2, IPersonalDataPolicy, or
+    # IErasureStateProvider exists. All 18 MOVE files, 5 KEEP files, and the
+    # EventStorePartyPayloadProtectionAdapter seam remain intact; the focused
+    # compatibility harness passes 19/19 tests and Story 8.7 remains blocked.
     action: "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open
