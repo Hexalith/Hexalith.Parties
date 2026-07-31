@@ -4,7 +4,7 @@ story_id: "8.6"
 epic: "8"
 created: 2026-07-08T18:23:46+02:00
 source_status: backlog
-target_status: ready-for-dev
+target_status: blocked
 baseline_commit: 2c4a7af
 eventstore_pin_at_creation: 0f428d0c914f2151aab15bb262f956a9630041dc
 ---
@@ -13,7 +13,7 @@ eventstore_pin_at_creation: 0f428d0c914f2151aab15bb262f956a9630041dc
 
 Status: blocked
 
-<!-- Note: This story is ready for dev workflow intake, but production source migration is hard-gated by the Story 8.3 projection/query SDK matrix row. -->
+<!-- The implementation packet is retained, but the story remains blocked by the Story 8.3 projection/query SDK matrix row and must not enter production development intake. -->
 
 ## Story
 
