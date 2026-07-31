@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-31T08:59:12+02:00
+# last_updated: 2026-07-31T15:45:08+02:00
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -42,7 +42,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-31T08:59:12+02:00
+last_updated: 2026-07-31T15:45:08+02:00
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -151,10 +151,12 @@ development_status:
   # Story context created 2026-07-16; production migration remains blocked by
   # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
   8-7-data-protection-extraction: blocked
-  # Story context revalidated 2026-07-31; production migration remains blocked by
-  # the 8.6 -> 8.7 -> 8.8 sequence. EventStore Story 1.20 is now owner-approved only
-  # for exact fa2d1c9/proof identities, which do not match current e4618d9/v3.86.0;
-  # G5, G7/G9, G8, G11, and current Commons/Builds consumption proof remain open.
+  # Story context revalidated 2026-07-31 after the latest root-submodule update.
+  # All eight checkouts match their clean root gitlinks; only Builds (b529b66) and
+  # Tenants (2cd7edf) moved from the prior snapshot, without delivering an 8.8 owner
+  # surface. EventStore fa2d1c9 proof still does not match current e4618d9/v3.86.0;
+  # root/origin baseline ed007f8 also fails commitlint (type/subject empty and an
+  # overlong body line). The sequence and G5/G7-G9/G8/G11/Commons/Builds proof stay open.
   8-8-client-mcp-apphost-build-and-deploy-cleanup: blocked
   8-9-ui-frontcomposer-and-fluent-consolidation: backlog
   8-10-final-readiness-documentation-and-retirement-gate: backlog
@@ -282,6 +284,20 @@ action_items:
     # Commons.ServiceDefaults 2.28.0; Tenants.Client and Tenants.Testing 2.4.2.
     # Package-only restore and Release build: 0 warnings, 0 errors.
     status: done
+  - epic: 8
+    # The publication decision above remains done. Revalidated 2026-07-31 after
+    # the latest root-submodule update: selected Commons 2.29.0 and Tenants 5.3.0
+    # packages are published, but the recorded Parties package-only proof covers
+    # Commons 2.28.0 and Tenants 2.4.2. This is consumer evidence, not owner release work.
+    action: "Rerun package-only restore/build/test/pack and consumer parity for selected Commons 2.29.0 and Tenants 5.3.0; record exact commands/results in Story 8.3 and the test summary before Story 8.8 deletes any source-mode or rollback path."
+    owner: "Amelia (Developer) + Murat (Test Architect)"
+    status: open
+  - epic: 8
+    # Revalidated 2026-07-31 at root/origin baseline ed007f8. Do not amend or
+    # force-rewrite pushed main from Story 8.8; this needs Git-governance disposition.
+    action: "Resolve the baseline commit-message policy failure reported by `npx --no-install commitlint --last --verbose` (`type-empty`, `subject-empty`, and `body-max-line-length`) through approved Git governance, and verify direct-main commitlint protection before tagging or releasing."
+    owner: "Administrator + release governance owner"
+    status: open
   - epic: 8
     # EventStore Story 1.20 is done with an owner-approved `available` packet at
     # exact source fa2d1c9 and its recorded proof package/container identities.
