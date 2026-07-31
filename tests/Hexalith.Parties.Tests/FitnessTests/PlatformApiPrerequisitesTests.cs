@@ -67,7 +67,7 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly IReadOnlyDictionary<string, string[]> RequiredAvailableConsumptionIdentities = new Dictionary<string, string[]>(StringComparer.Ordinal)
     {
         ["EventStore domain-service host"] = ["Consumption availability validated", "9f8b54dc161a4d5a9b2e6b1deacf331d1b80f1e0"],
-        ["EventStore DataProtection"] = ["Consumption availability recorded", "82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7"],
+        ["EventStore DataProtection"] = ["Consumption availability recorded", "e4618d9114c8824fd50fdfc8d135438aa261377c"],
         ["Commons HTTP helpers"] = ["Consumption availability recorded", "2.28.1", "b03469b13408530bb757d3d02279c2d772ee4848"],
         ["Builds shared props/targets"] = ["Consumption availability recorded", "4.18.5", "ed75ae3c45425b9610d5e75e6c5ec3e8d5283fe1"],
     };

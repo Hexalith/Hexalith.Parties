@@ -981,6 +981,26 @@ public sealed class EventStoreGatewayRoutingTests
 
             return ProcessingResultFactory(command);
         }
+
+        public Task<CommandProcessingResult> RouteFencedCommandAsync(
+            SubmitCommand command,
+            IdempotencyExecutionContext executionContext,
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(executionContext);
+            return RouteCommandAsync(command, cancellationToken);
+        }
+
+        public Task<IdempotencyCheckResult> ReconcileFencedCommandAsync(
+            SubmitCommand command,
+            IdempotencyExecutionContext executionContext,
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(command);
+            ArgumentNullException.ThrowIfNull(executionContext);
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(new IdempotencyCheckResult(IdempotencyCheckOutcome.Miss));
+        }
     }
 
     private sealed class EventStoreGatewayTestFactory(
@@ -1201,6 +1221,26 @@ public sealed class EventStoreGatewayRoutingTests
                 CorrelationId: command.CorrelationId,
                 EventCount: result.Events.Count,
                 ResultPayload: result.ResultPayload);
+        }
+
+        public Task<CommandProcessingResult> RouteFencedCommandAsync(
+            SubmitCommand command,
+            IdempotencyExecutionContext executionContext,
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(executionContext);
+            return RouteCommandAsync(command, cancellationToken);
+        }
+
+        public Task<IdempotencyCheckResult> ReconcileFencedCommandAsync(
+            SubmitCommand command,
+            IdempotencyExecutionContext executionContext,
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(command);
+            ArgumentNullException.ThrowIfNull(executionContext);
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(new IdempotencyCheckResult(IdempotencyCheckOutcome.Miss));
         }
 
         private static PartyDomainProcessor CreateInvoker()
