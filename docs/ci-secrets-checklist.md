@@ -22,6 +22,8 @@ The publishing identity must have rights to create/update these repositories:
 
 Prefer a dedicated CI identity for durable production use. A human-mapped test identity is acceptable only for temporary validation, with the API key rotated or deleted immediately after confirmation.
 
+Store the three release secrets in the protected GitHub environment named `production`. Configure required reviewers and restrict deployments to `main`; the manual release must not reach these credentials until its unprotected exact-source CI gate succeeds and an authorized reviewer approves the environment.
+
 ## Required For Pact Contract Gates
 
 - `PACT_BROKER_BASE_URL`: Pact Broker or PactFlow base URL.

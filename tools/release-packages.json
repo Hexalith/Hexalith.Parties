@@ -1,0 +1,40 @@
+{
+  "packages": [
+    {
+      "id": "Hexalith.Parties.Contracts",
+      "project": "src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj"
+    },
+    {
+      "id": "Hexalith.Parties.Client",
+      "project": "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj"
+    },
+    {
+      "id": "Hexalith.Parties.AdminPortal",
+      "project": "src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj"
+    },
+    {
+      "id": "Hexalith.Parties.ConsumerPortal",
+      "project": "src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj"
+    },
+    {
+      "id": "Hexalith.Parties.Picker",
+      "project": "src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj"
+    },
+    {
+      "id": "Hexalith.Parties.Authentication",
+      "project": "src/Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj"
+    },
+    {
+      "id": "Hexalith.Parties.Projections",
+      "project": "src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj"
+    },
+    {
+      "id": "Hexalith.Parties.Security",
+      "project": "src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj"
+    },
+    {
+      "id": "Hexalith.Parties.Testing",
+      "project": "src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj"
+    }
+  ]
+}

@@ -5,7 +5,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds reusable workfl
 ## Workflows
 
 - `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main`.
-- `.github/workflows/release.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@main`.
+- `.github/workflows/release.yml` is a manual `workflow_dispatch` caller of `Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@<reviewed-40-character-SHA>`, pinned together with its `builds-execution-sha` input to that same commit.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation for pull requests.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
 - `.github/workflows/codeql.yml` delegates C# CodeQL scanning.
@@ -30,7 +30,9 @@ passed to Parties test executables.
 
 ## Release
 
-Release runs on pushes to `main` through semantic-release. The release workflow:
+Release is an explicit operator action through `workflow_dispatch`; pushes to `main` run CI but never publish. Before the protected release job is requested, the caller proves that the dispatch selected the current `main` tip and that the exact commit has a successful push run of `ci.yml`. The reusable workflow and nested publishing tools must resolve to the same reviewed immutable Hexalith.Builds commit.
+
+The `production` environment must require human reviewers and allow deployments only from `main`. After approval, semantic-release:
 
 - installs npm dependencies from `package-lock.json`;
 - restores and builds `Hexalith.Parties.slnx`;
@@ -41,6 +43,8 @@ Release runs on pushes to `main` through semantic-release. The release workflow:
   - `registry.hexalith.com/parties`
   - `registry.hexalith.com/parties-mcp`
   - `registry.hexalith.com/parties-ui`
+
+The publication preflight freezes the exact source, nine-package manifest, and complete three-container destination set. It rejects missing credentials, identity drift, or an existing package/container version before the first publication write; duplicate skipping is deliberately disabled.
 
 The release workflow does not apply runtime deployment manifests and does not publish EventStore, Tenants, Memories, Sample, Redis, or FalkorDB images. Runtime deployment orchestration is owned outside this repository and consumes immutable release tags from Zot.
 
@@ -62,6 +66,8 @@ pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure -ResultsDire
 ```
 
 CI and default local commands run in package mode (`UseNuGetDeps=true`, `UseHexalithProjectReferences=false`). If unpublished Hexalith packages block restore, record the package-mode blocker and rerun source-mode triage with `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false` only as diagnostic evidence.
+
+At the current baseline, EventStore 3.88.0 does not contain the projection-rebuild APIs consumed by Parties, so package-mode CI reports CS0246. This is an upstream publication prerequisite: an owner must publish a compatible EventStore package and the Parties dependency must then be updated through the normal reviewed path. CI must not switch to source mode to hide the blocker.
 
 ## Secrets
 
