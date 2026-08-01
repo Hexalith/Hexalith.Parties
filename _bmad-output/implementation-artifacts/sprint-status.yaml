@@ -148,9 +148,9 @@ development_status:
   8-4-leaf-project-retirement: done
   8-5-eventstore-domain-service-sdk-host-cutover: done
   # Resumed 2026-08-01 by explicit user direction to use the latest EventStore.
-  # Latest stable v3.89.0, root gitlink, source checkout, and package catalog all
-  # select c590590, which contains the tenant-shared rebuild API required by 8.6.
-  8-6-projection-and-query-sdk-migration: in-progress
+  # Current v3.89.0-6, root gitlink, and source checkout all select 8f004ecf,
+  # which contains the tenant-shared rebuild API required by 8.6.
+  8-6-projection-and-query-sdk-migration: review
   # Story context created 2026-07-16; production migration remains blocked by
   # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
   8-7-data-protection-extraction: blocked
@@ -253,15 +253,18 @@ action_items:
     # processing-record semantics, erasure certificate/report parity, and proven
     # rollback (spine I8/I3) in the 8.3 matrix G5 row; routed to Hexalith.EventStore
     # owners as G5. Revalidated 2026-08-01 at matching root gitlink/clean checkout
-    # fa2d1c99 (`v3.82.0-24-gfa2d1c99`). The pin satisfies projection/query Story
-    # 1.20 provenance but does not deliver G5. EventStore Story 8.1 remains
-    # draft-not-authorized and in progress; Story 8.2 remains backlog; its G5
-    # proof packet is absent. No approved runtime G5 engine, pdenc-v2,
-    # IPersonalDataPolicy, or IErasureStateProvider exists. All 18 MOVE files,
-    # 5 KEEP files, and the EventStorePartyPayloadProtectionAdapter seam remain
-    # intact; active local DI is reversible; the focused compatibility harness
-    # passes 19/19. Story 8.6 is in progress, Story 8.7 remains blocked, and this
-    # retention action stays open.
+    # 8f004ecf (`v3.89.0-6-g8f004ecf`). The pin satisfies projection/query needs
+    # but does not deliver G5. EventStore Story 8.1 remains draft-not-authorized
+    # and in progress; the approved decomposition keeps Stories 8.2-8.11 in
+    # backlog, and Story 8.11 alone may record G5 `available` and unblock Parties
+    # Story 8.7. Its closure packet is absent. The current contract/no-op seams
+    # are not the planned Hexalith.EventStore.PayloadProtection packages, and no
+    # approved runtime G5 engine, pdenc-v2, IPersonalDataPolicy, or
+    # IErasureStateProvider exists. All 18 MOVE files, 5 KEEP files, and the
+    # EventStorePartyPayloadProtectionAdapter seam remain intact; active local DI
+    # is reversible; the focused compatibility harness passes 19/19. Story 8.6
+    # is in review, Story 8.7 remains blocked, and this retention action stays
+    # open.
     action: "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open

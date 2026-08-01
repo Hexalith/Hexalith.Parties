@@ -9,10 +9,79 @@ namespace Hexalith.Parties.Tests.FitnessTests;
 
 public sealed class PlatformApiPrerequisitesTests
 {
+    private const string EventStorePayloadProtectionSpecRelativePath = "references/Hexalith.EventStore/_bmad-output/implementation-artifacts/spec-shared-payload-protection-engine.md";
+    private const string EventStoreRelativePath = "references/Hexalith.EventStore";
+    private const string EventStoreSprintStatusRelativePath = "references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml";
+    private const string EventStoreStoryMigrationRelativePath = "references/Hexalith.EventStore/_bmad-output/planning-artifacts/story-id-migration-2026-08-01.md";
     private const string MatrixRelativePath = "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md";
+    private const string PayloadProtectionEventStoreDescribe = "v3.89.0-6-g8f004ecf";
+    private const string PayloadProtectionEventStoreSha = "8f004ecf8be271ec5e76f97f944c1fc1154391c7";
+    private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
+    private const string PayloadProtectionSurface = "Payload protection engine package";
     private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";
     private const string StartMarker = "<!-- platform-api-prerequisite-matrix:start -->";
     private const string EndMarker = "<!-- platform-api-prerequisite-matrix:end -->";
+
+    private static readonly string[] RequiredAbsentPayloadProtectionPaths =
+    [
+        "references/Hexalith.EventStore/_bmad-output/implementation-artifacts/8-11-g5-evidence-and-approval-closure.md",
+        "references/Hexalith.EventStore/src/Hexalith.EventStore.PayloadProtection/Hexalith.EventStore.PayloadProtection.csproj",
+        "references/Hexalith.EventStore/src/Hexalith.EventStore.PayloadProtection.AzureKeyVault/Hexalith.EventStore.PayloadProtection.AzureKeyVault.csproj",
+    ];
+
+    private static readonly string[] RequiredPayloadProtectionRollbackPaths =
+    [
+        "src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs",
+        "src/Hexalith.Parties.Security/PartyKeyManagementService.cs",
+        "src/Hexalith.Parties.Security/CachedPartyKeyManagementService.cs",
+        "src/Hexalith.Parties.Security/PartyKeyLifecycleService.cs",
+        "src/Hexalith.Parties.Security/IPartyKeyRetryScheduler.cs",
+        "src/Hexalith.Parties.Security/ActorBackedPartyKeyRetryScheduler.cs",
+        "src/Hexalith.Parties.Security/PartyKeyRetryActor.cs",
+        "src/Hexalith.Parties.Security/IPartyKeyRetryActor.cs",
+        "src/Hexalith.Parties.Security/DecryptionCircuitBreaker.cs",
+        "src/Hexalith.Parties.Security/DecryptionCircuitOpenException.cs",
+        "src/Hexalith.Parties.Security/KeyOperationAuditService.cs",
+        "src/Hexalith.Parties.Security/TenantKeyRotationService.cs",
+        "src/Hexalith.Parties.Security/TenantKeyRotationProgress.cs",
+        "src/Hexalith.Parties.Security/TenantKeyRotationProgressConflictException.cs",
+        "src/Hexalith.Parties.Security/ITenantKeyRotationCacheInvalidator.cs",
+        "src/Hexalith.Parties.Security/LocalDevKeyStorageBackend.cs",
+        "src/Hexalith.Parties.Security/PartyEncryptionKeyDestroyedException.cs",
+        "src/Hexalith.Parties.Security/CryptoPendingRecord.cs",
+        "src/Hexalith.Parties.Security/PartyErasureOrchestrator.cs",
+        "src/Hexalith.Parties.Security/ErasureVerificationService.cs",
+        "src/Hexalith.Parties.Security/PartyErasureRecordStore.cs",
+        "src/Hexalith.Parties.Security/PartyPersonalDataCommandGuard.cs",
+        "src/Hexalith.Parties.Security/PersonalDataGraphInspector.cs",
+        "src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs",
+        "tests/Hexalith.Parties.Security.Tests/CryptoKeyManagementCompatibilityHarnessTests.cs",
+    ];
+
+    private static readonly string[] RequiredPayloadProtectionStoryStatuses =
+    [
+        "8-1-shared-payload-protection-security-spec-and-adr: in-progress",
+        "8-2-payload-protection-contracts-and-golden-vectors: backlog",
+        "8-3-pdenc-v2-core-cryptographic-engine: backlog",
+        "8-4-compatibility-readers-and-mixed-history-routing: backlog",
+        "8-5-policy-and-key-lifecycle-mechanics: backlog",
+        "8-6-azure-key-vault-production-adapter-conformance: backlog",
+        "8-7-server-persistence-and-snapshot-integration: backlog",
+        "8-8-package-and-release-integration: backlog",
+        "8-9-parties-dual-provider-parity: backlog",
+        "8-10-post-v2-write-rollback-rehearsal: backlog",
+        "8-11-g5-evidence-and-approval-closure: backlog",
+    ];
+
+    private static readonly string[] RequiredPositivePayloadProtectionSpecTokens =
+    [
+        "Hexalith.EventStore.PayloadProtection",
+        "Hexalith.EventStore.PayloadProtection.AzureKeyVault",
+        "pdenc-v2",
+        "json+pdenc-v1",
+        "IPersonalDataPolicy",
+        "IErasureStateProvider",
+    ];
 
     private static readonly IReadOnlyDictionary<string, string[]> RequiredRows = new Dictionary<string, string[]>(StringComparer.Ordinal)
     {
@@ -53,7 +122,24 @@ public sealed class PlatformApiPrerequisitesTests
         ["EventStore domain-service host"] = ["AddEventStoreDomainService", "UseEventStoreDomainService"],
         ["EventStore projection/query SDK"] = ["IDomainProjectionHandler", "IDomainQueryHandler", "IReadModelStore", "IQueryCursorCodec"],
         ["EventStore DataProtection"] = ["AddEventStoreDataProtection", "DaprXmlRepository", "AddEventStoreQueryCursorCodec"],
-        ["Payload protection engine package"] = ["IEventPayloadProtectionService", "CryptoShreddingWorkflowState", "PartyPayloadProtectionService", "pdenc-v2", "v1 read support", "IPersonalDataPolicy", "IErasureStateProvider"],
+        ["Payload protection engine package"] =
+        [
+            "IEventPayloadProtectionService",
+            "NoOpEventPayloadProtectionService",
+            "TryAddSingleton<IEventPayloadProtectionService, NoOpEventPayloadProtectionService>",
+            "Hexalith.EventStore.PayloadProtection",
+            "Hexalith.EventStore.PayloadProtection.AzureKeyVault",
+            "PartyPayloadProtectionService",
+            "EventStorePartyPayloadProtectionAdapter",
+            "CryptoKeyManagementCompatibilityHarnessTests",
+            "pdenc-v2",
+            "json+pdenc-v1",
+            "IPersonalDataPolicy",
+            "IErasureStateProvider",
+            "8-2-payload-protection-contracts-and-golden-vectors: backlog",
+            "8-11-g5-evidence-and-approval-closure: backlog",
+            "only this story can record",
+        ],
         ["EventStore client envelopes/freshness/error codes"] = ["IEventStoreGatewayClient", "QueryResponseMetadata", "QueryProblemReasonCodes", "GatewayProblemDetailsExtensions"],
         ["Tenant claims transformation"] = [PartiesClaimTypes.EventStoreTenant, "AggregateIdentity.IsValid(string)", "UniqueIdHelper.IsValidUlid(string)"],
         ["Aspire publish helpers"] = ["AddEventStoreDomainModule", "WithJwtBearerSecurity", "WithEventStoreJwtAuthentication(audience)", "AddEventStoreGatewayClient"],
@@ -525,6 +611,11 @@ public sealed class PlatformApiPrerequisitesTests
             {
                 AssertFixedStringSearch(root, pattern, paths, expectMatch);
             }
+
+            if (string.Equals(row.Surface, PayloadProtectionSurface, StringComparison.Ordinal))
+            {
+                AssertPayloadProtectionEvidence(root, row, commands);
+            }
         }
     }
 
@@ -970,6 +1061,106 @@ public sealed class PlatformApiPrerequisitesTests
         hasMatches.ShouldBe(
             expectMatch,
             $"rg -n -F '{pattern}' {string.Join(' ', paths)}{Environment.NewLine}{string.Join(Environment.NewLine, matches)}");
+    }
+
+    private static void AssertPayloadProtectionEvidence(
+        string root,
+        MatrixRow row,
+        (string Pattern, string[] Paths, bool ExpectMatch)[] commands)
+    {
+        string expectedGitlink = $"160000 commit {PayloadProtectionEventStoreSha} {EventStoreRelativePath}";
+        row.ValidationEvidence.ShouldContain($"`git ls-tree HEAD {EventStoreRelativePath}` -> `{expectedGitlink}`");
+        RunGit(root, "ls-tree", "HEAD", EventStoreRelativePath)
+            .Trim()
+            .Replace('\t', ' ')
+            .ShouldBe(expectedGitlink);
+
+        row.ValidationEvidence.ShouldContain($"`git -C {EventStoreRelativePath} rev-parse HEAD` -> `{PayloadProtectionEventStoreSha}`");
+        RunGit(root, "-C", EventStoreRelativePath, "rev-parse", "HEAD").Trim().ShouldBe(PayloadProtectionEventStoreSha);
+
+        row.ValidationEvidence.ShouldContain($"`git -C {EventStoreRelativePath} describe --tags --always --dirty` -> `{PayloadProtectionEventStoreDescribe}`");
+        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--always", "--dirty").Trim().ShouldBe(PayloadProtectionEventStoreDescribe);
+
+        foreach (string path in RequiredAbsentPayloadProtectionPaths)
+        {
+            row.ValidationEvidence.ShouldContain($"`test ! -f {path}`");
+            File.Exists(Path.Combine(root, path)).ShouldBeFalse(path);
+        }
+
+        foreach (string status in RequiredPayloadProtectionStoryStatuses)
+        {
+            HasPositiveFixedStringCommand(commands, status, EventStoreSprintStatusRelativePath)
+                .ShouldBeTrue(status);
+        }
+
+        foreach (string token in RequiredPositivePayloadProtectionSpecTokens)
+        {
+            HasPositiveFixedStringCommand(commands, token, EventStorePayloadProtectionSpecRelativePath)
+                .ShouldBeTrue(token);
+        }
+
+        string ownerSpec = File.ReadAllText(Path.Combine(root, EventStorePayloadProtectionSpecRelativePath));
+        HashSet<string> exactPackageCodeSpans = Regex.Matches(
+                ownerSpec,
+                @"`(?<package>Hexalith\.EventStore\.PayloadProtection(?:\.AzureKeyVault)?)`",
+                RegexOptions.CultureInvariant)
+            .Select(static match => match.Groups["package"].Value)
+            .ToHashSet(StringComparer.Ordinal);
+        exactPackageCodeSpans.Contains("Hexalith.EventStore.PayloadProtection").ShouldBeTrue();
+        exactPackageCodeSpans.Contains("Hexalith.EventStore.PayloadProtection.AzureKeyVault").ShouldBeTrue();
+
+        const string authorityLine = "| Content- and identity-bound G5 decision | 8.11 G5 Evidence And Approval Closure | `backlog` | 8.10 complete plus all named approvals; only this story can record `available` and unblock Parties Story 8.7. |";
+        File.ReadAllLines(Path.Combine(root, EventStoreStoryMigrationRelativePath))
+            .Contains(authorityLine, StringComparer.Ordinal)
+            .ShouldBeTrue(authorityLine);
+
+        HasPositiveFixedStringCommand(
+                commands,
+                "TryAddSingleton<IEventPayloadProtectionService, NoOpEventPayloadProtectionService>",
+                "references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Configuration/ServiceCollectionExtensions.cs")
+            .ShouldBeTrue("The recorded no-op provider must remain the default server registration.");
+
+        foreach (string rollbackPath in RequiredPayloadProtectionRollbackPaths)
+        {
+            File.Exists(Path.Combine(root, rollbackPath)).ShouldBeTrue(rollbackPath);
+        }
+
+        string ledger = File.ReadAllText(Path.Combine(root, "_bmad-output/implementation-artifacts/sprint-status.yaml"));
+        string retentionItem = ExtractYamlListItemContaining(ledger, PayloadProtectionRetentionAction);
+        string normalizedRetentionItem = Regex.Replace(
+            retentionItem.Replace("#", string.Empty, StringComparison.Ordinal),
+            @"\s+",
+            " ",
+            RegexOptions.CultureInvariant);
+        normalizedRetentionItem.ShouldContain("8f004ecf (`v3.89.0-6-g8f004ecf`)");
+        normalizedRetentionItem.ShouldContain("Stories 8.2-8.11 in backlog");
+        normalizedRetentionItem.ShouldContain("Story 8.11 alone may record G5 `available` and unblock Parties Story 8.7");
+        normalizedRetentionItem.ShouldContain("Story 8.7 remains blocked");
+        normalizedRetentionItem.ShouldContain("retention action stays open");
+        normalizedRetentionItem.ShouldContain("status: open");
+    }
+
+    private static bool HasPositiveFixedStringCommand(
+        IEnumerable<(string Pattern, string[] Paths, bool ExpectMatch)> commands,
+        string pattern,
+        string expectedPath)
+        => commands.Any(command =>
+            command.ExpectMatch &&
+            string.Equals(command.Pattern, pattern, StringComparison.Ordinal) &&
+            command.Paths.SequenceEqual([expectedPath], StringComparer.Ordinal));
+
+    private static string ExtractYamlListItemContaining(string yaml, string value)
+    {
+        int valueIndex = yaml.IndexOf(value, StringComparison.Ordinal);
+        valueIndex.ShouldBeGreaterThanOrEqualTo(0, value);
+
+        int itemStart = yaml.LastIndexOf("\n  - ", valueIndex, StringComparison.Ordinal);
+        itemStart.ShouldBeGreaterThanOrEqualTo(0, value);
+
+        int nextItemStart = yaml.IndexOf("\n  - ", valueIndex, StringComparison.Ordinal);
+        return nextItemStart < 0
+            ? yaml[itemStart..]
+            : yaml[itemStart..nextItemStart];
     }
 
     private static IEnumerable<string> EnumerateSearchFiles(string directory)
