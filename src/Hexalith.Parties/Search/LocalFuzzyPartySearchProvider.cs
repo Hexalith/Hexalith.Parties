@@ -189,7 +189,9 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
 
         foreach (string token in candidates)
         {
-            if (TryMatch(normalizedDisplayName, token, out double matchScore, out string matchType))
+            bool allowFuzzyDisplayNameMatch = tokens.Length <= 1 || !string.Equals(token, fullQuery, StringComparison.Ordinal);
+
+            if (TryMatch(normalizedDisplayName, token, allowFuzzyDisplayNameMatch, out double matchScore, out string matchType))
             {
                 UpsertFieldMatch(fieldMatches, "displayName", 1.0, matchScore, matchType);
                 _ = matchedTokens.Add(token);
@@ -225,7 +227,12 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
         };
     }
 
-    private static bool TryMatch(string candidate, string token, out double score, out string matchType)
+    private static bool TryMatch(
+        string candidate,
+        string token,
+        bool allowFuzzy,
+        out double score,
+        out string matchType)
     {
         score = 0.0;
         matchType = string.Empty;
@@ -261,7 +268,7 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
 
         // Identifier-like tokens with digits create excessive false positives under Jaro-Winkler
         // (for example Entry-50000 vs Entry-10000). Keep them to deterministic matching.
-        if (token.Any(char.IsDigit))
+        if (!allowFuzzy || token.Any(char.IsDigit))
         {
             return false;
         }

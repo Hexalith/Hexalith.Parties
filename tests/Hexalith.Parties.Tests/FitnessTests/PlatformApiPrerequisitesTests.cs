@@ -14,8 +14,8 @@ public sealed class PlatformApiPrerequisitesTests
     private const string EventStoreSprintStatusRelativePath = "references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml";
     private const string EventStoreStoryMigrationRelativePath = "references/Hexalith.EventStore/_bmad-output/planning-artifacts/story-id-migration-2026-08-01.md";
     private const string MatrixRelativePath = "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md";
-    private const string PayloadProtectionEventStoreDescribe = "v3.89.0-6-g8f004ecf";
-    private const string PayloadProtectionEventStoreSha = "8f004ecf8be271ec5e76f97f944c1fc1154391c7";
+    private const string PayloadProtectionEventStoreDescribe = "v3.89.0-7-g4bcf2484";
+    private const string PayloadProtectionEventStoreSha = "4bcf2484a09eb26490cb2d32ceb6df8949f90cc6";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
     private const string PayloadProtectionSurface = "Payload protection engine package";
     private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";
@@ -60,7 +60,7 @@ public sealed class PlatformApiPrerequisitesTests
 
     private static readonly string[] RequiredPayloadProtectionStoryStatuses =
     [
-        "8-1-shared-payload-protection-security-spec-and-adr: in-progress",
+        "8-1-shared-payload-protection-security-spec-and-adr: done",
         "8-2-payload-protection-contracts-and-golden-vectors: backlog",
         "8-3-pdenc-v2-core-cryptographic-engine: backlog",
         "8-4-compatibility-readers-and-mixed-history-routing: backlog",
@@ -75,6 +75,9 @@ public sealed class PlatformApiPrerequisitesTests
 
     private static readonly string[] RequiredPositivePayloadProtectionSpecTokens =
     [
+        "status: approved-authorized",
+        "decision: adopted",
+        "story_8_2_authorized: true",
         "Hexalith.EventStore.PayloadProtection",
         "Hexalith.EventStore.PayloadProtection.AzureKeyVault",
         "pdenc-v2",
@@ -1100,6 +1103,9 @@ public sealed class PlatformApiPrerequisitesTests
         }
 
         string ownerSpec = File.ReadAllText(Path.Combine(root, EventStorePayloadProtectionSpecRelativePath));
+        ExtractFrontMatterValue(ownerSpec, "status").ShouldBe("approved-authorized");
+        ExtractFrontMatterValue(ownerSpec, "decision").ShouldBe("adopted");
+        ExtractFrontMatterValue(ownerSpec, "story_8_2_authorized").ShouldBe("true");
         HashSet<string> exactPackageCodeSpans = Regex.Matches(
                 ownerSpec,
                 @"`(?<package>Hexalith\.EventStore\.PayloadProtection(?:\.AzureKeyVault)?)`",
@@ -1132,8 +1138,10 @@ public sealed class PlatformApiPrerequisitesTests
             @"\s+",
             " ",
             RegexOptions.CultureInvariant);
-        normalizedRetentionItem.ShouldContain("8f004ecf (`v3.89.0-6-g8f004ecf`)");
-        normalizedRetentionItem.ShouldContain("Stories 8.2-8.11 in backlog");
+        normalizedRetentionItem.ShouldContain("4bcf2484 (`v3.89.0-7-g4bcf2484`)");
+        normalizedRetentionItem.ShouldContain("Story 8.1 is approved, authorized, adopted, and done");
+        normalizedRetentionItem.ShouldContain("Story 8.2 remains backlog");
+        normalizedRetentionItem.ShouldContain("Stories 8.3-8.11 remain predecessor-gated backlog");
         normalizedRetentionItem.ShouldContain("Story 8.11 alone may record G5 `available` and unblock Parties Story 8.7");
         normalizedRetentionItem.ShouldContain("Story 8.7 remains blocked");
         normalizedRetentionItem.ShouldContain("retention action stays open");
@@ -1148,6 +1156,26 @@ public sealed class PlatformApiPrerequisitesTests
             command.ExpectMatch &&
             string.Equals(command.Pattern, pattern, StringComparison.Ordinal) &&
             command.Paths.SequenceEqual([expectedPath], StringComparer.Ordinal));
+
+    private static string ExtractFrontMatterValue(string markdown, string key)
+    {
+        string[] lines = markdown.Split('\n');
+        lines[0].TrimEnd('\r').ShouldBe("---");
+
+        int closingDelimiter = Array.FindIndex(
+            lines,
+            1,
+            static line => string.Equals(line.TrimEnd('\r'), "---", StringComparison.Ordinal));
+        closingDelimiter.ShouldBeGreaterThan(0);
+
+        string prefix = $"{key}:";
+        string[] matches = lines[1..closingDelimiter]
+            .Select(static line => line.TrimEnd('\r'))
+            .Where(line => line.StartsWith(prefix, StringComparison.Ordinal))
+            .ToArray();
+
+        return matches.ShouldHaveSingleItem()[prefix.Length..].Trim().Trim('\'', '"');
+    }
 
     private static string ExtractYamlListItemContaining(string yaml, string value)
     {

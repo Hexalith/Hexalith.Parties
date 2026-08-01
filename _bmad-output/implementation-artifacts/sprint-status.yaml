@@ -253,11 +253,13 @@ action_items:
     # processing-record semantics, erasure certificate/report parity, and proven
     # rollback (spine I8/I3) in the 8.3 matrix G5 row; routed to Hexalith.EventStore
     # owners as G5. Revalidated 2026-08-01 at matching root gitlink/clean checkout
-    # 8f004ecf (`v3.89.0-6-g8f004ecf`). The pin satisfies projection/query needs
-    # but does not deliver G5. EventStore Story 8.1 remains draft-not-authorized
-    # and in progress; the approved decomposition keeps Stories 8.2-8.11 in
-    # backlog, and Story 8.11 alone may record G5 `available` and unblock Parties
-    # Story 8.7. Its closure packet is absent. The current contract/no-op seams
+    # 4bcf2484 (`v3.89.0-7-g4bcf2484`). The pin satisfies projection/query needs
+    # but does not deliver G5. EventStore Story 8.1 is approved, authorized,
+    # adopted, and done; that approval authorizes only Story 8.2 preflight and
+    # implementation. Story 8.2 remains backlog; Stories 8.3-8.11 remain
+    # predecessor-gated backlog, and Story 8.11 alone may record G5 `available`
+    # and unblock Parties Story 8.7. Its closure packet is absent. The current
+    # contract/no-op seams
     # are not the planned Hexalith.EventStore.PayloadProtection packages, and no
     # approved runtime G5 engine, pdenc-v2, IPersonalDataPolicy, or
     # IErasureStateProvider exists. All 18 MOVE files, 5 KEEP files, and the

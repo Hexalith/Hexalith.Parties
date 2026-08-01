@@ -61,3 +61,9 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-align-assistant-commit-message-generation.md`
   summary: Reconcile persistent BMAD branch guidance with the Hexalith default-main Git policy.
   evidence: The pre-existing project context still requires a typed branch and PR, while the authoritative Hexalith Git instructions say to work on `main` by default and branch only when genuinely required.
+- source_spec: `_bmad-output/implementation-artifacts/spec-gh-30708560778-fix-ci-failures.md`
+  summary: Hoist normalized multi-token search candidates outside per-entry evaluation.
+  evidence: `EvaluateEntry` rebuilds the query-only full phrase and candidate collection for every party, creating O(entries) allocations in the 10K hot path despite the current performance gate passing.
+- source_spec: `_bmad-output/implementation-artifacts/spec-gh-30708560778-fix-ci-failures.md`
+  summary: Normalize synthetic full-phrase coverage in multi-token relevance scoring.
+  evidence: A deterministic full-phrase match is added alongside real query tokens, so coverage can exceed one before the final score is clamped and can inflate ordering relative to token-only matches.

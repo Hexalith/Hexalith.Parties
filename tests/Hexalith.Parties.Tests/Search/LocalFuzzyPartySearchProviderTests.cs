@@ -68,6 +68,84 @@ public class LocalFuzzyPartySearchProviderTests
         match.RelevanceScore.ShouldBeGreaterThan(0.5);
     }
 
+    [Fact]
+    public void Search_ExactMultiTokenQuery_RetainsResultMetadataAndPaging()
+    {
+        PagedResult<PartySearchResult> result = _provider.Search(_entries, "Jean Dupont", null, null, 1, 1);
+
+        PartySearchResult match = result.Items.ShouldHaveSingleItem();
+        match.Party.Id.ShouldBe("p1");
+        match.Matches.ShouldHaveSingleItem().ShouldSatisfyAllConditions(
+            metadata => metadata.MatchedField.ShouldBe("displayName"),
+            metadata => metadata.MatchType.ShouldBe("exact"),
+            metadata => metadata.Score.ShouldBe(1.0));
+        result.Page.ShouldBe(1);
+        result.PageSize.ShouldBe(1);
+        result.TotalCount.ShouldBe(1);
+        result.TotalPages.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Search_MisspelledMultiTokenQuery_RetainsTokenFuzzyMatchAndMetadata()
+    {
+        PagedResult<PartySearchResult> result = _provider.Search(_entries, "Jena Dupnt", null, null, 1, 1);
+
+        PartySearchResult match = result.Items.ShouldHaveSingleItem();
+        match.Party.Id.ShouldBe("p1");
+        match.Matches.ShouldHaveSingleItem().ShouldSatisfyAllConditions(
+            metadata => metadata.MatchedField.ShouldBe("displayName"),
+            metadata => metadata.MatchType.ShouldBe("fuzzy"),
+            metadata => metadata.Score.ShouldBe(0.4));
+        match.RelevanceScore.ShouldBe(0.46, 0.000_001);
+        result.Page.ShouldBe(1);
+        result.PageSize.ShouldBe(1);
+        result.TotalCount.ShouldBe(1);
+        result.TotalPages.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Search_MultiTokenPhraseMatches_RetainOrderingAndPageBoundaries()
+    {
+        List<PartyIndexEntry> entries =
+        [
+            _entries[0],
+            _entries[0] with
+            {
+                Id = "p6",
+                DisplayName = "The Jean Du Society",
+                SortName = "Jean Du Society, The",
+            },
+        ];
+
+        PagedResult<PartySearchResult> firstPage = _provider.Search(entries, "Jean Du", null, null, 1, 1);
+        PagedResult<PartySearchResult> secondPage = _provider.Search(entries, "Jean Du", null, null, 2, 1);
+
+        PartySearchResult prefixMatch = firstPage.Items.ShouldHaveSingleItem();
+        prefixMatch.Party.Id.ShouldBe("p1");
+        prefixMatch.Matches.ShouldHaveSingleItem().ShouldSatisfyAllConditions(
+            metadata => metadata.MatchType.ShouldBe("prefix"),
+            metadata => metadata.Score.ShouldBe(0.8));
+        prefixMatch.RelevanceScore.ShouldBe(0.87, 0.000_001);
+
+        PartySearchResult containsMatch = secondPage.Items.ShouldHaveSingleItem();
+        containsMatch.Party.Id.ShouldBe("p6");
+        containsMatch.Matches.ShouldHaveSingleItem().ShouldSatisfyAllConditions(
+            metadata => metadata.MatchType.ShouldBe("contains"),
+            metadata => metadata.Score.ShouldBe(0.6));
+        containsMatch.RelevanceScore.ShouldBe(0.69, 0.000_001);
+
+        firstPage.ShouldSatisfyAllConditions(
+            page => page.Page.ShouldBe(1),
+            page => page.PageSize.ShouldBe(1),
+            page => page.TotalCount.ShouldBe(2),
+            page => page.TotalPages.ShouldBe(2));
+        secondPage.ShouldSatisfyAllConditions(
+            page => page.Page.ShouldBe(2),
+            page => page.PageSize.ShouldBe(1),
+            page => page.TotalCount.ShouldBe(2),
+            page => page.TotalPages.ShouldBe(2));
+    }
+
     // 7.6 — contact channel values are not searched by the MVP display-name path
     [Fact]
     public void Search_ContactChannelValues_AreNotSearched()
