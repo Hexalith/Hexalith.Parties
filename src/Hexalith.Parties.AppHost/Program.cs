@@ -1,8 +1,10 @@
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
 using Hexalith.EventStore.Aspire;
+using Hexalith.Parties.AppHost;
 
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
+DaprMtlsBootstrap? daprMtls = DaprMtlsBootstrap.Load(builder.Configuration);
 
 string eventStoreAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.yaml");
 string adminServerAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.eventstore-admin.yaml");
@@ -10,7 +12,19 @@ string sampleAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.samp
 string tenantsAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.tenants.yaml");
 string partiesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.parties.yaml");
 string memoriesAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.memories.yaml");
+string mtlsOnlyConfigPath = ResolveDaprConfigPath("mtls.yaml");
 string resiliencyConfigPath = ResolveDaprConfigPath("resiliency.yaml");
+if (daprMtls is not null)
+{
+    eventStoreAccessControlConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(eventStoreAccessControlConfigPath);
+    adminServerAccessControlConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(adminServerAccessControlConfigPath);
+    sampleAccessControlConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(sampleAccessControlConfigPath);
+    tenantsAccessControlConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(tenantsAccessControlConfigPath);
+    partiesAccessControlConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(partiesAccessControlConfigPath);
+    memoriesAccessControlConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(memoriesAccessControlConfigPath);
+    mtlsOnlyConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(mtlsOnlyConfigPath);
+}
+
 const string PublishModeJwtIssuer = "https://auth.tache.ai/realms/tache";
 const string PublishModeJwtAuthority = PublishModeJwtIssuer;
 
@@ -52,16 +66,21 @@ HexalithEventStoreResources eventStoreResources = builder.AddHexalithEventStore(
     eventStoreAccessControlConfigPath,
     adminServerAccessControlConfigPath,
     resiliencyConfigPath);
+daprMtls?.ConfigureProjectSidecar(eventStore);
+daprMtls?.ConfigureProjectSidecar(adminServer);
 
 IResourceBuilder<ProjectResource> parties = builder.AddProject<Projects.Hexalith_Parties>("parties")
-    .WithDaprSidecar(sidecar => sidecar
-        .WithOptions(new DaprSidecarOptions
+    .WithDaprSidecar(sidecar =>
+    {
+        _ = sidecar.WithOptions(new DaprSidecarOptions
         {
             AppId = "parties",
             Config = partiesAccessControlConfigPath,
         })
         .WithReference(eventStoreResources.StateStore)
-        .WithReference(eventStoreResources.PubSub))
+        .WithReference(eventStoreResources.PubSub);
+        daprMtls?.ConfigureSidecar(sidecar);
+    })
     .WaitFor(eventStoreResources.StateStore)
     .WaitFor(eventStoreResources.PubSub);
 
@@ -75,14 +94,17 @@ IResourceBuilder<ProjectResource> partiesMcp = builder.AddProject<Projects.Hexal
 _ = partiesMcp.WithEnvironment("Parties__Mcp__EventStoreGatewayBaseUrl", ReferenceExpression.Create($"{eventStore.GetEndpoint("http")}"));
 
 IResourceBuilder<ProjectResource> tenants = builder.AddProject<Projects.Hexalith_Tenants>("tenants")
-    .WithDaprSidecar(sidecar => sidecar
-        .WithOptions(new DaprSidecarOptions
+    .WithDaprSidecar(sidecar =>
+    {
+        _ = sidecar.WithOptions(new DaprSidecarOptions
         {
             AppId = "tenants",
             Config = tenantsAccessControlConfigPath,
         })
         .WithReference(eventStoreResources.StateStore)
-        .WithReference(eventStoreResources.PubSub))
+        .WithReference(eventStoreResources.PubSub);
+        daprMtls?.ConfigureSidecar(sidecar);
+    })
     .WaitFor(eventStoreResources.StateStore)
     .WaitFor(eventStoreResources.PubSub);
 
@@ -148,14 +170,17 @@ if (builder.ExecutionContext.IsPublishMode
     // mode always composes it as a first-class topology participant. The in-cluster Service URL
     // is the only rich-search endpoint Parties uses.
     IResourceBuilder<ProjectResource> memories = builder.AddProject("memories", memoriesProjectPath)
-        .WithDaprSidecar(sidecar => sidecar
-            .WithOptions(new DaprSidecarOptions
+        .WithDaprSidecar(sidecar =>
+        {
+            _ = sidecar.WithOptions(new DaprSidecarOptions
             {
                 AppId = "memories",
                 Config = memoriesAccessControlConfigPath,
             })
             .WithReference(eventStoreResources.StateStore)
-            .WithReference(eventStoreResources.PubSub))
+            .WithReference(eventStoreResources.PubSub);
+            daprMtls?.ConfigureSidecar(sidecar);
+        })
         .WaitFor(eventStoreResources.StateStore)
         .WaitFor(eventStoreResources.PubSub);
 
@@ -190,23 +215,30 @@ if (builder.ExecutionContext.IsPublishMode
     // EventStore__SignalR__Enabled is now set unconditionally near the eventstore definition (Story 1.7).
 
     IResourceBuilder<ProjectResource> sample = builder.AddProject("sample", sampleProjectPath)
-        .WithDaprSidecar(sidecar => sidecar
-            .WithOptions(new DaprSidecarOptions
+        .WithDaprSidecar(sidecar =>
+        {
+            _ = sidecar.WithOptions(new DaprSidecarOptions
             {
                 AppId = "sample",
                 Config = sampleAccessControlConfigPath,
-            }));
+            });
+            daprMtls?.ConfigureSidecar(sidecar);
+        });
 
     _ = builder.AddProject("sample-blazor-ui", sampleBlazorUiProjectPath)
         .WithReference(eventStore)
         .WaitFor(eventStore)
         .WithReference(sample)
         .WaitFor(sample)
-        .WithDaprSidecar(sidecar => sidecar
-            .WithOptions(new DaprSidecarOptions
+        .WithDaprSidecar(sidecar =>
+        {
+            _ = sidecar.WithOptions(new DaprSidecarOptions
             {
                 AppId = "sample-blazor-ui",
-            }))
+                Config = daprMtls is null ? null : mtlsOnlyConfigPath,
+            });
+            daprMtls?.ConfigureSidecar(sidecar);
+        })
         .WithEnvironment("EventStore__EventStoreUrl", ReferenceExpression.Create($"{eventStore.GetEndpoint("http")}"))
         .WithEnvironment("EventStore__SignalR__HubUrl", ReferenceExpression.Create($"{eventStore.GetEndpoint("http")}/hubs/projection-changes"))
         .WithEnvironment("EventStore__Authentication__Authority", PublishModeJwtAuthority)

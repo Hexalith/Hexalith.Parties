@@ -2,7 +2,8 @@
 title: '8.6 Projection and query SDK migration'
 type: 'refactor'
 created: '2026-07-31'
-status: 'draft'
+status: 'in-progress'
+baseline_commit: '3f80b002dc1928abed1f1e97c0c50ac2212b73cd'
 review_loop_iteration: 0
 context:
   - '{project-root}/_bmad-output/implementation-artifacts/epic-8-context.md'

@@ -4,6 +4,7 @@ using Hexalith.Parties.Domain;
 using Hexalith.Parties.Extensions;
 using Hexalith.Parties.HealthChecks;
 using Hexalith.Parties.Middleware;
+using Hexalith.Parties.Projections.Handlers;
 
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -14,7 +15,9 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Domain-service SDK host surface: service defaults, EventStore discovery, domain telemetry,
 // and canonical DAPR-invoked endpoints are owned by Hexalith.EventStore.
-builder.AddEventStoreDomainService(typeof(PartyAggregate).Assembly);
+builder.AddEventStoreDomainService(
+    typeof(PartyAggregate).Assembly,
+    typeof(PartyDetailProjectionHandler).Assembly);
 
 // Story 8.5 keeps the historical Hexalith.Parties telemetry source until the
 // platform degraded-response / DAPR-health parity row is resolved.
@@ -59,13 +62,15 @@ app.UseCloudEvents();
 //     Delivery is enforced by the pubsub component (scoped to parties + tenants in
 //     the AppHost composition), not by service-invocation access control.
 // Client-facing service-invocation access is blocked by AppHost DAPR
-// accesscontrol.parties.yaml (defaultAction: deny; only eventstore -> POST /process).
+// accesscontrol.parties.yaml (defaultAction: deny; only eventstore may invoke the exact
+// POST command, query, projection, and staged-rebuild routes listed there).
 // EventStore is the public command/query gateway after Story 12.2.
 app.MapSubscribeHandler();
 app.MapEventStoreDomainEvents();
-// Canonical SDK endpoints: /process, /replay-state, /query, /project, and
-// /admin/operational-index-metadata. DAPR service invocation remains ACL-limited
-// to only eventstore -> POST /process in accesscontrol.parties.yaml.
+// Canonical SDK endpoints include /process, /replay-state, /query, /project,
+// /project/v2, staged /project/rebuild/* operations, and operational metadata.
+// DAPR service invocation remains ACL-limited to EventStore and the exact POST
+// operations in accesscontrol.parties.yaml.
 app.UseEventStoreDomainService();
 app.MapActorsHandlers();
 

@@ -102,7 +102,9 @@ public sealed class ArchitecturalFitnessTests
             + string.Join(", ", violations));
 
         source.ShouldContain("app.MapActorsHandlers()");
-        source.ShouldContain("builder.AddEventStoreDomainService(typeof(PartyAggregate).Assembly)");
+        source.ShouldContain("builder.AddEventStoreDomainService(");
+        source.ShouldContain("typeof(PartyAggregate).Assembly");
+        source.ShouldContain("typeof(PartyDetailProjectionHandler).Assembly");
         source.ShouldContain("app.UseEventStoreDomainService()");
         source.ShouldContain("app.MapSubscribeHandler()");
         source.ShouldContain("app.MapEventStoreDomainEvents()");
@@ -119,8 +121,8 @@ public sealed class ArchitecturalFitnessTests
             "/tenants/events",
             customMessage: "MapEventStoreDomainEvents exception must name the route it exposes (POST /tenants/events).");
         source.ShouldContain(
-            "only eventstore -> POST /process",
-            customMessage: "The retained /process endpoint must be documented as DAPR service-invocation plumbing restricted by accesscontrol.parties.yaml.");
+            "only eventstore may invoke the exact",
+            customMessage: "The retained SDK endpoints must be documented as DAPR service-invocation plumbing restricted by accesscontrol.parties.yaml.");
     }
 
     [Fact]
@@ -320,6 +322,13 @@ public sealed class ArchitecturalFitnessTests
         partiesAccessControl.ShouldContain("defaultAction: deny");
         partiesAccessControl.ShouldContain("appId: eventstore");
         partiesAccessControl.ShouldContain("name: /process");
+        partiesAccessControl.ShouldContain("name: /query");
+        partiesAccessControl.ShouldContain("name: /project/v2");
+        partiesAccessControl.ShouldContain("name: /project/rebuild/v1");
+        partiesAccessControl.ShouldContain("name: /project/rebuild/stage/v1");
+        partiesAccessControl.ShouldContain("name: /project/rebuild/commit/v1");
+        partiesAccessControl.ShouldContain("name: /project/rebuild/abort/v1");
+        partiesAccessControl.ShouldContain("name: /project/rebuild/verify/v1");
         partiesAccessControl.ShouldContain("httpVerb: ['POST']");
 
         // Wildcard guards must catch the canonical YAML quoted forms as well as the unquoted form.

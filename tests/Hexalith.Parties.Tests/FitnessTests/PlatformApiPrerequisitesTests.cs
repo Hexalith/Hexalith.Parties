@@ -67,7 +67,7 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly IReadOnlyDictionary<string, string[]> RequiredAvailableConsumptionIdentities = new Dictionary<string, string[]>(StringComparer.Ordinal)
     {
         ["EventStore domain-service host"] = ["Consumption availability validated", "9f8b54dc161a4d5a9b2e6b1deacf331d1b80f1e0"],
-        ["EventStore DataProtection"] = ["Consumption availability recorded", "e4618d9114c8824fd50fdfc8d135438aa261377c"],
+        ["EventStore DataProtection"] = ["Consumption availability", "fa2d1c9910f8976553adb33dcdb1c9ff2ea75594"],
         ["Commons HTTP helpers"] = ["Consumption availability recorded", "2.28.1", "b03469b13408530bb757d3d02279c2d772ee4848"],
         ["Builds shared props/targets"] = ["Consumption availability recorded", "4.18.5", "ed75ae3c45425b9610d5e75e6c5ec3e8d5283fe1"],
     };
@@ -440,9 +440,9 @@ public sealed class PlatformApiPrerequisitesTests
         string story88 = File.ReadAllText(Path.Combine(root, "_bmad-output/implementation-artifacts/spec-8-8-client-mcp-apphost-build-and-deploy-cleanup.md"));
         string story810 = File.ReadAllText(Path.Combine(root, "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"));
 
-        story86.ShouldContain("Block If — available-row identity");
-        story86.ShouldContain("EventStore DataProtection");
-        story86.ShouldContain("availability-identity gate, not an additive-API request");
+        story86.ShouldContain("fa2d1c9910f8976553adb33dcdb1c9ff2ea75594");
+        story86.ShouldContain("Any other identity or consumption mode");
+        story86.ShouldContain("Keep the Story 8.3 owner status `available` while recording consumer gates");
 
         story88.ShouldContain("Block If — available-row identities");
         story88.ShouldContain("Commons HTTP helpers");
@@ -845,7 +845,9 @@ public sealed class PlatformApiPrerequisitesTests
         if (string.Equals(path, "src/Hexalith.Parties/Program.cs", StringComparison.Ordinal))
         {
             string source = File.ReadAllText(Path.Combine(root, path));
-            source.ShouldContain("AddEventStoreDomainService(typeof(PartyAggregate).Assembly)");
+            source.ShouldContain("AddEventStoreDomainService(");
+            source.ShouldContain("typeof(PartyAggregate).Assembly");
+            source.ShouldContain("typeof(PartyDetailProjectionHandler).Assembly");
             source.ShouldContain("UseEventStoreDomainService()");
             source.ShouldContain("ConfigureOpenTelemetryTracerProvider");
             source.ShouldContain("ConfigureOpenTelemetryMeterProvider");

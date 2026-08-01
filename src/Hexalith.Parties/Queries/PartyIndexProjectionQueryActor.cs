@@ -262,7 +262,7 @@ public sealed partial class PartyIndexProjectionQueryActor(
         }
     }
 
-    private static bool TryParseListPayload(byte[] payloadBytes, out ListPartiesQueryPayload payload)
+    internal static bool TryParseListPayload(byte[] payloadBytes, out ListPartiesQueryPayload payload)
     {
         payload = new ListPartiesQueryPayload(
             Page: 1,
@@ -343,7 +343,7 @@ public sealed partial class PartyIndexProjectionQueryActor(
         return true;
     }
 
-    private static bool TryParseSearchPayload(byte[] payloadBytes, out SearchPartiesQueryPayload payload)
+    internal static bool TryParseSearchPayload(byte[] payloadBytes, out SearchPartiesQueryPayload payload)
     {
         payload = new SearchPartiesQueryPayload(
             Query: string.Empty,
@@ -401,7 +401,7 @@ public sealed partial class PartyIndexProjectionQueryActor(
         return true;
     }
 
-    private static bool IsUnsupportedSearchMode(string? mode)
+    internal static bool IsUnsupportedSearchMode(string? mode)
     {
         if (string.IsNullOrWhiteSpace(mode))
         {
@@ -495,7 +495,7 @@ public sealed partial class PartyIndexProjectionQueryActor(
                     || message.Contains("actor not found", StringComparison.OrdinalIgnoreCase));
     }
 
-    private sealed record ListPartiesQueryPayload(
+    internal sealed record ListPartiesQueryPayload(
         int Page,
         int PageSize,
         PartyType? Type,
@@ -515,7 +515,7 @@ public sealed partial class PartyIndexProjectionQueryActor(
         string? ModifiedAfter = null,
         string? ModifiedBefore = null);
 
-    private sealed record SearchPartiesQueryPayload(
+    internal sealed record SearchPartiesQueryPayload(
         string Query,
         int Page,
         int PageSize,

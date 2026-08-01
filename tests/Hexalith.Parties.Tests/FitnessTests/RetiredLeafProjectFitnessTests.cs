@@ -88,7 +88,9 @@ public sealed class RetiredLeafProjectFitnessTests
             RepositoryRoot.Locate(),
             "src/Hexalith.Parties/Program.cs")));
 
-        source.ShouldContain("AddEventStoreDomainService(typeof(PartyAggregate).Assembly)");
+        source.ShouldContain("AddEventStoreDomainService(");
+        source.ShouldContain("typeof(PartyAggregate).Assembly");
+        source.ShouldContain("typeof(PartyDetailProjectionHandler).Assembly");
         source.ShouldContain("UseEventStoreDomainService()");
         source.ShouldContain("ConfigureOpenTelemetryTracerProvider");
         source.ShouldContain("ConfigureOpenTelemetryMeterProvider");

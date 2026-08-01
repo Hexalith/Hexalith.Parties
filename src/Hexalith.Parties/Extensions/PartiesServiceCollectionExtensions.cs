@@ -5,6 +5,7 @@ using Dapr.Client;
 using FluentValidation;
 
 using Hexalith.EventStore.Client.Handlers;
+using Hexalith.EventStore.Client.Registration;
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Configuration;
@@ -168,6 +169,17 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.AddSingleton<ICryptoStatusProvider>(sp => sp.GetRequiredService<PartyKeyLifecycleService>());
         _ = services.AddSingleton<DecryptionCircuitBreaker>();
         _ = services.AddSingleton<IPartyErasureRecordStore, PartyErasureRecordStore>();
+        _ = services.AddEventStoreReadModelStore();
+        _ = services.AddOptions<PartySdkReadModelOptions>()
+            .Bind(configuration.GetSection(PartySdkReadModelOptions.ConfigurationSection))
+            .Validate(options => !string.IsNullOrWhiteSpace(options.ReadModelStateStoreName),
+                "Party SDK read-model state store name must not be empty.")
+            .Validate(options => options.FreshnessAgingSeconds >= 0
+                    && options.FreshnessStaleSeconds >= options.FreshnessAgingSeconds,
+                "Party SDK freshness thresholds must be ordered and non-negative.")
+            .ValidateOnStart();
+        _ = services.AddSingleton<PartySdkReadModelEraser>();
+        _ = services.AddScoped<PartySdkQueryService>();
         _ = services.AddSingleton<PartyPayloadProtectionService>();
         _ = services.AddSingleton<EventStorePartyPayloadProtectionAdapter>();
         _ = services.AddSingleton<IEventPayloadProtectionService>(sp => sp.GetRequiredService<EventStorePartyPayloadProtectionAdapter>());
@@ -203,6 +215,18 @@ public static class PartiesServiceCollectionExtensions {
                     return new ErasureVerificationStoreResult
                     {
                         StoreName = "index-projection",
+                        Status = ErasureStoreCleanupStatus.Cleaned,
+                        Timestamp = DateTimeOffset.UtcNow,
+                    };
+                },
+                async (tenantId, partyId, cancellationToken) =>
+                {
+                    await sp.GetRequiredService<PartySdkReadModelEraser>()
+                        .EraseAsync(tenantId, partyId, cancellationToken)
+                        .ConfigureAwait(false);
+                    return new ErasureVerificationStoreResult
+                    {
+                        StoreName = "sdk-read-models",
                         Status = ErasureStoreCleanupStatus.Cleaned,
                         Timestamp = DateTimeOffset.UtcNow,
                     };

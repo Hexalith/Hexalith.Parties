@@ -7,11 +7,26 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Client\Hexalith.EventStore.Client.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.EventStore.Client" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
+    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.DomainService\Hexalith.EventStore.DomainService.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
+    <PackageReference Include="Hexalith.EventStore.DomainService" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Dapr.Client" />
     <PackageReference Include="Dapr.Actors" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" GeneratePathProperty="true" ExcludeAssets="all" NoWarn="NU1510" />
   </ItemGroup>
+
+  <!-- EventStore.DomainService brings the same logging-analyzer conflict handled by the Web host.
+       Restore the in-box LoggerMessage generator for this library's existing partial log methods. -->
+  <Target Name="_RestoreLoggerMessageGenerator" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Include="$(PkgMicrosoft_Extensions_Logging_Abstractions)\analyzers\dotnet\roslyn4.4\cs\Microsoft.Extensions.Logging.Generators.dll"
+                Condition="Exists('$(PkgMicrosoft_Extensions_Logging_Abstractions)\analyzers\dotnet\roslyn4.4\cs\Microsoft.Extensions.Logging.Generators.dll')
+                           and !@(Analyzer->AnyHaveMetadataValue('Filename', 'Microsoft.Extensions.Logging.Generators'))" />
+    </ItemGroup>
+  </Target>
 
 </Project>

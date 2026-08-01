@@ -3,9 +3,11 @@ project: parties
 date: 2026-07-31
 workflow: bmad-correct-course
 mode: batch
-status: proposed
+status: implemented
 change_scope: minor
-approval: pending
+approval: approved
+approved_by: Administrator
+approved_on: 2026-08-01
 ---
 
 # Sprint Change Proposal — Epics 7 and 8 Maintenance-Scope Revalidation
@@ -63,10 +65,11 @@ Evidence:
 None. This is documentation-only scope hygiene and does not change implemented
 behavior, release gates, or validation lanes.
 
-## 3. Recommended Approach
+## 3. Recommended and Approved Approach
 
-Use **Direct Adjustment**: add one scope-boundary paragraph to the current
-2026-07-17 readiness draft and revalidate the existing PRD and epics wording.
+**Direct Adjustment** was approved and implemented: one scope-boundary paragraph
+was added to the current 2026-07-17 readiness draft, and the existing PRD and
+epics wording was revalidated.
 
 - Effort: Low
 - Risk: Low
@@ -136,9 +139,9 @@ screens, components, or accessibility requirements.
 
 **Classification:** Minor
 **Recipient:** Developer/documentation maintainer
-**Status:** Pending approval
+**Status:** Complete
 
-Responsibilities after approval:
+Responsibilities completed:
 
 1. Apply only the proposed wording to the 2026-07-17 readiness draft.
 2. Preserve all epic/story scope, IDs, sequencing, and statuses.
@@ -152,8 +155,8 @@ Success criteria:
   functional coverage.
 - [x] The epics document explicitly classifies Epics 7 and 8 as maintenance with
   no new PRD functional coverage.
-- [ ] The 2026-07-17 readiness draft contains the symmetric scope boundary.
-- [ ] A corpus check confirms neither epic can be counted as MVP or
+- [x] The 2026-07-17 readiness draft contains the symmetric scope boundary.
+- [x] A corpus check confirms neither epic can be counted as MVP or
   product-feature functional coverage.
 - [x] Epics 1-5 remain the complete nine-FR feature baseline.
 
@@ -188,7 +191,7 @@ Success criteria:
 - [x] 4.1 Direct Adjustment is viable: low effort, low risk, no timeline impact.
 - [N/A] 4.2 Rollback of completed work is unnecessary.
 - [N/A] 4.3 PRD MVP review is unnecessary.
-- [x] 4.4 Direct Adjustment selected and proposed.
+- [x] 4.4 Direct Adjustment selected and completed.
 
 ### 5. Sprint Change Proposal Components
 
@@ -202,7 +205,19 @@ Success criteria:
 
 - [x] 6.1 Applicable checklist items addressed.
 - [x] 6.2 Proposal checked for consistency with the approved 2026-07-16 change.
-- [!] 6.3 Explicit Administrator approval required before implementation.
+- [x] 6.3 Administrator approved implementation on 2026-08-01.
 - [N/A] 6.4 No `sprint-status.yaml` update required.
-- [!] 6.5 Handoff completes after approval, edit, and corpus validation.
+- [x] 6.5 Handoff complete; success criteria verified.
 
+## Workflow Execution Log
+
+- Change trigger: keep PRD, epics, and readiness documents explicit that Epics 7
+  and 8 are maintenance scope with no new PRD functional coverage.
+- Approval: Administrator, 2026-08-01.
+- Change scope: Minor.
+- Artifacts modified: 2026-07-17 implementation-readiness draft and this finalized
+  Sprint Change Proposal.
+- Artifacts revalidated without edits: canonical PRD, canonical epics document,
+  completed 2026-07-07 readiness assessment, and Epic 7 final-readiness record.
+- Routed to: Developer/documentation maintainer.
+- Result: implemented and verified; no sprint-status or technical behavior changed.

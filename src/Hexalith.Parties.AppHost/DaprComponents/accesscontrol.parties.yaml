@@ -3,9 +3,10 @@
 #
 # Service-invocation policy:
 #   defaultAction: deny — only EventStore may invoke Parties via service invocation,
-#   and only on /process. This matches the Story 12.0 `party -> parties/process`
-#   mapping; broader paths (actor methods, /healthz, /metrics) must not be exposed
-#   to peer DAPR callers.
+#   and only on the exact command/query/projection operations below. This retains
+#   the Story 12.0 `party -> parties/process` mapping and admits the Story 8.6 SDK
+#   consumer routes without exposing actor methods, /healthz, /metrics, or any
+#   wildcard path to peer DAPR callers.
 #
 # Pub/sub event delivery (NOT covered by this list):
 #   The Tenants -> Parties event flow is delivered by the shared pubsub component:
@@ -30,5 +31,35 @@ spec:
         namespace: "default"
         operations:
           - name: /process
+            httpVerb: ['POST']
+            action: allow
+          - name: /query
+            httpVerb: ['POST']
+            action: allow
+          - name: /project
+            httpVerb: ['POST']
+            action: allow
+          - name: /project/v2
+            httpVerb: ['POST']
+            action: allow
+          - name: /replay-state
+            httpVerb: ['POST']
+            action: allow
+          - name: /project/rebuild/v1
+            httpVerb: ['POST']
+            action: allow
+          - name: /project/rebuild/shared/v1
+            httpVerb: ['POST']
+            action: allow
+          - name: /project/rebuild/stage/v1
+            httpVerb: ['POST']
+            action: allow
+          - name: /project/rebuild/commit/v1
+            httpVerb: ['POST']
+            action: allow
+          - name: /project/rebuild/abort/v1
+            httpVerb: ['POST']
+            action: allow
+          - name: /project/rebuild/verify/v1
             httpVerb: ['POST']
             action: allow

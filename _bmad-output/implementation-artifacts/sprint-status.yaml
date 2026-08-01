@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-07-31T23:33:05+02:00
+# last_updated: 2026-08-01
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -42,7 +42,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-07-31T23:33:05+02:00
+last_updated: 2026-08-01
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -147,7 +147,7 @@ development_status:
   8-3-platform-api-prerequisites: done
   8-4-leaf-project-retirement: done
   8-5-eventstore-domain-service-sdk-host-cutover: done
-  8-6-projection-and-query-sdk-migration: blocked
+  8-6-projection-and-query-sdk-migration: in-progress
   # Story context created 2026-07-16; production migration remains blocked by
   # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
   8-7-data-protection-extraction: blocked
@@ -234,12 +234,13 @@ action_items:
     #   sprint-change-proposal-2026-07-07-projection-rollback-retention.md.
     # Stays `open` until Story 8.6 records parity (I9), processing-record reads (I8),
     # rebuild-vs-replay (I10), and proven rollback (I3) in the 8.3 matrix row.
-    # Revalidated 2026-07-31: all governed projection/query/rebuild/adapter files
-    # and fallback branches remain rollback-owned. EventStore Story 1.20 is now
-    # done with an owner-approved `available` packet for exact source fa2d1c9 and
-    # its recorded proof artifacts. Parties currently selects e4618d9/v3.86.0,
-    # which does not match that exact receipt; the 8.3 row, consumer parity, and
-    # rollback proof remain open, so Story 8.6 and deletion remain blocked.
+    # Revalidated 2026-08-01: all 18 governed projection/query/rebuild/adapter
+    # artifacts and all 10 fallback branches remain rollback-owned. Parties now
+    # selects the exact approved EventStore Story 1.20 source fa2d1c9 at both the
+    # root gitlink and checkout (`v3.82.0-24-gfa2d1c99`). Identity selection is
+    # complete, but deployed routing/security, coordinated erasure, Parties
+    # parity, GDPR reads/no-leak, rebuild-vs-replay, and rollback proof remain
+    # open; Story 8.6 source work may proceed, but deletion remains blocked.
     action: "Keep projection rollback-only paths until Epic 8 proves EventStore SDK projection/query parity, GDPR processing-record reads, rebuild behavior, and rollback replacement."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open
@@ -250,13 +251,16 @@ action_items:
     # typed-unreadable outcomes + no-leak diagnostics, Art.20 export + Art.30
     # processing-record semantics, erasure certificate/report parity, and proven
     # rollback (spine I8/I3) in the 8.3 matrix G5 row; routed to Hexalith.EventStore
-    # owners as G5. Revalidated 2026-07-31 at root gitlink/checkout e4618d91
-    # (`v3.86.0`): EventStore Story 8.1's proposed specification remains
-    # draft-not-authorized; Story 8.2 is backlog and its required proof packet is
-    # absent. No approved runtime G5 engine, pdenc-v2, IPersonalDataPolicy, or
-    # IErasureStateProvider exists. All 18 MOVE files, 5 KEEP files, and the
-    # EventStorePartyPayloadProtectionAdapter seam remain intact; the focused
-    # compatibility harness passes 19/19 tests and Story 8.7 remains blocked.
+    # owners as G5. Revalidated 2026-08-01 at matching root gitlink/clean checkout
+    # fa2d1c99 (`v3.82.0-24-gfa2d1c99`). The pin satisfies projection/query Story
+    # 1.20 provenance but does not deliver G5. EventStore Story 8.1 remains
+    # draft-not-authorized and in progress; Story 8.2 remains backlog; its G5
+    # proof packet is absent. No approved runtime G5 engine, pdenc-v2,
+    # IPersonalDataPolicy, or IErasureStateProvider exists. All 18 MOVE files,
+    # 5 KEEP files, and the EventStorePartyPayloadProtectionAdapter seam remain
+    # intact; active local DI is reversible; the focused compatibility harness
+    # passes 19/19. Story 8.6 is in progress, Story 8.7 remains blocked, and this
+    # retention action stays open.
     action: "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open
@@ -304,16 +308,17 @@ action_items:
   - epic: 8
     # EventStore Story 1.20 is done with an owner-approved `available` packet at
     # exact source fa2d1c9 and its recorded proof package/container identities.
-    # Current Parties EventStore e4618d9/v3.86.0 does not match that exact receipt;
-    # the Story 8.3 matrix still needs reconciliation and selection. Gate 2 remains
-    # Parties-owned: after exact identity verification,
-    # Story 8.6 must prove SDK parity, GDPR reads/no-leak behavior,
+    # Parties now selects that exact fa2d1c9 source at both the root gitlink and
+    # checkout (`v3.82.0-24-gfa2d1c99`), so identity reconciliation is complete.
+    # Gate 2 remains Parties-owned: Story 8.6 must prove deployed routing/security,
+    # coordinated erasure, SDK parity, GDPR reads/no-leak behavior,
     # rebuild-vs-replay, and rollback before deleting any rollback-only path.
     action: "Reconcile the completed EventStore Story 1.20 `available` packet with an exact approved Parties dependency identity, then pass Story 8.6 consumer parity and rollback gates before deleting any rollback-only path."
     owner: "Winston (Architect) + Amelia (Developer) + Murat (Test Architect)"
     # Routed 2026-07-11 through the dedicated EventStore-owner prerequisite proposal.
-    # Revalidated 2026-07-31: owner closure exists, but consumer identity selection,
-    # matrix reconciliation, Parties parity, and rollback evidence remain open.
+    # Revalidated 2026-08-01: owner closure and exact identity selection are
+    # complete; matrix reconciliation, Parties parity, and rollback evidence
+    # remain open.
     status: in-progress
   - epic: 8
     # Routed and ownership-confirmed 2026-07-16 through:
