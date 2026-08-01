@@ -179,9 +179,12 @@ public sealed class PartiesContainerPublishWorkflowTests
     [Fact]
     public void CommitlintAndDependabotUseReleaseCompatibleCommitContracts()
     {
+        string commitlintConfig = CiTestPaths.ReadRepoFile("commitlint.config.mjs");
         string commitlint = CiTestPaths.ReadRepoFile(".github/workflows/commitlint.yml");
         string dependabot = CiTestPaths.ReadRepoFile(".github/dependabot.yml");
 
+        commitlintConfig.ShouldContain("'body-max-line-length': [2, 'always', 200]");
+        commitlintConfig.ShouldContain("'header-max-length': [2, 'always', 200]");
         commitlint.ShouldContain("types: [opened, synchronize, reopened, edited]");
         commitlint.ShouldContain("push:");
         commitlint.ShouldContain("pull-request-title: ${{ github.event.pull_request.title || '' }}");
