@@ -11,8 +11,6 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-using Dapr.Actors;
-using Dapr.Actors.Client;
 using Dapr.Client;
 
 using Hexalith.EventStore.Contracts.Identity;
@@ -25,7 +23,6 @@ using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
-using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Security;
 
 using Microsoft.AspNetCore.Hosting;
@@ -386,23 +383,6 @@ public sealed class EncryptionTestFactory : WebApplicationFactory<Program>
         builder.UseSetting("Authentication:JwtBearer:RequireHttpsMetadata", "false");
         builder.UseSetting("Parties:CryptoShredding:IsEnabled", cryptoEnabled.ToString());
 
-        IActorProxyFactory proxyFactory = Substitute.For<IActorProxyFactory>();
-        proxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
-            Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
-            .Returns(callInfo =>
-            {
-                IPartyDetailProjectionActor detailProxy = Substitute.For<IPartyDetailProjectionActor>();
-                detailProxy.GetDetailAsync().Returns(Task.FromResult<PartyDetail?>(null));
-                return detailProxy;
-            });
-
-        IPartyIndexProjectionActor indexProxy = Substitute.For<IPartyIndexProjectionActor>();
-        indexProxy.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
-            new Dictionary<string, PartyIndexEntry>()));
-        proxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-            Arg.Any<ActorId>(), Arg.Any<string>(), Arg.Any<ActorProxyOptions?>())
-            .Returns(indexProxy);
-
         DaprClient daprClient = Substitute.For<DaprClient>();
         daprClient.CheckHealthAsync(Arg.Any<CancellationToken>()).Returns(true);
         daprClient.GetStateAsync<string?>(
@@ -428,8 +408,6 @@ public sealed class EncryptionTestFactory : WebApplicationFactory<Program>
         {
             services.RemoveAll<ICommandRouter>();
             services.AddSingleton<ICommandRouter>(Substitute.For<ICommandRouter>());
-            services.RemoveAll<IActorProxyFactory>();
-            services.AddSingleton(proxyFactory);
             services.RemoveAll<DaprClient>();
             services.AddSingleton(daprClient);
         });

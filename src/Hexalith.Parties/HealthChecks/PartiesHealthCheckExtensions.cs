@@ -46,11 +46,6 @@ public static class PartiesHealthCheckExtensions
                 failureStatus: HealthStatus.Degraded,
                 tags: [],
                 timeout: healthCheckTimeout))
-            .AddCheck<ProjectionActorsHealthCheck>(
-                "projection-actors",
-                failureStatus: HealthStatus.Degraded,
-                tags: [],
-                timeout: healthCheckTimeout)
             .Add(new HealthCheckRegistration(
                 "tenants-integration",
                 sp => new TenantsIntegrationHealthCheck(

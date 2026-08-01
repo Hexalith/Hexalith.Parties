@@ -6,12 +6,7 @@ using FluentValidation;
 
 using Hexalith.EventStore.Client.Handlers;
 using Hexalith.EventStore.Client.Registration;
-using Hexalith.EventStore.Server.Actors;
-using Hexalith.EventStore.Server.Commands;
-using Hexalith.EventStore.Server.Configuration;
-using Hexalith.EventStore.Server.DomainServices;
-using Hexalith.EventStore.Server.Events;
-using Hexalith.EventStore.Server.Projections;
+using Hexalith.EventStore.DomainService;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Memories.Client.Rest;
 using Hexalith.Parties.Authorization;
@@ -130,17 +125,6 @@ public static class PartiesServiceCollectionExtensions {
         // processor (AC4).
         _ = services.AddSingleton<IDataSubjectAccessService, DataSubjectAccessService>();
 
-        // Single concrete registration so both interfaces resolve to the same instance per scope.
-        // Two separate AddTransient<TInterface, TImpl>() calls would create two parallel
-        // orchestrators, silently splitting any state or cache between the synchronous-update
-        // and poller-delivery paths.
-        _ = services.AddTransient<PartyProjectionUpdateOrchestrator>();
-        _ = services.AddTransient<IProjectionUpdateOrchestrator>(sp => sp.GetRequiredService<PartyProjectionUpdateOrchestrator>());
-        _ = services.AddTransient<IProjectionPollerDeliveryGateway>(sp => sp.GetRequiredService<PartyProjectionUpdateOrchestrator>());
-        _ = services.AddOptions<CommandStatusOptions>()
-            .BindConfiguration("EventStore:CommandStatus");
-        _ = services.AddSingleton<ICommandStatusStore, DaprCommandStatusStore>();
-
         // GDPR / crypto-shredding infrastructure
         _ = services.AddOptions<CryptoShreddingOptions>()
             .Bind(configuration.GetSection(CryptoShreddingOptions.ConfigurationSection))
@@ -170,6 +154,8 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.AddSingleton<DecryptionCircuitBreaker>();
         _ = services.AddSingleton<IPartyErasureRecordStore, PartyErasureRecordStore>();
         _ = services.AddEventStoreReadModelStore();
+        _ = services.AddEventStoreDataProtection(configuration, "Hexalith.Parties");
+        _ = services.AddEventStoreQueryCursorCodec("Hexalith.Parties.QueryCursor.v1");
         _ = services.AddOptions<PartySdkReadModelOptions>()
             .Bind(configuration.GetSection(PartySdkReadModelOptions.ConfigurationSection))
             .Validate(options => !string.IsNullOrWhiteSpace(options.ReadModelStateStoreName),
@@ -179,6 +165,7 @@ public static class PartiesServiceCollectionExtensions {
                 "Party SDK freshness thresholds must be ordered and non-negative.")
             .ValidateOnStart();
         _ = services.AddSingleton<PartySdkReadModelEraser>();
+        _ = services.AddSingleton<PartySdkLastKnownReadModelCache>();
         _ = services.AddScoped<PartySdkQueryService>();
         _ = services.AddSingleton<PartyPayloadProtectionService>();
         _ = services.AddSingleton<EventStorePartyPayloadProtectionAdapter>();
@@ -188,37 +175,8 @@ public static class PartiesServiceCollectionExtensions {
             .GetSection(PartyMemorySearchOptions.SectionName)
             .Get<PartyMemorySearchOptions>() ?? new PartyMemorySearchOptions();
         _ = services.AddSingleton<IReadOnlyList<ErasureStoreCleanupDelegate>>(sp => {
-            IActorProxyFactory actorProxyFactory = sp.GetRequiredService<IActorProxyFactory>();
             List<ErasureStoreCleanupDelegate> cleanups =
             [
-                async (tenantId, partyId, cancellationToken) =>
-                {
-                    IPartyDetailProjectionActor detailProxy = actorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
-                        new ActorId(PartyActorIds.Detail(tenantId, partyId)),
-                        nameof(PartyDetailProjectionActor));
-
-                    await detailProxy.EraseAsync(partyId).ConfigureAwait(false);
-                    return new ErasureVerificationStoreResult
-                    {
-                        StoreName = "detail-projection",
-                        Status = ErasureStoreCleanupStatus.Cleaned,
-                        Timestamp = DateTimeOffset.UtcNow,
-                    };
-                },
-                async (tenantId, partyId, cancellationToken) =>
-                {
-                    IPartyIndexProjectionActor indexProxy = actorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-                        new ActorId(PartyActorIds.Index(tenantId)),
-                        nameof(PartyIndexProjectionActor));
-
-                    await indexProxy.EraseAsync(partyId).ConfigureAwait(false);
-                    return new ErasureVerificationStoreResult
-                    {
-                        StoreName = "index-projection",
-                        Status = ErasureStoreCleanupStatus.Cleaned,
-                        Timestamp = DateTimeOffset.UtcNow,
-                    };
-                },
                 async (tenantId, partyId, cancellationToken) =>
                 {
                     await sp.GetRequiredService<PartySdkReadModelEraser>()
@@ -303,50 +261,12 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.AddSingleton<IErasureVerificationService, ErasureVerificationService>();
         _ = services.AddSingleton<PartyErasureOrchestrator>();
 
-        // Projection infrastructure (Epic 3)
-        _ = services.AddSingleton<IIndexPartitionStrategy, SingleKeyPartitionStrategy>();
-        _ = services.AddOptions<Hexalith.Parties.Projections.Configuration.ProjectionOptions>()
-            .Bind(configuration.GetSection(Hexalith.Parties.Projections.Configuration.ProjectionOptions.ConfigurationSection))
-            .Validate(o => o.BatchSize > 0, "ProjectionOptions.BatchSize must be greater than 0.")
-            .Validate(o => o.BatchTimeWindowMs > 0, "ProjectionOptions.BatchTimeWindowMs must be greater than 0.")
-            .ValidateOnStart();
-        _ = services.AddHttpClient<LocalPartyProjectionPlatformAdapter>(client => {
-            string daprPort = configuration["DAPR_HTTP_PORT"] ?? "3500";
-            client.BaseAddress = new Uri($"http://127.0.0.1:{daprPort}");
-        });
-        // Story 8.5 cuts the command host over to the EventStore DomainService SDK,
-        // but projection/rebuild actors still use the EventStore Server checkpoint
-        // stores until the later projection/query migration stories run.
-        AddEventStoreProjectionRuntimeCompatibility(services, configuration);
-        _ = services.AddTransient<EventStorePartyProjectionPlatformAdapter>();
-        _ = services.AddTransient<IPartyProjectionPlatformAdapter>(sp =>
-            sp.GetRequiredService<IOptions<Hexalith.Parties.Projections.Configuration.ProjectionOptions>>()
-                .Value
-                .PlatformAdapterMode == PartyProjectionPlatformAdapterMode.Local
-                ? sp.GetRequiredService<LocalPartyProjectionPlatformAdapter>()
-                : sp.GetRequiredService<EventStorePartyProjectionPlatformAdapter>());
-
         services.AddActors(options => {
-            string? aggregateActorTypeName = configuration["EventStore:Actors:AggregateActorTypeName"];
-            options.Actors.RegisterActor<AggregateActor>(
-                string.IsNullOrWhiteSpace(aggregateActorTypeName)
-                    ? nameof(AggregateActor)
-                    : aggregateActorTypeName);
-            options.Actors.RegisterActor<PartyIndexProjectionQueryActor>();
-            options.Actors.RegisterActor<PartyDetailProjectionQueryActor>();
-            options.Actors.RegisterActor<PartyDetailProjectionActor>();
-            options.Actors.RegisterActor<PartyIndexProjectionActor>();
             options.Actors.RegisterActor<PartyKeyRetryActor>();
         });
 
-        // Actor proxy factory for querying projection actors
+        // Actor proxy factory for key-destruction retry actors.
         _ = services.AddSingleton<IActorProxyFactory>(_ => new ActorProxyFactory());
-
-        // Projection rebuild service (Story 8.3 — D14/D15)
-        _ = services.AddHttpClient<IProjectionRebuildService, ProjectionRebuildService>(client => {
-            string daprPort = configuration["DAPR_HTTP_PORT"] ?? "3500";
-            client.BaseAddress = new Uri($"http://127.0.0.1:{daprPort}");
-        });
 
         // Search provider (local fallback until Hexalith.Memories rich search is configured)
         _ = services.AddSingleton<IPartySearchProvider, LocalFuzzyPartySearchProvider>();
@@ -408,53 +328,6 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.ConfigureHttpJsonOptions(options => PartiesJsonOptions.ApplyTo(options.SerializerOptions));
 
         return services;
-    }
-
-    private static void AddEventStoreProjectionRuntimeCompatibility(IServiceCollection services, IConfiguration configuration)
-    {
-        services.TryAddSingleton<IDomainServiceResolver, DomainServiceResolver>();
-        services.TryAddTransient<IDomainServiceInvoker, DaprDomainServiceInvoker>();
-        services.TryAddSingleton<ISnapshotManager, SnapshotManager>();
-        services.TryAddTransient<IEventPublisher, EventPublisher>();
-        services.TryAddTransient<IDeadLetterPublisher, DeadLetterPublisher>();
-        services.TryAddSingleton<ITopicNameValidator, TopicNameValidator>();
-        services.TryAddSingleton<IProjectionCheckpointTracker, ProjectionCheckpointTracker>();
-        services.TryAddSingleton<IProjectionRebuildCheckpointStore, ProjectionRebuildCheckpointStore>();
-        services.TryAddSingleton<IProjectionPollerTickSource, PeriodicProjectionPollerTickSource>();
-        services.TryAddSingleton(TimeProvider.System);
-
-        _ = services.AddHttpClient();
-        _ = services.Configure<DomainServiceOptions>(configuration.GetSection("EventStore:DomainServices"));
-        _ = services.AddOptions<EventPublisherOptions>()
-            .Bind(configuration.GetSection("EventStore:Publisher"));
-        _ = services.AddOptions<EventDrainOptions>()
-            .Bind(configuration.GetSection("EventStore:Drain"));
-        services.TryAddSingleton<IValidateOptions<BackpressureOptions>, ValidateBackpressureOptions>();
-        _ = services.AddOptions<BackpressureOptions>()
-            .Bind(configuration.GetSection("EventStore:Backpressure"))
-            .ValidateOnStart();
-        services.TryAddSingleton<IValidateOptions<CommandConcurrencyOptions>, ValidateCommandConcurrencyOptions>();
-        _ = services.AddOptions<CommandConcurrencyOptions>()
-            .Bind(configuration.GetSection("EventStore:CommandConcurrency"))
-            .ValidateOnStart();
-        _ = services.AddOptions<EventStoreActorOptions>()
-            .Bind(configuration.GetSection("EventStore:Actors"))
-            .Validate(
-                options => !string.IsNullOrWhiteSpace(options.AggregateActorTypeName),
-                "Aggregate actor type name must be configured.")
-            .ValidateOnStart();
-        _ = services.AddOptions<SnapshotOptions>()
-            .Bind(configuration.GetSection("EventStore:Snapshots"))
-            .Validate(options => { options.Validate(); return true; }, "Snapshot configuration is invalid. All intervals must be >= 10.")
-            .ValidateOnStart();
-        _ = services.AddOptions<Hexalith.EventStore.Server.Configuration.ProjectionOptions>()
-            .Bind(configuration.GetSection("EventStore:Projections"))
-            .Validate(options => { options.Validate(); return true; }, "Projection configuration is invalid. All intervals must be >= 0 and domain keys must be non-empty.")
-            .ValidateOnStart();
-
-        _ = services.AddHostedService<ProjectionDiscoveryHostedService>();
-        _ = services.AddHostedService<ActiveRebuildIndexCleanupService>();
-        _ = services.AddHostedService<ProjectionPollerService>();
     }
 
     private static IEnumerable<string> PartyDomainCaseVariants()

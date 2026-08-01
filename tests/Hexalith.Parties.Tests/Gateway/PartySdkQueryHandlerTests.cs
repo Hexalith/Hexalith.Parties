@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using Hexalith.EventStore.Client.Projections;
+using Hexalith.EventStore.Client.Queries;
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
@@ -161,11 +162,319 @@ public sealed class PartySdkQueryHandlerTests
         await store.DidNotReceiveWithAnyArgs().GetAsync<PartyDetailSdkReadModel>(default!, default!, default);
     }
 
+    [Fact]
+    public async Task IndexHandler_ProtectedCursorContinuesWithoutSkippingOrRepeatingAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyIndexSdkReadModel>(
+                "statestore",
+                PartySdkReadModelAddresses.Index("tenant-a"),
+                Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel
+            {
+                Entries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+                {
+                    ["party-1"] = IndexEntry("party-1"),
+                    ["party-2"] = IndexEntry("party-2"),
+                    ["party-3"] = IndexEntry("party-3"),
+                },
+                ProjectedAt = s_now,
+                ProjectionVersion = "global:3",
+            }, "etag"));
+        var handler = new PartyIndexQueryHandler(CreateService(store, cursorCodec: new TestCursorCodec()));
+
+        QueryResult first = await handler.ExecuteAsync(
+            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType) with
+            {
+                Paging = new QueryPagingOptions(PageSize: 2),
+            },
+            TestContext.Current.CancellationToken);
+        PagedResult<PartyIndexEntry> firstPage = first.GetPayload()
+            .Deserialize<PagedResult<PartyIndexEntry>>(PartiesJsonOptions.Default)!;
+
+        first.Success.ShouldBeTrue();
+        firstPage.Items.Select(static item => item.Id).ShouldBe(["party-1", "party-2"]);
+        first.Metadata!.Paging.ShouldNotBeNull();
+        first.Metadata.Paging.HasMore.ShouldBe(true);
+        first.Metadata.Paging.NextCursor.ShouldNotBeNullOrWhiteSpace();
+
+        QueryResult second = await handler.ExecuteAsync(
+            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType) with
+            {
+                Paging = new QueryPagingOptions(PageSize: 2, Cursor: first.Metadata.Paging.NextCursor),
+            },
+            TestContext.Current.CancellationToken);
+        PagedResult<PartyIndexEntry> secondPage = second.GetPayload()
+            .Deserialize<PagedResult<PartyIndexEntry>>(PartiesJsonOptions.Default)!;
+
+        second.Success.ShouldBeTrue();
+        secondPage.Items.Select(static item => item.Id).ShouldBe(["party-3"]);
+        second.Metadata!.Paging!.HasMore.ShouldBe(false);
+        second.Metadata.Paging.NextCursor.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task IndexHandler_CursorBoundToDifferentCallerFailsClosedBeforeStoreReadAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var codec = new TestCursorCodec();
+        string cursor = codec.Encode(
+            PartyIndexProjectionQueryActor.PartyIndexQueryType,
+            "different-scope",
+            "2");
+        var handler = new PartyIndexQueryHandler(CreateService(store, cursorCodec: codec));
+
+        QueryResult result = await handler.ExecuteAsync(
+            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType) with
+            {
+                Paging = new QueryPagingOptions(PageSize: 2, Cursor: cursor),
+            },
+            TestContext.Current.CancellationToken);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidCursor);
+        await store.DidNotReceiveWithAnyArgs().GetAsync<PartyIndexSdkReadModel>(default!, default!, default);
+    }
+
+    [Fact]
+    public async Task DetailHandler_StateStoreFailureReturnsTenantScopedLastKnownDataAsStaleAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var read = new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel
+        {
+            Detail = Detail("party-1"),
+            LastSequenceNumber = 7,
+            ProjectedAt = s_now,
+            ProjectionVersion = "7",
+        }, "etag");
+        int readCount = 0;
+        store.GetAsync<PartyDetailSdkReadModel>(
+                "statestore",
+                PartySdkReadModelAddresses.Detail("tenant-a", "party-1"),
+                Arg.Any<CancellationToken>())
+            .Returns(_ => readCount++ == 0
+                ? Task.FromResult(read)
+                : Task.FromException<ReadModelEntry<PartyDetailSdkReadModel>>(
+                    new InvalidOperationException("state store unavailable for Ada Lovelace")));
+        var handler = new GetPartyQueryHandler(CreateService(store));
+
+        QueryResult current = await handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            TestContext.Current.CancellationToken);
+        QueryResult degraded = await handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            TestContext.Current.CancellationToken);
+
+        current.Success.ShouldBeTrue();
+        degraded.Success.ShouldBeTrue();
+        degraded.Metadata!.IsDegraded.ShouldBe(true);
+        degraded.Metadata.IsStale.ShouldBe(true);
+        degraded.Metadata.WarningCodes!.ShouldContain(ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
+        PartyDetail payload = degraded.GetPayload().Deserialize<PartyDetail>(PartiesJsonOptions.Default)!;
+        payload.Id.ShouldBe("party-1");
+        payload.Freshness!.Status.ShouldBe(ProjectionFreshnessStatus.Stale);
+        payload.Freshness.WarningCodes.ShouldContain(ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
+        degraded.ErrorMessage.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task IndexHandler_StateStoreFailureReturnsTenantScopedLastKnownDataAsStaleAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var read = new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel
+        {
+            Entries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+            {
+                ["party-1"] = IndexEntry("party-1"),
+            },
+            ProjectedAt = s_now,
+            ProjectionVersion = "global:1",
+        }, "etag");
+        int readCount = 0;
+        store.GetAsync<PartyIndexSdkReadModel>(
+                "statestore",
+                PartySdkReadModelAddresses.Index("tenant-a"),
+                Arg.Any<CancellationToken>())
+            .Returns(_ => readCount++ == 0
+                ? Task.FromResult(read)
+                : Task.FromException<ReadModelEntry<PartyIndexSdkReadModel>>(
+                    new InvalidOperationException("state store unavailable for Ada Lovelace")));
+        var handler = new PartyIndexQueryHandler(CreateService(store));
+
+        QueryResult current = await handler.ExecuteAsync(
+            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType),
+            TestContext.Current.CancellationToken);
+        QueryResult degraded = await handler.ExecuteAsync(
+            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType),
+            TestContext.Current.CancellationToken);
+
+        current.Success.ShouldBeTrue();
+        degraded.Success.ShouldBeTrue();
+        degraded.Metadata!.IsDegraded.ShouldBe(true);
+        degraded.Metadata.IsStale.ShouldBe(true);
+        degraded.Metadata.WarningCodes!.ShouldContain(ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
+        PagedResult<PartyIndexEntry> payload = degraded.GetPayload()
+            .Deserialize<PagedResult<PartyIndexEntry>>(PartiesJsonOptions.Default)!;
+        payload.Items.ShouldHaveSingleItem().Id.ShouldBe("party-1");
+        payload.Freshness!.Status.ShouldBe(ProjectionFreshnessStatus.Stale);
+        payload.Freshness.WarningCodes.ShouldContain(ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
+        degraded.ErrorMessage.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task GdprHandlers_PreserveExportProcessingStatusAndCertificateSemanticsAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>(
+                "statestore",
+                PartySdkReadModelAddresses.Detail("tenant-a", "party-1"),
+                Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel
+            {
+                Detail = Detail("party-1"),
+                LastSequenceNumber = 3,
+                ProjectedAt = s_now,
+                ProjectionVersion = "3",
+            }, "etag"));
+        var activity = new ProcessingActivityRecord
+        {
+            SequenceNumber = 3,
+            PartyId = "party-1",
+            TenantId = "tenant-a",
+            ActorId = "user-1",
+            CorrelationId = "correlation-1",
+            OperationCategory = "Consent",
+            Outcome = "Succeeded",
+            EventType = "ConsentGranted",
+            Timestamp = s_now,
+            Summary = "Consent preference changed.",
+        };
+        store.GetAsync<PartyProcessingSdkReadModel>(
+                "statestore",
+                PartySdkReadModelAddresses.Processing("tenant-a", "party-1"),
+                Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel
+            {
+                Records = [activity],
+                LastSequenceNumber = 3,
+                ProjectedAt = s_now,
+                ProjectionVersion = "3",
+            }, "processing-etag"));
+        IPartyErasureRecordStore erasure = Substitute.For<IPartyErasureRecordStore>();
+        var status = new PartyErasureStatusRecord
+        {
+            PartyId = "party-1",
+            TenantId = "tenant-a",
+            Status = ErasureStatus.ErasurePending.ToString(),
+            UpdatedAt = s_now,
+        };
+        var certificate = new ErasureCertificate
+        {
+            PartyId = "party-1",
+            TenantId = "tenant-a",
+            Timestamp = s_now,
+            KeyVersionsDestroyed = [1],
+            VerificationStatus = ErasureVerificationStatus.Verified,
+        };
+        erasure.GetStatusAsync("tenant-a", "party-1", Arg.Any<CancellationToken>()).Returns(status);
+        erasure.GetCertificateAsync("tenant-a", "party-1", Arg.Any<CancellationToken>()).Returns(certificate);
+        PartySdkQueryService service = CreateService(store, recordStore: erasure);
+
+        QueryResult exportResult = await new ExportPartyDataQueryHandler(service).ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.ExportPartyDataQueryType),
+            TestContext.Current.CancellationToken);
+        QueryResult processingResult = await new GetProcessingRecordsQueryHandler(service).ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType),
+            TestContext.Current.CancellationToken);
+        QueryResult statusResult = await new GetErasureStatusQueryHandler(service).ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetErasureStatusQueryType),
+            TestContext.Current.CancellationToken);
+        QueryResult certificateResult = await new GetErasureCertificateQueryHandler(service).ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetErasureCertificateQueryType),
+            TestContext.Current.CancellationToken);
+
+        exportResult.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!
+            .ProcessingRecords.ShouldHaveSingleItem().ShouldBe(activity);
+        processingResult.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!
+            .ShouldHaveSingleItem().ShouldBe(activity);
+        statusResult.GetPayload().Deserialize<PartyErasureStatusRecord>(PartiesJsonOptions.Default).ShouldBe(status);
+        ErasureCertificate returnedCertificate = certificateResult.GetPayload()
+            .Deserialize<ErasureCertificate>(PartiesJsonOptions.Default)!;
+        returnedCertificate.PartyId.ShouldBe(certificate.PartyId);
+        returnedCertificate.TenantId.ShouldBe(certificate.TenantId);
+        returnedCertificate.Timestamp.ShouldBe(certificate.Timestamp);
+        returnedCertificate.KeyVersionsDestroyed.ShouldBe(certificate.KeyVersionsDestroyed);
+        returnedCertificate.VerificationStatus.ShouldBe(certificate.VerificationStatus);
+    }
+
+    [Theory]
+    [InlineData("{\"page\":0,\"pageSize\":20}")]
+    [InlineData("{\"page\":1,\"pageSize\":20,\"type\":\"0\"}")]
+    [InlineData("{\"page\":1,\"pageSize\":20,\"createdAfter\":\"2026-08-01T12:00:00\"}")]
+    [InlineData("{\"page\":1,\"pageSize\":20,\"createdAfter\":\"2026-08-02T12:00:00Z\",\"createdBefore\":\"2026-08-01T12:00:00Z\"}")]
+    [InlineData("{\"page\":1,\"pageSize\":20,\"unexpected\":true}")]
+    public async Task IndexHandler_StrictPayloadValidationFailsClosedBeforeStoreReadAsync(string json)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var handler = new PartyIndexQueryHandler(CreateService(store));
+
+        QueryResult result = await handler.ExecuteAsync(
+            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType) with
+            {
+                Payload = JsonSerializer.SerializeToUtf8Bytes(JsonDocument.Parse(json).RootElement),
+            },
+            TestContext.Current.CancellationToken);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
+        await store.DidNotReceiveWithAnyArgs().GetAsync<PartyIndexSdkReadModel>(default!, default!, default);
+    }
+
+    [Fact]
+    public async Task DetailHandler_TenantKeySeparatorFailsClosedBeforeStoreReadAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var handler = new GetPartyQueryHandler(CreateService(store));
+
+        QueryResult result = await handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType) with { TenantId = "tenant:escape" },
+            TestContext.Current.CancellationToken);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
+        await store.DidNotReceiveWithAnyArgs().GetAsync<PartyDetailSdkReadModel>(default!, default!, default);
+    }
+
+    [Fact]
+    public async Task SearchHandler_UnsupportedModeFailsClosedBeforeStoreReadAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var handler = new PartySearchQueryHandler(CreateService(store));
+
+        QueryResult result = await handler.ExecuteAsync(
+            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartySearchQueryType) with
+            {
+                Payload = JsonSerializer.SerializeToUtf8Bytes(new
+                {
+                    query = "Ada",
+                    page = 1,
+                    pageSize = 20,
+                    mode = "Semantic",
+                }),
+            },
+            TestContext.Current.CancellationToken);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.UnsupportedQueryType);
+        await store.DidNotReceiveWithAnyArgs().GetAsync<PartyIndexSdkReadModel>(default!, default!, default);
+    }
+
     private static PartySdkQueryService CreateService(
         IReadModelStore store,
         IPartySearchProvider? searchProvider = null,
-        IProjectionRebuildService? rebuildService = null,
-        IPartyErasureRecordStore? recordStore = null)
+        IPartyErasureRecordStore? recordStore = null,
+        IQueryCursorCodec? cursorCodec = null,
+        PartySdkLastKnownReadModelCache? lastKnownCache = null)
         => new(
             store,
             Options.Create(new PartySdkReadModelOptions
@@ -176,8 +485,9 @@ public sealed class PartySdkQueryHandlerTests
             }),
             new FixedTimeProvider(s_now),
             searchProvider ?? Substitute.For<IPartySearchProvider>(),
-            rebuildService ?? Substitute.For<IProjectionRebuildService>(),
-            recordStore ?? Substitute.For<IPartyErasureRecordStore>());
+            recordStore ?? Substitute.For<IPartyErasureRecordStore>(),
+            cursorCodec ?? new TestCursorCodec(),
+            lastKnownCache ?? new PartySdkLastKnownReadModelCache());
 
     private static QueryEnvelope CreateDetailEnvelope(string queryType)
         => new(
@@ -228,5 +538,48 @@ public sealed class PartySdkQueryHandlerTests
     private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
     {
         public override DateTimeOffset GetUtcNow() => now;
+    }
+
+    private sealed class TestCursorCodec : IQueryCursorCodec
+    {
+        public string Encode(string queryType, string scope, string position)
+            => Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(new CursorValue(queryType, scope, position)));
+
+        public bool TryDecode(
+            string? cursor,
+            string queryType,
+            string scope,
+            out string? position,
+            out string? failureReason)
+        {
+            position = null;
+            failureReason = null;
+            if (string.IsNullOrWhiteSpace(cursor))
+            {
+                return true;
+            }
+
+            try
+            {
+                CursorValue? value = JsonSerializer.Deserialize<CursorValue>(Convert.FromBase64String(cursor));
+                if (value is null
+                    || !string.Equals(value.QueryType, queryType, StringComparison.Ordinal)
+                    || !string.Equals(value.Scope, scope, StringComparison.Ordinal))
+                {
+                    failureReason = "wrong-scope";
+                    return false;
+                }
+
+                position = value.Position;
+                return true;
+            }
+            catch (Exception exception) when (exception is FormatException or JsonException)
+            {
+                failureReason = "malformed";
+                return false;
+            }
+        }
+
+        private sealed record CursorValue(string QueryType, string Scope, string Position);
     }
 }

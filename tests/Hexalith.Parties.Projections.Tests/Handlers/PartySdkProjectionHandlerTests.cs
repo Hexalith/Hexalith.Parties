@@ -36,6 +36,8 @@ public sealed class PartySdkProjectionHandlerTests
         IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
         store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
         ReadModelBatch? captured = null;
         batchStore.ExecuteAsync(Arg.Do<ReadModelBatch>(value => captured = value), Arg.Any<CancellationToken>())
             .Returns(ReadModelBatchResult.Completed("fingerprint"));
@@ -51,9 +53,12 @@ public sealed class PartySdkProjectionHandlerTests
         captured.ShouldNotBeNull();
         captured.Scope.ShouldBe(new ReadModelBatchScope(
             "statestore", "tenant-a", "party", "party-1", PartyProjectionNames.Detail, "dispatch-1"));
-        captured.Operations.Single().Key.ShouldBe("readmodel:tenant-a:party:party-detail:party-1:detail");
+        captured.Operations.Count.ShouldBe(2);
+        ReadModelBatchOperation detailOperation = captured.Operations.Single(static operation =>
+            operation.Key.EndsWith(":detail", StringComparison.Ordinal));
+        detailOperation.Key.ShouldBe("readmodel:tenant-a:party:party-detail:party-1:detail");
         PartyDetailSdkReadModel persisted = JsonSerializer.Deserialize<PartyDetailSdkReadModel>(
-            captured.Operations.Single().CanonicalValue.Span,
+            detailOperation.CanonicalValue.Span,
             s_canonicalJsonOptions)!;
         PartyDetail? retained = PartyDetailProjectionHandler.Apply(
             "party-1",
@@ -81,12 +86,13 @@ public sealed class PartySdkProjectionHandlerTests
             "rebuild-1",
             TestContext.Current.CancellationToken);
         PartyDetailSdkReadModel candidate = JsonSerializer.Deserialize<PartyDetailSdkReadModel>(
-            rebuild.Operations.Single().CanonicalValue.Span,
+            rebuild.Operations.Single(static operation => operation.Key.EndsWith(":detail", StringComparison.Ordinal)).CanonicalValue.Span,
             s_canonicalJsonOptions)!;
         PartyDetailSdkReadModel replay = PartyDetailSdkProjectionHandler.Fold(request, current: null);
 
         Normalize(candidate).ShouldBe(Normalize(replay));
         rebuild.StoreName.ShouldBe("statestore");
+        rebuild.Operations.Count.ShouldBe(2);
         handler.RebuildSemantics.ShouldBe(DomainProjectionRebuildSemantics.FullReplay);
     }
 
@@ -252,6 +258,82 @@ public sealed class PartySdkProjectionHandlerTests
         result.Detail.DisplayName.ShouldBeEmpty();
         result.Detail.ErasedAt.ShouldBe(DateTimeOffset.UnixEpoch.AddMinutes(5));
         result.Detail.LastModifiedAt.ShouldBe(DateTimeOffset.UnixEpoch.AddMinutes(5));
+    }
+
+    [Fact]
+    public void DetailFold_DuplicateAndOutOfOrderBatchMatchesOrderedReplayWithoutFreshnessDrift()
+    {
+        ProjectionRequest ordered = CreateRequest();
+        ProjectionRequest duplicateAndOutOfOrder = ordered with
+        {
+            Events =
+            [
+                ordered.Events[1],
+                ordered.Events[0],
+                ordered.Events[0] with { Timestamp = DateTimeOffset.UnixEpoch.AddHours(1) },
+            ],
+        };
+
+        PartyDetailSdkReadModel expected = PartyDetailSdkProjectionHandler.Fold(ordered, current: null);
+        PartyDetailSdkReadModel actual = PartyDetailSdkProjectionHandler.Fold(duplicateAndOutOfOrder, current: null);
+
+        JsonSerializer.Serialize(actual, s_canonicalJsonOptions)
+            .ShouldBe(JsonSerializer.Serialize(expected, s_canonicalJsonOptions));
+        actual.ProjectedAt.ShouldBe(DateTimeOffset.UnixEpoch.AddSeconds(1));
+    }
+
+    [Fact]
+    public void IndexFold_DuplicateAndOutOfOrderBatchMatchesOrderedReplayWithoutFreshnessDrift()
+    {
+        ProjectionRequest ordered = CreateRequest();
+        ProjectionRequest duplicateAndOutOfOrder = ordered with
+        {
+            Events =
+            [
+                ordered.Events[1],
+                ordered.Events[0],
+                ordered.Events[0] with { Timestamp = DateTimeOffset.UnixEpoch.AddHours(1) },
+            ],
+        };
+
+        PartyIndexSdkReadModel expected = PartyIndexSdkProjectionHandler.Fold(ordered, current: null);
+        PartyIndexSdkReadModel actual = PartyIndexSdkProjectionHandler.Fold(duplicateAndOutOfOrder, current: null);
+
+        JsonSerializer.Serialize(actual, s_canonicalJsonOptions)
+            .ShouldBe(JsonSerializer.Serialize(expected, s_canonicalJsonOptions));
+        actual.ProjectedAt.ShouldBe(DateTimeOffset.UnixEpoch.AddSeconds(1));
+    }
+
+    [Fact]
+    public void ProcessingActivityFold_ProjectsBoundedMetadataWithoutPersonalPayloadText()
+    {
+        const string firstName = "PersonalFirstName-should-not-leak";
+        const string lastName = "PersonalLastName-should-not-leak";
+        ProjectionRequest request = new(
+            "tenant-a",
+            "party",
+            "party-1",
+            [
+                Event(new PersonDetailsUpdated
+                {
+                    PersonDetails = new PersonDetails
+                    {
+                        FirstName = firstName,
+                        LastName = lastName,
+                    },
+                }, 1, DateTimeOffset.UnixEpoch),
+            ]);
+
+        PartyProcessingSdkReadModel result = PartyProcessingActivityFold.Fold(request, current: null);
+
+        ProcessingActivityRecord record = result.Records.ShouldHaveSingleItem();
+        record.SequenceNumber.ShouldBe(1);
+        record.OperationCategory.ShouldBe("PartyCommand");
+        record.EventType.ShouldBe(nameof(PersonDetailsUpdated));
+        record.Summary.ShouldBe("Person details updated.");
+        string json = JsonSerializer.Serialize(result, s_canonicalJsonOptions);
+        json.ShouldNotContain(firstName);
+        json.ShouldNotContain(lastName);
     }
 
     private static ProjectionRequest CreateRequest()

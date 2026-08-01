@@ -24,8 +24,6 @@
     <PackageReference Include="Hexalith.EventStore.Client" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
     <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.DomainService\Hexalith.EventStore.DomainService.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.EventStore.DomainService" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
-    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Server\Hexalith.EventStore.Server.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
-    <PackageReference Include="Hexalith.EventStore.Server" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
     <ProjectReference Include="$(HexalithTenantsRoot)\src\Hexalith.Tenants.Client\Hexalith.Tenants.Client.csproj" Condition="'$(HexalithTenantsFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.Tenants.Client" Condition="'$(HexalithTenantsFromSource)' != 'true'" />
     <ProjectReference Include="$(HexalithMemoriesRoot)\src\Hexalith.Memories.Client.Rest\Hexalith.Memories.Client.Rest.csproj"
@@ -37,6 +35,7 @@
 
   <ItemGroup>
     <PackageReference Include="Dapr.AspNetCore" />
+    <PackageReference Include="Dapr.Actors.AspNetCore" />
     <!-- Microsoft.Extensions.Logging.Abstractions is framework-provided in this Web project
          (via Microsoft.AspNetCore.App). A .NET 10 SDK interaction between package pruning and
          analyzer conflict resolution drops the [LoggerMessage] source generator entirely (the

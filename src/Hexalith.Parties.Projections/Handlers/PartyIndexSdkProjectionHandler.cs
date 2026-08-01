@@ -111,6 +111,7 @@ public sealed class PartyIndexSdkProjectionHandler(
             current?.LastSequenceNumbers ?? new Dictionary<string, long>(StringComparer.Ordinal),
             StringComparer.Ordinal);
         long lastSequence = sequences.GetValueOrDefault(request.AggregateId, long.MinValue);
+        DateTimeOffset projectedAt = current?.ProjectedAt ?? DateTimeOffset.UnixEpoch;
         entries.TryGetValue(request.AggregateId, out PartyIndexEntry? entry);
 
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
@@ -147,6 +148,7 @@ public sealed class PartyIndexSdkProjectionHandler(
             if (advance)
             {
                 lastSequence = Math.Max(lastSequence, @event.SequenceNumber);
+                projectedAt = PartySdkProjectionFold.ProjectedAt([@event], projectedAt);
             }
         }
 
@@ -167,7 +169,7 @@ public sealed class PartyIndexSdkProjectionHandler(
         {
             Entries = entries,
             LastSequenceNumbers = sequences,
-            ProjectedAt = PartySdkProjectionFold.ProjectedAt(request.Events, current?.ProjectedAt ?? DateTimeOffset.UnixEpoch),
+            ProjectedAt = projectedAt,
             ProjectionVersion = version,
         };
     }

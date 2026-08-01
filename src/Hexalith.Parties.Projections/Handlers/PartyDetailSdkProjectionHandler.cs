@@ -25,6 +25,8 @@ public sealed class PartyDetailSdkProjectionHandler(
     [
         new("party", PartyProjectionNames.Detail, PartySdkReadModelAddresses.DetailSlot,
             ProjectionReadModelSlotKind.AggregateOwned, declaresCanonicalWriter: true),
+        new("party", PartyProjectionNames.Detail, PartySdkReadModelAddresses.ProcessingSlot,
+            ProjectionReadModelSlotKind.AggregateOwned, declaresCanonicalWriter: true),
     ];
 
     public string Domain => "party";
@@ -50,8 +52,16 @@ public sealed class PartyDetailSdkProjectionHandler(
         ReadModelEntry<PartyDetailSdkReadModel> current = await readModelStore
             .GetAsync<PartyDetailSdkReadModel>(storeName, key, cancellationToken)
             .ConfigureAwait(false);
+        string processingKey = PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId);
+        ReadModelEntry<PartyProcessingSdkReadModel> currentProcessing = await readModelStore
+            .GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken)
+            .ConfigureAwait(false);
         PartyDetailSdkReadModel next = Fold(request, current.Value);
-        if (current.Value is not null && next.LastSequenceNumber == current.Value.LastSequenceNumber)
+        PartyProcessingSdkReadModel nextProcessing = PartyProcessingActivityFold.Fold(request, currentProcessing.Value);
+        if (current.Value is not null
+            && next.LastSequenceNumber == current.Value.LastSequenceNumber
+            && currentProcessing.Value is not null
+            && nextProcessing.LastSequenceNumber == currentProcessing.Value.LastSequenceNumber)
         {
             return DomainProjectionHandlerResult.AlreadyCompleted();
         }
@@ -59,9 +69,15 @@ public sealed class PartyDetailSdkProjectionHandler(
         ReadModelBatchConcurrency concurrency = current.ETag is { Length: > 0 } etag
             ? ReadModelBatchConcurrency.Match(etag)
             : ReadModelBatchConcurrency.CreateOnly;
+        ReadModelBatchConcurrency processingConcurrency = currentProcessing.ETag is { Length: > 0 } processingEtag
+            ? ReadModelBatchConcurrency.Match(processingEtag)
+            : ReadModelBatchConcurrency.CreateOnly;
         var batch = new ReadModelBatch(
             new ReadModelBatchScope(storeName, request.TenantId, Domain, request.AggregateId, ProjectionType, dispatchId),
-            [ReadModelBatchOperation.Write(key, next, concurrency)]);
+            [
+                ReadModelBatchOperation.Write(key, next, concurrency),
+                ReadModelBatchOperation.Write(processingKey, nextProcessing, processingConcurrency),
+            ]);
 
         ReadModelBatchResult result = await batchStore.ExecuteAsync(batch, cancellationToken).ConfigureAwait(false);
         return ReadModelBatchProjectionResultMapper.Map(result);
@@ -75,16 +91,24 @@ public sealed class PartyDetailSdkProjectionHandler(
         Validate(request, operationId);
         cancellationToken.ThrowIfCancellationRequested();
         PartyDetailSdkReadModel candidate = Fold(request, current: null);
+        PartyProcessingSdkReadModel processingCandidate = PartyProcessingActivityFold.Fold(request, current: null);
         string key = PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId);
         return Task.FromResult(new DomainProjectionRebuildPlan(
             StoreName,
-            [ReadModelBatchOperation.Write(key, candidate, ReadModelBatchConcurrency.LastWrite)]));
+            [
+                ReadModelBatchOperation.Write(key, candidate, ReadModelBatchConcurrency.LastWrite),
+                ReadModelBatchOperation.Write(
+                    PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId),
+                    processingCandidate,
+                    ReadModelBatchConcurrency.LastWrite),
+            ]));
     }
 
     internal static PartyDetailSdkReadModel Fold(ProjectionRequest request, PartyDetailSdkReadModel? current)
     {
         PartyDetail? detail = current?.Detail;
         long lastSequence = current?.LastSequenceNumber ?? long.MinValue;
+        DateTimeOffset projectedAt = current?.ProjectedAt ?? DateTimeOffset.UnixEpoch;
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
             PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence))
         {
@@ -110,12 +134,10 @@ public sealed class PartyDetailSdkProjectionHandler(
             if (advance)
             {
                 lastSequence = Math.Max(lastSequence, @event.SequenceNumber);
+                projectedAt = PartySdkProjectionFold.ProjectedAt([@event], projectedAt);
             }
         }
 
-        DateTimeOffset projectedAt = PartySdkProjectionFold.ProjectedAt(
-            request.Events.Where(item => item.SequenceNumber <= lastSequence).ToArray(),
-            current?.ProjectedAt ?? DateTimeOffset.UnixEpoch);
         return new PartyDetailSdkReadModel
         {
             Detail = detail,

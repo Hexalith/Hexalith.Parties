@@ -6,8 +6,6 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 
-using Dapr.Actors;
-using Dapr.Actors.Client;
 using Dapr.Client;
 
 using Hexalith.EventStore.Server.Actors;
@@ -17,7 +15,6 @@ using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.HealthChecks;
-using Hexalith.Parties.Projections.Abstractions;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -43,7 +40,7 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task HealthEndpoint_AllComponentsHealthy_Returns200AndIncludesProjectionStatusAsync()
+    public async Task HealthEndpoint_AllComponentsHealthy_Returns200WithoutRetiredProjectionActorCheckAsync()
     {
         ConfigureHealthyDaprClient();
 
@@ -53,7 +50,8 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         JsonDocument payload = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
-        payload.RootElement.GetProperty("results").GetProperty("projection-actors").GetProperty("status").GetString()
+        payload.RootElement.GetProperty("results").TryGetProperty("projection-actors", out _).ShouldBeFalse();
+        payload.RootElement.GetProperty("results").GetProperty("dapr-statestore").GetProperty("status").GetString()
             .ShouldBe("Healthy");
     }
 
@@ -208,9 +206,6 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
     {
         internal DaprClient DaprClient { get; } = Substitute.For<DaprClient>();
         internal ICommandRouter CommandRouter { get; } = Substitute.For<ICommandRouter>();
-        internal IActorProxyFactory ActorProxyFactory { get; } = Substitute.For<IActorProxyFactory>();
-        internal IPartyDetailProjectionActor DetailProjectionActor { get; } = Substitute.For<IPartyDetailProjectionActor>();
-        internal IPartyIndexProjectionActor IndexProjectionActor { get; } = Substitute.For<IPartyIndexProjectionActor>();
         internal SwitchableTenantsReadinessProbe TenantsReadinessProbe { get; } = new();
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -218,23 +213,6 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
             ArgumentNullException.ThrowIfNull(builder);
 
             builder.UseEnvironment("Development");
-
-            DetailProjectionActor.GetDetailAsync().Returns(Task.FromResult<PartyDetail?>(null));
-            DetailProjectionActor.IsRebuildingAsync().Returns(false);
-            IndexProjectionActor.GetEntriesAsync().Returns(Task.FromResult<IReadOnlyDictionary<string, PartyIndexEntry>>(
-                new Dictionary<string, PartyIndexEntry>()));
-            IndexProjectionActor.IsRebuildingAsync().Returns(false);
-
-            ActorProxyFactory.CreateActorProxy<IPartyDetailProjectionActor>(
-                Arg.Any<ActorId>(),
-                Arg.Any<string>(),
-                Arg.Any<ActorProxyOptions?>())
-                .Returns(DetailProjectionActor);
-            ActorProxyFactory.CreateActorProxy<IPartyIndexProjectionActor>(
-                Arg.Any<ActorId>(),
-                Arg.Any<string>(),
-                Arg.Any<ActorProxyOptions?>())
-                .Returns(IndexProjectionActor);
 
             CommandRouter.RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new CommandProcessingResult(true)));
@@ -250,8 +228,6 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
                 services.AddSingleton(DaprClient);
                 services.RemoveAll<ICommandRouter>();
                 services.AddSingleton(CommandRouter);
-                services.RemoveAll<IActorProxyFactory>();
-                services.AddSingleton(ActorProxyFactory);
                 services.RemoveAll<ITenantsReadinessProbe>();
                 services.AddSingleton<ITenantsReadinessProbe>(TenantsReadinessProbe);
                 services.RemoveAll<Hexalith.Parties.Authorization.ITenantAccessService>();

@@ -410,3 +410,25 @@ Validation results:
 The concurrently advanced EventStore checkout is not treated as consumption
 proof. Stories 8.6, 8.8, and 8.10 now fail closed and refresh the matrix if their
 selected release or root gitlink differs from the recorded identity.
+
+## Story 8.6 Refreshed Authorization, Latest SDK, And Migration — 2026-08-01
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| EventStore proof-integrity tests | Pass | `ProofPacketValidatorIntegrityTests`: 13 passed, 0 failed. |
+| Refreshed immutable owner proof | Pass | Raw evidence retention is locked through `2036-08-02T00:00:00Z`; provider proof SHA-256 `1d1c12c45aef2e77305e26d2315c715be9cae47372ab312aabb583bf475bc8c4`. Refreshed chain: A `21997d1974c4bc7022c77a5065edd9d327435c97`, B `55471ad752e49686c7d0a47159f25455fda24003`, C `dbf81916ac56ceebf8cda313089be86e40d96c98`; owner merge `77d6f47743453d542d96dbe088d5eef7cd05284b`. |
+| Historical exact source-consumer handoff | Pass | The same-shell verifier and consumer procedure at Parties dependency checkpoint `e65e8b5e9a1d202f240bb641490e7747a84a2da1` reported `verified_source_consumer_handoff=passed` for EventStore `fa2d1c9910f8976553adb33dcdb1c9ff2ea75594`. The subsequent compile proved that identity lacks the tenant-shared rebuild surface; no compatibility pass credit is assigned to it. |
+| Latest stable EventStore selection | Pass | User explicitly selected the latest release. Root gitlink, checkout, and tag all resolve to `v3.89.0`, commit `c590590bc581a3f72ef6e67148eda988ba4b8fe6`; this identity defines `IAsyncDomainSharedProjectionRebuildHandler`, `DomainSharedProjectionRebuildIdentity`, and `DomainSharedProjectionRebuildCandidate`. |
+| Latest SDK source consumer build | Pass | Source-mode restore plus `dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj --no-restore -c Debug -m:1 ...` completed with 0 warnings and 0 errors. |
+| Projection/rebuild parity suite | Pass | Direct xUnit v3 execution: 150 passed, 0 failed, 0 skipped. Coverage includes replay from zero, duplicate/out-of-order idempotency, aggregate detail rebuild, tenant-shared index rebuild replacement/pruning, erased-party exclusion, protected/redacted payloads, batch concurrency, processing records, and PII-free processing summaries. |
+| SDK query/registration/health/architecture focus | Pass | Direct xUnit v3 execution of `PartySdkQueryHandlerTests`, `HealthEndpointIntegrationTests`, `ProjectionPlatformAdapterTests`, and `ArchitecturalFitnessTests`: 48 passed, 0 failed. Coverage includes protected cursor continuation/scope rejection, strict payload and tenant validation, GDPR reads, detail/index last-known degraded fallback, SDK-only composition, and absence of retired actor/rebuild types. |
+| Broad Parties test assembly | Partial | 452 total: 449 passed, 3 failed, 0 skipped. The only failures are the pre-existing payload-protection prerequisite-matrix checks `Matrix_ValidationEvidenceCommandsAreReproducible`, `Matrix_EvidencePathsExistAndMatchDeclaredOwner`, and `Matrix_ValidationEvidenceNamesExpectedSymbols`; no pass credit is assigned to those failures. |
+| Integration project compile | Pass | After declaring the EventStore server fixture dependency directly in the integration-test project, compilation completed with 0 warnings and 0 errors while `Hexalith.Parties` retained no production `Hexalith.EventStore.Server` dependency. |
+| Integration execution | Environment-blocked | The focused encryption fixture could not start because the mixed source/package restore graph omitted runtime `Hexalith.Commons.Http, Version=2.29.0.0`. Six tests failed during host construction before exercising Story 8.6 behavior; no test-pass credit is assigned. |
+| Static validation | Pass | `git diff --check` passed; `bash scripts/check-no-warning-override.sh` reported no warning-override or nested-submodule regressions; production search found no `NotImplementedException` and no retired projection actor/rebuild/adapter runtime types. |
+
+Verdict: the former SDK compatibility block is resolved by EventStore `v3.89.0`,
+and the Story 8.6 projection/query migration is implemented with focused parity green.
+The story remains in progress because the frozen `/process`-only ACL wording conflicts
+with the already-tracked exact SDK endpoint allowlist, and broad validation retains the
+three pre-existing matrix failures plus the integration restore/runtime blocker above.

@@ -11,7 +11,7 @@ namespace Hexalith.Parties.Projections.Actors;
 /// Resolves event type names to <see cref="IEventPayload"/> types from the Parties event
 /// assembly. Builds a static lookup the first time it is queried so that the projection actors
 /// don't pay <c>assembly.GetTypes()</c> on every event delivery (which compounded with the
-/// replay-from-zero pattern in PartyProjectionUpdateOrchestrator).
+/// replay-from-zero pattern used by the SDK projection handlers).
 /// <para>
 /// Resolution order: full-name match first, then short-name match. Short-name collisions across
 /// namespaces are NOT silently resolved — when more than one type shares a short name, the

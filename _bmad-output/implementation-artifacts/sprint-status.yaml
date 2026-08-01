@@ -147,6 +147,9 @@ development_status:
   8-3-platform-api-prerequisites: done
   8-4-leaf-project-retirement: done
   8-5-eventstore-domain-service-sdk-host-cutover: done
+  # Resumed 2026-08-01 by explicit user direction to use the latest EventStore.
+  # Latest stable v3.89.0, root gitlink, source checkout, and package catalog all
+  # select c590590, which contains the tenant-shared rebuild API required by 8.6.
   8-6-projection-and-query-sdk-migration: in-progress
   # Story context created 2026-07-16; production migration remains blocked by
   # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
@@ -232,18 +235,16 @@ action_items:
   - epic: 7
     # Formalized 2026-07-07 as a governed deletion guardrail with exit criteria:
     #   sprint-change-proposal-2026-07-07-projection-rollback-retention.md.
-    # Stays `open` until Story 8.6 records parity (I9), processing-record reads (I8),
+    # Stayed `open` until Story 8.6 recorded parity (I9), processing-record reads (I8),
     # rebuild-vs-replay (I10), and proven rollback (I3) in the 8.3 matrix row.
-    # Revalidated 2026-08-01: all 18 governed projection/query/rebuild/adapter
-    # artifacts and all 10 fallback branches remain rollback-owned. Parties now
-    # selects the exact approved EventStore Story 1.20 source fa2d1c9 at both the
-    # root gitlink and checkout (`v3.82.0-24-gfa2d1c99`). Identity selection is
-    # complete, but deployed routing/security, coordinated erasure, Parties
-    # parity, GDPR reads/no-leak, rebuild-vs-replay, and rollback proof remain
-    # open; Story 8.6 source work may proceed, but deletion remains blocked.
+    # Closed 2026-08-01 under explicit user selection of latest EventStore
+    # v3.89.0/c590590. Latest-source build passed 0/0, projection/rebuild parity
+    # passed 150/150, and focused query/health/composition/architecture passed
+    # 48/48 before the rollback-only actor/rebuild/adapter paths were removed.
+    # The targeted revert of the Story 8.6 change set remains the code rollback.
     action: "Keep projection rollback-only paths until Epic 8 proves EventStore SDK projection/query parity, GDPR processing-record reads, rebuild behavior, and rollback replacement."
     owner: "Winston (Architect) + Amelia (Developer)"
-    status: open
+    status: done
   - epic: 7
     # Formalized 2026-07-07 as a governed deletion guardrail with exit criteria:
     #   sprint-change-proposal-2026-07-07-crypto-key-management-retention.md.

@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
 using Hexalith.EventStore.Client.Projections;
+using Hexalith.EventStore.Client.Queries;
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
@@ -9,7 +11,6 @@ using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Models;
-using Hexalith.Parties.Projections.Services;
 using Hexalith.Parties.Search;
 
 using Microsoft.Extensions.Options;
@@ -22,8 +23,9 @@ public sealed partial class PartySdkQueryService(
     IOptions<PartySdkReadModelOptions> options,
     TimeProvider timeProvider,
     IPartySearchProvider searchProvider,
-    IProjectionRebuildService projectionRebuildService,
-    IPartyErasureRecordStore erasureRecordStore)
+    IPartyErasureRecordStore erasureRecordStore,
+    IQueryCursorCodec cursorCodec,
+    PartySdkLastKnownReadModelCache lastKnownCache)
 {
     private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
 
@@ -52,7 +54,10 @@ public sealed partial class PartySdkQueryService(
 
         try
         {
-            ReadModelEntry<PartyDetailSdkReadModel> read = await ReadDetailModelAsync(query.TenantId, partyId, cancellationToken)
+            (ReadModelEntry<PartyDetailSdkReadModel> read, bool degraded) = await ReadDetailModelAsync(
+                query.TenantId,
+                partyId,
+                cancellationToken)
                 .ConfigureAwait(false);
             if (read.Value?.Detail is not { } stored)
             {
@@ -60,11 +65,13 @@ public sealed partial class PartySdkQueryService(
             }
 
             DateTimeOffset now = timeProvider.GetUtcNow();
-            ProjectionFreshnessMetadata freshness = ToPartiesFreshness(read.Value, now);
+            ProjectionFreshnessMetadata freshness = ToPartiesFreshness(read.Value, now, degraded);
             PartyDetail detail = stored with { Freshness = freshness };
-            IReadOnlyList<ProcessingActivityRecord> records = await projectionRebuildService
-                .GetProcessingRecordsAsync(query.TenantId, partyId, cancellationToken)
-                .ConfigureAwait(false);
+            (ReadModelEntry<PartyProcessingSdkReadModel> processing, _) = await ReadProcessingModelAsync(
+                query.TenantId,
+                partyId,
+                cancellationToken).ConfigureAwait(false);
+            IReadOnlyList<ProcessingActivityRecord> records = processing.Value?.Records ?? [];
             bool unavailable = string.IsNullOrWhiteSpace(detail.DisplayName) || string.IsNullOrWhiteSpace(detail.SortName);
             var package = new PartyDataPortabilityPackage
             {
@@ -82,7 +89,13 @@ public sealed partial class PartySdkQueryService(
                 ProcessingRecords = records,
                 Freshness = freshness,
             };
-            return Success(package, PartyDetailProjectionQueryActor.DataPortabilityProjectionType, read.Value, read.ETag, now);
+            return Success(
+                package,
+                PartyDetailProjectionQueryActor.DataPortabilityProjectionType,
+                read.Value,
+                read.ETag,
+                now,
+                degraded);
         }
         catch (OperationCanceledException)
         {
@@ -102,10 +115,29 @@ public sealed partial class PartySdkQueryService(
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
         }
 
-        IReadOnlyList<ProcessingActivityRecord> records = await projectionRebuildService
-            .GetProcessingRecordsAsync(query.TenantId, partyId, cancellationToken)
-            .ConfigureAwait(false);
-        return QueryResult.FromPayload(JsonSerializer.SerializeToElement(records, s_jsonOptions), "party-processing-records");
+        try
+        {
+            (ReadModelEntry<PartyProcessingSdkReadModel> read, bool degraded) = await ReadProcessingModelAsync(
+                query.TenantId,
+                partyId,
+                cancellationToken).ConfigureAwait(false);
+            PartyProcessingSdkReadModel model = read.Value ?? new PartyProcessingSdkReadModel();
+            return Success(
+                model.Records,
+                "party-processing-records",
+                model,
+                read.ETag,
+                timeProvider.GetUtcNow(),
+                degraded);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
+        }
     }
 
     public async Task<QueryResult> GetErasureStatusAsync(QueryEnvelope query, CancellationToken cancellationToken)
@@ -121,7 +153,10 @@ public sealed partial class PartySdkQueryService(
             .ConfigureAwait(false);
         if (status is null)
         {
-            ReadModelEntry<PartyDetailSdkReadModel> read = await ReadDetailModelAsync(query.TenantId, partyId, cancellationToken)
+            (ReadModelEntry<PartyDetailSdkReadModel> read, _) = await ReadDetailModelAsync(
+                query.TenantId,
+                partyId,
+                cancellationToken)
                 .ConfigureAwait(false);
             PartyDetail? detail = read.Value?.Detail;
             status = detail?.IsErased == true
@@ -162,6 +197,12 @@ public sealed partial class PartySdkQueryService(
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
         }
 
+        string cursorScope = CreateListCursorScope(query, payload, query.Paging?.PageSize ?? payload.PageSize);
+        if (!TryResolvePaging(query, payload.Page, payload.PageSize, cursorScope, out int pageNumber, out int pageSize, out int offset))
+        {
+            return QueryResult.Failure(QueryAdapterFailureReason.InvalidCursor);
+        }
+
         return await ReadIndexAsync(query, cancellationToken, (model, freshness) =>
         {
             PagedResult<PartyIndexEntry> page = PartySearchResultsBuilder.BuildPagedList(
@@ -172,12 +213,12 @@ public sealed partial class PartySdkQueryService(
                 payload.CreatedBefore,
                 payload.ModifiedAfter,
                 payload.ModifiedBefore,
-                payload.Page,
-                payload.PageSize) with
+                pageNumber,
+                pageSize) with
             {
                 Freshness = freshness,
             };
-            return page;
+            return (page, CreatePagingMetadata(query, cursorScope, offset, page.PageSize, page.Items.Count, page.TotalCount));
         }).ConfigureAwait(false);
     }
 
@@ -195,6 +236,12 @@ public sealed partial class PartySdkQueryService(
             return QueryResult.Failure(QueryAdapterFailureReason.UnsupportedQueryType);
         }
 
+        string cursorScope = CreateSearchCursorScope(query, payload, query.Paging?.PageSize ?? payload.PageSize);
+        if (!TryResolvePaging(query, payload.Page, payload.PageSize, cursorScope, out int pageNumber, out int pageSize, out int offset))
+        {
+            return QueryResult.Failure(QueryAdapterFailureReason.InvalidCursor);
+        }
+
         return await ReadIndexAsync(query, cancellationToken, (model, freshness) =>
         {
             PagedResult<PartySearchResult> page = searchProvider.Search(
@@ -202,13 +249,13 @@ public sealed partial class PartySdkQueryService(
                 payload.Query,
                 payload.Type,
                 payload.Active,
-                payload.Page,
-                payload.PageSize,
+                pageNumber,
+                pageSize,
                 cancellationToken) with
             {
                 Freshness = freshness,
             };
-            return page;
+            return (page, CreatePagingMetadata(query, cursorScope, offset, page.PageSize, page.Items.Count, page.TotalCount));
         }).ConfigureAwait(false);
     }
 
@@ -221,7 +268,10 @@ public sealed partial class PartySdkQueryService(
 
         try
         {
-            ReadModelEntry<PartyDetailSdkReadModel> read = await ReadDetailModelAsync(query.TenantId, partyId, cancellationToken)
+            (ReadModelEntry<PartyDetailSdkReadModel> read, bool degraded) = await ReadDetailModelAsync(
+                query.TenantId,
+                partyId,
+                cancellationToken)
                 .ConfigureAwait(false);
             if (read.Value?.Detail is not { } stored)
             {
@@ -229,8 +279,8 @@ public sealed partial class PartySdkQueryService(
             }
 
             DateTimeOffset now = timeProvider.GetUtcNow();
-            PartyDetail detail = stored with { Freshness = ToPartiesFreshness(read.Value, now) };
-            return Success(detail, PartyProjectionNames.Detail, read.Value, read.ETag, now);
+            PartyDetail detail = stored with { Freshness = ToPartiesFreshness(read.Value, now, degraded) };
+            return Success(detail, PartyProjectionNames.Detail, read.Value, read.ETag, now, degraded);
         }
         catch (OperationCanceledException)
         {
@@ -245,22 +295,41 @@ public sealed partial class PartySdkQueryService(
     private async Task<QueryResult> ReadIndexAsync<TPayload>(
         QueryEnvelope query,
         CancellationToken cancellationToken,
-        Func<PartyIndexSdkReadModel, ProjectionFreshnessMetadata, TPayload> createPayload)
+        Func<PartyIndexSdkReadModel, ProjectionFreshnessMetadata, (TPayload Payload, QueryPagingMetadata? Paging)> createPayload)
     {
         try
         {
             string storeName = StoreName;
-            ReadModelEntry<PartyIndexSdkReadModel> read = await readModelStore
-                .GetAsync<PartyIndexSdkReadModel>(storeName, PartySdkReadModelAddresses.Index(query.TenantId), cancellationToken)
-                .ConfigureAwait(false);
+            ReadModelEntry<PartyIndexSdkReadModel> read;
+            bool degraded = false;
+            try
+            {
+                read = await readModelStore
+                    .GetAsync<PartyIndexSdkReadModel>(storeName, PartySdkReadModelAddresses.Index(query.TenantId), cancellationToken)
+                    .ConfigureAwait(false);
+                if (read.Value is not null)
+                {
+                    lastKnownCache.StoreIndex(query.TenantId, read.Value);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception) when (lastKnownCache.TryGetIndex(query.TenantId, out PartyIndexSdkReadModel? cached))
+            {
+                read = new ReadModelEntry<PartyIndexSdkReadModel>(cached, null);
+                degraded = true;
+            }
+
             if (read.Value is not { } model)
             {
                 return QueryResult.Failure(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
             }
 
             DateTimeOffset now = timeProvider.GetUtcNow();
-            TPayload payload = createPayload(model, ToPartiesFreshness(model, now));
-            return Success(payload, PartyProjectionNames.Index, model, read.ETag, now);
+            (TPayload payload, QueryPagingMetadata? paging) = createPayload(model, ToPartiesFreshness(model, now, degraded));
+            return Success(payload, PartyProjectionNames.Index, model, read.ETag, now, degraded, paging);
         }
         catch (OperationCanceledException)
         {
@@ -272,31 +341,92 @@ public sealed partial class PartySdkQueryService(
         }
     }
 
-    private Task<ReadModelEntry<PartyDetailSdkReadModel>> ReadDetailModelAsync(
+    private async Task<(ReadModelEntry<PartyDetailSdkReadModel> Read, bool Degraded)> ReadDetailModelAsync(
         string tenantId,
         string partyId,
         CancellationToken cancellationToken)
-        => readModelStore.GetAsync<PartyDetailSdkReadModel>(
-            StoreName,
-            PartySdkReadModelAddresses.Detail(tenantId, partyId),
-            cancellationToken);
+    {
+        try
+        {
+            ReadModelEntry<PartyDetailSdkReadModel> read = await readModelStore.GetAsync<PartyDetailSdkReadModel>(
+                StoreName,
+                PartySdkReadModelAddresses.Detail(tenantId, partyId),
+                cancellationToken).ConfigureAwait(false);
+            if (read.Value is not null)
+            {
+                lastKnownCache.StoreDetail(tenantId, partyId, read.Value);
+            }
+
+            return (read, false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception) when (lastKnownCache.TryGetDetail(tenantId, partyId, out PartyDetailSdkReadModel? cached))
+        {
+            return (new ReadModelEntry<PartyDetailSdkReadModel>(cached, null), true);
+        }
+    }
+
+    private async Task<(ReadModelEntry<PartyProcessingSdkReadModel> Read, bool Degraded)> ReadProcessingModelAsync(
+        string tenantId,
+        string partyId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            ReadModelEntry<PartyProcessingSdkReadModel> read = await readModelStore.GetAsync<PartyProcessingSdkReadModel>(
+                StoreName,
+                PartySdkReadModelAddresses.Processing(tenantId, partyId),
+                cancellationToken).ConfigureAwait(false);
+            if (read.Value is not null)
+            {
+                lastKnownCache.StoreProcessing(tenantId, partyId, read.Value);
+            }
+
+            return (read, false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception) when (lastKnownCache.TryGetProcessing(tenantId, partyId, out PartyProcessingSdkReadModel? cached))
+        {
+            return (new ReadModelEntry<PartyProcessingSdkReadModel>(cached, null), true);
+        }
+    }
 
     private QueryResult Success<TPayload>(
         TPayload payload,
         string projectionType,
         IReadModelFreshness freshness,
         string? etag,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        bool degraded = false,
+        QueryPagingMetadata? paging = null)
     {
-        QueryResponseMetadata metadata = freshness.ToQueryResponseMetadata(Thresholds, now, etag) with
+        QueryResponseMetadata baseMetadata = freshness.ToQueryResponseMetadata(Thresholds, now, etag);
+        QueryResponseMetadata metadata = baseMetadata with
         {
+            IsStale = degraded ? true : baseMetadata.IsStale,
+            IsDegraded = degraded,
+            Paging = paging,
+            WarningCodes = degraded
+                ? [ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable]
+                : null,
             Provenance = QueryResponseProvenance.ProjectionBacked,
+            Lifecycle = degraded ? ProjectionLifecycleState.Stale : baseMetadata.Lifecycle,
         };
         return QueryResult.FromPayload(JsonSerializer.SerializeToElement(payload, s_jsonOptions), projectionType, metadata);
     }
 
-    private ProjectionFreshnessMetadata ToPartiesFreshness(IReadModelFreshness model, DateTimeOffset now)
-        => ReadModelFreshness.Classify(model, Thresholds, now) switch
+    private ProjectionFreshnessMetadata ToPartiesFreshness(IReadModelFreshness model, DateTimeOffset now, bool degraded = false)
+        => degraded
+            ? ProjectionFreshnessMetadata.Create(
+                ProjectionFreshnessStatus.Stale,
+                ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable)
+            : ReadModelFreshness.Classify(model, Thresholds, now) switch
         {
             ReadModelFreshnessState.Current or ReadModelFreshnessState.Aging =>
                 ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current),
@@ -305,6 +435,117 @@ public sealed partial class PartySdkQueryService(
                 ProjectionFreshnessStatus.Unavailable,
                 ProjectionFreshnessMetadata.WarningProjectionStateUnavailable),
         };
+
+    private QueryPagingMetadata? CreatePagingMetadata(
+        QueryEnvelope query,
+        string cursorScope,
+        int offset,
+        int pageSize,
+        int itemCount,
+        int totalCount)
+    {
+        if (query.Paging is null)
+        {
+            return null;
+        }
+
+        int nextOffset = checked(offset + itemCount);
+        bool hasMore = nextOffset < totalCount;
+        string? nextCursor = hasMore
+            ? cursorCodec.Encode(query.QueryType, cursorScope, nextOffset.ToString(CultureInfo.InvariantCulture))
+            : null;
+        return new QueryPagingMetadata(pageSize, offset, nextCursor, totalCount, hasMore);
+    }
+
+    private bool TryResolvePaging(
+        QueryEnvelope query,
+        int payloadPage,
+        int payloadPageSize,
+        string cursorScope,
+        out int page,
+        out int pageSize,
+        out int offset)
+    {
+        page = payloadPage;
+        pageSize = Math.Clamp(payloadPageSize, 1, 100);
+        long payloadOffset = (long)(page - 1) * pageSize;
+        offset = payloadOffset > int.MaxValue ? int.MaxValue : (int)payloadOffset;
+        if (query.Paging is null)
+        {
+            return true;
+        }
+
+        pageSize = query.Paging.PageSize ?? pageSize;
+        if (pageSize is < 1 or > 100
+            || query.Paging.Offset is < 0
+            || (!string.IsNullOrWhiteSpace(query.Paging.Cursor) && query.Paging.Offset is not null)
+            || !cursorCodec.TryDecode(
+                query.Paging.Cursor,
+                query.QueryType,
+                cursorScope,
+                out string? position,
+                out _))
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(position))
+        {
+            if (!int.TryParse(position, NumberStyles.None, CultureInfo.InvariantCulture, out offset) || offset < 0)
+            {
+                return false;
+            }
+        }
+        else if (query.Paging.Offset is { } requestedOffset)
+        {
+            offset = requestedOffset;
+        }
+
+        if (offset % pageSize != 0)
+        {
+            return false;
+        }
+
+        long resolvedPage = ((long)offset / pageSize) + 1;
+        if (resolvedPage > int.MaxValue)
+        {
+            return false;
+        }
+
+        page = (int)resolvedPage;
+        return true;
+    }
+
+    private static string CreateListCursorScope(
+        QueryEnvelope query,
+        PartyIndexProjectionQueryActor.ListPartiesQueryPayload payload,
+        int pageSize)
+        => QueryCursorScope.Create()
+            .Add("tenant", query.TenantId)
+            .Add("user", query.UserId)
+            .Add("type", payload.Type?.ToString())
+            .Add("active", payload.Active?.ToString(CultureInfo.InvariantCulture))
+            .Add("created-after", payload.CreatedAfter)
+            .Add("created-before", payload.CreatedBefore)
+            .Add("modified-after", payload.ModifiedAfter)
+            .Add("modified-before", payload.ModifiedBefore)
+            .Add("page-size", pageSize.ToString(CultureInfo.InvariantCulture))
+            .Build();
+
+    private static string CreateSearchCursorScope(
+        QueryEnvelope query,
+        PartyIndexProjectionQueryActor.SearchPartiesQueryPayload payload,
+        int pageSize)
+        => QueryCursorScope.Create()
+            .Add("tenant", query.TenantId)
+            .Add("user", query.UserId)
+            .Add("query", payload.Query.Trim())
+            .Add("type", payload.Type?.ToString())
+            .Add("active", payload.Active?.ToString(CultureInfo.InvariantCulture))
+            .Add("mode", payload.Mode)
+            .Add("case", payload.CaseId)
+            .Add("page-size", pageSize.ToString(CultureInfo.InvariantCulture))
+            .Build();
 
     private ReadModelFreshnessThresholds Thresholds => ReadModelFreshnessThresholds.Create(
         TimeSpan.FromSeconds(options.Value.FreshnessAgingSeconds),

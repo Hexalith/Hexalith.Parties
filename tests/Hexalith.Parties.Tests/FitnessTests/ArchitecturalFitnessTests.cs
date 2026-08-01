@@ -671,26 +671,18 @@ public sealed class ArchitecturalFitnessTests
     }
 
     [Fact]
-    public void PartiesProjectionActorsDoNotImplementEventStoreGenericProjectionContract()
+    public void PartiesProjectionRuntimeUsesOnlyEventStoreSdkHandlers()
     {
-        string detailSource = ReadRepoFile("src", "Hexalith.Parties.Projections", "Actors", "PartyDetailProjectionActor.cs");
-        string indexSource = ReadRepoFile("src", "Hexalith.Parties.Projections", "Actors", "PartyIndexProjectionActor.cs");
+        File.Exists(RepoPath("src", "Hexalith.Parties.Projections", "Actors", "PartyDetailProjectionActor.cs"))
+            .ShouldBeFalse("The local detail projection actor is retired after the SDK cutover.");
+        File.Exists(RepoPath("src", "Hexalith.Parties.Projections", "Actors", "PartyIndexProjectionActor.cs"))
+            .ShouldBeFalse("The local index projection actor is retired after the SDK cutover.");
 
-        Regex eventStoreContract = new(@"(?<!\w)(?:I?ProjectionActor)\b(?!\w)");
-        Regex localPartyContract = new(@"\bIParty\w*ProjectionActor\b");
+        string detailSource = ReadRepoFile("src", "Hexalith.Parties.Projections", "Handlers", "PartyDetailSdkProjectionHandler.cs");
+        string indexSource = ReadRepoFile("src", "Hexalith.Parties.Projections", "Handlers", "PartyIndexSdkProjectionHandler.cs");
 
-        bool DetectsEventStoreContract(string source)
-        {
-            string stripped = localPartyContract.Replace(source, string.Empty);
-            return eventStoreContract.IsMatch(stripped);
-        }
-
-        DetectsEventStoreContract(detailSource).ShouldBeFalse(
-            "PartyDetailProjectionActor must not implement EventStore's generic IProjectionActor contract.");
-        DetectsEventStoreContract(indexSource).ShouldBeFalse(
-            "PartyIndexProjectionActor must not implement EventStore's generic IProjectionActor contract.");
-        detailSource.ShouldContain("IPartyDetailProjectionActor");
-        indexSource.ShouldContain("IPartyIndexProjectionActor");
+        detailSource.ShouldContain("IAsyncDomainProjectionRebuildHandler");
+        indexSource.ShouldContain("IAsyncDomainSharedProjectionRebuildHandler");
     }
 
     private static string ReadRepoFile(params string[] segments)

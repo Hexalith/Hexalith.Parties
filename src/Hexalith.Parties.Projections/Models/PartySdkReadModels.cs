@@ -30,11 +30,24 @@ public sealed record PartyIndexSdkReadModel : IReadModelFreshness
     public string? ProjectionVersion { get; init; }
 }
 
+/// <summary>PII-free processing activity records projected with the aggregate detail.</summary>
+public sealed record PartyProcessingSdkReadModel : IReadModelFreshness
+{
+    public IReadOnlyList<ProcessingActivityRecord> Records { get; init; } = [];
+
+    public long LastSequenceNumber { get; init; } = long.MinValue;
+
+    public DateTimeOffset? ProjectedAt { get; init; }
+
+    public string? ProjectionVersion { get; init; }
+}
+
 /// <summary>Canonical addresses used by both Parties SDK producers and consumers.</summary>
 public static class PartySdkReadModelAddresses
 {
     public const string DetailSlot = "detail";
     public const string IndexSlot = "index";
+    public const string ProcessingSlot = "processing-records";
     public const string SharedIndexAggregateId = "parties";
 
     public static string Detail(string tenantId, string partyId)
@@ -42,6 +55,9 @@ public static class PartySdkReadModelAddresses
 
     public static string Index(string tenantId)
         => Build(tenantId, PartyProjectionNames.Index, SharedIndexAggregateId, IndexSlot);
+
+    public static string Processing(string tenantId, string partyId)
+        => Build(tenantId, PartyProjectionNames.Detail, partyId, ProcessingSlot);
 
     private static string Build(string tenantId, string projection, string aggregateId, string slot)
     {
