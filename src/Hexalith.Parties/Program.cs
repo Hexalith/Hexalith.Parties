@@ -68,7 +68,8 @@ app.UseCloudEvents();
 app.MapSubscribeHandler();
 app.MapEventStoreDomainEvents();
 // Canonical SDK endpoints include /process, /replay-state, /query, /project,
-// /project/v2, staged /project/rebuild/* operations, and operational metadata.
+// /project/v2, staged /project/rebuild/* operations, and the
+// /admin/operational-index-metadata discovery route.
 // DAPR service invocation remains ACL-limited to EventStore and the exact POST
 // operations in accesscontrol.parties.yaml.
 app.UseEventStoreDomainService();

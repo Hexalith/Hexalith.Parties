@@ -55,3 +55,9 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md`
   summary: Automate integrity validation for the G8-A owner-delivery receipt and its selected producer identity.
   evidence: The review confirmed that current Parties fitness tests parse only the marked matrix table and do not bind the supplemental receipt SHA, claimed four-file inventory, or focused EventStore test lane to the referenced Git objects.
+- source_spec: `_bmad-output/implementation-artifacts/spec-align-assistant-commit-message-generation.md`
+  summary: Bind the operational-index metadata ACL route to the EventStore policy, POST verb, and allow action in one focused assertion.
+  evidence: Incidental review of concurrent ACL edits found that independent string assertions can pass when `/admin/operational-index-metadata` is placed under the wrong app policy, verb, or action.
+- source_spec: `_bmad-output/implementation-artifacts/spec-align-assistant-commit-message-generation.md`
+  summary: Reconcile persistent BMAD branch guidance with the Hexalith default-main Git policy.
+  evidence: The pre-existing project context still requires a typed branch and PR, while the authoritative Hexalith Git instructions say to work on `main` by default and branch only when genuinely required.

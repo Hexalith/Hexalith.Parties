@@ -56,6 +56,32 @@ Before working in a Hexalith repository, locate, read, and follow
 - If nested submodules were initialized accidentally, deinitialize them before
   continuing.
 
+## Commit Message Generation
+
+When generating or suggesting a commit message for Claude, Codex, GitHub
+Copilot, or Visual Studio:
+
+- Inspect the active repository's commitlint configuration and Git instructions
+  before composing a candidate; repository-specific rules override generic
+  defaults.
+- Use `<type>[optional scope][!]: <description>`. Select the narrowest accurate
+  type (`feat`, `fix`, `perf`, `docs`, `refactor`, `test`, `revert`, `build`,
+  `ci`, or `style`) by release impact and never use `chore`. A documentation-only
+  change uses `docs`, for example `docs: align commit guidance`.
+- Start the description lowercase, write it in imperative mood, and omit a
+  trailing period. Honor configured header and body limits; under Hexalith
+  policy, prefer a subject near 50 characters and body lines near 72 characters.
+  Mark breaking changes with `!` or a `BREAKING CHANGE:` footer.
+- Reject plain-English or default-shaped subjects such as `Update ...`,
+  `Add ...`, `Fix ...`, and `Bump ...`. Reject merge, fixup, squash,
+  version-only, and Git-generated revert subjects even when commitlint ignores
+  them and exits successfully. Intentional reverts use `revert: ...`.
+- Validate the exact candidate, including any body and footers, with the
+  repository-pinned commitlint when tooling is available. Revise it until both
+  commitlint and the stricter Hexalith policy pass. If tooling is unavailable,
+  explicitly report that commitlint validation was not run; never claim
+  tool-verified compliance.
+
 ## Shared Entry Points
 
 - Keep `AGENTS.md`, `CLAUDE.md`, and `.github/copilot-instructions.md`

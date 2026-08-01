@@ -426,9 +426,18 @@ selected release or root gitlink differs from the recorded identity.
 | Integration project compile | Pass | After declaring the EventStore server fixture dependency directly in the integration-test project, compilation completed with 0 warnings and 0 errors while `Hexalith.Parties` retained no production `Hexalith.EventStore.Server` dependency. |
 | Integration execution | Environment-blocked | The focused encryption fixture could not start because the mixed source/package restore graph omitted runtime `Hexalith.Commons.Http, Version=2.29.0.0`. Six tests failed during host construction before exercising Story 8.6 behavior; no test-pass credit is assigned. |
 | Static validation | Pass | `git diff --check` passed; `bash scripts/check-no-warning-override.sh` reported no warning-override or nested-submodule regressions; production search found no `NotImplementedException` and no retired projection actor/rebuild/adapter runtime types. |
+| Operational-index metadata route red/green | Pass | New `ArchitecturalFitnessTests` assertions first failed 2/2 because `Program.cs` and the Parties ACL omitted `/admin/operational-index-metadata`. After the exact EventStore-only POST ACL operation and host documentation were added, the focused assertions passed 2/2 and the full architecture class passed 21/21. |
+| Canonical package-mode unit lane | Pass | `pwsh scripts/test.ps1 -Lane unit -ContinueOnFailure -Properties NuGetAudit=false`: all 11 unit projects passed, 1660 tests total. |
+| CI lane | Pass | `pwsh scripts/test.ps1 -Lane ci -ContinueOnFailure -Properties NuGetAudit=false`: 31 passed, 0 failed. |
+| Release solution build | Pass | `dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false --verbosity minimal`: 0 warnings, 0 errors. |
+| Source-mode unit lane | Partial | Eight projects built and passed; Contracts, Authentication, and Server did not build because the mixed source graph resolves duplicate `Hexalith.Commons.UniqueIds` assembly versions, and Memories correctly rejects Release source mode. No pass credit is assigned to the three projects. |
+| Current topology lane | Environment-blocked | `pwsh scripts/test.ps1 -Lane topology -ContinueOnFailure -Properties NuGetAudit=false`: 37 total, 26 passed, 6 explicitly skipped, 5 failed. All five failures are the Story 8.7 encryption fixture calling DAPR actors at `localhost:3500`; the connection was refused. A direct class rerun reproduced 5 failures out of 6 tests in 2.136 seconds. No Story 8.6 projection/query failure was reported, but no completion credit is assigned to the failed lane. |
+| Current static validation | Pass | Story-scoped `git diff --check` passed and `bash scripts/check-no-warning-override.sh` reported no warning-override or nested-submodule regression. Unrelated concurrent CRLF edits were preserved and excluded from the story-scoped whitespace result. |
 
 Verdict: the former SDK compatibility block is resolved by EventStore `v3.89.0`,
 and the Story 8.6 projection/query migration is implemented with focused parity green.
-The story remains in progress because the frozen `/process`-only ACL wording conflicts
-with the already-tracked exact SDK endpoint allowlist, and broad validation retains the
-three pre-existing matrix failures plus the integration restore/runtime blocker above.
+The later frozen spec resolves the ingress wording: gateway/public behavior is unchanged,
+while only EventStore may invoke exact internal POST SDK routes. The missing operational-index
+metadata discovery route is now admitted and fitness-tested. The story remains in progress
+because broad validation retains the three pre-existing G5 matrix failures and the topology
+lane retains five Story 8.7 encryption-fixture DAPR connection failures.

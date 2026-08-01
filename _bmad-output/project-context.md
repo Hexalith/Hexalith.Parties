@@ -219,8 +219,17 @@ _This file contains critical rules and patterns that AI agents must follow when 
   green. Verify parity locally with `bash scripts/check-no-warning-override.sh`. Never weaken it.
 - **Submodules: `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants` — root-repository submodules only,
   never `--recursive`** (CI checks out the same way; the build gate forbids nested-submodule init).
-- **Commits follow Conventional Commits** — `feat:`, `fix:`, `chore:`, `docs:`, with optional scope
-  (`fix(deploy): …`, `docs(planning): …`). Work on a typed branch (`<type>/<slug>`) and merge via PR.
+- **Commit-message generation follows active commitlint plus stricter Hexalith policy.** Inspect the active
+  repository's commitlint configuration and Git instructions, then use
+  `<type>[optional scope][!]: <description>`. Choose the narrowest accurate type (`feat`, `fix`, `perf`,
+  `docs`, `refactor`, `test`, `revert`, `build`, `ci`, or `style`) by release impact; **never use `chore`**.
+  Descriptions start lowercase, use imperative mood, and omit a trailing period. Honor configured limits,
+  prefer subjects near 50 characters and body lines near 72, and mark breaking changes with `!` or a
+  `BREAKING CHANGE:` footer. Reject plain-English (`Update …`, `Add …`, `Fix …`, `Bump …`) and ignored
+  merge, fixup, squash, version-only, or Git-generated revert defaults even if commitlint exits successfully;
+  intentional reverts use `revert: …`. Validate the exact candidate with repository-pinned commitlint when
+  available and revise until both policies pass; otherwise explicitly report that validation was not run.
+  Work on a typed branch (`<type>/<slug>`) and merge via PR.
 - **CI** (`.github/workflows/test.yml`, the only workflow): `lint` (analyzers build + Story 9.8 build-gate)
   → in parallel `test` (**4 named shards**: `contracts-client-security-mcp`, `domain-server`, `projections-ui`,
   `integration-deploy`) **and `ui-a11y`** (UI accessibility gate, bUnit) → `contract-test` → `report` (quality

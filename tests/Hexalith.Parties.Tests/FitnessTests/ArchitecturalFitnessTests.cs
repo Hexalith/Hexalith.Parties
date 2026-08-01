@@ -123,6 +123,9 @@ public sealed class ArchitecturalFitnessTests
         source.ShouldContain(
             "only eventstore may invoke the exact",
             customMessage: "The retained SDK endpoints must be documented as DAPR service-invocation plumbing restricted by accesscontrol.parties.yaml.");
+        source.ShouldContain(
+            "/admin/operational-index-metadata",
+            customMessage: "Program.cs must document the EventStore-only SDK metadata route used to discover Party query and named-projection handlers.");
     }
 
     [Fact]
@@ -329,6 +332,7 @@ public sealed class ArchitecturalFitnessTests
         partiesAccessControl.ShouldContain("name: /project/rebuild/commit/v1");
         partiesAccessControl.ShouldContain("name: /project/rebuild/abort/v1");
         partiesAccessControl.ShouldContain("name: /project/rebuild/verify/v1");
+        partiesAccessControl.ShouldContain("name: /admin/operational-index-metadata");
         partiesAccessControl.ShouldContain("httpVerb: ['POST']");
 
         // Wildcard guards must catch the canonical YAML quoted forms as well as the unquoted form.

@@ -3,7 +3,7 @@
 #
 # Service-invocation policy:
 #   defaultAction: deny — only EventStore may invoke Parties via service invocation,
-#   and only on the exact command/query/projection operations below. This retains
+#   and only on the exact command/query/projection/discovery operations below. This retains
 #   the Story 12.0 `party -> parties/process` mapping and admits the Story 8.6 SDK
 #   consumer routes without exposing actor methods, /healthz, /metrics, or any
 #   wildcard path to peer DAPR callers.
@@ -34,6 +34,9 @@ spec:
             httpVerb: ['POST']
             action: allow
           - name: /query
+            httpVerb: ['POST']
+            action: allow
+          - name: /admin/operational-index-metadata
             httpVerb: ['POST']
             action: allow
           - name: /project

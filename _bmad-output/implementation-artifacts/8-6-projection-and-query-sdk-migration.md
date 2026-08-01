@@ -198,6 +198,12 @@ Add direct `-class` runs for the new SDK parity harness. If topology or Docker-b
 
 GPT-5 Codex
 
+### Implementation Plan
+
+1. Add red architectural fitness assertions for the EventStore operational-index metadata discovery route in both `Program.cs` documentation and the deny-default DAPR ACL.
+2. Add the one exact EventStore-only POST ACL operation required by the frozen Story 8.6 spec while preserving unchanged public/gateway behavior and rejecting wildcard or peer ingress.
+3. Run focused architecture tests, canonical package-mode unit/CI/topology lanes, the Release solution build, and static guardrails; keep the story in progress if any full regression gate remains non-green.
+
 ### Debug Log References
 
 - 2026-07-09T13:25:25+02:00 - Loaded sprint status and selected requested story `8-6-projection-and-query-sdk-migration` from `_bmad-output/implementation-artifacts/sprint-status.yaml`.
@@ -222,6 +228,11 @@ GPT-5 Codex
 - 2026-08-01T14:20:00+02:00 - Latest source-mode projection consumer build passed with 0 warnings and 0 errors; direct projection execution passed 150/150. Focused query/health/composition/architecture execution passed 48/48.
 - 2026-08-01T14:20:00+02:00 - Broad Parties execution reported 452 total, 449 passed, and only the three pre-existing payload-protection matrix failures. The integration project compiled with 0 warnings/errors after its EventStore server fixture dependency became explicit; focused execution stopped during host construction on missing mixed-graph `Hexalith.Commons.Http, Version=2.29.0.0` and received no pass credit.
 - 2026-08-01T14:20:00+02:00 - `git diff --check` and `scripts/check-no-warning-override.sh` passed. Production searches found no `NotImplementedException`, retired projection actor/rebuild/adapter runtime types, or production EventStore.Server reference.
+- 2026-08-01T15:55:59+02:00 - Reconciled the older `/process`-only wording with the later frozen Story 8.6 spec: gateway/public behavior remains unchanged, while deny-default DAPR service invocation admits only EventStore and exact internal POST SDK routes. EventStore's operational-index hosted service requires `/admin/operational-index-metadata` to discover Party query and named-projection handlers.
+- 2026-08-01T15:55:59+02:00 - Added red architectural fitness assertions for metadata-route documentation and ACL admission (2/2 failed), then documented the route in `Program.cs`, added its exact EventStore-only POST ACL operation, and reran the two tests plus the full `ArchitecturalFitnessTests` class green (2/2 and 21/21).
+- 2026-08-01T15:55:59+02:00 - Canonical package-mode unit lane passed 1660/1660; CI lane passed 31/31; the Release solution build passed with 0 warnings and 0 errors; Story 8.6-scoped `git diff --check` and `scripts/check-no-warning-override.sh` passed.
+- 2026-08-01T15:55:59+02:00 - Full regression completion remains blocked: the Parties assembly remains 449/452 on the three pre-existing G5 prerequisite-matrix failures, and the topology lane reported 26 passed, 6 explicitly skipped, and 5 encryption-fixture failures because DAPR actor calls to `localhost:3500` were refused. Source-mode unit validation additionally built/passed 8 projects while three mixed-version/source-graph projects failed outside Story 8.6. The unchecked task and story status were preserved per the dev-story completion gate.
+- 2026-08-01T15:55:59+02:00 - The approved file-list gate could not run: `python3 _bmad/scripts/check_file_list.py --story _bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md --require-file-list` exited 2 because `_bmad/scripts/check_file_list.py` is absent. Manually added the three files changed in this continuation to the story File List; unrelated concurrent worktree edits remain excluded.
 
 ### Completion Notes List
 
@@ -230,7 +241,8 @@ GPT-5 Codex
 - All eight Party query discriminators run through SDK `IDomainQueryHandler` implementations. Strict tenant/payload validation, DataProtection-backed cursor scope, freshness metadata, GDPR export/status/certificate semantics, and tenant-scoped last-known degraded data are preserved.
 - Dapr projection/query actors, local rebuild services/checkpoints, projection platform adapters, actor fallbacks, and the actor health check were removed after focused parity passed. EventStore server utilities remain only as an explicit integration-test fixture dependency, not a production dependency.
 - Focused validation is green: latest SDK source build 0 warnings/errors, projections 150/150, and query/health/composition/architecture 48/48. Broad Parties validation is 449/452 with only three pre-existing payload-protection matrix failures; the integration fixture compiles but its mixed source/package runtime restore remains environment-blocked.
-- Story 8.6 remains `in-progress`, not SDK-blocked: the frozen `/process`-only ACL subtask conflicts with the already-tracked deny-default exact SDK endpoint allowlist required for `/query` and projection/rebuild dispatch. This is Class C platform cleanup and delivers no new PRD functional coverage.
+- The ingress wording is reconciled by the later frozen spec: gateway/public behavior remains unchanged, and deny-default DAPR service invocation allows only EventStore on exact POST command/query/projection/rebuild/discovery routes. The previously omitted operational-index metadata discovery route is now documented, admitted, and fitness-tested without a wildcard or peer expansion.
+- Story 8.6 remains `in-progress` because its full regression gate is not green: three pre-existing G5 matrix checks fail in the broad Parties assembly, and five Story 8.7 encryption-fixture topology tests require a DAPR actor sidecar on `localhost:3500`. This Class C platform cleanup delivers no new PRD functional coverage.
 
 ### File List
 
@@ -251,9 +263,11 @@ Pre-existing user-owned `references/Hexalith.Builds` dirt and
 - `src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs`
 - `src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj`
 - `src/Hexalith.Parties.Projections/Models/PartySdkReadModels.cs`
+- `src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml`
 - `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`
 - `src/Hexalith.Parties/HealthChecks/PartiesHealthCheckExtensions.cs`
 - `src/Hexalith.Parties/Hexalith.Parties.csproj`
+- `src/Hexalith.Parties/Program.cs`
 - `src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs`
 - `src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs`
 - `src/Hexalith.Parties/Queries/PartySdkQueryService.cs`
@@ -303,3 +317,4 @@ Pre-existing user-owned `references/Hexalith.Builds` dirt and
 | 2026-08-01 | 0.3 | Revalidated the now-available owner proof at its exact approved source SHA; blocked before migration because the mandatory A/B/C verifier's fresh seven-year WORM-retention check fails, then restored the pre-story dependency identity. | GPT-5 Codex (dev-story) |
 | 2026-08-01 | 0.4 | Extended WORM retention, published and verified a refreshed owner A/B/C chain, passed the exact source-consumer handoff, then blocked safely when the authorized SHA failed to compile the required tenant-shared rebuild surface. | GPT-5 Codex (dev-story) |
 | 2026-08-01 | 0.5 | Used latest stable EventStore v3.89.0 under explicit user direction, completed the SDK projection/query migration and local-mechanics retirement, and recorded focused-green plus broad/environment-limited validation. | GPT-5 Codex (dev-story) |
+| 2026-08-01 | 0.6 | Reconciled public versus internal ingress from the frozen spec, admitted and tested the missing EventStore-only operational-index metadata route, and retained `in-progress` because full regression gates remain non-green outside Story 8.6. | GPT-5 Codex (dev-story) |
