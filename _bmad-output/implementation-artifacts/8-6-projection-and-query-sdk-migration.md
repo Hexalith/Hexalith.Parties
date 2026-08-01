@@ -4,16 +4,16 @@ story_id: "8.6"
 epic: "8"
 created: 2026-07-08T18:23:46+02:00
 source_status: backlog
-target_status: blocked
+target_status: review
 baseline_commit: 2c4a7af
 eventstore_pin_at_creation: 0f428d0c914f2151aab15bb262f956a9630041dc
 ---
 
 # Story 8.6: Projection and query SDK migration
 
-Status: in-progress
+Status: review
 
-<!-- The implementation packet is retained, but the story remains blocked by the Story 8.3 projection/query SDK matrix row and must not enter production development intake. -->
+<!-- The prerequisite gate is resolved, implementation and regression evidence are green, and the story is ready for review. -->
 
 ## Story
 
@@ -59,10 +59,10 @@ so that Parties keeps only domain folds, query semantics, and tenant guardrails.
   - [x] Route pagination through `IQueryCursorCodec` only after cursor purpose/scope compatibility and DAPR key-ring persistence are proven.
   - [x] Preserve optional Memories indexing/search behavior as best effort; do not make Memories required for local search.
 
-- [ ] Replace host/service registrations without widening ingress (AC: 8, 9)
+- [x] Replace host/service registrations without widening ingress (AC: 8, 9)
   - [x] Update `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs` to register SDK projection/query handlers, read-model store usage, write policy, and cursor codec.
   - [x] Keep existing projection actors, rebuild service, adapters, and health checks registered until parity and rebuild evidence are recorded.
-  - [ ] Verify `src/Hexalith.Parties/Program.cs` keeps the Story 8.5 SDK host shape and that DAPR ACL exposure remains `/process` only.
+  - [x] Verify `src/Hexalith.Parties/Program.cs` keeps the Story 8.5 SDK host shape and that DAPR ACL exposure remains `/process` only.
 
 - [x] Delete local mechanics only after parity is green (AC: 6, 8)
   - [x] Remove Dapr projection actors and actor interfaces only after the SDK path proves detail/index parity.
@@ -203,6 +203,8 @@ GPT-5 Codex
 1. Add red architectural fitness assertions for the EventStore operational-index metadata discovery route in both `Program.cs` documentation and the deny-default DAPR ACL.
 2. Add the one exact EventStore-only POST ACL operation required by the frozen Story 8.6 spec while preserving unchanged public/gateway behavior and rejecting wildcard or peer ingress.
 3. Run focused architecture tests, canonical package-mode unit/CI/topology lanes, the Release solution build, and static guardrails; keep the story in progress if any full regression gate remains non-green.
+4. Isolate the encryption fixture from the production DAPR-backed key-retry scheduler removed from its former actor-proxy test seam, then rerun the focused fixture and every canonical lane.
+5. Advance to review only after all 15 projects, the Release solution build, static guardrails, and the manual File List reconciliation are green.
 
 ### Debug Log References
 
@@ -233,6 +235,15 @@ GPT-5 Codex
 - 2026-08-01T15:55:59+02:00 - Canonical package-mode unit lane passed 1660/1660; CI lane passed 31/31; the Release solution build passed with 0 warnings and 0 errors; Story 8.6-scoped `git diff --check` and `scripts/check-no-warning-override.sh` passed.
 - 2026-08-01T15:55:59+02:00 - Full regression completion remains blocked: the Parties assembly remains 449/452 on the three pre-existing G5 prerequisite-matrix failures, and the topology lane reported 26 passed, 6 explicitly skipped, and 5 encryption-fixture failures because DAPR actor calls to `localhost:3500` were refused. Source-mode unit validation additionally built/passed 8 projects while three mixed-version/source-graph projects failed outside Story 8.6. The unchecked task and story status were preserved per the dev-story completion gate.
 - 2026-08-01T15:55:59+02:00 - The approved file-list gate could not run: `python3 _bmad/scripts/check_file_list.py --story _bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md --require-file-list` exited 2 because `_bmad/scripts/check_file_list.py` is absent. Manually added the three files changed in this continuation to the story File List; unrelated concurrent worktree edits remain excluded.
+- 2026-08-01T16:14:29+02:00 - Resumed from clean `main` at `31a2f37`. The Release `Hexalith.Parties.Tests` build passed with 0 warnings/errors, and direct execution of `ArchitecturalFitnessTests` passed 21/21, confirming the Story 8.5 SDK host shape and exact deny-default EventStore-only POST ACL routes remain intact.
+- 2026-08-01T16:14:29+02:00 - Canonical package-mode `pwsh scripts/test.ps1 -Lane unit -ContinueOnFailure -Properties NuGetAudit=false,MinVerVersionOverride=1.0.0` passed all 11 projects and 1660/1660 tests.
+- 2026-08-01T16:14:29+02:00 - `pwsh scripts/test.ps1 -Lane integration -ContinueOnFailure -Properties NuGetAudit=false,MinVerVersionOverride=1.0.0` remained red: Sample passed 58/58, while Parties passed 449/452. The same three `PlatformApiPrerequisitesTests` failed on the Story 8.7/G5 payload-protection evidence (`Matrix_ValidationEvidenceCommandsAreReproducible`, `Matrix_EvidencePathsExistAndMatchDeclaredOwner`, and `Matrix_ValidationEvidenceNamesExpectedSymbols`). Stopped at the regression gate without changing production source, marking the remaining subtask complete, or moving the story from `in-progress`.
+- 2026-08-01T17:38:55+02:00 - Revalidated the host/ACL focus at the current EventStore root gitlink and checkout `8f004ecf8be271ec5e76f97f944c1fc1154391c7`: the Release test build completed with 0 warnings/errors and `ArchitecturalFitnessTests` passed 21/21.
+- 2026-08-01T17:38:55+02:00 - The first full all-lanes pass reached 14/15 projects: concurrently refreshed G5 matrix evidence made `Hexalith.Parties.Tests` green at 452/452, while five encryption-fixture tests exposed a Story 8.6 regression. Removing the retired projection actor proxy setup had also removed the fixture's only DAPR isolation, so the production `ActorBackedPartyKeyRetryScheduler` attempted `localhost:3500`.
+- 2026-08-01T17:38:55+02:00 - Registered a substitute `IPartyKeyRetryScheduler` in `EncryptionTestFactory` without restoring retired projection actors. The focused Release build completed with 0 warnings/errors and all six `EncryptionPipelineIntegrationTests` passed.
+- 2026-08-01T17:38:55+02:00 - Final `pwsh scripts/test.ps1 -Lane all -ContinueOnFailure -Properties NuGetAudit=false,MinVerVersionOverride=1.0.0` exited 0: all 15 projects passed; Parties passed 452/452, Sample passed 58/58, Integration passed 31 with 6 explicit deferred-health skips, and CI passed 31/31.
+- 2026-08-01T17:38:55+02:00 - Final Release solution build passed with 0 warnings and 0 errors. `git diff --check`, `bash scripts/check-no-warning-override.sh`, and production searches for `NotImplementedException` and retired projection/query runtime types passed.
+- 2026-08-01T17:38:55+02:00 - `_bmad/scripts/check_file_list.py` remains absent, so the automated File List gate could not run. Manual reconciliation confirmed the Story 8.6 continuation files are listed; concurrent G5 matrix/test edits, FrontComposer gitlink drift, and the untracked CI prerequisite spec remain excluded.
 
 ### Completion Notes List
 
@@ -240,9 +251,10 @@ GPT-5 Codex
 - Detail, index, and PII-free Art.30 processing-record projections now persist through SDK read-model batches and rebuild plans. Duplicate/out-of-order delivery no longer advances projection timestamps, and shared-index rebuild verification covers complete replacement and erased-party exclusion.
 - All eight Party query discriminators run through SDK `IDomainQueryHandler` implementations. Strict tenant/payload validation, DataProtection-backed cursor scope, freshness metadata, GDPR export/status/certificate semantics, and tenant-scoped last-known degraded data are preserved.
 - Dapr projection/query actors, local rebuild services/checkpoints, projection platform adapters, actor fallbacks, and the actor health check were removed after focused parity passed. EventStore server utilities remain only as an explicit integration-test fixture dependency, not a production dependency.
-- Focused validation is green: latest SDK source build 0 warnings/errors, projections 150/150, and query/health/composition/architecture 48/48. Broad Parties validation is 449/452 with only three pre-existing payload-protection matrix failures; the integration fixture compiles but its mixed source/package runtime restore remains environment-blocked.
+- Focused validation is green: latest SDK source build 0 warnings/errors, projections 150/150, query/health/composition/architecture 48/48, architecture fitness 21/21, and the corrected encryption fixture 6/6.
 - The ingress wording is reconciled by the later frozen spec: gateway/public behavior remains unchanged, and deny-default DAPR service invocation allows only EventStore on exact POST command/query/projection/rebuild/discovery routes. The previously omitted operational-index metadata discovery route is now documented, admitted, and fitness-tested without a wildcard or peer expansion.
-- Story 8.6 remains `in-progress` because its full regression gate is not green: three pre-existing G5 matrix checks fail in the broad Parties assembly, and five Story 8.7 encryption-fixture topology tests require a DAPR actor sidecar on `localhost:3500`. This Class C platform cleanup delivers no new PRD functional coverage.
+- The final all-lanes regression is green across all 15 projects. Parties passes 452/452; the Integration assembly passes 31 tests with 6 explicit deferred-health skips; and the Release solution build has 0 warnings and 0 errors.
+- Story 8.6 is ready for review. This Class C platform cleanup delivers no new PRD functional coverage.
 
 ### File List
 
@@ -318,3 +330,5 @@ Pre-existing user-owned `references/Hexalith.Builds` dirt and
 | 2026-08-01 | 0.4 | Extended WORM retention, published and verified a refreshed owner A/B/C chain, passed the exact source-consumer handoff, then blocked safely when the authorized SHA failed to compile the required tenant-shared rebuild surface. | GPT-5 Codex (dev-story) |
 | 2026-08-01 | 0.5 | Used latest stable EventStore v3.89.0 under explicit user direction, completed the SDK projection/query migration and local-mechanics retirement, and recorded focused-green plus broad/environment-limited validation. | GPT-5 Codex (dev-story) |
 | 2026-08-01 | 0.6 | Reconciled public versus internal ingress from the frozen spec, admitted and tested the missing EventStore-only operational-index metadata route, and retained `in-progress` because full regression gates remain non-green outside Story 8.6. | GPT-5 Codex (dev-story) |
+| 2026-08-01 | 0.7 | Revalidated the host/ACL and full unit gates, then halted on the unchanged Story 8.7/G5 prerequisite-matrix regression failures without modifying production source or advancing status. | GPT-5 Codex (dev-story) |
+| 2026-08-01 | 0.8 | Isolated the encryption fixture from the production DAPR retry scheduler, passed all 15 regression projects and the warning-free Release build, and advanced Story 8.6 to review. | GPT-5 Codex (dev-story) |

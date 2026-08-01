@@ -404,10 +404,30 @@ public sealed class EncryptionTestFactory : WebApplicationFactory<Program>
             Arg.Any<string>(), cancellationToken: Arg.Any<CancellationToken>())
             .Returns(true);
 
+        IPartyKeyRetryScheduler retryScheduler = Substitute.For<IPartyKeyRetryScheduler>();
+        retryScheduler.MarkPendingAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        retryScheduler.ClearPendingAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        retryScheduler.IsPendingAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
+            .Returns(false);
+
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<ICommandRouter>();
             services.AddSingleton<ICommandRouter>(Substitute.For<ICommandRouter>());
+            services.RemoveAll<IPartyKeyRetryScheduler>();
+            services.AddSingleton(retryScheduler);
             services.RemoveAll<DaprClient>();
             services.AddSingleton(daprClient);
         });

@@ -431,13 +431,17 @@ selected release or root gitlink differs from the recorded identity.
 | CI lane | Pass | `pwsh scripts/test.ps1 -Lane ci -ContinueOnFailure -Properties NuGetAudit=false`: 31 passed, 0 failed. |
 | Release solution build | Pass | `dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false --verbosity minimal`: 0 warnings, 0 errors. |
 | Source-mode unit lane | Partial | Eight projects built and passed; Contracts, Authentication, and Server did not build because the mixed source graph resolves duplicate `Hexalith.Commons.UniqueIds` assembly versions, and Memories correctly rejects Release source mode. No pass credit is assigned to the three projects. |
-| Current topology lane | Environment-blocked | `pwsh scripts/test.ps1 -Lane topology -ContinueOnFailure -Properties NuGetAudit=false`: 37 total, 26 passed, 6 explicitly skipped, 5 failed. All five failures are the Story 8.7 encryption fixture calling DAPR actors at `localhost:3500`; the connection was refused. A direct class rerun reproduced 5 failures out of 6 tests in 2.136 seconds. No Story 8.6 projection/query failure was reported, but no completion credit is assigned to the failed lane. |
-| Current static validation | Pass | Story-scoped `git diff --check` passed and `bash scripts/check-no-warning-override.sh` reported no warning-override or nested-submodule regression. Unrelated concurrent CRLF edits were preserved and excluded from the story-scoped whitespace result. |
+| Pre-closure topology lane | Environment-blocked | `pwsh scripts/test.ps1 -Lane topology -ContinueOnFailure -Properties NuGetAudit=false`: 37 total, 26 passed, 6 explicitly skipped, 5 failed. All five failures were the encryption fixture calling DAPR actors at `localhost:3500`; the connection was refused. A direct class rerun reproduced 5 failures out of 6 tests in 2.136 seconds. No Story 8.6 projection/query failure was reported, but no completion credit is assigned to the failed lane. |
+| Pre-closure static validation | Pass | Story-scoped `git diff --check` passed and `bash scripts/check-no-warning-override.sh` reported no warning-override or nested-submodule regression. Unrelated concurrent CRLF edits were preserved and excluded from the story-scoped whitespace result. |
+| Encryption fixture isolation | Pass | `EncryptionTestFactory` now replaces `IPartyKeyRetryScheduler` with a deterministic substitute, retaining DAPR isolation after the retired projection actor proxy setup was removed. The focused Release build completed with 0 warnings/errors and direct `EncryptionPipelineIntegrationTests` execution passed 6/6. |
+| Final all-lanes regression | Pass | `pwsh scripts/test.ps1 -Lane all -ContinueOnFailure -Properties NuGetAudit=false,MinVerVersionOverride=1.0.0` exited 0 with all 15 projects passing. Parties passed 452/452, Sample passed 58/58, Integration passed 31 with 6 explicit deferred-health skips, and CI passed 31/31. The skips remain documented deferred topology coverage and are not counted as Story 8.6 parity evidence. |
+| Final Release solution build | Pass | `dotnet build Hexalith.Parties.slnx -c Release -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --disable-build-servers -m:1 --verbosity:minimal`: 0 warnings, 0 errors. |
+| Final static and File List validation | Pass with manual File List reconciliation | `git diff --check`, `bash scripts/check-no-warning-override.sh`, and production searches for `NotImplementedException` and retired projection/query runtime types passed. `_bmad/scripts/check_file_list.py` is absent, so manual reconciliation confirmed all Story 8.6 continuation files are listed while unrelated concurrent changes remain excluded. |
 
 Verdict: the former SDK compatibility block is resolved by EventStore `v3.89.0`,
 and the Story 8.6 projection/query migration is implemented with focused parity green.
 The later frozen spec resolves the ingress wording: gateway/public behavior is unchanged,
 while only EventStore may invoke exact internal POST SDK routes. The missing operational-index
-metadata discovery route is now admitted and fitness-tested. The story remains in progress
-because broad validation retains the three pre-existing G5 matrix failures and the topology
-lane retains five Story 8.7 encryption-fixture DAPR connection failures.
+metadata discovery route is admitted and fitness-tested. The encryption fixture is isolated
+from its production DAPR retry scheduler, the full 15-project regression is green, and Story 8.6
+is ready for review.
