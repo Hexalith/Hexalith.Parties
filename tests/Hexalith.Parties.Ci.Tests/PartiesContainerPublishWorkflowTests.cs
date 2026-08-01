@@ -46,26 +46,34 @@ public sealed class PartiesContainerPublishWorkflowTests
     [Fact]
     public void ReleaseWorkflowPublishesOnlyPartiesContainersThroughSharedDomainRelease()
     {
+        const string buildsExecutionSha = "53d53ae42abf7c87d385a078ab260531480bbf8a";
         string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml");
 
-        workflow.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@main");
-        workflow.ShouldContain("test-platform: microsoft-testing-platform");
+        workflow.ShouldContain("on:\n  workflow_dispatch:");
+        workflow.ShouldNotContain("on:\n  push:");
+        workflow.ShouldContain($"Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@{buildsExecutionSha}");
+        workflow.ShouldContain($"builds-execution-sha: {buildsExecutionSha}");
+        workflow.ShouldNotContain("domain-release.yml@main");
+        workflow.ShouldContain("needs: verify-source");
+        workflow.ShouldContain("actions/workflows/ci.yml/runs");
+        workflow.ShouldContain("environment-name: production");
         workflow.ShouldContain("publish-containers: true");
+        workflow.ShouldContain("expected-package-count: 9");
+        workflow.ShouldContain("test-projects: ''");
         workflow.ShouldContain("src/Hexalith.Parties/Hexalith.Parties.csproj|parties");
         workflow.ShouldContain("src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj|parties-mcp");
         workflow.ShouldContain("src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj|parties-ui");
-        workflow.ShouldContain("secrets: inherit");
-        workflow.ShouldContain("tests/Hexalith.Parties.Ci.Tests");
+        workflow.ShouldContain("NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}");
+        workflow.ShouldContain("HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME }}");
+        workflow.ShouldContain("HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_API_KEY }}");
+        workflow.ShouldContain("verify-publication:");
+        workflow.ShouldNotContain("secrets: inherit");
+        workflow.ShouldNotContain("tests/Hexalith.Parties.Ci.Tests");
         workflow.ShouldNotContain("eventstore-admin");
         workflow.ShouldNotContain("sample-blazor-ui");
         workflow.ShouldNotContain("|tenants");
         workflow.ShouldNotContain("|memories");
         workflow.ShouldNotContain(":latest");
-
-        string sharedWorkflow = CiTestPaths.ReadRepoFile("references/Hexalith.Builds/.github/workflows/domain-release.yml");
-        sharedWorkflow.ShouldContain("default: 'vstest'");
-        sharedWorkflow.ShouldContain("inputs.test-platform == 'microsoft-testing-platform'");
-        sharedWorkflow.ShouldContain("--report-xunit-trx");
     }
 
     [Fact]

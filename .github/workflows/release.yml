@@ -1,39 +1,404 @@
 name: Release
 
+# Publication is an explicit operator action. The unprotected preflight proves the
+# dispatch selected the current main tip and that exact source already has a successful
+# push CI run before the protected release environment is entered. Ordinary pushes and
+# pull requests run CI only (see Hexalith.Builds ci-cd-standards.md, "Release Gates").
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-production
+  cancel-in-progress: false
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 jobs:
+  verify-source:
+    name: Verify exact green main source
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Require current main with successful exact-source CI
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          DISPATCH_REF: ${{ github.ref }}
+          DISPATCH_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$DISPATCH_REF" != "refs/heads/main" ]; then
+            echo "Release must be dispatched from refs/heads/main." >&2
+            exit 1
+          fi
+          if [[ ! "$DISPATCH_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "The dispatch source must be an exact lowercase commit SHA." >&2
+            exit 1
+          fi
+
+          live_main_sha="$(gh api "repos/${REPOSITORY}/git/ref/heads/main" --jq '.object.sha')"
+          if [[ ! "$live_main_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "The live main SHA could not be resolved safely." >&2
+            exit 1
+          fi
+          if [ "$DISPATCH_SHA" != "$live_main_sha" ]; then
+            echo "The dispatched source is no longer the live main tip." >&2
+            exit 1
+          fi
+
+          ci_runs="$(gh api --method GET \
+            "repos/${REPOSITORY}/actions/workflows/ci.yml/runs" \
+            -f branch=main \
+            -f event=push \
+            -f head_sha="$DISPATCH_SHA" \
+            -f status=success \
+            -f per_page=100)"
+          if ! printf '%s\n' "$ci_runs" | jq -e --arg sha "$DISPATCH_SHA" '
+            [.workflow_runs[] | select(
+              .head_sha == $sha and
+              .head_branch == "main" and
+              .event == "push" and
+              .status == "completed" and
+              .conclusion == "success"
+            )] | length > 0
+          ' >/dev/null; then
+            echo "No successful push CI run exists for the exact current main SHA." >&2
+            exit 1
+          fi
+
+      - name: Require registry versions at or below the release tag floor
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          DISPATCH_SHA: ${{ github.sha }}
+          PACKAGE_MANIFEST: tools/release-packages.json
+        run: |
+          set -euo pipefail
+          # Semantic Release derives the next version from the highest release tag reachable from
+          # the released branch, so a published package version above that floor makes every
+          # proposal land on an occupied version. If release tags are deleted while nuget.org keeps
+          # those versions, detect the resulting collision before entering the protected release
+          # job. Prove the floor covers the registry here before any secret is reachable.
+          if [[ ! "$DISPATCH_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "The dispatch source must be an exact lowercase commit SHA." >&2
+            exit 1
+          fi
+
+          if ! tag_refs="$(gh api --paginate "repos/${REPOSITORY}/git/refs/tags?per_page=100" | jq -s '.')"; then
+            echo "The repository tag refs could not be queried safely." >&2
+            exit 1
+          fi
+          if ! printf '%s\n' "$tag_refs" | jq -e '
+            type == "array" and
+            all(.[]; type == "array") and
+            all(.[][];
+              type == "object" and
+              (.ref | type == "string") and
+              (.ref | startswith("refs/tags/"))
+            )
+          ' >/dev/null; then
+            echo "The repository tag refs response could not be validated safely." >&2
+            exit 1
+          fi
+
+          # Only plain vMAJOR.MINOR.PATCH tags are release tags here, matching tagFormat in
+          # release.config.cjs. The regex is also what makes the tag name safe to interpolate below.
+          release_tags="$(printf '%s\n' "$tag_refs" | jq -r '
+            [ .[][].ref
+              | ltrimstr("refs/tags/")
+              | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))
+            ]
+            | unique
+            | sort_by(ltrimstr("v") | split(".") | map(tonumber))
+            | reverse
+            | .[]')"
+
+          # Semantic Release considers only tags merged into the released branch and takes the
+          # highest, so walk candidates highest-first and stop at the first one that is an ancestor
+          # of the dispatched source. A higher tag on an unmerged branch is correctly ignored.
+          #
+          # compare/{base}...{head} reports the status of HEAD RELATIVE TO BASE. With the tag as
+          # base and the dispatched source as head, a reachable tag is therefore "ahead" (the
+          # source is ahead of it) and "behind" means the tag is a DESCENDANT of the source, which
+          # Semantic Release will not see. Accepting "behind" here would adopt an unreachable tag
+          # as the floor and pass vacuously.
+          floor_tag=''
+          while IFS= read -r candidate_tag; do
+            [ -n "$candidate_tag" ] || continue
+            if ! comparison="$(gh api "repos/${REPOSITORY}/compare/${candidate_tag}...${DISPATCH_SHA}?per_page=1")"; then
+              echo "Tag '${candidate_tag}' could not be compared with the dispatched source." >&2
+              exit 1
+            fi
+            comparison_status="$(printf '%s\n' "$comparison" | jq -r '
+              if type == "object" and (.status | type == "string") then .status else "" end' 2>/dev/null || printf '')"
+            case "$comparison_status" in
+              identical | ahead)
+                floor_tag="$candidate_tag"
+                break
+                ;;
+              behind | diverged) ;;
+              *)
+                echo "Comparison of '${candidate_tag}' with the dispatched source could not be validated safely." >&2
+                exit 1
+                ;;
+            esac
+          done <<< "$release_tags"
+
+          if [ -z "$floor_tag" ]; then
+            echo "No release tag is reachable from the dispatched source, so the version floor cannot be proved." >&2
+            exit 1
+          fi
+          floor_version="${floor_tag#v}"
+
+          # tools/release-packages.json is the authoritative inventory. Read it at the exact
+          # dispatched source rather than checking out: this workflow deliberately uses no
+          # third-party actions, so the caller stays free of unpinned supply-chain surface.
+          if ! manifest_response="$(gh api "repos/${REPOSITORY}/contents/${PACKAGE_MANIFEST}?ref=${DISPATCH_SHA}")"; then
+            echo "The release package manifest could not be read at the dispatched source." >&2
+            exit 1
+          fi
+          manifest_content="$(printf '%s\n' "$manifest_response" | jq -r '
+            if type == "object" and .type == "file" and .path == $ENV.PACKAGE_MANIFEST
+              and .encoding == "base64" and (.content | type == "string")
+            then .content else "" end' 2>/dev/null || printf '')"
+          if [ -z "$manifest_content" ]; then
+            echo "The release package manifest response could not be validated safely." >&2
+            exit 1
+          fi
+          if ! manifest="$(printf '%s\n' "$manifest_content" | base64 -d)"; then
+            echo "The release package manifest could not be decoded." >&2
+            exit 1
+          fi
+          # Manifest ids reach a request URL, so they are validated as untrusted input.
+          if ! package_ids="$(printf '%s\n' "$manifest" | jq -er '
+            .packages
+            | if type == "array" and length > 0 then . else error("no packages") end
+            | map(
+                .id
+                | if type == "string" and test("^[A-Za-z0-9][A-Za-z0-9._-]*$")
+                  then . else error("invalid package id") end)
+            | unique
+            | .[]')"; then
+            echo "The release package manifest could not be validated safely." >&2
+            exit 1
+          fi
+
+          published_response="$(mktemp)"
+          trap 'rm -f "$published_response"' EXIT
+
+          violations=''
+          while IFS= read -r package_id; do
+            [ -n "$package_id" ] || continue
+            index_url="https://api.nuget.org/v3-flatcontainer/$(printf '%s' "$package_id" | tr '[:upper:]' '[:lower:]')/index.json"
+            # Retry transient transport faults: a single CDN blip across nine serial probes would
+            # otherwise abort an operator-initiated release and read as permanent drift.
+            if ! index_status="$(curl --silent --show-error --location --max-time 30 \
+              --retry 3 --retry-connrefused --retry-all-errors \
+              --output "$published_response" --write-out '%{http_code}' "$index_url")"; then
+              echo "The published version index for ${package_id} could not be retrieved." >&2
+              exit 1
+            fi
+            case "$index_status" in
+              404)
+                # Never published: no version can sit above the floor.
+                continue
+                ;;
+              200) ;;
+              *)
+                echo "The published version index for ${package_id} returned unexpected status ${index_status}." >&2
+                exit 1
+                ;;
+            esac
+
+            # Compare numerically: 3.15.1 is above 3.2.18, which a lexical comparison reverses.
+            # Equality is not a collision, so only strictly greater versions are reported.
+            #
+            # A version this cannot parse is unprovable, not absent, so an unrecognised shape fails
+            # closed rather than being dropped. Four-segment versions are compared on their first
+            # three because NuGet normalises 3.16.0.0 to 3.16.0, which would otherwise occupy a
+            # version this reported as free. Prereleases are excluded: 4.1.0-rc.1 does not occupy
+            # 4.1.0, so treating one as a collision would block releases that cannot collide.
+            if ! above_floor="$(jq -er --arg floor "$floor_version" '
+              def parts: split("-")[0] | split(".") | map(tonumber) | (. + [0, 0, 0])[0:3];
+              if type == "object" and (.versions | type == "array") then
+                .versions
+                | map(
+                    if type == "string" and test("^[0-9]+(\\.[0-9]+){1,3}(-[0-9A-Za-z.-]+)?$")
+                    then . else error("unrecognised published version") end)
+                | map(select(test("-") | not))
+                | map(select(parts > ($floor | parts)))
+                | sort_by(parts)
+                | (last // "")
+              else error("invalid published version index") end' "$published_response")"; then
+              echo "The published version index for ${package_id} could not be validated safely." >&2
+              exit 1
+            fi
+            if [ -n "$above_floor" ]; then
+              violations="${violations}  ${package_id} ${above_floor}"$'\n'
+            fi
+          done <<< "$package_ids"
+
+          if [ -n "$violations" ]; then
+            echo "Published package versions exceed the release tag floor ${floor_tag}:" >&2
+            printf '%s' "$violations" >&2
+            echo "Semantic Release would propose a version that already exists, and the publication preflight would reject it." >&2
+            echo "Restore the missing release tag at or above the highest published version, then redispatch." >&2
+            exit 1
+          fi
+          echo "Release tag floor ${floor_tag} is at or above every published version of the declared packages."
+
   release:
-    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@main
+    needs: verify-source
+    permissions:
+      actions: read
+      contents: write
+      issues: write
+      pull-requests: write
+    # domain-release.yml enforces a supply-chain identity check: the reusable workflow
+    # must be pinned to an exact 40-hex Builds commit and the caller must pass
+    # builds-execution-sha equal to that same SHA (the reusable job validates
+    # job.workflow_sha == builds-execution-sha). A missing or mismatched input is a
+    # workflow startup_failure. @main cannot be used: main advances, so job.workflow_sha
+    # would drift out of match. Replace both occurrences together.
+    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@53d53ae42abf7c87d385a078ab260531480bbf8a
     with:
       solution: Hexalith.Parties.slnx
-      dapr-version: '1.18.0'
-      test-platform: microsoft-testing-platform
+      timeout-minutes: 60
+      environment-name: production
       publish-containers: true
+      builds-execution-sha: 53d53ae42abf7c87d385a078ab260531480bbf8a
+      source-branch: main
+      source-ci-workflow: ci.yml
+      package-manifest: tools/release-packages.json
+      expected-package-count: 9
+      # CI (the verify-source gate above) already tested this exact head; leave
+      # test-projects empty so the release path does not duplicate the test compute.
+      test-projects: ''
       container-projects: |
         src/Hexalith.Parties/Hexalith.Parties.csproj|parties
         src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj|parties-mcp
         src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj|parties-ui
-      test-projects: |
-        tests/Hexalith.Parties.Contracts.Tests
-        tests/Hexalith.Parties.Authentication.Tests
-        tests/Hexalith.Parties.Client.Tests
-        tests/Hexalith.Parties.Server.Tests
-        tests/Hexalith.Parties.Projections.Tests
-        tests/Hexalith.Parties.Security.Tests
-        tests/Hexalith.Parties.AdminPortal.Tests
-        tests/Hexalith.Parties.ConsumerPortal.Tests
-        tests/Hexalith.Parties.UI.Tests
-        tests/Hexalith.Parties.Picker.Tests
-        tests/Hexalith.Parties.Mcp.Tests
-        tests/Hexalith.Parties.Tests
-        tests/Hexalith.Parties.Sample.Tests
-        tests/Hexalith.Parties.Ci.Tests
-    secrets: inherit
+    secrets:
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME }}
+      HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_API_KEY }}
+
+  verify-publication:
+    name: Verify exact source was published
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Require published release for exact dispatched source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          DISPATCH_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$DISPATCH_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "The dispatched release source must be an exact lowercase commit SHA." >&2
+            exit 1
+          fi
+
+          if ! releases="$(gh api --paginate "repos/${REPOSITORY}/releases?per_page=100" | jq -s '.')"; then
+            echo "The GitHub Releases API could not be queried safely." >&2
+            exit 1
+          fi
+          if ! printf '%s\n' "$releases" | jq -e '
+            type == "array" and
+            all(.[]; type == "array") and
+            all(.[][];
+              type == "object" and
+              (.draft | type == "boolean") and
+              (.tag_name | type == "string") and
+              (.tag_name | length > 0)
+            )
+          ' >/dev/null; then
+            echo "The GitHub Releases response could not be validated safely." >&2
+            exit 1
+          fi
+
+          published_tags="$(printf '%s\n' "$releases" | jq -r '.[][] | select(.draft == false) | .tag_name')"
+          matching_tag=''
+          while IFS= read -r tag_name; do
+            [ -n "$tag_name" ] || continue
+            encoded_tag="$(jq -rn --arg tag "$tag_name" '$tag | @uri')"
+            expected_ref="refs/tags/${tag_name}"
+            if ! tag_ref="$(gh api "repos/${REPOSITORY}/git/ref/tags/${encoded_tag}")"; then
+              echo "The exact tag ref '${expected_ref}' could not be resolved." >&2
+              exit 1
+            fi
+            if ! printf '%s\n' "$tag_ref" | jq -e --arg expected_ref "$expected_ref" '
+              type == "object" and
+              .ref == $expected_ref and
+              (.object | type == "object") and
+              (.object.type | type == "string") and
+              (.object.sha | type == "string")
+            ' >/dev/null; then
+              echo "The exact tag ref '${expected_ref}' response could not be validated safely." >&2
+              exit 1
+            fi
+
+            object_type="$(printf '%s\n' "$tag_ref" | jq -r '.object.type')"
+            object_sha="$(printf '%s\n' "$tag_ref" | jq -r '.object.sha')"
+            if [[ ! "$object_sha" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "The exact tag ref '${expected_ref}' object must have an exact lowercase SHA." >&2
+              exit 1
+            fi
+
+            case "$object_type" in
+              commit)
+                tag_sha="$object_sha"
+                ;;
+              tag)
+                if ! tag_object="$(gh api "repos/${REPOSITORY}/git/tags/${object_sha}")"; then
+                  echo "Annotated tag object '${object_sha}' for '${expected_ref}' could not be peeled." >&2
+                  exit 1
+                fi
+                if ! printf '%s\n' "$tag_object" | jq -e --arg object_sha "$object_sha" '
+                  type == "object" and
+                  .sha == $object_sha and
+                  (.object | type == "object") and
+                  (.object.type | type == "string") and
+                  (.object.sha | type == "string")
+                ' >/dev/null; then
+                  echo "Annotated tag object '${object_sha}' for '${expected_ref}' could not be validated safely." >&2
+                  exit 1
+                fi
+
+                peeled_type="$(printf '%s\n' "$tag_object" | jq -r '.object.type')"
+                tag_sha="$(printf '%s\n' "$tag_object" | jq -r '.object.sha')"
+                if [ "$peeled_type" != "commit" ]; then
+                  echo "The exact tag ref '${expected_ref}' has unsupported peeled object type '${peeled_type}'." >&2
+                  exit 1
+                fi
+                ;;
+              *)
+                echo "The exact tag ref '${expected_ref}' has unsupported object type '${object_type}'." >&2
+                exit 1
+                ;;
+            esac
+            if [[ ! "$tag_sha" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "The exact tag ref '${expected_ref}' did not peel to an exact lowercase commit SHA." >&2
+              exit 1
+            fi
+            if [ "$tag_sha" = "$DISPATCH_SHA" ]; then
+              matching_tag="$tag_name"
+              break
+            fi
+          done <<< "$published_tags"
+
+          if [ -z "$matching_tag" ]; then
+            echo "Inspect the Semantic Release output: no published GitHub Release tag resolves to dispatched SHA ${DISPATCH_SHA}." >&2
+            echo "If there were no releasable commits, redispatching will not help. Redispatch only when the source became stale and the new main tip has successful exact-source CI." >&2
+            exit 1
+          fi
+          echo "Published release tag '${matching_tag}' resolves to dispatched SHA ${DISPATCH_SHA}."
