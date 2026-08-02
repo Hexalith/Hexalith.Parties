@@ -315,7 +315,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             partyId,
             queryType: "GetParty",
             projectionType: PartyProjectionNames.Detail,
-            projectionActorType: "PartyDetailProjectionActor",
+            projectionActorType: "PartyDetailProjectionQueryActor",
             payload: null,
             cancellationToken).ConfigureAwait(false);
 

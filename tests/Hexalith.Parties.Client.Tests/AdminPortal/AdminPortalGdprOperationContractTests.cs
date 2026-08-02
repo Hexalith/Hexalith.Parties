@@ -330,7 +330,7 @@ public sealed class AdminPortalGdprOperationContractTests
         JsonElement root = body.RootElement;
         root.GetProperty("queryType").GetString().ShouldBe("GetParty");
         root.GetProperty("projectionType").GetString().ShouldBe(PartyProjectionNames.Detail);
-        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionActor");
+        root.GetProperty("projectionActorType").GetString().ShouldBe("PartyDetailProjectionQueryActor");
     }
 
     [Fact]

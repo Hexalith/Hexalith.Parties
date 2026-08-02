@@ -407,6 +407,121 @@ public sealed class PartySdkQueryHandlerTests
         returnedCertificate.VerificationStatus.ShouldBe(certificate.VerificationStatus);
     }
 
+    [Fact]
+    public async Task ErasureStatusHandler_StoreFailureReturnsBoundedFailureInsteadOfThrowingAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        IPartyErasureRecordStore erasure = Substitute.For<IPartyErasureRecordStore>();
+        erasure.GetStatusAsync("tenant-a", "party-1", Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<PartyErasureStatusRecord?>(new InvalidOperationException("store unavailable")));
+        var handler = new GetErasureStatusQueryHandler(CreateService(store, recordStore: erasure));
+
+        QueryResult result = await handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetErasureStatusQueryType),
+            TestContext.Current.CancellationToken);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+    }
+
+    [Fact]
+    public async Task ErasureCertificateHandler_StoreFailureReturnsBoundedFailureInsteadOfThrowingAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        IPartyErasureRecordStore erasure = Substitute.For<IPartyErasureRecordStore>();
+        erasure.GetCertificateAsync("tenant-a", "party-1", Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<ErasureCertificate?>(new InvalidOperationException("store unavailable")));
+        var handler = new GetErasureCertificateQueryHandler(CreateService(store, recordStore: erasure));
+
+        QueryResult result = await handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetErasureCertificateQueryType),
+            TestContext.Current.CancellationToken);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+    }
+
+    [Fact]
+    public void LastKnownReadModelCache_EvictDetailRemovesOnlyThatPartysCachedEntry()
+    {
+        var cache = new PartySdkLastKnownReadModelCache();
+        var detail = new PartyDetailSdkReadModel { Detail = Detail("party-1") };
+        cache.StoreDetail("tenant-a", "party-1", detail);
+        cache.StoreDetail("tenant-a", "party-2", detail with { Detail = Detail("party-2") });
+
+        cache.EvictDetail("tenant-a", "party-1");
+
+        cache.TryGetDetail("tenant-a", "party-1", out _).ShouldBeFalse();
+        cache.TryGetDetail("tenant-a", "party-2", out _).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void LastKnownReadModelCache_EvictProcessingRemovesOnlyThatPartysCachedEntry()
+    {
+        var cache = new PartySdkLastKnownReadModelCache();
+        var processing = new PartyProcessingSdkReadModel();
+        cache.StoreProcessing("tenant-a", "party-1", processing);
+        cache.StoreProcessing("tenant-a", "party-2", processing);
+
+        cache.EvictProcessing("tenant-a", "party-1");
+
+        cache.TryGetProcessing("tenant-a", "party-1", out _).ShouldBeFalse();
+        cache.TryGetProcessing("tenant-a", "party-2", out _).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void LastKnownReadModelCache_EvictIndexRemovesOnlyThatTenantsCachedEntry()
+    {
+        var cache = new PartySdkLastKnownReadModelCache();
+        var index = new PartyIndexSdkReadModel();
+        cache.StoreIndex("tenant-a", index);
+        cache.StoreIndex("tenant-b", index);
+
+        cache.EvictIndex("tenant-a");
+
+        cache.TryGetIndex("tenant-a", out _).ShouldBeFalse();
+        cache.TryGetIndex("tenant-b", out _).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task DetailHandler_DegradedReadAfterEvictionFailsBoundedInsteadOfReturningStalePreErasurePiiAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var lastKnownCache = new PartySdkLastKnownReadModelCache();
+        var preErasureDetail = new PartyDetailSdkReadModel { Detail = Detail("party-1"), LastSequenceNumber = 2 };
+        var read = new ReadModelEntry<PartyDetailSdkReadModel>(preErasureDetail, "etag-1");
+        int readCount = 0;
+        store.GetAsync<PartyDetailSdkReadModel>(
+                "statestore",
+                PartySdkReadModelAddresses.Detail("tenant-a", "party-1"),
+                Arg.Any<CancellationToken>())
+            .Returns(_ => readCount++ == 0
+                ? Task.FromResult(read)
+                : Task.FromException<ReadModelEntry<PartyDetailSdkReadModel>>(
+                    new InvalidOperationException("state store unavailable")));
+        var handler = new GetPartyQueryHandler(CreateService(store, lastKnownCache: lastKnownCache));
+
+        // First read succeeds and populates the last-known cache with pre-erasure PII.
+        QueryResult firstResult = await handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            TestContext.Current.CancellationToken);
+        firstResult.Success.ShouldBeTrue();
+
+        // Simulate the erasure cleanup step evicting the cache (PartiesServiceCollectionExtensions'
+        // "projection-cache" erasure cleanup delegate), then a store outage before any post-erasure
+        // read repopulates it.
+        lastKnownCache.EvictDetail("tenant-a", "party-1");
+        QueryResult degradedResult = await handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            TestContext.Current.CancellationToken);
+
+        // The eviction means ReadDetailModelAsync's exception filter no longer has a cached value
+        // to fall back to, so the store failure propagates to ReadDetailAsync's outer catch as a
+        // bounded ActorException failure rather than ever returning the stale pre-erasure PII.
+        degradedResult.Success.ShouldBeFalse();
+        degradedResult.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+    }
+
     [Theory]
     [InlineData("{\"page\":0,\"pageSize\":20}")]
     [InlineData("{\"page\":1,\"pageSize\":20,\"type\":\"0\"}")]

@@ -9,7 +9,7 @@ namespace Hexalith.Parties.Projections.Handlers;
 
 internal static class PartySdkProjectionFold
 {
-    private const string RedactedFormat = "json-redacted";
+    internal const string RedactedFormat = "json-redacted";
     private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
 
     public static IEnumerable<(ProjectionEventDto Event, IEventPayload? Payload, bool AdvanceCheckpoint)> DeserializeNew(

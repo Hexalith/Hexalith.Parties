@@ -677,10 +677,38 @@ public sealed class ArchitecturalFitnessTests
     [Fact]
     public void PartiesProjectionRuntimeUsesOnlyEventStoreSdkHandlers()
     {
-        File.Exists(RepoPath("src", "Hexalith.Parties.Projections", "Actors", "PartyDetailProjectionActor.cs"))
-            .ShouldBeFalse("The local detail projection actor is retired after the SDK cutover.");
-        File.Exists(RepoPath("src", "Hexalith.Parties.Projections", "Actors", "PartyIndexProjectionActor.cs"))
-            .ShouldBeFalse("The local index projection actor is retired after the SDK cutover.");
+        // All 18 rollback-only files retired by Story 8.6 once the SDK path proved parity:
+        // actor interfaces, Dapr actor implementations, platform adapters, the rebuild service
+        // and its checkpoint/scope/interface types, projection options, the update orchestrator,
+        // actor extensions, the actor health check, and the query-actor interface. Guard every
+        // one so accidental reintroduction of any of them is caught, not just the two actors.
+        string[][] retiredFiles =
+        [
+            ["src", "Hexalith.Parties.Projections", "Abstractions", "IPartyDetailProjectionActor.cs"],
+            ["src", "Hexalith.Parties.Projections", "Abstractions", "IPartyIndexProjectionActor.cs"],
+            ["src", "Hexalith.Parties.Projections", "Actors", "PartyDetailProjectionActor.cs"],
+            ["src", "Hexalith.Parties.Projections", "Actors", "PartyIndexProjectionActor.cs"],
+            ["src", "Hexalith.Parties.Projections", "Configuration", "PartyProjectionPlatformAdapterMode.cs"],
+            ["src", "Hexalith.Parties.Projections", "Configuration", "ProjectionOptions.cs"],
+            ["src", "Hexalith.Parties.Projections", "Services", "IPartyProjectionPlatformAdapter.cs"],
+            ["src", "Hexalith.Parties.Projections", "Services", "IProjectionRebuildService.cs"],
+            ["src", "Hexalith.Parties.Projections", "Services", "LocalPartyProjectionPlatformAdapter.cs"],
+            ["src", "Hexalith.Parties.Projections", "Services", "PartyProjectionPlatformFreshness.cs"],
+            ["src", "Hexalith.Parties.Projections", "Services", "PartyProjectionRebuildCheckpoint.cs"],
+            ["src", "Hexalith.Parties.Projections", "Services", "PartyProjectionRebuildScope.cs"],
+            ["src", "Hexalith.Parties.Projections", "Services", "ProjectionRebuildService.cs"],
+            ["src", "Hexalith.Parties", "Domain", "EventStorePartyProjectionPlatformAdapter.cs"],
+            ["src", "Hexalith.Parties", "Domain", "PartyProjectionUpdateOrchestrator.cs"],
+            ["src", "Hexalith.Parties", "Extensions", "PartyDetailProjectionActorExtensions.cs"],
+            ["src", "Hexalith.Parties", "HealthChecks", "ProjectionActorsHealthCheck.cs"],
+            ["src", "Hexalith.Parties", "Queries", "IPartyProjectionQueryActor.cs"],
+        ];
+
+        foreach (string[] segments in retiredFiles)
+        {
+            File.Exists(RepoPath(segments))
+                .ShouldBeFalse($"'{Path.Combine(segments)}' is a rollback-only file retired by Story 8.6 after the SDK path proved parity; it must not be reintroduced.");
+        }
 
         string detailSource = ReadRepoFile("src", "Hexalith.Parties.Projections", "Handlers", "PartyDetailSdkProjectionHandler.cs");
         string indexSource = ReadRepoFile("src", "Hexalith.Parties.Projections", "Handlers", "PartyIndexSdkProjectionHandler.cs");

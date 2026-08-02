@@ -147,9 +147,16 @@ development_status:
   8-3-platform-api-prerequisites: done
   8-4-leaf-project-retirement: done
   8-5-eventstore-domain-service-sdk-host-cutover: done
-  # Resumed 2026-08-01 by explicit user direction to use the latest EventStore.
-  # Current v3.89.0-6, root gitlink, and source checkout all select 8f004ecf,
-  # which contains the tenant-shared rebuild API required by 8.6.
+  # Resumed 2026-08-01 by explicit user direction to use the latest EventStore
+  # (v3.89.0/c590590, later re-verified at 8f004ecf) after the formally
+  # owner-approved fa2d1c99 identity failed to compile the required
+  # tenant-shared rebuild API. That real-time authorization is formally
+  # recorded by sprint-change-proposal-2026-08-02-story-8-6-eventstore-
+  # identity-authorization-backfill.md (approved 2026-08-02), which also
+  # reconciled the 8.3 matrix rows and flagged an open follow-up: re-run the
+  # focused projection/query regression at the current EventStore pin
+  # (4bcf2484 as of Story 8.7's later revalidation) before treating it as
+  # re-validated for Story 8.6.
   8-6-projection-and-query-sdk-migration: review
   # Story context created 2026-07-16; production migration remains blocked by
   # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
@@ -242,6 +249,10 @@ action_items:
     # passed 150/150, and focused query/health/composition/architecture passed
     # 48/48 before the rollback-only actor/rebuild/adapter paths were removed.
     # The targeted revert of the Story 8.6 change set remains the code rollback.
+    # The v3.89.0/c590590 identity selection was formally authorized after the
+    # fact by sprint-change-proposal-2026-08-02-story-8-6-eventstore-identity-
+    # authorization-backfill.md (approved 2026-08-02), which also reconciled
+    # the two affected 8.3 matrix rows.
     action: "Keep projection rollback-only paths until Epic 8 proves EventStore SDK projection/query parity, GDPR processing-record reads, rebuild behavior, and rollback replacement."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: done

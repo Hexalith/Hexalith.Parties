@@ -20,6 +20,10 @@ public sealed class PartySdkLastKnownReadModelCache
     public bool TryGetDetail(string tenantId, string partyId, out PartyDetailSdkReadModel? value)
         => _details.TryGetValue(PartySdkReadModelAddresses.Detail(tenantId, partyId), out value);
 
+    /// <summary>Removes a cached detail entry, e.g. so a degraded read cannot serve pre-erasure PII.</summary>
+    public void EvictDetail(string tenantId, string partyId)
+        => _details.TryRemove(PartySdkReadModelAddresses.Detail(tenantId, partyId), out _);
+
     public void StoreIndex(string tenantId, PartyIndexSdkReadModel value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -29,6 +33,14 @@ public sealed class PartySdkLastKnownReadModelCache
     public bool TryGetIndex(string tenantId, out PartyIndexSdkReadModel? value)
         => _indexes.TryGetValue(PartySdkReadModelAddresses.Index(tenantId), out value);
 
+    /// <summary>
+    /// Removes a tenant's cached shared index, e.g. so a degraded read cannot keep listing a party
+    /// that was just removed from the canonical index by erasure. The next successful read
+    /// repopulates the cache with the current (party-excluded) index.
+    /// </summary>
+    public void EvictIndex(string tenantId)
+        => _indexes.TryRemove(PartySdkReadModelAddresses.Index(tenantId), out _);
+
     public void StoreProcessing(string tenantId, string partyId, PartyProcessingSdkReadModel value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -37,4 +49,8 @@ public sealed class PartySdkLastKnownReadModelCache
 
     public bool TryGetProcessing(string tenantId, string partyId, out PartyProcessingSdkReadModel? value)
         => _processing.TryGetValue(PartySdkReadModelAddresses.Processing(tenantId, partyId), out value);
+
+    /// <summary>Removes a cached processing-activity checkpoint, matching the erasure reset applied to the canonical store.</summary>
+    public void EvictProcessing(string tenantId, string partyId)
+        => _processing.TryRemove(PartySdkReadModelAddresses.Processing(tenantId, partyId), out _);
 }

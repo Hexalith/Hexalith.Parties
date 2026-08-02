@@ -189,12 +189,24 @@ public static class PartiesServiceCollectionExtensions {
                         Timestamp = DateTimeOffset.UtcNow,
                     };
                 },
-                (tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
+                (tenantId, partyId, cancellationToken) =>
                 {
-                    StoreName = "projection-cache",
-                    Status = ErasureStoreCleanupStatus.Cleaned,
-                    Timestamp = DateTimeOffset.UtcNow,
-                }),
+                    // Evict the in-process last-known-good cache so a degraded read cannot serve
+                    // pre-erasure PII after PartySdkReadModelEraser has redacted the canonical
+                    // read-model store. The cache has no relationship to the eraser itself (it
+                    // lives in a different project to avoid a circular reference), so eviction is
+                    // composed here as its own erasure-cleanup step.
+                    PartySdkLastKnownReadModelCache cache = sp.GetRequiredService<PartySdkLastKnownReadModelCache>();
+                    cache.EvictDetail(tenantId, partyId);
+                    cache.EvictProcessing(tenantId, partyId);
+                    cache.EvictIndex(tenantId);
+                    return Task.FromResult(new ErasureVerificationStoreResult
+                    {
+                        StoreName = "projection-cache",
+                        Status = ErasureStoreCleanupStatus.Cleaned,
+                        Timestamp = DateTimeOffset.UtcNow,
+                    });
+                },
                 (tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
                 {
                     StoreName = "aggregate-readable-state",

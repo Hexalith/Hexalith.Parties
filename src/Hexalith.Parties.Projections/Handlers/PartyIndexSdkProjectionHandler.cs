@@ -82,6 +82,11 @@ public sealed class PartyIndexSdkProjectionHandler(
 
         cancellationToken.ThrowIfCancellationRequested();
         PartyIndexSdkReadModel current = FromCandidate(candidate);
+        if (aggregateHistory.Events.Length == 0)
+        {
+            return Task.FromResult(ToCandidate(current));
+        }
+
         return Task.FromResult(ToCandidate(Fold(aggregateHistory, current)));
     }
 
@@ -114,6 +119,12 @@ public sealed class PartyIndexSdkProjectionHandler(
         DateTimeOffset projectedAt = current?.ProjectedAt ?? DateTimeOffset.UnixEpoch;
         entries.TryGetValue(request.AggregateId, out PartyIndexEntry? entry);
 
+        // Tracks the sequence number of a PartyErased event only while it remains the most recent
+        // meaningful event folded for this aggregate. A later non-erasure event (a same-batch
+        // recreate) clears it again, so the checkpoint write below only special-cases the case
+        // where erasure is genuinely the terminal event.
+        long? erasedAtSequence = null;
+
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
             PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence))
         {
@@ -123,9 +134,11 @@ public sealed class PartyIndexSdkProjectionHandler(
                 {
                     _ = entries.Remove(request.AggregateId);
                     entry = null;
+                    erasedAtSequence = @event.SequenceNumber;
                 }
                 else
                 {
+                    erasedAtSequence = null;
                     PartyIndexEntry? applied = PartyIndexProjectionHandler.Apply(request.AggregateId, payload, entry);
                     if (applied is not null)
                     {
@@ -152,7 +165,16 @@ public sealed class PartyIndexSdkProjectionHandler(
             }
         }
 
-        if (lastSequence != long.MinValue)
+        if (erasedAtSequence is not null && erasedAtSequence == lastSequence)
+        {
+            // Erasure was the terminal event for this party: drop the checkpoint instead of
+            // persisting a stale watermark. Without this, a party recreated with the same id would
+            // have its own early events silently skipped as "already applied" by
+            // PartySdkProjectionFold.DeserializeNew on the next delivery. Full replay-from-zero
+            // makes re-folding the already-erased history on a future delivery idempotent-safe.
+            _ = sequences.Remove(request.AggregateId);
+        }
+        else if (lastSequence != long.MinValue)
         {
             sequences[request.AggregateId] = lastSequence;
         }

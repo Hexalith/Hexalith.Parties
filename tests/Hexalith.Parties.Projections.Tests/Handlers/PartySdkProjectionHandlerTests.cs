@@ -122,8 +122,47 @@ public sealed class PartySdkProjectionHandlerTests
         persisted.ShouldNotBeNull();
         persisted.Entries.ContainsKey("party-1").ShouldBeFalse();
         persisted.Entries["party-2"].DisplayName.ShouldBe("Party party-2");
-        persisted.LastSequenceNumbers["party-1"].ShouldBe(3);
+
+        // Erasure was the terminal event for party-1: the sequence checkpoint is dropped, not
+        // retained, so a party recreated with the same id is not skipped by the stale watermark.
+        persisted.LastSequenceNumbers.ContainsKey("party-1").ShouldBeFalse();
         persisted.LastSequenceNumbers["party-2"].ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task IndexHandler_RecreatedPartyAfterErasureIsNotSkippedByStaleCheckpointAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        PartyIndexSdkReadModel erased = PartyIndexSdkProjectionHandler.Fold(CreateErasureRequest(), current: CreateIndex("party-1"));
+        erased.LastSequenceNumbers.ContainsKey("party-1").ShouldBeFalse();
+
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(erased, "etag-2"));
+        PartyIndexSdkReadModel? persisted = null;
+        store.TrySaveAsync(
+                "statestore",
+                PartySdkReadModelAddresses.Index("tenant-a"),
+                Arg.Do<PartyIndexSdkReadModel>(value => persisted = value),
+                "etag-2",
+                Arg.Any<CancellationToken>())
+            .Returns(true);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options);
+
+        ProjectionRequest recreateRequest = new(
+            "tenant-a",
+            "party",
+            "party-1",
+            [Event(new PartyCreated { Type = PartyType.Person }, 1, DateTimeOffset.UnixEpoch.AddMinutes(10))]);
+
+        DomainProjectionHandlerResult result = await handler.ProjectAsync(
+            recreateRequest,
+            "dispatch-recreate",
+            TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        persisted.ShouldNotBeNull();
+        persisted.Entries.ContainsKey("party-1").ShouldBeTrue();
+        persisted.LastSequenceNumbers["party-1"].ShouldBe(1);
     }
 
     [Fact]
@@ -202,36 +241,105 @@ public sealed class PartySdkProjectionHandlerTests
     }
 
     [Fact]
-    public async Task Eraser_ConditionallyDeletesDetailButNeverWholeSharedIndexAsync()
+    public async Task SharedIndexRebuild_AccumulateWithEmptyAggregateHistoryDoesNotThrowAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
-        IReadModelConditionalEraser conditional = Substitute.For<IReadModelConditionalEraser>();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options);
+        DomainSharedProjectionRebuildIdentity identity = CreateSharedRebuildIdentity();
+        ProjectionRequest emptyHistory = CreateRequest() with { Events = [] };
+
+        DomainSharedProjectionRebuildCandidate candidate = await handler.CreateEmptyCandidateAsync(
+            identity,
+            TestContext.Current.CancellationToken);
+
+        candidate = await handler.AccumulateAsync(identity, candidate, emptyHistory, TestContext.Current.CancellationToken);
+
+        DomainProjectionRebuildPlan plan = await handler.FinalizeAsync(identity, candidate, TestContext.Current.CancellationToken);
+        PartyIndexSdkReadModel rebuilt = JsonSerializer.Deserialize<PartyIndexSdkReadModel>(
+            plan.Operations.Single().CanonicalValue.Span,
+            s_canonicalJsonOptions)!;
+        rebuilt.Entries.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Eraser_RedactsDetailInPlaceResetsProcessingCheckpointAndNeverErasesWholeSharedIndexAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
         string detailKey = PartySdkReadModelAddresses.Detail("tenant-a", "party-1");
+        string processingKey = PartySdkReadModelAddresses.Processing("tenant-a", "party-1");
         string indexKey = PartySdkReadModelAddresses.Index("tenant-a");
-        conditional.TryReadEtagAsync("statestore", detailKey, Arg.Any<CancellationToken>())
-            .Returns((true, "detail-etag"));
-        conditional.TryEraseAsync("statestore", detailKey, "detail-etag", Arg.Any<CancellationToken>())
+
+        PartyDetail existingDetail = PartyDetailSdkProjectionHandler.Fold(CreateRequest(), current: null).Detail!;
+        var existingDetailModel = new PartyDetailSdkReadModel { Detail = existingDetail, LastSequenceNumber = 2 };
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", detailKey, Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(existingDetailModel, "detail-etag"));
+        PartyDetailSdkReadModel? persistedDetail = null;
+        store.TrySaveAsync(
+                "statestore", detailKey, Arg.Do<PartyDetailSdkReadModel>(value => persistedDetail = value), "detail-etag", Arg.Any<CancellationToken>())
             .Returns(true);
+
+        var existingProcessing = new PartyProcessingSdkReadModel
+        {
+            Records = [new ProcessingActivityRecord
+            {
+                SequenceNumber = 1,
+                PartyId = "party-1",
+                TenantId = "tenant-a",
+                ActorId = "system",
+                CorrelationId = "unspecified",
+                OperationCategory = "PartyCommand",
+                Outcome = "Succeeded",
+                EventType = "PartyCreated",
+                Timestamp = DateTimeOffset.UnixEpoch,
+                Summary = "Party record created.",
+            }],
+            LastSequenceNumber = 2,
+        };
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(existingProcessing, "processing-etag"));
+        PartyProcessingSdkReadModel? persistedProcessing = null;
+        store.TrySaveAsync(
+                "statestore", processingKey, Arg.Do<PartyProcessingSdkReadModel>(value => persistedProcessing = value), "processing-etag", Arg.Any<CancellationToken>())
+            .Returns(true);
+
         store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, Arg.Any<CancellationToken>())
             .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(CreateIndex("party-1", "party-2"), "index-etag"));
-        PartyIndexSdkReadModel? persisted = null;
+        PartyIndexSdkReadModel? persistedIndex = null;
         store.TrySaveAsync(
-                "statestore",
-                indexKey,
-                Arg.Do<PartyIndexSdkReadModel>(value => persisted = value),
-                "index-etag",
-                Arg.Any<CancellationToken>())
+                "statestore", indexKey, Arg.Do<PartyIndexSdkReadModel>(value => persistedIndex = value), "index-etag", Arg.Any<CancellationToken>())
             .Returns(true);
-        var eraser = new PartySdkReadModelEraser(store, conditional, s_options);
+        var eraser = new PartySdkReadModelEraser(store, s_options);
 
         await eraser.EraseAsync("tenant-a", "party-1", TestContext.Current.CancellationToken);
 
-        await conditional.Received(1).TryEraseAsync(
-            "statestore", detailKey, "detail-etag", Arg.Any<CancellationToken>());
-        await conditional.DidNotReceive().TryEraseAsync(
-            "statestore", indexKey, Arg.Any<string>(), Arg.Any<CancellationToken>());
-        persisted.ShouldNotBeNull();
-        persisted.Entries.Keys.ShouldBe(["party-2"]);
+        persistedDetail.ShouldNotBeNull();
+        persistedDetail.Detail.ShouldNotBeNull();
+        persistedDetail.Detail.IsErased.ShouldBeTrue();
+        persistedDetail.Detail.DisplayName.ShouldBeEmpty();
+
+        persistedProcessing.ShouldNotBeNull();
+        persistedProcessing.Records.ShouldHaveSingleItem();
+        persistedProcessing.LastSequenceNumber.ShouldBe(long.MinValue);
+
+        persistedIndex.ShouldNotBeNull();
+        persistedIndex.Entries.Keys.ShouldBe(["party-2"]);
+    }
+
+    [Fact]
+    public void Eraser_ResetProcessingCheckpoint_NoExistingRowReturnsEmptyModel()
+    {
+        PartyProcessingSdkReadModel result = PartySdkReadModelEraser.ResetProcessingCheckpoint(current: null);
+
+        result.Records.ShouldBeEmpty();
+        result.LastSequenceNumber.ShouldBe(long.MinValue);
+    }
+
+    [Fact]
+    public void Eraser_RedactDetail_NoExistingRowReturnsEmptyModel()
+    {
+        PartyDetailSdkReadModel result = PartySdkReadModelEraser.RedactDetail(current: null, partyId: "party-1");
+
+        result.Detail.ShouldBeNull();
     }
 
     [Fact]
@@ -334,6 +442,50 @@ public sealed class PartySdkProjectionHandlerTests
         string json = JsonSerializer.Serialize(result, s_canonicalJsonOptions);
         json.ShouldNotContain(firstName);
         json.ShouldNotContain(lastName);
+    }
+
+    [Fact]
+    public void ProcessingActivityFold_CorruptLiveEventIsRecordedAsFailedNotSucceeded()
+    {
+        ProjectionRequest request = new(
+            "tenant-a",
+            "party",
+            "party-1",
+            [new ProjectionEventDto(
+                nameof(PartyCreated),
+                "{ not valid json"u8.ToArray(),
+                "json",
+                1,
+                DateTimeOffset.UnixEpoch,
+                "correlation-1")]);
+
+        PartyProcessingSdkReadModel result = PartyProcessingActivityFold.Fold(request, current: null);
+
+        ProcessingActivityRecord record = result.Records.ShouldHaveSingleItem();
+        record.Outcome.ShouldBe("Failed");
+        result.LastSequenceNumber.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ProcessingActivityFold_WholePayloadRedactedEventIsRecordedAsRedactedNotSucceeded()
+    {
+        ProjectionRequest request = new(
+            "tenant-a",
+            "party",
+            "party-1",
+            [new ProjectionEventDto(
+                nameof(PartyCreated),
+                "null"u8.ToArray(),
+                "json-redacted",
+                1,
+                DateTimeOffset.UnixEpoch,
+                "correlation-1")]);
+
+        PartyProcessingSdkReadModel result = PartyProcessingActivityFold.Fold(request, current: null);
+
+        ProcessingActivityRecord record = result.Records.ShouldHaveSingleItem();
+        record.Outcome.ShouldBe("Redacted");
+        result.LastSequenceNumber.ShouldBe(1);
     }
 
     private static ProjectionRequest CreateRequest()

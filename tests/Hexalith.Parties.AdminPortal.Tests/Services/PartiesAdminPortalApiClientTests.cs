@@ -540,7 +540,7 @@ public sealed class PartiesAdminPortalApiClientTests
         request.EntityId.ShouldBe("p-1");
         request.Criteria.ProjectionType.ShouldBe("PartyDetail");
         request.QueryType.ShouldBe("GetParty");
-        request.ProjectionActorType.ShouldBe("PartyDetailProjectionActor");
+        request.ProjectionActorType.ShouldBe("PartyDetailProjectionQueryActor");
         result.Payload.DisplayName.ShouldBe("Ada Lovelace");
     }
 
@@ -934,7 +934,7 @@ public sealed class PartiesAdminPortalApiClientTests
                 SearchQueryType = "SearchParties",
                 DetailProjectionType = "PartyDetail",
                 DetailQueryType = "GetParty",
-                DetailProjectionActorType = "PartyDetailProjectionActor",
+                DetailProjectionActorType = "PartyDetailProjectionQueryActor",
             }));
 
     private sealed class RecordingQueryService : IQueryService

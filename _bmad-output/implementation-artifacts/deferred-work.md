@@ -61,6 +61,12 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-align-assistant-commit-message-generation.md`
   summary: Reconcile persistent BMAD branch guidance with the Hexalith default-main Git policy.
   evidence: The pre-existing project context still requires a typed branch and PR, while the authoritative Hexalith Git instructions say to work on `main` by default and branch only when genuinely required.
+- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-fix-memories-npm-vulnerabilities.md`
+  summary: Pin the Node/npm runtime used by release-tooling workflows.
+  evidence: CI and release workflows use floating `lts/*`; changing this is pre-existing policy and the approved spec explicitly requires approval for Node engine policy changes.
+- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-fix-memories-npm-vulnerabilities.md`
+  summary: Make the semantic-release workflow invocation fail closed to the installed local binary.
+  evidence: `npx semantic-release` predates this change and may fetch if local tooling is absent; resolving it requires a separate release-workflow policy decision.
 - source_spec: `_bmad-output/implementation-artifacts/spec-gh-30708560778-fix-ci-failures.md`
   summary: Hoist normalized multi-token search candidates outside per-entry evaluation.
   evidence: `EvaluateEntry` rebuilds the query-only full phrase and candidate collection for every party, creating O(entries) allocations in the 10K hot path despite the current performance gate passing.

@@ -148,30 +148,41 @@ public sealed partial class PartySdkQueryService(
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
         }
 
-        PartyErasureStatusRecord? status = await erasureRecordStore
-            .GetStatusAsync(query.TenantId, partyId, cancellationToken)
-            .ConfigureAwait(false);
-        if (status is null)
+        try
         {
-            (ReadModelEntry<PartyDetailSdkReadModel> read, _) = await ReadDetailModelAsync(
-                query.TenantId,
-                partyId,
-                cancellationToken)
+            PartyErasureStatusRecord? status = await erasureRecordStore
+                .GetStatusAsync(query.TenantId, partyId, cancellationToken)
                 .ConfigureAwait(false);
-            PartyDetail? detail = read.Value?.Detail;
-            status = detail?.IsErased == true
-                ? new PartyErasureStatusRecord
-                {
-                    PartyId = detail.Id,
-                    TenantId = query.TenantId,
-                    Status = ErasureStatus.Erased.ToString(),
-                    UpdatedAt = detail.ErasedAt ?? detail.LastModifiedAt,
-                    ErasedAt = detail.ErasedAt,
-                }
-                : null;
-        }
+            if (status is null)
+            {
+                (ReadModelEntry<PartyDetailSdkReadModel> read, _) = await ReadDetailModelAsync(
+                    query.TenantId,
+                    partyId,
+                    cancellationToken)
+                    .ConfigureAwait(false);
+                PartyDetail? detail = read.Value?.Detail;
+                status = detail?.IsErased == true
+                    ? new PartyErasureStatusRecord
+                    {
+                        PartyId = detail.Id,
+                        TenantId = query.TenantId,
+                        Status = ErasureStatus.Erased.ToString(),
+                        UpdatedAt = detail.ErasedAt ?? detail.LastModifiedAt,
+                        ErasedAt = detail.ErasedAt,
+                    }
+                    : null;
+            }
 
-        return QueryResult.FromPayload(JsonSerializer.SerializeToElement(status, s_jsonOptions), "party-erasure-status");
+            return QueryResult.FromPayload(JsonSerializer.SerializeToElement(status, s_jsonOptions), "party-erasure-status");
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
+        }
     }
 
     public async Task<QueryResult> GetErasureCertificateAsync(QueryEnvelope query, CancellationToken cancellationToken)
@@ -182,10 +193,21 @@ public sealed partial class PartySdkQueryService(
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
         }
 
-        ErasureCertificate? certificate = await erasureRecordStore
-            .GetCertificateAsync(query.TenantId, partyId, cancellationToken)
-            .ConfigureAwait(false);
-        return QueryResult.FromPayload(JsonSerializer.SerializeToElement(certificate, s_jsonOptions), "party-erasure-certificate");
+        try
+        {
+            ErasureCertificate? certificate = await erasureRecordStore
+                .GetCertificateAsync(query.TenantId, partyId, cancellationToken)
+                .ConfigureAwait(false);
+            return QueryResult.FromPayload(JsonSerializer.SerializeToElement(certificate, s_jsonOptions), "party-erasure-certificate");
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
+        }
     }
 
     public async Task<QueryResult> GetPartyIndexAsync(QueryEnvelope query, CancellationToken cancellationToken)
