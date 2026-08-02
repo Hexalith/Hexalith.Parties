@@ -26,7 +26,7 @@ public sealed class AssistantCommitMessageInstructionsTests
     {
         string instructions = ReadInstructions();
 
-        instructions.ShouldContain("Claude, Codex, GitHub");
+        instructions.ShouldContain("Claude, Codex, Cursor, GitHub");
         instructions.ShouldContain("Copilot, or Visual Studio");
         instructions.ShouldContain("active repository's commitlint configuration and Git instructions");
         instructions.ShouldContain("`<type>[optional scope][!]: <description>`");
