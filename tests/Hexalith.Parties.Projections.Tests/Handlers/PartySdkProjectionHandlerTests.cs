@@ -10,6 +10,7 @@ using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Handlers;
 using Hexalith.Parties.Projections.Models;
+using Hexalith.Parties.Projections.Search;
 using Hexalith.Parties.Projections.Services;
 
 using Microsoft.Extensions.Options;
@@ -163,6 +164,63 @@ public sealed class PartySdkProjectionHandlerTests
         persisted.ShouldNotBeNull();
         persisted.Entries.ContainsKey("party-1").ShouldBeTrue();
         persisted.LastSequenceNumbers["party-1"].ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task IndexHandler_NotifiesSearchIndexerWithLatestEntryAndEventAfterSuccessfulWriteAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
+        store.TrySaveAsync(
+                "statestore",
+                PartySdkReadModelAddresses.Index("tenant-a"),
+                Arg.Any<PartyIndexSdkReadModel>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
+            .Returns(true);
+        IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
+
+        DomainProjectionHandlerResult result = await handler.ProjectAsync(
+            CreateRequest(),
+            "dispatch-1",
+            TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        await searchIndexer.Received(1).NotifyIndexedAsync(
+            "tenant-a",
+            Arg.Is<PartyIndexEntry>(entry => entry != null && entry.Id == "party-1"),
+            "PartyDeactivated",
+            DateTimeOffset.UnixEpoch.AddSeconds(1),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task IndexHandler_ErasureDoesNotNotifySearchIndexerAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        PartyIndexSdkReadModel existing = CreateIndex("party-1");
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(existing, "etag-1"));
+        store.TrySaveAsync(
+                "statestore",
+                PartySdkReadModelAddresses.Index("tenant-a"),
+                Arg.Any<PartyIndexSdkReadModel>(),
+                "etag-1",
+                Arg.Any<CancellationToken>())
+            .Returns(true);
+        IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
+
+        DomainProjectionHandlerResult result = await handler.ProjectAsync(
+            CreateErasureRequest(),
+            "dispatch-erase",
+            TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        await searchIndexer.DidNotReceive().NotifyIndexedAsync(
+            Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

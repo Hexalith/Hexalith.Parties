@@ -16,6 +16,7 @@ using Hexalith.Parties.Queries;
 using Microsoft.Extensions.Options;
 
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 using Shouldly;
 
@@ -160,6 +161,23 @@ public sealed class PartySdkQueryHandlerTests
                 cancellation.Token));
 
         await store.DidNotReceiveWithAnyArgs().GetAsync<PartyDetailSdkReadModel>(default!, default!, default);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_StoreThrowsOperationCanceledMidReadPropagatesInsteadOfBoundedFailureAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>(
+                "statestore",
+                PartySdkReadModelAddresses.Detail("tenant-a", "party-1"),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync<OperationCanceledException>();
+        var handler = new GetPartyQueryHandler(CreateService(store));
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => handler.ExecuteAsync(
+                CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+                TestContext.Current.CancellationToken));
     }
 
     [Fact]

@@ -45,6 +45,9 @@ spec:
           - name: /project/v2
             httpVerb: ['POST']
             action: allow
+          - name: /project/v2/reconcile
+            httpVerb: ['POST']
+            action: allow
           - name: /replay-state
             httpVerb: ['POST']
             action: allow

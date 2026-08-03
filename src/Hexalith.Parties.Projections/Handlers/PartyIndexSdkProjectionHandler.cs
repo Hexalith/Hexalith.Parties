@@ -9,6 +9,7 @@ using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Models;
+using Hexalith.Parties.Projections.Search;
 
 using Microsoft.Extensions.Options;
 
@@ -17,10 +18,13 @@ namespace Hexalith.Parties.Projections.Handlers;
 /// <summary>Persists the canonical shared Party tenant index with optimistic merge-on-write.</summary>
 public sealed class PartyIndexSdkProjectionHandler(
     IReadModelStore readModelStore,
-    IOptions<PartySdkReadModelOptions> options) :
+    IOptions<PartySdkReadModelOptions> options,
+    IPartyIndexSearchIndexer? searchIndexer = null) :
     IAsyncDomainSharedProjectionRebuildHandler,
     IDeclaresProjectionReadModelSlots
 {
+    private readonly IPartyIndexSearchIndexer _searchIndexer = searchIndexer ?? new NoOpPartyIndexSearchIndexer();
+
     private static readonly JsonSerializerOptions s_candidateJsonOptions = PartiesJsonOptions.Default;
 
     public static IReadOnlyList<ProjectionReadModelSlotDeclaration> ProjectionReadModelSlots { get; } =
@@ -47,14 +51,50 @@ public sealed class PartyIndexSdkProjectionHandler(
             return DomainProjectionHandlerResult.Completed();
         }
 
+        PartyIndexSdkReadModel? folded = null;
         await ReadModelWritePolicy.UpdateAsync<PartyIndexSdkReadModel>(
             readModelStore,
             StoreName,
             PartySdkReadModelAddresses.Index(request.TenantId),
-            current => Fold(request, current),
+            current => folded = Fold(request, current),
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
+        await NotifySearchIndexerAsync(request, folded, cancellationToken).ConfigureAwait(false);
+
         return DomainProjectionHandlerResult.Completed();
+    }
+
+    private async Task NotifySearchIndexerAsync(
+        ProjectionRequest request,
+        PartyIndexSdkReadModel? folded,
+        CancellationToken cancellationToken)
+    {
+        // Indexing an external search backend (e.g. Hexalith.Memories) is best effort: it must
+        // never fail or block the projection write it follows. An erased or otherwise-removed
+        // entry has nothing left to index — the erasure-cleanup path is responsible for removing
+        // it from the external index separately.
+        if (folded is null
+            || !folded.Entries.TryGetValue(request.AggregateId, out PartyIndexEntry? entry)
+            || entry is null)
+        {
+            return;
+        }
+
+        ProjectionEventDto latest = request.Events.OrderBy(static item => item.SequenceNumber).Last();
+        try
+        {
+            await _searchIndexer
+                .NotifyIndexedAsync(request.TenantId, entry, latest.EventTypeName, latest.Timestamp, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            // Best effort per IPartyIndexSearchIndexer's contract: swallow and move on.
+        }
     }
 
     public Task<DomainSharedProjectionRebuildCandidate> CreateEmptyCandidateAsync(

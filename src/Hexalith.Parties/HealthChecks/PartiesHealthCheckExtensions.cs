@@ -15,8 +15,8 @@ public static class PartiesHealthCheckExtensions
     /// <summary>
     /// Registers all DAPR infrastructure health checks for the Parties service.
     /// Readiness is gated only on command-processing dependencies tagged "ready":
-    /// the DAPR sidecar and the state store. Pub/sub and projection actor health
-    /// still contribute to /health, but pub/sub degradation must not block writes.
+    /// the DAPR sidecar and the state store. Pub/sub and SDK read-model connectivity
+    /// still contribute to /health, but their degradation must not block writes.
     /// </summary>
     public static IHealthChecksBuilder AddPartiesDaprHealthChecks(
         this IHealthChecksBuilder builder,
@@ -58,7 +58,12 @@ public static class PartiesHealthCheckExtensions
                 "memories-search",
                 failureStatus: HealthStatus.Degraded,
                 tags: [],
-                timeout: TimeSpan.FromSeconds(5));
+                timeout: TimeSpan.FromSeconds(5))
+            .AddCheck<PartyReadModelHealthCheck>(
+                "party-read-models",
+                failureStatus: HealthStatus.Degraded,
+                tags: [],
+                timeout: healthCheckTimeout);
 
         return builder;
     }

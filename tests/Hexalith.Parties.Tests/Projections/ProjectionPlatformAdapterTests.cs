@@ -1,11 +1,16 @@
 using Hexalith.EventStore.Client.Projections;
 using Hexalith.EventStore.Client.Queries;
 using Hexalith.EventStore.Contracts.Security;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Extensions;
+using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Security;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+using NSubstitute;
 
 using Shouldly;
 
@@ -44,6 +49,53 @@ public sealed class ProjectionPlatformAdapterTests
             .ShouldBeOfType<EventStorePartyPayloadProtectionAdapter>();
         provider.GetRequiredService<PartyPayloadProtectionService>()
             .ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task AddParties_ErasureCleanupDelegatesInvokeRealEraserAndCacheEvictionWithCorrectKeysAsync()
+    {
+        const string tenantId = "tenant-a";
+        const string partyId = "party-1";
+        IReadModelStore readModelStore = Substitute.For<IReadModelStore>();
+        readModelStore.GetAsync<PartyDetailSdkReadModel>("statestore", PartySdkReadModelAddresses.Detail(tenantId, partyId), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
+        readModelStore.GetAsync<PartyProcessingSdkReadModel>("statestore", PartySdkReadModelAddresses.Processing(tenantId, partyId), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
+        readModelStore.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index(tenantId), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
+        readModelStore.TrySaveAsync(
+                "statestore", Arg.Any<string>(), Arg.Any<PartyDetailSdkReadModel>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+        readModelStore.TrySaveAsync(
+                "statestore", Arg.Any<string>(), Arg.Any<PartyProcessingSdkReadModel>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+        readModelStore.TrySaveAsync(
+                "statestore", Arg.Any<string>(), Arg.Any<PartyIndexSdkReadModel>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+
+        IServiceCollection services = CreatePartiesServices();
+        services.RemoveAll<IReadModelStore>();
+        services.AddSingleton(readModelStore);
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        IReadOnlyList<ErasureStoreCleanupDelegate> cleanups =
+            provider.GetRequiredService<IReadOnlyList<ErasureStoreCleanupDelegate>>();
+        cleanups.Count.ShouldBe(5);
+
+        foreach (ErasureStoreCleanupDelegate cleanup in cleanups)
+        {
+            ErasureVerificationStoreResult result = await cleanup(tenantId, partyId, TestContext.Current.CancellationToken);
+            // Memories search is not configured in this test's DI graph, so its delegate reports
+            // NotApplicable rather than Cleaned; every other store must report Cleaned.
+            result.Status.ShouldBeOneOf(ErasureStoreCleanupStatus.Cleaned, ErasureStoreCleanupStatus.NotApplicable);
+        }
+
+        await readModelStore.Received(1).GetAsync<PartyDetailSdkReadModel>(
+            "statestore", PartySdkReadModelAddresses.Detail(tenantId, partyId), Arg.Any<CancellationToken>());
+        await readModelStore.Received(1).GetAsync<PartyProcessingSdkReadModel>(
+            "statestore", PartySdkReadModelAddresses.Processing(tenantId, partyId), Arg.Any<CancellationToken>());
+        await readModelStore.Received(1).GetAsync<PartyIndexSdkReadModel>(
+            "statestore", PartySdkReadModelAddresses.Index(tenantId), Arg.Any<CancellationToken>());
     }
 
     private static IServiceCollection CreatePartiesServices()

@@ -193,6 +193,11 @@ action_items:
   - epic: 6
     action: "Add a pre-review File List check that compares git diff --name-only to the story File List before status moves to review or done."
     owner: "Amelia (Developer)"
+    # Flagged by Story 8.6 code review (2026-08-02): Story 8.6's own Debug Log records
+    # `_bmad/scripts/check_file_list.py --story ... --require-file-list` exiting 2 because
+    # the script is absent, and the manual reconciliation performed instead. Confirmed the
+    # script is still absent from the repo as of this review. Status left `done` pending
+    # confirmation of whether the gate now lives elsewhere or genuinely regressed.
     status: done
   - epic: 6
     action: "Document the standard fallback validation ladder for this repo: direct xUnit v3 assemblies, serialized -m:1 builds, and focused project builds when dotnet test or solution build is environment-blocked."
@@ -215,6 +220,8 @@ action_items:
   - epic: 7
     action: "Convert the File List check into an actual pre-review gate that compares git diff --name-only with the story File List."
     owner: "Amelia (Developer)"
+    # Same caveat as the Epic 6 File List check item above: Story 8.6's Debug Log found
+    # `_bmad/scripts/check_file_list.py` absent (2026-08-02).
     status: done
   - epic: 7
     # Done 2026-07-07: gate created, approved, and committed
@@ -325,8 +332,15 @@ action_items:
   - epic: 8
     # EventStore Story 1.20 is done with an owner-approved `available` packet at
     # exact source fa2d1c9 and its recorded proof package/container identities.
-    # Parties now selects that exact fa2d1c9 source at both the root gitlink and
-    # checkout (`v3.82.0-24-gfa2d1c99`), so identity reconciliation is complete.
+    # Parties briefly selected that exact fa2d1c9 source at both the root gitlink
+    # and checkout (`v3.82.0-24-gfa2d1c99`), but that identity then failed the
+    # required source-mode projection build (missing tenant-shared rebuild
+    # surfaces). Superseded 2026-08-01: Parties adopted latest-stable EventStore
+    # `v3.89.0`/`c590590bc581a3f72ef6e67148eda988ba4b8fe6` under explicit
+    # Administrator direction, formally authorized after the fact by
+    # sprint-change-proposal-2026-08-02-story-8-6-eventstore-identity-authorization-backfill.md
+    # (approved 2026-08-02). Reconciled with the Epic 7 rollback-retention item
+    # below and the story-8-3 matrix by the same code-review pass (2026-08-02).
     # Gate 2 remains Parties-owned: Story 8.6 must prove deployed routing/security,
     # coordinated erasure, SDK parity, GDPR reads/no-leak behavior,
     # rebuild-vs-replay, and rollback before deleting any rollback-only path.

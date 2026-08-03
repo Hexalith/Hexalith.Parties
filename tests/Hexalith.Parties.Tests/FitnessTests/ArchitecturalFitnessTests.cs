@@ -327,6 +327,7 @@ public sealed class ArchitecturalFitnessTests
         partiesAccessControl.ShouldContain("name: /process");
         partiesAccessControl.ShouldContain("name: /query");
         partiesAccessControl.ShouldContain("name: /project/v2");
+        partiesAccessControl.ShouldContain("name: /project/v2/reconcile");
         partiesAccessControl.ShouldContain("name: /project/rebuild/v1");
         partiesAccessControl.ShouldContain("name: /project/rebuild/stage/v1");
         partiesAccessControl.ShouldContain("name: /project/rebuild/commit/v1");

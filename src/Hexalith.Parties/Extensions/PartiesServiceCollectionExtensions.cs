@@ -21,11 +21,9 @@ using Hexalith.Parties.Search;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Search;
-using Hexalith.Parties.Projections.Abstractions;
 using Hexalith.Parties.Projections.Actors;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Services;
-using Hexalith.Parties.Projections.Strategies;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Security;
 using Hexalith.Tenants.Client.Registration;
@@ -313,6 +311,7 @@ public static class PartiesServiceCollectionExtensions {
                 .Bind(configuration.GetSection(PartyMemoryUnitMappingStoreOptions.SectionName));
             _ = services.AddSingleton<IPartyMemoryUnitMappingStore, PartyMemoryUnitMappingStore>();
             _ = services.AddSingleton<PartyMemoryIndexingService>();
+            _ = services.AddSingleton<Hexalith.Parties.Projections.Search.IPartyIndexSearchIndexer, PartyMemoryIndexEntrySearchIndexer>();
             _ = services.AddSingleton<IPartySearchService>(sp => new MemoriesPartySearchService(
                 sp.GetRequiredService<MemoriesClient>(),
                 sp.GetRequiredService<LocalPartySearchService>(),

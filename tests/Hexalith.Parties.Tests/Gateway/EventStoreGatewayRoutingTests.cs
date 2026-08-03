@@ -1018,6 +1018,26 @@ public sealed class EventStoreGatewayRoutingTests
 
         public DirectPartiesCommandRouter? PartiesCommandRouter { get; private set; }
 
+        // Snapshot of the IHostedService registrations this isolated test host currently excludes
+        // (see ConfigureWebHost below). Update deliberately when the EventStore SDK adds or renames
+        // a hosted service — do not just make this test pass without checking whether the new
+        // service is actually safe to exclude here.
+        private static readonly string[] KnownExcludedHostedServiceNames =
+        [
+            "<factory-registered>",
+            "<factory-registered>",
+            "<factory-registered>",
+            "<factory-registered>",
+            "<factory-registered>",
+            "<factory-registered>",
+            "DaprRateLimitConfigSync",
+            "DataProtectionHostedService",
+            "GenericWebHostService",
+            "HealthCheckPublisherHostedService",
+            "ProjectionDiscoveryHostedService",
+            "TelemetryHostedService",
+        ];
+
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             ArgumentNullException.ThrowIfNull(builder);
@@ -1042,14 +1062,28 @@ public sealed class EventStoreGatewayRoutingTests
                 // Disable EventStore hosted services that require Dapr or mutate shared indexes in
                 // isolated gateway tests. Preserve EventStoreAuthorizationStartupValidator so
                 // auth-wiring regressions still fail fast at host build. Factory registrations do
-                // not expose their implementation type, so all such hosted services are removed.
-                foreach (ServiceDescriptor descriptor in services
+                // not expose their implementation type, so all such hosted services are removed —
+                // an allowlist by name is not possible for every registration style. The assertion
+                // below is the safety net: it fails loudly if the set of removed hosted services
+                // changes, so a newly-added one still requires a conscious review instead of being
+                // silently swept out.
+                ServiceDescriptor[] removedHostedServices = [.. services
                     .Where(d => d.ServiceType == typeof(IHostedService)
                         && !string.Equals(
                             d.ImplementationType?.Name,
                             "EventStoreAuthorizationStartupValidator",
-                            StringComparison.Ordinal))
-                    .ToArray())
+                            StringComparison.Ordinal))];
+                string[] removedHostedServiceNames = [.. removedHostedServices
+                    .Select(d => d.ImplementationType?.Name ?? "<factory-registered>")
+                    .OrderBy(static name => name, StringComparer.Ordinal)];
+                removedHostedServiceNames.ShouldBe(
+                    KnownExcludedHostedServiceNames,
+                    customMessage: "The set of IHostedService registrations excluded from isolated gateway "
+                        + "tests changed. If this is a new, genuinely Dapr-/shared-index-dependent service, "
+                        + $"add it to {nameof(KnownExcludedHostedServiceNames)} deliberately; otherwise "
+                        + "confirm it is actually safe to keep running in this isolated test host.");
+
+                foreach (ServiceDescriptor descriptor in removedHostedServices)
                 {
                     services.Remove(descriptor);
                 }

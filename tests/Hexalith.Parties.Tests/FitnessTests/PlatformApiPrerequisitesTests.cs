@@ -14,8 +14,8 @@ public sealed class PlatformApiPrerequisitesTests
     private const string EventStoreSprintStatusRelativePath = "references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml";
     private const string EventStoreStoryMigrationRelativePath = "references/Hexalith.EventStore/_bmad-output/planning-artifacts/story-id-migration-2026-08-01.md";
     private const string MatrixRelativePath = "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md";
-    private const string PayloadProtectionEventStoreDescribe = "v3.89.0-7-g4bcf2484";
-    private const string PayloadProtectionEventStoreSha = "4bcf2484a09eb26490cb2d32ceb6df8949f90cc6";
+    private const string PayloadProtectionEventStoreDescribe = "v3.89.0-8-g30810727";
+    private const string PayloadProtectionEventStoreSha = "30810727cb91f5886cb2aa13601680a23b18bcc0";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
     private const string PayloadProtectionSurface = "Payload protection engine package";
     private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";

@@ -9,6 +9,7 @@ context:
   - '{project-root}/_bmad-output/implementation-artifacts/epic-8-context.md'
   - '{project-root}/_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md'
   - '{project-root}/references/Hexalith.EventStore/_bmad-output/implementation-artifacts/1-20-owner-approved-parity-closure-proof-packet.md'
+  - '{project-root}/_bmad-output/planning-artifacts/sprint-change-proposal-2026-08-02-story-8-6-eventstore-identity-authorization-backfill.md'
 ---
 
 <frozen-after-approval reason="human-owned intent — do not modify unless human renegotiates">
@@ -18,6 +19,8 @@ context:
 **Problem:** EventStore Story 1.20 is `available`, but Parties consumes source SHA `9b9c776791c149cab26c795a476d23d3d11f7796` and package default `3.86.0`, neither of which is the approved identity `fa2d1c9910f8976553adb33dcdb1c9ff2ea75594`. SDK transport, erasure, parity, rebuild, and rollback are also unproven, so every local compatibility path must remain.
 
 **Approach:** Pin the approved source identity in a dependency-only root checkpoint; add SDK projection/query consumers beside retained local paths; narrowly admit EventStore-only internal routes; prove topology, parity, full rebuild, and rollback; only then remove rollback-only code.
+
+**Renegotiated outcome (2026-08-02, see Spec Change Log):** the owner-approved `fa2d1c99` identity failed the required source-mode projection build — it does not expose `IAsyncDomainSharedProjectionRebuildHandler`, `DomainSharedProjectionRebuildIdentity`, or `DomainSharedProjectionRebuildCandidate`, which the Parties tenant-shared index handler requires. Under explicit Administrator direction, Parties adopted latest-stable EventStore `v3.89.0` (`c590590bc581a3f72ef6e67148eda988ba4b8fe6`) instead, which does expose the required surfaces. This is not an inferred approval for a descendant/tag/package (the "Never" rule below): it is a distinct identity the Administrator directly selected, formally authorized after the fact by `sprint-change-proposal-2026-08-02-story-8-6-eventstore-identity-authorization-backfill.md` (approved 2026-08-02).
 
 ## Boundaries & Constraints
 
@@ -65,6 +68,10 @@ context:
 - Full rebuild matches aggregate replay and rollback restores equivalent reads. Any failed gate preserves all rollback code; all-green cleanup leaves no Parties-hosted platform lifecycle mechanics.
 
 ## Spec Change Log
+
+| Date | Change | Approved by |
+|------|--------|-------------|
+| 2026-08-02 | Renegotiated the approved EventStore consumption identity after `fa2d1c9910f8976553adb33dcdb1c9ff2ea75594` failed the required source-mode projection build (missing tenant-shared rebuild surfaces). Parties adopted `v3.89.0` (`c590590bc581a3f72ef6e67148eda988ba4b8fe6`) under explicit Administrator direction. Updated the Intent section with the renegotiated outcome and added the backfill SCP to `context:`. | Administrator (Jérôme Piquot), via `sprint-change-proposal-2026-08-02-story-8-6-eventstore-identity-authorization-backfill.md` |
 
 ## Design Notes
 

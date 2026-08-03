@@ -53,6 +53,28 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
         payload.RootElement.GetProperty("results").TryGetProperty("projection-actors", out _).ShouldBeFalse();
         payload.RootElement.GetProperty("results").GetProperty("dapr-statestore").GetProperty("status").GetString()
             .ShouldBe("Healthy");
+        payload.RootElement.GetProperty("results").GetProperty("party-read-models").GetProperty("status").GetString()
+            .ShouldBe("Healthy");
+    }
+
+    [Fact]
+    public async Task HealthEndpoint_ReadModelStoreUnreachable_ReturnsDegradedWithoutBlockingReadinessAsync()
+    {
+        ConfigureHealthyDaprClient();
+        _factory.DaprClient.GetByteStateAndETagAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<ConsistencyMode?>(), Arg.Any<IReadOnlyDictionary<string, string>>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync<HttpRequestException>();
+
+        using HttpClient client = _factory.CreateClient();
+        HttpResponseMessage healthResponse = await client.GetAsync("/health");
+        HttpResponseMessage readyResponse = await client.GetAsync("/ready");
+
+        healthResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        readyResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        JsonDocument payload = await JsonDocument.ParseAsync(await healthResponse.Content.ReadAsStreamAsync());
+        payload.RootElement.GetProperty("results").GetProperty("party-read-models").GetProperty("status").GetString()
+            .ShouldBe("Degraded");
     }
 
     [Fact]

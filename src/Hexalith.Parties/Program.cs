@@ -28,7 +28,7 @@ builder.Services.AddDaprClient();
 
 // DAPR health checks:
 // - readiness is gated by sidecar + state store (command-processing dependencies)
-// - /health also reports pub/sub degradation and projection actor responsiveness
+// - /health also reports pub/sub degradation and SDK read-model store reachability
 builder.Services.AddHealthChecks().AddPartiesDaprHealthChecks();
 
 builder.Services.AddParties(builder.Configuration);
