@@ -29,6 +29,13 @@ dotnet aspire run --project src/Hexalith.Parties.AppHost
 
 Default commands run in package mode. If restore fails because an unpublished Hexalith package such as `Hexalith.Tenants.Client` is unavailable, record that as a package-mode release blocker and use the source-mode properties in [docs/development-guide.md](docs/development-guide.md) only for diagnostic triage.
 
+`Hexalith.Parties.slnx` remains the canonical development and runtime-topology
+solution. Dependency governance builds `Hexalith.Parties.Standalone.slnx` in
+Release package mode (`-p:UseNuGetDeps=true`); it contains all 30 owned projects,
+including the package-built EventStore gateway test host, and no project or file
+entries under `references/`. The AppHost resolves external topology projects by
+path only when the app model runs, so the standalone compile graph stays owned.
+
 Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `security`, `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub`. The AppHost also declares `eventstore-admin-ui` and `parties-mcp` as explicit-start auxiliary resources; start them from the dashboard when you need stream browsing or MCP access. AI assistants connect to `parties-mcp` rather than the `parties` actor host.
 
 The default local run path uses repository-level submodules under `references/` only. Do not initialize nested submodules unless a separate story or maintainer asks for that explicitly. Rich Memories-backed search is optional for local development; enable it separately with `EnableMemoriesSearch=true` after initializing the `references/Hexalith.Memories` submodule.

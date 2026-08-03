@@ -4,8 +4,6 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <IsPublishable>true</IsPublishable>
-    <HexalithEventStoreBasePath>$(MSBuildThisFileDirectory)..\..\references\Hexalith.EventStore\src</HexalithEventStoreBasePath>
-    <HexalithTenantsBasePath>$(MSBuildThisFileDirectory)..\..\references\Hexalith.Tenants\src</HexalithTenantsBasePath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,15 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore\Hexalith.EventStore.csproj" />
-    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Admin.Server.Host\Hexalith.EventStore.Admin.Server.Host.csproj" AdditionalProperties="HexalithTenantsBasePath=$(HexalithTenantsBasePath)" />
-    <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Admin.UI\Hexalith.EventStore.Admin.UI.csproj" />
     <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Aspire\Hexalith.EventStore.Aspire.csproj" IsAspireProjectResource="false" Condition="'$(HexalithEventStoreFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.EventStore.Aspire" Condition="'$(HexalithEventStoreFromSource)' != 'true'" />
     <ProjectReference Include="..\Hexalith.Parties\Hexalith.Parties.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.Mcp\Hexalith.Parties.Mcp.csproj" />
     <ProjectReference Include="..\Hexalith.Parties.UI\Hexalith.Parties.UI.csproj" />
-    <ProjectReference Include="$(HexalithTenantsRoot)\src\Hexalith.Tenants\Hexalith.Tenants.csproj" AdditionalProperties="WarningsNotAsErrors=CS0108" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,10 +35,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
-  <Target Name="ValidateHexalithTenantsBasePath" BeforeTargets="ResolveProjectReferences">
-    <Error Condition="!Exists('$(HexalithEventStoreBasePath)')" Text="HexalithEventStoreBasePath '$(HexalithEventStoreBasePath)' does not exist. Run 'git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants' from the repository root. Do not use recursive submodule initialization for the default local run." />
-    <Error Condition="!Exists('$(HexalithTenantsBasePath)')" Text="HexalithTenantsBasePath '$(HexalithTenantsBasePath)' does not exist. Run 'git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants' from the repository root. Do not use recursive submodule initialization for the default local run." />
-  </Target>
 
 </Project>

@@ -1029,7 +1029,6 @@ public sealed class EventStoreGatewayRoutingTests
             "<factory-registered>",
             "<factory-registered>",
             "<factory-registered>",
-            "<factory-registered>",
             "DaprRateLimitConfigSync",
             "DataProtectionHostedService",
             "GenericWebHostService",

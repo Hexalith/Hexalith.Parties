@@ -28,6 +28,24 @@ if (daprMtls is not null)
 const string PublishModeJwtIssuer = "https://auth.tache.ai/realms/tache";
 const string PublishModeJwtAuthority = PublishModeJwtIssuer;
 
+DirectoryInfo repositoryRoot = FindRepositoryRoot();
+string eventStoreProjectPath = ReferenceProjectResolver.ResolveRequired(
+    repositoryRoot,
+    "Hexalith.EventStore",
+    Path.Combine("src", "Hexalith.EventStore", "Hexalith.EventStore.csproj"));
+string adminServerProjectPath = ReferenceProjectResolver.ResolveRequired(
+    repositoryRoot,
+    "Hexalith.EventStore",
+    Path.Combine("src", "Hexalith.EventStore.Admin.Server.Host", "Hexalith.EventStore.Admin.Server.Host.csproj"));
+string adminUiProjectPath = ReferenceProjectResolver.ResolveRequired(
+    repositoryRoot,
+    "Hexalith.EventStore",
+    Path.Combine("src", "Hexalith.EventStore.Admin.UI", "Hexalith.EventStore.Admin.UI.csproj"));
+string tenantsProjectPath = ReferenceProjectResolver.ResolveRequired(
+    repositoryRoot,
+    "Hexalith.Tenants",
+    Path.Combine("src", "Hexalith.Tenants", "Hexalith.Tenants.csproj"));
+
 // Registration dictionary key uses the Kubernetes-valid sanitized wildcard form `wildcard_party_v1`
 // (story 9.3 AC1 / ADR 9.3-1). ConfigMap data keys must match ^[A-Za-z0-9_.-]+$ and Pod container
 // env names must match ^[A-Za-z_][A-Za-z0-9_]*$ — both reject '*' and '|'. The sanitized form
@@ -38,7 +56,7 @@ const string PublishModeJwtAuthority = PublishModeJwtIssuer;
 // references/Hexalith.EventStore/src/Hexalith.EventStore.Server/DomainServices/DomainServiceResolver.cs).
 // The dictionary VALUE's TenantId field stays "*" — that is a value, not a key, and is valid in
 // env-var values.
-IResourceBuilder<ProjectResource> eventStore = builder.AddProject<Projects.Hexalith_EventStore>("eventstore")
+IResourceBuilder<ProjectResource> eventStore = builder.AddProject("eventstore", eventStoreProjectPath)
     .WithEnvironment("Authentication__DaprInternal__AllowedCallers__0", "tenants")
     .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__AppId", "parties")
     .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__MethodName", "process")
@@ -51,8 +69,8 @@ IResourceBuilder<ProjectResource> eventStore = builder.AddProject<Projects.Hexal
 // the topology runs. The hub path is /hubs/projection-changes (ProjectionChangedHub.HubPath); server-side
 // enablement is the EventStore host's EventStore:SignalR:Enabled (AddEventStoreSignalR).
 _ = eventStore.WithEnvironment("EventStore__SignalR__Enabled", "true");
-IResourceBuilder<ProjectResource> adminServer = builder.AddProject<Projects.Hexalith_EventStore_Admin_Server_Host>("eventstore-admin");
-IResourceBuilder<ProjectResource> adminUI = builder.AddProject<Projects.Hexalith_EventStore_Admin_UI>("eventstore-admin-ui")
+IResourceBuilder<ProjectResource> adminServer = builder.AddProject("eventstore-admin", adminServerProjectPath);
+IResourceBuilder<ProjectResource> adminUI = builder.AddProject("eventstore-admin-ui", adminUiProjectPath)
     .WithExplicitStart();
 
 // Persistence is the DAPR state store / pub-sub layer. Redis is provided by `dapr init` at
@@ -93,7 +111,7 @@ IResourceBuilder<ProjectResource> partiesMcp = builder.AddProject<Projects.Hexal
 
 _ = partiesMcp.WithEnvironment("Parties__Mcp__EventStoreGatewayBaseUrl", ReferenceExpression.Create($"{eventStore.GetEndpoint("http")}"));
 
-IResourceBuilder<ProjectResource> tenants = builder.AddProject<Projects.Hexalith_Tenants>("tenants")
+IResourceBuilder<ProjectResource> tenants = builder.AddProject("tenants", tenantsProjectPath)
     .WithDaprSidecar(sidecar =>
     {
         _ = sidecar.WithOptions(new DaprSidecarOptions
@@ -162,7 +180,7 @@ if (builder.ExecutionContext.IsPublishMode
     || string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringComparison.OrdinalIgnoreCase))
 {
     string memoriesProjectPath = ResolveOptionalReferenceProjectPath(
-        Path.Combine("references", "Hexalith.Memories"),
+        "Hexalith.Memories",
         Path.Combine("src", "Hexalith.Memories.Server", "Hexalith.Memories.Server.csproj"),
         "EnableMemoriesSearch");
 
@@ -204,11 +222,11 @@ if (builder.ExecutionContext.IsPublishMode
     || string.Equals(builder.Configuration["EnableEventStoreSampleUi"], "true", StringComparison.OrdinalIgnoreCase))
 {
     string sampleProjectPath = ResolveOptionalReferenceProjectPath(
-        Path.Combine("references", "Hexalith.EventStore"),
+        "Hexalith.EventStore",
         Path.Combine("samples", "Hexalith.EventStore.Sample", "Hexalith.EventStore.Sample.csproj"),
         "EnableEventStoreSampleUi");
     string sampleBlazorUiProjectPath = ResolveOptionalReferenceProjectPath(
-        Path.Combine("references", "Hexalith.EventStore"),
+        "Hexalith.EventStore",
         Path.Combine("samples", "Hexalith.EventStore.Sample.BlazorUI", "Hexalith.EventStore.Sample.BlazorUI.csproj"),
         "EnableEventStoreSampleUi");
 
@@ -426,19 +444,30 @@ static string ResolveDaprConfigPath(string fileName)
 
 // Resolves an optional reference submodule project by path so the AppHost carries no compile-time
 // ProjectReference to it. Used for Memories.Server, which is only needed when rich search is enabled.
-static string ResolveOptionalReferenceProjectPath(string submodulePath, string projectRelativePath, string enablingSettingName)
+static string ResolveOptionalReferenceProjectPath(string repositoryName, string projectRelativePath, string enablingSettingName)
 {
-    string repositoryRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
-    string projectPath = Path.Combine(repositoryRoot, submodulePath, projectRelativePath);
-    if (File.Exists(projectPath))
+    DirectoryInfo repositoryRoot = FindRepositoryRoot();
+    string? projectPath = ReferenceProjectResolver.Find(repositoryRoot, repositoryName, projectRelativePath);
+    if (projectPath is not null)
     {
         return projectPath;
     }
 
-    string normalizedSubmodulePath = submodulePath.Replace('\\', '/');
     throw new FileNotFoundException(
-        $"Optional project '{projectPath}' was not found. Run 'git submodule update --init {normalizedSubmodulePath}' before enabling '{enablingSettingName}' or publishing the Kubernetes topology. Do not use recursive submodule initialization for the default local run.",
-        projectPath);
+        $"Optional project '{projectRelativePath}' from {repositoryName} was not found before enabling '{enablingSettingName}' or publishing the Kubernetes topology. "
+        + ReferenceProjectResolver.InitializationGuidance(repositoryRoot, repositoryName),
+        projectRelativePath);
+}
+
+static DirectoryInfo FindRepositoryRoot()
+{
+    DirectoryInfo? directory = new(AppContext.BaseDirectory);
+    while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Hexalith.Parties.slnx")))
+    {
+        directory = directory.Parent;
+    }
+
+    return directory ?? throw new DirectoryNotFoundException("Could not locate the Hexalith.Parties repository root.");
 }
 
 // PUBLISH-MODE-JWT-HELPER - single-place contract for JWT authority/issuer wiring.

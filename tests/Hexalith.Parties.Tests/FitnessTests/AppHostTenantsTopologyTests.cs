@@ -7,20 +7,18 @@ namespace Hexalith.Parties.Tests.FitnessTests;
 public sealed class AppHostTenantsTopologyTests
 {
     [Fact]
-    public void AppHostProjectReferencesEventStoreTenantsAndAspireProjects()
+    public void AppHostProjectReferencesOnlyOwnedProjectsAndConsumesAspirePackage()
     {
         string project = ReadAppHostProject();
 
-        project.ShouldContain(@"$(HexalithEventStoreRoot)\src\Hexalith.EventStore\Hexalith.EventStore.csproj");
-        project.ShouldContain(@"$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Admin.Server.Host\Hexalith.EventStore.Admin.Server.Host.csproj");
-        project.ShouldContain(@"$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Admin.UI\Hexalith.EventStore.Admin.UI.csproj");
-        project.ShouldContain(@"$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Aspire\Hexalith.EventStore.Aspire.csproj");
-        project.ShouldContain(@"$(HexalithTenantsRoot)\src\Hexalith.Tenants\Hexalith.Tenants.csproj");
+        project.ShouldNotContain(@"$(HexalithEventStoreRoot)\src\Hexalith.EventStore\Hexalith.EventStore.csproj");
+        project.ShouldNotContain(@"$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Admin.Server.Host\Hexalith.EventStore.Admin.Server.Host.csproj");
+        project.ShouldNotContain(@"$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Admin.UI\Hexalith.EventStore.Admin.UI.csproj");
+        project.ShouldNotContain(@"$(HexalithTenantsRoot)\src\Hexalith.Tenants\Hexalith.Tenants.csproj");
         project.ShouldContain(@"Hexalith.Parties.Mcp\Hexalith.Parties.Mcp.csproj");
         project.ShouldContain(@"Hexalith.Parties.UI\Hexalith.Parties.UI.csproj");
         project.ShouldNotContain(@"references\Hexalith.Tenants\src\Hexalith.Tenants.Aspire\Hexalith.Tenants.Aspire.csproj");
-        project.ShouldContain(@"$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Aspire\Hexalith.EventStore.Aspire.csproj"" IsAspireProjectResource=""false""");
-        project.ShouldContain(@"IsAspireProjectResource=""false""");
+        project.ShouldContain(@"<PackageReference Include=""Hexalith.EventStore.Aspire""");
     }
 
     [Fact]
@@ -30,15 +28,15 @@ public sealed class AppHostTenantsTopologyTests
 
         Dictionary<string, string> resources = ExtractProjectResources(program);
 
-        resources["eventstore"].ShouldBe("Projects.Hexalith_EventStore");
-        resources["eventstore-admin"].ShouldBe("Projects.Hexalith_EventStore_Admin_Server_Host");
-        resources["eventstore-admin-ui"].ShouldBe("Projects.Hexalith_EventStore_Admin_UI");
         resources["parties"].ShouldBe("Projects.Hexalith_Parties");
-        resources["tenants"].ShouldBe("Projects.Hexalith_Tenants");
         resources["parties-mcp"].ShouldBe("Projects.Hexalith_Parties_Mcp");
+        program.ShouldContain(@"builder.AddProject(""eventstore"", eventStoreProjectPath)");
+        program.ShouldContain(@"builder.AddProject(""eventstore-admin"", adminServerProjectPath)");
+        program.ShouldContain(@"builder.AddProject(""eventstore-admin-ui"", adminUiProjectPath)");
+        program.ShouldContain(@"builder.AddProject(""tenants"", tenantsProjectPath)");
         program.ShouldContain("AddHexalithEventStoreSecurity()");
         program.ShouldNotContain(@"AddKeycloak(""keycloak"", 8180)");
-        program.ShouldMatch(@"adminUI\s*=\s*builder\.AddProject<Projects\.Hexalith_EventStore_Admin_UI>\(""eventstore-admin-ui""\)\s*\.WithExplicitStart\(\)");
+        program.ShouldMatch(@"adminUI\s*=\s*builder\.AddProject\(""eventstore-admin-ui"",\s*adminUiProjectPath\)\s*\.WithExplicitStart\(\)");
         program.ShouldContain("AddHexalithEventStore");
         program.ShouldNotContain("AddHexalithParties(");
         program.ShouldNotContain("AddHexalithTenants(");
@@ -234,12 +232,17 @@ public sealed class AppHostTenantsTopologyTests
     public void AppHostProgramComposesMemoriesOnlyWhenRichSearchIsEnabled()
     {
         string program = StripCSharpComments(ReadAppHostProgram());
+        string resolver = File.ReadAllText(Path.Combine(
+            RepositoryRoot.Locate(),
+            "src",
+            "Hexalith.Parties.AppHost",
+            "ReferenceProjectResolver.cs"));
 
         program.ShouldContain(@"builder.Configuration[""EnableMemoriesSearch""]");
         program.ShouldContain(@"AddProject(""memories"", memoriesProjectPath)");
         program.ShouldContain("ResolveOptionalReferenceProjectPath");
-        program.ShouldContain("Run 'git submodule update --init {normalizedSubmodulePath}'");
-        program.ShouldContain("Do not use recursive submodule initialization for the default local run.");
+        resolver.ShouldContain("submodule update --init references/{repositoryName}");
+        resolver.ShouldContain("Do not use recursive submodule initialization.");
         program.ShouldContain(@"WithEnvironment(""ConnectionStrings__falkordb"", ""falkordb:6379"")");
         program.ShouldMatch(@"if\s*\(builder\.ExecutionContext\.IsPublishMode[\s\S]*?string\.Equals\(builder\.Configuration\[""EnableMemoriesSearch""\][\s\S]*?AddProject\(""memories"", memoriesProjectPath\)");
         program.ShouldNotContain(@"AddProject<Projects.Hexalith_Memories_Server>(""memories"")");
@@ -263,16 +266,19 @@ public sealed class AppHostTenantsTopologyTests
     }
 
     [Fact]
-    public void AppHostProjectFailsMissingRootLevelSubmodulesWithActionableGuidance()
+    public void AppHostProgramFailsMissingRootLevelSubmodulesWithActionableGuidance()
     {
-        string project = ReadAppHostProject();
+        string program = ReadAppHostProgram();
+        string resolver = File.ReadAllText(Path.Combine(
+            RepositoryRoot.Locate(),
+            "src",
+            "Hexalith.Parties.AppHost",
+            "ReferenceProjectResolver.cs"));
 
-        project.ShouldContain("HexalithEventStoreBasePath");
-        project.ShouldContain("HexalithTenantsBasePath");
-        project.ShouldNotContain("HexalithMemoriesBasePath");
-        project.ShouldContain("git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants");
-        project.ShouldContain("Do not use recursive submodule initialization for the default local run.");
-        project.ShouldNotContain("git -C Hexalith.Memories submodule update");
+        program.ShouldContain("ReferenceProjectResolver.ResolveRequired");
+        resolver.ShouldContain("submodule update --init references/{repositoryName}");
+        resolver.ShouldContain("Do not use recursive submodule initialization.");
+        program.ShouldNotContain("git -C Hexalith.Memories submodule update");
     }
 
     [Fact]
