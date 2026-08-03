@@ -232,12 +232,17 @@ public sealed class AppHostTenantsTopologyTests
     public void AppHostProgramComposesMemoriesOnlyWhenRichSearchIsEnabled()
     {
         string program = StripCSharpComments(ReadAppHostProgram());
+        string resolver = File.ReadAllText(Path.Combine(
+            RepositoryRoot.Locate(),
+            "src",
+            "Hexalith.Parties.AppHost",
+            "ReferenceProjectResolver.cs"));
 
         program.ShouldContain(@"builder.Configuration[""EnableMemoriesSearch""]");
         program.ShouldContain(@"AddProject(""memories"", memoriesProjectPath)");
         program.ShouldContain("ResolveOptionalReferenceProjectPath");
-        program.ShouldContain("Run 'git submodule update --init {normalizedSubmodulePath}'");
-        program.ShouldContain("Do not use recursive submodule initialization for the default local run.");
+        resolver.ShouldContain("submodule update --init references/{repositoryName}");
+        resolver.ShouldContain("Do not use recursive submodule initialization.");
         program.ShouldContain(@"WithEnvironment(""ConnectionStrings__falkordb"", ""falkordb:6379"")");
         program.ShouldMatch(@"if\s*\(builder\.ExecutionContext\.IsPublishMode[\s\S]*?string\.Equals\(builder\.Configuration\[""EnableMemoriesSearch""\][\s\S]*?AddProject\(""memories"", memoriesProjectPath\)");
         program.ShouldNotContain(@"AddProject<Projects.Hexalith_Memories_Server>(""memories"")");
@@ -264,10 +269,15 @@ public sealed class AppHostTenantsTopologyTests
     public void AppHostProgramFailsMissingRootLevelSubmodulesWithActionableGuidance()
     {
         string program = ReadAppHostProgram();
+        string resolver = File.ReadAllText(Path.Combine(
+            RepositoryRoot.Locate(),
+            "src",
+            "Hexalith.Parties.AppHost",
+            "ReferenceProjectResolver.cs"));
 
-        program.ShouldContain("ResolveRequiredReferenceProjectPath");
-        program.ShouldContain("git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants");
-        program.ShouldContain("Do not use recursive submodule initialization for the default local run.");
+        program.ShouldContain("ReferenceProjectResolver.ResolveRequired");
+        resolver.ShouldContain("submodule update --init references/{repositoryName}");
+        resolver.ShouldContain("Do not use recursive submodule initialization.");
         program.ShouldNotContain("git -C Hexalith.Memories submodule update");
     }
 

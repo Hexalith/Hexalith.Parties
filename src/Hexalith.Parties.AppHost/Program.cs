@@ -28,16 +28,21 @@ if (daprMtls is not null)
 const string PublishModeJwtIssuer = "https://auth.tache.ai/realms/tache";
 const string PublishModeJwtAuthority = PublishModeJwtIssuer;
 
-string eventStoreProjectPath = ResolveRequiredReferenceProjectPath(
+DirectoryInfo repositoryRoot = FindRepositoryRoot();
+string eventStoreProjectPath = ReferenceProjectResolver.ResolveRequired(
+    repositoryRoot,
     "Hexalith.EventStore",
     Path.Combine("src", "Hexalith.EventStore", "Hexalith.EventStore.csproj"));
-string adminServerProjectPath = ResolveRequiredReferenceProjectPath(
+string adminServerProjectPath = ReferenceProjectResolver.ResolveRequired(
+    repositoryRoot,
     "Hexalith.EventStore",
     Path.Combine("src", "Hexalith.EventStore.Admin.Server.Host", "Hexalith.EventStore.Admin.Server.Host.csproj"));
-string adminUiProjectPath = ResolveRequiredReferenceProjectPath(
+string adminUiProjectPath = ReferenceProjectResolver.ResolveRequired(
+    repositoryRoot,
     "Hexalith.EventStore",
     Path.Combine("src", "Hexalith.EventStore.Admin.UI", "Hexalith.EventStore.Admin.UI.csproj"));
-string tenantsProjectPath = ResolveRequiredReferenceProjectPath(
+string tenantsProjectPath = ReferenceProjectResolver.ResolveRequired(
+    repositoryRoot,
     "Hexalith.Tenants",
     Path.Combine("src", "Hexalith.Tenants", "Hexalith.Tenants.csproj"));
 
@@ -441,46 +446,17 @@ static string ResolveDaprConfigPath(string fileName)
 // ProjectReference to it. Used for Memories.Server, which is only needed when rich search is enabled.
 static string ResolveOptionalReferenceProjectPath(string repositoryName, string projectRelativePath, string enablingSettingName)
 {
-    string? projectPath = FindReferenceProjectPath(repositoryName, projectRelativePath);
-    if (projectPath is not null)
-    {
-        return projectPath;
-    }
-
-    string normalizedSubmodulePath = $"references/{repositoryName}";
-    throw new FileNotFoundException(
-        $"Optional project '{projectRelativePath}' from {repositoryName} was not found. Run 'git submodule update --init {normalizedSubmodulePath}' before enabling '{enablingSettingName}' or publishing the Kubernetes topology. Do not use recursive submodule initialization for the default local run.",
-        projectRelativePath);
-}
-
-static string ResolveRequiredReferenceProjectPath(string repositoryName, string projectRelativePath)
-{
-    string? projectPath = FindReferenceProjectPath(repositoryName, projectRelativePath);
-    if (projectPath is not null)
-    {
-        return projectPath;
-    }
-
-    throw new FileNotFoundException(
-        $"Required topology project '{projectRelativePath}' from {repositoryName} was not found. "
-        + "Run 'git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants' from the repository root. "
-        + "Do not use recursive submodule initialization for the default local run.",
-        projectRelativePath);
-}
-
-static string? FindReferenceProjectPath(string repositoryName, string projectRelativePath)
-{
     DirectoryInfo repositoryRoot = FindRepositoryRoot();
-    string[] dependencyRoots =
-    [
-        Path.Combine(repositoryRoot.FullName, "references", repositoryName),
-        Path.Combine(repositoryRoot.Parent?.FullName ?? repositoryRoot.FullName, repositoryName),
-        Path.Combine(repositoryRoot.Parent?.FullName ?? repositoryRoot.FullName, "references", repositoryName),
-    ];
+    string? projectPath = ReferenceProjectResolver.Find(repositoryRoot, repositoryName, projectRelativePath);
+    if (projectPath is not null)
+    {
+        return projectPath;
+    }
 
-    return dependencyRoots
-        .Select(root => Path.GetFullPath(Path.Combine(root, projectRelativePath)))
-        .FirstOrDefault(File.Exists);
+    throw new FileNotFoundException(
+        $"Optional project '{projectRelativePath}' from {repositoryName} was not found before enabling '{enablingSettingName}' or publishing the Kubernetes topology. "
+        + ReferenceProjectResolver.InitializationGuidance(repositoryRoot, repositoryName),
+        projectRelativePath);
 }
 
 static DirectoryInfo FindRepositoryRoot()
