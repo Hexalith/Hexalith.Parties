@@ -2,26 +2,35 @@ using Hexalith.EventStore.Client.Projections;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Handlers;
 using Hexalith.Parties.Projections.Models;
+using Hexalith.Parties.Projections.Search;
 
 using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.Projections.Services;
 
-/// <summary>Erases one Party from canonical SDK read models without deleting the shared tenant index.</summary>
+/// <summary>
+/// Erases one Party from canonical SDK read models without deleting the shared tenant index row.
+/// Removes the party's index entry and sequence checkpoint; the tenant index document itself remains.
+/// </summary>
 public sealed class PartySdkReadModelEraser(
     IReadModelStore readModelStore,
-    IOptions<PartySdkReadModelOptions> options)
+    IOptions<PartySdkReadModelOptions> options,
+    IPartyIndexSearchIndexer? searchIndexer = null)
 {
+    private readonly IPartyIndexSearchIndexer _searchIndexer = searchIndexer ?? new NoOpPartyIndexSearchIndexer();
+
     public async Task EraseAsync(string tenantId, string partyId, CancellationToken cancellationToken)
     {
         string storeName = options.Value.ReadModelStateStoreName;
         ArgumentException.ThrowIfNullOrWhiteSpace(storeName);
 
-        // Redact the canonical detail in place rather than deleting the row: a persisted,
-        // PII-free tombstone (IsErased=true) is the architecture's stated invariant for an erased
-        // party's detail reads, and matches what a full rebuild already produces when it replays
-        // a PartyErased event through PartyDetailSdkProjectionHandler.Fold — keeping the eraser
-        // and the rebuild path in agreement.
+        // When a detail row already exists, redact it in place to a PII-free tombstone
+        // (IsErased=true), matching what a full rebuild produces when it replays PartyErased
+        // through PartyDetailSdkProjectionHandler.Fold. When no detail row exists (or Detail is
+        // null), leave Detail null — do not invent a tombstone. Authoritative erasure status
+        // remains IPartyErasureRecordStore; the detail read model is only a secondary hint when
+        // a prior projected row existed to redact. Also reset the detail sequence watermark so a
+        // party recreated with the same id is not skipped by DeserializeNew.
         await ReadModelWritePolicy.UpdateAsync<PartyDetailSdkReadModel>(
             readModelStore,
             storeName,
@@ -45,12 +54,37 @@ public sealed class PartySdkReadModelEraser(
             PartySdkReadModelAddresses.Index(tenantId),
             current => RemoveParty(current, partyId),
             cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        // Best-effort external search removal (Memories). Implementations must not throw; still
+        // guard so a buggy adapter cannot fail GDPR erasure cleanup.
+        try
+        {
+            await _searchIndexer.NotifyRemovedAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            // Best effort.
+        }
     }
 
     internal static PartyDetailSdkReadModel RedactDetail(PartyDetailSdkReadModel? current, string partyId)
-        => current is null
-            ? new PartyDetailSdkReadModel()
-            : current with { Detail = PartyDetailProjectionHandler.ApplyErasure(partyId, current.Detail) };
+    {
+        if (current is null)
+        {
+            return new PartyDetailSdkReadModel();
+        }
+
+        return current with
+        {
+            Detail = PartyDetailProjectionHandler.ApplyErasure(partyId, current.Detail),
+            LastSequenceNumber = long.MinValue,
+            ProjectionVersion = null,
+        };
+    }
 
     internal static PartyProcessingSdkReadModel ResetProcessingCheckpoint(PartyProcessingSdkReadModel? current)
         => current is null

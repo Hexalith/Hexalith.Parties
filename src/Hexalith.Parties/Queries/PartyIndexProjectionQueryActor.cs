@@ -27,10 +27,10 @@ public static class PartyIndexProjectionQueryActor
         @"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-    internal static bool TryParseListPayload(byte[] payloadBytes, out ListPartiesQueryPayload payload)
+    internal static bool TryParseListPayload(byte[]? payloadBytes, out ListPartiesQueryPayload payload)
     {
         payload = new ListPartiesQueryPayload(1, 20, null, null, null, null, null, null);
-        if (payloadBytes.Length == 0)
+        if (payloadBytes is null || payloadBytes.Length == 0)
         {
             return false;
         }
@@ -71,10 +71,10 @@ public static class PartyIndexProjectionQueryActor
         return true;
     }
 
-    internal static bool TryParseSearchPayload(byte[] payloadBytes, out SearchPartiesQueryPayload payload)
+    internal static bool TryParseSearchPayload(byte[]? payloadBytes, out SearchPartiesQueryPayload payload)
     {
         payload = new SearchPartiesQueryPayload(string.Empty, 1, 20, null, null, null, null);
-        if (payloadBytes.Length == 0)
+        if (payloadBytes is null || payloadBytes.Length == 0)
         {
             return false;
         }

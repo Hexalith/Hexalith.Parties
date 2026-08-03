@@ -336,4 +336,58 @@ public class LocalFuzzyPartySearchProviderTests
         PartySearchResult match = result.Items.First(r => r.Party.Id == "p1");
         match.Matches.ShouldAllBe(m => m.Score != null);
     }
+
+    [Fact]
+    public void Search_DigitContainingIdentifierTokens_DoNotFuzzyMatchNearMissIds()
+    {
+        List<PartyIndexEntry> entries =
+        [
+            new()
+            {
+                Id = "p-50000",
+                Type = PartyType.Organization,
+                DisplayName = "Entry-50000",
+                SortName = "entry-50000",
+                IsActive = true,
+            },
+            new()
+            {
+                Id = "p-10000",
+                Type = PartyType.Organization,
+                DisplayName = "Entry-10000",
+                SortName = "entry-10000",
+                IsActive = true,
+            },
+        ];
+
+        PagedResult<PartySearchResult> result = _provider.Search(entries, "Entry-50000", null, null, 1, 20);
+
+        PartySearchResult match = result.Items.ShouldHaveSingleItem();
+        match.Party.Id.ShouldBe("p-50000");
+        match.Matches.ShouldContain(m => m.MatchType == "exact");
+        result.Items.ShouldNotContain(r => r.Party.Id == "p-10000");
+    }
+
+    [Fact]
+    public void Search_MultiTokenNearMissFullPhrase_DoesNotFuzzyMatchWhenTokensMiss()
+    {
+        // Multi-token queries include the joined full phrase as a candidate; fuzzy is gated
+        // off for that phrase. Individual tokens here are not exact/prefix/contains hits and
+        // should not fuzzy-match the single-word display name either.
+        List<PartyIndexEntry> entries =
+        [
+            new()
+            {
+                Id = "p-1",
+                Type = PartyType.Organization,
+                DisplayName = "Abcdefghij",
+                SortName = "abcdefghij",
+                IsActive = true,
+            },
+        ];
+
+        PagedResult<PartySearchResult> result = _provider.Search(entries, "Abcx Efgy", null, null, 1, 20);
+
+        result.Items.ShouldBeEmpty();
+    }
 }

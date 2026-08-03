@@ -1,7 +1,6 @@
 #pragma warning disable CS8620 // NSubstitute + DaprClient nullable generics mismatch
 #pragma warning disable CA2007
 
-using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Headers;
@@ -414,34 +413,6 @@ public sealed class EncryptionTestFactory : WebApplicationFactory<Program>
             services.AddSingleton(daprClient);
         });
     }
-}
-
-/// <summary>
-/// Real (non-stubbed) in-memory <see cref="IPartyKeyRetryScheduler"/> used to isolate
-/// <see cref="EncryptionPipelineIntegrationTests"/> from the retired actor-proxy dependency
-/// while still exercising actual mark-pending/clear-pending/is-pending state transitions,
-/// rather than a fully-stubbed always-succeed/always-not-pending substitute.
-/// </summary>
-internal sealed class InMemoryPartyKeyRetryScheduler : IPartyKeyRetryScheduler
-{
-    private readonly ConcurrentDictionary<string, string> _pending = new(StringComparer.Ordinal);
-
-    public Task MarkPendingAsync(string tenantId, string partyId, string reason, CancellationToken cancellationToken = default)
-    {
-        _pending[Key(tenantId, partyId)] = reason;
-        return Task.CompletedTask;
-    }
-
-    public Task ClearPendingAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
-    {
-        _ = _pending.TryRemove(Key(tenantId, partyId), out _);
-        return Task.CompletedTask;
-    }
-
-    public Task<bool> IsPendingAsync(string tenantId, string partyId, CancellationToken cancellationToken = default)
-        => Task.FromResult(_pending.ContainsKey(Key(tenantId, partyId)));
-
-    private static string Key(string tenantId, string partyId) => $"{tenantId}:{partyId}";
 }
 
 public sealed class CryptoDisabledTestFactory : WebApplicationFactory<Program>

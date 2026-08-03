@@ -9,9 +9,10 @@ namespace Hexalith.Parties.Projections.Actors;
 
 /// <summary>
 /// Resolves event type names to <see cref="IEventPayload"/> types from the Parties event
-/// assembly. Builds a static lookup the first time it is queried so that the projection actors
+/// assembly. Builds a static lookup the first time it is queried so that SDK projection folds
 /// don't pay <c>assembly.GetTypes()</c> on every event delivery (which compounded with the
-/// replay-from-zero pattern used by the SDK projection handlers).
+/// replay-from-zero pattern used by the SDK projection handlers). Retained under
+/// <c>Actors/</c> as a shared fail-closed registry after Dapr projection-actor deletion.
 /// <para>
 /// Resolution order: full-name match first, then short-name match. Short-name collisions across
 /// namespaces are NOT silently resolved — when more than one type shares a short name, the

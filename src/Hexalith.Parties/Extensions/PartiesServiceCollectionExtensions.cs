@@ -1,4 +1,3 @@
-using Dapr.Actors;
 using Dapr.Actors.Client;
 using Dapr.Client;
 
@@ -23,6 +22,7 @@ using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Projections.Actors;
 using Hexalith.Parties.Projections.Configuration;
+using Hexalith.Parties.Projections.Search;
 using Hexalith.Parties.Projections.Services;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Security;
@@ -30,7 +30,6 @@ using Hexalith.Tenants.Client.Registration;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.Extensions;
@@ -205,16 +204,18 @@ public static class PartiesServiceCollectionExtensions {
                         Timestamp = DateTimeOffset.UtcNow,
                     });
                 },
+                // AggregateActor / EventStore.Server snapshot ownership left this host in Story 8.6.
+                // Report NotApplicable rather than a false Cleaned so verification certificates stay honest.
                 (tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
                 {
                     StoreName = "aggregate-readable-state",
-                    Status = ErasureStoreCleanupStatus.Cleaned,
+                    Status = ErasureStoreCleanupStatus.NotApplicable,
                     Timestamp = DateTimeOffset.UtcNow,
                 }),
                 (tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
                 {
                     StoreName = "snapshots",
-                    Status = ErasureStoreCleanupStatus.Cleaned,
+                    Status = ErasureStoreCleanupStatus.NotApplicable,
                     Timestamp = DateTimeOffset.UtcNow,
                 }),
             ];
@@ -311,7 +312,7 @@ public static class PartiesServiceCollectionExtensions {
                 .Bind(configuration.GetSection(PartyMemoryUnitMappingStoreOptions.SectionName));
             _ = services.AddSingleton<IPartyMemoryUnitMappingStore, PartyMemoryUnitMappingStore>();
             _ = services.AddSingleton<PartyMemoryIndexingService>();
-            _ = services.AddSingleton<Hexalith.Parties.Projections.Search.IPartyIndexSearchIndexer, PartyMemoryIndexEntrySearchIndexer>();
+            _ = services.AddSingleton<IPartyIndexSearchIndexer, PartyMemoryIndexEntrySearchIndexer>();
             _ = services.AddSingleton<IPartySearchService>(sp => new MemoriesPartySearchService(
                 sp.GetRequiredService<MemoriesClient>(),
                 sp.GetRequiredService<LocalPartySearchService>(),
@@ -331,6 +332,7 @@ public static class PartiesServiceCollectionExtensions {
         {
             // Local fallback is the only registered IPartySearchService when Memories is disabled.
             _ = services.AddSingleton<IPartySearchService>(sp => sp.GetRequiredService<LocalPartySearchService>());
+            _ = services.AddSingleton<IPartyIndexSearchIndexer, NoOpPartyIndexSearchIndexer>();
         }
 
         // FluentValidation (assembly scanning — no explicit validator registration)

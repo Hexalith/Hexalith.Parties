@@ -108,6 +108,34 @@ public class PartyMemorySearchOptionsValidatorTests
 
         IPartySearchService service = provider.GetRequiredService<IPartySearchService>();
         service.GetType().Name.ShouldBe(nameof(MemoriesPartySearchService));
+        provider.GetRequiredService<Hexalith.Parties.Projections.Search.IPartyIndexSearchIndexer>()
+            .ShouldBeOfType<PartyMemoryIndexEntrySearchIndexer>();
+    }
+
+    [Fact]
+    public void AddPartiesResolvesNoOpPartyIndexSearchIndexerWhenMemoriesDisabled()
+    {
+        IConfigurationRoot configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Parties:MemoriesSearch:Enabled"] = "false",
+                ["Authentication:JwtBearer:Issuer"] = "hexalith-test",
+                ["Authentication:JwtBearer:Audience"] = "hexalith-parties",
+                ["Authentication:JwtBearer:SigningKey"] = "DevOnlySigningKey-AtLeast32Chars-MustBeSecure!",
+                ["Authentication:JwtBearer:RequireHttpsMetadata"] = "false",
+                ["Tenants:PubSubName"] = "pubsub",
+                ["Tenants:TopicName"] = "system.tenants.events",
+            })
+            .Build();
+
+        using ServiceProvider provider = new ServiceCollection()
+            .AddSingleton<IConfiguration>(configuration)
+            .AddLogging()
+            .AddParties(configuration)
+            .BuildServiceProvider();
+
+        provider.GetRequiredService<Hexalith.Parties.Projections.Search.IPartyIndexSearchIndexer>()
+            .ShouldBeOfType<Hexalith.Parties.Projections.Search.NoOpPartyIndexSearchIndexer>();
     }
 
     [Fact]

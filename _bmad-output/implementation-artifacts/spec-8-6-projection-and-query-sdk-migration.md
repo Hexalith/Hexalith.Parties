@@ -18,13 +18,13 @@ context:
 
 **Problem:** EventStore Story 1.20 is `available`, but Parties consumes source SHA `9b9c776791c149cab26c795a476d23d3d11f7796` and package default `3.86.0`, neither of which is the approved identity `fa2d1c9910f8976553adb33dcdb1c9ff2ea75594`. SDK transport, erasure, parity, rebuild, and rollback are also unproven, so every local compatibility path must remain.
 
-**Approach:** Pin the approved source identity in a dependency-only root checkpoint; add SDK projection/query consumers beside retained local paths; narrowly admit EventStore-only internal routes; prove topology, parity, full rebuild, and rollback; only then remove rollback-only code.
+**Approach:** Pin the approved source identity in a dependency-only root checkpoint; add SDK projection/query consumers while rollback paths remain temporarily available; narrowly admit EventStore-only internal routes; prove topology, the SDK verification matrix, full rebuild, and rollback; only then remove rollback-only code.
 
 **Renegotiated outcome (2026-08-02, see Spec Change Log):** the owner-approved `fa2d1c99` identity failed the required source-mode projection build — it does not expose `IAsyncDomainSharedProjectionRebuildHandler`, `DomainSharedProjectionRebuildIdentity`, or `DomainSharedProjectionRebuildCandidate`, which the Parties tenant-shared index handler requires. Under explicit Administrator direction, Parties adopted latest-stable EventStore `v3.89.0` (`c590590bc581a3f72ef6e67148eda988ba4b8fe6`) instead, which does expose the required surfaces. This is not an inferred approval for a descendant/tag/package (the "Never" rule below): it is a distinct identity the Administrator directly selected, formally authorized after the fact by `sprint-change-proposal-2026-08-02-story-8-6-eventstore-identity-authorization-backfill.md` (approved 2026-08-02).
 
 ## Boundaries & Constraints
 
-**Always:** Preserve deny-by-default/no-public-API topology; query names, page/page-size clients, freshness states, read-model identities, tenant isolation, cancellation, and GDPR Art.20/Art.30/no-leak behavior. Use the approved async projection/rebuild, read-model store/batch/conditional-erasure/freshness, query-handler, write-policy, and cursor-codec seams. Retain all 18 documented rollback artifacts, both actor interfaces, registrations, and ten `NotImplementedException` fallbacks until rebuild and rollback gates pass. Keep the Story 8.3 owner status `available` while recording consumer gates.
+**Always:** Preserve deny-by-default/no-public-API topology; query names, page/page-size clients, SDK-native freshness states (`Current`/`Stale`/`Unavailable`, with store-outage last-known reads reported as `Stale` + `Metadata.IsDegraded` + store-unavailable warning), read-model identities, tenant isolation, cancellation, and GDPR Art.20/Art.30/no-leak behavior. Use the approved async projection/rebuild, read-model store/batch/conditional-erasure/freshness, query-handler, write-policy, and cursor-codec seams. Retain all 18 documented rollback artifacts, both actor interfaces, registrations, and ten `NotImplementedException` fallbacks until rebuild and rollback gates pass. Keep the Story 8.3 owner status `available` while recording consumer gates.
 
 **Ask First:** Any other identity or consumption mode; any public/external ACL expansion or replacement transport; any dependency commit with unrelated changes; any cursor contract change beyond an additive opaque option preserving page/page-size clients.
 
@@ -34,7 +34,7 @@ context:
 
 | Scenario | State | Required behavior | Failure behavior |
 |----------|-------|-------------------|------------------|
-| Delivery | replay zero, duplicate, out of order | SDK detail/index equal local end state; atomic checkpoint | Bounded degradation; no key leak |
+| Delivery | replay zero, duplicate, out of order | SDK detail/index preserve the documented normalized end state and atomic checkpoint | Bounded degradation; no key leak |
 | Query | detail/list/search/GDPR; fresh or stale | Same validation, paging, freshness, erasure exclusion | Same bounded rejection or last-known result |
 | Cursor | absent, valid, expired, tampered, wrong scope | Existing paging works; any cursor is opaque/key-ring compatible | Deterministic rejection |
 | Erasure | detail plus shared index | Remove target only, under coordination | Retry conflict; preserve unrelated entries |
@@ -46,7 +46,7 @@ context:
 
 - `references/Hexalith.EventStore` -- exact approved root gitlink.
 - `src/Hexalith.Parties.Projections/Handlers/` and `src/Hexalith.Parties/Queries/` -- reusable folds and new SDK consumers.
-- `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs` -- dual-path registration/cutover boundary.
+- `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs` -- SDK handler registration and cutover boundary.
 - `src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml` -- internal route allowlist.
 - `tests/Hexalith.Parties.Projections.Tests/` and `tests/Hexalith.Parties.Tests/` -- parity evidence.
 
@@ -54,7 +54,7 @@ context:
 
 **Execution:**
 - [ ] `references/Hexalith.EventStore` and evidence artifacts -- create an otherwise-clean dependency checkpoint at the approved SHA; run the packet's exact A/B/C source receipt; refresh stale matrix/sprint identities.
-- [ ] Test projects -- add a dual-path harness covering the matrix before registration changes.
+- [ ] Test projects -- add an SDK-only verification harness covering the matrix before registration changes.
 - [ ] Projection handlers -- adapt pure folds to approved async persistence, batching, coordinated erasure, freshness, and staged full rebuild; explicitly register their assembly.
 - [ ] Query handlers -- implement one SDK handler per existing query and approved cursor/key-ring use without breaking clients.
 - [ ] ACL and topology tests -- allow only EventStore and exact POST query/projection/rebuild routes; retain default deny.
@@ -64,7 +64,7 @@ context:
 **Acceptance Criteria:**
 - The packet receipt proves the root gitlink and checkout exactly equal the approved SHA and the dependency checkpoint is otherwise clean.
 - Only EventStore can invoke approved internal SDK routes; gateway/public behavior is unchanged.
-- Dual-path tests agree for delivery, queries, freshness, erasure, diagnostics, GDPR, and normalized read models without leakage.
+- The SDK-only verification matrix covers delivery, queries, freshness, erasure, diagnostics, GDPR, and normalized read models without leakage.
 - Full rebuild matches aggregate replay and rollback restores equivalent reads. Any failed gate preserves all rollback code; all-green cleanup leaves no Parties-hosted platform lifecycle mechanics.
 
 ## Spec Change Log
@@ -72,6 +72,8 @@ context:
 | Date | Change | Approved by |
 |------|--------|-------------|
 | 2026-08-02 | Renegotiated the approved EventStore consumption identity after `fa2d1c9910f8976553adb33dcdb1c9ff2ea75594` failed the required source-mode projection build (missing tenant-shared rebuild surfaces). Parties adopted `v3.89.0` (`c590590bc581a3f72ef6e67148eda988ba4b8fe6`) under explicit Administrator direction. Updated the Intent section with the renegotiated outcome and added the backfill SCP to `context:`. | Administrator (Jérôme Piquot), via `sprint-change-proposal-2026-08-02-story-8-6-eventstore-identity-authorization-backfill.md` |
+| 2026-08-03 | Renegotiated AC7 / Spec Always freshness to the three SDK-native statuses (`Current`/`Stale`/`Unavailable`). Store-outage last-known reads are documented as `Stale` + `Metadata.IsDegraded` + store-unavailable warning. `Rebuilding`/`Degraded`/`LocalOnly` remain on the enum for wire compatibility but are not produced by the SDK query path; Picker/UI collapse any legacy values into the degraded UX. | Administrator, via bmad-code-review Group 3 decision |
+| 2026-08-03 | Replaced the obsolete actor-vs-SDK dual-path acceptance language with an SDK-only verification matrix after AC8 removed the actor path. The matrix still preserves replay, ordering, query, freshness, erasure, diagnostics, GDPR, rebuild, and rollback evidence requirements. | Administrator, via bmad-code-review Group 5 decision |
 
 ## Design Notes
 

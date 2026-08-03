@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -13,6 +14,7 @@ using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Search;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.Queries;
@@ -25,9 +27,12 @@ public sealed partial class PartySdkQueryService(
     IPartySearchProvider searchProvider,
     IPartyErasureRecordStore erasureRecordStore,
     IQueryCursorCodec cursorCodec,
-    PartySdkLastKnownReadModelCache lastKnownCache)
+    PartySdkLastKnownReadModelCache lastKnownCache,
+    ILogger<PartySdkQueryService> logger)
 {
     private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
+    private static readonly PartyDetailSdkReadModel s_unknownFreshness = new();
+    private static readonly SearchValues<char> s_reservedPartyIdChars = SearchValues.Create(":\0|\r\n");
 
     [GeneratedRegex(@"^[A-Za-z0-9_\-\.]{1,128}$", RegexOptions.CultureInvariant)]
     private static partial Regex ValidTenantIdRegex();
@@ -67,10 +72,11 @@ public sealed partial class PartySdkQueryService(
             DateTimeOffset now = timeProvider.GetUtcNow();
             ProjectionFreshnessMetadata freshness = ToPartiesFreshness(read.Value, now, degraded);
             PartyDetail detail = stored with { Freshness = freshness };
-            (ReadModelEntry<PartyProcessingSdkReadModel> processing, _) = await ReadProcessingModelAsync(
+            (ReadModelEntry<PartyProcessingSdkReadModel> processing, bool processingDegraded) = await ReadProcessingModelAsync(
                 query.TenantId,
                 partyId,
                 cancellationToken).ConfigureAwait(false);
+            degraded = degraded || processingDegraded;
             IReadOnlyList<ProcessingActivityRecord> records = processing.Value?.Records ?? [];
             bool unavailable = string.IsNullOrWhiteSpace(detail.DisplayName) || string.IsNullOrWhiteSpace(detail.SortName);
             var package = new PartyDataPortabilityPackage
@@ -87,7 +93,7 @@ public sealed partial class PartySdkQueryService(
                 CorrelationId = string.IsNullOrWhiteSpace(query.CorrelationId) ? "unspecified" : query.CorrelationId.Trim(),
                 Party = detail.IsErased || unavailable ? null : detail,
                 ProcessingRecords = records,
-                Freshness = freshness,
+                Freshness = ToPartiesFreshness(read.Value, now, degraded),
             };
             return Success(
                 package,
@@ -101,8 +107,9 @@ public sealed partial class PartySdkQueryService(
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            LogQueryFailed(query.QueryType, exception.GetType().Name);
             return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
         }
     }
@@ -134,8 +141,9 @@ public sealed partial class PartySdkQueryService(
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            LogQueryFailed(query.QueryType, exception.GetType().Name);
             return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
         }
     }
@@ -153,13 +161,23 @@ public sealed partial class PartySdkQueryService(
             PartyErasureStatusRecord? status = await erasureRecordStore
                 .GetStatusAsync(query.TenantId, partyId, cancellationToken)
                 .ConfigureAwait(false);
+            IReadModelFreshness freshness = s_unknownFreshness;
+            string? etag = null;
+            bool degraded = false;
             if (status is null)
             {
-                (ReadModelEntry<PartyDetailSdkReadModel> read, _) = await ReadDetailModelAsync(
+                (ReadModelEntry<PartyDetailSdkReadModel> read, bool detailDegraded) = await ReadDetailModelAsync(
                     query.TenantId,
                     partyId,
                     cancellationToken)
                     .ConfigureAwait(false);
+                degraded = detailDegraded;
+                if (read.Value is not null)
+                {
+                    freshness = read.Value;
+                    etag = read.ETag;
+                }
+
                 PartyDetail? detail = read.Value?.Detail;
                 status = detail?.IsErased == true
                     ? new PartyErasureStatusRecord
@@ -173,14 +191,21 @@ public sealed partial class PartySdkQueryService(
                     : null;
             }
 
-            return QueryResult.FromPayload(JsonSerializer.SerializeToElement(status, s_jsonOptions), "party-erasure-status");
+            return Success(
+                status,
+                "party-erasure-status",
+                freshness,
+                etag,
+                timeProvider.GetUtcNow(),
+                degraded);
         }
         catch (OperationCanceledException)
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            LogQueryFailed(query.QueryType, exception.GetType().Name);
             return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
         }
     }
@@ -198,14 +223,20 @@ public sealed partial class PartySdkQueryService(
             ErasureCertificate? certificate = await erasureRecordStore
                 .GetCertificateAsync(query.TenantId, partyId, cancellationToken)
                 .ConfigureAwait(false);
-            return QueryResult.FromPayload(JsonSerializer.SerializeToElement(certificate, s_jsonOptions), "party-erasure-certificate");
+            return Success(
+                certificate,
+                "party-erasure-certificate",
+                s_unknownFreshness,
+                etag: null,
+                timeProvider.GetUtcNow());
         }
         catch (OperationCanceledException)
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            LogQueryFailed(query.QueryType, exception.GetType().Name);
             return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
         }
     }
@@ -219,7 +250,7 @@ public sealed partial class PartySdkQueryService(
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
         }
 
-        string cursorScope = CreateListCursorScope(query, payload, query.Paging?.PageSize ?? payload.PageSize);
+        string cursorScope = CreateListCursorScope(query, payload, ScopePageSize(query, payload.PageSize));
         if (!TryResolvePaging(query, payload.Page, payload.PageSize, cursorScope, out int pageNumber, out int pageSize, out int offset))
         {
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidCursor);
@@ -227,8 +258,9 @@ public sealed partial class PartySdkQueryService(
 
         return await ReadIndexAsync(query, cancellationToken, (model, freshness) =>
         {
+            IEnumerable<PartyIndexEntry> entries = (model.Entries ?? new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)).Values;
             PagedResult<PartyIndexEntry> page = PartySearchResultsBuilder.BuildPagedList(
-                model.Entries.Values,
+                entries,
                 payload.Type,
                 payload.Active,
                 payload.CreatedAfter,
@@ -258,7 +290,7 @@ public sealed partial class PartySdkQueryService(
             return QueryResult.Failure(QueryAdapterFailureReason.UnsupportedQueryType);
         }
 
-        string cursorScope = CreateSearchCursorScope(query, payload, query.Paging?.PageSize ?? payload.PageSize);
+        string cursorScope = CreateSearchCursorScope(query, payload, ScopePageSize(query, payload.PageSize));
         if (!TryResolvePaging(query, payload.Page, payload.PageSize, cursorScope, out int pageNumber, out int pageSize, out int offset))
         {
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidCursor);
@@ -266,8 +298,9 @@ public sealed partial class PartySdkQueryService(
 
         return await ReadIndexAsync(query, cancellationToken, (model, freshness) =>
         {
+            IEnumerable<PartyIndexEntry> entries = (model.Entries ?? new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)).Values;
             PagedResult<PartySearchResult> page = searchProvider.Search(
-                model.Entries.Values,
+                entries,
                 payload.Query,
                 payload.Type,
                 payload.Active,
@@ -308,8 +341,9 @@ public sealed partial class PartySdkQueryService(
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            LogQueryFailed(query.QueryType, exception.GetType().Name);
             return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
         }
     }
@@ -357,8 +391,9 @@ public sealed partial class PartySdkQueryService(
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            LogQueryFailed(query.QueryType, exception.GetType().Name);
             return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
         }
     }
@@ -417,6 +452,13 @@ public sealed partial class PartySdkQueryService(
         {
             return (new ReadModelEntry<PartyProcessingSdkReadModel>(cached, null), true);
         }
+        catch (Exception exception)
+        {
+            // Soft-fail: export and Art.30 reads stay bounded when the processing slot is unreachable
+            // and no last-known entry exists (retired actor degraded to an empty record list).
+            LogProcessingUnavailable(exception.GetType().Name);
+            return (new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel(), null), true);
+        }
     }
 
     private QueryResult Success<TPayload>(
@@ -436,7 +478,7 @@ public sealed partial class PartySdkQueryService(
             Paging = paging,
             WarningCodes = degraded
                 ? [ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable]
-                : null,
+                : baseMetadata.WarningCodes,
             Provenance = QueryResponseProvenance.ProjectionBacked,
             Lifecycle = degraded ? ProjectionLifecycleState.Stale : baseMetadata.Lifecycle,
         };
@@ -449,14 +491,14 @@ public sealed partial class PartySdkQueryService(
                 ProjectionFreshnessStatus.Stale,
                 ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable)
             : ReadModelFreshness.Classify(model, Thresholds, now) switch
-        {
-            ReadModelFreshnessState.Current or ReadModelFreshnessState.Aging =>
-                ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current),
-            ReadModelFreshnessState.Stale => ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale),
-            _ => ProjectionFreshnessMetadata.Create(
-                ProjectionFreshnessStatus.Unavailable,
-                ProjectionFreshnessMetadata.WarningProjectionStateUnavailable),
-        };
+            {
+                ReadModelFreshnessState.Current or ReadModelFreshnessState.Aging =>
+                    ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Current),
+                ReadModelFreshnessState.Stale => ProjectionFreshnessMetadata.Create(ProjectionFreshnessStatus.Stale),
+                _ => ProjectionFreshnessMetadata.Create(
+                    ProjectionFreshnessStatus.Unavailable,
+                    ProjectionFreshnessMetadata.WarningProjectionStateUnavailable),
+            };
 
     private QueryPagingMetadata? CreatePagingMetadata(
         QueryEnvelope query,
@@ -498,6 +540,7 @@ public sealed partial class PartySdkQueryService(
         }
 
         pageSize = query.Paging.PageSize ?? pageSize;
+        string? failureReason = null;
         if (pageSize is < 1 or > 100
             || query.Paging.Offset is < 0
             || (!string.IsNullOrWhiteSpace(query.Paging.Cursor) && query.Paging.Offset is not null)
@@ -506,8 +549,13 @@ public sealed partial class PartySdkQueryService(
                 query.QueryType,
                 cursorScope,
                 out string? position,
-                out _))
+                out failureReason))
         {
+            if (!string.IsNullOrWhiteSpace(failureReason))
+            {
+                LogCursorRejected(query.QueryType, failureReason);
+            }
+
             return false;
         }
 
@@ -537,6 +585,9 @@ public sealed partial class PartySdkQueryService(
         page = (int)resolvedPage;
         return true;
     }
+
+    private static int ScopePageSize(QueryEnvelope query, int payloadPageSize)
+        => query.Paging?.PageSize ?? Math.Clamp(payloadPageSize, 1, 100);
 
     private static string CreateListCursorScope(
         QueryEnvelope query,
@@ -589,7 +640,7 @@ public sealed partial class PartySdkQueryService(
         return ValidTenantIdRegex().IsMatch(query.TenantId ?? string.Empty)
             && !string.IsNullOrWhiteSpace(query.AggregateId)
             && string.Equals(partyId, query.AggregateId, StringComparison.Ordinal)
-            && !partyId.Contains(':', StringComparison.Ordinal);
+            && partyId.AsSpan().IndexOfAny(s_reservedPartyIdChars) < 0;
     }
 
     private static bool TryValidateIndexEnvelope(QueryEnvelope query)
@@ -599,4 +650,19 @@ public sealed partial class PartySdkQueryService(
             && string.Equals(query.AggregateId, PartyIndexProjectionQueryActor.ListAggregateId, StringComparison.Ordinal)
             && string.Equals(entityId, PartyIndexProjectionQueryActor.ListAggregateId, StringComparison.Ordinal);
     }
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Party SDK query {QueryType} failed with {ExceptionType}.")]
+    private partial void LogQueryFailed(string? queryType, string exceptionType);
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Party processing read model unavailable with {ExceptionType}; returning empty degraded records.")]
+    private partial void LogProcessingUnavailable(string exceptionType);
+
+    [LoggerMessage(
+        Level = LogLevel.Debug,
+        Message = "Party query cursor rejected for queryType {QueryType}: {FailureReason}.")]
+    private partial void LogCursorRejected(string? queryType, string failureReason);
 }

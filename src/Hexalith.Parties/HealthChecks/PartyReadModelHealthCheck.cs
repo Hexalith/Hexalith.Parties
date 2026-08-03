@@ -13,9 +13,10 @@ namespace Hexalith.Parties.HealthChecks;
 /// Projection degradation must remain non-readiness-blocking, so failures here report
 /// <see cref="HealthStatus.Degraded"/>, never <see cref="HealthStatus.Unhealthy"/>.
 /// </summary>
-internal sealed class PartyReadModelHealthCheck(
+internal sealed partial class PartyReadModelHealthCheck(
     IReadModelStore readModelStore,
-    IOptions<PartySdkReadModelOptions> options)
+    IOptions<PartySdkReadModelOptions> options,
+    ILogger<PartyReadModelHealthCheck> logger)
     : IHealthCheck
 {
     private const string ProbeKey = "party-sdk-read-model-health-probe";
@@ -25,6 +26,7 @@ internal sealed class PartyReadModelHealthCheck(
         CancellationToken cancellationToken = default)
     {
         string stateStoreName = options.Value.ReadModelStateStoreName;
+        var data = new Dictionary<string, object> { ["stateStore"] = stateStoreName };
         try
         {
             _ = await readModelStore
@@ -32,20 +34,38 @@ internal sealed class PartyReadModelHealthCheck(
                 .ConfigureAwait(false);
             return HealthCheckResult.Healthy(
                 "SDK read-model store is reachable.",
-                new Dictionary<string, object> { ["stateStore"] = stateStoreName });
+                data);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            throw;
+            // Registration timeout cancels the token; report Degraded (never Unhealthy) so
+            // readiness stays non-blocking, matching the retired ProjectionActorsHealthCheck.
+            LogProbeTimedOut(logger, stateStoreName);
+            return HealthCheckResult.Degraded(
+                "SDK read-model health probe timed out.",
+                data: data);
         }
         catch (Exception ex)
         {
+            LogProbeFailed(logger, stateStoreName, ex);
             return HealthCheckResult.Degraded(
                 "SDK read-model store is unreachable; projection reads may serve stale last-known data.",
                 ex,
-                new Dictionary<string, object> { ["stateStore"] = stateStoreName });
+                data);
         }
     }
+
+    [LoggerMessage(
+        EventId = 1,
+        Level = LogLevel.Warning,
+        Message = "SDK read-model health probe timed out for state store {StateStoreName}.")]
+    private static partial void LogProbeTimedOut(ILogger logger, string stateStoreName);
+
+    [LoggerMessage(
+        EventId = 2,
+        Level = LogLevel.Warning,
+        Message = "SDK read-model health probe failed for state store {StateStoreName}.")]
+    private static partial void LogProbeFailed(ILogger logger, string stateStoreName, Exception exception);
 
     private sealed record ReadModelProbeSentinel;
 }

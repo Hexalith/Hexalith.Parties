@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-08-01
+# last_updated: 2026-08-03
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -42,7 +42,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-08-01
+last_updated: 2026-08-03
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -157,7 +157,7 @@ development_status:
   # focused projection/query regression at the current EventStore pin
   # (4bcf2484 as of Story 8.7's later revalidation) before treating it as
   # re-validated for Story 8.6.
-  8-6-projection-and-query-sdk-migration: review
+  8-6-projection-and-query-sdk-migration: in-progress
   # Story context created 2026-07-16; production migration remains blocked by
   # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
   8-7-data-protection-extraction: blocked

@@ -375,7 +375,9 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
             PageSize = pageSize,
             TotalCount = payload.TotalCount,
             Metadata = metadata,
-            SafeReason = state is PartyPickerSearchState.LocalOnly or PartyPickerSearchState.Degraded
+            // SDK-native freshness is Current/Stale/Unavailable; Stale (incl. store-outage) maps to Degraded UX.
+            // Legacy LocalOnly/Degraded/Rebuilding enum values still collapse to Degraded if an old payload appears.
+            SafeReason = state is PartyPickerSearchState.Degraded
                 ? "Search results may be limited for the current context."
                 : null,
         };
@@ -387,10 +389,10 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
             SearchStatus = freshness?.Status switch
             {
                 ProjectionFreshnessStatus.Current => "Current",
-                ProjectionFreshnessStatus.LocalOnly => "LocalOnly",
-                ProjectionFreshnessStatus.Degraded or
-                    ProjectionFreshnessStatus.Stale or
-                    ProjectionFreshnessStatus.Rebuilding => "Degraded",
+                ProjectionFreshnessStatus.Stale or
+                    ProjectionFreshnessStatus.Degraded or
+                    ProjectionFreshnessStatus.Rebuilding or
+                    ProjectionFreshnessStatus.LocalOnly => "Degraded",
                 ProjectionFreshnessStatus.Unavailable => "Unavailable",
                 _ => "Unavailable",
             },
@@ -399,10 +401,10 @@ public sealed class PartyPickerApiClient(IPartiesQueryClient queryClient)
     private static PartyPickerSearchState ToSearchState(ProjectionFreshnessMetadata? freshness, int visibleCount)
         => freshness?.Status switch
         {
-            ProjectionFreshnessStatus.LocalOnly when visibleCount > 0 => PartyPickerSearchState.LocalOnly,
-            ProjectionFreshnessStatus.Degraded or
-                ProjectionFreshnessStatus.Stale or
-                ProjectionFreshnessStatus.Rebuilding when visibleCount > 0 => PartyPickerSearchState.Degraded,
+            ProjectionFreshnessStatus.Stale or
+                ProjectionFreshnessStatus.Degraded or
+                ProjectionFreshnessStatus.Rebuilding or
+                ProjectionFreshnessStatus.LocalOnly when visibleCount > 0 => PartyPickerSearchState.Degraded,
             ProjectionFreshnessStatus.Unavailable => PartyPickerSearchState.Error,
             _ => visibleCount == 0 ? PartyPickerSearchState.Empty : PartyPickerSearchState.Ready,
         };

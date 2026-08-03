@@ -26,7 +26,7 @@ public sealed class DegradedResponseMiddleware(RequestDelegate next, HealthCheck
 
         // Skip infrastructure endpoints to avoid circular health check invocation:
         // - Health probes: middleware runs health checks → would recurse
-        // - Actor invocations: projection-actors health check calls actors via DAPR
+        // - Actor invocations: PartyKeyRetryActor (and any residual actor traffic) via DAPR
         //   sidecar → routed back to /actors/* → middleware runs health checks again → infinite loop
         // - DAPR sidecar-internal callbacks: the sidecar invokes these during
         //   startup, before its own health endpoint is guaranteed responsive.
@@ -53,7 +53,7 @@ public sealed class DegradedResponseMiddleware(RequestDelegate next, HealthCheck
             context.RequestAborted).ConfigureAwait(false);
 
         // Reads can keep serving stale data when command durability is impaired but
-        // the sidecar and projection actors are still responsive.
+        // the sidecar and SDK read-model store remain reachable (or degraded).
         bool canServeStaleReads = CanServeStaleReads(report);
 
         if (canServeStaleReads)
@@ -105,8 +105,8 @@ public sealed class DegradedResponseMiddleware(RequestDelegate next, HealthCheck
             return false;
         }
 
-        if (report.Entries.TryGetValue("projection-actors", out HealthReportEntry projectionEntry)
-            && projectionEntry.Status == HealthStatus.Unhealthy)
+        if (report.Entries.TryGetValue("party-read-models", out HealthReportEntry readModelEntry)
+            && readModelEntry.Status == HealthStatus.Unhealthy)
         {
             return false;
         }
@@ -115,9 +115,9 @@ public sealed class DegradedResponseMiddleware(RequestDelegate next, HealthCheck
             && stateStoreEntry.Status == HealthStatus.Unhealthy;
         bool pubSubDegraded = report.Entries.TryGetValue("dapr-pubsub", out HealthReportEntry pubSubEntry)
             && pubSubEntry.Status == HealthStatus.Degraded;
-        bool projectionActorsDegraded = report.Entries.TryGetValue("projection-actors", out HealthReportEntry degradedProjectionEntry)
-            && degradedProjectionEntry.Status == HealthStatus.Degraded;
+        bool readModelsDegraded = report.Entries.TryGetValue("party-read-models", out HealthReportEntry degradedReadModelEntry)
+            && degradedReadModelEntry.Status == HealthStatus.Degraded;
 
-        return stateStoreUnavailable || pubSubDegraded || projectionActorsDegraded;
+        return stateStoreUnavailable || pubSubDegraded || readModelsDegraded;
     }
 }

@@ -364,7 +364,7 @@ public sealed class PartyPickerApiClientTests
     }
 
     [Theory]
-    [InlineData(ProjectionFreshnessStatus.LocalOnly, PartyPickerSearchState.LocalOnly, "LocalOnly")]
+    [InlineData(ProjectionFreshnessStatus.LocalOnly, PartyPickerSearchState.Degraded, "Degraded")]
     [InlineData(ProjectionFreshnessStatus.Degraded, PartyPickerSearchState.Degraded, "Degraded")]
     [InlineData(ProjectionFreshnessStatus.Stale, PartyPickerSearchState.Degraded, "Degraded")]
     [InlineData(ProjectionFreshnessStatus.Rebuilding, PartyPickerSearchState.Degraded, "Degraded")]

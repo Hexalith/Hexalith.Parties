@@ -962,6 +962,44 @@ public sealed class EventStoreGatewayRoutingTests
         }
     }
 
+    [Fact]
+    public async Task ConfigurableCommandRouter_StatusWritesUseMessageIdWhenCorrelationDiffersAsync()
+    {
+        var statusStore = new InMemoryCommandStatusStore();
+        var router = new ConfigurableCommandRouter
+        {
+            StatusStore = statusStore,
+            ProcessingResultFactory = command => new CommandProcessingResult(
+                Accepted: true,
+                CorrelationId: command.CorrelationId,
+                EventCount: 1),
+            StatusFactory = command => new CommandStatusRecord(
+                CommandStatus.Completed,
+                DateTimeOffset.UtcNow,
+                command.AggregateId,
+                EventCount: 1,
+                RejectionEventType: null,
+                FailureReason: null,
+                TimeoutDuration: null,
+                MessageId: command.MessageId,
+                CorrelationId: command.CorrelationId),
+        };
+        var command = new SubmitCommand(
+            MessageId: "message-id-1",
+            Tenant: "tenant-a",
+            Domain: "party",
+            AggregateId: "party-1",
+            CommandType: typeof(CreatePartyComposite).FullName!,
+            Payload: [],
+            CorrelationId: "correlation-id-1",
+            UserId: "user-1");
+
+        _ = await router.RouteCommandAsync(command, TestContext.Current.CancellationToken);
+
+        statusStore.GetStatusHistory("tenant-a", "message-id-1").ShouldHaveSingleItem();
+        statusStore.GetStatusHistory("tenant-a", "correlation-id-1").ShouldBeEmpty();
+    }
+
     private sealed class ConfigurableCommandRouter : ICommandRouter
     {
         public required Func<SubmitCommand, CommandProcessingResult> ProcessingResultFactory { get; init; }
@@ -975,7 +1013,7 @@ public sealed class EventStoreGatewayRoutingTests
             ArgumentNullException.ThrowIfNull(command);
             if (StatusStore is not null)
             {
-                await StatusStore.WriteStatusAsync(command.Tenant, command.CorrelationId, StatusFactory(command), cancellationToken)
+                await StatusStore.WriteStatusAsync(command.Tenant, command.MessageId, StatusFactory(command), cancellationToken)
                     .ConfigureAwait(false);
             }
 

@@ -144,11 +144,11 @@ Read by the `parties` host (`appsettings*.json` / env, `__` nesting):
 |---------------|---------|
 | `Authentication:JwtBearer` | JWT validation (OIDC `Authority` or symmetric `SigningKey` ≥32 chars; `Issuer`, `Audience`) |
 | `Tenants` | tenant integration (ServiceName, PubSubName, TopicName `system.tenants.events`, CommandApiAppId) |
-| `Parties:Projections` | `ProjectionOptions` (BatchSize > 0, BatchTimeWindowMs > 0) |
+| `EventStore:Projections` | SDK read-model options (`ReadModelStateStoreName`, `FreshnessAgingSeconds`, `FreshnessStaleSeconds`) bound by `PartySdkReadModelOptions` |
 | `Parties:CryptoShredding:IsEnabled` | crypto-shredding feature (**default true**) — see GDPR note below |
 | `Parties:Compliance:GdprFeaturesActive` | suppresses the MVP compliance warning (**default false**) |
 | `Parties:MemoriesSearch` | rich search (Enabled, Endpoint, ApiToken, TenantId, CaseId, EnabledAxes) |
-| `EventStore:CommandStatus` / `EventStore:DomainServices` | EventStore server integration |
+| `EventStore:DomainServices` | EventStore domain-service registration (AppId / identity for gateway routing) |
 
 Read by the `parties-ui` host:
 

@@ -121,9 +121,9 @@ public sealed class DegradedResponseMiddlewareTests
     }
 
     [Fact]
-    public async Task InvokeAsync_ProjectionActorsDegradedButReadStillSucceeds_HeadersAddedAsync()
+    public async Task InvokeAsync_ReadModelsDegradedButReadStillSucceeds_HeadersAddedAsync()
     {
-        HealthCheckService healthCheckService = CreateProjectionDegradedHealthCheckService();
+        HealthCheckService healthCheckService = CreateReadModelsDegradedHealthCheckService();
 
         var middleware = new DegradedResponseMiddleware(
             context => context.Response.WriteAsync("ok"),
@@ -213,7 +213,7 @@ public sealed class DegradedResponseMiddlewareTests
         {
             ["dapr-sidecar"] = new(HealthStatus.Healthy, "test", TimeSpan.Zero, null, null),
             ["dapr-statestore"] = new(HealthStatus.Unhealthy, "test", TimeSpan.Zero, null, null),
-            ["projection-actors"] = new(HealthStatus.Healthy, "test", TimeSpan.Zero, null, null),
+            ["party-read-models"] = new(HealthStatus.Healthy, "test", TimeSpan.Zero, null, null),
         };
 
         var report = new HealthReport(entries, TimeSpan.Zero);
@@ -231,7 +231,7 @@ public sealed class DegradedResponseMiddlewareTests
         {
             ["dapr-sidecar"] = new(HealthStatus.Unhealthy, "test", TimeSpan.Zero, null, null),
             ["dapr-statestore"] = new(HealthStatus.Unhealthy, "test", TimeSpan.Zero, null, null),
-            ["projection-actors"] = new(HealthStatus.Unhealthy, "test", TimeSpan.Zero, null, null),
+            ["party-read-models"] = new(HealthStatus.Unhealthy, "test", TimeSpan.Zero, null, null),
         };
 
         var report = new HealthReport(entries, TimeSpan.Zero);
@@ -243,13 +243,15 @@ public sealed class DegradedResponseMiddlewareTests
         return service;
     }
 
-    private static HealthCheckService CreateProjectionDegradedHealthCheckService()
+    private static HealthCheckService CreateReadModelsDegradedHealthCheckService()
     {
+        // Only the production key is degraded; pub/sub stays healthy so headers prove
+        // CanServeStaleReads adopts party-read-models (not a retired projection-actors key).
         var entries = new Dictionary<string, HealthReportEntry>
         {
             ["dapr-sidecar"] = new(HealthStatus.Healthy, "test", TimeSpan.Zero, null, null),
-            ["dapr-pubsub"] = new(HealthStatus.Degraded, "test", TimeSpan.Zero, null, null),
-            ["projection-actors"] = new(HealthStatus.Degraded, "test", TimeSpan.Zero, null, null),
+            ["dapr-pubsub"] = new(HealthStatus.Healthy, "test", TimeSpan.Zero, null, null),
+            ["party-read-models"] = new(HealthStatus.Degraded, "test", TimeSpan.Zero, null, null),
         };
 
         var report = new HealthReport(entries, TimeSpan.Zero);

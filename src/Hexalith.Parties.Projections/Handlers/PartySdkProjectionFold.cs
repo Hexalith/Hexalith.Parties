@@ -12,6 +12,14 @@ internal static class PartySdkProjectionFold
     internal const string RedactedFormat = "json-redacted";
     private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
 
+    /// <summary>
+    /// Yields events newer than <paramref name="lastSequenceNumber"/> in sequence order.
+    /// <list type="bullet">
+    /// <item>Non-JSON / unresolved types: <c>(null, advance: false)</c> — checkpoint must not move.</item>
+    /// <item>Corrupt JSON (<see cref="JsonException"/> and related): <c>(null, advance: true)</c> — skip permanently.</item>
+    /// <item>Successful payload or whole-payload redacted: <c>(payload?, advance: true)</c>.</item>
+    /// </list>
+    /// </summary>
     public static IEnumerable<(ProjectionEventDto Event, IEventPayload? Payload, bool AdvanceCheckpoint)> DeserializeNew(
         IReadOnlyCollection<ProjectionEventDto> events,
         long lastSequenceNumber)
@@ -45,7 +53,11 @@ internal static class PartySdkProjectionFold
             {
                 deserialized = JsonSerializer.Deserialize(@event.Payload, eventType, s_jsonOptions);
             }
-            catch (JsonException)
+            catch (Exception ex) when (
+                ex is JsonException
+                    or ArgumentNullException
+                    or NotSupportedException
+                    or InvalidOperationException)
             {
                 deserializationFailed = true;
             }
@@ -76,3 +88,4 @@ internal static class PartySdkProjectionFold
     private static DateTimeOffset Max(DateTimeOffset left, DateTimeOffset right)
         => left >= right ? left : right;
 }
+

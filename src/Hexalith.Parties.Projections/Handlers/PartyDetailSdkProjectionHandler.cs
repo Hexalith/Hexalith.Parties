@@ -13,7 +13,9 @@ using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.Projections.Handlers;
 
-/// <summary>Persists the canonical aggregate-owned Party detail read model.</summary>
+/// <summary>
+/// Persists the canonical aggregate-owned Party detail and processing-activity read models.
+/// </summary>
 public sealed class PartyDetailSdkProjectionHandler(
     IReadModelStore readModelStore,
     IReadModelBatchStore batchStore,
@@ -21,6 +23,8 @@ public sealed class PartyDetailSdkProjectionHandler(
     IAsyncDomainProjectionRebuildHandler,
     IDeclaresProjectionReadModelSlots
 {
+    private const string UnresolvedOrUnsupportedEventReason = "unresolved-or-unsupported-event";
+
     public static IReadOnlyList<ProjectionReadModelSlotDeclaration> ProjectionReadModelSlots { get; } =
     [
         new("party", PartyProjectionNames.Detail, PartySdkReadModelAddresses.DetailSlot,
@@ -63,6 +67,14 @@ public sealed class PartyDetailSdkProjectionHandler(
             && currentProcessing.Value is not null
             && nextProcessing.LastSequenceNumber == currentProcessing.Value.LastSequenceNumber)
         {
+            long priorSequence = current.Value.LastSequenceNumber;
+            if (request.Events.Any(item => item.SequenceNumber > priorSequence))
+            {
+                // New events were present but none advanced the checkpoint (unresolved / non-JSON).
+                // AlreadyCompleted would stop retries while the events were never applied.
+                return DomainProjectionHandlerResult.Failed(UnresolvedOrUnsupportedEventReason);
+            }
+
             return DomainProjectionHandlerResult.AlreadyCompleted();
         }
 

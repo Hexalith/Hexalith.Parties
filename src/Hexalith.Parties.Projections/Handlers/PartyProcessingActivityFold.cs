@@ -18,34 +18,42 @@ internal static class PartyProcessingActivityFold
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
             PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence))
         {
+            // `payload` is null both for a genuine JSON deserialization failure and for a
+            // whole-payload-redacted event (see PartySdkProjectionFold.DeserializeNew) — the two
+            // must not both be recorded as "Succeeded" in this Art.30 processing-activity log.
+            // Non-advancing unresolved/non-JSON events are also recorded as Failed (deduped by
+            // sequence) without moving the checkpoint so a later successful delivery can still apply.
+            bool isRedacted = string.Equals(@event.SerializationFormat, PartySdkProjectionFold.RedactedFormat, StringComparison.OrdinalIgnoreCase);
+            string outcome = !advance
+                ? "Failed"
+                : payload is not null
+                    ? "Succeeded"
+                    : isRedacted
+                        ? "Redacted"
+                        : "Failed";
+
+            if (!records.Exists(record => record.SequenceNumber == @event.SequenceNumber))
+            {
+                records.Add(new ProcessingActivityRecord
+                {
+                    SequenceNumber = @event.SequenceNumber,
+                    PartyId = request.AggregateId,
+                    TenantId = request.TenantId,
+                    ActorId = NormalizeMetadata(@event.UserId, "system"),
+                    CorrelationId = NormalizeMetadata(@event.CorrelationId, "unspecified"),
+                    OperationCategory = GetOperationCategory(@event.EventTypeName, payload),
+                    Outcome = outcome,
+                    EventType = GetShortEventTypeName(@event.EventTypeName),
+                    Timestamp = @event.Timestamp.ToUniversalTime(),
+                    Summary = CreateProcessingSummary(@event.EventTypeName, payload),
+                });
+            }
+
             if (!advance)
             {
                 continue;
             }
 
-            // `payload` is null both for a genuine JSON deserialization failure and for a
-            // whole-payload-redacted event (see PartySdkProjectionFold.DeserializeNew) — the two
-            // must not both be recorded as "Succeeded" in this Art.30 processing-activity log.
-            bool isRedacted = string.Equals(@event.SerializationFormat, PartySdkProjectionFold.RedactedFormat, StringComparison.OrdinalIgnoreCase);
-            string outcome = payload is not null
-                ? "Succeeded"
-                : isRedacted
-                    ? "Redacted"
-                    : "Failed";
-
-            records.Add(new ProcessingActivityRecord
-            {
-                SequenceNumber = @event.SequenceNumber,
-                PartyId = request.AggregateId,
-                TenantId = request.TenantId,
-                ActorId = NormalizeMetadata(@event.UserId, "system"),
-                CorrelationId = NormalizeMetadata(@event.CorrelationId, "unspecified"),
-                OperationCategory = GetOperationCategory(@event.EventTypeName, payload),
-                Outcome = outcome,
-                EventType = GetShortEventTypeName(@event.EventTypeName),
-                Timestamp = @event.Timestamp.ToUniversalTime(),
-                Summary = CreateProcessingSummary(@event.EventTypeName, payload),
-            });
             lastSequence = @event.SequenceNumber;
             projectedAt = PartySdkProjectionFold.ProjectedAt([@event], projectedAt);
         }

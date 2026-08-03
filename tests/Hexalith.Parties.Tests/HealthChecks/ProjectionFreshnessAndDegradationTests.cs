@@ -108,8 +108,8 @@ public sealed class ProjectionFreshnessAndDegradationTests
 
     // AC3/AC6 — Degraded response headers must contain only bounded vocabulary: no projection
     // identifiers, sequence positions, actor/state keys, or rebuild internals. Cross-tenant
-    // isolation at the query layer is covered by PartyDetailProjectionQueryActorTests and
-    // PartyIndexProjectionQueryActorTests; the middleware has no tenant context so this is a
+    // isolation at the query layer is covered by PartySdkQueryHandlerTests for detail plus
+    // index/search degraded fallback; the middleware has no tenant context so this is a
     // header-shape invariant rather than a tenant-scoping assertion.
     [Fact]
     public async Task InvokeAsync_DegradedHeaders_ContainOnlyBoundedMetadataAsync()
@@ -184,7 +184,7 @@ public sealed class ProjectionFreshnessAndDegradationTests
         var entries = new Dictionary<string, HealthReportEntry>
         {
             ["dapr-sidecar"] = new(HealthStatus.Healthy, "test", TimeSpan.Zero, null, null),
-            ["projection-actors"] = new(HealthStatus.Degraded, "rebuilding", TimeSpan.Zero, null, null),
+            ["party-read-models"] = new(HealthStatus.Degraded, "rebuilding", TimeSpan.Zero, null, null),
         };
         var report = new HealthReport(entries, TimeSpan.Zero);
         HealthCheckService service = Substitute.For<HealthCheckService>();
@@ -199,7 +199,7 @@ public sealed class ProjectionFreshnessAndDegradationTests
         {
             ["dapr-sidecar"] = new(HealthStatus.Healthy, "test", TimeSpan.Zero, null, null),
             ["dapr-statestore"] = new(HealthStatus.Unhealthy, "write-path unavailable", TimeSpan.Zero, null, null),
-            ["projection-actors"] = new(HealthStatus.Healthy, "loaded", TimeSpan.Zero, null, null),
+            ["party-read-models"] = new(HealthStatus.Healthy, "loaded", TimeSpan.Zero, null, null),
         };
         var report = new HealthReport(entries, TimeSpan.Zero);
         HealthCheckService service = Substitute.For<HealthCheckService>();

@@ -1,9 +1,12 @@
 using Hexalith.EventStore.Client.Projections;
 using Hexalith.EventStore.Client.Queries;
 using Hexalith.EventStore.Contracts.Security;
+using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Extensions;
 using Hexalith.Parties.Projections.Models;
+using Hexalith.Parties.Queries;
 using Hexalith.Parties.Security;
 
 using Microsoft.Extensions.Configuration;
@@ -78,17 +81,56 @@ public sealed class ProjectionPlatformAdapterTests
         services.AddSingleton(readModelStore);
         using ServiceProvider provider = services.BuildServiceProvider();
 
+        PartySdkLastKnownReadModelCache cache = provider.GetRequiredService<PartySdkLastKnownReadModelCache>();
+        cache.StoreDetail(tenantId, partyId, new PartyDetailSdkReadModel
+        {
+            LastSequenceNumber = 1,
+            Detail = new PartyDetail
+            {
+                Id = partyId,
+                Type = PartyType.Person,
+                DisplayName = "Pre-erasure PII",
+                SortName = "pre-erasure",
+            },
+        });
+        cache.StoreProcessing(tenantId, partyId, new PartyProcessingSdkReadModel { LastSequenceNumber = 1 });
+        cache.StoreIndex(tenantId, new PartyIndexSdkReadModel
+        {
+            Entries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+            {
+                [partyId] = new()
+                {
+                    Id = partyId,
+                    Type = PartyType.Person,
+                    DisplayName = "Pre-erasure PII",
+                },
+            },
+            LastSequenceNumbers = new Dictionary<string, long>(StringComparer.Ordinal) { [partyId] = 1 },
+        });
+        cache.TryGetDetail(tenantId, partyId, out _).ShouldBeTrue();
+        cache.TryGetProcessing(tenantId, partyId, out _).ShouldBeTrue();
+        cache.TryGetIndex(tenantId, out _).ShouldBeTrue();
+
         IReadOnlyList<ErasureStoreCleanupDelegate> cleanups =
             provider.GetRequiredService<IReadOnlyList<ErasureStoreCleanupDelegate>>();
         cleanups.Count.ShouldBe(5);
 
+        Dictionary<string, ErasureStoreCleanupStatus> statuses = new(StringComparer.Ordinal);
         foreach (ErasureStoreCleanupDelegate cleanup in cleanups)
         {
             ErasureVerificationStoreResult result = await cleanup(tenantId, partyId, TestContext.Current.CancellationToken);
-            // Memories search is not configured in this test's DI graph, so its delegate reports
-            // NotApplicable rather than Cleaned; every other store must report Cleaned.
-            result.Status.ShouldBeOneOf(ErasureStoreCleanupStatus.Cleaned, ErasureStoreCleanupStatus.NotApplicable);
+            statuses[result.StoreName] = result.Status;
         }
+
+        statuses["sdk-read-models"].ShouldBe(ErasureStoreCleanupStatus.Cleaned);
+        statuses["projection-cache"].ShouldBe(ErasureStoreCleanupStatus.Cleaned);
+        statuses["aggregate-readable-state"].ShouldBe(ErasureStoreCleanupStatus.NotApplicable);
+        statuses["snapshots"].ShouldBe(ErasureStoreCleanupStatus.NotApplicable);
+        statuses["memories-search"].ShouldBe(ErasureStoreCleanupStatus.NotApplicable);
+
+        cache.TryGetDetail(tenantId, partyId, out _).ShouldBeFalse();
+        cache.TryGetProcessing(tenantId, partyId, out _).ShouldBeFalse();
+        cache.TryGetIndex(tenantId, out _).ShouldBeFalse();
 
         await readModelStore.Received(1).GetAsync<PartyDetailSdkReadModel>(
             "statestore", PartySdkReadModelAddresses.Detail(tenantId, partyId), Arg.Any<CancellationToken>());

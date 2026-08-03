@@ -1,3 +1,5 @@
+using System.Buffers;
+
 using Hexalith.EventStore.Client.Projections;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
@@ -50,6 +52,8 @@ public static class PartySdkReadModelAddresses
     public const string ProcessingSlot = "processing-records";
     public const string SharedIndexAggregateId = "parties";
 
+    private static readonly SearchValues<char> s_reservedChars = SearchValues.Create(":\0|\r\n");
+
     public static string Detail(string tenantId, string partyId)
         => Build(tenantId, PartyProjectionNames.Detail, partyId, DetailSlot);
 
@@ -69,9 +73,14 @@ public static class PartySdkReadModelAddresses
     private static void ValidateSegment(string value, string parameterName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(value, parameterName);
-        if (value.Contains(':', StringComparison.Ordinal))
+
+        // Match EventStore ProjectionKeySegments reserved-character discipline:
+        // ':' (separator), '\0' (terminator), '|' (domain extraction), CR/LF (log-line safety).
+        if (value.AsSpan().IndexOfAny(s_reservedChars) >= 0)
         {
-            throw new ArgumentException("Read-model identity segments must not contain ':'.", parameterName);
+            throw new ArgumentException(
+                $"{parameterName} must not contain ':', '\\0', '|', '\\r', or '\\n' — reserved by the projection key scheme.",
+                parameterName);
         }
     }
 }

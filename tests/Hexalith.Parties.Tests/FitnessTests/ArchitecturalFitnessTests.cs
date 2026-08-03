@@ -329,10 +329,12 @@ public sealed class ArchitecturalFitnessTests
         partiesAccessControl.ShouldContain("name: /project/v2");
         partiesAccessControl.ShouldContain("name: /project/v2/reconcile");
         partiesAccessControl.ShouldContain("name: /project/rebuild/v1");
+        partiesAccessControl.ShouldContain("name: /project/rebuild/shared/v1");
         partiesAccessControl.ShouldContain("name: /project/rebuild/stage/v1");
         partiesAccessControl.ShouldContain("name: /project/rebuild/commit/v1");
         partiesAccessControl.ShouldContain("name: /project/rebuild/abort/v1");
         partiesAccessControl.ShouldContain("name: /project/rebuild/verify/v1");
+        partiesAccessControl.ShouldContain("name: /replay-state");
         partiesAccessControl.ShouldContain("name: /admin/operational-index-metadata");
         partiesAccessControl.ShouldContain("httpVerb: ['POST']");
 

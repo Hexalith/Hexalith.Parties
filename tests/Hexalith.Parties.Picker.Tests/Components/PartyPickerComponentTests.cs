@@ -764,7 +764,7 @@ public sealed class PartyPickerComponentTests : BunitContext
     }
 
     [Theory]
-    [InlineData(ProjectionFreshnessStatus.LocalOnly, "Local search results")]
+    [InlineData(ProjectionFreshnessStatus.LocalOnly, "Limited search results")]
     [InlineData(ProjectionFreshnessStatus.Degraded, "Limited search results")]
     [InlineData(ProjectionFreshnessStatus.Stale, "Limited search results")]
     [InlineData(ProjectionFreshnessStatus.Rebuilding, "Limited search results")]

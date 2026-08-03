@@ -125,27 +125,22 @@ Business-rule highlights: state-driven idempotency (`DomainResult.NoOp`), the er
 
 ## 6. Read side — projections (CQRS)
 
-Events flow back into projections via **`PartyProjectionUpdateOrchestrator`** (registered for both `IProjectionUpdateOrchestrator` and `IProjectionPollerDeliveryGateway`). On delivery it reads the full stream from the EventStore `AggregateActor` (replay-from-zero; idempotency handled downstream), orders by sequence, unprotects payloads, and applies each event to two projection actors.
+Events are projected by EventStore into Parties SDK handlers (`PartyDetailSdkProjectionHandler`, `PartyIndexSdkProjectionHandler`) registered through `AddEventStoreDomainService`. Handlers fold events with replay-from-zero / duplicate-delivery idempotency, write canonical detail and shared-index read models via `IReadModelStore` / `ReadModelWritePolicy`, and optionally notify Memories through `IPartyIndexSearchIndexer`.
 
 **Read models** ([data-models.md §5](data-models.md)):
 
-- **`PartyDetailProjectionActor`** — per party (`{tenant}:party-detail:{partyId}`), materialises `PartyDetail`.
-- **`PartyIndexProjectionActor`** — per tenant (`{tenant}:party-index`), a `Dictionary<partyId, PartyIndexEntry>` for list/search. Erased parties are removed from the index.
+- **Detail** — per party (`readmodel:{tenant}:party:…:detail`), materialises `PartyDetail` (plus processing-activity slot).
+- **Index** — per tenant shared index (`…:index`), a `Dictionary<partyId, PartyIndexEntry>` for list/search. Erased parties are removed from the index.
 
-Each actor keeps a **last-processed sequence checkpoint** so replay-from-zero is idempotent, plus apply-level dedup (set semantics) so a crash between state and checkpoint writes still converges. The index actor **batches** writes (`BatchSize` default 50; flush via a `flush-batch` reminder). Both register an `auto-rebuild` reminder on detected state corruption, calling `ProjectionRebuildService` (which reads the persisted stream directly over the DAPR actor-state HTTP API, with resumable checkpoints).
-
-**Query path:** `PartyDetailProjectionQueryActor` / `PartyIndexProjectionQueryActor` implement EventStore's `IProjectionActor.QueryAsync` and serve `PartyDetail`/`GetParty`, `PartyIndex` (paged+filtered), `PartySearch` (via `IPartySearchProvider`), and GDPR reads (`ExportPartyData` Art.20, `GetProcessingRecords` Art.30, `GetErasureStatus`, `GetErasureCertificate` erasure proof). `GetErasureStatus` reads authoritative lifecycle status from the erasure record store when available, with safe terminal fallback from `PartyDetail`. Every read carries `ProjectionFreshnessMetadata`; stale/degraded reads fall back to a static last-known cache. Search defaults to `LocalFuzzyPartySearchProvider`; when `Parties:MemoriesSearch:Enabled=true` it swaps to `MemoriesPartySearchService` (Memories REST + local fallback) — see [memories-backed-party-search.md](memories-backed-party-search.md).
+**Query path:** EventStore gateway routes handler-advertised query types to Parties `POST /query` (`IDomainQueryHandler` implementations such as `PartyDetailQueryHandler` / `PartyIndexQueryHandler` / GDPR variants). Wire query-type names remain the historical `PartyDetailProjectionQueryActor.*` / `PartyIndexProjectionQueryActor.*` constants. Every read carries `ProjectionFreshnessMetadata` using SDK-native `Current`/`Stale`/`Unavailable` (store-outage last-known reads report `Stale` + `Metadata.IsDegraded`). Search defaults to `LocalFuzzyPartySearchProvider`; when `Parties:MemoriesSearch:Enabled=true` it swaps to `MemoriesPartySearchService` — see [memories-backed-party-search.md](memories-backed-party-search.md).
 
 ### Actor inventory
 
 | Actor | Project | Responsibility |
 |-------|---------|----------------|
-| `PartyDetailProjectionActor` | Projections | per-party `PartyDetail` read model |
-| `PartyIndexProjectionActor` | Projections | per-tenant searchable index |
-| `PartyDetailProjectionQueryActor` | Hexalith.Parties | query adapter (detail/export/processing/certificate) |
-| `PartyIndexProjectionQueryActor` | Hexalith.Parties | query adapter (list/search) |
 | `PartyKeyRetryActor` | Security | GDPR key-creation retry scheduling |
-| `AggregateActor` | EventStore.Server | event-stream host (registered by `AddEventStoreServer`) |
+
+Dapr projection/query actors and `ProjectionRebuildService` were retired in Story 8.6 after SDK parity.
 
 ---
 

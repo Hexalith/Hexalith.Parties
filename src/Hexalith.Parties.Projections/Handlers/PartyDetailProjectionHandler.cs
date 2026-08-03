@@ -12,7 +12,10 @@ public sealed class PartyDetailProjectionHandler
     {
         return @event switch
         {
-            PartyCreated e => state is null ? HandlePartyCreated(partyId, e) : state,
+            // After erasure the detail row is a PII-free IsErased tombstone, not null. Same-id
+            // recreate (PartyCreated) must replace that tombstone — matching index Fold, which
+            // drops the entry on PartyErased so a later PartyCreated can insert again.
+            PartyCreated e => state is null || state.IsErased ? HandlePartyCreated(partyId, e) : state,
             PartyDisplayNameDerived e when state is not null => HandleNameDerived(state, e),
             PersonDetailsUpdated e when state is not null => HandlePersonDetailsUpdated(state, e),
             OrganizationDetailsUpdated e when state is not null => HandleOrganizationDetailsUpdated(state, e),

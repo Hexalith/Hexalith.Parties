@@ -17,23 +17,20 @@
 | `Hexalith.Parties.Mcp` | 📦 | yes | `parties-mcp` host; `PartiesMcpTools` (5 tools) |
 | `Hexalith.Parties.Authentication` | internal library | yes* | Shared Parties claim normalization; retirement remains gated by Story 8.3 tenant-claims prerequisites |
 | `Hexalith.Parties.UI` | internal app | no | Blazor Server browser UI/BFF; embeds AdminPortal, owns OIDC, route discovery, and UI specimens |
-| `Hexalith.Parties` | 🔒 host | no | Domain service host: `PartyAggregate`, DI (`AddParties`), `/process`, query actors, auth, middleware, health, validation |
-| `Hexalith.Parties.Projections` | 🔒 | yes* | projection actors + handlers + `ProjectionRebuildService` |
+| `Hexalith.Parties` | 🔒 host | no | Domain service host: `PartyAggregate`, DI (`AddParties`), EventStore SDK `/process`+`/query`+`/project`, auth, middleware, health, validation |
+| `Hexalith.Parties.Projections` | 🔒 | yes* | SDK projection handlers/folds + read-model models/eraser (Dapr projection actors retired in Story 8.6) |
 | `Hexalith.Parties.Security` | 🔒 | yes* | crypto-shredding: AES-256-GCM, key mgmt/rotation, erasure, `PartyKeyRetryActor` |
 | `Hexalith.Parties.Testing` | 🔒 | no | shared test utilities |
 
 `*` packable by default per `Directory.Build.props`, but these are documented as internal — not consumer dependencies.
 
-## DAPR actors (6)
+## DAPR actors (post Story 8.6)
 
 | Actor | Project | Actor id | Responsibility |
 |-------|---------|----------|----------------|
-| `PartyDetailProjectionActor` | Projections | `{tenant}:party-detail:{partyId}` | per-party `PartyDetail` read model (event apply + checkpoint) |
-| `PartyIndexProjectionActor` | Projections | `{tenant}:party-index` | per-tenant searchable index (batched writes, flush reminder) — live and rebuild state key is `…:default` |
-| `PartyDetailProjectionQueryActor` | Hexalith.Parties | `party-detail:{tenant}:{partyId}` | query adapter — detail / export / processing records / erasure status / erasure certificate |
-| `PartyIndexProjectionQueryActor` | Hexalith.Parties | `party-index:{tenant}:parties` | query adapter — list / search |
 | `PartyKeyRetryActor` | Security | (key-retry id) | GDPR key-creation retry scheduling |
-| `AggregateActor` | EventStore.Server | (stream id) | event-stream host (registered by `AddEventStoreServer`) |
+
+Story 8.6 retired Parties-hosted `PartyDetailProjectionActor` / `PartyIndexProjectionActor` and the Dapr query-actor implementations. Detail/index reads and GDPR query types now run through EventStore SDK `IDomainQueryHandler` / `IDomainProjectionHandler` paths (`/query`, `/project*`). Query-type constant bags still use the historical `PartyDetailProjectionQueryActor` / `PartyIndexProjectionQueryActor` names as shims for wire compatibility.
 
 ## Blazor UI components
 
