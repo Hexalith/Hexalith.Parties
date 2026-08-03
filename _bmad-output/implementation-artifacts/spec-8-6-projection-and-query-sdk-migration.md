@@ -2,7 +2,7 @@
 title: '8.6 Projection and query SDK migration'
 type: 'refactor'
 created: '2026-07-31'
-status: 'in-progress'
+status: 'done'
 baseline_commit: '3f80b002dc1928abed1f1e97c0c50ac2212b73cd'
 review_loop_iteration: 0
 context:
@@ -53,13 +53,13 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `references/Hexalith.EventStore` and evidence artifacts -- create an otherwise-clean dependency checkpoint at the approved SHA; run the packet's exact A/B/C source receipt; refresh stale matrix/sprint identities.
-- [ ] Test projects -- add an SDK-only verification harness covering the matrix before registration changes.
-- [ ] Projection handlers -- adapt pure folds to approved async persistence, batching, coordinated erasure, freshness, and staged full rebuild; explicitly register their assembly.
-- [ ] Query handlers -- implement one SDK handler per existing query and approved cursor/key-ring use without breaking clients.
-- [ ] ACL and topology tests -- allow only EventStore and exact POST query/projection/rebuild routes; retain default deny.
-- [ ] Stores and registrations -- full rebuild/diff, SDK cutover, and rollback rehearsal while locals remain.
-- [ ] Rollback set -- after an evidence manifest marks every gate green, delete it and all ten fallbacks; rerun all gates.
+- [x] `references/Hexalith.EventStore` and evidence artifacts -- create an otherwise-clean dependency checkpoint at the approved SHA; run the packet's exact A/B/C source receipt; refresh stale matrix/sprint identities.
+- [x] Test projects -- add an SDK-only verification harness covering the matrix before registration changes.
+- [x] Projection handlers -- adapt pure folds to approved async persistence, batching, coordinated erasure, freshness, and staged full rebuild; explicitly register their assembly.
+- [x] Query handlers -- implement one SDK handler per existing query and approved cursor/key-ring use without breaking clients.
+- [x] ACL and topology tests -- allow only EventStore and exact POST query/projection/rebuild routes; retain default deny.
+- [x] Stores and registrations -- full rebuild/diff, SDK cutover, and rollback rehearsal while locals remain.
+- [x] Rollback set -- after an evidence manifest marks every gate green, delete it and all ten fallbacks; rerun all gates.
 
 **Acceptance Criteria:**
 - The packet receipt proves the root gitlink and checkout exactly equal the approved SHA and the dependency checkpoint is otherwise clean.
@@ -86,3 +86,46 @@ The internal EventStore allowlist is not a public API expansion. Source mode is 
 - Build and directly execute `Hexalith.Parties.Projections.Tests` and focused `Hexalith.Parties.Tests` in Debug source mode -- parity/rebuild/rollback pass.
 - `pwsh scripts/test.ps1 -Lane unit` and `pwsh scripts/test.ps1 -Lane topology` -- pass; a topology skip is not credited.
 - `bash scripts/check-no-warning-override.sh && git diff --check` -- pass.
+
+## Suggested Review Order
+
+**Coordinated erasure**
+
+- Start with the atomic three-model erasure boundary and bounded batch recovery.
+  [`PartySdkReadModelEraser.cs:33`](../../src/Hexalith.Parties.Projections/Services/PartySdkReadModelEraser.cs#L33)
+
+- Map operational cleanup failures explicitly instead of mis-certifying D15 success.
+  [`PartiesServiceCollectionExtensions.cs:174`](../../src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs#L174)
+
+- Preserve cancellation while bounding unexpected verification failures.
+  [`ErasureVerificationService.cs:34`](../../src/Hexalith.Parties.Security/ErasureVerificationService.cs#L34)
+
+**Projection ordering**
+
+- Detect cross-delivery gaps and unresolved events before advancing checkpoints.
+  [`PartySdkProjectionFold.cs:25`](../../src/Hexalith.Parties.Projections/Handlers/PartySdkProjectionFold.cs#L25)
+
+- Coordinate detail and processing writes behind persistent erasure tombstones.
+  [`PartyDetailSdkProjectionHandler.cs:40`](../../src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs#L40)
+
+- Re-fold every shared-index retry while preserving unrelated aggregate state.
+  [`PartyIndexSdkProjectionHandler.cs:42`](../../src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs#L42)
+
+**Degraded reads**
+
+- Bound cache lifetime and block in-flight reads from undoing erasure eviction.
+  [`PartySdkLastKnownReadModelCache.cs:9`](../../src/Hexalith.Parties/Queries/PartySdkLastKnownReadModelCache.cs#L9)
+
+- Keep export, embedded-party, and processing freshness semantics consistent.
+  [`PartySdkQueryService.cs:52`](../../src/Hexalith.Parties/Queries/PartySdkQueryService.cs#L52)
+
+**Ingress and evidence**
+
+- Retain default deny with exact EventStore-only POST SDK routes.
+  [`accesscontrol.parties.yaml:23`](../../src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml#L23)
+
+- Review concurrency, erasure, rebuild, and delivery-gap regression coverage.
+  [`PartySdkProjectionHandlerTests.cs:360`](../../tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs#L360)
+
+- Finish with exact current-pin commands, totals, skips, and caveats.
+  [`test-summary.md:449`](tests/test-summary.md#L449)

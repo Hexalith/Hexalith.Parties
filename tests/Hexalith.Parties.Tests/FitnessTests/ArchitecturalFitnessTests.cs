@@ -322,30 +322,59 @@ public sealed class ArchitecturalFitnessTests
 
         appHost.ShouldContain("AppId = \"parties\"");
         appHost.ShouldContain("accesscontrol.parties.yaml");
-        partiesAccessControl.ShouldContain("defaultAction: deny");
-        partiesAccessControl.ShouldContain("appId: eventstore");
-        partiesAccessControl.ShouldContain("name: /process");
-        partiesAccessControl.ShouldContain("name: /query");
-        partiesAccessControl.ShouldContain("name: /project/v2");
-        partiesAccessControl.ShouldContain("name: /project/v2/reconcile");
-        partiesAccessControl.ShouldContain("name: /project/rebuild/v1");
-        partiesAccessControl.ShouldContain("name: /project/rebuild/shared/v1");
-        partiesAccessControl.ShouldContain("name: /project/rebuild/stage/v1");
-        partiesAccessControl.ShouldContain("name: /project/rebuild/commit/v1");
-        partiesAccessControl.ShouldContain("name: /project/rebuild/abort/v1");
-        partiesAccessControl.ShouldContain("name: /project/rebuild/verify/v1");
-        partiesAccessControl.ShouldContain("name: /replay-state");
-        partiesAccessControl.ShouldContain("name: /admin/operational-index-metadata");
-        partiesAccessControl.ShouldContain("httpVerb: ['POST']");
+        string[] yamlLines = partiesAccessControl
+            .Split('\n')
+            .Select(static line => line.TrimEnd('\r'))
+            .Where(static line => !string.IsNullOrWhiteSpace(line) && !line.TrimStart().StartsWith('#'))
+            .ToArray();
+        yamlLines.ShouldContain("spec:");
+        yamlLines.ShouldContain("  accessControl:");
+        yamlLines.Count(static line => string.Equals(line, "    defaultAction: deny", StringComparison.Ordinal)).ShouldBe(1);
+        yamlLines.Count(static line => line.StartsWith("      - appId:", StringComparison.Ordinal)).ShouldBe(1);
+        yamlLines.Single(static line => line.StartsWith("      - appId:", StringComparison.Ordinal))
+            .ShouldBe("      - appId: eventstore");
+        yamlLines.Count(static line => string.Equals(line, "        defaultAction: deny", StringComparison.Ordinal)).ShouldBe(1);
 
-        // Wildcard guards must catch the canonical YAML quoted forms as well as the unquoted form.
-        Regex wildcardAppId = new(@"appId:\s*['""]?\*['""]?");
-        wildcardAppId.IsMatch(partiesAccessControl).ShouldBeFalse(
-            "Parties access control must not allow wildcard appId (any quoted/unquoted form).");
-
-        Regex wildcardOperationName = new(@"name:\s*['""]?/\*\*['""]?");
-        wildcardOperationName.IsMatch(partiesAccessControl).ShouldBeFalse(
-            "Parties access control must not expose a wildcard operation path (any quoted/unquoted form).");
+        string[] expectedRoutes =
+        [
+            "/admin/operational-index-metadata",
+            "/process",
+            "/project",
+            "/project/rebuild/abort/v1",
+            "/project/rebuild/commit/v1",
+            "/project/rebuild/shared/v1",
+            "/project/rebuild/stage/v1",
+            "/project/rebuild/v1",
+            "/project/rebuild/verify/v1",
+            "/project/v2",
+            "/project/v2/reconcile",
+            "/query",
+            "/replay-state",
+        ];
+        int operationsStart = Array.IndexOf(yamlLines, "        operations:");
+        operationsStart.ShouldBeGreaterThan(0);
+        string[] operationLines = yamlLines[(operationsStart + 1)..];
+        string[] actualRoutes = operationLines
+            .Where(static line => line.StartsWith("          - name: ", StringComparison.Ordinal))
+            .Select(static line => line["          - name: ".Length..])
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        actualRoutes.ShouldBe(expectedRoutes.Order(StringComparer.Ordinal));
+        int[] operationStarts = operationLines
+            .Select(static (line, index) => (line, index))
+            .Where(static item => item.line.StartsWith("          - name: ", StringComparison.Ordinal))
+            .Select(static item => item.index)
+            .ToArray();
+        for (int operationIndex = 0; operationIndex < operationStarts.Length; operationIndex++)
+        {
+            int start = operationStarts[operationIndex];
+            int end = operationIndex + 1 < operationStarts.Length ? operationStarts[operationIndex + 1] : operationLines.Length;
+            string[] operation = operationLines[start..end];
+            operation.ShouldContain("            httpVerb: ['POST']");
+            operation.ShouldContain("            action: allow");
+            operation.Count(static line => line.TrimStart().StartsWith("httpVerb:", StringComparison.Ordinal)).ShouldBe(1);
+            operation.Count(static line => line.TrimStart().StartsWith("action:", StringComparison.Ordinal)).ShouldBe(1);
+        }
 
         // Pub/sub event delivery is enforced by the pubsub component, not service-invocation ACL.
         // The YAML must document this explicitly so the Tenants -> Parties subscription route

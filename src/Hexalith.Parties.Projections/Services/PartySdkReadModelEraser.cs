@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+
 using Hexalith.EventStore.Client.Projections;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Handlers;
@@ -9,54 +11,195 @@ using Microsoft.Extensions.Options;
 namespace Hexalith.Parties.Projections.Services;
 
 /// <summary>
-/// Erases one Party from canonical SDK read models without deleting the shared tenant index row.
-/// Removes the party's index entry and sequence checkpoint; the tenant index document itself remains.
+/// Redacts one Party across the three canonical SDK read models in a coordinated same-store batch.
 /// </summary>
 public sealed class PartySdkReadModelEraser(
     IReadModelStore readModelStore,
+    IReadModelBatchStore batchStore,
     IOptions<PartySdkReadModelOptions> options,
-    IPartyIndexSearchIndexer? searchIndexer = null)
+    IPartyIndexSearchIndexer? searchIndexer = null,
+    TimeProvider? timeProvider = null)
 {
+    private const int MaxOptimisticAttempts = 3;
+    private const int MaxIncompleteResumes = 2;
     private readonly IPartyIndexSearchIndexer _searchIndexer = searchIndexer ?? new NoOpPartyIndexSearchIndexer();
+    private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
+    /// <summary>Redacts the Party read models and retains permanent anti-resurrection tombstones.</summary>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="partyId">The Party aggregate identifier.</param>
+    /// <param name="cancellationToken">A token that cancels the cleanup.</param>
+    /// <returns>A task that completes only after the coordinated store batch is durably proven.</returns>
     public async Task EraseAsync(string tenantId, string partyId, CancellationToken cancellationToken)
     {
         string storeName = options.Value.ReadModelStateStoreName;
         ArgumentException.ThrowIfNullOrWhiteSpace(storeName);
+        string detailKey = PartySdkReadModelAddresses.Detail(tenantId, partyId);
+        string processingKey = PartySdkReadModelAddresses.Processing(tenantId, partyId);
+        string indexKey = PartySdkReadModelAddresses.Index(tenantId);
+        DateTimeOffset cleanupAt = _timeProvider.GetUtcNow();
+        string invocationId = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
 
-        // When a detail row already exists, redact it in place to a PII-free tombstone
-        // (IsErased=true), matching what a full rebuild produces when it replays PartyErased
-        // through PartyDetailSdkProjectionHandler.Fold. When no detail row exists (or Detail is
-        // null), leave Detail null — do not invent a tombstone. Authoritative erasure status
-        // remains IPartyErasureRecordStore; the detail read model is only a secondary hint when
-        // a prior projected row existed to redact. Also reset the detail sequence watermark so a
-        // party recreated with the same id is not skipped by DeserializeNew.
-        await ReadModelWritePolicy.UpdateAsync<PartyDetailSdkReadModel>(
-            readModelStore,
-            storeName,
-            PartySdkReadModelAddresses.Detail(tenantId, partyId),
-            current => RedactDetail(current, partyId),
-            cancellationToken: cancellationToken).ConfigureAwait(false);
+        for (int attempt = 0; attempt < MaxOptimisticAttempts; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ReadModelEntry<PartyDetailSdkReadModel> detail = await readModelStore
+                .GetAsync<PartyDetailSdkReadModel>(storeName, detailKey, cancellationToken)
+                .ConfigureAwait(false);
+            ReadModelEntry<PartyProcessingSdkReadModel> processing = await readModelStore
+                .GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken)
+                .ConfigureAwait(false);
+            ReadModelEntry<PartyIndexSdkReadModel> index = await readModelStore
+                .GetAsync<PartyIndexSdkReadModel>(storeName, indexKey, cancellationToken)
+                .ConfigureAwait(false);
 
-        // Reset the processing-activity checkpoint so a party recreated with the same id is not
-        // silently skipped by the stale watermark, while preserving prior records as Art.30
-        // processing-activity history (the records themselves are PII-free and are not erased).
-        await ReadModelWritePolicy.UpdateAsync<PartyProcessingSdkReadModel>(
-            readModelStore,
-            storeName,
-            PartySdkReadModelAddresses.Processing(tenantId, partyId),
-            ResetProcessingCheckpoint,
-            cancellationToken: cancellationToken).ConfigureAwait(false);
+            var batch = new ReadModelBatch(
+                new ReadModelBatchScope(
+                    storeName,
+                    tenantId,
+                    "party",
+                    partyId,
+                    "party-erasure",
+                    $"{invocationId}-{attempt}"),
+                [
+                    ReadModelBatchOperation.Write(
+                        detailKey,
+                        RedactDetail(detail.Value, partyId, cleanupAt),
+                        Concurrency(detail.ETag)),
+                    ReadModelBatchOperation.Write(
+                        processingKey,
+                        ResetProcessingCheckpoint(processing.Value, cleanupAt),
+                        Concurrency(processing.ETag)),
+                    ReadModelBatchOperation.Write(
+                        indexKey,
+                        RemoveParty(index.Value, partyId, cleanupAt),
+                        Concurrency(index.ETag)),
+                ]);
 
-        await ReadModelWritePolicy.UpdateAsync<PartyIndexSdkReadModel>(
-            readModelStore,
-            storeName,
-            PartySdkReadModelAddresses.Index(tenantId),
-            current => RemoveParty(current, partyId),
-            cancellationToken: cancellationToken).ConfigureAwait(false);
+            ReadModelBatchResult result = await ExecuteWithResumeAsync(batch, cancellationToken).ConfigureAwait(false);
+            if (result.IsSuccess)
+            {
+                await NotifySearchRemovalAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
+                return;
+            }
 
-        // Best-effort external search removal (Memories). Implementations must not throw; still
-        // guard so a buggy adapter cannot fail GDPR erasure cleanup.
+            if (result.Status is ReadModelBatchStatus.Conflict
+                && result.ConflictKind is ReadModelBatchConflictKind.Optimistic)
+            {
+                continue;
+            }
+
+            throw new InvalidOperationException("sdk-read-model-cleanup-failed");
+        }
+
+        throw new InvalidOperationException("sdk-read-model-cleanup-conflict");
+    }
+
+    internal static PartyDetailSdkReadModel RedactDetail(
+        PartyDetailSdkReadModel? current,
+        string partyId,
+        DateTimeOffset? cleanupAt = null)
+    {
+        DateTimeOffset requestedAt = cleanupAt ?? DateTimeOffset.UtcNow;
+        DateTimeOffset effectiveAt = current?.ErasedAt ?? requestedAt;
+        long retainedSequence = Math.Max(
+            current?.ErasureSequenceNumber ?? long.MinValue,
+            current?.LastSequenceNumber ?? long.MinValue);
+        return new PartyDetailSdkReadModel
+        {
+            Detail = PartyDetailProjectionHandler.ApplyErasure(partyId, current?.Detail) is { } redacted
+                ? redacted with { ErasedAt = effectiveAt, LastModifiedAt = effectiveAt }
+                : null,
+            LastSequenceNumber = current?.LastSequenceNumber ?? long.MinValue,
+            ErasureSequenceNumber = retainedSequence,
+            ErasedAt = effectiveAt,
+            ProjectedAt = current?.ErasureSequenceNumber is not null
+                ? current.ProjectedAt
+                : Max(current?.ProjectedAt, requestedAt),
+            ProjectionVersion = current?.ProjectionVersion,
+        };
+    }
+
+    internal static PartyProcessingSdkReadModel ResetProcessingCheckpoint(
+        PartyProcessingSdkReadModel? current,
+        DateTimeOffset? cleanupAt = null)
+    {
+        DateTimeOffset requestedAt = cleanupAt ?? DateTimeOffset.UtcNow;
+        DateTimeOffset effectiveAt = current?.ErasedAt ?? requestedAt;
+        return new PartyProcessingSdkReadModel
+        {
+            Records = current?.Records ?? [],
+            LastSequenceNumber = current?.LastSequenceNumber ?? long.MinValue,
+            ErasureSequenceNumber = Math.Max(
+                current?.ErasureSequenceNumber ?? long.MinValue,
+                current?.LastSequenceNumber ?? long.MinValue),
+            ErasedAt = effectiveAt,
+            ProjectedAt = current?.ErasureSequenceNumber is not null
+                ? current.ProjectedAt
+                : Max(current?.ProjectedAt, requestedAt),
+            ProjectionVersion = current?.ProjectionVersion,
+        };
+    }
+
+    internal static PartyIndexSdkReadModel RemoveParty(
+        PartyIndexSdkReadModel? current,
+        string partyId,
+        DateTimeOffset? cleanupAt = null)
+    {
+        DateTimeOffset requestedAt = cleanupAt ?? DateTimeOffset.UtcNow;
+        var entries = new Dictionary<string, Hexalith.Parties.Contracts.Models.PartyIndexEntry>(
+            current?.Entries ?? new Dictionary<string, Hexalith.Parties.Contracts.Models.PartyIndexEntry>(StringComparer.Ordinal),
+            StringComparer.Ordinal);
+        _ = entries.Remove(partyId);
+        var sequences = new Dictionary<string, long>(
+            current?.LastSequenceNumbers ?? new Dictionary<string, long>(StringComparer.Ordinal),
+            StringComparer.Ordinal);
+        var erasureSequences = new Dictionary<string, long>(
+            current?.ErasureSequenceNumbers ?? new Dictionary<string, long>(StringComparer.Ordinal),
+            StringComparer.Ordinal);
+        bool alreadyErased = erasureSequences.ContainsKey(partyId);
+        erasureSequences[partyId] = Math.Max(
+            erasureSequences.GetValueOrDefault(partyId, long.MinValue),
+            sequences.GetValueOrDefault(partyId, long.MinValue));
+
+        return new PartyIndexSdkReadModel
+        {
+            Entries = entries,
+            LastSequenceNumbers = sequences,
+            ErasureSequenceNumbers = erasureSequences,
+            ProjectedAt = alreadyErased ? current?.ProjectedAt : Max(current?.ProjectedAt, requestedAt),
+            ProjectionVersion = current?.ProjectionVersion,
+        };
+    }
+
+    private static ReadModelBatchConcurrency Concurrency(string? etag)
+        => string.IsNullOrEmpty(etag)
+            ? ReadModelBatchConcurrency.CreateOnly
+            : ReadModelBatchConcurrency.Match(etag);
+
+    private static DateTimeOffset Max(DateTimeOffset? left, DateTimeOffset right)
+        => left is { } value && value >= right ? value : right;
+
+    private async Task<ReadModelBatchResult> ExecuteWithResumeAsync(
+        ReadModelBatch batch,
+        CancellationToken cancellationToken)
+    {
+        ReadModelBatchResult result = await batchStore.ExecuteAsync(batch, cancellationToken).ConfigureAwait(false);
+        for (int resume = 0;
+            resume < MaxIncompleteResumes && result.Status is ReadModelBatchStatus.Incomplete;
+            resume++)
+        {
+            result = await batchStore.ExecuteAsync(batch, cancellationToken).ConfigureAwait(false);
+        }
+
+        return result;
+    }
+
+    private async Task NotifySearchRemovalAsync(
+        string tenantId,
+        string partyId,
+        CancellationToken cancellationToken)
+    {
         try
         {
             await _searchIndexer.NotifyRemovedAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
@@ -67,52 +210,7 @@ public sealed class PartySdkReadModelEraser(
         }
         catch (Exception)
         {
-            // Best effort.
+            // External search cleanup is best effort after the canonical batch commits.
         }
-    }
-
-    internal static PartyDetailSdkReadModel RedactDetail(PartyDetailSdkReadModel? current, string partyId)
-    {
-        if (current is null)
-        {
-            return new PartyDetailSdkReadModel();
-        }
-
-        return current with
-        {
-            Detail = PartyDetailProjectionHandler.ApplyErasure(partyId, current.Detail),
-            LastSequenceNumber = long.MinValue,
-            ProjectionVersion = null,
-        };
-    }
-
-    internal static PartyProcessingSdkReadModel ResetProcessingCheckpoint(PartyProcessingSdkReadModel? current)
-        => current is null
-            ? new PartyProcessingSdkReadModel()
-            : current with { LastSequenceNumber = long.MinValue };
-
-    internal static PartyIndexSdkReadModel RemoveParty(PartyIndexSdkReadModel? current, string partyId)
-    {
-        var entries = new Dictionary<string, Hexalith.Parties.Contracts.Models.PartyIndexEntry>(
-            current?.Entries ?? new Dictionary<string, Hexalith.Parties.Contracts.Models.PartyIndexEntry>(StringComparer.Ordinal),
-            StringComparer.Ordinal);
-        _ = entries.Remove(partyId);
-
-        // Clear the companion sequence checkpoint too. Without this, recreating a party with the
-        // same id leaves a stale watermark: events at or below it are silently skipped as
-        // "already applied" by PartySdkProjectionFold.DeserializeNew, so the recreated party can
-        // vanish from the tenant index until its own event count exceeds the old high-water mark.
-        var sequences = new Dictionary<string, long>(
-            current?.LastSequenceNumbers ?? new Dictionary<string, long>(StringComparer.Ordinal),
-            StringComparer.Ordinal);
-        _ = sequences.Remove(partyId);
-
-        return new PartyIndexSdkReadModel
-        {
-            Entries = entries,
-            LastSequenceNumbers = sequences,
-            ProjectedAt = current?.ProjectedAt,
-            ProjectionVersion = current?.ProjectionVersion,
-        };
     }
 }

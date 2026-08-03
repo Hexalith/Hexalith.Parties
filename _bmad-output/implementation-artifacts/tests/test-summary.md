@@ -445,3 +445,43 @@ while only EventStore may invoke exact internal POST SDK routes. The missing ope
 metadata discovery route is admitted and fitness-tested. The encryption fixture is isolated
 from its production DAPR retry scheduler, the full 15-project regression is green, and Story 8.6
 is ready for review.
+
+### Story 8.6 Consolidated Review Hardening — 2026-08-03
+
+The review patch closes the erasure, ordering, cache-race, query-freshness,
+rebuild-side-effect, ACL-structure, and model-layout findings. Canonical SDK
+cleanup now writes detail, processing activity, and the shared tenant index in
+one `IReadModelBatchStore` operation with bounded optimistic retry and retained
+anti-resurrection tombstones. Projection deliveries reject cross-delivery gaps
+without persistence, shared-index retries revalidate against every reloaded
+snapshot, and rebuild finalization only returns a plan. Query caching is
+generation-aware, capacity-bounded, and retention-bounded; processing reads
+prove that the Party exists, and degraded portability responses now use one
+consistent stale/degraded freshness classification.
+
+The current checked-in EventStore gitlink and checkout both resolve to
+`7854f8e51ce9b852bb6c3cac6012670122e93792`. The exact current-pin source tests
+use EventStore from that checkout while intentionally consuming
+`Hexalith.Commons.UniqueIds` from its package. The all-source aggregate graph is
+not credited: it imports both package `Hexalith.Commons.UniqueIds` 2.30.0 and a
+source assembly with version 1.0.0, producing `MSB3243` followed by `CS1704`.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Current EventStore pin | Pass | `git ls-tree HEAD references/Hexalith.EventStore` and `git -C references/Hexalith.EventStore rev-parse HEAD` both returned `7854f8e51ce9b852bb6c3cac6012670122e93792`. |
+| Current-pin projection suite | Pass | `dotnet test tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj -c Debug --no-restore -p:HexalithEventStoreFromSource=true -p:HexalithCommonsFromSource=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -- --no-progress --output Normal`: 200 passed, 0 failed, 0 skipped. |
+| Current-pin Parties suite | Pass | `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --no-restore -p:HexalithEventStoreFromSource=true -p:HexalithCommonsFromSource=false -- --no-progress --output Normal`: 501 passed, 0 failed, 0 skipped. |
+| Current-pin security suite | Pass | `dotnet test tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj --no-restore -p:HexalithEventStoreFromSource=true -p:HexalithCommonsFromSource=false -- --no-progress --output Normal`: 169 passed, 0 failed, 0 skipped. |
+| All-source Commons caveat | Expected baseline failure; no pass credit | `dotnet test tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --no-restore -- --no-progress --output Normal` failed before tests with `MSB3243` and `CS1704` for duplicate `Hexalith.Commons.UniqueIds` 2.30.0/1.0.0 assemblies. The successful current-pin commands above isolate EventStore source consumption and do not conceal this graph defect. |
+| Unit lane | Pass | `pwsh -NoProfile -File scripts/test.ps1 -Lane unit -Configuration Debug -ContinueOnFailure -Properties NuGetAudit=false,MinVerVersionOverride=1.0.0`: all 11 projects passed, 1,710 tests, 0 failed, 0 skipped. |
+| Integration lane | Pass | `pwsh -NoProfile -File scripts/test.ps1 -Lane integration -Configuration Debug -ContinueOnFailure -Properties NuGetAudit=false,MinVerVersionOverride=1.0.0`: Parties 501/501 and Sample 58/58; 559 passed, 0 failed, 0 skipped. |
+| Topology lane | Pass with unrelated skips excluded from proof | `pwsh -NoProfile -File scripts/test.ps1 -Lane topology -Configuration Debug -ContinueOnFailure -Properties NuGetAudit=false,MinVerVersionOverride=1.0.0`: 35 passed, 0 failed, 6 skipped. All six skips are pre-existing Story 12 health/readiness deferrals and are not credited as Story 8.6 evidence. Independent active proofs passed with no skips: `DaprMtlsBootstrapTests` 3/3, `AppHostTenantsTopologyTests` 16/16, and the exact structured Parties ACL assertion 1/1. |
+| CI lane | Pass | `pwsh -NoProfile -File scripts/test.ps1 -Lane ci -Configuration Debug -ContinueOnFailure -Properties NuGetAudit=false,MinVerVersionOverride=1.0.0`: 35 passed, 0 failed, 0 skipped. |
+| Final Release solution build | Pass | `dotnet build Hexalith.Parties.slnx -c Release --no-restore -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`: 0 warnings, 0 errors. |
+| Spec/prerequisite verification | Pass | Direct `PlatformApiPrerequisitesTests` execution against the current pin: 12 passed, 0 failed, 0 skipped. |
+| Static policy | Pass | `bash scripts/check-no-warning-override.sh` reported no warning override or nested-submodule regression. `PartySdkProjectionFold.cs` is consistently CRLF as required; `git -c core.whitespace=cr-at-eol diff --check` passes. Plain `git diff --check` reports the intentional CR characters on newly added lines in that pre-existing CRLF file because the repository has no `.gitattributes` rule declaring CR-at-EOL. |
+
+The 14 executable project inventories therefore pass with 2,339 succeeded,
+0 failed, and 6 unrelated deferred Story 12 skips; the non-executable
+`Hexalith.Parties.EventStoreGateway.TestHost` remains explicitly inventoried as
+test support rather than being falsely executed as a test assembly.

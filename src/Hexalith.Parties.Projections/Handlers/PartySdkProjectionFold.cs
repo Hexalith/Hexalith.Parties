@@ -9,6 +9,8 @@ namespace Hexalith.Parties.Projections.Handlers;
 
 internal static class PartySdkProjectionFold
 {
+    internal const string DeliverySequenceGapReason = "delivery-sequence-gap";
+    internal const string UnresolvedOrUnsupportedEventReason = "unresolved-or-unsupported-event";
     internal const string RedactedFormat = "json-redacted";
     private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
 
@@ -80,6 +82,46 @@ internal static class PartySdkProjectionFold
         }
     }
 
+    /// <summary>
+    /// Determines whether a delivery contains a new event whose type or serialization format
+    /// cannot currently be resolved. Such a delivery must fail before any checkpoint is persisted
+    /// so EventStore can retry it after the consumer is upgraded.
+    /// </summary>
+    public static bool HasUnresolvedNewEvent(
+        IReadOnlyCollection<ProjectionEventDto> events,
+        long lastSequenceNumber)
+        => DeserializeNew(events, lastSequenceNumber).Any(static item => !item.AdvanceCheckpoint);
+
+    /// <summary>
+    /// Returns a bounded retry reason when a delivery cannot safely be folded from the supplied
+    /// aggregate checkpoint. Aggregate sequences are one-based and contiguous across deliveries.
+    /// </summary>
+    public static string? GetDeliveryFailureReason(
+        IReadOnlyCollection<ProjectionEventDto> events,
+        long lastSequenceNumber)
+    {
+        long checkpoint = lastSequenceNumber;
+        foreach (ProjectionEventDto @event in events.OrderBy(static item => item.SequenceNumber))
+        {
+            if (@event.SequenceNumber <= checkpoint)
+            {
+                continue;
+            }
+
+            long expected = checkpoint == long.MinValue ? 1 : checked(checkpoint + 1);
+            if (@event.SequenceNumber != expected)
+            {
+                return DeliverySequenceGapReason;
+            }
+
+            checkpoint = @event.SequenceNumber;
+        }
+
+        return HasUnresolvedNewEvent(events, lastSequenceNumber)
+            ? UnresolvedOrUnsupportedEventReason
+            : null;
+    }
+
     public static DateTimeOffset ProjectedAt(IReadOnlyCollection<ProjectionEventDto> events, DateTimeOffset fallback)
         => events.Count == 0
             ? fallback
@@ -88,4 +130,3 @@ internal static class PartySdkProjectionFold
     private static DateTimeOffset Max(DateTimeOffset left, DateTimeOffset right)
         => left >= right ? left : right;
 }
-

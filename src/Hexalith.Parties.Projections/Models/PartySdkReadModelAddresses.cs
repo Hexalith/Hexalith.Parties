@@ -1,65 +1,43 @@
 using System.Buffers;
 
-using Hexalith.EventStore.Client.Projections;
 using Hexalith.Parties.Contracts;
-using Hexalith.Parties.Contracts.Models;
 
 namespace Hexalith.Parties.Projections.Models;
-
-/// <summary>The canonical aggregate-owned detail value written by the SDK projection.</summary>
-public sealed record PartyDetailSdkReadModel : IReadModelFreshness
-{
-    public PartyDetail? Detail { get; init; }
-
-    public long LastSequenceNumber { get; init; } = long.MinValue;
-
-    public DateTimeOffset? ProjectedAt { get; init; }
-
-    public string? ProjectionVersion { get; init; }
-}
-
-/// <summary>The canonical shared tenant index value written by the SDK projection.</summary>
-public sealed record PartyIndexSdkReadModel : IReadModelFreshness
-{
-    public IReadOnlyDictionary<string, PartyIndexEntry> Entries { get; init; }
-        = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal);
-
-    public IReadOnlyDictionary<string, long> LastSequenceNumbers { get; init; }
-        = new Dictionary<string, long>(StringComparer.Ordinal);
-
-    public DateTimeOffset? ProjectedAt { get; init; }
-
-    public string? ProjectionVersion { get; init; }
-}
-
-/// <summary>PII-free processing activity records projected with the aggregate detail.</summary>
-public sealed record PartyProcessingSdkReadModel : IReadModelFreshness
-{
-    public IReadOnlyList<ProcessingActivityRecord> Records { get; init; } = [];
-
-    public long LastSequenceNumber { get; init; } = long.MinValue;
-
-    public DateTimeOffset? ProjectedAt { get; init; }
-
-    public string? ProjectionVersion { get; init; }
-}
 
 /// <summary>Canonical addresses used by both Parties SDK producers and consumers.</summary>
 public static class PartySdkReadModelAddresses
 {
+    /// <summary>The aggregate-owned detail slot name.</summary>
     public const string DetailSlot = "detail";
+
+    /// <summary>The shared tenant index slot name.</summary>
     public const string IndexSlot = "index";
+
+    /// <summary>The aggregate-owned processing activity slot name.</summary>
     public const string ProcessingSlot = "processing-records";
+
+    /// <summary>The synthetic aggregate identifier used by the shared tenant index.</summary>
     public const string SharedIndexAggregateId = "parties";
 
     private static readonly SearchValues<char> s_reservedChars = SearchValues.Create(":\0|\r\n");
 
+    /// <summary>Builds the canonical detail address.</summary>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="partyId">The party aggregate identifier.</param>
+    /// <returns>The canonical detail state key.</returns>
     public static string Detail(string tenantId, string partyId)
         => Build(tenantId, PartyProjectionNames.Detail, partyId, DetailSlot);
 
+    /// <summary>Builds the canonical shared tenant index address.</summary>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <returns>The canonical shared index state key.</returns>
     public static string Index(string tenantId)
         => Build(tenantId, PartyProjectionNames.Index, SharedIndexAggregateId, IndexSlot);
 
+    /// <summary>Builds the canonical processing activity address.</summary>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="partyId">The party aggregate identifier.</param>
+    /// <returns>The canonical processing activity state key.</returns>
     public static string Processing(string tenantId, string partyId)
         => Build(tenantId, PartyProjectionNames.Detail, partyId, ProcessingSlot);
 
@@ -74,8 +52,6 @@ public static class PartySdkReadModelAddresses
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(value, parameterName);
 
-        // Match EventStore ProjectionKeySegments reserved-character discipline:
-        // ':' (separator), '\0' (terminator), '|' (domain extraction), CR/LF (log-line safety).
         if (value.AsSpan().IndexOfAny(s_reservedChars) >= 0)
         {
             throw new ArgumentException(

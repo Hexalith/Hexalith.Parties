@@ -60,25 +60,21 @@ public sealed class ProjectionPlatformAdapterTests
         const string tenantId = "tenant-a";
         const string partyId = "party-1";
         IReadModelStore readModelStore = Substitute.For<IReadModelStore>();
+        IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
         readModelStore.GetAsync<PartyDetailSdkReadModel>("statestore", PartySdkReadModelAddresses.Detail(tenantId, partyId), Arg.Any<CancellationToken>())
             .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
         readModelStore.GetAsync<PartyProcessingSdkReadModel>("statestore", PartySdkReadModelAddresses.Processing(tenantId, partyId), Arg.Any<CancellationToken>())
             .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
         readModelStore.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index(tenantId), Arg.Any<CancellationToken>())
             .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
-        readModelStore.TrySaveAsync(
-                "statestore", Arg.Any<string>(), Arg.Any<PartyDetailSdkReadModel>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(true);
-        readModelStore.TrySaveAsync(
-                "statestore", Arg.Any<string>(), Arg.Any<PartyProcessingSdkReadModel>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(true);
-        readModelStore.TrySaveAsync(
-                "statestore", Arg.Any<string>(), Arg.Any<PartyIndexSdkReadModel>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(true);
+        batchStore.ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>())
+            .Returns(ReadModelBatchResult.Completed("fingerprint"));
 
         IServiceCollection services = CreatePartiesServices();
         services.RemoveAll<IReadModelStore>();
+        services.RemoveAll<IReadModelBatchStore>();
         services.AddSingleton(readModelStore);
+        services.AddSingleton(batchStore);
         using ServiceProvider provider = services.BuildServiceProvider();
 
         PartySdkLastKnownReadModelCache cache = provider.GetRequiredService<PartySdkLastKnownReadModelCache>();
@@ -138,6 +134,52 @@ public sealed class ProjectionPlatformAdapterTests
             "statestore", PartySdkReadModelAddresses.Processing(tenantId, partyId), Arg.Any<CancellationToken>());
         await readModelStore.Received(1).GetAsync<PartyIndexSdkReadModel>(
             "statestore", PartySdkReadModelAddresses.Index(tenantId), Arg.Any<CancellationToken>());
+        await batchStore.Received(1).ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task AddParties_FailingSdkBatchProducesNonCompleteVerificationInsteadOfD15CleanedAsync()
+    {
+        const string tenantId = "tenant-a";
+        const string partyId = "party-1";
+        IReadModelStore readModelStore = Substitute.For<IReadModelStore>();
+        IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
+        readModelStore.GetAsync<PartyDetailSdkReadModel>(
+                "statestore", PartySdkReadModelAddresses.Detail(tenantId, partyId), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
+        readModelStore.GetAsync<PartyProcessingSdkReadModel>(
+                "statestore", PartySdkReadModelAddresses.Processing(tenantId, partyId), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
+        readModelStore.GetAsync<PartyIndexSdkReadModel>(
+                "statestore", PartySdkReadModelAddresses.Index(tenantId), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
+        batchStore.ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>())
+            .Returns(ReadModelBatchResult.Indeterminate("fingerprint", "transaction-dispatch"));
+        IServiceCollection services = CreatePartiesServices();
+        services.RemoveAll<IReadModelStore>();
+        services.RemoveAll<IReadModelBatchStore>();
+        services.AddSingleton(readModelStore);
+        services.AddSingleton(batchStore);
+        using ServiceProvider provider = services.BuildServiceProvider();
+        IErasureVerificationService verification = provider.GetRequiredService<IErasureVerificationService>();
+
+        ErasureVerificationReport report = await verification.VerifyErasureAsync(
+            tenantId,
+            partyId,
+            new ErasureCertificate
+            {
+                PartyId = partyId,
+                TenantId = tenantId,
+                Timestamp = DateTimeOffset.UnixEpoch,
+                KeyVersionsDestroyed = [1],
+                VerificationStatus = ErasureVerificationStatus.Pending,
+            },
+            TestContext.Current.CancellationToken);
+
+        report.OverallStatus.ShouldNotBe(ErasureVerificationOverallStatus.Complete);
+        ErasureVerificationStoreResult sdk = report.StoreResults.Single(static result => result.StoreName == "sdk-read-models");
+        sdk.Status.ShouldBe(ErasureStoreCleanupStatus.Failed);
+        (sdk.ErrorMessage ?? string.Empty).ShouldNotContain("transaction-dispatch");
     }
 
     private static IServiceCollection CreatePartiesServices()

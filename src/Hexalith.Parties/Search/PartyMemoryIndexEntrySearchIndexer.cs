@@ -47,7 +47,7 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
                 string warningKey = $"{tenantId}:{entry.Id}";
                 if (s_caseIdMissingWarned.TryAdd(warningKey, 0))
                 {
-                    LogIndexingSkippedMissingCaseId(tenantId, entry.Id);
+                    LogIndexingSkippedMissingCaseId();
                 }
 
                 return;
@@ -67,13 +67,13 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
 
             if (result is null)
             {
-                LogIndexingSkippedUnmappedUnit(tenantId, entry.Id);
+                LogIndexingSkippedUnmappedUnit();
                 return;
             }
 
             if (!result.Indexed)
             {
-                LogIndexingFailed(tenantId, entry.Id, result.FailureReason ?? "unknown");
+                LogIndexingFailed();
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -83,7 +83,7 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
         catch (Exception ex)
         {
             // Seam contract: implementations must never throw into the projection path.
-            LogIndexingException(ex, tenantId, entry.Id);
+            LogIndexingException(ex.GetType().Name);
         }
     }
 
@@ -108,7 +108,7 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
                 string warningKey = $"{tenantId}:{partyId}:remove";
                 if (s_caseIdMissingWarned.TryAdd(warningKey, 0))
                 {
-                    LogIndexingSkippedMissingCaseId(tenantId, partyId);
+                    LogIndexingSkippedMissingCaseId();
                 }
 
                 return;
@@ -120,7 +120,7 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
 
             if (!result.Cleaned)
             {
-                LogRemovalFailed(tenantId, partyId, result.BlockedReason ?? "unknown");
+                LogRemovalFailed();
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -129,25 +129,25 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
         }
         catch (Exception ex)
         {
-            LogRemovalException(ex, tenantId, partyId);
+            LogRemovalException(ex.GetType().Name);
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Memories indexing skipped for {TenantId}/{PartyId}: search is enabled but no CaseId is configured.")]
-    private partial void LogIndexingSkippedMissingCaseId(string tenantId, string partyId);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Memories party indexing skipped: search is enabled but no CaseId is configured.")]
+    private partial void LogIndexingSkippedMissingCaseId();
 
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Memories indexing skipped for {TenantId}/{PartyId}: entry could not be mapped to a memory unit.")]
-    private partial void LogIndexingSkippedUnmappedUnit(string tenantId, string partyId);
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Memories party indexing skipped: entry could not be mapped to a memory unit.")]
+    private partial void LogIndexingSkippedUnmappedUnit();
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Memories indexing failed for {TenantId}/{PartyId}: {Reason}")]
-    private partial void LogIndexingFailed(string tenantId, string partyId, string reason);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Memories party indexing failed.")]
+    private partial void LogIndexingFailed();
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Memories indexing threw for {TenantId}/{PartyId}.")]
-    private partial void LogIndexingException(Exception ex, string tenantId, string partyId);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Memories party indexing threw: {ExceptionType}")]
+    private partial void LogIndexingException(string exceptionType);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Memories removal failed for {TenantId}/{PartyId}: {Reason}")]
-    private partial void LogRemovalFailed(string tenantId, string partyId, string reason);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Memories party removal failed.")]
+    private partial void LogRemovalFailed();
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Memories removal threw for {TenantId}/{PartyId}.")]
-    private partial void LogRemovalException(Exception ex, string tenantId, string partyId);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Memories party removal threw: {ExceptionType}")]
+    private partial void LogRemovalException(string exceptionType);
 }

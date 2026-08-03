@@ -176,15 +176,34 @@ public static class PartiesServiceCollectionExtensions {
             [
                 async (tenantId, partyId, cancellationToken) =>
                 {
-                    await sp.GetRequiredService<PartySdkReadModelEraser>()
-                        .EraseAsync(tenantId, partyId, cancellationToken)
-                        .ConfigureAwait(false);
-                    return new ErasureVerificationStoreResult
+                    try
                     {
-                        StoreName = "sdk-read-models",
-                        Status = ErasureStoreCleanupStatus.Cleaned,
-                        Timestamp = DateTimeOffset.UtcNow,
-                    };
+                        await sp.GetRequiredService<PartySdkReadModelEraser>()
+                            .EraseAsync(tenantId, partyId, cancellationToken)
+                            .ConfigureAwait(false);
+                        return new ErasureVerificationStoreResult
+                        {
+                            StoreName = "sdk-read-models",
+                            Status = ErasureStoreCleanupStatus.Cleaned,
+                            Timestamp = DateTimeOffset.UtcNow,
+                        };
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        throw;
+                    }
+                    catch (Exception)
+                    {
+                        // SDK batch failures are operational, not proof that encrypted state is
+                        // unreadable. Return bounded failure so D15 cannot mis-certify cleanup.
+                        return new ErasureVerificationStoreResult
+                        {
+                            StoreName = "sdk-read-models",
+                            Status = ErasureStoreCleanupStatus.Failed,
+                            Timestamp = DateTimeOffset.UtcNow,
+                            ErrorMessage = "SDK read-model cleanup did not complete.",
+                        };
+                    }
                 },
                 (tenantId, partyId, cancellationToken) =>
                 {

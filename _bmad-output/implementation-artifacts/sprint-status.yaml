@@ -157,7 +157,7 @@ development_status:
   # focused projection/query regression at the current EventStore pin
   # (4bcf2484 as of Story 8.7's later revalidation) before treating it as
   # re-validated for Story 8.6.
-  8-6-projection-and-query-sdk-migration: in-progress
+  8-6-projection-and-query-sdk-migration: review
   # Story context created 2026-07-16; production migration remains blocked by
   # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
   8-7-data-protection-extraction: blocked

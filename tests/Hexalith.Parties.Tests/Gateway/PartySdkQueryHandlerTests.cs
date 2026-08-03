@@ -808,6 +808,72 @@ public sealed class PartySdkQueryHandlerTests
     }
 
     [Fact]
+    public void LastKnownReadModelCache_EvictionGenerationRejectsLateReadStore()
+    {
+        var clock = new FixedTimeProvider(s_now);
+        var cache = new PartySdkLastKnownReadModelCache(clock, 8, TimeSpan.FromMinutes(1));
+        long generation = cache.BeginRead();
+
+        cache.EvictDetail("tenant-a", "party-1");
+        bool stored = cache.StoreDetailIfCurrent(
+            "tenant-a",
+            "party-1",
+            generation,
+            new PartyDetailSdkReadModel { Detail = Detail("party-1") });
+
+        stored.ShouldBeFalse();
+        cache.TryGetDetail("tenant-a", "party-1", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task DetailHandler_EvictionDuringCanonicalReadRejectsLatePreErasureValueAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var completion = new TaskCompletionSource<ReadModelEntry<PartyDetailSdkReadModel>>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        store.GetAsync<PartyDetailSdkReadModel>(
+                "statestore",
+                PartySdkReadModelAddresses.Detail("tenant-a", "party-1"),
+                Arg.Any<CancellationToken>())
+            .Returns(completion.Task);
+        var cache = new PartySdkLastKnownReadModelCache();
+        var handler = new GetPartyQueryHandler(CreateService(store, lastKnownCache: cache));
+
+        Task<QueryResult> pending = handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            TestContext.Current.CancellationToken);
+        cache.EvictDetail("tenant-a", "party-1");
+        completion.SetResult(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel
+        {
+            Detail = Detail("party-1") with { DisplayName = "Pre-erasure PII" },
+            LastSequenceNumber = 2,
+            ProjectedAt = s_now,
+        }, "etag-old"));
+
+        QueryResult result = await pending.ConfigureAwait(true);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        cache.TryGetDetail("tenant-a", "party-1", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void LastKnownReadModelCache_CapacityAndRetentionAreBounded()
+    {
+        var clock = new FixedTimeProvider(s_now);
+        var cache = new PartySdkLastKnownReadModelCache(clock, 1, TimeSpan.FromMinutes(1));
+        cache.StoreDetail("tenant-a", "party-1", new PartyDetailSdkReadModel { Detail = Detail("party-1") });
+        clock.Advance(TimeSpan.FromSeconds(1));
+        cache.StoreDetail("tenant-a", "party-2", new PartyDetailSdkReadModel { Detail = Detail("party-2") });
+
+        cache.TryGetDetail("tenant-a", "party-1", out _).ShouldBeFalse();
+        cache.TryGetDetail("tenant-a", "party-2", out _).ShouldBeTrue();
+
+        clock.Advance(TimeSpan.FromMinutes(1));
+        cache.TryGetDetail("tenant-a", "party-2", out _).ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task DetailHandler_DegradedReadAfterEvictionFailsBoundedInsteadOfReturningStalePreErasurePiiAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
@@ -1167,12 +1233,48 @@ public sealed class PartySdkQueryHandlerTests
         package.Party.ShouldNotBeNull();
         package.ProcessingRecords.ShouldBeEmpty();
         package.Freshness!.Status.ShouldBe(ProjectionFreshnessStatus.Stale);
+        package.Party.Freshness!.Status.ShouldBe(ProjectionFreshnessStatus.Stale);
+        result.Metadata!.Lifecycle.ShouldBe(ProjectionLifecycleState.Stale);
+    }
+
+    [Fact]
+    public async Task ProcessingHandler_NonexistentPartyReturnsBoundedNotFoundWithoutEmptyHistoryAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>(
+                "statestore",
+                PartySdkReadModelAddresses.Detail("tenant-a", "party-1"),
+                Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
+        var handler = new GetProcessingRecordsQueryHandler(CreateService(store));
+
+        QueryResult result = await handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType),
+            TestContext.Current.CancellationToken);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        await store.DidNotReceive().GetAsync<PartyProcessingSdkReadModel>(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ProcessingHandler_StateStoreFailureReturnsTenantScopedLastKnownDataAsDegradedAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>(
+                "statestore",
+                PartySdkReadModelAddresses.Detail("tenant-a", "party-1"),
+                Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel
+            {
+                Detail = Detail("party-1"),
+                LastSequenceNumber = 3,
+                ProjectedAt = s_now,
+                ProjectionVersion = "3",
+            }, "detail-etag"));
         var activity = new ProcessingActivityRecord
         {
             SequenceNumber = 3,
@@ -1460,7 +1562,11 @@ public sealed class PartySdkQueryHandlerTests
 
     private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
     {
-        public override DateTimeOffset GetUtcNow() => now;
+        private DateTimeOffset _now = now;
+
+        public override DateTimeOffset GetUtcNow() => _now;
+
+        public void Advance(TimeSpan duration) => _now += duration;
     }
 
     private sealed class TestCursorCodec : IQueryCursorCodec

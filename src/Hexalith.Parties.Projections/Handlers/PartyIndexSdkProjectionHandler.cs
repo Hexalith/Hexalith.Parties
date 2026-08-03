@@ -23,8 +23,6 @@ public sealed class PartyIndexSdkProjectionHandler(
     IAsyncDomainSharedProjectionRebuildHandler,
     IDeclaresProjectionReadModelSlots
 {
-    private const string UnresolvedOrUnsupportedEventReason = "unresolved-or-unsupported-event";
-
     private readonly IPartyIndexSearchIndexer _searchIndexer = searchIndexer ?? new NoOpPartyIndexSearchIndexer();
 
     private static readonly JsonSerializerOptions s_candidateJsonOptions = PartiesJsonOptions.Default;
@@ -57,37 +55,54 @@ public sealed class PartyIndexSdkProjectionHandler(
         ReadModelEntry<PartyIndexSdkReadModel> currentEntry = await readModelStore
             .GetAsync<PartyIndexSdkReadModel>(StoreName, indexKey, cancellationToken)
             .ConfigureAwait(false);
-        IndexFoldResult foldResult = FoldCore(request, currentEntry.Value);
+        PartyIndexFoldResult foldResult = FoldCore(request, currentEntry.Value);
+        if (foldResult.FailureReason is not null)
+        {
+            return DeliveryFailure(foldResult.FailureReason);
+        }
+
         PartyIndexSdkReadModel folded = foldResult.Model;
 
         if (IsIdempotentNoOp(currentEntry.Value, folded, request.AggregateId))
         {
-            long priorSequence = currentEntry.Value?.LastSequenceNumbers.GetValueOrDefault(
-                request.AggregateId,
-                long.MinValue) ?? long.MinValue;
-            if (request.Events.Any(item => item.SequenceNumber > priorSequence))
-            {
-                return DomainProjectionHandlerResult.Failed(UnresolvedOrUnsupportedEventReason);
-            }
-
             return DomainProjectionHandlerResult.AlreadyCompleted();
         }
 
-        await ReadModelWritePolicy.UpdateAsync<PartyIndexSdkReadModel>(
-            readModelStore,
-            StoreName,
-            indexKey,
-            _ => folded,
-            cancellationToken: cancellationToken).ConfigureAwait(false);
+        PartyIndexFoldResult persistedFold = foldResult;
+        try
+        {
+            await ReadModelWritePolicy.UpdateAsync<PartyIndexSdkReadModel>(
+                readModelStore,
+                StoreName,
+                indexKey,
+                current =>
+                {
+                    // Revalidate against every optimistic retry snapshot before producing a
+                    // candidate. A concurrent writer can expose a cross-delivery gap or make an
+                    // event unresolved relative to the current aggregate checkpoint.
+                    persistedFold = FoldCore(request, current);
+                    if (persistedFold.FailureReason is not null)
+                    {
+                        throw new PartyProjectionDeliveryException(persistedFold.FailureReason);
+                    }
 
-        await NotifySearchIndexerAsync(request, foldResult, cancellationToken).ConfigureAwait(false);
+                    return persistedFold.Model;
+                },
+                cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
+        catch (PartyProjectionDeliveryException exception)
+        {
+            return DeliveryFailure(exception.Message);
+        }
+
+        await NotifySearchIndexerAsync(request, persistedFold, cancellationToken).ConfigureAwait(false);
 
         return DomainProjectionHandlerResult.Completed();
     }
 
     private async Task NotifySearchIndexerAsync(
         ProjectionRequest request,
-        IndexFoldResult foldResult,
+        PartyIndexFoldResult foldResult,
         CancellationToken cancellationToken)
     {
         // Indexing an external search backend (e.g. Hexalith.Memories) is best effort: it must
@@ -158,10 +173,16 @@ public sealed class PartyIndexSdkProjectionHandler(
             return Task.FromResult(ToCandidate(current));
         }
 
-        return Task.FromResult(ToCandidate(Fold(aggregateHistory, current)));
+        PartyIndexFoldResult foldResult = FoldCore(aggregateHistory, current);
+        if (foldResult.FailureReason is not null)
+        {
+            throw new InvalidOperationException(foldResult.FailureReason);
+        }
+
+        return Task.FromResult(ToCandidate(foldResult.Model));
     }
 
-    public async Task<DomainProjectionRebuildPlan> FinalizeAsync(
+    public Task<DomainProjectionRebuildPlan> FinalizeAsync(
         DomainSharedProjectionRebuildIdentity identity,
         DomainSharedProjectionRebuildCandidate candidate,
         CancellationToken cancellationToken)
@@ -170,48 +191,18 @@ public sealed class PartyIndexSdkProjectionHandler(
         ArgumentNullException.ThrowIfNull(candidate);
         cancellationToken.ThrowIfCancellationRequested();
         PartyIndexSdkReadModel rebuiltIndex = FromCandidate(candidate);
-
-        // Best-effort reindex of the rebuilt tenant index so Memories is not left on pre-rebuild
-        // documents. Failures here must not block returning the rebuild plan.
-        await NotifyRebuildIndexedAsync(identity.TenantId, rebuiltIndex, cancellationToken).ConfigureAwait(false);
-
-        return new DomainProjectionRebuildPlan(
+        return Task.FromResult(new DomainProjectionRebuildPlan(
             RebuildStoreName,
             [ReadModelBatchOperation.Write(
                 PartySdkReadModelAddresses.Index(identity.TenantId),
                 rebuiltIndex,
-                ReadModelBatchConcurrency.LastWrite)]);
-    }
-
-    private async Task NotifyRebuildIndexedAsync(
-        string tenantId,
-        PartyIndexSdkReadModel rebuiltIndex,
-        CancellationToken cancellationToken)
-    {
-        DateTimeOffset timestamp = rebuiltIndex.ProjectedAt ?? DateTimeOffset.UtcNow;
-        foreach (PartyIndexEntry entry in rebuiltIndex.Entries.Values)
-        {
-            try
-            {
-                await _searchIndexer
-                    .NotifyIndexedAsync(tenantId, entry, "PartyIndexRebuild", timestamp, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                // Best effort.
-            }
-        }
+                ReadModelBatchConcurrency.LastWrite)]));
     }
 
     internal static PartyIndexSdkReadModel Fold(ProjectionRequest request, PartyIndexSdkReadModel? current)
         => FoldCore(request, current).Model;
 
-    private static IndexFoldResult FoldCore(ProjectionRequest request, PartyIndexSdkReadModel? current)
+    private static PartyIndexFoldResult FoldCore(ProjectionRequest request, PartyIndexSdkReadModel? current)
     {
         var entries = new Dictionary<string, PartyIndexEntry>(
             current?.Entries ?? new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal),
@@ -219,17 +210,21 @@ public sealed class PartyIndexSdkProjectionHandler(
         var sequences = new Dictionary<string, long>(
             current?.LastSequenceNumbers ?? new Dictionary<string, long>(StringComparer.Ordinal),
             StringComparer.Ordinal);
+        var erasureSequences = new Dictionary<string, long>(
+            current?.ErasureSequenceNumbers ?? new Dictionary<string, long>(StringComparer.Ordinal),
+            StringComparer.Ordinal);
         long lastSequence = sequences.GetValueOrDefault(request.AggregateId, long.MinValue);
+        string? failureReason = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, lastSequence);
+        if (failureReason is not null)
+        {
+            return new PartyIndexFoldResult(current ?? new PartyIndexSdkReadModel(), null, false, failureReason);
+        }
+
+        bool isErased = erasureSequences.ContainsKey(request.AggregateId);
         DateTimeOffset projectedAt = current?.ProjectedAt ?? DateTimeOffset.UnixEpoch;
         entries.TryGetValue(request.AggregateId, out PartyIndexEntry? entry);
         bool hadEntry = entry is not null;
         ProjectionEventDto? lastIndexedEvent = null;
-
-        // Tracks the sequence number of a PartyErased event only while it remains the most recent
-        // meaningful event folded for this aggregate. A later non-erasure event that actually
-        // mutates the entry (a same-batch recreate) clears it again, so the checkpoint write below
-        // only special-cases the case where erasure is genuinely the terminal event.
-        long? erasedAtSequence = null;
 
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
             PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence))
@@ -240,17 +235,17 @@ public sealed class PartyIndexSdkProjectionHandler(
                 {
                     _ = entries.Remove(request.AggregateId);
                     entry = null;
-                    erasedAtSequence = @event.SequenceNumber;
+                    isErased = true;
+                    erasureSequences[request.AggregateId] = Math.Max(
+                        erasureSequences.GetValueOrDefault(request.AggregateId, long.MinValue),
+                        @event.SequenceNumber);
                     lastIndexedEvent = null;
                 }
-                else
+                else if (!isErased)
                 {
                     PartyIndexEntry? applied = PartyIndexProjectionHandler.Apply(request.AggregateId, payload, entry);
                     if (applied is not null)
                     {
-                        // Only clear terminal-erasure tracking when a later event actually mutates
-                        // the entry. No-op payloads must leave erasedAtSequence intact.
-                        erasedAtSequence = null;
                         if (!ReferenceEquals(applied, entry))
                         {
                             DateTimeOffset eventTimestamp = @event.Timestamp.ToUniversalTime();
@@ -275,14 +270,7 @@ public sealed class PartyIndexSdkProjectionHandler(
             }
         }
 
-        if (entry is null && erasedAtSequence is not null)
-        {
-            // Erasure removed the entry and no later event restored it (including same-batch
-            // no-ops that still advance the deserialize checkpoint). Drop the watermark so a
-            // party recreated with the same id is not skipped by DeserializeNew.
-            _ = sequences.Remove(request.AggregateId);
-        }
-        else if (lastSequence != long.MinValue)
+        if (lastSequence != long.MinValue)
         {
             sequences[request.AggregateId] = lastSequence;
         }
@@ -299,11 +287,12 @@ public sealed class PartyIndexSdkProjectionHandler(
         {
             Entries = entries,
             LastSequenceNumbers = sequences,
+            ErasureSequenceNumbers = erasureSequences,
             ProjectedAt = projectedAt,
             ProjectionVersion = version,
         };
         bool removed = hadEntry && entry is null;
-        return new IndexFoldResult(model, lastIndexedEvent, removed);
+        return new PartyIndexFoldResult(model, lastIndexedEvent, removed, null);
     }
 
     private string StoreName
@@ -315,6 +304,11 @@ public sealed class PartyIndexSdkProjectionHandler(
             return value;
         }
     }
+
+    private static DomainProjectionHandlerResult DeliveryFailure(string reason)
+        => string.Equals(reason, PartySdkProjectionFold.DeliverySequenceGapReason, StringComparison.Ordinal)
+            ? DomainProjectionHandlerResult.Retryable(reason)
+            : DomainProjectionHandlerResult.Failed(reason);
 
     private static bool IsIdempotentNoOp(
         PartyIndexSdkReadModel? current,
@@ -329,6 +323,13 @@ public sealed class PartyIndexSdkProjectionHandler(
         long priorSequence = current.LastSequenceNumbers.GetValueOrDefault(aggregateId, long.MinValue);
         long nextSequence = folded.LastSequenceNumbers.GetValueOrDefault(aggregateId, long.MinValue);
         if (priorSequence != nextSequence)
+        {
+            return false;
+        }
+
+        long priorErasure = current.ErasureSequenceNumbers.GetValueOrDefault(aggregateId, long.MinValue);
+        long nextErasure = folded.ErasureSequenceNumbers.GetValueOrDefault(aggregateId, long.MinValue);
+        if (priorErasure != nextErasure)
         {
             return false;
         }
@@ -396,8 +397,4 @@ public sealed class PartyIndexSdkProjectionHandler(
         _ = PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId);
     }
 
-    internal readonly record struct IndexFoldResult(
-        PartyIndexSdkReadModel Model,
-        ProjectionEventDto? LastIndexedEvent,
-        bool Removed);
 }

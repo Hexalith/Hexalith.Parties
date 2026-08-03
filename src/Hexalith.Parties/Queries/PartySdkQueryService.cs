@@ -69,14 +69,14 @@ public sealed partial class PartySdkQueryService(
                 return QueryResult.Failure(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
             }
 
-            DateTimeOffset now = timeProvider.GetUtcNow();
-            ProjectionFreshnessMetadata freshness = ToPartiesFreshness(read.Value, now, degraded);
-            PartyDetail detail = stored with { Freshness = freshness };
             (ReadModelEntry<PartyProcessingSdkReadModel> processing, bool processingDegraded) = await ReadProcessingModelAsync(
                 query.TenantId,
                 partyId,
                 cancellationToken).ConfigureAwait(false);
             degraded = degraded || processingDegraded;
+            DateTimeOffset now = timeProvider.GetUtcNow();
+            ProjectionFreshnessMetadata freshness = ToPartiesFreshness(read.Value, now, degraded);
+            PartyDetail detail = stored with { Freshness = freshness };
             IReadOnlyList<ProcessingActivityRecord> records = processing.Value?.Records ?? [];
             bool unavailable = string.IsNullOrWhiteSpace(detail.DisplayName) || string.IsNullOrWhiteSpace(detail.SortName);
             var package = new PartyDataPortabilityPackage
@@ -93,7 +93,7 @@ public sealed partial class PartySdkQueryService(
                 CorrelationId = string.IsNullOrWhiteSpace(query.CorrelationId) ? "unspecified" : query.CorrelationId.Trim(),
                 Party = detail.IsErased || unavailable ? null : detail,
                 ProcessingRecords = records,
-                Freshness = ToPartiesFreshness(read.Value, now, degraded),
+                Freshness = freshness,
             };
             return Success(
                 package,
@@ -124,10 +124,20 @@ public sealed partial class PartySdkQueryService(
 
         try
         {
+            (ReadModelEntry<PartyDetailSdkReadModel> detail, bool detailDegraded) = await ReadDetailModelAsync(
+                query.TenantId,
+                partyId,
+                cancellationToken).ConfigureAwait(false);
+            if (detail.Value?.Detail is null)
+            {
+                return QueryResult.Failure(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+            }
+
             (ReadModelEntry<PartyProcessingSdkReadModel> read, bool degraded) = await ReadProcessingModelAsync(
                 query.TenantId,
                 partyId,
                 cancellationToken).ConfigureAwait(false);
+            degraded |= detailDegraded;
             PartyProcessingSdkReadModel model = read.Value ?? new PartyProcessingSdkReadModel();
             return Success(
                 model.Records,
@@ -358,14 +368,16 @@ public sealed partial class PartySdkQueryService(
             string storeName = StoreName;
             ReadModelEntry<PartyIndexSdkReadModel> read;
             bool degraded = false;
+            long cacheGeneration = lastKnownCache.BeginRead();
             try
             {
                 read = await readModelStore
                     .GetAsync<PartyIndexSdkReadModel>(storeName, PartySdkReadModelAddresses.Index(query.TenantId), cancellationToken)
                     .ConfigureAwait(false);
-                if (read.Value is not null)
+                if (read.Value is not null
+                    && !lastKnownCache.StoreIndexIfCurrent(query.TenantId, cacheGeneration, read.Value))
                 {
-                    lastKnownCache.StoreIndex(query.TenantId, read.Value);
+                    throw new InvalidOperationException("read-model-invalidated");
                 }
             }
             catch (OperationCanceledException)
@@ -403,15 +415,17 @@ public sealed partial class PartySdkQueryService(
         string partyId,
         CancellationToken cancellationToken)
     {
+        long cacheGeneration = lastKnownCache.BeginRead();
         try
         {
             ReadModelEntry<PartyDetailSdkReadModel> read = await readModelStore.GetAsync<PartyDetailSdkReadModel>(
                 StoreName,
                 PartySdkReadModelAddresses.Detail(tenantId, partyId),
                 cancellationToken).ConfigureAwait(false);
-            if (read.Value is not null)
+            if (read.Value is not null
+                && !lastKnownCache.StoreDetailIfCurrent(tenantId, partyId, cacheGeneration, read.Value))
             {
-                lastKnownCache.StoreDetail(tenantId, partyId, read.Value);
+                throw new InvalidOperationException("read-model-invalidated");
             }
 
             return (read, false);
@@ -431,18 +445,22 @@ public sealed partial class PartySdkQueryService(
         string partyId,
         CancellationToken cancellationToken)
     {
+        long cacheGeneration = lastKnownCache.BeginRead();
         try
         {
             ReadModelEntry<PartyProcessingSdkReadModel> read = await readModelStore.GetAsync<PartyProcessingSdkReadModel>(
                 StoreName,
                 PartySdkReadModelAddresses.Processing(tenantId, partyId),
                 cancellationToken).ConfigureAwait(false);
-            if (read.Value is not null)
+            if (read.Value is not null
+                && !lastKnownCache.StoreProcessingIfCurrent(tenantId, partyId, cacheGeneration, read.Value))
             {
-                lastKnownCache.StoreProcessing(tenantId, partyId, read.Value);
+                throw new InvalidOperationException("read-model-invalidated");
             }
 
-            return (read, false);
+            return read.Value is null
+                ? (new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel(), null), true)
+                : (read, false);
         }
         catch (OperationCanceledException)
         {

@@ -369,6 +369,60 @@ public sealed class PartyDomainProcessorValidationTests
     }
 
     [Fact]
+    public async Task ProcessAsync_RetryErasureVerification_FailedSdkCleanupCannotVerifyOrEmitTerminalErasure()
+    {
+        string partyId = Guid.NewGuid().ToString("D");
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        IPartyErasureRecordStore recordStore = Substitute.For<IPartyErasureRecordStore>();
+        ErasureCertificate certificate = new()
+        {
+            PartyId = partyId,
+            TenantId = "tenant-a",
+            Timestamp = DateTimeOffset.Parse("2026-05-21T20:45:00Z"),
+            KeyVersionsDestroyed = [1],
+            VerificationStatus = ErasureVerificationStatus.Pending,
+        };
+        recordStore.GetCertificateAsync("tenant-a", partyId, Arg.Any<CancellationToken>())
+            .Returns(certificate);
+        ErasureStoreCleanupDelegate failedSdkCleanup = (_, _, _) => Task.FromResult(
+            new ErasureVerificationStoreResult
+            {
+                StoreName = "sdk-read-models",
+                Status = ErasureStoreCleanupStatus.Failed,
+                Timestamp = DateTimeOffset.Parse("2026-05-21T20:50:00Z"),
+                ErrorMessage = "SDK read-model cleanup did not complete.",
+            });
+        var verificationService = new ErasureVerificationService(
+            [failedSdkCleanup],
+            NullLogger<ErasureVerificationService>.Instance);
+        PartyDomainProcessor invoker = CreateInvoker(
+            protection,
+            recordStore,
+            CreateOrchestrator(verificationService));
+        PartyState state = PartyTestState(partyId, ErasureStatus.KeyDestroyed);
+        CommandEnvelope command = CreateCommand(new RetryErasureVerification { PartyId = partyId, TenantId = "tenant-a" });
+
+        DomainResult result = await invoker.ProcessAsync(command, state, CancellationToken.None);
+
+        result.Events.OfType<ErasureVerified>().ShouldBeEmpty();
+        result.Events.OfType<PartyErased>().ShouldBeEmpty();
+        await recordStore.Received(1).SaveVerificationReportAsync(
+            Arg.Is<ErasureVerificationReport>(report => report != null
+                && report.OverallStatus != ErasureVerificationOverallStatus.Complete
+                && report.StoreResults.Single().StoreName == "sdk-read-models"
+                && report.StoreResults.Single().Status == ErasureStoreCleanupStatus.Failed),
+            Arg.Any<CancellationToken>());
+        await recordStore.Received(1).SaveCertificateAsync(
+            Arg.Is<ErasureCertificate>(saved => saved != null
+                && saved.VerificationStatus == ErasureVerificationStatus.Failed),
+            Arg.Any<CancellationToken>());
+        await recordStore.DidNotReceive().SaveCertificateAsync(
+            Arg.Is<ErasureCertificate>(saved => saved != null
+                && saved.VerificationStatus == ErasureVerificationStatus.Verified),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ProcessAsync_RetryErasureVerification_ActivePartyIsBoundedRejectionWithoutStoreMutation()
     {
         string partyId = Guid.NewGuid().ToString("D");

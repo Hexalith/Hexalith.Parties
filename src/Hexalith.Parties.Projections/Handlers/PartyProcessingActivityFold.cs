@@ -14,6 +14,8 @@ internal static class PartyProcessingActivityFold
     {
         var records = new List<ProcessingActivityRecord>(current?.Records ?? []);
         long lastSequence = current?.LastSequenceNumber ?? long.MinValue;
+        long? erasureSequence = current?.ErasureSequenceNumber;
+        DateTimeOffset? erasedAt = current?.ErasedAt;
         DateTimeOffset projectedAt = current?.ProjectedAt ?? DateTimeOffset.UnixEpoch;
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
             PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence))
@@ -32,7 +34,9 @@ internal static class PartyProcessingActivityFold
                         ? "Redacted"
                         : "Failed";
 
-            if (!records.Exists(record => record.SequenceNumber == @event.SequenceNumber))
+            bool isErasure = payload is PartyErased;
+            if (erasureSequence is null
+                && !records.Exists(record => record.SequenceNumber == @event.SequenceNumber))
             {
                 records.Add(new ProcessingActivityRecord
                 {
@@ -49,6 +53,12 @@ internal static class PartyProcessingActivityFold
                 });
             }
 
+            if (isErasure)
+            {
+                erasureSequence = Math.Max(erasureSequence ?? long.MinValue, @event.SequenceNumber);
+                erasedAt = @event.Timestamp.ToUniversalTime();
+            }
+
             if (!advance)
             {
                 continue;
@@ -62,6 +72,8 @@ internal static class PartyProcessingActivityFold
         {
             Records = records,
             LastSequenceNumber = lastSequence,
+            ErasureSequenceNumber = erasureSequence,
+            ErasedAt = erasedAt,
             ProjectedAt = projectedAt,
             ProjectionVersion = lastSequence == long.MinValue
                 ? null

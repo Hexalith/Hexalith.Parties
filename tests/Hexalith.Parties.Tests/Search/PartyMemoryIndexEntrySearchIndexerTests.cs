@@ -3,6 +3,7 @@ using Hexalith.Memories.Contracts.V1;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Search;
+using Hexalith.Parties.Tests.Gateway;
 
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -83,6 +84,51 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             "PartyCreated",
             DateTimeOffset.UnixEpoch,
             TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task NotifyIndexedAsync_WhenIndexingThrows_LogsOnlyBoundedMetadataAsync()
+    {
+        var logger = new RecordingLogger<PartyMemoryIndexEntrySearchIndexer>();
+        var client = new ThrowingMemoriesClient(
+            new InvalidOperationException("tenant-a/party-1 readmodel:key must not leak"));
+        var mappingStore = new RecordingMappingStore();
+        PartyMemorySearchOptions options = new()
+        {
+            Enabled = true,
+            Endpoint = new Uri("https://memories.example/"),
+            CaseId = "case-a",
+            RequireApiToken = false,
+        };
+        IOptionsMonitor<PartyMemorySearchOptions> monitor = CreateMonitor(options);
+        var indexer = new PartyMemoryIndexEntrySearchIndexer(
+            new PartyMemoryIndexingService(
+                client,
+                mappingStore,
+                monitor,
+                NullLogger<PartyMemoryIndexingService>.Instance),
+            new PartyMemoryCleanupService(
+                new HttpClient { BaseAddress = new Uri("https://memories.example/") },
+                mappingStore,
+                NullLogger<PartyMemoryCleanupService>.Instance),
+            monitor,
+            logger);
+
+        await indexer.NotifyIndexedAsync(
+            "tenant-a",
+            CreateEntry(),
+            "PartyCreated",
+            DateTimeOffset.UnixEpoch,
+            TestContext.Current.CancellationToken);
+
+        (Microsoft.Extensions.Logging.LogLevel level, string message, Exception? exception) =
+            logger.Records.ShouldHaveSingleItem();
+        level.ShouldBe(Microsoft.Extensions.Logging.LogLevel.Warning);
+        message.ShouldContain(nameof(InvalidOperationException));
+        message.ShouldNotContain("tenant-a");
+        message.ShouldNotContain("party-1");
+        message.ShouldNotContain("readmodel:key");
+        exception.ShouldBeNull();
     }
 
     [Fact]

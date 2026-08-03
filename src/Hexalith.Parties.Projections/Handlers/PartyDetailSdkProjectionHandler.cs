@@ -23,8 +23,6 @@ public sealed class PartyDetailSdkProjectionHandler(
     IAsyncDomainProjectionRebuildHandler,
     IDeclaresProjectionReadModelSlots
 {
-    private const string UnresolvedOrUnsupportedEventReason = "unresolved-or-unsupported-event";
-
     public static IReadOnlyList<ProjectionReadModelSlotDeclaration> ProjectionReadModelSlots { get; } =
     [
         new("party", PartyProjectionNames.Detail, PartySdkReadModelAddresses.DetailSlot,
@@ -60,6 +58,17 @@ public sealed class PartyDetailSdkProjectionHandler(
         ReadModelEntry<PartyProcessingSdkReadModel> currentProcessing = await readModelStore
             .GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken)
             .ConfigureAwait(false);
+        long oldestCheckpoint = Math.Min(
+            current.Value?.LastSequenceNumber ?? long.MinValue,
+            currentProcessing.Value?.LastSequenceNumber ?? long.MinValue);
+        string? deliveryFailure = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, oldestCheckpoint);
+        if (deliveryFailure is not null)
+        {
+            // Fail the whole coordinated write before either read model advances. A mixed batch
+            // containing known and unresolved events must remain retryable as one delivery.
+            return DeliveryFailure(deliveryFailure);
+        }
+
         PartyDetailSdkReadModel next = Fold(request, current.Value);
         PartyProcessingSdkReadModel nextProcessing = PartyProcessingActivityFold.Fold(request, currentProcessing.Value);
         if (current.Value is not null
@@ -67,14 +76,6 @@ public sealed class PartyDetailSdkProjectionHandler(
             && currentProcessing.Value is not null
             && nextProcessing.LastSequenceNumber == currentProcessing.Value.LastSequenceNumber)
         {
-            long priorSequence = current.Value.LastSequenceNumber;
-            if (request.Events.Any(item => item.SequenceNumber > priorSequence))
-            {
-                // New events were present but none advanced the checkpoint (unresolved / non-JSON).
-                // AlreadyCompleted would stop retries while the events were never applied.
-                return DomainProjectionHandlerResult.Failed(UnresolvedOrUnsupportedEventReason);
-            }
-
             return DomainProjectionHandlerResult.AlreadyCompleted();
         }
 
@@ -102,6 +103,12 @@ public sealed class PartyDetailSdkProjectionHandler(
     {
         Validate(request, operationId);
         cancellationToken.ThrowIfCancellationRequested();
+        string? deliveryFailure = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, long.MinValue);
+        if (deliveryFailure is not null)
+        {
+            throw new InvalidOperationException(deliveryFailure);
+        }
+
         PartyDetailSdkReadModel candidate = Fold(request, current: null);
         PartyProcessingSdkReadModel processingCandidate = PartyProcessingActivityFold.Fold(request, current: null);
         string key = PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId);
@@ -120,21 +127,27 @@ public sealed class PartyDetailSdkProjectionHandler(
     {
         PartyDetail? detail = current?.Detail;
         long lastSequence = current?.LastSequenceNumber ?? long.MinValue;
+        long? erasureSequence = current?.ErasureSequenceNumber;
+        DateTimeOffset? erasedAt = current?.ErasedAt;
         DateTimeOffset projectedAt = current?.ProjectedAt ?? DateTimeOffset.UnixEpoch;
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
             PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence))
         {
-            if (payload is not null)
+            if (payload is PartyErased erased)
             {
-                PartyDetail? applied = payload is PartyErased erased
-                    ? PartyDetailProjectionHandler.ApplyErasure(request.AggregateId, detail) is { } redacted
+                detail = PartyDetailProjectionHandler.ApplyErasure(request.AggregateId, detail) is { } redacted
                         ? redacted with
                         {
                             ErasedAt = erased.ErasedAt,
                             LastModifiedAt = erased.ErasedAt,
                         }
-                        : null
-                    : PartyDetailProjectionHandler.Apply(request.AggregateId, payload, detail);
+                        : null;
+                erasureSequence = Math.Max(erasureSequence ?? long.MinValue, @event.SequenceNumber);
+                erasedAt = erased.ErasedAt;
+            }
+            else if (payload is not null && erasureSequence is null)
+            {
+                PartyDetail? applied = PartyDetailProjectionHandler.Apply(request.AggregateId, payload, detail);
                 if (applied is not null && !ReferenceEquals(applied, detail))
                 {
                     applied = NormalizeEventTimestamps(applied, detail, @event.Timestamp.ToUniversalTime());
@@ -154,6 +167,8 @@ public sealed class PartyDetailSdkProjectionHandler(
         {
             Detail = detail,
             LastSequenceNumber = lastSequence,
+            ErasureSequenceNumber = erasureSequence,
+            ErasedAt = erasedAt,
             ProjectedAt = projectedAt,
             ProjectionVersion = lastSequence == long.MinValue ? null : lastSequence.ToString(System.Globalization.CultureInfo.InvariantCulture),
         };
@@ -168,6 +183,11 @@ public sealed class PartyDetailSdkProjectionHandler(
             return value;
         }
     }
+
+    private static DomainProjectionHandlerResult DeliveryFailure(string reason)
+        => string.Equals(reason, PartySdkProjectionFold.DeliverySequenceGapReason, StringComparison.Ordinal)
+            ? DomainProjectionHandlerResult.Retryable(reason)
+            : DomainProjectionHandlerResult.Failed(reason);
 
     private static PartyDetail NormalizeEventTimestamps(
         PartyDetail applied,

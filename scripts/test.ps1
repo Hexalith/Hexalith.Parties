@@ -96,13 +96,21 @@ $ciProjects = @(
 
 $allProjects = $unitProjects + $integrationProjects + $topologyProjects + $ciProjects
 
+# Projects under tests/ that support test execution but do not themselves contain tests. Keep
+# these explicit so the inventory gate still fails when an unreviewed project appears, without
+# attempting to execute a Web test host as a test assembly.
+$testSupportProjects = @(
+    "tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj"
+)
+
 function Assert-TestProjectInventory {
     $discoveredProjects = Get-ChildItem -Path (Join-Path $RepositoryRoot "tests") -Filter "*.csproj" -Recurse |
         ForEach-Object { [System.IO.Path]::GetRelativePath($RepositoryRoot, $_.FullName).Replace('\', '/') } |
         Sort-Object
 
-    $configuredProjects = $allProjects | Sort-Object
-    $duplicateProjects = $allProjects | Group-Object | Where-Object { $_.Count -gt 1 }
+    $inventoryProjects = $allProjects + $testSupportProjects
+    $configuredProjects = $inventoryProjects | Sort-Object
+    $duplicateProjects = $inventoryProjects | Group-Object | Where-Object { $_.Count -gt 1 }
 
     if ($duplicateProjects) {
         $duplicateList = ($duplicateProjects | ForEach-Object { $_.Name }) -join ", "

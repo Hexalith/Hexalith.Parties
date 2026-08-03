@@ -31,6 +31,10 @@ public sealed partial class ErasureVerificationService(
                 result = await storeCleanups[i](tenantId, partyId, cancellationToken).ConfigureAwait(false);
                 result = SanitizeResult(result);
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 // D15 pattern: corrupted actor state + destroyed key = no data recoverable.
