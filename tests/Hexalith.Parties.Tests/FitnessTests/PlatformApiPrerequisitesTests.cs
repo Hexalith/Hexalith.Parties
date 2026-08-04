@@ -14,7 +14,7 @@ public sealed class PlatformApiPrerequisitesTests
     private const string EventStoreSprintStatusRelativePath = "references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml";
     private const string EventStoreStoryMigrationRelativePath = "references/Hexalith.EventStore/_bmad-output/planning-artifacts/story-id-migration-2026-08-01.md";
     private const string MatrixRelativePath = "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md";
-    private const string PayloadProtectionEventStoreDescribe = "v3.89.0-9-g7854f8e5";
+    private const string PayloadProtectionEventStoreDescribe = "v3.90.0";
     private const string PayloadProtectionEventStoreSha = "7854f8e51ce9b852bb6c3cac6012670122e93792";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
     private const string PayloadProtectionSurface = "Payload protection engine package";
@@ -1081,8 +1081,12 @@ public sealed class PlatformApiPrerequisitesTests
         row.ValidationEvidence.ShouldContain($"`git -C {EventStoreRelativePath} rev-parse HEAD` -> `{PayloadProtectionEventStoreSha}`");
         RunGit(root, "-C", EventStoreRelativePath, "rev-parse", "HEAD").Trim().ShouldBe(PayloadProtectionEventStoreSha);
 
-        row.ValidationEvidence.ShouldContain($"`git -C {EventStoreRelativePath} describe --tags --always --dirty` -> `{PayloadProtectionEventStoreDescribe}`");
-        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--always", "--dirty").Trim().ShouldBe(PayloadProtectionEventStoreDescribe);
+        row.ValidationEvidence.ShouldContain(
+            $"`git -C {EventStoreRelativePath} describe --tags --exact-match HEAD` -> `{PayloadProtectionEventStoreDescribe}`");
+        row.ValidationEvidence.ShouldContain("v3.89.0-9-g7854f8e5");
+        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--exact-match", "HEAD")
+            .Trim()
+            .ShouldBe(PayloadProtectionEventStoreDescribe);
 
         foreach (string path in RequiredAbsentPayloadProtectionPaths)
         {

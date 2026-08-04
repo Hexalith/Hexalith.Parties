@@ -209,7 +209,9 @@ public sealed class PartiesContainerPublishWorkflowTests
         ci.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main");
         ci.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@");
         ci.ShouldContain("workflow_dispatch");
-        ci.ShouldContain("EventStore 3.88.0");
+        ci.ShouldContain("EventStore 3.90.0");
+        ci.ShouldContain("Package mode remains the authoritative CI and release path");
+        ci.ShouldContain("source mode is diagnostic only");
         ci.ShouldContain("registry.hexalith.com/parties");
         ci.ShouldContain("registry.hexalith.com/parties-mcp");
         ci.ShouldContain("registry.hexalith.com/parties-ui");

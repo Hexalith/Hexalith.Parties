@@ -1,6 +1,7 @@
-using System.Diagnostics;
 using System.IO.Compression;
 using System.Xml.Linq;
+
+using Hexalith.Parties.PackageTests;
 
 using Shouldly;
 
@@ -11,7 +12,6 @@ public sealed class ClientPackageTests : IDisposable
     private const string LocalVersionOverride = "0.0.0-local.0";
     private const string LocalPackVersionProperties = $"-p:MinVerVersionOverride={LocalVersionOverride} -p:PackageVersion={LocalVersionOverride}";
     private const string CommonsPackVersionProperties = "-p:MinVerVersionOverride=2.27.0 -p:PackageVersion=2.27.0";
-    private const string EventStorePackVersionProperties = "-p:MinVerVersionOverride=3.47.0 -p:PackageVersion=3.47.0";
     private const int MaxDeclaredDependencyCount = 16;
     private const long MaxPackedClientPackageBytes = 5L * 1024L * 1024L;
 
@@ -45,6 +45,8 @@ public sealed class ClientPackageTests : IDisposable
         PackageProbe probe = BuildLocalPackageFeed();
         string nuspecXml = ReadNuspecXml(probe.ClientPackagePath);
         IReadOnlyList<string> dependencyIds = ReadDependencyIds(nuspecXml);
+        ReadDependencyVersion(nuspecXml, "Hexalith.EventStore.Contracts")
+            .ShouldBe(probe.EventStoreVersion);
 
         dependencyIds.OrderBy(static value => value, StringComparer.OrdinalIgnoreCase).ShouldBe(
         [
@@ -144,14 +146,16 @@ public sealed class ClientPackageTests : IDisposable
             """);
 
         RunDotnet("build", $"\"{projectPath}\" --configuration Release", consumerDirectory);
-        DotnetResult listResult = RunDotnet(
+        string listOutput = RunDotnet(
             "package",
             $"list --project \"{projectPath}\" --include-transitive",
             consumerDirectory);
+        string assetsJson = File.ReadAllText(Path.Combine(consumerDirectory, "obj", "project.assets.json"));
+        assetsJson.ShouldContain($"Hexalith.EventStore.Contracts/{probe.EventStoreVersion}");
 
         foreach (string forbidden in s_forbiddenDependencyTerms)
         {
-            listResult.Output.ShouldNotContain(forbidden);
+            listOutput.ShouldNotContain(forbidden);
         }
     }
 
@@ -175,6 +179,12 @@ public sealed class ClientPackageTests : IDisposable
         string feedDirectory = Path.Combine(_workDirectory, "feed");
         Directory.CreateDirectory(feedDirectory);
         string restoreSources = PackRestoreSources(feedDirectory);
+        string eventStoreVersion = PackageTestProcess.ResolveMsbuildProperty(
+            repoRoot,
+            "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
+            "HexalithEventStoreVersion");
+        string eventStorePackVersionProperties =
+            $"-p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion}";
 
         RunDotnet(
             "pack",
@@ -186,7 +196,7 @@ public sealed class ClientPackageTests : IDisposable
             repoRoot);
         RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {EventStorePackVersionProperties}",
+            $"\"{Path.Combine(repoRoot, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {eventStorePackVersionProperties}",
             repoRoot);
         RunDotnet(
             "pack",
@@ -205,7 +215,8 @@ public sealed class ClientPackageTests : IDisposable
         return new PackageProbe(
             feedDirectory,
             clientPackagePath,
-            ReadPackageVersion(clientPackagePath));
+            ReadPackageVersion(clientPackagePath),
+            eventStoreVersion);
     }
 
     private static string PackRestoreSources(string feedDirectory)
@@ -226,6 +237,18 @@ public sealed class ClientPackageTests : IDisposable
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(static value => value, StringComparer.OrdinalIgnoreCase),
         ];
+    }
+
+    private static string ReadDependencyVersion(string nuspecXml, string dependencyId)
+    {
+        XDocument document = XDocument.Parse(nuspecXml);
+        return document
+            .Descendants()
+            .Single(element =>
+                element.Name.LocalName == "dependency"
+                && string.Equals(element.Attribute("id")?.Value, dependencyId, StringComparison.Ordinal))
+            .Attribute("version")?.Value
+            ?? throw new InvalidOperationException($"Dependency {dependencyId} has no version.");
     }
 
     private static string ReadPackageVersion(string packagePath)
@@ -254,39 +277,15 @@ public sealed class ClientPackageTests : IDisposable
         return reader.ReadToEnd();
     }
 
-    private static DotnetResult RunDotnet(string command, string arguments, string workingDirectory)
+    private static string RunDotnet(string command, string arguments, string workingDirectory)
     {
-        using var process = new Process();
         string effectiveArguments = string.Equals(command, "pack", StringComparison.Ordinal)
             ? $"-m:1 {arguments}"
             : arguments;
-
-        process.StartInfo = new ProcessStartInfo
-        {
-            FileName = "dotnet",
-            Arguments = $"{command} {effectiveArguments}",
-            WorkingDirectory = workingDirectory,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-
-        process.Start();
-        string stdout = process.StandardOutput.ReadToEnd();
-        string stderr = process.StandardError.ReadToEnd();
-
-        if (!process.WaitForExit(120_000))
-        {
-            process.Kill(entireProcessTree: true);
-            throw new TimeoutException($"dotnet {command} timed out. stdout: {stdout} stderr: {stderr}");
-        }
-
-        var result = new DotnetResult(stdout + stderr);
-        process.ExitCode.ShouldBe(
-            0,
-            $"dotnet {command} {arguments} failed with exit code {process.ExitCode}.{Environment.NewLine}{result.Output}");
-        return result;
+        PackageTestProcessResult result = PackageTestProcess.RunDotnet(
+            $"{command} {effectiveArguments}",
+            workingDirectory);
+        return result.StandardOutput + result.StandardError;
     }
 
     private static string LocateRepositoryRoot()
@@ -305,7 +304,9 @@ public sealed class ClientPackageTests : IDisposable
         throw new InvalidOperationException("Unable to locate repository root.");
     }
 
-    private sealed record DotnetResult(string Output);
-
-    private sealed record PackageProbe(string FeedDirectory, string ClientPackagePath, string ClientPackageVersion);
+    private sealed record PackageProbe(
+        string FeedDirectory,
+        string ClientPackagePath,
+        string ClientPackageVersion,
+        string EventStoreVersion);
 }

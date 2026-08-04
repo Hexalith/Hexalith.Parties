@@ -6,6 +6,7 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class CommonsHttpRestoreRoutingTests
 {
     private const string CommonsHttpProjectReference = @"$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.Http\Hexalith.Commons.Http.csproj";
+    private const string EventStoreContractsPackageId = "Hexalith.EventStore.Contracts";
     private const string PackageCondition = "'$(HexalithCommonsHttpFromSource)' != 'true'";
     private const string PackageId = "Hexalith.Commons.Http";
     private const int PythonCaptureTimeoutMilliseconds = 5_000;
@@ -86,10 +87,13 @@ public sealed class CommonsHttpRestoreRoutingTests
         string validationScript = CiTestPaths.ReadRepoFile("scripts/validate-nuget-packages.py");
         string consumerValidationScript = CiTestPaths.ReadRepoFile("scripts/validate-consumer-package-references.py");
         (string centralAlias, string centralVersion) = ReadCentralCommonsHttpPackageVersion();
+        (string eventStoreAlias, string eventStoreVersion) = ReadCentralPackageVersion(EventStoreContractsPackageId);
 
         centralAlias.ShouldBe("$(HexalithCommonsVersion)");
         centralVersion.ShouldNotBeNullOrWhiteSpace();
         centralVersion.ShouldNotContain("$(");
+        eventStoreAlias.ShouldBe("$(HexalithEventStoreVersion)");
+        eventStoreVersion.ShouldBe("3.90.0");
         packageVersion.Value.ShouldBe("$(HexalithCommonsHttpPackageVersion)");
         (packageVersion.Parent?.Attribute("Condition")?.Value ?? string.Empty)
             .ShouldBe("'$(MSBuildProjectName)' == 'Hexalith.Commons.Http' and '$(HexalithCommonsHttpPackageVersion)' != ''");
@@ -104,23 +108,36 @@ public sealed class CommonsHttpRestoreRoutingTests
         validationScript.ShouldNotContain("\"Hexalith.Commons.Http\": \"$(");
         validationScript.ShouldContain("\"Hexalith.Commons.UniqueIds\": commons_version");
         validationScript.ShouldContain("REQUIRED_COMMONS_HTTP_DEPENDENCY_PACKAGES");
+        validationScript.ShouldContain("resolve_hexalith_event_store_version");
+        validationScript.ShouldContain("validate_event_store_dependency_versions");
+        validationScript.ShouldContain("REQUIRED_EVENT_STORE_DEPENDENCY_ID");
         consumerValidationScript.ShouldContain("resolve_hexalith_commons_version");
+        consumerValidationScript.ShouldContain("resolve_hexalith_event_store_version");
         consumerValidationScript.ShouldContain("validate_commons_support_packages");
+        consumerValidationScript.ShouldContain("validate_event_store_support_packages");
         consumerValidationScript.ShouldContain("-p:WarningsNotAsErrors=NU1603");
         consumerValidationScript.ShouldNotContain("\"2.27.0\"");
+        consumerValidationScript.ShouldNotContain("\"3.47.0\"");
     }
 
     [Fact]
     public void MsbuildPropertyResolverReturnsCurrentCentralVersion()
     {
         (_, string centralVersion) = ReadCentralCommonsHttpPackageVersion();
-        (int exitCode, string standardOutput, string standardError) = RunPython(
+        (_, string eventStoreVersion) = ReadCentralPackageVersion(EventStoreContractsPackageId);
+        (int commonsExitCode, string commonsOutput, string commonsError) = RunPython(
             "scripts/msbuild_properties.py",
             "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
             "HexalithCommonsVersion");
+        (int eventStoreExitCode, string eventStoreOutput, string eventStoreError) = RunPython(
+            "scripts/msbuild_properties.py",
+            "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
+            "HexalithEventStoreVersion");
 
-        exitCode.ShouldBe(0, standardError);
-        standardOutput.Trim().ShouldBe(centralVersion);
+        commonsExitCode.ShouldBe(0, commonsError);
+        commonsOutput.Trim().ShouldBe(centralVersion);
+        eventStoreExitCode.ShouldBe(0, eventStoreError);
+        eventStoreOutput.Trim().ShouldBe(eventStoreVersion);
     }
 
     [Fact]
@@ -269,7 +286,7 @@ module = importlib.util.module_from_spec(spec)
 sys.path.insert(0, sys.argv[1])
 spec.loader.exec_module(module)
 
-for project, version in module.support_package_projects("9.8.7"):
+for project, version in module.support_package_projects("9.8.7", "7.6.5"):
     if project in (
         "references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/Hexalith.Commons.Http.csproj",
         "references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj",
@@ -308,7 +325,7 @@ sys.path.insert(0, str(scripts_directory))
 sys.modules["consumer_solution_inventory_probe"] = module
 spec.loader.exec_module(module)
 
-for project, _ in module.support_package_projects("0.0.0"):
+for project, _ in module.support_package_projects("0.0.0", "0.0.0"):
     print(project)
 """;
 
@@ -371,50 +388,68 @@ def load_module(name, file_name):
 pack = load_module("pack_release_main_probe", "pack-release-packages.py")
 validator = load_module("validate_nuget_main_probe", "validate-nuget-packages.py")
 consumer = load_module("validate_consumer_main_probe", "validate-consumer-package-references.py")
-central_version = "9.8.7"
+commons_version = "9.8.7"
+event_store_version = "7.6.5"
 
 with tempfile.TemporaryDirectory() as temporary_root:
     temporary_root = Path(temporary_root)
 
     pack_commands = []
-    pack.resolve_hexalith_commons_version = lambda: central_version
+    pack.resolve_hexalith_commons_version = lambda: commons_version
     pack.subprocess.run = lambda command, **kwargs: pack_commands.append(command) or subprocess.CompletedProcess(command, 0)
     with patch.object(sys, "argv", ["pack-release-packages.py", str(temporary_root / "parties"), "1.2.3"]):
         if pack.main() != 0:
             raise SystemExit("Pack main did not succeed")
-    expected_override = f"-p:HexalithCommonsHttpPackageVersion={central_version}"
+    expected_override = f"-p:HexalithCommonsHttpPackageVersion={commons_version}"
     if len(pack_commands) != len(pack.PACKAGE_PROJECTS) or any(expected_override not in command for command in pack_commands):
         raise SystemExit("Pack main did not propagate the synthetic Commons version")
-    print(f"pack|{central_version}")
+    print(f"pack|{commons_version}")
 
     validation_directory = temporary_root / "validation"
     validation_directory.mkdir()
     for package_id in validator.EXPECTED_PACKAGE_IDS:
         (validation_directory / f"{package_id}.nupkg").touch()
 
-    def package_metadata(package_path, unique_ids_version=central_version):
+    def package_metadata(
+        package_path,
+        unique_ids_version=commons_version,
+        contracts_version=event_store_version,
+        client_version=event_store_version,
+        client_id="Hexalith.EventStore.Client",
+        include_event_store_dependency=True,
+    ):
         package_id = package_path.stem
-        dependencies = {
+        dependencies = [
             validator.DependencyMetadata("Hexalith.Commons.UniqueIds", unique_ids_version),
-        }
+        ]
+        if include_event_store_dependency:
+            dependencies.append(
+                validator.DependencyMetadata("Hexalith.EventStore.Contracts", contracts_version)
+            )
+        if package_id == "Hexalith.Parties.AdminPortal":
+            dependencies.append(
+                validator.DependencyMetadata(client_id, client_version)
+            )
         if package_id in validator.REQUIRED_COMMONS_HTTP_DEPENDENCY_PACKAGES:
-            dependencies.add(validator.DependencyMetadata("Hexalith.Commons.Http", central_version))
+            dependencies.append(validator.DependencyMetadata("Hexalith.Commons.Http", commons_version))
         return validator.PackageMetadata(
             package_id,
             "1.2.3",
             "README.md",
             True,
             frozenset(dependencies),
+            (validator.DependencyGroupMetadata("net10.0", tuple(dependencies)),),
         )
 
-    validator.resolve_hexalith_commons_version = lambda: central_version
+    validator.resolve_hexalith_commons_version = lambda: commons_version
+    validator.resolve_hexalith_event_store_version = lambda: event_store_version
     validator.get_metadata = package_metadata
     with patch.object(sys, "argv", ["validate-nuget-packages.py", str(validation_directory)]):
         if validator.main() != 0:
             raise SystemExit("NuGet validator main did not succeed")
 
     def wrong_unique_ids_metadata(package_path):
-        version = "9.8.6" if package_path.stem == "Hexalith.Parties.Client" else central_version
+        version = "9.8.6" if package_path.stem == "Hexalith.Parties.Client" else commons_version
         return package_metadata(package_path, version)
 
     validator.get_metadata = wrong_unique_ids_metadata
@@ -422,20 +457,83 @@ with tempfile.TemporaryDirectory() as temporary_root:
         try:
             validator.main()
         except ValueError as error:
-            if "Hexalith.Commons.UniqueIds" not in str(error) or central_version not in str(error):
+            if "Hexalith.Commons.UniqueIds" not in str(error) or commons_version not in str(error):
                 raise
         else:
             raise SystemExit("NuGet validator accepted the wrong direct UniqueIds version")
-    print(f"validator|{central_version}")
+    def wrong_event_store_metadata(package_path):
+        client_version = "7.6.4" if package_path.stem == "Hexalith.Parties.AdminPortal" else event_store_version
+        return package_metadata(package_path, client_version=client_version)
 
-    captured_consumer_version = []
-    consumer.resolve_hexalith_commons_version = lambda repository_root: central_version
+    validator.get_metadata = wrong_event_store_metadata
+    with patch.object(sys, "argv", ["validate-nuget-packages.py", str(validation_directory)]):
+        try:
+            validator.main()
+        except ValueError as error:
+            if "Hexalith.EventStore.Client=7.6.4" not in str(error) or event_store_version not in str(error):
+                raise
+        else:
+            raise SystemExit("NuGet validator accepted a stale non-required EventStore dependency version")
+
+    def empty_event_store_metadata(package_path):
+        client_version = "" if package_path.stem == "Hexalith.Parties.AdminPortal" else event_store_version
+        return package_metadata(package_path, client_version=client_version)
+
+    validator.get_metadata = empty_event_store_metadata
+    with patch.object(sys, "argv", ["validate-nuget-packages.py", str(validation_directory)]):
+        try:
+            validator.main()
+        except ValueError as error:
+            if "Hexalith.EventStore.Client=<missing>" not in str(error):
+                raise
+        else:
+            raise SystemExit("NuGet validator accepted an empty non-required EventStore dependency version")
+
+    def case_variant_event_store_metadata(package_path):
+        client_version = "7.6.4" if package_path.stem == "Hexalith.Parties.AdminPortal" else event_store_version
+        return package_metadata(
+            package_path,
+            client_version=client_version,
+            client_id="hexalith.eventstore.client",
+        )
+
+    validator.get_metadata = case_variant_event_store_metadata
+    with patch.object(sys, "argv", ["validate-nuget-packages.py", str(validation_directory)]):
+        try:
+            validator.main()
+        except ValueError as error:
+            if "hexalith.eventstore.client=7.6.4" not in str(error):
+                raise
+        else:
+            raise SystemExit("NuGet validator allowed case variation to bypass EventStore validation")
+
+    def missing_event_store_metadata(package_path):
+        return package_metadata(
+            package_path,
+            include_event_store_dependency=package_path.stem != "Hexalith.Parties.Testing",
+        )
+
+    validator.get_metadata = missing_event_store_metadata
+    with patch.object(sys, "argv", ["validate-nuget-packages.py", str(validation_directory)]):
+        try:
+            validator.main()
+        except ValueError as error:
+            if "Hexalith.EventStore.Contracts" not in str(error) or "<missing>" not in str(error):
+                raise
+        else:
+            raise SystemExit("NuGet validator accepted a missing required EventStore dependency")
+    print(f"validator|{commons_version}|{event_store_version}")
+
+    captured_consumer_versions = []
+    captured_consumer_validations = []
+    consumer.resolve_hexalith_commons_version = lambda repository_root: commons_version
+    consumer.resolve_hexalith_event_store_version = lambda repository_root: event_store_version
     consumer.package_versions = lambda package_directory: {
         package_id: "1.2.3" for package_id in consumer.PACKAGE_IDS
     }
 
-    def capture_support_pack(output_directory, commons_version):
-        captured_consumer_version.append(commons_version)
+    def capture_support_pack(output_directory, captured_commons_version, captured_event_store_version):
+        captured_consumer_versions.append((captured_commons_version, captured_event_store_version))
         output_directory.mkdir(parents=True)
         return output_directory
 
@@ -443,7 +541,9 @@ with tempfile.TemporaryDirectory() as temporary_root:
     consumer.write_nuget_config = lambda *args: temporary_root / "NuGet.Config"
     consumer.write_client_consumer = lambda root, version: root / "ClientConsumer.csproj"
     consumer.write_portal_consumer = lambda root, version: root / "PortalConsumer.csproj"
-    consumer.validate_consumer = lambda project_file: None
+    consumer.validate_consumer = lambda project_file, version, required: captured_consumer_validations.append(
+        (project_file.name, version, required)
+    )
     consumer_packages = temporary_root / "consumer-packages"
     consumer_packages.mkdir()
     with patch.object(
@@ -458,9 +558,14 @@ with tempfile.TemporaryDirectory() as temporary_root:
     ):
         if consumer.main() != 0:
             raise SystemExit("Consumer validator main did not succeed")
-    if captured_consumer_version != [central_version]:
-        raise SystemExit(f"Consumer main propagated {captured_consumer_version!r}")
-    print(f"consumer|{central_version}")
+    if captured_consumer_versions != [(commons_version, event_store_version)]:
+        raise SystemExit(f"Consumer main propagated {captured_consumer_versions!r}")
+    if captured_consumer_validations != [
+        ("ClientConsumer.csproj", event_store_version, consumer.CLIENT_REQUIRED_EVENT_STORE_PACKAGE_IDS),
+        ("PortalConsumer.csproj", event_store_version, consumer.PORTAL_REQUIRED_EVENT_STORE_PACKAGE_IDS),
+    ]:
+        raise SystemExit(f"Consumer asset validations were not wired correctly: {captured_consumer_validations!r}")
+    print(f"consumer|{commons_version}|{event_store_version}")
 """;
 
         (int exitCode, string standardOutput, string standardError) = RunPython(
@@ -470,12 +575,144 @@ with tempfile.TemporaryDirectory() as temporary_root:
 
         exitCode.ShouldBe(0, standardError);
         standardOutput.ShouldContain("pack|9.8.7");
-        standardOutput.ShouldContain("validator|9.8.7");
-        standardOutput.ShouldContain("consumer|9.8.7");
+        standardOutput.ShouldContain("validator|9.8.7|7.6.5");
+        standardOutput.ShouldContain("consumer|9.8.7|7.6.5");
     }
 
     [Fact]
-    public void CommonsSupportPackingRequiresExactProducedPackageMetadata()
+    public void ConsumerAssetsRejectStaleSelectedEventStorePackage()
+    {
+        const string probe = """
+import importlib.util
+import json
+import sys
+import tempfile
+from pathlib import Path
+
+scripts_directory = Path(sys.argv[1])
+sys.path.insert(0, str(scripts_directory))
+script_file = scripts_directory / "validate-consumer-package-references.py"
+spec = importlib.util.spec_from_file_location("consumer_assets_probe", script_file)
+if spec is None or spec.loader is None:
+    raise SystemExit(f"Could not load {script_file}")
+module = importlib.util.module_from_spec(spec)
+sys.modules["consumer_assets_probe"] = module
+spec.loader.exec_module(module)
+
+with tempfile.TemporaryDirectory() as temporary_root:
+    assets_file = Path(temporary_root) / "project.assets.json"
+    assets_file.write_text(json.dumps({
+        "libraries": {
+            "Hexalith.EventStore.Contracts/7.6.5": {"type": "package"},
+            "hexalith.eventstore.client/7.6.4": {"type": "package"},
+        }
+    }), encoding="utf-8")
+    try:
+        module.validate_event_store_assets(
+            assets_file,
+            "7.6.5",
+            module.PORTAL_REQUIRED_EVENT_STORE_PACKAGE_IDS,
+        )
+    except ValueError as error:
+        message = str(error)
+        if "hexalith.eventstore.client=7.6.4" not in message or "7.6.5" not in message:
+            raise
+        print("stale-selected|rejected")
+    else:
+        raise SystemExit("Consumer assets validator accepted a stale selected EventStore package")
+""";
+
+        (int exitCode, string standardOutput, string standardError) = RunPython(
+            "-c",
+            probe,
+            CiTestPaths.RepoFile("scripts"));
+
+        exitCode.ShouldBe(0, standardError);
+        standardOutput.ShouldContain("stale-selected|rejected");
+    }
+
+    [Fact]
+    public void NuspecValidatorPreservesAndValidatesEveryDependencyGroup()
+    {
+        const string probe = """"
+import dataclasses
+import importlib.util
+import sys
+import tempfile
+import zipfile
+from pathlib import Path
+
+scripts_directory = Path(sys.argv[1])
+sys.path.insert(0, str(scripts_directory))
+script_file = scripts_directory / "validate-nuget-packages.py"
+spec = importlib.util.spec_from_file_location("nuspec_groups_probe", script_file)
+if spec is None or spec.loader is None:
+    raise SystemExit(f"Could not load {script_file}")
+module = importlib.util.module_from_spec(spec)
+sys.modules["nuspec_groups_probe"] = module
+spec.loader.exec_module(module)
+
+with tempfile.TemporaryDirectory() as temporary_root:
+    package_path = Path(temporary_root) / "Hexalith.Parties.Client.1.2.3.nupkg"
+    nuspec = """<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Hexalith.Parties.Client</id>
+    <version>1.2.3</version>
+    <readme>README.md</readme>
+    <license type="expression">MIT</license>
+    <dependencies>
+      <group targetFramework="net9.0">
+        <dependency id="hexalith.eventstore.contracts" version="3.90.0" />
+      </group>
+      <group targetFramework="net10.0">
+        <dependency id="Hexalith.EventStore.Contracts" version="3.90.0" />
+        <dependency id="Hexalith.EventStore.Client" version="3.90.0" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>
+"""
+    with zipfile.ZipFile(package_path, "w") as package:
+        package.writestr("Hexalith.Parties.Client.nuspec", nuspec)
+        package.writestr("README.md", "readme")
+
+    metadata = module.get_metadata(package_path)
+    if [group.target_framework for group in metadata.dependency_groups] != ["net9.0", "net10.0"]:
+        raise SystemExit(f"Nuspec dependency groups were not preserved: {metadata.dependency_groups!r}")
+    module.validate_event_store_dependency_versions(package_path, metadata, "3.90.0")
+
+    missing_contracts = dataclasses.replace(
+        metadata,
+        dependency_groups=(
+            metadata.dependency_groups[0],
+            module.DependencyGroupMetadata(
+                "net10.0",
+                (module.DependencyMetadata("Hexalith.EventStore.Client", "3.90.0"),),
+            ),
+        ),
+    )
+    try:
+        module.validate_event_store_dependency_versions(package_path, missing_contracts, "3.90.0")
+    except ValueError as error:
+        if "net10.0" not in str(error) or "exactly one" not in str(error):
+            raise
+        print("missing-group-contracts|rejected")
+    else:
+        raise SystemExit("Nuspec validator accepted a group without EventStore.Contracts")
+"""";
+
+        (int exitCode, string standardOutput, string standardError) = RunPython(
+            "-c",
+            probe,
+            CiTestPaths.RepoFile("scripts"));
+
+        exitCode.ShouldBe(0, standardError);
+        standardOutput.ShouldContain("missing-group-contracts|rejected");
+    }
+
+    [Fact]
+    public void SupportPackingRequiresExactProducedPackageMetadata()
     {
         const string probe = """
 import importlib.util
@@ -496,7 +733,8 @@ module = importlib.util.module_from_spec(spec)
 sys.modules["consumer_support_pack_probe"] = module
 spec.loader.exec_module(module)
 
-central_version = "9.8.7"
+commons_version = "9.8.7"
+event_store_version = "7.6.5"
 mode = {"value": "exact"}
 
 def write_package(output_directory, package_id, file_version, metadata_version):
@@ -521,9 +759,12 @@ def fake_pack(command, **kwargs):
         raise SystemExit(f"Support package packing must use Release, found {configuration!r}")
 
     project_name = Path(command[2]).stem
-    if project_name not in module.COMMONS_SUPPORT_PACKAGE_IDS:
+    validated_package_ids = module.COMMONS_SUPPORT_PACKAGE_IDS | module.EVENT_STORE_SUPPORT_PACKAGE_IDS
+    if project_name not in validated_package_ids:
         return subprocess.CompletedProcess(command, 0)
     if mode["value"] == "missing-http" and project_name == "Hexalith.Commons.Http":
+        return subprocess.CompletedProcess(command, 0)
+    if mode["value"] == "missing-eventstore" and project_name == "Hexalith.EventStore.Contracts":
         return subprocess.CompletedProcess(command, 0)
 
     output_directory = Path(command[command.index("--output") + 1])
@@ -535,6 +776,8 @@ def fake_pack(command, **kwargs):
     metadata_version = (
         "9.8.6"
         if mode["value"] == "wrong-uniqueids" and project_name == "Hexalith.Commons.UniqueIds"
+        else "7.6.4"
+        if mode["value"] == "wrong-eventstore" and project_name == "Hexalith.EventStore.Client"
         else requested_version
     )
     write_package(output_directory, project_name, requested_version, metadata_version)
@@ -543,12 +786,12 @@ def fake_pack(command, **kwargs):
 with tempfile.TemporaryDirectory() as temporary_root:
     temporary_root = Path(temporary_root)
     with patch.object(module.subprocess, "run", side_effect=fake_pack):
-        module.pack_support_packages(temporary_root / "exact", central_version)
+        module.pack_support_packages(temporary_root / "exact", commons_version, event_store_version)
         print("exact|accepted")
 
         mode["value"] = "wrong-uniqueids"
         try:
-            module.pack_support_packages(temporary_root / "wrong", central_version)
+            module.pack_support_packages(temporary_root / "wrong", commons_version, event_store_version)
         except ValueError as error:
             if "Hexalith.Commons.UniqueIds" not in str(error) or "metadata version 9.8.6" not in str(error):
                 raise
@@ -558,13 +801,33 @@ with tempfile.TemporaryDirectory() as temporary_root:
 
         mode["value"] = "missing-http"
         try:
-            module.pack_support_packages(temporary_root / "missing", central_version)
+            module.pack_support_packages(temporary_root / "missing", commons_version, event_store_version)
         except ValueError as error:
             if "Hexalith.Commons.Http" not in str(error) or "<none>" not in str(error):
                 raise
             print("missing|rejected")
         else:
             raise SystemExit("Missing exact Commons.Http package was accepted")
+
+        mode["value"] = "wrong-eventstore"
+        try:
+            module.pack_support_packages(temporary_root / "wrong-eventstore", commons_version, event_store_version)
+        except ValueError as error:
+            if "Hexalith.EventStore.Client" not in str(error) or "metadata version 7.6.4" not in str(error):
+                raise
+            print("wrong-eventstore|rejected")
+        else:
+            raise SystemExit("Wrong EventStore.Client metadata was accepted")
+
+        mode["value"] = "missing-eventstore"
+        try:
+            module.pack_support_packages(temporary_root / "missing-eventstore", commons_version, event_store_version)
+        except ValueError as error:
+            if "Hexalith.EventStore.Contracts" not in str(error) or "<none>" not in str(error):
+                raise
+            print("missing-eventstore|rejected")
+        else:
+            raise SystemExit("Missing exact EventStore.Contracts package was accepted")
 """;
 
         (int exitCode, string standardOutput, string standardError) = RunPython(
@@ -576,6 +839,8 @@ with tempfile.TemporaryDirectory() as temporary_root:
         standardOutput.ShouldContain("exact|accepted");
         standardOutput.ShouldContain("wrong|rejected");
         standardOutput.ShouldContain("missing|rejected");
+        standardOutput.ShouldContain("wrong-eventstore|rejected");
+        standardOutput.ShouldContain("missing-eventstore|rejected");
     }
 
     [Fact]
@@ -595,16 +860,19 @@ with tempfile.TemporaryDirectory() as temporary_root:
     }
 
     private static (string Alias, string Version) ReadCentralCommonsHttpPackageVersion()
+        => ReadCentralPackageVersion(PackageId);
+
+    private static (string Alias, string Version) ReadCentralPackageVersion(string packageId)
     {
         XDocument props = XDocument.Load(CiTestPaths.RepoFile("references/Hexalith.Builds/Props/Directory.Packages.props"));
         string alias = props
             .Descendants("PackageVersion")
-            .Single(element => element.Attribute("Include")?.Value == PackageId)
+            .Single(element => element.Attribute("Include")?.Value == packageId)
             .Attribute("Version")?.Value
-            ?? throw new InvalidOperationException($"{PackageId} version was not found in shared package props.");
+            ?? throw new InvalidOperationException($"{packageId} version was not found in shared package props.");
         string propertyName = alias.StartsWith("$(", StringComparison.Ordinal) && alias.EndsWith(')')
             ? alias[2..^1]
-            : throw new InvalidOperationException($"{PackageId} version '{alias}' is not a central property alias.");
+            : throw new InvalidOperationException($"{packageId} version '{alias}' is not a central property alias.");
         string version = props.Descendants(propertyName).SingleOrDefault()?.Value
             ?? throw new InvalidOperationException($"Central property {propertyName} was not found in shared package props.");
 

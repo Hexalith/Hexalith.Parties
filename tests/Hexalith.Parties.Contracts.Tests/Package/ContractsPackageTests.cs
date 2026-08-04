@@ -1,8 +1,8 @@
-using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
 using System.Xml.Linq;
 
+using Hexalith.Parties.PackageTests;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -16,7 +16,6 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
     internal const string LocalVersionOverride = "0.0.0-local.0";
     internal const string LocalPackVersionProperties = $"-p:MinVerVersionOverride={LocalVersionOverride} -p:PackageVersion={LocalVersionOverride}";
     internal const string CommonsPackVersionProperties = "-p:MinVerVersionOverride=2.27.0 -p:PackageVersion=2.27.0";
-    internal const string EventStorePackVersionProperties = "-p:MinVerVersionOverride=3.47.0 -p:PackageVersion=3.47.0";
 
     private readonly ContractsPackageFixture _fixture;
 
@@ -83,6 +82,8 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
         string[] dependencies = ReadDependencyIds(package.PartiesPackagePath);
 
         dependencies.ShouldBe(["ByteAether.Ulid", "Hexalith.Commons.UniqueIds", "Hexalith.EventStore.Contracts"]);
+        ReadDependencyVersion(package.PartiesPackagePath, "Hexalith.EventStore.Contracts")
+            .ShouldBe(package.EventStoreVersion);
         AssertNoForbiddenDependencyIds(dependencies, package.PartiesPackagePath);
     }
 
@@ -170,7 +171,7 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
 
         string assetsJson = File.ReadAllText(Path.Combine(consumerDirectory, "obj", "project.assets.json"));
         assetsJson.ShouldContain("Hexalith.Parties.Contracts");
-        assetsJson.ShouldContain("Hexalith.EventStore.Contracts");
+        assetsJson.ShouldContain($"Hexalith.EventStore.Contracts/{package.EventStoreVersion}");
         foreach (string forbidden in s_forbiddenDependencyTerms)
         {
             assetsJson.ShouldNotContain(forbidden, Case.Insensitive);
@@ -288,6 +289,20 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
             .ToArray();
     }
 
+    private static string ReadDependencyVersion(string packagePath, string dependencyId)
+    {
+        using ZipArchive archive = ZipFile.OpenRead(packagePath);
+        ZipArchiveEntry nuspecEntry = archive.Entries.Single(entry => entry.FullName.EndsWith(".nuspec", StringComparison.Ordinal));
+        XDocument nuspec = XDocument.Load(nuspecEntry.Open());
+        XNamespace ns = nuspec.Root!.Name.Namespace;
+
+        return nuspec
+            .Descendants(ns + "dependency")
+            .Single(element => string.Equals((string?)element.Attribute("id"), dependencyId, StringComparison.Ordinal))
+            .Attribute("version")?.Value
+            ?? throw new InvalidOperationException($"Dependency {dependencyId} has no version in {packagePath}.");
+    }
+
     private static void AssertNoForbiddenDependencyIds(string[] dependencies, string packagePath)
     {
         string[] violations = dependencies
@@ -299,36 +314,7 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
     }
 
     internal static void RunDotnet(string arguments, string workingDirectory)
-    {
-        using Process process = Process.Start(
-            new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                Arguments = arguments,
-                WorkingDirectory = workingDirectory,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-            }) ?? throw new InvalidOperationException("Could not start dotnet process.");
-
-        string stdout = process.StandardOutput.ReadToEnd();
-        string stderr = process.StandardError.ReadToEnd();
-        if (!process.WaitForExit(120_000))
-        {
-            try
-            {
-                process.Kill(entireProcessTree: true);
-            }
-            catch (InvalidOperationException)
-            {
-                // Process already exited between the timeout check and the kill attempt.
-            }
-
-            throw new TimeoutException($"dotnet {arguments} timed out.{Environment.NewLine}{stdout}{Environment.NewLine}{stderr}");
-        }
-
-        process.ExitCode.ShouldBe(0, $"dotnet {arguments} failed.{Environment.NewLine}{stdout}{Environment.NewLine}{stderr}");
-    }
+        => _ = PackageTestProcess.RunDotnet(arguments, workingDirectory);
 }
 
 internal sealed record ContractsPackageArtifacts(
@@ -336,7 +322,8 @@ internal sealed record ContractsPackageArtifacts(
     string PackageFeed,
     string PartiesPackagePath,
     string EventStoreContractsPackagePath,
-    string PartiesVersion);
+    string PartiesVersion,
+    string EventStoreVersion);
 
 public sealed class ContractsPackageFixture : IDisposable
 {
@@ -373,12 +360,18 @@ public sealed class ContractsPackageFixture : IDisposable
         string feedDirectory = Path.Combine(workingDirectory, "feed");
         Directory.CreateDirectory(feedDirectory);
         string restoreSources = $"--source \"{feedDirectory}\" --source \"https://api.nuget.org/v3/index.json\"";
+        string eventStoreVersion = PackageTestProcess.ResolveMsbuildProperty(
+            repoRoot,
+            "src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj",
+            "HexalithEventStoreVersion");
+        string eventStorePackVersionProperties =
+            $"-p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion}";
 
         ContractsPackageTests.RunDotnet(
             $"pack \"{Path.Combine(repoRoot, "references", "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.UniqueIds", "Hexalith.Commons.UniqueIds.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {ContractsPackageTests.CommonsPackVersionProperties}",
             repoRoot);
         ContractsPackageTests.RunDotnet(
-            $"pack \"{Path.Combine(repoRoot, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {ContractsPackageTests.EventStorePackVersionProperties}",
+            $"pack \"{Path.Combine(repoRoot, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {eventStorePackVersionProperties}",
             repoRoot);
         ContractsPackageTests.RunDotnet(
             $"pack \"{Path.Combine(repoRoot, "src", "Hexalith.Parties.Contracts", "Hexalith.Parties.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {ContractsPackageTests.LocalPackVersionProperties}",
@@ -394,7 +387,14 @@ public sealed class ContractsPackageFixture : IDisposable
             .First();
 
         string version = ReadPackageVersion(partiesPackage);
-        return new ContractsPackageArtifacts(workingDirectory, feedDirectory, partiesPackage, eventStorePackage, version);
+        ReadPackageVersion(eventStorePackage).ShouldBe(eventStoreVersion);
+        return new ContractsPackageArtifacts(
+            workingDirectory,
+            feedDirectory,
+            partiesPackage,
+            eventStorePackage,
+            version,
+            eventStoreVersion);
     }
 
     private static string FindRepoRoot()

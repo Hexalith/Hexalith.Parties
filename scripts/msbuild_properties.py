@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-COMMONS_VERSION_PROJECT = REPO_ROOT / "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj"
+CENTRAL_VERSION_PROJECT = REPO_ROOT / "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj"
 MSBUILD_TIMEOUT_SECONDS = 30
 MAX_DIAGNOSTIC_LENGTH = 500
 MAX_PROPERTY_VALUE_DIAGNOSTIC_LENGTH = 120
@@ -123,10 +123,20 @@ def resolve_msbuild_property(
 
 def resolve_hexalith_commons_version(repository_root: Path = REPO_ROOT) -> str:
     """Resolve the central Hexalith Commons version used by package publication."""
-    project_file = repository_root / COMMONS_VERSION_PROJECT.relative_to(REPO_ROOT)
+    project_file = repository_root / CENTRAL_VERSION_PROJECT.relative_to(REPO_ROOT)
     return resolve_msbuild_property(
         project_file,
         "HexalithCommonsVersion",
+        working_directory=repository_root,
+    )
+
+
+def resolve_hexalith_event_store_version(repository_root: Path = REPO_ROOT) -> str:
+    """Resolve the central Hexalith EventStore version used by package publication."""
+    project_file = repository_root / CENTRAL_VERSION_PROJECT.relative_to(REPO_ROOT)
+    return resolve_msbuild_property(
+        project_file,
+        "HexalithEventStoreVersion",
         working_directory=repository_root,
     )
 

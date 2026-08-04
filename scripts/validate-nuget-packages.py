@@ -10,7 +10,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from xml.etree import ElementTree
 
-from msbuild_properties import MsbuildPropertyResolutionError, resolve_hexalith_commons_version
+from msbuild_properties import (
+    MsbuildPropertyResolutionError,
+    resolve_hexalith_commons_version,
+    resolve_hexalith_event_store_version,
+)
 
 
 EXPECTED_PACKAGE_IDS = frozenset(
@@ -51,11 +55,20 @@ REQUIRED_COMMONS_HTTP_DEPENDENCY_PACKAGES = frozenset(
     }
 )
 
+EVENT_STORE_DEPENDENCY_PREFIX = "Hexalith.EventStore."
+REQUIRED_EVENT_STORE_DEPENDENCY_ID = "Hexalith.EventStore.Contracts"
+
 
 @dataclass(frozen=True)
 class DependencyMetadata:
     package_id: str
     version: str
+
+
+@dataclass(frozen=True)
+class DependencyGroupMetadata:
+    target_framework: str | None
+    dependencies: tuple[DependencyMetadata, ...]
 
 
 @dataclass(frozen=True)
@@ -65,6 +78,7 @@ class PackageMetadata:
     readme: str
     has_license: bool
     dependencies: frozenset[DependencyMetadata]
+    dependency_groups: tuple[DependencyGroupMetadata, ...] = ()
 
 
 def get_metadata(package_path: Path) -> PackageMetadata:
@@ -101,16 +115,63 @@ def get_metadata(package_path: Path) -> PackageMetadata:
         if readme not in package.namelist():
             raise ValueError(f"{package_path.name}: readme file '{readme}' is not in the package")
 
-        dependencies = frozenset(
-            DependencyMetadata(
-                dependency.attrib["id"].strip(),
-                dependency.attrib.get("version", "").strip(),
+        def dependency_metadata(elements: list[ElementTree.Element]) -> tuple[DependencyMetadata, ...]:
+            return tuple(
+                DependencyMetadata(
+                    dependency.attrib["id"].strip(),
+                    dependency.attrib.get("version", "").strip(),
+                )
+                for dependency in elements
+                if dependency.attrib.get("id", "").strip()
             )
-            for dependency in find_elements(".//n:metadata/n:dependencies//n:dependency")
-            if dependency.attrib.get("id", "").strip()
+
+        dependency_groups: list[DependencyGroupMetadata] = []
+        dependencies_elements = find_elements(".//n:metadata/n:dependencies")
+        if not dependencies_elements:
+            dependency_groups.append(DependencyGroupMetadata(None, ()))
+        for dependencies_element in dependencies_elements:
+            group_elements = [
+                child
+                for child in dependencies_element
+                if child.tag.rsplit("}", 1)[-1] == "group"
+            ]
+            direct_dependencies = dependency_metadata(
+                [
+                    child
+                    for child in dependencies_element
+                    if child.tag.rsplit("}", 1)[-1] == "dependency"
+                ]
+            )
+            if direct_dependencies or not group_elements:
+                dependency_groups.append(DependencyGroupMetadata(None, direct_dependencies))
+            for group in group_elements:
+                dependency_groups.append(
+                    DependencyGroupMetadata(
+                        group.attrib.get("targetFramework"),
+                        dependency_metadata(
+                            [
+                                child
+                                for child in group
+                                if child.tag.rsplit("}", 1)[-1] == "dependency"
+                            ]
+                        ),
+                    )
+                )
+
+        dependencies = frozenset(
+            dependency
+            for group in dependency_groups
+            for dependency in group.dependencies
         )
 
-        return PackageMetadata(package_id, version, readme, bool(license_value or license_file), dependencies)
+        return PackageMetadata(
+            package_id,
+            version,
+            readme,
+            bool(license_value or license_file),
+            dependencies,
+            tuple(dependency_groups),
+        )
 
 
 def validate_dependency_boundaries(package_path: Path, metadata: PackageMetadata) -> None:
@@ -158,12 +219,60 @@ def validate_expected_dependency_versions(
             )
 
 
+def validate_event_store_dependency_versions(
+    package_path: Path,
+    metadata: PackageMetadata,
+    expected_version: str,
+) -> None:
+    """Require every dependency group to use the evaluated central EventStore version."""
+    groups = metadata.dependency_groups or (
+        DependencyGroupMetadata(None, tuple(metadata.dependencies)),
+    )
+    event_store_prefix = EVENT_STORE_DEPENDENCY_PREFIX.casefold()
+    required_id = REQUIRED_EVENT_STORE_DEPENDENCY_ID.casefold()
+
+    for index, group in enumerate(groups, start=1):
+        group_label = group.target_framework or f"unnamed group {index}"
+        event_store_dependencies = sorted(
+            (
+                dependency
+                for dependency in group.dependencies
+                if dependency.package_id.casefold().startswith(event_store_prefix)
+            ),
+            key=lambda dependency: (dependency.package_id.casefold(), dependency.version),
+        )
+        required_dependencies = [
+            dependency
+            for dependency in event_store_dependencies
+            if dependency.package_id.casefold() == required_id
+        ]
+        required_versions = [dependency.version or "<missing>" for dependency in required_dependencies]
+        if len(required_dependencies) != 1 or required_dependencies[0].version != expected_version:
+            raise ValueError(
+                f"{package_path.name}: dependency group '{group_label}' must contain exactly one required "
+                f"{REQUIRED_EVENT_STORE_DEPENDENCY_ID} dependency at version {expected_version}, "
+                f"found {required_versions or '<missing>'}"
+            )
+
+        invalid_dependencies = [
+            f"{dependency.package_id}={dependency.version or '<missing>'}"
+            for dependency in event_store_dependencies
+            if dependency.version != expected_version
+        ]
+        if invalid_dependencies:
+            raise ValueError(
+                f"{package_path.name}: every Hexalith.EventStore.* dependency in group '{group_label}' "
+                f"must use version {expected_version}, found {invalid_dependencies}"
+            )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate Hexalith.Parties NuGet package output.")
     parser.add_argument("package_directory", type=Path, help="Directory containing .nupkg files.")
     args = parser.parse_args()
 
     commons_version = resolve_hexalith_commons_version()
+    event_store_version = resolve_hexalith_event_store_version()
     expected_dependency_versions = {
         "Hexalith.Commons.Http": commons_version,
         "Hexalith.Commons.UniqueIds": commons_version,
@@ -189,6 +298,7 @@ def main() -> int:
             raise ValueError(f"{package.name}: missing license metadata")
         validate_dependency_boundaries(package, metadata)
         validate_expected_dependency_versions(package, metadata, expected_dependency_versions)
+        validate_event_store_dependency_versions(package, metadata, event_store_version)
 
     if package_ids != EXPECTED_PACKAGE_IDS:
         missing = sorted(EXPECTED_PACKAGE_IDS - package_ids)

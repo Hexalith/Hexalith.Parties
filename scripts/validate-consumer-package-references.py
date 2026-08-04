@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -12,7 +13,11 @@ import zipfile
 from pathlib import Path
 from xml.etree import ElementTree
 
-from msbuild_properties import MsbuildPropertyResolutionError, resolve_hexalith_commons_version
+from msbuild_properties import (
+    MsbuildPropertyResolutionError,
+    resolve_hexalith_commons_version,
+    resolve_hexalith_event_store_version,
+)
 
 
 PACKAGE_IDS = [
@@ -36,9 +41,31 @@ COMMONS_SUPPORT_PACKAGE_IDS = frozenset(
     }
 )
 
+EVENT_STORE_SUPPORT_PACKAGE_PROJECTS = [
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj",
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Client/Hexalith.EventStore.Client.csproj",
+]
+EVENT_STORE_SUPPORT_PACKAGE_IDS = frozenset(
+    {
+        "Hexalith.EventStore.Client",
+        "Hexalith.EventStore.Contracts",
+    }
+)
+
+CLIENT_REQUIRED_EVENT_STORE_PACKAGE_IDS = frozenset(
+    {
+        "Hexalith.EventStore.Contracts",
+    }
+)
+
+PORTAL_REQUIRED_EVENT_STORE_PACKAGE_IDS = frozenset(
+    {
+        "Hexalith.EventStore.Client",
+        "Hexalith.EventStore.Contracts",
+    }
+)
+
 OTHER_SUPPORT_PACKAGE_PROJECTS = [
-    ("references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj", "3.47.0"),
-    ("references/Hexalith.EventStore/src/Hexalith.EventStore.Client/Hexalith.EventStore.Client.csproj", "3.47.0"),
     ("references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj", "1.7.0"),
     ("references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.csproj", "1.7.0"),
     ("references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Hexalith.Tenants.Contracts.csproj", "2.4.2"),
@@ -46,10 +73,11 @@ OTHER_SUPPORT_PACKAGE_PROJECTS = [
 ]
 
 
-def support_package_projects(commons_version: str) -> list[tuple[str, str]]:
-    """Return support projects with Commons packages aligned to the central version."""
+def support_package_projects(commons_version: str, event_store_version: str) -> list[tuple[str, str]]:
+    """Return support projects with central package versions applied."""
     return [
         *((project, commons_version) for project in COMMONS_SUPPORT_PACKAGE_PROJECTS),
+        *((project, event_store_version) for project in EVENT_STORE_SUPPORT_PACKAGE_PROJECTS),
         *OTHER_SUPPORT_PACKAGE_PROJECTS,
     ]
 
@@ -90,10 +118,14 @@ def package_versions(package_directory: Path) -> dict[str, str]:
     return versions
 
 
-def validate_commons_support_packages(package_directory: Path, commons_version: str) -> None:
-    """Require one exact central-version package for each Commons support identity."""
+def validate_support_packages(
+    package_directory: Path,
+    package_ids: frozenset[str],
+    expected_version: str,
+) -> None:
+    """Require one exact-version package for each requested support identity."""
     packages: dict[str, list[tuple[Path, str]]] = {
-        package_id: [] for package_id in COMMONS_SUPPORT_PACKAGE_IDS
+        package_id: [] for package_id in package_ids
     }
     for package_path in package_directory.glob("*.nupkg"):
         if ".symbols." in package_path.name or package_path.name.endswith(".snupkg"):
@@ -107,17 +139,27 @@ def validate_commons_support_packages(package_directory: Path, commons_version: 
         if len(artifacts) != 1:
             names = sorted(path.name for path, _ in artifacts)
             raise ValueError(
-                f"Expected exactly one {package_id} {commons_version} support package, "
+                f"Expected exactly one {package_id} {expected_version} support package, "
                 f"found {names or '<none>'}"
             )
 
         package_path, metadata_version = artifacts[0]
-        expected_filename = f"{package_id}.{commons_version}.nupkg"
-        if metadata_version != commons_version or package_path.name != expected_filename:
+        expected_filename = f"{package_id}.{expected_version}.nupkg"
+        if metadata_version != expected_version or package_path.name != expected_filename:
             raise ValueError(
                 f"Expected exact {package_id} support package {expected_filename} with metadata version "
-                f"{commons_version}, found {package_path.name} with metadata version {metadata_version}"
+                f"{expected_version}, found {package_path.name} with metadata version {metadata_version}"
             )
+
+
+def validate_commons_support_packages(package_directory: Path, commons_version: str) -> None:
+    """Require exact central-version Commons support packages."""
+    validate_support_packages(package_directory, COMMONS_SUPPORT_PACKAGE_IDS, commons_version)
+
+
+def validate_event_store_support_packages(package_directory: Path, event_store_version: str) -> None:
+    """Require exact central-version EventStore support packages."""
+    validate_support_packages(package_directory, EVENT_STORE_SUPPORT_PACKAGE_IDS, event_store_version)
 
 
 def run_dotnet(args: list[str], working_directory: Path) -> None:
@@ -138,9 +180,13 @@ def assert_package_only(project_file: Path, required_package_ids: list[str]) -> 
             raise ValueError(f"{project_file}: missing PackageReference for {package_id}")
 
 
-def pack_support_packages(output_directory: Path, commons_version: str) -> Path:
+def pack_support_packages(
+    output_directory: Path,
+    commons_version: str,
+    event_store_version: str,
+) -> Path:
     output_directory.mkdir(parents=True, exist_ok=True)
-    for project, version in support_package_projects(commons_version):
+    for project, version in support_package_projects(commons_version, event_store_version):
         project_path = REPO_ROOT / project
         if not project_path.exists():
             raise ValueError(f"Support package project not found: {project_path}")
@@ -166,6 +212,7 @@ def pack_support_packages(output_directory: Path, commons_version: str) -> Path:
         )
 
     validate_commons_support_packages(output_directory, commons_version)
+    validate_event_store_support_packages(output_directory, event_store_version)
     return output_directory
 
 
@@ -260,8 +307,64 @@ def write_portal_consumer(root: Path, version: str) -> Path:
     return project_file
 
 
-def validate_consumer(project_file: Path) -> None:
+def validate_event_store_assets(
+    assets_file: Path,
+    expected_version: str,
+    required_package_ids: frozenset[str],
+) -> None:
+    """Validate the EventStore package versions selected by NuGet restore."""
+    if not assets_file.is_file():
+        raise ValueError(f"Restore did not produce assets file: {assets_file}")
+
+    assets = json.loads(assets_file.read_text(encoding="utf-8"))
+    libraries = assets.get("libraries")
+    if not isinstance(libraries, dict):
+        raise ValueError(f"{assets_file}: missing NuGet libraries object")
+
+    selected: list[tuple[str, str]] = []
+    for identity, library in libraries.items():
+        if not isinstance(identity, str) or "/" not in identity:
+            continue
+        package_id, version = identity.rsplit("/", 1)
+        if package_id.casefold().startswith("hexalith.eventstore."):
+            if isinstance(library, dict) and library.get("type") not in (None, "package"):
+                continue
+            selected.append((package_id, version))
+
+    invalid = sorted(
+        f"{package_id}={version or '<missing>'}"
+        for package_id, version in selected
+        if version != expected_version
+    )
+    if invalid:
+        raise ValueError(
+            f"{assets_file}: every selected Hexalith.EventStore.* package must use version "
+            f"{expected_version}, found {invalid}"
+        )
+
+    selected_ids = {package_id.casefold() for package_id, _ in selected}
+    missing = sorted(
+        package_id
+        for package_id in required_package_ids
+        if package_id.casefold() not in selected_ids
+    )
+    if missing:
+        raise ValueError(
+            f"{assets_file}: missing required selected EventStore packages: {missing}"
+        )
+
+
+def validate_consumer(
+    project_file: Path,
+    event_store_version: str,
+    required_event_store_package_ids: frozenset[str],
+) -> None:
     run_dotnet(["restore", str(project_file)], project_file.parent)
+    validate_event_store_assets(
+        project_file.parent / "obj" / "project.assets.json",
+        event_store_version,
+        required_event_store_package_ids,
+    )
     run_dotnet(
         [
             "build",
@@ -289,6 +392,7 @@ def main() -> int:
     args = parser.parse_args()
 
     commons_version = resolve_hexalith_commons_version(REPO_ROOT)
+    event_store_version = resolve_hexalith_event_store_version(REPO_ROOT)
     package_directory = args.package_directory.resolve()
     versions = package_versions(package_directory)
     version = versions["Hexalith.Parties.Contracts"]
@@ -297,11 +401,23 @@ def main() -> int:
     if work_directory.exists():
         shutil.rmtree(work_directory)
     work_directory.mkdir(parents=True)
-    support_feed = pack_support_packages(work_directory / "support-packages", commons_version)
+    support_feed = pack_support_packages(
+        work_directory / "support-packages",
+        commons_version,
+        event_store_version,
+    )
     write_nuget_config(work_directory, [package_directory, support_feed], args.nuget_source)
 
-    validate_consumer(write_client_consumer(work_directory, version))
-    validate_consumer(write_portal_consumer(work_directory, version))
+    validate_consumer(
+        write_client_consumer(work_directory, version),
+        event_store_version,
+        CLIENT_REQUIRED_EVENT_STORE_PACKAGE_IDS,
+    )
+    validate_consumer(
+        write_portal_consumer(work_directory, version),
+        event_store_version,
+        PORTAL_REQUIRED_EVENT_STORE_PACKAGE_IDS,
+    )
 
     print(f"Validated package-only consumers for Hexalith.Parties packages at version {version}.")
     return 0
