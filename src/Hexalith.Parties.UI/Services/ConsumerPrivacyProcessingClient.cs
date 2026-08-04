@@ -85,7 +85,7 @@ internal sealed class ConsumerPrivacyProcessingClient(ISelfScopedPartiesClient s
         => value?.Trim() switch
         {
             "Read" or "Query" => ConsumerPrivacyProcessingCategory.DataRead,
-            "Write" or "Command" or "Update" => ConsumerPrivacyProcessingCategory.DataChanged,
+            "Write" or "Command" or "Update" or "PartyCommand" => ConsumerPrivacyProcessingCategory.DataChanged,
             "Export" => ConsumerPrivacyProcessingCategory.DataExport,
             "Consent" => ConsumerPrivacyProcessingCategory.Consent,
             "Erasure" or "Delete" => ConsumerPrivacyProcessingCategory.Erasure,
@@ -100,7 +100,7 @@ internal sealed class ConsumerPrivacyProcessingClient(ISelfScopedPartiesClient s
         {
             "Completed" or "Succeeded" or "Success" => ConsumerPrivacyProcessingRecordOutcome.Completed,
             "Accepted" or "Pending" => ConsumerPrivacyProcessingRecordOutcome.Accepted,
-            "Restricted" or "Limited" => ConsumerPrivacyProcessingRecordOutcome.Limited,
+            "Restricted" or "Limited" or "Redacted" => ConsumerPrivacyProcessingRecordOutcome.Limited,
             "Failed" or "Rejected" or "Error" => ConsumerPrivacyProcessingRecordOutcome.Failed,
             "" or null => ConsumerPrivacyProcessingRecordOutcome.Unknown,
             _ => ConsumerPrivacyProcessingRecordOutcome.Unknown,

@@ -200,17 +200,11 @@ public sealed class PartySdkReadModelEraser(
         string partyId,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            await _searchIndexer.NotifyRemovedAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception)
-        {
-            // External search cleanup is best effort after the canonical batch commits.
-        }
+        // Best effort: the canonical detail/processing/index batch has already committed by the
+        // time this runs, so a search-indexer non-convergence must not fail EraseAsync and flip
+        // the "sdk-read-models" erasure-verification store to Failed — that store certifies the
+        // canonical PII redaction, not the optional Memories search index, which already reports
+        // its own convergence separately under the "memories-search" store.
+        _ = await _searchIndexer.NotifyRemovedAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
     }
 }

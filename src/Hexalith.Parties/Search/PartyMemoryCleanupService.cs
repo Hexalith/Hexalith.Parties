@@ -94,7 +94,8 @@ internal sealed class PartyMemoryCleanupService(
     /// not expose a batch <c>?sourceUri=</c> DELETE, so we read the per-party →
     /// memory-unit-id mapping that the indexing service records, then iterate per-unit
     /// DELETEs against the existing <c>DELETE /api/tenants/{t}/cases/{c}/memory-units/{id}</c>
-    /// endpoint.
+    /// endpoint. The CaseId stored with each mapping is authoritative; <paramref name="caseId"/>
+    /// is used only for legacy mappings written before CaseId persistence was introduced.
     /// <para>
     /// <b>Atomicity (P17 / P25).</b> After each successful per-unit DELETE the mapping is
     /// rewritten with only the still-failed entries so a cancellation or partial failure
@@ -125,20 +126,9 @@ internal sealed class PartyMemoryCleanupService(
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(caseId);
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
 
         string sourceUri = PartyMemoryUrn.Build(tenantId, partyId);
-
-        if (httpClient.BaseAddress is null)
-        {
-            return new PartyMemoryCleanupResult(
-                partyId,
-                MemoryUnitId: string.Empty,
-                sourceUri,
-                Cleaned: false,
-                BlockedReason: "Memories cleanup blocked: HttpClient has no BaseAddress (Parties:MemoriesSearch:Endpoint missing).");
-        }
 
         IReadOnlyList<PartyMemoryUnitMappingEntry> mappings = await mappingStore
             .GetMappingsAsync(tenantId, partyId, cancellationToken)
@@ -154,6 +144,16 @@ internal sealed class PartyMemoryCleanupService(
                 BlockedReason: null);
         }
 
+        if (httpClient.BaseAddress is null)
+        {
+            return new PartyMemoryCleanupResult(
+                partyId,
+                MemoryUnitId: string.Empty,
+                sourceUri,
+                Cleaned: false,
+                BlockedReason: "Memories cleanup blocked: HttpClient has no BaseAddress (Parties:MemoriesSearch:Endpoint missing).");
+        }
+
         int initialCount = mappings.Count;
         List<PartyMemoryUnitMappingEntry> remaining = [.. mappings];
         string? firstBlockedReason = null;
@@ -164,10 +164,17 @@ internal sealed class PartyMemoryCleanupService(
             foreach (PartyMemoryUnitMappingEntry mapping in mappings)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                string resolvedCaseId = string.IsNullOrWhiteSpace(mapping.CaseId) ? caseId : mapping.CaseId;
+                if (string.IsNullOrWhiteSpace(resolvedCaseId))
+                {
+                    firstBlockedReason ??= "Memories cleanup blocked: the indexed unit has no persisted CaseId and no fallback CaseId is configured.";
+                    firstBlockedUnitId ??= mapping.MemoryUnitId;
+                    continue;
+                }
 
                 PartyMemoryCleanupResult perUnit = await DeleteMemoryUnitAsync(
                     tenantId,
-                    caseId,
+                    resolvedCaseId,
                     partyId,
                     mapping.MemoryUnitId,
                     cancellationToken).ConfigureAwait(false);

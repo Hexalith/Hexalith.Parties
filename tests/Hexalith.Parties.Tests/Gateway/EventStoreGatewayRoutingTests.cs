@@ -1062,6 +1062,11 @@ public sealed class EventStoreGatewayRoutingTests
         // service is actually safe to exclude here.
         private static readonly string[] KnownExcludedHostedServiceNames =
         [
+            // EventStore v3.91.0 added one more factory-registered hosted service (6th entry) —
+            // reviewed as part of the Story 8.6 v3.91.0 identity adoption: it is a background
+            // reconciliation-retry worker for the new bounded rebuild-completion manifest, which
+            // is Dapr-/shared-index-dependent like the others already excluded here.
+            "<factory-registered>",
             "<factory-registered>",
             "<factory-registered>",
             "<factory-registered>",

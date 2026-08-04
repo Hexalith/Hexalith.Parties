@@ -42,6 +42,7 @@ public class PartyMemoryUnitMapperTests
         unit.Metadata["partyId"].Value.ShouldBe("party-1");
         unit.Metadata["aggregateId"].Value.ShouldBe("party-1");
         unit.Metadata["eventType"].Value.ShouldBe("PartyCreated");
+        unit.Metadata["timestamp"].Value.ShouldBe("2026-05-02T10:00:00.0000000+00:00");
         unit.Metadata["correlationId"].Value.ShouldBe("corr-1");
         unit.Metadata["causationId"].Value.ShouldBe("cause-1");
         unit.Metadata["sourceService"].Value.ShouldBe("Hexalith.Parties");
@@ -105,6 +106,7 @@ public class PartyMemoryUnitMapperTests
         mappings.Count.ShouldBe(1);
         mappings[0].MemoryUnitId.ShouldBe("workflow-1");
         mappings[0].SourceUri.ShouldBe(result.SourceUri);
+        mappings[0].CaseId.ShouldBe("case-a");
     }
 
     [Fact]
@@ -233,7 +235,13 @@ public class PartyMemoryUnitMapperTests
     {
         private readonly Dictionary<string, List<PartyMemoryUnitMappingEntry>> _mappings = new(StringComparer.Ordinal);
 
-        public Task RecordMappingAsync(string tenantId, string partyId, string memoryUnitId, string sourceUri, CancellationToken cancellationToken)
+        public Task RecordMappingAsync(
+            string tenantId,
+            string partyId,
+            string memoryUnitId,
+            string sourceUri,
+            string caseId,
+            CancellationToken cancellationToken)
         {
             string key = $"{tenantId}:{partyId}";
             if (!_mappings.TryGetValue(key, out List<PartyMemoryUnitMappingEntry>? list))
@@ -247,11 +255,11 @@ public class PartyMemoryUnitMapperTests
             int idx = list.FindIndex(e => string.Equals(e.SourceUri, sourceUri, StringComparison.Ordinal));
             if (idx >= 0)
             {
-                list[idx] = new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri);
+                list[idx] = new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri, caseId);
             }
             else
             {
-                list.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri));
+                list.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri, caseId));
             }
 
             return Task.CompletedTask;

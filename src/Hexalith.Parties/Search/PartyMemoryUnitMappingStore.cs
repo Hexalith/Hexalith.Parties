@@ -12,11 +12,12 @@ namespace Hexalith.Parties.Search;
 /// <summary>
 /// Per-party → memory-unit-id mapping. Recorded by the indexing service after successful
 /// <c>IngestAsync</c> calls; consumed by the cleanup service so erasure can iterate per-unit
-/// DELETEs against the existing per-unit Memories endpoint. Implements the AC5 cleanup
+/// DELETEs against the existing per-unit Memories endpoint. Each entry retains the CaseId
+/// used for ingestion so cleanup survives later configuration changes. Implements the AC5 cleanup
 /// re-architecture described in resolved decision #2 of the story spec — without this
 /// mapping the erasure flow has no way to know which memory unit ids belong to a party.
 /// </summary>
-internal sealed record PartyMemoryUnitMappingEntry(string MemoryUnitId, string SourceUri);
+internal sealed record PartyMemoryUnitMappingEntry(string MemoryUnitId, string SourceUri, string? CaseId = null);
 
 internal interface IPartyMemoryUnitMappingStore
 {
@@ -25,6 +26,7 @@ internal interface IPartyMemoryUnitMappingStore
         string partyId,
         string memoryUnitId,
         string sourceUri,
+        string caseId,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<PartyMemoryUnitMappingEntry>> GetMappingsAsync(
@@ -89,12 +91,14 @@ internal sealed class PartyMemoryUnitMappingStore(
         string partyId,
         string memoryUnitId,
         string sourceUri,
+        string caseId,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
         ArgumentException.ThrowIfNullOrWhiteSpace(memoryUnitId);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceUri);
+        ArgumentException.ThrowIfNullOrWhiteSpace(caseId);
 
         string key = BuildKey(tenantId, partyId);
 
@@ -113,19 +117,23 @@ internal sealed class PartyMemoryUnitMappingStore(
             bool replaced = false;
             foreach (PartyMemoryUnitMappingEntry existing in current)
             {
-                if (string.Equals(existing.MemoryUnitId, memoryUnitId, StringComparison.Ordinal))
+                bool sameMemoryUnit = string.Equals(existing.MemoryUnitId, memoryUnitId, StringComparison.Ordinal);
+                bool sameSource = string.Equals(existing.SourceUri, sourceUri, StringComparison.Ordinal);
+                if (sameMemoryUnit || sameSource)
                 {
-                    // Already recorded with the same id — no write needed.
-                    return;
-                }
+                    if (!replaced)
+                    {
+                        if (sameMemoryUnit
+                            && sameSource
+                            && string.Equals(existing.CaseId, caseId, StringComparison.Ordinal))
+                        {
+                            return;
+                        }
 
-                if (string.Equals(existing.SourceUri, sourceUri, StringComparison.Ordinal))
-                {
-                    // Same source URI but a different memory-unit-id: replace with the latest
-                    // id rather than appending; otherwise cleanup would issue a DELETE for the
-                    // stale id (which 404s) and miss the live one if it ever differs.
-                    updated.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri));
-                    replaced = true;
+                        updated.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri, caseId));
+                        replaced = true;
+                    }
+
                     continue;
                 }
 
@@ -134,7 +142,7 @@ internal sealed class PartyMemoryUnitMappingStore(
 
             if (!replaced)
             {
-                updated.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri));
+                updated.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri, caseId));
             }
 
             bool success = await daprClient

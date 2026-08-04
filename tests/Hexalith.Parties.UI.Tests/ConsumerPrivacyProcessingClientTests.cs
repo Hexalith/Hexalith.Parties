@@ -70,6 +70,7 @@ public sealed class ConsumerPrivacyProcessingClientTests
     [InlineData("Export", "Accepted", ConsumerPrivacyProcessingCategory.DataExport, ConsumerPrivacyProcessingRecordOutcome.Accepted)]
     [InlineData("Consent", "Restricted", ConsumerPrivacyProcessingCategory.Consent, ConsumerPrivacyProcessingRecordOutcome.Limited)]
     [InlineData("Erasure", "Rejected", ConsumerPrivacyProcessingCategory.Erasure, ConsumerPrivacyProcessingRecordOutcome.Failed)]
+    [InlineData("PartyCommand", "Redacted", ConsumerPrivacyProcessingCategory.DataChanged, ConsumerPrivacyProcessingRecordOutcome.Limited)]
     [InlineData("raw-event-type", "backend-status", ConsumerPrivacyProcessingCategory.Unknown, ConsumerPrivacyProcessingRecordOutcome.Unknown)]
     public async Task GetMyProcessingSummaryAsync_MapsBackendMetadataToBoundedEnums(
         string category,

@@ -122,7 +122,7 @@ public sealed class ProjectionPlatformAdapterTests
         statuses["projection-cache"].ShouldBe(ErasureStoreCleanupStatus.Cleaned);
         statuses["aggregate-readable-state"].ShouldBe(ErasureStoreCleanupStatus.NotApplicable);
         statuses["snapshots"].ShouldBe(ErasureStoreCleanupStatus.NotApplicable);
-        statuses["memories-search"].ShouldBe(ErasureStoreCleanupStatus.NotApplicable);
+        statuses["memories-search"].ShouldBe(ErasureStoreCleanupStatus.Cleaned);
 
         cache.TryGetDetail(tenantId, partyId, out _).ShouldBeFalse();
         cache.TryGetProcessing(tenantId, partyId, out _).ShouldBeFalse();

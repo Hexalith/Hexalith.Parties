@@ -113,7 +113,7 @@ public class PartyMemorySearchOptionsValidatorTests
     }
 
     [Fact]
-    public void AddPartiesResolvesNoOpPartyIndexSearchIndexerWhenMemoriesDisabled()
+    public void AddPartiesResolvesCleanupCapableIndexerWhenMemoriesDisabled()
     {
         IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -135,7 +135,9 @@ public class PartyMemorySearchOptionsValidatorTests
             .BuildServiceProvider();
 
         provider.GetRequiredService<Hexalith.Parties.Projections.Search.IPartyIndexSearchIndexer>()
-            .ShouldBeOfType<Hexalith.Parties.Projections.Search.NoOpPartyIndexSearchIndexer>();
+            .ShouldBeOfType<PartyMemoryIndexEntrySearchIndexer>();
+        provider.GetRequiredService<PartyMemoryCleanupService>().ShouldNotBeNull();
+        provider.GetRequiredService<IPartyMemoryUnitMappingStore>().ShouldNotBeNull();
     }
 
     [Fact]

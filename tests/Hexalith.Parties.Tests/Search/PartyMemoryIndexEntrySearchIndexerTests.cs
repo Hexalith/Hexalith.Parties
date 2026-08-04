@@ -24,7 +24,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             mappingStore,
             new PartyMemorySearchOptions { Enabled = false, CaseId = "case-a" });
 
-        await indexer.NotifyIndexedAsync(
+        bool result = await indexer.NotifyIndexedAsync(
             "tenant-a",
             CreateEntry(),
             "PartyCreated",
@@ -32,6 +32,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             TestContext.Current.CancellationToken);
 
         client.IngestCount.ShouldBe(0);
+        result.ShouldBeTrue();
     }
 
     [Fact]
@@ -50,16 +51,21 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
                 RequireApiToken = false,
             });
 
-        await indexer.NotifyIndexedAsync(
+        DateTimeOffset eventTimestamp = DateTimeOffset.Parse("2026-08-04T12:34:56Z");
+        bool result = await indexer.NotifyIndexedAsync(
             "tenant-a",
             CreateEntry(),
             "PartyCreated",
-            DateTimeOffset.UnixEpoch,
+            eventTimestamp,
             TestContext.Current.CancellationToken);
 
+        result.ShouldBeTrue();
         client.IngestCount.ShouldBe(1);
         client.LastTenantId.ShouldBe("tenant-a");
         client.LastCaseId.ShouldBe("case-a");
+        client.LastMetadata.ShouldNotBeNull();
+        client.LastMetadata["eventType"].Value.ShouldBe("PartyCreated");
+        client.LastMetadata["timestamp"].Value.ShouldBe(eventTimestamp.ToString("O"));
     }
 
     [Fact]
@@ -78,12 +84,14 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
                 RequireApiToken = false,
             });
 
-        await Should.NotThrowAsync(() => indexer.NotifyIndexedAsync(
+        bool result = await indexer.NotifyIndexedAsync(
             "tenant-a",
             CreateEntry(),
             "PartyCreated",
             DateTimeOffset.UnixEpoch,
-            TestContext.Current.CancellationToken));
+            TestContext.Current.CancellationToken);
+
+        result.ShouldBeFalse();
     }
 
     [Fact]
@@ -140,6 +148,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             "party-1",
             "memory-1",
             "urn:hexalith:parties:tenant-a:party:party-1",
+            "case-a",
             CancellationToken.None);
         var handler = new CapturingHandler(new HttpResponseMessage(System.Net.HttpStatusCode.NoContent));
         var cleanup = new PartyMemoryCleanupService(
@@ -168,10 +177,39 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             }),
             NullLogger<PartyMemoryIndexEntrySearchIndexer>.Instance);
 
-        await indexer.NotifyRemovedAsync("tenant-a", "party-1", TestContext.Current.CancellationToken);
+        bool result = await indexer.NotifyRemovedAsync("tenant-a", "party-1", TestContext.Current.CancellationToken);
 
+        result.ShouldBeTrue();
         handler.RequestCount.ShouldBe(1);
         (await mappingStore.GetMappingsAsync("tenant-a", "party-1", CancellationToken.None)).Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task NotifyRemovedAsync_WhenIndexingDisabled_StillCleansPersistedCaseAsync()
+    {
+        var mappingStore = new RecordingMappingStore();
+        await mappingStore.RecordMappingAsync(
+            "tenant-a",
+            "party-1",
+            "memory-1",
+            "urn:hexalith:parties:tenant-a:party:party-1",
+            "case-at-ingestion",
+            CancellationToken.None);
+        var handler = new CapturingHandler(new HttpResponseMessage(System.Net.HttpStatusCode.NoContent));
+        var indexer = new PartyMemoryIndexEntrySearchIndexer(
+            indexingService: null,
+            new PartyMemoryCleanupService(
+                new HttpClient(handler) { BaseAddress = new Uri("https://memories.example/") },
+                mappingStore,
+                NullLogger<PartyMemoryCleanupService>.Instance),
+            CreateMonitor(new PartyMemorySearchOptions { Enabled = false, CaseId = "case-current" }),
+            NullLogger<PartyMemoryIndexEntrySearchIndexer>.Instance);
+
+        bool result = await indexer.NotifyRemovedAsync("tenant-a", "party-1", TestContext.Current.CancellationToken);
+
+        result.ShouldBeTrue();
+        handler.LastUri.ShouldNotBeNull();
+        handler.LastUri.AbsolutePath.ShouldContain("/cases/case-at-ingestion/");
     }
 
     private static PartyMemoryIndexEntrySearchIndexer CreateIndexer(
@@ -244,6 +282,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             string partyId,
             string memoryUnitId,
             string sourceUri,
+            string caseId,
             CancellationToken cancellationToken)
         {
             string key = $"{tenantId}:{partyId}";
@@ -253,7 +292,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
                 _mappings[key] = list;
             }
 
-            list.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri));
+            list.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri, caseId));
             return Task.CompletedTask;
         }
 
@@ -302,6 +341,8 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
 
         public string? LastCaseId { get; private set; }
 
+        public IReadOnlyDictionary<string, MetadataField>? LastMetadata { get; private set; }
+
 #pragma warning disable HXL001
         public override Task<string> IngestAsync(
             string tenantId,
@@ -316,6 +357,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             IngestCount++;
             LastTenantId = tenantId;
             LastCaseId = caseId;
+            LastMetadata = metadata;
             return Task.FromResult("workflow-1");
         }
 #pragma warning restore HXL001
@@ -345,11 +387,14 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
     {
         public int RequestCount { get; private set; }
 
+        public Uri? LastUri { get; private set; }
+
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
             RequestCount++;
+            LastUri = request.RequestUri;
             return Task.FromResult(response);
         }
     }

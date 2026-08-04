@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-08-03
+# last_updated: 2026-08-04
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -42,7 +42,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-08-03
+last_updated: 2026-08-04
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -157,9 +157,23 @@ development_status:
   # focused projection/query regression at the current EventStore pin
   # (4bcf2484 as of Story 8.7's later revalidation) before treating it as
   # re-validated for Story 8.6.
-  8-6-projection-and-query-sdk-migration: review
+  # Corrected 2026-08-04 from an erroneous `done` back to `in-progress` by
+  # sprint-change-proposal-2026-08-04.md: the additive EventStore package
+  # handoff sub-block is now green at v3.91.0 (1d6e9321), but material
+  # review findings (diagnostic-logging, corrupt-vs-redacted observability,
+  # rebuild/live-write concurrency, remaining parity-test gaps) are still
+  # open and were never part of the approved twelve-patch set.
+  8-6-projection-and-query-sdk-migration: in-progress
   # Story context created 2026-07-16; production migration remains blocked by
   # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
+  # G5 receipt revalidated 2026-08-04 at the current EventStore identity
+  # v3.91.0 (1d6e9321acfc416768c1c78e9facf573c9c41f71) per
+  # sprint-change-proposal-2026-08-04.md: the release adds Story 8.6's
+  # shared-projection rebuild completion mechanics only, not pdenc-v2,
+  # IPersonalDataPolicy, IErasureStateProvider, the production key-backend
+  # package, or the Story 8.11 closure packet. G5 stays needs-additive-api,
+  # the retention action stays open, and no Parties protection-path deletion
+  # is authorized. Story 8.7 remains blocked.
   8-7-data-protection-extraction: blocked
   # Story context revalidated 2026-07-31 after the latest root-submodule update.
   # All eight checkouts match their clean root gitlinks; only Builds (b529b66) and

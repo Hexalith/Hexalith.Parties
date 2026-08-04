@@ -121,7 +121,13 @@ internal sealed class PartyMemoryIndexingService(
         try
         {
             await mappingStore
-                .RecordMappingAsync(unit.TenantId, unit.PartyId, workflowInstanceId, unit.SourceUri, cancellationToken)
+                .RecordMappingAsync(
+                    unit.TenantId,
+                    unit.PartyId,
+                    workflowInstanceId,
+                    unit.SourceUri,
+                    unit.CaseId,
+                    cancellationToken)
                 .ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

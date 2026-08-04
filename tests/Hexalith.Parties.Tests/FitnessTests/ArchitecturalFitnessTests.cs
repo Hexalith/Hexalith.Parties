@@ -746,7 +746,7 @@ public sealed class ArchitecturalFitnessTests
         string indexSource = ReadRepoFile("src", "Hexalith.Parties.Projections", "Handlers", "PartyIndexSdkProjectionHandler.cs");
 
         detailSource.ShouldContain("IAsyncDomainProjectionRebuildHandler");
-        indexSource.ShouldContain("IAsyncDomainSharedProjectionRebuildHandler");
+        indexSource.ShouldContain("IAsyncDomainSharedProjectionRebuildCompletionHandler");
     }
 
     private static string ReadRepoFile(params string[] segments)

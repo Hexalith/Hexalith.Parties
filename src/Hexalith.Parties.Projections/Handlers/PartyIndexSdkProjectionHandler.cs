@@ -20,9 +20,11 @@ public sealed class PartyIndexSdkProjectionHandler(
     IReadModelStore readModelStore,
     IOptions<PartySdkReadModelOptions> options,
     IPartyIndexSearchIndexer? searchIndexer = null) :
-    IAsyncDomainSharedProjectionRebuildHandler,
+    IAsyncDomainSharedProjectionRebuildCompletionHandler,
     IDeclaresProjectionReadModelSlots
 {
+    private const string SearchReconciliationReason = "search-reconciliation-required";
+    private const string RebuildEventType = "PartyProjectionRebuilt";
     private readonly IPartyIndexSearchIndexer _searchIndexer = searchIndexer ?? new NoOpPartyIndexSearchIndexer();
 
     private static readonly JsonSerializerOptions s_candidateJsonOptions = PartiesJsonOptions.Default;
@@ -65,7 +67,12 @@ public sealed class PartyIndexSdkProjectionHandler(
 
         if (IsIdempotentNoOp(currentEntry.Value, folded, request.AggregateId))
         {
-            return DomainProjectionHandlerResult.AlreadyCompleted();
+            PartyIndexFoldResult reconciliationFold = BuildReconciliationFold(request, folded);
+            bool reconciled = await NotifySearchIndexerAsync(request, reconciliationFold, cancellationToken)
+                .ConfigureAwait(false);
+            return reconciled
+                ? DomainProjectionHandlerResult.AlreadyCompleted()
+                : DomainProjectionHandlerResult.Retryable(SearchReconciliationReason);
         }
 
         PartyIndexFoldResult persistedFold = foldResult;
@@ -95,36 +102,34 @@ public sealed class PartyIndexSdkProjectionHandler(
             return DeliveryFailure(exception.Message);
         }
 
-        await NotifySearchIndexerAsync(request, persistedFold, cancellationToken).ConfigureAwait(false);
-
-        return DomainProjectionHandlerResult.Completed();
+        bool indexed = await NotifySearchIndexerAsync(request, persistedFold, cancellationToken).ConfigureAwait(false);
+        return indexed
+            ? DomainProjectionHandlerResult.Completed()
+            : DomainProjectionHandlerResult.Retryable(SearchReconciliationReason);
     }
 
-    private async Task NotifySearchIndexerAsync(
+    private async Task<bool> NotifySearchIndexerAsync(
         ProjectionRequest request,
         PartyIndexFoldResult foldResult,
         CancellationToken cancellationToken)
     {
-        // Indexing an external search backend (e.g. Hexalith.Memories) is best effort: it must
-        // never fail or block the projection write it follows.
         try
         {
             if (foldResult.Removed)
             {
-                await _searchIndexer
+                return await _searchIndexer
                     .NotifyRemovedAsync(request.TenantId, request.AggregateId, cancellationToken)
                     .ConfigureAwait(false);
-                return;
             }
 
             if (!foldResult.Model.Entries.TryGetValue(request.AggregateId, out PartyIndexEntry? entry)
                 || entry is null
                 || foldResult.LastIndexedEvent is null)
             {
-                return;
+                return true;
             }
 
-            await _searchIndexer
+            return await _searchIndexer
                 .NotifyIndexedAsync(
                     request.TenantId,
                     entry,
@@ -139,7 +144,7 @@ public sealed class PartyIndexSdkProjectionHandler(
         }
         catch (Exception)
         {
-            // Best effort per IPartyIndexSearchIndexer's contract: swallow and move on.
+            return false;
         }
     }
 
@@ -182,7 +187,7 @@ public sealed class PartyIndexSdkProjectionHandler(
         return Task.FromResult(ToCandidate(foldResult.Model));
     }
 
-    public Task<DomainProjectionRebuildPlan> FinalizeAsync(
+    public async Task<DomainProjectionRebuildPlan> FinalizeAsync(
         DomainSharedProjectionRebuildIdentity identity,
         DomainSharedProjectionRebuildCandidate candidate,
         CancellationToken cancellationToken)
@@ -191,12 +196,89 @@ public sealed class PartyIndexSdkProjectionHandler(
         ArgumentNullException.ThrowIfNull(candidate);
         cancellationToken.ThrowIfCancellationRequested();
         PartyIndexSdkReadModel rebuiltIndex = FromCandidate(candidate);
-        return Task.FromResult(new DomainProjectionRebuildPlan(
+        ReadModelEntry<PartyIndexSdkReadModel> current = await readModelStore
+            .GetAsync<PartyIndexSdkReadModel>(
+                RebuildStoreName,
+                PartySdkReadModelAddresses.Index(identity.TenantId),
+                cancellationToken)
+            .ConfigureAwait(false);
+        string[] removedPartyIds = [.. (current?.Value?.Entries.Keys ?? [])
+            .Except(rebuiltIndex.Entries.Keys, StringComparer.Ordinal)
+            .OrderBy(static partyId => partyId, StringComparer.Ordinal)];
+        PartyIndexSearchRebuildEntry[] rebuiltEntries = [.. rebuiltIndex.Entries.Values
+            .OrderBy(static entry => entry.Id, StringComparer.Ordinal)
+            .Select(static entry => new PartyIndexSearchRebuildEntry(
+                entry,
+                RebuildEventType,
+                entry.LastModifiedAt))];
+        byte[] completionState = JsonSerializer.SerializeToUtf8Bytes(
+            new PartyIndexSearchRebuildManifest(rebuiltEntries, removedPartyIds),
+            s_candidateJsonOptions);
+        return new DomainProjectionRebuildPlan(
             RebuildStoreName,
             [ReadModelBatchOperation.Write(
                 PartySdkReadModelAddresses.Index(identity.TenantId),
                 rebuiltIndex,
-                ReadModelBatchConcurrency.LastWrite)]));
+                ReadModelBatchConcurrency.LastWrite)],
+            completionState);
+    }
+
+    public async Task<DomainProjectionHandlerResult> CompleteRebuildAsync(
+        DomainSharedProjectionRebuildIdentity identity,
+        DomainSharedProjectionRebuildCandidate candidate,
+        ReadOnlyMemory<byte> completionState,
+        CancellationToken cancellationToken)
+    {
+        Validate(identity);
+        ArgumentNullException.ThrowIfNull(candidate);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (completionState.IsEmpty)
+        {
+            return DomainProjectionHandlerResult.Completed();
+        }
+
+        PartyIndexSearchRebuildManifest manifest = JsonSerializer
+            .Deserialize<PartyIndexSearchRebuildManifest>(completionState.Span, s_candidateJsonOptions)
+            ?? throw new InvalidOperationException("The Party index search rebuild manifest is empty or malformed.");
+
+        // The manifest's removal list was computed from a FinalizeAsync-time snapshot, which can
+        // predate a live write that (re)added one of those parties during the rebuild-accumulation
+        // window. Re-check against the index as it stands now so a still-live party is never
+        // reported as removed to the search indexer.
+        ReadModelEntry<PartyIndexSdkReadModel> currentEntry = await readModelStore
+            .GetAsync<PartyIndexSdkReadModel>(
+                RebuildStoreName,
+                PartySdkReadModelAddresses.Index(identity.TenantId),
+                cancellationToken)
+            .ConfigureAwait(false);
+        IReadOnlySet<string> stillPresentPartyIds = currentEntry.Value?.Entries.Keys is { } keys
+            ? new HashSet<string>(keys, StringComparer.Ordinal)
+            : new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (string partyId in manifest.RemovedPartyIds)
+        {
+            if (stillPresentPartyIds.Contains(partyId))
+            {
+                continue;
+            }
+
+            if (!await _searchIndexer.NotifyRemovedAsync(identity.TenantId, partyId, cancellationToken).ConfigureAwait(false))
+            {
+                return DomainProjectionHandlerResult.Retryable(SearchReconciliationReason);
+            }
+        }
+
+        foreach (PartyIndexSearchRebuildEntry item in manifest.Entries)
+        {
+            if (!await _searchIndexer
+                .NotifyIndexedAsync(identity.TenantId, item.Entry, item.EventType, item.Timestamp, cancellationToken)
+                .ConfigureAwait(false))
+            {
+                return DomainProjectionHandlerResult.Retryable(SearchReconciliationReason);
+            }
+        }
+
+        return DomainProjectionHandlerResult.Completed();
     }
 
     internal static PartyIndexSdkReadModel Fold(ProjectionRequest request, PartyIndexSdkReadModel? current)
@@ -223,7 +305,7 @@ public sealed class PartyIndexSdkProjectionHandler(
         bool isErased = erasureSequences.ContainsKey(request.AggregateId);
         DateTimeOffset projectedAt = current?.ProjectedAt ?? DateTimeOffset.UnixEpoch;
         entries.TryGetValue(request.AggregateId, out PartyIndexEntry? entry);
-        bool hadEntry = entry is not null;
+        bool removalObserved = false;
         ProjectionEventDto? lastIndexedEvent = null;
 
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
@@ -240,6 +322,7 @@ public sealed class PartyIndexSdkProjectionHandler(
                         erasureSequences.GetValueOrDefault(request.AggregateId, long.MinValue),
                         @event.SequenceNumber);
                     lastIndexedEvent = null;
+                    removalObserved = true;
                 }
                 else if (!isErased)
                 {
@@ -291,8 +374,7 @@ public sealed class PartyIndexSdkProjectionHandler(
             ProjectedAt = projectedAt,
             ProjectionVersion = version,
         };
-        bool removed = hadEntry && entry is null;
-        return new PartyIndexFoldResult(model, lastIndexedEvent, removed, null);
+        return new PartyIndexFoldResult(model, lastIndexedEvent, removalObserved, null);
     }
 
     private string StoreName
@@ -306,9 +388,26 @@ public sealed class PartyIndexSdkProjectionHandler(
     }
 
     private static DomainProjectionHandlerResult DeliveryFailure(string reason)
-        => string.Equals(reason, PartySdkProjectionFold.DeliverySequenceGapReason, StringComparison.Ordinal)
-            ? DomainProjectionHandlerResult.Retryable(reason)
-            : DomainProjectionHandlerResult.Failed(reason);
+        => DomainProjectionHandlerResult.Retryable(reason);
+
+    private static PartyIndexFoldResult BuildReconciliationFold(
+        ProjectionRequest request,
+        PartyIndexSdkReadModel current)
+    {
+        if (current.ErasureSequenceNumbers.ContainsKey(request.AggregateId))
+        {
+            return new PartyIndexFoldResult(current, null, true, null);
+        }
+
+        ProjectionEventDto? lastIndexedEvent = request.Events.Length == 0
+            ? null
+            : PartySdkProjectionFold
+                .DeserializeNew(request.Events, request.Events.Min(static item => item.SequenceNumber) - 1)
+                .Where(static item => item.Payload is not null and not PartyErased)
+                .Select(static item => item.Event)
+                .LastOrDefault();
+        return new PartyIndexFoldResult(current, lastIndexedEvent, false, null);
+    }
 
     private static bool IsIdempotentNoOp(
         PartyIndexSdkReadModel? current,
@@ -369,6 +468,15 @@ public sealed class PartyIndexSdkProjectionHandler(
 
     private static DomainSharedProjectionRebuildCandidate ToCandidate(PartyIndexSdkReadModel value)
         => new(JsonSerializer.SerializeToUtf8Bytes(value, s_candidateJsonOptions));
+
+    private sealed record PartyIndexSearchRebuildEntry(
+        PartyIndexEntry Entry,
+        string EventType,
+        DateTimeOffset Timestamp);
+
+    private sealed record PartyIndexSearchRebuildManifest(
+        IReadOnlyList<PartyIndexSearchRebuildEntry> Entries,
+        IReadOnlyList<string> RemovedPartyIds);
 
     private static void Validate(DomainSharedProjectionRebuildIdentity identity)
     {

@@ -3,7 +3,7 @@ stepsCompleted: [1, 2, 3, 4]
 status: complete
 completedAt: '2026-06-09'
 epicCount: 8
-storyCount: 55
+storyCount: 58
 correctCourse: '2026-06-09 — readiness course-correction: split Story 4.1 (decision spike + impl) and Story 3.5 (D7 backend + report UI); +phone-reflow AC on 2.3; +mock-fidelity rule. 2026-06-28 — readiness remediation for sprint-change-proposal-2026-06-28: add Epic 6 implementation-ready Class A consolidation stories, add Epic 7 deferred architecture placeholder, and pin A3/A8 decisions. 2026-06-29 — readiness scope hygiene: classify Epics 1-5 as PRD feature scope, Epic 6 as conditional maintenance scope, Epic 7 as excluded/deferred planning scope, and normalize Epic 2 Story 2.5 before Story 2.4. 2026-06-29 — Epic 7 approved for PM/Architect planning only. 2026-06-29 — Epic 7 PM/Architect implementation plan approved: add story backlog 7.1-7.8 for platform alignment while preserving post-MVP maintenance classification. 2026-07-06 — approved sprint-change-proposal-2026-07-06: close Epic 7 as completed partial platform alignment and add Epic 8 Class C domain-focus refactoring backlog.'
 inputDocuments:
   # Canonical requirements source (PRD-shaped; consolidates the brownfield basis below)
@@ -1780,6 +1780,30 @@ changed.
 
 **And** final verification confirms or blocks release using the agreed build,
 focused test, package/API, topology, deploy, and UI accessibility lanes.
+
+### Story 8.11: Validation fallback ladder runner and guidance
+
+As a maintainer and test architect,
+I want durable fallback-validation guidance and runner support,
+so that every focused lane is attempted and blocked environments cannot create a
+false green by silently omitting later projects.
+
+**Given** a test lane contains multiple projects and one project fails
+**When** continue-after-failure mode is enabled
+**Then** the runner attempts every project, emits an inspectable result summary,
+and returns a failing exit code when any project fails.
+
+**And** the default runner behavior remains fail-fast for existing callers.
+
+**And** local result-directory, logger, and build-property forwarding support
+allows environment blockers and focused evidence to be recorded precisely.
+
+**And** CI continues within each shard, reports every project result, preserves
+the authoritative project inventory, and fails the shard after all attempts when
+any project fails.
+
+**And** the repository documents the standard fallback validation ladder and
+reconciles the Epic 6 and Epic 7 action items this story completes.
 
 ### Story 8.12: Parties-only Zot container publish CI
 

@@ -276,7 +276,13 @@ public class MemoriesSearchHealthCheckTests
 
         public IReadOnlyCollection<string> AllPartyKeys => _mappings.Keys;
 
-        public Task RecordMappingAsync(string tenantId, string partyId, string memoryUnitId, string sourceUri, CancellationToken cancellationToken)
+        public Task RecordMappingAsync(
+            string tenantId,
+            string partyId,
+            string memoryUnitId,
+            string sourceUri,
+            string caseId,
+            CancellationToken cancellationToken)
         {
             string key = $"{tenantId}:{partyId}";
             if (!_mappings.TryGetValue(key, out List<PartyMemoryUnitMappingEntry>? list))
@@ -285,7 +291,7 @@ public class MemoriesSearchHealthCheckTests
                 _mappings[key] = list;
             }
 
-            list.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri));
+            list.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri, caseId));
             return Task.CompletedTask;
         }
 

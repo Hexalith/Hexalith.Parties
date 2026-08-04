@@ -64,8 +64,24 @@ public sealed class PartyDetailSdkProjectionHandler(
         string? deliveryFailure = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, oldestCheckpoint);
         if (deliveryFailure is not null)
         {
-            // Fail the whole coordinated write before either read model advances. A mixed batch
-            // containing known and unresolved events must remain retryable as one delivery.
+            if (string.Equals(
+                deliveryFailure,
+                PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason,
+                StringComparison.Ordinal))
+            {
+                try
+                {
+                    await RecordUnresolvedProcessingAsync(request, storeName, processingKey, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch (InvalidOperationException)
+                {
+                    // The audit-record write lost the optimistic-concurrency race (retry-budget
+                    // exhausted). The delivery is still retryable — a future attempt retries both
+                    // the audit write and the main fold, so this must not crash dispatch.
+                }
+            }
+
             return DeliveryFailure(deliveryFailure);
         }
 
@@ -184,10 +200,22 @@ public sealed class PartyDetailSdkProjectionHandler(
         }
     }
 
+    private async Task RecordUnresolvedProcessingAsync(
+        ProjectionRequest request,
+        string storeName,
+        string processingKey,
+        CancellationToken cancellationToken)
+    {
+        await ReadModelWritePolicy.UpdateAsync<PartyProcessingSdkReadModel>(
+            readModelStore,
+            storeName,
+            processingKey,
+            current => PartyProcessingActivityFold.Fold(request, current),
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+    }
+
     private static DomainProjectionHandlerResult DeliveryFailure(string reason)
-        => string.Equals(reason, PartySdkProjectionFold.DeliverySequenceGapReason, StringComparison.Ordinal)
-            ? DomainProjectionHandlerResult.Retryable(reason)
-            : DomainProjectionHandlerResult.Failed(reason);
+        => DomainProjectionHandlerResult.Retryable(reason);
 
     private static PartyDetail NormalizeEventTimestamps(
         PartyDetail applied,

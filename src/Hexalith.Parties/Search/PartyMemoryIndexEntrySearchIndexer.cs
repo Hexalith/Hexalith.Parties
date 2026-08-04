@@ -16,7 +16,7 @@ namespace Hexalith.Parties.Search;
 /// <see cref="IPartyIndexSearchIndexer"/> seam and is registered by <c>AddParties</c>.
 /// </summary>
 internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
-    PartyMemoryIndexingService indexingService,
+    PartyMemoryIndexingService? indexingService,
     PartyMemoryCleanupService cleanupService,
     IOptionsMonitor<PartyMemorySearchOptions> options,
     ILogger<PartyMemoryIndexEntrySearchIndexer> logger) : IPartyIndexSearchIndexer
@@ -25,7 +25,7 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
     // storm — mirrors the retired PartyProjectionUpdateOrchestrator's behavior.
     private static readonly ConcurrentDictionary<string, byte> s_caseIdMissingWarned = new(StringComparer.Ordinal);
 
-    public async Task NotifyIndexedAsync(
+    public async Task<bool> NotifyIndexedAsync(
         string tenantId,
         PartyIndexEntry entry,
         string eventType,
@@ -39,7 +39,7 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
             PartyMemorySearchOptions current = options.CurrentValue;
             if (!current.Enabled)
             {
-                return;
+                return true;
             }
 
             if (string.IsNullOrWhiteSpace(current.CaseId))
@@ -50,7 +50,13 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
                     LogIndexingSkippedMissingCaseId();
                 }
 
-                return;
+                return false;
+            }
+
+            if (indexingService is null)
+            {
+                LogIndexingFailed();
+                return false;
             }
 
             PartyMemoryIndexingResult? result = await indexingService
@@ -68,13 +74,15 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
             if (result is null)
             {
                 LogIndexingSkippedUnmappedUnit();
-                return;
+                return true;
             }
 
             if (!result.Indexed)
             {
                 LogIndexingFailed();
             }
+
+            return result.Indexed;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -82,12 +90,13 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
         }
         catch (Exception ex)
         {
-            // Seam contract: implementations must never throw into the projection path.
+            // Convert external failures into an explicit non-converged result for retry.
             LogIndexingException(ex.GetType().Name);
+            return false;
         }
     }
 
-    public async Task NotifyRemovedAsync(
+    public async Task<bool> NotifyRemovedAsync(
         string tenantId,
         string partyId,
         CancellationToken cancellationToken)
@@ -98,30 +107,16 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
         try
         {
             PartyMemorySearchOptions current = options.CurrentValue;
-            if (!current.Enabled)
-            {
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(current.CaseId))
-            {
-                string warningKey = $"{tenantId}:{partyId}:remove";
-                if (s_caseIdMissingWarned.TryAdd(warningKey, 0))
-                {
-                    LogIndexingSkippedMissingCaseId();
-                }
-
-                return;
-            }
-
             PartyMemoryCleanupResult result = await cleanupService
-                .DeleteByPartyAsync(tenantId, current.CaseId, partyId, cancellationToken)
+                .DeleteByPartyAsync(tenantId, current.CaseId ?? string.Empty, partyId, cancellationToken)
                 .ConfigureAwait(false);
 
             if (!result.Cleaned)
             {
                 LogRemovalFailed();
             }
+
+            return result.Cleaned;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -130,6 +125,7 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
         catch (Exception ex)
         {
             LogRemovalException(ex.GetType().Name);
+            return false;
         }
     }
 

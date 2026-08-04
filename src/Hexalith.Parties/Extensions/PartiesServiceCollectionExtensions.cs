@@ -30,6 +30,7 @@ using Hexalith.Tenants.Client.Registration;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.Extensions;
@@ -40,6 +41,7 @@ public static class PartiesServiceCollectionExtensions {
     public static IServiceCollection AddParties(this IServiceCollection services, IConfiguration configuration) {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
+        services.TryAddSingleton(configuration);
 
         // ProblemDetails support (RFC 9457)
         _ = services.AddProblemDetails();
@@ -239,52 +241,24 @@ public static class PartiesServiceCollectionExtensions {
                 }),
             ];
 
-            if (memorySearch.Enabled)
+            cleanups.Add(async (tenantId, partyId, cancellationToken) =>
             {
-                cleanups.Add(async (tenantId, partyId, cancellationToken) =>
-                {
-                    // Read the current options on every call so a runtime config reload
-                    // (`IOptionsMonitor`) is honoured. Capturing CaseId at registration time
-                    // would silently bind cleanup to whatever value was set at boot.
-                    PartyMemorySearchOptions current = sp
-                        .GetRequiredService<IOptionsMonitor<PartyMemorySearchOptions>>()
-                        .CurrentValue;
-                    string memoriesCaseId = current.CaseId ?? string.Empty;
+                // Cleanup remains active even when new Memories indexing is disabled. Each
+                // durable mapping carries the CaseId used at ingestion time; the current CaseId
+                // is retained only as a compatibility fallback for legacy mappings.
+                PartyMemoryCleanupService cleanupService = sp.GetRequiredService<PartyMemoryCleanupService>();
+                PartyMemoryCleanupResult result = await cleanupService
+                    .DeleteByPartyAsync(tenantId, memorySearch.CaseId ?? string.Empty, partyId, cancellationToken)
+                    .ConfigureAwait(false);
 
-                    if (string.IsNullOrWhiteSpace(memoriesCaseId))
-                    {
-                        return new ErasureVerificationStoreResult
-                        {
-                            StoreName = "memories-search",
-                            Status = ErasureStoreCleanupStatus.Failed,
-                            Timestamp = DateTimeOffset.UtcNow,
-                            ErrorMessage = "Memories cleanup blocked: Parties:MemoriesSearch:CaseId is not configured.",
-                        };
-                    }
-
-                    PartyMemoryCleanupService cleanupService = sp.GetRequiredService<PartyMemoryCleanupService>();
-                    PartyMemoryCleanupResult result = await cleanupService
-                        .DeleteByPartyAsync(tenantId, memoriesCaseId, partyId, cancellationToken)
-                        .ConfigureAwait(false);
-
-                    return new ErasureVerificationStoreResult
-                    {
-                        StoreName = "memories-search",
-                        Status = result.Cleaned ? ErasureStoreCleanupStatus.Cleaned : ErasureStoreCleanupStatus.Failed,
-                        Timestamp = DateTimeOffset.UtcNow,
-                        ErrorMessage = result.BlockedReason,
-                    };
-                });
-            }
-            else
-            {
-                cleanups.Add((tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
+                return new ErasureVerificationStoreResult
                 {
                     StoreName = "memories-search",
-                    Status = ErasureStoreCleanupStatus.NotApplicable,
+                    Status = result.Cleaned ? ErasureStoreCleanupStatus.Cleaned : ErasureStoreCleanupStatus.Failed,
                     Timestamp = DateTimeOffset.UtcNow,
-                }));
-            }
+                    ErrorMessage = result.BlockedReason,
+                };
+            });
 
             return cleanups;
         });
@@ -305,6 +279,23 @@ public static class PartiesServiceCollectionExtensions {
             .BindConfiguration(PartyMemorySearchOptions.SectionName)
             .ValidateOnStart();
         _ = services.AddSingleton<IValidateOptions<PartyMemorySearchOptions>, PartyMemorySearchOptionsValidator>();
+        _ = services
+            .AddOptions<PartyMemoryUnitMappingStoreOptions>()
+            .Bind(configuration.GetSection(PartyMemoryUnitMappingStoreOptions.SectionName));
+        _ = services.AddSingleton<IPartyMemoryUnitMappingStore, PartyMemoryUnitMappingStore>();
+        string? memoriesApiToken = memorySearch.ApiToken;
+        _ = services.AddHttpClient<PartyMemoryCleanupService>((sp, httpClient) =>
+        {
+            if (memorySearch.Endpoint is not null)
+            {
+                httpClient.BaseAddress = memorySearch.Endpoint;
+            }
+
+            PartyMemoryCleanupService.ConfigureAuthorization(
+                httpClient,
+                memoriesApiToken,
+                sp.GetService<ILogger<PartyMemoryCleanupService>>());
+        });
 
         if (memorySearch.Enabled)
         {
@@ -322,37 +313,24 @@ public static class PartiesServiceCollectionExtensions {
                 options.Endpoint = memorySearch.Endpoint;
                 options.ApiToken = memorySearch.ApiToken;
             });
-            // Per-party → memory-unit-id mapping so erasure cleanup can iterate per-unit
-            // DELETEs against the existing per-unit Memories endpoint (AC5 resolved
-            // decision #2). Backed by Dapr state store; durable across process restarts.
-            // P14: state-store component name is operator-configurable.
-            _ = services
-                .AddOptions<PartyMemoryUnitMappingStoreOptions>()
-                .Bind(configuration.GetSection(PartyMemoryUnitMappingStoreOptions.SectionName));
-            _ = services.AddSingleton<IPartyMemoryUnitMappingStore, PartyMemoryUnitMappingStore>();
             _ = services.AddSingleton<PartyMemoryIndexingService>();
-            _ = services.AddSingleton<IPartyIndexSearchIndexer, PartyMemoryIndexEntrySearchIndexer>();
             _ = services.AddSingleton<IPartySearchService>(sp => new MemoriesPartySearchService(
                 sp.GetRequiredService<MemoriesClient>(),
                 sp.GetRequiredService<LocalPartySearchService>(),
                 sp.GetRequiredService<IOptionsMonitor<PartyMemorySearchOptions>>(),
                 sp.GetRequiredService<ILogger<MemoriesPartySearchService>>()));
-            string? memoriesApiToken = memorySearch.ApiToken;
-            _ = services.AddHttpClient<PartyMemoryCleanupService>((sp, httpClient) =>
-            {
-                httpClient.BaseAddress = memorySearch.Endpoint;
-                PartyMemoryCleanupService.ConfigureAuthorization(
-                    httpClient,
-                    memoriesApiToken,
-                    sp.GetService<ILogger<PartyMemoryCleanupService>>());
-            });
         }
         else
         {
             // Local fallback is the only registered IPartySearchService when Memories is disabled.
             _ = services.AddSingleton<IPartySearchService>(sp => sp.GetRequiredService<LocalPartySearchService>());
-            _ = services.AddSingleton<IPartyIndexSearchIndexer, NoOpPartyIndexSearchIndexer>();
         }
+
+        _ = services.AddSingleton<IPartyIndexSearchIndexer>(sp => new PartyMemoryIndexEntrySearchIndexer(
+            sp.GetService<PartyMemoryIndexingService>(),
+            sp.GetRequiredService<PartyMemoryCleanupService>(),
+            sp.GetRequiredService<IOptionsMonitor<PartyMemorySearchOptions>>(),
+            sp.GetRequiredService<ILogger<PartyMemoryIndexEntrySearchIndexer>>()));
 
         // FluentValidation (assembly scanning — no explicit validator registration)
         _ = services.AddValidatorsFromAssemblyContaining<CreatePartyValidator>();

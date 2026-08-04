@@ -3,15 +3,15 @@ using Hexalith.Parties.Contracts.Models;
 namespace Hexalith.Parties.Projections.Search;
 
 /// <summary>
-/// Best-effort hook invoked after a Party index entry is durably persisted or removed, so an
-/// optional external search index (e.g. Hexalith.Memories) can be kept in sync. Implementations
-/// must never throw — indexing is not required for local search, so a failure here must not
-/// block or fail the projection write it is notified from.
+/// Hook invoked after a Party index entry is durably persisted or removed, so an optional
+/// external search index (e.g. Hexalith.Memories) can be kept in sync. Implementations return
+/// <see langword="true"/> only after the requested external state has converged. Cancellation
+/// must propagate; other failures should be reported as <see langword="false"/>.
 /// </summary>
 public interface IPartyIndexSearchIndexer
 {
     /// <summary>Notifies the indexer that <paramref name="entry"/> was just persisted.</summary>
-    Task NotifyIndexedAsync(
+    Task<bool> NotifyIndexedAsync(
         string tenantId,
         PartyIndexEntry entry,
         string eventType,
@@ -19,7 +19,7 @@ public interface IPartyIndexSearchIndexer
         CancellationToken cancellationToken);
 
     /// <summary>Notifies the indexer that <paramref name="partyId"/> was removed from the index.</summary>
-    Task NotifyRemovedAsync(
+    Task<bool> NotifyRemovedAsync(
         string tenantId,
         string partyId,
         CancellationToken cancellationToken);

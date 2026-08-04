@@ -186,7 +186,13 @@ internal sealed class MemoriesSearchHealthCheck(
         string probeParty = $"_health-probe-{Guid.NewGuid():N}";
         try
         {
-            await store.RecordMappingAsync(probeTenant, probeParty, "_probe-unit", "urn:_probe", cancellationToken).ConfigureAwait(false);
+            await store.RecordMappingAsync(
+                probeTenant,
+                probeParty,
+                "_probe-unit",
+                "urn:_probe",
+                "_probe-case",
+                cancellationToken).ConfigureAwait(false);
             IReadOnlyList<PartyMemoryUnitMappingEntry> read = await store.GetMappingsAsync(probeTenant, probeParty, cancellationToken).ConfigureAwait(false);
             await store.ClearMappingsAsync(probeTenant, probeParty, cancellationToken).ConfigureAwait(false);
             return read.Count == 1

@@ -17,6 +17,12 @@ internal static class PartyProcessingActivityFold
         long? erasureSequence = current?.ErasureSequenceNumber;
         DateTimeOffset? erasedAt = current?.ErasedAt;
         DateTimeOffset projectedAt = current?.ProjectedAt ?? DateTimeOffset.UnixEpoch;
+
+        // Once an unresolved event is seen, the checkpoint must not advance past it even if a
+        // later event in the same batch resolves and would otherwise advance the checkpoint —
+        // otherwise a future redelivery (e.g. after a consumer upgrade) would never revisit the
+        // still-unresolved event, and its "Failed" Art.30 record would be stuck permanently.
+        bool blockedByUnresolvedEvent = false;
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
             PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence))
         {
@@ -60,6 +66,12 @@ internal static class PartyProcessingActivityFold
             }
 
             if (!advance)
+            {
+                blockedByUnresolvedEvent = true;
+                continue;
+            }
+
+            if (blockedByUnresolvedEvent)
             {
                 continue;
             }

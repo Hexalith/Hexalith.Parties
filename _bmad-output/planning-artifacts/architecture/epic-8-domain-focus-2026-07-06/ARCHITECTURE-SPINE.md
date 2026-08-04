@@ -99,9 +99,12 @@ substance and sheds reusable platform mechanics.
   set-based idempotency; duplicate/out-of-order tolerance.
 - I10. Stale/degraded reads render last-known (never throw on staleness);
   `ProjectionFreshnessMetadata` on every read; erased parties excluded from the
-  index. Target abstractions: `IDomainProjectionHandler`, `IDomainQueryHandler`,
-  `IReadModelStore`, `ReadModelWritePolicy`, `IQueryCursorCodec`. A full rebuild
-  is executed and verified against aggregate replay before local code deletion.
+  index, and Party identifiers remain permanently unavailable for reuse after
+  erasure — sequence/checkpoint state must preserve that tombstone under
+  delayed or same-ID events. Target abstractions: `IDomainProjectionHandler`,
+  `IDomainQueryHandler`, `IReadModelStore`, `ReadModelWritePolicy`,
+  `IQueryCursorCodec`. A full rebuild is executed and verified against
+  aggregate replay before local code deletion.
 
 **Identifier, build, UI, GDPR copy, scope**
 - I11. Stop rejecting valid ULID-compatible aggregate IDs; retain replay compat

@@ -70,8 +70,18 @@ public sealed class PartySdkProjectionHandlerTests
         persisted.Detail.Id.ShouldBe(retained!.Id);
         persisted.Detail.Type.ShouldBe(retained.Type);
         persisted.Detail.IsActive.ShouldBe(retained.IsActive);
+        persisted.Detail.CreatedAt.ShouldBe(DateTimeOffset.UnixEpoch);
+        persisted.Detail.LastModifiedAt.ShouldBe(DateTimeOffset.UnixEpoch.AddSeconds(1));
+        persisted.Detail.NameHistory.ShouldHaveSingleItem().ChangedAt.ShouldBe(DateTimeOffset.UnixEpoch);
         persisted.LastSequenceNumber.ShouldBe(2);
         persisted.ProjectedAt.ShouldBe(DateTimeOffset.UnixEpoch.AddSeconds(1));
+        ReadModelBatchOperation processingOperation = captured.Operations.Single(static operation =>
+            operation.Key.EndsWith(":processing-records", StringComparison.Ordinal));
+        processingOperation.Key.ShouldBe("readmodel:tenant-a:party:party-detail:party-1:processing-records");
+        PartyProcessingSdkReadModel processing = JsonSerializer.Deserialize<PartyProcessingSdkReadModel>(
+            processingOperation.CanonicalValue.Span,
+            s_canonicalJsonOptions)!;
+        processing.Records.Select(static record => record.SequenceNumber).ShouldBe([1, 2]);
     }
 
     [Fact]
@@ -94,6 +104,11 @@ public sealed class PartySdkProjectionHandlerTests
         Normalize(candidate).ShouldBe(Normalize(replay));
         rebuild.StoreName.ShouldBe("statestore");
         rebuild.Operations.Count.ShouldBe(2);
+        PartyProcessingSdkReadModel processingCandidate = JsonSerializer.Deserialize<PartyProcessingSdkReadModel>(
+            rebuild.Operations.Single(static operation => operation.Key.EndsWith(":processing-records", StringComparison.Ordinal)).CanonicalValue.Span,
+            s_canonicalJsonOptions)!;
+        processingCandidate.Records.Select(static record => record.SequenceNumber).ShouldBe([1, 2]);
+        processingCandidate.LastSequenceNumber.ShouldBe(2);
         handler.RebuildSemantics.ShouldBe(DomainProjectionRebuildSemantics.FullReplay);
     }
 
@@ -210,6 +225,13 @@ public sealed class PartySdkProjectionHandlerTests
                 Arg.Any<CancellationToken>())
             .Returns(true);
         IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
+        searchIndexer.NotifyIndexedAsync(
+                Arg.Any<string>(),
+                Arg.Any<PartyIndexEntry>(),
+                Arg.Any<string>(),
+                Arg.Any<DateTimeOffset>(),
+                Arg.Any<CancellationToken>())
+            .Returns(true);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
 
         DomainProjectionHandlerResult result = await handler.ProjectAsync(
@@ -241,6 +263,8 @@ public sealed class PartySdkProjectionHandlerTests
                 Arg.Any<CancellationToken>())
             .Returns(true);
         IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
+        searchIndexer.NotifyRemovedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(true);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
 
         DomainProjectionHandlerResult result = await handler.ProjectAsync(
@@ -258,7 +282,39 @@ public sealed class PartySdkProjectionHandlerTests
     }
 
     [Fact]
-    public async Task IndexHandler_SearchIndexerThrowDoesNotFailProjectionAsync()
+    public async Task IndexHandler_ErasureNotifiesRemovalWhenCanonicalEntryWasAlreadyAbsentAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var existing = new PartyIndexSdkReadModel
+        {
+            LastSequenceNumbers = new Dictionary<string, long>(StringComparer.Ordinal) { ["party-1"] = 1 },
+        };
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(existing, "etag-1"));
+        store.TrySaveAsync(
+                "statestore",
+                PartySdkReadModelAddresses.Index("tenant-a"),
+                Arg.Any<PartyIndexSdkReadModel>(),
+                "etag-1",
+                Arg.Any<CancellationToken>())
+            .Returns(true);
+        IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
+        searchIndexer.NotifyRemovedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
+        ProjectionRequest request = CreateErasureRequest();
+
+        DomainProjectionHandlerResult result = await handler.ProjectAsync(
+            request,
+            "dispatch-erase-absent",
+            TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        await searchIndexer.Received(1).NotifyRemovedAsync("tenant-a", "party-1", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task IndexHandler_SearchIndexerThrowReturnsRetryableAfterCanonicalWriteAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
         store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
@@ -278,7 +334,7 @@ public sealed class PartySdkProjectionHandlerTests
                 Arg.Any<string>(),
                 Arg.Any<DateTimeOffset>(),
                 Arg.Any<CancellationToken>())
-            .Returns<Task>(_ => throw new InvalidOperationException("memories down"));
+            .Returns<Task<bool>>(_ => throw new InvalidOperationException("memories down"));
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
 
         DomainProjectionHandlerResult result = await handler.ProjectAsync(
@@ -286,7 +342,53 @@ public sealed class PartySdkProjectionHandlerTests
             "dispatch-1",
             TestContext.Current.CancellationToken);
 
-        result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        result.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        result.ReasonCode.ShouldBe("search-reconciliation-required");
+    }
+
+    [Fact]
+    public async Task IndexHandler_RetryAfterSearchFailureReconcilesIdempotentCanonicalWriteAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        string indexKey = PartySdkReadModelAddresses.Index("tenant-a");
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
+        PartyIndexSdkReadModel? persisted = null;
+        store.TrySaveAsync(
+                "statestore",
+                indexKey,
+                Arg.Do<PartyIndexSdkReadModel>(value => persisted = value),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
+            .Returns(true);
+        IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
+        searchIndexer.NotifyIndexedAsync(
+                Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+            .Returns(false, true);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
+        ProjectionRequest request = CreateRequest();
+
+        DomainProjectionHandlerResult first = await handler.ProjectAsync(
+            request,
+            "dispatch-search-retry",
+            TestContext.Current.CancellationToken);
+        first.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        persisted.ShouldNotBeNull();
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(persisted, "etag-2"));
+
+        DomainProjectionHandlerResult retry = await handler.ProjectAsync(
+            request,
+            "dispatch-search-retry",
+            TestContext.Current.CancellationToken);
+
+        retry.Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        await searchIndexer.Received(2).NotifyIndexedAsync(
+            "tenant-a",
+            Arg.Is<PartyIndexEntry>(entry => entry != null && entry.Id == "party-1"),
+            "PartyDeactivated",
+            DateTimeOffset.UnixEpoch.AddSeconds(1),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -492,7 +594,7 @@ public sealed class PartySdkProjectionHandlerTests
             "dispatch-unresolved-mixed",
             TestContext.Current.CancellationToken);
 
-        result.Status.ShouldBe(ProjectionDispatchStatus.Failed);
+        result.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
         result.ReasonCode.ShouldBe("unresolved-or-unsupported-event");
         await store.DidNotReceive().TrySaveAsync(
             Arg.Any<string>(),
@@ -525,7 +627,7 @@ public sealed class PartySdkProjectionHandlerTests
     }
 
     [Fact]
-    public async Task DetailHandler_UnresolvedOnlyDeliveryReturnsFailedNotAlreadyCompletedAsync()
+    public async Task DetailHandler_UnresolvedOnlyDeliveryIsRetryableAndPersistsFailedAuditAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
         IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
@@ -535,6 +637,14 @@ public sealed class PartySdkProjectionHandlerTests
             .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(detail, "etag-d"));
         store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(processing, "etag-p"));
+        PartyProcessingSdkReadModel? persistedAudit = null;
+        store.TrySaveAsync(
+                "statestore",
+                Arg.Any<string>(),
+                Arg.Do<PartyProcessingSdkReadModel>(value => persistedAudit = value),
+                "etag-p",
+                Arg.Any<CancellationToken>())
+            .Returns(true);
         var handler = new PartyDetailSdkProjectionHandler(store, batchStore, s_options);
         ProjectionRequest unresolved = CreateRequest() with
         {
@@ -555,13 +665,62 @@ public sealed class PartySdkProjectionHandlerTests
             "dispatch-unresolved",
             TestContext.Current.CancellationToken);
 
-        result.Status.ShouldBe(ProjectionDispatchStatus.Failed);
+        result.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        result.ReasonCode.ShouldBe("unresolved-or-unsupported-event");
+        persistedAudit.ShouldNotBeNull();
+        persistedAudit.Records.Last().Outcome.ShouldBe("Failed");
+        persistedAudit.LastSequenceNumber.ShouldBe(2);
+        await batchStore.DidNotReceive().ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DetailHandler_UnresolvedAuditWriteExhaustsRetryBudgetWithoutCrashingDispatchAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
+        PartyDetailSdkReadModel detail = PartyDetailSdkProjectionHandler.Fold(CreateRequest(), current: null);
+        PartyProcessingSdkReadModel processing = PartyProcessingActivityFold.Fold(CreateRequest(), current: null);
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(detail, "etag-d"));
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(processing, "etag-p"));
+        // Every optimistic-concurrency attempt loses the race, exhausting
+        // ReadModelWritePolicy.UpdateAsync's retry budget and making the audit write itself throw
+        // InvalidOperationException — this must not crash dispatch of the still-retryable delivery.
+        store.TrySaveAsync(
+                "statestore",
+                Arg.Any<string>(),
+                Arg.Any<PartyProcessingSdkReadModel>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
+            .Returns(false);
+        var handler = new PartyDetailSdkProjectionHandler(store, batchStore, s_options);
+        ProjectionRequest unresolved = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(
+                    "TotallyUnknownEventType",
+                    "{}"u8.ToArray(),
+                    "json",
+                    3,
+                    DateTimeOffset.UnixEpoch.AddSeconds(3),
+                    "correlation-1"),
+            ],
+        };
+
+        DomainProjectionHandlerResult result = await handler.ProjectAsync(
+            unresolved,
+            "dispatch-unresolved-exhausted",
+            TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
         result.ReasonCode.ShouldBe("unresolved-or-unsupported-event");
         await batchStore.DidNotReceive().ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task DetailHandler_MixedKnownAndUnresolvedDeliveryFailsBeforeCoordinatedWriteAsync()
+    public async Task DetailHandler_MixedKnownAndUnresolvedDeliveryIsRetryableAndRecordsAuditAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
         IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
@@ -569,6 +728,14 @@ public sealed class PartySdkProjectionHandlerTests
             .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
         store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
+        PartyProcessingSdkReadModel? persistedAudit = null;
+        store.TrySaveAsync(
+                "statestore",
+                Arg.Any<string>(),
+                Arg.Do<PartyProcessingSdkReadModel>(value => persistedAudit = value),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
+            .Returns(true);
         var handler = new PartyDetailSdkProjectionHandler(store, batchStore, s_options);
         ProjectionRequest request = CreateRequest() with
         {
@@ -590,8 +757,60 @@ public sealed class PartySdkProjectionHandlerTests
             "dispatch-unresolved-mixed",
             TestContext.Current.CancellationToken);
 
-        result.Status.ShouldBe(ProjectionDispatchStatus.Failed);
+        result.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
         result.ReasonCode.ShouldBe("unresolved-or-unsupported-event");
+        persistedAudit.ShouldNotBeNull();
+        persistedAudit.Records.Select(static record => record.Outcome).ShouldBe(["Succeeded", "Failed"]);
+        persistedAudit.LastSequenceNumber.ShouldBe(1);
+        await batchStore.DidNotReceive().ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DetailHandler_UnresolvedThenResolvableInSameBatchDoesNotAdvancePastUnresolvedAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
+        PartyProcessingSdkReadModel? persistedAudit = null;
+        store.TrySaveAsync(
+                "statestore",
+                Arg.Any<string>(),
+                Arg.Do<PartyProcessingSdkReadModel>(value => persistedAudit = value),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
+            .Returns(true);
+        var handler = new PartyDetailSdkProjectionHandler(store, batchStore, s_options);
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(
+                    "TotallyUnknownEventType",
+                    "{}"u8.ToArray(),
+                    "json",
+                    1,
+                    DateTimeOffset.UnixEpoch,
+                    "correlation-1"),
+                Event(new PartyCreated { Type = PartyType.Person }, 2, DateTimeOffset.UnixEpoch.AddSeconds(1)),
+            ],
+        };
+
+        DomainProjectionHandlerResult result = await handler.ProjectAsync(
+            request,
+            "dispatch-unresolved-then-resolved",
+            TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        result.ReasonCode.ShouldBe("unresolved-or-unsupported-event");
+        persistedAudit.ShouldNotBeNull();
+        persistedAudit.Records.Select(static record => record.Outcome).ShouldBe(["Failed", "Succeeded"]);
+        // The checkpoint must stay behind the still-unresolved sequence 1 event even though
+        // sequence 2 resolved successfully in the same batch — otherwise a later redelivery
+        // (e.g. after a consumer upgrade) would never revisit sequence 1 again.
+        persistedAudit.LastSequenceNumber.ShouldBe(long.MinValue);
         await batchStore.DidNotReceive().ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>());
     }
 
@@ -733,6 +952,26 @@ public sealed class PartySdkProjectionHandlerTests
     }
 
     [Fact]
+    public void DetailHandler_DeclaresCanonicalDetailAndProcessingSlots()
+    {
+        PartyDetailSdkProjectionHandler.ProjectionReadModelSlots.ShouldBe(
+        [
+            new ProjectionReadModelSlotDeclaration(
+                "party",
+                PartyProjectionNames.Detail,
+                PartySdkReadModelAddresses.DetailSlot,
+                ProjectionReadModelSlotKind.AggregateOwned,
+                declaresCanonicalWriter: true),
+            new ProjectionReadModelSlotDeclaration(
+                "party",
+                PartyProjectionNames.Detail,
+                PartySdkReadModelAddresses.ProcessingSlot,
+                ProjectionReadModelSlotKind.AggregateOwned,
+                declaresCanonicalWriter: true),
+        ]);
+    }
+
+    [Fact]
     public async Task SharedIndexRebuild_AccumulatesCompleteHistoriesIntoOneReplacementAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
@@ -805,6 +1044,83 @@ public sealed class PartySdkProjectionHandlerTests
 
         plan.Operations.ShouldHaveSingleItem();
         await searchIndexer.DidNotReceiveWithAnyArgs().NotifyIndexedAsync(default!, default!, default!, default, default);
+        await searchIndexer.DidNotReceiveWithAnyArgs().NotifyRemovedAsync(default!, default!, default);
+    }
+
+    [Fact]
+    public async Task SharedIndexRebuild_CompletionReindexesCandidateAndRemovesStaleEntriesAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        // FinalizeAsync reads the pre-rebuild index (still has "stale-party"); by the time
+        // CompleteRebuildAsync runs, the rebuild plan's write has already applied and the
+        // canonical store no longer has it — CompleteRebuildAsync re-reads fresh to confirm.
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(
+                new ReadModelEntry<PartyIndexSdkReadModel>(CreateIndex("stale-party"), "etag-1"),
+                new ReadModelEntry<PartyIndexSdkReadModel>(CreateIndex(), "etag-2"));
+        IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
+        searchIndexer.NotifyIndexedAsync(
+                Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+        searchIndexer.NotifyRemovedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
+        DomainSharedProjectionRebuildIdentity identity = CreateSharedRebuildIdentity();
+        DomainSharedProjectionRebuildCandidate candidate = await handler.CreateEmptyCandidateAsync(
+            identity,
+            TestContext.Current.CancellationToken);
+        candidate = await handler.AccumulateAsync(identity, candidate, CreateRequest(), TestContext.Current.CancellationToken);
+        DomainProjectionRebuildPlan plan = await handler.FinalizeAsync(identity, candidate, TestContext.Current.CancellationToken);
+
+        DomainProjectionHandlerResult result = await handler.CompleteRebuildAsync(
+            identity,
+            candidate,
+            plan.CompletionState,
+            TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        await searchIndexer.Received(1).NotifyRemovedAsync("tenant-a", "stale-party", Arg.Any<CancellationToken>());
+        await searchIndexer.Received(1).NotifyIndexedAsync(
+            "tenant-a",
+            Arg.Is<PartyIndexEntry>(entry => entry != null && entry.Id == "party-1"),
+            "PartyProjectionRebuilt",
+            DateTimeOffset.UnixEpoch.AddSeconds(1),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SharedIndexRebuild_CompletionDoesNotNotifyRemovalForAPartyStillPresentAsync()
+    {
+        // A live write can (re)add a party during the rebuild-accumulation window, after
+        // FinalizeAsync already snapshotted it as absent from the rebuilt candidate. By the time
+        // CompleteRebuildAsync runs, the canonical store reflects that live write again, so the
+        // still-live party must not be reported as removed to the search indexer.
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(
+                new ReadModelEntry<PartyIndexSdkReadModel>(CreateIndex("stale-party"), "etag-1"),
+                new ReadModelEntry<PartyIndexSdkReadModel>(CreateIndex("stale-party"), "etag-2"));
+        IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
+        searchIndexer.NotifyIndexedAsync(
+                Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+        searchIndexer.NotifyRemovedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
+        DomainSharedProjectionRebuildIdentity identity = CreateSharedRebuildIdentity();
+        DomainSharedProjectionRebuildCandidate candidate = await handler.CreateEmptyCandidateAsync(
+            identity,
+            TestContext.Current.CancellationToken);
+        candidate = await handler.AccumulateAsync(identity, candidate, CreateRequest(), TestContext.Current.CancellationToken);
+        DomainProjectionRebuildPlan plan = await handler.FinalizeAsync(identity, candidate, TestContext.Current.CancellationToken);
+
+        DomainProjectionHandlerResult result = await handler.CompleteRebuildAsync(
+            identity,
+            candidate,
+            plan.CompletionState,
+            TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
         await searchIndexer.DidNotReceiveWithAnyArgs().NotifyRemovedAsync(default!, default!, default);
     }
 
@@ -946,6 +1262,28 @@ public sealed class PartySdkProjectionHandlerTests
         persistedIndex.LastSequenceNumbers["party-1"].ShouldBe(1);
         persistedIndex.LastSequenceNumbers["party-2"].ShouldBe(1);
         persistedIndex.ErasureSequenceNumbers["party-1"].ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Eraser_SearchIndexerNonConvergenceDoesNotFailAnAlreadyCommittedBatchAsync()
+    {
+        // The canonical batch is the source of truth for "sdk-read-models" erasure certification.
+        // A non-converging (optional, best-effort) Memories search notify must not turn a
+        // successfully-committed batch into a reported cleanup failure.
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
+        IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
+        ConfigureEmptyErasureReads(store);
+        batchStore.ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>())
+            .Returns(ReadModelBatchResult.Completed("fingerprint"));
+        searchIndexer.NotifyRemovedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(false);
+        var eraser = new PartySdkReadModelEraser(store, batchStore, s_options, searchIndexer);
+
+        await eraser.EraseAsync("tenant-a", "party-1", TestContext.Current.CancellationToken);
+
+        await batchStore.Received(1).ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>());
+        await searchIndexer.Received(1).NotifyRemovedAsync("tenant-a", "party-1", Arg.Any<CancellationToken>());
     }
 
     [Fact]
