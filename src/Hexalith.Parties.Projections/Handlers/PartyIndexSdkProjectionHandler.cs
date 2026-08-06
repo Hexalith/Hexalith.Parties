@@ -11,6 +11,7 @@ using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Projections.Search;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.Projections.Handlers;
@@ -19,7 +20,8 @@ namespace Hexalith.Parties.Projections.Handlers;
 public sealed class PartyIndexSdkProjectionHandler(
     IReadModelStore readModelStore,
     IOptions<PartySdkReadModelOptions> options,
-    IPartyIndexSearchIndexer? searchIndexer = null) :
+    IPartyIndexSearchIndexer? searchIndexer = null,
+    ILogger<PartyIndexSdkProjectionHandler>? logger = null) :
     IAsyncDomainSharedProjectionRebuildCompletionHandler,
     IDeclaresProjectionReadModelSlots
 {
@@ -57,7 +59,10 @@ public sealed class PartyIndexSdkProjectionHandler(
         ReadModelEntry<PartyIndexSdkReadModel> currentEntry = await readModelStore
             .GetAsync<PartyIndexSdkReadModel>(StoreName, indexKey, cancellationToken)
             .ConfigureAwait(false);
-        PartyIndexFoldResult foldResult = FoldCore(request, currentEntry.Value);
+        // Safe to pass the logger on this pre-check: if it detects a failure it returns
+        // immediately below, so the persisting call's own logged FoldCore invocation further down
+        // never runs for the same delivery (mutually exclusive, not duplicated).
+        PartyIndexFoldResult foldResult = FoldCore(request, currentEntry.Value, logger);
         if (foldResult.FailureReason is not null)
         {
             return DeliveryFailure(foldResult.FailureReason);
@@ -67,6 +72,12 @@ public sealed class PartyIndexSdkProjectionHandler(
 
         if (IsIdempotentNoOp(currentEntry.Value, folded, request.AggregateId))
         {
+            // Reconciliation-only: IsIdempotentNoOp being true means this exact delivery already
+            // fully applied and persisted on an earlier, separate ProjectAsync dispatch — not
+            // later in this call. That earlier dispatch's own persisting FoldCore invocation (in
+            // the try/UpdateAsync block below, but from that prior call, not this one) already
+            // logged any drops for it then. This walk stays silent so a redelivered no-op does not
+            // re-log the same drop every time it is retried.
             PartyIndexFoldResult reconciliationFold = BuildReconciliationFold(request, folded);
             bool reconciled = await NotifySearchIndexerAsync(request, reconciliationFold, cancellationToken)
                 .ConfigureAwait(false);
@@ -76,6 +87,7 @@ public sealed class PartyIndexSdkProjectionHandler(
         }
 
         PartyIndexFoldResult persistedFold = foldResult;
+        bool loggedThisDelivery = false;
         try
         {
             await ReadModelWritePolicy.UpdateAsync<PartyIndexSdkReadModel>(
@@ -87,7 +99,16 @@ public sealed class PartyIndexSdkProjectionHandler(
                     // Revalidate against every optimistic retry snapshot before producing a
                     // candidate. A concurrent writer can expose a cross-delivery gap or make an
                     // event unresolved relative to the current aggregate checkpoint.
-                    persistedFold = FoldCore(request, current);
+                    //
+                    // ReadModelWritePolicy.UpdateAsync re-invokes this callback on every
+                    // optimistic-concurrency retry (up to DefaultMaxAttempts), each with a fresh
+                    // `current` snapshot. request.Events — the only input the drop diagnostics
+                    // depend on — never changes across retries, so passing the logger on every
+                    // attempt would re-emit the same diagnostic once per retry under writer
+                    // contention. Log at most once per delivery by only passing the real logger on
+                    // the first attempt.
+                    persistedFold = FoldCore(request, current, loggedThisDelivery ? null : logger);
+                    loggedThisDelivery = true;
                     if (persistedFold.FailureReason is not null)
                     {
                         throw new PartyProjectionDeliveryException(persistedFold.FailureReason);
@@ -178,7 +199,7 @@ public sealed class PartyIndexSdkProjectionHandler(
             return Task.FromResult(ToCandidate(current));
         }
 
-        PartyIndexFoldResult foldResult = FoldCore(aggregateHistory, current);
+        PartyIndexFoldResult foldResult = FoldCore(aggregateHistory, current, logger);
         if (foldResult.FailureReason is not null)
         {
             throw new InvalidOperationException(foldResult.FailureReason);
@@ -284,7 +305,10 @@ public sealed class PartyIndexSdkProjectionHandler(
     internal static PartyIndexSdkReadModel Fold(ProjectionRequest request, PartyIndexSdkReadModel? current)
         => FoldCore(request, current).Model;
 
-    private static PartyIndexFoldResult FoldCore(ProjectionRequest request, PartyIndexSdkReadModel? current)
+    private static PartyIndexFoldResult FoldCore(
+        ProjectionRequest request,
+        PartyIndexSdkReadModel? current,
+        ILogger? logger = null)
     {
         var entries = new Dictionary<string, PartyIndexEntry>(
             current?.Entries ?? new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal),
@@ -299,6 +323,21 @@ public sealed class PartyIndexSdkProjectionHandler(
         string? failureReason = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, lastSequence);
         if (failureReason is not null)
         {
+            if (logger is not null
+                && string.Equals(failureReason, PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason, StringComparison.Ordinal))
+            {
+                // GetDeliveryFailureReason's own detection pass above ran silently (it is shared
+                // with PartyDetailSdkProjectionHandler, which logs this case through a different,
+                // already-logged path). The shared Party index projection has no equivalent
+                // fallback, so without this it would never emit NonJsonEventDropped /
+                // UnknownEventTypeDropped / AmbiguousEventTypeDropped for an unresolvable event —
+                // exactly the case where operators most need to see it, because the delivery is
+                // now stuck Retryable. Re-walk once with the logger to emit that diagnostic before
+                // returning; FoldCore returns immediately afterward, so the main fold loop below
+                // never re-walks the same events and cannot double-log.
+                _ = PartySdkProjectionFold.HasUnresolvedNewEvent(request.Events, lastSequence, logger);
+            }
+
             return new PartyIndexFoldResult(current ?? new PartyIndexSdkReadModel(), null, false, failureReason);
         }
 
@@ -309,7 +348,7 @@ public sealed class PartyIndexSdkProjectionHandler(
         ProjectionEventDto? lastIndexedEvent = null;
 
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
-            PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence))
+            PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence, logger))
         {
             if (payload is not null)
             {

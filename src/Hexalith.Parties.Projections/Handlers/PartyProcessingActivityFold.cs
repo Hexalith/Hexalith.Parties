@@ -4,13 +4,24 @@ using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Models;
 
+using Microsoft.Extensions.Logging;
+
 namespace Hexalith.Parties.Projections.Handlers;
 
 internal static class PartyProcessingActivityFold
 {
+    /// <summary>
+    /// Folds new events into the Art.30 processing-activity read model. <paramref name="logger"/>
+    /// is the sole operator-facing diagnostic seam for the whole aggregate-owned Detail slot: this
+    /// fold runs on every <see cref="PartyDetailSdkProjectionHandler"/> code path that
+    /// observes the raw event delivery (successful project, rebuild, and the unresolved-only audit
+    /// write), so passing the logger here — and leaving <c>PartyDetailSdkProjectionHandler.Fold</c>
+    /// itself silent — reports every drop/skip exactly once per delivery instead of twice.
+    /// </summary>
     public static PartyProcessingSdkReadModel Fold(
         ProjectionRequest request,
-        PartyProcessingSdkReadModel? current)
+        PartyProcessingSdkReadModel? current,
+        ILogger? logger = null)
     {
         var records = new List<ProcessingActivityRecord>(current?.Records ?? []);
         long lastSequence = current?.LastSequenceNumber ?? long.MinValue;
@@ -24,7 +35,7 @@ internal static class PartyProcessingActivityFold
         // still-unresolved event, and its "Failed" Art.30 record would be stuck permanently.
         bool blockedByUnresolvedEvent = false;
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
-            PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence))
+            PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence, logger))
         {
             // `payload` is null both for a genuine JSON deserialization failure and for a
             // whole-payload-redacted event (see PartySdkProjectionFold.DeserializeNew) — the two

@@ -9,6 +9,7 @@ using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Models;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.Projections.Handlers;
@@ -19,7 +20,8 @@ namespace Hexalith.Parties.Projections.Handlers;
 public sealed class PartyDetailSdkProjectionHandler(
     IReadModelStore readModelStore,
     IReadModelBatchStore batchStore,
-    IOptions<PartySdkReadModelOptions> options) :
+    IOptions<PartySdkReadModelOptions> options,
+    ILogger<PartyDetailSdkProjectionHandler>? logger = null) :
     IAsyncDomainProjectionRebuildHandler,
     IDeclaresProjectionReadModelSlots
 {
@@ -85,8 +87,10 @@ public sealed class PartyDetailSdkProjectionHandler(
             return DeliveryFailure(deliveryFailure);
         }
 
+        // Fold (Detail slot) stays silent by design — see its own XML doc for why the Processing
+        // fold below is the sole logger carrier for this handler.
         PartyDetailSdkReadModel next = Fold(request, current.Value);
-        PartyProcessingSdkReadModel nextProcessing = PartyProcessingActivityFold.Fold(request, currentProcessing.Value);
+        PartyProcessingSdkReadModel nextProcessing = PartyProcessingActivityFold.Fold(request, currentProcessing.Value, logger);
         if (current.Value is not null
             && next.LastSequenceNumber == current.Value.LastSequenceNumber
             && currentProcessing.Value is not null
@@ -125,8 +129,9 @@ public sealed class PartyDetailSdkProjectionHandler(
             throw new InvalidOperationException(deliveryFailure);
         }
 
+        // Fold (Detail slot) stays silent by design here too — same invariant as ProjectAsync.
         PartyDetailSdkReadModel candidate = Fold(request, current: null);
-        PartyProcessingSdkReadModel processingCandidate = PartyProcessingActivityFold.Fold(request, current: null);
+        PartyProcessingSdkReadModel processingCandidate = PartyProcessingActivityFold.Fold(request, current: null, logger);
         string key = PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId);
         return Task.FromResult(new DomainProjectionRebuildPlan(
             StoreName,
@@ -139,6 +144,18 @@ public sealed class PartyDetailSdkProjectionHandler(
             ]));
     }
 
+    /// <summary>
+    /// Folds new events into the Detail read model. Deliberately does not pass a logger to
+    /// <see cref="PartySdkProjectionFold.DeserializeNew"/>: this handler's Processing-slot fold
+    /// (<see cref="PartyProcessingActivityFold.Fold"/>) is the sole logger carrier for the whole
+    /// Detail-slot handler, because every code path that calls this method
+    /// (<see cref="ProjectAsync"/>, <see cref="PrepareRebuildAsync"/>) also calls
+    /// <see cref="PartyProcessingActivityFold.Fold"/> over the exact same <c>request.Events</c> in
+    /// the same call. That invariant depends on the Detail and Processing checkpoints staying in
+    /// lockstep (both slots are aggregate-owned and advance from the same event stream); if a
+    /// future change ever lets one slot's fold run without the other for the same delivery, this
+    /// silence would start dropping diagnostics instead of merely avoiding a duplicate.
+    /// </summary>
     internal static PartyDetailSdkReadModel Fold(ProjectionRequest request, PartyDetailSdkReadModel? current)
     {
         PartyDetail? detail = current?.Detail;
@@ -206,11 +223,21 @@ public sealed class PartyDetailSdkProjectionHandler(
         string processingKey,
         CancellationToken cancellationToken)
     {
+        // ReadModelWritePolicy.UpdateAsync re-invokes this callback on every optimistic-concurrency
+        // retry with a fresh `current` snapshot; request.Events never changes across retries, so
+        // logging on every attempt would repeat the same diagnostic under writer contention. Log at
+        // most once per delivery by only passing the real logger on the first attempt.
+        bool loggedThisDelivery = false;
         await ReadModelWritePolicy.UpdateAsync<PartyProcessingSdkReadModel>(
             readModelStore,
             storeName,
             processingKey,
-            current => PartyProcessingActivityFold.Fold(request, current),
+            current =>
+            {
+                PartyProcessingSdkReadModel next = PartyProcessingActivityFold.Fold(request, current, loggedThisDelivery ? null : logger);
+                loggedThisDelivery = true;
+                return next;
+            },
             cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 

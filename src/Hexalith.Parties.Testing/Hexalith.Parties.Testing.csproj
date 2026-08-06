@@ -4,4 +4,9 @@
     <ProjectReference Include="..\Hexalith.Parties.Contracts\Hexalith.Parties.Contracts.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- For RecordingLogger<T>, the shared ILogger<T> test double used by multiple test projects. -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
 </Project>

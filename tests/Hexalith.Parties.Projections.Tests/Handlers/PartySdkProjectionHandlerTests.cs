@@ -1,18 +1,23 @@
+using System.Reflection;
 using System.Text.Json;
 
 using Hexalith.EventStore.Client.Projections;
+using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Projections;
 using Hexalith.EventStore.DomainService;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.Projections.Actors;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Handlers;
 using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Projections.Search;
 using Hexalith.Parties.Projections.Services;
+using Hexalith.Parties.Testing;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using NSubstitute;
@@ -602,6 +607,48 @@ public sealed class PartySdkProjectionHandlerTests
             Arg.Any<PartyIndexSdkReadModel>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task IndexHandler_MixedKnownAndUnresolvedDeliveryLogsUnresolvedDiagnosticAsync()
+    {
+        // FoldCore's failure branch returns before its own logged DeserializeNew loop is ever
+        // reached, so without a dedicated fix the shared Party index projection would silently
+        // never emit NonJsonEventDropped/UnknownEventTypeDropped/AmbiguousEventTypeDropped —
+        // exactly when a delivery is stuck Retryable and operators most need to see it.
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyIndexSdkReadModel>(
+                "statestore",
+                PartySdkReadModelAddresses.Index("tenant-a"),
+                Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
+        var logger = new RecordingLogger<PartyIndexSdkProjectionHandler>();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer: null, logger: logger);
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                Event(new PartyCreated { Type = PartyType.Person }, 1, DateTimeOffset.UnixEpoch),
+                new ProjectionEventDto(
+                    "TotallyUnknownEventType",
+                    "{}"u8.ToArray(),
+                    "json",
+                    2,
+                    DateTimeOffset.UnixEpoch.AddSeconds(1),
+                    "correlation-1"),
+            ],
+        };
+
+        DomainProjectionHandlerResult result = await handler.ProjectAsync(
+            request,
+            "dispatch-unresolved-mixed-logged",
+            TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        result.ReasonCode.ShouldBe("unresolved-or-unsupported-event");
+        (LogLevel Level, string Message, Exception? Exception) record = logger.Records.ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Warning);
+        record.Message.ShouldContain("could not resolve event type");
     }
 
     [Fact]
@@ -1201,6 +1248,42 @@ public sealed class PartySdkProjectionHandlerTests
     }
 
     [Fact]
+    public async Task SharedIndexRebuild_UnresolvedEventLogsUnresolvedDiagnosticAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var logger = new RecordingLogger<PartyIndexSdkProjectionHandler>();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer: null, logger: logger);
+        DomainSharedProjectionRebuildIdentity identity = CreateSharedRebuildIdentity();
+        DomainSharedProjectionRebuildCandidate candidate = await handler.CreateEmptyCandidateAsync(
+            identity,
+            TestContext.Current.CancellationToken);
+        ProjectionRequest unresolved = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(
+                    "TotallyUnknownEventType",
+                    "{}"u8.ToArray(),
+                    "json",
+                    1,
+                    DateTimeOffset.UnixEpoch,
+                    "correlation-1"),
+            ],
+        };
+
+        _ = await Should.ThrowAsync<InvalidOperationException>(() =>
+            handler.AccumulateAsync(
+                identity,
+                candidate,
+                unresolved,
+                TestContext.Current.CancellationToken));
+
+        (LogLevel Level, string Message, Exception? Exception) record = logger.Records.ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Warning);
+        record.Message.ShouldContain("could not resolve event type");
+    }
+
+    [Fact]
     public async Task Eraser_RedactsAllCanonicalModelsInOneCoordinatedBatchAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
@@ -1610,6 +1693,365 @@ public sealed class PartySdkProjectionHandlerTests
         result.LastSequenceNumber.ShouldBe(1);
     }
 
+    [Fact]
+    public void DeserializeNew_UnknownEventType_DoesNotAdvanceCheckpointAndYieldsNoPayload()
+    {
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(
+                    "TotallyUnknownEventType",
+                    "{}"u8.ToArray(),
+                    "json",
+                    1,
+                    DateTimeOffset.UnixEpoch,
+                    "correlation-1"),
+            ],
+        };
+
+        var results = PartySdkProjectionFold.DeserializeNew(request.Events, long.MinValue).ToList();
+
+        (ProjectionEventDto Event, IEventPayload? Payload, bool AdvanceCheckpoint) single = results.ShouldHaveSingleItem();
+        single.Payload.ShouldBeNull();
+        single.AdvanceCheckpoint.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DeserializeNew_NonJsonSerializationFormat_DoesNotAdvanceCheckpointAndYieldsNoPayload()
+    {
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(
+                    nameof(PartyCreated),
+                    "not-used"u8.ToArray(),
+                    "protobuf",
+                    1,
+                    DateTimeOffset.UnixEpoch,
+                    "correlation-1"),
+            ],
+        };
+
+        var results = PartySdkProjectionFold.DeserializeNew(request.Events, long.MinValue).ToList();
+
+        (ProjectionEventDto Event, IEventPayload? Payload, bool AdvanceCheckpoint) single = results.ShouldHaveSingleItem();
+        single.Payload.ShouldBeNull();
+        single.AdvanceCheckpoint.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DeserializeNew_UnknownEventType_LogsUnknownEventTypeDroppedWarning()
+    {
+        var logger = new RecordingLogger<PartyDetailSdkProjectionHandler>();
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(
+                    "TotallyUnknownEventType",
+                    "{}"u8.ToArray(),
+                    "json",
+                    1,
+                    DateTimeOffset.UnixEpoch,
+                    "correlation-1"),
+            ],
+        };
+
+        _ = PartySdkProjectionFold.DeserializeNew(request.Events, long.MinValue, logger).ToList();
+
+        (LogLevel Level, string Message, Exception? Exception) record = logger.Records.ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Warning);
+        record.Message.ShouldContain("could not resolve event type");
+        record.Message.ShouldNotContain("tenant-a");
+        record.Message.ShouldNotContain("party-1");
+    }
+
+    [Fact]
+    public void DeserializeNew_NonJsonFormat_LogsNonJsonEventDroppedWarning()
+    {
+        var logger = new RecordingLogger<PartyDetailSdkProjectionHandler>();
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(
+                    nameof(PartyCreated),
+                    "not-used"u8.ToArray(),
+                    "protobuf",
+                    1,
+                    DateTimeOffset.UnixEpoch,
+                    "correlation-1"),
+            ],
+        };
+
+        _ = PartySdkProjectionFold.DeserializeNew(request.Events, long.MinValue, logger).ToList();
+
+        (LogLevel Level, string Message, Exception? Exception) record = logger.Records.ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Warning);
+        record.Message.ShouldContain("non-JSON serialization format");
+    }
+
+    [Fact]
+    public void DeserializeNew_AmbiguousShortEventTypeName_LogsAmbiguousEventTypeDroppedWarning()
+    {
+        // PartyEventTypeResolver.IsAmbiguousShortName has no true-positive case reachable through
+        // the real Hexalith.Parties.Contracts assembly today (verified directly: 0 short-name
+        // collisions among its 44 current event-payload types — PartyEventTypeResolverTests
+        // already documents this as an unreachable branch). To prove DeserializeNew's
+        // branch-selection logic actually calls AmbiguousEventTypeDropped (not
+        // UnknownEventTypeDropped) when the resolver reports ambiguous, this test seeds the
+        // resolver's private resolution cache with a synthetic ambiguous outcome for a unique
+        // sentinel event-type name that can never collide with a real one — the same "GetOrAdd
+        // returns the cached entry without invoking the factory" contract the resolver documents
+        // for itself. No production type is added to the Contracts assembly.
+        string sentinelEventTypeName = $"Test.Sentinel.Ambiguous.{Guid.NewGuid():N}";
+        SeedEventTypeResolverCacheAsAmbiguous(sentinelEventTypeName);
+        var logger = new RecordingLogger<PartyDetailSdkProjectionHandler>();
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(
+                    sentinelEventTypeName,
+                    "{}"u8.ToArray(),
+                    "json",
+                    1,
+                    DateTimeOffset.UnixEpoch,
+                    "correlation-1"),
+            ],
+        };
+
+        var results = PartySdkProjectionFold.DeserializeNew(request.Events, long.MinValue, logger).ToList();
+
+        (ProjectionEventDto Event, IEventPayload? Payload, bool AdvanceCheckpoint) single = results.ShouldHaveSingleItem();
+        single.Payload.ShouldBeNull();
+        single.AdvanceCheckpoint.ShouldBeFalse();
+        (LogLevel Level, string Message, Exception? Exception) record = logger.Records.ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Warning);
+        record.Message.ShouldContain("ambiguous short event-type name");
+        record.Message.ShouldNotContain("could not resolve event type");
+    }
+
+    [Fact]
+    public void DeserializeNew_CorruptLiveEvent_LogsPayloadDeserializationFailedWarningDistinctFromRedacted()
+    {
+        var logger = new RecordingLogger<PartyDetailSdkProjectionHandler>();
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(
+                    nameof(PartyCreated),
+                    "{ not valid json"u8.ToArray(),
+                    "json",
+                    1,
+                    DateTimeOffset.UnixEpoch,
+                    "correlation-1"),
+            ],
+        };
+
+        var results = PartySdkProjectionFold.DeserializeNew(request.Events, long.MinValue, logger).ToList();
+
+        (ProjectionEventDto Event, IEventPayload? Payload, bool AdvanceCheckpoint) single = results.ShouldHaveSingleItem();
+        single.Payload.ShouldBeNull();
+        single.AdvanceCheckpoint.ShouldBeTrue();
+        (LogLevel Level, string Message, Exception? Exception) record = logger.Records.ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Warning);
+        record.Message.ShouldContain("failed to deserialize live event");
+        record.Message.ShouldContain("JsonException");
+        record.Message.ShouldNotContain("redacted");
+        record.Message.ShouldNotContain("tenant-a");
+        record.Message.ShouldNotContain("party-1");
+        // The raw exception object is never passed to ILogger: a syntax-level JsonException can
+        // embed a fragment of the offending raw payload bytes in its own .Message, and most
+        // logging sinks render exception.ToString() into the emitted log text. Only the exception
+        // type name travels as a structured field (asserted above).
+        record.Exception.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DeserializeNew_RedactedTailDecodeFailure_LogsRedactedEventDroppedInformationDistinctFromCorrupt()
+    {
+        var logger = new RecordingLogger<PartyDetailSdkProjectionHandler>();
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(
+                    nameof(PartyCreated),
+                    "{ not valid json"u8.ToArray(),
+                    PartySdkProjectionFold.RedactedFormat,
+                    1,
+                    DateTimeOffset.UnixEpoch,
+                    "correlation-1"),
+            ],
+        };
+
+        var results = PartySdkProjectionFold.DeserializeNew(request.Events, long.MinValue, logger).ToList();
+
+        (ProjectionEventDto Event, IEventPayload? Payload, bool AdvanceCheckpoint) single = results.ShouldHaveSingleItem();
+        single.Payload.ShouldBeNull();
+        single.AdvanceCheckpoint.ShouldBeTrue();
+        (LogLevel Level, string Message, Exception? Exception) record = logger.Records.ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Information);
+        record.Message.ShouldContain("dropped redacted event");
+        record.Message.ShouldContain("JsonException");
+        record.Message.ShouldNotContain("failed to deserialize live event");
+        record.Message.ShouldNotContain("tenant-a");
+        record.Message.ShouldNotContain("party-1");
+        // Same no-raw-exception rule as the corrupt-live-event case above.
+        record.Exception.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DeserializeNew_ResolvedTypeDecodesToNullWithoutRedaction_LogsNullPayloadEventDroppedWarning()
+    {
+        // A resolved, non-redacted event type can deserialize without throwing but still yield a
+        // null instance (e.g. a literal JSON "null" body under serialization format "json", not
+        // "json-redacted"). The checkpoint must not advance — the same non-advancing category as
+        // an unresolved/non-JSON drop — and this previously logged nothing at all, contradicting
+        // the method's own "every drop/skip emits a distinct diagnostic" doc comment.
+        var logger = new RecordingLogger<PartyDetailSdkProjectionHandler>();
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(
+                    nameof(PartyCreated),
+                    "null"u8.ToArray(),
+                    "json",
+                    1,
+                    DateTimeOffset.UnixEpoch,
+                    "correlation-1"),
+            ],
+        };
+
+        var results = PartySdkProjectionFold.DeserializeNew(request.Events, long.MinValue, logger).ToList();
+
+        (ProjectionEventDto Event, IEventPayload? Payload, bool AdvanceCheckpoint) single = results.ShouldHaveSingleItem();
+        single.Payload.ShouldBeNull();
+        single.AdvanceCheckpoint.ShouldBeFalse();
+        (LogLevel Level, string Message, Exception? Exception) record = logger.Records.ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Warning);
+        record.Message.ShouldContain("produced no payload");
+        record.Message.ShouldNotContain("tenant-a");
+        record.Message.ShouldNotContain("party-1");
+    }
+
+    [Fact]
+    public void DeserializeNew_WholePayloadRedacted_LogsWholePayloadRedactedEventDroppedInformation()
+    {
+        var logger = new RecordingLogger<PartyDetailSdkProjectionHandler>();
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(
+                    nameof(PartyCreated),
+                    "null"u8.ToArray(),
+                    PartySdkProjectionFold.RedactedFormat,
+                    1,
+                    DateTimeOffset.UnixEpoch,
+                    "correlation-1"),
+            ],
+        };
+
+        var results = PartySdkProjectionFold.DeserializeNew(request.Events, long.MinValue, logger).ToList();
+
+        (ProjectionEventDto Event, IEventPayload? Payload, bool AdvanceCheckpoint) single = results.ShouldHaveSingleItem();
+        single.Payload.ShouldBeNull();
+        single.AdvanceCheckpoint.ShouldBeTrue();
+        (LogLevel Level, string Message, Exception? Exception) record = logger.Records.ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Information);
+        record.Message.ShouldContain("whole-payload-redacted");
+        record.Exception.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task DetailHandler_IncrementalDispatchAcrossTwoDeliveriesMatchesSingleShotRebuildAsync()
+    {
+        // The pre-existing rebuild-vs-replay test compares PrepareRebuildAsync's output to a
+        // second, separate call of the exact same static Fold function with the same full event
+        // list — both sides run identical code once, so it cannot detect a real divergence
+        // between genuine multi-dispatch incremental persistence and a full rebuild. This test
+        // exercises two independent code paths: (1) two separate ProjectAsync calls against a
+        // stateful store, simulating live incremental delivery, and (2) one PrepareRebuildAsync
+        // call over the complete history, simulating a full rebuild — then asserts convergence.
+        var inMemoryStore = new InMemoryReadModelBatchStore();
+        var incrementalHandler = new PartyDetailSdkProjectionHandler(inMemoryStore, inMemoryStore, s_options);
+        ProjectionRequest full = CreateRequest();
+        ProjectionRequest firstDelivery = full with { Events = [full.Events[0]] };
+        ProjectionRequest secondDelivery = full with { Events = [full.Events[1]] };
+
+        DomainProjectionHandlerResult firstResult = await incrementalHandler.ProjectAsync(
+            firstDelivery,
+            "dispatch-1",
+            TestContext.Current.CancellationToken);
+        DomainProjectionHandlerResult secondResult = await incrementalHandler.ProjectAsync(
+            secondDelivery,
+            "dispatch-2",
+            TestContext.Current.CancellationToken);
+
+        firstResult.Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        secondResult.Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        string detailKey = PartySdkReadModelAddresses.Detail(full.TenantId, full.AggregateId);
+        string processingKey = PartySdkReadModelAddresses.Processing(full.TenantId, full.AggregateId);
+        PartyDetailSdkReadModel incrementalDetail = inMemoryStore.Deserialize<PartyDetailSdkReadModel>(detailKey);
+        PartyProcessingSdkReadModel incrementalProcessing = inMemoryStore.Deserialize<PartyProcessingSdkReadModel>(processingKey);
+
+        var rebuildHandler = new PartyDetailSdkProjectionHandler(
+            new InMemoryReadModelBatchStore(),
+            new InMemoryReadModelBatchStore(),
+            s_options);
+        DomainProjectionRebuildPlan plan = await rebuildHandler.PrepareRebuildAsync(
+            full,
+            "rebuild-1",
+            TestContext.Current.CancellationToken);
+        PartyDetailSdkReadModel rebuiltDetail = JsonSerializer.Deserialize<PartyDetailSdkReadModel>(
+            plan.Operations.Single(static operation => operation.Key.EndsWith(":detail", StringComparison.Ordinal)).CanonicalValue.Span,
+            s_canonicalJsonOptions)!;
+        PartyProcessingSdkReadModel rebuiltProcessing = JsonSerializer.Deserialize<PartyProcessingSdkReadModel>(
+            plan.Operations.Single(static operation => operation.Key.EndsWith(":processing-records", StringComparison.Ordinal)).CanonicalValue.Span,
+            s_canonicalJsonOptions)!;
+
+        Normalize(incrementalDetail).ShouldBe(Normalize(rebuiltDetail));
+        incrementalDetail.LastSequenceNumber.ShouldBe(rebuiltDetail.LastSequenceNumber);
+        incrementalProcessing.Records.Select(static record => record.SequenceNumber)
+            .ShouldBe(rebuiltProcessing.Records.Select(static record => record.SequenceNumber));
+        incrementalProcessing.LastSequenceNumber.ShouldBe(rebuiltProcessing.LastSequenceNumber);
+    }
+
+    /// <summary>
+    /// Seeds <see cref="PartyEventTypeResolver"/>'s private resolution cache with a synthetic
+    /// "ambiguous" outcome for <paramref name="eventTypeName"/> via reflection, so a test can
+    /// exercise the true-ambiguous branch without a real short-name collision existing in the
+    /// Contracts assembly. <c>ConcurrentDictionary.GetOrAdd</c> returns an existing entry without
+    /// invoking its factory, so once seeded, <see cref="PartyEventTypeResolver.Resolve"/> and
+    /// <see cref="PartyEventTypeResolver.IsAmbiguousShortName"/> both report this key as ambiguous
+    /// for the lifetime of the test process — safe because the sentinel key is process-unique
+    /// (caller-supplied GUID) and can never collide with a real event type name.
+    /// </summary>
+    private static void SeedEventTypeResolverCacheAsAmbiguous(string eventTypeName)
+    {
+        Type resolverType = typeof(PartyEventTypeResolver);
+        FieldInfo cacheField = resolverType.GetField("s_resolvedCache", BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new InvalidOperationException("PartyEventTypeResolver.s_resolvedCache field not found.");
+        object cache = cacheField.GetValue(null)
+            ?? throw new InvalidOperationException("PartyEventTypeResolver.s_resolvedCache is null.");
+        Type outcomeType = resolverType.GetNestedType("ResolveOutcome", BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("PartyEventTypeResolver.ResolveOutcome type not found.");
+        PropertyInfo ambiguousProperty = outcomeType.GetProperty("Ambiguous", BindingFlags.Public | BindingFlags.Static)
+            ?? throw new InvalidOperationException("PartyEventTypeResolver.ResolveOutcome.Ambiguous property not found.");
+        object ambiguousOutcome = ambiguousProperty.GetValue(null)
+            ?? throw new InvalidOperationException("PartyEventTypeResolver.ResolveOutcome.Ambiguous returned null.");
+        MethodInfo tryAdd = cache.GetType().GetMethod("TryAdd")
+            ?? throw new InvalidOperationException("ConcurrentDictionary<string, ResolveOutcome>.TryAdd not found.");
+        bool added = (bool)tryAdd.Invoke(cache, [eventTypeName, ambiguousOutcome])!;
+        added.ShouldBeTrue("the sentinel event-type name must be unique and unseeded before this call.");
+    }
+
     private static ProjectionRequest CreateRequest()
         => new(
             "tenant-a",
@@ -1710,4 +2152,80 @@ public sealed class PartySdkProjectionHandlerTests
             model.ProjectedAt,
             model.ProjectionVersion,
         };
+
+    /// <summary>
+    /// A real (non-mocked) stateful <see cref="IReadModelStore"/>/<see cref="IReadModelBatchStore"/>
+    /// double that actually persists across calls, so a sequence of independent handler dispatches
+    /// observes the effect of earlier ones — unlike an NSubstitute stub returning a fixed value.
+    /// Used to prove genuine convergence between incremental multi-dispatch persistence and a
+    /// single-shot rebuild, which two calls to the same static Fold function cannot distinguish.
+    /// </summary>
+    private sealed class InMemoryReadModelBatchStore : IReadModelStore, IReadModelBatchStore
+    {
+        private readonly Dictionary<string, (ReadOnlyMemory<byte> Bytes, string ETag)> _entries = new(StringComparer.Ordinal);
+        private int _etagSequence;
+
+        public Task<ReadModelEntry<TValue>> GetAsync<TValue>(
+            string storeName,
+            string key,
+            CancellationToken cancellationToken = default)
+            where TValue : class
+            => Task.FromResult(_entries.TryGetValue(key, out (ReadOnlyMemory<byte> Bytes, string ETag) entry)
+                ? new ReadModelEntry<TValue>(
+                    JsonSerializer.Deserialize<TValue>(entry.Bytes.Span, s_canonicalJsonOptions),
+                    entry.ETag)
+                : new ReadModelEntry<TValue>(null, null));
+
+        public Task SaveAsync<TValue>(
+            string storeName,
+            string key,
+            TValue value,
+            CancellationToken cancellationToken = default)
+            where TValue : class
+        {
+            _entries[key] = (JsonSerializer.SerializeToUtf8Bytes(value, s_canonicalJsonOptions), NextETag());
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> TrySaveAsync<TValue>(
+            string storeName,
+            string key,
+            TValue value,
+            string etag,
+            CancellationToken cancellationToken = default)
+            where TValue : class
+        {
+            bool exists = _entries.TryGetValue(key, out (ReadOnlyMemory<byte> Bytes, string ETag) current);
+            bool matches = etag.Length == 0 ? !exists : exists && string.Equals(current.ETag, etag, StringComparison.Ordinal);
+            if (!matches)
+            {
+                return Task.FromResult(false);
+            }
+
+            _entries[key] = (JsonSerializer.SerializeToUtf8Bytes(value, s_canonicalJsonOptions), NextETag());
+            return Task.FromResult(true);
+        }
+
+        public Task<ReadModelBatchResult> ExecuteAsync(ReadModelBatch batch, CancellationToken cancellationToken = default)
+        {
+            foreach (ReadModelBatchOperation operation in batch.Operations)
+            {
+                if (operation.Kind == ReadModelBatchOperationKind.Delete)
+                {
+                    _ = _entries.Remove(operation.Key);
+                    continue;
+                }
+
+                _entries[operation.Key] = (operation.CanonicalValue, NextETag());
+            }
+
+            return Task.FromResult(ReadModelBatchResult.Completed("test-fingerprint"));
+        }
+
+        public TValue Deserialize<TValue>(string key)
+            where TValue : class
+            => JsonSerializer.Deserialize<TValue>(_entries[key].Bytes.Span, s_canonicalJsonOptions)!;
+
+        private string NextETag() => $"etag-{++_etagSequence}";
+    }
 }

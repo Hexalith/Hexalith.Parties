@@ -1,8 +1,14 @@
 using Microsoft.Extensions.Logging;
 
-namespace Hexalith.Parties.Tests.Gateway;
+namespace Hexalith.Parties.Testing;
 
-internal sealed class RecordingLogger<T> : ILogger<T>
+/// <summary>
+/// Minimal in-memory <see cref="ILogger{TCategoryName}"/> double that records every logged
+/// message so tests can assert on operator-facing diagnostics without a real logging provider.
+/// Shared by multiple test projects rather than duplicated locally in each.
+/// </summary>
+/// <typeparam name="T">The logging category type.</typeparam>
+public sealed class RecordingLogger<T> : ILogger<T>
 {
     private readonly List<(LogLevel Level, string Message, Exception? Exception)> _records = [];
 

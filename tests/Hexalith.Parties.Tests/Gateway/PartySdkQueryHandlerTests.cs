@@ -12,6 +12,7 @@ using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Projections.Services;
 using Hexalith.Parties.Queries;
+using Hexalith.Parties.Testing;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;

@@ -3,7 +3,7 @@ using Hexalith.Memories.Contracts.V1;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Search;
-using Hexalith.Parties.Tests.Gateway;
+using Hexalith.Parties.Testing;
 
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;

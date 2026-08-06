@@ -132,3 +132,74 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-scp-2026-08-04-story-8-6-g5-receipt-recovery.md`
   summary: Document the `.agents/skills/bmad-sprint-planning/scripts/sprint_plan.py` `--fresh` rebuild fix (preserve `generated`/`last_updated` only when not forcing a fresh rebuild) and attribute it in the 8.6 story or this ledger.
   evidence: Blind-hunter review found this fix and its new test assertions are a distinct bug from the previously-documented STORY_RANK/`_slug()` regeneration incident, but no file in the current diff explains or attributes it, leaving a future reader unable to tell why `sprint_plan.py` changed.
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Reconsider the `[LoggerMessage]` vs. plain-`ILogger` choice in `PartySdkProjectionFold.Log` for house-style consistency.
+  evidence: 2026-08-05 review-layer finding — the `Log` class's comment claims `[LoggerMessage]` can't be used because `Hexalith.Parties.Projections.csproj` lacks a direct `Microsoft.Extensions.Logging.Abstractions` package reference, but `Hexalith.Parties.Security.csproj` is in the identical situation and successfully uses `[LoggerMessage]` throughout (`PartyKeyLifecycleService.cs`, `DecryptionCircuitBreaker.cs`, `PartyErasureOrchestrator.cs`) via a package reference with `ExcludeAssets="all"`. Adopting the same fix (or correcting the comment if a real difference is found) needs a deliberate, verified change to build configuration, not a same-pass patch.
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Attribute dropped-event diagnostics to the class that actually detects the drop, not whichever handler happened to pass its `ILogger<T>` in.
+  evidence: 2026-08-05 review-layer finding — drops detected inside the shared static helpers `PartySdkProjectionFold`/`PartyProcessingActivityFold` are logged under `PartyDetailSdkProjectionHandler`'s or `PartyIndexSdkProjectionHandler`'s log category depending purely on which handler called in. An operator filtering by the actual source class gets nothing, and the same drop reason can appear under two different categories. Fixing this cleanly needs a design decision (e.g., a dedicated logger category or `ILoggerFactory` seam), not a quick patch.
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Decide an acceptable log-volume strategy (batching/sampling/dedup) for the new drop diagnostics during full projection rebuilds.
+  evidence: 2026-08-05 review-layer finding — `PartyIndexSdkProjectionHandler.AccumulateAsync` (the full-rebuild path) now re-emits a log line for every historically-known-bad event on every rebuild run, with no batching, sampling, or dedup — a real log-flooding risk on a large event store. Needs a product/ops decision on acceptable rebuild-time log volume, not a same-pass patch.
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Widen `PartySdkProjectionFold.DeserializeNew`'s catch filter to cover `FormatException`/`OverflowException` from custom converters.
+  evidence: 2026-08-05 review-layer finding, pre-existing (not caused by this session's patch): the catch filter only covers `JsonException`/`ArgumentNullException`/`NotSupportedException`/`InvalidOperationException`; a `FormatException` or `OverflowException` thrown by a custom converter propagates unhandled and crashes the whole dispatch instead of being skip-logged.
+
+## Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)
+
+Human-directed: the 2026-08-05 build session restored operator diagnostic logging and
+added fold-level test coverage, then deferred the remaining open review findings below
+rather than force them through this pass. This entry also fulfills the still-open
+2026-08-04 action item above ("Reconcile the two conflicting trackers... and add it to
+this ledger") for the `FinalizeAsync` concurrency defect.
+
+- `PrepareRebuildAsync`/`FinalizeAsync` write with `ReadModelBatchConcurrency.LastWrite`
+  (no ETag check) [`PartyDetailSdkProjectionHandler.cs:99,103`,
+  `PartyIndexSdkProjectionHandler.cs:102`] — a rebuild finalize can silently overwrite a
+  newer concurrent live `ProjectAsync` write with no conflict detection. Investigated
+  2026-08-05: switching to `Match(etag)` unilaterally is unsafe without knowing the
+  EventStore SDK rebuild-plan executor's retry/abort contract on a write conflict — that
+  contract lives in `Hexalith.EventStore.DomainService`'s rebuild orchestration, outside
+  this repo's `IAsyncDomainProjectionRebuildHandler` /
+  `IAsyncDomainSharedProjectionRebuildCompletionHandler` surface. Needs SDK-owner input,
+  not a unilateral Parties-side change.
+- Host wiring (`builder.AddEventStoreDomainService(typeof(PartyAggregate).Assembly,
+  typeof(PartyDetailProjectionHandler).Assembly)`) is verified only as literal source
+  text by `ArchitecturalFitnessTests`/`PlatformApiPrerequisitesTests`/
+  `RetiredLeafProjectFitnessTests`; no test queries a projected read model after an
+  authenticated end-to-end command. Closing this needs `EventStoreGatewayE2ETests`, but
+  its `PartiesAspireTopologyFixture.RequireSeededTenants()` unconditionally throws since
+  Story 12.2 retired `TenantIntegrationTestSeeder` — reinstating that seeder is real work
+  out of scope for a review-patch pass.
+- `PartyProcessingSdkReadModel.Records` grows unbounded — one ever-growing JSON blob per
+  party, re-serialized on every processing-activity projection write. A real scalability
+  concern but needs a pagination/archival design, not a quick patch.
+- Minor/cosmetic, `PartyDetailSdkProjectionHandler`/`PartyIndexSdkProjectionHandler`
+  family: sequential (not parallel) `GetAsync` calls doubling state-store round-trip
+  latency on the busiest projection path; duplicated `StoreName` null-check across
+  classes; `PartyErased.LastModifiedAt` immediately overwritten by
+  `NormalizeEventTimestamps` (harmless while both timestamps match, would silently
+  diverge otherwise); `PartyIndexSdkProjectionHandler.Validate` reusing
+  `PartySdkReadModelAddresses.Detail(...)` purely for its validation side effect,
+  coupling Index validation to Detail's address-shape rules.
+- Minor/cosmetic, rollback-shim naming and test quality: `PartyDetailProjectionQueryActor`
+  / `PartyIndexProjectionQueryActor` keep the "Actor" name with zero actor behavior
+  (intentional temporary rollback shims); `PartySdkReadModelOptions.ConfigurationSection`
+  reuses the retired `Hexalith.EventStore.Server.Configuration.ProjectionOptions`'s
+  `"EventStore:Projections"` config key; the new `Dapr.Actors.AspNetCore` package
+  reference and `$(HexalithCommonsHttpFromSource)` MSBuild property rename are
+  undocumented but verified correct; the DI test
+  `AddParties_UsesSdkReadModelsAndCursorCodecWithoutLocalProjectionMechanics` asserts
+  absence via a brittle `descriptor.ServiceType.FullName` string match rather than a type
+  reference; `HealthEndpoint_AllComponentsHealthy_Returns200WithoutRetiredProjectionActorCheckAsync`
+  keeps an "all components healthy" framing that now excludes SDK read models from what
+  "all" verifies; the PII seed rename (`"Ada"/"Lovelace"` →
+  `"SyntheticPrivateFirstName8472"/"SyntheticPrivateLastName6391"`) landed in only 2 of
+  dozens of usages across `EventStoreGatewayRoutingTests.cs`, with 7 other test files
+  still using `"Ada"/"Lovelace"`; `DirectPartiesCommandRouter`'s test double now keys its
+  completion write on `command.MessageId` instead of `command.CorrelationId`, correctly
+  mirroring production `SubmitCommandHandler.cs` behavior but undocumented in the diff.
+- Cosmetic: the Epic 7 rollback-retention action item is closed `done` citing an
+  authorization SCP "approved 2026-08-02" for an action the same annotation dates to
+  2026-08-01 (approval postdating the act it authorizes by a day); resolves naturally
+  when `sprint-status.yaml` is next synced.
