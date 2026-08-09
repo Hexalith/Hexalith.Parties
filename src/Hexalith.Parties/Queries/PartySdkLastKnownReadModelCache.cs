@@ -4,18 +4,19 @@ namespace Hexalith.Parties.Queries;
 
 /// <summary>
 /// Keeps tenant-scoped last-known SDK read models for bounded degraded reads. Eviction advances a
-/// generation so a canonical read that started before erasure cannot restore an evicted value.
+/// per-key generation so a canonical read that started before erasure of that key cannot restore
+/// an evicted value, without aborting unrelated in-flight stores for other keys.
 /// </summary>
 public sealed class PartySdkLastKnownReadModelCache
 {
     private const int DefaultMaximumEntries = 1024;
     private static readonly TimeSpan s_defaultRetention = TimeSpan.FromMinutes(5);
     private readonly Dictionary<string, PartySdkLastKnownReadModelCacheEntry> _entries = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, long> _keyGenerations = new(StringComparer.Ordinal);
     private readonly object _gate = new();
     private readonly int _maximumEntries;
     private readonly TimeProvider _timeProvider;
     private readonly TimeSpan _retention;
-    private long _generation;
 
     /// <summary>Initializes a cache with bounded production defaults.</summary>
     public PartySdkLastKnownReadModelCache()
@@ -44,21 +45,30 @@ public sealed class PartySdkLastKnownReadModelCache
         _retention = retention;
     }
 
-    /// <summary>Captures the generation that must still be current when an asynchronous read completes.</summary>
-    /// <returns>The current invalidation generation.</returns>
-    public long BeginRead()
+    /// <summary>
+    /// Captures the per-key generation that must still be current when an asynchronous read for
+    /// <paramref name="cacheKey"/> completes.
+    /// </summary>
+    /// <param name="cacheKey">The exact cache key that will later be stored or evicted.</param>
+    /// <returns>The current invalidation generation for <paramref name="cacheKey"/>.</returns>
+    public long BeginRead(string cacheKey)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(cacheKey);
         lock (_gate)
         {
-            return _generation;
+            return _keyGenerations.GetValueOrDefault(cacheKey);
         }
     }
 
-    /// <summary>Stores a detail value using the current generation.</summary>
+    /// <summary>Stores a detail value using the current generation for that detail key.</summary>
     public void StoreDetail(string tenantId, string partyId, PartyDetailSdkReadModel value)
-        => _ = StoreDetailIfCurrent(tenantId, partyId, BeginRead(), value);
+        => _ = StoreDetailIfCurrent(
+            tenantId,
+            partyId,
+            BeginRead(PartySdkReadModelAddresses.Detail(tenantId, partyId)),
+            value);
 
-    /// <summary>Stores a detail value only if no eviction occurred since the read began.</summary>
+    /// <summary>Stores a detail value only if no eviction occurred for that key since the read began.</summary>
     public bool StoreDetailIfCurrent(string tenantId, string partyId, long generation, PartyDetailSdkReadModel value)
         => StoreIfCurrent(PartySdkReadModelAddresses.Detail(tenantId, partyId), generation, value);
 
@@ -66,15 +76,15 @@ public sealed class PartySdkLastKnownReadModelCache
     public bool TryGetDetail(string tenantId, string partyId, out PartyDetailSdkReadModel? value)
         => TryGet(PartySdkReadModelAddresses.Detail(tenantId, partyId), out value);
 
-    /// <summary>Evicts a detail entry and invalidates reads that began before the eviction.</summary>
+    /// <summary>Evicts a detail entry and invalidates reads that began before the eviction of that key.</summary>
     public void EvictDetail(string tenantId, string partyId)
         => Evict(PartySdkReadModelAddresses.Detail(tenantId, partyId));
 
-    /// <summary>Stores an index value using the current generation.</summary>
+    /// <summary>Stores an index value using the current generation for that index key.</summary>
     public void StoreIndex(string tenantId, PartyIndexSdkReadModel value)
-        => _ = StoreIndexIfCurrent(tenantId, BeginRead(), value);
+        => _ = StoreIndexIfCurrent(tenantId, BeginRead(PartySdkReadModelAddresses.Index(tenantId)), value);
 
-    /// <summary>Stores an index value only if no eviction occurred since the read began.</summary>
+    /// <summary>Stores an index value only if no eviction occurred for that key since the read began.</summary>
     public bool StoreIndexIfCurrent(string tenantId, long generation, PartyIndexSdkReadModel value)
         => StoreIfCurrent(PartySdkReadModelAddresses.Index(tenantId), generation, value);
 
@@ -82,15 +92,19 @@ public sealed class PartySdkLastKnownReadModelCache
     public bool TryGetIndex(string tenantId, out PartyIndexSdkReadModel? value)
         => TryGet(PartySdkReadModelAddresses.Index(tenantId), out value);
 
-    /// <summary>Evicts a tenant index and invalidates reads that began before the eviction.</summary>
+    /// <summary>Evicts a tenant index and invalidates reads that began before the eviction of that key.</summary>
     public void EvictIndex(string tenantId)
         => Evict(PartySdkReadModelAddresses.Index(tenantId));
 
-    /// <summary>Stores a processing value using the current generation.</summary>
+    /// <summary>Stores a processing value using the current generation for that processing key.</summary>
     public void StoreProcessing(string tenantId, string partyId, PartyProcessingSdkReadModel value)
-        => _ = StoreProcessingIfCurrent(tenantId, partyId, BeginRead(), value);
+        => _ = StoreProcessingIfCurrent(
+            tenantId,
+            partyId,
+            BeginRead(PartySdkReadModelAddresses.Processing(tenantId, partyId)),
+            value);
 
-    /// <summary>Stores a processing value only if no eviction occurred since the read began.</summary>
+    /// <summary>Stores a processing value only if no eviction occurred for that key since the read began.</summary>
     public bool StoreProcessingIfCurrent(
         string tenantId,
         string partyId,
@@ -102,7 +116,7 @@ public sealed class PartySdkLastKnownReadModelCache
     public bool TryGetProcessing(string tenantId, string partyId, out PartyProcessingSdkReadModel? value)
         => TryGet(PartySdkReadModelAddresses.Processing(tenantId, partyId), out value);
 
-    /// <summary>Evicts a processing value and invalidates reads that began before the eviction.</summary>
+    /// <summary>Evicts a processing value and invalidates reads that began before the eviction of that key.</summary>
     public void EvictProcessing(string tenantId, string partyId)
         => Evict(PartySdkReadModelAddresses.Processing(tenantId, partyId));
 
@@ -110,7 +124,7 @@ public sealed class PartySdkLastKnownReadModelCache
     {
         lock (_gate)
         {
-            _generation++;
+            _keyGenerations[key] = _keyGenerations.GetValueOrDefault(key) + 1;
             _ = _entries.Remove(key);
         }
     }
@@ -121,7 +135,7 @@ public sealed class PartySdkLastKnownReadModelCache
         ArgumentNullException.ThrowIfNull(value);
         lock (_gate)
         {
-            if (generation != _generation)
+            if (generation != _keyGenerations.GetValueOrDefault(key))
             {
                 return false;
             }

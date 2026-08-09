@@ -813,7 +813,7 @@ public sealed class PartySdkQueryHandlerTests
     {
         var clock = new FixedTimeProvider(s_now);
         var cache = new PartySdkLastKnownReadModelCache(clock, 8, TimeSpan.FromMinutes(1));
-        long generation = cache.BeginRead();
+        long generation = cache.BeginRead(PartySdkReadModelAddresses.Detail("tenant-a", "party-1"));
 
         cache.EvictDetail("tenant-a", "party-1");
         bool stored = cache.StoreDetailIfCurrent(
@@ -824,6 +824,24 @@ public sealed class PartySdkQueryHandlerTests
 
         stored.ShouldBeFalse();
         cache.TryGetDetail("tenant-a", "party-1", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void LastKnownReadModelCache_EvictionDoesNotInvalidateUnrelatedKeyStore()
+    {
+        var cache = new PartySdkLastKnownReadModelCache();
+        long detailGeneration = cache.BeginRead(PartySdkReadModelAddresses.Detail("tenant-a", "party-1"));
+
+        cache.EvictIndex("tenant-a");
+        bool stored = cache.StoreDetailIfCurrent(
+            "tenant-a",
+            "party-1",
+            detailGeneration,
+            new PartyDetailSdkReadModel { Detail = Detail("party-1") });
+
+        stored.ShouldBeTrue();
+        cache.TryGetDetail("tenant-a", "party-1", out PartyDetailSdkReadModel? detail).ShouldBeTrue();
+        detail!.Detail!.Id.ShouldBe("party-1");
     }
 
     [Fact]

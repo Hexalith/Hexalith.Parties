@@ -28,6 +28,7 @@ public sealed class ProjectionPlatformAdapterTests
 
         services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(IReadModelStore));
         services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(IQueryCursorCodec));
+        services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(TimeProvider));
         services.ShouldNotContain(static descriptor => string.Equals(
             descriptor.ServiceType.FullName,
             "Hexalith.Parties.Projections.Services.IPartyProjectionPlatformAdapter",

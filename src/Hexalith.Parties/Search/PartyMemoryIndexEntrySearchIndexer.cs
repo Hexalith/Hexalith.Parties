@@ -50,7 +50,9 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
                     LogIndexingSkippedMissingCaseId();
                 }
 
-                return false;
+                // Config mistake: skip indexing as converged so index projection delivery does
+                // not stall forever on search-reconciliation-required. Removal/cleanup still runs.
+                return true;
             }
 
             if (indexingService is null)

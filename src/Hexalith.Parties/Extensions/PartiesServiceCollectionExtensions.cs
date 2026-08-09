@@ -42,6 +42,9 @@ public static class PartiesServiceCollectionExtensions {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
         services.TryAddSingleton(configuration);
+        // PartySdkQueryService (and other seams) require TimeProvider; the generic host does not
+        // register it by default. Match Tenants / Parties.UI and keep TryAdd so hosts may override.
+        services.TryAddSingleton(TimeProvider.System);
 
         // ProblemDetails support (RFC 9457)
         _ = services.AddProblemDetails();
@@ -245,10 +248,14 @@ public static class PartiesServiceCollectionExtensions {
             {
                 // Cleanup remains active even when new Memories indexing is disabled. Each
                 // durable mapping carries the CaseId used at ingestion time; the current CaseId
-                // is retained only as a compatibility fallback for legacy mappings.
+                // is retained only as a compatibility fallback for legacy mappings. Read the
+                // live options so a runtime CaseId reload matches PartyMemoryIndexEntrySearchIndexer.
                 PartyMemoryCleanupService cleanupService = sp.GetRequiredService<PartyMemoryCleanupService>();
+                PartyMemorySearchOptions current = sp
+                    .GetRequiredService<IOptionsMonitor<PartyMemorySearchOptions>>()
+                    .CurrentValue;
                 PartyMemoryCleanupResult result = await cleanupService
-                    .DeleteByPartyAsync(tenantId, memorySearch.CaseId ?? string.Empty, partyId, cancellationToken)
+                    .DeleteByPartyAsync(tenantId, current.CaseId ?? string.Empty, partyId, cancellationToken)
                     .ConfigureAwait(false);
 
                 return new ErasureVerificationStoreResult

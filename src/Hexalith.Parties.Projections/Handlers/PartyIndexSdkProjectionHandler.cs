@@ -276,7 +276,7 @@ public sealed class PartyIndexSdkProjectionHandler(
             ? new HashSet<string>(keys, StringComparer.Ordinal)
             : new HashSet<string>(StringComparer.Ordinal);
 
-        foreach (string partyId in manifest.RemovedPartyIds)
+        foreach (string partyId in manifest.RemovedPartyIds ?? Array.Empty<string>())
         {
             if (stillPresentPartyIds.Contains(partyId))
             {
@@ -289,7 +289,7 @@ public sealed class PartyIndexSdkProjectionHandler(
             }
         }
 
-        foreach (PartyIndexSearchRebuildEntry item in manifest.Entries)
+        foreach (PartyIndexSearchRebuildEntry item in manifest.Entries ?? Array.Empty<PartyIndexSearchRebuildEntry>())
         {
             if (!await _searchIndexer
                 .NotifyIndexedAsync(identity.TenantId, item.Entry, item.EventType, item.Timestamp, cancellationToken)
@@ -397,9 +397,13 @@ public sealed class PartyIndexSdkProjectionHandler(
             sequences[request.AggregateId] = lastSequence;
         }
 
-        long maxGlobalPosition = Math.Max(
-            request.Events.Max(static item => item.GlobalPosition),
-            ParseGlobalPosition(current?.ProjectionVersion));
+        // Empty deliveries are a no-op fold (already-completed / probe); Max() on an empty
+        // sequence throws InvalidOperationException and must not abort the handler.
+        long maxGlobalPosition = request.Events.Length == 0
+            ? ParseGlobalPosition(current?.ProjectionVersion)
+            : Math.Max(
+                request.Events.Max(static item => item.GlobalPosition),
+                ParseGlobalPosition(current?.ProjectionVersion));
         string? version = maxGlobalPosition > 0
             ? $"global:{maxGlobalPosition.ToString(System.Globalization.CultureInfo.InvariantCulture)}"
             : lastSequence == long.MinValue

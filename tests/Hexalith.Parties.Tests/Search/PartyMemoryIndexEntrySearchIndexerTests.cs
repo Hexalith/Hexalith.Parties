@@ -36,6 +36,32 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
     }
 
     [Fact]
+    public async Task NotifyIndexedAsync_WhenEnabledWithoutCaseId_ReturnsConvergedWithoutIngestAsync()
+    {
+        var client = new RecordingMemoriesClient();
+        var mappingStore = new RecordingMappingStore();
+        var indexer = CreateIndexer(
+            client,
+            mappingStore,
+            new PartyMemorySearchOptions
+            {
+                Enabled = true,
+                Endpoint = new Uri("https://memories.example/"),
+                CaseId = null,
+            });
+
+        bool result = await indexer.NotifyIndexedAsync(
+            "tenant-a",
+            CreateEntry(),
+            "PartyCreated",
+            DateTimeOffset.UnixEpoch,
+            TestContext.Current.CancellationToken);
+
+        client.IngestCount.ShouldBe(0);
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task NotifyIndexedAsync_WhenEnabledWithCaseId_IngestsAsync()
     {
         var client = new RecordingMemoriesClient();

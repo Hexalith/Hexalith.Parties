@@ -3,15 +3,17 @@ story_key: 8-6-projection-and-query-sdk-migration
 story_id: "8.6"
 epic: "8"
 created: 2026-07-08T18:23:46+02:00
+status: done
 source_status: backlog
 target_status: review
 baseline_commit: 2c4a7af
+review_loop_iteration: 0
 eventstore_pin_at_creation: 0f428d0c914f2151aab15bb262f956a9630041dc
 ---
 
 # Story 8.6: Projection and query SDK migration
 
-Status: in-review
+Status: done
 
 <!-- Group 1+2+3+4 re-review patches applied 2026-08-03; Group 5 re-review 2026-08-03; prior open Group 2 logging/LastWrite items and Group 6 remain. -->
 
@@ -627,3 +629,43 @@ and only accumulated content since.
 | 2026-08-05 | 0.11 | Restored operator-facing diagnostic logging for dropped/unresolved/corrupt/ambiguous/redacted projection events (plain `ILogger` calls, not `[LoggerMessage]`, due to a source-generator/ProjectReference gap), made the corrupt-vs-redacted log signal distinct, and closed the two genuinely-missing fold/rebuild-parity test gaps (reconciling two already-fixed ones the finding text had not caught up with). `PrepareRebuildAsync`/`FinalizeAsync` `LastWrite`-concurrency remains the one open finding, pending SDK-level input; status stays `in-progress`. | Claude Sonnet 5 (dev-story) |
 | 2026-08-05 | 0.12 | Human-directed: the remaining 7 open `[Review]` findings (the `LastWrite`-concurrency Patch item plus 6 pre-existing Defer items) are logged under a new dated section in `deferred-work.md` and this build session proceeds to review without forcing them through. This also satisfies the still-open 2026-08-04 ledger action item to log the `FinalizeAsync` concurrency defect. Tasks remain unchecked in this story to reflect their deferred (not done) status. | Claude Sonnet 5 (dev-story) |
 | 2026-08-05 | 0.13 | Fixed all 8 patch-worthy issues from a code review of the diagnostic-logging patch itself: dead-code Index unresolved/ambiguous/non-JSON diagnostics, a silently-dropped resolved-but-null-payload case, duplicate logging under optimistic-concurrency retry, a raw-exception PII/GDPR leak risk (confirmed empirically), missing `AmbiguousEventTypeDropped` test coverage (via a reflection-seeded resolver cache), an undocumented silent-`Fold` invariant, a misleading comment, and a duplicated `RecordingLogger<T>` (moved to shared `Hexalith.Parties.Testing`). `Hexalith.Parties.Projections`/`Hexalith.Parties.Testing` build 0 warnings/0 errors; `Hexalith.Parties.Projections.Tests` passes 220/220; `Hexalith.Parties.Tests` and other `Hexalith.Parties.Testing` consumers show no regression. | Claude Sonnet 5 (dev-story) |
+| 2026-08-09 | 0.14 | bmad-build review pass: patched missing `TimeProvider` DI, asymmetric detail/processing checkpoint gap false-positives, empty-event `Max` throw, null rebuild-manifest lists, boot-time CaseId capture on erasure cleanup, missing-CaseId search stall, and global LKG generation aborting unrelated reads. Deferred Incomplete-erasure resume, memories-disabled erasure proof, actor-era failure vocabulary, Actors-folder packaging, deploy backfill, mapping-store collision, and party-id allowlist rigor to `deferred-work.md`. Focused query/DI/indexer tests 61/61; projection handler tests 64/64. | Cursor Grok 4.5 (bmad-build) |
+
+## Suggested Review Order
+
+**DI and query host**
+
+- Register `TimeProvider.System` so `PartySdkQueryService` resolves without host defaults.
+  [`PartiesServiceCollectionExtensions.cs:47`](../../src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs#L47)
+
+- Read live `CaseId` on GDPR memories-search erasure cleanup.
+  [`PartiesServiceCollectionExtensions.cs:255`](../../src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs#L255)
+
+**Projection folds**
+
+- Use the present slot watermark when the other detail/processing slot is missing.
+  [`PartyDetailSdkProjectionHandler.cs:66`](../../src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs#L66)
+
+- Guard empty deliveries before `Events.Max` on the shared index fold.
+  [`PartyIndexSdkProjectionHandler.cs:402`](../../src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs#L402)
+
+- Null-safe rebuild search manifest lists.
+  [`PartyIndexSdkProjectionHandler.cs:279`](../../src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs#L279)
+
+**Last-known cache and Memories**
+
+- Scope LKG invalidation generations per cache key.
+  [`PartySdkLastKnownReadModelCache.cs:54`](../../src/Hexalith.Parties/Queries/PartySdkLastKnownReadModelCache.cs#L54)
+
+- Pass key-scoped generations from query reads.
+  [`PartySdkQueryService.cs:418`](../../src/Hexalith.Parties/Queries/PartySdkQueryService.cs#L418)
+
+- Treat missing Memories CaseId as converged skip, not permanent retry.
+  [`PartyMemoryIndexEntrySearchIndexer.cs:45`](../../src/Hexalith.Parties/Search/PartyMemoryIndexEntrySearchIndexer.cs#L45)
+
+**Tests**
+
+- Assert `TimeProvider` registration and unrelated-key LKG isolation.
+  [`ProjectionPlatformAdapterTests.cs:29`](../../tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs#L29)
+  [`PartySdkQueryHandlerTests.cs:829`](../../tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs#L829)
+  [`PartyMemoryIndexEntrySearchIndexerTests.cs:38`](../../tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexEntrySearchIndexerTests.cs#L38)

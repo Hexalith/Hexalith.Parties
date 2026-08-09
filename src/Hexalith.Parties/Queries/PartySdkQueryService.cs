@@ -368,7 +368,7 @@ public sealed partial class PartySdkQueryService(
             string storeName = StoreName;
             ReadModelEntry<PartyIndexSdkReadModel> read;
             bool degraded = false;
-            long cacheGeneration = lastKnownCache.BeginRead();
+            long cacheGeneration = lastKnownCache.BeginRead(PartySdkReadModelAddresses.Index(query.TenantId));
             try
             {
                 read = await readModelStore
@@ -415,7 +415,7 @@ public sealed partial class PartySdkQueryService(
         string partyId,
         CancellationToken cancellationToken)
     {
-        long cacheGeneration = lastKnownCache.BeginRead();
+        long cacheGeneration = lastKnownCache.BeginRead(PartySdkReadModelAddresses.Detail(tenantId, partyId));
         try
         {
             ReadModelEntry<PartyDetailSdkReadModel> read = await readModelStore.GetAsync<PartyDetailSdkReadModel>(
@@ -445,7 +445,7 @@ public sealed partial class PartySdkQueryService(
         string partyId,
         CancellationToken cancellationToken)
     {
-        long cacheGeneration = lastKnownCache.BeginRead();
+        long cacheGeneration = lastKnownCache.BeginRead(PartySdkReadModelAddresses.Processing(tenantId, partyId));
         try
         {
             ReadModelEntry<PartyProcessingSdkReadModel> read = await readModelStore.GetAsync<PartyProcessingSdkReadModel>(

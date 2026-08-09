@@ -60,9 +60,24 @@ public sealed class PartyDetailSdkProjectionHandler(
         ReadModelEntry<PartyProcessingSdkReadModel> currentProcessing = await readModelStore
             .GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken)
             .ConfigureAwait(false);
-        long oldestCheckpoint = Math.Min(
-            current.Value?.LastSequenceNumber ?? long.MinValue,
-            currentProcessing.Value?.LastSequenceNumber ?? long.MinValue);
+        // When only one of the detail/processing slots exists, do not Min() the present
+        // watermark with long.MinValue for the missing slot — that invents a false
+        // delivery-sequence-gap on the next contiguous event and stalls ProjectAsync.
+        long oldestCheckpoint;
+        if (current.Value is null && currentProcessing.Value is not null)
+        {
+            oldestCheckpoint = currentProcessing.Value.LastSequenceNumber;
+        }
+        else if (current.Value is not null && currentProcessing.Value is null)
+        {
+            oldestCheckpoint = current.Value.LastSequenceNumber;
+        }
+        else
+        {
+            oldestCheckpoint = Math.Min(
+                current.Value?.LastSequenceNumber ?? long.MinValue,
+                currentProcessing.Value?.LastSequenceNumber ?? long.MinValue);
+        }
         string? deliveryFailure = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, oldestCheckpoint);
         if (deliveryFailure is not null)
         {

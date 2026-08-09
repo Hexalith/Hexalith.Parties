@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-08-04
+# last_updated: 2026-08-09
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -157,13 +157,11 @@ development_status:
   # focused projection/query regression at the current EventStore pin
   # (4bcf2484 as of Story 8.7's later revalidation) before treating it as
   # re-validated for Story 8.6.
-  # Corrected 2026-08-04 from an erroneous `done` back to `in-progress` by
-  # sprint-change-proposal-2026-08-04.md: the additive EventStore package
-  # handoff sub-block is now green at v3.91.0 (1d6e9321), but material
-  # review findings (diagnostic-logging, corrupt-vs-redacted observability,
-  # rebuild/live-write concurrency, remaining parity-test gaps) are still
-  # open and were never part of the approved twelve-patch set.
-  8-6-projection-and-query-sdk-migration: in-progress
+  # Advanced to `review` 2026-08-09 after the bmad-build review pass patched
+  # TimeProvider DI, asymmetric checkpoint false-gaps, empty-event Max, null
+  # rebuild manifests, CaseId options reload, missing-CaseId search stall, and
+  # per-key LKG invalidation. Remaining non-blocking items are in deferred-work.md.
+  8-6-projection-and-query-sdk-migration: review
   # Story context created 2026-07-16; production migration remains blocked by
   # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
   # G5 receipt revalidated 2026-08-04 at the current EventStore identity

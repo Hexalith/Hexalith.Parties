@@ -203,3 +203,30 @@ this ledger") for the `FinalizeAsync` concurrency defect.
   authorization SCP "approved 2026-08-02" for an action the same annotation dates to
   2026-08-01 (approval postdating the act it authorizes by a day); resolves naturally
   when `sprint-status.yaml` is next synced.
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Retry Incomplete erasure batches after re-reading store etags instead of replaying the same batch payload.
+  evidence: PartySdkReadModelEraser.ExecuteWithResumeAsync re-executes the original batch on Incomplete without refreshing etags; a partial apply can loop into sdk-read-model-cleanup-conflict.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Add an erasure composition test that proves memories-search cleanup with indexing disabled and durable mappings present.
+  evidence: ProjectionPlatformAdapterTests invoke memories-search cleanup with Enabled=false and no seeded mappings, so Cleaned can pass without exercising DELETE/clearance.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Rename ActorNotFoundInfrastructure/ActorException query failure vocabulary now that Dapr projection actors are gone.
+  evidence: PartySdkQueryService still returns actor-era failure reasons on the SDK path, which misleads operators after AC8 actor deletion.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Move PartyEventTypeResolver out of the retired Projections/Actors packaging folder.
+  evidence: The resolver remains under Actors/ after projection actors were deleted, obscuring ownership.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Document or automate Dapr-actor to SDK read-model key backfill for existing deployments.
+  evidence: Story File List deletes actor projection paths without an AppHost/deploy cutover that migrates existing actor state into SDK keys.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Harden PartyMemoryUnitMappingStore upsert when MemoryUnitId and SourceUri match different existing rows.
+  evidence: Edge-case review found a second live mapping row can be dropped when two entries match the new unit id and source uri separately.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Restore stronger party-id length/allowlist validation on the SDK query detail envelope.
+  evidence: TryValidateDetailEnvelope only rejects reserved chars after TenantSafeProjectionReadGuardrailsTests were deleted; oversized/malformed party ids are weakly gated.
