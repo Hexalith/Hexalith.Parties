@@ -5,13 +5,16 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Extensions;
+using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Queries;
 using Hexalith.Parties.Security;
 
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 using NSubstitute;
 
@@ -29,6 +32,8 @@ public sealed class ProjectionPlatformAdapterTests
         services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(IReadModelStore));
         services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(IQueryCursorCodec));
         services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(TimeProvider));
+        services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(PartySdkQueryService));
+        services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(PartySdkLastKnownReadModelCache));
         services.ShouldNotContain(static descriptor => string.Equals(
             descriptor.ServiceType.FullName,
             "Hexalith.Parties.Projections.Services.IPartyProjectionPlatformAdapter",
@@ -41,6 +46,46 @@ public sealed class ProjectionPlatformAdapterTests
             descriptor.ServiceType.FullName,
             "Hexalith.EventStore.Server.Projections.IProjectionUpdateOrchestrator",
             StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void AddParties_ResolvesSdkQueryServiceCursorCodecAndInjectedLastKnownCacheClock()
+    {
+        IServiceCollection services = CreatePartiesServices();
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<PartySdkQueryService>().ShouldNotBeNull();
+        provider.GetRequiredService<IDataProtectionProvider>().ShouldNotBeNull();
+        provider.GetRequiredService<IQueryCursorCodec>().ShouldNotBeNull();
+        provider.GetRequiredService<PartySdkLastKnownReadModelCache>().ShouldNotBeNull();
+        provider.GetRequiredService<TimeProvider>().ShouldBe(TimeProvider.System);
+    }
+
+    [Fact]
+    public void AddParties_RejectsInvalidPartySdkReadModelOptionsOnAccess()
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authentication:JwtBearer:Issuer"] = "hexalith-test",
+                ["Authentication:JwtBearer:Audience"] = "hexalith-parties",
+                ["Authentication:JwtBearer:SigningKey"] = "DevOnlySigningKey-AtLeast32Chars-MustBeSecure!",
+                ["Authentication:JwtBearer:RequireHttpsMetadata"] = "false",
+                ["Tenants:PubSubName"] = "pubsub",
+                ["Tenants:TopicName"] = "system.tenants.events",
+                ["EventStore:Projections:ReadModelStateStoreName"] = " ",
+                ["EventStore:Projections:FreshnessAgingSeconds"] = "30",
+                ["EventStore:Projections:FreshnessStaleSeconds"] = "10",
+            })
+            .Build();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddParties(configuration);
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        OptionsValidationException ex = Should.Throw<OptionsValidationException>(
+            () => _ = provider.GetRequiredService<IOptions<PartySdkReadModelOptions>>().Value);
+        ex.Message.ShouldContain("Party SDK");
     }
 
     [Fact]
@@ -181,6 +226,35 @@ public sealed class ProjectionPlatformAdapterTests
         ErasureVerificationStoreResult sdk = report.StoreResults.Single(static result => result.StoreName == "sdk-read-models");
         sdk.Status.ShouldBe(ErasureStoreCleanupStatus.Failed);
         (sdk.ErrorMessage ?? string.Empty).ShouldNotContain("transaction-dispatch");
+    }
+
+    [Fact]
+    public async Task AddParties_CanceledSdkReadModelCleanupRethrowsInsteadOfFailedAsync()
+    {
+        const string tenantId = "tenant-a";
+        const string partyId = "party-1";
+        IServiceCollection services = CreatePartiesServices();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        IReadOnlyList<ErasureStoreCleanupDelegate> cleanups =
+            provider.GetRequiredService<IReadOnlyList<ErasureStoreCleanupDelegate>>();
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        OperationCanceledException thrown = await Should.ThrowAsync<OperationCanceledException>(async () =>
+        {
+            foreach (ErasureStoreCleanupDelegate cleanup in cleanups)
+            {
+                ErasureVerificationStoreResult result = await cleanup(tenantId, partyId, cts.Token)
+                    .ConfigureAwait(false);
+                if (string.Equals(result.StoreName, "sdk-read-models", StringComparison.Ordinal))
+                {
+                    result.Status.ShouldNotBe(ErasureStoreCleanupStatus.Failed);
+                }
+            }
+        });
+
+        thrown.ShouldNotBeNull();
     }
 
     private static IServiceCollection CreatePartiesServices()

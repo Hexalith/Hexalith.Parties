@@ -103,11 +103,11 @@ public static class PartiesServiceCollectionExtensions {
 
         // Projection-side only — NOT for command/query gateway authorization (Story 12.3 AC4).
         // EventStore owns gateway tenant validation/RBAC via ITenantValidator/IRbacValidator.
-        // Parties retains ITenantAccessService strictly for projection-side / internal actor-host
-        // membership lookups against the local Tenants projection. The fitness test
-        // PartiesRequestPath_DoesNotUseTenantAccessServiceOrDenialTranslator pins this boundary
-        // by asserting the request-path code paths (Program, domain processor, command/query
-        // controllers) do not consume this service.
+        // Parties retains ITenantAccessService for domain/projection-side membership lookups
+        // against the local Tenants projection (not for public request-path auth). The fitness
+        // test PartiesRequestPath_DoesNotUseTenantAccessServiceOrDenialTranslator pins this
+        // boundary by asserting Program, the domain processor, and request-path surfaces do
+        // not consume this service.
         //
         // Singleton lifetime assumes ITenantProjectionStore is also Singleton (the default
         // InMemoryTenantProjectionStore is). Replacing the projection store with a Scoped
@@ -118,13 +118,13 @@ public static class PartiesServiceCollectionExtensions {
         // Story 1.5 (AR-D3) — D3 defense-in-depth self-authorization decision service. Pure/stateless
         // aggregateId == party_id check, fail-closed (deny on null/empty/mismatch). Singleton mirrors
         // ITenantAccessService above (no captive-dependency concern). KEPT OFF THE REQUEST PATH: the
-        // parties actor host is machine-to-machine over DAPR at POST /process and carries no end-user
-        // principal there (DAPR strips the JWT), so there is no consumer party_id to check on the request
-        // path today — the EventStore gateway owns request-path RBAC and the active own-data-only
-        // enforcement is the BFF self-scope accessor (Story 1.5 AC1). This is the registered, unit-tested
-        // building block the deferred gateway self-principal will consume. The fitness test
-        // PartiesRequestPath_DoesNotUseDataSubjectAccessService pins it out of Program.cs and the domain
-        // processor (AC4).
+        // Parties domain-service host is machine-to-machine over DAPR at POST /process and carries
+        // no end-user principal there (DAPR strips the JWT), so there is no consumer party_id to
+        // check on the request path today — the EventStore gateway owns request-path RBAC and the
+        // active own-data-only enforcement is the BFF self-scope accessor (Story 1.5 AC1). This is
+        // the registered, unit-tested building block the deferred gateway self-principal will
+        // consume. The fitness test PartiesRequestPath_DoesNotUseDataSubjectAccessService pins it
+        // out of Program.cs and the domain processor (AC4).
         _ = services.AddSingleton<IDataSubjectAccessService, DataSubjectAccessService>();
 
         // GDPR / crypto-shredding infrastructure
@@ -197,10 +197,16 @@ public static class PartiesServiceCollectionExtensions {
                     {
                         throw;
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         // SDK batch failures are operational, not proof that encrypted state is
                         // unreadable. Return bounded failure so D15 cannot mis-certify cleanup.
+                        // Log type only — exception messages can echo payload fragments.
+                        sp.GetService<ILoggerFactory>()
+                            ?.CreateLogger("Hexalith.Parties.ErasureCleanup")
+                            .LogWarning(
+                                "SDK read-model cleanup failed with {ExceptionType}.",
+                                ex.GetType().Name);
                         return new ErasureVerificationStoreResult
                         {
                             StoreName = "sdk-read-models",
@@ -217,6 +223,7 @@ public static class PartiesServiceCollectionExtensions {
                     // read-model store. The cache has no relationship to the eraser itself (it
                     // lives in a different project to avoid a circular reference), so eviction is
                     // composed here as its own erasure-cleanup step.
+                    cancellationToken.ThrowIfCancellationRequested();
                     PartySdkLastKnownReadModelCache cache = sp.GetRequiredService<PartySdkLastKnownReadModelCache>();
                     cache.EvictDetail(tenantId, partyId);
                     cache.EvictProcessing(tenantId, partyId);
@@ -250,21 +257,43 @@ public static class PartiesServiceCollectionExtensions {
                 // durable mapping carries the CaseId used at ingestion time; the current CaseId
                 // is retained only as a compatibility fallback for legacy mappings. Read the
                 // live options so a runtime CaseId reload matches PartyMemoryIndexEntrySearchIndexer.
-                PartyMemoryCleanupService cleanupService = sp.GetRequiredService<PartyMemoryCleanupService>();
-                PartyMemorySearchOptions current = sp
-                    .GetRequiredService<IOptionsMonitor<PartyMemorySearchOptions>>()
-                    .CurrentValue;
-                PartyMemoryCleanupResult result = await cleanupService
-                    .DeleteByPartyAsync(tenantId, current.CaseId ?? string.Empty, partyId, cancellationToken)
-                    .ConfigureAwait(false);
-
-                return new ErasureVerificationStoreResult
+                try
                 {
-                    StoreName = "memories-search",
-                    Status = result.Cleaned ? ErasureStoreCleanupStatus.Cleaned : ErasureStoreCleanupStatus.Failed,
-                    Timestamp = DateTimeOffset.UtcNow,
-                    ErrorMessage = result.BlockedReason,
-                };
+                    PartyMemoryCleanupService cleanupService = sp.GetRequiredService<PartyMemoryCleanupService>();
+                    PartyMemorySearchOptions current = sp
+                        .GetRequiredService<IOptionsMonitor<PartyMemorySearchOptions>>()
+                        .CurrentValue;
+                    PartyMemoryCleanupResult result = await cleanupService
+                        .DeleteByPartyAsync(tenantId, current.CaseId ?? string.Empty, partyId, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    return new ErasureVerificationStoreResult
+                    {
+                        StoreName = "memories-search",
+                        Status = result.Cleaned ? ErasureStoreCleanupStatus.Cleaned : ErasureStoreCleanupStatus.Failed,
+                        Timestamp = DateTimeOffset.UtcNow,
+                        ErrorMessage = result.BlockedReason,
+                    };
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    sp.GetService<ILoggerFactory>()
+                        ?.CreateLogger("Hexalith.Parties.ErasureCleanup")
+                        .LogWarning(
+                            "Memories search cleanup failed with {ExceptionType}.",
+                            ex.GetType().Name);
+                    return new ErasureVerificationStoreResult
+                    {
+                        StoreName = "memories-search",
+                        Status = ErasureStoreCleanupStatus.Failed,
+                        Timestamp = DateTimeOffset.UtcNow,
+                        ErrorMessage = "Memories search cleanup did not complete.",
+                    };
+                }
             });
 
             return cleanups;
@@ -290,6 +319,10 @@ public static class PartiesServiceCollectionExtensions {
             .AddOptions<PartyMemoryUnitMappingStoreOptions>()
             .Bind(configuration.GetSection(PartyMemoryUnitMappingStoreOptions.SectionName));
         _ = services.AddSingleton<IPartyMemoryUnitMappingStore, PartyMemoryUnitMappingStore>();
+        // Endpoint and ApiToken are captured from the boot configuration snapshot (same posture
+        // as MemoriesClient below). Typed HttpClient BaseAddress/default headers are not safe
+        // hot-reload knobs; changing them requires a process restart. CaseId alone is read live
+        // from IOptionsMonitor in the erasure delegate as a legacy-mapping fallback.
         string? memoriesApiToken = memorySearch.ApiToken;
         _ = services.AddHttpClient<PartyMemoryCleanupService>((sp, httpClient) =>
         {

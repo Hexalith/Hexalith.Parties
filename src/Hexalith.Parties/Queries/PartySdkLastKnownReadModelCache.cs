@@ -24,6 +24,17 @@ public sealed class PartySdkLastKnownReadModelCache
     {
     }
 
+    /// <summary>
+    /// Initializes a cache with the DI-registered clock and bounded production defaults.
+    /// Preferred by the container when <see cref="TimeProvider"/> is registered so host
+    /// overrides of <c>TryAddSingleton(TimeProvider.System)</c> reach retention checks.
+    /// </summary>
+    /// <param name="timeProvider">The clock used for retention checks.</param>
+    public PartySdkLastKnownReadModelCache(TimeProvider timeProvider)
+        : this(timeProvider, DefaultMaximumEntries, s_defaultRetention)
+    {
+    }
+
     /// <summary>Initializes a cache with explicit time, capacity, and retention controls.</summary>
     /// <param name="timeProvider">The clock used for retention checks.</param>
     /// <param name="maximumEntries">The maximum number of cached values across all slots.</param>

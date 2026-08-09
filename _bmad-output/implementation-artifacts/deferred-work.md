@@ -230,3 +230,10 @@ this ledger") for the `FinalizeAsync` concurrency defect.
 - source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
   summary: Restore stronger party-id length/allowlist validation on the SDK query detail envelope.
   evidence: TryValidateDetailEnvelope only rejects reserved chars after TenantSafeProjectionReadGuardrailsTests were deleted; oversized/malformed party ids are weakly gated.
+
+## Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)
+
+DI + query host sub-chunk (`PartiesServiceCollectionExtensions.cs` vs `2c4a7af`).
+
+- `tests/e2e/specs/story-7-4-projection-platform-compatibility.spec.ts` still expects deleted projection-adapter registrations and old `ProjectionPlatformAdapterTests` method names — deferred, pre-existing e2e drift outside this DI chunk.
+- Erasure cleanup timestamps still use `DateTimeOffset.UtcNow` instead of the newly registered `TimeProvider` — deferred, pre-existing certificate timestamp pattern across erasure store results.

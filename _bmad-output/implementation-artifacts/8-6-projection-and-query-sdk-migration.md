@@ -3,17 +3,17 @@ story_key: 8-6-projection-and-query-sdk-migration
 story_id: "8.6"
 epic: "8"
 created: 2026-07-08T18:23:46+02:00
-status: done
+status: in-progress
 source_status: backlog
 target_status: review
 baseline_commit: 2c4a7af
-review_loop_iteration: 0
+review_loop_iteration: 1
 eventstore_pin_at_creation: 0f428d0c914f2151aab15bb262f956a9630041dc
 ---
 
 # Story 8.6: Projection and query SDK migration
 
-Status: done
+Status: in-progress
 
 <!-- Group 1+2+3+4 re-review patches applied 2026-08-03; Group 5 re-review 2026-08-03; prior open Group 2 logging/LastWrite items and Group 6 remain. -->
 
@@ -301,7 +301,21 @@ _Layers: Blind Hunter, Edge Case Hunter, Verification Gap, Acceptance Auditor (s
 - [x] [Review][Defer] `PartyIndexSdkProjectionHandler.CompleteRebuildAsync` would throw `NullReferenceException` (not a controlled result) if a persisted rebuild-completion manifest ever deserializes with null `Entries`/`RemovedPartyIds` — not reachable under the current producer (`FinalizeAsync` always serializes non-null arrays), hardening-only — deferred, pre-existing class of defensive-coding gap
 - [x] [Review][Defer] Full-suite verification (run after applying the patches above) surfaced `PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible` RED: it hard-pins the Story 8.3 matrix's "Payload protection engine package" (G5) row to EventStore `v3.89.0`/`7854f8e5`, but the working tree is now at `v3.91.0`/`1d6e9321` (this story's resolved EventStore identity Decision above). Pre-existing to this review session — the submodule was already at this commit in the working tree before this review started (confirmed against the session's initial `git status`) — not caused by any of this review's patches. Out of Story 8.6 scope per the frozen spec's "Never...pull Story 8.7 crypto extraction into scope" rule: the G5 payload-protection row is Story 8.7's territory and needs its own owner-reviewed identity-authorization update (mirroring the 2026-08-02 SCP pattern), not a Story 8.6 patch. [tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs:18,1074-1090; _bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md]
 
+**DI + query host sub-chunk re-review (2026-08-09: `PartiesServiceCollectionExtensions.cs` vs `2c4a7af`, File List scope) findings:**
 
+_Layers: Blind Hunter, Edge Case Hunter, Verification Gap, Acceptance Auditor. Acceptance Auditor: no AC violations for this chunk. Dismissed as noise: Program-owned `IDomainQueryHandler` discovery; optional eraser indexer default while `IPartyIndexSearchIndexer` is registered; tenant-wide `EvictIndex` (index key is tenant-scoped); empty-mapping `Cleaned` when Memories is off (P38 / always-on cleanup); null Endpoint / empty CaseId already bounded inside `PartyMemoryCleanupService`; Evict* dictionary ops not realistically throwing; `TryAddSingleton(configuration)` required by EventStore registration helpers; missing dedicated `IValidateOptions<PartySdkReadModelOptions>` type (inline `.Validate` is enough)._
+
+- [x] [Review][Decision] Memories cleanup HttpClient freezes Endpoint/ApiToken from the boot `memorySearch` snapshot while CaseId is deliberately read live from `IOptionsMonitor` — Resolved 2026-08-09: Administrator chose option 1 — keep boot-freeze for Endpoint/ApiToken (matches typed HttpClient / MemoriesClient); document that those two require restart while CaseId remains live as legacy-mapping fallback only.
+- [x] [Review][Patch] Document that Memories cleanup Endpoint/ApiToken are boot-frozen (restart required) while CaseId is live via `IOptionsMonitor` [src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs:293] — Fixed 2026-08-09: configure-callback comment documents boot-freeze vs live CaseId.
+- [x] [Review][Patch] Register `PartySdkLastKnownReadModelCache` with injected `TimeProvider` so `TryAddSingleton(TimeProvider.System)` overrides reach LKG retention [src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs:170] — Fixed 2026-08-09: added `TimeProvider`-only constructor preferred by DI over the parameterless `TimeProvider.System` path.
+- [x] [Review][Patch] Log exception type (not message/PII) when `sdk-read-models` cleanup maps failures to `Failed` [src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs:200] — Fixed 2026-08-09: Warning log with `{ExceptionType}` only.
+- [x] [Review][Patch] Update stale `actor-host` comments after projection/query actors were removed from this composition [src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs:106] — Fixed 2026-08-09: comments now describe domain-service host / projection-side lookups.
+- [x] [Review][Patch] Strengthen `AddParties` DI tests: resolve `PartySdkQueryService` and `IQueryCursorCodec` (with DataProtection), pin `PartySdkReadModelOptions` ValidateOnStart failures, and assert canceled `sdk-read-models` cleanup rethrows [tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs:25] — Fixed 2026-08-09: three new tests; descriptor assert also requires `PartySdkQueryService` / LKG cache. Focused class 7/7.
+- [x] [Review][Patch] Refresh `AssertApprovedStory85DiffIsNarrow` expectations for the post-8.6 DI surface (no AggregateActor / projection hosted services / DaprDomainServiceInvoker) [tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs:924] — Fixed 2026-08-09: asserts SDK read-model/cursor/DataProtection/query/`TimeProvider` registrations and absence of retired projection runtime types.
+- [x] [Review][Patch] Bound unexpected non-cancel exceptions from the always-on `memories-search` erasure cleanup delegate to `Failed` [src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs:247] — Fixed 2026-08-09: try/catch mirrors sdk-read-models (type-only log + Failed).
+- [x] [Review][Patch] Honor cancellation on the `projection-cache` eviction cleanup delegate before reporting `Cleaned` [src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs:213] — Fixed 2026-08-09: `cancellationToken.ThrowIfCancellationRequested()` before Evict*.
+- [x] [Review][Defer] `tests/e2e/specs/story-7-4-projection-platform-compatibility.spec.ts` still expects deleted projection-adapter registrations and old test method names — deferred, pre-existing e2e drift outside this DI chunk
+- [x] [Review][Defer] Erasure cleanup timestamps still use `DateTimeOffset.UtcNow` instead of the newly registered `TimeProvider` — deferred, pre-existing certificate timestamp pattern
 
 ### Story Classification and Gate
 
@@ -630,6 +644,7 @@ and only accumulated content since.
 | 2026-08-05 | 0.12 | Human-directed: the remaining 7 open `[Review]` findings (the `LastWrite`-concurrency Patch item plus 6 pre-existing Defer items) are logged under a new dated section in `deferred-work.md` and this build session proceeds to review without forcing them through. This also satisfies the still-open 2026-08-04 ledger action item to log the `FinalizeAsync` concurrency defect. Tasks remain unchecked in this story to reflect their deferred (not done) status. | Claude Sonnet 5 (dev-story) |
 | 2026-08-05 | 0.13 | Fixed all 8 patch-worthy issues from a code review of the diagnostic-logging patch itself: dead-code Index unresolved/ambiguous/non-JSON diagnostics, a silently-dropped resolved-but-null-payload case, duplicate logging under optimistic-concurrency retry, a raw-exception PII/GDPR leak risk (confirmed empirically), missing `AmbiguousEventTypeDropped` test coverage (via a reflection-seeded resolver cache), an undocumented silent-`Fold` invariant, a misleading comment, and a duplicated `RecordingLogger<T>` (moved to shared `Hexalith.Parties.Testing`). `Hexalith.Parties.Projections`/`Hexalith.Parties.Testing` build 0 warnings/0 errors; `Hexalith.Parties.Projections.Tests` passes 220/220; `Hexalith.Parties.Tests` and other `Hexalith.Parties.Testing` consumers show no regression. | Claude Sonnet 5 (dev-story) |
 | 2026-08-09 | 0.14 | bmad-build review pass: patched missing `TimeProvider` DI, asymmetric detail/processing checkpoint gap false-positives, empty-event `Max` throw, null rebuild-manifest lists, boot-time CaseId capture on erasure cleanup, missing-CaseId search stall, and global LKG generation aborting unrelated reads. Deferred Incomplete-erasure resume, memories-disabled erasure proof, actor-era failure vocabulary, Actors-folder packaging, deploy backfill, mapping-store collision, and party-id allowlist rigor to `deferred-work.md`. Focused query/DI/indexer tests 61/61; projection handler tests 64/64. | Cursor Grok 4.5 (bmad-build) |
+| 2026-08-09 | 0.15 | bmad-code-review DI+query-host sub-chunk: applied 8 patches (LKG TimeProvider ctor, erasure type-only logging, memories Failed bound, cache CT, boot-freeze docs, stale actor-host comments, DI/fitness tests). Deferred e2e story-7-4 drift and UtcNow timestamps. Remaining Suggested Review Order chunks still pending review; status `in-progress`. | Cursor Grok 4.5 (bmad-code-review) |
 
 ## Suggested Review Order
 
