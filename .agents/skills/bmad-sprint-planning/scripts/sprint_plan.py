@@ -400,7 +400,7 @@ def cmd_generate(args):
         return default
 
     generated = args.date
-    if not args.fresh and existing is not None and existing.get("generated"):
+    if existing is not None and existing.get("generated"):
         generated = str(existing["generated"])
 
     if existing is not None and not args.fresh:

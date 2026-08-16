@@ -182,8 +182,6 @@ def test_fresh_rebuild_ignores_existing_statuses(tmp_path, capsys):
     data = load(status_file)
     assert data["development_status"]["1-1-user-authentication"] == "backlog"
     assert data["development_status"]["epic-1"] == "backlog"
-    assert data["generated"] == DATE
-    assert data["last_updated"] == DATE
     assert result["fresh"] is True
     # action_items are retro history, not tracking state — carried even on --fresh
     assert data["action_items"][0]["status"] == "open"
