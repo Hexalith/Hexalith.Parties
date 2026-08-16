@@ -80,11 +80,8 @@ internal sealed class PartyMemoryIndexingService(
             // caught here — they should surface as 500 so the underlying defect is fixed
             // rather than masked as transient outage.
             logger.LogWarning(
-                ex,
-                "Memories indexing failed for {TenantId}/{PartyId} (source URI {SourceUri}). Search may be stale until repair runs.",
-                unit.TenantId,
-                unit.PartyId,
-                unit.SourceUri);
+                "Memories indexing failed with {ExceptionType}; search may be stale until repair runs.",
+                ex.GetType().Name);
             return new PartyMemoryIndexingResult(
                 unit.PartyId,
                 unit.SourceUri,
@@ -101,10 +98,7 @@ internal sealed class PartyMemoryIndexingService(
         if (string.IsNullOrWhiteSpace(workflowInstanceId))
         {
             logger.LogWarning(
-                "Memories returned a successful response with no workflow/memory-unit id for {TenantId}/{PartyId} (source URI {SourceUri}). Mapping not recorded; search may be stale.",
-                unit.TenantId,
-                unit.PartyId,
-                unit.SourceUri);
+                "Memories returned a successful response with no workflow/memory-unit id. Mapping was not recorded; search may be stale.");
             return new PartyMemoryIndexingResult(
                 unit.PartyId,
                 unit.SourceUri,
@@ -136,7 +130,12 @@ internal sealed class PartyMemoryIndexingService(
         }
         catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
         {
-            await TryCompensatingDeleteAsync(unit, workflowInstanceId, ex, cancellationToken).ConfigureAwait(false);
+            await TryCompensatingDeleteAsync(
+                    unit,
+                    workflowInstanceId,
+                    ex.GetType().Name,
+                    cancellationToken)
+                .ConfigureAwait(false);
             return new PartyMemoryIndexingResult(
                 unit.PartyId,
                 unit.SourceUri,
@@ -156,42 +155,39 @@ internal sealed class PartyMemoryIndexingService(
     private async Task TryCompensatingDeleteAsync(
         PartyMemoryUnit unit,
         string workflowInstanceId,
-        Exception originalFailure,
+        string originalFailureType,
         CancellationToken cancellationToken)
     {
         try
         {
             PartyMemorySearchOptions current = options.CurrentValue;
-            if (current.Endpoint is null || string.IsNullOrWhiteSpace(current.CaseId))
+            if (current.Endpoint is null || string.IsNullOrWhiteSpace(unit.CaseId))
             {
                 logger.LogError(
-                    originalFailure,
-                    "Compensating delete for orphaned Memories unit {WorkflowInstanceId} (tenant {TenantId}, party {PartyId}) skipped: Memories endpoint or case id not configured. Operator must run reconciliation manually.",
-                    workflowInstanceId,
-                    unit.TenantId,
-                    unit.PartyId);
+                    "Compensating delete was skipped because the Memories endpoint or captured case id is unavailable after {OriginalFailureType}. Operator reconciliation is required.",
+                    originalFailureType);
                 return;
             }
 
             using HttpClient httpClient = new() { BaseAddress = current.Endpoint };
-            PartyMemoryCleanupService.ConfigureAuthorization(httpClient, current.ApiToken, logger);
+            // ConfigureAuthorization can optionally log its caught FormatException. Compensation
+            // diagnostics deliberately retain no raw exceptions, so let the helper ignore a
+            // malformed token and report only the bounded HTTP/exception outcome below.
+            PartyMemoryCleanupService.ConfigureAuthorization(httpClient, current.ApiToken);
             string path = $"api/tenants/{Uri.EscapeDataString(unit.TenantId)}/cases/{Uri.EscapeDataString(unit.CaseId)}/memory-units/{Uri.EscapeDataString(workflowInstanceId)}";
             using HttpResponseMessage response = await httpClient.DeleteAsync(path, cancellationToken).ConfigureAwait(false);
             if (response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 logger.LogWarning(
-                    "Compensating delete succeeded for orphaned Memories unit {WorkflowInstanceId} after mapping write failed.",
-                    workflowInstanceId);
+                    "Compensating delete succeeded after mapping write failed with {OriginalFailureType}.",
+                    originalFailureType);
                 return;
             }
 
             logger.LogError(
-                originalFailure,
-                "Compensating delete returned HTTP {StatusCode} for orphaned Memories unit {WorkflowInstanceId} (tenant {TenantId}, party {PartyId}). Operator must run reconciliation manually.",
+                "Compensating delete returned HTTP {StatusCode} after mapping write failed with {OriginalFailureType}. Operator reconciliation is required.",
                 (int)response.StatusCode,
-                workflowInstanceId,
-                unit.TenantId,
-                unit.PartyId);
+                originalFailureType);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -200,12 +196,9 @@ internal sealed class PartyMemoryIndexingService(
         catch (Exception compensateFailure) when (compensateFailure is not OutOfMemoryException and not StackOverflowException)
         {
             logger.LogError(
-                compensateFailure,
-                "Compensating delete threw for orphaned Memories unit {WorkflowInstanceId} (tenant {TenantId}, party {PartyId}). Operator must run reconciliation manually. Original mapping failure: {OriginalFailure}",
-                workflowInstanceId,
-                unit.TenantId,
-                unit.PartyId,
-                originalFailure.GetType().Name);
+                "Compensating delete failed with {CompensationFailureType} after mapping write failed with {OriginalFailureType}. Operator reconciliation is required.",
+                compensateFailure.GetType().Name,
+                originalFailureType);
         }
     }
 }

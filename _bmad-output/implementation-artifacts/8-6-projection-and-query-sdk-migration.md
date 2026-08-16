@@ -328,6 +328,20 @@ _Layers: Blind Hunter, Edge Case Hunter, Verification Gap, Acceptance Auditor. A
 - [x] [Review][Patch] Report unexpected erasure cleanup exceptions and non-caller cancellations as sanitized failed store results; propagate caller cancellation and remove identifiers from verification logs.
 - [x] [Review][Patch] Reject divergent duplicate sequence identities/payloads in one projection delivery with bounded retry while retaining idempotent identical duplicates.
 
+**Code review (2026-08-16) findings:**
+
+- [x] [Review][Patch] Fix inconsistent frontmatter status in story file [8-6-projection-and-query-sdk-migration.md:6] — Fixed 2026-08-16: frontmatter, body, and sprint tracking consistently retained `in-progress` during implementation and re-verification before advancing through the review workflow.
+- [x] [Review][Patch] Sanitize tenant/party identifiers and raw exceptions in PartyMemoryUnitMappingStore logging [src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs:156-170,207-214,246-254] — Fixed and hardened 2026-08-16: record/read/clear/replace provider failures retain no inner exception; `TrySaveStateAsync` failures and non-caller cancellations surface bounded identifier-free store failures; caller cancellation still propagates. Conflict telemetry logs Debug only before a real retry and a sanitized Warning on terminal exhaustion. Focused tests assert tenant, party, memory-unit, source-URI, and case identifiers are absent from logs and complete exception text, with no raw logger exception.
+- [x] [Review][Defer] Align ErasedAt resolution in PartyProcessingActivityFold when payload is PartyErased [src/Hexalith.Parties.Projections/Handlers/PartyProcessingActivityFold.cs:77] — deferred, pre-existing
+- [x] [Review][Defer] Parallelize state-store reads in PrepareRebuildAsync [src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs:398-404] — deferred, pre-existing
+
+**Review hardening follow-up (2026-08-16) findings:**
+
+- [x] [Review][Patch] Keep the shared-index preflight fold silent so first-persistence skip-and-advance deliveries emit each diagnostic once; unresolved retryable failures still log once before returning.
+- [x] [Review][Patch] Make memory-unit mapping replacement case-aware: migrate matching legacy entries into the supplied case, replace stale identity only within that case, and retain matching entries from other cases for later erasure.
+- [x] [Review][Patch] Use the ingested unit's captured CaseId for compensating delete eligibility and remove raw exceptions plus tenant/party/unit/source identifiers from indexing, empty-workflow, and compensation diagnostics.
+- [x] [Review][Patch] Treat an explicit Memories `Degraded=true` response as Degraded while preserving probe data, and clear a created mapping sentinel in `finally` without replacing a primary read failure with cleanup failure.
+
 ### Story Classification and Gate
 
 - Epic 8 is Class C post-MVP maintenance. It must not be reported as new PRD functional delivery. [Source: `_bmad-output/planning-artifacts/epics.md#Epic-8-Domain-Focus-Refactoring-and-Platform-Extraction-Class-C`]
@@ -520,6 +534,9 @@ GPT-5 Codex
 - 2026-08-16 - Applied the final eight-item correctness review patch. Focused direct execution passed `PartySdkProjectionHandlerTests` 75/75, query/cleanup/mapping classes 66/66, and `ErasureVerificationServiceTests` 17/17. Full projection and security assemblies passed 231/231 and 171/171.
 - 2026-08-16 - The first unfiltered Parties run reported 515/517: the known Story 8.7/G5 prerequisite-matrix pin drift plus one Story 8.6 integration-harness assumption that treated an unavailable mapping store as an empty inventory. The harness now supplies an explicit authoritative-empty mapping store; its focused class passes 7/7, and the final Parties run excluding only the known G5 test passes 516/516.
 - 2026-08-16 - `dotnet build Hexalith.Parties.slnx -c Release --no-restore` and the package-mode Release projection build completed with 0 warnings/0 errors. `git diff --check` and `bash scripts/check-no-warning-override.sh` passed.
+- 2026-08-16 - Closed the two follow-up review patches: aligned story tracking at `in-progress` for the patch cycle and sanitized `PartyMemoryUnitMappingStore` retry/failure diagnostics. The focused Debug project build completed with 0 warnings/errors; mapping-store tests pass 5/5 and mapping/cleanup/indexing/DI consumer classes pass 36/36. The full Parties assembly passes 519/520; the sole failure remains the pre-existing Story 8.7/G5 `PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible` EventStore-pin drift. After refreshing the normal solution restore to clear the focused source-mode asset graph, the Release solution build completed with 0 warnings/errors; `git diff --check` and `scripts/check-no-warning-override.sh` pass.
+- 2026-08-16 - Hardened the mapping-store review patch without changing the active `in-review`/`review` transition. Provider exceptions are no longer retained as inner exceptions; state-write exceptions and non-caller cancellations are bounded and sanitized; caller cancellation propagates across record/read/clear/replace; terminal ETag exhaustion emits Warning rather than a false retry Debug record. The focused Debug build passes with 0 warnings/errors, mapping-store tests pass 13/13, mapping/cleanup/indexing consumer tests pass 30/30, and both `git diff --check` and `scripts/check-no-warning-override.sh` pass.
+- 2026-08-16 - Closed the four review-hardening findings while preserving the active `in-review`/`review` transition. The projection and Parties focused Debug builds pass with 0 warnings/errors; `PartySdkProjectionHandlerTests` passes 76/76; mapping-store/indexing/search-indexer/health-check classes pass 42/42. `git diff --check` and `scripts/check-no-warning-override.sh` pass. Mapping-save tests capture the actual `TrySaveStateAsync` list and assert supplied, legacy-migrated, same-case-replaced, and cross-case-retained CaseIds.
 
 ### Completion Notes List
 
@@ -538,6 +555,9 @@ GPT-5 Codex
 - 2026-08-05 - A follow-up adversarial code review of the diagnostic-logging patch itself (the one that closed the earlier Group 2 logging findings) found 8 patch-worthy issues in that patch's own diff — none PRD-functional, all mechanical correctness/observability/GDPR-hygiene defects in the newly-added logging code and its tests. All 8 fixed: the shared Party index projection's unresolved/ambiguous/non-JSON diagnostics were dead code (the failure branch returned before the logged walk ever ran) and now fire correctly at every `FoldCore` call site without duplicating; a resolved-but-null-payload event now logs distinctly instead of silently; optimistic-concurrency retries no longer repeat the same diagnostic per attempt; the raw `Exception` object is no longer passed to `ILogger` after direct testing confirmed a syntax-level `JsonException` can embed a fragment of raw payload bytes in `.Message`; the `AmbiguousEventTypeDropped` branch now has coverage via a reflection-seeded resolver cache (confirmed empirically unreachable through the real 44-type Contracts assembly, so no production type was added); the silent-`Fold` invariant and a misleading no-op-branch comment are now documented in place; and `RecordingLogger<T>` moved from two duplicated per-project copies into the shared `Hexalith.Parties.Testing` project. `Hexalith.Parties.Projections.Tests` passes 220/220; `Hexalith.Parties.Tests` and the other three `Hexalith.Parties.Testing` consumers show no regression.
 - 2026-08-16 - Closed the final patch-level rebuild/live-write race after EventStore v3.95 made the conflict contract explicit. Detail, processing, and shared-index rebuild plans now use snapshot ETags (`Match`) or first-writer protection (`CreateOnly`) instead of unconditional `LastWrite`, so concurrent live projection writes are preserved and the staged rebuild reports a bounded conflict. Projection handlers pass 66/66; the full projection suite passes 222/222; source-mode, package-mode, and full Release solution builds complete with zero warnings/errors. The focused Parties query/DI/architecture/prerequisite run passes 89/90; the sole failure is the already-deferred Story 8.7/G5 matrix pin drift and is not caused by this patch.
 - 2026-08-16 - Applied the final eight-item correctness patch set across coordinated projection slots, Art.30 recovery, rebuild search reconciliation, best-effort erasure notifications, Memories mapping cleanup, last-known absence invalidation, erasure verification, and duplicate-delivery validation. Focused projection/query-search/security runs pass 75/75, 66/66, and 17/17; full projection and security suites pass 231/231 and 171/171; the Parties suite passes 516/516 when the single pre-existing Story 8.7/G5 matrix-pin test is excluded. Source/package builds, the Release solution build, and static policy checks complete with zero warnings/errors.
+- 2026-08-16 - The final review-follow-up patch removes tenant/party identifiers and raw exception objects from mapping-store diagnostics while preserving fail-closed error propagation. New regression coverage passes 5/5; related mapping/cleanup/indexing/DI coverage passes 36/36; the Release solution build and static policy checks pass. The only full-Parties failure remains the already-deferred Story 8.7/G5 matrix-pin test.
+- 2026-08-16 - Same-pass mapping-store hardening removes provider exceptions from every sanitized failure chain, distinguishes caller from provider cancellation, wraps `TrySaveStateAsync` failures, and makes terminal conflict telemetry truthful. Expanded tests exercise all four operations and all five sensitive inputs; the focused class passes 13/13 and related mapping/cleanup/indexing classes pass 30/30. The existing `in-review`/`review` workflow state is preserved.
+- 2026-08-16 - Review hardening now guarantees one drop diagnostic per shared-index delivery, preserves cross-case Memories cleanup inventory, uses captured CaseId for sanitized compensation, and reports explicit Memories degradation while cleaning health sentinels in `finally`. Focused builds and 118 targeted tests are green; static checks pass; workflow state remains `in-review`/`review`.
 
 ### File List
 
@@ -666,6 +686,10 @@ and only accumulated content since.
 | 2026-08-09 | 0.15 | bmad-code-review DI+query-host sub-chunk: applied 8 patches (LKG TimeProvider ctor, erasure type-only logging, memories Failed bound, cache CT, boot-freeze docs, stale actor-host comments, DI/fitness tests). Deferred e2e story-7-4 drift and UtcNow timestamps. Remaining Suggested Review Order chunks still pending review; status `in-progress`. | Cursor Grok 4.5 (bmad-code-review) |
 | 2026-08-16 | 0.16 | Replaced unconditional detail, processing, and shared-index rebuild writes with ETag-matched/create-only plans now that EventStore v3.95 defines bounded staged-conflict behavior; added focused concurrency-policy tests and refreshed verification evidence. | GPT-5 Codex (bmad-build) |
 | 2026-08-16 | 0.17 | Applied eight final correctness patches for coordinated-slot loss, Art.30 recovery, canonical rebuild reconciliation, bounded erasure/search failures, fail-closed Memories inventory reads, cache absence invalidation, safe erasure verification, and duplicate-sequence conflicts; added focused tests and refreshed evidence. | GPT-5 Codex (bmad-build) |
+| 2026-08-16 | 0.18 | bmad-code-review: triaged review findings across Blind Hunter, Edge Case Hunter, Verification Gap, and Acceptance Auditor layers. Recorded 2 patch action items (frontmatter status and mapping-store identifier logging) and 2 deferred items (ErasedAt resolution and rebuild read parallelization); retained `in-progress`. | Gemini 3.7 Flash (bmad-code-review) |
+| 2026-08-16 | 0.19 | Closed both review follow-ups by aligning in-progress tracking and sanitizing mapping-store retry/failure diagnostics; added focused no-identifier/no-raw-exception coverage and refreshed verification evidence. | GPT-5 Codex (bmad-build) |
+| 2026-08-16 | 0.20 | Hardened mapping-store failure surfaces and cancellation classification, wrapped state-write failures, made terminal conflict telemetry accurate, expanded sensitive-data regression coverage, and preserved the active review transition. | GPT-5 Codex (bmad-build) |
+| 2026-08-16 | 0.21 | Closed review hardening for projection diagnostic cardinality, case-aware mapping retention, captured-case sanitized compensation, and degraded/cleanup-safe Memories health probing; added focused regression evidence without changing review state. | GPT-5 Codex (bmad-build) |
 
 ## Suggested Review Order
 
@@ -685,6 +709,9 @@ and only accumulated content since.
 
 **Shared-index convergence**
 
+- Silent preflight folding prevents duplicate diagnostics while unresolved failures still log once.
+  [`PartyIndexSdkProjectionHandler.cs:62`](../../src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs#L62)
+
 - Rebuild completion publishes only current canonical entries and skips later erasures.
   [`PartyIndexSdkProjectionHandler.cs:250`](../../src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs#L250)
 
@@ -696,8 +723,20 @@ and only accumulated content since.
 - Observed canonical absence invalidates stale detail, index, and processing cache generations.
   [`PartySdkQueryService.cs:379`](../../src/Hexalith.Parties/Queries/PartySdkQueryService.cs#L379)
 
-- Mapping inventory outages propagate instead of falsely certifying Memories cleanup.
-  [`PartyMemoryUnitMappingStore.cs:172`](../../src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs#L172)
+- Mapping-store failures are bounded to identifier-free surfaces without hiding caller cancellation.
+  [`PartyMemoryUnitMappingStore.cs:147`](../../src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs#L147)
+
+- Case-scoped replacement retains old-case units so erasure can still discover them.
+  [`PartyMemoryUnitMappingStore.cs:111`](../../src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs#L111)
+
+- Compensation uses captured CaseId and emits only bounded status and exception-type metadata.
+  [`PartyMemoryIndexingService.cs:155`](../../src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs#L155)
+
+- Health respects upstream degradation and always attempts created-sentinel cleanup.
+  [`MemoriesSearchHealthCheck.cs:117`](../../src/Hexalith.Parties/HealthChecks/MemoriesSearchHealthCheck.cs#L117)
+
+- Terminal conflicts emit sanitized warnings after four truthful retry diagnostics.
+  [`PartyMemoryUnitMappingStore.cs:171`](../../src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs#L171)
 
 - Cleanup exceptions and non-caller timeouts produce sanitized failed verification results.
   [`ErasureVerificationService.cs:24`](../../src/Hexalith.Parties.Security/ErasureVerificationService.cs#L24)
@@ -713,5 +752,14 @@ and only accumulated content since.
 - Security tests distinguish caller cancellation from sanitized cleanup failure.
   [`ErasureVerificationServiceTests.cs:300`](../../tests/Hexalith.Parties.Security.Tests/ErasureVerificationServiceTests.cs#L300)
 
-- Mapping-store tests prove failure propagation and identifier-free diagnostics.
-  [`PartyMemoryUnitMappingStoreTests.cs:17`](../../tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitMappingStoreTests.cs#L17)
+- Mapping-store tests prove cancellation classification and identifier-free diagnostics.
+  [`PartyMemoryUnitMappingStoreTests.cs:27`](../../tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitMappingStoreTests.cs#L27)
+
+- Save-payload tests prove CaseId migration, same-case replacement, and cross-case retention.
+  [`PartyMemoryUnitMappingStoreTests.cs:27`](../../tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitMappingStoreTests.cs#L27)
+
+- Indexing tests prove sanitized transient, empty-workflow, and compensation diagnostics.
+  [`PartyMemoryUnitMapperTests.cs:143`](../../tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitMapperTests.cs#L143)
+
+- Health tests prove explicit degradation plus finally-cleanup and primary-failure preservation.
+  [`MemoriesSearchHealthCheckTests.cs:101`](../../tests/Hexalith.Parties.Tests/HealthChecks/MemoriesSearchHealthCheckTests.cs#L101)

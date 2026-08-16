@@ -115,11 +115,18 @@ internal sealed class MemoriesSearchHealthCheck(
         }
 
         bool allReachable = searchOutcome.Reachable && cleanupOutcome.Reachable && mappingStoreOutcome.Reachable;
-        if (allReachable)
+        if (allReachable && !searchOutcome.DegradedReportedByMemories)
         {
             return HealthCheckResult.Healthy(
                 "Memories rich search, cleanup route, and mapping store are all reachable.",
                 data);
+        }
+
+        if (allReachable)
+        {
+            return HealthCheckResult.Degraded(
+                "Memories is reachable but reported degraded search capabilities.",
+                data: data);
         }
 
         // Degraded (not unhealthy) so /ready does not flap when Memories is briefly unreachable;
@@ -184,6 +191,8 @@ internal sealed class MemoriesSearchHealthCheck(
         // underscore reserves it as an internal probe namespace.
         string probeTenant = "_health-probe";
         string probeParty = $"_health-probe-{Guid.NewGuid():N}";
+        bool sentinelCreated = false;
+        MappingStoreProbeOutcome? outcome = null;
         try
         {
             await store.RecordMappingAsync(
@@ -193,9 +202,9 @@ internal sealed class MemoriesSearchHealthCheck(
                 "urn:_probe",
                 "_probe-case",
                 cancellationToken).ConfigureAwait(false);
+            sentinelCreated = true;
             IReadOnlyList<PartyMemoryUnitMappingEntry> read = await store.GetMappingsAsync(probeTenant, probeParty, cancellationToken).ConfigureAwait(false);
-            await store.ClearMappingsAsync(probeTenant, probeParty, cancellationToken).ConfigureAwait(false);
-            return read.Count == 1
+            outcome = read.Count == 1
                 ? new MappingStoreProbeOutcome(true, null)
                 : new MappingStoreProbeOutcome(false, $"Mapping store round-trip returned {read.Count} entries (expected 1).");
         }
@@ -205,8 +214,36 @@ internal sealed class MemoriesSearchHealthCheck(
         }
         catch (Exception ex)
         {
-            return new MappingStoreProbeOutcome(false, $"Mapping store round-trip failed: {ex.GetType().Name}: {ex.Message}");
+            outcome = new MappingStoreProbeOutcome(false, $"Mapping store round-trip failed: {ex.GetType().Name}.");
         }
+        finally
+        {
+            if (sentinelCreated)
+            {
+                try
+                {
+                    await store.ClearMappingsAsync(probeTenant, probeParty, cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    // A cleanup failure must affect a successful primary probe, but it must not
+                    // replace a more useful read/round-trip failure that already explains why the
+                    // mapping store is unavailable.
+                    if (outcome is null || outcome.Reachable)
+                    {
+                        outcome = new MappingStoreProbeOutcome(
+                            false,
+                            $"Mapping store sentinel cleanup failed: {ex.GetType().Name}.");
+                    }
+                }
+            }
+        }
+
+        return outcome ?? new MappingStoreProbeOutcome(false, "Mapping store probe did not produce a result.");
     }
 
     private static string BuildDegradedDescription(

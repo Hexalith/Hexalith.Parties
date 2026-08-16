@@ -108,27 +108,23 @@ internal sealed class PartyMemoryUnitMappingStore(
             (IReadOnlyList<PartyMemoryUnitMappingEntry> current, string etag) =
                 await ReadWithETagAsync(key, cancellationToken).ConfigureAwait(false);
 
-            // Dedup by both MemoryUnitId AND SourceUri. Memories returns the same memory-unit-id
-            // for repeated ingests of the same source URI (per the contract documented above),
-            // but if that property ever drifts (Memories rebuild, contract change), checking
-            // SourceUri lets us replace the stale id rather than appending unbounded ghosts.
+            // Dedup by MemoryUnitId or SourceUri only inside the same case. A source may be
+            // reindexed into a new case after configuration changes; retaining the prior-case
+            // entry is essential because cleanup must still discover and erase that old unit.
+            // Legacy entries without CaseId predate case-aware persistence and are adopted into
+            // the current case when their identity matches.
             List<PartyMemoryUnitMappingEntry> updated = [];
             bool replaced = false;
             foreach (PartyMemoryUnitMappingEntry existing in current)
             {
                 bool sameMemoryUnit = string.Equals(existing.MemoryUnitId, memoryUnitId, StringComparison.Ordinal);
                 bool sameSource = string.Equals(existing.SourceUri, sourceUri, StringComparison.Ordinal);
-                if (sameMemoryUnit || sameSource)
+                bool sameCase = string.IsNullOrWhiteSpace(existing.CaseId)
+                    || string.Equals(existing.CaseId, caseId, StringComparison.Ordinal);
+                if (sameCase && (sameMemoryUnit || sameSource))
                 {
                     if (!replaced)
                     {
-                        if (sameMemoryUnit
-                            && sameSource
-                            && string.Equals(existing.CaseId, caseId, StringComparison.Ordinal))
-                        {
-                            return;
-                        }
-
                         updated.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri, caseId));
                         replaced = true;
                     }
@@ -144,20 +140,46 @@ internal sealed class PartyMemoryUnitMappingStore(
                 updated.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri, caseId));
             }
 
-            bool success = await daprClient
-                .TrySaveStateAsync(_stateStoreName, key, updated, etag, cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
+            if (current.SequenceEqual(updated))
+            {
+                return;
+            }
+
+            bool success;
+            try
+            {
+                success = await daprClient
+                    .TrySaveStateAsync(_stateStoreName, key, updated, etag, cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(
+                    "Failed to record a memory-unit mapping with {ExceptionType}; mapping was not persisted.",
+                    ex.GetType().Name);
+                throw new InvalidOperationException("memory-unit-mapping-record-failed");
+            }
 
             if (success)
             {
                 return;
             }
 
-            logger.LogDebug(
-                "ETag conflict recording memory-unit mapping for {TenantId}/{PartyId} (attempt {Attempt}/{Max}); retrying.",
-                tenantId,
-                partyId,
-                attempt + 1,
+            if (attempt + 1 < MaxConcurrencyRetries)
+            {
+                logger.LogDebug(
+                    "ETag conflict recording a memory-unit mapping (attempt {Attempt}/{Max}); retrying.",
+                    attempt + 1,
+                    MaxConcurrencyRetries);
+                continue;
+            }
+
+            logger.LogWarning(
+                "ETag conflicts exhausted while recording a memory-unit mapping after {AttemptCount} attempts; mapping was not persisted.",
                 MaxConcurrencyRetries);
         }
 
@@ -165,8 +187,7 @@ internal sealed class PartyMemoryUnitMappingStore(
         // deleting the just-ingested memory unit and reporting a blocked indexing result.
         // Swallowing here would silently orphan a memory unit in Memories with no Parties-side
         // record, breaking AC5 GDPR cleanup.
-        throw new InvalidOperationException(
-            $"Failed to record memory-unit mapping for {tenantId}/{partyId} after {MaxConcurrencyRetries} concurrency retries.");
+        throw new InvalidOperationException("memory-unit-mapping-record-conflict");
     }
 
     public async Task<IReadOnlyList<PartyMemoryUnitMappingEntry>> GetMappingsAsync(
@@ -194,7 +215,7 @@ internal sealed class PartyMemoryUnitMappingStore(
                 .DeleteStateAsync(_stateStoreName, BuildKey(tenantId, partyId), cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
         }
@@ -204,13 +225,9 @@ internal sealed class PartyMemoryUnitMappingStore(
             // BlockedReason rather than reporting "Cleaned: true" with stale mapping state.
             // The previous swallow left ghost mapping entries that misled subsequent re-runs.
             logger.LogWarning(
-                ex,
-                "Failed to clear memory-unit mapping for {TenantId}/{PartyId}; surfacing as cleanup failure.",
-                tenantId,
-                partyId);
-            throw new InvalidOperationException(
-                $"Failed to clear memory-unit mapping for {tenantId}/{partyId}: {ex.GetType().Name}",
-                ex);
+                "Failed to clear a memory-unit mapping with {ExceptionType}; surfacing as cleanup failure.",
+                ex.GetType().Name);
+            throw new InvalidOperationException("memory-unit-mapping-clear-failed");
         }
     }
 
@@ -237,20 +254,16 @@ internal sealed class PartyMemoryUnitMappingStore(
                 .SaveStateAsync(_stateStoreName, key, entries, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
         }
         catch (Exception ex)
         {
             logger.LogWarning(
-                ex,
-                "Failed to replace memory-unit mapping for {TenantId}/{PartyId}; cleanup re-run will retry the same unit set.",
-                tenantId,
-                partyId);
-            throw new InvalidOperationException(
-                $"Failed to replace memory-unit mapping for {tenantId}/{partyId}: {ex.GetType().Name}",
-                ex);
+                "Failed to replace a memory-unit mapping with {ExceptionType}; cleanup re-run will retry the same unit set.",
+                ex.GetType().Name);
+            throw new InvalidOperationException("memory-unit-mapping-replace-failed");
         }
     }
 
@@ -268,7 +281,7 @@ internal sealed class PartyMemoryUnitMappingStore(
                 .ConfigureAwait(false);
             return (state ?? (IReadOnlyList<PartyMemoryUnitMappingEntry>)[], etag ?? string.Empty);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
         }
@@ -277,7 +290,7 @@ internal sealed class PartyMemoryUnitMappingStore(
             logger.LogWarning(
                 "Failed to read a memory-unit mapping with {ExceptionType}; cleanup cannot certify an empty inventory.",
                 ex.GetType().Name);
-            throw new InvalidOperationException("memory-unit-mapping-read-failed", ex);
+            throw new InvalidOperationException("memory-unit-mapping-read-failed");
         }
     }
 

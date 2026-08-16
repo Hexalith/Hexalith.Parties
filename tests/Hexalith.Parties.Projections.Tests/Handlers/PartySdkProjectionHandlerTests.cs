@@ -680,6 +680,56 @@ public sealed class PartySdkProjectionHandlerTests
     }
 
     [Fact]
+    public async Task IndexHandler_FirstPersistenceSkipAndAdvanceLogsDiagnosticOnceAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyIndexSdkReadModel>(
+                "statestore",
+                PartySdkReadModelAddresses.Index("tenant-a"),
+                Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
+        store.TrySaveAsync(
+                "statestore",
+                PartySdkReadModelAddresses.Index("tenant-a"),
+                Arg.Any<PartyIndexSdkReadModel>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
+            .Returns(true);
+        var logger = new RecordingLogger<PartyIndexSdkProjectionHandler>();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer: null, logger: logger);
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(
+                    nameof(PartyCreated),
+                    "{ not valid json"u8.ToArray(),
+                    "json",
+                    1,
+                    DateTimeOffset.UnixEpoch,
+                    "correlation-1"),
+            ],
+        };
+
+        DomainProjectionHandlerResult result = await handler.ProjectAsync(
+            request,
+            "dispatch-corrupt-first-write",
+            TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        (LogLevel level, string message, Exception? loggedException) = logger.Records.ShouldHaveSingleItem();
+        level.ShouldBe(LogLevel.Warning);
+        message.ShouldContain("failed to deserialize live event");
+        loggedException.ShouldBeNull();
+        await store.Received(1).TrySaveAsync(
+            "statestore",
+            PartySdkReadModelAddresses.Index("tenant-a"),
+            Arg.Any<PartyIndexSdkReadModel>(),
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task DetailHandler_DuplicateDeliveryReturnsAlreadyCompletedAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();

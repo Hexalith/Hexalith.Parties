@@ -3,7 +3,9 @@ using Hexalith.Memories.Client.Rest;
 using Hexalith.Parties.Search;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.Testing;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
@@ -138,6 +140,94 @@ public class PartyMemoryUnitMapperTests
     }
 
     [Fact]
+    public async Task PartyMemoryIndexingServiceTransientFailureLogRetainsNoSensitiveDataOrException()
+    {
+        const string tenantId = "tenant-secret";
+        const string partyId = "party-secret";
+        const string caseId = "case-secret";
+        const string providerFailure = "provider leaked tenant-secret party-secret case-secret";
+        var client = new ThrowingMemoriesClient(new HttpRequestException(providerFailure));
+        var logger = new RecordingLogger<PartyMemoryIndexingService>();
+        var service = new PartyMemoryIndexingService(
+            client,
+            new RecordingMappingStore(),
+            CreateMonitor(new PartyMemorySearchOptions()),
+            logger);
+
+        PartyMemoryIndexingResult? result = await service.IndexAsync(
+            CreateEntry() with { Id = partyId },
+            new PartyMemoryUnitMappingContext(tenantId, caseId, "PartyCreated", AggregateId: partyId),
+            CancellationToken.None);
+
+        result.ShouldNotBeNull().Indexed.ShouldBeFalse();
+        AssertSanitizedDiagnostics(logger, tenantId, partyId, caseId, providerFailure);
+        logger.Records.ShouldHaveSingleItem().Message.ShouldContain(nameof(HttpRequestException));
+    }
+
+    [Fact]
+    public async Task PartyMemoryIndexingServiceEmptyWorkflowLogRetainsNoSensitiveData()
+    {
+        const string tenantId = "tenant-secret";
+        const string partyId = "party-secret";
+        const string caseId = "case-secret";
+        var client = new RecordingMemoriesClient { WorkflowInstanceId = " " };
+        var logger = new RecordingLogger<PartyMemoryIndexingService>();
+        var service = new PartyMemoryIndexingService(
+            client,
+            new RecordingMappingStore(),
+            CreateMonitor(new PartyMemorySearchOptions()),
+            logger);
+
+        PartyMemoryIndexingResult? result = await service.IndexAsync(
+            CreateEntry() with { Id = partyId },
+            new PartyMemoryUnitMappingContext(tenantId, caseId, "PartyCreated", AggregateId: partyId),
+            CancellationToken.None);
+
+        result.ShouldNotBeNull().Indexed.ShouldBeFalse();
+        AssertSanitizedDiagnostics(logger, tenantId, partyId, caseId);
+        logger.Records.ShouldHaveSingleItem().Message.ShouldContain("no workflow/memory-unit id");
+    }
+
+    [Fact]
+    public async Task PartyMemoryIndexingServiceCompensationUsesCapturedCaseAndLogsOnlyBoundedMetadata()
+    {
+        const string tenantId = "tenant-secret";
+        const string partyId = "party-secret";
+        const string caseId = "case-secret";
+        const string memoryUnitId = "memory-unit-secret";
+        const string providerFailure = "provider leaked tenant-secret party-secret case-secret memory-unit-secret";
+        var client = new RecordingMemoriesClient { WorkflowInstanceId = memoryUnitId };
+        var logger = new RecordingLogger<PartyMemoryIndexingService>();
+        var service = new PartyMemoryIndexingService(
+            client,
+            new ThrowingMappingStore(new InvalidOperationException(providerFailure)),
+            CreateMonitor(new PartyMemorySearchOptions
+            {
+                Endpoint = new Uri("http://127.0.0.1:1/"),
+                // Deliberately differs from the ingest snapshot. Compensation must use the
+                // captured unit CaseId, not this mutable live option.
+                CaseId = null,
+                ApiToken = "invalid\r\nmemory-unit-secret",
+            }),
+            logger);
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+        PartyMemoryIndexingResult? result = await service.IndexAsync(
+            CreateEntry() with { Id = partyId },
+            new PartyMemoryUnitMappingContext(tenantId, caseId, "PartyCreated", AggregateId: partyId),
+            timeout.Token);
+
+        result.ShouldNotBeNull().Indexed.ShouldBeFalse();
+        AssertSanitizedDiagnostics(logger, tenantId, partyId, caseId, memoryUnitId, providerFailure);
+        (LogLevel level, string message, Exception? loggedException) = logger.Records.ShouldHaveSingleItem();
+        level.ShouldBe(LogLevel.Error);
+        message.ShouldContain(nameof(HttpRequestException));
+        message.ShouldContain(nameof(InvalidOperationException));
+        message.ShouldNotContain("skipped");
+        loggedException.ShouldBeNull();
+    }
+
+    [Fact]
     public void ErasedPartyIsNotMappedForIndexing()
     {
         PartyIndexEntry erased = CreateEntry() with { IsErased = true };
@@ -190,6 +280,21 @@ public class PartyMemoryUnitMapperTests
 
     private static IOptionsMonitor<PartyMemorySearchOptions> CreateMonitor(PartyMemorySearchOptions options)
         => new TestOptionsMonitor<PartyMemorySearchOptions>(options);
+
+    private static void AssertSanitizedDiagnostics(
+        RecordingLogger<PartyMemoryIndexingService> logger,
+        params string[] sensitiveValues)
+    {
+        logger.Records.ShouldNotBeEmpty();
+        foreach ((_, string message, Exception? loggedException) in logger.Records)
+        {
+            loggedException.ShouldBeNull();
+            foreach (string sensitiveValue in sensitiveValues)
+            {
+                message.ShouldNotContain(sensitiveValue);
+            }
+        }
+    }
 
     private static PartyIndexEntry CreateEntry()
         => new()
@@ -250,9 +355,14 @@ public class PartyMemoryUnitMapperTests
                 _mappings[key] = list;
             }
 
-            // Match prod dedup: by MemoryUnitId AND SourceUri so a re-record with same
-            // SourceUri replaces the existing entry rather than appending unbounded ghosts.
-            int idx = list.FindIndex(e => string.Equals(e.SourceUri, sourceUri, StringComparison.Ordinal));
+            // Match production: replace matching identities only within the same case.
+            // Legacy entries without a CaseId are adopted by the current case, while
+            // cross-case entries remain available for later cleanup.
+            int idx = list.FindIndex(e =>
+                (string.IsNullOrWhiteSpace(e.CaseId)
+                    || string.Equals(e.CaseId, caseId, StringComparison.Ordinal))
+                && (string.Equals(e.MemoryUnitId, memoryUnitId, StringComparison.Ordinal)
+                    || string.Equals(e.SourceUri, sourceUri, StringComparison.Ordinal)));
             if (idx >= 0)
             {
                 list[idx] = new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri, caseId);
@@ -291,6 +401,34 @@ public class PartyMemoryUnitMapperTests
         }
     }
 
+    private sealed class ThrowingMappingStore(Exception failure) : IPartyMemoryUnitMappingStore
+    {
+        public Task RecordMappingAsync(
+            string tenantId,
+            string partyId,
+            string memoryUnitId,
+            string sourceUri,
+            string caseId,
+            CancellationToken cancellationToken)
+            => Task.FromException(failure);
+
+        public Task<IReadOnlyList<PartyMemoryUnitMappingEntry>> GetMappingsAsync(
+            string tenantId,
+            string partyId,
+            CancellationToken cancellationToken)
+            => Task.FromResult<IReadOnlyList<PartyMemoryUnitMappingEntry>>([]);
+
+        public Task ClearMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
+            => Task.CompletedTask;
+
+        public Task ReplaceMappingsAsync(
+            string tenantId,
+            string partyId,
+            IReadOnlyList<PartyMemoryUnitMappingEntry> entries,
+            CancellationToken cancellationToken)
+            => Task.CompletedTask;
+    }
+
     private sealed class RecordingMemoriesClient()
         : MemoriesClient(
             new HttpClient { BaseAddress = new Uri("https://memories.example") },
@@ -308,6 +446,8 @@ public class PartyMemoryUnitMapperTests
         public IReadOnlyDictionary<string, MetadataField> LastMetadata { get; private set; } =
             new Dictionary<string, MetadataField>(StringComparer.Ordinal);
 
+        public string WorkflowInstanceId { get; init; } = "workflow-1";
+
 #pragma warning disable HXL001
         public override Task<string> IngestAsync(
             string tenantId,
@@ -324,7 +464,7 @@ public class PartyMemoryUnitMapperTests
             LastSourceUri = sourceUri;
             LastContentText = System.Text.Encoding.UTF8.GetString(content);
             LastMetadata = metadata ?? new Dictionary<string, MetadataField>(StringComparer.Ordinal);
-            return Task.FromResult("workflow-1");
+            return Task.FromResult(WorkflowInstanceId);
         }
 #pragma warning restore HXL001
     }

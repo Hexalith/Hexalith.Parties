@@ -300,3 +300,67 @@ DI + query host sub-chunk (`PartiesServiceCollectionExtensions.cs` vs `2c4a7af`)
 - source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
   summary: Add executable mTLS topology coverage across every configured Dapr sidecar.
   evidence: Current tests inspect generated YAML and one synthetic sidecar but never start the mTLS topology or prove a cross-service invocation with all sidecars credentialed.
+
+## Deferred from: code review of spec-8-6-projection-and-query-sdk-migration.md (2026-08-16)
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Align ErasedAt timestamp resolution in PartyProcessingActivityFold when payload is PartyErased.
+  evidence: `PartyDetailProjectionHandler.ApplyErasure` assigns `ErasedAt = erased.ErasedAt` while `PartyProcessingActivityFold.Fold` assigns `@event.Timestamp.ToUniversalTime()`.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Parallelize sequential state-store reads in PartyDetailSdkProjectionHandler.PrepareRebuildAsync.
+  evidence: `PrepareRebuildAsync` awaits `readModelStore.GetAsync<PartyDetailSdkReadModel>` and `GetAsync<PartyProcessingSdkReadModel>` sequentially rather than concurrently with `Task.WhenAll`.
+
+## Deferred from: bmad-build Story 8.6 review (2026-08-16)
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Make Memories rebuild reconciliation atomic with concurrent erase and re-add operations.
+  evidence: `PartyIndexSdkProjectionHandler.CompleteRebuildAsync` reads canonical index state once before external notifications, so a later live erase or re-add can race a stale `NotifyIndexedAsync` or `NotifyRemovedAsync` call.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Move the Memories cleanup mapping ledger behind an approved EventStore persistence abstraction.
+  evidence: `PartyMemoryUnitMappingStore` persists operational state directly through `DaprClient`, outside the EventStore read-model and write-policy abstractions required for domain-module persistence.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Add concurrency-safe removal semantics to the Memories mapping ledger.
+  evidence: `ClearMappingsAsync` and `ReplaceMappingsAsync` use unconditional delete/save operations, so concurrent indexing can lose a newly committed mapping and leave an undiscoverable Memories unit.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Verify an empty Memories mapping ledger against an authoritative inventory before certifying cleanup.
+  evidence: `PartyMemoryCleanupService.DeleteByPartyAsync` treats zero local mappings as cleaned even when state loss, legacy indexing, or configuration drift could leave remote units behind.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Compensate when cancellation occurs after Memories ingestion but before mapping persistence.
+  evidence: `PartyMemoryIndexingService` propagates caller cancellation from the mapping write without deleting the already-created unit, leaving it outside later erasure discovery.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Persist a durable recovery ledger when both mapping persistence and compensating deletion fail.
+  evidence: `PartyMemoryIndexingService` records a double failure only in logs, so later erasure has no durable way to discover the orphaned Memories unit.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Schedule retry or backfill when Memories indexing is skipped for a missing CaseId.
+  evidence: `PartyMemoryIndexEntrySearchIndexer.NotifyIndexedAsync` returns success when CaseId is absent, so fixing configuration alone does not cause the skipped party to be indexed.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Keep Memories cleanup health observable when new rich-search indexing is disabled.
+  evidence: `MemoriesSearchHealthCheck` returns Healthy immediately when indexing is disabled although previously persisted mappings can still require remote deletion and mapping-store access.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Validate erasure-certificate identity, status, and destroyed key versions before certifying store cleanup.
+  evidence: `ErasureVerificationService.VerifyErasureAsync` accepts an `ErasureCertificate` but never verifies it belongs to the requested tenant and party or represents a completed key-destruction state.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Bound and page the per-party Article 30 processing-activity read model.
+  evidence: `PartyProcessingActivityFold` retains one ever-growing list and performs a linear `FindIndex` for every event, producing unbounded state values and quadratic rebuild work.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Handle null dictionary properties in persisted Party index read models with a bounded recovery result.
+  evidence: A malformed persisted `PartyIndexSdkReadModel` with null dictionaries can reach dictionary operations and throw rather than producing a controlled rebuild-required or corruption result.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Bound Party search query, mode, and CaseId inputs before cursor-scope construction and full-index evaluation.
+  evidence: Search payload parsing validates paging and type but imposes no length limits on strings copied into cursor scope and processed against tenant entries.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Define authoritative handling for successfully deserialized marker events labeled json-redacted.
+  evidence: A parameterless event can deserialize from an empty redacted payload into a valid `IEventPayload` and be applied as a real domain fact, while whole-payload redaction is otherwise intended to skip application and advance only the checkpoint.

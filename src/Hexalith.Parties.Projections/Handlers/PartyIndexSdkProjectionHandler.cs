@@ -59,12 +59,22 @@ public sealed class PartyIndexSdkProjectionHandler(
         ReadModelEntry<PartyIndexSdkReadModel> currentEntry = await readModelStore
             .GetAsync<PartyIndexSdkReadModel>(StoreName, indexKey, cancellationToken)
             .ConfigureAwait(false);
-        // Safe to pass the logger on this pre-check: if it detects a failure it returns
-        // immediately below, so the persisting call's own logged FoldCore invocation further down
-        // never runs for the same delivery (mutually exclusive, not duplicated).
-        PartyIndexFoldResult foldResult = FoldCore(request, currentEntry.Value, logger);
+        // Keep the preflight silent. A successful delivery is folded again by UpdateAsync to
+        // produce the actual persistence candidate, and logging both walks would duplicate every
+        // skip-and-advance diagnostic on the first write. An unresolved failure is re-walked once
+        // with the logger below because no persistence callback will run for that delivery.
+        PartyIndexFoldResult foldResult = FoldCore(request, currentEntry.Value);
         if (foldResult.FailureReason is not null)
         {
+            if (logger is not null
+                && string.Equals(
+                    foldResult.FailureReason,
+                    PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason,
+                    StringComparison.Ordinal))
+            {
+                _ = FoldCore(request, currentEntry.Value, logger);
+            }
+
             return DeliveryFailure(foldResult.FailureReason);
         }
 

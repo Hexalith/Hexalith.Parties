@@ -163,6 +163,7 @@ development_status:
   # per-key LKG invalidation. Remaining non-blocking items are in deferred-work.md.
   # Returned to `in-progress` 2026-08-09 after bmad-code-review DI+query-host
   # sub-chunk applied 8 patches; Suggested Review Order chunks 2–4 still pending.
+  # Re-reviewed 2026-08-16: 2 patch items recorded as action items; retained `in-progress`.
   8-6-projection-and-query-sdk-migration: review
   # Story context created 2026-07-16; production migration remains blocked by
   # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.

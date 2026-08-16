@@ -98,6 +98,129 @@ public class MemoriesSearchHealthCheckTests
     }
 
     [Fact]
+    public async Task MemoriesReportedDegradedReturnsDegradedWithReachabilityData()
+    {
+        PartyMemorySearchOptions options = new()
+        {
+            Enabled = true,
+            Endpoint = new Uri("https://memories.example/"),
+            TenantId = "tenant-a",
+            CaseId = "case-a",
+            RequireApiToken = false,
+        };
+        var memoriesClient = new ProbingMemoriesClient
+        {
+            ProbeResult = new HybridSearchResult
+            {
+                Results = [],
+                TotalCount = 0,
+                Degraded = true,
+                UnavailableAxes = ["semantic"],
+                Query = "healthcheck",
+            },
+        };
+        var mappingStore = new RecordingMappingStore();
+        var services = new ServiceCollection()
+            .AddSingleton<MemoriesClient>(memoriesClient)
+            .AddSingleton(new PartyMemoryCleanupService(
+                new HttpClient(new RecordingCleanupHandler(HttpStatusCode.NotFound)) { BaseAddress = options.Endpoint },
+                new RecordingMappingStore(),
+                NullLogger<PartyMemoryCleanupService>.Instance))
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
+            .BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
+
+        HealthCheckResult result = await check.CheckHealthAsync(
+            new HealthCheckContext { Registration = new HealthCheckRegistration("test", check, null, null) },
+            CancellationToken.None);
+
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Description.ShouldBe("Memories is reachable but reported degraded search capabilities.");
+        result.Data["searchReachable"].ShouldBe(true);
+        result.Data["cleanupRouteReachable"].ShouldBe(true);
+        result.Data["mappingStoreReachable"].ShouldBe(true);
+        result.Data["degradedReportedByMemories"].ShouldBe(true);
+        ((IReadOnlyList<string>)result.Data["unavailableAxes"]).ShouldBe(["semantic"]);
+        mappingStore.AllPartyKeys.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task MappingStoreReadFailureStillClearsCreatedSentinel()
+    {
+        PartyMemorySearchOptions options = new()
+        {
+            Enabled = true,
+            Endpoint = new Uri("https://memories.example/"),
+            TenantId = "tenant-a",
+            CaseId = "case-a",
+            RequireApiToken = false,
+        };
+        var mappingStore = new RecordingMappingStore
+        {
+            ReadFailure = new InvalidOperationException("sensitive primary failure"),
+        };
+        var services = new ServiceCollection()
+            .AddSingleton<MemoriesClient>(new ProbingMemoriesClient())
+            .AddSingleton(new PartyMemoryCleanupService(
+                new HttpClient(new RecordingCleanupHandler(HttpStatusCode.NotFound)) { BaseAddress = options.Endpoint },
+                new RecordingMappingStore(),
+                NullLogger<PartyMemoryCleanupService>.Instance))
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
+            .BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
+
+        HealthCheckResult result = await check.CheckHealthAsync(
+            new HealthCheckContext { Registration = new HealthCheckRegistration("test", check, null, null) },
+            CancellationToken.None);
+
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        mappingStore.ClearCalls.ShouldBe(1);
+        mappingStore.AllPartyKeys.ShouldBeEmpty();
+        string reason = result.Data["mappingStoreReason"].ToString()!;
+        reason.ShouldContain(nameof(InvalidOperationException));
+        reason.ShouldNotContain("sensitive primary failure");
+    }
+
+    [Fact]
+    public async Task MappingStoreCleanupFailureDoesNotMaskPrimaryReadFailure()
+    {
+        PartyMemorySearchOptions options = new()
+        {
+            Enabled = true,
+            Endpoint = new Uri("https://memories.example/"),
+            TenantId = "tenant-a",
+            CaseId = "case-a",
+            RequireApiToken = false,
+        };
+        var mappingStore = new RecordingMappingStore
+        {
+            ReadFailure = new InvalidOperationException("primary read failed"),
+            ClearFailure = new HttpRequestException("secondary cleanup failed"),
+        };
+        var services = new ServiceCollection()
+            .AddSingleton<MemoriesClient>(new ProbingMemoriesClient())
+            .AddSingleton(new PartyMemoryCleanupService(
+                new HttpClient(new RecordingCleanupHandler(HttpStatusCode.NotFound)) { BaseAddress = options.Endpoint },
+                new RecordingMappingStore(),
+                NullLogger<PartyMemoryCleanupService>.Instance))
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
+            .BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
+
+        HealthCheckResult result = await check.CheckHealthAsync(
+            new HealthCheckContext { Registration = new HealthCheckRegistration("test", check, null, null) },
+            CancellationToken.None);
+
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        mappingStore.ClearCalls.ShouldBe(1);
+        string reason = result.Data["mappingStoreReason"].ToString()!;
+        reason.ShouldContain(nameof(InvalidOperationException));
+        reason.ShouldNotContain(nameof(HttpRequestException));
+        reason.ShouldNotContain("primary read failed");
+        reason.ShouldNotContain("secondary cleanup failed");
+    }
+
+    [Fact]
     public async Task DisabledMemoriesSearchReportsHealthyAndLocalOnlyMode()
     {
         PartyMemorySearchOptions options = new() { Enabled = false };
@@ -276,6 +399,12 @@ public class MemoriesSearchHealthCheckTests
 
         public IReadOnlyCollection<string> AllPartyKeys => _mappings.Keys;
 
+        public int ClearCalls { get; private set; }
+
+        public Exception? ReadFailure { get; init; }
+
+        public Exception? ClearFailure { get; init; }
+
         public Task RecordMappingAsync(
             string tenantId,
             string partyId,
@@ -296,11 +425,19 @@ public class MemoriesSearchHealthCheckTests
         }
 
         public Task<IReadOnlyList<PartyMemoryUnitMappingEntry>> GetMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
-            => Task.FromResult<IReadOnlyList<PartyMemoryUnitMappingEntry>>(
-                _mappings.TryGetValue($"{tenantId}:{partyId}", out List<PartyMemoryUnitMappingEntry>? list) ? list : []);
+            => ReadFailure is null
+                ? Task.FromResult<IReadOnlyList<PartyMemoryUnitMappingEntry>>(
+                    _mappings.TryGetValue($"{tenantId}:{partyId}", out List<PartyMemoryUnitMappingEntry>? list) ? list : [])
+                : Task.FromException<IReadOnlyList<PartyMemoryUnitMappingEntry>>(ReadFailure);
 
         public Task ClearMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
         {
+            ClearCalls++;
+            if (ClearFailure is not null)
+            {
+                return Task.FromException(ClearFailure);
+            }
+
             _mappings.Remove($"{tenantId}:{partyId}");
             return Task.CompletedTask;
         }
