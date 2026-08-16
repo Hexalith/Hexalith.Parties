@@ -12,6 +12,7 @@ namespace Hexalith.Parties.Projections.Handlers;
 internal static class PartySdkProjectionFold
 {
     internal const string DeliverySequenceGapReason = "delivery-sequence-gap";
+    internal const string ConflictingDuplicateEventReason = "conflicting-duplicate-event";
     internal const string UnresolvedOrUnsupportedEventReason = "unresolved-or-unsupported-event";
     internal const string RedactedFormat = "json-redacted";
     private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
@@ -36,9 +37,15 @@ internal static class PartySdkProjectionFold
         ILogger? logger = null)
     {
         long checkpoint = lastSequenceNumber;
+        var seenDeliverySequences = new HashSet<long>();
         foreach (ProjectionEventDto @event in events.OrderBy(static item => item.SequenceNumber))
         {
             if (@event.SequenceNumber <= checkpoint)
+            {
+                continue;
+            }
+
+            if (!seenDeliverySequences.Add(@event.SequenceNumber))
             {
                 continue;
             }
@@ -170,6 +177,18 @@ internal static class PartySdkProjectionFold
         IReadOnlyCollection<ProjectionEventDto> events,
         long lastSequenceNumber)
     {
+        var deliveryEventsBySequence = new Dictionary<long, ProjectionEventDto>();
+        foreach (ProjectionEventDto @event in events)
+        {
+            if (deliveryEventsBySequence.TryGetValue(@event.SequenceNumber, out ProjectionEventDto? prior)
+                && !AreEquivalent(prior, @event))
+            {
+                return ConflictingDuplicateEventReason;
+            }
+
+            deliveryEventsBySequence[@event.SequenceNumber] = @event;
+        }
+
         long checkpoint = lastSequenceNumber;
         foreach (ProjectionEventDto @event in events.OrderBy(static item => item.SequenceNumber))
         {
@@ -199,6 +218,19 @@ internal static class PartySdkProjectionFold
 
     private static DateTimeOffset Max(DateTimeOffset left, DateTimeOffset right)
         => left >= right ? left : right;
+
+    private static bool AreEquivalent(ProjectionEventDto left, ProjectionEventDto right)
+        => string.Equals(left.EventTypeName, right.EventTypeName, StringComparison.Ordinal)
+            && (left.Payload is null
+                ? right.Payload is null
+                : right.Payload is not null && left.Payload.AsSpan().SequenceEqual(right.Payload))
+            && string.Equals(left.SerializationFormat, right.SerializationFormat, StringComparison.Ordinal)
+            && left.SequenceNumber == right.SequenceNumber
+            && left.Timestamp.Equals(right.Timestamp)
+            && string.Equals(left.CorrelationId, right.CorrelationId, StringComparison.Ordinal)
+            && string.Equals(left.MessageId, right.MessageId, StringComparison.Ordinal)
+            && string.Equals(left.UserId, right.UserId, StringComparison.Ordinal)
+            && left.GlobalPosition == right.GlobalPosition;
 
     // AC7 — structured logging contract: message templates never embed aggregate/party ids,
     // tenant ids, correlation ids, state-store keys, or exception content — only the event type

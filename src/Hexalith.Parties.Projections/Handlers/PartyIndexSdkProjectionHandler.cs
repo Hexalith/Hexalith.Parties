@@ -235,12 +235,15 @@ public sealed class PartyIndexSdkProjectionHandler(
         byte[] completionState = JsonSerializer.SerializeToUtf8Bytes(
             new PartyIndexSearchRebuildManifest(rebuiltEntries, removedPartyIds),
             s_candidateJsonOptions);
+        ReadModelBatchConcurrency concurrency = current?.ETag is { Length: > 0 } etag
+            ? ReadModelBatchConcurrency.Match(etag)
+            : ReadModelBatchConcurrency.CreateOnly;
         return new DomainProjectionRebuildPlan(
             RebuildStoreName,
             [ReadModelBatchOperation.Write(
                 PartySdkReadModelAddresses.Index(identity.TenantId),
                 rebuiltIndex,
-                ReadModelBatchConcurrency.LastWrite)],
+                concurrency)],
             completionState);
     }
 
@@ -272,13 +275,12 @@ public sealed class PartyIndexSdkProjectionHandler(
                 PartySdkReadModelAddresses.Index(identity.TenantId),
                 cancellationToken)
             .ConfigureAwait(false);
-        IReadOnlySet<string> stillPresentPartyIds = currentEntry.Value?.Entries.Keys is { } keys
-            ? new HashSet<string>(keys, StringComparer.Ordinal)
-            : new HashSet<string>(StringComparer.Ordinal);
+        IReadOnlyDictionary<string, PartyIndexEntry> currentEntries = currentEntry.Value?.Entries
+            ?? new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal);
 
         foreach (string partyId in manifest.RemovedPartyIds ?? Array.Empty<string>())
         {
-            if (stillPresentPartyIds.Contains(partyId))
+            if (currentEntries.ContainsKey(partyId))
             {
                 continue;
             }
@@ -291,8 +293,21 @@ public sealed class PartyIndexSdkProjectionHandler(
 
         foreach (PartyIndexSearchRebuildEntry item in manifest.Entries ?? Array.Empty<PartyIndexSearchRebuildEntry>())
         {
+            // A live write can update or erase an entry after the rebuild batch commits but
+            // before completion runs. The manifest is only a bounded work inventory; canonical
+            // state supplies the value to publish and absence means there is nothing to reindex.
+            if (!currentEntries.TryGetValue(item.Entry.Id, out PartyIndexEntry? canonicalEntry))
+            {
+                continue;
+            }
+
             if (!await _searchIndexer
-                .NotifyIndexedAsync(identity.TenantId, item.Entry, item.EventType, item.Timestamp, cancellationToken)
+                .NotifyIndexedAsync(
+                    identity.TenantId,
+                    canonicalEntry,
+                    item.EventType,
+                    canonicalEntry.LastModifiedAt,
+                    cancellationToken)
                 .ConfigureAwait(false))
             {
                 return DomainProjectionHandlerResult.Retryable(SearchReconciliationReason);

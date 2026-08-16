@@ -8,6 +8,7 @@ using Hexalith.Parties.Extensions;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Queries;
+using Hexalith.Parties.Search;
 using Hexalith.Parties.Security;
 
 using Microsoft.AspNetCore.DataProtection;
@@ -117,10 +118,13 @@ public sealed class ProjectionPlatformAdapterTests
             .Returns(ReadModelBatchResult.Completed("fingerprint"));
 
         IServiceCollection services = CreatePartiesServices();
+        IPartyMemoryUnitMappingStore mappingStore = new EmptyMappingStore();
         services.RemoveAll<IReadModelStore>();
         services.RemoveAll<IReadModelBatchStore>();
+        services.RemoveAll<IPartyMemoryUnitMappingStore>();
         services.AddSingleton(readModelStore);
         services.AddSingleton(batchStore);
+        services.AddSingleton(mappingStore);
         using ServiceProvider provider = services.BuildServiceProvider();
 
         PartySdkLastKnownReadModelCache cache = provider.GetRequiredService<PartySdkLastKnownReadModelCache>();
@@ -274,5 +278,33 @@ public sealed class ProjectionPlatformAdapterTests
         services.AddLogging();
         services.AddParties(configuration);
         return services;
+    }
+
+    private sealed class EmptyMappingStore : IPartyMemoryUnitMappingStore
+    {
+        public Task RecordMappingAsync(
+            string tenantId,
+            string partyId,
+            string memoryUnitId,
+            string sourceUri,
+            string caseId,
+            CancellationToken cancellationToken)
+            => Task.CompletedTask;
+
+        public Task<IReadOnlyList<PartyMemoryUnitMappingEntry>> GetMappingsAsync(
+            string tenantId,
+            string partyId,
+            CancellationToken cancellationToken)
+            => Task.FromResult<IReadOnlyList<PartyMemoryUnitMappingEntry>>([]);
+
+        public Task ClearMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
+            => Task.CompletedTask;
+
+        public Task ReplaceMappingsAsync(
+            string tenantId,
+            string partyId,
+            IReadOnlyList<PartyMemoryUnitMappingEntry> entries,
+            CancellationToken cancellationToken)
+            => Task.CompletedTask;
     }
 }

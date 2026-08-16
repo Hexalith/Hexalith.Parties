@@ -25,6 +25,8 @@ public sealed class PartyDetailSdkProjectionHandler(
     IAsyncDomainProjectionRebuildHandler,
     IDeclaresProjectionReadModelSlots
 {
+    private const string ProjectionRebuildRequiredReason = "projection-rebuild-required";
+
     public static IReadOnlyList<ProjectionReadModelSlotDeclaration> ProjectionReadModelSlots { get; } =
     [
         new("party", PartyProjectionNames.Detail, PartySdkReadModelAddresses.DetailSlot,
@@ -60,24 +62,18 @@ public sealed class PartyDetailSdkProjectionHandler(
         ReadModelEntry<PartyProcessingSdkReadModel> currentProcessing = await readModelStore
             .GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken)
             .ConfigureAwait(false);
-        // When only one of the detail/processing slots exists, do not Min() the present
-        // watermark with long.MinValue for the missing slot — that invents a false
-        // delivery-sequence-gap on the next contiguous event and stalls ProjectAsync.
-        long oldestCheckpoint;
-        if (current.Value is null && currentProcessing.Value is not null)
+        // Detail and Processing are one coordinated aggregate-owned projection. If only one slot
+        // survives, its checkpoint cannot prove the missing slot contains the prior history. A
+        // live delivery must therefore stop and request a full replay instead of reconstructing
+        // the missing row from only the newly delivered tail.
+        if ((current.Value is null) != (currentProcessing.Value is null))
         {
-            oldestCheckpoint = currentProcessing.Value.LastSequenceNumber;
+            return DeliveryFailure(ProjectionRebuildRequiredReason);
         }
-        else if (current.Value is not null && currentProcessing.Value is null)
-        {
-            oldestCheckpoint = current.Value.LastSequenceNumber;
-        }
-        else
-        {
-            oldestCheckpoint = Math.Min(
-                current.Value?.LastSequenceNumber ?? long.MinValue,
-                currentProcessing.Value?.LastSequenceNumber ?? long.MinValue);
-        }
+
+        long oldestCheckpoint = Math.Min(
+            current.Value?.LastSequenceNumber ?? long.MinValue,
+            currentProcessing.Value?.LastSequenceNumber ?? long.MinValue);
         string? deliveryFailure = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, oldestCheckpoint);
         if (deliveryFailure is not null)
         {
@@ -131,7 +127,7 @@ public sealed class PartyDetailSdkProjectionHandler(
         return ReadModelBatchProjectionResultMapper.Map(result);
     }
 
-    public Task<DomainProjectionRebuildPlan> PrepareRebuildAsync(
+    public async Task<DomainProjectionRebuildPlan> PrepareRebuildAsync(
         ProjectionRequest request,
         string operationId,
         CancellationToken cancellationToken)
@@ -147,16 +143,30 @@ public sealed class PartyDetailSdkProjectionHandler(
         // Fold (Detail slot) stays silent by design here too — same invariant as ProjectAsync.
         PartyDetailSdkReadModel candidate = Fold(request, current: null);
         PartyProcessingSdkReadModel processingCandidate = PartyProcessingActivityFold.Fold(request, current: null, logger);
+        string storeName = StoreName;
         string key = PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId);
-        return Task.FromResult(new DomainProjectionRebuildPlan(
-            StoreName,
+        ReadModelEntry<PartyDetailSdkReadModel> current = await readModelStore
+            .GetAsync<PartyDetailSdkReadModel>(storeName, key, cancellationToken)
+            .ConfigureAwait(false);
+        string processingKey = PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId);
+        ReadModelEntry<PartyProcessingSdkReadModel> currentProcessing = await readModelStore
+            .GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken)
+            .ConfigureAwait(false);
+        ReadModelBatchConcurrency concurrency = current?.ETag is { Length: > 0 } etag
+            ? ReadModelBatchConcurrency.Match(etag)
+            : ReadModelBatchConcurrency.CreateOnly;
+        ReadModelBatchConcurrency processingConcurrency = currentProcessing?.ETag is { Length: > 0 } processingEtag
+            ? ReadModelBatchConcurrency.Match(processingEtag)
+            : ReadModelBatchConcurrency.CreateOnly;
+        return new DomainProjectionRebuildPlan(
+            storeName,
             [
-                ReadModelBatchOperation.Write(key, candidate, ReadModelBatchConcurrency.LastWrite),
+                ReadModelBatchOperation.Write(key, candidate, concurrency),
                 ReadModelBatchOperation.Write(
-                    PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId),
+                    processingKey,
                     processingCandidate,
-                    ReadModelBatchConcurrency.LastWrite),
-            ]));
+                    processingConcurrency),
+            ]);
     }
 
     /// <summary>

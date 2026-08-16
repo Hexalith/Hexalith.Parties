@@ -205,6 +205,18 @@ public sealed class PartySdkReadModelEraser(
         // the "sdk-read-models" erasure-verification store to Failed — that store certifies the
         // canonical PII redaction, not the optional Memories search index, which already reports
         // its own convergence separately under the "memories-search" store.
-        _ = await _searchIndexer.NotifyRemovedAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            _ = await _searchIndexer.NotifyRemovedAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            // The coordinated canonical batch is already committed. The optional search cleanup
+            // has its own erasure-verification result, so an indexer fault is bounded here.
+        }
     }
 }

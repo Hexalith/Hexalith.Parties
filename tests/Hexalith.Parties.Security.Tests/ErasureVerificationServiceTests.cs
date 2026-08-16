@@ -297,11 +297,10 @@ public class ErasureVerificationServiceTests
     }
 
     [Fact]
-    public async Task VerifyErasureAsync_ActorCorrupted_TreatsAsClean()
+    public async Task VerifyErasureAsync_UnexpectedCleanupFailureIsSanitizedAndReportedFailed()
     {
-        // Arrange — delegate throws to simulate corrupted actor state (D15 pattern)
         ErasureStoreCleanupDelegate corruptedStore = (_, _, _)
-            => throw new InvalidOperationException("Deserialization failed: corrupted state");
+            => throw new InvalidOperationException("Deserialization failed for Ada Lovelace tenant-secret party-secret");
         ErasureStoreCleanupDelegate healthyStore = (_, _, _) => Task.FromResult(
             new ErasureVerificationStoreResult
             {
@@ -310,20 +309,66 @@ public class ErasureVerificationServiceTests
                 Timestamp = DateTimeOffset.UtcNow,
             });
 
-        var service = CreateService([corruptedStore, healthyStore]);
+        var logger = new CapturingLogger<ErasureVerificationService>();
+        var service = new ErasureVerificationService([corruptedStore, healthyStore], logger);
         ErasureCertificate certificate = CreateCertificate();
 
-        // Act — should NOT throw; corrupted store treated as Cleaned per D15
         ErasureVerificationReport report = await service.VerifyErasureAsync(
-            TenantId, PartyId, certificate, CancellationToken.None);
+            "tenant-secret", "party-secret", certificate, CancellationToken.None);
 
-        // Assert
-        report.OverallStatus.ShouldBe(ErasureVerificationOverallStatus.Complete);
+        report.OverallStatus.ShouldBe(ErasureVerificationOverallStatus.Partial);
         report.StoreResults.Count.ShouldBe(2);
-        report.StoreResults[0].Status.ShouldBe(ErasureStoreCleanupStatus.Cleaned);
+        report.StoreResults[0].Status.ShouldBe(ErasureStoreCleanupStatus.Failed);
         string fallbackError = report.StoreResults[0].ErrorMessage ?? string.Empty;
         fallbackError.ShouldNotContain("Deserialization failed");
-        fallbackError.ShouldNotContain("corrupted state");
+        fallbackError.ShouldNotContain("Ada Lovelace");
+        fallbackError.ShouldNotContain("tenant-secret");
+        string failureLog = logger.Messages.Single(message => message.Contains("cleanup failed", StringComparison.Ordinal));
+        failureLog.ShouldContain(nameof(InvalidOperationException));
+        failureLog.ShouldNotContain("Ada Lovelace");
+        failureLog.ShouldNotContain("tenant-secret");
+        failureLog.ShouldNotContain("party-secret");
+        logger.Messages.ShouldAllBe(message =>
+            !message.Contains("tenant-secret", StringComparison.Ordinal)
+            && !message.Contains("party-secret", StringComparison.Ordinal)
+            && !message.Contains("Ada Lovelace", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task VerifyErasureAsync_CallerCancellationPropagates()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        ErasureStoreCleanupDelegate canceledStore = (_, _, _) =>
+            Task.FromCanceled<ErasureVerificationStoreResult>(cancellation.Token);
+        var service = CreateService([canceledStore]);
+
+        await Should.ThrowAsync<OperationCanceledException>(() => service.VerifyErasureAsync(
+            TenantId,
+            PartyId,
+            CreateCertificate(),
+            cancellation.Token));
+    }
+
+    [Fact]
+    public async Task VerifyErasureAsync_NonCallerCancellationIsReportedFailed()
+    {
+        using var otherCancellation = new CancellationTokenSource();
+        otherCancellation.Cancel();
+        ErasureStoreCleanupDelegate timedOutStore = (_, _, _) =>
+            Task.FromCanceled<ErasureVerificationStoreResult>(otherCancellation.Token);
+        var service = CreateService([timedOutStore]);
+
+        ErasureVerificationReport report = await service.VerifyErasureAsync(
+            TenantId,
+            PartyId,
+            CreateCertificate(),
+            CancellationToken.None);
+
+        report.OverallStatus.ShouldBe(ErasureVerificationOverallStatus.Failed);
+        ErasureVerificationStoreResult result = report.StoreResults.ShouldHaveSingleItem();
+        result.Status.ShouldBe(ErasureStoreCleanupStatus.Failed);
+        result.ErrorMessage.ShouldBe("Store cleanup did not complete.");
     }
 
     [Fact]

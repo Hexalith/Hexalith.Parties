@@ -374,8 +374,11 @@ public sealed partial class PartySdkQueryService(
                 read = await readModelStore
                     .GetAsync<PartyIndexSdkReadModel>(storeName, PartySdkReadModelAddresses.Index(query.TenantId), cancellationToken)
                     .ConfigureAwait(false);
-                if (read.Value is not null
-                    && !lastKnownCache.StoreIndexIfCurrent(query.TenantId, cacheGeneration, read.Value))
+                if (read.Value is null)
+                {
+                    lastKnownCache.EvictIndex(query.TenantId);
+                }
+                else if (!lastKnownCache.StoreIndexIfCurrent(query.TenantId, cacheGeneration, read.Value))
                 {
                     throw new InvalidOperationException("read-model-invalidated");
                 }
@@ -422,8 +425,11 @@ public sealed partial class PartySdkQueryService(
                 StoreName,
                 PartySdkReadModelAddresses.Detail(tenantId, partyId),
                 cancellationToken).ConfigureAwait(false);
-            if (read.Value is not null
-                && !lastKnownCache.StoreDetailIfCurrent(tenantId, partyId, cacheGeneration, read.Value))
+            if (read.Value is null)
+            {
+                lastKnownCache.EvictDetail(tenantId, partyId);
+            }
+            else if (!lastKnownCache.StoreDetailIfCurrent(tenantId, partyId, cacheGeneration, read.Value))
             {
                 throw new InvalidOperationException("read-model-invalidated");
             }
@@ -452,8 +458,11 @@ public sealed partial class PartySdkQueryService(
                 StoreName,
                 PartySdkReadModelAddresses.Processing(tenantId, partyId),
                 cancellationToken).ConfigureAwait(false);
-            if (read.Value is not null
-                && !lastKnownCache.StoreProcessingIfCurrent(tenantId, partyId, cacheGeneration, read.Value))
+            if (read.Value is null)
+            {
+                lastKnownCache.EvictProcessing(tenantId, partyId);
+            }
+            else if (!lastKnownCache.StoreProcessingIfCurrent(tenantId, partyId, cacheGeneration, read.Value))
             {
                 throw new InvalidOperationException("read-model-invalidated");
             }

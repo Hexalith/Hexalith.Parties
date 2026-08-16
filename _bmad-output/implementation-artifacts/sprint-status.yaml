@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-08-09
+# last_updated: 2026-08-16
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -42,7 +42,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-08-09
+last_updated: 2026-08-16
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -163,7 +163,7 @@ development_status:
   # per-key LKG invalidation. Remaining non-blocking items are in deferred-work.md.
   # Returned to `in-progress` 2026-08-09 after bmad-code-review DI+query-host
   # sub-chunk applied 8 patches; Suggested Review Order chunks 2–4 still pending.
-  8-6-projection-and-query-sdk-migration: in-progress
+  8-6-projection-and-query-sdk-migration: review
   # Story context created 2026-07-16; production migration remains blocked by
   # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
   # G5 receipt revalidated 2026-08-04 at the current EventStore identity

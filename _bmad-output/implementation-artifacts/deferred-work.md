@@ -163,6 +163,9 @@ this ledger") for the `FinalizeAsync` concurrency defect.
   this repo's `IAsyncDomainProjectionRebuildHandler` /
   `IAsyncDomainSharedProjectionRebuildCompletionHandler` surface. Needs SDK-owner input,
   not a unilateral Parties-side change.
+  Resolved 2026-08-16: EventStore v3.95 now provides the required bounded conflict
+  contract. Parties rebuild plans use `Match(etag)` for existing rows and `CreateOnly`
+  for absent rows; focused plan-policy tests pass for detail, processing, and index.
 - Host wiring (`builder.AddEventStoreDomainService(typeof(PartyAggregate).Assembly,
   typeof(PartyDetailProjectionHandler).Assembly)`) is verified only as literal source
   text by `ArchitecturalFitnessTests`/`PlatformApiPrerequisitesTests`/
@@ -237,3 +240,63 @@ DI + query host sub-chunk (`PartiesServiceCollectionExtensions.cs` vs `2c4a7af`)
 
 - `tests/e2e/specs/story-7-4-projection-platform-compatibility.spec.ts` still expects deleted projection-adapter registrations and old `ProjectionPlatformAdapterTests` method names — deferred, pre-existing e2e drift outside this DI chunk.
 - Erasure cleanup timestamps still use `DateTimeOffset.UtcNow` instead of the newly registered `TimeProvider` — deferred, pre-existing certificate timestamp pattern across erasure store results.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Protect Memories mapping replacement and clearing with ETag-aware retry semantics.
+  evidence: `PartyMemoryUnitMappingStore.ReplaceMappingsAsync` and the empty-list delete can overwrite a concurrent indexing write after cleanup reads the prior mapping set.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Persist partial Memories cleanup progress with a token that survives caller cancellation.
+  evidence: `PartyMemoryCleanupService.DeleteByPartyAsync` uses the already-cancelled caller token in its `finally` mapping update, so cancellation can prevent the promised resumable audit state from being saved.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Compensate when cancellation occurs after Memories ingestion but before mapping persistence.
+  evidence: `PartyMemoryIndexingService` rethrows caller cancellation from `RecordMappingAsync` without deleting the already-created Memories unit, leaving an untracked unit outside erasure discovery.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Use ingestion-time endpoint and CaseId data for Memories compensating deletion.
+  evidence: `TryCompensatingDeleteAsync` gates cleanup on the current options snapshot even though configuration can change after ingestion and the unit retains its authoritative CaseId.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Resolve consumer package-validation support artifacts from current central versions.
+  evidence: `scripts/validate-consumer-package-references.py` hard-codes obsolete FrontComposer and Tenants versions instead of the currently evaluated dependency set.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Keep consumer package-validation caches inside the disposable validation workspace.
+  evidence: `scripts/validate-consumer-package-references.py` places `NUGET_PACKAGES` under the work directory's parent, so cleanup leaves packages that can mask missing-feed failures in later runs.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Make consumer package validation use only explicitly configured NuGet sources.
+  evidence: The generated NuGet configuration lacks `<clear/>`, and the CLI always retains nuget.org, allowing undeclared user or machine feeds to hide incomplete local package output.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Compare forbidden NuGet dependency identifiers case-insensitively.
+  evidence: `scripts/validate-nuget-packages.py` performs case-sensitive package-ID checks even though NuGet identifiers are case-insensitive.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Pin reusable CI and CodeQL workflows to reviewed immutable revisions.
+  evidence: `.github/workflows/ci.yml` and `.github/workflows/codeql.yml` invoke reusable workflows through mutable `@main` references.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Publish Aspire-hosted services with Production environment defaults.
+  evidence: `src/Hexalith.Parties.AppHost/Program.cs` emits `ASPNETCORE_ENVIRONMENT` and `DOTNET_ENVIRONMENT` as `Development` for publish output.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Fail publish preflight when the confidential OIDC client secret is absent.
+  evidence: `src/Hexalith.Parties.AppHost/Program.cs` substitutes an empty client secret and continues producing deployment artifacts that cannot authenticate.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Reject duplicate keyed identifiers while merging BMAD configuration arrays.
+  evidence: `_bmad/scripts/config_utils.py` can retain repeated base codes or ids, leaving ambiguous effective configuration after overrides.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Tolerate deleted historical tag references during release verification.
+  evidence: `.github/workflows/release.yml` can report a successful current publication as failed when an older release references a tag that no longer exists.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Restore the Playwright browser accessibility lane as a required CI gate.
+  evidence: The replacement CI workflow no longer runs `npm run test:a11y`, leaving axe, keyboard-focus, forced-colors, computed-style, and visual checks unexecuted.
+
+- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  summary: Add executable mTLS topology coverage across every configured Dapr sidecar.
+  evidence: Current tests inspect generated YAML and one synthetic sidecar but never start the mTLS topology or prove a cross-service invocation with all sidecars credentialed.

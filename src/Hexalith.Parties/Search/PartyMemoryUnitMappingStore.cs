@@ -71,10 +71,9 @@ internal interface IPartyMemoryUnitMappingStore
 /// so two concurrent indexings of the same party cannot lose a mapping under last-writer-wins.
 /// </para>
 /// <para>
-/// <b>Failure surface (P2 / P24).</b> State-store failures during writes propagate to the
-/// caller so <see cref="PartyMemoryIndexingService"/> can surface them as <c>Indexed: false</c>
-/// (with compensating cleanup of the just-ingested unit). Reads degrade to "no mapping" with
-/// a structured warning so cleanup never fails-closed on a transient read outage.
+/// <b>Failure surface (P2 / P24).</b> State-store failures propagate to the caller. A failed
+/// mapping read must never be interpreted as an authoritative empty inventory because that could
+/// certify cleanup while Memories still contains indexed data.
 /// </para>
 /// </summary>
 internal sealed class PartyMemoryUnitMappingStore(
@@ -275,14 +274,10 @@ internal sealed class PartyMemoryUnitMappingStore(
         }
         catch (Exception ex)
         {
-            // Reads degrade to "no mapping" so cleanup operating with stale state-store
-            // visibility never blocks erasure. The warning makes the silent-degrade path
-            // observable so an operator can act on persistent read outages.
             logger.LogWarning(
-                ex,
-                "Failed to read memory-unit mapping for state key {Key}; treating as empty. Cleanup may not find prior mappings.",
-                key);
-            return ((IReadOnlyList<PartyMemoryUnitMappingEntry>)[], string.Empty);
+                "Failed to read a memory-unit mapping with {ExceptionType}; cleanup cannot certify an empty inventory.",
+                ex.GetType().Name);
+            throw new InvalidOperationException("memory-unit-mapping-read-failed", ex);
         }
     }
 

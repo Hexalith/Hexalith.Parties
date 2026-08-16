@@ -115,6 +115,46 @@ public class PartyMemoryCleanupServiceTests
     }
 
     [Fact]
+    public async Task DeleteByPartyAsync_MappingReadFailureReportsFailedInsteadOfCleaned()
+    {
+        var service = new PartyMemoryCleanupService(
+            new HttpClient(new TestHandler(new HttpResponseMessage(HttpStatusCode.OK)))
+            {
+                BaseAddress = new Uri("https://memories.example/"),
+            },
+            new ThrowingMappingStore(new InvalidOperationException("Ada Lovelace mapping unavailable")),
+            NullLogger<PartyMemoryCleanupService>.Instance);
+
+        PartyMemoryCleanupResult result = await service.DeleteByPartyAsync(
+            "tenant-secret",
+            "case-secret",
+            "party-secret",
+            TestContext.Current.CancellationToken);
+
+        result.Cleaned.ShouldBeFalse();
+        result.BlockedReason.ShouldBe("Memories cleanup could not verify its mapping inventory.");
+        string blockedReason = result.BlockedReason!;
+        blockedReason.ShouldNotContain("Ada Lovelace");
+        blockedReason.ShouldNotContain("tenant-secret");
+        blockedReason.ShouldNotContain("party-secret");
+    }
+
+    [Fact]
+    public async Task DeleteByPartyAsync_MappingReadCancellationPropagates()
+    {
+        var service = new PartyMemoryCleanupService(
+            new HttpClient(),
+            new ThrowingMappingStore(new OperationCanceledException()),
+            NullLogger<PartyMemoryCleanupService>.Instance);
+
+        await Should.ThrowAsync<OperationCanceledException>(() => service.DeleteByPartyAsync(
+            "tenant-a",
+            "case-a",
+            "party-1",
+            TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task DeleteByPartyAsyncIteratesEveryRecordedMapping()
     {
         // Return a fresh HttpResponseMessage per call — the response body is disposed after
@@ -255,6 +295,34 @@ public class PartyMemoryCleanupServiceTests
 
             return Task.CompletedTask;
         }
+    }
+
+    private sealed class ThrowingMappingStore(Exception exception) : IPartyMemoryUnitMappingStore
+    {
+        public Task RecordMappingAsync(
+            string tenantId,
+            string partyId,
+            string memoryUnitId,
+            string sourceUri,
+            string caseId,
+            CancellationToken cancellationToken)
+            => Task.CompletedTask;
+
+        public Task<IReadOnlyList<PartyMemoryUnitMappingEntry>> GetMappingsAsync(
+            string tenantId,
+            string partyId,
+            CancellationToken cancellationToken)
+            => Task.FromException<IReadOnlyList<PartyMemoryUnitMappingEntry>>(exception);
+
+        public Task ClearMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
+            => Task.CompletedTask;
+
+        public Task ReplaceMappingsAsync(
+            string tenantId,
+            string partyId,
+            IReadOnlyList<PartyMemoryUnitMappingEntry> entries,
+            CancellationToken cancellationToken)
+            => Task.CompletedTask;
     }
 
     private sealed class TestHandler(HttpResponseMessage response) : HttpMessageHandler

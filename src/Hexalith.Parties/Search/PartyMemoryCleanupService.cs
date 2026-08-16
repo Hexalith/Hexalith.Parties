@@ -130,9 +130,29 @@ internal sealed class PartyMemoryCleanupService(
 
         string sourceUri = PartyMemoryUrn.Build(tenantId, partyId);
 
-        IReadOnlyList<PartyMemoryUnitMappingEntry> mappings = await mappingStore
-            .GetMappingsAsync(tenantId, partyId, cancellationToken)
-            .ConfigureAwait(false);
+        IReadOnlyList<PartyMemoryUnitMappingEntry> mappings;
+        try
+        {
+            mappings = await mappingStore
+                .GetMappingsAsync(tenantId, partyId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(
+                "Memories cleanup could not read its mapping inventory because of {ExceptionType}.",
+                ex.GetType().Name);
+            return new PartyMemoryCleanupResult(
+                partyId,
+                MemoryUnitId: string.Empty,
+                sourceUri,
+                Cleaned: false,
+                BlockedReason: "Memories cleanup could not verify its mapping inventory.");
+        }
 
         if (mappings.Count == 0)
         {

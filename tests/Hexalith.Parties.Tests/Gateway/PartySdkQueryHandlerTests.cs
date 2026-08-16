@@ -931,6 +931,149 @@ public sealed class PartySdkQueryHandlerTests
         degradedResult.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
     }
 
+    [Fact]
+    public async Task DetailHandler_ObservedCanonicalAbsenceInvalidatesLastKnownValueAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var cached = new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel
+        {
+            Detail = Detail("party-1") with { DisplayName = "Stale personal value" },
+            LastSequenceNumber = 1,
+        }, "etag-old");
+        int readCount = 0;
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(_ => readCount++ switch
+            {
+                0 => Task.FromResult(cached),
+                1 => Task.FromResult(new ReadModelEntry<PartyDetailSdkReadModel>(null, null)),
+                _ => Task.FromException<ReadModelEntry<PartyDetailSdkReadModel>>(new InvalidOperationException("outage")),
+            });
+        var cache = new PartySdkLastKnownReadModelCache();
+        var handler = new GetPartyQueryHandler(CreateService(store, lastKnownCache: cache));
+
+        (await handler.ExecuteAsync(CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType), TestContext.Current.CancellationToken))
+            .Success.ShouldBeTrue();
+        QueryResult missing = await handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            TestContext.Current.CancellationToken);
+        QueryResult outage = await handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            TestContext.Current.CancellationToken);
+
+        missing.Success.ShouldBeFalse();
+        missing.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        outage.Success.ShouldBeFalse();
+        outage.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        cache.TryGetDetail("tenant-a", "party-1", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task IndexHandler_ObservedCanonicalAbsenceInvalidatesLastKnownValueAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var cached = new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel
+        {
+            Entries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)
+            {
+                ["party-1"] = IndexEntry("party-1") with { DisplayName = "Stale personal value" },
+            },
+        }, "etag-old");
+        int readCount = 0;
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(_ => readCount++ switch
+            {
+                0 => Task.FromResult(cached),
+                1 => Task.FromResult(new ReadModelEntry<PartyIndexSdkReadModel>(null, null)),
+                _ => Task.FromException<ReadModelEntry<PartyIndexSdkReadModel>>(new InvalidOperationException("outage")),
+            });
+        var cache = new PartySdkLastKnownReadModelCache();
+        var handler = new PartyIndexQueryHandler(CreateService(store, lastKnownCache: cache));
+
+        (await handler.ExecuteAsync(CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType), TestContext.Current.CancellationToken))
+            .Success.ShouldBeTrue();
+        QueryResult missing = await handler.ExecuteAsync(
+            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType),
+            TestContext.Current.CancellationToken);
+        QueryResult outage = await handler.ExecuteAsync(
+            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType),
+            TestContext.Current.CancellationToken);
+
+        missing.Success.ShouldBeFalse();
+        missing.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        outage.Success.ShouldBeFalse();
+        outage.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        cache.TryGetIndex("tenant-a", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ProcessingHandler_ObservedCanonicalAbsenceInvalidatesLastKnownRecordsAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel
+            {
+                Detail = Detail("party-1"),
+            }, "detail-etag"));
+        var staleActivity = new ProcessingActivityRecord
+        {
+            SequenceNumber = 1,
+            PartyId = "party-1",
+            TenantId = "tenant-a",
+            ActorId = "actor",
+            CorrelationId = "correlation",
+            OperationCategory = "PartyCommand",
+            Outcome = "Succeeded",
+            EventType = "PartyCreated",
+            Timestamp = s_now,
+            Summary = "Party record created.",
+        };
+        int readCount = 0;
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(_ => readCount++ switch
+            {
+                0 => Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel
+                {
+                    Records = [staleActivity],
+                }, "etag-old")),
+                1 => Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null)),
+                _ => Task.FromException<ReadModelEntry<PartyProcessingSdkReadModel>>(new InvalidOperationException("outage")),
+            });
+        var cache = new PartySdkLastKnownReadModelCache();
+        var handler = new GetProcessingRecordsQueryHandler(CreateService(store, lastKnownCache: cache));
+
+        QueryResult first = await handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType),
+            TestContext.Current.CancellationToken);
+        QueryResult missing = await handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType),
+            TestContext.Current.CancellationToken);
+        QueryResult outage = await handler.ExecuteAsync(
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType),
+            TestContext.Current.CancellationToken);
+
+        first.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.ShouldHaveSingleItem();
+        missing.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.ShouldBeEmpty();
+        outage.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.ShouldBeEmpty();
+        cache.TryGetProcessing("tenant-a", "party-1", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void LastKnownReadModelCache_ObservedAbsenceGenerationRejectsLateStoresForEverySlot()
+    {
+        var cache = new PartySdkLastKnownReadModelCache();
+        long detailGeneration = cache.BeginRead(PartySdkReadModelAddresses.Detail("tenant-a", "party-1"));
+        long processingGeneration = cache.BeginRead(PartySdkReadModelAddresses.Processing("tenant-a", "party-1"));
+        long indexGeneration = cache.BeginRead(PartySdkReadModelAddresses.Index("tenant-a"));
+
+        cache.EvictDetail("tenant-a", "party-1");
+        cache.EvictProcessing("tenant-a", "party-1");
+        cache.EvictIndex("tenant-a");
+
+        cache.StoreDetailIfCurrent("tenant-a", "party-1", detailGeneration, new PartyDetailSdkReadModel()).ShouldBeFalse();
+        cache.StoreProcessingIfCurrent("tenant-a", "party-1", processingGeneration, new PartyProcessingSdkReadModel()).ShouldBeFalse();
+        cache.StoreIndexIfCurrent("tenant-a", indexGeneration, new PartyIndexSdkReadModel()).ShouldBeFalse();
+    }
+
     [Theory]
     [InlineData("{\"page\":0,\"pageSize\":20}")]
     [InlineData("{\"page\":1,\"pageSize\":20,\"type\":\"0\"}")]

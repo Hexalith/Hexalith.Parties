@@ -52,22 +52,23 @@ internal static class PartyProcessingActivityFold
                         : "Failed";
 
             bool isErasure = payload is PartyErased;
-            if (erasureSequence is null
-                && !records.Exists(record => record.SequenceNumber == @event.SequenceNumber))
+            int existingRecordIndex = records.FindIndex(record => record.SequenceNumber == @event.SequenceNumber);
+            ProcessingActivityRecord derivedRecord = CreateRecord(request, @event, payload, outcome);
+            if (existingRecordIndex >= 0)
             {
-                records.Add(new ProcessingActivityRecord
+                // An unresolved record deliberately remains retryable at the same sequence. Once
+                // an upgraded consumer resolves that event, replace the failed audit fact with
+                // the now-authoritative derived fact rather than letting sequence-only dedup keep
+                // the stale failure forever.
+                if (advance
+                    && string.Equals(records[existingRecordIndex].Outcome, "Failed", StringComparison.Ordinal))
                 {
-                    SequenceNumber = @event.SequenceNumber,
-                    PartyId = request.AggregateId,
-                    TenantId = request.TenantId,
-                    ActorId = NormalizeMetadata(@event.UserId, "system"),
-                    CorrelationId = NormalizeMetadata(@event.CorrelationId, "unspecified"),
-                    OperationCategory = GetOperationCategory(@event.EventTypeName, payload),
-                    Outcome = outcome,
-                    EventType = GetShortEventTypeName(@event.EventTypeName),
-                    Timestamp = @event.Timestamp.ToUniversalTime(),
-                    Summary = CreateProcessingSummary(@event.EventTypeName, payload),
-                });
+                    records[existingRecordIndex] = derivedRecord;
+                }
+            }
+            else if (erasureSequence is null)
+            {
+                records.Add(derivedRecord);
             }
 
             if (isErasure)
@@ -103,6 +104,25 @@ internal static class PartyProcessingActivityFold
                 : lastSequence.ToString(System.Globalization.CultureInfo.InvariantCulture),
         };
     }
+
+    private static ProcessingActivityRecord CreateRecord(
+        ProjectionRequest request,
+        ProjectionEventDto @event,
+        IEventPayload? payload,
+        string outcome)
+        => new()
+        {
+            SequenceNumber = @event.SequenceNumber,
+            PartyId = request.AggregateId,
+            TenantId = request.TenantId,
+            ActorId = NormalizeMetadata(@event.UserId, "system"),
+            CorrelationId = NormalizeMetadata(@event.CorrelationId, "unspecified"),
+            OperationCategory = GetOperationCategory(@event.EventTypeName, payload),
+            Outcome = outcome,
+            EventType = GetShortEventTypeName(@event.EventTypeName),
+            Timestamp = @event.Timestamp.ToUniversalTime(),
+            Summary = CreateProcessingSummary(@event.EventTypeName, payload),
+        };
 
     private static string CreateProcessingSummary(string eventTypeName, IEventPayload? payload)
         => payload switch

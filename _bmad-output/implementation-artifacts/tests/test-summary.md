@@ -485,3 +485,40 @@ The 14 executable project inventories therefore pass with 2,339 succeeded,
 0 failed, and 6 unrelated deferred Story 12 skips; the non-executable
 `Hexalith.Parties.EventStoreGateway.TestHost` remains explicitly inventoried as
 test support rather than being falsely executed as a test assembly.
+
+### Story 8.6 Rebuild Concurrency Closure — 2026-08-16
+
+Current EventStore v3.95 maps optimistic staging conflicts to bounded failed
+dispatch outcomes and rebuilds plans from fresh handler state on subsequent
+lifecycle requests. Parties therefore replaced unconditional rebuild writes
+with snapshot ETag matching for existing rows and create-only protection for
+absent rows. A concurrent live projection write is preserved rather than being
+silently overwritten.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Projection source build | Pass | `dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -nr:false -m:1 --verbosity minimal`: 0 warnings, 0 errors. |
+| Rebuild concurrency focus | Pass | Direct xUnit v3 `PartySdkProjectionHandlerTests`: 66 passed, 0 failed, 0 skipped. Existing detail, processing, and index rows require their captured ETags; absent rows use `CreateOnly`. |
+| Full projection suite | Pass | Direct xUnit v3 execution: 222 passed, 0 failed, 0 skipped. |
+| Package-mode projection build | Pass | Package-mode restore plus Release build with `UseHexalithProjectReferences=false` and `HexalithEventStoreFromSource=false`: 0 warnings, 0 errors. |
+| Release solution build | Pass | `dotnet build Hexalith.Parties.slnx -c Release -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -nr:false -m:1 --verbosity minimal`: 0 warnings, 0 errors. |
+| Query/DI/architecture/prerequisite focus | Partial | Source-mode build passed with 0 warnings/errors; direct execution passed 89/90. The sole failure is the pre-existing, deferred Story 8.7/G5 `PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible` matrix pin drift, not a Story 8.6 regression. |
+
+### Story 8.6 Final Correctness Patch — 2026-08-16
+
+The final review patch closes eight fail-open or stale-data paths without changing
+the approved SDK migration intent or the human-deferred host E2E/legacy Playwright
+scope.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Projection handler focus | Pass | `PartySdkProjectionHandlerTests`: 75 passed, 0 failed. Covers both one-slot-missing directions, failed-to-success Art.30 reconciliation, canonical updated/erased rebuild completion, bounded eraser notify failures, cancellation, and identical/conflicting duplicates. |
+| Query and Memories focus | Pass | `PartySdkQueryHandlerTests`, `PartyMemoryCleanupServiceTests`, and `PartyMemoryUnitMappingStoreTests`: 66 passed, 0 failed. Covers observed absence for detail/index/processing, per-key generation races, fail-closed mapping reads, cancellation, and sanitized failure reporting. |
+| Erasure verification focus | Pass | `ErasureVerificationServiceTests`: 17 passed, 0 failed. Caller cancellation propagates; non-caller cancellation and unexpected exceptions are sanitized failed results; failure logs contain no supplied identifiers or PII. |
+| Full projection suite | Pass | 231 passed, 0 failed, 0 skipped. |
+| Full security suite | Pass | 171 passed, 0 failed, 0 skipped. |
+| Broad Parties suite | Pass with known exclusion | 516 passed, 0 failed with only `PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible` excluded. A prior unfiltered run reproduced that pre-existing Story 8.7/G5 pin-drift failure; no Story 8.6 test remains red. |
+| Integration cleanup composition | Pass | `ProjectionPlatformAdapterTests`: 7 passed, 0 failed after its mapping inventory was made explicitly authoritative-empty instead of relying on a state-read failure degrading to empty. |
+| Source and package builds | Pass | All three affected test projects build with 0 warnings/errors; package-mode Release projection build with `HexalithEventStoreFromSource=false` also completes with 0 warnings/errors. |
+| Release solution build | Pass | `dotnet build Hexalith.Parties.slnx -c Release --no-restore`: 0 warnings, 0 errors. |
+| Static policy | Pass | `git diff --check` and `bash scripts/check-no-warning-override.sh` pass. |

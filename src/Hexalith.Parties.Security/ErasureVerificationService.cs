@@ -19,7 +19,7 @@ public sealed partial class ErasureVerificationService(
         ErasureCertificate erasureCertificate,
         CancellationToken cancellationToken = default)
     {
-        LogVerificationStarted(tenantId, partyId);
+        LogVerificationStarted();
 
         List<ErasureVerificationStoreResult> storeResults = [];
 
@@ -37,15 +37,16 @@ public sealed partial class ErasureVerificationService(
             }
             catch (Exception ex)
             {
-                // D15 pattern: corrupted actor state + destroyed key = no data recoverable.
-                // Treat as "Cleaned" since the encryption key is already destroyed.
-                LogCorruptedStoreTreatedAsClean(tenantId, partyId, i, ex.GetType().Name);
+                // SDK read models, caches, and search data are not protected by the destroyed
+                // aggregate key. An unexpected fault (including a timeout/non-caller
+                // cancellation) therefore cannot certify this store as cleaned.
+                LogStoreCleanupFailed(i, ex.GetType().Name);
                 result = new ErasureVerificationStoreResult
                 {
                     StoreName = $"store-{i}",
-                    Status = ErasureStoreCleanupStatus.Cleaned,
+                    Status = ErasureStoreCleanupStatus.Failed,
                     Timestamp = DateTimeOffset.UtcNow,
-                    ErrorMessage = "D15: Store treated as clean after key destruction.",
+                    ErrorMessage = "Store cleanup did not complete.",
                 };
             }
 
@@ -63,7 +64,7 @@ public sealed partial class ErasureVerificationService(
             OverallStatus = overallStatus,
         };
 
-        LogVerificationCompleted(tenantId, partyId, overallStatus.ToString(), storeResults.Count);
+        LogVerificationCompleted(overallStatus.ToString(), storeResults.Count);
         return report;
     }
 
@@ -125,14 +126,14 @@ public sealed partial class ErasureVerificationService(
             };
     }
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "D15: Store {StoreIndex} threw during cleanup for party {TenantId}/{PartyId}, treating as clean (corrupted state + destroyed key). ExceptionType={ExceptionType}")]
-    private partial void LogCorruptedStoreTreatedAsClean(string tenantId, string partyId, int storeIndex, string exceptionType);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Erasure store {StoreIndex} cleanup failed with {ExceptionType}.")]
+    private partial void LogStoreCleanupFailed(int storeIndex, string exceptionType);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Erasure verification started for party {TenantId}/{PartyId}")]
-    private partial void LogVerificationStarted(string tenantId, string partyId);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Erasure verification started.")]
+    private partial void LogVerificationStarted();
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Erasure verification completed for party {TenantId}/{PartyId}: {OverallStatus} ({StoreCount} stores checked)")]
-    private partial void LogVerificationCompleted(string tenantId, string partyId, string overallStatus, int storeCount);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Erasure verification completed: {OverallStatus} ({StoreCount} stores checked).")]
+    private partial void LogVerificationCompleted(string overallStatus, int storeCount);
 }
 
 /// <summary>

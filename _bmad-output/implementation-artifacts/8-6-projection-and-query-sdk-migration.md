@@ -3,7 +3,7 @@ story_key: 8-6-projection-and-query-sdk-migration
 story_id: "8.6"
 epic: "8"
 created: 2026-07-08T18:23:46+02:00
-status: in-progress
+status: done
 source_status: backlog
 target_status: review
 baseline_commit: 2c4a7af
@@ -13,7 +13,7 @@ eventstore_pin_at_creation: 0f428d0c914f2151aab15bb262f956a9630041dc
 
 # Story 8.6: Projection and query SDK migration
 
-Status: in-progress
+Status: review
 
 <!-- Group 1+2+3+4 re-review patches applied 2026-08-03; Group 5 re-review 2026-08-03; prior open Group 2 logging/LastWrite items and Group 6 remain. -->
 
@@ -255,7 +255,7 @@ _Several deleted actor-side test files never actually ran a dual-path actor-vs-S
 - [x] [Review][Patch] All diagnostic logging for dropped/unresolved/corrupt/ambiguous events was deleted, not migrated [src/Hexalith.Parties.Projections/Handlers/PartySdkProjectionFold.cs] — Fixed 2026-08-05: `DeserializeNew` now accepts an optional `ILogger?` and reports non-JSON, unknown-type, ambiguous-short-name, corrupt-live-deserialization, redacted-tail-deserialization, and whole-payload-redacted drops through six distinct message templates (no aggregate/party/tenant identifiers — only event type name and sequence number). `PartyProcessingActivityFold.Fold` is the sole carrier of the logger for the whole Detail-slot handler (covers `ProjectAsync`, `PrepareRebuildAsync`, and the unresolved-only audit write in one place, exactly once per delivery); `PartyIndexSdkProjectionHandler` passes its logger only from the actual persisting `FoldCore`/`AccumulateAsync` calls, not from the idempotent-no-op pre-check or reconciliation walk, to avoid duplicate log lines for the same drop. `[LoggerMessage]` source generation was not usable here (this project has no direct `Microsoft.Extensions.Logging.Abstractions` package reference, only a transitive one through the EventStore SDK ProjectReferences, and the generator does not activate across a P2P boundary without one — same class of gap as the pruning-driven CS8795 already documented in `Hexalith.Parties.csproj`); used plain `ILogger` extension-method calls instead, matching the pattern already used elsewhere in this codebase (e.g. `PartyMemoryIndexingService.cs`, `PartyKeyRetryActor.cs`). Added `RecordingLogger<T>` to `Hexalith.Parties.Projections.Tests` and 7 new tests asserting exact level/message/exception-presence for every drop path. `Hexalith.Parties.Projections.Tests` passes 216/216; `Hexalith.Parties.Tests` passes 503/504 (the one failure is the pre-existing, out-of-scope Story 8.7/G5 `PayloadProtectionEventStoreSha` matrix-drift test — see Group 6 finding above, unrelated to this patch).
 - [x] [Review][Patch] A genuinely corrupt live event is now indistinguishable from an expected post-erasure redacted-tail read in the fold's checkpoint-advancement logging [src/Hexalith.Parties.Projections/Handlers/PartySdkProjectionFold.cs:48-58] — Fixed 2026-08-05, together with the logging item above: the corrupt-non-redacted path logs `PayloadDeserializationFailed` at Warning; the expected post-erasure redacted-tail path logs `RedactedEventDropped` at Information — distinct templates and levels so operators no longer have to guess which case produced a given drop. Both still skip-and-advance identically (unchanged, correct behavior); only the log signal was missing. Covered by `DeserializeNew_CorruptLiveEvent_LogsPayloadDeserializationFailedWarningDistinctFromRedacted` and `DeserializeNew_RedactedTailDecodeFailure_LogsRedactedEventDroppedInformationDistinctFromCorrupt`.
 - [x] [Review][Decision] Full rebuild may resurrect a hard-deleted (erased) party's Detail row as a redacted tombstone [src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs:93,117-124] — Resolved 2026-08-02: Administrator chose "persisted tombstone" as canonical (matches the architecture doc's "PII-free tombstone semantics" invariant and what a full rebuild already produced). `PartySdkReadModelEraser.EraseAsync` no longer hard-deletes the Detail row; it now redacts it in place via `PartyDetailProjectionHandler.ApplyErasure`, so the eraser and the rebuild path agree.
-- [ ] [Review][Patch] `PrepareRebuildAsync`/`FinalizeAsync` write with `ReadModelBatchConcurrency.LastWrite` (no ETag check) [src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs:99,103; PartyIndexSdkProjectionHandler.cs:102] — Still not fixed. Investigated 2026-08-05: a unilateral switch to `Match(etag)` would only be safe if the caller (the EventStore SDK's rebuild-plan executor) has a defined retry/abort contract for a rebuild-plan write conflict — that contract lives outside this repository, in `Hexalith.EventStore.DomainService`'s rebuild orchestration, not in the `IAsyncDomainProjectionRebuildHandler`/`IAsyncDomainSharedProjectionRebuildCompletionHandler` surface this story consumes. Changing the concurrency mode without knowing whether the SDK retries the whole rebuild, discards the plan, or surfaces an unhandled exception on conflict risks trading a silent-overwrite bug for a silent-total-rebuild-failure bug. Left open pending explicit SDK-level input, per the story's own prior note; not addressed in this session.
+- [x] [Review][Patch] `PrepareRebuildAsync`/`FinalizeAsync` write with `ReadModelBatchConcurrency.LastWrite` (no ETag check) [src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs:99,103; PartyIndexSdkProjectionHandler.cs:102] — Fixed 2026-08-16: current EventStore v3.95 defines the missing conflict contract. `DomainProjectionDispatcher.ExecuteStagedRebuildAsync` maps a staged `Conflict` to a bounded failed dispatch, and `DomainSharedProjectionRebuildDispatcher.FromStaging` maps it to `DeliveryIdentityConflict`; each lifecycle request rebuilds the plan from fresh handler state. Detail/processing rebuild preparation now reads both slot ETags and emits `Match(etag)` or `CreateOnly`; shared-index finalization does the same for the tenant index. A live write after the snapshot therefore causes a controlled conflict instead of being overwritten. Added existing-row and absent-row plan tests for all three slots; the focused handler class passes 66/66 and the full projection suite passes 222/222.
 - [x] [Review][Dismiss] ~~`PartySdkReadModelOptions` has no validation on bind~~ — False positive: verified against `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs` (Group 4, not visible to the reviewing subagent that raised this), which already registers `.Validate(options => options.FreshnessAgingSeconds >= 0 && options.FreshnessStaleSeconds >= options.FreshnessAgingSeconds, ...).ValidateOnStart()`. A misconfigured value already fails at startup, not at first query.
 - [ ] [Review][Defer] `PartyProcessingSdkReadModel.Records` grows unbounded, one ever-growing JSON blob per party [src/Hexalith.Parties.Projections/Handlers/PartyProcessingActivityFold.cs] — every projection write re-serializes a long-lived party's entire processing history. Real scalability concern but a bigger design change (pagination/archival) than a quick patch — deferred.
 - [ ] [Review][Defer] Minor/cosmetic: sequential (not parallel) `GetAsync` calls in `PartyDetailSdkProjectionHandler.ProjectAsync` (doubles state-store round-trip latency on the busiest projection path); `StoreName` null-check duplicated across classes instead of centralized; `PartyErased`'s `LastModifiedAt = erased.ErasedAt` is immediately overwritten by `NormalizeEventTimestamps` (harmless today since both timestamps are equal in current tests, but would silently diverge if they ever differ); `PartyIndexSdkProjectionHandler.Validate(ProjectionRequest,...)` reuses `PartySdkReadModelAddresses.Detail(...)` purely for its validation side effect, coupling Index validation to Detail's address-shape rules.
@@ -316,6 +316,17 @@ _Layers: Blind Hunter, Edge Case Hunter, Verification Gap, Acceptance Auditor. A
 - [x] [Review][Patch] Honor cancellation on the `projection-cache` eviction cleanup delegate before reporting `Cleaned` [src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs:213] — Fixed 2026-08-09: `cancellationToken.ThrowIfCancellationRequested()` before Evict*.
 - [x] [Review][Defer] `tests/e2e/specs/story-7-4-projection-platform-compatibility.spec.ts` still expects deleted projection-adapter registrations and old test method names — deferred, pre-existing e2e drift outside this DI chunk
 - [x] [Review][Defer] Erasure cleanup timestamps still use `DateTimeOffset.UtcNow` instead of the newly registered `TimeProvider` — deferred, pre-existing certificate timestamp pattern
+
+**Final projection/query correctness review (2026-08-16) findings:**
+
+- [x] [Review][Patch] Fail retryably with `projection-rebuild-required` when exactly one coordinated detail/processing slot is missing; never reconstruct prior detail or Art.30 history from a live tail delivery.
+- [x] [Review][Patch] Reconcile an unresolved sequence's existing failed processing record when an upgraded consumer later resolves it, replacing the outcome and derived fields without duplicating the sequence.
+- [x] [Review][Patch] Treat shared-index rebuild manifests as work inventories only: re-read canonical entries at completion, publish their latest values, and skip entries erased after commit.
+- [x] [Review][Patch] Bound non-cancellation search-indexer exceptions after the canonical SDK erasure batch commits while preserving cancellation.
+- [x] [Review][Patch] Propagate mapping-store read failures and map them to a sanitized failed Memories cleanup result; never certify an unverified empty inventory as cleaned.
+- [x] [Review][Patch] Invalidate each last-known cache key generation when a successful canonical detail, processing, or index read observes absence, preventing later outages from serving stale values.
+- [x] [Review][Patch] Report unexpected erasure cleanup exceptions and non-caller cancellations as sanitized failed store results; propagate caller cancellation and remove identifiers from verification logs.
+- [x] [Review][Patch] Reject divergent duplicate sequence identities/payloads in one projection delivery with bounded retry while retaining idempotent identical duplicates.
 
 ### Story Classification and Gate
 
@@ -506,6 +517,9 @@ GPT-5 Codex
 - 2026-08-05 - `dotnet build src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -nr:false -m:1` passed 0 warnings/0 errors. `dotnet build src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj` (same flags) passed 0 warnings/0 errors. `dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj` (same flags) passed 0 warnings/0 errors; direct execution passed 220/220 (up from 216/216 before this pass's 4 new tests).
 - 2026-08-05 - `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj` (same flags) passed 0 warnings/0 errors; direct execution reported 503/504 — same sole pre-existing, out-of-scope failure as before (`PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible`), confirming the `RecordingLogger<T>` relocation introduced no regression. `Hexalith.Parties.Contracts.Tests`, `Hexalith.Parties.Security.Tests`, `Hexalith.Parties.Server.Tests`, and `Hexalith.Parties.Client.Tests` (the other consumers of `Hexalith.Parties.Testing`) all built 0 warnings/0 errors after the shared-package-reference change.
 - 2026-08-05 - `git diff --check` and `bash scripts/check-no-warning-override.sh` both passed.
+- 2026-08-16 - Applied the final eight-item correctness review patch. Focused direct execution passed `PartySdkProjectionHandlerTests` 75/75, query/cleanup/mapping classes 66/66, and `ErasureVerificationServiceTests` 17/17. Full projection and security assemblies passed 231/231 and 171/171.
+- 2026-08-16 - The first unfiltered Parties run reported 515/517: the known Story 8.7/G5 prerequisite-matrix pin drift plus one Story 8.6 integration-harness assumption that treated an unavailable mapping store as an empty inventory. The harness now supplies an explicit authoritative-empty mapping store; its focused class passes 7/7, and the final Parties run excluding only the known G5 test passes 516/516.
+- 2026-08-16 - `dotnet build Hexalith.Parties.slnx -c Release --no-restore` and the package-mode Release projection build completed with 0 warnings/0 errors. `git diff --check` and `bash scripts/check-no-warning-override.sh` passed.
 
 ### Completion Notes List
 
@@ -522,6 +536,8 @@ GPT-5 Codex
 - 2026-08-05 - Closed three of the four remaining Group 2 review findings: operator-facing diagnostic logging for dropped/unresolved/corrupt/ambiguous/redacted projection events is restored (via plain `ILogger` extension calls, not `[LoggerMessage]` — see Debug Log for why), the corrupt-live-vs-redacted-tail log signal is now distinct, and the two genuinely-missing fold/rebuild-parity test gaps are closed (two of the four originally-listed gaps were already covered by prior-session tests and only needed the finding text reconciled). The `PrepareRebuildAsync`/`FinalizeAsync` `LastWrite`-concurrency finding remains open pending explicit EventStore SDK-level input on the rebuild-plan conflict contract — this is the one remaining known risk from this story's own open findings list. Story status remains `in-progress` for that reason; not advanced to `review`/`done` in this session.
 - 2026-08-05 - Human directed: defer the remaining 7 open `[Review]` tasks (the `LastWrite`-concurrency Patch plus 6 pre-existing Defer items) rather than force them through this build session, and proceed to code review. Logged as `## Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)` in `deferred-work.md`, which also closes out the still-open 2026-08-04 ledger action item to record the `FinalizeAsync` concurrency defect there.
 - 2026-08-05 - A follow-up adversarial code review of the diagnostic-logging patch itself (the one that closed the earlier Group 2 logging findings) found 8 patch-worthy issues in that patch's own diff — none PRD-functional, all mechanical correctness/observability/GDPR-hygiene defects in the newly-added logging code and its tests. All 8 fixed: the shared Party index projection's unresolved/ambiguous/non-JSON diagnostics were dead code (the failure branch returned before the logged walk ever ran) and now fire correctly at every `FoldCore` call site without duplicating; a resolved-but-null-payload event now logs distinctly instead of silently; optimistic-concurrency retries no longer repeat the same diagnostic per attempt; the raw `Exception` object is no longer passed to `ILogger` after direct testing confirmed a syntax-level `JsonException` can embed a fragment of raw payload bytes in `.Message`; the `AmbiguousEventTypeDropped` branch now has coverage via a reflection-seeded resolver cache (confirmed empirically unreachable through the real 44-type Contracts assembly, so no production type was added); the silent-`Fold` invariant and a misleading no-op-branch comment are now documented in place; and `RecordingLogger<T>` moved from two duplicated per-project copies into the shared `Hexalith.Parties.Testing` project. `Hexalith.Parties.Projections.Tests` passes 220/220; `Hexalith.Parties.Tests` and the other three `Hexalith.Parties.Testing` consumers show no regression.
+- 2026-08-16 - Closed the final patch-level rebuild/live-write race after EventStore v3.95 made the conflict contract explicit. Detail, processing, and shared-index rebuild plans now use snapshot ETags (`Match`) or first-writer protection (`CreateOnly`) instead of unconditional `LastWrite`, so concurrent live projection writes are preserved and the staged rebuild reports a bounded conflict. Projection handlers pass 66/66; the full projection suite passes 222/222; source-mode, package-mode, and full Release solution builds complete with zero warnings/errors. The focused Parties query/DI/architecture/prerequisite run passes 89/90; the sole failure is the already-deferred Story 8.7/G5 matrix pin drift and is not caused by this patch.
+- 2026-08-16 - Applied the final eight-item correctness patch set across coordinated projection slots, Art.30 recovery, rebuild search reconciliation, best-effort erasure notifications, Memories mapping cleanup, last-known absence invalidation, erasure verification, and duplicate-delivery validation. Focused projection/query-search/security runs pass 75/75, 66/66, and 17/17; full projection and security suites pass 231/231 and 171/171; the Parties suite passes 516/516 when the single pre-existing Story 8.7/G5 matrix-pin test is excluded. Source/package builds, the Release solution build, and static policy checks complete with zero warnings/errors.
 
 ### File List
 
@@ -544,6 +560,7 @@ and only accumulated content since.
 - `_bmad-output/implementation-artifacts/8-6-ac1-llm-instructions.md`
 - `tests/Hexalith.Parties.Projections.Tests/Models/PartySdkReadModelAddressesTests.cs`
 - `src/Hexalith.Parties.Testing/RecordingLogger.cs`
+- `tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitMappingStoreTests.cs`
 
 **Modified**
 - `_bmad-output/implementation-artifacts/deferred-work.md`
@@ -575,6 +592,7 @@ and only accumulated content since.
 - `src/Hexalith.Parties/Queries/PartyDetailProjectionQueryActor.cs`
 - `src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs`
 - `src/Hexalith.Parties/Queries/PartySdkQueryService.cs`
+- `src/Hexalith.Parties.Security/ErasureVerificationService.cs`
 - `tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj`
 - `tests/Hexalith.Parties.IntegrationTests/Security/EncryptionPipelineIntegrationTests.cs`
 - `tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs`
@@ -593,6 +611,7 @@ and only accumulated content since.
 - `tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs`
 - `tests/Hexalith.Parties.Tests/HealthChecks/HealthEndpointIntegrationTests.cs`
 - `tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs`
+- `tests/Hexalith.Parties.Security.Tests/ErasureVerificationServiceTests.cs`
 - `tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs`
 - `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs`
 
@@ -645,42 +664,54 @@ and only accumulated content since.
 | 2026-08-05 | 0.13 | Fixed all 8 patch-worthy issues from a code review of the diagnostic-logging patch itself: dead-code Index unresolved/ambiguous/non-JSON diagnostics, a silently-dropped resolved-but-null-payload case, duplicate logging under optimistic-concurrency retry, a raw-exception PII/GDPR leak risk (confirmed empirically), missing `AmbiguousEventTypeDropped` test coverage (via a reflection-seeded resolver cache), an undocumented silent-`Fold` invariant, a misleading comment, and a duplicated `RecordingLogger<T>` (moved to shared `Hexalith.Parties.Testing`). `Hexalith.Parties.Projections`/`Hexalith.Parties.Testing` build 0 warnings/0 errors; `Hexalith.Parties.Projections.Tests` passes 220/220; `Hexalith.Parties.Tests` and other `Hexalith.Parties.Testing` consumers show no regression. | Claude Sonnet 5 (dev-story) |
 | 2026-08-09 | 0.14 | bmad-build review pass: patched missing `TimeProvider` DI, asymmetric detail/processing checkpoint gap false-positives, empty-event `Max` throw, null rebuild-manifest lists, boot-time CaseId capture on erasure cleanup, missing-CaseId search stall, and global LKG generation aborting unrelated reads. Deferred Incomplete-erasure resume, memories-disabled erasure proof, actor-era failure vocabulary, Actors-folder packaging, deploy backfill, mapping-store collision, and party-id allowlist rigor to `deferred-work.md`. Focused query/DI/indexer tests 61/61; projection handler tests 64/64. | Cursor Grok 4.5 (bmad-build) |
 | 2026-08-09 | 0.15 | bmad-code-review DI+query-host sub-chunk: applied 8 patches (LKG TimeProvider ctor, erasure type-only logging, memories Failed bound, cache CT, boot-freeze docs, stale actor-host comments, DI/fitness tests). Deferred e2e story-7-4 drift and UtcNow timestamps. Remaining Suggested Review Order chunks still pending review; status `in-progress`. | Cursor Grok 4.5 (bmad-code-review) |
+| 2026-08-16 | 0.16 | Replaced unconditional detail, processing, and shared-index rebuild writes with ETag-matched/create-only plans now that EventStore v3.95 defines bounded staged-conflict behavior; added focused concurrency-policy tests and refreshed verification evidence. | GPT-5 Codex (bmad-build) |
+| 2026-08-16 | 0.17 | Applied eight final correctness patches for coordinated-slot loss, Art.30 recovery, canonical rebuild reconciliation, bounded erasure/search failures, fail-closed Memories inventory reads, cache absence invalidation, safe erasure verification, and duplicate-sequence conflicts; added focused tests and refreshed evidence. | GPT-5 Codex (bmad-build) |
 
 ## Suggested Review Order
 
-**DI and query host**
+**Coordinated projection integrity**
 
-- Register `TimeProvider.System` so `PartySdkQueryService` resolves without host defaults.
-  [`PartiesServiceCollectionExtensions.cs:47`](../../src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs#L47)
+- Start here: missing coordinated slots now require full replay instead of partial reconstruction.
+  [`PartyDetailSdkProjectionHandler.cs:44`](../../src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs#L44)
 
-- Read live `CaseId` on GDPR memories-search erasure cleanup.
-  [`PartiesServiceCollectionExtensions.cs:255`](../../src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs#L255)
+- Divergent duplicate sequences fail bounded while identical redelivery remains idempotent.
+  [`PartySdkProjectionFold.cs:176`](../../src/Hexalith.Parties.Projections/Handlers/PartySdkProjectionFold.cs#L176)
 
-**Projection folds**
+- Previously failed Art.30 rows reconcile when upgraded consumers resolve their events.
+  [`PartyProcessingActivityFold.cs:55`](../../src/Hexalith.Parties.Projections/Handlers/PartyProcessingActivityFold.cs#L55)
 
-- Use the present slot watermark when the other detail/processing slot is missing.
-  [`PartyDetailSdkProjectionHandler.cs:66`](../../src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs#L66)
+- Rebuild plans preserve concurrent live writes through ETag matching or create-only writes.
+  [`PartyDetailSdkProjectionHandler.cs:130`](../../src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs#L130)
 
-- Guard empty deliveries before `Events.Max` on the shared index fold.
-  [`PartyIndexSdkProjectionHandler.cs:402`](../../src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs#L402)
+**Shared-index convergence**
 
-- Null-safe rebuild search manifest lists.
-  [`PartyIndexSdkProjectionHandler.cs:279`](../../src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs#L279)
+- Rebuild completion publishes only current canonical entries and skips later erasures.
+  [`PartyIndexSdkProjectionHandler.cs:250`](../../src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs#L250)
 
-**Last-known cache and Memories**
+- Post-commit search failures remain best-effort without weakening canonical erasure.
+  [`PartySdkReadModelEraser.cs:198`](../../src/Hexalith.Parties.Projections/Services/PartySdkReadModelEraser.cs#L198)
 
-- Scope LKG invalidation generations per cache key.
-  [`PartySdkLastKnownReadModelCache.cs:54`](../../src/Hexalith.Parties/Queries/PartySdkLastKnownReadModelCache.cs#L54)
+**Fail-closed privacy reads and erasure**
 
-- Pass key-scoped generations from query reads.
-  [`PartySdkQueryService.cs:418`](../../src/Hexalith.Parties/Queries/PartySdkQueryService.cs#L418)
+- Observed canonical absence invalidates stale detail, index, and processing cache generations.
+  [`PartySdkQueryService.cs:379`](../../src/Hexalith.Parties/Queries/PartySdkQueryService.cs#L379)
 
-- Treat missing Memories CaseId as converged skip, not permanent retry.
-  [`PartyMemoryIndexEntrySearchIndexer.cs:45`](../../src/Hexalith.Parties/Search/PartyMemoryIndexEntrySearchIndexer.cs#L45)
+- Mapping inventory outages propagate instead of falsely certifying Memories cleanup.
+  [`PartyMemoryUnitMappingStore.cs:172`](../../src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs#L172)
 
-**Tests**
+- Cleanup exceptions and non-caller timeouts produce sanitized failed verification results.
+  [`ErasureVerificationService.cs:24`](../../src/Hexalith.Parties.Security/ErasureVerificationService.cs#L24)
 
-- Assert `TimeProvider` registration and unrelated-key LKG isolation.
-  [`ProjectionPlatformAdapterTests.cs:29`](../../tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs#L29)
-  [`PartySdkQueryHandlerTests.cs:829`](../../tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs#L829)
-  [`PartyMemoryIndexEntrySearchIndexerTests.cs:38`](../../tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexEntrySearchIndexerTests.cs#L38)
+**Regression evidence**
+
+- Projection tests cover slot loss, duplicate conflicts, recovery, and canonical rebuild reconciliation.
+  [`PartySdkProjectionHandlerTests.cs:707`](../../tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs#L707)
+
+- Query tests prove observed-absence invalidation across every last-known cache slot.
+  [`PartySdkQueryHandlerTests.cs:1061`](../../tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs#L1061)
+
+- Security tests distinguish caller cancellation from sanitized cleanup failure.
+  [`ErasureVerificationServiceTests.cs:300`](../../tests/Hexalith.Parties.Security.Tests/ErasureVerificationServiceTests.cs#L300)
+
+- Mapping-store tests prove failure propagation and identifier-free diagnostics.
+  [`PartyMemoryUnitMappingStoreTests.cs:17`](../../tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitMappingStoreTests.cs#L17)
