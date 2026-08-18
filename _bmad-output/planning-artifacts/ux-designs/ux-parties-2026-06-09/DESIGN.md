@@ -3,7 +3,7 @@ name: Parties UI
 description: Enterprise party-management portal (Admin + Consumer self-service) on FrontComposer + FluentUI Blazor V5.
 status: final
 created: 2026-06-09
-updated: 2026-06-09
+updated: 2026-08-18
 colors:
   # Brand DELTA only. Everything unlisted inherits FluentUI V5 (Fluent 2) +
   # the FrontComposer shell. Do NOT redeclare Fluent 2 custom properties in CSS —
@@ -53,7 +53,8 @@ components:
     stale: 'var(--colorStatusWarningForeground1)'
     degraded: 'var(--colorStatusInfoForeground1)'
   gdpr-destructive-button:
-    background: 'var(--colorStatusDangerForeground1)'
+    background: 'var(--colorStatusDangerBackground3)'        # matched AA pair — never a *Foreground* token as a fill
+    foreground: 'var(--colorStatusDangerForegroundInverted)' # paired text color, stated explicitly
     radius: '{rounded.md}'
 ---
 
@@ -110,10 +111,16 @@ token, it doesn't override it** — Fluent 2's defaults are the contract.
     accepted-but-projecting, degraded read on last-known cache).
 - **Focus** inherits the Fluent 2 `--colorStrokeFocus2` 2px ring on every
   interactive element. Never removed.
+- **Dark mode is gated, not assumed:** the brand ramp derives from the custom
+  accent seed via `baseLayerLuminance`, and a derived ramp is not automatically
+  AA. Acceptance check: the dark-theme brand fill and the four status token
+  *pairs* verify **≥4.5:1 in dark mode**; if the derived fill misses, pin the
+  dark brand fill explicitly in this file.
 
 Avoid: a separate consumer brand color, gradients, more than the one teal accent,
 hand-picked hex for party/GDPR states (always map to the Fluent 2 status token so
-light/dark and forced-colors stay correct).
+light/dark and forced-colors stay correct), and the raw accent on **any text —
+links included** (link color binds to `{colors.brand-fill}`).
 
 ## Typography
 
@@ -166,7 +173,11 @@ customize them; the shell/library defaults are the contract:
 `FluentLayout` · `FluentLayoutItem` · `FluentProviders` · `FluentNav` ·
 `FluentNavItem` · `FluentNavCategory` · `FluentDataGrid` · `TemplateColumn` ·
 `FluentTextInput` · `FluentSelect` · `FluentButton` · `FluentBadge` ·
-`FluentMenu` · `FluentMenuButton` · `FluentStack` · `FluentText` · `FluentSpacer`.
+`FluentMenu` · `FluentMenuButton` · `FluentStack` · `FluentText` · `FluentSpacer` ·
+`FluentSwitch` · `FluentDialog` · `FluentMessageBar` · `FluentSkeleton`.
+The consent control renders as `FluentSwitch`; all confirmation dialogs are
+`FluentDialog`; command-result status regions render on `FluentMessageBar`; the
+cold-load state uses `FluentSkeleton`.
 
 Brand-layer / domain components (the only specified deltas) — rendered in
 [`mockups/admin-parties.html`](mockups/admin-parties.html) and
@@ -182,23 +193,32 @@ Brand-layer / domain components (the only specified deltas) — rendered in
   `--colorStatus*Foreground1` **on** `--colorStatus*Background1` token *pairs*
   (AA-designed together); do not hand-mix a status foreground onto an arbitrary
   tint (warning-on-pale-tint lands ~4.44:1, marginal).
-- **Data-freshness indicator** — a small status dot + label expressing the read
-  model's `ProjectionFreshnessMetadata`: `fresh`
+- **Freshness indicator** — a small status dot + label expressing the read
+  model's `ProjectionFreshnessMetadata`. **Three states, not two:** `fresh`
   (`{components.freshness-indicator.fresh}`), `stale`
-  (`{components.freshness-indicator.stale}`, "as of HH:MM"), `degraded`
-  (`{components.freshness-indicator.degraded}`, "showing last known"). Visual
-  only; behavior lives in `EXPERIENCE.md.State Patterns`.
+  (`{components.freshness-indicator.stale}`, always with "as of HH:MM"),
+  `degraded` (`{components.freshness-indicator.degraded}`, "showing last known"
+  — Info, **never Warning**). Visual only; behavior lives in
+  `EXPERIENCE.md.State Patterns`.
 - **GDPR destructive button** — erasure and other irreversible actions use
-  `FluentButton` filled with `{components.gdpr-destructive-button.background}`
-  (`--colorStatusDangerForeground1`), `{rounded.md}`, and always pair with a
-  confirmation step (behavior in EXPERIENCE.md). Restrict/withdraw use
-  `ButtonAppearance.Outline`, not the danger fill.
-- **Party picker** (`<hexalith-party-picker>`) — combobox, used as-is behaviorally
-  but **must be re-skinned to Fluent 2 tokens**. It currently styles against legacy
-  FAST tokens (`--neutral-stroke-rest`, `--accent-fill-rest`) that don't resolve in
-  the V5 shell; map its `--hx-picker-*` vars onto `--colorNeutralStroke1`,
-  `--colorNeutralBackground1`, `--colorNeutralForeground1`, `{colors.accent}`,
-  `--colorStatusDangerForeground1`. (Tracked as design debt — see EXPERIENCE.md.)
+  `FluentButton` filled with the **matched danger pair**:
+  `{components.gdpr-destructive-button.background}` under
+  `{components.gdpr-destructive-button.foreground}` text
+  (`--colorStatusDangerBackground3` + `--colorStatusDangerForegroundInverted`,
+  AA-designed together — never a `*Foreground1` token as a fill), `{rounded.md}`,
+  and always paired with a confirmation step (behavior in EXPERIENCE.md). The
+  danger fill belongs on the **in-dialog Confirm**; the on-page erase *trigger*
+  is `ButtonAppearance.Outline` (the safer affordance). Restrict/withdraw use
+  `ButtonAppearance.Outline`, never the danger fill.
+- **Party picker** (`<hexalith-party-picker>`) — combobox, used as-is
+  behaviorally. **Re-skinned to Fluent 2 tokens (done, 2026-08):** its
+  `--hx-picker-*` vars map onto `--colorNeutralStroke1`,
+  `--colorNeutralBackground1/2`, `--colorNeutralForeground1/3`,
+  `--colorStatusDangerForeground1`; keep any accent mapping in the
+  `{colors.accent}` family (no foreign-brand fallback hex). Two standing visual
+  requirements: a **visible `--colorStrokeFocus2` focus ring styled inside the
+  shadow root** (never suppressed), and a clear affordance that is a **real
+  `<button aria-label="Clear selection">`**, not a decorated span.
 
 ## Do's and Don'ts
 
@@ -210,6 +230,8 @@ Brand-layer / domain components (the only specified deltas) — rendered in
 | Pair every state color with a text label | Communicate party state or erasure by color alone |
 | Keep Admin at comfortable density, Consumer roomy | Build two visual brands; both areas are one Fluent family |
 | Fill primary buttons with `{colors.brand-fill}` (`--colorBrandBackground`, AA-safe) | Put white text on the raw accent base `{colors.accent}` — it's 3.51:1, fails AA |
+| Bind **link text** to `{colors.brand-fill}` — links are text | Paint link text (incl. the sign-in SSO link) with the raw accent `{colors.accent}` |
 | Use the raw accent `{colors.accent}` for non-text accents only (nav stripe, tints) | Use accent decoratively, as a background, or more than one brand color |
-| Re-skin the party picker onto Fluent 2 tokens | Ship the picker against legacy FAST `--*-fill-rest` tokens |
+| Keep **every area** on Fluent 2 tokens (picker re-skin done 2026-08) | Style any surface against legacy FAST `--*-rest` tokens — they don't resolve in the V5 shell (a var with no fallback silently disappears) |
+| Give selected/active states a forced-colors-surviving indicator (real border/outline + `aria-current`/`aria-selected`) | Signal selection by background tint or inset box-shadow alone — forced-colors strips both |
 | Reserve the danger fill for irreversible GDPR actions | Use the danger color for ordinary buttons or emphasis |

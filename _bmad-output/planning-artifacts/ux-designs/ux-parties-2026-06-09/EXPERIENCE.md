@@ -3,7 +3,7 @@ name: Parties UI
 status: final
 sources:
   - {planning_artifacts}/../project-context.md
-updated: 2026-06-09
+updated: 2026-08-18
 ---
 
 # Parties UI — Experience Spine
@@ -33,19 +33,35 @@ backend (commands route through the EventStore gateway; reads come from replayed
 projections carrying `ProjectionFreshnessMetadata`). That single fact shapes more
 of this spine than anything visual — see **State Patterns**.
 
+Two platform facts bound this spine. **Authentication is delegated:** the sign-in
+surface is the tenant IdP's hosted page (Keycloak, via OIDC challenge), not a
+page this app renders; role routing on return is ours (`Admin`/`TenantOwner` →
+Admin, bound `Consumer` → Consumer, unbound Consumer → `/no-party-binding`), so
+the accessible-authentication floor (WCAG 3.3.8) binds the **IdP configuration**
+— see Accessibility Floor. **Launch gate:** consumer surfaces invite real data
+subjects to submit personal data; they go live only once the production-KMS
+prerequisite is met (README GDPR notice / deployment-security-checklist) —
+synthetic data only until then.
+
 ## Information Architecture
 
 | Surface | Area | Reached from | Purpose |
 |---|---|---|---|
-| **Sign in** | Shell | App entry (unauthenticated) | Authenticate; role routing to landing |
+| **Sign in** | Shell | App entry (unauthenticated) — the IdP's hosted page, role routing on return | Authenticate; role routing to landing |
+| **No party binding** | Shell | Role routing when a Consumer's `party_id` claim resolves to zero/multiple parties (`/no-party-binding`) | Fail-closed landing: reassuring copy + support path; no data access |
 | **Parties list** | Admin | Nav → Parties (`/admin/parties`) | Search/filter Person + Organization records |
 | **Party detail** | Admin | List row (`/admin/parties/{id}`) | View one record; entry to edit + GDPR |
 | **Create / Edit party** | Admin | List toolbar / detail action | Author a party (validated → command) |
 | **GDPR operations** | Admin | Detail → GDPR (`/admin/parties/{id}/gdpr`) | DPO: erase · restrict · consent · export · processing records · verify |
-| **My profile** | Consumer | Consumer landing | View own personal data |
-| **Edit my profile** | Consumer | My profile → Edit | Correct/update own data |
-| **My consent** | Consumer | Nav → Consent | Grant / withdraw consent, plain-language |
-| **My data & privacy** | Consumer | Nav → Privacy | Export my data · request erasure · see what's processed about me |
+| **My profile** | Consumer | Consumer landing (`/me`) | View own personal data |
+| **Edit my profile** | Consumer | My profile → Edit (`/me/edit`) | Correct/update own data |
+| **My consent** | Consumer | Nav → Consent (`/me/consent`) | Grant / withdraw consent, plain-language |
+| **My data & privacy** | Consumer | Nav → Privacy (`/me/privacy`) | Export my data · request erasure · see what's processed about me |
+| **Help & contact** | Both | Persistent affordance, same place on every page (shell footer/nav) | Consistent help (WCAG 3.2.6): route to support/DPO; every failure state's "support path" points here |
+
+Every consumer surface above must be **nav-reachable** (no URL-typing paths):
+Consent and Privacy are nav entries under the Consumer policy; Edit is an action
+on My profile.
 
 **Navigation model:** the shell's `<FluentNav>` auto-populates from registered
 domain manifests, gated by `<AuthorizeView Policy=…>` — Admin nav entries never
@@ -75,7 +91,9 @@ Consumer GDPR copy: **say what will happen in human words, then name the right.*
 | "You can cancel until deletion begins. Once it's done, it's permanent — we can't undo it." | State only the cancel window and hide that completed deletion is irreversible |
 | "Delete my data" / "Withdraw consent" / "Grant consent" (plain verbs) | "Erasure" / "Toggle data-processing authorization flag" |
 | Split "Things you control" (consent) from "Things we keep to run your account" (contract / legal) | One list with a toggle on every row, implying you can switch off a contract/legal basis |
-| For a legitimate-interest basis, offer **Object** (Art. 21), not a withdraw toggle | Show a withdraw toggle on a basis the user can't actually withdraw |
+| For a legitimate-interest basis, name the right: "You can object to this use — contact us and we'll review it." (Art. 21 is an *assessment*, not a toggle) | Show a withdraw toggle on a basis the user can't actually withdraw — or a rendered-but-disabled Object button, or copy implying objection instantly stops the processing |
+| "Processing of your data is currently restricted — you can still change your consent choices." | Hide that a restriction exists, or disable consent while restricted (Art. 18(3) keeps consent editable) |
+| "Consent changes are paused while your data is being deleted." (during erasure) | "We couldn't change this — please try again" on a rejection that can never succeed during erasure |
 | "Preparing your export — we'll have a download ready here. We'll show it when it's done." (machine-readable) | "Ready in a moment / under a minute" (over-promises an async job; no format stated) |
 | Admin: "Erase party — irreversible. Type the name to confirm." | Admin: a bare "Are you sure?" |
 | "Showing what we last knew — refreshing…" (stale read) | "Stale projection / cache miss" |
@@ -89,12 +107,12 @@ defaults, when inherited).
 | Component | Use | Behavioral rules |
 |---|---|---|
 | **Parties data grid** (`FluentDataGrid`) | Admin list | Server-driven search (debounced) + type/active filters via `FluentSelect`; row → detail; never block render on staleness (show freshness, render last-known). |
-| **Party picker** (`<hexalith-party-picker>`) | Admin link-a-party | Implements the full **WAI-ARIA combobox pattern**: input `role=combobox` + `aria-expanded` + `aria-controls`→listbox; listbox `role=listbox`, options `role=option` with `aria-selected`, active tracked by `aria-activedescendant` (not color alone). `aria-autocomplete=list`, 300ms debounce; selecting fires `party-selected` `{partyId, partyType, status}` (`composed:true`); honor its state machine (Idle/Loading/Ready/Empty/LocalOnly/Degraded/Unauthorized/Forbidden/TransientFailure/NotFound/Gone/Error). **Design debt:** re-skin to Fluent 2 tokens + add the ARIA wiring above (see DESIGN.md). |
+| **Party picker** (`<hexalith-party-picker>`) | Admin link-a-party | Implements the full **WAI-ARIA combobox pattern**: input `role=combobox` + `aria-expanded` + `aria-controls`→listbox; listbox `role=listbox`, options `role=option` with `aria-selected` **and per-option `id`s**, active tracked by `aria-activedescendant` (not color alone). `aria-autocomplete=list`, 300ms debounce; selecting fires `party-selected` `{partyId, partyType, status}` (`composed:true`); honor its state machine (Idle/Loading/Ready/Empty/LocalOnly/Degraded/Unauthorized/Forbidden/TransientFailure/NotFound/Gone/Error). Result-state transitions **announce via an internal `role=status` region** (result count / "no matches" / "limited results") — never a quiet visual note alone. Clear affordance is a real button; focus ring styled in the shadow root (see DESIGN.md). *(FAST→Fluent 2 re-skin + ARIA wiring: resolved 2026-08 — debt retired.)* |
 | **Party-state badge** | Both | Lifecycle (`active/inactive/restricted/erased`) — color **and** text label, never color alone. An `erased` party shows tombstone copy, not data. |
-| **Consent control** | Consumer | Real `role=switch` + `aria-checked` + visible label tied to its purpose/lawful-basis via `aria-describedby` — never a styled `<div>`. **Defaults Off; never pre-checked** (GDPR Art. 7). Optimistic: flip + announce "Saving…" via `aria-live=polite` — **do not move focus to a toast on save**; reconcile on projection confirm; on rejection revert + inline reason. Only **consent-based** items get a toggle; contract/legitimate-interest data is read-only (with an **Object** action where applicable). |
-| **GDPR action button** | Both | Irreversible actions (erase) use the danger fill + **typed confirmation** in a real labeled input; reversible (restrict, withdraw) use outline + single confirm. Never auto-fire on focus/blur. |
-| **Freshness indicator** | Both | Surfaces `ProjectionFreshnessMetadata`: fresh / stale ("as of HH:MM") / degraded ("showing last known"). Dot + word (never color alone). Pairs with an `aria-live=polite` announcement on transition. |
-| **Command result toast** | Both | Success/processing → `role=status aria-live=polite` "Saved — updating…". **Validation rejection / failure → `role=alert` (assertive)** with the reason — not polite. An *erasure* acknowledgement uses a neutral/info tone, **never success-green** (deleting data isn't a "success" celebration). Never a blocking `alert()`/`confirm()`. |
+| **Consent control** | Consumer | Real `role=switch` + `aria-checked` + visible label tied to its purpose/lawful-basis via `aria-describedby` — never a styled `<div>`. **Defaults Off; never pre-checked** (GDPR Art. 7). Optimistic: flip + announce "Saving…" via `aria-live=polite` — **do not steal focus on save**; reconcile on projection confirm; on rejection revert + inline reason. Only **consent-based** items get a toggle; contract/legitimate-interest data is read-only. Toggles **stay enabled while processing is restricted** (Art. 18(3)); **while erasure is in progress they render disabled** with "Consent changes are paused while your data is being deleted." **Object (Art. 21) is blocked-on-backend:** until an objection command exists, render the contact path (see Voice and Tone) — never a disabled button. |
+| **GDPR action button** | Both | The danger fill lives on the **in-dialog Confirm**; the on-page trigger is outline (safer affordance). **Admin erase** requires **typed confirmation** (the person's name) in a real labeled input — irreversible from acceptance. **Consumer "Delete my data" is a request, reversible until deletion begins**: a real `FluentDialog` (trap/restore) with explicit consequence copy and a single Confirm — **no typed transcription** (cognitive floor). Reversible actions (restrict, withdraw) use outline + single confirm. Never auto-fire on focus/blur. *(Visual spec: DESIGN.md "GDPR destructive button" — this behavioral family also covers the reversible outline actions.)* |
+| **Freshness indicator** | Both | Surfaces `ProjectionFreshnessMetadata` — **three states**: fresh / stale (**always "as of HH:MM"**, on real surfaces, not just specimens) / degraded ("showing last known", Info — never Warning). Dot + word (never color alone). The indicator is itself a `role=status` region; transitions announce via `aria-live=polite`. |
+| **Command result status region** | Both | Inline `role=status aria-live=polite` region — not a floating toast — "Saved — updating…". **Validation rejection / failure → `role=alert` (assertive)** with the reason — not polite. An *erasure* acknowledgement uses a neutral/info tone, **never success-green** (deleting data isn't a "success" celebration). Never a blocking `alert()`/`confirm()`. |
 
 ## State Patterns
 
@@ -105,12 +123,15 @@ the UI must make that legible without alarming anyone. States map to the real
 | State | Surface | Treatment |
 |---|---|---|
 | **Cold load** | All | `FluentDataGrid`/panel skeleton; no spinner-only screens. |
-| **Empty** (`NoData`) | List, search | "No parties match." + clear-filters action; never a dead end. |
+| **Empty** (`NoData`) | List, search, consumer My consent | "No parties match." + clear-filters action; never a dead end. Consumer with zero defined consent purposes: "Nothing here needs a decision right now." |
 | **Display-name-only** (`DisplayNameOnly`) | Detail | Partial projection: show the name, mark the rest "still loading," don't imply the record is empty. |
-| **Accepted-but-processing** | After any command | Optimistic echo + freshness `degraded`/`info` dot + toast "Saved — updating…". The view the user just acted on reflects their change immediately; the projection reconciles silently. **This is the core eventual-consistency UX.** |
-| **Stale read** (`Degraded`) | Any read | Banner/dot "Showing what we last knew — refreshing" using `freshness.stale`; **render the last-known cache, never throw, never blank the screen.** Auto-refresh; `aria-live` announces when fresh. |
+| **Accepted-but-processing** | After any command | Optimistic echo + freshness `degraded`/`info` dot + status region "Saved — updating…". The view the user just acted on reflects their change immediately; the projection reconciles silently. **This is the core eventual-consistency UX.** |
+| **Stale read** (`Degraded`) | Any read | Banner/dot "Showing what we last knew — refreshing" using `{components.freshness-indicator.stale}`; **render the last-known cache, never throw, never blank the screen.** Auto-refresh; `aria-live` announces when fresh. |
 | **Validation rejected** (`Validation`) | Create/Edit, consent | Inline field error from the `PartyCommandValidationRejected` event (not an exception); **announced via `role=alert` (assertive)**, error tied to field via `aria-describedby`; preserve the user's input; offer retry. |
-| **Erasure requested / in progress** | Consumer privacy, Admin GDPR | Two honest states: **(a) cancellable** until deletion begins — "You can cancel until deletion begins"; **(b) permanent** once complete — "Done — permanently deleted, can't be undone." Neutral/info tone, never success-green. Don't present the 30-day figure as the cancel window. |
+| **Erasure requested / in progress** | Consumer privacy, Admin GDPR | Two honest states: **(a) cancellable** until deletion begins — "You can cancel until deletion begins"; **(b) permanent** once complete — worded as **verified** deletion: "We've deleted your data and verified it's gone" (no certificate internals). Neutral/info tone, never success-green. Don't present the 30-day figure as the cancel window. At request time show a **PII-free request reference** ("keep this number"); the status page confirms completion while the session lasts. While in progress: consent toggles disabled ("Consent changes are paused while your data is being deleted."); a late **Cancel** on a stale view surfaces the backend's reason verbatim — "Deletion has already begun and cannot be cancelled." — via `role=alert`, never a generic retry. |
+| **Restricted** (Art. 18) | Party detail, Consumer profile/privacy | `restricted` badge + banner. Consumer copy: "Processing of your data is currently restricted — you can still change your consent choices." **Consent controls stay enabled** (Art. 18(3)); admin lifecycle edits gray out per policy; consent still rejects during erasure (that guard wins). The privacy surface names how to *request* restriction ("You can ask us to restrict processing — contact us"). |
+| **No party binding** | Shell (`/no-party-binding`) | Fail-closed: a Consumer's `party_id` claim resolved to zero/multiple parties. Reassuring, no-blame copy ("Your account isn't linked to a data record yet — contact us and we'll fix it"), Help & contact path, no data access, no retry loop. |
+| **Export preparing / ready** | Consumer privacy | Preparing: polite status "Preparing your export…". Ready: **polite announcement + a focusable "Download your export" control** — never a silent download appearing (4.1.3). |
 | **Transient failure** (`TransientFailure`) | Any | "We couldn't reach the service. Your data is safe." + Retry; exponential backoff; keep prior content visible. |
 | **Load failure** (`LoadFailure`) | Any | Non-transient: explain + Retry + support path; never a raw stack/500. |
 | **Sign-in required** (`SignInRequired`) | Any | Route to sign-in, preserve return URL. |
@@ -130,13 +151,20 @@ the UI must make that legible without alarming anyone. States map to the real
   multi-field; **destructive actions require typed confirmation** in a real input,
   never `Enter`.
 - **Focus management:** on **dialog** open trap focus, on close restore to the
-  trigger; on **blocking** errors move focus to the alert. For **non-blocking,
+  trigger; `Esc` closes any `FluentDialog`. The tablet **detail sheet behaves as
+  a dialog** (trap, `Esc` closes, restore to the originating grid row); the phone
+  full-screen detail is a **page** (focus to the heading on open; Back restores
+  the row). On **blocking** errors move focus to the alert. For **non-blocking,
   optimistic** results (consent save, "Saved — updating…") **announce via
-  `aria-live` only — do not steal focus to a toast** (it's disruptive when it fires
-  on every quiet save). Pattern already in AdminPortal — extend it, don't over-apply it.
+  `aria-live` only — do not steal focus** (it's disruptive when it fires on every
+  quiet save). Pattern already in AdminPortal — extend it, don't over-apply it.
+- **Focus is never obscured (2.4.11):** focusable list/grid items carry
+  `scroll-margin-top` ≥ the sticky header + pinned-row height; status regions and
+  banners never overlay the element that holds focus.
 - **Banned:** native `alert()`/`confirm()`/`prompt()` dialogs (they block the
-  Blazor event loop — use `FluentDialog`/toasts); color-only state; auto-submit of
-  destructive actions on blur; spinner-only screens; throwing on stale reads.
+  Blazor event loop — use `FluentDialog`/status regions); color-only state;
+  auto-submit of destructive actions on blur; spinner-only screens; throwing on
+  stale reads.
 
 ## Accessibility Floor
 
@@ -155,11 +183,23 @@ DESIGN.md). Target: **WCAG 2.2 AA** (consumer-facing).
   + `aria-checked`; the Person/Organization chooser is a `radiogroup`; the picker
   uses the combobox roles (see Component Patterns); the typed-erase confirm is a
   labeled `<input>`. No interactive `<div>`s.
+- **Accessible authentication (3.3.8):** sign-in is delegated to the IdP's
+  hosted page — the IdP configuration must not block paste or password managers,
+  must carry `autocomplete="username"` / `"current-password"` tokens, and must
+  offer a non-cognitive-test path (SSO / passkey / email link qualify). This
+  floor is a **requirement on the chosen IdP configuration**, verified per
+  deployment — a consumer who cannot clear sign-in can exercise no GDPR right.
 - Full keyboard operability; visible `--colorStrokeFocus2` ring never suppressed;
   logical focus order; skip links functional; focus moved only where it helps (see
   Interaction Primitives — not on every optimistic save).
 - Support **forced-colors / high-contrast** (`@media (forced-colors: active)`) and
-  **`prefers-reduced-motion`** **product-wide** (today only the picker honors them).
+  **`prefers-reduced-motion`** **product-wide** (today only the picker honors
+  them). Selected/active states carry a **forced-colors-surviving indicator**
+  (real border/outline + `aria-current`/`aria-selected`) — never background tint
+  or box-shadow alone.
+- **Consistent help (3.2.6):** the Help & contact affordance sits in the same
+  place on every page in both areas (see IA); every failure state's "support
+  path" points at it.
 - State is never communicated by color alone (party-state badge always carries a
   text label; freshness dot always carries a word).
 - GDPR consent and erasure controls are reachable, labeled (`aria-describedby` ties
@@ -200,10 +240,15 @@ often after a prompting email). One responsive codebase, two density postures.
   density and copy register, not by a second visual identity.
 - **Rejected — native modal dialogs** (`alert`/`confirm`): they freeze the Blazor
   event loop; all confirmation is in-app (`FluentDialog` + typed confirm).
+- **Rejected — dead controls implying agency:** a rights affordance is never
+  rendered permanently disabled. If the backend can't deliver the right yet
+  (Object, Art. 21 today), offer the honest contact path instead — and never
+  fake dialog semantics (`role=dialog`/`aria-modal`) on an element that doesn't
+  trap and restore focus.
 
 ## Key Flows
 
-_Visual reference: Flows 1–2 → [`mockups/consumer-privacy.html`](mockups/consumer-privacy.html) + [`mockups/consumer-profile.html`](mockups/consumer-profile.html); Flow 3 → [`mockups/admin-parties.html`](mockups/admin-parties.html); Flow 4 → [`mockups/create-edit-party.html`](mockups/create-edit-party.html). Entry: [`mockups/signin.html`](mockups/signin.html)._
+_Visual reference: Flows 1–2 and 5 → [`mockups/consumer-privacy.html`](mockups/consumer-privacy.html) + [`mockups/consumer-profile.html`](mockups/consumer-profile.html); Flow 3 → [`mockups/admin-parties.html`](mockups/admin-parties.html); Flow 4 → [`mockups/create-edit-party.html`](mockups/create-edit-party.html). Entry: [`mockups/signin.html`](mockups/signin.html)._
 
 ### Flow 1 — Marc checks what's held about him (Marc, customer, Sunday 9pm, on his phone)
 
@@ -213,18 +258,19 @@ _Visual reference: Flows 1–2 → [`mockups/consumer-privacy.html`](mockups/con
    freshness dot reads "Up to date."
 3. He taps **My data & privacy**. Two honest groups: **Things you control**
    (consent, off by default) and **Things we keep to run your account** (contract /
-   legitimate interest, read-only with an *Object* action), plus two actions —
-   *Export my data*, *Delete my data*.
-4. He taps **Export my data**. Toast: "Preparing your export — this can take a
-   little while. We'll show it here the moment it's ready." The portability job runs
-   server-side, producing a machine-readable (JSON) file.
-5. **Climax:** the export readies and a download appears — *his own data, in his
-   hands, in a portable file he can keep or move elsewhere, without a ticket or a
-   call to support*. The right stopped being abstract.
+   legitimate interest, read-only, with the object-to-this-use contact path — Art.
+   21, see Voice and Tone), plus two actions — *Export my data*, *Delete my data*.
+4. He taps **Export my data**. A status region reads: "Preparing your export —
+   this can take a little while. We'll show it here the moment it's ready." The
+   portability job runs server-side, producing a machine-readable (JSON) file.
+5. **Climax:** the export readies — announced politely, with a focusable
+   **Download your export** control — *his own data, in his hands, in a portable
+   file he can keep or move elsewhere, without a ticket or a call to support*.
+   The right stopped being abstract.
 
-Failure: export service unreachable → `TransientFailure` toast "We couldn't build
-your export just now. Your data is safe — try again." Retry with backoff; the
-request is not lost.
+Failure: export service unreachable → `TransientFailure` status "We couldn't
+build your export just now. Your data is safe — try again." Retry with backoff;
+the request is not lost.
 
 ### Flow 2 — Marc withdraws a consent (Marc, customer, two minutes later)
 
@@ -276,5 +322,31 @@ that looks like a permissions bug.
    into three keystrokes and an Enter.
 
 Failure: search backend degraded → picker enters `Degraded`/`LocalOnly`, shows
-last-known matches with a quiet "limited results" note; selection still works,
-nothing blocks.
+last-known matches with a "limited results" note announced via the picker's
+`role=status` region; selection still works, nothing blocks.
+
+### Flow 5 — Marc deletes his data (Marc, customer, three weeks later, phone)
+
+1. Back in **My data & privacy**, Marc taps **Delete my data**.
+2. A real dialog (focus trapped, `Esc` closes) states the consequence in two
+   honest halves: deletion starts soon and is **cancellable until it begins**;
+   once done it is **permanent**. One Confirm — no typed transcription for a
+   consumer.
+3. He confirms. The page shows the neutral (never success-green) state — "We've
+   started deleting your data… You can cancel until deletion begins" — plus a
+   **PII-free request reference** ("keep this number"). His consent toggles gray
+   out: "Consent changes are paused while your data is being deleted."
+4. Next morning, second thoughts. He returns and taps **Cancel deletion** —
+   inside the window, the request cancels and his profile is intact. (Had
+   deletion already begun, he'd see the honest inline reason: "Deletion has
+   already begun and cannot be cancelled.")
+5. He re-requests a week later and lets it run. **Climax:** the status page reads
+   "We've deleted your data and verified it's gone" — *verified permanence,
+   stated plainly to the person it matters most to*, while his session still
+   lets him see it. The right was exercised start to finish without a ticket.
+
+Failure: cancel raced past the window on a stale view → the specific rejection
+reason above via `role=alert`, never a generic "try again."
+
+_Restriction (Art. 18) and Edit-my-profile are deliberately **table-covered**
+(State Patterns / Component Patterns) — simple enough not to need a walked flow._

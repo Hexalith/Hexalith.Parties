@@ -38,7 +38,7 @@ export default defineConfig({
   webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER
     ? undefined
     : {
-        command: 'dotnet run --project ../../src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Release --no-build --no-launch-profile --urls http://127.0.0.1:5072',
+        command: 'dotnet run --project ../../src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Release --no-launch-profile -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -- --urls http://127.0.0.1:5072',
         url: BASE_URL,
         reuseExistingServer: !IS_CI,
         timeout: 120_000,

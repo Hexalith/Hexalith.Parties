@@ -79,18 +79,18 @@ body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);
   <p class="state">A · at rest</p>
   <div class="page">
     <h1>My data &amp; privacy</h1>
-    <span class="fresh"><span class="dot ok"></span> Up to date</span>
+    <span class="fresh" role="status"><span class="dot ok"></span> Up to date</span>
 
     <div class="card">
       <h3>Things you control</h3>
       <p class="lead">Consent is yours to give or take back, any time.</p>
       <div class="toggle-row">
-        <div class="meta"><label id="c1" class="k">Product updates</label><div class="sub">Off — you won't get product emails.</div></div>
-        <button class="sw off" role="switch" aria-checked="false" aria-labelledby="c1"></button>
+        <div class="meta"><label id="c1" class="k">Product updates</label><div class="sub" id="c1-state">Off — you won't get product emails.</div></div>
+        <button class="sw off" role="switch" aria-checked="false" aria-labelledby="c1" aria-describedby="c1-state"></button>
       </div>
       <div class="toggle-row">
-        <div class="meta"><label id="c2" class="k">Marketing emails</label><div class="sub">Off — no offers unless you turn this on.</div></div>
-        <button class="sw off" role="switch" aria-checked="false" aria-labelledby="c2"></button>
+        <div class="meta"><label id="c2" class="k">Marketing emails</label><div class="sub" id="c2-state">Off — you won't get marketing emails.</div></div>
+        <button class="sw off" role="switch" aria-checked="false" aria-labelledby="c2" aria-describedby="c2-state"></button>
       </div>
       <a class="link" href="#consent">Manage all consent →</a>
     </div>
@@ -100,7 +100,7 @@ body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);
       <p class="lead">We need these to provide the service — they aren't consent toggles.</p>
       <div class="datum"><div class="k">Name &amp; contact</div><div class="basis">To manage your account · basis: contract</div></div>
       <div class="datum"><div class="k">Sign-in history</div><div class="basis">To keep your account secure · basis: legitimate interest</div>
-        <button class="btn outline small obj">Object to this use</button></div>
+        <div class="basis obj">You can object to this use — <a class="link" href="#contact">contact us</a> and we'll review it.</div></div>
     </div>
 
     <div class="card">
@@ -119,7 +119,7 @@ body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);
   <p class="state">B · deletion started · stale</p>
   <div class="page">
     <h1>My data &amp; privacy</h1>
-    <span class="fresh"><span class="dot stale"></span> Showing what we last knew — refreshing…</span>
+    <span class="fresh" role="status"><span class="dot stale"></span> Showing what we last knew — refreshing…</span>
 
     <div class="toast" role="status" aria-live="polite">We've started deleting your data — updating…</div>
 

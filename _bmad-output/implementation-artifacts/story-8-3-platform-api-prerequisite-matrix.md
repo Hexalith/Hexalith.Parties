@@ -48,6 +48,42 @@ retention action, and does not change Story 8.7's `blocked` status: the
 release adds Story 8.6's shared-projection rebuild completion mechanics only,
 not the G5 runtime engine.
 
+### Story 8.10 final retained-identity reconciliation — 2026-08-18
+
+This ledger is the authoritative current-consumption receipt for Story 8.10.
+Earlier row-level identities remain as historical evidence for the story that
+selected them, but they do not describe the retained dependency graph. Package
+and source identities are deliberately separate: a package version never proves
+which source gitlink is checked out, and a gitlink never proves package-mode
+consumption.
+
+| Surface | Selected mode | Current consumer evidence | Immutable identity | Disposition and rollback |
+| --- | --- | --- | --- | --- |
+| EventStore domain-service host and DataProtection/query SDK | Package (default Release graph) | `Directory.Build.props` defaults `UseHexalithProjectReferences=false`; `Hexalith.Parties`, `Contracts`, `Client`, `Projections`, `Security`, and test projects select EventStore `PackageReference` branches when `HexalithEventStoreFromSource != true`; the Builds catalog supplies the version. | Released package `3.95.0`. | Retained and consumed. If package restore or compatibility regresses, set the explicitly supported source-mode properties for diagnostic rollback and use the separately recorded source identity below; do not relabel the source build as package proof. |
+| EventStore domain-service host and DataProtection/query SDK | Source (explicit project-reference graph) | `HexalithEventStoreFromSource` is enabled only when `UseHexalithProjectReferences=true`; the root gitlink and checkout match and contain the SDK host, query, projection, rebuild, DataProtection, and cursor surfaces consumed by Parties. | Root gitlink and checkout `454b4d100c8c095abf5077c6a8d408da6681e87e` (`v3.95.0-2-g454b4d10`). | Retained diagnostic/source path. Roll back a source-only regression by returning to the default package graph at `3.95.0`; any later source adoption must refresh both gitlink and checkout proof. |
+| Commons HTTP helpers | Source | `HexalithCommonsHttpFromSource` selects `references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http` when the root checkout exists; `Hexalith.Parties`, `Hexalith.Parties.Client`, and `Hexalith.Parties.Security` consume that branch. | Root gitlink and checkout `6fbac0c5dff2b8a58e90732c51b31911421a8a65` (`v2.30.0-10-g6fbac0c`). | Retained and consumed from source. The catalog's `2.30.0` package is a fallback, not current consumption proof. Roll back a source regression by explicitly selecting the package branch, restoring, and rerunning client/security/package compatibility before deleting any local HTTP behavior. |
+| Builds central catalog | Source import | `Directory.Packages.props` imports `references/Hexalith.Builds/Props/Directory.Packages.props`; the imported catalog selects EventStore `3.95.0` and Commons `2.30.0`. Parties does not import `Hexalith.Build.props` or `Hexalith.Package.props`. | Root gitlink and checkout `17b1c7aae3e1854e464f17bd88d527f8350ea203`. | Retained and consumed for the catalog only. Shared props/targets adoption remains under `8.8-runtime-boundary-cleanup`; retain Parties-local build props, targets, scripts, and probes. Roll back catalog regressions by restoring the prior approved Builds gitlink and rerunning warning, restore, Release build, test, pack, and consumer gates. |
+
+The four previously named `available` receipts are therefore reconciled as
+follows: the domain-service host and EventStore DataProtection rows use the
+EventStore package/source identities above; Commons HTTP uses the selected
+source identity; Builds uses the imported catalog identity. Unconsumed
+historical pins and the Commons package fallback remain audit or rollback
+information only. The open G1/G2, G4-G9, and G11 surfaces remain governed by
+the accepted Story 8.7-8.9 deferrals; none is promoted to `available` here.
+The older marked matrix below is a historical decision log: references there
+to Story 8.6 being `in-progress` or to EventStore `v3.91.0`/`1d6e9321` are
+superseded by Story 8.6=`done`, the current receipts above, and the accepted
+residual-debt disposition below.
+
+| Accepted deferral | Owner | Exit proof | Rollback | Evidence |
+| --- | --- | --- | --- | --- |
+| `8.6-residual-review-debt` | Parties development/test owners plus EventStore SDK owners for producer/runtime proof | Resolve or supersede every unchecked Story 8.6 `[Review][Defer]`; exercise authenticated SDK handler discovery and runtime deny-default EventStore-only ACL enforcement before deleting the related seams. | Retain source/package selection, the Parties AppHost/gateway topology, the exact ACL, and remaining compatibility seams. | `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`; `_bmad-output/implementation-artifacts/deferred-work.md` |
+| `8.7-data-protection-extraction` | EventStore payload-protection plus Parties development/test owners | Deliver G5 and pass the complete compatibility/switch-back packet. | Retain Parties security, adapter, DI selection, and compatibility harness. | `_bmad-output/implementation-artifacts/deferred-work.md` |
+| `8.8-runtime-boundary-cleanup` | EventStore, Commons, FrontComposer, Builds, platform-AppHost, and Parties owners | Prove every G1/G2/G6-G9/G11 adoption slice at exact identities with integrated rollback. | Retain every Parties-local runtime/client/MCP/AppHost/build path. | `_bmad-output/implementation-artifacts/deferred-work.md` |
+| `8.9-frontcomposer-ui-consolidation` | FrontComposer, UX, Parties development/test owners | Deliver G4 and pass producer plus Parties bUnit/Playwright parity. | Retain all Parties UI primitives and Fluent 2 behavior until slice parity passes. | `_bmad-output/implementation-artifacts/deferred-work.md` |
+| `external-runtime-deployment` | External platform operations/deployment owners | Prove environment-specific orchestration and rollback using immutable images. | Redeploy the prior immutable image/configuration set externally. | `docs/deployment-guide.md`; `_bmad-output/implementation-artifacts/deferred-work.md` |
+
 <!-- platform-api-prerequisite-matrix:start -->
 | Surface | Owner | Status | Evidence paths | Proof required before migration | Dependent Epic 8 stories | Story 8.3 decision / rollback | Validation command or inspection used |
 | --- | --- | --- | --- | --- | --- | --- | --- |

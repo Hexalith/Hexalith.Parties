@@ -39,7 +39,7 @@ public sealed class MainLayoutAccessibilityTests : BunitContext
     }
 
     [Fact]
-    public void MainLayout_renders_app_skip_links_as_first_two_focusable_anchors()
+    public void MainLayout_uses_frontcomposer_skip_links_as_first_two_focusable_anchors()
     {
         IRenderedComponent<CascadingAuthenticationState> cut = RenderMainLayout();
 
@@ -47,9 +47,9 @@ public sealed class MainLayoutAccessibilityTests : BunitContext
 
         anchors.Length.ShouldBe(2);
         anchors[0].TextContent.Trim().ShouldBe("Skip to content");
-        anchors[0].GetAttribute("href").ShouldBe("#parties-main-content");
+        anchors[0].GetAttribute("href").ShouldEndWith("#fc-main-content");
         anchors[1].TextContent.Trim().ShouldBe("Skip to navigation");
-        anchors[1].GetAttribute("href").ShouldBe("#parties-app-navigation");
+        anchors[1].GetAttribute("href").ShouldEndWith("#fc-nav");
     }
 
     [Fact]
@@ -67,16 +67,19 @@ public sealed class MainLayoutAccessibilityTests : BunitContext
     }
 
     [Fact]
-    public void MainLayout_exposes_named_navigation_and_content_landmarks()
+    public void MainLayout_exposes_one_named_navigation_and_one_content_landmark()
     {
         IRenderedComponent<CascadingAuthenticationState> cut = RenderMainLayout();
 
-        IElement navigation = cut.Find("#parties-app-navigation");
-        navigation.GetAttribute("role").ShouldBe("navigation");
-        navigation.GetAttribute("aria-label").ShouldBe("Application navigation");
-        navigation.QuerySelector("[data-testid='fc-navigation-rail']").ShouldNotBeNull();
+        IElement[] navigationLandmarks = cut.FindAll("[role='navigation']").ToArray();
+        navigationLandmarks.Length.ShouldBe(1);
+        navigationLandmarks[0].GetAttribute("aria-label").ShouldBe("Primary navigation");
+        navigationLandmarks[0].GetAttribute("data-testid").ShouldBe("fc-navigation-rail");
 
-        IElement content = cut.Find("#parties-main-content");
+        IElement[] contentLandmarks = cut.FindAll("[role='main']").ToArray();
+        contentLandmarks.Length.ShouldBe(1);
+        IElement content = contentLandmarks[0];
+        content.Id.ShouldBe("fc-main-content");
         content.GetAttribute("role").ShouldBe("main");
         content.GetAttribute("aria-label").ShouldBe("Main content");
         content.TextContent.ShouldContain("Sample content");

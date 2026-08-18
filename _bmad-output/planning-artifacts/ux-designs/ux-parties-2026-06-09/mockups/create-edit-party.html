@@ -42,8 +42,9 @@ label{display:block;font-size:13px;font-weight:600;color:var(--fg2);margin-botto
 /* picker combobox */
 .picker{position:relative}
 .combo{display:flex;align-items:center;border:1px solid var(--accent);border-radius:var(--r-sm);padding:8px 11px;background:var(--bg1);gap:8px}
+.combo:focus-within{outline:2px solid var(--brand-fill);outline-offset:2px}
 .combo input{border:0;outline:0;flex:1;font-size:14px;font-family:var(--font)}
-.combo .clear{color:var(--fg3);cursor:pointer}
+.combo .clear{color:var(--fg3);cursor:pointer;background:none;border:0;padding:0;font:inherit}
 .listbox{border:1px solid var(--stroke1);border-radius:var(--r-md);margin-top:4px;box-shadow:var(--shadow8);background:var(--bg1);overflow:hidden}
 .listbox .o{padding:9px 12px;font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer}
 .listbox .o.act{background:#e1f4f6}
@@ -74,11 +75,11 @@ label{display:block;font-size:13px;font-weight:600;color:var(--fg2);margin-botto
       <div class="field"><label>Legal name <span class="req">*</span></label>
         <input class="input" value="Acme Holdings Ltd"></div>
       <div class="field picker"><label>Primary contact</label>
-        <div class="combo"><input role="combobox" aria-expanded="true" aria-controls="pl" aria-activedescendant="o1" aria-autocomplete="list" aria-label="Primary contact" value="acme cfo"><span class="clear" aria-hidden="true">✕</span><span aria-hidden="true">▾</span></div>
+        <div class="combo"><input role="combobox" aria-expanded="true" aria-controls="pl" aria-activedescendant="o1" aria-autocomplete="list" aria-label="Primary contact" value="acme cfo"><button type="button" class="clear" aria-label="Clear selection">✕</button><span aria-hidden="true">▾</span></div>
         <div class="listbox" id="pl" role="listbox" aria-label="Matching parties">
           <div id="o1" class="o act" role="option" aria-selected="true"><span>Marc Delacroix</span><span class="badge-state b-active">● Active</span><span class="ty">Person</span></div>
-          <div class="o" role="option" aria-selected="false"><span>Maria Acosta</span><span class="ty">Person</span></div>
-          <div class="o" role="option" aria-selected="false"><span>Acme Treasury (dept.)</span><span class="ty">Organization</span></div>
+          <div id="o2" class="o" role="option" aria-selected="false"><span>Maria Acosta</span><span class="ty">Person</span></div>
+          <div id="o3" class="o" role="option" aria-selected="false"><span>Acme Treasury (dept.)</span><span class="ty">Organization</span></div>
         </div>
         <div class="hint">Type to search · ↓↑ to move · Enter to link · Esc to close</div>
       </div>
@@ -88,15 +89,15 @@ label{display:block;font-size:13px;font-weight:600;color:var(--fg2);margin-botto
     <div class="col">
       <div class="state-label" style="padding:0 0 8px">Validation rejected</div>
       <h1>New party</h1>
-      <div class="banner warn">We couldn't save this party. Fix the highlighted field and try again — nothing you typed was lost.</div>
+      <div class="banner warn" role="alert">We couldn't save this party. Fix the highlighted field and try again — nothing you typed was lost.</div>
       <div class="field"><label>Type <span class="req">*</span></label>
         <div class="seg" role="radiogroup" aria-label="Type"><div class="opt on" role="radio" aria-checked="true" tabindex="0">Person</div><div class="opt" role="radio" aria-checked="false" tabindex="-1">Organization</div></div></div>
       <div class="field"><label>Legal name <span class="req">*</span></label>
-        <input class="input bad" value="">
-        <div class="err">⚠ A name is required for a Person party.</div></div>
+        <input class="input bad" value="" aria-invalid="true" aria-describedby="err-name">
+        <div class="err" id="err-name">⚠ A name is required for a Person party.</div></div>
       <div class="field"><label>Email</label>
-        <input class="input bad" value="marc@@example">
-        <div class="err">⚠ That doesn't look like an email address.</div></div>
+        <input class="input bad" value="marc@@example" aria-invalid="true" aria-describedby="err-email">
+        <div class="err" id="err-email">⚠ That doesn't look like an email address.</div></div>
       <div class="footer"><button class="btn subtle">Cancel</button><button class="btn primary">Create party</button></div>
     </div>
   </div>

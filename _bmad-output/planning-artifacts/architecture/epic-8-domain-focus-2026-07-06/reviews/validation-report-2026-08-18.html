@@ -1,0 +1,422 @@
+<title>Epic 8 Spine Gate</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #F6F7F9;
+    --surface: #FFFFFF;
+    --ink: #1C2733;
+    --muted: #5C6B7A;
+    --accent: #38618C;
+    --accent-ink: #2C4E72;
+    --hairline: #DDE3EA;
+    --chip-bg: #EDF1F5;
+    --crit: #A8352B;
+    --crit-bg: #F9EEEC;
+    --high: #B35A1F;
+    --high-bg: #F9F1E9;
+    --med: #8F7714;
+    --med-bg: #F7F3E4;
+    --low: #5B7285;
+    --low-bg: #EEF2F5;
+    --good: #2E7D5B;
+    --good-bg: #EAF4EF;
+    --code-bg: #EDF1F5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #12161C;
+      --surface: #1A2029;
+      --ink: #E3E9F0;
+      --muted: #93A2B3;
+      --accent: #82AACF;
+      --accent-ink: #9FC0DD;
+      --hairline: #2A3441;
+      --chip-bg: #232C37;
+      --crit: #E37A6E;
+      --crit-bg: #2E1F1D;
+      --high: #DE9A5E;
+      --high-bg: #2C231A;
+      --med: #CBB255;
+      --med-bg: #2A2619;
+      --low: #8CA3B8;
+      --low-bg: #202832;
+      --good: #6FBF9B;
+      --good-bg: #1B2A24;
+      --code-bg: #232C37;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #12161C;
+    --surface: #1A2029;
+    --ink: #E3E9F0;
+    --muted: #93A2B3;
+    --accent: #82AACF;
+    --accent-ink: #9FC0DD;
+    --hairline: #2A3441;
+    --chip-bg: #232C37;
+    --crit: #E37A6E;
+    --crit-bg: #2E1F1D;
+    --high: #DE9A5E;
+    --high-bg: #2C231A;
+    --med: #CBB255;
+    --med-bg: #2A2619;
+    --low: #8CA3B8;
+    --low-bg: #202832;
+    --good: #6FBF9B;
+    --good-bg: #1B2A24;
+    --code-bg: #232C37;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    font-size: 1rem;
+    line-height: 1.62;
+    margin: 0;
+    padding: 2.5rem 1.25rem 4rem;
+  }
+  .page { max-width: 76ch; margin: 0 auto; display: flex; flex-direction: column; gap: 2.25rem; }
+
+  h1, h2, h3, .sans { font-family: "IBM Plex Sans", "Segoe UI", Arial, sans-serif; }
+  h1 { font-size: 1.85rem; font-weight: 700; line-height: 1.2; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+  h2 { font-size: 1.2rem; font-weight: 600; margin: 0 0 0.9rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--hairline); }
+  h3 { font-size: 1rem; font-weight: 600; margin: 0; line-height: 1.4; }
+  p { margin: 0; }
+  a { color: var(--accent); }
+
+  code, .mono {
+    font-family: "IBM Plex Mono", "Consolas", monospace;
+    font-size: 0.84em;
+    background: var(--code-bg);
+    border-radius: 3px;
+    padding: 0.08em 0.35em;
+  }
+  .eyebrow {
+    font-family: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-top: 0.75rem; line-height: 1.7; }
+  .meta code { font-size: 0.82em; }
+
+  .verdict {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-left: 4px solid var(--high);
+    border-radius: 6px;
+    padding: 1.4rem 1.6rem;
+  }
+  .verdict-chip {
+    display: inline-block;
+    font-family: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--high);
+    background: var(--high-bg);
+    border: 1px solid var(--high);
+    border-radius: 999px;
+    padding: 0.25rem 0.85rem;
+    margin-bottom: 0.85rem;
+  }
+  .verdict p + p { margin-top: 0.7rem; }
+
+  .lenses { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.8rem; }
+  .lens {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .lens .name { font-family: "IBM Plex Sans", "Segoe UI", Arial, sans-serif; font-weight: 600; font-size: 0.92rem; }
+  .lens .call { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+  .counts { display: flex; gap: 0.45rem; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+  .pill {
+    font-family: "IBM Plex Mono", "Consolas", monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    border-radius: 999px;
+    padding: 0.1rem 0.55rem;
+  }
+  .pill.c { background: var(--crit-bg); color: var(--crit); }
+  .pill.h { background: var(--high-bg); color: var(--high); }
+  .pill.m { background: var(--med-bg); color: var(--med); }
+  .pill.l { background: var(--low-bg); color: var(--low); }
+  .pill.g { background: var(--good-bg); color: var(--good); }
+
+  .strengths { display: flex; flex-direction: column; gap: 0.55rem; margin: 0; padding: 0; list-style: none; }
+  .strengths li { padding-left: 1.5rem; position: relative; font-size: 0.95rem; }
+  .strengths li::before { content: "✓"; position: absolute; left: 0.15rem; color: var(--good); font-family: "IBM Plex Sans", sans-serif; font-weight: 700; }
+
+  .finding {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 1.1rem 1.3rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .finding.crit { border-left: 4px solid var(--crit); }
+  .finding.high { border-left: 4px solid var(--high); }
+  .findings { display: flex; flex-direction: column; gap: 1rem; }
+  .fhead { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+  .fid { font-family: "IBM Plex Mono", "Consolas", monospace; font-size: 0.8rem; font-weight: 500; color: var(--muted); }
+  .sev {
+    font-family: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    border-radius: 3px; padding: 0.12rem 0.45rem;
+  }
+  .sev.crit { background: var(--crit-bg); color: var(--crit); }
+  .sev.high { background: var(--high-bg); color: var(--high); }
+  .lens-chips { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-left: auto; }
+  .lchip {
+    font-family: "IBM Plex Mono", "Consolas", monospace;
+    font-size: 0.68rem; color: var(--muted);
+    border: 1px solid var(--hairline); border-radius: 3px; padding: 0.08rem 0.4rem;
+    background: var(--chip-bg);
+  }
+  .finding p { font-size: 0.95rem; }
+  .close-rule { font-size: 0.92rem; border-top: 1px dashed var(--hairline); padding-top: 0.6rem; }
+  .close-rule strong { font-family: "IBM Plex Sans", sans-serif; }
+
+  .medlist, .lowlist { display: flex; flex-direction: column; gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+  .medlist li, .lowlist li { padding-left: 1.35rem; position: relative; font-size: 0.94rem; }
+  .medlist li::before, .lowlist li::before {
+    content: ""; position: absolute; left: 0.1rem; top: 0.52em;
+    width: 0.55rem; height: 0.55rem; border-radius: 50%;
+  }
+  .medlist li::before { background: var(--med); }
+  .lowlist li::before { background: var(--low); }
+  .vid { font-family: "IBM Plex Mono", "Consolas", monospace; font-size: 0.82rem; color: var(--muted); margin-right: 0.25rem; }
+
+  .steps { margin: 0; padding-left: 1.4rem; display: flex; flex-direction: column; gap: 0.7rem; font-size: 0.96rem; }
+  .steps li::marker { font-family: "IBM Plex Sans", sans-serif; font-weight: 600; color: var(--accent); }
+
+  .footer-note { color: var(--muted); font-size: 0.88rem; font-style: italic; }
+  .scrollwrap { overflow-x: auto; }
+</style>
+
+<div class="page">
+  <header>
+    <div class="eyebrow">BMad Reviewer Gate · Validate</div>
+    <h1>Epic 8 Architecture Spine — Validation Report</h1>
+    <div class="meta">
+      Target <code>…/architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md</code> · 2026-08-18 · spine unmodified<br>
+      Deterministic lint: <strong>0 findings</strong> · 4 reviewer lenses · 33 raw findings → <strong>26 after cross-lens dedup</strong>
+      <span class="counts" style="display:inline-flex; margin-left:0.4rem; vertical-align:middle;">
+        <span class="pill c">1 critical</span><span class="pill h">4 high</span><span class="pill m">13 medium</span><span class="pill l">8 low</span>
+      </span>
+    </div>
+  </header>
+
+  <section class="verdict">
+    <div class="verdict-chip">Conditional pass</div>
+    <p>The spine is a sound, unusually well machine-enforced reconciliation contract — every named
+    route, type, version, test class, and deferral ID is real and reality-checked, §4 demonstrably
+    propagated into specs 8.6–8.10, and no invariant contradicts the Epic 7 parent.</p>
+    <p>Two structural conditions block treating it as closure-grade: <strong>(1)</strong> §7's I4 row
+    claims “Executable” on a Builds identity that exists only in the uncommitted working tree,
+    violating I4's own consumption-evidence rule; <strong>(2)</strong> the §4/§5 gate system binds
+    <em>spec files</em>, while the remaining work now lives in ledger deferrals whose executors
+    inherit none of its clauses — with identity/parity coupling across those executors (the one
+    critical finding) left unclosed.</p>
+    <p style="border-top: 1px dashed var(--hairline); padding-top: 0.7rem;"><strong style="color: var(--good); font-family: 'IBM Plex Sans', sans-serif;">Outcome — update applied 2026-08-18:</strong>
+    V1/V3/V4/V5 closed by new invariants I16–I18 and the I1/I1a amendments; V2 annotated in the
+    §7 I4 row (the commit itself remains the open closure condition); V6, V11, V16–V18, V20, V21,
+    V23 fixed in the §2/§5/§7 sweep; the rest deferred with revisit conditions in the workspace
+    <code>.memlog.md</code>. A post-update gate pass (rubric, reality-check, adversarial) confirmed
+    the closures and its second-order fixes — including correcting the §2 supersession to
+    <em>gated, not executed</em> — landed the same day. Final state: lint 0 findings,
+    <code>EpicEightClosureFitnessTests</code> 13/13 green, spine <code>status: final</code>.</p>
+  </section>
+
+  <section>
+    <h2>Lens verdicts</h2>
+    <div class="lenses">
+      <div class="lens">
+        <span class="name">Rubric walker <span class="lchip">RW</span></span>
+        <span class="call">Pass with conditions — honest ratification; §7 overstates one pin; stale vs the grown story set.</span>
+        <span class="counts"><span class="pill h">1H</span><span class="pill m">4M</span><span class="pill l">3L</span></span>
+      </div>
+      <div class="lens">
+        <span class="name">Reality check <span class="lchip">RC</span></span>
+        <span class="call">Pass with findings — nothing asserted from training data; one §7 I4 pin refuted at HEAD.</span>
+        <span class="counts"><span class="pill h">1H</span><span class="pill m">2M</span><span class="pill l">3L</span></span>
+      </div>
+      <div class="lens">
+        <span class="name">Adversarial <span class="lchip">ADV</span></span>
+        <span class="call">Conditional — the gate speaks “sequenced spec files”; the closure moved work into ledger deferrals the letter no longer binds.</span>
+        <span class="counts"><span class="pill c">1C</span><span class="pill h">3H</span><span class="pill m">5M</span><span class="pill l">2L</span></span>
+      </div>
+      <div class="lens">
+        <span class="name">Closure-evidence integrity <span class="lchip">CE</span></span>
+        <span class="call">Honest &amp; load-bearing — all 29 test classes and 5 deferrals real; three honesty edges.</span>
+        <span class="counts"><span class="pill m">3M</span><span class="pill l">5L</span></span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What holds</h2>
+    <ul class="strengths">
+      <li>I1's 13-route deny-default ACL list matches <code>accesscontrol.parties.yaml</code> verbatim; two fitness suites pin it.</li>
+      <li>All 29 named §7 test classes and all 5 deferral IDs exist; the map is machine-verified fail-closed by <code>EpicEightClosureFitnessTests</code>.</li>
+      <li>I2 SDK entry points, all five I10 abstractions, and every I12 build-discipline claim verified against the repo.</li>
+      <li>§4's six clauses are present in all five specs 8.6–8.10; broad stories were split or hard-gated as required.</li>
+      <li>No Epic 8 invariant weakens an inherited Epic 7 decision (I3≈AD-1/AD-6 · I9/I10≈AD-2 · I7/I8≈AD-3 · §2≈AD-4 · I4≥AD-5).</li>
+      <li>“No deferred item is represented as delivered” holds forward for all five accepted deferrals.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Critical</h2>
+    <div class="findings">
+      <article class="finding crit">
+        <div class="fhead">
+          <span class="sev crit">Critical</span>
+          <span class="fid">V1</span>
+          <h3>Identity-stamped parity gap: a later identity bump silently invalidates the parity evidence that authorized an earlier irreversible deletion (I3 × I4)</h3>
+          <span class="lens-chips"><span class="lchip">ADV-1</span></span>
+        </div>
+        <p>Five deferral executors share one <code>references/Hexalith.EventStore</code> gitlink and one
+        Builds catalog version, but I4/§4.1 record identity <em>per story</em>. Executor A (8.7) proves
+        parity at EventStore 3.97.0 and deletes its rollback surface; executor B (8.8) bumps to 3.98.0
+        and refreshes only its own rows — both letter-compliant, and A's deletion now stands on evidence
+        never run at the consumed identity. The 8.3 matrix already documents this failure shape twice.</p>
+        <p class="close-rule"><strong>Close with I16:</strong> parity evidence is valid only at the identity it was
+        produced against; any retained-identity change re-opens every parity claim stamped at a different
+        identity; no deletion merges into a tree whose identity differs from its evidence's stamp.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>High</h2>
+    <div class="findings">
+      <article class="finding high">
+        <div class="fhead">
+          <span class="sev high">High</span>
+          <span class="fid">V2</span>
+          <h3>§7 I4 “Executable” rests on an uncommitted Builds gitlink — found independently by three lenses</h3>
+          <span class="lens-chips"><span class="lchip">RC-F1</span><span class="lchip">RW-F1</span><span class="lchip">CE-F5</span><span class="lchip">RC-F4</span></span>
+        </div>
+        <p>Spine, 8.3 matrix, and <code>PlatformApiPrerequisitesTests.cs:18</code> pin Builds to
+        <code>17b1c7aa…</code>, but <code>git ls-tree HEAD</code> records <code>6b78075…</code> — only the
+        working-tree checkout matches. A fresh clone of HEAD fails the fitness test; the matrix's “root
+        gitlink and checkout” wording is false at the committed state; <code>sprint-status.yaml:197–201</code>
+        already admits closure stays open on exactly this, yet §7 carries no caveat. The evidence also rests
+        on untracked files (<code>EpicEightClosureFitnessTests.cs</code>, <code>DocumentationFitnessTests.cs</code>,
+        <code>ClosureDeferral.cs</code>).</p>
+        <p class="close-rule"><strong>Remedy:</strong> commit the submodule bump and pending closure files (or correct
+        the pins to the committed SHA), and annotate the I4 row until then.</p>
+      </article>
+
+      <article class="finding high">
+        <div class="fhead">
+          <span class="sev high">High</span>
+          <span class="fid">V3</span>
+          <h3>The §4 gate is scoped by enumeration: it binds “spec files 8.6–8.10” and nothing else</h3>
+          <span class="lens-chips"><span class="lchip">ADV-2</span><span class="lchip">RW-F2</span></span>
+        </div>
+        <p><strong>Backward:</strong> stories 8.11–8.13 (8.13 deletion-heavy) executed entirely outside §4
+        under SCP authority, while §5 still claims the sequence “unchanged” and §7 silently consumes their
+        outputs. <strong>Forward:</strong> accepted deferral entries carry only four fields — no prerequisites,
+        touched-repos, lanes, non-goals, or parity checklist — so a <code>bmad-loop-sweep</code> ledger executor
+        can delete surfaces a concurrent spec-driven session declared non-goals, both letter-compliant.</p>
+        <p class="close-rule"><strong>Close with I17</strong> (deferrals may be worked only through a six-clause §4
+        spec; activation annotates the entry) + reword §4 to gate “any deletion-heavy spec in this epic, present
+        or later added” + a §5 note acknowledging 8.11–8.13.</p>
+      </article>
+
+      <article class="finding high">
+        <div class="fhead">
+          <span class="sev high">High</span>
+          <span class="fid">V4</span>
+          <h3>AppHost retirement is required by one deferral and forbidden by another; the ACL forks into two copies with the fitness gate on the wrong one</h3>
+          <span class="lens-chips"><span class="lchip">ADV-3</span></span>
+        </div>
+        <p>8.8's parity clause (I1a) authorizes retiring the Parties AppHost the moment parity is proven;
+        <code>8.6-residual-review-debt</code>'s rollback clause forbids deleting host/ACL seams until its
+        runtime-ACL proof lands — which today can only run on that AppHost. Post-retirement, I1's frozen
+        route list binds a file in a repo the spine doesn't govern while <code>DocumentationFitnessTests</code>
+        still asserts the Parties-local copy; the 13-route enumeration has no change protocol.</p>
+        <p class="close-rule"><strong>Remedy:</strong> amend I1 (single named authoritative ACL owner; assert
+        (app-id, verb, policy, action) tuples; owner-approved changes) and I1a (deferral rollback clauses take
+        precedence over parity-based retirement).</p>
+      </article>
+
+      <article class="finding high">
+        <div class="fhead">
+          <span class="sev high">High</span>
+          <span class="fid">V5</span>
+          <h3>“Parity evidence” has no defined baseline; deleting baseline tests with the code they guard has already passed once</h3>
+          <span class="lens-chips"><span class="lchip">ADV-4</span></span>
+        </div>
+        <p>§4 clauses 4/6 demand parity evidence but never define what parity is measured against. Story 8.6
+        deleted <code>TenantSafeProjectionReadGuardrailsTests</code> alongside its code, and the ledger now
+        carries the lost behavior as open debt — the spine ratified the incident without extracting a rule.
+        A later executor reading the shrunken suite as the contract launders the behavior out permanently,
+        parity-green at every step.</p>
+        <p class="close-rule"><strong>Close with I18:</strong> the parity baseline is the §7 map's named surfaces at
+        the closure commit; deleting or weakening a baseline surface in the changeset that deletes its
+        implementation is invalid as parity evidence.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Medium (13)</h2>
+    <ul class="medlist">
+      <li><span class="vid">V6 · ADV-5</span><strong>Two authoritative documents assign paging/freshness to two owners</strong> — Epic 7 AD-4/B10 say Commons owns paging; the G6 matrix row puts envelope+freshness in EventStore.Contracts; §2 leaves “owning modules” unnamed. Name owners per shape; add a precedence rule.</li>
+      <li><span class="vid">V7 · ADV-6</span><strong>§5's order no longer binds anyone</strong> — deferral entries impose no cross-deferral order; running 8.9 before 8.7 proves Art.20 export parity against an engine 8.7 then replaces.</li>
+      <li><span class="vid">V8 · ADV-7</span><strong>I10 pins freshness <em>presence</em>, not grammar</strong> — <code>global:N</code> vs <code>{id}:{seq}</code> vs G6 wire dialects all comply; a shared UI indicator renders wrong staleness.</li>
+      <li><span class="vid">V9 · ADV-8</span><strong>Memories mapping ledger has two mandated classifications</strong> — read model vs rebuild-surviving operational ledger; I9 replay-from-zero breaks one. Close with an I19 persistence-class taxonomy.</li>
+      <li><span class="vid">V10 · ADV-9</span><strong>§4.3 accepts a described, never-exercised rollback</strong> — later slices silently expire earlier slices' revert paths.</li>
+      <li><span class="vid">V11 · RW-F3</span><strong>§2 omits two SCP-named extractions</strong> (tenant-claims → EventStore.Authentication; FrontComposer UI primitives per G4) and never states the deliberate supersession of Epic 7's Class A anchor boundary.</li>
+      <li><span class="vid">V12 · RW-F4</span><strong>Three invariants lack a decidable approval mechanism</strong> — I1a “explicitly approved” owner, I5 “intentionally versioned”, I2 “hooks the SDK cannot own”. Bind each to a recorded artifact.</li>
+      <li><span class="vid">V13 · RW-F5</span><strong>Production key-backend/KMS is silent</strong> — 8.7 moves key management, G5 tracks the backend as undelivered, yet no spine line owns it; Epic 7 telemetry conventions bind only by reference.</li>
+      <li><span class="vid">V14 · RC-F2</span><strong>OR-shaped gitlink assertion masks HEAD/checkout divergence</strong> — <code>AssertGitlinkAndCheckout</code> passes on HEAD ∨ index ∨ checkout; the EventStore path already does the strict check.</li>
+      <li><span class="vid">V15 · RC-F3</span><strong>I13 “purge FAST/v4 tokens” is partially unrealized</strong> — three retained CSS files still consume undefined FAST tokens (<code>PartiesAdminPortal.razor.css:75</code> with no fallback); no token-purity guard exists.</li>
+      <li><span class="vid">V16 · CE-F1</span><strong>I2's E2E citation is environment-gated and vacuous</strong> — <code>EventStoreGatewayE2ETests</code> returns green without Docker/DAPR and seeded no tenants in the recorded closure lane.</li>
+      <li><span class="vid">V17 · CE-F2</span><strong>I13/I14 and the 8.9 ledger entry are one remediation stale</strong> — the same-day FrontComposer shell adoption already delivered the skip-links slice the ledger still describes as wholly retained/deferred.</li>
+      <li><span class="vid">V18 · CE-F3</span><strong>“Executable”-only rows omit accepted residual debt touching their substance</strong> — I7 foremost (erasure-certificate identity validation, Memories cleanup races), plus I9/I10 quality debts.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Low (8)</h2>
+    <ul class="lowlist">
+      <li><span class="vid">V19 · RC-F5</span><code>ReadModelWritePolicy</code> is a static class listed among “target abstractions”; recategorize.</li>
+      <li><span class="vid">V20 · RC-F6</span>§7 I11 credits ULID preservation to tests that contain no ULID coverage; real witnesses: <code>IdentifierValidatorTests</code> / <code>PartyAggregateCompositeTests</code>.</li>
+      <li><span class="vid">V21 · CE-F4</span>I12 row omits the open ledger item that CI no longer runs the Playwright a11y lane (closure-time receipt gate is fail-closed).</li>
+      <li><span class="vid">V22 · CE-F6</span>Open ledger items outside the five-ID closure set (DW-1/DW-2, pre-DW entries) have no §7 or deferral pointer.</li>
+      <li><span class="vid">V23 · RW-F6 · CE-F7</span>The §7 I3 row's deferral list is incomplete: missing <code>8.6-residual-review-debt</code> and <code>external-runtime-deployment</code> (owns “release recovery”).</li>
+      <li><span class="vid">V24 · RW-F7 · CE-F8 · ADV-10</span>§7 and the closure fitness pins are amendable only by the actor they gate; the I15 guard is narrow by construction (diff vs closure-HEAD, skipped on shallow checkouts, prose-string enforcement).</li>
+      <li><span class="vid">V25 · ADV-11</span>DataProtection key-ring/cursor continuity is absent from I1a's parity list; topology cutover/rollback invalidates live cursors.</li>
+      <li><span class="vid">V26 · RW-F8</span>Package-vs-source identity divergence (EventStore <code>3.95.0</code> vs <code>v3.95.0-2-g454b4d10</code>) deserves explicit owner confirmation.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Suggested disposition order</h2>
+    <ol class="steps">
+      <li><strong>Commit-and-annotate (V2)</strong> — mechanical; resolves the only refuted pin and makes §7 durable.</li>
+      <li><strong>Adopt I16–I18 + I1/I1a amendments (V1, V3, V4, V5)</strong> — one Update pass closes every critical/high; they are three faces of one gap: the gate system speaks “sequenced spec files” while the closure moved the remaining work into ledger deferrals.</li>
+      <li><strong>§2/§5/§7 accuracy sweep (V6, V11, V17, V18, V23, V20)</strong> — table/row edits, no design decisions.</li>
+      <li><strong>Defer with revisit conditions</strong> — V7–V10, V12–V16, V19, V21–V22, V24–V26 are individually small; several (V8, V9, V25) only bite when their G-row APIs land.</li>
+    </ol>
+  </section>
+
+  <p class="footer-note">Full detail, evidence with file:line, and proposed invariant wording live in the four review
+  files under <code>…/epic-8-domain-focus-2026-07-06/reviews/</code>, alongside the markdown twin of this report.</p>
+</div>

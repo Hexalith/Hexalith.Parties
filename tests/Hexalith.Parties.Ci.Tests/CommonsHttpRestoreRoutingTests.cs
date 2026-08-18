@@ -93,7 +93,7 @@ public sealed class CommonsHttpRestoreRoutingTests
         centralVersion.ShouldNotBeNullOrWhiteSpace();
         centralVersion.ShouldNotContain("$(");
         eventStoreAlias.ShouldBe("$(HexalithEventStoreVersion)");
-        eventStoreVersion.ShouldBe("3.90.0");
+        eventStoreVersion.ShouldBe("3.95.0");
         packageVersion.Value.ShouldBe("$(HexalithCommonsHttpPackageVersion)");
         (packageVersion.Parent?.Attribute("Condition")?.Value ?? string.Empty)
             .ShouldBe("'$(MSBuildProjectName)' == 'Hexalith.Commons.Http' and '$(HexalithCommonsHttpPackageVersion)' != ''");

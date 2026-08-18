@@ -22,7 +22,7 @@ is already complete. Its owner must explicitly preserve or replace
 `parties-mcp`, standalone `parties-ui`, and the Parties Docker/Kubernetes/ACA
 publish-target behavior before the current AppHost can be retired.
 
-Runtime deployment orchestration is owned outside this repository. The orchestrator must consume immutable image tags from:
+Runtime deployment orchestration is externally owned. The orchestrator must consume immutable image tags from:
 
 - `registry.hexalith.com/parties`
 - `registry.hexalith.com/parties-mcp`

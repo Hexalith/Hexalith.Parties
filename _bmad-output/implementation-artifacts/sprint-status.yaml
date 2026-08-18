@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-08-16
+# last_updated: 2026-08-18
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -42,7 +42,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-08-16
+last_updated: 2026-08-18
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -163,8 +163,8 @@ development_status:
   # per-key LKG invalidation. Remaining non-blocking items are in deferred-work.md.
   # Returned to `in-progress` 2026-08-09 after bmad-code-review DI+query-host
   # sub-chunk applied 8 patches; Suggested Review Order chunks 2–4 still pending.
-  # Re-reviewed 2026-08-16: 2 patch items recorded as action items; retained `in-progress`.
-  8-6-projection-and-query-sdk-migration: review
+  # Advanced to `done` 2026-08-17 after all review findings and follow-ups were verified clean.
+  8-6-projection-and-query-sdk-migration: done
   # Story context created 2026-07-16; production migration remains blocked by
   # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
   # G5 receipt revalidated 2026-08-04 at the current EventStore identity
@@ -184,7 +184,22 @@ development_status:
   # overlong body line). The sequence and G5/G7-G9/G8/G11/Commons/Builds proof stay open.
   8-8-client-mcp-apphost-build-and-deploy-cleanup: blocked
   8-9-ui-frontcomposer-and-fluent-consolidation: backlog
-  8-10-final-readiness-documentation-and-retirement-gate: backlog
+  # Story 8.10 closure evidence, 2026-08-18: retained identities are EventStore
+  # package 3.95.0 and source 454b4d100c8c095abf5077c6a8d408da6681e87e,
+  # Commons HTTP source 6fbac0c5dff2b8a58e90732c51b31911421a8a65,
+  # and Builds catalog 17b1c7aae3e1854e464f17bd88d527f8350ea203.
+  # Story 8.6 remains done with accepted umbrella deferral
+  # 8.6-residual-review-debt covering its unchecked non-blocking review debt;
+  # Stories 8.7/8.8 remain blocked and Story 8.9 remains backlog.
+  # Focused closure/documentation/identity fitness, the 59-project Release
+  # build, all 15 .NET test projects (2,437 passed; 6 existing Story 12 skips),
+  # package/API and package-only consumer validation, npm typecheck, and all
+  # 6 Playwright accessibility checks are green after the user-authorized
+  # dependency and shared-shell fixes. Closure stays open because those fixes
+  # remain modified dependency working trees rather than immutable owner
+  # commits/releases selected by the superproject. Retain every 8.7-8.9
+  # rollback path; external deployment remains owned by the orchestrator.
+  8-10-final-readiness-documentation-and-retirement-gate: review
   # Added by Correct Course 2026-07-07
   # (sprint-change-proposal-2026-07-07-validation-ladder-runner.md).
   # QA/tooling maintenance story; independent of the 8.6-8.10 deletion sequence

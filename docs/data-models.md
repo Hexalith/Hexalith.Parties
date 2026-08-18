@@ -6,7 +6,7 @@ Hexalith.Parties is an **event-sourced, CQRS** domain service. There is **no rel
 
 1. A single **event-sourced aggregate** (`Party`) whose authoritative state is a stream of domain events.
 2. A set of **commands** that request changes and **events** that record them.
-3. A set of **read-model projections** (`PartyDetail`, `PartyIndexEntry`) materialised by DAPR actors and stored in a DAPR state store (Redis locally).
+3. A set of **read-model projections** (`PartyDetail`, `PartyIndexEntry`) materialised by EventStore SDK projection handlers and stored through `IReadModelStore` (Redis-backed DAPR state locally).
 
 The contracts layer (`Hexalith.Parties.Contracts`) carries **no infrastructure dependency** — it references only `Hexalith.EventStore.Contracts`. It must not require a database, vector store, graph provider, or temporal store (enforced by `Contracts.Tests` architectural fitness tests).
 
@@ -170,15 +170,30 @@ Published when commands fail (architectural Decision D3). [event-handler-pattern
 
 ## 5. Read models (CQRS query side)
 
-Read models are materialised by DAPR actors from the event stream and stored per-actor in the DAPR state store. Both carry **freshness metadata** so the gateway can surface stale/degraded reads.
+Read models are materialised from the event stream by EventStore SDK
+`IDomainProjectionHandler` implementations and stored per read-model through
+`IReadModelStore`. Both carry **freshness metadata** so the gateway can surface
+stale/degraded reads.
 
 ### `PartyDetail` — full per-party view
 
-`src/Hexalith.Parties.Contracts/Models/PartyDetail.cs`. Built by `PartyDetailProjectionActor` (`src/Hexalith.Parties.Projections/Actors/`). Fields: `Id`, `Type`, `IsActive`, `DisplayName`[PD], `SortName`[PD], `PersonDetails?`, `OrganizationDetails?`, `ContactChannels[]`, `Identifiers[]`, `ConsentRecords[]`, `NameHistory[]`[PD], `CreatedAt`, `LastModifiedAt`, `IsRestricted`, `RestrictedAt?`, `IsErased`, `ErasedAt?`, `Freshness?`.
+`src/Hexalith.Parties.Contracts/Models/PartyDetail.cs`. Built by
+`PartyDetailSdkProjectionHandler` and its pure fold in
+`src/Hexalith.Parties.Projections/Handlers/`. Fields: `Id`, `Type`, `IsActive`,
+`DisplayName`[PD], `SortName`[PD], `PersonDetails?`, `OrganizationDetails?`,
+`ContactChannels[]`, `Identifiers[]`, `ConsentRecords[]`, `NameHistory[]`[PD],
+`CreatedAt`, `LastModifiedAt`, `IsRestricted`, `RestrictedAt?`, `IsErased`,
+`ErasedAt?`, `Freshness?`.
 
 ### `PartyIndexEntry` — lightweight searchable row
 
-`src/Hexalith.Parties.Contracts/Models/PartyIndexEntry.cs`. Stored as a per-tenant `Dictionary<partyId, PartyIndexEntry>` in `PartyIndexProjectionActor`. Fields: `Id`, `Type`, `IsActive`, `DisplayName`[PD], `SortName`[PD], `CreatedAt`, `LastModifiedAt`, `IsErased`, plus `[JsonIgnore]` in-memory `SearchableContactChannels` / `SearchableIdentifiers`. **Erased parties are removed from the index** entirely (never appear in search).
+`src/Hexalith.Parties.Contracts/Models/PartyIndexEntry.cs`. Stored as a
+per-tenant `Dictionary<partyId, PartyIndexEntry>` by
+`PartyIndexSdkProjectionHandler` through the shared-read-model policy. Fields:
+`Id`, `Type`, `IsActive`, `DisplayName`[PD], `SortName`[PD], `CreatedAt`,
+`LastModifiedAt`, `IsErased`, plus `[JsonIgnore]` in-memory
+`SearchableContactChannels` / `SearchableIdentifiers`. **Erased parties are
+removed from the index** entirely (never appear in search).
 
 ### Supporting model types
 
@@ -193,7 +208,9 @@ Read models are materialised by DAPR actors from the event stream and stored per
 | `PartyDataPortabilityPackage` | GDPR Art.20 export (`Party: PartyDetail?` + `ProcessingRecords[]` + status) |
 | `ErasureCertificate` | GDPR erasure proof (`PartyId`, `TenantId`, `Timestamp`, `KeyVersionsDestroyed`, `VerificationStatus`) returned through the AdminPortal erasure-certificate query |
 
-For projection actor mechanics (checkpointing, idempotency, rebuild, batching), see **[architecture.md](architecture.md) §4** and `src/Hexalith.Parties.Projections/`.
+For SDK projection mechanics (per-read-model checkpoints, idempotency, rebuild,
+and batching), see **[architecture.md](architecture.md) §6** and
+`src/Hexalith.Parties.Projections/`.
 
 ---
 

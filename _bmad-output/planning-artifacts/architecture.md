@@ -38,7 +38,7 @@ referenceDocsAvailable:
   - docs/gdpr-processing-activity-records.md
   - docs/deployment-guide.md
   - docs/kubernetes-deployment-architecture.md
-  - docs/deployment-security-checklist.md
+  - docs/deployment-security-checklist.md (retired by Story 8.13 — the production KMS gate now lives in docs/index.md and docs/getting-started.md)
   - docs/deferred-search-and-temporal-queries.md
   - docs/memories-backed-party-search.md
   - _bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/review-rubric.md

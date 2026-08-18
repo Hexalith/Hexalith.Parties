@@ -1,101 +1,72 @@
 # Spine Pair Review — parties
 
+_Rubric-walker pass, 2026-08-18. Validates `DESIGN.md` + `EXPERIENCE.md` (both `status: final`, 2026-06-09) as the source-extraction contract for downstream consumers. Prior run (2026-06-09) and its documented residuals in `.decision-log.md` were honored — documented residuals are marked "known residual", not re-flagged._
+
 ## Overall verdict
 
-This is a strong, source-extractable spine pair. Every component named anywhere has both a DESIGN.md visual row and an EXPERIENCE.md behavioral row; every YAML token and `{path.to.token}` prose reference resolves; all five mockups are linked inline at the right spine sections and named for what they illustrate; "spine wins on conflict" is stated in both files; and the eventually-consistent state model (stale / degraded / accepted-but-processing / tenant-warming / display-name-only / erased-tombstone) is covered with real treatments mapped to the codebase's `StatusKind` / `PartyPickerSearchState` enums. A downstream consumer can source-extract cleanly. The only gaps are minor and non-blocking: one freshness sub-token (`inactive` badge color used in prose but the badge has an `inactive` token; `restricted` party-state lacks a parallel `restricted` entry that prose names — see Findings), and a couple of unmocked surfaces (My consent full page, restrict/portability/processing-record panels) that are explicitly classified spine-only in the decision log rather than orphaned.
+A clean, genuinely source-extractable delta-spine pair: canonical shape on both files, committed tokens with load-bearing contrast caveats spelled out, a State Patterns section that actually carries the product's hardest problem (eventual consistency), and all five mocks linked with spine-wins stated. The one structural risk is **source drift**: the `sources` file (`project-context.md`) was revised 2026-06-21 — twelve days *after* finalize — and now carries consumer-binding (`/no-party-binding`) and Art. 18 restriction rules the spine pair does not reflect. Everything else found is medium-or-below polish on an otherwise strong contract.
 
-## 1. Flow coverage — strong
+## 1. Flow coverage — adequate
 
-Checked: every stated user need / journey in the IA tables (both areas) against the Key Flows; each flow for named protagonist, numbered steps, an explicit climax beat, and a failure path.
-
-All four flows have a named protagonist (Marc ×2, Priya ×2), numbered steps, a bolded **Climax**, and a **Failure** line. Coverage maps cleanly to the consumer needs (view data → Flow 1; consent → Flow 2) and admin needs (erasure → Flow 3; link-a-party/picker → Flow 4). Failure paths are real and distinct (TransientFailure export, Validation revert, TenantUnavailable warming, Degraded/LocalOnly picker).
+Extracted user-facing capabilities from `project-context.md` (Consumer portal / consent / GDPR rules + MCP/UI sections): admin party CRUD (create/find/view/update/erase), GDPR consent grant/withdraw, restriction/lift (Art. 18), erasure (admin + consumer front doors, cancel, verification), export (Art. 20), processing records (Art. 30), consumer self-service view/edit, sign-in/role routing, consumer→party claim binding. Checked each against EXPERIENCE.md IA + Key Flows. All four Key Flows have a named protagonist, numbered steps, a bold **Climax** beat, and an explicit Failure path — the mechanical shape is flawless. Export (Flow 1), consent withdrawal (Flow 2), admin erasure incl. verification (Flow 3), and create/link via picker (Flow 4) are covered end-to-end.
 
 ### Findings
-- **low** No dedicated flow exercises **Edit my profile** (Consumer) as a protagonist journey — it is an IA surface (`EXPERIENCE.md:46`) and is mocked (`consumer-profile.html`), but the optimistic-save + validation-reject behavior is only shown in the mock, not narrated as a flow. The mock + State Patterns row cover it, so this is informational, not a gap. *Fix:* optionally fold a one-line edit-profile beat into Flow 1, or leave as-is (the mock is sufficient for story-dev).
-- **low** **Sign in** has no narrated flow, only an entry reference and a mock. Given role-routing is load-bearing (decides landing area), a downstream consumer relies entirely on `signin.html` + Foundation prose. Adequate, but a single failure path (bad credentials / SSO bounce) is unspecified anywhere. *Fix:* add a one-row State Pattern or Voice line for sign-in failure if story-dev needs the copy.
+- **high** The unbound-consumer path is absent everywhere: `project-context.md` (Consumer portal rules, "Consumer→Party binding is claim-based and fail-closed") mandates zero/multiple `party_id` claims → redirect `/no-party-binding`, yet that surface/state appears in neither the IA table, State Patterns, nor any flow (EXPERIENCE.md §Information Architecture, §State Patterns). Every mis-provisioned consumer hits this dead end with no specified copy or recovery. Root cause is source drift (see §7), but the downstream impact lands here. *Fix:* add a `No party binding` state row (fail-closed, reassuring copy, support path) and a `/no-party-binding` IA entry.
+- **medium** Consumer self-service erasure — the emotionally central GDPR journey (`RequestMyErasureAsync` / `CancelMyErasureAsync` in the source) — has no Key Flow. Its copy (Voice and Tone rows 1–2) and state row ("Erasure requested / in progress") exist, but the request→cancel-window→permanent narrative, including where the **Cancel** control lives, is never walked (EXPERIENCE.md §Key Flows). *Fix:* add a fifth flow (Marc requests deletion, sees the cancellable state, optionally cancels) or extend Flow 1.
+- **low** Restriction (Art. 18 restrict/lift) and Edit-my-profile have surfaces and component rules but no flow; both are simple enough that the tables carry them (EXPERIENCE.md §Key Flows). *Fix:* optional — a one-line note that these are table-covered by design.
 
 ## 2. Token completeness — strong
 
-Checked: every frontmatter token and every `{path.to.token}` prose reference in DESIGN.md resolves; color tokens have hex or are inherited-by-name per the project's deliberate Fluent-inheritance posture.
-
-`{colors.accent}` (#0097A7, hex present), `{rounded.sm/md/lg/xl/full}` (all defined with px), `{typography.body-consumer.fontSize}` (16px, defined), and all `{components.party-state-badge.*}`, `{components.freshness-indicator.*}`, `{components.gdpr-destructive-button.*}` references resolve to frontmatter entries. Inherited Fluent 2 tokens (`--colorNeutral*`, `--colorStatus*`, `--colorStrokeFocus2`, `--fontFamilyBase`, etc.) are correctly referenced by name and per instructions are NOT flagged as missing-hex — the file documents the inheritance contract explicitly (`DESIGN.md:13-18`, frontmatter comments). No CRITICAL color gaps.
+Extracted every frontmatter token and all 26 `{path.to.token}` prose references in DESIGN.md; **every reference resolves** against the YAML. Owned colors carry hex (`accent` #0097A7); the delta-only inheritance strategy is executed cleanly — every inherited value is a *named* Fluent 2 custom property (`var(--colorStatus…)`, `--fontSizeBase300/400`, `--borderRadius*`), unambiguous for a consumer with the Fluent 2 catalog. Contrast targets are stated exactly where load-bearing: raw accent 3.51:1 non-text-only, `brand-fill` → `--colorBrandBackground` (≈#00767f, AA), status *token pairs*, the 4.44:1 warning-tint caveat. Verified all 5 mocks bind `--brand-fill:#00767f` as the decision log claims.
 
 ### Findings
-- **medium** Prose at `DESIGN.md:172` names a **`restricted`** party-state badge value (`{components.party-state-badge.restricted}`) and the frontmatter (`DESIGN.md:48`) defines `restricted`, `active`, `inactive`, `erased` — these resolve. However the prose enumerates `active / inactive / restricted / erased` while the *behavioral* lifecycle in EXPERIENCE.md (`:91`) lists `active/inactive/restricted/erased` too — consistent. No miss. (Re-verified: this is clean; flagged only to record that the four-value set matches across both files.)
-- **low** `accent-dark` is set identical to `accent` (`#0097A7`, `DESIGN.md:12`) with a comment that Fluent derives dark tints via `baseLayerLuminance`. This is intentional and self-documented, but a literal-minded extractor could read it as a copy-paste error. *Fix:* none required; the comment already explains it. Noted for the reviewer's awareness only.
+- **medium** `components.gdpr-destructive-button.background` binds a **Foreground** token (`--colorStatusDangerForeground1`) as a button *fill* (DESIGN.md frontmatter + §Components "GDPR destructive button"). In light theme that red carries white text acceptably, but in dark theme Fluent flips `*Foreground1` to a light tint designed for text-on-dark — as a fill under white text it will fail AA, and the button's own text color is never specified. The spine's own rule ("use matched token *pairs*… do not hand-mix a status foreground") argues against this binding. *Fix:* bind the fill to the danger *background* ramp (e.g. `--colorStatusDangerBackground3` with its paired foreground) and state the text color.
 
-## 3. Component coverage — strong
+## 3. Component coverage — adequate
 
-Checked: every component named anywhere (frontmatter `components`, DESIGN Components prose, EXPERIENCE Component Patterns, mockups, flows) for a DESIGN visual row AND an EXPERIENCE behavioral row with real rules.
-
-| Component | DESIGN visual | EXPERIENCE behavioral | Verdict |
-|---|---|---|---|
-| Party-state badge | `DESIGN.md:169-174` (pill, token map, label-always) | `EXPERIENCE.md:91` (lifecycle, color+text, erased tombstone) | covered |
-| Data-freshness indicator | `DESIGN.md:176-181` (dot+label, fresh/stale/degraded tokens) | `EXPERIENCE.md:94` (ProjectionFreshnessMetadata, aria-live) | covered |
-| GDPR destructive button | `DESIGN.md:183-186` (danger fill, r-md, confirm-pair; outline for reversible) | `EXPERIENCE.md:93` (danger+typed confirm; outline+single confirm) | covered |
-| Party picker | `DESIGN.md:188-192` (re-skin to Fluent 2, debt) | `EXPERIENCE.md:90` (combobox, debounce, event, state machine, debt) | covered |
-| Parties data grid | inherited (`FluentDataGrid`, `DESIGN.md:162`) | `EXPERIENCE.md:89` (server search, filters, never block on staleness) | covered |
-| Consent control | inherited (Fluent toggle) | `EXPERIENCE.md:92` (optimistic, reconcile, lawful-basis inline) | covered |
-| Command result toast | inherited (Fluent toast) | `EXPERIENCE.md:95` (async accept toast, danger on reject, no alert) | covered |
-
-Inherited-as-is FluentUI components (`DESIGN.md:158-163`) are listed with the "do not customize" contract — correct shadcn-style discipline; they need no behavioral row.
+Extracted every component named in either spine. The four domain components (party-state badge, freshness indicator, GDPR button, party picker) each have a real DESIGN.md visual row *and* a real EXPERIENCE.md behavioral row — genuinely two-sided specs, with the picker's row carrying the full ARIA combobox contract and its real `PartyPickerSearchState` machine. Inherited components are governed by the explicit "as-is, unchanged" inventory. Picker FAST-token re-skin: known residual (design debt, logged).
 
 ### Findings
-- (none — every named component has both rows or is an explicitly inherited primitive with a stated contract.)
+- **medium** The **consent control** — a first-class, GDPR-load-bearing component with a rich behavioral row (EXPERIENCE.md §Component Patterns) — has no visual home: no DESIGN.md Components row, and no switch component (`FluentSwitch` or equivalent) in DESIGN.md's as-is inventory (DESIGN.md §Components). A story-dev must guess what renders it. *Fix:* add `FluentSwitch` to the as-is list (or a brief DESIGN row if the visual deviates).
+- **low** `FluentDialog` (used 3× in EXPERIENCE.md — banned-natives rule, typed-confirm, Flow 3), the command-result toast, and the cold-load skeleton are behaviorally specified but their rendering components are absent from DESIGN.md's inherited inventory (DESIGN.md §Components). *Fix:* extend the as-is list with `FluentDialog`, the toast/message-bar component, and the skeleton component.
+- **low** Name drift across spines: "Data-freshness indicator" (DESIGN) vs "Freshness indicator" (EXPERIENCE); "GDPR destructive button" (DESIGN) vs "GDPR action button" (EXPERIENCE — deliberately wider, covering reversible outline actions too, but the widening is implicit). *Fix:* align names or note the widening explicitly.
 
 ## 4. State coverage — strong
 
-Checked: walked every IA surface and the State Patterns table; verified the eventual-consistency states the prompt flags (stale / degraded / accepted-but-processing / tenant-warming).
-
-State Patterns (`EXPERIENCE.md:103-116`) covers Cold load, Empty/NoData, DisplayNameOnly, Accepted-but-processing, Stale/Degraded, Validation, TransientFailure, LoadFailure, SignInRequired, TenantUnavailable (warming), AdminRequired/Forbidden, and Erased/Gone — all mapped to real `StatusKind`/`PartyPickerSearchState` enum values. The "tenant-warming" case is explicitly fail-closed-but-not-denied with non-alarming copy (`:114`), and accepted-but-processing is called out as the core eventual-consistency UX (`:108`). Mocks render the load-bearing ones (stale read, accepted-but-processing toast, erase typed-confirm, tenant-warming, validation-rejected).
+Walked all nine IA surfaces against the State Patterns table. Coverage is the pair's best work: 14 state rows mapped to the *real* `StatusKind` / `PartyPickerSearchState` enums, including the states most specs forget — `DisplayNameOnly` partial projections, accepted-but-processing optimistic echo, `TenantUnavailable` warming copy, tombstoned `Gone`. Offline is a documented "no" (decision log concern scan). Focus lives correctly in Interaction Primitives. Erasure gets the honest two-state treatment (cancellable vs permanent).
 
 ### Findings
-- **low** **Picker-specific states** (`LocalOnly`, `Unauthorized`, `NotFound`) are named in the picker's enumerated state machine (`EXPERIENCE.md:90`) and partially in Flow 4 failure (`Degraded/LocalOnly`), but the State Patterns table maps to the *page-level* `StatusKind`, not the picker's `PartyPickerSearchState`. A story-dev implementing the picker must read both the Component Patterns row and the flow to reconstruct the full picker state set. *Fix:* none strictly required (the enum is named verbatim, so it's resolvable); optionally add a picker state sub-table if the picker becomes its own story.
-- **low** **Offline** is declared out of scope in the decision log (`.decision-log.md:93`, "offline (no)") and correctly absent from State Patterns — consistent, not a miss. Noted to confirm the omission is deliberate.
+- **medium** No state row for **restricted** as a *surface treatment*: `restricted` exists as a badge value, but nothing says what restriction does to the UI — which admin actions gray out, what the consumer sees, and the source's subtle Art. 18(3) rule that **consent edits stay allowed while restricted** (but reject during erasure) (`project-context.md` "Restriction (Art.18) guards are subtle"; EXPERIENCE.md §State Patterns). Source-drift-related (rule added 2026-06-21). *Fix:* add a `Restricted` state row: badge + which controls stay live (consent toggles) vs disabled, with the erasure-in-progress exception.
+- **low** Export has flow-only coverage: "preparing" and "ready for download" states exist in Flow 1 narrative but not as State Patterns rows, so they're extractable only from prose (EXPERIENCE.md §Key Flows Flow 1 vs §State Patterns). *Fix:* one `Export preparing / ready` row.
+- **low** My-consent empty state (consumer with zero defined consent purposes) unspecified; the `Empty (NoData)` row is admin-list-shaped (EXPERIENCE.md §State Patterns). *Fix:* extend the Empty row's surface column.
 
 ## 5. Visual reference coverage — strong
 
-Every mockup file is linked inline at the relevant spine section, named for what it illustrates, and each carries an in-file header comment listing the spine sections it governs. "Spine wins on conflict" appears in both DESIGN.md (`:64-65`) and EXPERIENCE.md (`:14`, `:63`).
-
-| Mockup | Linked at | Named-for | Orphan? |
-|---|---|---|---|
-| `signin.html` | `EXPERIENCE.md:58`, `:188` (entry) | sign-in + role routing | no |
-| `admin-parties.html` | `DESIGN.md:166`, `EXPERIENCE.md:59`, `:188` (Flow 3) | Admin master-detail + GDPR | no |
-| `create-edit-party.html` | `EXPERIENCE.md:60`, `:188` (Flow 4) | Create/Edit + in-form picker | no |
-| `consumer-profile.html` | `EXPERIENCE.md:61`, `:188` (Flows 1–2) | My profile view/edit | no |
-| `consumer-privacy.html` | `DESIGN.md:167`, `EXPERIENCE.md:62`, `:188` (Flows 1–2) | My data & privacy | no |
-
-No orphan mockups; no broken inline links (all paths are relative `mockups/<file>.html` and exist on disk).
-
-### Findings
-- **low** The decision log (`.decision-log.md:172-174`) classifies several surfaces as *spine-only* (Sign in is actually mocked; My consent full page, restrict/portability/processing-records panels are not). These are intentionally unmocked, not orphaned — story-dev builds them from the spine tables. The log even flags "user asked whether any need a visual reference," so the gap is acknowledged, not accidental. *Fix:* none; this is correct coverage classification. Surfaced so the reviewer knows these surfaces ship without a mock by design.
+mockups/ holds exactly 5 files (`signin`, `admin-parties`, `create-edit-party`, `consumer-profile`, `consumer-privacy`); no imports/ or wireframes/ exist. All 5 are linked inline from EXPERIENCE.md §IA with a parenthetical naming what each illustrates, re-mapped per-flow at §Key Flows; DESIGN.md additionally links the two component-bearing mocks at §Components. Zero orphans (the 5 `.working/key-*.html` files are pre-promotion drafts of the same five — expected). "Spine wins on conflict" is stated in both spines. Phone-reflow mock for the Admin master-detail: known residual (deferred, documented). No findings.
 
 ## 6. Bloat & overspecification — strong
 
-No notable bloat. DESIGN.md specifies only brand-layer deltas and explicitly refuses to restate inherited Fluent tokens; the inherited-component list is a contract ("do not customize"), not specification. EXPERIENCE.md state table is dense but every row is load-bearing for an eventually-consistent backend. The frontmatter comments (e.g. `DESIGN.md:13-18`, `:38-42`) carry inheritance rationale that a naive reader might call verbose, but it is exactly the context a downstream extractor needs to avoid re-declaring JS-emitted Fluent custom properties — justified, not bloat.
+Both spines are disciplined delta documents: tables where tables work, no source restatement (the source's build/test rules are correctly ignored), no pixel specs where an inherited token covers it, no decorative narrative outside the sanctioned climax beats. DESIGN.md's editorial voice ("enterprise records tool wearing a calm face") earns its place; EXPERIENCE.md prose stays behavioral. The dense picker row (full ARIA wiring + enum dump) is at the edge but every clause is load-bearing against real code. No findings.
 
-## 7. Inheritance discipline — strong
+## 7. Inheritance discipline — adequate
 
-Sources resolve (FrontComposer shell + FluentUI V5 `5.0.0-rc.3`, grounded in `.decision-log.md:106-131`). Fluent token names are used verbatim (`--colorStatusDangerForeground1`, `--colorStrokeFocus2`, `--fontSizeBase400`, `--borderRadiusMedium`, `--fc-spacing-unit`, etc.) and match the grounding capture. Component names are identical across DESIGN/EXPERIENCE/mockups (`<hexalith-party-picker>`, `FluentDataGrid`, `FluentBadge`). EXPERIENCE token refs that point back to DESIGN resolve: `DESIGN.md body-consumer` (`:153`), `freshness.stale` (`:109`), `--colorStrokeFocus2` (`:144`).
+`sources` resolves: `{planning_artifacts}/../project-context.md` → `/home/administrator/projects/hexalith/parties/_bmad-output/project-context.md` (exists). Domain names are verbatim from source/code: `ProjectionFreshnessMetadata`, `PartyCommandValidationRejected`, `StatusKind`, `PartyPickerSearchState`, `party-selected {partyId, partyType, status}`, routes `/admin/parties*`, roles `Admin`/`TenantOwner`/`Consumer`. Cross-spine deferrals (`DESIGN.md.Brand & Style`, `EXPERIENCE.md.State Patterns`, `DESIGN.md` `body-consumer`) all resolve. Consent-vs-lawful-basis and Object-not-toggle honesty rules mirror the source faithfully. No glossary exists in any of the three files (nothing to diverge). Export-as-async framing vs source's export-as-read: known residual (deliberate regulated-language resolution #8).
 
 ### Findings
-- **low** EXPERIENCE.md `:109` references `freshness.stale` in shorthand ("using `freshness.stale`") rather than the full `{components.freshness-indicator.stale}` path used in DESIGN.md. It resolves unambiguously to one token, but the shorthand isn't the canonical `{path.to.token}` form. *Fix:* optionally normalize to `{components.freshness-indicator.stale}` for a mechanical resolver; a human/AI extractor resolves it fine as-is.
+- **medium** **Source drift:** the frontmatter source was rewritten 2026-06-21 (Epics 4–5 consumer/GDPR rules) — after both spines went `final` on 2026-06-09 — and the spines were never re-validated against it. The concrete casualties are §1's `/no-party-binding` gap and §4's restriction row (EXPERIENCE.md frontmatter `updated: 2026-06-09` vs source `Last Updated: 2026-06-21`). *Fix:* run a spine refresh pass against the current source; bump `updated`.
+- **low** The token path `freshness.stale` in the Stale-read state row doesn't match any DESIGN.md path — the real token is `components.freshness-indicator.stale` (EXPERIENCE.md §State Patterns). Human-resolvable, machine-unresolvable. *Fix:* use the full path.
+- **low** Admin surfaces carry verbatim routes but Consumer surfaces don't, though the source names the `/me/*` scope (EXPERIENCE.md §Information Architecture; `project-context.md` "ConsumerPortal (self-scoped `/me/*`)"). *Fix:* add `/me/...` routes to the four consumer IA rows.
 
 ## 8. Shape fit — strong
 
-DESIGN.md follows the canonical section order exactly: Brand & Style → Colors → Typography → Layout & Spacing → Elevation & Depth → Shapes → Components → Do's and Don'ts (all 8 present, in order). EXPERIENCE.md has all required defaults: Foundation, Information Architecture, Voice and Tone, Component Patterns, State Patterns, Interaction Primitives, Accessibility Floor, plus the required-when-applicable Responsive & Platform (triggered by responsive web), Inspiration & Anti-patterns, and Key Flows. Frontmatter on both files is complete (`name`, `description`/`status`, `sources`, dates). The `> Spine wins on conflict` blockquote is present in both.
-
-### Findings
-- (none — both files match the house shape.)
+DESIGN.md: all 8 canonical sections present, exactly in order (Brand & Style → Colors → Typography → Layout & Spacing → Elevation & Depth → Shapes → Components → Do's and Don'ts); frontmatter has `name`, `description`, `status`, dates, and all five token families. EXPERIENCE.md: all 8 required defaults present and ordered per the reference examples, plus Responsive & Platform (correctly triggered — two form-factor postures) and Inspiration & Anti-patterns (earns its place: the AdminPortal-pattern lift and the consent-dark-pattern rejections are real decisions). No dropped defaults, no invented sections. Frontmatter complete (`name`, `status`, `sources`, `updated`). No findings.
 
 ## Mechanical notes
 
-- **Name consistency:** component names are identical across all files (`<hexalith-party-picker>`, party-state badge, freshness indicator, GDPR destructive/action button, parties data grid, consent control, command result toast). DESIGN calls it "GDPR destructive button"; EXPERIENCE calls the row "GDPR action button" — same component, slightly different row label. Minor; both clearly map. Worth aligning the label if a strict name-match extractor is used.
-- **Cross-refs:** all `{path.to.token}` references in DESIGN.md resolve to frontmatter; all `mockups/*.html` inline links exist on disk; all `DESIGN.md.*` / `EXPERIENCE.md.*` section deferrals point to sections that exist. No broken cross-refs found.
-- **Frontmatter completeness:** DESIGN.md frontmatter has `name`, `description`, `status`, `created`, `updated`, `colors`, `typography`, `rounded`, `spacing`, `components` — complete. EXPERIENCE.md has `name`, `status`, `sources`, `updated` — complete. One nit: EXPERIENCE `sources` is `{planning_artifacts}/../project-context.md` (a relative-up path); it resolves but is less tidy than DESIGN's. Both `status: draft` — consistent with the decision log's reviewer-gate-pending state.
-- **Enum grounding:** `StatusKind` (12 values) and `PartyPickerSearchState` (12 values) named in EXPERIENCE match the grounding capture in `.decision-log.md:122-130` verbatim — strong source fidelity, story-dev can map states 1:1 to existing code.
-- **Hex in mockups vs. inheritance:** mockups hard-code Fluent hex values (e.g. `--danger:#b10e1c`) with comments mapping each to its `--colorStatus*` custom property. This is correct for a static HTML mock and does not contradict DESIGN.md's "don't redeclare Fluent custom properties in CSS" rule (that rule governs the real Blazor app, not illustrative mocks). No conflict.
-
----
-
-**File:** `/home/administrator/projects/hexalith/parties/_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/review-rubric.md`
+- **Name inconsistencies:** "Data-freshness indicator" (DESIGN §Components) ↔ "Freshness indicator" (EXPERIENCE §Component Patterns); "GDPR destructive button" (DESIGN) ↔ "GDPR action button" (EXPERIENCE). Token keys (`freshness-indicator`, `gdpr-destructive-button`) are consistent.
+- **Broken/loose cross-refs:** `freshness.stale` (EXPERIENCE §State Patterns) is not a resolvable DESIGN token path (should be `components.freshness-indicator.stale`). All 26 `{…}` references inside DESIGN.md resolve. All 7 mockup links in EXPERIENCE and 2 in DESIGN point at files that exist.
+- **Frontmatter:** complete on both spines; EXPERIENCE `sources` resolves. Spine `updated: 2026-06-09` now trails the source's `Last Updated: 2026-06-21` — the pair's only structural exposure.
+- **Component inventory gaps:** `FluentDialog` (used 3× in EXPERIENCE), the toast, the skeleton, and a switch for the consent control are absent from DESIGN's as-is list.
+- **Mermaid:** none used in either spine — nothing to validate.
+- **Mock parity spot-check:** all 5 mocks define `--brand-fill:#00767f` (decision-log resolution #1 verified on disk).
+- **Known residuals honored (not re-flagged):** picker FAST→Fluent 2 re-skin debt; deferred phone-reflow mock; illustrative sub-24px/12px sizing in mocks; export async framing; typed-name PII kept in-memory (implementation note).

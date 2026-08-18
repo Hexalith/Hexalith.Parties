@@ -20,6 +20,16 @@ using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+// The Playwright accessibility host runs under the explicit Test environment. Static web assets are
+// enabled automatically only in Development, so opt the Test host in before MapStaticAssets builds
+// its endpoints; otherwise blazor.web.js and Fluent/FrontComposer RCL assets fail and the lane tests
+// an SSR-only page instead of the interactive keyboard surface.
+if (builder.Environment.IsEnvironment("Test"))
+{
+    builder.WebHost.UseStaticWebAssets();
+}
+
 builder.AddHexalithServiceDefaults(ConfigurePartiesServiceDefaults);
 
 // ADR-030 — ValidateScopes=true so a Singleton capturing a Scoped service fails at boot

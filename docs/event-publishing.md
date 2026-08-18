@@ -128,7 +128,8 @@ Events are delivered with at-least-once semantics. A successful subscriber respo
 Production access-control policy should define service-to-service invocation rules equivalent to:
 
 - **Default action:** `deny` (secure by default)
-- **parties:** Allowed to invoke domain services via POST
+- **eventstore:** The only app allowed to invoke the Parties SDK domain-service
+  host, and only on the exact POST command/query/projection/replay/rebuild paths
 - **Subscribers:** No service invocation permissions (receive events via pub/sub only)
 
 Configure `DAPR_TRUST_DOMAIN` and `DAPR_NAMESPACE` environment variables for your Kubernetes deployment.
@@ -137,11 +138,24 @@ Configure `DAPR_TRUST_DOMAIN` and `DAPR_NAMESPACE` environment variables for you
 
 Local development uses Redis-backed pub/sub configured in [src/Hexalith.Parties.AppHost/DaprComponents](src/Hexalith.Parties.AppHost/DaprComponents):
 
-- **pubsub.yaml:** Redis on `localhost:6379`, scopes: `parties`, `sample`
-- **subscription-parties.yaml:** Topic `tenant-a.parties.events`, scoped to the sample subscriber app-id `sample`
+- **pubsub.yaml:** Redis on `localhost:6379`, component scopes `eventstore`,
+  `parties`, `tenants`, `memories`, and `sample`; publishing scopes are
+  `eventstore=sample.parties.events` and `tenants=system.tenants.events`, while
+  subscription scopes are `parties=system.tenants.events` and
+  `sample=sample.parties.events`.
+- **subscription-parties.yaml:** Topic `tenant-a.parties.events`, scoped to the
+  sample subscriber app-id `sample`.
 - **resiliency.yaml:** Conservative retry policies for fast local iteration
-- **accesscontrol.yaml:** `defaultAction: allow` (no mTLS in self-hosted mode)
+- **accesscontrol.yaml / accesscontrol.*.yaml:** sidecar-specific
+  `defaultAction: deny` policies. `accesscontrol.parties.yaml` permits only the
+  `eventstore` app ID on the exact SDK POST routes; subscribers receive pub/sub
+  delivery without broad service-invocation access.
 
-The sample subscriber endpoint lives in [samples/Hexalith.Parties.Sample/PartyEventHandler.cs](samples/Hexalith.Parties.Sample/PartyEventHandler.cs) and maps `/events/parties`. `parties` is the publisher only.
+The sample subscriber endpoint lives in [samples/Hexalith.Parties.Sample/PartyEventHandler.cs](samples/Hexalith.Parties.Sample/PartyEventHandler.cs) and maps `/events/parties`. The `eventstore` app publishes party-domain events, `tenants` publishes tenant-lifecycle events, `parties` subscribes to tenant-lifecycle events, and `sample` subscribes to party-domain events.
 
-Run via .NET Aspire: `dotnet run --project src/Hexalith.Parties.AppHost`
+Run via .NET Aspire: `dotnet aspire run --project src/Hexalith.Parties.AppHost`.
+These YAML files are local-development wiring, not production manifests.
+Runtime deployment orchestration is externally owned. The external orchestrator
+owns environment-specific DAPR components, broker credentials, ingress,
+promotion, and rollback, and consumes immutable Parties image tags as described in
+[deployment-guide.md](deployment-guide.md).

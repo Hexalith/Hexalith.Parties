@@ -62,15 +62,24 @@ Open the Aspire dashboard URL printed by the command and verify these resources 
 - `statestore` and `pubsub` - DAPR components backed by Redis
 - DAPR sidecars for `eventstore`, `eventstore-admin`, `parties`, and `tenants`
 
-The `eventstore-admin-ui` and `parties-mcp` resources are explicit-start auxiliaries in the dashboard. Start `eventstore-admin-ui` when you need stream browsing, and start `parties-mcp` when an AI assistant needs the MCP tool host. The MCP host is separate from the `parties` actor host.
+The `eventstore-admin-ui` and `parties-mcp` resources are explicit-start auxiliaries in the dashboard. Start `eventstore-admin-ui` when you need stream browsing, and start `parties-mcp` when an AI assistant needs the MCP tool host. The MCP host is separate from the internal `parties` domain-service host.
 
-EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties owns domain execution and projection behavior behind the actor host. Do not call Parties internals to manage tenant lifecycle, RBAC, authorization, projection actors, or domain invocation.
+EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties owns domain execution and SDK projection/query handlers behind the domain-service host. Do not call Parties internals to manage tenant lifecycle, RBAC, authorization, read models, or domain invocation.
+
+The Parties DAPR sidecar is deny-by-default. Only the `eventstore` app ID may
+invoke the exact POST SDK routes (`/process`, `/query`,
+`/admin/operational-index-metadata`, `/project`, `/project/v2`,
+`/project/v2/reconcile`, `/replay-state`, `/project/rebuild/v1`,
+`/project/rebuild/shared/v1`, `/project/rebuild/stage/v1`,
+`/project/rebuild/commit/v1`, `/project/rebuild/abort/v1`, and
+`/project/rebuild/verify/v1`). These are internal service-invocation endpoints,
+not an alternate public API.
 
 If startup fails before the dashboard appears, first check that Docker Desktop is running and that the baseline root submodules exist under `references/`. A missing build, Commons, EventStore, FrontComposer, PolymorphicSerializations, or Tenants checkout is a setup problem, not a partial local topology that should be treated as ready.
 
 Memories-backed rich search is optional for the default local Parties run. To include it, initialize the `references/Hexalith.Memories` submodule and run the AppHost with `EnableMemoriesSearch=true`; leave it unset for the baseline one-command local topology.
 
-Readiness is confirmed by the Aspire dashboard health column and by the service-default endpoints exposed by each HTTP resource: `/ready` for readiness, `/health` for full health, and `/alive` for liveness. Treat the system as usable only after `eventstore`, `parties`, and `tenants` are healthy; a live `parties` actor host alone is not enough because public traffic enters through EventStore.
+Readiness is confirmed by the Aspire dashboard health column and by the service-default endpoints exposed by each HTTP resource: `/ready` for readiness, `/health` for full health, and `/alive` for liveness. Treat the system as usable only after `eventstore`, `parties`, and `tenants` are healthy; a live `parties` domain-service host alone is not enough because public traffic enters through EventStore.
 
 ---
 
@@ -199,7 +208,7 @@ Invoke-RestMethod -Method Post -Uri "$env:EVENTSTORE_URL/api/v1/commands" `
 
 Expected result: EventStore accepts the command and returns a correlation id. Command acceptance is not a read-your-write guarantee; projections may need a short moment before query results reflect the event.
 
-The command -> event -> projection flow is: EventStore authenticates and authorizes the request, routes the command envelope to the Parties domain actor host, Parties validates and emits domain events, EventStore persists and publishes those events, and the Parties projection actors update read models that queries use. Use the returned correlation id when checking logs or EventStore Admin UI evidence.
+The command -> event -> projection flow is: EventStore authenticates and authorizes the request, routes the command envelope to the Parties SDK domain-service host, Parties validates and emits domain events, EventStore persists and publishes those events, and Parties SDK projection handlers update read models that SDK query handlers use. Use the returned correlation id when checking logs or EventStore Admin UI evidence.
 
 ---
 
@@ -350,7 +359,7 @@ public sealed class MyService(
 
 ## Step 6: MCP Host
 
-AI assistants connect to the separate `parties-mcp` host, not to `/mcp` on the `parties` actor host.
+AI assistants connect to the separate `parties-mcp` host, not to `/mcp` on the `parties` domain-service host.
 
 Canonical tools:
 
@@ -414,7 +423,7 @@ Local Aspire-issued dev certificates must be trusted before curl or HttpClient c
 
 ### EventStore Gateway Not Ready
 
-Check the Aspire dashboard for `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, and `tenants`. Public command/query readiness is EventStore-owned; Parties health only proves the actor host is alive behind the gateway.
+Check the Aspire dashboard for `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, and `tenants`. Public command/query readiness is EventStore-owned; Parties health only proves the SDK domain-service host is alive behind the gateway.
 
 ### Docker or Submodule Startup Failures
 
@@ -430,7 +439,7 @@ If Redis, Keycloak, EventStore, or Tenants fail before the dashboard reaches hea
 
 ### Projection Delay
 
-A command can be accepted before the projection is queryable. Retry with bounded backoff and check projection freshness or EventStore Admin UI stream evidence. Do not bypass EventStore by reading projection actors directly.
+A command can be accepted before the projection is queryable. Retry with bounded backoff and check projection freshness or EventStore Admin UI stream evidence. Do not bypass EventStore by invoking SDK query/read-model internals directly.
 
 ### MVP Compliance Boundary
 
@@ -440,7 +449,7 @@ The warning remains non-dismissable in service startup logs and response metadat
 
 ### MCP Unavailable
 
-Verify the `parties-mcp` resource is running and configured with the EventStore gateway base URL. Do not route assistants to `/mcp` on the `parties` actor host.
+Verify the `parties-mcp` resource is running and configured with the EventStore gateway base URL. Do not route assistants to `/mcp` on the `parties` domain-service host.
 
 ---
 

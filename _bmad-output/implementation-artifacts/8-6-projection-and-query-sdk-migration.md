@@ -5,7 +5,7 @@ epic: "8"
 created: 2026-07-08T18:23:46+02:00
 status: done
 source_status: backlog
-target_status: review
+target_status: done
 baseline_commit: 2c4a7af
 review_loop_iteration: 1
 eventstore_pin_at_creation: 0f428d0c914f2151aab15bb262f956a9630041dc
@@ -13,7 +13,7 @@ eventstore_pin_at_creation: 0f428d0c914f2151aab15bb262f956a9630041dc
 
 # Story 8.6: Projection and query SDK migration
 
-Status: review
+Status: done
 
 <!-- Group 1+2+3+4 re-review patches applied 2026-08-03; Group 5 re-review 2026-08-03; prior open Group 2 logging/LastWrite items and Group 6 remain. -->
 

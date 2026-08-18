@@ -73,7 +73,7 @@ body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);paddin
 .grow .ty{color:var(--fg3)}
 .badge-state{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:var(--r-full);padding:2px 9px;width:max-content}
 .b-active{background:#e7f3e7;color:var(--success)}
-.b-restricted{background:#fbeee2;color:var(--warning)}
+.b-restricted{background:#fff9f5;color:var(--warning)} /* matched status token pair per DESIGN.md — never hand-mix tints */
 .b-erased{background:#fbe9e9;color:var(--danger)}
 .b-inactive{background:#eef0f1;color:var(--fg3)}
 /* detail */
@@ -134,7 +134,7 @@ body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);paddin
           <select class="sel"><option>Active</option><option>All states</option></select>
           <button class="btn primary">New</button>
         </div>
-        <div class="freshbar"><span class="dot stale"></span> Showing what we last knew — refreshing… (as of 10:38)</div>
+        <div class="freshbar" role="status"><span class="dot stale"></span> Showing what we last knew — refreshing… (as of 10:38)</div>
         <div class="grid">
           <div class="grow head"><span>Name</span><span>Type</span><span>State</span></div>
           <div class="grow sel"><span class="nm">Acme Holdings Ltd</span><span class="ty">Organization</span><span><span class="badge-state b-active">● Active</span></span></div>
@@ -186,7 +186,7 @@ body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);paddin
     <div class="content">
       <div class="master">
         <div class="toolbar"><div class="search">🔎 Search parties…</div><select class="sel"><option>Person</option></select></div>
-        <div class="freshbar"><span class="dot ok"></span> Up to date</div>
+        <div class="freshbar" role="status"><span class="dot ok"></span> Up to date</div>
         <div class="grid">
           <div class="grow head"><span>Name</span><span>Type</span><span>State</span></div>
           <div class="grow sel"><span class="nm">Jordan Webb</span><span class="ty">Person</span><span><span class="badge-state b-active">● Active</span></span></div>

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PRD Validation: Parties UI PRD</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --border: #e7e5e4;
+    --text: #1c1917;
+    --muted: #78716c;
+
+    --verdict-strong: #16a34a;
+    --verdict-adequate: #65a30d;
+    --verdict-thin: #d97706;
+    --verdict-broken: #dc2626;
+
+    --sev-low: #64748b;
+    --sev-medium: #ca8a04;
+    --sev-high: #ea580c;
+    --sev-critical: #dc2626;
+
+    --grade-exc: #16a34a;
+    --grade-good: #65a30d;
+    --grade-fair: #d97706;
+    --grade-poor: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  header.report-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .title h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .title .subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .grade {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: white;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+  .grade-excellent { background: var(--grade-exc); }
+  .grade-good { background: var(--grade-good); }
+  .grade-fair { background: var(--grade-fair); }
+  .grade-poor { background: var(--grade-poor); }
+
+  .synthesis {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--muted);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    font-size: 15.5px;
+  }
+  .synthesis p { margin: 0 0 10px; }
+  .synthesis p:last-child { margin-bottom: 0; }
+
+  .dimension-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .dim-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .dim-card .dim-name { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .dim-card .dim-verdict { font-size: 14px; font-weight: 600; }
+
+  section.dimension, section.reviewer-section { margin-bottom: 14px; }
+  section.dimension details, section.reviewer-section details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  section summary {
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  section summary::-webkit-details-marker { display: none; }
+  section summary::before {
+    content: "▸";
+    display: inline-block;
+    color: var(--muted);
+    transition: transform 0.15s ease;
+  }
+  section details[open] summary::before { transform: rotate(90deg); }
+  section summary h2 {
+    display: inline;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    flex: 1;
+  }
+  .verdict-pill {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: white;
+  }
+  .verdict-strong { background: var(--verdict-strong); }
+  .verdict-adequate { background: var(--verdict-adequate); }
+  .verdict-thin { background: var(--verdict-thin); }
+  .verdict-broken { background: var(--verdict-broken); }
+
+  .dim-body { padding: 4px 20px 18px; }
+  .dim-judgment { color: var(--text); font-size: 14.5px; }
+  .dim-judgment p { margin: 0 0 10px; }
+
+  .findings-list { padding: 0 20px 4px; }
+  article.finding {
+    padding: 14px 0;
+    border-top: 1px solid var(--border);
+  }
+  article.finding:first-child { border-top: none; }
+  article.finding header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .badge {
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+  }
+  .badge-sev-low { background: rgba(100, 116, 139, 0.12); color: var(--sev-low); }
+  .badge-sev-medium { background: rgba(202, 138, 4, 0.14); color: var(--sev-medium); }
+  .badge-sev-high { background: rgba(234, 88, 12, 0.14); color: var(--sev-high); }
+  .badge-sev-critical { background: rgba(220, 38, 38, 0.14); color: var(--sev-critical); }
+  .finding-title { margin: 0; font-size: 15px; font-weight: 500; flex: 1; min-width: 200px; }
+  .finding-location { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; color: var(--muted); }
+  .finding-note, .finding-fix { margin-top: 6px; font-size: 14px; }
+  .finding-fix strong { color: var(--muted); font-weight: 500; }
+
+  .reviewer-source {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  .mechanical {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 24px;
+    font-size: 14px;
+  }
+  .mechanical h3 { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .mechanical ul { margin: 0; padding-left: 20px; }
+  .mechanical li { margin-bottom: 4px; color: var(--text); }
+
+  footer.report-footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  footer .meta { display: flex; gap: 24px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+  <div class="container">
+
+    <header class="report-header">
+      <div class="title">
+        <h1>Parties UI PRD — Validation Report</h1>
+        <div class="subtitle">_bmad-output/planning-artifacts/parties-ui-prd.md</div>
+      </div>
+      <div class="grade grade-fair">Fair</div>
+    </header>
+
+    <div class="synthesis">
+      <p>This PRD does its declared job well: a compact, theater-free consolidation with a real precedence rule ("the source artifact owning the topic wins"), clean FR identification, a complete FR traceability matrix, and unusually honest scope ring-fencing — and its brownfield references check out on disk (all six §Source Artifacts paths exist; the Epics 1–5 <code>done</code> claim matches <code>sprint-status.yaml</code>). The risk sits on the non-FR half of its own promise: NFR coverage is not extractable from the traceability matrix, and the UX-DR ID scheme does not resolve in the artifact the PRD names as its authority — so readiness tooling gets first-class FRs but second-class NFR/UX-DR coverage.</p>
+      <p>The adversarial and source-fidelity reviewers materially shift the picture on currency and change control. The document was edited on 2026-07-06 and 2026-07-16 (git-verified) with the frontmatter date never bumped and no version, changelog, or owner; §Current Implementation Evidence is now stale (Epics 6–7 are <code>done</code>, Epic 8 is <code>in-progress</code> with stories 8.11–8.13 the PRD does not know exist); and — decisive for planning any fix — the file is <strong>frozen byte-for-byte by an active fitness gate</strong> (<code>EpicEightClosureFitnessTests.EpicEightAddsNoPrdFunctionalRequirement</code>, baseline 37f4ec8 = current HEAD), so every corrective edit must be batched as a governed non-Epic-8 change that advances the baseline. The adversarial reviewer rated three findings critical (canonical-in-name-only, false date, unrecoverable UX-DRs); the synthesis consolidates them to high because the evidence-based reviewers corroborate the substance at lower severity and the readiness process's explicit reconciliation step mitigates the worst-case reading — but they, plus the extraction gaps, put the grade at Fair rather than Good.</p>
+    </div>
+
+    <div class="dimension-summary">
+      <div class="dim-card">
+        <div class="dim-name">Decision-readiness</div>
+        <div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">Substance over theater</div>
+        <div class="dim-verdict" style="color: var(--verdict-strong)">strong</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">Strategic coherence</div>
+        <div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">Done-ness clarity</div>
+        <div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">Scope honesty</div>
+        <div class="dim-verdict" style="color: var(--verdict-strong)">strong</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">Downstream usability</div>
+        <div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">Shape fit</div>
+        <div class="dim-verdict" style="color: var(--verdict-strong)">strong</div>
+      </div>
+    </div>
+
+    <section class="dimension">
+      <details>
+        <summary>
+          <h2>Decision-readiness</h2>
+          <span class="verdict-pill verdict-adequate">adequate</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>For this shape, "acting on the PRD" means a readiness operator or maintainer can trust its answers. The PRD makes its two load-bearing decisions as decisions, not considerations: §Source Artifacts states a conflict-precedence rule ("the source artifact owning the topic wins: architecture for system decisions, UX spines for product experience, and implementation story records for completed work evidence"), and §Current Implementation Evidence states a scope invariant with teeth ("Epics 7 and 8 are maintenance scope only... must not be reported as product-feature delivery"). The absence of Open Questions and <code>[NOTE FOR PM]</code> callouts is shape-consistent — the underlying decisions were made and shipped; there is nothing left open to dodge.</p>
+            <p>The one soft spot is temporal: the evidence snapshot is pinned to 2026-06-27 and the document correctly instructs that later validation "must reconcile this PRD and planning documents with implementation story records," but the maintenance bullets partially read as current state while the tree has moved (as of this review, <code>sprint-status.yaml</code> shows epics 6–7 <code>done</code> and epic 8 <code>in-progress</code>).</p>
+          </div>
+        </div>
+        <div class="findings-list">
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-low">low</span>
+              <h3 class="finding-title">Evidence snapshot ages without a refresh contract</h3>
+              <span class="finding-location">§Current Implementation Evidence</span>
+            </header>
+            <div class="finding-note">"As of 2026-06-27" is now ~7 weeks old; epic 6 and 7 are <code>done</code> and epic 8 <code>in-progress</code> in <code>sprint-status.yaml</code>, while the bullets still describe Epic 8 as "approved". The reconciliation sentence mitigates, but a reader can mistake the bullets for live status.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Re-stamp the snapshot date on each readiness run, or mark each maintenance bullet explicitly as-of its date.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <section class="dimension">
+      <details>
+        <summary>
+          <h2>Substance over theater</h2>
+          <span class="verdict-pill verdict-strong">strong</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>There is no furniture in this document. No personas, no vision statement, no differentiation section — and for a retroactive consolidation that absence is honesty, not a gap. What is here is earned and product-specific throughout: NFR2 commits to "never treats accepted commands as read-your-write"; NFR4 pins copy behavior ("Erasure copy commits to starting the obligation and states completed erasure is permanent... no fixed completion time"); NFR7 bans a concrete failure mode ("Do not hard-code raw accent colors for text-bearing controls or redeclare Fluent tokens in product CSS"). None of the nine NFRs is copyable boilerplate — each would be falsified by a specific implementation mistake. The §UX Requirements section is deliberately a pointer rather than a restatement, which is consistent with the precedence rule (its extraction weakness is logged under Downstream usability, not here).</p>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="dimension">
+      <details>
+        <summary>
+          <h2>Strategic coherence</h2>
+          <span class="verdict-pill verdict-adequate">adequate</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>This dimension matters less for this shape: the PRD is not betting a thesis to win a green-light; the product is shipped. Judged lightly, it still coheres: §Product Scope carries a compact thesis (one responsive Blazor Server app, two role-gated areas, browser talks only to the UI host/BFF, tokens server-side), and the FR arc — shell, admin records, admin GDPR, consumer self-service, consumer consent/privacy — mirrors Epics 1–5 one-to-one in the §Traceability Matrix rather than reading as a backlog. There are no Success Metrics and no counter-metrics; for a retroactive consolidation whose "success" is that readiness tooling can extract coverage, that omission is appropriate and is noted here rather than penalized.</p>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="dimension">
+      <details>
+        <summary>
+          <h2>Done-ness clarity</h2>
+          <span class="verdict-pill verdict-adequate">adequate</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>This dimension matters most here, so it was judged unforgivingly. Most FRs carry at least one directly testable consequence: FR-Shell's "Consumers without exactly one verified <code>party_id</code> claim land in the fail-closed <code>NoPartyBinding</code> state, never on a data screen" is a crisp pass/fail; FR-Consumer-3's "Consent toggles default Off, are real switch controls" likewise; FR-Admin-3 pins "route ids are authoritative on edit" and "a real radiogroup"; FR-Admin-4 enumerates its operations (typed-name erasure confirmation, restrict/lift, record/revoke consent, Art.20 export, Art.30 records). The pattern vocabulary — "last-known rendering", "optimistic echo", "PII-free tombstone" — is defined once in NFR2/NFR3 and reused across FRs, which keeps the terse FR paragraphs testable rather than adjectival.</p>
+            <p>The residue: "bounded" appears twice with no bound in-document and no pointer to the record that owns the bound; "validated forms" leaves the validation contract unlocated; and nothing in the PRD defines when a read counts as "stale" or "degraded" (the behavior once stale is testable, but the trigger lives elsewhere unnamed). FR-Consumer-4's "Copy must be plain, honest" is adjectives, but UX-DR13–16 explicitly own copy requirements, so it resolves. Because Epics 1–5 story records carry the acceptance evidence and the precedence rule delegates authority, these are moderated in severity — but a reader working from this document alone hits them.</p>
+          </div>
+        </div>
+        <div class="findings-list">
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">"Bounded" without a bound</h3>
+              <span class="finding-location">§FR-Admin-4, §FR-Consumer-4</span>
+            </header>
+            <div class="finding-note">"A bounded verification report" and "bounded audit metadata" state a bound exists but neither the bound nor its owning record is named; §Current Implementation Evidence mentions Story 3.5/3.6 (D7 erasure certificate, bounded Admin erasure-verification report UI) but the FRs don't cite them.</div>
+            <div class="finding-fix"><strong>Fix:</strong> State the bound in one clause per FR, or cite the owning story/architecture record by name.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-low">low</span>
+              <h3 class="finding-title">Validation rules unlocated</h3>
+              <span class="finding-location">§FR-Admin-3, §FR-Consumer-2</span>
+            </header>
+            <div class="finding-note">"Validated forms" and "validated, self-scoped update commands" don't say which artifact owns the validation contract; the precedence rule implies architecture or UX but doesn't disambiguate for this topic.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Name the owning artifact for form-validation rules.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-low">low</span>
+              <h3 class="finding-title">Staleness trigger undefined</h3>
+              <span class="finding-location">§NFR2, §FR-Admin-1</span>
+            </header>
+            <div class="finding-note">The response to a stale/degraded read is well-specified, but no in-document definition or named pointer says what makes a read stale/degraded.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Cite the architecture's freshness/degraded-read contract.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <section class="dimension">
+      <details>
+        <summary>
+          <h2>Scope honesty</h2>
+          <span class="verdict-pill verdict-strong">strong</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>Omissions are explicit and the boundaries do real work. §Out of MVP Scope names four deferrals with their correct dispositions — notably "Production KMS provisioning is a deployment prerequisite before processing real regulated EU personal data, not a UI feature story", which is exactly the kind of reclassification that silent de-scoping would hide. The §Current Implementation Evidence scope invariant is an unusually honest anti-inflation guard: it doesn't just exclude Epics 6–8 from FR coverage, it forbids counting them ("must not be reported as product-feature delivery"). Zero <code>[ASSUMPTION]</code> tags and zero open items is shape-consistent, not evasion — the sources are shipped artifacts, so nothing was inferred without confirmation. Open-items density of zero on a retroactive PRD is exactly right.</p>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="dimension">
+      <details>
+        <summary>
+          <h2>Downstream usability</h2>
+          <span class="verdict-pill verdict-adequate">adequate</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>This dimension matters most for this PRD — extraction by readiness tooling is its stated purpose. The FR side is clean: nine unique, stable FR IDs; a §Traceability Matrix covering every FR with epic and concrete surfaces (routes); frontmatter <code>status: canonical-requirements-source</code> as a tooling anchor; and every §Source Artifacts path verified present on disk. The NFR and UX-DR sides are weaker, and both weaknesses cut directly against the §Purpose promise that "readiness tooling can extract FR/NFR coverage."</p>
+            <p>The UX-DR problem is specific: §UX Requirements opens "The final UX design set is authoritative for the product experience" — but <code>DESIGN.md</code>, <code>EXPERIENCE.md</code>, and <code>validation-report.md</code> contain zero occurrences of "UX-DR". The individually numbered definitions live in <code>epics.md</code> (e.g., "UX-DR9 — Real semantics, no interactive <code>&lt;div&gt;</code>s"). On top of the misattribution, the grouped labels don't align with the ranges: "UX-DR8 through UX-DR12" lists seven items across five IDs, and "UX-DR13 through UX-DR16" lists five items across four IDs — so neither a tool nor a human can map a given UX-DR ID to its requirement from this document or from the artifact it names as authority.</p>
+          </div>
+        </div>
+        <div class="findings-list">
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-high">high</span>
+              <h3 class="finding-title">NFR coverage not extractable</h3>
+              <span class="finding-location">§Traceability Matrix, §Purpose</span>
+            </header>
+            <div class="finding-note">The Purpose promises extraction of "FR/NFR coverage", but the matrix maps only the nine FRs; the sole NFR→epic mapping in the document is one prose fragment ("Epic 6... supports NFR9"). NFR1–NFR8 coverage must be inferred from outside the canonical source.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Add NFR rows to the traceability matrix (or a second matrix) mapping each NFR to its primary epics/surfaces or gate (e.g., NFR1→a11y gate, NFR9→CI).</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">UX-DR IDs don't resolve in their named authority</h3>
+              <span class="finding-location">§UX Requirements</span>
+            </header>
+            <div class="finding-note">The named-authoritative UX design set carries no UX-DR identifiers (they are defined individually in <code>epics.md</code>), and two range/label groupings mismatch (DR8–12: 5 IDs vs 7 labels; DR13–16: 4 IDs vs 5 labels), leaving individual UX-DR requirements unmappable from this PRD. The adversarial reviewer rates this critical; consolidated to high in the synthesis.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Enumerate UX-DR1–16 individually with one line each, or explicitly name <code>epics.md</code> as the ID authority and align each label to its ID.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-low">low</span>
+              <h3 class="finding-title">No Glossary</h3>
+              <span class="finding-location">whole document</span>
+            </header>
+            <div class="finding-note">Domain nouns (tombstone, optimistic echo, projection freshness, bound Consumer, self-scoped accessor, tenant warm-up) are used consistently but never defined in-doc; tolerable under the precedence rule, but sections don't fully stand alone when pulled out.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Optional ten-line glossary anchoring the pattern vocabulary.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <section class="dimension">
+      <details>
+        <summary>
+          <h2>Shape fit</h2>
+          <span class="verdict-pill verdict-strong">strong</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>The PRD names its own shape in §Purpose and holds to it. It is a brownfield capability consolidation and reads like one: no personas, no user journeys, no success-metric apparatus bolted on to look like a chain-top PRD — the rubric's over-formalization trap is exactly what this document avoids. Brownfield accuracy checks pass: all six §Source Artifacts paths exist; <code>sprint-change-proposal-2026-07-06.md</code> resolves; the "Epics 1-5 and their stories as <code>done</code>" claim matches <code>sprint-status.yaml</code>; the Story 1.4/3.5/3.6/4.1/4.2 dependency-evidence entries match existing implementation-artifact records. Done MVP versus maintenance scope is distinguished crisply rather than left to inference. The single shape wrinkle — the UX-DR authority misattribution — is logged under Downstream usability rather than double-counted here.</p>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="reviewer-section">
+      <details open>
+        <summary>
+          <h2>Adversarial review</h2>
+          <span class="reviewer-source">review-adversarial-general.md</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>The document's central claim — canonical — is false by its own text: §Source Artifacts cedes authority on every topic domain to another document, so the PRD is authoritative for nothing while presenting itself to tooling as the single source. It is also stale by construction: frontmatter says 2026-06-27, but git history shows edits on 2026-07-06 and 2026-07-16 with no version, changelog, or date bump, and the body cites events later than its own evidence date. The requirement inventory a readiness tool would extract is unreliable: three incompatible ID grammars, UX-DR requirements compressed into ranges whose item counts don't match their ID counts (and whose declared authoritative source doesn't even contain the UX-DR identifiers — they live in <code>epics.md</code>), no NFR or UX-DR rows in the traceability matrix, no acceptance criteria, and normative language ("honestly", "plain", "usable", "bounded", "agreed") that no check can verify. A compliance-blocking KMS prerequisite is parked in "Out of MVP Scope" where coverage extraction will never see it. As a prose consolidation the file is readable; as a machine-consumed readiness source it fails its stated purpose.</p>
+            <p><em>Synthesis note: findings below keep the adversarial severity ratings. The three criticals are consolidated to high in the overall grade — the rubric and source-fidelity reviewers corroborate their substance at lower severity, and the readiness process's explicit reconciliation step blunts the worst-case reading — but their substance stands unrefuted.</em></p>
+          </div>
+        </div>
+        <div class="findings-list">
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-critical">critical</span>
+              <h3 class="finding-title">Canonical in name, subordinate in fact</h3>
+              <span class="finding-location">§Purpose vs §Source Artifacts</span>
+            </header>
+            <div class="finding-note">The PRD declares itself "the canonical ... requirements source", then rules that on any conflict "the source artifact owning the topic wins" — and those three domains partition essentially everything the PRD contains, so the document is authoritative for nothing. None of the six listed sources is pinned to a revision, hash, or date, so a readiness check that reads only this file has no way to detect silent divergence — and §Current Implementation Evidence even instructs that readiness validation "must reconcile this PRD ... with implementation story records", i.e., the PRD admits the readiness check cannot trust the PRD. A verdict built on this file is unfalsifiable by design.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Pick one: (a) make it genuinely canonical — changes flow into this file via change control and this file wins conflicts; or (b) rename it a "consolidated requirements index" and require the readiness tool to validate against pinned source revisions (commit SHA or content hash per source) recorded in this file.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-critical">critical</span>
+              <h3 class="finding-title">Frontmatter date is false; document mutates without change control</h3>
+              <span class="finding-location">frontmatter vs §Current Implementation Evidence</span>
+            </header>
+            <div class="finding-note">The body cites <code>sprint-change-proposal-2026-07-06.md</code> and states Epic 7 "is completed", both later than the document's only date. Git history confirms edits on 2026-07-06 and 2026-07-16 with the frontmatter date never updated; there is no version number, no changelog, no owner, no approver. The "As of 2026-06-27" heading sits directly above facts that only became true in July — an internal contradiction a tool timestamping its coverage snapshot will faithfully propagate.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Add <code>version</code>, <code>last_updated</code>, and an owner to frontmatter; add a changelog section; scope "as of" claims per subsection; bump on every edit.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-critical">critical</span>
+              <h3 class="finding-title">UX-DR requirements unrecoverable; declared authority does not define them</h3>
+              <span class="finding-location">§UX Requirements</span>
+            </header>
+            <div class="finding-note">Sixteen requirements are compressed into four range bullets with two ID/label count mismatches (DR8–12: 5 IDs glossed by 7 features; DR13–16: 4 IDs by 5). No injective ID-to-requirement mapping exists, so a coverage extractor cannot attribute any individual UX-DR from this file alone. The escape hatch fails too: the UX-DR identifiers do not appear anywhere in <code>DESIGN.md</code>, <code>EXPERIENCE.md</code>, or <code>validation-report.md</code> — they are defined in <code>epics.md</code>. The PRD points readers and tools at a source that does not contain the IDs it cites.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Enumerate all 16 UX-DRs as individual one-line requirements in this file, and cite <code>epics.md</code> as their defining source (or move the definitions into the design set and re-point).</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-high">high</span>
+              <h3 class="finding-title">Untestable normative language throughout the FRs/NFRs</h3>
+              <span class="finding-location">FR-Consumer-3/4, NFR1, NFR4, NFR6, NFR7, FR-Admin-1/4</span>
+            </header>
+            <div class="finding-note">A readiness check can verify none of these clauses: "grant and withdraw consent honestly"; copy "must be plain, honest"; "usable target sizes" (WCAG 2.2 supplies an actual number — 24×24 CSS px, SC 2.5.8 — which the PRD declines to state); tenant warm-up "communicated as a temporary state"; "stale/degraded read handling" (handling defined nowhere); "bounded" (bounded by what, measured how); "the agreed domain deltas" (agreed where, by whom, recorded in what artifact). Each reduces coverage checking to keyword presence.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Replace every adverbial quality with an observable criterion (e.g., "target sizes ≥ 24×24 CSS px per WCAG 2.2 SC 2.5.8"; name the artifact recording the agreed deltas).</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-high">high</span>
+              <h3 class="finding-title">No acceptance criteria, no NFR thresholds, whole NFR categories missing</h3>
+              <span class="finding-location">§Functional Requirements, §Non-Functional Requirements</span>
+            </header>
+            <div class="finding-note">Every FR is capability prose with no acceptance criteria; every NFR is unquantified. There is no performance, latency, availability, capacity, concurrency, or browser-support NFR at all; NFR2 makes freshness "first-class" but sets no bound on how stale data may be before the UI must say so. "Coverage" degenerates to "some story mentions the ID" — the check can never fail on substance.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Attach 2–5 verifiable acceptance criteria per FR, quantify each NFR, and explicitly declare any waived NFR categories so absence is a decision, not a hole.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-high">high</span>
+              <h3 class="finding-title">Traceability matrix omits NFRs and UX-DRs entirely</h3>
+              <span class="finding-location">§Traceability Matrix</span>
+            </header>
+            <div class="finding-note">The matrix maps only the nine FRs to Epics 1–5. NFR1–NFR9 have no epic or surface mapping anywhere; UX-DR1–16 map to nothing. A tool extracting "FR/NFR coverage" finds NFR coverage undefined and will either crash, report 0%, or silently skip NFRs — all three outcomes defeat the document's purpose.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Add matrix rows for NFR1–9 and UX-DR1–16 (or an explicit "verified by" column naming the test lane/gate per NFR).</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-high">high</span>
+              <h3 class="finding-title">Three incompatible requirement ID grammars break mechanical extraction</h3>
+              <span class="finding-location">§FR-Shell, §NFR1, §UX Requirements</span>
+            </header>
+            <div class="finding-note">The file uses <code>FR-Shell</code> (area, no number), <code>FR-Admin-N</code>/<code>FR-Consumer-N</code>, <code>NFR1</code> (no hyphen, no area), and <code>UX-DRn</code>. A regex like <code>FR-[A-Za-z]+-\d+</code> misses FR-Shell; <code>NFR-\d+</code> misses every NFR. The document also never declares which classes count as "functional requirements" for the Epic 7/8 scope invariant — do UX-DRs count? A tool must guess.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Normalize IDs (e.g., FR-Shell-1, NFR-1..NFR-9), state the ID scheme in a conventions note, and declare which ID classes participate in functional-coverage counting.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-high">high</span>
+              <h3 class="finding-title">Role model incoherent: DPO exists in FR-Admin-4 but not in the shell</h3>
+              <span class="finding-location">§FR-Shell vs §FR-Admin-4</span>
+            </header>
+            <div class="finding-note">FR-Shell routes exactly three roles ("Admin or TenantOwner users land in Admin; Consumer users land in Consumer"). FR-Admin-4 then grants erasure and Art.30 powers to "DPO/Admin users" — a DPO role the shell never routes, gates, or lands anywhere. Also unspecified: a user holding both Admin and Consumer roles, and a user holding none. The most privilege-sensitive role in the document has undefined navigation and undefined gating.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Add a complete role/landing/navigation table covering Admin, TenantOwner, DPO, Consumer, multi-role, and no-role principals.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-high">high</span>
+              <h3 class="finding-title">Compliance-blocking prerequisite buried in "Out of MVP Scope"</h3>
+              <span class="finding-location">§Out of MVP Scope</span>
+            </header>
+            <div class="finding-note">"Production KMS provisioning is a deployment prerequisite before processing real regulated EU personal data" is a legal go-live gate for the product's core (GDPR) purpose, yet it is phrased as a non-requirement in the section coverage tooling is designed to ignore. No FR, NFR, or gate owns it. A readiness check can report the initiative green while the system is not lawfully deployable against real EU personal data — the exact false positive this PRD exists to prevent.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Promote it to an NFR or an explicit deployment-gate requirement with an owner and a verification method; "Out of MVP Scope" should contain only things nobody must do.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">NFR3 asserts an enforcement the out-of-scope section defers</h3>
+              <span class="finding-location">§NFR3 vs §Out of MVP Scope</span>
+            </header>
+            <div class="finding-note">NFR3 states "Parties-side defense-in-depth asserts <code>aggregateId == party_id</code>", while Out of MVP Scope says "Gateway-level data-subject/self principal support remains a future enhancement." The PRD never states which layer enforces own-data-only today versus later — precisely the ambiguity a readiness check on a security NFR must not have.</div>
+            <div class="finding-fix"><strong>Fix:</strong> State explicitly which assertion exists now, at which seam, and what the deferred gateway enhancement adds beyond it.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">Scope invariant excludes Epic 6 and strains against its own bullets</h3>
+              <span class="finding-location">§Current Implementation Evidence</span>
+            </header>
+            <div class="finding-note">The bolded "Scope invariant" binds only Epics 7 and 8; Epic 6's identical claim is an ordinary bullet with weaker normative status for no stated reason. Meanwhile Epic 7 is described as "completed partial platform-alignment scope" inside an invariant that says "maintenance scope only"; "partial platform-alignment" is defined nowhere.</div>
+            <div class="finding-fix"><strong>Fix:</strong> One invariant covering Epics 6–8 uniformly; drop or define "partial platform-alignment".</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">Unresolvable references inside the evidence and NFRs</h3>
+              <span class="finding-location">§Current Implementation Evidence, §NFR7, §FR-Admin-4</span>
+            </header>
+            <div class="finding-note">"Story 3.5 completed D7 erasure certificate": <code>D7</code> is defined nowhere in this file (it is an epics.md decision ID). "The agreed domain deltas" (NFR7) names no artifact recording the agreement. "Existing typed client/gateway seams" (FR-Admin-4) is unverifiable without naming the seams. Each forces a tool or reviewer to leave the "canonical" file to learn what the requirement refers to.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Define or link every imported identifier at first use.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">Cancellation window undefined — by the PRD's own honesty standard</h3>
+              <span class="finding-location">§FR-Consumer-4</span>
+            </header>
+            <div class="finding-note">Consumers may "cancel erasure while cancellation is still allowed", but no event or boundary defines when cancellation stops being allowed. The same section demands copy "free of hard timing promises that the system cannot guarantee" — yet the PRD itself cannot state the boundary, so neither implementers nor testers can know what the UI is permitted to promise.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Define the cancellation boundary as an event (e.g., "until the erasure obligation transitions to started"), even if no wall-clock duration is promised.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">No definition of what "readiness" means against this file</h3>
+              <span class="finding-location">§Purpose</span>
+            </header>
+            <div class="finding-note">The document exists to serve readiness checks but never states the contract: what constitutes coverage (story reference? test evidence? both?), which requirement classes are gating, or how NFR satisfaction is demonstrated. Different tools will compute different verdicts from the same file and all can claim compliance.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Add a short "readiness contract" section: per requirement class, what evidence counts and where it lives.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-low">low</span>
+              <h3 class="finding-title">NFR9 is a process gate, not a product NFR; frontmatter status is a self-description</h3>
+              <span class="finding-location">§NFR9, frontmatter</span>
+            </header>
+            <div class="finding-note">".NET 10, central package management, <code>.slnx</code>, warnings as errors ... root-level submodules" are repository/build policy, not attributes of the parties-ui product; counting them as product NFR coverage pollutes the extraction. <code>status: canonical-requirements-source</code> is a claim of role, not a lifecycle state — tooling expecting draft/review/approved gets an unrecognized enum.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Move NFR9 to an "Engineering Constraints" section outside NFR numbering (or label the class explicitly); use a real lifecycle status plus a separate <code>role</code> field.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <section class="reviewer-section">
+      <details open>
+        <summary>
+          <h2>Source-fidelity &amp; currency review</h2>
+          <span class="reviewer-source">review-source-fidelity.md</span>
+        </summary>
+        <div class="dim-body">
+          <div class="dim-judgment">
+            <p>The PRD's requirements core verifies cleanly against the repository as of 2026-08-18: all six §Source Artifacts paths exist; the full FR→Epic traceability matrix matches <code>epics.md</code> exactly; all nine routes exist as real <code>@page</code> directives; all NFR9 build-gate claims hold; the five dependency-evidence stories are <code>done</code>; and the temporal-query/MCP deferral is confirmed (no <code>get_party_name_at</code> tool exists). Eleven checked claims held up. The findings concentrate on currency metadata, the staleness of §Current Implementation Evidence, and — decisive for remediation — an active fitness gate that freezes the file byte-for-byte.</p>
+          </div>
+        </div>
+        <div class="findings-list">
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-high">high</span>
+              <h3 class="finding-title">PRD frozen byte-for-byte by an active fitness gate; any corrective edit fails CI</h3>
+              <span class="finding-location">whole document</span>
+            </header>
+            <div class="finding-note"><code>EpicEightClosureFitnessTests.EpicEightAddsNoPrdFunctionalRequirement</code> (lines 153–178) asserts <code>git diff --name-only 37f4ec8</code> over the PRD and <code>epics.md</code> is empty; <code>BaselineCommit</code> 37f4ec8 is the current HEAD. This is the strongest consumer dependency found: it depends on the PRD's exact bytes. Every fix suggested in this report therefore breaks the Epic 8 zero-PRD gate unless the baseline constant is advanced or the change is governed as an explicit non-Epic-8 correction with the test updated in the same change.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Batch all PRD corrections into one governed docs change that also advances <code>BaselineCommit</code>, ideally after Story 8.10 closes; do not hand-edit the PRD in isolation.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-high">high</span>
+              <h3 class="finding-title">Frontmatter date never maintained across later edits</h3>
+              <span class="finding-location">frontmatter, date: 2026-06-27</span>
+            </header>
+            <div class="finding-note"><code>git log --follow</code> shows two material edits after creation: f93534e (2026-07-06, added the "Post-MVP maintenance status" block) and df2cc6e (2026-07-16, added the "Scope invariant" paragraph). Readiness tooling records this file's currency (<code>implementation-readiness-report-2026-07-07.md</code> selects it and logs "modified 2026-07-06 21:47"), so a false date marker directly undermines currency assessment of the canonical requirements source.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Update <code>date</code> to the true last-edit date or replace with <code>created</code>/<code>last_updated</code> fields — coordinated with the freeze finding above.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-high">high</span>
+              <h3 class="finding-title">§Current Implementation Evidence stale against today's sprint status</h3>
+              <span class="finding-location">§Current Implementation Evidence</span>
+            </header>
+            <div class="finding-note">The section's facts remain individually true but no longer describe reality: <code>sprint-status.yaml</code> (2026-08-18) shows <code>epic-8: in-progress</code> with 8.1–8.6 and 8.11–8.13 <code>done</code>, 8.7/8.8 <code>blocked</code>, 8.9 <code>backlog</code>, 8.10 <code>review</code>; Epic 6 is <code>done</code>. The PRD describes Epic 8 only as "approved" backlog scope and knows nothing of stories 8.11–8.13. A reader treating this section as evidence would conclude Epic 8 is un-started.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Refresh the section with a current as-of date, Epic 6/7 done status, and the Epic 8 story-level state — coordinated with the baseline-freeze fix.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">"Epic 7 preserves rollback paths" superseded for the projection path</h3>
+              <span class="finding-location">§Current Implementation Evidence, Epic 7 bullet</span>
+            </header>
+            <div class="finding-note">As a description of the historical Epic 7 record it is true, but as current state it misleads: the projection-rollback retention action item was closed 2026-08-01 under Story 8.6 — the rollback-only actor/rebuild/adapter paths were removed after governed parity evidence. Only the crypto/key-management retention (Story 8.7 gate) remains open.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Qualify the bullet: projection rollback-only paths were removed 2026-08-01 under the governed retention SCP; crypto/key-management rollback paths remain preserved pending Story 8.7.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-medium">medium</span>
+              <h3 class="finding-title">KMS prerequisite's documented home retired; source artifact points at deleted file</h3>
+              <span class="finding-location">§Out of MVP Scope; §Source Artifacts conflict rule</span>
+            </header>
+            <div class="finding-note">The PRD's claim still holds and is still documented (<code>docs/index.md:86</code>, <code>docs/getting-started.md:446</code>), but <code>docs/deployment-security-checklist.md</code> — the checklist that owned this gate — was deleted by Story 8.13 (commit 30c5fd9), and <code>architecture.md:41</code> (a source artifact that "wins" on system decisions per the PRD's own conflict rule) still references the deleted file, as does <code>project-context.md:257</code>. A readiness run following the conflict rule lands on a dead path.</div>
+            <div class="finding-fix"><strong>Fix:</strong> No PRD text change strictly required; repoint <code>architecture.md:41</code> and <code>project-context.md</code> to the surviving KMS documentation.</div>
+          </article>
+          <article class="finding">
+            <header>
+              <span class="badge badge-sev-low">low</span>
+              <h3 class="finding-title">NFR8 "ServiceDefaults" wording predates the Story 8.4 Commons cutover</h3>
+              <span class="finding-location">§NFR8</span>
+            </header>
+            <div class="finding-note">Still literally true, but the local <code>Hexalith.Parties.ServiceDefaults</code> wrapper no longer exists; the host now consumes <code>Hexalith.Commons.ServiceDefaults</code> directly (<code>src/Hexalith.Parties.UI/Program.cs</code> lines 1, 33, 226). A reader could search for a local ServiceDefaults project and conclude NFR8 is unmet.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Reword to "uses Hexalith.Commons.ServiceDefaults" when the PRD is next unfrozen.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <div class="mechanical">
+      <h3>Mechanical notes</h3>
+      <ul>
+        <li><strong>Cross-refs:</strong> all six §Source Artifacts paths verified present on disk; <code>sprint-change-proposal-2026-07-06.md</code> resolves in <code>planning-artifacts/</code>.</li>
+        <li><strong>Sprint-status roundtrip:</strong> "Epics 1-5... done" matches <code>sprint-status.yaml</code>; post-PRD-date drift: <code>epic-6: done</code>, <code>epic-7: done</code>, <code>epic-8: in-progress</code>.</li>
+        <li><strong>ID continuity:</strong> FR-Shell + FR-Admin-1..4 + FR-Consumer-1..4 unique, no gaps; NFR1–NFR9 contiguous; §Traceability Matrix covers all nine FRs and only FRs.</li>
+        <li><strong>UX-DR IDs:</strong> referenced only as ranges; absent from all three named UX design set files; defined individually in <code>epics.md</code>; two range/label count mismatches (DR8–12: 5 IDs / 7 labels; DR13–16: 4 IDs / 5 labels).</li>
+        <li><strong>Assumptions Index roundtrip:</strong> vacuously consistent — no inline tags and no index. <strong>UJ protagonists:</strong> no UJs exist — shape-appropriate.</li>
+        <li><strong>Glossary drift:</strong> no glossary to drift against; usage of <code>party_id</code>, "Bound Consumers", "last-known", and "tombstone" is consistent across FRs and NFRs.</li>
+        <li><strong>Frontmatter:</strong> <code>date: 2026-06-27</code> predates the review date; <code>status: canonical-requirements-source</code> is a useful machine anchor and should stay stable.</li>
+      </ul>
+    </div>
+
+    <footer class="report-footer">
+      <div class="meta">
+        <span>Rubric: .claude/skills/bmad-prd/assets/prd-validation-checklist.md</span>
+        <span>Generated: 2026-08-18T19:56:56+02:00</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

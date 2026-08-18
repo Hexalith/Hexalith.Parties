@@ -1,13 +1,13 @@
 # Hexalith.Parties
 
-Hexalith.Parties is a ready-to-deploy party management domain service for people and organizations. Public command and query traffic goes through Hexalith.EventStore; the `parties` service runs the domain actor host behind that gateway, and consumers normally use the typed .NET client package. The solution also includes `parties-ui`, a Blazor Server browser UI/BFF for the Admin and Consumer experiences.
+Hexalith.Parties is a ready-to-deploy party management domain service for people and organizations. Public command and query traffic goes through Hexalith.EventStore; the `parties` service runs an EventStore SDK domain-service host behind that gateway, and consumers normally use the typed .NET client package. The solution also includes `parties-ui`, a Blazor Server browser UI/BFF for the Admin and Consumer experiences.
 
 > **GDPR Notice:** Some GDPR infrastructure exists, and crypto-shredding is enabled by default, but the default key store is `LocalDevKeyStorageBackend` (in-memory, dev-only). **Do not store regulated EU personal data** until a production KMS or secret-store-backed key provider is provisioned. The MVP warning switch is separate from the crypto feature; see [deployment-guide.md](docs/deployment-guide.md) for the current runtime ownership boundary.
 
 ## Key Features
 
 - **EventStore gateway** -- Public command/query ingress uses `POST /api/v1/commands` and `POST /api/v1/queries` with `Domain="party"`.
-- **Parties actor host** -- The `parties` resource owns domain execution, projections, and DAPR actor hosting behind EventStore.
+- **Parties domain-service host** -- The `parties` resource owns domain execution and SDK projection/query handlers behind EventStore.
 - **Typed client package** -- `IPartiesCommandClient` and `IPartiesQueryClient` hide EventStore envelope plumbing for .NET consumers.
 - **Parties UI/BFF** -- `parties-ui` is a Blazor Server host with FrontComposer, FluentUI, host-owned OIDC, role-gated Admin/Consumer areas, accessibility gates, and server-side token handling.
 - **Admin portal RCL** -- `Hexalith.Parties.AdminPortal` provides the protected `/admin/parties*` browse/detail/create/edit/GDPR surfaces embedded by `parties-ui`.
@@ -36,11 +36,22 @@ including the package-built EventStore gateway test host, and no project or file
 entries under `references/`. The AppHost resolves external topology projects by
 path only when the app model runs, so the standalone compile graph stays owned.
 
-Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `security`, `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub`. The AppHost also declares `eventstore-admin-ui` and `parties-mcp` as explicit-start auxiliary resources; start them from the dashboard when you need stream browsing or MCP access. AI assistants connect to `parties-mcp` rather than the `parties` actor host.
+Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `security`, `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub`. The AppHost also declares `eventstore-admin-ui` and `parties-mcp` as explicit-start auxiliary resources; start them from the dashboard when you need stream browsing or MCP access. AI assistants connect to `parties-mcp` rather than the internal `parties` domain-service host.
 
 The default local run path uses repository-level submodules under `references/` only. Do not initialize nested submodules unless a separate story or maintainer asks for that explicitly. Rich Memories-backed search is optional for local development; enable it separately with `EnableMemoriesSearch=true` after initializing the `references/Hexalith.Memories` submodule.
 
-> **Prerequisite - tenant access state.** Provision or use an active Hexalith.Tenants tenant membership before the first Parties call. EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties consumes the authorized command/query behind the actor host and does not manage tenant lifecycle or roles itself.
+> **Prerequisite - tenant access state.** Provision or use an active Hexalith.Tenants tenant membership before the first Parties call. EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties consumes the authorized command/query behind the domain-service host and does not manage tenant lifecycle or roles itself.
+
+The internal DAPR access-control policy is deny-by-default and permits only the
+`eventstore` app ID to invoke the SDK domain routes: `/process`, `/query`,
+`/admin/operational-index-metadata`, `/project`, `/project/v2`,
+`/project/v2/reconcile`, `/replay-state`, `/project/rebuild/v1`,
+`/project/rebuild/shared/v1`, `/project/rebuild/stage/v1`,
+`/project/rebuild/commit/v1`, `/project/rebuild/abort/v1`, and
+`/project/rebuild/verify/v1`. Runtime deployment orchestration is externally
+owned; the external orchestrator owns manifests, environment secrets, ingress,
+promotion, and rollback. This repository publishes immutable workload images
+and retains only local AppHost wiring.
 
 See the [Getting Started Guide](docs/getting-started.md) for the full EventStore-fronted walkthrough.
 
@@ -55,7 +66,13 @@ See the [Getting Started Guide](docs/getting-started.md) for the full EventStore
 
 ## Project Structure
 
-Adopter-facing packages (left column) are the only modules consumers normally reference. Modules under "Internal" are private to the actor host and not adopter-facing dependencies — do not reference them from consumer applications.
+The repository contains exactly **13 projects under `src` plus one sample
+project**, **15 runnable .NET test projects plus one support host**
+(`Hexalith.Parties.EventStoreGateway.TestHost`), with Playwright e2e coverage
+alongside them. Adopter-facing packages (left column) are the only modules
+consumers normally reference directly. Modules under
+"Internal" are private to the domain-service host and not adopter-facing
+dependencies — do not reference them from consumer applications.
 
 ```
 Hexalith.Parties/
@@ -69,9 +86,11 @@ Hexalith.Parties/
     Hexalith.Parties.Picker/         # Embeddable Blazor/custom-element party picker
     Hexalith.Parties.UI/             # Blazor Server browser UI/BFF for Admin and Consumer experiences
     Hexalith.Parties.Mcp/            # Separate parties-mcp host over the typed client
-    # Internal (actor host private — not adopter-facing dependencies)
-    Hexalith.Parties/                # Domain actor host and PartyAggregate behind EventStore
-    Hexalith.Parties.Projections/    # Read model projections and actors (internal)
+    # Internal (domain-service-host private — not adopter-facing dependencies)
+    Hexalith.Parties.Authentication/ # Published authentication dependency; not a direct adopter package
+    Hexalith.Parties/                # SDK domain-service host and PartyAggregate behind EventStore
+    Hexalith.Parties.Projections/    # SDK projection/query handlers and read models (internal)
+    Hexalith.Parties.Security/       # GDPR payload protection and erasure infrastructure
     Hexalith.Parties.Testing/        # Test utilities
   tests/                             # Unit, integration, and architectural tests
   samples/

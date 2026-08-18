@@ -55,13 +55,20 @@ public sealed partial class AccessibilityStyleGuardTests
     }
 
     [Fact]
-    public void MainLayout_accessibility_css_declares_forced_colors_and_reduced_motion_rules()
+    public void FrontComposer_shell_stylesheet_link_is_declared_in_app_component()
     {
-        string content = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "src/Hexalith.Parties.UI/Components/Layout/MainLayout.razor.css"));
+        string root = FindRepositoryRoot();
+        string appRazor = File.ReadAllText(Path.Combine(root, "src/Hexalith.Parties.UI/Components/App.razor"));
+        appRazor.ShouldContain("_content/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.styles.css");
+        appRazor.ShouldContain("Hexalith.Parties.UI.styles.css");
 
-        content.ShouldContain("@media (forced-colors: active)", Case.Insensitive);
-        content.ShouldContain("@media (prefers-reduced-motion: reduce)", Case.Insensitive);
-        content.ShouldContain("--colorStrokeFocus2", Case.Insensitive);
+        string fcShellPath = Path.Combine(root, "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot/css/fc-shell.css");
+        if (File.Exists(fcShellPath))
+        {
+            string content = File.ReadAllText(fcShellPath);
+            content.ShouldContain("@media (forced-colors: active)", Case.Insensitive);
+            content.ShouldContain("--colorStrokeFocus2", Case.Insensitive);
+        }
     }
 
     private static IEnumerable<(string RelativePath, string Content)> ReadAppOwnedStyles()

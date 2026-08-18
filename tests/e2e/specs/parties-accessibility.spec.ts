@@ -22,13 +22,13 @@ test.describe('Parties UI accessibility specimen', () => {
 
     await expectNoBlockingAxeViolations(page, {
       route: SPECIMEN_ROUTE,
-      include: ['#parties-main-content'],
+      include: ['#fc-main-content'],
       requiredSelectors: [
         "[data-testid='parties-accessibility-specimen-ready']",
-        '#parties-main-content',
-        '#parties-app-navigation',
-        "a[href='#parties-main-content']",
-        "a[href='#parties-app-navigation']",
+        '#fc-main-content',
+        '#fc-nav',
+        "a[href$='#fc-main-content']",
+        "a[href$='#fc-nav']",
       ],
       artifactPath: testInfo.outputPath('axe-parties-accessibility.json'),
     });
@@ -36,18 +36,20 @@ test.describe('Parties UI accessibility specimen', () => {
 
   test('skip links are the first two keyboard tab stops and focus their targets', async ({ page }) => {
     await gotoSpecimen(page);
+    await page.locator('.fc-shell-root').focus();
 
     await page.keyboard.press('Tab');
     await expect(page.locator(':focus')).toHaveText('Skip to content');
     await page.keyboard.press('Enter');
-    await expect(page.locator(':focus')).toHaveAttribute('id', 'parties-main-content');
+    await expect(page.locator(':focus')).toHaveAttribute('id', 'fc-main-content');
 
     await gotoSpecimen(page);
+    await page.locator('.fc-shell-root').focus();
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
     await expect(page.locator(':focus')).toHaveText('Skip to navigation');
     await page.keyboard.press('Enter');
-    await expect(page.locator(':focus')).toHaveAttribute('id', 'parties-app-navigation');
+    await expect(page.locator(':focus')).toHaveAttribute('id', 'fc-nav');
   });
 
   test('keyboard flow reaches representative controls without trapping focus', async ({ page }) => {
@@ -73,7 +75,7 @@ test.describe('Parties UI accessibility specimen', () => {
     expect(await page.evaluate(() => matchMedia('(forced-colors: active)').matches)).toBe(true);
     expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
 
-    await page.getByText('Skip to content').focus();
+    await page.locator(".fc-skip-link[href$='#fc-main-content']").focus();
     const outlineColor = await page.locator(':focus').evaluate((element) => getComputedStyle(element).outlineColor);
     expect(outlineColor).toBeTruthy();
 
@@ -111,20 +113,49 @@ test.describe('Parties UI accessibility specimen', () => {
 const gotoSpecimen = async (page: import('@playwright/test').Page): Promise<void> => {
   await page.goto(SPECIMEN_ROUTE);
   await expect(page.getByTestId('parties-accessibility-specimen-ready'), `${SPECIMEN_ROUTE} missing ready marker`).toBeVisible();
+  await expect(page.locator('.fc-shell-root[data-fc-interactive="true"]')).toBeVisible();
   const text = await page.locator('body').innerText();
   expect(text.trim().length, `${SPECIMEN_ROUTE} rendered blank text`).toBeGreaterThan(0);
 };
 
 const tabUntilTestId = async (page: import('@playwright/test').Page, testId: string): Promise<void> => {
-  for (let attempt = 0; attempt < 30; attempt += 1) {
+  const focusSequence: string[] = [];
+  const target = page.getByTestId(testId);
+  for (let attempt = 0; attempt < 60; attempt += 1) {
     await page.keyboard.press('Tab');
-    const focusedTestId = await page.locator(':focus').getAttribute('data-testid');
-    if (focusedTestId === testId) {
+    const targetHasFocus = await target.evaluate((element) => {
+      let active = document.activeElement;
+      while (active?.shadowRoot?.activeElement) {
+        active = active.shadowRoot.activeElement;
+      }
+
+      return active === element || element.contains(active);
+    });
+    if (targetHasFocus) {
       return;
     }
+
+    const focused = await page.evaluate(() => {
+      let element = document.activeElement;
+      while (element?.shadowRoot?.activeElement) {
+        element = element.shadowRoot.activeElement;
+      }
+
+      if (!(element instanceof HTMLElement)) {
+        return { testId: null, description: '<no active element>' };
+      }
+
+      return {
+        description: element.dataset.testid
+          ?? element.id
+          ?? element.getAttribute('aria-label')
+          ?? (element.textContent?.trim().slice(0, 60) || element.tagName),
+      };
+    });
+    focusSequence.push(focused.description);
   }
 
-  throw new Error(`Expected focus to reach ${testId}`);
+  throw new Error(`Expected focus to reach ${testId}; observed: ${focusSequence.join(' -> ')}`);
 };
 
 interface PartiesVisualBaseline {
@@ -155,18 +186,18 @@ interface PartiesVisualBaseline {
 const collectVisualBaseline = async (page: import('@playwright/test').Page): Promise<PartiesVisualBaseline> => ({
   route: SPECIMEN_ROUTE,
   viewport: await page.viewportSize() ?? { width: 0, height: 0 },
-  skipLinks: await page.locator('.parties-skip-link').evaluateAll((links) =>
+  skipLinks: await page.locator('.fc-skip-link').evaluateAll((links) =>
     links.map((link) => link.textContent?.trim() ?? '')),
   landmarks: {
-    main: await page.locator('#parties-main-content').evaluate((element) => element.getAttribute('aria-label') ?? ''),
-    navigation: await page.locator('#parties-app-navigation').evaluate((element) => element.getAttribute('aria-label') ?? ''),
+    main: await page.locator('#fc-main-content').evaluate((element) => element.getAttribute('aria-label') ?? ''),
+    navigation: await page.locator("[data-testid='fc-navigation-rail']:visible").evaluate((element) => element.getAttribute('aria-label') ?? ''),
   },
   specimenSections: await page.locator('.parties-accessibility-specimen h1, .parties-accessibility-specimen h2').evaluateAll((headings) =>
     headings.map((heading) => heading.textContent?.trim() ?? '')),
   representativeControls: {
     primaryButtonVisible: await page.getByTestId('parties-specimen-primary-action').isVisible(),
     normalLinkVisible: await page.getByTestId('parties-specimen-link').isVisible(),
-    statusRegionVisible: await page.locator("[role='status'][aria-live='polite']").isVisible(),
+    statusRegionVisible: await page.getByText('Synthetic status update queued.', { exact: true }).isVisible(),
     freshnessVisible: await page.locator('.data-freshness-indicator').isVisible(),
     stateBadgeVisible: await page.locator('.party-state-badge').isVisible(),
     destructiveButtonVisible: await page.locator('.gdpr-destructive-button').isVisible(),

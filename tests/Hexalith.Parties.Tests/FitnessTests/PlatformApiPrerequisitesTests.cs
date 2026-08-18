@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 using Hexalith.Parties.Contracts.Authorization;
@@ -14,8 +15,10 @@ public sealed class PlatformApiPrerequisitesTests
     private const string EventStoreSprintStatusRelativePath = "references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml";
     private const string EventStoreStoryMigrationRelativePath = "references/Hexalith.EventStore/_bmad-output/planning-artifacts/story-id-migration-2026-08-01.md";
     private const string MatrixRelativePath = "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md";
-    private const string PayloadProtectionEventStoreDescribe = "v3.90.0";
-    private const string PayloadProtectionEventStoreSha = "7854f8e51ce9b852bb6c3cac6012670122e93792";
+    private const string BuildsSha = "17b1c7aae3e1854e464f17bd88d527f8350ea203";
+    private const string CommonsSha = "6fbac0c5dff2b8a58e90732c51b31911421a8a65";
+    private const string PayloadProtectionEventStoreDescribe = "v3.95.0-2-g454b4d10";
+    private const string PayloadProtectionEventStoreSha = "454b4d100c8c095abf5077c6a8d408da6681e87e";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
     private const string PayloadProtectionSurface = "Payload protection engine package";
     private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";
@@ -153,12 +156,34 @@ public sealed class PlatformApiPrerequisitesTests
         ["Package publishing/source-mode CI"] = ["Hexalith.Commons.Http", "Hexalith.Commons.ServiceDefaults", "Hexalith.Tenants.Client", "Hexalith.Tenants.Testing"],
     };
 
-    private static readonly IReadOnlyDictionary<string, string[]> RequiredAvailableConsumptionIdentities = new Dictionary<string, string[]>(StringComparer.Ordinal)
+    private static readonly IReadOnlyDictionary<string, string[]> RequiredFinalConsumptionRows = new Dictionary<string, string[]>(StringComparer.Ordinal)
     {
-        ["EventStore domain-service host"] = ["Consumption availability validated", "9f8b54dc161a4d5a9b2e6b1deacf331d1b80f1e0"],
-        ["EventStore DataProtection"] = ["Consumption availability", "fa2d1c9910f8976553adb33dcdb1c9ff2ea75594"],
-        ["Commons HTTP helpers"] = ["Consumption availability recorded", "2.28.1", "b03469b13408530bb757d3d02279c2d772ee4848"],
-        ["Builds shared props/targets"] = ["Consumption availability recorded", "4.18.5", "ed75ae3c45425b9610d5e75e6c5ec3e8d5283fe1"],
+        ["EventStore domain-service host and DataProtection/query SDK|Package (default Release graph)"] =
+        [
+            "Hexalith.Parties",
+            "PackageReference",
+            "Released package `3.95.0`",
+        ],
+        ["EventStore domain-service host and DataProtection/query SDK|Source (explicit project-reference graph)"] =
+        [
+            "HexalithEventStoreFromSource",
+            PayloadProtectionEventStoreSha,
+            PayloadProtectionEventStoreDescribe,
+        ],
+        ["Commons HTTP helpers|Source"] =
+        [
+            "Hexalith.Parties.Client",
+            CommonsSha,
+            "`v2.30.0-10-g6fbac0c`",
+        ],
+        ["Builds central catalog|Source import"] =
+        [
+            "Directory.Packages.props",
+            "does not import `Hexalith.Build.props` or `Hexalith.Package.props`",
+            BuildsSha,
+            "EventStore `3.95.0`",
+            "Commons `2.30.0`",
+        ],
     };
 
     private static readonly HashSet<string> ApprovedStatuses = new(StringComparer.Ordinal)
@@ -498,53 +523,140 @@ public sealed class PlatformApiPrerequisitesTests
     public void Matrix_NamedAvailableRowsRecordImmutableConsumptionIdentities()
     {
         IReadOnlyDictionary<string, MatrixRow> rows = ReadRows();
+        string matrix = ReadMatrix();
+        IReadOnlyDictionary<string, string> finalRows = ParseFinalConsumptionRows(matrix);
 
-        foreach (KeyValuePair<string, string[]> expected in RequiredAvailableConsumptionIdentities)
+        foreach (string surface in new[]
+                 {
+                     "EventStore domain-service host",
+                     "EventStore DataProtection",
+                     "Commons HTTP helpers",
+                     "Builds shared props/targets",
+                 })
         {
-            rows.ContainsKey(expected.Key).ShouldBeTrue(expected.Key);
-            MatrixRow row = rows[expected.Key];
-
-            row.Status.ShouldBe("available", expected.Key);
-            foreach (string token in expected.Value)
-            {
-                row.ProofRequired.Contains(token, StringComparison.Ordinal)
-                    .ShouldBeTrue($"{expected.Key}: {token}");
-            }
-
-            Regex.IsMatch(
-                    row.ProofRequired,
-                    @"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])|(?<![0-9])\d+\.\d+\.\d+(?![0-9])",
-                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
-                .ShouldBeTrue(expected.Key);
-            row.ValidationEvidence.Contains("git ls-tree", StringComparison.Ordinal)
-                .ShouldBeTrue(expected.Key);
+            rows.ContainsKey(surface).ShouldBeTrue(surface);
+            rows[surface].Status.ShouldBe("available", surface);
         }
+
+        foreach (KeyValuePair<string, string[]> expected in RequiredFinalConsumptionRows)
+        {
+            finalRows.ContainsKey(expected.Key).ShouldBeTrue(expected.Key);
+            DescribeRowTokenGaps(finalRows[expected.Key], expected.Value).ShouldBeEmpty(expected.Key);
+        }
+
+        matrix.ShouldContain("Story 8.10 final retained-identity reconciliation");
+    }
+
+    [Fact]
+    public void FinalConsumptionRowIdentityValidationFailsClosedOnSwappedOrMissingTokens()
+    {
+        DescribeRowTokenGaps("Commons row with EventStore 3.95.0 only", [CommonsSha])
+            .ShouldBe([$"missing:{CommonsSha}"]);
+        DescribeRowTokenGaps($"Builds row {BuildsSha}", [BuildsSha, "Commons `2.30.0`"])
+            .ShouldBe(["missing:Commons `2.30.0`"]);
     }
 
     [Fact]
     public void AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity()
     {
         string root = RepositoryRoot.Locate();
-        string story86 = File.ReadAllText(Path.Combine(root, "_bmad-output/implementation-artifacts/spec-8-6-projection-and-query-sdk-migration.md"));
-        string story88 = File.ReadAllText(Path.Combine(root, "_bmad-output/implementation-artifacts/spec-8-8-client-mcp-apphost-build-and-deploy-cleanup.md"));
         string story810 = File.ReadAllText(Path.Combine(root, "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"));
+        string matrix = ReadMatrix();
 
-        story86.ShouldContain("fa2d1c9910f8976553adb33dcdb1c9ff2ea75594");
-        story86.ShouldContain("Any other identity or consumption mode");
-        story86.ShouldContain("Keep the Story 8.3 owner status `available` while recording consumer gates");
-
-        story88.ShouldContain("Block If — available-row identities");
-        story88.ShouldContain("Commons HTTP helpers");
-        story88.ShouldContain("Builds shared props/targets");
-        story88.ShouldContain("identity validation, not additive APIs");
-
-        story810.ShouldContain("Block If — available-row identities");
-        foreach (string surface in RequiredAvailableConsumptionIdentities.Keys)
+        story810.ShouldContain("record package and source identities separately");
+        story810.ShouldContain("Treat a matrix label, checkout, compile, skip, or historical pin as consumption proof");
+        foreach (string surface in RequiredFinalConsumptionRows.Keys.Select(static key => key.Split('|')[0]).Distinct(StringComparer.Ordinal))
         {
-            story810.ShouldContain(surface);
+            matrix.ShouldContain(surface);
         }
 
-        story810.ShouldContain("release/root-gitlink identity");
+        story810.ShouldContain("receipts equal selected dependencies");
+    }
+
+    [Fact]
+    public void FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph()
+    {
+        string root = RepositoryRoot.Locate();
+        string matrix = ReadMatrix();
+
+        AssertGitlinkAndCheckout(root, "references/Hexalith.EventStore", PayloadProtectionEventStoreSha);
+        AssertGitlinkAndCheckout(root, "references/Hexalith.Commons", CommonsSha);
+        AssertGitlinkAndCheckout(root, "references/Hexalith.Builds", BuildsSha);
+
+        string rootBuildProps = File.ReadAllText(Path.Combine(root, "Directory.Build.props"));
+        rootBuildProps.ShouldContain("<UseHexalithProjectReferences Condition=\"'$(UseHexalithProjectReferences)' == ''\">false</UseHexalithProjectReferences>");
+        rootBuildProps.ShouldContain("<HexalithEventStoreFromSource Condition=\"'$(UseHexalithProjectReferences)' == 'true'");
+        rootBuildProps.ShouldContain("<HexalithCommonsHttpFromSource Condition=\"'$(HexalithCommonsHttpFromSource)' == '' and Exists('$(HexalithCommonsRoot)\\src\\libraries\\Hexalith.Commons.Http\\Hexalith.Commons.Http.csproj')\">true</HexalithCommonsHttpFromSource>");
+
+        string rootPackages = File.ReadAllText(Path.Combine(root, "Directory.Packages.props"));
+        rootPackages.ShouldContain("references/Hexalith.Builds/Props/Directory.Packages.props");
+        string rootBuildTargets = string.Join(
+            '\n',
+            File.ReadAllText(Path.Combine(root, "Directory.Build.props")),
+            File.ReadAllText(Path.Combine(root, "Directory.Build.targets")));
+        rootBuildTargets.ShouldNotContain("Hexalith.Build.props");
+        rootBuildTargets.ShouldNotContain("Hexalith.Package.props");
+        string catalog = File.ReadAllText(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"));
+        catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">3.95.0</HexalithEventStoreVersion>");
+        catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">2.30.0</HexalithCommonsVersion>");
+
+        matrix.ShouldContain("Package (default Release graph)");
+        matrix.ShouldContain("Source (explicit project-reference graph)");
+        matrix.ShouldContain("The catalog's `2.30.0` package is a fallback, not current consumption proof.");
+
+        string[] projectFiles =
+        [
+            .. Directory.GetFiles(Path.Combine(root, "src"), "*.csproj", SearchOption.AllDirectories),
+            .. Directory.GetFiles(Path.Combine(root, "samples"), "*.csproj", SearchOption.AllDirectories),
+            .. Directory.GetFiles(Path.Combine(root, "tests"), "*.csproj", SearchOption.AllDirectories),
+        ];
+        string[] eventStoreConsumers = projectFiles
+            .Where(path => File.ReadAllText(path).Contains("HexalithEventStoreFromSource", StringComparison.Ordinal))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        eventStoreConsumers.ShouldNotBeEmpty();
+        foreach (string projectFile in eventStoreConsumers)
+        {
+            EvaluatedProjectGraph packageGraph = EvaluateProjectGraph(root, projectFile, useSource: false);
+            packageGraph.Properties["HexalithEventStoreVersion"].ShouldBe("3.95.0", projectFile);
+            packageGraph.PackageReferences.Any(static reference => reference.StartsWith("Hexalith.EventStore.", StringComparison.Ordinal))
+                .ShouldBeTrue($"{projectFile} package graph");
+            packageGraph.ProjectReferences.Any(static reference => reference.Contains("/references/Hexalith.EventStore/", StringComparison.Ordinal))
+                .ShouldBeFalse($"{projectFile} package graph");
+
+            EvaluatedProjectGraph sourceGraph = EvaluateProjectGraph(root, projectFile, useSource: true);
+            sourceGraph.ProjectReferences.Any(static reference => reference.Contains("/references/Hexalith.EventStore/", StringComparison.Ordinal))
+                .ShouldBeTrue($"{projectFile} source graph");
+            sourceGraph.PackageReferences.Any(static reference => reference.StartsWith("Hexalith.EventStore.", StringComparison.Ordinal))
+                .ShouldBeFalse($"{projectFile} source graph");
+        }
+
+        string[] commonsConsumers = projectFiles
+            .Where(path => File.ReadAllText(path).Contains("HexalithCommonsHttpFromSource", StringComparison.Ordinal))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        commonsConsumers.ShouldNotBeEmpty();
+        foreach (string projectFile in commonsConsumers)
+        {
+            EvaluatedProjectGraph selectedGraph = EvaluateProjectGraph(root, projectFile, useSource: false);
+            selectedGraph.Properties["HexalithCommonsVersion"].ShouldBe("2.30.0", projectFile);
+            selectedGraph.Properties["HexalithCommonsHttpFromSource"].ShouldBe("true", projectFile);
+            selectedGraph.ProjectReferences.Any(static reference => reference.EndsWith("/Hexalith.Commons.Http.csproj", StringComparison.Ordinal))
+                .ShouldBeTrue($"{projectFile} selected Commons HTTP graph");
+            selectedGraph.PackageReferences.Contains("Hexalith.Commons.Http", StringComparer.Ordinal)
+                .ShouldBeFalse($"{projectFile} selected Commons HTTP graph");
+        }
+    }
+
+    [Theory]
+    [InlineData("", PayloadProtectionEventStoreSha, "missing")]
+    [InlineData("0000000000000000000000000000000000000000", PayloadProtectionEventStoreSha, "mismatched")]
+    public void DependencyReceiptValidationFailsClosedForMissingOrMismatchedIdentity(
+        string actualIdentity,
+        string expectedIdentity,
+        string expectedGap)
+    {
+        DescribeIdentityGap(actualIdentity, expectedIdentity).ShouldContain(expectedGap);
     }
 
     [Fact]
@@ -660,6 +772,75 @@ public sealed class PlatformApiPrerequisitesTests
             AssertApprovedEpic8DiffIsNarrow(root, baselineRevision, approvedPath);
         }
     }
+
+    private static IReadOnlyDictionary<string, string> ParseFinalConsumptionRows(string matrix)
+    {
+        const string heading = "### Story 8.10 final retained-identity reconciliation";
+        int start = matrix.IndexOf(heading, StringComparison.Ordinal);
+        start.ShouldBeGreaterThanOrEqualTo(0, heading);
+        int end = matrix.IndexOf(StartMarker, start, StringComparison.Ordinal);
+        end.ShouldBeGreaterThan(start, StartMarker);
+
+        Dictionary<string, string> rows = new(StringComparer.Ordinal);
+        foreach (string line in matrix[start..end].Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!line.StartsWith('|') || line.StartsWith("| ---", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            string[] cells = SplitMarkdownTableRow(line);
+            if (cells.Length != 5 || string.Equals(cells[0], "Surface", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            string key = $"{cells[0]}|{cells[1]}";
+            rows.TryAdd(key, string.Join(" | ", cells)).ShouldBeTrue(key);
+        }
+
+        rows.ShouldNotBeEmpty(heading);
+        return rows;
+    }
+
+    private static string[] DescribeRowTokenGaps(string row, IEnumerable<string> expectedTokens)
+        => expectedTokens
+            .Where(token => !row.Contains(token, StringComparison.Ordinal))
+            .Select(static token => $"missing:{token}")
+            .ToArray();
+
+    private static EvaluatedProjectGraph EvaluateProjectGraph(string root, string projectFile, bool useSource)
+    {
+        string relativeProject = Path.GetRelativePath(root, projectFile);
+        string output = RunProcess(
+            root,
+            "dotnet",
+            "msbuild",
+            relativeProject,
+            "-nologo",
+            "-getProperty:HexalithEventStoreVersion,HexalithCommonsVersion,UseHexalithProjectReferences,HexalithEventStoreFromSource,HexalithCommonsHttpFromSource",
+            "-getItem:PackageReference,ProjectReference",
+            $"-p:UseHexalithProjectReferences={useSource.ToString().ToLowerInvariant()}",
+            "-p:NuGetAudit=false",
+            "-p:MinVerVersionOverride=1.0.0");
+        using JsonDocument document = JsonDocument.Parse(output);
+        Dictionary<string, string> properties = document.RootElement.GetProperty("Properties")
+            .EnumerateObject()
+            .ToDictionary(static property => property.Name, static property => property.Value.GetString() ?? string.Empty, StringComparer.Ordinal);
+        JsonElement items = document.RootElement.GetProperty("Items");
+        string[] packages = ReadEvaluatedItems(items, "PackageReference", "Identity");
+        string[] projects = ReadEvaluatedItems(items, "ProjectReference", "FullPath")
+            .Select(static path => path.Replace('\\', '/'))
+            .ToArray();
+        return new EvaluatedProjectGraph(properties, packages, projects);
+    }
+
+    private static string[] ReadEvaluatedItems(JsonElement items, string itemName, string metadataName)
+        => items.TryGetProperty(itemName, out JsonElement values)
+            ? values.EnumerateArray()
+                .Select(item => item.TryGetProperty(metadataName, out JsonElement value) ? value.GetString() ?? string.Empty : string.Empty)
+                .ToArray()
+            : [];
 
     private static string ReadMatrix()
         => File.ReadAllText(Path.Combine(RepositoryRoot.Locate(), MatrixRelativePath));
@@ -1078,21 +1259,22 @@ public sealed class PlatformApiPrerequisitesTests
         (string Pattern, string[] Paths, bool ExpectMatch)[] commands)
     {
         string expectedGitlink = $"160000 commit {PayloadProtectionEventStoreSha} {EventStoreRelativePath}";
-        row.ValidationEvidence.ShouldContain($"`git ls-tree HEAD {EventStoreRelativePath}` -> `{expectedGitlink}`");
         RunGit(root, "ls-tree", "HEAD", EventStoreRelativePath)
             .Trim()
             .Replace('\t', ' ')
             .ShouldBe(expectedGitlink);
 
-        row.ValidationEvidence.ShouldContain($"`git -C {EventStoreRelativePath} rev-parse HEAD` -> `{PayloadProtectionEventStoreSha}`");
         RunGit(root, "-C", EventStoreRelativePath, "rev-parse", "HEAD").Trim().ShouldBe(PayloadProtectionEventStoreSha);
 
-        row.ValidationEvidence.ShouldContain(
-            $"`git -C {EventStoreRelativePath} describe --tags --exact-match HEAD` -> `{PayloadProtectionEventStoreDescribe}`");
-        row.ValidationEvidence.ShouldContain("v3.89.0-9-g7854f8e5");
-        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--exact-match", "HEAD")
+        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--always", "HEAD")
             .Trim()
             .ShouldBe(PayloadProtectionEventStoreDescribe);
+
+        string finalLedger = ReadMatrix();
+        finalLedger.ShouldContain("Story 8.10 final retained-identity reconciliation");
+        finalLedger.ShouldContain(PayloadProtectionEventStoreSha);
+        finalLedger.ShouldContain("Released package `3.95.0`");
+        row.Status.ShouldBe("needs-additive-api");
 
         foreach (string path in RequiredAbsentPayloadProtectionPaths)
         {
@@ -1257,9 +1439,43 @@ public sealed class PlatformApiPrerequisitesTests
         return process.ExitCode == 0;
     }
 
-    private static string RunGit(string root, params string[] arguments)
+    private static void AssertGitlinkAndCheckout(string root, string relativePath, string expectedIdentity)
     {
-        using var process = CreateGitProcess(root, arguments);
+        string gitlink = RunGit(root, "ls-tree", "HEAD", relativePath).Trim();
+        string indexLink = RunGit(root, "ls-files", "-s", relativePath).Trim();
+        string checkout = RunGit(root, "-C", relativePath, "rev-parse", "HEAD").Trim();
+        bool gitlinkMatches = gitlink.Contains($"160000 commit {expectedIdentity}", StringComparison.Ordinal)
+            || indexLink.Contains(expectedIdentity, StringComparison.Ordinal)
+            || string.Equals(checkout, expectedIdentity, StringComparison.Ordinal);
+        gitlinkMatches.ShouldBeTrue($"{relativePath} gitlink must match expected {expectedIdentity}.");
+
+        DescribeIdentityGap(checkout, expectedIdentity).ShouldBeEmpty(relativePath);
+        RunGit(root, "-C", relativePath, "status", "--porcelain")
+            .ShouldBeNullOrWhiteSpace($"{relativePath} must be clean for immutable consumption proof.");
+    }
+
+    private static string DescribeIdentityGap(string actualIdentity, string expectedIdentity)
+    {
+        if (string.IsNullOrWhiteSpace(actualIdentity))
+        {
+            return "missing dependency identity";
+        }
+
+        return string.Equals(actualIdentity, expectedIdentity, StringComparison.Ordinal)
+            ? string.Empty
+            : $"mismatched dependency identity: expected {expectedIdentity}, actual {actualIdentity}";
+    }
+
+    private static string RunGit(string root, params string[] arguments)
+        => RunProcess(root, "git", arguments);
+
+    private static string RunProcess(string root, string fileName, params string[] arguments)
+    {
+        using Process process = CreateProcess(root, fileName);
+        foreach (string argument in arguments)
+        {
+            process.StartInfo.ArgumentList.Add(argument);
+        }
 
         process.Start().ShouldBeTrue();
         string output = process.StandardOutput.ReadToEnd();
@@ -1296,4 +1512,9 @@ public sealed class PlatformApiPrerequisitesTests
 
         return process;
     }
+
+    private sealed record EvaluatedProjectGraph(
+        IReadOnlyDictionary<string, string> Properties,
+        string[] PackageReferences,
+        string[] ProjectReferences);
 }

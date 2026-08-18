@@ -4,11 +4,11 @@
 
 ## Shell Primitives
 
-- `MainLayout` exposes the first two keyboard tab stops as `Skip to content` and `Skip to navigation`.
-- `Skip to content` targets `#parties-main-content`; `Skip to navigation` targets `#parties-app-navigation`.
-- Both targets are stable, programmatically focusable with `tabindex="-1"`, and named with app-owned landmark semantics.
-- Focus indicators use `--colorStrokeFocus2` in normal mode and system colors under `@media (forced-colors: active)`.
-- App-owned transitions must honor `@media (prefers-reduced-motion: reduce)` without hiding state changes.
+- `MainLayout` delegates shell accessibility primitives to `FrontComposerShell`; it does not add parallel skip links or landmarks.
+- The first two keyboard tab stops are `Skip to content` and `Skip to navigation`, targeting FrontComposer's `#fc-main-content` and `#fc-nav` focus targets.
+- `#fc-main-content` is the single main landmark and is labelled `Main content`; `FrontComposerNavigation` owns the single `Primary navigation` landmark.
+- FrontComposer's focus indicators use `--colorStrokeFocus2` in normal mode and system colors under `@media (forced-colors: active)`.
+- Shell skip links have no motion transition, so reduced-motion users receive the same immediate focus state.
 
 ## Component Semantics
 

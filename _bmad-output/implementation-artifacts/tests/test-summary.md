@@ -522,3 +522,111 @@ scope.
 | Source and package builds | Pass | All three affected test projects build with 0 warnings/errors; package-mode Release projection build with `HexalithEventStoreFromSource=false` also completes with 0 warnings/errors. |
 | Release solution build | Pass | `dotnet build Hexalith.Parties.slnx -c Release --no-restore`: 0 warnings, 0 errors. |
 | Static policy | Pass | `git diff --check` and `bash scripts/check-no-warning-override.sh` pass. |
+
+## Story 8.10 Final Readiness, Documentation, and Retirement Gate — 2026-08-18
+
+Story 8.10 reconciled the retained dependency graph, accepted explicit
+owner/proof/rollback/evidence deferrals for Stories 8.7-8.9 and external runtime
+deployment, refreshed the maintained topology/inventory documentation, and
+added executable documentation, closure, zero-PRD, invariant-map, and dependency
+selection fitness. Closure remains deliberately open because two required gates
+are red; no deferred migration or external deployment work is represented as
+delivered.
+
+### Retained immutable identities and rollback
+
+- EventStore default package graph: `3.95.0`.
+- EventStore explicit source graph: root gitlink and checkout
+  `454b4d100c8c095abf5077c6a8d408da6681e87e`
+  (`v3.95.0-2-g454b4d10`).
+- Commons HTTP selected source graph: root gitlink and checkout
+  `6fbac0c5dff2b8a58e90732c51b31911421a8a65`
+  (`v2.30.0-10-g6fbac0c`); package `2.30.0` is fallback only.
+- Builds imported catalog: root gitlink and checkout
+  `17b1c7aae3e1854e464f17bd88d527f8350ea203` (`v4.24.0`); it selects EventStore
+  `3.95.0` and Commons `2.30.0`.
+- Rollback remains the current Parties payload-protection, authentication,
+  client/MCP/AppHost/build, UI, and local-topology implementations. Runtime
+  deployment rollback is owned by the external orchestrator and redeploys the
+  prior immutable image/configuration set.
+
+### Validation receipts
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Focused Release build | Pass | `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`: 0 warnings, 0 errors. |
+| Closure fitness | Pass | Post-review direct xUnit v3 `EpicEightClosureFitnessTests`: 13 passed, 0 failed, 0 skipped; status aliases, accepted residual debt, evidence anchors, invariant test classes, canonical PRD/epic scope, and red-receipt closure guards are fail-closed. |
+| Documentation fitness | Pass | Direct xUnit v3 `DocumentationFitnessTests`: 3 passed, 0 failed, 0 skipped. |
+| Dependency-prerequisite fitness | Pass | Post-review direct xUnit v3 `PlatformApiPrerequisitesTests`: 16 passed, 0 failed, 0 skipped; final-ledger rows are surface-specific and every conditional EventStore/Commons consumer graph is evaluated through MSBuild in its selected modes. |
+| Warning/nested-submodule policy | Pass | `bash scripts/check-no-warning-override.sh`: no warning-override or nested-submodule regression. |
+| Solution restore | Pass | `dotnet restore Hexalith.Parties.slnx`: restored the current graph successfully. |
+| Release solution build | **Blocked** | `dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1`: 21 errors, all in clean root-gitlink `references/Hexalith.PolymorphicSerializations` (`5e01ff3ab7a7393c2252ee0c2fc1247556e7c129`): SA1000, SA1010, SA1313, and SA1316. Parties-owned projects built; dependency edits require owner authorization and were not made. |
+| All .NET test projects | Pass with owner-visible skips | Post-review exact `scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults`: all 15 projects passed; 2,437 succeeded, 0 failed, 6 skipped. The six topology skips are the existing Story 12 DAPR/Tenants runtime-health deferrals and remain visible in `TestResults/Hexalith.Parties.IntegrationTests.trx`. |
+| CI identity regression | Pass after repair | The first all-lane run found one stale live assertion expecting EventStore `3.90.0`; the test and `docs/ci.md` now consume the catalog-selected `3.95.0`. Focused CI rerun and the final all-lane rerun passed 37/37. |
+| Package/API validation | Pass | Packed and validated all 9 release packages at `0.0.0-story810`; exact EventStore `3.95.0` and Commons `2.30.0` metadata passed. |
+| Package-only consumers | Pass | Client and portal consumer projects restored and built from the temporary package feed with 0 warnings and 0 errors. |
+| npm install and typecheck | Pass | `npm ci --prefix tests/e2e` found 0 vulnerabilities; `npm --prefix tests/e2e run typecheck` passed. |
+| Playwright accessibility | **Blocked** | `npm --prefix tests/e2e run test:a11y`: 2 passed, 4 failed. Failures are the shell skip link navigating to the auth challenge instead of focusing `#parties-main-content`, keyboard focus consequently timing out, duplicate `Skip to content` strict-locator ambiguity between Parties and FrontComposer, and three polite status regions causing strict-locator ambiguity in the visual contract. The axe gate and raw-teal guard passed. Resolving this crosses the deferred Story 8.9 shell-consolidation boundary, so no gate or test was weakened. |
+| Static diff | Pass | `git diff --check` completed with no output. |
+
+### Open closure blockers
+
+- blocker: `release-solution-polymorphic-stylecop`
+  owner: `Hexalith.PolymorphicSerializations maintainers for the dependency fix; Amelia (Parties Developer) and Murat (Test Architect) for consuming-graph revalidation`
+  exit_proof: `At the retained root gitlink, dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 completes with zero warnings and zero errors, including the PolymorphicSerializations projects.`
+  rollback_or_action: `Do not edit or advance the dependency without owner authorization. Retain the current Parties package/source selectors and rerun the complete Release, test, package, and consumer gates after an approved dependency receipt.`
+  evidence: `The Release solution build row above records 21 SA1000/SA1010/SA1313/SA1316 errors at root gitlink 5e01ff3ab7a7393c2252ee0c2fc1247556e7c129.`
+
+- blocker: `playwright-shell-accessibility`
+  owner: `Hexalith.FrontComposer shell owners + Sally (UX Designer) + Amelia (Parties Developer) + Murat (Test Architect)`
+  exit_proof: `npm --prefix tests/e2e run test:a11y passes the skip-link target/focus, unique landmark/status-region, axe, forced-color, and raw-token checks at an approved FrontComposer identity.`
+  rollback_or_action: `Keep the retained Parties UI primitives and current Story 8.9 rollback surface. Do not weaken strict locators or accessibility gates; change shared shell or Parties adoption only with the Story 8.9 owner boundary authorized.`
+  evidence: `The Playwright accessibility row above records 2 passed and 4 failed, and deferred-work.md entry 8.9-frontcomposer-ui-consolidation owns the shared-shell adoption exit.`
+
+**Closure verdict:** keep Story 8.10 open in `review`/`in-review` and Epic 8
+`in-progress`. The accepted deferrals are complete, but the solution-build and
+Playwright a11y requirements must both pass before either status changes to
+`done`.
+
+### Authorized dependency and shell remediation — 2026-08-18
+
+The user authorized the two owner-boundary changes recorded above. The
+PolymorphicSerializations source was made compatible with its pinned StyleCop
+analyzers without suppressing diagnostics, and Parties now adopts the shared
+FrontComposer shell instead of emitting duplicate skip links, landmarks, and
+status selectors. The Playwright Test host explicitly serves static web assets
+and builds the selected FrontComposer source graph, so the accessibility lane
+exercises an interactive Blazor UI rather than SSR-only output.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| PolymorphicSerializations owner build and tests | Pass | At base `5e01ff3ab7a7393c2252ee0c2fc1247556e7c129`, its Release build completed with 0 warnings and 0 errors and its test assembly passed 15/15. The compatible explicit-syntax preferences do not suppress StyleCop diagnostics. |
+| FrontComposer shell focus/theme tests | Pass | Direct focused execution of `Story13AccessibilityPrimitivesTests`, `FrontComposerShellTests`, `FcSystemThemeWatcherTests`, and `ThemeEffectsScopeTests` passed 50/50. Fluent `ThemeSettings.IsExact=false` keeps the configured teal as a palette seed instead of forcing the raw, non-AA brand background. |
+| Parties UI tests | Pass | Source-selected Release build completed with 0 warnings and 0 errors; `Hexalith.Parties.UI.Tests` passed 327/327. |
+| Warning/nested-submodule policy and solution build | Pass | `bash scripts/check-no-warning-override.sh`, solution restore, and `dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`: 59 projects, 0 warnings, 0 errors. This resolves the former 21-error dependency blocker. |
+| All .NET test projects | Pass with owner-visible skips | `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults`: all 15 projects passed; 2,437 succeeded, 0 failed, 6 existing Story 12 topology skips. |
+| Package/API and package-only consumers | Pass | All 9 release packages were packed and validated at `0.0.0-story810`; client and portal package-only consumers built with 0 warnings and 0 errors. |
+| npm and Playwright accessibility | Pass | The exact frozen `npm ci`, typecheck, and accessibility sequence passed with 0 npm vulnerabilities and 6/6 Playwright checks. It proves axe, skip-link targets/focus, keyboard flow, forced-colors/reduced-motion behavior, AA-safe brand color, and the visual contract. This resolves the former 2-pass/4-fail shell blocker. |
+| Static diff | Pass | `git diff --check` completed with no output after remediation. |
+
+The green executable receipts are not yet immutable consumption receipts.
+FrontComposer was tested from a modified working tree based on
+`90954acc66f2c7554ea0490d5ecbc39b46cec05a`; the superproject still records
+`97f44c499e83a0ffbf054febd0aab384054ea39e`. PolymorphicSerializations was
+tested from a modified working tree based on the recorded gitlink
+`5e01ff3ab7a7393c2252ee0c2fc1247556e7c129`. No owner commit, release, or
+superproject gitlink receipt exists for either fix.
+
+### Remaining immutable-receipt blocker
+
+- blocker: `authorized-owner-fixes-not-immutable`
+  owner: `Hexalith.FrontComposer and Hexalith.PolymorphicSerializations maintainers for owner commits/releases; Amelia (Parties Developer) and Murat (Test Architect) for superproject selection and revalidation`
+  exit_proof: `Record immutable owner commits or releases, select them through the superproject gitlinks/package graph, then rerun the exact Release solution build, all 15-project lane, package/consumer validation, and npm accessibility lane with the same green results.`
+  rollback_or_action: `Keep Story 8.10 in review and Epic 8 in progress. Do not represent dirty dependency checkouts as delivered dependencies; if either owner fix is rejected, restore the retained Story 8.9 UI surface and dependency selection before rerunning the gates.`
+  evidence: `The authorized remediation rows above are green, but git status reports modified FrontComposer and PolymorphicSerializations working trees, and the FrontComposer checkout does not equal the superproject gitlink.`
+
+**Updated closure verdict:** the former technical blockers are resolved, but
+the frozen `Never` rule explicitly rejects checkout/compile evidence as
+consumption proof. Story 8.10 therefore remains `review`/`in-review` and Epic 8
+remains `in-progress` pending immutable owner and superproject receipts followed
+by the final gate rerun.

@@ -254,7 +254,8 @@ _This file contains critical rules and patterns that AI agents must follow when 
     because the default key store is dev-only, **not** because crypto-shredding is disabled. Don't conflate the
     MVP warning switch with the crypto feature, and don't disable crypto-shredding to "match the README."
 - **The default key store is `LocalDevKeyStorageBackend` (in-memory, dev-only).** Never ship it to
-  production — provision a real KMS/secret store (`docs/deployment-security-checklist.md`). Do **not** store
+  production — provision a real KMS/secret store (production KMS gate in `docs/getting-started.md`;
+  the former `docs/deployment-security-checklist.md` was retired by Story 8.13). Do **not** store
   regulated EU personal data in the MVP; evaluate with synthetic data.
 - **The event contract evolves additively only** — add new optional fields or new event types; **never
   remove or rename** an existing field. Subscribers are forward-compatible and break otherwise.
