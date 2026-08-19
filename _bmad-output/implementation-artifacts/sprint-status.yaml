@@ -189,12 +189,12 @@ development_status:
   # links and role=main/role=navigation landmarks — at FrontComposer root gitlink
   # 7a337a21d4ba261bf27aeb3feedde47789f0160a. Work packages A-E (entity picker,
   # freshness indicator, live-region contract, file/JSON download, typed-name
-  # confirmation) remain undelivered, so this story stays backlog: a delivered
-  # slice never advances the owning story. The slice's I13 parity is NOT yet
+  # confirmation) remain undelivered, so this story is blocked: a delivered
+  # slice never completes the owning story. The slice's I13 parity is NOT yet
   # discharged — it left the app-owned focus-visible and forced-colors rules
   # unscoped and dead at runtime, and the Playwright receipt never focuses a
   # content control. Retain every other Parties UI primitive.
-  8-9-ui-frontcomposer-and-fluent-consolidation: backlog
+  8-9-ui-frontcomposer-and-fluent-consolidation: blocked
   # Story 8.10 closure evidence, 2026-08-18: retained identities are EventStore
   # package 3.95.0 and source 454b4d100c8c095abf5077c6a8d408da6681e87e,
   # Commons HTTP source 6fbac0c5dff2b8a58e90732c51b31911421a8a65,
