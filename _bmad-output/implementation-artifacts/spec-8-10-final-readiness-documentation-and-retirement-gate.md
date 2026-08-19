@@ -2,7 +2,7 @@
 title: '8.10 Final readiness, documentation, and retirement gate'
 type: 'refactor'
 created: '2026-08-17'
-status: 'in-progress'
+status: 'in-review'
 baseline_commit: '37f4ec826c6f4aea4651cfbad94fb6ab7fc4f0a0'
 review_loop_iteration: 2
 context:
@@ -144,7 +144,7 @@ Decisions were resolved as follows. **D1 — shell slice:** backfilled rather th
 
 New finding raised during verification, not by the review layers:
 
-- [ ] [Review][Patch] Release solution build is red at HEAD — 16 SA1316 errors, all inside `references/Hexalith.PolymorphicSerializations` at the selected gitlink `0dca9e9d`, none outside it. The 2026-08-18 `Pass` receipt was produced from a modified working tree; the commit that landed carries only part of that fix. Blocks Epic 8 closure and is routed to the PolymorphicSerializations maintainers as `polymorphicserializations-stylecop-fix-incomplete-at-selected-gitlink` [_bmad-output/implementation-artifacts/tests/test-summary.md:563]
+- [x] [Review][Patch] Release solution build is red at HEAD — 16 SA1316 errors, all inside `references/Hexalith.PolymorphicSerializations` at the selected gitlink `0dca9e9d`, none outside it. The 2026-08-18 `Pass` receipt was produced from a modified working tree; the commit that landed carries only part of that fix. The authorized owner working-tree patch now restores the required tuple-element casing and makes the 59-project Release build green, but Epic 8 closure remains blocked until the owner fix is committed and the superproject selects that immutable gitlink. Tracked as `polymorphicserializations-stylecop-fix-incomplete-at-selected-gitlink` [_bmad-output/implementation-artifacts/tests/test-summary.md:563]
 
 **Acceptance Criteria:**
 - Given an incomplete 8.6-8.9 disposition, when closure fitness runs, then any missing owner, proof, rollback, or evidence names the gap and prevents closure.

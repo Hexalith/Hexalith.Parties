@@ -719,3 +719,28 @@ verdict was based on receipts produced from modified working trees and did not
 survive re-measurement at the committed tree. The frozen `Never` rule rejecting
 checkout/compile evidence as consumption proof is what caught this: the fix was
 real in a working tree and only partly real in the commit that landed.
+
+### Authorized PolymorphicSerializations SA1316 completion — 2026-08-19
+
+The user authorized the smallest owner-repository patch needed to complete the
+tuple-element-casing fix. The working tree at selected gitlink
+`0dca9e9d3f8b2a20ba426b84fa575ab4e7b5562b` restores `Type` / `Data` in the
+source generator and the prior public `Name` / `TypeName` / `Version`
+discriminator tuple names. No analyzer suppression, warning override, package
+version, dependency, or Parties production source changed.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| PolymorphicSerializations owner Release build | Pass in authorized working tree | `dotnet build Hexalith.PolymorphicSerializations.slnx -c Release --no-restore -m:1`: 0 warnings, 0 errors. |
+| PolymorphicSerializations owner tests | Pass in authorized working tree | Direct xUnit v3 execution of `test/Hexalith.PolymorphicSerializations.Tests/bin/Release/net10.0/Hexalith.PolymorphicSerializations.Tests.dll`: 15 passed, 0 failed, 0 skipped. |
+| Story 8.10 Release gate | Pass in authorized working tree | `bash scripts/check-no-warning-override.sh && dotnet restore Hexalith.Parties.slnx && dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1`: guard and restore passed; all 59 projects built with 0 warnings and 0 errors. |
+| Story 8.10 focused fitness | Pass | Direct xUnit v3 execution: `EpicEightClosureFitnessTests` 14/14, `DocumentationFitnessTests` 3/3, and `PlatformApiPrerequisitesTests` 16/16; no failures or skips. |
+
+This is repair evidence, not immutable consumption proof. The selected
+superproject gitlink still names `0dca9e9d`, whose clean committed tree fails
+with the 16 SA1316 diagnostics recorded above. Keep
+`polymorphicserializations-stylecop-fix-incomplete-at-selected-gitlink` and
+`authorized-owner-fixes-not-immutable` open until the owner patch is committed,
+the superproject gitlink is advanced to that exact commit, and the full Release,
+test, package/consumer, and accessibility gates are rerun at the immutable
+identity.
