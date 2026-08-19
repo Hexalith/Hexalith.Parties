@@ -62,13 +62,38 @@ public sealed partial class AccessibilityStyleGuardTests
         appRazor.ShouldContain("_content/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.styles.css");
         appRazor.ShouldContain("Hexalith.Parties.UI.styles.css");
 
+        // Skip loudly rather than pass silently. The shell stylesheet lives in a root submodule a
+        // package-mode clone need not check out; a conditional that swallows the assertions would
+        // report forced-colors coverage that never ran.
         string fcShellPath = Path.Combine(root, "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot/css/fc-shell.css");
-        if (File.Exists(fcShellPath))
-        {
-            string content = File.ReadAllText(fcShellPath);
-            content.ShouldContain("@media (forced-colors: active)", Case.Insensitive);
-            content.ShouldContain("--colorStrokeFocus2", Case.Insensitive);
-        }
+        Assert.SkipUnless(File.Exists(fcShellPath), $"FrontComposer submodule is not checked out: {fcShellPath}");
+
+        string content = File.ReadAllText(fcShellPath);
+        content.ShouldContain("@media (forced-colors: active)", Case.Insensitive);
+        content.ShouldContain("--colorStrokeFocus2", Case.Insensitive);
+    }
+
+    [Fact]
+    public void App_owned_content_styles_stay_scoped_to_a_rendered_element()
+    {
+        string root = FindRepositoryRoot();
+        string layoutDirectory = Path.Combine(root, "src/Hexalith.Parties.UI/Components/Layout");
+        string mainLayoutRazor = File.ReadAllText(Path.Combine(layoutDirectory, "MainLayout.razor"));
+        string mainLayoutCss = File.ReadAllText(Path.Combine(layoutDirectory, "MainLayout.razor.css"));
+
+        // CSS isolation stamps the scope id only onto elements written in the .razor file. A layout
+        // whose render tree is a single child component emits no scope attribute, so every ::deep
+        // rule compiles to a selector that matches nothing and the focus indicator dies silently.
+        mainLayoutRazor.ShouldContain(
+            "class=\"parties-main-content\"",
+            Case.Sensitive,
+            "MainLayout must render an app-owned element for its scoped ::deep rules to attach to.");
+
+        mainLayoutCss.ShouldContain(".parties-main-content ::deep");
+        mainLayoutCss.ShouldContain(":focus-visible");
+        mainLayoutCss.ShouldContain("--colorStrokeFocus2");
+        mainLayoutCss.ShouldContain("@media (forced-colors: active)", Case.Insensitive);
+        mainLayoutCss.ShouldContain("@media (prefers-reduced-motion: reduce)", Case.Insensitive);
     }
 
     private static IEnumerable<(string RelativePath, string Content)> ReadAppOwnedStyles()

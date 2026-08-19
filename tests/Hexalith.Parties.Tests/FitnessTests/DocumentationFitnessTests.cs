@@ -74,19 +74,24 @@ public sealed class DocumentationFitnessTests
     {
         string root = RepositoryRoot.Locate();
         string[] sourceProjects = Directory.GetFiles(Path.Combine(root, "src"), "*.csproj", SearchOption.AllDirectories)
-            .Select(Path.GetFileNameWithoutExtension)
+            .Where(IsNotBuildOutput)
+            .Select(path => Path.GetFileNameWithoutExtension(path)!)
             .Order(StringComparer.Ordinal)
-            .ToArray()!;
+            .ToArray();
         sourceProjects.ShouldBe(ExpectedSourceProjects);
         File.Exists(Path.Combine(root, "samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj")).ShouldBeTrue();
         Read(root, "Hexalith.Parties.slnx").ShouldContain("samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj");
 
         string[] testProjects = Directory.GetFiles(Path.Combine(root, "tests"), "*.csproj", SearchOption.AllDirectories)
+            .Where(IsNotBuildOutput)
             .Select(path => Path.GetFileNameWithoutExtension(path)!)
             .Order(StringComparer.Ordinal)
             .ToArray();
-        testProjects.Length.ShouldBe(16);
-        testProjects.ShouldContain("Hexalith.Parties.EventStoreGateway.TestHost");
+
+        // Assert the exact set, not the count. A bare Length check lets a rename, or an add paired
+        // with a removal, pass while the documented inventory silently drifts.
+        string[] expectedTestProjects = [.. ExpectedRunnableProjects, "Hexalith.Parties.EventStoreGateway.TestHost"];
+        testProjects.ShouldBe([.. expectedTestProjects.Order(StringComparer.Ordinal)]);
 
         string testScript = Read(root, "scripts/test.ps1");
         string[] runnableProjects = Regex.Matches(
@@ -158,7 +163,30 @@ public sealed class DocumentationFitnessTests
         }
 
         string eventPublishing = Read(root, "docs/event-publishing.md");
-        eventPublishing.ShouldNotContain("defaultAction: allow");
+
+        // Pin the documentation to the ACL files as they actually are, not to a slogan. Asserting the
+        // doc merely omits "defaultAction: allow" made the real allow-by-default eventstore-admin
+        // policy undocumentable, so the doc read as a blanket deny-by-default claim that was false.
+        // Every component that IS deny-by-default must be named as such, and any component that is
+        // not must be named as an explicit exception.
+        string componentDirectory = Path.Combine(root, "src/Hexalith.Parties.AppHost/DaprComponents");
+        foreach (string aclPath in Directory.GetFiles(componentDirectory, "accesscontrol*.yaml"))
+        {
+            string fileName = Path.GetFileName(aclPath);
+            bool allowsByDefault = Regex.IsMatch(
+                File.ReadAllText(aclPath),
+                @"(?m)^\s{4}defaultAction:\s*allow\s*$",
+                RegexOptions.CultureInvariant);
+
+            eventPublishing.ShouldContain(fileName, Case.Sensitive, $"{fileName} must be documented.");
+            if (allowsByDefault)
+            {
+                eventPublishing.ShouldContain(
+                    "defaultAction: allow",
+                    Case.Sensitive,
+                    $"{fileName} is allow-by-default and must be documented as an explicit exception.");
+            }
+        }
         foreach (string appId in new[] { "eventstore", "parties", "tenants", "memories", "sample" })
         {
             eventPublishing.ShouldContain(appId);
@@ -169,6 +197,14 @@ public sealed class DocumentationFitnessTests
         eventPublishing.ShouldContain("parties=system.tenants.events");
         eventPublishing.ShouldContain("sample=sample.parties.events");
     }
+
+    /// <summary>
+    /// Excludes generated or copied project files under <c>obj</c> and <c>bin</c> so a stale build
+    /// output cannot fail the exact-inventory assertions as if it were real drift.
+    /// </summary>
+    private static bool IsNotBuildOutput(string path)
+        => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+            && !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
 
     private static string Read(string root, string relativePath)
         => File.ReadAllText(Path.Combine(root, relativePath));

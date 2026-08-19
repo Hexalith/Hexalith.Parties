@@ -34,7 +34,17 @@ test.describe('Parties UI accessibility specimen', () => {
     });
   });
 
-  test('skip links are the first two keyboard tab stops and focus their targets', async ({ page }) => {
+  // Scoped deliberately to the shell subtree, and named for what it proves. Tabbing from a cold
+  // document is NOT assertable here: once the shell hydrates it moves focus to the route <h1>
+  // (an intentional SPA announcement pattern), which also advances the browser's sequential focus
+  // navigation point past the skip links. Measured 2026-08-19 -- after load, activeElement is
+  // `h1#parties-accessibility-specimen-title`, so the first Tab reaches the specimen's primary
+  // button. Seeding focus on `.fc-shell-root` (tabindex="-1", the skip links' parent) restores a
+  // meaningful assertion: the skip links are the first two focusable descendants of the shell, in
+  // order, and Enter moves focus to their targets. Whether a keyboard user can still reach the skip
+  // links after route-heading focus is a FrontComposer shell question -- see the
+  // `frontcomposer-skip-link-reachability-after-route-focus` entry in deferred-work.md.
+  test('skip links are the first two focusable elements in the shell and focus their targets', async ({ page }) => {
     await gotoSpecimen(page);
     await page.locator('.fc-shell-root').focus();
 
@@ -142,14 +152,17 @@ const tabUntilTestId = async (page: import('@playwright/test').Page, testId: str
       }
 
       if (!(element instanceof HTMLElement)) {
-        return { testId: null, description: '<no active element>' };
+        return { description: '<no active element>' };
       }
 
+      // `||`, not `??`: element.id is '' when absent, which is not nullish, so a `??` chain stops
+      // there and every diagnostic line renders blank.
       return {
         description: element.dataset.testid
-          ?? element.id
-          ?? element.getAttribute('aria-label')
-          ?? (element.textContent?.trim().slice(0, 60) || element.tagName),
+          || element.id
+          || element.getAttribute('aria-label')
+          || element.textContent?.trim().slice(0, 60)
+          || element.tagName,
       };
     });
     focusSequence.push(focused.description);
@@ -197,7 +210,10 @@ const collectVisualBaseline = async (page: import('@playwright/test').Page): Pro
   representativeControls: {
     primaryButtonVisible: await page.getByTestId('parties-specimen-primary-action').isVisible(),
     normalLinkVisible: await page.getByTestId('parties-specimen-link').isVisible(),
-    statusRegionVisible: await page.getByText('Synthetic status update queued.', { exact: true }).isVisible(),
+    // Assert the ARIA contract, not the copy. The specimen renders several polite regions, so scope
+    // to the first rather than matching text -- a text match would let the live-region semantics
+    // regress to a plain <div> and still pass.
+    statusRegionVisible: await page.locator("[role='status'][aria-live='polite']").first().isVisible(),
     freshnessVisible: await page.locator('.data-freshness-indicator').isVisible(),
     stateBadgeVisible: await page.locator('.party-state-badge').isVisible(),
     destructiveButtonVisible: await page.locator('.gdpr-destructive-button').isVisible(),

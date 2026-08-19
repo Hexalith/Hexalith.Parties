@@ -60,7 +60,7 @@ Hexalith.Parties/
 │   ├── Hexalith.Parties.Mcp/          # 📦 parties-mcp host (separate process; AI tool boundary)
 │   │   ├── Program.cs                 #   MapMcp() stateless; per-request typed clients; context forwarding
 │   │   └── Tools/                     #   PartiesMcpTools (5 tools), tool names, result envelope
-│   ├── Hexalith.Parties.Authentication/ # 📦 shared authentication/authorization helpers
+│   ├── Hexalith.Parties.Authentication/ # 🔒 internal claims-transformation helpers; packable, not adopter-facing (G7/G9 rollback surface until 8.8)
 │   │
 │   │   # ───────── Internal (domain-service-host private) ─────────
 │   ├── Hexalith.Parties/              # 🔒 Domain service HOST (the `parties` resource)

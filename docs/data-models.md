@@ -203,7 +203,7 @@ removed from the index** entirely (never appear in search).
 | `MatchMetadata` | `MatchedField`, `MatchType`, `Score?` (MVP only emits `displayName`) |
 | `PagedResult<T>` | `Items[]`, `Page`, `PageSize`, `TotalCount`, `TotalPages`, `Freshness?` |
 | `ProjectionFreshnessMetadata` | `Status: ProjectionFreshnessStatus` + `WarningCodes[]` (consts: `projection-rebuilding`, `…-state-store-unavailable`, `…-context-unavailable`, `…-state-unavailable`) |
-| `PartyDetailProjectionReadResult` / `PartyIndexProjectionReadResult` | actor read envelopes (detail + freshness / entries + freshness) |
+| `PartyDetailProjectionReadResult` / `PartyIndexProjectionReadResult` | query-handler read envelopes (detail + freshness / entries + freshness) |
 | `ProcessingActivityRecord` | GDPR Art.30 processing-log row (`SequenceNumber`, `PartyId`, `TenantId`, `ActorId`, `CorrelationId`, `OperationCategory`, `EventType`, `Outcome`, `Timestamp`, `Summary`) |
 | `PartyDataPortabilityPackage` | GDPR Art.20 export (`Party: PartyDetail?` + `ProcessingRecords[]` + status) |
 | `ErasureCertificate` | GDPR erasure proof (`PartyId`, `TenantId`, `Timestamp`, `KeyVersionsDestroyed`, `VerificationStatus`) returned through the AdminPortal erasure-certificate query |

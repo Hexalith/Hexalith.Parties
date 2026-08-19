@@ -365,6 +365,29 @@ DI + query host sub-chunk (`PartiesServiceCollectionExtensions.cs` vs `2c4a7af`)
   summary: Define authoritative handling for successfully deserialized marker events labeled json-redacted.
   evidence: A parameterless event can deserialize from an empty redacted payload into a valid `IEventPayload` and be applied as a real domain fact, while whole-payload redaction is otherwise intended to skip application and advance only the checkpoint.
 
+## Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-08-19)
+
+Placed before the closure-deferral section on purpose: `EpicEightClosureFitnessTests.ParseDeferrals`
+slices from the closure heading to end of file, so anything appended after it is absorbed into the
+last `deferral_id` block.
+
+- Only one of six `accesscontrol.*.yaml` components is verified. `DocumentationFitnessTests.MaintainedDocumentationDescribesSdkRoutesUnderEventStoreOnlyDenyAcl` parses `accesscontrol.parties.yaml` alone, while the documentation it pins generalizes over all sidecar policies. Broadening the assertion is outside the Story 8.10 Code Map.
+- The Playwright accessibility lane is wired into no workflow. `.github/workflows/` contains no Playwright or `test:a11y` step, `scripts/test.ps1` invokes no npm lane, and `tests/e2e/package.json`'s `test:a11y` script is called by nothing. Spine §7 I12 already records the always-on CI a11y lane as a separate open ledger item.
+- Duplicated, timeout-free git/process helpers. `RunGit`/`TryRunGit` are defined in both `EpicEightClosureFitnessTests` and `PlatformApiPrerequisitesTests`, and `Read(root, relativePath)` a third time in `DocumentationFitnessTests`. `RunGit` drains stdout fully before stderr with no timeout; not a realistic deadlock at these output sizes, but the pattern should be consolidated.
+- `frontcomposer-skip-link-reachability-after-route-focus` — **route to FrontComposer shell owners.**
+  Measured 2026-08-19 on the accessibility specimen at FrontComposer `7a337a21`: once the shell
+  hydrates it moves focus to the route `<h1>` (`h1#parties-accessibility-specimen-title`). That is a
+  deliberate SPA announcement pattern, but it also advances the browser's sequential focus
+  navigation point past both `.fc-skip-link` anchors, so the first `Tab` after load reaches the
+  page's first interactive control rather than "Skip to content". A keyboard user would have to
+  Shift+Tab backwards to reach a skip link after a client-side route change. On a cold document
+  load the DOM order is correct — the skip links are the shell's first two focusable descendants,
+  which `parties-accessibility.spec.ts` now asserts explicitly by seeding focus on `.fc-shell-root`.
+  Question for the owners: should the shell reset the sequential focus navigation point (for example
+  by focusing a container ahead of the skip links, or by focusing the skip link itself) so WCAG
+  2.4.1 bypass remains forward-reachable after route changes?
+- EventStore `3.95.0` is hardcoded in five or more places (`PlatformApiPrerequisitesTests`, `docs/ci.md`, `docs/architecture.md` §3) rather than read from the Builds catalog's `HexalithEventStoreVersion`. This is the drift the "CI identity regression — one stale live assertion expecting EventStore 3.90.0" receipt already recorded once.
+
 ## Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18
 
 These deferrals preserve the current implementation as the rollback surface and
@@ -372,8 +395,21 @@ allow Epic 8 readiness to be assessed without representing the deferred
 migrations as delivered. Every entry is accepted by the approved Story 8.10
 deferral-based closure intent.
 
+**Field vocabulary (clarified 2026-08-19).** Spine I17 distinguishes *waiting*
+from *working*: the four deferral fields are the contract for waiting, and the
+six §4 clauses are the contract for working. The former single `source_spec`
+field conflated the two, making Story 8.10 appear to activate four deferrals
+when it authored four and activated one. Entries therefore now use:
+
+- `authored_by_spec` — the spec that wrote this entry down and accepted the wait.
+  Carries no §4 obligation.
+- `activated_by_spec` — the spec that started working the deferral. Triggers the
+  full six-clause §4 gate in that spec, per I17.
+- `delivered_slices` — present only when part of a deferral has shipped. A
+  delivered slice never advances the owning story's status.
+
 - deferral_id: `8.6-residual-review-debt`
-  source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+  authored_by_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
   status: accepted
   owner: `Amelia (Parties Developer) + Murat (Test Architect) + Hexalith.EventStore SDK owners where producer/runtime proof is required`
   exit_proof: `Resolve or explicitly supersede every unchecked [Review][Defer] item in Story 8.6; in particular, exercise SDK handler discovery through an authenticated projected query and enforce the deny-default EventStore-only DAPR ACL in a runnable topology before removing retained host or ACL rollback seams.`
@@ -381,7 +417,7 @@ deferral-based closure intent.
   evidence: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md and _bmad-output/implementation-artifacts/deferred-work.md record the unchecked review deferrals and their detailed evidence; sprint-status.yaml keeps 8.6 done because these are accepted non-blocking residual debts, not unimplemented acceptance tasks.`
 
 - deferral_id: `8.7-data-protection-extraction`
-  source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  authored_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
   status: accepted
   owner: `Hexalith.EventStore payload-protection owners + Amelia (Parties Developer) + Murat (Test Architect)`
   exit_proof: `Deliver the G5 runtime engine and Story 8.11 closure packet at an exact approved package or root-gitlink identity; pass protected, redacted, legacy, typed-unreadable, no-leak, Art.20, Art.30, erasure certificate/report, and exercised switch-back parity before changing Story 8.7 from blocked.`
@@ -389,7 +425,7 @@ deferral-based closure intent.
   evidence: `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md — Payload protection engine package row; sprint-status.yaml keeps 8.7 blocked and the crypto-retention action open.`
 
 - deferral_id: `8.8-runtime-boundary-cleanup`
-  source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  authored_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
   status: accepted
   owner: `Hexalith.EventStore, Hexalith.Commons, Hexalith.FrontComposer, Builds, platform-AppHost owners + Amelia (Parties Developer) + Murat (Test Architect)`
   exit_proof: `Deliver and approve exact identities plus producer/consumer parity for G1/G2 degraded response and DAPR health, G6 envelopes/freshness, G7/G9 claims and identifiers, G8 security/typed-client/integrated topology, and G11 MCP/deep-link/capability helpers; exercise switch-back before deleting Parties-local paths or retiring the AppHost.`
@@ -397,15 +433,17 @@ deferral-based closure intent.
   evidence: `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md — EventStore degraded response, client envelopes, tenant claims, Aspire publish helpers, MCP/deep-link/search, Commons HTTP, and Builds rows; sprint-status.yaml keeps 8.8 blocked.`
 
 - deferral_id: `8.9-frontcomposer-ui-consolidation`
-  source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  activated_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  activation_authority: `_bmad-output/planning-artifacts/sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md`
+  delivered_slices: `G4 work package F only (shell skip links and role="main"/role="navigation" landmarks), adopted 2026-08-18 at FrontComposer root gitlink 7a337a21d4ba261bf27aeb3feedde47789f0160a. Work packages A-E remain undelivered and Story 8.9 stays backlog. This slice's I13 parity is conditional on repairing the app-owned focus-visible and forced-colors regression it introduced in MainLayout.razor.css.`
   status: accepted
   owner: `Hexalith.FrontComposer Contracts.UI/Shell owners + Sally (UX Designer) + Amelia (Parties Developer) + Murat (Test Architect)`
   exit_proof: `Deliver the complete G4 primitive set at an exact approved FrontComposer identity and pass producer bUnit plus Parties bUnit/Playwright parity for picker semantics, freshness/live regions, safe downloads, typed-name confirmation, skip links, forced colors, reduced motion, focus, and GDPR copy before changing Story 8.9 from backlog.`
-  rollback: `Keep the Parties picker, freshness/status regions, download helpers, typed erasure confirmation, optimistic reconciliation, portal components, and current Fluent 2 styling until each replacement slice proves parity; revert a failed slice independently. Delivered-slice carve-out (2026-08-18): the FrontComposer shell slice (skip links and landmarks) is already adopted — its rollback is reverting the shell adoption itself, not a retained Parties copy.`
+  rollback: `Keep the Parties picker, freshness/status regions, download helpers, typed erasure confirmation, optimistic reconciliation, portal components, and current Fluent 2 styling until each replacement slice proves parity; revert a failed slice independently. The delivered shell slice rolls back by restoring the Parties-owned skip links, #parties-main-content, and #parties-app-navigation from the parent of superproject commit 2b63ab9 and pinning FrontComposer back to 97f44c499e83a0ffbf054febd0aab384054ea39e; that revert reinstates the duplicate skip-link strict-locator ambiguity the slice resolved, so it must be paired with a Playwright rerun.`
   evidence: `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md — FrontComposer UI primitives row; sprint-status.yaml keeps 8.9 backlog; tests/Hexalith.Parties.UI.Tests/MainLayoutAccessibilityTests.cs and _bmad-output/implementation-artifacts/tests/test-summary.md record the 2026-08-18 shell-slice adoption.`
 
 - deferral_id: `external-runtime-deployment`
-  source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  authored_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
   status: accepted
   owner: `External platform-operations and deployment owners`
   exit_proof: `Consume immutable Parties image tags and provide environment-specific DAPR components, subscriptions, resiliency, deny-default access control, ingress, secrets, registry credentials, signing/scanning, and promotion evidence in the owner repository; prove rollback to the prior immutable image set.`

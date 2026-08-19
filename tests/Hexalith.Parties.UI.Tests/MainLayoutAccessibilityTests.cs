@@ -59,7 +59,10 @@ public sealed class MainLayoutAccessibilityTests : BunitContext
 
         foreach (IElement anchor in cut.FindAll("a[href]").Take(2))
         {
-            string targetId = anchor.GetAttribute("href")![1..];
+            // Split on the fragment rather than trimming one leading character. FrontComposerShell
+            // composes hrefs as {AbsolutePath}{Query}#fragment, so [1..] only happens to work at the
+            // root URL and would build a selector like "##fc-main-content" on any other route.
+            string targetId = anchor.GetAttribute("href")!.Split('#')[^1];
             IElement target = cut.Find($"#{targetId}");
 
             target.GetAttribute("tabindex").ShouldBe("-1");

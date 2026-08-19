@@ -1,5 +1,7 @@
-# DAPR Access Control Configuration for the Parties actor-host sidecar.
-# Story 12.2 reference: AC2 + AC3.
+# DAPR Access Control Configuration for the Parties domain-service host sidecar.
+# Story 12.2 reference: AC2 + AC3. Route list reconciled for the EventStore SDK in Story 8.6;
+# it is pinned by DocumentationFitnessTests and changes require an owner approval recorded in the
+# Story 8.3 matrix reconciliation ledger (Epic 8 spine, invariant I1).
 #
 # Service-invocation policy:
 #   defaultAction: deny — only EventStore may invoke Parties via service invocation,

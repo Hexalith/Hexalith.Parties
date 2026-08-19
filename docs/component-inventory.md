@@ -15,7 +15,7 @@
 | `Hexalith.Parties.AdminPortal` | 📦 | yes | FrontComposer-hosted Blazor admin (FluentUI) + GDPR ops |
 | `Hexalith.Parties.ConsumerPortal` | 📦 | yes | FrontComposer-hosted Consumer `/me*` RCL; owns profile, consent, privacy, erasure, export, and processing-transparency ports |
 | `Hexalith.Parties.Mcp` | 📦 | yes | `parties-mcp` host; `PartiesMcpTools` (5 tools) |
-| `Hexalith.Parties.Authentication` | internal library | yes* | Shared Parties claim normalization; retirement remains gated by Story 8.3 tenant-claims prerequisites |
+| `Hexalith.Parties.Authentication` | internal library | yes* | Internal claim normalization; packable but not adopter-facing. Retained as the G7/G9 rollback surface; retirement is gated by the Story 8.3 tenant-claims prerequisites and the `8.8-runtime-boundary-cleanup` deferral |
 | `Hexalith.Parties.UI` | internal app | no | Blazor Server browser UI/BFF; embeds AdminPortal, owns OIDC, route discovery, and UI specimens |
 | `Hexalith.Parties` | 🔒 host | no | Domain service host: `PartyAggregate`, DI (`AddParties`), EventStore SDK `/process`+`/query`+`/project`, auth, middleware, health, validation |
 | `Hexalith.Parties.Projections` | 🔒 | yes* | SDK projection handlers/folds + read-model models/eraser (Dapr projection actors retired in Story 8.6) |

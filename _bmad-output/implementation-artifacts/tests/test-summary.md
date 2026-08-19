@@ -550,7 +550,12 @@ delivered.
   deployment rollback is owned by the external orchestrator and redeploys the
   prior immutable image/configuration set.
 
-### Validation receipts
+### Initial validation receipts (superseded 2026-08-18)
+
+Retained as the audit trail for the first run. **These rows are not the closure
+gate** — the authoritative table is the `### Validation receipts` section below,
+after the authorized remediation. The heading here deliberately omits the exact
+phrase `Validation receipts` so the closure fitness parser cannot select it.
 
 | Check | Result | Evidence |
 | --- | --- | --- |
@@ -598,24 +603,43 @@ status selectors. The Playwright Test host explicitly serves static web assets
 and builds the selected FrontComposer source graph, so the accessibility lane
 exercises an interactive Blazor UI rather than SSR-only output.
 
+### Validation receipts
+
+Authoritative closure-gate table. Check names are canonical: the closure fitness
+test requires a `Release solution build` row and a `Playwright accessibility`
+row, and rejects any value that does not begin with `Pass` or that still names a
+blocker.
+
 | Check | Result | Evidence |
 | --- | --- | --- |
-| PolymorphicSerializations owner build and tests | Pass | At base `5e01ff3ab7a7393c2252ee0c2fc1247556e7c129`, its Release build completed with 0 warnings and 0 errors and its test assembly passed 15/15. The compatible explicit-syntax preferences do not suppress StyleCop diagnostics. |
+| PolymorphicSerializations owner build and tests | Pass | At gitlink `0dca9e9d3f8b2a20ba426b84fa575ab4e7b5562b`, its Release build completed with 0 warnings and 0 errors and its test assembly passed 15/15. The compatible explicit-syntax preferences do not suppress StyleCop diagnostics. |
 | FrontComposer shell focus/theme tests | Pass | Direct focused execution of `Story13AccessibilityPrimitivesTests`, `FrontComposerShellTests`, `FcSystemThemeWatcherTests`, and `ThemeEffectsScopeTests` passed 50/50. Fluent `ThemeSettings.IsExact=false` keeps the configured teal as a palette seed instead of forcing the raw, non-AA brand background. |
-| Parties UI tests | Pass | Source-selected Release build completed with 0 warnings and 0 errors; `Hexalith.Parties.UI.Tests` passed 327/327. |
-| Warning/nested-submodule policy and solution build | Pass | `bash scripts/check-no-warning-override.sh`, solution restore, and `dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`: 59 projects, 0 warnings, 0 errors. This resolves the former 21-error dependency blocker. |
+| Parties UI tests | Pass | `Hexalith.Parties.UI.Tests` passed 328/328 after the 2026-08-19 code-review repair of the app-owned focus-visible scope regression. |
+| Warning and nested-submodule policy | Pass | `bash scripts/check-no-warning-override.sh` and solution restore: no warning-override or nested-submodule regression. |
+| Release solution build | **Blocked** | Re-measured 2026-08-19 at the committed tree: `dotnet build Hexalith.Parties.slnx -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` reports **0 warnings, 16 errors**, every one of them SA1316 (`Tuple element names should use correct casing`) inside `references/Hexalith.PolymorphicSerializations` at gitlink `0dca9e9d3f8b2a20ba426b84fa575ab4e7b5562b`. Zero errors occur outside that submodule. The earlier `Pass` row on this line was produced from a **modified working tree**; the commit that actually landed (`0dca9e9d`, "refactor: update code style and improve type handling in serialization classes") carries only part of that fix — for example `src/libraries/Hexalith.PolymorphicSerializations/PolymorphicHelper.cs:60` still declares `(string name, string typeName, int version)`. See the `polymorphicserializations-stylecop-fix-incomplete-at-selected-gitlink` blocker below. |
 | All .NET test projects | Pass with owner-visible skips | `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults`: all 15 projects passed; 2,437 succeeded, 0 failed, 6 existing Story 12 topology skips. |
 | Package/API and package-only consumers | Pass | All 9 release packages were packed and validated at `0.0.0-story810`; client and portal package-only consumers built with 0 warnings and 0 errors. |
-| npm and Playwright accessibility | Pass | The exact frozen `npm ci`, typecheck, and accessibility sequence passed with 0 npm vulnerabilities and 6/6 Playwright checks. It proves axe, skip-link targets/focus, keyboard flow, forced-colors/reduced-motion behavior, AA-safe brand color, and the visual contract. This resolves the former 2-pass/4-fail shell blocker. |
+| npm install and typecheck | Pass | `npm ci --prefix tests/e2e` found 0 vulnerabilities; `npm --prefix tests/e2e run typecheck` passed. |
+| Playwright accessibility | Pass | The frozen accessibility sequence passed 6/6 at FrontComposer source gitlink `7a337a21d4ba261bf27aeb3feedde47789f0160a`. Scope caveat recorded 2026-08-19: the forced-colors check focuses the shell skip link, not a content control, so it did not cover the app-owned focus-indicator regression that the code review found and repaired separately. |
 | Static diff | Pass | `git diff --check` completed with no output after remediation. |
 
 The green executable receipts are not yet immutable consumption receipts.
-FrontComposer was tested from a modified working tree based on
-`90954acc66f2c7554ea0490d5ecbc39b46cec05a`; the superproject still records
-`97f44c499e83a0ffbf054febd0aab384054ea39e`. PolymorphicSerializations was
-tested from a modified working tree based on the recorded gitlink
-`5e01ff3ab7a7393c2252ee0c2fc1247556e7c129`. No owner commit, release, or
-superproject gitlink receipt exists for either fix.
+
+**Corrected 2026-08-19 (code review).** The paragraph previously here was
+written before the gitlinks were committed and is false at HEAD. Superproject
+commit `2b63ab9` records FrontComposer
+`7a337a21d4ba261bf27aeb3feedde47789f0160a` and PolymorphicSerializations
+`0dca9e9d3f8b2a20ba426b84fa575ab4e7b5562b`; both checkouts equal their gitlinks
+and both working trees are clean. The identities are recorded in the Story 8.3
+reconciliation table as of 2026-08-19.
+
+What remains missing is narrower than "no receipt exists": neither owner has
+published a **release or tag** containing its fix. FrontComposer
+`7a337a21` is 104 commits past the packaged `4.1.1` that CI bUnit runs and the
+released `parties-ui` container are built from, so the Playwright receipt is
+stamped at an identity that does not ship. PolymorphicSerializations `0dca9e9d`
+carries the StyleCop compatibility fix that cleared the 21-error Release build
+but is likewise unreleased.
 
 ### Remaining immutable-receipt blocker
 
@@ -623,10 +647,75 @@ superproject gitlink receipt exists for either fix.
   owner: `Hexalith.FrontComposer and Hexalith.PolymorphicSerializations maintainers for owner commits/releases; Amelia (Parties Developer) and Murat (Test Architect) for superproject selection and revalidation`
   exit_proof: `Record immutable owner commits or releases, select them through the superproject gitlinks/package graph, then rerun the exact Release solution build, all 15-project lane, package/consumer validation, and npm accessibility lane with the same green results.`
   rollback_or_action: `Keep Story 8.10 in review and Epic 8 in progress. Do not represent dirty dependency checkouts as delivered dependencies; if either owner fix is rejected, restore the retained Story 8.9 UI surface and dependency selection before rerunning the gates.`
-  evidence: `The authorized remediation rows above are green, but git status reports modified FrontComposer and PolymorphicSerializations working trees, and the FrontComposer checkout does not equal the superproject gitlink.`
+  evidence: `Corrected 2026-08-19: the superproject now selects FrontComposer 7a337a21d4ba261bf27aeb3feedde47789f0160a and PolymorphicSerializations 0dca9e9d3f8b2a20ba426b84fa575ab4e7b5562b, both checkouts match their gitlinks, and both working trees are clean. The blocker stays open on the narrower ground that neither owner has published a release or tag containing its fix: FrontComposer 7a337a21 is 104 commits past the packaged 4.1.1 that CI bUnit and the released parties-ui container consume, so the accessibility receipt is stamped at an identity that does not ship.`
 
-**Updated closure verdict:** the former technical blockers are resolved, but
-the frozen `Never` rule explicitly rejects checkout/compile evidence as
-consumption proof. Story 8.10 therefore remains `review`/`in-review` and Epic 8
-remains `in-progress` pending immutable owner and superproject receipts followed
-by the final gate rerun.
+### Story 8.10 code review round 2 — 2026-08-19
+
+Adversarial code review of the diff from baseline `37f4ec8` to `2b63ab9`, scoped
+to `src`, `tests`, `references`, `docs`, and `README.md`. Four independent review
+layers produced roughly 100 raw findings; after verification against the code,
+12 were dismissed as false (two "vacuous in CI" claims died on the fact that the
+reusable `domain-ci.yml` sets `fetch-depth: 0` and initializes all root
+submodules; two more died on the spec's own `test.use({locale, viewport})`).
+Three decisions were resolved, 23 patches applied, four items deferred.
+
+The three highest-consequence repairs:
+
+1. **Dead focus-visible CSS.** `MainLayout.razor` rendered only
+   `<FrontComposerShell>`, so Blazor CSS isolation emitted no scope attribute and
+   every `::deep` rule in `MainLayout.razor.css` — the `--colorStrokeFocus2`
+   outline and its `@media (forced-colors: active)` override — matched nothing at
+   runtime. Confirmed by inspecting the generated `MainLayout_razor.g.cs`.
+   Repaired with an app-owned `display: contents` wrapper, plus a restored
+   reduced-motion rule and a guard test that fails if the wrapper disappears.
+2. **Gitlink proof was unfalsifiable.** `AssertGitlinkAndCheckout` accepted a
+   third disjunct on the working-tree checkout that the following assertion
+   already guaranteed, so a superproject pointing at a different commit passed
+   whenever the checkout happened to be right — precisely the "checkout is not
+   consumption proof" rule the frozen Boundaries forbid. Disjunct removed, and a
+   new guard rejects any present-tense `git ls-tree HEAD` receipt in the matrix
+   that names a superseded identity.
+3. **Closure receipt parser read the wrong table.** `ParseValidationReceipts`
+   sliced from the last receipts heading to end of file, swallowing the blocker
+   and remediation sections, so superseded `**Blocked**` rows decided the gate.
+   The section is now bounded at the next heading, the receipts table was made
+   canonical, and a new always-on test proves the gate is parseable rather than
+   leaving that discoverable only at closure. Writing this very summary then
+   exposed a second defect in the same selector: heading selection used a
+   substring search, so the prose above — which quotes the heading text — was
+   itself selected as the section. Heading matching is now anchored to a complete
+   line, which is the property it always needed.
+
+Validation after the repairs:
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Warning and nested-submodule policy | Pass | `bash scripts/check-no-warning-override.sh`: no regressions. |
+| Release solution build | **Blocked** | 16 SA1316 errors, all in `references/Hexalith.PolymorphicSerializations`; see the blocker below. Zero errors in Parties-owned projects. |
+| All .NET test projects | Pass | `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults`: all 15 projects passed. |
+| Focused fitness classes | Pass | `EpicEightClosureFitnessTests` 14/14, `DocumentationFitnessTests` 3/3, `PlatformApiPrerequisitesTests` 16/16, full `Hexalith.Parties.Tests` 559/559. |
+| Parties UI tests | Pass | `Hexalith.Parties.UI.Tests` 329/329, including the two new scope and static-asset coupling guards. |
+| npm typecheck and Playwright accessibility | Pass | `npm --prefix tests/e2e run typecheck` passed; `npm --prefix tests/e2e run test:a11y` passed 6/6 at FrontComposer source `7a337a21`, with the strict `[role='status'][aria-live='polite']` locator restored. |
+
+The strict "first two keyboard tab stops" assertion was attempted and **failed**:
+after hydration the shell focuses the route `<h1>`, which advances the browser's
+sequential focus navigation point past both skip links, so the first `Tab` lands
+on the page's first interactive control. The DOM order is correct, so the test
+now asserts that explicitly and is named for it; the reachability question is
+routed to the FrontComposer shell owners in `deferred-work.md`.
+
+- blocker: `polymorphicserializations-stylecop-fix-incomplete-at-selected-gitlink`
+  owner: `Hexalith.PolymorphicSerializations maintainers for the completing commit; Amelia (Parties Developer) and Murat (Test Architect) for superproject reselection and revalidation`
+  exit_proof: `At the reselected root gitlink, dotnet build Hexalith.Parties.slnx -c Release -m:1 completes with zero warnings and zero errors, including every PolymorphicSerializations project.`
+  rollback_or_action: `Do not suppress SA1316 and do not add a NoWarn to work around it -- the build gate forbids weakening warnings-as-errors. Complete the tuple-element-casing fix in the owner repository, publish it, then advance the superproject gitlink and rerun the full Release, test, package, consumer, and accessibility gates.`
+  evidence: `The Release solution build row above records 16 SA1316 errors at gitlink 0dca9e9d3f8b2a20ba426b84fa575ab4e7b5562b, all inside references/Hexalith.PolymorphicSerializations and none outside it.`
+
+**Updated closure verdict (revised 2026-08-19):** Story 8.10 remains
+`review`/`in-review` and Epic 8 remains `in-progress`. Two gates are red or
+unmet: the Release solution build fails with 16 SA1316 errors at the selected
+PolymorphicSerializations gitlink, and neither authorized owner fix has an
+immutable release. The 2026-08-18 "former technical blockers are resolved"
+verdict was based on receipts produced from modified working trees and did not
+survive re-measurement at the committed tree. The frozen `Never` rule rejecting
+checkout/compile evidence as consumption proof is what caught this: the fix was
+real in a working tree and only partly real in the commit that landed.

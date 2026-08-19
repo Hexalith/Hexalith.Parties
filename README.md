@@ -87,7 +87,7 @@ Hexalith.Parties/
     Hexalith.Parties.UI/             # Blazor Server browser UI/BFF for Admin and Consumer experiences
     Hexalith.Parties.Mcp/            # Separate parties-mcp host over the typed client
     # Internal (domain-service-host private — not adopter-facing dependencies)
-    Hexalith.Parties.Authentication/ # Published authentication dependency; not a direct adopter package
+    Hexalith.Parties.Authentication/ # Internal claims-transformation library; packable but not adopter-facing. Retained as the rollback surface until 8.8 runtime-boundary cleanup proves G7/G9 parity
     Hexalith.Parties/                # SDK domain-service host and PartyAggregate behind EventStore
     Hexalith.Parties.Projections/    # SDK projection/query handlers and read models (internal)
     Hexalith.Parties.Security/       # GDPR payload protection and erasure infrastructure

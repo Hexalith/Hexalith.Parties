@@ -56,7 +56,7 @@ Open the Aspire dashboard URL printed by the command and verify these resources 
 - `security` - local Keycloak-backed security service for run-mode OIDC/JWT testing
 - `eventstore` - public command/query gateway
 - `eventstore-admin` - admin server used by the EventStore Admin UI
-- `parties` - Parties domain actor/projection host behind EventStore
+- `parties` - Parties domain-service host behind EventStore (EventStore SDK projection/query handlers; the Dapr projection and query actors were retired in Story 8.6)
 - `tenants` - tenant lifecycle, membership, role, and configuration authority
 - `redis` - local DAPR state/pubsub backing service
 - `statestore` and `pubsub` - DAPR components backed by Redis
@@ -327,7 +327,7 @@ builder.Services.AddPartiesClient(builder.Configuration);
 }
 ```
 
-`Parties:BaseUrl` is the EventStore gateway base URL. It is not the `parties` actor-host URL.
+`Parties:BaseUrl` is the EventStore gateway base URL. It is not the `parties` domain-service host URL.
 
 ```csharp
 public sealed class MyService(
@@ -386,7 +386,7 @@ Use the `parties-mcp` endpoint shown in the Aspire dashboard. Replace `<parties-
 }
 ```
 
-The MCP host forwards tenant, user, and authorization context to the EventStore gateway through the typed Parties client boundary. It does not call Parties actors, projections, validators, controllers, or DAPR service invocation directly.
+The MCP host forwards tenant, user, and authorization context to the EventStore gateway through the typed Parties client boundary. It does not call the Parties domain-service host, its projection or query handlers, validators, controllers, or DAPR service invocation directly.
 
 ---
 

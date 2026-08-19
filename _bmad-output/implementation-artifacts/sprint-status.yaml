@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-08-18
+# last_updated: 2026-08-19
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -42,7 +42,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-08-18
+last_updated: 2026-08-19
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -183,6 +183,17 @@ development_status:
   # root/origin baseline ed007f8 also fails commitlint (type/subject empty and an
   # overlong body line). The sequence and G5/G7-G9/G8/G11/Commons/Builds proof stay open.
   8-8-client-mcp-apphost-build-and-deploy-cleanup: blocked
+  # Delivered-slice record, 2026-08-19
+  # (sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md).
+  # Story 8.10 adopted G4 work package F only — the FrontComposer shell skip
+  # links and role=main/role=navigation landmarks — at FrontComposer root gitlink
+  # 7a337a21d4ba261bf27aeb3feedde47789f0160a. Work packages A-E (entity picker,
+  # freshness indicator, live-region contract, file/JSON download, typed-name
+  # confirmation) remain undelivered, so this story stays backlog: a delivered
+  # slice never advances the owning story. The slice's I13 parity is NOT yet
+  # discharged — it left the app-owned focus-visible and forced-colors rules
+  # unscoped and dead at runtime, and the Playwright receipt never focuses a
+  # content control. Retain every other Parties UI primitive.
   8-9-ui-frontcomposer-and-fluent-consolidation: backlog
   # Story 8.10 closure evidence, 2026-08-18: retained identities are EventStore
   # package 3.95.0 and source 454b4d100c8c095abf5077c6a8d408da6681e87e,
@@ -199,7 +210,18 @@ development_status:
   # remain modified dependency working trees rather than immutable owner
   # commits/releases selected by the superproject. Retain every 8.7-8.9
   # rollback path; external deployment remains owned by the orchestrator.
-  8-10-final-readiness-documentation-and-retirement-gate: review
+  # Code review round 2, 2026-08-19: 3 decisions resolved and 23 patches applied
+  # (see the story's Review Findings). Shell-slice authority backfilled by
+  # sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md.
+  # Status moved review -> in-progress because re-measurement at the committed
+  # tree found the Release solution build RED: 16 SA1316 errors, all inside
+  # references/Hexalith.PolymorphicSerializations at gitlink 0dca9e9d, none
+  # outside it. The 2026-08-18 green receipt came from a modified working tree
+  # and the landed commit carries only part of that fix. Two blockers are open:
+  # polymorphicserializations-stylecop-fix-incomplete-at-selected-gitlink and
+  # authorized-owner-fixes-not-immutable. All 15 .NET test projects pass and the
+  # 6/6 Playwright accessibility lane passes at FrontComposer source 7a337a21.
+  8-10-final-readiness-documentation-and-retirement-gate: in-progress
   # Added by Correct Course 2026-07-07
   # (sprint-change-proposal-2026-07-07-validation-ladder-runner.md).
   # QA/tooling maintenance story; independent of the 8.6-8.10 deletion sequence

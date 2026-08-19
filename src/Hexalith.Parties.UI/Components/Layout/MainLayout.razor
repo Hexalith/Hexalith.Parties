@@ -2,7 +2,14 @@
 @using Hexalith.FrontComposer.Shell.Components.Layout
 
 <FrontComposerShell Navigation="PartiesNavigation" ContentLabel="Main content">
-    @Body
+    @* This wrapper is load-bearing, not decorative. Blazor CSS isolation stamps the scope id
+       only onto HTML elements written in this .razor file; when MainLayout rendered nothing but
+       the shell component, every ::deep rule in MainLayout.razor.css compiled to a selector that
+       matched no element and the app-owned focus indicator was dead at runtime. The wrapper uses
+       display: contents so it stays out of layout. *@
+    <div class="parties-main-content">
+        @Body
+    </div>
 </FrontComposerShell>
 
 @code {

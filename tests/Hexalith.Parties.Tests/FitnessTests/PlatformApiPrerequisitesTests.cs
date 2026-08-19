@@ -15,8 +15,17 @@ public sealed class PlatformApiPrerequisitesTests
     private const string EventStoreSprintStatusRelativePath = "references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml";
     private const string EventStoreStoryMigrationRelativePath = "references/Hexalith.EventStore/_bmad-output/planning-artifacts/story-id-migration-2026-08-01.md";
     private const string MatrixRelativePath = "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md";
+
+    // Every child process here is a git query or an MSBuild evaluation. None should approach this;
+    // the bound exists so a hung child fails the lane with a diagnosable message instead of blocking.
+    private const int ProcessTimeoutMilliseconds = 300_000;
     private const string BuildsSha = "17b1c7aae3e1854e464f17bd88d527f8350ea203";
     private const string CommonsSha = "6fbac0c5dff2b8a58e90732c51b31911421a8a65";
+
+    // Consumed by MainLayout for the shell landmarks and skip links (G4 work package F, delivered
+    // under sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md).
+    // Recorded separately from the packaged 4.1.1 identity that CI and the released container use.
+    private const string FrontComposerSha = "7a337a21d4ba261bf27aeb3feedde47789f0160a";
     private const string PayloadProtectionEventStoreDescribe = "v3.95.0-2-g454b4d10";
     private const string PayloadProtectionEventStoreSha = "454b4d100c8c095abf5077c6a8d408da6681e87e";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
@@ -560,17 +569,43 @@ public sealed class PlatformApiPrerequisitesTests
     public void AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity()
     {
         string root = RepositoryRoot.Locate();
-        string story810 = File.ReadAllText(Path.Combine(root, "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"));
         string matrix = ReadMatrix();
 
-        story810.ShouldContain("record package and source identities separately");
-        story810.ShouldContain("Treat a matrix label, checkout, compile, skip, or historical pin as consumption proof");
         foreach (string surface in RequiredFinalConsumptionRows.Keys.Select(static key => key.Split('|')[0]).Distinct(StringComparer.Ordinal))
         {
             matrix.ShouldContain(surface);
         }
 
-        story810.ShouldContain("receipts equal selected dependencies");
+        // Directional gate retention. A downstream story that is still blocked must keep the
+        // available-row identity gate holding it there; a story that has since completed may
+        // legitimately retire its gate. Pinning both unconditionally is what pushed the previous
+        // version of this test into grepping the Story 8.10 spec's own frozen Boundaries prose --
+        // a spec asserting its own wording proves nothing about consumer fail-closed behaviour.
+        // (DescribeIdentityGap's missing/mismatched outcomes are exercised directly by the
+        // identity-gap theory below.)
+        string sprintStatus = File.ReadAllText(
+            Path.Combine(root, "_bmad-output/implementation-artifacts/sprint-status.yaml"));
+        (string StoryKey, string SpecPath)[] downstreamConsumers =
+        [
+            ("8-8-client-mcp-apphost-build-and-deploy-cleanup",
+                "_bmad-output/implementation-artifacts/spec-8-8-client-mcp-apphost-build-and-deploy-cleanup.md"),
+        ];
+
+        foreach ((string storyKey, string specPath) in downstreamConsumers)
+        {
+            if (!Regex.IsMatch(
+                    sprintStatus,
+                    $@"(?m)^\s*{Regex.Escape(storyKey)}:\s*blocked\s*$",
+                    RegexOptions.CultureInvariant))
+            {
+                continue;
+            }
+
+            File.ReadAllText(Path.Combine(root, specPath)).ShouldContain(
+                "Block If — available-row identities",
+                Case.Sensitive,
+                $"{storyKey} is still blocked, so its available-row identity gate must remain declared.");
+        }
     }
 
     [Fact]
@@ -582,6 +617,35 @@ public sealed class PlatformApiPrerequisitesTests
         AssertGitlinkAndCheckout(root, "references/Hexalith.EventStore", PayloadProtectionEventStoreSha);
         AssertGitlinkAndCheckout(root, "references/Hexalith.Commons", CommonsSha);
         AssertGitlinkAndCheckout(root, "references/Hexalith.Builds", BuildsSha);
+        AssertGitlinkAndCheckout(root, "references/Hexalith.FrontComposer", FrontComposerSha);
+
+        // The shell slice consumes FrontComposer source, so its identity must appear in the matrix
+        // reconciliation table alongside the package identity that actually ships.
+        matrix.ShouldContain(FrontComposerSha);
+        matrix.ShouldContain("4.1.1");
+
+        // Any present-tense `git ls-tree HEAD` receipt must name the identity HEAD actually records.
+        // Historical receipts belong to the story that captured them and must be written with a dated
+        // placeholder instead of the literal HEAD, so a superseded pin cannot read as current proof.
+        Dictionary<string, string> currentGitlinks = new(StringComparer.Ordinal)
+        {
+            [EventStoreRelativePath] = PayloadProtectionEventStoreSha,
+            ["references/Hexalith.Commons"] = CommonsSha,
+            ["references/Hexalith.Builds"] = BuildsSha,
+            ["references/Hexalith.FrontComposer"] = FrontComposerSha,
+        };
+        foreach (Match receipt in Regex.Matches(
+                     matrix,
+                     @"git ls-tree HEAD (?<path>references/[A-Za-z.]+)`\s*->\s*`160000 commit (?<sha>[0-9a-f]{40})",
+                     RegexOptions.CultureInvariant))
+        {
+            if (currentGitlinks.TryGetValue(receipt.Groups["path"].Value, out string? expectedSha))
+            {
+                receipt.Groups["sha"].Value.ShouldBe(
+                    expectedSha,
+                    $"Stale present-tense gitlink receipt for {receipt.Groups["path"].Value}.");
+            }
+        }
 
         string rootBuildProps = File.ReadAllText(Path.Combine(root, "Directory.Build.props"));
         rootBuildProps.ShouldContain("<UseHexalithProjectReferences Condition=\"'$(UseHexalithProjectReferences)' == ''\">false</UseHexalithProjectReferences>");
@@ -823,7 +887,12 @@ public sealed class PlatformApiPrerequisitesTests
             $"-p:UseHexalithProjectReferences={useSource.ToString().ToLowerInvariant()}",
             "-p:NuGetAudit=false",
             "-p:MinVerVersionOverride=1.0.0");
-        using JsonDocument document = JsonDocument.Parse(output);
+        // MSBuild can emit restore or NuGet preamble on stdout ahead of the JSON payload; parsing
+        // the raw stream throws JsonException instead of reporting a graph difference.
+        int jsonStart = output.IndexOf('{', StringComparison.Ordinal);
+        jsonStart.ShouldBeGreaterThanOrEqualTo(0, $"MSBuild produced no JSON payload for {relativeProject}: {output}");
+
+        using JsonDocument document = JsonDocument.Parse(output[jsonStart..]);
         Dictionary<string, string> properties = document.RootElement.GetProperty("Properties")
             .EnumerateObject()
             .ToDictionary(static property => property.Name, static property => property.Value.GetString() ?? string.Empty, StringComparer.Ordinal);
@@ -1444,10 +1513,17 @@ public sealed class PlatformApiPrerequisitesTests
         string gitlink = RunGit(root, "ls-tree", "HEAD", relativePath).Trim();
         string indexLink = RunGit(root, "ls-files", "-s", relativePath).Trim();
         string checkout = RunGit(root, "-C", relativePath, "rev-parse", "HEAD").Trim();
+
+        // The recorded gitlink must match on its own terms. A third disjunct on the checkout used to
+        // sit here, but the checkout is already required to match two lines below, so it made the
+        // gitlink assertion unfalsifiable: a superproject pointing at a different commit passed
+        // whenever the working tree happened to be right. The Story 8.3 matrix is explicit that a
+        // working-tree checkout alone is not root-submodule-pin proof, and the frozen Boundaries
+        // forbid treating a checkout as consumption proof.
         bool gitlinkMatches = gitlink.Contains($"160000 commit {expectedIdentity}", StringComparison.Ordinal)
-            || indexLink.Contains(expectedIdentity, StringComparison.Ordinal)
-            || string.Equals(checkout, expectedIdentity, StringComparison.Ordinal);
-        gitlinkMatches.ShouldBeTrue($"{relativePath} gitlink must match expected {expectedIdentity}.");
+            || indexLink.Contains(expectedIdentity, StringComparison.Ordinal);
+        gitlinkMatches.ShouldBeTrue(
+            $"{relativePath} gitlink must match expected {expectedIdentity}; recorded gitlink was '{gitlink}'.");
 
         DescribeIdentityGap(checkout, expectedIdentity).ShouldBeEmpty(relativePath);
         RunGit(root, "-C", relativePath, "status", "--porcelain")
@@ -1478,10 +1554,19 @@ public sealed class PlatformApiPrerequisitesTests
         }
 
         process.Start().ShouldBeTrue();
-        string output = process.StandardOutput.ReadToEnd();
-        string error = process.StandardError.ReadToEnd();
-        process.WaitForExit();
 
+        // Drain stderr concurrently. Reading stdout to completion first deadlocks if the child
+        // fills the stderr pipe buffer, which a verbose MSBuild evaluation can do.
+        Task<string> errorTask = process.StandardError.ReadToEndAsync();
+        string output = process.StandardOutput.ReadToEnd();
+        if (!process.WaitForExit(ProcessTimeoutMilliseconds))
+        {
+            process.Kill(entireProcessTree: true);
+            throw new TimeoutException(
+                $"{fileName} {string.Join(' ', arguments)} did not exit within {ProcessTimeoutMilliseconds / 1000} seconds.");
+        }
+
+        string error = errorTask.GetAwaiter().GetResult();
         process.ExitCode.ShouldBe(0, error);
         return output;
     }

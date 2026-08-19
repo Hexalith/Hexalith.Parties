@@ -146,10 +146,18 @@ Local development uses Redis-backed pub/sub configured in [src/Hexalith.Parties.
 - **subscription-parties.yaml:** Topic `tenant-a.parties.events`, scoped to the
   sample subscriber app-id `sample`.
 - **resiliency.yaml:** Conservative retry policies for fast local iteration
-- **accesscontrol.yaml / accesscontrol.*.yaml:** sidecar-specific
-  `defaultAction: deny` policies. `accesscontrol.parties.yaml` permits only the
-  `eventstore` app ID on the exact SDK POST routes; subscribers receive pub/sub
-  delivery without broad service-invocation access.
+- **accesscontrol.yaml / accesscontrol.*.yaml:** sidecar-specific service-invocation
+  policies. `accesscontrol.parties.yaml` is `defaultAction: deny` at both the
+  top level and the policy level, and permits only the `eventstore` app ID on the
+  exact SDK POST routes; subscribers receive pub/sub delivery without broad
+  service-invocation access. `accesscontrol.yaml`, `accesscontrol.tenants.yaml`,
+  `accesscontrol.memories.yaml`, and `accesscontrol.sample.yaml` are likewise
+  deny-by-default.
+  **One documented exception:** `accesscontrol.eventstore-admin.yaml` is
+  `defaultAction: allow` at the top level. Local self-hosted DAPR does not reliably
+  expose caller identity without mTLS, so the Admin UI to Admin Server hop would
+  break under deny-by-default. This is run-mode local wiring only — it is not a
+  production manifest, and the Parties sidecar boundary is unaffected.
 
 The sample subscriber endpoint lives in [samples/Hexalith.Parties.Sample/PartyEventHandler.cs](samples/Hexalith.Parties.Sample/PartyEventHandler.cs) and maps `/events/parties`. The `eventstore` app publishes party-domain events, `tenants` publishes tenant-lifecycle events, `parties` subscribes to tenant-lifecycle events, and `sample` subscribes to party-domain events.
 

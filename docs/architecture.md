@@ -122,6 +122,17 @@ the canonical surface with `UseEventStoreDomainService`.
 3. **Handlers** (`src/Hexalith.Parties/Domain/PartyAggregate.cs`) enforce business rules in a guard cascade (null → id validity → idempotency no-op → type/required checks → emit events), then return a `DomainResult` of `IEventPayload`s (or rejection events). Success results may carry an enriched `PartyDetail` (`PartyCommandResult` / `CompositeCommandResult`).
 4. EventStore **persists** the events to the aggregate stream and **publishes** them as CloudEvents (persist-then-publish; drain/recovery guarantees at-least-once).
 
+**Payload protection on the command path.** Step 1's "protected current state" is not plaintext.
+`IEventPayloadProtectionService` (implemented by `PartyPayloadProtectionService` in
+`Hexalith.Parties.Security`, adapted via `EventStorePartyPayloadProtectionAdapter`) decrypts the
+current-state snapshot and prior event payloads before the aggregate sees them. **After a party's
+key has been destroyed by crypto-shredding, decryption deliberately fails closed to a redaction
+fallback** — the payload is surfaced as `json-redacted` rather than throwing — so erased history
+replays without leaking and without breaking rehydration. Registration order matters: the Parties
+protection service is registered **before** `AddEventStoreServer`, so it overrides the SDK default
+`NoOpEventPayloadProtectionService`. Retiring this local implementation is gated by the
+`8.7-data-protection-extraction` deferral; see §8 for key storage and the production-KMS gate.
+
 Business-rule highlights: state-driven idempotency (`DomainResult.NoOp`), the erasure state machine (`ErasurePending → KeyDestroyed → Verified → Erased`), Art.18 restriction guards (with an Art.18(3) carve-out for consent ops), deterministic `ConsentId`, and the composite two-phase (validate-all-then-emit) with a `MaxSubOperations` cap.
 
 ---
@@ -205,8 +216,8 @@ src/
   Hexalith.Parties.ConsumerPortal/ # protected Consumer /me self-service RCL
   Hexalith.Parties.UI/             # Blazor Server browser UI/BFF (`parties-ui`)
   Hexalith.Parties.Mcp/            # parties-mcp host (5 tools)
-  Hexalith.Parties.Authentication/ # shared authentication/authorization package
   # Internal (domain-service-host private)
+  Hexalith.Parties.Authentication/ # internal claims-transformation library; packable but not adopter-facing, retained as the G7/G9 rollback surface until 8.8
   Hexalith.Parties/                # SDK domain-service host, PartyAggregate, DI, middleware, query adapters
   Hexalith.Parties.Projections/    # SDK projection handlers/folds + read-model support
   Hexalith.Parties.Security/       # crypto-shredding / key management / erasure

@@ -1,13 +1,32 @@
-::deep :where(a, button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+/* The shell owns the main-content landmark. This wrapper exists purely so CSS isolation has an
+   app-owned element to stamp its scope id onto -- without a real element rendered by MainLayout,
+   every ::deep rule below compiles to a selector that matches nothing. Keep it out of layout. */
+.parties-main-content {
+    display: contents;
+}
+
+.parties-main-content ::deep :where(a, button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
     outline: var(--strokeWidthThick) solid var(--colorStrokeFocus2);
     outline-offset: var(--spacingHorizontalXS);
 }
 
 @media (forced-colors: active) {
-    ::deep :where(a, button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+    .parties-main-content ::deep :where(a, button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
         background: Canvas;
         border-color: Highlight;
         color: CanvasText;
         outline-color: Highlight;
+    }
+}
+
+/* App-owned motion rule. The shell stylesheet declares no reduced-motion behaviour, so Parties
+   components inside the content area carry their own. State changes stay visible -- only the
+   animation is suppressed. */
+@media (prefers-reduced-motion: reduce) {
+    .parties-main-content ::deep :where(a, button, input, select, textarea, summary, [tabindex]) {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
     }
 }

@@ -42,11 +42,19 @@ public sealed class EpicEightClosureFitnessTests
 
         string sprintStatus = Read(root, SprintStatusPath);
         ReadYamlStatus(sprintStatus, "8-6-projection-and-query-sdk-migration").ShouldBe("done");
-        Regex.Matches(
-                Read(root, Story86Path),
-                @"(?m)^\s*- \[ \] \[Review\]\[Defer\]",
-                RegexOptions.CultureInvariant)
-            .ShouldNotBeEmpty("8.6 has explicit residual review debt, so its accepted umbrella deferral must remain present.");
+
+        // Directional, not mandatory. Unresolved Story 8.6 review debt REQUIRES the umbrella
+        // deferral to exist; it must not require the debt itself to persist. The previous assertion
+        // was inverted, so resolving Story 8.6's residual debt would have broken Epic 8 closure.
+        bool hasResidualStory86Debt = Regex.IsMatch(
+            Read(root, Story86Path),
+            @"(?m)^\s*- \[ \] \[Review\]\[Defer\]",
+            RegexOptions.CultureInvariant);
+        if (hasResidualStory86Debt)
+        {
+            deferrals.Select(static item => item.Id)
+                .ShouldContain("8.6-residual-review-debt", "Story 8.6 still has unchecked review debt.");
+        }
         ReadYamlStatus(sprintStatus, "8-7-data-protection-extraction").ShouldBe("blocked");
         ReadYamlStatus(sprintStatus, "8-8-client-mcp-apphost-build-and-deploy-cleanup").ShouldBe("blocked");
         ReadYamlStatus(sprintStatus, "8-9-ui-frontcomposer-and-fluent-consolidation").ShouldBe("backlog");
@@ -112,13 +120,7 @@ public sealed class EpicEightClosureFitnessTests
         string marked = ReadMarkedSection(spine, "epic-8-invariant-map");
         Dictionary<string, (string Disposition, string Evidence)> rows = ParseInvariantRows(marked);
         string[] expected = ["I1", "I1a", .. Enumerable.Range(2, 14).Select(static number => $"I{number}")];
-        HashSet<string> testClasses = Directory.GetFiles(Path.Combine(root, "tests"), "*.cs", SearchOption.AllDirectories)
-            .SelectMany(static path => Regex.Matches(
-                File.ReadAllText(path),
-                @"\bclass\s+(?<name>[A-Za-z][A-Za-z0-9_]*Tests)\b",
-                RegexOptions.CultureInvariant))
-            .Select(static match => match.Groups["name"].Value)
-            .ToHashSet(StringComparer.Ordinal);
+        HashSet<string> testClasses = CollectExecutableTestClasses(root);
 
         rows.Keys.Order(StringComparer.Ordinal).ShouldBe(expected.Order(StringComparer.Ordinal));
         foreach (KeyValuePair<string, (string Disposition, string Evidence)> row in rows)
@@ -165,22 +167,26 @@ public sealed class EpicEightClosureFitnessTests
         spine.ShouldContain("Epic 8 adds **zero** PRD functional requirements");
 
         string[] scopeArtifacts = [PrdPath, EpicsPath];
-        if (TryRunGit(root, out _, "cat-file", "-e", $"{BaselineCommit}^{{commit}}"))
-        {
-            SplitLines(RunGit(root, ["diff", "--name-only", BaselineCommit, "--", EpicsPath]))
-                .ShouldBeEmpty("Epic 8 cannot change the epic/FR inventory.");
-
-            // The PRD accepts governed non-functional corrections (currency metadata,
-            // traceability, wording — e.g. the 2026-08-18 validation-driven correction),
-            // but its FR/NFR requirement inventory is frozen at the baseline: Epic 8
-            // adds zero PRD functional requirements.
-            ExtractRequirementIds(Read(root, PrdPath)).ShouldBe(
-                ExtractRequirementIds(RunGit(root, ["show", $"{BaselineCommit}:{PrdPath}"])),
-                "Epic 8 cannot add, remove, or reorder canonical PRD requirements.");
-        }
-
         SplitLines(RunGit(root, ["ls-files", "--others", "--exclude-standard", "--", .. scopeArtifacts]))
             .ShouldBeEmpty("Untracked canonical scope artifacts also fail the zero-PRD gate.");
+
+        // Skip loudly rather than pass silently. A shallow clone cannot reach the baseline commit,
+        // and the previous conditional turned the whole PRD/epic freeze into a no-op that still
+        // reported pass -- exactly the invisible skip AC3 forbids.
+        Assert.SkipUnless(
+            TryRunGit(root, out _, "cat-file", "-e", $"{BaselineCommit}^{{commit}}"),
+            $"Baseline commit {BaselineCommit} is unreachable; check out with fetch-depth 0 to run the zero-PRD freeze.");
+
+        SplitLines(RunGit(root, ["diff", "--name-only", BaselineCommit, "--", EpicsPath]))
+            .ShouldBeEmpty("Epic 8 cannot change the epic/FR inventory.");
+
+        // The PRD accepts governed non-functional corrections (currency metadata,
+        // traceability, wording — e.g. the 2026-08-18 validation-driven correction),
+        // but its FR/NFR requirement inventory is frozen at the baseline: Epic 8
+        // adds zero PRD functional requirements.
+        ExtractRequirementIds(Read(root, PrdPath)).ShouldBe(
+            ExtractRequirementIds(RunGit(root, ["show", $"{BaselineCommit}:{PrdPath}"])),
+            "Epic 8 cannot add, remove, or reorder canonical PRD requirements.");
     }
 
     [Fact]
@@ -212,6 +218,30 @@ public sealed class EpicEightClosureFitnessTests
         DescribeReceiptGaps(receipts).ShouldBeEmpty();
     }
 
+    [Fact]
+    public void ValidationReceiptSectionResolvesToTheCurrentTableAndIsWellFormed()
+    {
+        string root = RepositoryRoot.Locate();
+        Dictionary<string, string> receipts = ParseValidationReceipts(Read(root, TestSummaryPath));
+
+        // Deliberately exercised regardless of story status. The closure gate reads these receipts
+        // only once the story is already marked done, so a superseded or unparsable table would stay
+        // invisible until the moment someone attempts closure and the gate proves unpassable.
+        receipts.ContainsKey("Release solution build").ShouldBeTrue(
+            "The closure gate requires a canonically named Release solution build receipt.");
+        receipts.ContainsKey("Playwright accessibility").ShouldBeTrue(
+            "The closure gate requires a canonically named Playwright accessibility receipt.");
+
+        // Structural only -- deliberately NOT a greenness check. Greenness belongs to the closure
+        // gate above. Asserting Pass here would mean a genuinely red gate has to be written up as
+        // Pass to keep the normal test lane green, which is precisely the pressure that manufactures
+        // false receipts. A red receipt must be recordable as red without breaking the build.
+        foreach (KeyValuePair<string, string> receipt in receipts)
+        {
+            receipt.Value.ShouldNotBeNullOrWhiteSpace(receipt.Key);
+        }
+    }
+
     [Theory]
     [InlineData("unknown")]
     [InlineData("ready-ish")]
@@ -228,6 +258,57 @@ public sealed class EpicEightClosureFitnessTests
         };
 
         DescribeReceiptGaps(receipts).ShouldBe(["Release solution build:**Blocked**", "Playwright accessibility:Failed"]);
+    }
+
+    /// <summary>
+    /// Collects test classes that can actually discharge an invariant: the class must be declared in
+    /// a project that <c>scripts/test.ps1</c> runs, and that file must declare at least one test
+    /// method. A bare name match anywhere under <c>tests/</c> is not evidence — a comment, a support
+    /// host, or an abstract helper would all have satisfied it.
+    /// </summary>
+    private static HashSet<string> CollectExecutableTestClasses(string root)
+    {
+        HashSet<string> runnableProjects = Regex.Matches(
+                Read(root, "scripts/test.ps1"),
+                "tests/(?<project>[^/]+Tests)/[^\"\\r\\n]+\\.csproj",
+                RegexOptions.CultureInvariant)
+            .Select(static match => match.Groups["project"].Value)
+            .ToHashSet(StringComparer.Ordinal);
+        runnableProjects.ShouldNotBeEmpty("scripts/test.ps1 must enumerate the runnable test projects.");
+
+        string testsRoot = Path.Combine(root, "tests");
+        HashSet<string> classes = new(StringComparer.Ordinal);
+        foreach (string path in Directory.GetFiles(testsRoot, "*.cs", SearchOption.AllDirectories))
+        {
+            string relativePath = Path.GetRelativePath(testsRoot, path);
+            string[] segments = relativePath.Split(Path.DirectorySeparatorChar);
+            if (segments.Length < 2 || !runnableProjects.Contains(segments[0]))
+            {
+                continue;
+            }
+
+            if (relativePath.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+                || relativePath.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string text = File.ReadAllText(path);
+            if (!text.Contains("[Fact]", StringComparison.Ordinal) && !text.Contains("[Theory]", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            foreach (Match match in Regex.Matches(
+                         text,
+                         @"\bclass\s+(?<name>[A-Za-z][A-Za-z0-9_]*Tests)\b",
+                         RegexOptions.CultureInvariant))
+            {
+                classes.Add(match.Groups["name"].Value);
+            }
+        }
+
+        return classes;
     }
 
     private static string[] DescribeDeferralGaps(ClosureDeferral deferral)
@@ -260,7 +341,9 @@ public sealed class EpicEightClosureFitnessTests
     {
         string[] anchors = Regex.Matches(
                 evidence,
-                @"(?<path>(?:_bmad-output|docs|src|tests|scripts|references)/[^\s;,`]+\.(?:md|ya?ml|cs|csproj|ps1|py|sh))",
+                // csproj precedes cs: with cs first, "Foo.csproj" matches only ".cs" and the
+                // truncated path is then reported as a missing evidence anchor.
+                @"(?<path>(?:_bmad-output|docs|src|tests|scripts|references)/[^\s;,`]+\.(?:csproj|md|ya?ml|cs|ps1|py|sh|ts|json|razor)(?![A-Za-z0-9]))",
                 RegexOptions.CultureInvariant)
             .Select(static match => match.Groups["path"].Value.TrimEnd('.', ':'))
             .Distinct(StringComparer.Ordinal)
@@ -310,9 +393,21 @@ public sealed class EpicEightClosureFitnessTests
 
     private static Dictionary<string, string> ParseValidationReceipts(string summary)
     {
-        int headingIndex = summary.LastIndexOf("### Validation receipts", StringComparison.Ordinal);
-        headingIndex.ShouldBeGreaterThanOrEqualTo(0, "Validation receipt heading is missing.");
-        string section = summary[headingIndex..];
+        // Match a real heading LINE, not a substring. A plain LastIndexOf also matches any prose
+        // that merely quotes the heading text -- including this file's own narrative describing the
+        // parser -- which silently reselects the section and makes the gate read the wrong table.
+        MatchCollection headings = Regex.Matches(
+            summary,
+            @"(?m)^### Validation receipts[ \t]*\r?$",
+            RegexOptions.CultureInvariant);
+        headings.Count.ShouldBeGreaterThan(0, "Validation receipt heading is missing.");
+        int headingIndex = headings[^1].Index;
+
+        // Bound the section at the next heading. Slicing to end of file swallows every later table,
+        // so superseded blocker and remediation rows would decide the closure gate.
+        int nextHeadingIndex = summary.IndexOf("\n### ", headingIndex + 1, StringComparison.Ordinal);
+        string section = nextHeadingIndex < 0 ? summary[headingIndex..] : summary[headingIndex..nextHeadingIndex];
+
         Dictionary<string, string> receipts = new(StringComparer.Ordinal);
         foreach (Match match in Regex.Matches(
                      section,
@@ -320,10 +415,16 @@ public sealed class EpicEightClosureFitnessTests
                      RegexOptions.CultureInvariant))
         {
             string check = match.Groups["check"].Value.Trim();
-            if (!string.Equals(check, "Check", StringComparison.Ordinal) && !check.StartsWith("---", StringComparison.Ordinal))
+            if (string.Equals(check, "Check", StringComparison.Ordinal)
+                || Regex.IsMatch(check, @"^[:\-\s]+$", RegexOptions.CultureInvariant))
             {
-                receipts[check] = match.Groups["result"].Value.Trim();
+                continue;
             }
+
+            // Fail loudly on a duplicated check name: silent last-wins lets a later Pass row
+            // overwrite an earlier Blocked one.
+            receipts.ContainsKey(check).ShouldBeFalse($"Duplicate validation receipt row: {check}");
+            receipts[check] = match.Groups["result"].Value.Trim();
         }
 
         receipts.ShouldNotBeEmpty("Validation receipt table is missing.");
@@ -332,7 +433,13 @@ public sealed class EpicEightClosureFitnessTests
 
     private static string[] DescribeReceiptGaps(IReadOnlyDictionary<string, string> receipts)
         => receipts
-            .Where(static receipt => !receipt.Value.StartsWith("Pass", StringComparison.OrdinalIgnoreCase))
+            .Where(static receipt =>
+            {
+                // Tolerate bold markup, but never accept a qualified pass that still names a blocker.
+                string value = receipt.Value.Trim('*', ' ');
+                return !value.StartsWith("Pass", StringComparison.OrdinalIgnoreCase)
+                    || value.Contains("block", StringComparison.OrdinalIgnoreCase);
+            })
             .Select(static receipt => $"{receipt.Key}:{receipt.Value}")
             .ToArray();
 

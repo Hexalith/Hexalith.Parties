@@ -247,7 +247,7 @@ sprint-status tracks.
 | I1a | Deferred | `8.8-runtime-boundary-cleanup` retains the Parties AppHost until integrated-topology, security, publish, and rollback parity exist. |
 | I2 | Executable + Deferred | `RetiredLeafProjectFitnessTests` guards the EventStore SDK host shape and retired leaf boundaries at source level; `EventStoreGatewayE2ETests` adds topology-gated coverage (runs fully only with Docker/DAPR available); `8.6-residual-review-debt` owns authenticated end-to-end handler-discovery proof. |
 | I3 | Deferred | `8.6-residual-review-debt` (host/gateway/ACL switch-back seams), `8.7-data-protection-extraction`, `8.8-runtime-boundary-cleanup`, and `8.9-frontcomposer-ui-consolidation` retain every named local rollback path until parity is executable; `external-runtime-deployment` owns the release-recovery rollback path. |
-| I4 | Executable | `PlatformApiPrerequisitesTests` verifies package/source selection separately and pins EventStore package `3.95.0`, EventStore source `454b4d100c8c095abf5077c6a8d408da6681e87e`, Commons HTTP source `6fbac0c5dff2b8a58e90732c51b31911421a8a65`, and Builds catalog `17b1c7aae3e1854e464f17bd88d527f8350ea203`. Caveat (2026-08-18): the Builds identity is a working-tree checkout — the committed gitlink is `6b78075` — so this row is durable only once the pending superproject gitlink commit lands; closure stays open on exactly this per the sprint-status 8.10 note. |
+| I4 | Executable | `PlatformApiPrerequisitesTests` verifies package/source selection separately and pins EventStore package `3.95.0`, EventStore source `454b4d100c8c095abf5077c6a8d408da6681e87e`, Commons HTTP source `6fbac0c5dff2b8a58e90732c51b31911421a8a65`, and Builds catalog `17b1c7aae3e1854e464f17bd88d527f8350ea203`. Resolved (2026-08-18): superproject commit `2b63ab9` landed the gitlinks and closure tests — all identities now match HEAD and the row is durable. |
 | I5 | Executable | `ContractsPublicApiSnapshotTests`, `ClientPackageTests`, `PartyPickerPackagingTests`, `AdminPortalPackagingTests`, and `ConsumerPortalPackagingTests` preserve the public package surface. |
 | I6 | Executable + Deferred | `EventStoreGatewayRoutingTests`, `HttpPartiesQueryClientTests`, and `SelfScopedPartiesClientTests` preserve command/query behavior and self-scope; `8.8-runtime-boundary-cleanup` owns future shared-helper adoption. |
 | I7 | Executable + Deferred | `PartyAggregateConsentTests`, `PartyAggregateErasureTests`, and `ErasureVerificationServiceTests` preserve consent, restriction, and erasure behavior; `8.6-residual-review-debt` owns the residual erasure-certificate identity/status validation and Memories cleanup-race review debt. |
@@ -256,10 +256,40 @@ sprint-status tracks.
 | I10 | Executable + Deferred | `PartySdkQueryHandlerTests` and `ProjectionFreshnessAndDegradationTests` guard rebuild, freshness, stale-read, erased-index, and tombstone behavior; `8.6-residual-review-debt` owns the open freshness-mapping and search-input-bounds debt. |
 | I11 | Executable + Deferred | `IdentifierHygieneFitnessTests` bans GUID-parser regressions while `IdentifierValidatorTests` and `PartyAggregateCompositeTests` preserve ULID-compatible acceptance and GUID-shaped replay; `8.8-runtime-boundary-cleanup` owns future Commons-helper adoption. |
 | I12 | Executable | `DocumentationFitnessTests` and `PartiesContainerPublishWorkflowTests` pin the runnable lanes and publication contract; warning, restore, Release build, package, consumer, typecheck, and Playwright receipts remain mandatory closure gates (the always-on CI Playwright a11y lane is a separate open ledger item). |
-| I13 | Executable + Deferred | `MainLayoutAccessibilityTests` (asserting the FrontComposer shell slice — skip links and landmarks — adopted 2026-08-18) and `PartiesAccessibilitySpecimenTests` guard the retained UI; `8.9-frontcomposer-ui-consolidation` owns the remaining shared-primitive slices. |
+| I13 | Deferred (parity not yet discharged) | `MainLayoutAccessibilityTests` (asserting the FrontComposer shell slice — skip links and landmarks — adopted 2026-08-18 under the 2026-08-19 backfill SCP) and `PartiesAccessibilitySpecimenTests` guard the retained UI, but I13 parity is NOT discharged: the shell slice left the app-owned focus-visible and forced-colors rules unscoped and therefore dead at runtime, and the Playwright receipt focuses only the shell skip link, never a content control. `8.9-frontcomposer-ui-consolidation` owns both the remaining shared-primitive slices and this open regression. |
 | I14 | Executable + Deferred | `MyConsentPageTests` and `MyPrivacyPageTests` guard GDPR copy and stale-read honesty; `8.9-frontcomposer-ui-consolidation` owns the remaining shared-copy consolidation (shell slice already adopted 2026-08-18). |
 | I15 | Executable | `EpicEightClosureFitnessTests` verifies that Epic 8 changes no PRD functional-requirement artifact and cannot be reported as MVP feature delivery. |
 <!-- epic-8-invariant-map:end -->
+
+### 7a. Disposition of I16–I18 — added 2026-08-19
+
+The map above covers I1–I15 by construction: those invariants each name a
+retained implementation surface that a test can guard. I16–I18 are **gate-
+integrity invariants** — they govern how evidence is produced, stamped, and
+inherited, not what the software does at runtime. They are dispositioned here
+rather than in the map so that their absence is a recorded decision instead of a
+silent omission, and so the map's row set stays exactly the set the closure
+fitness test parses.
+
+- **I16 (identity-stamped parity) — partially executable.**
+  `PlatformApiPrerequisitesTests` is I16 enforcement: it verifies package and
+  source selection separately and pins each retained identity. Its residual gap
+  is that identity re-opening is a review-time obligation, not something a test
+  can observe. Owner: whichever story changes a retained identity.
+- **I17 (deferral executors inherit the gate) — process gate, not executable.**
+  Enforced at spec-authoring and review time. The `deferred-work.md` field
+  vocabulary added 2026-08-19 (`authored_by_spec` / `activated_by_spec` /
+  `delivered_slices`) makes the waiting-versus-working distinction legible so
+  that a reviewer can check it. Owner: the spec author and the reviewer gate.
+- **I18 (parity baseline) — process gate, not executable.** The baseline is the
+  §7 map as of closure commit `2b63ab9`. `InvariantMapCoversI1ThroughI15WithExecutableOrDeferredEvidence`
+  checks that every named surface still resolves to a class under `tests/`, which
+  is a necessary but not sufficient guard: it cannot tell whether a surface was
+  weakened rather than deleted. Owner: the reviewer gate.
+
+No executable-evidence claim is made for I17 or I18, and none should be
+manufactured — a test asserting that a document contains its own wording is not
+evidence.
 
 ## 8. Validation & Amendment Record — 2026-08-18
 
@@ -269,10 +299,11 @@ with a conditional pass; the consolidated report and full reviews live in
 `reviews/`. Amendments applied in response: I16–I18 added, I1/I1a tightened,
 §2 owners named with the Epic 7 precedence rule and the Class A supersession
 stated, §4 rescoped by property, §5 sequencing extended to bind the accepted
-closure deferrals, and the §7 map corrected. The single open closure condition
-is unchanged from sprint-status: the Builds/FrontComposer submodule identities
-and the closure fitness tests must land as committed superproject state before
-the §7 I4 row is durable. A post-amendment gate pass (rubric, reality-check,
+closure deferrals, and the §7 map corrected. The formerly open closure
+condition is resolved: superproject commit `2b63ab9` (2026-08-18) landed the
+submodule identities, the closure fitness tests, and the §7 map as committed
+state — `2b63ab9` is therefore the Epic 8 closure commit that freezes the I18
+parity baseline. A post-amendment gate pass (rubric, reality-check,
 adversarial) confirmed the prior critical/high findings closed and its own
 fixes — the gated-not-executed Class A supersession wording, I16–I18
 tightenings, and §5/§7 precision — were applied the same day. Findings

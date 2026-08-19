@@ -248,6 +248,32 @@ public sealed class PartiesUiHostCompositionTests
         scope.ServiceProvider.GetRequiredService<IIdentityBindingProvisioningService>().ShouldNotBeNull();
     }
 
+    [Fact]
+    public void TestEnvironmentStaticWebAssetOptIn_StaysCoupledToThePlaywrightWebServer()
+    {
+        // The accessibility lane is the only consumer of this branch, and no workflow runs that lane,
+        // so deleting the opt-in or renaming the environment would leave every .NET test green while
+        // silently downgrading the lane to an SSR-only page with a 0-byte blazor.web.js. Assert the
+        // two halves of the coupling against each other. A runtime assertion would be stronger, but
+        // it needs Microsoft.AspNetCore.Mvc.Testing, whose version lives in the imported Builds
+        // catalog rather than this repository.
+        string program = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Program.cs"));
+        string playwrightConfig = File.ReadAllText(ProjectRoot("tests/e2e/playwright.config.ts"));
+
+        program.ShouldContain(
+            "builder.Environment.IsEnvironment(\"Test\")",
+            Case.Sensitive,
+            "The Playwright host needs an explicit Test-environment branch.");
+        program.ShouldContain(
+            "UseStaticWebAssets()",
+            Case.Sensitive,
+            "Without UseStaticWebAssets the Test host serves no blazor.web.js and the lane tests SSR only.");
+        playwrightConfig.ShouldContain(
+            "ASPNETCORE_ENVIRONMENT: 'Test'",
+            Case.Sensitive,
+            "The webServer must run in the environment Program.cs opts in.");
+    }
+
     private static string ProjectRoot(string relativePath)
     {
         string current = AppContext.BaseDirectory;

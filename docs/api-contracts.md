@@ -145,7 +145,7 @@ The erasure certificate path uses the existing `PartyDetailProjectionQueryActor`
 
 ## 3. MCP host — `parties-mcp`
 
-`src/Hexalith.Parties.Mcp/`. A **separate** ASP.NET host (no DAPR sidecar) exposing Model Context Protocol tools over Streamable HTTP (`app.MapMcp()`, stateless). It forwards `Authorization`, `X-Tenant-Id`, `X-User-Id` from the request to the EventStore gateway via the typed client (`McpContextForwardingHandler`); it does **not** call Parties actors directly.
+`src/Hexalith.Parties.Mcp/`. A **separate** ASP.NET host (no DAPR sidecar) exposing Model Context Protocol tools over Streamable HTTP (`app.MapMcp()`, stateless). It forwards `Authorization`, `X-Tenant-Id`, `X-User-Id` from the request to the EventStore gateway via the typed client (`McpContextForwardingHandler`); it does **not** call the Parties domain-service host directly.
 
 Client config:
 
