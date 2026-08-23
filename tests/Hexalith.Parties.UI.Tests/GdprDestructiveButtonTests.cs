@@ -17,6 +17,9 @@ public sealed class GdprDestructiveButtonTests : BunitContext
         JSInterop.SetupVoid(
             "Microsoft.FluentUI.Blazor.Utilities.Attributes.observeAttributeChange",
             _ => true);
+        JSInterop.SetupVoid(
+            "Microsoft.FluentUI.Blazor.Utilities.Attributes.copyToShadow",
+            _ => true);
     }
 
     [Fact]

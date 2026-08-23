@@ -185,10 +185,22 @@ public sealed class ClientPackageTests : IDisposable
             "HexalithEventStoreVersion");
         string eventStorePackVersionProperties =
             $"-p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion}";
+        string uniqueIdsProject = Path.Combine(
+            repoRoot,
+            "references",
+            "Hexalith.Commons",
+            "src",
+            "libraries",
+            "Hexalith.Commons.UniqueIds",
+            "Hexalith.Commons.UniqueIds.csproj");
 
         RunDotnet(
+            "build",
+            $"\"{uniqueIdsProject}\" --configuration Release -m:1 {CommonsPackVersionProperties}",
+            repoRoot);
+        RunDotnet(
             "pack",
-            $"\"{Path.Combine(repoRoot, "references", "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.UniqueIds", "Hexalith.Commons.UniqueIds.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {CommonsPackVersionProperties}",
+            $"\"{uniqueIdsProject}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {CommonsPackVersionProperties}",
             repoRoot);
         RunDotnet(
             "pack",

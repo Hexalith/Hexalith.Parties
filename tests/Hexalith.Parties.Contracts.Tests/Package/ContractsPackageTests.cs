@@ -366,9 +366,20 @@ public sealed class ContractsPackageFixture : IDisposable
             "HexalithEventStoreVersion");
         string eventStorePackVersionProperties =
             $"-p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion}";
+        string uniqueIdsProject = Path.Combine(
+            repoRoot,
+            "references",
+            "Hexalith.Commons",
+            "src",
+            "libraries",
+            "Hexalith.Commons.UniqueIds",
+            "Hexalith.Commons.UniqueIds.csproj");
 
         ContractsPackageTests.RunDotnet(
-            $"pack \"{Path.Combine(repoRoot, "references", "Hexalith.Commons", "src", "libraries", "Hexalith.Commons.UniqueIds", "Hexalith.Commons.UniqueIds.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {ContractsPackageTests.CommonsPackVersionProperties}",
+            $"build \"{uniqueIdsProject}\" --configuration Release -m:1 {ContractsPackageTests.CommonsPackVersionProperties}",
+            repoRoot);
+        ContractsPackageTests.RunDotnet(
+            $"pack \"{uniqueIdsProject}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {ContractsPackageTests.CommonsPackVersionProperties}",
             repoRoot);
         ContractsPackageTests.RunDotnet(
             $"pack \"{Path.Combine(repoRoot, "references", "Hexalith.EventStore", "src", "Hexalith.EventStore.Contracts", "Hexalith.EventStore.Contracts.csproj")}\" --configuration Release --output \"{feedDirectory}\" {restoreSources} {eventStorePackVersionProperties}",
