@@ -60,6 +60,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain("environment-name: production");
         workflow.ShouldContain("publish-containers: true");
         workflow.ShouldContain("expected-package-count: 9");
+        workflow.ShouldContain("require-publication-authority: false");
         workflow.ShouldContain("test-projects: ''");
         workflow.ShouldContain("src/Hexalith.Parties/Hexalith.Parties.csproj|parties");
         workflow.ShouldContain("src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj|parties-mcp");

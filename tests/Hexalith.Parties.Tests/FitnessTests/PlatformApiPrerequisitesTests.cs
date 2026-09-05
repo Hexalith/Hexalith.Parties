@@ -25,9 +25,9 @@ public sealed class PlatformApiPrerequisitesTests
     // Consumed by MainLayout for the shell landmarks and skip links (G4 work package F, delivered
     // under sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md).
     // Recorded separately from the packaged 4.3.0 identity that CI and the released container use.
-    private const string FrontComposerSha = "092240002f55f7fbacaef017b91d752d8ca10fe3";
-    private const string PayloadProtectionEventStoreDescribe = "v3.102.0-22-g070a4b66";
-    private const string PayloadProtectionEventStoreSha = "070a4b66eecf923ae904d8c06e25d798de9247aa";
+    private const string FrontComposerSha = "5cbc5583142a6774ff7813698ad98ec267b336f0";
+    private const string PayloadProtectionEventStoreDescribe = "v3.102.0-27-g7a81a410";
+    private const string PayloadProtectionEventStoreSha = "7a81a41000df11632ea84d331d764c6a240a8a46";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
     private const string PayloadProtectionSurface = "Payload protection engine package";
     private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";

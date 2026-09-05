@@ -221,7 +221,7 @@ development_status:
   # polymorphicserializations-stylecop-fix-incomplete-at-selected-gitlink and
   # authorized-owner-fixes-not-immutable. All 15 .NET test projects pass and the
   # 6/6 Playwright accessibility lane passes at FrontComposer source 7a337a21.
-  8-10-final-readiness-documentation-and-retirement-gate: in-progress
+  8-10-final-readiness-documentation-and-retirement-gate: review
   # Added by Correct Course 2026-07-07
   # (sprint-change-proposal-2026-07-07-validation-ladder-runner.md).
   # QA/tooling maintenance story; independent of the 8.6-8.10 deletion sequence

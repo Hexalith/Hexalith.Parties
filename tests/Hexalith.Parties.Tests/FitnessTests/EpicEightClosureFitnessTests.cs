@@ -57,7 +57,7 @@ public sealed class EpicEightClosureFitnessTests
         }
         ReadYamlStatus(sprintStatus, "8-7-data-protection-extraction").ShouldBe("blocked");
         ReadYamlStatus(sprintStatus, "8-8-client-mcp-apphost-build-and-deploy-cleanup").ShouldBe("blocked");
-        ReadYamlStatus(sprintStatus, "8-9-ui-frontcomposer-and-fluent-consolidation").ShouldBe("backlog");
+        ReadYamlStatus(sprintStatus, "8-9-ui-frontcomposer-and-fluent-consolidation").ShouldBe("blocked");
     }
 
     [Theory]
