@@ -280,9 +280,15 @@ jobs:
     needs: verify-source
     permissions:
       actions: read
+      attestations: write
       contents: write
+      id-token: write
       issues: write
       pull-requests: write
+    # GitHub validates the maximum permissions of every job in a called workflow,
+    # including the skipped governed-release job, so attestations/id-token must be
+    # granted here even though `governed-release` stays false. The legacy job
+    # inherits this set. Do not add attestation or signing steps here.
     # domain-release.yml enforces a supply-chain identity check: the reusable workflow
     # must be pinned to an exact 40-hex Builds commit and the caller must pass
     # builds-execution-sha equal to that same SHA (the reusable job validates
@@ -294,6 +300,7 @@ jobs:
       solution: Hexalith.Parties.slnx
       timeout-minutes: 60
       environment-name: production
+      governed-release: false
       publish-containers: true
       builds-execution-sha: 8db7459d065926501ee045b3aaf7b816780905e5
       source-branch: main

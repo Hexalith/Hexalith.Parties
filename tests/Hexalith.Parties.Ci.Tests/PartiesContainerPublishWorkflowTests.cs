@@ -58,6 +58,9 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain("actions/workflows/${source_ci_workflow}/runs");
         workflow.ShouldContain("source-ci-workflow: ${{ needs.verify-source.outputs.source-ci-workflow }}");
         workflow.ShouldContain("environment-name: production");
+        workflow.ShouldContain("governed-release: false");
+        workflow.ShouldContain("attestations: write");
+        workflow.ShouldContain("id-token: write");
         workflow.ShouldContain("publish-containers: true");
         workflow.ShouldContain("expected-package-count: 9");
         workflow.ShouldContain("require-publication-authority: false");
