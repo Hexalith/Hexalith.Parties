@@ -2,7 +2,7 @@
 title: 'Update Hexalith packages, repair CI, and ship a bypass-gated release'
 type: 'bugfix'
 created: '2026-09-05'
-status: 'in-review'
+status: 'done'
 baseline_commit: 'a7524c5fa59ff4320dbfaa196149713228b80cf7'
 review_loop_iteration: 0
 context:
@@ -83,3 +83,43 @@ context:
 - `gh run list --workflow=ci.yml --branch main --limit 5` then `gh run watch <id> --exit-status` for CI, Commitlint, and CodeQL on the pushed SHA -- expected: success.
 - `gh workflow run release.yml --ref main -f bypass-validation=true` then watch the run -- expected: publication success.
 - `curl -sL https://api.nuget.org/v3-flatcontainer/hexalith.parties.contracts/index.json` (and the other eight ids) plus `gh release view <tag>` -- expected: versions match the Release tag and exceed `1.0.0`.
+
+## Suggested Review Order
+
+**Catalog adopt**
+
+- Builds catalog is the only Hexalith version source; Memories is now 2.25.0.
+  [`Directory.Packages.props:10`](../../references/Hexalith.Builds/Props/Directory.Packages.props#L10)
+
+- RC-gate ledger authorizes the adopted Builds SHA on main.
+  [`.gitlink-signoff.tsv:47`](../../.gitlink-signoff.tsv#L47)
+
+**Release bypass**
+
+- False-default `bypass-validation` is the operator dispatch seam.
+  [`release.yml:10`](../../.github/workflows/release.yml#L10)
+
+- Selected proof workflow is passed into the pinned Builds publisher.
+  [`release.yml:307`](../../.github/workflows/release.yml#L307)
+
+- Publication preflight accepts `ci.yml` or `commitlint.yml` only.
+  [`validate-publication-preflight.sh:37`](../../scripts/validate-publication-preflight.sh#L37)
+
+- Docs distinguish ordinary CI proof from authorized Commitlint bypass.
+  [`ci.md:37`](../../docs/ci.md#L37)
+
+**CI compile repair**
+
+- xUnit v3 `CollectionDefinition` replaces obsolete assembly `CollectionBehavior`.
+  [`NonParallelCollection.cs:3`](../../tests/Hexalith.Parties.Server.Tests/NonParallelCollection.cs#L3)
+
+**Container labels**
+
+- Rebound OCI labels survive the SDK 10 colon-split parse.
+  [`Directory.Build.targets:88`](../../Directory.Build.targets#L88)
+
+**Tests**
+
+- Contract tests pin bypass mapping, SHA, and collection swap.
+  [`PartiesContainerPublishWorkflowTests.cs:85`](../../tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs#L85)
+
