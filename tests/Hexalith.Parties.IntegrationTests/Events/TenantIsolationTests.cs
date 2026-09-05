@@ -23,6 +23,7 @@ namespace Hexalith.Parties.IntegrationTests.Events;
 /// These tests focus on tenant-scoped publish behavior at the publisher boundary,
 /// not on full subscriber topology wiring.
 /// </summary>
+[Collection("Non-parallel")]
 public class TenantIsolationTests
 {
     private const string _correlationId = "corr-tenant-001";

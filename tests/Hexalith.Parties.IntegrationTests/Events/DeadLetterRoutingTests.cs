@@ -21,6 +21,7 @@ namespace Hexalith.Parties.IntegrationTests.Events;
 /// transient publish failure behavior with a mocked <see cref="DaprClient"/>.
 /// These tests do not simulate EventStore drain recovery end to end.
 /// </summary>
+[Collection("Non-parallel")]
 public class DeadLetterRoutingTests
 {
     private const string _correlationId = "corr-deadletter-001";

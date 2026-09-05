@@ -12,6 +12,7 @@ using Shouldly;
 
 namespace Hexalith.Parties.Server.Tests.Aggregates;
 
+[Collection("Non-parallel")]
 public class PartyAggregateRestrictionTests {
     // === Task 7.8 ===
     [Fact]

@@ -13,6 +13,7 @@ using DaprMtlsBootstrap = apphost::Hexalith.Parties.AppHost.DaprMtlsBootstrap;
 
 namespace Hexalith.Parties.IntegrationTests.Topology;
 
+[Collection("Non-parallel")]
 public sealed class DaprMtlsBootstrapTests
 {
     [Fact]

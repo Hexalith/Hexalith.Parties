@@ -1,3 +1,7 @@
-using Xunit;
+namespace Hexalith.Parties.Server.Tests;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class NonParallelCollection
+{
+    public const string Name = "Non-parallel";
+}

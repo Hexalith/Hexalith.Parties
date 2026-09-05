@@ -41,5 +41,9 @@ references/Hexalith.Builds|640b59c1434e4e1e079771c401e11048772c7a27|validated-ad
 # --- 2026-08-04 EventStore 3.90.0 alignment: Builds selects the exact
 #     EventStore release already checked out by Parties. ---
 references/Hexalith.Builds|a53166539bf4441d5e33d04281b14c2d59e950c3|validated-advance|v4.23.0-38-ga531665|jpiquot|2026-08-04
+# --- 2026-09-05 catalog adopt: Builds v4.27.1 selects EventStore 3.102.0,
+#     Commons 2.30.0, Memories 2.25.0, and the other live Hexalith family
+#     versions published on nuget.org. ---
+references/Hexalith.Builds|8db7459d065926501ee045b3aaf7b816780905e5|validated-advance|v4.27.1|jpiquot|2026-09-05
 references/Hexalith.Tenants|8d1a5bd760310a724dd35649aea478d364a2c89a|validated-advance|v2.3.0-9-g8d1a5bd|jpiquot|2026-07-07
 references/Hexalith.EventStore|1627190e515c1189a48acf3c5b599500fa6c8ba1|validated-advance|v3.45.0|jpiquot|2026-07-07

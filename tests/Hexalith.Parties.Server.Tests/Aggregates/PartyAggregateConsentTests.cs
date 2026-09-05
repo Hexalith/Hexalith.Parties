@@ -11,6 +11,7 @@ using Shouldly;
 
 namespace Hexalith.Parties.Server.Tests.Aggregates;
 
+[Collection("Non-parallel")]
 public class PartyAggregateConsentTests {
     // === Task 7.1 ===
     [Fact]

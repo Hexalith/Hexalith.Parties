@@ -12,6 +12,7 @@ using Shouldly;
 
 namespace Hexalith.Parties.Server.Tests.Aggregates;
 
+[Collection("Non-parallel")]
 public class PartyAggregateErasureTests {
     [Fact]
     public void Handle_ErasePartyCommand_EmitsErasePartyRequestedEvent() {

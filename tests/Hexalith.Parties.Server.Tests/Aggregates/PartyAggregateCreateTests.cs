@@ -16,6 +16,7 @@ using Shouldly;
 
 namespace Hexalith.Parties.Server.Tests.Aggregates;
 
+[Collection("Non-parallel")]
 public class PartyAggregateCreateTests
 {
     private const string UlidPartyId = "01HYX7QS3NP8M4KQJR5A7CVWKM";

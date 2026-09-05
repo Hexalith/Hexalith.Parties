@@ -23,6 +23,7 @@ namespace Hexalith.Parties.IntegrationTests.Events;
 /// These tests validate the publication contract with a mocked <see cref="DaprClient"/>;
 /// they do not exercise the full command-processing pipeline.
 /// </summary>
+[Collection("Non-parallel")]
 public class EventPublishingVerificationTests
 {
     private const string _correlationId = "corr-001";

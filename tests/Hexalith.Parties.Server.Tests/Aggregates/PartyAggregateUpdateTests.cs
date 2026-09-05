@@ -11,6 +11,7 @@ using Shouldly;
 
 namespace Hexalith.Parties.Server.Tests.Aggregates;
 
+[Collection("Non-parallel")]
 public class PartyAggregateUpdateTests
 {
     private static readonly DateTimeOffset FixedInstant = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);

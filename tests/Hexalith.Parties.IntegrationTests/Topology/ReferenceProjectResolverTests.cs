@@ -7,6 +7,7 @@ using ReferenceProjectResolver = apphost::Hexalith.Parties.AppHost.ReferenceProj
 namespace Hexalith.Parties.IntegrationTests.Topology;
 
 /// <summary>Exercises topology-project resolution across supported repository layouts.</summary>
+[Collection("Non-parallel")]
 public sealed class ReferenceProjectResolverTests
 {
     /// <summary>Verifies that a root-declared umbrella dependency wins over stale nested content.</summary>

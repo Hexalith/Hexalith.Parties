@@ -11,6 +11,7 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 /// cannot perform the code flow, so a missing/misconfigured confidential client silently breaks
 /// sign-in. Validated against the committed realm JSON; no running Keycloak required.
 /// </summary>
+[Collection("Non-parallel")]
 public sealed class PartiesUiKeycloakRealmTests
 {
     private const string PartiesUiClientId = "hexalith-parties-ui";

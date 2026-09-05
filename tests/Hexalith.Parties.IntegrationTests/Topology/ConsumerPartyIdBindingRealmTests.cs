@@ -11,6 +11,7 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 /// verified IdP user attribute, and the UI receives exactly one <c>party_id</c> claim. These tests
 /// validate the committed Keycloak realm import without requiring a running Keycloak instance.
 /// </summary>
+[Collection("Non-parallel")]
 public sealed class ConsumerPartyIdBindingRealmTests
 {
     private const string PartiesUiClientId = "hexalith-parties-ui";

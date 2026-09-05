@@ -20,6 +20,7 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 /// environment (e.g. the AppHost's DAPR component files are not on the probe path), the test skips
 /// gracefully per the project's integration-lane convention rather than reporting a red failure.
 /// </remarks>
+[Collection("Non-parallel")]
 public sealed class PartiesUiTopologyTests
 {
     [Fact]

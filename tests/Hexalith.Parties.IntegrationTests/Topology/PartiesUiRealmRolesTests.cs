@@ -14,6 +14,7 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 /// bUnit/DI tests remain the binding proof of the ACs; this pins the realm wiring the live flow needs.
 /// Validated against the committed realm JSON; no running Keycloak required.
 /// </summary>
+[Collection("Non-parallel")]
 public sealed class PartiesUiRealmRolesTests
 {
     private const string PartiesUiClientId = "hexalith-parties-ui";

@@ -5,17 +5,17 @@ namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 /// across all E2E health check test classes. Starts the Aspire topology (Parties service,
 /// DAPR sidecar, in-memory state store/pub/sub) ONCE for the collection.
 /// </summary>
-[CollectionDefinition("PartiesAspireTopology")]
+[CollectionDefinition("PartiesAspireTopology", DisableParallelization = true)]
 public class PartiesAspireTopologyCollection : ICollectionFixture<PartiesAspireTopologyFixture>
 {
 }
 
-[CollectionDefinition("PartiesAspireTopologyHealth")]
+[CollectionDefinition("PartiesAspireTopologyHealth", DisableParallelization = true)]
 public class PartiesAspireTopologyHealthCollection : ICollectionFixture<PartiesAspireTopologyFixture>
 {
 }
 
-[CollectionDefinition("PartiesAspireTopologyAdmin")]
+[CollectionDefinition("PartiesAspireTopologyAdmin", DisableParallelization = true)]
 public class PartiesAspireTopologyAdminCollection : ICollectionFixture<PartiesAspireTopologyFixture>
 {
 }

@@ -2,6 +2,7 @@ using Shouldly;
 
 namespace Hexalith.Parties.IntegrationTests.Security;
 
+[Collection("Non-parallel")]
 public sealed class InMemoryPartyKeyRetrySchedulerTests
 {
     [Fact]

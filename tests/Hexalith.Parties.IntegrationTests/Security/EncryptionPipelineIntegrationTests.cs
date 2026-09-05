@@ -41,6 +41,7 @@ namespace Hexalith.Parties.IntegrationTests.Security;
 /// Tier 2 integration tests that verify the encryption pipeline through the
 /// DI-wired WebApplicationFactory, testing real component interactions.
 /// </summary>
+[Collection("Non-parallel")]
 public sealed class EncryptionPipelineIntegrationTests : IClassFixture<EncryptionTestFactory>
 {
     private readonly EncryptionTestFactory _factory;
