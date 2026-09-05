@@ -70,7 +70,7 @@ Write `{outputFile}` including:
 - Key assumptions and risks
 - Next recommended workflow (e.g., `test-review` or `trace`)
 
-**If `tea_use_playwright_utils` is true**, add a `Playwright Utils deviations` section listing every entry rolled up in Step 3C, one line each as `file:line — reason`. Write `None` when the list is empty; the reader cannot tell an empty section from a forgotten one.
+**If `tea_use_playwright_utils` is true**, add a `Playwright Utils deviations` section listing every entry rolled up in Step 3C, one line each as `file:line: reason`. Write `None` when the list is empty; the reader cannot tell an empty section from a forgotten one.
 
 **If `tea_use_pactjs_utils` is true and contract artifacts were generated**, add a `Pact.js Utils deviations` section on the same terms, from the same roll-up. Separate headings: a run can be clean on one mandate and not the other.
 
@@ -113,7 +113,7 @@ Name in the same section any RECOMMENDED utility the run wanted but could not wi
 
 ## On Complete
 
-Run: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`
+Run: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --project-root {project-root} --key workflow.on_complete`
 
 If the resolver succeeds and returns a non-empty `workflow.on_complete`, execute that value as the final terminal instruction before exiting.
 
