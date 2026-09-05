@@ -56,14 +56,14 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `references/Hexalith.Builds`, `.gitlink-signoff.tsv` -- checkout the latest Builds commit whose catalog matches current nuget.org; authorize the gitlink.
-- [ ] `tests/Hexalith.Parties.Server.Tests/AssemblyInfo.cs`, `tests/Hexalith.Parties.IntegrationTests/AssemblyInfo.cs` -- replace obsolete assembly `CollectionBehavior` with xUnit v3 `CollectionDefinition` + `[Collection]`.
-- [ ] Fitness pins, Story 8.3 matrix, `docs/ci.md`, `docs/architecture.md` -- refresh live EventStore/Commons/Builds identities to the adopted catalog; do not rewrite historical receipts.
-- [ ] `.github/workflows/release.yml` -- add EventStore-parity `bypass-validation`; emit and consume `source-ci-workflow`; retarget `uses` and `builds-execution-sha` to the adopted Builds SHA together.
-- [ ] `tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs` -- assert the new SHA pin, typed bypass input (default false), `false -> ci.yml`, `true -> commitlint.yml`, malformed rejection, and docs catalog text.
-- [ ] Local package-mode restore, serialized Release build, focused CI/fitness tests, then `scripts/test.ps1` lanes that CI runs.
-- [ ] Commit and push `main` (authorized by this intent). Watch `ci.yml`, `commitlint.yml`, `codeql.yml`, and any other required push workflows until they succeed on that SHA.
-- [ ] Dispatch `gh workflow run release.yml --ref main -f bypass-validation=true`. If `production` waits, approve that pending deployment; do not change environment rules. Confirm the GitHub Release tag and all nine nuget.org versions.
+- [x] `references/Hexalith.Builds`, `.gitlink-signoff.tsv` -- checkout the latest Builds commit whose catalog matches current nuget.org; authorize the gitlink.
+- [x] `tests/Hexalith.Parties.Server.Tests/AssemblyInfo.cs`, `tests/Hexalith.Parties.IntegrationTests/AssemblyInfo.cs` -- replace obsolete assembly `CollectionBehavior` with xUnit v3 `CollectionDefinition` + `[Collection]`.
+- [x] Fitness pins, Story 8.3 matrix, `docs/ci.md`, `docs/architecture.md` -- refresh live EventStore/Commons/Builds identities to the adopted catalog; do not rewrite historical receipts.
+- [x] `.github/workflows/release.yml` -- add EventStore-parity `bypass-validation`; emit and consume `source-ci-workflow`; retarget `uses` and `builds-execution-sha` to the adopted Builds SHA together.
+- [x] `tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs` -- assert the new SHA pin, typed bypass input (default false), `false -> ci.yml`, `true -> commitlint.yml`, malformed rejection, and docs catalog text.
+- [x] Local package-mode restore, serialized Release build, focused CI/fitness tests, then `scripts/test.ps1` lanes that CI runs.
+- [x] Commit and push `main` (authorized by this intent). Watch `ci.yml`, `commitlint.yml`, `codeql.yml`, and any other required push workflows until they succeed on that SHA.
+- [x] Dispatch `gh workflow run release.yml --ref main -f bypass-validation=true`. If `production` waits, approve that pending deployment; do not change environment rules. Confirm the GitHub Release tag and all nine nuget.org versions.
 
 **Acceptance Criteria:**
 - Given package-mode restore, when MSBuild evaluates Hexalith versions, then they equal the latest published nuget.org identities selected by the adopted Builds catalog, including Memories 2.25.0 or newer.

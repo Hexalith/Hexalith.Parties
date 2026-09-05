@@ -117,6 +117,41 @@ public sealed class PartiesContainerPublishWorkflowTests
     }
 
     [Fact]
+    public void ServerAndIntegrationTestsReplaceObsoleteCollectionBehaviorWithNonParallelCollections()
+    {
+        string serverAssembly = CiTestPaths.ReadRepoFile("tests/Hexalith.Parties.Server.Tests/AssemblyInfo.cs");
+        string integrationAssembly = CiTestPaths.ReadRepoFile("tests/Hexalith.Parties.IntegrationTests/AssemblyInfo.cs");
+        string serverCollectionUse = CiTestPaths.ReadRepoFile(
+            "tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs");
+        string integrationCollectionUse = CiTestPaths.ReadRepoFile(
+            "tests/Hexalith.Parties.IntegrationTests/Events/TenantIsolationTests.cs");
+
+        serverAssembly.ShouldContain("[CollectionDefinition(Name, DisableParallelization = true)]");
+        serverAssembly.ShouldNotContain("CollectionBehavior");
+        integrationAssembly.ShouldContain("[CollectionDefinition(Name, DisableParallelization = true)]");
+        integrationAssembly.ShouldNotContain("CollectionBehavior");
+        serverCollectionUse.ShouldContain("[Collection(\"Non-parallel\")]");
+        integrationCollectionUse.ShouldContain("[Collection(\"Non-parallel\")]");
+
+        foreach (string path in Directory.EnumerateFiles(
+            CiTestPaths.RepoFile("tests/Hexalith.Parties.Server.Tests"),
+            "*.cs",
+            SearchOption.AllDirectories).Concat(Directory.EnumerateFiles(
+            CiTestPaths.RepoFile("tests/Hexalith.Parties.IntegrationTests"),
+            "*.cs",
+            SearchOption.AllDirectories)))
+        {
+            if (path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                || path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            File.ReadAllText(path).ShouldNotContain("CollectionBehavior");
+        }
+    }
+
+    [Fact]
     public void ReleaseSupportFilesDeclareSemanticReleaseAndSecretContracts()
     {
         string packageJson = CiTestPaths.ReadRepoFile("package.json");
