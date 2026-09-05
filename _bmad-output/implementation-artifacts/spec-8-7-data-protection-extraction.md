@@ -1,86 +1,70 @@
 ---
-title: '8.7 Data-protection extraction'
+title: '8.7 Shared payload-protection adoption and parity'
 type: 'refactor'
-created: '2026-07-07T00:00:00+02:00'
-status: 'draft'
+created: '2026-08-22'
+status: 'in-progress'
+baseline_commit: '3d3abef4279e41cf0025870152e3fc597e26f872'
 review_loop_iteration: 0
-followup_review_recommended: false
 context:
-  - '{project-root}/_bmad-output/planning-artifacts/architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md'
-  - '{project-root}/_bmad-output/implementation-artifacts/epic-8-context.md'
   - '{project-root}/_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md'
-  - '{project-root}/_bmad-output/implementation-artifacts/spec-8-6-projection-and-query-sdk-migration.md'
-warnings:
-  - oversized
-  - blocked-prerequisite
+  - '{project-root}/references/Hexalith.EventStore/_bmad-output/implementation-artifacts/spec-shared-payload-protection-engine.md'
 ---
 
-<intent-contract>
+<frozen-after-approval reason="human-owned intent — do not modify unless human renegotiates">
 
 ## Intent
 
-**Problem:** `Hexalith.Parties.Security` owns generic data-protection mechanics — AES-256-GCM payload protection, key storage/wrapping/rotation, retry scheduling, a decryption circuit breaker, key-operation audit, and typed-unreadable handling — even though Epic 7 already introduced the `EventStorePartyPayloadProtectionAdapter` seam. A domain module owning reusable crypto infrastructure violates the domain-module contract.
+**Problem:** Parties owns the working payload engine; EventStore supplies only contracts and a no-op. An unproven replacement risks unreadable histories, wrong erasure outcomes, and failed rollback.
 
-**Approach:** Move the generic mechanics behind shared provider contracts (a shared DataProtection package or the approved EventStore provider), leaving Parties only its party-specific commands, GDPR legal policy, erasure orchestration semantics, domain-specific certificates/reports, and UX/copy — after compatibility proves every protected-payload and erasure behavior and a rollback path.
+**Approach:** After EventStore closes G5, adopt its provider behind reversible DI and prove parity across real Parties workflows and post-v2 switch-back. Retain the local engine and public APIs; delete them only in the deferred cleanup.
 
 ## Boundaries & Constraints
 
-**Always:** Preserve spine invariant I8 — `json+pdenc-v1`, `json-redacted`, legacy unprotected reads, key zeroing, typed-unreadable outcomes, no-leak diagnostics, Art.20 exports, Art.30 processing records, and erasure reports/certificates — and I7 (two-front-door erasure + D7 cross-submodule verification, consent≠lawful-basis, Art.18 guards). Keep `Parties:CryptoShredding:IsEnabled` default-true (the crypto feature) distinct from `Parties:Compliance:GdprFeaturesActive` default-false (the MVP warning). Keep `LocalDevKeyStorageBackend` as the dev-only default and never ship it to production. Never log `[PersonalData]` or event payloads.
+**Always:** Gate entry on G5 `available`, the EventStore 8.11 closure, approvals, and exact package/source identities. The current source is `c21bd749154d701c3b7d68e40d1008d3475e35c4`; the package graph uses `3.95.0`. Preserve plaintext/v1/v2 reads, typed outcomes, tenant isolation, key zeroing, no-leak diagnostics, GDPR semantics, erasure evidence, and default-on crypto-shredding.
 
-**Block If:** No shared DataProtection package or approved EventStore payload-protection provider exists with owner approval, parity proof, and a `references/Hexalith.EventStore` submodule-pin recorded in the 8.3 matrix (the matrix "EventStore DataProtection" row is cursor-scoped for 8.6; a payload-protection-provider parity row must be added and proven before 8.7 starts). Also HALT if the shared provider cannot express typed-unreadable/deleted-key redaction, the retry/circuit-breaker semantics, or per-tenant key rotation; or if the erasure certificate/report domain contract (`IErasureVerificationService`, approval-gated) would change.
+**Ask First:** Any EventStore contract or dependency identity change; any breaking change to published Parties security APIs; any change to `IErasureVerificationService`, certificates/reports, persisted formats/names, or approved G5 evidence.
 
-**Never:** Do not migrate projection/query (8.6), client/MCP/AppHost/deploy (8.8), or UI (8.9). Do not move party-specific erasure orchestration, GDPR legal policy, or domain-specific certificates/reports unless an ADR explicitly moves them. Do not delete any local crypto/key file before the shared provider records parity + proven rollback. Do not disable crypto-shredding to "match the README."
+**Never:** Change production code while G5 is closed. Do not mistake `AddEventStoreDataProtection` or the no-op service for the shared engine, weaken provenance tests, log PII/key/payload material, disable crypto-shredding, delete the local path, or absorb Stories 8.8/8.9.
 
 ## I/O & Edge-Case Matrix
 
 | Scenario | Input / State | Expected Output / Behavior | Error Handling |
-|----------|--------------|----------------------------|----------------|
-| Protected read | Current state with `json+pdenc-v1` payloads | Shared provider unprotects to identical plaintext state | No payload/key in logs or exceptions |
-| Deleted-key redaction | Erased party, key destroyed | `json-redacted` typed-unreadable outcome; PII-free tombstone | `PartyEncryptionKeyDestroyedException` mapped to typed unreadable, not a 500 |
-| Legacy unprotected | Pre-encryption event payloads | Read as-is, unchanged | No spurious decrypt attempt |
-| Export / processing records | Art.20 export / Art.30 read on erased-or-live party | Domain semantics identical to pre-migration | Missing → existing no-op/empty semantics |
-| Rollback | Provider regression detected | Revert to local `PartyPayloadProtectionService` + `PartyKeyManagementService` registration | No data loss; local path still present |
+|----------|---------------|----------------------------|----------------|
+| Closed gate | Missing package, closure, approval, identity, or parity receipt | Halt `blocked` without production/dependency changes | Name every missing receipt |
+| Mixed history | Plaintext, v1, and v2 events/snapshots | Both providers reconstruct identical domain state | Malformed/mismatched metadata yields typed unreadable outcomes |
+| Rollback | Persisted v2 data followed by local selection | Local path reads v1/v2; forward selection succeeds again | Any mismatch blocks adoption |
 
-</intent-contract>
+</frozen-after-approval>
 
 ## Code Map
 
-Target: shared DataProtection package / approved EventStore provider (owner: Hexalith.EventStore — parity row must be added to 8.3 and proven first). Existing seam kept: `src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs`.
-
-MOVE behind provider (delete locally only after parity + rollback proof — I3 set):
-- `PartyPayloadProtectionService.cs`, `PartyKeyManagementService.cs`, `CachedPartyKeyManagementService.cs`, `PartyKeyLifecycleService.cs` -- protection + key management engine.
-- `IPartyKeyRetryScheduler.cs`, `ActorBackedPartyKeyRetryScheduler.cs`, `PartyKeyRetryActor.cs`, `IPartyKeyRetryActor.cs` -- retry scheduling.
-- `DecryptionCircuitBreaker.cs`, `DecryptionCircuitOpenException.cs`, `KeyOperationAuditService.cs`, `TenantKeyRotationService.cs`, `TenantKeyRotationProgress.cs`, `TenantKeyRotationProgressConflictException.cs`, `ITenantKeyRotationCacheInvalidator.cs` -- rotation/audit/circuit mechanics.
-- `LocalDevKeyStorageBackend.cs`, `PartyEncryptionKeyDestroyedException.cs`, `CryptoPendingRecord.cs` -- key store + typed outcomes (keep dev-only default semantics until provider proves the equivalent).
-
-KEEP (domain — do NOT move without ADR):
-- `PartyErasureOrchestrator.cs`, `ErasureVerificationService.cs`, `PartyErasureRecordStore.cs`, `PartyPersonalDataCommandGuard.cs`, `PersonalDataGraphInspector.cs` -- party-specific GDPR policy, erasure orchestration, certificates/reports.
-
-Evidence: `story-8-3-platform-api-prerequisite-matrix.md` (add payload-protection-provider parity + pin), `tests/.../test-summary.md`, `sprint-status.yaml`.
+- `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md:97` -- G5 is `needs-additive-api`; its source receipt trails the live gitlink.
+- `references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Security/IEventPayloadProtectionService.cs:10` -- provider-neutral event/snapshot and typed-outcome seam.
+- `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs:130` -- reversible provider-selection boundary; currently local-only.
+- `src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs:15` and `src/Hexalith.Parties/Domain/PartyDomainProcessor.cs:569` -- adapter and direct coupling to neutralize without deleting.
+- `tests/Hexalith.Parties.Security.Tests/CryptoKeyManagementCompatibilityHarnessTests.cs:24` -- 19-case local baseline; `CreateHarness` at line 699 needs dual-provider parameterization.
+- `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs:29` -- immutable identity and retention guard.
 
 ## Tasks & Acceptance
 
-**Execution:** (gated by the Block-If prerequisite)
-- [ ] `story-8-3-platform-api-prerequisite-matrix.md` -- add + prove the shared payload-protection-provider parity row (formats, key zeroing, typed-unreadable, rotation, audit, no-leak, exports, processing records, rollback) + pin proof.
-- [ ] `tests/Hexalith.Parties.Security.Tests/` (parity harness) -- prove `json+pdenc-v1`, `json-redacted`, legacy unprotected, key zeroing, typed unreadable, no-leak diagnostics, export/processing-record semantics against BOTH local and provider paths.
-- [ ] Rebind `EventStorePartyPayloadProtectionAdapter` (and registrations in `PartiesServiceCollectionExtensions`) to the shared provider; keep local registration until parity.
-- [ ] Delete the MOVE-listed files only after parity harness is green and rollback is verified.
+**Execution:**
+- [ ] `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md` and `references/Hexalith.EventStore/_bmad-output/implementation-artifacts/8-11-g5-evidence-and-approval-closure.md` -- verify exact identities, approvals, API inventory, backend, and `available`; otherwise halt.
+- [ ] `tests/Hexalith.Parties.Security.Tests/CryptoKeyManagementCompatibilityHarnessTests.cs` -- run local/shared vectors for v1/v2, AAD mutation/transplant, typed failures, tenant isolation, persisted restart state, and no-leak telemetry.
+- [ ] `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`, `src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs`, and `src/Hexalith.Parties/Domain/PartyDomainProcessor.cs` -- add reversible selection and neutralize local coupling while retaining v2-capable rollback and public APIs.
+- [ ] `tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs`, `tests/Hexalith.Parties.Security.Tests/ErasureVerificationServiceTests.cs`, and `tests/Hexalith.Parties.IntegrationTests/Security/EncryptionPipelineIntegrationTests.cs` -- prove real GDPR, erasure, rotation/retry, persisted state, and backward/forward switches.
+- [ ] `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`, `_bmad-output/implementation-artifacts/sprint-status.yaml`, and `_bmad-output/implementation-artifacts/tests/test-summary.md` -- record identities, totals, rollback proof, retained surfaces, and open KMS gates without crediting skips.
 
 **Acceptance Criteria:**
-- Given the payload-protection-provider parity row is unproven, when 8.7 is attempted, then it HALTs `blocked` with that prerequisite as the blocking condition.
-- Given proven parity, when protected/redacted/legacy payloads are read, then plaintext state, typed-unreadable outcomes, and PII-free tombstones are behaviorally identical to pre-migration.
-- Given erasure and export flows, when run on the provider, then certificates, reports, exports, and processing records preserve domain semantics and leak no PII.
-- Given the migration completes, when inspected, then Parties.Security retains only domain GDPR policy/orchestration and no generic key-management engine.
+- Given the current checkout lacks the G5 runtime packages and 8.11 closure, when execution begins, then it halts `blocked` with no production or dependency changes.
+- Given approved G5 artifacts and matching identities, when mixed histories and failures run through both providers, then state, outcomes, GDPR reads, erasure evidence, and no-leak behavior are equivalent.
+- Given persisted v2 writes, when selection switches backward and forward, then v1/v2 remain readable without migration and any failure blocks adoption.
+- Given every adoption gate is green, when the shared provider is selected, then the local v2-capable rollback path and published Parties security APIs remain intact for the deferred cleanup.
 
-## Design Notes
-
-- **§4 gate mapping:** (1) Prereq: shared payload-protection provider parity + pin (predecessors 8.3, 8.5 done; independent of 8.6). (2) Repos: `Parties` + `Hexalith.EventStore`. (3) Rollback: MOVE files stay until parity; revert = restore local registration. (4) Lanes: `Hexalith.Parties.Security.Tests` EXE directly, no-leak diagnostics check, topology. (5) Non-goals: 8.6/8.8/8.9. (6) Parity checklist: I8 + I7.
+## Spec Change Log
 
 ## Verification
 
 **Commands:**
-- `dotnet build src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj -c Release -m:1` -- expected: green.
-- `Hexalith.Parties.Security.Tests` EXE run directly with `-class` for the parity harness -- expected: format/key/typed-unreadable/no-leak/export/processing tests pass.
-
-**Manual checks:**
-- Confirm no generic key-management/circuit-breaker/rotation engine remains in `Hexalith.Parties.Security` after deletion, and the dev-only key-store warning is preserved.
+- `git ls-tree HEAD references/Hexalith.EventStore && git -C references/Hexalith.EventStore rev-parse HEAD` -- expected: identical source identity recorded in the matrix.
+- `dotnet build tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:HexalithEventStoreFromSource=true && ./tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests -class Hexalith.Parties.Security.Tests.CryptoKeyManagementCompatibilityHarnessTests` -- expected: dual-provider tests pass without skips.
+- `dotnet build src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj -c Release -p:UseHexalithProjectReferences=false -p:HexalithEventStoreFromSource=false -m:1 && pwsh scripts/test.ps1 -Lane unit && pwsh scripts/test.ps1 -Lane topology && bash scripts/check-no-warning-override.sh && git diff --check` -- expected: available gates pass; a production-KMS gap remains blocking.

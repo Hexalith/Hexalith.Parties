@@ -465,3 +465,7 @@ when it authored four and activated one. Entries therefore now use:
 - source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
   summary: Complete Fluent UI V5 and Fluent 2 styling and accordion conformance across all Parties UI RCLs.
   evidence: This independently reviewable design-system conformance slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-7-data-protection-extraction.md`
+  summary: Delete the retained local crypto and key-management engine and reconcile published Parties security APIs after shared-provider adoption proves parity and rollback.
+  evidence: This destructive cleanup is independently shippable and was split from Story 8.7 after its hardened draft exceeded the 1,600-token workflow limit.
