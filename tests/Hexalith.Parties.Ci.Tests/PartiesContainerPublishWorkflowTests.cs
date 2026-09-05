@@ -135,6 +135,13 @@ public sealed class PartiesContainerPublishWorkflowTests
         releaseConfig.ShouldContain("dotnet nuget push \"./nupkgs/Hexalith.Parties.*.nupkg\"");
         releaseConfig.ShouldContain("./.hexalith/release/publish-containers.sh");
         releaseConfig.ShouldNotContain("--skip-duplicate");
+        string containerTargets = CiTestPaths.ReadRepoFile("Directory.Build.targets");
+        containerTargets.ShouldContain("Target Name=\"RebindContainerProvenanceLabels\"");
+        containerTargets.ShouldContain("AfterTargets=\"_ParseItemsForPublishingSingleContainer\"");
+        containerTargets.ShouldContain("https://github.com/Hexalith/Hexalith.Parties");
+        containerTargets.ShouldContain("<ContainerGenerateLabelsImageSource>false</ContainerGenerateLabelsImageSource>");
+        containerTargets.ShouldNotContain("Hexalith.EventStore");
+
         publicationPreflight.ShouldContain("readonly expected_package_count=9");
         publicationPreflight.ShouldContain("ci.yml|commitlint.yml");
         publicationPreflight.ShouldContain(
