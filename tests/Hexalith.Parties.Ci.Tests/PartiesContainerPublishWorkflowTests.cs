@@ -136,6 +136,9 @@ public sealed class PartiesContainerPublishWorkflowTests
         releaseConfig.ShouldContain("./.hexalith/release/publish-containers.sh");
         releaseConfig.ShouldNotContain("--skip-duplicate");
         publicationPreflight.ShouldContain("readonly expected_package_count=9");
+        publicationPreflight.ShouldContain("ci.yml|commitlint.yml");
+        publicationPreflight.ShouldContain(
+            "HEXALITH_RELEASE_SOURCE_CI_WORKFLOW must be exactly ci.yml or commitlint.yml.");
         publicationPreflight.ShouldContain("--container-repository \"registry.hexalith.com/parties\"");
         publicationPreflight.ShouldContain("--container-repository \"registry.hexalith.com/parties-mcp\"");
         publicationPreflight.ShouldContain("--container-repository \"registry.hexalith.com/parties-ui\"");
@@ -176,6 +179,48 @@ public sealed class PartiesContainerPublishWorkflowTests
             "src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj",
             "src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj",
         ]);
+    }
+
+    [Theory]
+    [InlineData("verify", "ci.yml")]
+    [InlineData("verify", "commitlint.yml")]
+    [InlineData("publish", "ci.yml")]
+    [InlineData("publish", "commitlint.yml")]
+    public void PublicationPreflightWrapperForwardsAllowedSourceWorkflowUnchanged(
+        string phase,
+        string sourceCiWorkflow)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        (int exitCode, string error, bool preflightInvoked, string[] arguments) =
+            RunPublicationPreflightWrapper(phase, ExpectedPackageCount.ToString(), sourceCiWorkflow);
+
+        exitCode.ShouldBe(0, error);
+        preflightInvoked.ShouldBeTrue();
+        ArgumentValues(arguments, "--source-ci-workflow").ShouldBe([sourceCiWorkflow]);
+        ArgumentValues(arguments, "--phase").ShouldBe([phase]);
+    }
+
+    [Theory]
+    [InlineData("nightly.yml")]
+    [InlineData("ci.yaml")]
+    [InlineData("")]
+    public void PublicationPreflightWrapperRejectsUnknownSourceWorkflowBeforeSharedPreflight(string sourceCiWorkflow)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        (int exitCode, string error, bool preflightInvoked, string[] _) =
+            RunPublicationPreflightWrapper("verify", ExpectedPackageCount.ToString(), sourceCiWorkflow);
+
+        exitCode.ShouldNotBe(0);
+        error.ShouldContain("must be exactly ci.yml or commitlint.yml");
+        preflightInvoked.ShouldBeFalse();
     }
 
     [Theory]
@@ -279,7 +324,10 @@ public sealed class PartiesContainerPublishWorkflowTests
     }
 
     private static (int ExitCode, string Error, bool PreflightInvoked, string[] Arguments)
-        RunPublicationPreflightWrapper(string phase, string? workflowPackageCount)
+        RunPublicationPreflightWrapper(
+            string phase,
+            string? workflowPackageCount,
+            string sourceCiWorkflow = "ci.yml")
     {
         string temporary = Path.Combine(Path.GetTempPath(), $"hexalith-parties-preflight-{Guid.NewGuid():N}");
         Directory.CreateDirectory(temporary);
@@ -314,7 +362,7 @@ public sealed class PartiesContainerPublishWorkflowTests
             start.Environment["HEXALITH_BUILDS_EXECUTION_SHA"] = new string('a', 40);
             start.Environment["HEXALITH_RELEASE_ENVIRONMENT"] = "production";
             start.Environment["HEXALITH_RELEASE_SOURCE_BRANCH"] = "main";
-            start.Environment["HEXALITH_RELEASE_SOURCE_CI_WORKFLOW"] = "ci.yml";
+            start.Environment["HEXALITH_RELEASE_SOURCE_CI_WORKFLOW"] = sourceCiWorkflow;
             start.Environment["HEXALITH_RELEASE_PACKAGE_MANIFEST"] = "tools/release-packages.json";
             start.Environment["GITHUB_SHA"] = new string('b', 40);
             start.Environment["HEXALITH_PUBLICATION_PREFLIGHT"] = recordingPreflight;
