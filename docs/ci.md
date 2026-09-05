@@ -31,7 +31,7 @@ executables. Release reuses the successful exact-source CI evidence and leaves
 
 ## Release
 
-Release is an explicit operator action through `workflow_dispatch`; pushes to `main` run CI but never publish. Before the protected release job is requested, the caller proves that the dispatch selected the current `main` tip and that the exact commit has a successful push run of `ci.yml`. The reusable workflow and nested publishing tools must resolve to the same reviewed immutable Hexalith.Builds commit.
+Release is an explicit operator action through `workflow_dispatch`; pushes to `main` run CI but never publish. Before the protected release job is requested, the caller proves that the dispatch selected the current `main` tip. The optional boolean `bypass-validation` input defaults to `false` and then requires a successful exact-source push run of `ci.yml`; `true` requires a successful exact-source push run of `commitlint.yml` instead. Any other value is rejected before secrets or publish. The reusable workflow and nested publishing tools must resolve to the same reviewed immutable Hexalith.Builds commit.
 
 The `production` environment must require human reviewers and allow deployments only from `main`. After approval, semantic-release:
 
@@ -68,7 +68,7 @@ pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure -ResultsDire
 
 CI and default local commands run in package mode (`UseNuGetDeps=true`, `UseHexalithProjectReferences=false`). If unpublished Hexalith packages block restore, record the package-mode blocker and rerun source-mode triage with `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false` only as diagnostic evidence.
 
-At the current baseline, the evaluated central catalog selects EventStore 3.95.0, which contains the projection-rebuild APIs consumed by Parties. Package mode remains the authoritative CI and release path; source mode is diagnostic only and must not be used to hide package metadata or publication failures.
+At the current baseline, the evaluated central catalog selects EventStore 3.102.0, which contains the projection-rebuild APIs consumed by Parties. Package mode remains the authoritative CI and release path; source mode is diagnostic only and must not be used to hide package metadata or publication failures.
 
 ## Secrets
 

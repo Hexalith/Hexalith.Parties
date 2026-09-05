@@ -46,7 +46,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     [Fact]
     public void ReleaseWorkflowPublishesOnlyPartiesContainersThroughSharedDomainRelease()
     {
-        const string buildsExecutionSha = "53d53ae42abf7c87d385a078ab260531480bbf8a";
+        const string buildsExecutionSha = "8db7459d065926501ee045b3aaf7b816780905e5";
         string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml");
 
         workflow.ShouldContain("on:\n  workflow_dispatch:");
@@ -55,7 +55,8 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain($"builds-execution-sha: {buildsExecutionSha}");
         workflow.ShouldNotContain("domain-release.yml@main");
         workflow.ShouldContain("needs: verify-source");
-        workflow.ShouldContain("actions/workflows/ci.yml/runs");
+        workflow.ShouldContain("actions/workflows/${source_ci_workflow}/runs");
+        workflow.ShouldContain("source-ci-workflow: ${{ needs.verify-source.outputs.source-ci-workflow }}");
         workflow.ShouldContain("environment-name: production");
         workflow.ShouldContain("publish-containers: true");
         workflow.ShouldContain("expected-package-count: 9");
@@ -74,6 +75,41 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldNotContain("|tenants");
         workflow.ShouldNotContain("|memories");
         workflow.ShouldNotContain(":latest");
+    }
+
+    [Fact]
+    public void ReleaseWorkflowSelectsSourceProofFromTypedBypassValidationInput()
+    {
+        string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml");
+
+        workflow.ShouldContain("bypass-validation:");
+        workflow.ShouldContain("required: false");
+        workflow.ShouldContain("default: false");
+        workflow.ShouldContain("type: boolean");
+        workflow.ShouldContain("BYPASS_VALIDATION: ${{ inputs['bypass-validation'] }}");
+        workflow.ShouldContain("source_ci_workflow=\"ci.yml\"");
+        workflow.ShouldContain("source_ci_workflow=\"commitlint.yml\"");
+        workflow.ShouldContain("bypass-validation must resolve to exactly true or false.");
+        workflow.ShouldContain("source-ci-workflow: ${{ steps.select-source-proof.outputs.source-ci-workflow }}");
+        workflow.ShouldContain("source-ci-workflow: ${{ needs.verify-source.outputs.source-ci-workflow }}");
+
+        int falseBranch = workflow.IndexOf("false)", StringComparison.Ordinal);
+        int trueBranch = workflow.IndexOf("true)", StringComparison.Ordinal);
+        int malformedBranch = workflow.IndexOf("*)", StringComparison.Ordinal);
+        int ciAssignment = workflow.IndexOf("source_ci_workflow=\"ci.yml\"", StringComparison.Ordinal);
+        int commitlintAssignment = workflow.IndexOf("source_ci_workflow=\"commitlint.yml\"", StringComparison.Ordinal);
+        int malformedMessage = workflow.IndexOf(
+            "bypass-validation must resolve to exactly true or false.",
+            StringComparison.Ordinal);
+
+        falseBranch.ShouldBeGreaterThan(0);
+        trueBranch.ShouldBeGreaterThan(falseBranch);
+        malformedBranch.ShouldBeGreaterThan(trueBranch);
+        ciAssignment.ShouldBeGreaterThan(falseBranch);
+        ciAssignment.ShouldBeLessThan(trueBranch);
+        commitlintAssignment.ShouldBeGreaterThan(trueBranch);
+        commitlintAssignment.ShouldBeLessThan(malformedBranch);
+        malformedMessage.ShouldBeGreaterThan(malformedBranch);
     }
 
     [Fact]
@@ -209,7 +245,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         ci.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main");
         ci.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@");
         ci.ShouldContain("workflow_dispatch");
-        ci.ShouldContain("EventStore 3.95.0");
+        ci.ShouldContain("EventStore 3.102.0");
         ci.ShouldContain("Package mode remains the authoritative CI and release path");
         ci.ShouldContain("source mode is diagnostic only");
         ci.ShouldContain("registry.hexalith.com/parties");
