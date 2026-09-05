@@ -46,7 +46,7 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 | AuthN | JWT Bearer | 10.0.11 |
 | MCP | ModelContextProtocol | 2.2.0 |
 | UI | FluentUI Blazor + CustomElements | 5.0-rc.4-26180.1 / 10.0.11 |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | 2.21.3 |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | 2.25.0 |
 | Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | 3.2.2 / 4.3.0 / 6.2.0 / 2.9.0 / 4.14.0 |
 
 Full table with all packages: [architecture.md §3](architecture.md). Versioning is git-tag SemVer via MinVer (prefix `v`).

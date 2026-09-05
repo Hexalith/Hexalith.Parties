@@ -26,8 +26,11 @@ Coverage is intentionally not enabled yet in `ci.yml`; the local `coverage` lane
 CI explicitly selects the shared workflow's `microsoft-testing-platform`
 command contract. Test evidence uses the xUnit v3 MTP-native TRX reporter;
 VSTest-only `--logger` and `--collect` options are not passed to Parties test
-executables. Release reuses the successful exact-source CI evidence and leaves
-`test-projects` empty so it does not duplicate those test tiers.
+executables. Ordinary Release (`bypass-validation=false`) reuses successful
+exact-source `ci.yml` evidence and leaves `test-projects` empty so it does not
+duplicate those test tiers. Authorized bypass (`bypass-validation=true`) instead
+requires successful exact-source `commitlint.yml` proof and still leaves
+`test-projects` empty.
 
 ## Release
 
@@ -37,7 +40,7 @@ The `production` environment must require human reviewers and allow deployments 
 
 - installs npm dependencies from `package-lock.json`;
 - restores and builds `Hexalith.Parties.slnx`;
-- revalidates the exact source whose Tier 1 and Tier 2 tests already passed in CI;
+- revalidates the exact dispatched `main` SHA against the selected source-proof workflow (`ci.yml` or, when bypassing, `commitlint.yml`);
 - packs and validates Parties NuGet packages through `scripts/pack-release-packages.py`, `scripts/validate-nuget-packages.py`, and `scripts/validate-consumer-package-references.py`;
 - publishes NuGet packages with `NUGET_API_KEY`;
 - publishes exactly these Parties-owned containers to Zot through the shared release publisher:

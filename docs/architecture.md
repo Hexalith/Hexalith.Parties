@@ -54,7 +54,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.5` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.4.1-beta.706` |
 | Gateway/eventing | Hexalith.EventStore | package `3.102.0` by default; source gitlink `7a81a41000df11632ea84d331d764c6a240a8a46` when explicitly selected |
-| Tenancy | Hexalith.Tenants (`references/` submodule, project ref) | source |
+| Tenancy | Hexalith.Tenants | package `5.6.0` by default; source gitlink `0ca32a5cf6448f35b67f29f0ddcbce44d144b05e` when explicitly selected |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.2.0` |
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.11` |
@@ -62,7 +62,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | MCP | ModelContextProtocol / .AspNetCore | `2.2.0` / `2.2.0` |
 | UI | Microsoft.FluentUI.AspNetCore.Components | `5.0.0-rc.4-26180.1` |
 | | Microsoft.AspNetCore.Components.CustomElements | `10.0.11` |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | `2.21.3` |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | package `2.25.0` by default |
 | Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.17.x` |
 | Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.9.0` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0-rc.1` |

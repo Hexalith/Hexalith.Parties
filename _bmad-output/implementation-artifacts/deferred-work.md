@@ -469,3 +469,19 @@ when it authored four and activated one. Entries therefore now use:
 - source_spec: `_bmad-output/implementation-artifacts/spec-8-7-data-protection-extraction.md`
   summary: Delete the retained local crypto and key-management engine and reconcile published Parties security APIs after shared-provider adoption proves parity and rollback.
   evidence: This destructive cleanup is independently shippable and was split from Story 8.7 after its hardened draft exceeded the 1,600-token workflow limit.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
+  summary: Make the parties-ui release container stay healthy in Development so the shared OCI smoke can finish and GitHub Release assets attach.
+  evidence: Release run 33980524472 published NuGet 1.1.1 and passed parties/parties-mcp smoke, then failed parties-ui with image-start-failure; the GitHub Release for v1.1.1 has no nupkg assets because semantic-release never reached the GitHub plugin.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
+  summary: Execute the Release verify-source bash with a fake gh/GITHUB_OUTPUT harness the way EventStore does.
+  evidence: Parties currently asserts bypass mapping by YAML substring order; a later assignment after esac can invert ci.yml vs commitlint.yml without failing those tests.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
+  summary: Add MSBuild/PublishContainer proof for rebound OCI created labels and reject impossible RFC 3339 calendar days.
+  evidence: RebindContainerProvenanceLabels is only string-checked; the shared OCI validator ignores org.opencontainers.image.created, and the regex accepts dates such as 2026-02-31.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
+  summary: Align diagnostic source gitlinks to the published nuget.org tags selected by the Builds catalog.
+  evidence: Package mode restores EventStore 3.102.0, Tenants 5.6.0, and Memories 2.25.0, but the recorded gitlinks sit at v3.102.0-27, v5.7.0-5, and v2.25.2; frozen intent required asking before advancing source past those tags.

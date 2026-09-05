@@ -192,6 +192,7 @@ public sealed class PlatformApiPrerequisitesTests
             BuildsSha,
             "EventStore `3.102.0`",
             "Commons `2.30.0`",
+            "Memories `2.25.0`",
         ],
     };
 

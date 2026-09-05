@@ -119,8 +119,8 @@ public sealed class PartiesContainerPublishWorkflowTests
     [Fact]
     public void ServerAndIntegrationTestsReplaceObsoleteCollectionBehaviorWithNonParallelCollections()
     {
-        string serverAssembly = CiTestPaths.ReadRepoFile("tests/Hexalith.Parties.Server.Tests/AssemblyInfo.cs");
-        string integrationAssembly = CiTestPaths.ReadRepoFile("tests/Hexalith.Parties.IntegrationTests/AssemblyInfo.cs");
+        string serverAssembly = CiTestPaths.ReadRepoFile("tests/Hexalith.Parties.Server.Tests/NonParallelCollection.cs");
+        string integrationAssembly = CiTestPaths.ReadRepoFile("tests/Hexalith.Parties.IntegrationTests/NonParallelCollection.cs");
         string serverCollectionUse = CiTestPaths.ReadRepoFile(
             "tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs");
         string integrationCollectionUse = CiTestPaths.ReadRepoFile(
@@ -234,7 +234,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     {
         if (OperatingSystem.IsWindows())
         {
-            return;
+            Assert.Skip("Publication preflight wrapper tests require bash.");
         }
 
         (int exitCode, string error, bool preflightInvoked, string[] arguments) =
@@ -254,7 +254,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     {
         if (OperatingSystem.IsWindows())
         {
-            return;
+            Assert.Skip("Publication preflight wrapper tests require bash.");
         }
 
         (int exitCode, string error, bool preflightInvoked, string[] _) =
@@ -272,7 +272,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     {
         if (OperatingSystem.IsWindows())
         {
-            return;
+            Assert.Skip("Publication preflight wrapper tests require bash.");
         }
 
         (int exitCode, string error, bool preflightInvoked, string[] arguments) =
@@ -300,7 +300,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     {
         if (OperatingSystem.IsWindows())
         {
-            return;
+            Assert.Skip("Publication preflight wrapper tests require bash.");
         }
 
         (int exitCode, string error, bool preflightInvoked, string[] _) =
@@ -336,6 +336,8 @@ public sealed class PartiesContainerPublishWorkflowTests
         ci.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main");
         ci.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@");
         ci.ShouldContain("workflow_dispatch");
+        ci.ShouldContain("bypass-validation");
+        ci.ShouldContain("commitlint.yml");
         ci.ShouldContain("EventStore 3.102.0");
         ci.ShouldContain("Package mode remains the authoritative CI and release path");
         ci.ShouldContain("source mode is diagnostic only");

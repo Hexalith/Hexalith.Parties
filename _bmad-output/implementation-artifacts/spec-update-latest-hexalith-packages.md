@@ -2,7 +2,7 @@
 title: 'Update Hexalith packages, repair CI, and ship a bypass-gated release'
 type: 'bugfix'
 created: '2026-09-05'
-status: 'in-progress'
+status: 'in-review'
 baseline_commit: 'a7524c5fa59ff4320dbfaa196149713228b80cf7'
 review_loop_iteration: 0
 context:

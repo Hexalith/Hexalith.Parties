@@ -47,3 +47,10 @@ references/Hexalith.Builds|a53166539bf4441d5e33d04281b14c2d59e950c3|validated-ad
 references/Hexalith.Builds|8db7459d065926501ee045b3aaf7b816780905e5|validated-advance|v4.27.1|jpiquot|2026-09-05
 references/Hexalith.Tenants|8d1a5bd760310a724dd35649aea478d364a2c89a|validated-advance|v2.3.0-9-g8d1a5bd|jpiquot|2026-07-07
 references/Hexalith.EventStore|1627190e515c1189a48acf3c5b599500fa6c8ba1|validated-advance|v3.45.0|jpiquot|2026-07-07
+# --- 2026-09-05 live source identities used by fitness/docs after catalog adopt.
+#     Package mode still restores nuget.org versions from Builds; these rows only
+#     authorize the diagnostic gitlinks currently recorded on main. ---
+references/Hexalith.EventStore|7a81a41000df11632ea84d331d764c6a240a8a46|validated-advance|v3.102.0-27-g7a81a410|jpiquot|2026-09-05
+references/Hexalith.FrontComposer|5cbc5583142a6774ff7813698ad98ec267b336f0|validated-advance|v4.3.0-7-g5cbc5583|jpiquot|2026-09-05
+references/Hexalith.Memories|e9653980cf8b55e17afde30a5a8587cb30405e78|validated-advance|v2.25.2|jpiquot|2026-09-05
+references/Hexalith.Tenants|0ca32a5cf6448f35b67f29f0ddcbce44d144b05e|validated-advance|v5.7.0-5-g0ca32a5c|jpiquot|2026-09-05
