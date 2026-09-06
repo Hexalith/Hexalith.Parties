@@ -858,3 +858,4 @@ location: root diagnostic gitlinks and the Builds catalog
 source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
 reason: Package mode restores EventStore 3.102.0, Tenants 5.6.0, and Memories 2.25.0, but the recorded gitlinks sit at v3.102.0-27, v5.7.0-5, and v2.25.2; frozen intent required asking before advancing source past those tags.
 status: open
+decision: 2026-09-06 Align exact catalog tags — Reset the three diagnostic gitlinks to exact catalog-selected release tags and reconcile live pins and signoff evidence while preserving package mode as authoritative.

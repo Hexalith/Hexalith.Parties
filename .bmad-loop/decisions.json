@@ -1,4 +1,13 @@
 {
+  "DW-108": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Reset the three diagnostic gitlinks to exact catalog-selected release tags and reconcile live pins and signoff evidence while preserving package mode as authoritative.",
+    "key": "1",
+    "label": "Align exact catalog tags",
+    "resolution": ""
+  },
   "DW-12": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
