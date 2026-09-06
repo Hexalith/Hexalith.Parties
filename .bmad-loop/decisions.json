@@ -53,6 +53,15 @@
     "label": "Add compatible SDK names",
     "resolution": ""
   },
+  "DW-35": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Treat every root json-redacted payload as checkpoint-only regardless of CLR shape and add compatibility tests.",
+    "key": "1",
+    "label": "Always checkpoint only",
+    "resolution": ""
+  },
   "DW-5": {
     "answered_at": "2026-09-06",
     "bundle_name": "",

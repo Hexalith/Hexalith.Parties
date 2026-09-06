@@ -280,6 +280,7 @@ location: whole-payload json-redacted event handling
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: Whole-payload `json-redacted` events still depend on a resolvable CLR type and can apply a default-valued event produced from `{}`. The same behavior existed in the retired actor path, and the current field-level protection service does not normally produce a root encrypted marker; correcting it belongs to the broader payload-redaction contract rather than this migration patch chunk. Also recorded in "Deferred from: bmad-build Story 8.6 review (2026-08-16)": A parameterless event can deserialize from an empty redacted payload into a valid `IEventPayload` and be applied as a real domain fact, while whole-payload redaction is otherwise intended to skip application and advance only the checkpoint.
 status: open
+decision: 2026-09-06 Always checkpoint only — Treat every root json-redacted payload as checkpoint-only regardless of CLR shape and add compatibility tests.
 
 ### DW-36: Align reconciliation LastIndexedEvent with the canonical fold
 
