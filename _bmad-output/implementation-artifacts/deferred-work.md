@@ -140,6 +140,7 @@ location: .github/workflows CI and release Node setup
 source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-fix-memories-npm-vulnerabilities.md`
 reason: CI and release workflows use floating `lts/*`; changing this is pre-existing policy and the approved spec explicitly requires approval for Node engine policy changes.
 status: open
+decision: 2026-09-06 Pin Node 24 — Pin the tested Node 24 major and a repository-controlled npm version in CI and release workflows.
 
 ### DW-18: Fail semantic-release closed to the local binary
 
