@@ -257,6 +257,7 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: Party query shims, EventStore:Projections configuration, and build documentation
 reason: Minor/cosmetic: query shim classes keep "Actor" names; `EventStore:Projections` config-key reuse; undocumented `Dapr.Actors.AspNetCore` / MSBuild property rename — intentional temporary trade-offs from the first Group 4 pass.
 status: open
+decision: 2026-09-06 Add compatible SDK names — Introduce canonical SDK names and a Parties-specific configuration section while retaining obsolete aliases and fallback binding.
 
 ### DW-33: Clean up Group 5 DI, health, naming, and status-key polish
 

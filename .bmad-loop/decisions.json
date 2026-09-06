@@ -44,6 +44,15 @@
     "label": "Use stable Other",
     "resolution": ""
   },
+  "DW-32": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Introduce canonical SDK names and a Parties-specific configuration section while retaining obsolete aliases and fallback binding.",
+    "key": "1",
+    "label": "Add compatible SDK names",
+    "resolution": ""
+  },
   "DW-5": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
