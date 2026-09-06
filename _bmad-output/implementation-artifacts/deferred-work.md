@@ -211,6 +211,7 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: GetOperationCategory
 reason: `GetOperationCategory` default arm returns a short event-type name rather than a stable category vocabulary — Art.30 taxonomy design choice.
 status: open
+decision: 2026-09-06 Use stable Other — Map unknown events to a stable Other category and retain EventType separately for bounded diagnostics.
 
 ### DW-27: Report invalid PageSize separately from InvalidCursor
 

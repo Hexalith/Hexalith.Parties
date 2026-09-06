@@ -35,6 +35,15 @@
     "label": "Use npm exec no",
     "resolution": ""
   },
+  "DW-26": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Map unknown events to a stable Other category and retain EventType separately for bounded diagnostics.",
+    "key": "1",
+    "label": "Use stable Other",
+    "resolution": ""
+  },
   "DW-5": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
