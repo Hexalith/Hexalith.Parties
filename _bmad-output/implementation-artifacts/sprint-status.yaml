@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-08-22
+# last_updated: 2026-09-06
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -40,9 +40,12 @@
 # - Developer typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
+# - Story keys in this file are frozen (they match story filename stems). Do not
+#   regenerate them from epics.md titles. Do not run stock sprint_plan.py generate
+#   against this file: it rejects `blocked` and re-slugs titles. Refresh in place.
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-08-22
+last_updated: 2026-09-06
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -202,7 +205,7 @@ development_status:
   # 2026-09-05, see below).
   # Story 8.6 remains done with accepted umbrella deferral
   # 8.6-residual-review-debt covering its unchecked non-blocking review debt;
-  # Stories 8.7/8.8 remain blocked and Story 8.9 remains backlog.
+  # Stories 8.7/8.8/8.9 remain blocked; Story 8.10 remains review.
   # Focused closure/documentation/identity fitness, the 59-project Release
   # build, all 15 .NET test projects (2,437 passed; 6 existing Story 12 skips),
   # package/API and package-only consumer validation, npm typecheck, and all

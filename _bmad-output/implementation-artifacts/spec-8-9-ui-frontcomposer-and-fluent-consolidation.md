@@ -2,7 +2,7 @@
 title: '8.9 Adopt the FrontComposer entity picker'
 type: 'refactor'
 created: '2026-08-19'
-status: 'in-progress'
+status: 'blocked'
 baseline_commit: 'eeda4bacb2b79b2173d77c4fed6c3fdd1f5edaa5'
 review_loop_iteration: 0
 context:
@@ -37,6 +37,8 @@ context:
 
 </frozen-after-approval>
 
+Canonical workflow status is `blocked` in `sprint-status.yaml`. This spec is the G4-A picker slice; it is not a license to start production edits.
+
 ## Code Map
 
 - `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md:101` -- authoritative G4 gate; A is undelivered.
@@ -62,6 +64,8 @@ context:
 - Given a parity failure, when rollback is exercised, then the prior local picker can be restored without changing the public package or custom-element contract.
 
 ## Spec Change Log
+
+- 2026-09-06: Frontmatter `status` `in-progress` → `blocked`. Added the workflow-status note below the frozen block. Frozen Intent/Boundaries unchanged.
 
 ## Design Notes
 

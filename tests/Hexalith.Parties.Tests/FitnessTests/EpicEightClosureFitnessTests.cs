@@ -361,15 +361,26 @@ public sealed class EpicEightClosureFitnessTests
 
     private static ClosureDeferral[] ParseDeferrals(string markdown)
     {
-        const string heading = "## Story 8.10 accepted Epic 8 closure deferrals";
-        int headingIndex = markdown.IndexOf(heading, StringComparison.Ordinal);
-        headingIndex.ShouldBeGreaterThanOrEqualTo(0, $"Missing {heading}");
-        string closureSection = markdown[headingIndex..];
-        return Regex.Matches(
-                closureSection,
+        // Legacy multi-line bulleted form (still exercised by
+        // DeferralParserPreservesReorderedAndMissingFieldsForSpecificDiagnostics): a top-level
+        // "- deferral_id:" line followed by indented sub-field lines.
+        IEnumerable<string> bulletedBlocks = Regex.Matches(
+                markdown,
                 @"(?ms)^- deferral_id:.*?(?=^- deferral_id:|\z)",
                 RegexOptions.CultureInvariant)
-            .Select(static match => match.Value)
+            .Select(static match => match.Value);
+
+        // Current deferred-work.md form: each closure deferral's fields are embedded in a single
+        // "reason:" line inside its own "### DW-N" ledger entry rather than under a dedicated
+        // heading. "deferral_id:" not preceded by "- " identifies such a line; it is unique to
+        // exactly these entries in deferred-work.md.
+        IEnumerable<string> inlineBlocks = Regex.Matches(
+                markdown,
+                @"(?m)^(?!- deferral_id:).*\bdeferral_id:.*$",
+                RegexOptions.CultureInvariant)
+            .Select(static match => match.Value);
+
+        return bulletedBlocks.Concat(inlineBlocks)
             .Select(static block => new ClosureDeferral(
                 ReadDeferralField(block, "deferral_id"),
                 ReadDeferralField(block, "status"),
@@ -377,15 +388,20 @@ public sealed class EpicEightClosureFitnessTests
                 ReadDeferralField(block, "exit_proof"),
                 ReadDeferralField(block, "rollback"),
                 ReadDeferralField(block, "evidence")))
+            .OrderBy(static deferral => Array.IndexOf(ExpectedDeferrals, deferral.Id))
             .ToArray();
     }
 
     private static string ReadDeferralField(string block, string field)
     {
+        // Field markers appear either at the start of an indented bullet line (legacy form) or
+        // preceded by whitespace mid-line among several fields packed onto one line (current
+        // form). An unquoted value's end is bounded by the next "field: " marker or end of line/
+        // block, so a value on a shared line does not swallow the fields that follow it.
         Match match = Regex.Match(
             block,
-            $@"(?m)^\s*(?:-\s*)?{Regex.Escape(field)}:\s*(?:`(?<quoted>[^`]*)`|(?<plain>\S.*?))\s*$",
-            RegexOptions.CultureInvariant);
+            $@"(?:^|(?<=\s))(?:-\s*)?{Regex.Escape(field)}:\s*(?:`(?<quoted>[^`]*)`|(?<plain>\S.*?))(?=\s+[A-Za-z][A-Za-z_]*:\s|\s*$)",
+            RegexOptions.CultureInvariant | RegexOptions.Multiline);
         return match.Success
             ? (match.Groups["quoted"].Success ? match.Groups["quoted"].Value : match.Groups["plain"].Value.Trim())
             : string.Empty;

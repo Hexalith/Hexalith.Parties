@@ -27,7 +27,7 @@ so that Parties keeps GDPR policy without owning reusable crypto infrastructure.
 ## Acceptance Criteria
 
 1. Given the Story 8.3 `Payload protection engine package` row remains `needs-additive-api`, when this story is attempted, then production source migration halts as `blocked` until the row records the named security/owner approval, exact shared-engine release or root `references/Hexalith.EventStore` pin, stable format/state-key/actor/metric contract, green local-versus-provider parity evidence, and exercised rollback. A checked-out submodule source tree or owner-routing document alone is not approval.
-2. Given the approved Epic 8 sequence remains `8.6 -> 8.7` while Story 8.6 is blocked, when owner-side G5 work or Story 8.7 preparation proceeds in parallel, then no Parties production migration or deletion starts until 8.6 is completed or the sequence is explicitly changed by an approved architecture/product artifact.
+2. Given the approved Epic 8 sequence remains `8.6 -> 8.7` and Story 8.6 is `done`, when owner-side G5 work or Story 8.7 preparation proceeds, then no Parties production migration or deletion starts until the Story 8.3 G5 row is consumable (`available` with named approval, exact identity, producer/consumer parity, and rollback). Completing 8.6 does not waive G5.
 3. Given an approved shared payload-protection provider exists, when it is adopted, then it supplies versioned `pdenc-v2` writes with deterministic authenticated-additional-data binding, `json+pdenc-v1` reads, policy and erasure-state extension seams, precise typed-unreadable outcomes, and generic key storage/wrapping/rotation, audit, retry, circuit-breaker, and production-backend behavior without reusing ASP.NET Core cursor Data Protection as the payload engine.
 4. Given protected, redacted, legacy, snapshot, or malformed persisted data, when either the retained local path or shared provider reads it, then `json+pdenc-v1`, `json-redacted`, legacy unprotected, missing metadata, metadata/bytes mismatch, large protected fields, and snapshots preserve the existing readable or bounded typed-unreadable semantics. Unknown versions fail closed; legacy data is not rewritten in place and never triggers a spurious decrypt attempt.
 5. Given deleted, missing, denied, unavailable, tampered, or inconsistent key/payload states, when unprotection fails, then only erasure-record/certificate-backed `KeyInvalidatedOrDeleted` becomes `json-redacted` or a PII-free tombstone. Missing key, access denial, provider outage, integrity failure, and consistency failure remain distinct bounded outcomes; no provider exception-text parsing or provider detail reaches logs, exceptions, metrics, traces, or ProblemDetails.
@@ -47,7 +47,7 @@ so that Parties keeps GDPR policy without owning reusable crypto infrastructure.
   - [x] Confirm Story 8.6 is `blocked` and record that the authoritative sequence conflicts with the draft Story 8.7 spec's “independent of 8.6” note.
   - [x] Mark Story 8.7 blocked and halt before production code, package, or submodule edits.
   - [ ] Before implementation resumes, update the existing G5 row with the named owner/reviewer, exact approved release or root gitlink, producer and consumer proof, frozen compatibility identities, and rollback instructions; change its status only when the review gate is genuinely satisfied.
-  - [ ] Resolve the `8.6 -> 8.7` sequence by completing 8.6 or approving an explicit sequencing change; parallel owner delivery does not waive the consuming-story sequence.
+  - [x] Resolve the `8.6 -> 8.7` sequence by completing 8.6 (done 2026-08-17). Parallel owner delivery still does not waive G5.
 
 - [ ] Accept the owner-delivered G5 surface without inventing a local replacement (AC: 1, 3, 7, 9, 12)
   - [ ] Consume the approved additive shared payload-engine package/API only after security-owner approval and root provenance are recorded; do not guess a package, project, or API name before it lands.
@@ -259,10 +259,11 @@ GPT-5 Codex
 - 2026-07-16T00:32:11+02:00 - Revalidated after concurrent `/pushall`: root gitlink and checkout both equal `82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7`; the synchronized tree still lacks G5 and has no owner-approved G5 packet.
 - 2026-07-16T00:23:38+02:00 - Confirmed Story 8.6 is blocked and the approved Epic 8 sequence remains authoritative despite the draft 8.7 spec's contradictory design note.
 - 2026-07-16T00:23:38+02:00 - Halted before production, dependency, or submodule edits; all local crypto/key rollback files and registrations remain intact.
+- 2026-09-06T16:34:00+02:00 - Course correction: Story 8.6 is `done` (2026-08-17). Story 8.7 stays `blocked` on G5; completing 8.6 does not waive that gate.
 
 ### Completion Notes List
 
-- Source migration is blocked because no owner-approved G5 shared payload-protection engine, release/root pin, dual-path parity evidence, or exercised rollback is recorded, and the preceding Story 8.6 remains blocked under the authoritative sequence.
+- Source migration is blocked because no owner-approved G5 shared payload-protection engine, release/root pin, dual-path parity evidence, or exercised rollback is recorded. Story 8.6 is `done`; G5 remains the live halt.
 - The current root-approved and checked-out EventStore versions both lack `pdenc-v2`, `IPersonalDataPolicy`, `IErasureStateProvider`, and a shared payload engine; ASP.NET Core cursor Data Protection is not a substitute.
 - No production source, project/package dependency, or submodule pointer was changed and no product tests were run during story creation. The local implementation remains the required rollback path.
 

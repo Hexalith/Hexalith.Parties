@@ -760,5 +760,5 @@ than a working-tree patch. Re-verified 2026-09-06:
 `authorized-owner-fixes-not-immutable` are both closed: the exit proof each
 blocker required (a zero-warning, zero-error Release build at a real committed
 gitlink) is met at `8aeed1d2`. The 8-3 reconciliation matrix's PolymorphicSerializations
-row has been updated to this gitlink; `.gitlink-signoff.tsv` needs a corresponding
-`validated-advance` row before this identity may ship in a release tag.
+row has been updated to this gitlink, and `.gitlink-signoff.tsv` carries the matching
+`validated-advance` row (2026-09-06) authorizing this identity to ship in a release tag.

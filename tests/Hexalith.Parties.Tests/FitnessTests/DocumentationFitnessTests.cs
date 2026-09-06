@@ -173,8 +173,22 @@ public sealed class DocumentationFitnessTests
         foreach (string aclPath in Directory.GetFiles(componentDirectory, "accesscontrol*.yaml"))
         {
             string fileName = Path.GetFileName(aclPath);
+            string yaml = File.ReadAllText(aclPath);
+
+            // Scope the allow-by-default check to the top-level accessControl fields only (before
+            // the nested "policies:" list), not any indentation depth -- otherwise a per-app
+            // policy's own "defaultAction: allow" would be misread as the file's overall default.
+            int accessControlIndex = yaml.IndexOf("accessControl:", StringComparison.Ordinal);
+            accessControlIndex.ShouldBeGreaterThanOrEqualTo(0, $"{fileName} must declare accessControl.");
+            Match policiesMatch = Regex.Match(
+                yaml[accessControlIndex..],
+                @"(?m)^\s*policies:\s*$",
+                RegexOptions.CultureInvariant);
+            string topLevelAccessControl = policiesMatch.Success
+                ? yaml[accessControlIndex..(accessControlIndex + policiesMatch.Index)]
+                : yaml[accessControlIndex..];
             bool allowsByDefault = Regex.IsMatch(
-                File.ReadAllText(aclPath),
+                topLevelAccessControl,
                 @"(?m)^\s*defaultAction:\s*allow\s*$",
                 RegexOptions.CultureInvariant);
 

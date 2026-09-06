@@ -217,6 +217,14 @@ _This file contains critical rules and patterns that AI agents must follow when 
   - Test lanes via `scripts/test.ps1 -Lane <lane>` (see Testing Rules).
 - **The build gate is the contract:** a fresh clone (root-repository submodules under `references/` only, no warnings override) must build
   green. Verify parity locally with `bash scripts/check-no-warning-override.sh`. Never weaken it.
+- **Sprint tracking keys and `blocked` are frozen.** Canonical story ids are the existing keys in
+  `_bmad-output/implementation-artifacts/sprint-status.yaml` (they match story filename stems). Do not run
+  `.agents/skills/bmad-sprint-planning/scripts/sprint_plan.py generate` against that file: stock BMad rejects
+  `blocked` and re-slugs titles, which would detach story files and unblock G5/G4-gated work. Refresh status
+  by editing the YAML in place (or a future Parties-owned wrapper). `blocked` means context exists and an
+  explicit prerequisite prevents implementation; it is not `backlog` and not `ready-for-dev`. Story 8.9's
+  next executable slice is G4-A (`spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`); G4-F was a
+  delivered slice only; G4-B–E remain deferred.
 - **Submodules: `git submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants` — root-repository submodules only,
   never `--recursive`** (CI checks out the same way; the build gate forbids nested-submodule init).
 - **Commit-message generation follows active commitlint plus stricter Hexalith policy.** Inspect the active

@@ -1557,18 +1557,35 @@ public sealed class PlatformApiPrerequisitesTests
 
         process.Start().ShouldBeTrue();
 
-        // Drain stdout and stderr concurrently and under the same timeout bound. Reading either
+        // Drain stdout and stderr concurrently and under one shared deadline. Reading either
         // stream to completion synchronously deadlocks if the child fills the other pipe's
         // buffer, or blocks forever if the child hangs while keeping a stream open -- a verbose
-        // or stalled MSBuild evaluation can do either.
+        // or stalled MSBuild evaluation can do either. A single Stopwatch-tracked deadline (rather
+        // than two independent full timeouts) bounds total detection time at ProcessTimeoutMilliseconds
+        // instead of up to double that; the catch-all kills the child on a stream fault too, not only
+        // on timeout, so a faulted read task cannot leak the process tree.
+        Stopwatch stopwatch = Stopwatch.StartNew();
         Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
         Task<string> errorTask = process.StandardError.ReadToEndAsync();
-        if (!Task.WaitAll([outputTask, errorTask], ProcessTimeoutMilliseconds) ||
-            !process.WaitForExit(ProcessTimeoutMilliseconds))
+        try
+        {
+            if (!Task.WaitAll([outputTask, errorTask], ProcessTimeoutMilliseconds))
+            {
+                throw new TimeoutException(
+                    $"{fileName} {string.Join(' ', arguments)} did not exit within {ProcessTimeoutMilliseconds / 1000} seconds.");
+            }
+
+            int remainingMilliseconds = (int)Math.Max(0, ProcessTimeoutMilliseconds - stopwatch.ElapsedMilliseconds);
+            if (!process.WaitForExit(remainingMilliseconds))
+            {
+                throw new TimeoutException(
+                    $"{fileName} {string.Join(' ', arguments)} did not exit within {ProcessTimeoutMilliseconds / 1000} seconds.");
+            }
+        }
+        catch
         {
             process.Kill(entireProcessTree: true);
-            throw new TimeoutException(
-                $"{fileName} {string.Join(' ', arguments)} did not exit within {ProcessTimeoutMilliseconds / 1000} seconds.");
+            throw;
         }
 
         string output = outputTask.GetAwaiter().GetResult();
