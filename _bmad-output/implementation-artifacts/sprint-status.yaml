@@ -234,8 +234,17 @@ development_status:
   # identity and the previously-unsigned Commons advance. Status is `review`
   # (matches the spec frontmatter `in-review`) -- this comment previously and
   # incorrectly claimed a "moved review -> in-progress" transition that never
-  # happened at the value below; see the story's Round 3 Review Findings for
-  # remaining decision/patch items before closure.
+  # happened at the value below.
+  # Code review round 4, 2026-09-06: EventStore and Memories had drifted past
+  # the round-3 identities (unauthorized, found by
+  # PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph
+  # failing at HEAD). Owner authorized the new identities in place of a revert:
+  # EventStore acf5c4e4 (v3.102.0-31-gacf5c4e4), Memories fa8f5316 (v2.26.0).
+  # Reconciled across the 8.3 matrix, docs/architecture.md, the architecture
+  # spine §7 I4 row, .gitlink-signoff.tsv, and the PayloadProtectionEventStoreSha
+  # test constant. A second finding (deferred-work.md's reformat broke
+  # EpicEightClosureFitnessTests' heading anchor) remains open; see the story's
+  # Round 4 Review Findings for remaining patch items before closure.
   8-10-final-readiness-documentation-and-retirement-gate: review
   # Added by Correct Course 2026-07-07
   # (sprint-change-proposal-2026-07-07-validation-ladder-runner.md).
