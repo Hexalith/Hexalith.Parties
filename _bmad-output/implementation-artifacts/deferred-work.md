@@ -38,6 +38,7 @@ location: RecordConsent and RevokeConsent command contracts
 source_spec: `_bmad-output/implementation-artifacts/spec-8-2-identifier-correctness-and-zero-risk-hygiene.md`
 reason: `RecordConsent` and `RevokeConsent` currently accept `ChannelId`/`ConsentId` values that can contain legacy `channel:purpose` separators, so applying the new `PartyIdentifier` semantic-ID helper would break existing consent IDs while leaving aggregate not-found messages able to echo raw consent/channel identifiers.
 status: open
+decision: 2026-09-06 Separate compatible validators — Add separate channel-segment and legacy-composite consent validators, preserve existing stored IDs, and replace unsafe error detail.
 
 ### DW-6: Correct and validate the advanced Hexalith.Builds checkout
 

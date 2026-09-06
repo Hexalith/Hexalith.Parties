@@ -1,0 +1,11 @@
+{
+  "DW-5": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Add separate channel-segment and legacy-composite consent validators, preserve existing stored IDs, and replace unsafe error detail.",
+    "key": "1",
+    "label": "Separate compatible validators",
+    "resolution": ""
+  }
+}
