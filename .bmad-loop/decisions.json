@@ -89,6 +89,15 @@
     "label": "Separate compatible validators",
     "resolution": ""
   },
+  "DW-50": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Partition records into bounded state buckets and add cursor-paged reads with an explicit compatibility and migration path.",
+    "key": "1",
+    "label": "Paged bucketed model",
+    "resolution": ""
+  },
   "DW-9": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
