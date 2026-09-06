@@ -644,7 +644,8 @@ origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review
 location: PartyIndexSdkProjectionHandler.CompleteRebuildAsync
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `PartyIndexSdkProjectionHandler.CompleteRebuildAsync` reads canonical index state once before external notifications, so a later live erase or re-add can race a stale `NotifyIndexedAsync` or `NotifyRemovedAsync` call.
-status: open
+status: done 2026-09-06
+resolution: already resolved: Commit 8e3953e0; src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs:278-325 re-reads canonical state before each rebuild-completion notification, and tests/Hexalith.Parties.Projections.Tests/PartySdkProjectionHandlerTests.cs:1371-1480 covers concurrent erase and re-add.
 
 ### DW-81: Move the Memories mapping ledger behind EventStore persistence
 
@@ -880,4 +881,5 @@ origin: code review of spec-8-10-final-readiness-documentation-and-retirement-ga
 location: scripts/validate-publication-preflight.sh
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: The script accepts `HEXALITH_RELEASE_SOURCE_CI_WORKFLOW=commitlint.yml` (the weaker proof path) with no independent check that an operator authorized the bypass; today it is reachable only through release.yml's gated `bypass-validation` input and the script is not wired into any workflow file yet, so it is not currently exploitable. Related to the already-open DW-106 (bypass-validation to proof-source mapping has no executed-bash test, only YAML substring-ordering). Settle by re-checking every caller of this script once it is wired into CI; if a future caller can set the env var independently of the gated input, this becomes a real authorization bypass.
-status: open
+status: done 2026-09-06
+resolution: already resolved: .github/workflows/release.yml:42-56 and :307 confine commitlint.yml to the typed bypass input; references/Hexalith.Builds/.github/workflows/domain-release.yml:472,1014 forwards only that selected input, release.config.cjs:12,22 merely invokes preflight, and no alternate caller exists.
