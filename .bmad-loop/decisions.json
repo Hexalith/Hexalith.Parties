@@ -7,5 +7,14 @@
     "key": "1",
     "label": "Separate compatible validators",
     "resolution": ""
+  },
+  "DW-9": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Add independently selectable EventStore.Client extensions with idempotency, order, and coexistence tests, then adapt consumers while retaining generic registration.",
+    "key": "1",
+    "label": "Add EventStore extensions",
+    "resolution": ""
   }
 }

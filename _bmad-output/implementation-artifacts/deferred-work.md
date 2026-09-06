@@ -72,6 +72,7 @@ location: EventStore.Client registration across Parties and FrontComposer
 source_spec: none
 reason: This independently shippable EventStore.Client package change was split from the G8 owner-proof action so the EventStore.Aspire JWT prerequisite can be completed first.
 status: open
+decision: 2026-09-06 Add EventStore extensions — Add independently selectable EventStore.Client extensions with idempotency, order, and coexistence tests, then adapt consumers while retaining generic registration.
 
 ### DW-10: Deliver integrated AppHost topology parity proof
 
