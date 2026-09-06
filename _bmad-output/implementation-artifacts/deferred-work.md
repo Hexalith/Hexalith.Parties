@@ -376,6 +376,7 @@ location: PartySdkProjectionFold and PartyProcessingActivityFold diagnostics
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: 2026-08-05 review-layer finding — drops detected inside the shared static helpers `PartySdkProjectionFold`/`PartyProcessingActivityFold` are logged under `PartyDetailSdkProjectionHandler`'s or `PartyIndexSdkProjectionHandler`'s log category depending purely on which handler called in. An operator filtering by the actual source class gets nothing, and the same drop reason can appear under two different categories. Fixing this cleanly needs a design decision (e.g., a dedicated logger category or `ILoggerFactory` seam), not a quick patch.
 status: open
+decision: 2026-09-06 Dedicated fold categories — Give each fold a dedicated typed or named logger category, inject it through handlers, and lock category stability with tests.
 
 ### DW-48: Bound dropped-event diagnostic volume during full rebuilds
 

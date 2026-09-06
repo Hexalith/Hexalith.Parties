@@ -62,6 +62,15 @@
     "label": "Always checkpoint only",
     "resolution": ""
   },
+  "DW-47": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Give each fold a dedicated typed or named logger category, inject it through handlers, and lock category stability with tests.",
+    "key": "1",
+    "label": "Dedicated fold categories",
+    "resolution": ""
+  },
   "DW-5": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
