@@ -1,16 +1,4 @@
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-1-baseline-and-release-blocker-stabilization.md`
-  summary: Add a lane-runner mode that continues after failed projects and reports every failing project in one run.
-  evidence: `scripts/test.ps1 -Lane all` and each CI shard currently stop at the first failing project, so a package-mode restore blocker can hide later project-specific failures until the first blocker is resolved.
-  status: resolved
-  resolved_by: Story 8-11 (sprint-change-proposal-2026-07-07-validation-ladder-runner.md). `scripts/test.ps1 -ContinueOnFailure` runs every project and prints a PASS/FAIL summary (exit 1 if any failed); the CI `Run test shard` loop continues after a failing project and summarizes all failures. Default fail-fast behavior preserved.
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-1-baseline-and-release-blocker-stabilization.md`
-  summary: Add inspectable local test result output and optional build/restore property forwarding to `scripts/test.ps1`.
-  evidence: CI writes TRX/coverage artifacts and some local blockers require properties such as `UseHexalithProjectReferences=true`, but the local lane runner currently exposes neither a results-directory/logger option nor a safe property-forwarding interface.
-  status: resolved
-  resolved_by: Story 8-11 (sprint-change-proposal-2026-07-07-validation-ladder-runner.md). `scripts/test.ps1 -ResultsDirectory <path>` emits a per-project TRX (local CI parity) and `-Properties <k=v>,<k=v>` forwards each value as `-p:<value>` to `dotnet test`.
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-2-identifier-correctness-and-zero-risk-hygiene.md`
-  summary: Define a support-safe consent/channel identifier contract for GDPR consent commands.
-  evidence: `RecordConsent` and `RevokeConsent` currently accept `ChannelId`/`ConsentId` values that can contain legacy `channel:purpose` separators, so applying the new `PartyIdentifier` semantic-ID helper would break existing consent IDs while leaving aggregate not-found messages able to echo raw consent/channel identifiers.
+# Deferred Work
 
 ### DW-1: Follow-up review still recommended for 8-2-identifier-correctness-and-zero-risk-hygiene after the review budget was exhausted
 origin: review-budget-followup
@@ -26,467 +14,817 @@ severity: low
 reason: Review budget (3 cycles) was exhausted with the story finalized (status: done, verify green) while the review pass kept recommending an independent follow-up. The work was committed by bmad-loop run 20260707-072046-c4fb; this entry preserves the lingering follow-up recommendation for a deliberate later review.
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
-  summary: Correct and validate the advanced Hexalith.Builds checkout before adopting its package-version changes.
-  evidence: Checkout `63d3221` supplied `v1.16.3` as a NuGet version and caused Actions runs `29467970597` and `29468665570` to fail during restore. Builds `v4.18.11` corrected the value to `1.16.3`; commit `6516faf` adds the evaluated central-version release guard and fixtures. Builds `v4.19.0` retains both changes and adds the MTP-compatible shared test contract exposed by follow-up run `29482004796`; the Parties gitlink/signoff adopt that release.
-  status: resolved
-  resolved_by: `_bmad-output/implementation-artifacts/spec-gh-29467970597-fix-invalid-builds-package-version.md`; Hexalith.Builds `640b59c1434e4e1e079771c401e11048772c7a27` (`v4.19.0`)
-- source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
-  summary: Add a persisted-LRU eviction regression test for the advanced Hexalith.Memories checkout.
-  evidence: Incidental review found the new workflow recency field is tested across serialization and eviction separately, but not after serialize/restore at the 256-entry limit; a restored actor could evict a recently refreshed workflow and reapply a delayed transition.
-- source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
-  summary: Add an intermediate-state migration test for the advanced Hexalith.Memories checkout.
-  evidence: Incidental review found no test for persisted state containing `AppliedTransitionSequences` while lacking the newer `AppliedTransitionWorkflowOrder`, leaving the immediate predecessor format's eviction queue reconstruction unverified.
-- source_spec: none
-  summary: Deliver EventStore.Client granular typed-client registration with Parties and FrontComposer coexistence proof.
-  evidence: This independently shippable EventStore.Client package change was split from the G8 owner-proof action so the EventStore.Aspire JWT prerequisite can be completed first.
-- source_spec: none
-  summary: Deliver FrontComposer.AppHost or approved platform AppHost integrated-topology parity proof.
-  evidence: This independently shippable platform-host change was split from the G8 owner-proof action because it depends on the EventStore Aspire and client-registration surfaces being proven first.
-- source_spec: none
-  summary: Deliver the external platform-operations runtime deployment handoff for G8.
-  evidence: This independently governed operational handoff was split from the G8 owner-proof action because it requires platform-owner coordination after local run and publish parity are established.
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md`
-  summary: Add runtime multi-audience JWT enforcement and positive/negative token-validation proof to EventStore and consuming hosts.
-  evidence: This was split because the reusable EventStore.Aspire composition surface can ship independently before each host authentication configurator adopts ordered valid audiences.
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md`
-  summary: Harden the EventStore owner AppHost publish path and poison-scan an actual published artifact for credential leakage.
-  evidence: This was split because owner-AppHost adoption and publish-output validation are independently shippable after the reusable JWT composition API exists.
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md`
-  summary: Automate integrity validation for the G8-A owner-delivery receipt and its selected producer identity.
-  evidence: The review confirmed that current Parties fitness tests parse only the marked matrix table and do not bind the supplemental receipt SHA, claimed four-file inventory, or focused EventStore test lane to the referenced Git objects.
-- source_spec: `_bmad-output/implementation-artifacts/spec-align-assistant-commit-message-generation.md`
-  summary: Bind the operational-index metadata ACL route to the EventStore policy, POST verb, and allow action in one focused assertion.
-  evidence: Incidental review of concurrent ACL edits found that independent string assertions can pass when `/admin/operational-index-metadata` is placed under the wrong app policy, verb, or action.
-- source_spec: `_bmad-output/implementation-artifacts/spec-align-assistant-commit-message-generation.md`
-  summary: Reconcile persistent BMAD branch guidance with the Hexalith default-main Git policy.
-  evidence: The pre-existing project context still requires a typed branch and PR, while the authoritative Hexalith Git instructions say to work on `main` by default and branch only when genuinely required.
-- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-fix-memories-npm-vulnerabilities.md`
-  summary: Pin the Node/npm runtime used by release-tooling workflows.
-  evidence: CI and release workflows use floating `lts/*`; changing this is pre-existing policy and the approved spec explicitly requires approval for Node engine policy changes.
-- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-fix-memories-npm-vulnerabilities.md`
-  summary: Make the semantic-release workflow invocation fail closed to the installed local binary.
-  evidence: `npx semantic-release` predates this change and may fetch if local tooling is absent; resolving it requires a separate release-workflow policy decision.
-- source_spec: `_bmad-output/implementation-artifacts/spec-gh-30708560778-fix-ci-failures.md`
-  summary: Hoist normalized multi-token search candidates outside per-entry evaluation.
-  evidence: `EvaluateEntry` rebuilds the query-only full phrase and candidate collection for every party, creating O(entries) allocations in the 10K hot path despite the current performance gate passing.
-- source_spec: `_bmad-output/implementation-artifacts/spec-gh-30708560778-fix-ci-failures.md`
-  summary: Normalize synthetic full-phrase coverage in multi-token relevance scoring.
-  evidence: A deterministic full-phrase match is added alongside real query tokens, so coverage can exceed one before the final score is clamped and can inflate ordering relative to token-only matches.
-
-## Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03)
-
-- Three independent `UpdateAsync` calls in `PartySdkReadModelEraser.EraseAsync` can leave detail/processing/index mutually inconsistent on mid-flight failure — no multi-key transactional write seam in the approved `ReadModelWritePolicy` API.
-- Optimistic concurrency retries re-run `ApplyErasure` and refresh `ErasedAt` — `ApplyErasure` always stamps `UtcNow`; short-circuiting on `IsErased` needs a deliberate idempotency contract change.
-- Erasure copies through pre-erasure `ProjectedAt`/`ProjectionVersion` on detail/index — stamping erasure-time freshness is entangled with the open AC7 freshness-mapping gap; index timestamps also cover unrelated remaining parties.
-
-## Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 2)
-
-- `s_caseIdMissingWarned` is an unbounded static ConcurrentDictionary (one entry per tenant/party for process lifetime) — mirrors retired orchestrator pattern.
-- Index `ProjectionVersion` scheme (`global:N` / `{id}:{seq}` / keep-current) lacks Fold/class remarks for freshness/query consumers.
-- `GetOperationCategory` default arm returns a short event-type name rather than a stable category vocabulary — Art.30 taxonomy design choice.
-
-## Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 3)
-
-- Out-of-range `PageSize` under `Paging` rejected as `InvalidCursor` even with no cursor — debugging misdirection only.
-- Non-durable unbounded in-process last-known cache; no `ApplicationStopping` link; Actor-named constant bags; missing-detail vs empty-processing asymmetry — intentional shim/architecture trade-offs from the first Group 3 pass.
-- ~~Cursor codec `failureReason` discarded~~ — resolved 2026-08-03 (`LogCursorRejected` in `PartySdkQueryService`).
-
-## Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 4)
-
-- Host `AddEventStoreDomainService(... PartyDetailProjectionHandler.Assembly)` remains source-text-only — closing properly needs reinstating the retired tenant seeder for authenticated query e2e.
-- ACL allow-list has no runtime Dapr enforcement check beyond YAML fitness — same topology e2e class as the assembly-scan defer.
-- Minor/cosmetic: query shim classes keep "Actor" names; `EventStore:Projections` config-key reuse; undocumented `Dapr.Actors.AspNetCore` / MSBuild property rename — intentional temporary trade-offs from the first Group 4 pass.
-
-## Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 5)
-
-- Prior Group 5 cosmetic defer remains open (stringly DI absence checks; health "all components" naming; partial Ada→Synthetic rename; undocumented MessageId status-key change).
-- `TestCursorCodec` private double instead of production DI codec; collapsed index invalid-payload theory; six indistinguishable `<factory-registered>` hosted-service exclusions — intentional test-isolation / factory-registration limits from the first Group 5 pass.
-
-## Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04)
-
-- Whole-payload `json-redacted` events still depend on a resolvable CLR type and can apply a default-valued event produced from `{}`. The same behavior existed in the retired actor path, and the current field-level protection service does not normally produce a root encrypted marker; correcting it belongs to the broader payload-redaction contract rather than this migration patch chunk.
-
-## Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)
-
-- `PartyIndexSdkProjectionHandler.BuildReconciliationFold` recomputes `LastIndexedEvent` via a separate code path from the canonical `FoldCore`, used only on the already-confirmed idempotent-no-op/reconciliation branch — could pick a different "last event" for search-reconciliation notification metadata on a multi-event no-op batch, but doesn't affect canonical read-model correctness. Needs a dedicated multi-event test to pin the intended behavior.
-- `PartyMemoryCleanupService`'s new "no persisted CaseId and no fallback configured" blocked branch has zero test coverage.
-- `PartyIndexSdkProjectionHandler.CompleteRebuildAsync` would throw `NullReferenceException` (not a controlled result) if a persisted rebuild-completion manifest ever deserializes with null `Entries`/`RemovedPartyIds`. Not reachable under the current producer (`FinalizeAsync` always serializes non-null arrays); hardening-only.
-- `PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible` is RED: it hard-pins the Story 8.3 matrix's "Payload protection engine package" (G5) row to EventStore `v3.89.0`/`7854f8e5`, but the working tree is now at `v3.91.0`/`1d6e9321` (this story's resolved EventStore identity). Pre-existing to this review session, not caused by its patches. Out of Story 8.6 scope — G5 payload-protection is Story 8.7's territory and needs its own owner-reviewed identity-authorization update, not a Story 8.6 patch.
-
-- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-8-6-projection-and-query-sdk-migration.md`
-  summary: Pin the reusable commitlint workflow to an immutable reviewed revision.
-  evidence: Incidental review found `.github/workflows/commitlint.yml` consumes `Hexalith/Hexalith.Builds/.github/workflows/commitlint.yml@main`, allowing unrelated upstream changes to alter validation without a reviewed Parties change.
-- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-8-6-projection-and-query-sdk-migration.md`
-  summary: Verify every expected package and container artifact before declaring a release successful.
-  evidence: Incidental review found `.github/workflows/release.yml` treats a non-draft GitHub Release at the dispatched commit as sufficient proof, without verifying the complete NuGet and container artifact set.
-- source_spec: `_bmad-output/implementation-artifacts/spec-scp-2026-08-04-story-8-6-g5-receipt-recovery.md`
-  summary: Pin the Story 8.7 payload-protection (G5) matrix row's validation-evidence commands to an exact commit instead of a moving `HEAD` reference.
-  evidence: Blind-hunter review of the 2026-08-04 SCP recovery found the G5 row's `git ls-tree HEAD references/Hexalith.EventStore` / `references/Hexalith.Builds` commands resolve against whatever the working tree currently points to, unlike the sibling projection/query SDK and DataProtection rows in the same matrix, which pin to an exact Parties commit (`03ab938c637aa15f7a0af402afc8664dfc54d1a4`) for reproducibility. This pattern pre-dates the 2026-08-04 identity refresh; the refresh preserved rather than introduced it.
-- source_spec: `_bmad-output/implementation-artifacts/spec-scp-2026-08-04-story-8-6-g5-receipt-recovery.md`
-  summary: Restore the G8 Aspire/AppHost proof-requirements paragraph and the DataProtection-identity-consumption sentence dropped from `epic-8-context.md` during its regeneration, and expand the compressed Story 8.12/8.13 Cross-Story Dependencies detail back out.
-  evidence: Blind-hunter review found the working-tree regeneration of `epic-8-context.md` (predating this SCP recovery; only its line endings were normalized here) silently dropped the G8 local-run/publish JWT, audience-relationship, HTTPS-metadata, and secret-free-manifest proof requirements, and the sentence tying `AddEventStoreDataProtection`/`DaprXmlRepository`/cursor-codec consumption to the DataProtection prerequisite identity. It also compressed the explicit list of what stays externally owned for Stories 8.12/8.13 (production manifests, DAPR components, ingress, secrets, scans, signatures, promotion gates) into one generic sentence. A future Story 8.8/8.9/8.10 session loading only the cached epic context would miss this guidance.
-- source_spec: `_bmad-output/implementation-artifacts/spec-scp-2026-08-04-story-8-6-g5-receipt-recovery.md`
-  summary: Reconcile the two conflicting trackers of the `PartyIndexSdkProjectionHandler.FinalizeAsync` rebuild/live-write concurrency defect and add it to this ledger.
-  evidence: Blind-hunter review found the defect (blind `ReadModelBatchConcurrency.LastWrite` can drop a canonical entry added mid-rebuild) exists both as a still-unchecked `[ ]` Group 2 task and, separately, inside a `[x]`-checked "Fixed 2026-08-04 (partial)" bullet in `8-6-projection-and-query-sdk-migration.md` that itself states the underlying issue is "left open — not addressed by this patch." The two are never cross-referenced, and the defect was never logged here, so it is invisible to anyone scanning only this ledger.
-- source_spec: `_bmad-output/implementation-artifacts/spec-scp-2026-08-04-story-8-6-g5-receipt-recovery.md`
-  summary: Document the `.agents/skills/bmad-sprint-planning/scripts/sprint_plan.py` `--fresh` rebuild fix (preserve `generated`/`last_updated` only when not forcing a fresh rebuild) and attribute it in the 8.6 story or this ledger.
-  evidence: Blind-hunter review found this fix and its new test assertions are a distinct bug from the previously-documented STORY_RANK/`_slug()` regeneration incident, but no file in the current diff explains or attributes it, leaving a future reader unable to tell why `sprint_plan.py` changed.
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Reconsider the `[LoggerMessage]` vs. plain-`ILogger` choice in `PartySdkProjectionFold.Log` for house-style consistency.
-  evidence: 2026-08-05 review-layer finding — the `Log` class's comment claims `[LoggerMessage]` can't be used because `Hexalith.Parties.Projections.csproj` lacks a direct `Microsoft.Extensions.Logging.Abstractions` package reference, but `Hexalith.Parties.Security.csproj` is in the identical situation and successfully uses `[LoggerMessage]` throughout (`PartyKeyLifecycleService.cs`, `DecryptionCircuitBreaker.cs`, `PartyErasureOrchestrator.cs`) via a package reference with `ExcludeAssets="all"`. Adopting the same fix (or correcting the comment if a real difference is found) needs a deliberate, verified change to build configuration, not a same-pass patch.
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Attribute dropped-event diagnostics to the class that actually detects the drop, not whichever handler happened to pass its `ILogger<T>` in.
-  evidence: 2026-08-05 review-layer finding — drops detected inside the shared static helpers `PartySdkProjectionFold`/`PartyProcessingActivityFold` are logged under `PartyDetailSdkProjectionHandler`'s or `PartyIndexSdkProjectionHandler`'s log category depending purely on which handler called in. An operator filtering by the actual source class gets nothing, and the same drop reason can appear under two different categories. Fixing this cleanly needs a design decision (e.g., a dedicated logger category or `ILoggerFactory` seam), not a quick patch.
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Decide an acceptable log-volume strategy (batching/sampling/dedup) for the new drop diagnostics during full projection rebuilds.
-  evidence: 2026-08-05 review-layer finding — `PartyIndexSdkProjectionHandler.AccumulateAsync` (the full-rebuild path) now re-emits a log line for every historically-known-bad event on every rebuild run, with no batching, sampling, or dedup — a real log-flooding risk on a large event store. Needs a product/ops decision on acceptable rebuild-time log volume, not a same-pass patch.
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Widen `PartySdkProjectionFold.DeserializeNew`'s catch filter to cover `FormatException`/`OverflowException` from custom converters.
-  evidence: 2026-08-05 review-layer finding, pre-existing (not caused by this session's patch): the catch filter only covers `JsonException`/`ArgumentNullException`/`NotSupportedException`/`InvalidOperationException`; a `FormatException` or `OverflowException` thrown by a custom converter propagates unhandled and crashes the whole dispatch instead of being skip-logged.
-
-## Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)
-
-Human-directed: the 2026-08-05 build session restored operator diagnostic logging and
-added fold-level test coverage, then deferred the remaining open review findings below
-rather than force them through this pass. This entry also fulfills the still-open
-2026-08-04 action item above ("Reconcile the two conflicting trackers... and add it to
-this ledger") for the `FinalizeAsync` concurrency defect.
-
-- `PrepareRebuildAsync`/`FinalizeAsync` write with `ReadModelBatchConcurrency.LastWrite`
-  (no ETag check) [`PartyDetailSdkProjectionHandler.cs:99,103`,
-  `PartyIndexSdkProjectionHandler.cs:102`] — a rebuild finalize can silently overwrite a
-  newer concurrent live `ProjectAsync` write with no conflict detection. Investigated
-  2026-08-05: switching to `Match(etag)` unilaterally is unsafe without knowing the
-  EventStore SDK rebuild-plan executor's retry/abort contract on a write conflict — that
-  contract lives in `Hexalith.EventStore.DomainService`'s rebuild orchestration, outside
-  this repo's `IAsyncDomainProjectionRebuildHandler` /
-  `IAsyncDomainSharedProjectionRebuildCompletionHandler` surface. Needs SDK-owner input,
-  not a unilateral Parties-side change.
-  Resolved 2026-08-16: EventStore v3.95 now provides the required bounded conflict
-  contract. Parties rebuild plans use `Match(etag)` for existing rows and `CreateOnly`
-  for absent rows; focused plan-policy tests pass for detail, processing, and index.
-- Host wiring (`builder.AddEventStoreDomainService(typeof(PartyAggregate).Assembly,
-  typeof(PartyDetailProjectionHandler).Assembly)`) is verified only as literal source
-  text by `ArchitecturalFitnessTests`/`PlatformApiPrerequisitesTests`/
-  `RetiredLeafProjectFitnessTests`; no test queries a projected read model after an
-  authenticated end-to-end command. Closing this needs `EventStoreGatewayE2ETests`, but
-  its `PartiesAspireTopologyFixture.RequireSeededTenants()` unconditionally throws since
-  Story 12.2 retired `TenantIntegrationTestSeeder` — reinstating that seeder is real work
-  out of scope for a review-patch pass.
-- `PartyProcessingSdkReadModel.Records` grows unbounded — one ever-growing JSON blob per
-  party, re-serialized on every processing-activity projection write. A real scalability
-  concern but needs a pagination/archival design, not a quick patch.
-- Minor/cosmetic, `PartyDetailSdkProjectionHandler`/`PartyIndexSdkProjectionHandler`
-  family: sequential (not parallel) `GetAsync` calls doubling state-store round-trip
-  latency on the busiest projection path; duplicated `StoreName` null-check across
-  classes; `PartyErased.LastModifiedAt` immediately overwritten by
-  `NormalizeEventTimestamps` (harmless while both timestamps match, would silently
-  diverge otherwise); `PartyIndexSdkProjectionHandler.Validate` reusing
-  `PartySdkReadModelAddresses.Detail(...)` purely for its validation side effect,
-  coupling Index validation to Detail's address-shape rules.
-- Minor/cosmetic, rollback-shim naming and test quality: `PartyDetailProjectionQueryActor`
-  / `PartyIndexProjectionQueryActor` keep the "Actor" name with zero actor behavior
-  (intentional temporary rollback shims); `PartySdkReadModelOptions.ConfigurationSection`
-  reuses the retired `Hexalith.EventStore.Server.Configuration.ProjectionOptions`'s
-  `"EventStore:Projections"` config key; the new `Dapr.Actors.AspNetCore` package
-  reference and `$(HexalithCommonsHttpFromSource)` MSBuild property rename are
-  undocumented but verified correct; the DI test
-  `AddParties_UsesSdkReadModelsAndCursorCodecWithoutLocalProjectionMechanics` asserts
-  absence via a brittle `descriptor.ServiceType.FullName` string match rather than a type
-  reference; `HealthEndpoint_AllComponentsHealthy_Returns200WithoutRetiredProjectionActorCheckAsync`
-  keeps an "all components healthy" framing that now excludes SDK read models from what
-  "all" verifies; the PII seed rename (`"Ada"/"Lovelace"` →
-  `"SyntheticPrivateFirstName8472"/"SyntheticPrivateLastName6391"`) landed in only 2 of
-  dozens of usages across `EventStoreGatewayRoutingTests.cs`, with 7 other test files
-  still using `"Ada"/"Lovelace"`; `DirectPartiesCommandRouter`'s test double now keys its
-  completion write on `command.MessageId` instead of `command.CorrelationId`, correctly
-  mirroring production `SubmitCommandHandler.cs` behavior but undocumented in the diff.
-- Cosmetic: the Epic 7 rollback-retention action item is closed `done` citing an
-  authorization SCP "approved 2026-08-02" for an action the same annotation dates to
-  2026-08-01 (approval postdating the act it authorizes by a day); resolves naturally
-  when `sprint-status.yaml` is next synced.
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Retry Incomplete erasure batches after re-reading store etags instead of replaying the same batch payload.
-  evidence: PartySdkReadModelEraser.ExecuteWithResumeAsync re-executes the original batch on Incomplete without refreshing etags; a partial apply can loop into sdk-read-model-cleanup-conflict.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Add an erasure composition test that proves memories-search cleanup with indexing disabled and durable mappings present.
-  evidence: ProjectionPlatformAdapterTests invoke memories-search cleanup with Enabled=false and no seeded mappings, so Cleaned can pass without exercising DELETE/clearance.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Rename ActorNotFoundInfrastructure/ActorException query failure vocabulary now that Dapr projection actors are gone.
-  evidence: PartySdkQueryService still returns actor-era failure reasons on the SDK path, which misleads operators after AC8 actor deletion.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Move PartyEventTypeResolver out of the retired Projections/Actors packaging folder.
-  evidence: The resolver remains under Actors/ after projection actors were deleted, obscuring ownership.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Document or automate Dapr-actor to SDK read-model key backfill for existing deployments.
-  evidence: Story File List deletes actor projection paths without an AppHost/deploy cutover that migrates existing actor state into SDK keys.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Harden PartyMemoryUnitMappingStore upsert when MemoryUnitId and SourceUri match different existing rows.
-  evidence: Edge-case review found a second live mapping row can be dropped when two entries match the new unit id and source uri separately.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Restore stronger party-id length/allowlist validation on the SDK query detail envelope.
-  evidence: TryValidateDetailEnvelope only rejects reserved chars after TenantSafeProjectionReadGuardrailsTests were deleted; oversized/malformed party ids are weakly gated.
-
-## Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)
-
-DI + query host sub-chunk (`PartiesServiceCollectionExtensions.cs` vs `2c4a7af`).
-
-- `tests/e2e/specs/story-7-4-projection-platform-compatibility.spec.ts` still expects deleted projection-adapter registrations and old `ProjectionPlatformAdapterTests` method names — deferred, pre-existing e2e drift outside this DI chunk.
-- Erasure cleanup timestamps still use `DateTimeOffset.UtcNow` instead of the newly registered `TimeProvider` — deferred, pre-existing certificate timestamp pattern across erasure store results.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Protect Memories mapping replacement and clearing with ETag-aware retry semantics.
-  evidence: `PartyMemoryUnitMappingStore.ReplaceMappingsAsync` and the empty-list delete can overwrite a concurrent indexing write after cleanup reads the prior mapping set.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Persist partial Memories cleanup progress with a token that survives caller cancellation.
-  evidence: `PartyMemoryCleanupService.DeleteByPartyAsync` uses the already-cancelled caller token in its `finally` mapping update, so cancellation can prevent the promised resumable audit state from being saved.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Compensate when cancellation occurs after Memories ingestion but before mapping persistence.
-  evidence: `PartyMemoryIndexingService` rethrows caller cancellation from `RecordMappingAsync` without deleting the already-created Memories unit, leaving an untracked unit outside erasure discovery.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Use ingestion-time endpoint and CaseId data for Memories compensating deletion.
-  evidence: `TryCompensatingDeleteAsync` gates cleanup on the current options snapshot even though configuration can change after ingestion and the unit retains its authoritative CaseId.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Resolve consumer package-validation support artifacts from current central versions.
-  evidence: `scripts/validate-consumer-package-references.py` hard-codes obsolete FrontComposer and Tenants versions instead of the currently evaluated dependency set.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Keep consumer package-validation caches inside the disposable validation workspace.
-  evidence: `scripts/validate-consumer-package-references.py` places `NUGET_PACKAGES` under the work directory's parent, so cleanup leaves packages that can mask missing-feed failures in later runs.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Make consumer package validation use only explicitly configured NuGet sources.
-  evidence: The generated NuGet configuration lacks `<clear/>`, and the CLI always retains nuget.org, allowing undeclared user or machine feeds to hide incomplete local package output.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Compare forbidden NuGet dependency identifiers case-insensitively.
-  evidence: `scripts/validate-nuget-packages.py` performs case-sensitive package-ID checks even though NuGet identifiers are case-insensitive.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Pin reusable CI and CodeQL workflows to reviewed immutable revisions.
-  evidence: `.github/workflows/ci.yml` and `.github/workflows/codeql.yml` invoke reusable workflows through mutable `@main` references.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Publish Aspire-hosted services with Production environment defaults.
-  evidence: `src/Hexalith.Parties.AppHost/Program.cs` emits `ASPNETCORE_ENVIRONMENT` and `DOTNET_ENVIRONMENT` as `Development` for publish output.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Fail publish preflight when the confidential OIDC client secret is absent.
-  evidence: `src/Hexalith.Parties.AppHost/Program.cs` substitutes an empty client secret and continues producing deployment artifacts that cannot authenticate.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Reject duplicate keyed identifiers while merging BMAD configuration arrays.
-  evidence: `_bmad/scripts/config_utils.py` can retain repeated base codes or ids, leaving ambiguous effective configuration after overrides.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Tolerate deleted historical tag references during release verification.
-  evidence: `.github/workflows/release.yml` can report a successful current publication as failed when an older release references a tag that no longer exists.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Restore the Playwright browser accessibility lane as a required CI gate.
-  evidence: The replacement CI workflow no longer runs `npm run test:a11y`, leaving axe, keyboard-focus, forced-colors, computed-style, and visual checks unexecuted.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Add executable mTLS topology coverage across every configured Dapr sidecar.
-  evidence: Current tests inspect generated YAML and one synthetic sidecar but never start the mTLS topology or prove a cross-service invocation with all sidecars credentialed.
-
-## Deferred from: code review of spec-8-6-projection-and-query-sdk-migration.md (2026-08-16)
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Align ErasedAt timestamp resolution in PartyProcessingActivityFold when payload is PartyErased.
-  evidence: `PartyDetailProjectionHandler.ApplyErasure` assigns `ErasedAt = erased.ErasedAt` while `PartyProcessingActivityFold.Fold` assigns `@event.Timestamp.ToUniversalTime()`.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Parallelize sequential state-store reads in PartyDetailSdkProjectionHandler.PrepareRebuildAsync.
-  evidence: `PrepareRebuildAsync` awaits `readModelStore.GetAsync<PartyDetailSdkReadModel>` and `GetAsync<PartyProcessingSdkReadModel>` sequentially rather than concurrently with `Task.WhenAll`.
-
-## Deferred from: bmad-build Story 8.6 review (2026-08-16)
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Make Memories rebuild reconciliation atomic with concurrent erase and re-add operations.
-  evidence: `PartyIndexSdkProjectionHandler.CompleteRebuildAsync` reads canonical index state once before external notifications, so a later live erase or re-add can race a stale `NotifyIndexedAsync` or `NotifyRemovedAsync` call.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Move the Memories cleanup mapping ledger behind an approved EventStore persistence abstraction.
-  evidence: `PartyMemoryUnitMappingStore` persists operational state directly through `DaprClient`, outside the EventStore read-model and write-policy abstractions required for domain-module persistence.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Add concurrency-safe removal semantics to the Memories mapping ledger.
-  evidence: `ClearMappingsAsync` and `ReplaceMappingsAsync` use unconditional delete/save operations, so concurrent indexing can lose a newly committed mapping and leave an undiscoverable Memories unit.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Verify an empty Memories mapping ledger against an authoritative inventory before certifying cleanup.
-  evidence: `PartyMemoryCleanupService.DeleteByPartyAsync` treats zero local mappings as cleaned even when state loss, legacy indexing, or configuration drift could leave remote units behind.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Compensate when cancellation occurs after Memories ingestion but before mapping persistence.
-  evidence: `PartyMemoryIndexingService` propagates caller cancellation from the mapping write without deleting the already-created unit, leaving it outside later erasure discovery.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Persist a durable recovery ledger when both mapping persistence and compensating deletion fail.
-  evidence: `PartyMemoryIndexingService` records a double failure only in logs, so later erasure has no durable way to discover the orphaned Memories unit.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Schedule retry or backfill when Memories indexing is skipped for a missing CaseId.
-  evidence: `PartyMemoryIndexEntrySearchIndexer.NotifyIndexedAsync` returns success when CaseId is absent, so fixing configuration alone does not cause the skipped party to be indexed.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Keep Memories cleanup health observable when new rich-search indexing is disabled.
-  evidence: `MemoriesSearchHealthCheck` returns Healthy immediately when indexing is disabled although previously persisted mappings can still require remote deletion and mapping-store access.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Validate erasure-certificate identity, status, and destroyed key versions before certifying store cleanup.
-  evidence: `ErasureVerificationService.VerifyErasureAsync` accepts an `ErasureCertificate` but never verifies it belongs to the requested tenant and party or represents a completed key-destruction state.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Bound and page the per-party Article 30 processing-activity read model.
-  evidence: `PartyProcessingActivityFold` retains one ever-growing list and performs a linear `FindIndex` for every event, producing unbounded state values and quadratic rebuild work.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Handle null dictionary properties in persisted Party index read models with a bounded recovery result.
-  evidence: A malformed persisted `PartyIndexSdkReadModel` with null dictionaries can reach dictionary operations and throw rather than producing a controlled rebuild-required or corruption result.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Bound Party search query, mode, and CaseId inputs before cursor-scope construction and full-index evaluation.
-  evidence: Search payload parsing validates paging and type but imposes no length limits on strings copied into cursor scope and processed against tenant entries.
-
-- source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  summary: Define authoritative handling for successfully deserialized marker events labeled json-redacted.
-  evidence: A parameterless event can deserialize from an empty redacted payload into a valid `IEventPayload` and be applied as a real domain fact, while whole-payload redaction is otherwise intended to skip application and advance only the checkpoint.
-
-## Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-08-19)
-
-Placed before the closure-deferral section on purpose: `EpicEightClosureFitnessTests.ParseDeferrals`
-slices from the closure heading to end of file, so anything appended after it is absorbed into the
-last `deferral_id` block.
-
-- Only one of six `accesscontrol.*.yaml` components is verified. `DocumentationFitnessTests.MaintainedDocumentationDescribesSdkRoutesUnderEventStoreOnlyDenyAcl` parses `accesscontrol.parties.yaml` alone, while the documentation it pins generalizes over all sidecar policies. Broadening the assertion is outside the Story 8.10 Code Map.
-- The Playwright accessibility lane is wired into no workflow. `.github/workflows/` contains no Playwright or `test:a11y` step, `scripts/test.ps1` invokes no npm lane, and `tests/e2e/package.json`'s `test:a11y` script is called by nothing. Spine §7 I12 already records the always-on CI a11y lane as a separate open ledger item.
-- Duplicated, timeout-free git/process helpers. `RunGit`/`TryRunGit` are defined in both `EpicEightClosureFitnessTests` and `PlatformApiPrerequisitesTests`, and `Read(root, relativePath)` a third time in `DocumentationFitnessTests`. `RunGit` drains stdout fully before stderr with no timeout; not a realistic deadlock at these output sizes, but the pattern should be consolidated.
-- `frontcomposer-skip-link-reachability-after-route-focus` — **route to FrontComposer shell owners.**
-  Measured 2026-08-19 on the accessibility specimen at FrontComposer `7a337a21`: once the shell
-  hydrates it moves focus to the route `<h1>` (`h1#parties-accessibility-specimen-title`). That is a
-  deliberate SPA announcement pattern, but it also advances the browser's sequential focus
-  navigation point past both `.fc-skip-link` anchors, so the first `Tab` after load reaches the
-  page's first interactive control rather than "Skip to content". A keyboard user would have to
-  Shift+Tab backwards to reach a skip link after a client-side route change. On a cold document
-  load the DOM order is correct — the skip links are the shell's first two focusable descendants,
-  which `parties-accessibility.spec.ts` now asserts explicitly by seeding focus on `.fc-shell-root`.
-  Question for the owners: should the shell reset the sequential focus navigation point (for example
-  by focusing a container ahead of the skip links, or by focusing the skip link itself) so WCAG
-  2.4.1 bypass remains forward-reachable after route changes?
-- EventStore's exact version is hardcoded in five or more places (`PlatformApiPrerequisitesTests`, `docs/ci.md`, `docs/architecture.md` §3) rather than read from the Builds catalog's `HexalithEventStoreVersion`. This is the drift the "CI identity regression — one stale live assertion expecting EventStore 3.90.0" receipt already recorded once. (Updated 2026-09-06: the cited value was `3.95.0` when this note was written 2026-08-19; the 2026-09-05 catalog adopt advanced all cited places to `3.102.0` together, so the specific hardcoded value drifts each time the catalog moves — the underlying "not read from the catalog" gap remains.)
-
-## Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18
-
-These deferrals preserve the current implementation as the rollback surface and
-allow Epic 8 readiness to be assessed without representing the deferred
-migrations as delivered. Every entry is accepted by the approved Story 8.10
-deferral-based closure intent.
-
-**Field vocabulary (clarified 2026-08-19).** Spine I17 distinguishes *waiting*
-from *working*: the four deferral fields are the contract for waiting, and the
-six §4 clauses are the contract for working. The former single `source_spec`
-field conflated the two, making Story 8.10 appear to activate four deferrals
-when it authored four and activated one. Entries therefore now use:
-
-- `authored_by_spec` — the spec that wrote this entry down and accepted the wait.
-  Carries no §4 obligation.
-- `activated_by_spec` — the spec that started working the deferral. Triggers the
-  full six-clause §4 gate in that spec, per I17.
-- `delivered_slices` — present only when part of a deferral has shipped. A
-  delivered slice never advances the owning story's status.
-
-- deferral_id: `8.6-residual-review-debt`
-  authored_by_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
-  status: accepted
-  owner: `Amelia (Parties Developer) + Murat (Test Architect) + Hexalith.EventStore SDK owners where producer/runtime proof is required`
-  exit_proof: `Resolve or explicitly supersede every unchecked [Review][Defer] item in Story 8.6; in particular, exercise SDK handler discovery through an authenticated projected query and enforce the deny-default EventStore-only DAPR ACL in a runnable topology before removing retained host or ACL rollback seams.`
-  rollback: `Keep the completed 8.6 SDK handlers and exact ACL as the production path, retain source/package selection plus the Parties AppHost and gateway topology as switch-back and diagnostic surfaces, and do not delete further host, query, projection, or ACL compatibility seams until the corresponding deferred proof passes.`
-  evidence: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md and _bmad-output/implementation-artifacts/deferred-work.md record the unchecked review deferrals and their detailed evidence; sprint-status.yaml keeps 8.6 done because these are accepted non-blocking residual debts, not unimplemented acceptance tasks.`
-
-- deferral_id: `8.7-data-protection-extraction`
-  authored_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  status: accepted
-  owner: `Hexalith.EventStore payload-protection owners + Amelia (Parties Developer) + Murat (Test Architect)`
-  exit_proof: `Deliver the G5 runtime engine and Story 8.11 closure packet at an exact approved package or root-gitlink identity; pass protected, redacted, legacy, typed-unreadable, no-leak, Art.20, Art.30, erasure certificate/report, and exercised switch-back parity before changing Story 8.7 from blocked.`
-  rollback: `Keep Hexalith.Parties.Security, all 18 MOVE files, all 5 KEEP files, EventStorePartyPayloadProtectionAdapter, local DI selection, and the compatibility harness. If shared-provider adoption later regresses, switch back to the retained local provider and rerun the compatibility harness before forward restoration.`
-  evidence: `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md — Payload protection engine package row; sprint-status.yaml keeps 8.7 blocked and the crypto-retention action open.`
-
-- deferral_id: `8.8-runtime-boundary-cleanup`
-  authored_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  status: accepted
-  owner: `Hexalith.EventStore, Hexalith.Commons, Hexalith.FrontComposer, Builds, platform-AppHost owners + Amelia (Parties Developer) + Murat (Test Architect)`
-  exit_proof: `Deliver and approve exact identities plus producer/consumer parity for G1/G2 degraded response and DAPR health, G6 envelopes/freshness, G7/G9 claims and identifiers, G8 security/typed-client/integrated topology, and G11 MCP/deep-link/capability helpers; exercise switch-back before deleting Parties-local paths or retiring the AppHost.`
-  rollback: `Keep the Parties degraded middleware and health checks, Authentication project, typed clients, MCP context forwarding and five tools, AdminPortal links/probes, build selectors, and Parties AppHost. Revert each future adoption slice independently to these retained paths.`
-  evidence: `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md — EventStore degraded response, client envelopes, tenant claims, Aspire publish helpers, MCP/deep-link/search, Commons HTTP, and Builds rows; sprint-status.yaml keeps 8.8 blocked.`
-
-- deferral_id: `8.9-frontcomposer-ui-consolidation`
-  activated_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  activation_authority: `_bmad-output/planning-artifacts/sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md`
-  delivered_slices: `G4 work package F only (shell skip links and role="main"/role="navigation" landmarks), adopted 2026-08-18 at FrontComposer root gitlink 7a337a21d4ba261bf27aeb3feedde47789f0160a. Work packages A-E remain undelivered and Story 8.9 stays backlog. This slice's I13 parity is conditional on repairing the app-owned focus-visible and forced-colors regression it introduced in MainLayout.razor.css.`
-  status: accepted
-  owner: `Hexalith.FrontComposer Contracts.UI/Shell owners + Sally (UX Designer) + Amelia (Parties Developer) + Murat (Test Architect)`
-  exit_proof: `Deliver the complete G4 primitive set at an exact approved FrontComposer identity and pass producer bUnit plus Parties bUnit/Playwright parity for picker semantics, freshness/live regions, safe downloads, typed-name confirmation, skip links, forced colors, reduced motion, focus, and GDPR copy before changing Story 8.9 from backlog.`
-  rollback: `Keep the Parties picker, freshness/status regions, download helpers, typed erasure confirmation, optimistic reconciliation, portal components, and current Fluent 2 styling until each replacement slice proves parity; revert a failed slice independently. The delivered shell slice rolls back by restoring the Parties-owned skip links, #parties-main-content, and #parties-app-navigation from the parent of superproject commit 2b63ab9 and pinning FrontComposer back to 97f44c499e83a0ffbf054febd0aab384054ea39e; that revert reinstates the duplicate skip-link strict-locator ambiguity the slice resolved, so it must be paired with a Playwright rerun.`
-  evidence: `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md — FrontComposer UI primitives row; sprint-status.yaml keeps 8.9 backlog; tests/Hexalith.Parties.UI.Tests/MainLayoutAccessibilityTests.cs and _bmad-output/implementation-artifacts/tests/test-summary.md record the 2026-08-18 shell-slice adoption.`
-
-- deferral_id: `external-runtime-deployment`
-  authored_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  status: accepted
-  owner: `External platform-operations and deployment owners`
-  exit_proof: `Consume immutable Parties image tags and provide environment-specific DAPR components, subscriptions, resiliency, deny-default access control, ingress, secrets, registry credentials, signing/scanning, and promotion evidence in the owner repository; prove rollback to the prior immutable image set.`
-  rollback: `This repository keeps workload source, CI, immutable image publication, and the local Parties AppHost migration rollback topology. Runtime rollback remains an external orchestrator operation that redeploys the prior immutable image set and platform configuration.`
-  evidence: `docs/deployment-guide.md and the Epic 8 architecture spine assign runtime deployment outside this repository; Story 8.13 retired the historical in-repo deploy assets, which must not be restored.`
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
-  summary: Adopt FrontComposer per-record freshness, live-region, and optimistic-reconciliation primitives after G4-B/C delivery.
-  evidence: This independently shippable UI-state slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
-  summary: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery.
-  evidence: This independently testable download and cleanup slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
-  summary: Adopt the FrontComposer typed-name destructive confirmation mode for Admin erasure after G4-E delivery.
-  evidence: This independently shippable destructive-interaction slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
-  summary: Complete Fluent UI V5 and Fluent 2 styling and accordion conformance across all Parties UI RCLs.
-  evidence: This independently reviewable design-system conformance slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-7-data-protection-extraction.md`
-  summary: Delete the retained local crypto and key-management engine and reconcile published Parties security APIs after shared-provider adoption proves parity and rollback.
-  evidence: This destructive cleanup is independently shippable and was split from Story 8.7 after its hardened draft exceeded the 1,600-token workflow limit.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
-  summary: Make the parties-ui release container stay healthy in Development so the shared OCI smoke can finish and GitHub Release assets attach.
-  evidence: Release run 33980524472 published NuGet 1.1.1 and passed parties/parties-mcp smoke, then failed parties-ui with image-start-failure; the GitHub Release for v1.1.1 has no nupkg assets because semantic-release never reached the GitHub plugin.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
-  summary: Execute the Release verify-source bash with a fake gh/GITHUB_OUTPUT harness the way EventStore does.
-  evidence: Parties currently asserts bypass mapping by YAML substring order; a later assignment after esac can invert ci.yml vs commitlint.yml without failing those tests.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
-  summary: Add MSBuild/PublishContainer proof for rebound OCI created labels and reject impossible RFC 3339 calendar days.
-  evidence: RebindContainerProvenanceLabels is only string-checked; the shared OCI validator ignores org.opencontainers.image.created, and the regex accepts dates such as 2026-02-31.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
-  summary: Align diagnostic source gitlinks to the published nuget.org tags selected by the Builds catalog.
-  evidence: Package mode restores EventStore 3.102.0, Tenants 5.6.0, and Memories 2.25.0, but the recorded gitlinks sit at v3.102.0-27, v5.7.0-5, and v2.25.2; frozen intent required asking before advancing source past those tags.
-
-## Deferred from: code review of story-8-10 (2026-09-06)
-
-- Skip links are no longer the real first-Tab keyboard stop after a client-side route change — already routed to FrontComposer shell owners as `frontcomposer-skip-link-reachability-after-route-focus` above; the review layer that raised this again confirmed no further action is needed beyond what that entry already tracks. [tests/e2e/specs/parties-accessibility.spec.ts:37-49]
-- Release workflow's bypass-validation→proof-source mapping (`false→ci.yml`/`true→commitlint.yml`) is verified only by substring-ordering in the YAML text, not by executing the bash — already self-disclosed above ("Execute the Release verify-source bash with a fake gh/GITHUB_OUTPUT harness..."); the review layer that raised this again confirmed no further action is needed beyond what that entry already tracks. [.github/workflows/release.yml:44-56, tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs:100-116]
+### DW-3: Add a fail-continuing lane runner
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-1-baseline-and-release-blocker-stabilization.md"), 2026-09-06
+location: scripts/test.ps1 and CI test-shard loops
+source_spec: `_bmad-output/implementation-artifacts/spec-8-1-baseline-and-release-blocker-stabilization.md`
+reason: `scripts/test.ps1 -Lane all` and each CI shard currently stop at the first failing project, so a package-mode restore blocker can hide later project-specific failures until the first blocker is resolved. The legacy ledger recorded status resolved and resolution Story 8-11 (sprint-change-proposal-2026-07-07-validation-ladder-runner.md). `scripts/test.ps1 -ContinueOnFailure` runs every project and prints a PASS/FAIL summary (exit 1 if any failed); the CI `Run test shard` loop continues after a failing project and summarizes all failures. Default fail-fast behavior preserved, but the authoritative migration manifest requires this entry to remain open.
+status: open
+
+### DW-4: Add inspectable local test output and property forwarding
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-1-baseline-and-release-blocker-stabilization.md"), 2026-09-06
+location: scripts/test.ps1
+source_spec: `_bmad-output/implementation-artifacts/spec-8-1-baseline-and-release-blocker-stabilization.md`
+reason: CI writes TRX/coverage artifacts and some local blockers require properties such as `UseHexalithProjectReferences=true`, but the local lane runner currently exposes neither a results-directory/logger option nor a safe property-forwarding interface. The legacy ledger recorded status resolved and resolution Story 8-11 (sprint-change-proposal-2026-07-07-validation-ladder-runner.md). `scripts/test.ps1 -ResultsDirectory <path>` emits a per-project TRX (local CI parity) and `-Properties <k=v>,<k=v>` forwards each value as `-p:<value>` to `dotnet test`, but the authoritative migration manifest requires this entry to remain open.
+status: open
+
+### DW-5: Define a safe consent and channel identifier contract
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-2-identifier-correctness-and-zero-risk-hygiene.md"), 2026-09-06
+location: RecordConsent and RevokeConsent command contracts
+source_spec: `_bmad-output/implementation-artifacts/spec-8-2-identifier-correctness-and-zero-risk-hygiene.md`
+reason: `RecordConsent` and `RevokeConsent` currently accept `ChannelId`/`ConsentId` values that can contain legacy `channel:purpose` separators, so applying the new `PartyIdentifier` semantic-ID helper would break existing consent IDs while leaving aggregate not-found messages able to echo raw consent/channel identifiers.
+status: open
+
+### DW-6: Correct and validate the advanced Hexalith.Builds checkout
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md"), 2026-09-06
+location: references/Hexalith.Builds
+source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
+reason: Checkout `63d3221` supplied `v1.16.3` as a NuGet version and caused Actions runs `29467970597` and `29468665570` to fail during restore. Builds `v4.18.11` corrected the value to `1.16.3`; commit `6516faf` adds the evaluated central-version release guard and fixtures. Builds `v4.19.0` retains both changes and adds the MTP-compatible shared test contract exposed by follow-up run `29482004796`; the Parties gitlink/signoff adopt that release. The legacy ledger recorded status resolved and resolution `_bmad-output/implementation-artifacts/spec-gh-29467970597-fix-invalid-builds-package-version.md`; Hexalith.Builds `640b59c1434e4e1e079771c401e11048772c7a27` (`v4.19.0`), but the authoritative migration manifest requires this entry to remain open.
+status: open
+
+### DW-7: Test persisted LRU eviction after restore
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md"), 2026-09-06
+location: references/Hexalith.Memories persisted-LRU tests
+source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
+reason: Incidental review found the new workflow recency field is tested across serialization and eviction separately, but not after serialize/restore at the 256-entry limit; a restored actor could evict a recently refreshed workflow and reapply a delayed transition.
+status: open
+
+### DW-8: Test intermediate Memories state migration
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md"), 2026-09-06
+location: references/Hexalith.Memories migration tests
+source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
+reason: Incidental review found no test for persisted state containing `AppliedTransitionSequences` while lacking the newer `AppliedTransitionWorkflowOrder`, leaving the immediate predecessor format's eviction queue reconstruction unverified.
+status: open
+
+### DW-9: Deliver granular EventStore.Client registration and coexistence proof
+
+origin: migrated from legacy ledger (flat source_spec "none"), 2026-09-06
+location: EventStore.Client registration across Parties and FrontComposer
+source_spec: none
+reason: This independently shippable EventStore.Client package change was split from the G8 owner-proof action so the EventStore.Aspire JWT prerequisite can be completed first.
+status: open
+
+### DW-10: Deliver integrated AppHost topology parity proof
+
+origin: migrated from legacy ledger (flat source_spec "none"), 2026-09-06
+location: FrontComposer.AppHost or approved platform AppHost
+source_spec: none
+reason: This independently shippable platform-host change was split from the G8 owner-proof action because it depends on the EventStore Aspire and client-registration surfaces being proven first.
+status: open
+
+### DW-11: Deliver the external runtime deployment handoff
+
+origin: migrated from legacy ledger (flat source_spec "none"), 2026-09-06
+location: external platform-operations owner repository
+source_spec: none
+reason: This independently governed operational handoff was split from the G8 owner-proof action because it requires platform-owner coordination after local run and publish parity are established. Also recorded in "Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18": deferral_id: `external-runtime-deployment` authored_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md` status: accepted owner: `External platform-operations and deployment owners` exit_proof: `Consume immutable Parties image tags and provide environment-specific DAPR components, subscriptions, resiliency, deny-default access control, ingress, secrets, registry credentials, signing/scanning, and promotion evidence in the owner repository; prove rollback to the prior immutable image set.` rollback: `This repository keeps workload source, CI, immutable image publication, and the local Parties AppHost migration rollback topology. Runtime rollback remains an external orchestrator operation that redeploys the prior immutable image set and platform configuration.` evidence: `docs/deployment-guide.md and the Epic 8 architecture spine assign runtime deployment outside this repository; Story 8.13 retired the historical in-repo deploy assets, which must not be restored.`
+status: open
+
+### DW-12: Enforce multi-audience JWT validation at runtime
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md"), 2026-09-06
+location: EventStore.Aspire and consuming host authentication
+source_spec: `_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md`
+reason: This was split because the reusable EventStore.Aspire composition surface can ship independently before each host authentication configurator adopts ordered valid audiences.
+status: open
+
+### DW-13: Harden EventStore AppHost publish and credential scanning
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md"), 2026-09-06
+location: EventStore owner AppHost publish output
+source_spec: `_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md`
+reason: This was split because owner-AppHost adoption and publish-output validation are independently shippable after the reusable JWT composition API exists.
+status: open
+
+### DW-14: Validate G8-A delivery receipt integrity
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md"), 2026-09-06
+location: G8-A owner-delivery receipt and Parties fitness tests
+source_spec: `_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md`
+reason: The review confirmed that current Parties fitness tests parse only the marked matrix table and do not bind the supplemental receipt SHA, claimed four-file inventory, or focused EventStore test lane to the referenced Git objects.
+status: open
+
+### DW-15: Bind the operational-index ACL route, verb, policy, and action
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-align-assistant-commit-message-generation.md"), 2026-09-06
+location: /admin/operational-index-metadata DAPR ACL
+source_spec: `_bmad-output/implementation-artifacts/spec-align-assistant-commit-message-generation.md`
+reason: Incidental review of concurrent ACL edits found that independent string assertions can pass when `/admin/operational-index-metadata` is placed under the wrong app policy, verb, or action.
+status: open
+
+### DW-16: Reconcile BMAD branching guidance with default-main policy
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-align-assistant-commit-message-generation.md"), 2026-09-06
+location: persistent BMAD project context and Hexalith Git guidance
+source_spec: `_bmad-output/implementation-artifacts/spec-align-assistant-commit-message-generation.md`
+reason: The pre-existing project context still requires a typed branch and PR, while the authoritative Hexalith Git instructions say to work on `main` by default and branch only when genuinely required.
+status: open
+
+### DW-17: Pin the Node and npm runtime in release workflows
+
+origin: migrated from legacy ledger (flat source_spec "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-fix-memories-npm-vulnerabilities.md"), 2026-09-06
+location: .github/workflows CI and release Node setup
+source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-fix-memories-npm-vulnerabilities.md`
+reason: CI and release workflows use floating `lts/*`; changing this is pre-existing policy and the approved spec explicitly requires approval for Node engine policy changes.
+status: open
+
+### DW-18: Fail semantic-release closed to the local binary
+
+origin: migrated from legacy ledger (flat source_spec "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-fix-memories-npm-vulnerabilities.md"), 2026-09-06
+location: semantic-release workflow
+source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-fix-memories-npm-vulnerabilities.md`
+reason: `npx semantic-release` predates this change and may fetch if local tooling is absent; resolving it requires a separate release-workflow policy decision.
+status: open
+
+### DW-19: Hoist multi-token search candidate normalization
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-gh-30708560778-fix-ci-failures.md"), 2026-09-06
+location: EvaluateEntry multi-token search hot path
+source_spec: `_bmad-output/implementation-artifacts/spec-gh-30708560778-fix-ci-failures.md`
+reason: `EvaluateEntry` rebuilds the query-only full phrase and candidate collection for every party, creating O(entries) allocations in the 10K hot path despite the current performance gate passing.
+status: open
+
+### DW-20: Normalize full-phrase multi-token relevance coverage
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-gh-30708560778-fix-ci-failures.md"), 2026-09-06
+location: multi-token relevance scoring
+source_spec: `_bmad-output/implementation-artifacts/spec-gh-30708560778-fix-ci-failures.md`
+reason: A deterministic full-phrase match is added alongside real query tokens, so coverage can exceed one before the final score is clamped and can inflate ordering relative to token-only matches.
+status: open
+
+### DW-21: Make Party SDK erasure writes atomic
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03)"), 2026-09-06
+location: PartySdkReadModelEraser.EraseAsync
+reason: Three independent `UpdateAsync` calls in `PartySdkReadModelEraser.EraseAsync` can leave detail/processing/index mutually inconsistent on mid-flight failure — no multi-key transactional write seam in the approved `ReadModelWritePolicy` API.
+status: open
+
+### DW-22: Define idempotent ErasedAt semantics for retries
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03)"), 2026-09-06
+location: PartySdkReadModelEraser.ApplyErasure
+reason: Optimistic concurrency retries re-run `ApplyErasure` and refresh `ErasedAt` — `ApplyErasure` always stamps `UtcNow`; short-circuiting on `IsErased` needs a deliberate idempotency contract change.
+status: open
+
+### DW-23: Define erasure freshness metadata semantics
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03)"), 2026-09-06
+location: PartySdkReadModelEraser detail and index freshness metadata
+reason: Erasure copies through pre-erasure `ProjectedAt`/`ProjectionVersion` on detail/index — stamping erasure-time freshness is entangled with the open AC7 freshness-mapping gap; index timestamps also cover unrelated remaining parties.
+status: open
+
+### DW-24: Bound missing-CaseId warning deduplication
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 2)"), 2026-09-06
+location: s_caseIdMissingWarned
+reason: `s_caseIdMissingWarned` is an unbounded static ConcurrentDictionary (one entry per tenant/party for process lifetime) — mirrors retired orchestrator pattern.
+status: open
+
+### DW-25: Document Party index ProjectionVersion semantics
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 2)"), 2026-09-06
+location: Party index projection fold and ProjectionVersion
+reason: Index `ProjectionVersion` scheme (`global:N` / `{id}:{seq}` / keep-current) lacks Fold/class remarks for freshness/query consumers.
+status: open
+
+### DW-26: Define stable Article 30 operation categories
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 2)"), 2026-09-06
+location: GetOperationCategory
+reason: `GetOperationCategory` default arm returns a short event-type name rather than a stable category vocabulary — Art.30 taxonomy design choice.
+status: open
+
+### DW-27: Report invalid PageSize separately from InvalidCursor
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 3)"), 2026-09-06
+location: Paging.PageSize validation
+reason: Out-of-range `PageSize` under `Paging` rejected as `InvalidCursor` even with no cursor — debugging misdirection only.
+status: open
+
+### DW-28: Harden query compatibility shim lifecycle and state handling
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 3)"), 2026-09-06
+location: Party SDK query compatibility shims
+reason: Non-durable unbounded in-process last-known cache; no `ApplicationStopping` link; Actor-named constant bags; missing-detail vs empty-processing asymmetry — intentional shim/architecture trade-offs from the first Group 3 pass.
+status: open
+
+### DW-29: Preserve the cursor codec failure reason
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 3)"), 2026-09-06
+location: PartySdkQueryService.LogCursorRejected
+reason: The cursor codec `failureReason` was discarded before rejection logging.
+status: done 2026-08-03
+resolution: Resolved by `LogCursorRejected` in `PartySdkQueryService`.
+
+### DW-30: Add authenticated projected-query end-to-end proof
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 4)"), 2026-09-06
+location: host AddEventStoreDomainService registration and EventStoreGatewayE2ETests
+reason: Host `AddEventStoreDomainService(... PartyDetailProjectionHandler.Assembly)` remains source-text-only — closing properly needs reinstating the retired tenant seeder for authenticated query e2e. Also recorded in "Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)": Host wiring (`builder.AddEventStoreDomainService(typeof(PartyAggregate).Assembly, typeof(PartyDetailProjectionHandler).Assembly)`) is verified only as literal source text by `ArchitecturalFitnessTests`/`PlatformApiPrerequisitesTests`/ `RetiredLeafProjectFitnessTests`; no test queries a projected read model after an authenticated end-to-end command. Closing this needs `EventStoreGatewayE2ETests`, but its `PartiesAspireTopologyFixture.RequireSeededTenants()` unconditionally throws since Story 12.2 retired `TenantIntegrationTestSeeder` — reinstating that seeder is real work out of scope for a review-patch pass.
+status: open
+
+### DW-31: Add runtime DAPR ACL enforcement proof
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 4)"), 2026-09-06
+location: DAPR ACL allow-list
+reason: ACL allow-list has no runtime Dapr enforcement check beyond YAML fitness — same topology e2e class as the assembly-scan defer.
+status: open
+
+### DW-32: Clean up query shim and configuration naming
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 4)"), 2026-09-06
+location: Party query shims, EventStore:Projections configuration, and build documentation
+reason: Minor/cosmetic: query shim classes keep "Actor" names; `EventStore:Projections` config-key reuse; undocumented `Dapr.Actors.AspNetCore` / MSBuild property rename — intentional temporary trade-offs from the first Group 4 pass.
+status: open
+
+### DW-33: Clean up Group 5 DI, health, naming, and status-key polish
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 5)"), 2026-09-06
+location: Group 5 DI, health, query naming, and MessageId status handling
+reason: Prior Group 5 cosmetic defer remains open (stringly DI absence checks; health "all components" naming; partial Ada→Synthetic rename; undocumented MessageId status-key change).
+status: open
+
+### DW-34: Strengthen cursor, payload, and hosted-service test fidelity
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 5)"), 2026-09-06
+location: query and host test fixtures
+reason: `TestCursorCodec` private double instead of production DI codec; collapsed index invalid-payload theory; six indistinguishable `<factory-registered>` hosted-service exclusions — intentional test-isolation / factory-registration limits from the first Group 5 pass.
+status: open
+
+### DW-35: Define whole-payload json-redacted event handling
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04)"), 2026-09-06
+location: whole-payload json-redacted event handling
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: Whole-payload `json-redacted` events still depend on a resolvable CLR type and can apply a default-valued event produced from `{}`. The same behavior existed in the retired actor path, and the current field-level protection service does not normally produce a root encrypted marker; correcting it belongs to the broader payload-redaction contract rather than this migration patch chunk. Also recorded in "Deferred from: bmad-build Story 8.6 review (2026-08-16)": A parameterless event can deserialize from an empty redacted payload into a valid `IEventPayload` and be applied as a real domain fact, while whole-payload redaction is otherwise intended to skip application and advance only the checkpoint.
+status: open
+
+### DW-36: Align reconciliation LastIndexedEvent with the canonical fold
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: PartyIndexSdkProjectionHandler.BuildReconciliationFold
+reason: `PartyIndexSdkProjectionHandler.BuildReconciliationFold` recomputes `LastIndexedEvent` via a separate code path from the canonical `FoldCore`, used only on the already-confirmed idempotent-no-op/reconciliation branch — could pick a different "last event" for search-reconciliation notification metadata on a multi-event no-op batch, but doesn't affect canonical read-model correctness. Needs a dedicated multi-event test to pin the intended behavior.
+status: open
+
+### DW-37: Test blocked Memories cleanup without a CaseId
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: PartyMemoryCleanupService
+reason: `PartyMemoryCleanupService`'s new "no persisted CaseId and no fallback configured" blocked branch has zero test coverage.
+status: open
+
+### DW-38: Harden rebuild completion against null manifest collections
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: PartyIndexSdkProjectionHandler.CompleteRebuildAsync
+reason: `PartyIndexSdkProjectionHandler.CompleteRebuildAsync` would throw `NullReferenceException` (not a controlled result) if a persisted rebuild-completion manifest ever deserializes with null `Entries`/`RemovedPartyIds`. Not reachable under the current producer (`FinalizeAsync` always serializes non-null arrays); hardening-only.
+status: open
+
+### DW-39: Refresh the G5 matrix validation-evidence identity
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible and Story 8.3 G5 matrix row
+reason: `PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible` is RED: it hard-pins the Story 8.3 matrix's "Payload protection engine package" (G5) row to EventStore `v3.89.0`/`7854f8e5`, but the working tree is now at `v3.91.0`/`1d6e9321` (this story's resolved EventStore identity). Pre-existing to this review session, not caused by its patches. Out of Story 8.6 scope — G5 payload-protection is Story 8.7's territory and needs its own owner-reviewed identity-authorization update, not a Story 8.6 patch.
+status: open
+
+### DW-40: Pin the reusable commitlint workflow revision
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: .github/workflows/commitlint.yml
+source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-8-6-projection-and-query-sdk-migration.md`
+reason: Incidental review found `.github/workflows/commitlint.yml` consumes `Hexalith/Hexalith.Builds/.github/workflows/commitlint.yml@main`, allowing unrelated upstream changes to alter validation without a reviewed Parties change.
+status: open
+
+### DW-41: Verify all release package and container artifacts
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: .github/workflows/release.yml
+source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-8-6-projection-and-query-sdk-migration.md`
+reason: Incidental review found `.github/workflows/release.yml` treats a non-draft GitHub Release at the dispatched commit as sufficient proof, without verifying the complete NuGet and container artifact set.
+status: open
+
+### DW-42: Pin Story 8.7 G5 validation evidence to an exact commit
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: _bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md
+source_spec: `_bmad-output/implementation-artifacts/spec-scp-2026-08-04-story-8-6-g5-receipt-recovery.md`
+reason: Blind-hunter review of the 2026-08-04 SCP recovery found the G5 row's `git ls-tree HEAD references/Hexalith.EventStore` / `references/Hexalith.Builds` commands resolve against whatever the working tree currently points to, unlike the sibling projection/query SDK and DataProtection rows in the same matrix, which pin to an exact Parties commit (`03ab938c637aa15f7a0af402afc8664dfc54d1a4`) for reproducibility. This pattern pre-dates the 2026-08-04 identity refresh; the refresh preserved rather than introduced it.
+status: open
+
+### DW-43: Restore dropped G8 and cross-story guidance in Epic 8 context
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: _bmad-output/planning-artifacts/epic-8-context.md
+source_spec: `_bmad-output/implementation-artifacts/spec-scp-2026-08-04-story-8-6-g5-receipt-recovery.md`
+reason: Blind-hunter review found the working-tree regeneration of `epic-8-context.md` (predating this SCP recovery; only its line endings were normalized here) silently dropped the G8 local-run/publish JWT, audience-relationship, HTTPS-metadata, and secret-free-manifest proof requirements, and the sentence tying `AddEventStoreDataProtection`/`DaprXmlRepository`/cursor-codec consumption to the DataProtection prerequisite identity. It also compressed the explicit list of what stays externally owned for Stories 8.12/8.13 (production manifests, DAPR components, ingress, secrets, scans, signatures, promotion gates) into one generic sentence. A future Story 8.8/8.9/8.10 session loading only the cached epic context would miss this guidance.
+status: open
+
+### DW-44: Prevent rebuild finalization from overwriting concurrent live projection writes
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: PartyIndexSdkProjectionHandler.FinalizeAsync
+source_spec: `_bmad-output/implementation-artifacts/spec-scp-2026-08-04-story-8-6-g5-receipt-recovery.md`
+reason: Blind-hunter review found the defect (blind `ReadModelBatchConcurrency.LastWrite` can drop a canonical entry added mid-rebuild) exists both as a still-unchecked `[ ]` Group 2 task and, separately, inside a `[x]`-checked "Fixed 2026-08-04 (partial)" bullet in `8-6-projection-and-query-sdk-migration.md` that itself states the underlying issue is "left open — not addressed by this patch." The two are never cross-referenced, and the defect was never logged here, so it is invisible to anyone scanning only this ledger. Also recorded in "Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)": The 2026-08-05 human-directed session restored operator diagnostic logging and fold-level tests, deferred the remaining findings, and recorded that this item fulfills the earlier tracker-reconciliation action. `PrepareRebuildAsync`/`FinalizeAsync` write with `ReadModelBatchConcurrency.LastWrite` (no ETag check) [`PartyDetailSdkProjectionHandler.cs:99,103`, `PartyIndexSdkProjectionHandler.cs:102`] — a rebuild finalize can silently overwrite a newer concurrent live `ProjectAsync` write with no conflict detection. Investigated 2026-08-05: switching to `Match(etag)` unilaterally is unsafe without knowing the EventStore SDK rebuild-plan executor's retry/abort contract on a write conflict — that contract lives in `Hexalith.EventStore.DomainService`'s rebuild orchestration, outside this repo's `IAsyncDomainProjectionRebuildHandler` / `IAsyncDomainSharedProjectionRebuildCompletionHandler` surface. Needs SDK-owner input, not a unilateral Parties-side change. Resolved 2026-08-16: EventStore v3.95 now provides the required bounded conflict contract. Parties rebuild plans use `Match(etag)` for existing rows and `CreateOnly` for absent rows; focused plan-policy tests pass for detail, processing, and index.
+status: open
+
+### DW-45: Document and attribute the sprint-plan --fresh rebuild fix
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: .agents/skills/bmad-sprint-planning/scripts/sprint_plan.py
+source_spec: `_bmad-output/implementation-artifacts/spec-scp-2026-08-04-story-8-6-g5-receipt-recovery.md`
+reason: Blind-hunter review found this fix and its new test assertions are a distinct bug from the previously-documented STORY_RANK/`_slug()` regeneration incident, but no file in the current diff explains or attributes it, leaving a future reader unable to tell why `sprint_plan.py` changed.
+status: open
+
+### DW-46: Align PartySdkProjectionFold logging with house style
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: PartySdkProjectionFold.Log and Hexalith.Parties.Projections.csproj
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: 2026-08-05 review-layer finding — the `Log` class's comment claims `[LoggerMessage]` can't be used because `Hexalith.Parties.Projections.csproj` lacks a direct `Microsoft.Extensions.Logging.Abstractions` package reference, but `Hexalith.Parties.Security.csproj` is in the identical situation and successfully uses `[LoggerMessage]` throughout (`PartyKeyLifecycleService.cs`, `DecryptionCircuitBreaker.cs`, `PartyErasureOrchestrator.cs`) via a package reference with `ExcludeAssets="all"`. Adopting the same fix (or correcting the comment if a real difference is found) needs a deliberate, verified change to build configuration, not a same-pass patch.
+status: open
+
+### DW-47: Give projection-fold drop diagnostics stable logger categories
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: PartySdkProjectionFold and PartyProcessingActivityFold diagnostics
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: 2026-08-05 review-layer finding — drops detected inside the shared static helpers `PartySdkProjectionFold`/`PartyProcessingActivityFold` are logged under `PartyDetailSdkProjectionHandler`'s or `PartyIndexSdkProjectionHandler`'s log category depending purely on which handler called in. An operator filtering by the actual source class gets nothing, and the same drop reason can appear under two different categories. Fixing this cleanly needs a design decision (e.g., a dedicated logger category or `ILoggerFactory` seam), not a quick patch.
+status: open
+
+### DW-48: Bound dropped-event diagnostic volume during full rebuilds
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: PartyIndexSdkProjectionHandler.AccumulateAsync
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: 2026-08-05 review-layer finding — `PartyIndexSdkProjectionHandler.AccumulateAsync` (the full-rebuild path) now re-emits a log line for every historically-known-bad event on every rebuild run, with no batching, sampling, or dedup — a real log-flooding risk on a large event store. Needs a product/ops decision on acceptable rebuild-time log volume, not a same-pass patch.
+status: open
+
+### DW-49: Handle converter format and overflow failures during event deserialization
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
+location: PartySdkProjectionFold.DeserializeNew
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: 2026-08-05 review-layer finding, pre-existing (not caused by this session's patch): the catch filter only covers `JsonException`/`ArgumentNullException`/`NotSupportedException`/`InvalidOperationException`; a `FormatException` or `OverflowException` thrown by a custom converter propagates unhandled and crashes the whole dispatch instead of being skip-logged.
+status: open
+
+### DW-50: Bound and page the per-party Article 30 processing-activity read model
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
+location: PartyProcessingActivityFold and PartyProcessingSdkReadModel.Records
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `PartyProcessingSdkReadModel.Records` grows unbounded — one ever-growing JSON blob per party, re-serialized on every processing-activity projection write. A real scalability concern but needs a pagination/archival design, not a quick patch. Also recorded in "Deferred from: bmad-build Story 8.6 review (2026-08-16)": `PartyProcessingActivityFold` retains one ever-growing list and performs a linear `FindIndex` for every event, producing unbounded state values and quadratic rebuild work.
+status: open
+
+### DW-51: Resolve projection-handler performance and validation-coupling debt
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
+location: PartyDetailSdkProjectionHandler and PartyIndexSdkProjectionHandler
+reason: Minor/cosmetic, `PartyDetailSdkProjectionHandler`/`PartyIndexSdkProjectionHandler` family: sequential (not parallel) `GetAsync` calls doubling state-store round-trip latency on the busiest projection path; duplicated `StoreName` null-check across classes; `PartyErased.LastModifiedAt` immediately overwritten by `NormalizeEventTimestamps` (harmless while both timestamps match, would silently diverge otherwise); `PartyIndexSdkProjectionHandler.Validate` reusing `PartySdkReadModelAddresses.Detail(...)` purely for its validation side effect, coupling Index validation to Detail's address-shape rules.
+status: open
+
+### DW-52: Clean up rollback-shim naming, configuration, and test debt
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
+location: rollback query shims, configuration, DI tests, and health tests
+reason: Minor/cosmetic, rollback-shim naming and test quality: `PartyDetailProjectionQueryActor` / `PartyIndexProjectionQueryActor` keep the "Actor" name with zero actor behavior (intentional temporary rollback shims); `PartySdkReadModelOptions.ConfigurationSection` reuses the retired `Hexalith.EventStore.Server.Configuration.ProjectionOptions`'s `"EventStore:Projections"` config key; the new `Dapr.Actors.AspNetCore` package reference and `$(HexalithCommonsHttpFromSource)` MSBuild property rename are undocumented but verified correct; the DI test `AddParties_UsesSdkReadModelsAndCursorCodecWithoutLocalProjectionMechanics` asserts absence via a brittle `descriptor.ServiceType.FullName` string match rather than a type reference; `HealthEndpoint_AllComponentsHealthy_Returns200WithoutRetiredProjectionActorCheckAsync` keeps an "all components healthy" framing that now excludes SDK read models from what "all" verifies; the PII seed rename (`"Ada"/"Lovelace"` → `"SyntheticPrivateFirstName8472"/"SyntheticPrivateLastName6391"`) landed in only 2 of dozens of usages across `EventStoreGatewayRoutingTests.cs`, with 7 other test files still using `"Ada"/"Lovelace"`; `DirectPartiesCommandRouter`'s test double now keys its completion write on `command.MessageId` instead of `command.CorrelationId`, correctly mirroring production `SubmitCommandHandler.cs` behavior but undocumented in the diff.
+status: open
+
+### DW-53: Correct the Epic 7 rollback-retention approval chronology
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
+location: _bmad-output/implementation-artifacts/sprint-status.yaml
+reason: Cosmetic: the Epic 7 rollback-retention action item is closed `done` citing an authorization SCP "approved 2026-08-02" for an action the same annotation dates to 2026-08-01 (approval postdating the act it authorizes by a day); resolves naturally when `sprint-status.yaml` is next synced.
+status: open
+
+### DW-54: Refresh etags before retrying incomplete erasure batches
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
+location: PartySdkReadModelEraser.ExecuteWithResumeAsync
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: PartySdkReadModelEraser.ExecuteWithResumeAsync re-executes the original batch on Incomplete without refreshing etags; a partial apply can loop into sdk-read-model-cleanup-conflict.
+status: open
+
+### DW-55: Test Memories erasure cleanup with disabled indexing and durable mappings
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
+location: ProjectionPlatformAdapterTests and Memories cleanup composition
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: ProjectionPlatformAdapterTests invoke memories-search cleanup with Enabled=false and no seeded mappings, so Cleaned can pass without exercising DELETE/clearance.
+status: open
+
+### DW-56: Replace actor-era query failure vocabulary on the SDK path
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
+location: PartySdkQueryService failure vocabulary
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: PartySdkQueryService still returns actor-era failure reasons on the SDK path, which misleads operators after AC8 actor deletion.
+status: open
+
+### DW-57: Move PartyEventTypeResolver out of the retired Actors folder
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
+location: Projections/Actors/PartyEventTypeResolver
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: The resolver remains under Actors/ after projection actors were deleted, obscuring ownership.
+status: open
+
+### DW-58: Provide Dapr-actor to SDK read-model key backfill
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
+location: Dapr-actor to SDK read-model deployment migration
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: Story File List deletes actor projection paths without an AppHost/deploy cutover that migrates existing actor state into SDK keys.
+status: open
+
+### DW-59: Preserve mappings when unit ID and source URI match different rows
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
+location: PartyMemoryUnitMappingStore
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: Edge-case review found a second live mapping row can be dropped when two entries match the new unit id and source uri separately.
+status: open
+
+### DW-60: Restore bounded allowlisted party IDs on SDK detail queries
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
+location: Party SDK query detail-envelope validation
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: TryValidateDetailEnvelope only rejects reserved chars after TenantSafeProjectionReadGuardrailsTests were deleted; oversized/malformed party ids are weakly gated.
+status: open
+
+### DW-61: Update the Story 7.4 projection compatibility E2E spec
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: tests/e2e/specs/story-7-4-projection-platform-compatibility.spec.ts
+reason: This came from the DI and query-host sub-chunk comparing PartiesServiceCollectionExtensions.cs with 2c4a7af. `tests/e2e/specs/story-7-4-projection-platform-compatibility.spec.ts` still expects deleted projection-adapter registrations and old `ProjectionPlatformAdapterTests` method names — deferred, pre-existing e2e drift outside this DI chunk.
+status: open
+
+### DW-62: Use TimeProvider for erasure cleanup timestamps
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: erasure cleanup TimeProvider usage
+reason: Erasure cleanup timestamps still use `DateTimeOffset.UtcNow` instead of the newly registered `TimeProvider` — deferred, pre-existing certificate timestamp pattern across erasure store results.
+status: open
+
+### DW-63: Protect Memories mapping replacement and clearing with concurrency-safe retries
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: PartyMemoryUnitMappingStore.ClearMappingsAsync and ReplaceMappingsAsync
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `PartyMemoryUnitMappingStore.ReplaceMappingsAsync` and the empty-list delete can overwrite a concurrent indexing write after cleanup reads the prior mapping set. Also recorded in "Deferred from: bmad-build Story 8.6 review (2026-08-16)": `ClearMappingsAsync` and `ReplaceMappingsAsync` use unconditional delete/save operations, so concurrent indexing can lose a newly committed mapping and leave an undiscoverable Memories unit.
+status: open
+
+### DW-64: Persist partial Memories cleanup progress after caller cancellation
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: PartyMemoryCleanupService.DeleteByPartyAsync
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `PartyMemoryCleanupService.DeleteByPartyAsync` uses the already-cancelled caller token in its `finally` mapping update, so cancellation can prevent the promised resumable audit state from being saved.
+status: open
+
+### DW-65: Compensate after cancellation between Memories ingestion and mapping persistence
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: PartyMemoryIndexingService
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `PartyMemoryIndexingService` rethrows caller cancellation from `RecordMappingAsync` without deleting the already-created Memories unit, leaving an untracked unit outside erasure discovery. Also recorded in "Deferred from: bmad-build Story 8.6 review (2026-08-16)": `PartyMemoryIndexingService` propagates caller cancellation from the mapping write without deleting the already-created unit, leaving it outside later erasure discovery.
+status: open
+
+### DW-66: Use ingestion-time identity for Memories compensating deletion
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: PartyMemoryIndexingService.TryCompensatingDeleteAsync
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `TryCompensatingDeleteAsync` gates cleanup on the current options snapshot even though configuration can change after ingestion and the unit retains its authoritative CaseId.
+status: open
+
+### DW-67: Resolve consumer validation artifacts from central package versions
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: scripts/validate-consumer-package-references.py
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `scripts/validate-consumer-package-references.py` hard-codes obsolete FrontComposer and Tenants versions instead of the currently evaluated dependency set.
+status: open
+
+### DW-68: Contain consumer-validation package caches in the disposable workspace
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: scripts/validate-consumer-package-references.py
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `scripts/validate-consumer-package-references.py` places `NUGET_PACKAGES` under the work directory's parent, so cleanup leaves packages that can mask missing-feed failures in later runs.
+status: open
+
+### DW-69: Restrict consumer validation to configured NuGet sources
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: scripts/validate-consumer-package-references.py
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: The generated NuGet configuration lacks `<clear/>`, and the CLI always retains nuget.org, allowing undeclared user or machine feeds to hide incomplete local package output.
+status: open
+
+### DW-70: Compare forbidden NuGet package IDs case-insensitively
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: scripts/validate-nuget-packages.py
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `scripts/validate-nuget-packages.py` performs case-sensitive package-ID checks even though NuGet identifiers are case-insensitive.
+status: open
+
+### DW-71: Pin reusable CI and CodeQL workflows to immutable revisions
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: .github/workflows/ci.yml and .github/workflows/codeql.yml
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `.github/workflows/ci.yml` and `.github/workflows/codeql.yml` invoke reusable workflows through mutable `@main` references.
+status: open
+
+### DW-72: Publish Aspire-hosted services with Production defaults
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: src/Hexalith.Parties.AppHost/Program.cs
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `src/Hexalith.Parties.AppHost/Program.cs` emits `ASPNETCORE_ENVIRONMENT` and `DOTNET_ENVIRONMENT` as `Development` for publish output.
+status: open
+
+### DW-73: Fail publish preflight when the OIDC client secret is missing
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: src/Hexalith.Parties.AppHost/Program.cs
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `src/Hexalith.Parties.AppHost/Program.cs` substitutes an empty client secret and continues producing deployment artifacts that cannot authenticate.
+status: open
+
+### DW-74: Reject duplicate keys in merged BMAD configuration arrays
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: _bmad/scripts/config_utils.py
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `_bmad/scripts/config_utils.py` can retain repeated base codes or ids, leaving ambiguous effective configuration after overrides.
+status: open
+
+### DW-75: Tolerate deleted historical tags during release verification
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: .github/workflows/release.yml
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `.github/workflows/release.yml` can report a successful current publication as failed when an older release references a tag that no longer exists.
+status: open
+
+### DW-76: Restore the Playwright accessibility lane as a required CI gate
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: .github/workflows, scripts/test.ps1, and tests/e2e/package.json
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: The replacement CI workflow no longer runs `npm run test:a11y`, leaving axe, keyboard-focus, forced-colors, computed-style, and visual checks unexecuted. Also recorded in "Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-08-19)": The Playwright accessibility lane is wired into no workflow. `.github/workflows/` contains no Playwright or `test:a11y` step, `scripts/test.ps1` invokes no npm lane, and `tests/e2e/package.json`'s `test:a11y` script is called by nothing. Spine §7 I12 already records the always-on CI a11y lane as a separate open ledger item.
+status: open
+
+### DW-77: Exercise mTLS across every configured Dapr sidecar
+
+origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
+location: configured Dapr sidecar topology tests
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: Current tests inspect generated YAML and one synthetic sidecar but never start the mTLS topology or prove a cross-service invocation with all sidecars credentialed.
+status: open
+
+### DW-78: Align PartyErased timestamp resolution across projection folds
+
+origin: migrated from legacy ledger ("Deferred from: code review of spec-8-6-projection-and-query-sdk-migration.md (2026-08-16)"), 2026-09-06
+location: PartyProcessingActivityFold.Fold and PartyDetailProjectionHandler.ApplyErasure
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `PartyDetailProjectionHandler.ApplyErasure` assigns `ErasedAt = erased.ErasedAt` while `PartyProcessingActivityFold.Fold` assigns `@event.Timestamp.ToUniversalTime()`.
+status: open
+
+### DW-79: Parallelize state-store reads in PartyDetailSdkProjectionHandler.PrepareRebuildAsync
+
+origin: migrated from legacy ledger ("Deferred from: code review of spec-8-6-projection-and-query-sdk-migration.md (2026-08-16)"), 2026-09-06
+location: PartyDetailSdkProjectionHandler.PrepareRebuildAsync
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `PrepareRebuildAsync` awaits `readModelStore.GetAsync<PartyDetailSdkReadModel>` and `GetAsync<PartyProcessingSdkReadModel>` sequentially rather than concurrently with `Task.WhenAll`.
+status: open
+
+### DW-80: Make Memories rebuild reconciliation atomic with concurrent erase and re-add
+
+origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review (2026-08-16)"), 2026-09-06
+location: PartyIndexSdkProjectionHandler.CompleteRebuildAsync
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `PartyIndexSdkProjectionHandler.CompleteRebuildAsync` reads canonical index state once before external notifications, so a later live erase or re-add can race a stale `NotifyIndexedAsync` or `NotifyRemovedAsync` call.
+status: open
+
+### DW-81: Move the Memories mapping ledger behind EventStore persistence
+
+origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review (2026-08-16)"), 2026-09-06
+location: PartyMemoryUnitMappingStore
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `PartyMemoryUnitMappingStore` persists operational state directly through `DaprClient`, outside the EventStore read-model and write-policy abstractions required for domain-module persistence.
+status: open
+
+### DW-82: Verify empty Memories mappings against an authoritative inventory
+
+origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review (2026-08-16)"), 2026-09-06
+location: PartyMemoryCleanupService.DeleteByPartyAsync
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `PartyMemoryCleanupService.DeleteByPartyAsync` treats zero local mappings as cleaned even when state loss, legacy indexing, or configuration drift could leave remote units behind.
+status: open
+
+### DW-83: Persist recovery when mapping and compensating deletion both fail
+
+origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review (2026-08-16)"), 2026-09-06
+location: PartyMemoryIndexingService
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `PartyMemoryIndexingService` records a double failure only in logs, so later erasure has no durable way to discover the orphaned Memories unit.
+status: open
+
+### DW-84: Schedule retry or backfill when Memories indexing lacks a CaseId
+
+origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review (2026-08-16)"), 2026-09-06
+location: PartyMemoryIndexEntrySearchIndexer.NotifyIndexedAsync
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `PartyMemoryIndexEntrySearchIndexer.NotifyIndexedAsync` returns success when CaseId is absent, so fixing configuration alone does not cause the skipped party to be indexed.
+status: open
+
+### DW-85: Keep Memories cleanup health observable when indexing is disabled
+
+origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review (2026-08-16)"), 2026-09-06
+location: MemoriesSearchHealthCheck
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `MemoriesSearchHealthCheck` returns Healthy immediately when indexing is disabled although previously persisted mappings can still require remote deletion and mapping-store access.
+status: open
+
+### DW-86: Validate erasure certificates before certifying store cleanup
+
+origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review (2026-08-16)"), 2026-09-06
+location: ErasureVerificationService.VerifyErasureAsync
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: `ErasureVerificationService.VerifyErasureAsync` accepts an `ErasureCertificate` but never verifies it belongs to the requested tenant and party or represents a completed key-destruction state.
+status: open
+
+### DW-87: Handle null Party index dictionaries with bounded recovery
+
+origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review (2026-08-16)"), 2026-09-06
+location: PartyIndexSdkReadModel
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: A malformed persisted `PartyIndexSdkReadModel` with null dictionaries can reach dictionary operations and throw rather than producing a controlled rebuild-required or corruption result.
+status: open
+
+### DW-88: Bound Party search inputs before cursor and index evaluation
+
+origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review (2026-08-16)"), 2026-09-06
+location: Party search payload parsing and cursor-scope construction
+source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
+reason: Search payload parsing validates paging and type but imposes no length limits on strings copied into cursor scope and processed against tenant entries.
+status: open
+
+### DW-89: Verify EventStore-only deny ACL across all Dapr sidecars
+
+origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-08-19)"), 2026-09-06
+location: DocumentationFitnessTests and accesscontrol.*.yaml
+reason: This note was deliberately placed before the closure-deferral section because EpicEightClosureFitnessTests.ParseDeferrals slices from that heading through end of file. Only one of six `accesscontrol.*.yaml` components is verified. `DocumentationFitnessTests.MaintainedDocumentationDescribesSdkRoutesUnderEventStoreOnlyDenyAcl` parses `accesscontrol.parties.yaml` alone, while the documentation it pins generalizes over all sidecar policies. Broadening the assertion is outside the Story 8.10 Code Map.
+status: open
+
+### DW-90: Consolidate timeout-safe git and process test helpers
+
+origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-08-19)"), 2026-09-06
+location: EpicEightClosureFitnessTests, PlatformApiPrerequisitesTests, and DocumentationFitnessTests
+reason: Duplicated, timeout-free git/process helpers. `RunGit`/`TryRunGit` are defined in both `EpicEightClosureFitnessTests` and `PlatformApiPrerequisitesTests`, and `Read(root, relativePath)` a third time in `DocumentationFitnessTests`. `RunGit` drains stdout fully before stderr with no timeout; not a realistic deadlock at these output sizes, but the pattern should be consolidated.
+status: open
+
+### DW-91: Restore forward skip-link reachability after route focus
+
+origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-08-19)"), 2026-09-06
+location: FrontComposer shell route-focus handling and tests/e2e/specs/parties-accessibility.spec.ts
+reason: `frontcomposer-skip-link-reachability-after-route-focus` — **route to FrontComposer shell owners.** Measured 2026-08-19 on the accessibility specimen at FrontComposer `7a337a21`: once the shell hydrates it moves focus to the route `<h1>` (`h1#parties-accessibility-specimen-title`). That is a deliberate SPA announcement pattern, but it also advances the browser's sequential focus navigation point past both `.fc-skip-link` anchors, so the first `Tab` after load reaches the page's first interactive control rather than "Skip to content". A keyboard user would have to Shift+Tab backwards to reach a skip link after a client-side route change. On a cold document load the DOM order is correct — the skip links are the shell's first two focusable descendants, which `parties-accessibility.spec.ts` now asserts explicitly by seeding focus on `.fc-shell-root`. Question for the owners: should the shell reset the sequential focus navigation point (for example by focusing a container ahead of the skip links, or by focusing the skip link itself) so WCAG 2.4.1 bypass remains forward-reachable after route changes? Also recorded in "Deferred from: code review of story-8-10 (2026-09-06)": Skip links are no longer the real first-Tab keyboard stop after a client-side route change — already routed to FrontComposer shell owners as `frontcomposer-skip-link-reachability-after-route-focus` above; the review layer that raised this again confirmed no further action is needed beyond what that entry already tracks. [tests/e2e/specs/parties-accessibility.spec.ts:37-49]
+status: open
+
+### DW-92: Read the EventStore version from the Builds catalog
+
+origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-08-19)"), 2026-09-06
+location: PlatformApiPrerequisitesTests, docs/ci.md, and docs/architecture.md
+reason: EventStore's exact version is hardcoded in five or more places (`PlatformApiPrerequisitesTests`, `docs/ci.md`, `docs/architecture.md` §3) rather than read from the Builds catalog's `HexalithEventStoreVersion`. This is the drift the "CI identity regression — one stale live assertion expecting EventStore 3.90.0" receipt already recorded once. (Updated 2026-09-06: the cited value was `3.95.0` when this note was written 2026-08-19; the 2026-09-05 catalog adopt advanced all cited places to `3.102.0` together, so the specific hardcoded value drifts each time the catalog moves — the underlying "not read from the catalog" gap remains.)
+status: open
+
+### DW-93: Define authored_by_spec as non-activating deferral metadata
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Story 8.10 closure-deferral field vocabulary
+reason: Story 8.10 accepted these deferrals as waiting work while preserving the current implementation as rollback; its clarified vocabulary separates authoring a wait from activating work. `authored_by_spec` — the spec that wrote this entry down and accepted the wait. Carries no §4 obligation.
+status: open
+
+### DW-94: Define activated_by_spec as deferral-activation metadata
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Story 8.10 closure-deferral field vocabulary
+reason: `activated_by_spec` — the spec that started working the deferral. Triggers the full six-clause §4 gate in that spec, per I17.
+status: open
+
+### DW-95: Define delivered_slices as partial-delivery metadata
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Story 8.10 closure-deferral field vocabulary
+reason: `delivered_slices` — present only when part of a deferral has shipped. A delivered slice never advances the owning story's status.
+status: open
+
+### DW-96: Resolve or supersede Story 8.6 residual review debt
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Story 8.6 spec and runnable Parties/EventStore topology
+reason: deferral_id: `8.6-residual-review-debt` authored_by_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md` status: accepted owner: `Amelia (Parties Developer) + Murat (Test Architect) + Hexalith.EventStore SDK owners where producer/runtime proof is required` exit_proof: `Resolve or explicitly supersede every unchecked [Review][Defer] item in Story 8.6; in particular, exercise SDK handler discovery through an authenticated projected query and enforce the deny-default EventStore-only DAPR ACL in a runnable topology before removing retained host or ACL rollback seams.` rollback: `Keep the completed 8.6 SDK handlers and exact ACL as the production path, retain source/package selection plus the Parties AppHost and gateway topology as switch-back and diagnostic surfaces, and do not delete further host, query, projection, or ACL compatibility seams until the corresponding deferred proof passes.` evidence: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md and _bmad-output/implementation-artifacts/deferred-work.md record the unchecked review deferrals and their detailed evidence; sprint-status.yaml keeps 8.6 done because these are accepted non-blocking residual debts, not unimplemented acceptance tasks.`
+status: open
+
+### DW-97: Complete Story 8.7 data-protection extraction
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Hexalith.Parties.Security and the Story 8.3 payload-protection row
+reason: deferral_id: `8.7-data-protection-extraction` authored_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md` status: accepted owner: `Hexalith.EventStore payload-protection owners + Amelia (Parties Developer) + Murat (Test Architect)` exit_proof: `Deliver the G5 runtime engine and Story 8.11 closure packet at an exact approved package or root-gitlink identity; pass protected, redacted, legacy, typed-unreadable, no-leak, Art.20, Art.30, erasure certificate/report, and exercised switch-back parity before changing Story 8.7 from blocked.` rollback: `Keep Hexalith.Parties.Security, all 18 MOVE files, all 5 KEEP files, EventStorePartyPayloadProtectionAdapter, local DI selection, and the compatibility harness. If shared-provider adoption later regresses, switch back to the retained local provider and rerun the compatibility harness before forward restoration.` evidence: `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md — Payload protection engine package row; sprint-status.yaml keeps 8.7 blocked and the crypto-retention action open.`
+status: open
+
+### DW-98: Complete Story 8.8 runtime-boundary cleanup
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Parties runtime boundaries, AppHost, and Story 8.3 prerequisite matrix
+reason: deferral_id: `8.8-runtime-boundary-cleanup` authored_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md` status: accepted owner: `Hexalith.EventStore, Hexalith.Commons, Hexalith.FrontComposer, Builds, platform-AppHost owners + Amelia (Parties Developer) + Murat (Test Architect)` exit_proof: `Deliver and approve exact identities plus producer/consumer parity for G1/G2 degraded response and DAPR health, G6 envelopes/freshness, G7/G9 claims and identifiers, G8 security/typed-client/integrated topology, and G11 MCP/deep-link/capability helpers; exercise switch-back before deleting Parties-local paths or retiring the AppHost.` rollback: `Keep the Parties degraded middleware and health checks, Authentication project, typed clients, MCP context forwarding and five tools, AdminPortal links/probes, build selectors, and Parties AppHost. Revert each future adoption slice independently to these retained paths.` evidence: `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md — EventStore degraded response, client envelopes, tenant claims, Aspire publish helpers, MCP/deep-link/search, Commons HTTP, and Builds rows; sprint-status.yaml keeps 8.8 blocked.`
+status: open
+
+### DW-99: Complete Story 8.9 FrontComposer UI consolidation
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Parties UI RCLs and FrontComposer Contracts.UI/Shell
+reason: deferral_id: `8.9-frontcomposer-ui-consolidation` activated_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md` activation_authority: `_bmad-output/planning-artifacts/sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md` delivered_slices: `G4 work package F only (shell skip links and role="main"/role="navigation" landmarks), adopted 2026-08-18 at FrontComposer root gitlink 7a337a21d4ba261bf27aeb3feedde47789f0160a. Work packages A-E remain undelivered and Story 8.9 stays backlog. This slice's I13 parity is conditional on repairing the app-owned focus-visible and forced-colors regression it introduced in MainLayout.razor.css.` status: accepted owner: `Hexalith.FrontComposer Contracts.UI/Shell owners + Sally (UX Designer) + Amelia (Parties Developer) + Murat (Test Architect)` exit_proof: `Deliver the complete G4 primitive set at an exact approved FrontComposer identity and pass producer bUnit plus Parties bUnit/Playwright parity for picker semantics, freshness/live regions, safe downloads, typed-name confirmation, skip links, forced colors, reduced motion, focus, and GDPR copy before changing Story 8.9 from backlog.` rollback: `Keep the Parties picker, freshness/status regions, download helpers, typed erasure confirmation, optimistic reconciliation, portal components, and current Fluent 2 styling until each replacement slice proves parity; revert a failed slice independently. The delivered shell slice rolls back by restoring the Parties-owned skip links, #parties-main-content, and #parties-app-navigation from the parent of superproject commit 2b63ab9 and pinning FrontComposer back to 97f44c499e83a0ffbf054febd0aab384054ea39e; that revert reinstates the duplicate skip-link strict-locator ambiguity the slice resolved, so it must be paired with a Playwright rerun.` evidence: `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md — FrontComposer UI primitives row; sprint-status.yaml keeps 8.9 backlog; tests/Hexalith.Parties.UI.Tests/MainLayoutAccessibilityTests.cs and _bmad-output/implementation-artifacts/tests/test-summary.md record the 2026-08-18 shell-slice adoption.`
+status: open
+
+### DW-100: Adopt FrontComposer per-record freshness, live-region, and optimistic-reconciliation primitives after G4-B/C delivery.
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Parties UI state components and FrontComposer G4-B/C primitives
+source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
+reason: This independently shippable UI-state slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
+status: open
+
+### DW-101: Consolidate Admin and Consumer exports onto the approved FrontComposer browser-download service after G4-D delivery.
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Admin and Consumer exports and FrontComposer browser-download service
+source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
+reason: This independently testable download and cleanup slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
+status: open
+
+### DW-102: Adopt the FrontComposer typed-name destructive confirmation mode for Admin erasure after G4-E delivery.
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Admin erasure UI and FrontComposer destructive confirmation
+source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
+reason: This independently shippable destructive-interaction slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
+status: open
+
+### DW-103: Complete Fluent UI V5 and Fluent 2 styling and accordion conformance across all Parties UI RCLs.
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: all Parties UI RCLs
+source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
+reason: This independently reviewable design-system conformance slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
+status: open
+
+### DW-104: Delete the retained local crypto and key-management engine and reconcile published Parties security APIs after shared-provider adoption proves parity and rollback.
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: Hexalith.Parties.Security and published Parties security APIs
+source_spec: `_bmad-output/implementation-artifacts/spec-8-7-data-protection-extraction.md`
+reason: This destructive cleanup is independently shippable and was split from Story 8.7 after its hardened draft exceeded the 1,600-token workflow limit.
+status: open
+
+### DW-105: Make the parties-ui release container stay healthy in Development so the shared OCI smoke can finish and GitHub Release assets attach.
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: parties-ui release container and shared OCI smoke workflow
+source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
+reason: Release run 33980524472 published NuGet 1.1.1 and passed parties/parties-mcp smoke, then failed parties-ui with image-start-failure; the GitHub Release for v1.1.1 has no nupkg assets because semantic-release never reached the GitHub plugin.
+status: open
+
+### DW-106: Execute the Release verify-source bash with a fake gh/GITHUB_OUTPUT harness the way EventStore does.
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: .github/workflows/release.yml verify-source logic
+source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
+reason: Parties currently asserts bypass mapping by YAML substring order; a later assignment after esac can invert ci.yml vs commitlint.yml without failing those tests. Also recorded in "Deferred from: code review of story-8-10 (2026-09-06)": Release workflow's bypass-validation→proof-source mapping (`false→ci.yml`/`true→commitlint.yml`) is verified only by substring-ordering in the YAML text, not by executing the bash — already self-disclosed above ("Execute the Release verify-source bash with a fake gh/GITHUB_OUTPUT harness..."); the review layer that raised this again confirmed no further action is needed beyond what that entry already tracks. [.github/workflows/release.yml:44-56, tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs:100-116]
+status: open
+
+### DW-107: Add MSBuild/PublishContainer proof for rebound OCI created labels and reject impossible RFC 3339 calendar days.
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: RebindContainerProvenanceLabels and shared OCI validation
+source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
+reason: RebindContainerProvenanceLabels is only string-checked; the shared OCI validator ignores org.opencontainers.image.created, and the regex accepts dates such as 2026-02-31.
+status: open
+
+### DW-108: Align diagnostic source gitlinks to the published nuget.org tags selected by the Builds catalog.
+
+origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
+location: root diagnostic gitlinks and the Builds catalog
+source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
+reason: Package mode restores EventStore 3.102.0, Tenants 5.6.0, and Memories 2.25.0, but the recorded gitlinks sit at v3.102.0-27, v5.7.0-5, and v2.25.2; frozen intent required asking before advancing source past those tags.
+status: open
