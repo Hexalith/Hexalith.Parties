@@ -53,6 +53,15 @@
     "label": "Use stable Other",
     "resolution": ""
   },
+  "DW-27": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Add and map an InvalidPage failure reason, distinguish cursor failures from paging validation, and cover EventStore and Parties compatibility.",
+    "key": "1",
+    "label": "Add invalid-page sentinel",
+    "resolution": ""
+  },
   "DW-32": {
     "answered_at": "2026-09-06",
     "bundle_name": "",

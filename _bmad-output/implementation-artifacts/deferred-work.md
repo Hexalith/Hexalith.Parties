@@ -227,6 +227,7 @@ location: Paging.PageSize validation
 reason: Out-of-range `PageSize` under `Paging` rejected as `InvalidCursor` even with no cursor — debugging misdirection only.
 status: open
 decision: 2026-09-06 Add invalid-page sentinel — Add and map an InvalidPage failure reason, distinguish cursor failures from paging validation, and cover EventStore and Parties compatibility.
+decision: 2026-09-06 Add invalid-page sentinel — Add and map an InvalidPage failure reason, distinguish cursor failures from paging validation, and cover EventStore and Parties compatibility.
 
 ### DW-28: Harden query compatibility shim lifecycle and state handling
 
