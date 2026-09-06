@@ -26,6 +26,15 @@
     "label": "Pin Node 24",
     "resolution": ""
   },
+  "DW-18": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Invoke semantic-release through npm exec --no so only the installed dependency can run.",
+    "key": "1",
+    "label": "Use npm exec no",
+    "resolution": ""
+  },
   "DW-5": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
