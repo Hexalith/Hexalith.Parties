@@ -134,6 +134,15 @@
     "label": "Add test-only topology support",
     "resolution": ""
   },
+  "DW-78": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Use PartyErased.ErasedAt consistently across detail and processing folds and document the semantic choice.",
+    "key": "1",
+    "label": "Payload erasure instant",
+    "resolution": ""
+  },
   "DW-9": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
