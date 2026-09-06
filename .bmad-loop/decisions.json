@@ -1,4 +1,13 @@
 {
+  "DW-107": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Add real calendar validation, executable publish and rebind proof, and required created-label validation in the owning repositories.",
+    "key": "1",
+    "label": "Authorize cross-repo hardening",
+    "resolution": ""
+  },
   "DW-108": {
     "answered_at": "2026-09-06",
     "bundle_name": "",

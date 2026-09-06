@@ -873,6 +873,7 @@ source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-
 reason: RebindContainerProvenanceLabels is only string-checked; the shared OCI validator ignores org.opencontainers.image.created, and the regex accepts dates such as 2026-02-31.
 status: open
 decision: 2026-09-06 Authorize cross-repo hardening — Add real calendar validation, executable publish and rebind proof, and required created-label validation in the owning repositories.
+decision: 2026-09-06 Authorize cross-repo hardening — Add real calendar validation, executable publish and rebind proof, and required created-label validation in the owning repositories.
 
 ### DW-108: Align diagnostic source gitlinks to the published nuget.org tags selected by the Builds catalog.
 
