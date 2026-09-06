@@ -106,5 +106,14 @@
     "key": "1",
     "label": "Add EventStore extensions",
     "resolution": ""
+  },
+  "DW-91": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Adjust FrontComposer route focus so skip links remain forward reachable while retaining an accessible route announcement, then add producer and Parties Playwright coverage.",
+    "key": "1",
+    "label": "Restore forward skip access",
+    "resolution": ""
   }
 }
