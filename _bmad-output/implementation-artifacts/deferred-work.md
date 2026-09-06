@@ -97,6 +97,7 @@ location: EventStore.Aspire and consuming host authentication
 source_spec: `_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md`
 reason: This was split because the reusable EventStore.Aspire composition surface can ship independently before each host authentication configurator adopts ordered valid audiences.
 status: open
+decision: 2026-09-06 Add owner-level audiences — Add ordered ValidAudiences to owner options and configurators, retain Audience as the primary backward-compatible value, and test the acceptance and rejection matrix.
 
 ### DW-13: Harden EventStore AppHost publish and credential scanning
 
