@@ -71,6 +71,15 @@
     "label": "Dedicated fold categories",
     "resolution": ""
   },
+  "DW-48": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Accumulate bounded counts by failure reason and emit one no-PII summary at rebuild completion.",
+    "key": "1",
+    "label": "Summarize diagnostics",
+    "resolution": ""
+  },
   "DW-5": {
     "answered_at": "2026-09-06",
     "bundle_name": "",

@@ -385,6 +385,7 @@ location: PartyIndexSdkProjectionHandler.AccumulateAsync
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: 2026-08-05 review-layer finding — `PartyIndexSdkProjectionHandler.AccumulateAsync` (the full-rebuild path) now re-emits a log line for every historically-known-bad event on every rebuild run, with no batching, sampling, or dedup — a real log-flooding risk on a large event store. Needs a product/ops decision on acceptable rebuild-time log volume, not a same-pass patch.
 status: open
+decision: 2026-09-06 Summarize diagnostics — Accumulate bounded counts by failure reason and emit one no-PII summary at rebuild completion.
 
 ### DW-49: Handle converter format and overflow failures during event deserialization
 
