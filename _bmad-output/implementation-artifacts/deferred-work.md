@@ -28,7 +28,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: scripts/test.ps1
 source_spec: `_bmad-output/implementation-artifacts/spec-8-1-baseline-and-release-blocker-stabilization.md`
 reason: CI writes TRX/coverage artifacts and some local blockers require properties such as `UseHexalithProjectReferences=true`, but the local lane runner currently exposes neither a results-directory/logger option nor a safe property-forwarding interface. The legacy ledger recorded status resolved and resolution Story 8-11 (sprint-change-proposal-2026-07-07-validation-ladder-runner.md). `scripts/test.ps1 -ResultsDirectory <path>` emits a per-project TRX (local CI parity) and `-Properties <k=v>,<k=v>` forwards each value as `-p:<value>` to `dotnet test`, but the authoritative migration manifest requires this entry to remain open.
-status: open
+status: done 2026-09-06
+resolution: already resolved: scripts/test.ps1:12-18 exposes ResultsDirectory and Properties; scripts/test.ps1:25-30 creates the requested result root; scripts/test.ps1:51-64 forwards per-project TRX/results and MSBuild properties.
 
 ### DW-5: Define a safe consent and channel identifier contract
 
@@ -44,7 +45,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: references/Hexalith.Builds
 source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
 reason: Checkout `63d3221` supplied `v1.16.3` as a NuGet version and caused Actions runs `29467970597` and `29468665570` to fail during restore. Builds `v4.18.11` corrected the value to `1.16.3`; commit `6516faf` adds the evaluated central-version release guard and fixtures. Builds `v4.19.0` retains both changes and adds the MTP-compatible shared test contract exposed by follow-up run `29482004796`; the Parties gitlink/signoff adopt that release. The legacy ledger recorded status resolved and resolution `_bmad-output/implementation-artifacts/spec-gh-29467970597-fix-invalid-builds-package-version.md`; Hexalith.Builds `640b59c1434e4e1e079771c401e11048772c7a27` (`v4.19.0`), but the authoritative migration manifest requires this entry to remain open.
-status: open
+status: done 2026-09-06
+resolution: already resolved: The root and checkout both select references/Hexalith.Builds commit 8db7459d065926501ee045b3aaf7b816780905e5, exact tag v4.27.1, superseding the verified v4.19.0 fix; root history also contains a97530d2 and 9377c572 for catalog/test-evidence corrections.
 
 ### DW-7: Test persisted LRU eviction after restore
 
@@ -116,7 +118,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: /admin/operational-index-metadata DAPR ACL
 source_spec: `_bmad-output/implementation-artifacts/spec-align-assistant-commit-message-generation.md`
 reason: Incidental review of concurrent ACL edits found that independent string assertions can pass when `/admin/operational-index-metadata` is placed under the wrong app policy, verb, or action.
-status: open
+status: done 2026-09-06
+resolution: already resolved: Commit 02ccd3176 added structural ACL parsing; tests/Hexalith.Parties.Tests/FitnessTests/ArchitecturalFitnessTests.cs:317-377 asserts the single EventStore policy, exact route inventory, POST verb, and allow action.
 
 ### DW-16: Reconcile BMAD branching guidance with default-main policy
 
@@ -163,21 +166,24 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03)"), 2026-09-06
 location: PartySdkReadModelEraser.EraseAsync
 reason: Three independent `UpdateAsync` calls in `PartySdkReadModelEraser.EraseAsync` can leave detail/processing/index mutually inconsistent on mid-flight failure — no multi-key transactional write seam in the approved `ReadModelWritePolicy` API.
-status: open
+status: done 2026-09-06
+resolution: already resolved: Commit 02ccd3176; src/Hexalith.Parties.Projections/Services/PartySdkReadModelEraser.cs:13-20,56-95 writes detail, processing, and index through one ReadModelBatch and retries optimistic conflicts.
 
 ### DW-22: Define idempotent ErasedAt semantics for retries
 
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03)"), 2026-09-06
 location: PartySdkReadModelEraser.ApplyErasure
 reason: Optimistic concurrency retries re-run `ApplyErasure` and refresh `ErasedAt` — `ApplyErasure` always stamps `UtcNow`; short-circuiting on `IsErased` needs a deliberate idempotency contract change.
-status: open
+status: done 2026-09-06
+resolution: already resolved: Commit 02ccd3176; PartySdkReadModelEraser.cs:40,103-119,127-140,149-171 freezes cleanup time and preserves first-erasure metadata, with retry stability proven in PartySdkProjectionHandlerTests.cs:1788-1860.
 
 ### DW-23: Define erasure freshness metadata semantics
 
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03)"), 2026-09-06
 location: PartySdkReadModelEraser detail and index freshness metadata
 reason: Erasure copies through pre-erasure `ProjectedAt`/`ProjectionVersion` on detail/index — stamping erasure-time freshness is entangled with the open AC7 freshness-mapping gap; index timestamps also cover unrelated remaining parties.
-status: open
+status: done 2026-09-06
+resolution: already resolved: Commit 02ccd3176; PartySdkReadModelEraser.cs:116-119,137-140,160-171 stamps ProjectedAt on first cleanup, preserves it on retries, and retains ProjectionVersion; PartySdkProjectionHandlerTests.cs:1741-1762 and 1835-1860 pin the semantics.
 
 ### DW-24: Bound missing-CaseId warning deduplication
 
@@ -284,14 +290,16 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
 location: PartyIndexSdkProjectionHandler.CompleteRebuildAsync
 reason: `PartyIndexSdkProjectionHandler.CompleteRebuildAsync` would throw `NullReferenceException` (not a controlled result) if a persisted rebuild-completion manifest ever deserializes with null `Entries`/`RemovedPartyIds`. Not reachable under the current producer (`FinalizeAsync` always serializes non-null arrays); hardening-only.
-status: open
+status: done 2026-09-06
+resolution: already resolved: PartyIndexSdkProjectionHandler.cs:291 and :304 normalize null RemovedPartyIds and Entries to Array.Empty; introduced by commit 6fac8309.
 
 ### DW-39: Refresh the G5 matrix validation-evidence identity
 
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
 location: PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible and Story 8.3 G5 matrix row
 reason: `PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible` is RED: it hard-pins the Story 8.3 matrix's "Payload protection engine package" (G5) row to EventStore `v3.89.0`/`7854f8e5`, but the working tree is now at `v3.91.0`/`1d6e9321` (this story's resolved EventStore identity). Pre-existing to this review session, not caused by its patches. Out of Story 8.6 scope — G5 payload-protection is Story 8.7's territory and needs its own owner-reviewed identity-authorization update, not a Story 8.6 patch.
-status: open
+status: done 2026-09-06
+resolution: already resolved: PlatformApiPrerequisitesTests.cs:29-30 pins the current EventStore identity, while :1333-1349 validates the current gitlink, checkout, matrix ledger, and package identity; refreshed by commit e95d2f82.
 
 ### DW-40: Pin the reusable commitlint workflow revision
 
@@ -331,7 +339,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: PartyIndexSdkProjectionHandler.FinalizeAsync
 source_spec: `_bmad-output/implementation-artifacts/spec-scp-2026-08-04-story-8-6-g5-receipt-recovery.md`
 reason: Blind-hunter review found the defect (blind `ReadModelBatchConcurrency.LastWrite` can drop a canonical entry added mid-rebuild) exists both as a still-unchecked `[ ]` Group 2 task and, separately, inside a `[x]`-checked "Fixed 2026-08-04 (partial)" bullet in `8-6-projection-and-query-sdk-migration.md` that itself states the underlying issue is "left open — not addressed by this patch." The two are never cross-referenced, and the defect was never logged here, so it is invisible to anyone scanning only this ledger. Also recorded in "Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)": The 2026-08-05 human-directed session restored operator diagnostic logging and fold-level tests, deferred the remaining findings, and recorded that this item fulfills the earlier tracker-reconciliation action. `PrepareRebuildAsync`/`FinalizeAsync` write with `ReadModelBatchConcurrency.LastWrite` (no ETag check) [`PartyDetailSdkProjectionHandler.cs:99,103`, `PartyIndexSdkProjectionHandler.cs:102`] — a rebuild finalize can silently overwrite a newer concurrent live `ProjectAsync` write with no conflict detection. Investigated 2026-08-05: switching to `Match(etag)` unilaterally is unsafe without knowing the EventStore SDK rebuild-plan executor's retry/abort contract on a write conflict — that contract lives in `Hexalith.EventStore.DomainService`'s rebuild orchestration, outside this repo's `IAsyncDomainProjectionRebuildHandler` / `IAsyncDomainSharedProjectionRebuildCompletionHandler` surface. Needs SDK-owner input, not a unilateral Parties-side change. Resolved 2026-08-16: EventStore v3.95 now provides the required bounded conflict contract. Parties rebuild plans use `Match(etag)` for existing rows and `CreateOnly` for absent rows; focused plan-policy tests pass for detail, processing, and index.
-status: open
+status: done 2026-09-06
+resolution: already resolved: PartyIndexSdkProjectionHandler.cs:248-250 uses ETag Match/CreateOnly finalization, and :282-309 rereads canonical state before notifications; implemented by commit 8e3953e0.
 
 ### DW-45: Document and attribute the sprint-plan --fresh rebuild fix
 
@@ -400,7 +409,8 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
 location: _bmad-output/implementation-artifacts/sprint-status.yaml
 reason: Cosmetic: the Epic 7 rollback-retention action item is closed `done` citing an authorization SCP "approved 2026-08-02" for an action the same annotation dates to 2026-08-01 (approval postdating the act it authorizes by a day); resolves naturally when `sprint-status.yaml` is next synced.
-status: open
+status: done 2026-09-06
+resolution: already resolved: sprint-status.yaml:321-329 records that closure occurred under the 2026-08-01 user selection and formal authorization followed in the 2026-08-02 SCP; clarified by commit 03ab938c.
 
 ### DW-54: Refresh etags before retrying incomplete erasure batches
 
@@ -416,7 +426,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: ProjectionPlatformAdapterTests and Memories cleanup composition
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: ProjectionPlatformAdapterTests invoke memories-search cleanup with Enabled=false and no seeded mappings, so Cleaned can pass without exercising DELETE/clearance.
-status: open
+status: done 2026-09-06
+resolution: already resolved: PartyMemoryIndexEntrySearchIndexerTests.cs:214-239 disables indexing, seeds a durable case-at-ingestion mapping, removes it, and verifies the persisted case is used in the DELETE URI; commit d4e1d83d.
 
 ### DW-56: Replace actor-era query failure vocabulary on the SDK path
 
@@ -685,7 +696,8 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-08-19)"), 2026-09-06
 location: DocumentationFitnessTests and accesscontrol.*.yaml
 reason: This note was deliberately placed before the closure-deferral section because EpicEightClosureFitnessTests.ParseDeferrals slices from that heading through end of file. Only one of six `accesscontrol.*.yaml` components is verified. `DocumentationFitnessTests.MaintainedDocumentationDescribesSdkRoutesUnderEventStoreOnlyDenyAcl` parses `accesscontrol.parties.yaml` alone, while the documentation it pins generalizes over all sidecar policies. Broadening the assertion is outside the Story 8.10 Code Map.
-status: open
+status: done 2026-09-06
+resolution: already resolved: Commit f8fd7404; tests/Hexalith.Parties.Tests/FitnessTests/DocumentationFitnessTests.cs:172-189 enumerates every accesscontrol*.yaml file and verifies and documents its default-action posture.
 
 ### DW-90: Consolidate timeout-safe git and process test helpers
 
@@ -713,21 +725,24 @@ status: open
 origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
 location: Story 8.10 closure-deferral field vocabulary
 reason: Story 8.10 accepted these deferrals as waiting work while preserving the current implementation as rollback; its clarified vocabulary separates authoring a wait from activating work. `authored_by_spec` — the spec that wrote this entry down and accepted the wait. Carries no §4 obligation.
-status: open
+status: done 2026-09-06
+resolution: already resolved: Commit f8fd7404; spec-8-10-final-readiness-documentation-and-retirement-gate.md:48-54 defines authored_by_spec as authoring without activation or section 4 obligation.
 
 ### DW-94: Define activated_by_spec as deferral-activation metadata
 
 origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
 location: Story 8.10 closure-deferral field vocabulary
 reason: `activated_by_spec` — the spec that started working the deferral. Triggers the full six-clause §4 gate in that spec, per I17.
-status: open
+status: done 2026-09-06
+resolution: already resolved: Commit f8fd7404; spec-8-10-final-readiness-documentation-and-retirement-gate.md:46-54 distinguishes activation from authoring, and ARCHITECTURE-SPINE.md:279-283 records the enforced vocabulary.
 
 ### DW-95: Define delivered_slices as partial-delivery metadata
 
 origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
 location: Story 8.10 closure-deferral field vocabulary
 reason: `delivered_slices` — present only when part of a deferral has shipped. A delivered slice never advances the owning story's status.
-status: open
+status: done 2026-09-06
+resolution: already resolved: Commit f8fd7404; sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md:131-134 defines delivered_slices and states that a delivered slice does not advance the story.
 
 ### DW-96: Resolve or supersede Story 8.6 residual review debt
 
