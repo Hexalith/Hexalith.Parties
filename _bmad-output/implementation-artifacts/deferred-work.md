@@ -254,6 +254,7 @@ location: host AddEventStoreDomainService registration and EventStoreGatewayE2ET
 reason: Host `AddEventStoreDomainService(... PartyDetailProjectionHandler.Assembly)` remains source-text-only — closing properly needs reinstating the retired tenant seeder for authenticated query e2e. Also recorded in "Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)": Host wiring (`builder.AddEventStoreDomainService(typeof(PartyAggregate).Assembly, typeof(PartyDetailProjectionHandler).Assembly)`) is verified only as literal source text by `ArchitecturalFitnessTests`/`PlatformApiPrerequisitesTests`/ `RetiredLeafProjectFitnessTests`; no test queries a projected read model after an authenticated end-to-end command. Closing this needs `EventStoreGatewayE2ETests`, but its `PartiesAspireTopologyFixture.RequireSeededTenants()` unconditionally throws since Story 12.2 retired `TenantIntegrationTestSeeder` — reinstating that seeder is real work out of scope for a review-patch pass.
 status: open
 decision: 2026-09-06 Minimal test-only seeder — Add a narrowly scoped fixture seeder through the supported internal tenant-event callback, then submit an authenticated command and query its projection.
+decision: 2026-09-06 Minimal test-only seeder — Add a narrowly scoped fixture seeder through the supported internal tenant-event callback, then submit an authenticated command and query its projection.
 
 ### DW-31: Add runtime DAPR ACL enforcement proof
 

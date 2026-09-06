@@ -62,6 +62,15 @@
     "label": "Add invalid-page sentinel",
     "resolution": ""
   },
+  "DW-30": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Add a narrowly scoped fixture seeder through the supported internal tenant-event callback, then submit an authenticated command and query its projection.",
+    "key": "1",
+    "label": "Minimal test-only seeder",
+    "resolution": ""
+  },
   "DW-32": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
