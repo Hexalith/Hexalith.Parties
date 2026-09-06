@@ -225,7 +225,9 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 3)"), 2026-09-06
 location: Party SDK query compatibility shims
 reason: Non-durable unbounded in-process last-known cache; no `ApplicationStopping` link; Actor-named constant bags; missing-detail vs empty-processing asymmetry — intentional shim/architecture trade-offs from the first Group 3 pass.
-status: open
+status: done 2026-09-06
+resolution: closed by human decision: Retain the bounded in-memory cache and document shutdown and restart loss as intentional until a durable successor exists.
+decision: 2026-09-06 Document bounded memory — Retain the bounded in-memory cache and document shutdown and restart loss as intentional until a durable successor exists.
 
 ### DW-29: Preserve the cursor codec failure reason
 
