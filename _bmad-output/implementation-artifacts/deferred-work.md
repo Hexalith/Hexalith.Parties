@@ -106,6 +106,7 @@ location: EventStore owner AppHost publish output
 source_spec: `_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md`
 reason: This was split because owner-AppHost adoption and publish-output validation are independently shippable after the reusable JWT composition API exists.
 status: open
+decision: 2026-09-06 Authorize owner adoption — Adopt the helper in the owner AppHost and inspect publish output, failing on secret or poison values.
 
 ### DW-14: Validate G8-A delivery receipt integrity
 

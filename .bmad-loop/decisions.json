@@ -8,6 +8,15 @@
     "label": "Add owner-level audiences",
     "resolution": ""
   },
+  "DW-13": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Adopt the helper in the owner AppHost and inspect publish output, failing on secret or poison values.",
+    "key": "1",
+    "label": "Authorize owner adoption",
+    "resolution": ""
+  },
   "DW-5": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
