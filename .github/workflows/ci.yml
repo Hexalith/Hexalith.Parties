@@ -23,6 +23,7 @@ jobs:
     with:
       solution: Hexalith.Parties.slnx
       dapr-version: '1.18.0'
+      dapr-runtime-version: '1.18.2'
       test-platform: microsoft-testing-platform
       run-consumer-validation: true
       run-coverage-gate: false
