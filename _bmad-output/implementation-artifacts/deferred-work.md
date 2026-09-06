@@ -226,6 +226,7 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: Paging.PageSize validation
 reason: Out-of-range `PageSize` under `Paging` rejected as `InvalidCursor` even with no cursor — debugging misdirection only.
 status: open
+decision: 2026-09-06 Add invalid-page sentinel — Add and map an InvalidPage failure reason, distinguish cursor failures from paging validation, and cover EventStore and Parties compatibility.
 
 ### DW-28: Harden query compatibility shim lifecycle and state handling
 
@@ -251,6 +252,7 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: host AddEventStoreDomainService registration and EventStoreGatewayE2ETests
 reason: Host `AddEventStoreDomainService(... PartyDetailProjectionHandler.Assembly)` remains source-text-only — closing properly needs reinstating the retired tenant seeder for authenticated query e2e. Also recorded in "Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)": Host wiring (`builder.AddEventStoreDomainService(typeof(PartyAggregate).Assembly, typeof(PartyDetailProjectionHandler).Assembly)`) is verified only as literal source text by `ArchitecturalFitnessTests`/`PlatformApiPrerequisitesTests`/ `RetiredLeafProjectFitnessTests`; no test queries a projected read model after an authenticated end-to-end command. Closing this needs `EventStoreGatewayE2ETests`, but its `PartiesAspireTopologyFixture.RequireSeededTenants()` unconditionally throws since Story 12.2 retired `TenantIntegrationTestSeeder` — reinstating that seeder is real work out of scope for a review-patch pass.
 status: open
+decision: 2026-09-06 Minimal test-only seeder — Add a narrowly scoped fixture seeder through the supported internal tenant-event callback, then submit an authenticated command and query its projection.
 
 ### DW-31: Add runtime DAPR ACL enforcement proof
 
@@ -629,6 +631,7 @@ location: configured Dapr sidecar topology tests
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: Current tests inspect generated YAML and one synthetic sidecar but never start the mTLS topology or prove a cross-service invocation with all sidecars credentialed.
 status: open
+decision: 2026-09-06 Add test-only topology support — Introduce test-scoped readiness and tenant bootstrap, run all sidecars, and prove a credentialed cross-service invocation.
 
 ### DW-78: Align PartyErased timestamp resolution across projection folds
 
@@ -637,6 +640,7 @@ location: PartyProcessingActivityFold.Fold and PartyDetailProjectionHandler.Appl
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `PartyDetailProjectionHandler.ApplyErasure` assigns `ErasedAt = erased.ErasedAt` while `PartyProcessingActivityFold.Fold` assigns `@event.Timestamp.ToUniversalTime()`.
 status: open
+decision: 2026-09-06 Payload erasure instant — Use PartyErased.ErasedAt consistently across detail and processing folds and document the semantic choice.
 
 ### DW-79: Parallelize state-store reads in PartyDetailSdkProjectionHandler.PrepareRebuildAsync
 
@@ -864,6 +868,7 @@ location: RebindContainerProvenanceLabels and shared OCI validation
 source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
 reason: RebindContainerProvenanceLabels is only string-checked; the shared OCI validator ignores org.opencontainers.image.created, and the regex accepts dates such as 2026-02-31.
 status: open
+decision: 2026-09-06 Authorize cross-repo hardening — Add real calendar validation, executable publish and rebind proof, and required created-label validation in the owning repositories.
 
 ### DW-108: Align diagnostic source gitlinks to the published nuget.org tags selected by the Builds catalog.
 
@@ -873,4 +878,19 @@ source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-
 reason: Package mode restores EventStore 3.102.0, Tenants 5.6.0, and Memories 2.25.0, but the recorded gitlinks sit at v3.102.0-27, v5.7.0-5, and v2.25.2; frozen intent required asking before advancing source past those tags.
 status: open
 decision: 2026-09-06 Align exact catalog tags — Reset the three diagnostic gitlinks to exact catalog-selected release tags and reconcile live pins and signoff evidence while preserving package mode as authoritative.
-decision: 2026-09-06 Align exact catalog tags — Reset the three diagnostic gitlinks to exact catalog-selected release tags and reconcile live pins and signoff evidence while preserving package mode as authoritative.
+
+### DW-109: Cover ordinary main pushes with the root-gitlink RC sign-off gate, and pin Tenants/Memories identities.
+
+origin: code review of spec-8-10-final-readiness-documentation-and-retirement-gate (2026-09-06)
+location: .github/workflows/rc-gate.yml; tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: rc-gate.yml enforces `.gitlink-signoff.tsv` only on a release-candidate-labeled PR or a push to `rc/**`/`release/**`/a `v*` tag — never an ordinary push to `main`, which is this repo's actual workflow. PlatformApiPrerequisitesTests hardcodes a SHA constant only for EventStore/Commons/Builds/FrontComposer; Tenants and Memories have no such pin. Together, an unauthorized or unreviewed Tenants/Memories gitlink bump on main is caught by nothing until someone reads the diff by hand — exactly the failure mode this review round found live at HEAD.
+status: open
+
+### DW-110: Verify validate-publication-preflight.sh's commitlint-proof path is only ever reachable through an authorized bypass.
+
+origin: code review of spec-8-10-final-readiness-documentation-and-retirement-gate (2026-09-06)
+location: scripts/validate-publication-preflight.sh
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: The script accepts `HEXALITH_RELEASE_SOURCE_CI_WORKFLOW=commitlint.yml` (the weaker proof path) with no independent check that an operator authorized the bypass; today it is reachable only through release.yml's gated `bypass-validation` input and the script is not wired into any workflow file yet, so it is not currently exploitable. Related to the already-open DW-106 (bypass-validation to proof-source mapping has no executed-bash test, only YAML substring-ordering). Settle by re-checking every caller of this script once it is wired into CI; if a future caller can set the env var independently of the gated input, this becomes a real authorization bypass.
+status: open
