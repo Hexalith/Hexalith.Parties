@@ -53,8 +53,8 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.4.6` |
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.5` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.4.1-beta.706` |
-| Gateway/eventing | Hexalith.EventStore | package `3.102.0` by default; source gitlink `7a81a41000df11632ea84d331d764c6a240a8a46` when explicitly selected |
-| Tenancy | Hexalith.Tenants | package `5.6.0` by default; source gitlink `0ca32a5cf6448f35b67f29f0ddcbce44d144b05e` when explicitly selected |
+| Gateway/eventing | Hexalith.EventStore | package `3.102.0` by default; source gitlink `acf5c4e403699d4f9290fd6636e4d6b1872a3bd6` when explicitly selected |
+| Tenancy | Hexalith.Tenants | package `5.6.0` by default; source gitlink `d914b13bd9b2354dbb6b556c9887664f68672069` when explicitly selected |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.2.0` |
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.11` |

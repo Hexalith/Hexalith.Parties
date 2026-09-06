@@ -59,3 +59,11 @@ references/Hexalith.Commons|6da79aed2daa4e199689331ee3196f7872c0988a|validated-a
 #     0dca9e9d interim fix to a clean committed identity; Release solution build
 #     re-verified 0 warnings/0 errors at this gitlink. ---
 references/Hexalith.PolymorphicSerializations|8aeed1d27c9a050bc4bec6d89051aa00de306a69|validated-advance|v1.19.2-11-g8aeed1d|jpiquot|2026-09-06
+# --- 2026-09-06 code review round 4: EventStore/Tenants/Memories drifted past the
+#     2026-09-05 catalog-adopt identities during closure documentation work; owner
+#     authorized the new identities in place of a revert, reconciled across the
+#     8.3 matrix, docs/architecture.md, the architecture spine, sprint-status.yaml,
+#     and PlatformApiPrerequisitesTests' PayloadProtectionEventStoreSha. ---
+references/Hexalith.EventStore|acf5c4e403699d4f9290fd6636e4d6b1872a3bd6|validated-advance|v3.102.0-31-gacf5c4e4|jpiquot|2026-09-06
+references/Hexalith.Tenants|d914b13bd9b2354dbb6b556c9887664f68672069|validated-advance|v5.7.0-7-gd914b13b|jpiquot|2026-09-06
+references/Hexalith.Memories|fa8f53165183695888dd0df001d4b1e58071f39e|validated-advance|v2.26.0|jpiquot|2026-09-06

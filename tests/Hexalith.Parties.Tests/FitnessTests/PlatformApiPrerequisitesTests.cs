@@ -26,8 +26,8 @@ public sealed class PlatformApiPrerequisitesTests
     // under sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md).
     // Recorded separately from the packaged 4.3.0 identity that CI and the released container use.
     private const string FrontComposerSha = "5cbc5583142a6774ff7813698ad98ec267b336f0";
-    private const string PayloadProtectionEventStoreDescribe = "v3.102.0-27-g7a81a410";
-    private const string PayloadProtectionEventStoreSha = "7a81a41000df11632ea84d331d764c6a240a8a46";
+    private const string PayloadProtectionEventStoreDescribe = "v3.102.0-31-gacf5c4e4";
+    private const string PayloadProtectionEventStoreSha = "acf5c4e403699d4f9290fd6636e4d6b1872a3bd6";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
     private const string PayloadProtectionSurface = "Payload protection engine package";
     private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";
