@@ -48,7 +48,11 @@ The internal DAPR access-control policy is deny-by-default and permits only the
 `/project/v2/reconcile`, `/replay-state`, `/project/rebuild/v1`,
 `/project/rebuild/shared/v1`, `/project/rebuild/stage/v1`,
 `/project/rebuild/commit/v1`, `/project/rebuild/abort/v1`, and
-`/project/rebuild/verify/v1`. Runtime deployment orchestration is externally
+`/project/rebuild/verify/v1`. One documented exception: `accesscontrol.eventstore-admin.yaml`
+is `defaultAction: allow` at the top level, because local self-hosted DAPR does
+not reliably expose caller identity without mTLS (see
+[`docs/event-publishing.md`](docs/event-publishing.md) for the full rationale).
+Runtime deployment orchestration is externally
 owned; the external orchestrator owns manifests, environment secrets, ingress,
 promotion, and rollback. This repository publishes immutable workload images
 and retains only local AppHost wiring.

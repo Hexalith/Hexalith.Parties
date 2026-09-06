@@ -386,7 +386,7 @@ last `deferral_id` block.
   Question for the owners: should the shell reset the sequential focus navigation point (for example
   by focusing a container ahead of the skip links, or by focusing the skip link itself) so WCAG
   2.4.1 bypass remains forward-reachable after route changes?
-- EventStore `3.95.0` is hardcoded in five or more places (`PlatformApiPrerequisitesTests`, `docs/ci.md`, `docs/architecture.md` §3) rather than read from the Builds catalog's `HexalithEventStoreVersion`. This is the drift the "CI identity regression — one stale live assertion expecting EventStore 3.90.0" receipt already recorded once.
+- EventStore's exact version is hardcoded in five or more places (`PlatformApiPrerequisitesTests`, `docs/ci.md`, `docs/architecture.md` §3) rather than read from the Builds catalog's `HexalithEventStoreVersion`. This is the drift the "CI identity regression — one stale live assertion expecting EventStore 3.90.0" receipt already recorded once. (Updated 2026-09-06: the cited value was `3.95.0` when this note was written 2026-08-19; the 2026-09-05 catalog adopt advanced all cited places to `3.102.0` together, so the specific hardcoded value drifts each time the catalog moves — the underlying "not read from the catalog" gap remains.)
 
 ## Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18
 

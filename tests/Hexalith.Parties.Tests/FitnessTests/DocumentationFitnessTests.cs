@@ -175,7 +175,7 @@ public sealed class DocumentationFitnessTests
             string fileName = Path.GetFileName(aclPath);
             bool allowsByDefault = Regex.IsMatch(
                 File.ReadAllText(aclPath),
-                @"(?m)^\s{4}defaultAction:\s*allow\s*$",
+                @"(?m)^\s*defaultAction:\s*allow\s*$",
                 RegexOptions.CultureInvariant);
 
             eventPublishing.ShouldContain(fileName, Case.Sensitive, $"{fileName} must be documented.");

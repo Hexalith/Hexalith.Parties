@@ -744,3 +744,21 @@ with the 16 SA1316 diagnostics recorded above. Keep
 the superproject gitlink is advanced to that exact commit, and the full Release,
 test, package/consumer, and accessibility gates are rerun at the immutable
 identity.
+
+### PolymorphicSerializations blockers closed — 2026-09-06 (code review round 3)
+
+The superproject gitlink has since advanced to `8aeed1d27c9a050bc4bec6d89051aa00de306a69`
+(`v1.19.2-11-g8aeed1d`), a real committed identity 9 commits past `0dca9e9d`,
+carrying the completing tuple-element-casing fix as a landed owner commit rather
+than a working-tree patch. Re-verified 2026-09-06:
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Release solution build | Pass | `dotnet build Hexalith.Parties.slnx -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`: 0 warnings, 0 errors. `PolymorphicHelper.cs`'s tuple casing is fixed at this gitlink; the 16 SA1316 errors recorded at `0dca9e9d` are gone. |
+
+`polymorphicserializations-stylecop-fix-incomplete-at-selected-gitlink` and
+`authorized-owner-fixes-not-immutable` are both closed: the exit proof each
+blocker required (a zero-warning, zero-error Release build at a real committed
+gitlink) is met at `8aeed1d2`. The 8-3 reconciliation matrix's PolymorphicSerializations
+row has been updated to this gitlink; `.gitlink-signoff.tsv` needs a corresponding
+`validated-advance` row before this identity may ship in a release tag.

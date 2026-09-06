@@ -855,10 +855,12 @@ public sealed class PlatformApiPrerequisitesTests
             }
 
             string[] cells = SplitMarkdownTableRow(line);
-            if (cells.Length != 5 || string.Equals(cells[0], "Surface", StringComparison.Ordinal))
+            if (string.Equals(cells.Length > 0 ? cells[0] : string.Empty, "Surface", StringComparison.Ordinal))
             {
                 continue;
             }
+
+            cells.Length.ShouldBe(5, $"malformed reconciliation-table row (expected 5 cells): {line}");
 
             string key = $"{cells[0]}|{cells[1]}";
             rows.TryAdd(key, string.Join(" | ", cells)).ShouldBeTrue(key);
@@ -1512,18 +1514,17 @@ public sealed class PlatformApiPrerequisitesTests
     private static void AssertGitlinkAndCheckout(string root, string relativePath, string expectedIdentity)
     {
         string gitlink = RunGit(root, "ls-tree", "HEAD", relativePath).Trim();
-        string indexLink = RunGit(root, "ls-files", "-s", relativePath).Trim();
         string checkout = RunGit(root, "-C", relativePath, "rev-parse", "HEAD").Trim();
 
-        // The recorded gitlink must match on its own terms. A third disjunct on the checkout used to
-        // sit here, but the checkout is already required to match two lines below, so it made the
-        // gitlink assertion unfalsifiable: a superproject pointing at a different commit passed
-        // whenever the working tree happened to be right. The Story 8.3 matrix is explicit that a
-        // working-tree checkout alone is not root-submodule-pin proof, and the frozen Boundaries
-        // forbid treating a checkout as consumption proof.
-        bool gitlinkMatches = gitlink.Contains($"160000 commit {expectedIdentity}", StringComparison.Ordinal)
-            || indexLink.Contains(expectedIdentity, StringComparison.Ordinal);
-        gitlinkMatches.ShouldBeTrue(
+        // The recorded gitlink must match on its own terms, against the committed HEAD tree only.
+        // A third disjunct on the checkout used to sit here, but the checkout is already required
+        // to match two lines below, so it made the gitlink assertion unfalsifiable: a superproject
+        // pointing at a different commit passed whenever the working tree happened to be right. A
+        // later disjunct on the staged index made the same mistake with a staged-but-uncommitted
+        // bump. The Story 8.3 matrix is explicit that neither a working-tree checkout nor a staged
+        // index alone is root-submodule-pin proof, and the frozen Boundaries forbid treating either
+        // as consumption proof.
+        gitlink.Contains($"160000 commit {expectedIdentity}", StringComparison.Ordinal).ShouldBeTrue(
             $"{relativePath} gitlink must match expected {expectedIdentity}; recorded gitlink was '{gitlink}'.");
 
         DescribeIdentityGap(checkout, expectedIdentity).ShouldBeEmpty(relativePath);
@@ -1556,17 +1557,21 @@ public sealed class PlatformApiPrerequisitesTests
 
         process.Start().ShouldBeTrue();
 
-        // Drain stderr concurrently. Reading stdout to completion first deadlocks if the child
-        // fills the stderr pipe buffer, which a verbose MSBuild evaluation can do.
+        // Drain stdout and stderr concurrently and under the same timeout bound. Reading either
+        // stream to completion synchronously deadlocks if the child fills the other pipe's
+        // buffer, or blocks forever if the child hangs while keeping a stream open -- a verbose
+        // or stalled MSBuild evaluation can do either.
+        Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
         Task<string> errorTask = process.StandardError.ReadToEndAsync();
-        string output = process.StandardOutput.ReadToEnd();
-        if (!process.WaitForExit(ProcessTimeoutMilliseconds))
+        if (!Task.WaitAll([outputTask, errorTask], ProcessTimeoutMilliseconds) ||
+            !process.WaitForExit(ProcessTimeoutMilliseconds))
         {
             process.Kill(entireProcessTree: true);
             throw new TimeoutException(
                 $"{fileName} {string.Join(' ', arguments)} did not exit within {ProcessTimeoutMilliseconds / 1000} seconds.");
         }
 
+        string output = outputTask.GetAwaiter().GetResult();
         string error = errorTask.GetAwaiter().GetResult();
         process.ExitCode.ShouldBe(0, error);
         return output;

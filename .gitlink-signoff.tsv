@@ -54,3 +54,8 @@ references/Hexalith.EventStore|7a81a41000df11632ea84d331d764c6a240a8a46|validate
 references/Hexalith.FrontComposer|5cbc5583142a6774ff7813698ad98ec267b336f0|validated-advance|v4.3.0-7-g5cbc5583|jpiquot|2026-09-05
 references/Hexalith.Memories|e9653980cf8b55e17afde30a5a8587cb30405e78|validated-advance|v2.25.2|jpiquot|2026-09-05
 references/Hexalith.Tenants|0ca32a5cf6448f35b67f29f0ddcbce44d144b05e|validated-advance|v5.7.0-5-g0ca32a5c|jpiquot|2026-09-05
+references/Hexalith.Commons|6da79aed2daa4e199689331ee3196f7872c0988a|validated-advance|v2.30.0-19-g6da79ae|jpiquot|2026-09-05
+# --- 2026-09-06 code review round 3: PolymorphicSerializations advanced past the
+#     0dca9e9d interim fix to a clean committed identity; Release solution build
+#     re-verified 0 warnings/0 errors at this gitlink. ---
+references/Hexalith.PolymorphicSerializations|8aeed1d27c9a050bc4bec6d89051aa00de306a69|validated-advance|v1.19.2-11-g8aeed1d|jpiquot|2026-09-06
