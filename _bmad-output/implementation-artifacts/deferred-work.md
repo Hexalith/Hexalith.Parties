@@ -634,6 +634,7 @@ source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk
 reason: Current tests inspect generated YAML and one synthetic sidecar but never start the mTLS topology or prove a cross-service invocation with all sidecars credentialed.
 status: open
 decision: 2026-09-06 Add test-only topology support — Introduce test-scoped readiness and tenant bootstrap, run all sidecars, and prove a credentialed cross-service invocation.
+decision: 2026-09-06 Add test-only topology support — Introduce test-scoped readiness and tenant bootstrap, run all sidecars, and prove a credentialed cross-service invocation.
 
 ### DW-78: Align PartyErased timestamp resolution across projection folds
 

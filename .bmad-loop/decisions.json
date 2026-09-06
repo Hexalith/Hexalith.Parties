@@ -125,6 +125,15 @@
     "label": "Paged bucketed model",
     "resolution": ""
   },
+  "DW-77": {
+    "answered_at": "2026-09-06",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Introduce test-scoped readiness and tenant bootstrap, run all sidecars, and prove a credentialed cross-service invocation.",
+    "key": "1",
+    "label": "Add test-only topology support",
+    "resolution": ""
+  },
   "DW-9": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
