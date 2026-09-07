@@ -17,6 +17,15 @@
     "label": "Align exact catalog tags",
     "resolution": ""
   },
+  "DW-112": {
+    "answered_at": "2026-09-07",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Render Skip to navigation only when #fc-nav is mounted, preserve Skip to content, and add producer plus Parties viewport coverage.",
+    "key": "hide-when-unmounted",
+    "label": "Hide compact link",
+    "resolution": ""
+  },
   "DW-12": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
