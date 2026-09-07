@@ -667,6 +667,7 @@ source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk
 reason: `PartyMemoryCleanupService.DeleteByPartyAsync` treats zero local mappings as cleaned even when state loss, legacy indexing, or configuration drift could leave remote units behind.
 status: open
 decision: 2026-09-07 Query Memories — Add or adopt a bounded Memories API that inventories units by canonical Parties source identity, reconcile local mappings from it, and require zero remote units before reporting cleanup complete.
+decision: 2026-09-07 Query Memories — Add or adopt a bounded Memories API that inventories units by canonical Parties source identity, reconcile local mappings from it, and require zero remote units before reporting cleanup complete.
 
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
@@ -905,6 +906,7 @@ location: references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Com
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: The skip-to-navigation link renders whenever `HasNavigation` is true, but `#fc-nav` mounts only when `HasNavigation && !IsSubCompactDesktopViewport`. On Tablet/Phone the href has no focus target. Parties consumes the shell and does not edit this submodule; route to FrontComposer shell owners.
 status: open
+decision: 2026-09-07 Hide compact link — Render Skip to navigation only when #fc-nav is mounted, preserve Skip to content, and add producer plus Parties viewport coverage.
 decision: 2026-09-07 Hide compact link — Render Skip to navigation only when #fc-nav is mounted, preserve Skip to content, and add producer plus Parties viewport coverage.
 
 ### DW-113: Parse only the first complete JSON object from MSBuild `-getProperty/-getItem` stdout.

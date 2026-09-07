@@ -64,6 +64,30 @@ deferred: []
 
 ## Review Triage Log
 
+| Finding | Verdict | Route and evidence |
+| --- | --- | --- |
+| Blind 1: nonzero `dotnet test` can hide infrastructure failure | medium | patch — a nonzero result is now aggregated only when its expected TRX exists; missing evidence fails that shard step immediately. |
+| Blind 2: an active shard can have an absent output | medium | patch — the final gate now checks the selected platform and configured tier inputs and rejects a missing active count. |
+| Blind 3: step conditions and input mappings were not protected | medium | patch — each shard contract now asserts its exact platform/input condition and project environment mapping. |
+| Blind 4: no Tier 1-to-Tier 2-to-final-gate runtime sequence | medium | patch — legal VSTest and MTP sequences now prove Tier 2 runs after a Tier 1 test failure and the final gate blocks afterward. |
+| Blind 5: aggregate fixture mixed VSTest and MTP outputs | medium | patch — aggregate fixtures now use legal same-platform pairs, supplemented by one isolated runtime case per output channel. |
+| Blind 6: inactive-path test did not protect GitHub step selection | medium | patch — exact `if:` contracts protect all four selection paths and the empty-output gate runtime remains covered. |
+| Blind 7: failure-count assertions allowed substring matches | low | patch — outputs must now match one exact newline-terminated assignment. |
+| Blind 8: summary assertions did not bind status to project order | low | patch — tests compare the exact ordered row sequence for failure and passing scenarios. |
+| Blind 9: summary and annotation values were not escaped | low | patch — Markdown metacharacters and workflow-command percent data are escaped and exercised by metacharacter fixtures. |
+| Blind 10: evidence-upload preservation was weakly tested | medium | patch — the harness now protects `if: always()`, artifact name, TRX glob, and coverage glob. |
+| Blind 11: the diff contains deferred-ledger edits | false | rejected — the ledger was already modified before this implementation began; it was neither edited nor reverted here, preserving concurrent user work and the spec boundary. |
+| Edge 1: nonzero without test results is misreported | medium | patch — the expected TRX guard distinguishes aggregatable test failures from evidence-less infrastructure failures. |
+| Edge 2: a nonempty input made only of blank lines succeeds | false | rejected — exact empty inputs skip the step as specified; whitespace-only nonempty text is not a configured project and the matrix requires no false failure for an empty list. |
+| Edge 3: a whitespace-only project line is attempted | false | rejected — such a line is invalid caller data rather than a project; it cannot hide a configured result and would fail visibly. |
+| Edge 4: duplicate basenames overwrite evidence | medium | rejected as outside this intent — this is pre-existing result-path behavior, while the approved intent explicitly requires retaining per-project TRX arguments and caller inventory. |
+| Edge 5: Markdown metacharacters corrupt summary rows | low | patch — paths are escaped before table emission and exact-row tests include pipe and backtick characters. |
+| Edge 6: leading-zero counts use octal arithmetic | medium | patch — validated digit strings are now converted with an explicit base-10 prefix and `08` is covered at runtime. |
+| Edge 7: failure-count addition can overflow | false | rejected — counts are emitted internally from bounded workflow-call project lists, whose maximum cardinality is far below Bash integer range. |
+| Edge 8: output assertions accepted expected substrings | low | patch — exact assignment matching now rejects duplicate or overwritten output values. |
+| Verification 1: two output channels lacked behavioral coverage | medium | patch — isolated nonzero runtime cases now cover unit/integration for VSTest and MTP independently. |
+| Verification 2: deferred-work was modified against the boundary | false | rejected — the modification predates this implementation and belongs to concurrent outer-repository work; this task did not touch the ledger. |
+
 ## Design Notes
 
 Individual test steps finish successfully after recording expected test-process failures so later tiers remain eligible. They expose numeric failure counts through step outputs; one `if: always()` gate validates and sums active outputs, emits a workflow error, and exits 1 only after coverage validation and all configured shard loops have had an opportunity to run. Unexpected shell/infrastructure errors continue to fail their own step.
