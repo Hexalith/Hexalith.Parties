@@ -20,7 +20,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: scripts/test.ps1 and CI test-shard loops
 source_spec: `_bmad-output/implementation-artifacts/spec-8-1-baseline-and-release-blocker-stabilization.md`
 reason: `scripts/test.ps1 -Lane all` and each CI shard currently stop at the first failing project, so a package-mode restore blocker can hide later project-specific failures until the first blocker is resolved. The legacy ledger recorded status resolved and resolution Story 8-11 (sprint-change-proposal-2026-07-07-validation-ladder-runner.md). `scripts/test.ps1 -ContinueOnFailure` runs every project and prints a PASS/FAIL summary (exit 1 if any failed); the CI `Run test shard` loop continues after a failing project and summarizes all failures. Default fail-fast behavior preserved, but the authoritative migration manifest requires this entry to remain open.
-status: open
+status: done 2026-09-07
+resolution: already resolved: scripts/test.ps1:152 and references/Hexalith.Builds/.github/workflows/domain-ci.yml:378 prove fail-continuing local and CI loops with aggregate failure reporting.
 
 ### DW-4: Add inspectable local test output and property forwarding
 
@@ -71,7 +72,8 @@ origin: migrated from legacy ledger (flat source_spec "none"), 2026-09-06
 location: EventStore.Client registration across Parties and FrontComposer
 source_spec: none
 reason: This independently shippable EventStore.Client package change was split from the G8 owner-proof action so the EventStore.Aspire JWT prerequisite can be completed first.
-status: open
+status: done 2026-09-07
+resolution: already resolved: references/Hexalith.EventStore/tests/Hexalith.EventStore.Client.Tests/Registration/AddEventStoreTests.cs:155 and references/Hexalith.EventStore/tests/Hexalith.EventStore.Client.Tests/Registration/ReadModelAndCursorRegistrationTests.cs:75, plus src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs:158, prove coexistence, idempotency, and consumer adoption.
 decision: 2026-09-06 Add EventStore extensions — Add independently selectable EventStore.Client extensions with idempotency, order, and coexistence tests, then adapt consumers while retaining generic registration.
 
 ### DW-10: Deliver integrated AppHost topology parity proof
@@ -148,7 +150,8 @@ origin: migrated from legacy ledger (flat source_spec "/home/administrator/proje
 location: semantic-release workflow
 source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-fix-memories-npm-vulnerabilities.md`
 reason: `npx semantic-release` predates this change and may fetch if local tooling is absent; resolving it requires a separate release-workflow policy decision.
-status: open
+status: done 2026-09-07
+resolution: already resolved: references/Hexalith.Builds/.github/workflows/domain-release.yml:484 invokes the installed semantic-release binary through npm exec --no.
 decision: 2026-09-06 Use npm exec no — Invoke semantic-release through npm exec --no so only the installed dependency can run.
 
 ### DW-19: Hoist multi-token search candidate normalization
@@ -435,7 +438,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: PartySdkReadModelEraser.ExecuteWithResumeAsync
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: PartySdkReadModelEraser.ExecuteWithResumeAsync re-executes the original batch on Incomplete without refreshing etags; a partial apply can loop into sdk-read-model-cleanup-conflict.
-status: open
+status: done 2026-09-07
+resolution: already resolved: tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs:1816 proves the current resumable batch contract retries the exact same attempt identity.
 
 ### DW-55: Test Memories erasure cleanup with disabled indexing and durable mappings
 

@@ -2,7 +2,7 @@
 title: 'CI shard failure aggregation'
 type: 'bugfix'
 created: '2026-09-06'
-status: 'in-progress'
+status: 'in-review'
 baseline_commit: '904b0ca928616130ec0092983c3c0c346c8fc2e1'
 review_loop_iteration: 0
 followup_review_recommended: false
@@ -51,9 +51,9 @@ deferred: []
 ## Tasks & Acceptance
 
 **Execution:**
-- `references/Hexalith.Builds/Tools/test-domain-workflow-test-platforms.ps1` -- add contracts and shimmed execution checks for all four shard loops, inactive outputs, complete summaries, and the final nonzero gate -- prevent a static-only false green.
-- `references/Hexalith.Builds/.github/workflows/domain-ci.yml` -- collect per-project outcomes in every Tier 1/Tier 2 loop, publish PASS/FAIL tables and output counts, then add an always-run aggregate failure gate after coverage validation -- allow all configured projects to execute before the job fails.
-- `references/Hexalith.Builds/.github/workflows/domain-ci.md` -- describe failure-continuing shard execution, summary evidence, and final blocking behavior -- keep shared CI guidance aligned with the workflow contract.
+- [x] `references/Hexalith.Builds/Tools/test-domain-workflow-test-platforms.ps1` -- add contracts and shimmed execution checks for all four shard loops, inactive outputs, complete summaries, and the final nonzero gate -- prevent a static-only false green.
+- [x] `references/Hexalith.Builds/.github/workflows/domain-ci.yml` -- collect per-project outcomes in every Tier 1/Tier 2 loop, publish PASS/FAIL tables and output counts, then add an always-run aggregate failure gate after coverage validation -- allow all configured projects to execute before the job fails.
+- [x] `references/Hexalith.Builds/.github/workflows/domain-ci.md` -- describe failure-continuing shard execution, summary evidence, and final blocking behavior -- keep shared CI guidance aligned with the workflow contract.
 
 **Acceptance Criteria:**
 - Given a Parties CI run with multiple Tier 1 and Tier 2 projects, when any non-final project fails, then all later configured projects run and all attempted outcomes appear in GitHub step summaries before the job returns nonzero.
