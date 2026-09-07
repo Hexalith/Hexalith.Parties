@@ -44,6 +44,15 @@
     "label": "Add owner-level audiences",
     "resolution": ""
   },
+  "DW-120": {
+    "answered_at": "2026-09-07",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Add case-insensitive channel uniqueness guards on creation and update while retaining existing consent IDs for nonconflicting states. Define safe handling for pre-existing ambiguous aggregates and add collision tests.",
+    "key": "1",
+    "label": "Reject case-only duplicates",
+    "resolution": ""
+  },
   "DW-13": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
