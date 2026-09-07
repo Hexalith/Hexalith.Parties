@@ -152,6 +152,15 @@
     "label": "Payload erasure instant",
     "resolution": ""
   },
+  "DW-82": {
+    "answered_at": "2026-09-07",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Add or adopt a bounded Memories API that inventories units by canonical Parties source identity, reconcile local mappings from it, and require zero remote units before reporting cleanup complete.",
+    "key": "authoritative-memories-query",
+    "label": "Query Memories",
+    "resolution": ""
+  },
   "DW-9": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
