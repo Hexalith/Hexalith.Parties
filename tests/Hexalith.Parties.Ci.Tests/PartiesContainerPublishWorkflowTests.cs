@@ -18,7 +18,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     [InlineData("package.json", "package-lock.json", "semantic-release", "^25.0.9", "25.0.9")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@axe-core/playwright", "^4.13.0", "4.13.0")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@playwright/test", "^1.63.0", "1.63.0")]
-    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@types/node", "^26.4.1", "26.4.1")]
+    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@types/node", "^26.5.0", "26.5.0")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "typescript", "^7.0.2", "7.0.2")]
     public void DependencyManifestsAndLocksMatchSelectedVersions(
         string manifestPath,
@@ -369,7 +369,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         ci.ShouldContain("workflow_dispatch");
         ci.ShouldContain("bypass-validation");
         ci.ShouldContain("commitlint.yml");
-        ci.ShouldContain("EventStore 3.102.0");
+        ci.ShouldContain("EventStore 3.103.0");
         ci.ShouldContain("Package mode remains the authoritative CI and release path");
         ci.ShouldContain("source mode is diagnostic only");
         ci.ShouldContain("registry.hexalith.com/parties");

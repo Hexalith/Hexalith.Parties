@@ -20,18 +20,18 @@ public sealed class PlatformApiPrerequisitesTests
     // the bound exists so a hung child fails the lane with a diagnosable message instead of blocking.
     private const int ProcessTimeoutMilliseconds = 300_000;
     private const string AiToolsSha = "5f93d2ec8239494852c97032c819cb1689939e36";
-    private const string BuildsSha = "6daad3d501e97204eba66d971bba6a7103b85ccd";
+    private const string BuildsSha = "7b0b1837ce368e314b5e11b011b73603637a17e1";
     private const string CommonsSha = "6da79aed2daa4e199689331ee3196f7872c0988a";
 
     // Consumed by MainLayout for the shell landmarks and skip links (G4 work package F, delivered
     // under sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md).
     // Recorded separately from the packaged 4.3.0 identity that CI and the released container use.
-    private const string FrontComposerSha = "f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a";
-    private const string MemoriesSha = "7e9c2c387ee84b4d5c96c27f4cf613e13ff2c9e2";
+    private const string FrontComposerSha = "7e0e6cc605853f7bf4f3f732505e208ea564cc9e";
+    private const string MemoriesSha = "15fdfaea7004d68e9b149e828503f832d049009a";
     private const string PolymorphicSerializationsSha = "8aeed1d27c9a050bc4bec6d89051aa00de306a69";
-    private const string TenantsSha = "f75cdacc8eca458778c7109fd3f713f8907bed02";
-    private const string PayloadProtectionEventStoreDescribe = "v3.102.0-58-g3c6a5e33";
-    private const string PayloadProtectionEventStoreSha = "3c6a5e33f9fbaf8469047ba3de72f70ab4425e66";
+    private const string TenantsSha = "e7f366623733abdb64f173e9843edc7fc7d22193";
+    private const string PayloadProtectionEventStoreDescribe = "v3.103.0-2-gd45206f7";
+    private const string PayloadProtectionEventStoreSha = "d45206f7cbd80a112519c1d4687d7279a745f0c5";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
     private const string PayloadProtectionSurface = "Payload protection engine package";
     private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";
@@ -175,7 +175,7 @@ public sealed class PlatformApiPrerequisitesTests
         [
             "Hexalith.Parties",
             "PackageReference",
-            "Released package `3.102.0`",
+            "Released package `3.103.0`",
         ],
         ["EventStore domain-service host and DataProtection/query SDK|Source (explicit project-reference graph)"] =
         [
@@ -194,22 +194,22 @@ public sealed class PlatformApiPrerequisitesTests
             "Directory.Packages.props",
             "does not import `Hexalith.Build.props` or `Hexalith.Package.props`",
             BuildsSha,
-            "EventStore `3.102.0`",
+            "EventStore `3.103.0`",
             "Commons `2.30.0`",
-            "Memories `2.26.1`",
+            "Memories `2.26.2`",
             "Tenants `5.7.0`",
             "Parties `1.1.1`",
         ],
         ["Memories submodule|Source (optional rich search)"] =
         [
             MemoriesSha,
-            "`v2.26.2-4-g7e9c2c38`",
-            "HexalithMemoriesVersion=2.26.1",
+            "`v2.26.2-9-g15fdfaea`",
+            "HexalithMemoriesVersion=2.26.2",
         ],
         ["Tenants AppHost topology|Source (diagnostic) and package `5.7.0` (default graph)"] =
         [
             TenantsSha,
-            "`v5.7.0-27-gf75cdacc`",
+            "`v5.7.0-31-ge7f36662`",
             "5.7.0",
         ],
     };
@@ -688,9 +688,9 @@ public sealed class PlatformApiPrerequisitesTests
         rootBuildTargets.ShouldNotContain("Hexalith.Build.props");
         rootBuildTargets.ShouldNotContain("Hexalith.Package.props");
         string catalog = File.ReadAllText(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"));
-        catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">3.102.0</HexalithEventStoreVersion>");
+        catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">3.103.0</HexalithEventStoreVersion>");
         catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">2.30.0</HexalithCommonsVersion>");
-        catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">2.26.1</HexalithMemoriesVersion>");
+        catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">2.26.2</HexalithMemoriesVersion>");
         catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">5.7.0</HexalithTenantsVersion>");
         catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">1.1.1</HexalithPartiesVersion>");
 
@@ -712,7 +712,7 @@ public sealed class PlatformApiPrerequisitesTests
         foreach (string projectFile in eventStoreConsumers)
         {
             EvaluatedProjectGraph packageGraph = EvaluateProjectGraph(root, projectFile, useSource: false);
-            packageGraph.Properties["HexalithEventStoreVersion"].ShouldBe("3.102.0", projectFile);
+            packageGraph.Properties["HexalithEventStoreVersion"].ShouldBe("3.103.0", projectFile);
             packageGraph.PackageReferences.Any(static reference => reference.StartsWith("Hexalith.EventStore.", StringComparison.Ordinal))
                 .ShouldBeTrue($"{projectFile} package graph");
             packageGraph.ProjectReferences.Any(static reference => reference.Contains("/references/Hexalith.EventStore/", StringComparison.Ordinal))
@@ -1374,7 +1374,7 @@ public sealed class PlatformApiPrerequisitesTests
         string finalLedger = ReadMatrix();
         finalLedger.ShouldContain("Story 8.10 final retained-identity reconciliation");
         finalLedger.ShouldContain(PayloadProtectionEventStoreSha);
-        finalLedger.ShouldContain("Released package `3.102.0`");
+        finalLedger.ShouldContain("Released package `3.103.0`");
         row.Status.ShouldBe("needs-additive-api");
 
         foreach (string path in RequiredAbsentPayloadProtectionPaths)

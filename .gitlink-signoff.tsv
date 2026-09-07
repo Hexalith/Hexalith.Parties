@@ -76,3 +76,9 @@ references/Hexalith.Memories|7e9c2c387ee84b4d5c96c27f4cf613e13ff2c9e2|validated-
 references/Hexalith.FrontComposer|f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a|validated-advance|v4.3.0-37-gf0c3b6fd|jpiquot|2026-09-07
 references/Hexalith.Tenants|f75cdacc8eca458778c7109fd3f713f8907bed02|validated-advance|v5.7.0-27-gf75cdacc|jpiquot|2026-09-07
 references/Hexalith.Builds|6daad3d501e97204eba66d971bba6a7103b85ccd|validated-advance|v4.27.1-14-g6daad3d|jpiquot|2026-09-07
+# --- 2026-09-07 full submodule and package update ---
+references/Hexalith.Builds|7b0b1837ce368e314b5e11b011b73603637a17e1|validated-advance|v4.27.1-16-g7b0b183|jpiquot|2026-09-07
+references/Hexalith.EventStore|d45206f7cbd80a112519c1d4687d7279a745f0c5|validated-advance|v3.103.0-2-gd45206f7|jpiquot|2026-09-07
+references/Hexalith.FrontComposer|7e0e6cc605853f7bf4f3f732505e208ea564cc9e|validated-advance|v4.3.0-67-g7e0e6cc6|jpiquot|2026-09-07
+references/Hexalith.Memories|15fdfaea7004d68e9b149e828503f832d049009a|validated-advance|v2.26.2-9-g15fdfaea|jpiquot|2026-09-07
+references/Hexalith.Tenants|e7f366623733abdb64f173e9843edc7fc7d22193|validated-advance|v5.7.0-31-ge7f36662|jpiquot|2026-09-07
