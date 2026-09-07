@@ -26,6 +26,15 @@
     "label": "Hide compact link",
     "resolution": ""
   },
+  "DW-119": {
+    "answered_at": "2026-09-07",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Renegotiate the frozen contract, add IsInEnum for LawfulBasis, and cap revoke reasons at 256 characters. Propagate focused boundary tests without changing command or event wire shape.",
+    "key": "1",
+    "label": "Tighten validation",
+    "resolution": ""
+  },
   "DW-12": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
