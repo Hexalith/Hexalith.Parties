@@ -462,6 +462,7 @@ location: PartySdkQueryService failure vocabulary
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: PartySdkQueryService still returns actor-era failure reasons on the SDK path, which misleads operators after AC8 actor deletion.
 status: open
+decision: 2026-09-07 Compatible canonical aliases — Add semantic SDK and read-model aliases in EventStore.Contracts while preserving legacy wire values. Switch Parties source and tests to the aliases and retain old constants as obsolete compatible members.
 
 ### DW-57: Move PartyEventTypeResolver out of the retired Actors folder
 

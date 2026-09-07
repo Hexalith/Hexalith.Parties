@@ -143,6 +143,15 @@
     "label": "Paged bucketed model",
     "resolution": ""
   },
+  "DW-56": {
+    "answered_at": "2026-09-07",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Add semantic SDK and read-model aliases in EventStore.Contracts while preserving legacy wire values. Switch Parties source and tests to the aliases and retain old constants as obsolete compatible members.",
+    "key": "1",
+    "label": "Compatible canonical aliases",
+    "resolution": ""
+  },
   "DW-77": {
     "answered_at": "2026-09-06",
     "bundle_name": "",
