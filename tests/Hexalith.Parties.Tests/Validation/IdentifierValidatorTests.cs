@@ -1,6 +1,7 @@
 using FluentValidation.Results;
 
 using Hexalith.Parties.Contracts.Commands;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Validation;
 
@@ -305,6 +306,14 @@ public sealed class IdentifierValidatorTests
             TenantId = "tenant-a",
         })),
         new("ReactivateParty", id => new ReactivatePartyValidator().Validate(new ReactivateParty { PartyId = id })),
+        new("RecordConsent", id => new RecordConsentValidator().Validate(new RecordConsent
+        {
+            PartyId = id,
+            TenantId = "tenant-a",
+            ChannelId = "ch-email-1",
+            Purpose = "marketing",
+            LawfulBasis = LawfulBasis.Consent,
+        })),
         new("RemoveContactChannel", id => new RemoveContactChannelValidator().Validate(new RemoveContactChannel
         {
             PartyId = id,
@@ -325,6 +334,12 @@ public sealed class IdentifierValidatorTests
         {
             PartyId = id,
             TenantId = "tenant-a",
+        })),
+        new("RevokeConsent", id => new RevokeConsentValidator().Validate(new RevokeConsent
+        {
+            PartyId = id,
+            TenantId = "tenant-a",
+            ConsentId = "consent-1",
         })),
         new("SetIsNaturalPerson", id => new SetIsNaturalPersonValidator().Validate(new SetIsNaturalPerson
         {

@@ -145,6 +145,92 @@ public sealed class PartyDomainProcessorValidationTests
     }
 
     [Fact]
+    public async Task ProcessAsync_InvalidRecordConsentIdentifier_ReturnsBoundedRejectionWithoutRehydration()
+    {
+        const string unsafeChannelId = "channel/unsafe-sensitive";
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        PartyDomainProcessor invoker = CreateInvoker(protection);
+        CommandEnvelope command = CreateCommand(new RecordConsent
+        {
+            PartyId = "party-1",
+            TenantId = "tenant-a",
+            ChannelId = unsafeChannelId,
+            Purpose = "marketing",
+            LawfulBasis = LawfulBasis.Consent,
+        });
+        DomainServiceCurrentState currentState = CreateCurrentStateWithProtectedSnapshot(command);
+
+        DomainResult result = await invoker.ProcessAsync(command, currentState, CancellationToken.None);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyCommandValidationRejected rejection = result.Events
+            .ShouldHaveSingleItem()
+            .ShouldBeOfType<PartyCommandValidationRejected>();
+        rejection.CommandType.ShouldBe(typeof(RecordConsent).FullName);
+        rejection.Failures.ShouldHaveSingleItem().PropertyName.ShouldBe(nameof(RecordConsent.ChannelId));
+        JsonSerializer.Serialize(rejection).ShouldNotContain(unsafeChannelId, Case.Sensitive);
+        rejection.Failures.ShouldAllBe(failure => failure.ErrorCode.Length <= 128);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_RecordConsentWith101CharacterPurpose_ReturnsBoundedRejectionWithoutRehydration()
+    {
+        string purpose = new('p', 101);
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        PartyDomainProcessor invoker = CreateInvoker(protection);
+        CommandEnvelope command = CreateCommand(new RecordConsent
+        {
+            PartyId = "party-1",
+            TenantId = "tenant-a",
+            ChannelId = "channel-1",
+            Purpose = purpose,
+            LawfulBasis = LawfulBasis.Consent,
+        });
+        DomainServiceCurrentState currentState = CreateCurrentStateWithProtectedSnapshot(command);
+
+        DomainResult result = await invoker.ProcessAsync(command, currentState, CancellationToken.None);
+
+        PartyCommandValidationRejected rejection = result.Events
+            .ShouldHaveSingleItem()
+            .ShouldBeOfType<PartyCommandValidationRejected>();
+        rejection.Failures.ShouldHaveSingleItem().PropertyName.ShouldBe(nameof(RecordConsent.Purpose));
+        JsonSerializer.Serialize(rejection).ShouldNotContain(purpose, Case.Sensitive);
+        rejection.Failures.ShouldAllBe(failure => failure.ErrorCode.Length <= 128);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_InvalidRevokeConsentIdentifier_ReturnsBoundedRejectionWithoutRehydration()
+    {
+        const string unsafeConsentId = "channel:purpose:unsafe-sensitive";
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        PartyDomainProcessor invoker = CreateInvoker(protection);
+        CommandEnvelope command = CreateCommand(new RevokeConsent
+        {
+            PartyId = "party-1",
+            TenantId = "tenant-a",
+            ConsentId = unsafeConsentId,
+        });
+        DomainServiceCurrentState currentState = CreateCurrentStateWithProtectedSnapshot(command);
+
+        DomainResult result = await invoker.ProcessAsync(command, currentState, CancellationToken.None);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyCommandValidationRejected rejection = result.Events
+            .ShouldHaveSingleItem()
+            .ShouldBeOfType<PartyCommandValidationRejected>();
+        rejection.CommandType.ShouldBe(typeof(RevokeConsent).FullName);
+        rejection.Failures.ShouldHaveSingleItem().PropertyName.ShouldBe(nameof(RevokeConsent.ConsentId));
+        JsonSerializer.Serialize(rejection).ShouldNotContain(unsafeConsentId, Case.Sensitive);
+        rejection.Failures.ShouldAllBe(failure => failure.ErrorCode.Length <= 128);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+    }
+
+    [Fact]
     public async Task ProcessAsync_ValidCreatePartyPayload_ProducesDomainEvents()
     {
         PartyDomainProcessor invoker = CreateInvoker(Substitute.For<IEventPayloadProtectionService>());

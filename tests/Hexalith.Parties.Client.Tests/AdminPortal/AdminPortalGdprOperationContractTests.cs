@@ -246,6 +246,84 @@ public sealed class AdminPortalGdprOperationContractTests
         handler.LastRequest.ShouldBeNull();
     }
 
+    [Theory]
+    [InlineData("a1b2c3d4-e5f6-7890-abcd-ef1234567890")]
+    [InlineData("{a1b2c3d4-e5f6-7890-abcd-ef1234567890}")]
+    public async Task AddConsentAsync_LegacyGuidChannel_SubmitsExactIdentifierAsync(string channelId)
+    {
+        var handler = new RecordingHandler(HttpStatusCode.Accepted, "{}", "application/json");
+        var client = CreateHttpClient(handler);
+
+        await client.AddConsentAsync("party-1", channelId, "marketing", LawfulBasis.Consent, CancellationToken.None);
+
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
+        body.RootElement.GetProperty("payload").GetProperty("channelId").GetString().ShouldBe(channelId);
+    }
+
+    [Theory]
+    [InlineData("channel/unsafe-sensitive", "marketing")]
+    [InlineData("channel:purpose", "marketing")]
+    [InlineData("channel-1", "purpose/unsafe-sensitive")]
+    public async Task AddConsentAsync_UnsafeConsentInput_DoesNotSendRequestAsync(string channelId, string purpose)
+    {
+        var handler = new RecordingHandler(HttpStatusCode.Accepted, "{}", "application/json");
+        var client = CreateHttpClient(handler);
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(
+            () => client.AddConsentAsync("party-1", channelId, purpose, LawfulBasis.Consent, CancellationToken.None));
+
+        exception.Message.ShouldNotContain(channelId, Case.Sensitive);
+        exception.Message.ShouldNotContain(purpose, Case.Sensitive);
+        handler.LastRequest.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task AddConsentAsync_101CharacterPurpose_DoesNotSendRequestAsync()
+    {
+        string purpose = new('p', 101);
+        var handler = new RecordingHandler(HttpStatusCode.Accepted, "{}", "application/json");
+        var client = CreateHttpClient(handler);
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(
+            () => client.AddConsentAsync("party-1", "channel-1", purpose, LawfulBasis.Consent, CancellationToken.None));
+
+        exception.Message.ShouldNotContain(purpose, Case.Sensitive);
+        handler.LastRequest.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("consent-1")]
+    [InlineData("ch-email-1:marketing")]
+    [InlineData("{a1b2c3d4-e5f6-7890-abcd-ef1234567890}:billing")]
+    public async Task RevokeConsentAsync_CompatibleIdentifier_SubmitsExactIdentifierAsync(string consentId)
+    {
+        var handler = new RecordingHandler(HttpStatusCode.Accepted, "{}", "application/json");
+        var client = CreateHttpClient(handler);
+
+        await client.RevokeConsentAsync("party-1", consentId, CancellationToken.None);
+
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
+        JsonElement root = body.RootElement;
+        root.GetProperty("commandType").GetString().ShouldBe(typeof(RevokeConsent).FullName);
+        root.GetProperty("payload").GetProperty("consentId").GetString().ShouldBe(consentId);
+    }
+
+    [Theory]
+    [InlineData("consent/unsafe-sensitive")]
+    [InlineData("channel:purpose:unsafe-sensitive")]
+    [InlineData("channel:pur pose")]
+    public async Task RevokeConsentAsync_UnsafeIdentifier_DoesNotSendRequestAsync(string consentId)
+    {
+        var handler = new RecordingHandler(HttpStatusCode.Accepted, "{}", "application/json");
+        var client = CreateHttpClient(handler);
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(
+            () => client.RevokeConsentAsync("party-1", consentId, CancellationToken.None));
+
+        exception.Message.ShouldNotContain(consentId, Case.Sensitive);
+        handler.LastRequest.ShouldBeNull();
+    }
+
     [Fact]
     public async Task RetryVerificationAsync_SubmitsRetryVerificationCommandContractAsync()
     {

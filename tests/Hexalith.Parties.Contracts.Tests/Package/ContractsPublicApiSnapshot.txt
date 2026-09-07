@@ -727,6 +727,10 @@ type class Hexalith.Parties.Contracts.State.PartyState interfaces:
   method System.Void Apply(Hexalith.Parties.Contracts.Events.ErasureVerified e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyErased e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyMerged e)
+type class Hexalith.Parties.Contracts.ValueObjects.ConsentIdentifier interfaces:
+  method System.Boolean IsValidChannelId(System.String value)
+  method System.Boolean IsValidConsentId(System.String value)
+  method System.Boolean IsValidPurpose(System.String value)
 type class Hexalith.Parties.Contracts.ValueObjects.ConsentRecord interfaces:System.IEquatable<Hexalith.Parties.Contracts.ValueObjects.ConsentRecord>
   ctor ()
   property System.String ChannelId required getset

@@ -106,7 +106,11 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         string purpose,
         LawfulBasis lawfulBasis,
         CancellationToken cancellationToken)
-        => PostCommandAsync(
+    {
+        ValidateChannelId(channelId);
+        ValidatePurpose(purpose);
+
+        return PostCommandAsync(
             partyId,
             new RecordConsent
             {
@@ -118,13 +122,18 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             },
             AdminPortalGdprRoutes.Consent,
             cancellationToken);
+    }
 
     public Task<AdminPortalGdprCommandResult> RevokeConsentAsync(string partyId, string consentId, CancellationToken cancellationToken)
-        => PostCommandAsync(
+    {
+        ValidateConsentId(consentId);
+
+        return PostCommandAsync(
             partyId,
             new RevokeConsent { PartyId = partyId, TenantId = _options.Tenant, ConsentId = consentId },
             AdminPortalGdprRoutes.ConsentById,
             cancellationToken);
+    }
 
     public Task<IReadOnlyList<ConsentRecord>> GetConsentAsync(string partyId, CancellationToken cancellationToken)
         => GetConsentFromPartyDetailAsync(partyId, cancellationToken);
@@ -404,6 +413,35 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         {
             throw new ArgumentException("AggregateId must be a support-safe identifier.", nameof(aggregateId));
         }
+    }
+
+    private static void ValidateChannelId(string channelId)
+    {
+        if (!ConsentIdentifier.IsValidChannelId(channelId))
+        {
+            throw new ArgumentException("ChannelId must be a support-safe identifier.", nameof(channelId));
+        }
+    }
+
+    private static void ValidateConsentId(string consentId)
+    {
+        if (!ConsentIdentifier.IsValidConsentId(consentId))
+        {
+            throw new ArgumentException("ConsentId must be a support-safe identifier.", nameof(consentId));
+        }
+    }
+
+    private static void ValidatePurpose(string purpose)
+    {
+        if (!string.IsNullOrWhiteSpace(purpose)
+            && ConsentIdentifier.IsValidPurpose(purpose.Trim()))
+        {
+            return;
+        }
+
+        throw new ArgumentException(
+            "Purpose must contain 1 to 100 ASCII alphanumeric characters, hyphens, or underscores.",
+            nameof(purpose));
     }
 
     private sealed record PartyQueryPayload(string PartyId);

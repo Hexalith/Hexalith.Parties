@@ -38,7 +38,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: RecordConsent and RevokeConsent command contracts
 source_spec: `_bmad-output/implementation-artifacts/spec-8-2-identifier-correctness-and-zero-risk-hygiene.md`
 reason: `RecordConsent` and `RevokeConsent` currently accept `ChannelId`/`ConsentId` values that can contain legacy `channel:purpose` separators, so applying the new `PartyIdentifier` semantic-ID helper would break existing consent IDs while leaving aggregate not-found messages able to echo raw consent/channel identifiers.
-status: open
+status: done 2026-09-07
+resolution: resolved by sweep bundle dw-safe-consent-identifiers
+resolution-undo: 7adbf51424c125b77bca8b3b97165cbe979cd88a46e456ab347a6b829727a629 2026-09-07 7374617475733a206f70656e
 decision: 2026-09-06 Separate compatible validators — Add separate channel-segment and legacy-composite consent validators, preserve existing stored IDs, and replace unsafe error detail.
 
 ### DW-6: Correct and validate the advanced Hexalith.Builds checkout
@@ -955,4 +957,43 @@ origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-fi
 location: tests/e2e/playwright.config.ts and tests/Hexalith.Parties.UI.Tests/PartiesUiHostCompositionTests.cs
 source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
 reason: Local `ASPNETCORE_ENVIRONMENT=Test` runs may reuse an unrelated process at the expected URL, while current checks only inspect configuration text and do not execute the CI/local and Test/Development matrix.
+status: open
+
+### DW-119: RecordConsentValidator does not guard LawfulBasis with IsInEnum and RevokeConsentValidator leaves Reason unbounded, unlike every sibling command validator.
+origin: spec-deferred 5a330376d9e2
+location: src/Hexalith.Parties/Validation/RecordConsentValidator.cs and RevokeConsentValidator.cs
+source_spec: `spec-safe-consent-identifiers.md`
+severity: medium
+reason: AddContactChannelValidator, AddIdentifierValidator and CreatePartyValidator all call IsInEnum on their enum property, and RestrictProcessingValidator bounds Reason to 256 characters. RecordConsent carries LawfulBasis straight into ConsentRecorded, so an out-of-range cast is persisted. Deferred rather than patched because the intent contract's Never clause forbids changing lawful-basis behaviour; adding the rule would reject commands that are accepted today.
+status: open
+
+### DW-120: The deterministic lowercased ConsentId can collide when two contact channels differ only by letter case, while the channel lookup itself is ordinal case-sensitive.
+origin: spec-deferred 92120d4622ad
+location: src/Hexalith.Parties/Domain/PartyAggregate.cs:1362-1364
+source_spec: `spec-safe-consent-identifiers.md`
+severity: medium
+reason: PartyAggregate.Handle(RecordConsent) builds $"{channelId}:{purpose}".ToLowerInvariant() while state.ContactChannels.Any(c => c.Id == command.ChannelId) compares ordinally, so channels "Ch-Email-1" and "ch-email-1" collapse onto one consent id. Both lines are unchanged by this story and the intent's Always clause requires preserving that generation, so this is pre-existing behaviour, not a regression.
+status: open
+
+### DW-121: The consumer portal maps the client's new ArgumentException to a generic Failed outcome while the admin portal maps it to ValidationRejected.
+origin: spec-deferred 637e8540aa5c
+location: src/Hexalith.Parties.UI/Services/ConsumerConsentClient.cs:43-47,67-70
+source_spec: `spec-safe-consent-identifiers.md`
+reason: PartiesAdminPortalApiClient.ExecuteGdprCommandAsync catches ArgumentException and returns AdminPortalGdprOutcome.ValidationRejected, but SelfScopedPartiesClient calls HttpAdminPortalGdprClient directly and ConsumerConsentClient has a bare catch returning ConsumerConsentOperationOutcome.Failed. Unverified because MyConsentPage supplies purposes from a fixed catalogue and channel/consent ids from stored projections, all of which satisfy ConsentIdentifier today. What would settle it, if-true severity medium: evidence that a stored channel or consent id in a real tenant fails ConsentIdentifier, or a consumer path that feeds free-form channel/purpose input.
+status: open
+
+### DW-122: No test asserts that the production DI extension registers the consent validators, and the domain processor fails open when a validator is missing.
+origin: spec-deferred f8aa7466374b
+location: src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs:376
+source_spec: `spec-safe-consent-identifiers.md`
+severity: medium
+reason: PartyDomainProcessorValidationTests.CreateInvoker builds its own AddValidatorsFromAssemblyContaining scan rather than calling PartiesServiceCollectionExtensions.AddHexalithParties, and PartyDomainProcessor.TryRejectInvalidPayloadAsync logs and returns null when no validator resolves. A regression in the production registration surface would leave every command unvalidated with the suite green. Pre-existing infrastructure design, not introduced here.
+status: open
+
+### DW-123: ContactChannelNotFound and IdentifierNotFound still interpolate caller-supplied identifiers into their messages outside the two consent handlers.
+origin: spec-deferred 671760729b1e
+location: src/Hexalith.Parties/Domain/PartyAggregate.cs:412,415,423,426,1174,1229,1305
+source_spec: `spec-safe-consent-identifiers.md`
+severity: medium
+reason: PartyAggregate.cs lines 412, 415, 423, 426, 1174, 1229 and 1305 still emit $"Contact channel '{id}' not found." / $"Identifier '{id}' not found.", so the same event type now has two message dialects depending on which command produced it. Those call sites belong to commands outside this story's intent contract and were not touched by it.
 status: open

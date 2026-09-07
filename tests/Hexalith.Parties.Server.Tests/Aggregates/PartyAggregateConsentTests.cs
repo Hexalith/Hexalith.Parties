@@ -69,7 +69,98 @@ public class PartyAggregateConsentTests {
 
         // Assert
         result.IsRejection.ShouldBeTrue();
-        result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
+        ContactChannelNotFound rejection = result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
+        string message = rejection.Message.ShouldNotBeNull();
+        message.ShouldBe("Contact channel not found.");
+        message.ShouldNotContain(command.ChannelId, Case.Sensitive);
+    }
+
+    [Fact]
+    public void Handle_RecordConsent_CompatibleChannelPreservesWriteNormalization()
+    {
+        const string channelId = "Ch-Email-1";
+        PartyState state = PartyTestData.CreatePersonState();
+        state.Apply(new ContactChannelAdded
+        {
+            ContactChannelId = channelId,
+            Type = ContactChannelType.Email,
+            Value = "person@example.test",
+        });
+        RecordConsent command = PartyTestData.ValidRecordConsent() with
+        {
+            ChannelId = channelId,
+            Purpose = " Marketing ",
+        };
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        ConsentRecorded recorded = result.Events.ShouldHaveSingleItem().ShouldBeOfType<ConsentRecorded>();
+        recorded.ChannelId.ShouldBe(channelId);
+        recorded.Purpose.ShouldBe("marketing");
+        recorded.ConsentId.ShouldBe("ch-email-1:marketing");
+    }
+
+    [Fact]
+    public void Handle_RecordConsent_UnsafeChannelRejectsBeforeLookupWithoutEcho()
+    {
+        const string unsafeChannelId = "channel/unsafe-sensitive";
+        RecordConsent command = PartyTestData.ValidRecordConsent() with { ChannelId = unsafeChannelId };
+        PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        CompositeOperationConflict rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<CompositeOperationConflict>();
+        string message = rejection.Message.ShouldNotBeNull();
+        message.ShouldBe("Channel ID is invalid.");
+        message.ShouldNotContain(unsafeChannelId, Case.Sensitive);
+    }
+
+    [Fact]
+    public void Handle_RecordConsent_UnsafePartyIdRejectsBeforeChannelLookupWithoutEcho()
+    {
+        const string unsafePartyId = "party/unsafe-sensitive";
+        RecordConsent command = PartyTestData.ValidRecordConsent() with { PartyId = unsafePartyId };
+        PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        CompositeOperationConflict rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<CompositeOperationConflict>();
+        string message = rejection.Message.ShouldNotBeNull();
+        message.ShouldBe("Party ID is invalid.");
+        message.ShouldNotContain(unsafePartyId, Case.Sensitive);
+    }
+
+    [Fact]
+    public void Handle_RevokeConsent_UnsafePartyIdRejectsBeforeConsentLookupWithoutEcho()
+    {
+        const string unsafePartyId = "party/unsafe-sensitive";
+        RevokeConsent command = PartyTestData.ValidRevokeConsent("consent-1") with { PartyId = unsafePartyId };
+        PartyState state = PartyTestData.CreateStateWithConsent();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        CompositeOperationConflict rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<CompositeOperationConflict>();
+        string message = rejection.Message.ShouldNotBeNull();
+        message.ShouldBe("Party ID is invalid.");
+        message.ShouldNotContain(unsafePartyId, Case.Sensitive);
+    }
+
+    [Fact]
+    public void Handle_RecordConsent_OverLimitChannelRejectsWithoutEcho()
+    {
+        string channelId = new('c', 129);
+        RecordConsent command = PartyTestData.ValidRecordConsent() with { ChannelId = channelId };
+        PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        CompositeOperationConflict rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<CompositeOperationConflict>();
+        string message = rejection.Message.ShouldNotBeNull();
+        message.ShouldBe("Channel ID is invalid.");
+        message.ShouldNotContain(channelId, Case.Sensitive);
     }
 
     [Fact]
@@ -90,7 +181,8 @@ public class PartyAggregateConsentTests {
         DomainResult result = PartyAggregate.Handle(command, state);
 
         result.IsRejection.ShouldBeTrue();
-        result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
+        CompositeOperationConflict rejection = result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        rejection.Message.ShouldBe("Channel ID is invalid.");
         state.ConsentRecords.ShouldBeEmpty();
     }
 
@@ -128,6 +220,83 @@ public class PartyAggregateConsentTests {
         revoked.RevokedBy.ShouldBe("test-admin");
         revoked.Reason.ShouldBe("withdrawn");
         revoked.Source.ShouldBe("admin-portal");
+    }
+
+    [Theory]
+    [InlineData("consent-1")]
+    [InlineData("ch-email-1:marketing")]
+    public void Handle_RevokeConsent_CompatibleStoredIdEmitsExactIdentifier(string consentId)
+    {
+        PartyState state = PartyTestData.CreatePersonState();
+        state.Apply(new ConsentRecorded
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            TenantId = PartyTestData.DefaultTenantId,
+            ConsentId = consentId,
+            ChannelId = PartyTestData.DefaultChannelId,
+            Purpose = PartyTestData.DefaultConsentPurpose,
+            LawfulBasis = LawfulBasis.Consent,
+            GrantedAt = DateTimeOffset.UtcNow,
+            GrantedBy = "admin",
+        });
+        RevokeConsent command = PartyTestData.ValidRevokeConsent(consentId);
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        ConsentRevoked revoked = result.Events.ShouldHaveSingleItem().ShouldBeOfType<ConsentRevoked>();
+        revoked.ConsentId.ShouldBe(consentId);
+    }
+
+    [Fact]
+    public void Handle_RevokeConsent_UnsafeIdentifierRejectsBeforeLookupWithoutEcho()
+    {
+        const string unsafeConsentId = "channel:purpose:unsafe-sensitive";
+        RevokeConsent command = PartyTestData.ValidRevokeConsent(unsafeConsentId);
+        PartyState state = PartyTestData.CreateStateWithConsent();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        CompositeOperationConflict rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<CompositeOperationConflict>();
+        string message = rejection.Message.ShouldNotBeNull();
+        message.ShouldBe("Consent ID is invalid.");
+        message.ShouldNotContain(unsafeConsentId, Case.Sensitive);
+    }
+
+    [Fact]
+    public void Handle_RevokeConsent_OverLimitIdentifierRejectsWithoutEcho()
+    {
+        string consentId = $"channel:{new string('p', 101)}";
+        RevokeConsent command = PartyTestData.ValidRevokeConsent(consentId);
+        PartyState state = PartyTestData.CreateStateWithConsent();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        CompositeOperationConflict rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<CompositeOperationConflict>();
+        string message = rejection.Message.ShouldNotBeNull();
+        message.ShouldBe("Consent ID is invalid.");
+        message.ShouldNotContain(consentId, Case.Sensitive);
+    }
+
+    [Fact]
+    public void Handle_ConsentCommands_UnsafeIdentifiersPreservePartyNotFoundPrecedence()
+    {
+        RecordConsent record = PartyTestData.ValidRecordConsent() with { ChannelId = "channel/unsafe" };
+        RevokeConsent revoke = PartyTestData.ValidRevokeConsent("channel:purpose:unsafe");
+
+        PartyAggregate.Handle(record, null).Events.ShouldHaveSingleItem().ShouldBeOfType<PartyNotFound>();
+        PartyAggregate.Handle(revoke, null).Events.ShouldHaveSingleItem().ShouldBeOfType<PartyNotFound>();
+    }
+
+    [Fact]
+    public void Handle_ConsentCommands_UnsafeIdentifiersPreserveErasurePrecedence()
+    {
+        PartyState state = PartyTestData.CreateErasurePendingState();
+        RecordConsent record = PartyTestData.ValidRecordConsent() with { ChannelId = "channel/unsafe" };
+        RevokeConsent revoke = PartyTestData.ValidRevokeConsent("channel:purpose:unsafe");
+
+        PartyAggregate.Handle(record, state).Events.ShouldHaveSingleItem().ShouldBeOfType<PartyErasureInProgress>();
+        PartyAggregate.Handle(revoke, state).Events.ShouldHaveSingleItem().ShouldBeOfType<PartyErasureInProgress>();
     }
 
     // === Task 7.6 ===
@@ -169,6 +338,9 @@ public class PartyAggregateConsentTests {
         rejection.PartyId.ShouldBe(PartyTestData.DefaultPartyId);
         rejection.TenantId.ShouldBe(PartyTestData.DefaultTenantId);
         rejection.ConsentId.ShouldBe("nonexistent:consent");
+        string message = rejection.Message.ShouldNotBeNull();
+        message.ShouldBe("Consent not found.");
+        message.ShouldNotContain(command.ConsentId, Case.Sensitive);
     }
 
     // === Task 7.15 ===
@@ -340,7 +512,10 @@ public class PartyAggregateConsentTests {
 
         // Assert
         result.IsRejection.ShouldBeTrue();
-        result.Events[0].ShouldBeOfType<InvalidConsentPurpose>();
+        InvalidConsentPurpose rejection = result.Events[0].ShouldBeOfType<InvalidConsentPurpose>();
+        rejection.TenantId.ShouldBe(PartyTestData.DefaultTenantId);
+        rejection.Purpose.ShouldBeNull();
+        rejection.Message.ShouldBe("Purpose is required.");
     }
 
     [Fact]
@@ -360,6 +535,27 @@ public class PartyAggregateConsentTests {
 
         // Assert
         result.IsRejection.ShouldBeTrue();
+        InvalidConsentPurpose rejection = result.Events[0].ShouldBeOfType<InvalidConsentPurpose>();
+        rejection.TenantId.ShouldBe(PartyTestData.DefaultTenantId);
+        rejection.Purpose.ShouldBeNull();
+        rejection.Message.ShouldBe("Purpose must contain only alphanumeric characters, hyphens, and underscores.");
+    }
+
+    [Fact]
+    public void Handle_RecordConsent_OverLimitPurposeReturnsSanitizedRejection()
+    {
+        string purpose = new('p', 101);
+        RecordConsent command = PartyTestData.ValidRecordConsent() with { Purpose = purpose };
+        PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        InvalidConsentPurpose rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<InvalidConsentPurpose>();
+        rejection.TenantId.ShouldBe(PartyTestData.DefaultTenantId);
+        rejection.Purpose.ShouldBeNull();
+        string message = rejection.Message.ShouldNotBeNull();
+        message.ShouldBe("Purpose must not exceed 100 characters.");
+        message.ShouldNotContain(purpose, Case.Sensitive);
     }
 
     [Fact]

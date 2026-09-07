@@ -1320,11 +1320,20 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             return erasureRejection;
         }
 
+        DomainResult? partyIdRejection = ValidateStandaloneSemanticId(command.PartyId, "Party ID");
+        if (partyIdRejection is not null) {
+            return partyIdRejection;
+        }
+
+        if (!ConsentIdentifier.IsValidChannelId(command.ChannelId)) {
+            return DomainResult.Rejection([new CompositeOperationConflict { Message = "Channel ID is invalid." }]);
+        }
+
         // NOTE: No restriction check — consent management allowed during restriction (Article 18(3))
 
         // Validate channel exists
         if (!state.ContactChannels.Any(c => c.Id == command.ChannelId)) {
-            return DomainResult.Rejection([new ContactChannelNotFound { Message = $"Contact channel '{command.ChannelId}' not found." }]);
+            return DomainResult.Rejection([new ContactChannelNotFound { Message = "Contact channel not found." }]);
         }
 
         // Validate purpose format
@@ -1332,27 +1341,21 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         if (string.IsNullOrWhiteSpace(purpose)) {
             return DomainResult.Rejection([new InvalidConsentPurpose {
                 PartyId = command.PartyId,
-                    TenantId = string.Empty,
-                Purpose = command.Purpose,
+                TenantId = command.TenantId,
+                Purpose = null,
                 Message = "Purpose is required.",
             }]);
         }
 
-        if (purpose.Length > 100) {
+        if (!ConsentIdentifier.IsValidPurpose(purpose)) {
+            string message = purpose.Length > 100
+                ? "Purpose must not exceed 100 characters."
+                : "Purpose must contain only alphanumeric characters, hyphens, and underscores.";
             return DomainResult.Rejection([new InvalidConsentPurpose {
                 PartyId = command.PartyId,
                 TenantId = command.TenantId,
-                Purpose = command.Purpose,
-                Message = "Purpose must not exceed 100 characters.",
-            }]);
-        }
-
-        if (!System.Text.RegularExpressions.Regex.IsMatch(purpose, @"^[a-zA-Z0-9\-_]+$")) {
-            return DomainResult.Rejection([new InvalidConsentPurpose {
-                PartyId = command.PartyId,
-                TenantId = command.TenantId,
-                Purpose = command.Purpose,
-                Message = "Purpose must contain only alphanumeric characters, hyphens, and underscores.",
+                Purpose = null,
+                Message = message,
             }]);
         }
 
@@ -1390,12 +1393,21 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             return erasureRejection;
         }
 
+        DomainResult? partyIdRejection = ValidateStandaloneSemanticId(command.PartyId, "Party ID");
+        if (partyIdRejection is not null) {
+            return partyIdRejection;
+        }
+
+        if (!ConsentIdentifier.IsValidConsentId(command.ConsentId)) {
+            return DomainResult.Rejection([new CompositeOperationConflict { Message = "Consent ID is invalid." }]);
+        }
+
         // NOTE: No restriction check — consent management allowed during restriction (Article 18(3))
 
         // Find consent by ID
         ConsentRecord? consent = null;
         for (int i = 0; i < state.ConsentRecords.Count; i++) {
-            if (state.ConsentRecords[i].ConsentId == command.ConsentId) {
+            if (string.Equals(state.ConsentRecords[i].ConsentId, command.ConsentId, StringComparison.Ordinal)) {
                 consent = state.ConsentRecords[i];
                 break;
             }
@@ -1406,7 +1418,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
                 PartyId = command.PartyId,
                 TenantId = command.TenantId,
                 ConsentId = command.ConsentId,
-                Message = $"Consent '{command.ConsentId}' not found.",
+                Message = "Consent not found.",
             }]);
         }
 
