@@ -20,7 +20,7 @@
 | **Test** | `pwsh -NoProfile -File scripts/test.ps1 -Lane {unit\|integration\|topology\|ci\|all\|coverage}` or `dotnet test tests/<Project>/<Project>.csproj`. Blocked-lane triage: add `-ContinueOnFailure` (report every failing project) and `-ResultsDirectory TestResults` (inspectable TRX) — see the fallback validation ladder in [development-guide.md](./development-guide.md) |
 | **Entry points** | AppHost `Program.cs` (dev) · `Hexalith.Parties/Program.cs` → EventStore-only `/process`, `/query`, `/project*`, `/replay-state`, `/project/rebuild/*` · `Hexalith.Parties.Mcp/Program.cs` → `/mcp` |
 | **Domain logic** | `src/Hexalith.Parties/Domain/PartyAggregate.cs` |
-| **Prereqs** | .NET 10 SDK 10.0.302, Docker Desktop; root build submodules under `references/` |
+| **Prereqs** | .NET 10 SDK 10.0.400, Docker Desktop; root build submodules under `references/` |
 
 ## Generated documentation (this scan)
 
@@ -86,7 +86,7 @@ Then follow [getting-started.md](./getting-started.md) for auth + first command/
 1. **GDPR crypto-shredding is implemented & enabled by default** (`Parties:CryptoShredding:IsEnabled=true`) despite the README's "not in MVP" notice — a separate switch from the MVP warning (`Parties:Compliance:GdprFeaturesActive`). 🚨 The **only** key store is `LocalDevKeyStorageBackend` (in-memory) with **no production guard/warning**, so a prod restart silently destroys all key material → unrecoverable personal data. Provision a real KMS first ([architecture.md §8](./architecture.md)).
 2. **MCP exposes exactly 5 tools** (`create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`). `get_party_name_at` does **not** exist — temporal name-as-of queries are reserved, not implemented. *(The README + `getting-started.md` previously listed a phantom 6th `get_party_name_at` tool; corrected in this pass.)*
 3. **Projection/query actors and `ProjectionRebuildService` were retired in Story 8.6:** EventStore SDK handlers and read-model stores now own the mechanics; regression tests pin rebuild/live agreement ([architecture.md §6](./architecture.md)).
-4. **The AppHost SDK and Aspire packages are aligned at `13.4.6`.** `Testcontainers` is declared but unused.
+4. **The AppHost SDK and Aspire packages are aligned at `13.5.3`.** `Testcontainers` is declared but unused.
 5. **Submodules are now checked out** under `references/` in this working copy. A **fresh clone** must initialize the root build submodules (`Hexalith.Builds`, `Hexalith.Commons`, `Hexalith.EventStore`, `Hexalith.FrontComposer`, `Hexalith.PolymorphicSerializations`, and `Hexalith.Tenants`) without `--recursive`; `Hexalith.Memories` remains optional for rich search.
 
 ---

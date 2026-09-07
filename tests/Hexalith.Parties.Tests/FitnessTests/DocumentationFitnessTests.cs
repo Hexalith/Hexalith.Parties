@@ -118,6 +118,28 @@ public sealed class DocumentationFitnessTests
     }
 
     [Fact]
+    public void CodeMapDocumentsThePinnedSdkVersion()
+    {
+        string root = RepositoryRoot.Locate();
+        const string pinnedSdk = "10.0.400";
+        string[] codeMapDocuments =
+        [
+            "docs/architecture.md",
+            "docs/index.md",
+            "docs/project-overview.md",
+            "docs/source-tree-analysis.md",
+            "docs/getting-started.md",
+        ];
+
+        foreach (string relativePath in codeMapDocuments)
+        {
+            string documentation = Read(root, relativePath);
+            documentation.ShouldContain(pinnedSdk, Case.Sensitive, relativePath);
+            documentation.ShouldNotContain("10.0.302", Case.Sensitive, relativePath);
+        }
+    }
+
+    [Fact]
     public void MaintainedDocumentationDescribesSdkRoutesUnderEventStoreOnlyDenyAcl()
     {
         string root = RepositoryRoot.Locate();

@@ -13,7 +13,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Attribute | Value |
 |-----------|-------|
 | Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), exactly 13 projects under `src` plus one sample project + 15 runnable .NET test projects + 1 support host + Playwright e2e |
-| Primary language | C# / **.NET 10** (SDK pinned `10.0.302`) |
+| Primary language | C# / **.NET 10** (SDK pinned `10.0.400`) |
 | Architecture style | Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, gateway-fronted (EventStore) |
 | Orchestration | .NET Aspire 13.4 (`dotnet aspire run`) |
 | Eventing | DAPR pub/sub (Redis local; Kafka/RabbitMQ/Service Bus in prod) |
@@ -49,20 +49,20 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 
 | Category | Technology | Version |
 |----------|-----------|---------|
-| Runtime | .NET | `net10.0` (SDK `10.0.302`, rollForward latestPatch) |
-| Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.4.6` |
+| Runtime | .NET | `net10.0` (SDK `10.0.400`, rollForward latestPatch) |
+| Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.5.3` |
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.5` |
-| | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.4.1-beta.706` |
-| Gateway/eventing | Hexalith.EventStore | package `3.102.0` by default; source gitlink `acf5c4e403699d4f9290fd6636e4d6b1872a3bd6` when explicitly selected |
-| Tenancy | Hexalith.Tenants | package `5.6.0` by default; source gitlink `d914b13bd9b2354dbb6b556c9887664f68672069` when explicitly selected |
+| | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.5.0-preview.1.260825-0345` |
+| Gateway/eventing | Hexalith.EventStore | package `3.102.0` by default; source gitlink `3c6a5e33f9fbaf8469047ba3de72f70ab4425e66` when explicitly selected |
+| Tenancy | Hexalith.Tenants | package `5.7.0` by default; source gitlink `f75cdacc8eca458778c7109fd3f713f8907bed02` when explicitly selected |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.2.0` |
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.11` |
 | API docs | Microsoft.AspNetCore.OpenApi / Swashbuckle.SwaggerUI | `10.0.11` / `10.2.3` |
 | MCP | ModelContextProtocol / .AspNetCore | `2.2.0` / `2.2.0` |
-| UI | Microsoft.FluentUI.AspNetCore.Components | `5.0.0-rc.4-26180.1` |
+| UI | Microsoft.FluentUI.AspNetCore.Components | `5.0.0-rc.5-26219.1` |
 | | Microsoft.AspNetCore.Components.CustomElements | `10.0.11` |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | package `2.25.0` by default |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | package `2.26.1` by default |
 | Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.17.x` |
 | Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.9.0` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0-rc.1` |
@@ -72,7 +72,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 
 Solution-wide build settings (`Directory.Build.props`): `Nullable=enable`, `ImplicitUsings=enable`, **`TreatWarningsAsErrors=true`** (enforced by a build gate — see §11). Central package management via `Directory.Packages.props`.
 
-The AppHost SDK and Aspire packages are aligned at `13.4.6`; DAPR client,
+The AppHost SDK and Aspire packages are aligned at `13.5.3`; DAPR client,
 actors, and ASP.NET Core packages are aligned at `1.18.5`.
 
 ---

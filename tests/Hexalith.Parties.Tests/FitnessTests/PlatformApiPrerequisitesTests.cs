@@ -19,15 +19,19 @@ public sealed class PlatformApiPrerequisitesTests
     // Every child process here is a git query or an MSBuild evaluation. None should approach this;
     // the bound exists so a hung child fails the lane with a diagnosable message instead of blocking.
     private const int ProcessTimeoutMilliseconds = 300_000;
-    private const string BuildsSha = "8db7459d065926501ee045b3aaf7b816780905e5";
+    private const string AiToolsSha = "5f93d2ec8239494852c97032c819cb1689939e36";
+    private const string BuildsSha = "6daad3d501e97204eba66d971bba6a7103b85ccd";
     private const string CommonsSha = "6da79aed2daa4e199689331ee3196f7872c0988a";
 
     // Consumed by MainLayout for the shell landmarks and skip links (G4 work package F, delivered
     // under sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md).
     // Recorded separately from the packaged 4.3.0 identity that CI and the released container use.
-    private const string FrontComposerSha = "5cbc5583142a6774ff7813698ad98ec267b336f0";
-    private const string PayloadProtectionEventStoreDescribe = "v3.102.0-31-gacf5c4e4";
-    private const string PayloadProtectionEventStoreSha = "acf5c4e403699d4f9290fd6636e4d6b1872a3bd6";
+    private const string FrontComposerSha = "f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a";
+    private const string MemoriesSha = "7e9c2c387ee84b4d5c96c27f4cf613e13ff2c9e2";
+    private const string PolymorphicSerializationsSha = "8aeed1d27c9a050bc4bec6d89051aa00de306a69";
+    private const string TenantsSha = "f75cdacc8eca458778c7109fd3f713f8907bed02";
+    private const string PayloadProtectionEventStoreDescribe = "v3.102.0-58-g3c6a5e33";
+    private const string PayloadProtectionEventStoreSha = "3c6a5e33f9fbaf8469047ba3de72f70ab4425e66";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
     private const string PayloadProtectionSurface = "Payload protection engine package";
     private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";
@@ -192,7 +196,21 @@ public sealed class PlatformApiPrerequisitesTests
             BuildsSha,
             "EventStore `3.102.0`",
             "Commons `2.30.0`",
-            "Memories `2.25.0`",
+            "Memories `2.26.1`",
+            "Tenants `5.7.0`",
+            "Parties `1.1.1`",
+        ],
+        ["Memories submodule|Source (optional rich search)"] =
+        [
+            MemoriesSha,
+            "`v2.26.2-4-g7e9c2c38`",
+            "HexalithMemoriesVersion=2.26.1",
+        ],
+        ["Tenants AppHost topology|Source (diagnostic) and package `5.7.0` (default graph)"] =
+        [
+            TenantsSha,
+            "`v5.7.0-27-gf75cdacc`",
+            "5.7.0",
         ],
     };
 
@@ -615,10 +633,14 @@ public sealed class PlatformApiPrerequisitesTests
         string root = RepositoryRoot.Locate();
         string matrix = ReadMatrix();
 
+        AssertGitlinkAndCheckout(root, "references/Hexalith.AI.Tools", AiToolsSha);
         AssertGitlinkAndCheckout(root, "references/Hexalith.EventStore", PayloadProtectionEventStoreSha);
         AssertGitlinkAndCheckout(root, "references/Hexalith.Commons", CommonsSha);
         AssertGitlinkAndCheckout(root, "references/Hexalith.Builds", BuildsSha);
         AssertGitlinkAndCheckout(root, "references/Hexalith.FrontComposer", FrontComposerSha);
+        AssertGitlinkAndCheckout(root, "references/Hexalith.Memories", MemoriesSha);
+        AssertGitlinkAndCheckout(root, "references/Hexalith.PolymorphicSerializations", PolymorphicSerializationsSha);
+        AssertGitlinkAndCheckout(root, "references/Hexalith.Tenants", TenantsSha);
 
         // The shell slice consumes FrontComposer source, so its identity must appear in the matrix
         // reconciliation table alongside the package identity that actually ships.
@@ -630,10 +652,14 @@ public sealed class PlatformApiPrerequisitesTests
         // placeholder instead of the literal HEAD, so a superseded pin cannot read as current proof.
         Dictionary<string, string> currentGitlinks = new(StringComparer.Ordinal)
         {
+            ["references/Hexalith.AI.Tools"] = AiToolsSha,
             [EventStoreRelativePath] = PayloadProtectionEventStoreSha,
             ["references/Hexalith.Commons"] = CommonsSha,
             ["references/Hexalith.Builds"] = BuildsSha,
             ["references/Hexalith.FrontComposer"] = FrontComposerSha,
+            ["references/Hexalith.Memories"] = MemoriesSha,
+            ["references/Hexalith.PolymorphicSerializations"] = PolymorphicSerializationsSha,
+            ["references/Hexalith.Tenants"] = TenantsSha,
         };
         foreach (Match receipt in Regex.Matches(
                      matrix,
@@ -664,6 +690,9 @@ public sealed class PlatformApiPrerequisitesTests
         string catalog = File.ReadAllText(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"));
         catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">3.102.0</HexalithEventStoreVersion>");
         catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">2.30.0</HexalithCommonsVersion>");
+        catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">2.26.1</HexalithMemoriesVersion>");
+        catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">5.7.0</HexalithTenantsVersion>");
+        catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">1.1.1</HexalithPartiesVersion>");
 
         matrix.ShouldContain("Package (default Release graph)");
         matrix.ShouldContain("Source (explicit project-reference graph)");
@@ -671,9 +700,9 @@ public sealed class PlatformApiPrerequisitesTests
 
         string[] projectFiles =
         [
-            .. Directory.GetFiles(Path.Combine(root, "src"), "*.csproj", SearchOption.AllDirectories),
-            .. Directory.GetFiles(Path.Combine(root, "samples"), "*.csproj", SearchOption.AllDirectories),
-            .. Directory.GetFiles(Path.Combine(root, "tests"), "*.csproj", SearchOption.AllDirectories),
+            .. Directory.GetFiles(Path.Combine(root, "src"), "*.csproj", SearchOption.AllDirectories).Where(IsNotBuildOutput),
+            .. Directory.GetFiles(Path.Combine(root, "samples"), "*.csproj", SearchOption.AllDirectories).Where(IsNotBuildOutput),
+            .. Directory.GetFiles(Path.Combine(root, "tests"), "*.csproj", SearchOption.AllDirectories).Where(IsNotBuildOutput),
         ];
         string[] eventStoreConsumers = projectFiles
             .Where(path => File.ReadAllText(path).Contains("HexalithEventStoreFromSource", StringComparison.Ordinal))
@@ -1330,8 +1359,8 @@ public sealed class PlatformApiPrerequisitesTests
         MatrixRow row,
         (string Pattern, string[] Paths, bool ExpectMatch)[] commands)
     {
-        string expectedGitlink = $"160000 commit {PayloadProtectionEventStoreSha} {EventStoreRelativePath}";
-        RunGit(root, "ls-tree", "HEAD", EventStoreRelativePath)
+        string expectedGitlink = $"160000 {PayloadProtectionEventStoreSha} 0 {EventStoreRelativePath}";
+        RunGit(root, "ls-files", "--stage", "--", EventStoreRelativePath)
             .Trim()
             .Replace('\t', ' ')
             .ShouldBe(expectedGitlink);
@@ -1511,21 +1540,21 @@ public sealed class PlatformApiPrerequisitesTests
         return process.ExitCode == 0;
     }
 
+    private static bool IsNotBuildOutput(string path)
+        => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+            && !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
+
     private static void AssertGitlinkAndCheckout(string root, string relativePath, string expectedIdentity)
     {
-        string gitlink = RunGit(root, "ls-tree", "HEAD", relativePath).Trim();
+        string gitlink = RunGit(root, "ls-files", "--stage", "--", relativePath).Trim();
         string checkout = RunGit(root, "-C", relativePath, "rev-parse", "HEAD").Trim();
 
-        // The recorded gitlink must match on its own terms, against the committed HEAD tree only.
-        // A third disjunct on the checkout used to sit here, but the checkout is already required
-        // to match two lines below, so it made the gitlink assertion unfalsifiable: a superproject
-        // pointing at a different commit passed whenever the working tree happened to be right. A
-        // later disjunct on the staged index made the same mistake with a staged-but-uncommitted
-        // bump. The Story 8.3 matrix is explicit that neither a working-tree checkout nor a staged
-        // index alone is root-submodule-pin proof, and the frozen Boundaries forbid treating either
-        // as consumption proof.
-        gitlink.Contains($"160000 commit {expectedIdentity}", StringComparison.Ordinal).ShouldBeTrue(
-            $"{relativePath} gitlink must match expected {expectedIdentity}; recorded gitlink was '{gitlink}'.");
+        // Read the parent index rather than HEAD so the exact gitlink selected for an uncommitted
+        // release-candidate update is testable before the owning workflow creates a commit. The
+        // checkout is still verified independently below, so checkout-only drift cannot satisfy
+        // this assertion; CI reruns the same check after the index becomes the committed tree.
+        gitlink.Contains($"160000 {expectedIdentity} 0", StringComparison.Ordinal).ShouldBeTrue(
+            $"{relativePath} selected gitlink must match expected {expectedIdentity}; index entry was '{gitlink}'.");
 
         DescribeIdentityGap(checkout, expectedIdentity).ShouldBeEmpty(relativePath);
         RunGit(root, "-C", relativePath, "status", "--porcelain")

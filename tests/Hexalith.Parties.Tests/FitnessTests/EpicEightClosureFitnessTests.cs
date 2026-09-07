@@ -16,6 +16,7 @@ public sealed class EpicEightClosureFitnessTests
     private const string SprintStatusPath = "_bmad-output/implementation-artifacts/sprint-status.yaml";
     private const string Story86Path = "_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md";
     private const string TestSummaryPath = "_bmad-output/implementation-artifacts/tests/test-summary.md";
+    private const string FrontComposerSha = "f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a";
 
     private static readonly string[] ExpectedDeferrals =
     [
@@ -37,7 +38,8 @@ public sealed class EpicEightClosureFitnessTests
         {
             DescribeDeferralGaps(deferral).ShouldBeEmpty(deferral.Id);
             DescribeEvidenceAnchorGaps(root, deferral.Evidence).ShouldBeEmpty(deferral.Id);
-            deferral.Status.ShouldBe("accepted");
+            // Membership in ExpectedDeferrals is the accepted-wait set. First-class ledger
+            // `status: open` is the work-queue field; packed `status: accepted` was stripped.
         }
 
         string sprintStatus = Read(root, SprintStatusPath);
@@ -222,7 +224,8 @@ public sealed class EpicEightClosureFitnessTests
     public void ValidationReceiptSectionResolvesToTheCurrentTableAndIsWellFormed()
     {
         string root = RepositoryRoot.Locate();
-        Dictionary<string, string> receipts = ParseValidationReceipts(Read(root, TestSummaryPath));
+        string summary = Read(root, TestSummaryPath);
+        Dictionary<string, string> receipts = ParseValidationReceipts(summary);
 
         // Deliberately exercised regardless of story status. The closure gate reads these receipts
         // only once the story is already marked done, so a superseded or unparsable table would stay
@@ -240,6 +243,11 @@ public sealed class EpicEightClosureFitnessTests
         {
             receipt.Value.ShouldNotBeNullOrWhiteSpace(receipt.Key);
         }
+
+        ReadValidationReceiptEvidence(summary, "Playwright accessibility")
+            .Contains(FrontComposerSha, StringComparison.Ordinal)
+            .ShouldBeTrue(
+                "The authoritative accessibility receipt must prove the selected FrontComposer source identity.");
     }
 
     [Theory]
@@ -409,20 +417,7 @@ public sealed class EpicEightClosureFitnessTests
 
     private static Dictionary<string, string> ParseValidationReceipts(string summary)
     {
-        // Match a real heading LINE, not a substring. A plain LastIndexOf also matches any prose
-        // that merely quotes the heading text -- including this file's own narrative describing the
-        // parser -- which silently reselects the section and makes the gate read the wrong table.
-        MatchCollection headings = Regex.Matches(
-            summary,
-            @"(?m)^### Validation receipts[ \t]*\r?$",
-            RegexOptions.CultureInvariant);
-        headings.Count.ShouldBeGreaterThan(0, "Validation receipt heading is missing.");
-        int headingIndex = headings[^1].Index;
-
-        // Bound the section at the next heading. Slicing to end of file swallows every later table,
-        // so superseded blocker and remediation rows would decide the closure gate.
-        int nextHeadingIndex = summary.IndexOf("\n### ", headingIndex + 1, StringComparison.Ordinal);
-        string section = nextHeadingIndex < 0 ? summary[headingIndex..] : summary[headingIndex..nextHeadingIndex];
+        string section = ReadLatestValidationReceiptSection(summary);
 
         Dictionary<string, string> receipts = new(StringComparer.Ordinal);
         foreach (Match match in Regex.Matches(
@@ -445,6 +440,35 @@ public sealed class EpicEightClosureFitnessTests
 
         receipts.ShouldNotBeEmpty("Validation receipt table is missing.");
         return receipts;
+    }
+
+    private static string ReadValidationReceiptEvidence(string summary, string check)
+    {
+        string section = ReadLatestValidationReceiptSection(summary);
+        Match match = Regex.Match(
+            section,
+            $@"(?m)^\|\s*{Regex.Escape(check)}\s*\|[^|]*\|\s*(?<evidence>[^|\r\n]+?)\s*\|",
+            RegexOptions.CultureInvariant);
+        match.Success.ShouldBeTrue($"Validation receipt evidence is missing: {check}");
+        return match.Groups["evidence"].Value.Trim();
+    }
+
+    private static string ReadLatestValidationReceiptSection(string summary)
+    {
+        // Match a real heading LINE, not a substring. A plain LastIndexOf also matches any prose
+        // that merely quotes the heading text -- including this file's own narrative describing the
+        // parser -- which silently reselects the section and makes the gate read the wrong table.
+        MatchCollection headings = Regex.Matches(
+            summary,
+            @"(?m)^### Validation receipts[ \t]*\r?$",
+            RegexOptions.CultureInvariant);
+        headings.Count.ShouldBeGreaterThan(0, "Validation receipt heading is missing.");
+        int headingIndex = headings[^1].Index;
+
+        // Bound the section at the next heading. Slicing to end of file swallows every later table,
+        // so superseded blocker and remediation rows would decide the closure gate.
+        int nextHeadingIndex = summary.IndexOf("\n### ", headingIndex + 1, StringComparison.Ordinal);
+        return nextHeadingIndex < 0 ? summary[headingIndex..] : summary[headingIndex..nextHeadingIndex];
     }
 
     private static string[] DescribeReceiptGaps(IReadOnlyDictionary<string, string> receipts)

@@ -10,6 +10,8 @@ using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.UI.IdentityBinding;
 
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.FluentUI.AspNetCore.Components;
 
@@ -249,29 +251,36 @@ public sealed class PartiesUiHostCompositionTests
     }
 
     [Fact]
-    public void TestEnvironmentStaticWebAssetOptIn_StaysCoupledToThePlaywrightWebServer()
+    public void PlaywrightWebServer_RunsInTheTestEnvironmentThatOptsInStaticWebAssets()
     {
-        // The accessibility lane is the only consumer of this branch, and no workflow runs that lane,
-        // so deleting the opt-in or renaming the environment would leave every .NET test green while
-        // silently downgrading the lane to an SSR-only page with a 0-byte blazor.web.js. Assert the
-        // two halves of the coupling against each other. A runtime assertion would be stronger, but
-        // it needs Microsoft.AspNetCore.Mvc.Testing, whose version lives in the imported Builds
-        // catalog rather than this repository.
-        string program = File.ReadAllText(ProjectRoot("src/Hexalith.Parties.UI/Program.cs"));
         string playwrightConfig = File.ReadAllText(ProjectRoot("tests/e2e/playwright.config.ts"));
 
-        program.ShouldContain(
-            "builder.Environment.IsEnvironment(\"Test\")",
-            Case.Sensitive,
-            "The Playwright host needs an explicit Test-environment branch.");
-        program.ShouldContain(
-            "UseStaticWebAssets()",
-            Case.Sensitive,
-            "Without UseStaticWebAssets the Test host serves no blazor.web.js and the lane tests SSR only.");
         playwrightConfig.ShouldContain(
             "ASPNETCORE_ENVIRONMENT: 'Test'",
             Case.Sensitive,
             "The webServer must run in the environment Program.cs opts in.");
+    }
+
+    [Fact]
+    public async Task TestEnvironment_ServesBlazorFrameworkScript_WhenStaticWebAssetsAreOptedInAsync()
+    {
+        await using WebApplicationFactory<global::Program> factory = new WebApplicationFactory<global::Program>()
+            .WithWebHostBuilder(static builder =>
+            {
+                builder.UseEnvironment("Test");
+                builder.UseSetting("Parties:BaseUrl", "http://127.0.0.1:59999");
+                builder.UseSetting("Parties:Tenant", "test-tenant");
+            });
+
+        using HttpClient client = factory.CreateClient();
+        HttpResponseMessage response = await client.GetAsync(
+            "/_framework/blazor.web.js",
+            TestContext.Current.CancellationToken);
+        byte[] body = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
+
+        response.IsSuccessStatusCode.ShouldBeTrue(
+            $"Test-environment static web assets must serve blazor.web.js; got {(int)response.StatusCode} {response.ReasonPhrase}.");
+        body.Length.ShouldBeGreaterThan(0, "A 0-byte blazor.web.js means the Test host fell back to SSR-only output.");
     }
 
     private static string ProjectRoot(string relativePath)

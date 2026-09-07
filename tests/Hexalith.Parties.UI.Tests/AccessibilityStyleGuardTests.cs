@@ -6,6 +6,8 @@ namespace Hexalith.Parties.UI.Tests;
 
 public sealed partial class AccessibilityStyleGuardTests
 {
+    private const string PackagedFrontComposerShellVersion = "4.3.0";
+
     private static readonly string[] AppOwnedRoots =
     [
         "src/Hexalith.Parties.UI/Components",
@@ -62,13 +64,19 @@ public sealed partial class AccessibilityStyleGuardTests
         appRazor.ShouldContain("_content/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.styles.css");
         appRazor.ShouldContain("Hexalith.Parties.UI.styles.css");
 
-        // Skip loudly rather than pass silently. The shell stylesheet lives in a root submodule a
-        // package-mode clone need not check out; a conditional that swallows the assertions would
-        // report forced-colors coverage that never ran.
-        string fcShellPath = Path.Combine(root, "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot/css/fc-shell.css");
-        Assert.SkipUnless(File.Exists(fcShellPath), $"FrontComposer submodule is not checked out: {fcShellPath}");
+        // Packaged 4.3.0 is the CI/bUnit/container identity. Reading submodule wwwroot would skip
+        // on a package-mode clone and would not prove the asset that actually ships.
+        string packagedCss = Path.Combine(
+            ResolveNuGetPackagesRoot(),
+            "hexalith.frontcomposer.shell",
+            PackagedFrontComposerShellVersion,
+            "staticwebassets",
+            "css",
+            "fc-shell.css");
+        File.Exists(packagedCss).ShouldBeTrue(
+            $"Restore Hexalith.FrontComposer.Shell {PackagedFrontComposerShellVersion}; missing packaged stylesheet {packagedCss}.");
 
-        string content = File.ReadAllText(fcShellPath);
+        string content = File.ReadAllText(packagedCss);
         content.ShouldContain("@media (forced-colors: active)", Case.Insensitive);
         content.ShouldContain("--colorStrokeFocus2", Case.Insensitive);
     }
@@ -131,6 +139,10 @@ public sealed partial class AccessibilityStyleGuardTests
 
         throw new InvalidOperationException("Could not locate repository root.");
     }
+
+    private static string ResolveNuGetPackagesRoot()
+        => Environment.GetEnvironmentVariable("NUGET_PACKAGES")
+            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
 
     [GeneratedRegex(@"(?:outline|box-shadow)\s*:\s*none", RegexOptions.IgnoreCase)]
     private static partial Regex FocusSuppressionRegex();

@@ -15,7 +15,7 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 | **Domain** | Party records (Person / Organization), contact channels, identifiers, GDPR consent & erasure |
 | **Style** | Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, fronted by the EventStore gateway |
 | **Repository** | Monolith - exactly 13 projects under `src` plus one sample project, 15 runnable .NET test projects plus one support host, and Playwright e2e |
-| **Language / runtime** | C# / **.NET 10** (SDK `10.0.302`) |
+| **Language / runtime** | C# / **.NET 10** (SDK `10.0.400`) |
 | **Orchestration** | .NET Aspire 13.4 (`dotnet aspire run`) |
 | **Eventing** | DAPR pub/sub — CloudEvents 1.0 on `{tenant}.parties.events` (Redis local; Kafka/RabbitMQ/Service Bus in prod) |
 | **Integration** | Typed .NET client · `parties-ui` Blazor Server BFF · `parties-mcp` (AI tools, 5) · DAPR event subscription · Blazor Picker, AdminPortal & ConsumerPortal |
@@ -38,15 +38,15 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 
 | Category | Technology | Version |
 |----------|-----------|---------|
-| Runtime | .NET | net10.0 (SDK 10.0.302) |
-| Orchestration | .NET Aspire | 13.4.6 |
+| Runtime | .NET | net10.0 (SDK 10.0.400) |
+| Orchestration | .NET Aspire | 13.5.3 |
 | Actors / pub-sub | DAPR | 1.18.5 |
 | Validation | FluentValidation | 12.1.1 |
 | Mediation | MediatR | 14.2.0 |
 | AuthN | JWT Bearer | 10.0.11 |
 | MCP | ModelContextProtocol | 2.2.0 |
-| UI | FluentUI Blazor + CustomElements | 5.0-rc.4-26180.1 / 10.0.11 |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | 2.25.0 |
+| UI | FluentUI Blazor + CustomElements | 5.0.0-rc.5-26219.1 / 10.0.11 |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | 2.26.1 |
 | Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | 3.2.2 / 4.3.0 / 6.2.0 / 2.9.0 / 4.14.0 |
 
 Full table with all packages: [architecture.md §3](architecture.md). Versioning is git-tag SemVer via MinVer (prefix `v`).

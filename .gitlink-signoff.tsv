@@ -67,3 +67,12 @@ references/Hexalith.PolymorphicSerializations|8aeed1d27c9a050bc4bec6d89051aa00de
 references/Hexalith.EventStore|acf5c4e403699d4f9290fd6636e4d6b1872a3bd6|validated-advance|v3.102.0-31-gacf5c4e4|jpiquot|2026-09-06
 references/Hexalith.Tenants|d914b13bd9b2354dbb6b556c9887664f68672069|validated-advance|v5.7.0-7-gd914b13b|jpiquot|2026-09-06
 references/Hexalith.Memories|fa8f53165183695888dd0df001d4b1e58071f39e|validated-advance|v2.26.0|jpiquot|2026-09-06
+# --- 2026-09-07 full dependency refresh: owner-authorized advances to the
+#     verified default-branch heads. Builds is the sole NuGet catalog authority;
+#     its 6daad3d5 catalog selects Memories 2.26.1, Tenants 5.7.0, and Parties
+#     1.1.1 while NuGet's newer Memories 2.26.2 remains catalog-owned drift. ---
+references/Hexalith.EventStore|3c6a5e33f9fbaf8469047ba3de72f70ab4425e66|validated-advance|v3.102.0-58-g3c6a5e33|jpiquot|2026-09-07
+references/Hexalith.Memories|7e9c2c387ee84b4d5c96c27f4cf613e13ff2c9e2|validated-advance|v2.26.2-4-g7e9c2c38|jpiquot|2026-09-07
+references/Hexalith.FrontComposer|f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a|validated-advance|v4.3.0-37-gf0c3b6fd|jpiquot|2026-09-07
+references/Hexalith.Tenants|f75cdacc8eca458778c7109fd3f713f8907bed02|validated-advance|v5.7.0-27-gf75cdacc|jpiquot|2026-09-07
+references/Hexalith.Builds|6daad3d501e97204eba66d971bba6a7103b85ccd|validated-advance|v4.27.1-14-g6daad3d|jpiquot|2026-09-07

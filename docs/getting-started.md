@@ -1,6 +1,6 @@
 # Getting Started with Hexalith.Parties
 
-This guide starts the local EventStore-fronted topology, sends a Parties command through EventStore, queries it back through EventStore, and shows the typed .NET client and separate MCP host integration paths. The default path is Aspire-based local development; the Kubernetes section is optional and uses the same public EventStore gateway contract.
+This guide starts the local EventStore-fronted topology, sends a Parties command through EventStore, queries it back through EventStore, and shows the typed .NET client and separate MCP host integration paths. The default path is Aspire-based local development.
 
 **Time estimate:** Under 30 minutes from clone to first command/query round-trip.
 
@@ -12,22 +12,12 @@ This guide starts the local EventStore-fronted topology, sends a Parties command
 
 | Tool | Version | Download |
 |------|---------|----------|
-| .NET SDK | 10.0.302 (pinned in `global.json`) | [dot.net](https://dot.net) |
+| .NET SDK | 10.0.400 (pinned in `global.json`) | [dot.net](https://dot.net) |
 | Docker Desktop | Latest | [docker.com](https://www.docker.com/) |
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
 
-Aspire is used through the .NET SDK command `dotnet aspire run`; no separate local orchestration script is required for the default path. DAPR components and sidecars are composed by the AppHost for Aspire mode, so the DAPR CLI is not required unless you use the optional Kubernetes walkthrough.
-
-**Additional prerequisites for the optional Kubernetes walkthrough (Step 1b):**
-
-| Tool | Version | Download |
-|------|---------|----------|
-| Sandbox Kubernetes cluster | any operator-controlled context isolated from production | Use your platform team's approved local or sandbox cluster setup |
-| `kubectl` | recent | [kubernetes.io/docs/tasks/tools/](https://kubernetes.io/docs/tasks/tools/) |
-| DAPR CLI | recent | [docs.dapr.io](https://docs.dapr.io/getting-started/install-dapr-cli/) |
-| PowerShell (`pwsh`) | 7+ | [github.com/PowerShell](https://github.com/PowerShell/PowerShell) |
-| aspirate | `9.1.0` (pinned) | Installed automatically by `dotnet tool restore`. Do not install globally. |
+Aspire is used through the .NET SDK command `dotnet aspire run`; no separate local orchestration script is required for the default path. DAPR components and sidecars are composed by the AppHost for Aspire mode, so the DAPR CLI is not required.
 
 Verify your setup:
 
@@ -73,7 +63,9 @@ invoke the exact POST SDK routes (`/process`, `/query`,
 `/project/rebuild/shared/v1`, `/project/rebuild/stage/v1`,
 `/project/rebuild/commit/v1`, `/project/rebuild/abort/v1`, and
 `/project/rebuild/verify/v1`). These are internal service-invocation endpoints,
-not an alternate public API.
+not an alternate public API. The `accesscontrol.eventstore-admin.yaml`
+component is an explicit exception (`defaultAction: allow`); see
+[event-publishing.md](event-publishing.md).
 
 If startup fails before the dashboard appears, first check that Docker Desktop is running and that the baseline root submodules exist under `references/`. A missing build, Commons, EventStore, FrontComposer, PolymorphicSerializations, or Tenants checkout is a setup problem, not a partial local topology that should be treated as ready.
 

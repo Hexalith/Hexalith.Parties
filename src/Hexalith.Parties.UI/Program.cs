@@ -249,3 +249,8 @@ static void ConfigurePartiesServiceDefaults(HexalithServiceDefaultsOptions optio
     options.RegisterDefaultSelfCheck = false;
     options.ActivitySourceNames.Add("Hexalith.Parties");
 }
+
+/// <summary>
+/// Entry point class, made partial for WebApplicationFactory test access.
+/// </summary>
+public partial class Program;

@@ -535,16 +535,29 @@ delivered.
 
 ### Retained immutable identities and rollback
 
-- EventStore default package graph: `3.95.0`.
+- EventStore default package graph: `3.102.0`.
 - EventStore explicit source graph: root gitlink and checkout
-  `454b4d100c8c095abf5077c6a8d408da6681e87e`
-  (`v3.95.0-2-g454b4d10`).
+  `3c6a5e33f9fbaf8469047ba3de72f70ab4425e66`
+  (`v3.102.0-58-g3c6a5e33`).
 - Commons HTTP selected source graph: root gitlink and checkout
-  `6fbac0c5dff2b8a58e90732c51b31911421a8a65`
-  (`v2.30.0-10-g6fbac0c`); package `2.30.0` is fallback only.
+  `6da79aed2daa4e199689331ee3196f7872c0988a`
+  (`v2.30.0-19-g6da79ae`); package `2.30.0` is fallback only.
 - Builds imported catalog: root gitlink and checkout
-  `17b1c7aae3e1854e464f17bd88d527f8350ea203` (`v4.24.0`); it selects EventStore
-  `3.95.0` and Commons `2.30.0`.
+  `6daad3d501e97204eba66d971bba6a7103b85ccd`; it selects EventStore
+  `3.102.0`, Commons `2.30.0`, Memories `2.26.1`, Tenants `5.7.0`, and
+  Parties `1.1.1`.
+- FrontComposer shell slice: source gitlink
+  `f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a` (`v4.3.0-37-gf0c3b6fd`); packaged
+  `4.3.0` remains the CI/bUnit/container identity.
+- Memories optional source: root gitlink and checkout
+  `7e9c2c387ee84b4d5c96c27f4cf613e13ff2c9e2` (`v2.26.2-4-g7e9c2c38`);
+  package mode remains catalog-selected `2.26.1`, with NuGet `2.26.2`
+  recorded as catalog-owned drift.
+- Tenants source graph: root gitlink and checkout
+  `f75cdacc8eca458778c7109fd3f713f8907bed02` (`v5.7.0-27-gf75cdacc`);
+  package mode uses `5.7.0`.
+- PolymorphicSerializations: `8aeed1d27c9a050bc4bec6d89051aa00de306a69`
+  (`v1.19.2-11-g8aeed1d`).
 - Rollback remains the current Parties payload-protection, authentication,
   client/MCP/AppHost/build, UI, and local-topology implementations. Runtime
   deployment rollback is owned by the external orchestrator and redeploys the
@@ -616,11 +629,11 @@ blocker.
 | FrontComposer shell focus/theme tests | Pass | Direct focused execution of `Story13AccessibilityPrimitivesTests`, `FrontComposerShellTests`, `FcSystemThemeWatcherTests`, and `ThemeEffectsScopeTests` passed 50/50. Fluent `ThemeSettings.IsExact=false` keeps the configured teal as a palette seed instead of forcing the raw, non-AA brand background. |
 | Parties UI tests | Pass | `Hexalith.Parties.UI.Tests` passed 328/328 after the 2026-08-19 code-review repair of the app-owned focus-visible scope regression. |
 | Warning and nested-submodule policy | Pass | `bash scripts/check-no-warning-override.sh` and solution restore: no warning-override or nested-submodule regression. |
-| Release solution build | **Blocked** | Re-measured 2026-08-19 at the committed tree: `dotnet build Hexalith.Parties.slnx -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` reports **0 warnings, 16 errors**, every one of them SA1316 (`Tuple element names should use correct casing`) inside `references/Hexalith.PolymorphicSerializations` at gitlink `0dca9e9d3f8b2a20ba426b84fa575ab4e7b5562b`. Zero errors occur outside that submodule. The earlier `Pass` row on this line was produced from a **modified working tree**; the commit that actually landed (`0dca9e9d`, "refactor: update code style and improve type handling in serialization classes") carries only part of that fix — for example `src/libraries/Hexalith.PolymorphicSerializations/PolymorphicHelper.cs:60` still declares `(string name, string typeName, int version)`. See the `polymorphicserializations-stylecop-fix-incomplete-at-selected-gitlink` blocker below. |
+| Release solution build | Pass | Re-measured 2026-09-06 at PolymorphicSerializations `8aeed1d27c9a050bc4bec6d89051aa00de306a69`: `dotnet build Hexalith.Parties.slnx -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` reports 0 warnings, 0 errors. The 16 SA1316 errors recorded at `0dca9e9d` are gone. |
 | All .NET test projects | Pass with owner-visible skips | `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults`: all 15 projects passed; 2,437 succeeded, 0 failed, 6 existing Story 12 topology skips. |
 | Package/API and package-only consumers | Pass | All 9 release packages were packed and validated at `0.0.0-story810`; client and portal package-only consumers built with 0 warnings and 0 errors. |
 | npm install and typecheck | Pass | `npm ci --prefix tests/e2e` found 0 vulnerabilities; `npm --prefix tests/e2e run typecheck` passed. |
-| Playwright accessibility | Pass | The frozen accessibility sequence passed 6/6 at FrontComposer source gitlink `7a337a21d4ba261bf27aeb3feedde47789f0160a`. Scope caveat recorded 2026-08-19: the forced-colors check focuses the shell skip link, not a content control, so it did not cover the app-owned focus-indicator regression that the code review found and repaired separately. |
+| Playwright accessibility | Pass | Re-measured 2026-09-07 after the toolchain update: the frozen accessibility sequence passed 6/6 with Playwright `1.63.0` at FrontComposer source gitlink `f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a` (`v4.3.0-37-gf0c3b6fd`), matching the current reconciliation table. I13 is still not discharged: the forced-colors check focuses `.fc-skip-link`, not a content control (DW-111). Packaged `4.3.0` remains the CI/bUnit/container identity and is recorded separately. |
 | Static diff | Pass | `git diff --check` completed with no output after remediation. |
 
 The green executable receipts are not yet immutable consumption receipts.

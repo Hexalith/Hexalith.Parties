@@ -8,7 +8,7 @@ Hexalith.Parties/
 ├── Directory.Build.props              # net10.0, Nullable, ImplicitUsings, TreatWarningsAsErrors=true, MinVer
 ├── Directory.Build.targets            # shared MSBuild targets
 ├── Directory.Packages.props           # central package versions (ManagePackageVersionsCentrally)
-├── global.json                        # .NET SDK pin 10.0.302 (rollForward latestPatch)
+├── global.json                        # .NET SDK pin 10.0.400 (rollForward latestPatch)
 ├── aspire.config.json                 # points Aspire tooling at the AppHost csproj
 ├── .config/dotnet-tools.json          # local tools (aspirate 9.1.0)
 ├── .gitmodules                        # root-level Hexalith submodules under references/
@@ -18,7 +18,7 @@ Hexalith.Parties/
 │   ├── Hexalith.Parties.AppHost/      # ▶ Current Aspire dev/rollback entry point; retire after G8 platform-host parity
 │   │   ├── Program.cs                 #   composes eventstore, parties, tenants, mcp, memories, security…
 │   │   ├── DaprComponents/            #   run-mode DAPR YAML: statestore, pubsub, resiliency,
-│   │   │                              #     subscription-parties, accesscontrol.*.yaml (deny-by-default)
+│   │   │                              #     subscription-parties, accesscontrol.*.yaml (deny-by-default except accesscontrol.eventstore-admin.yaml, defaultAction: allow)
 │   │   ├── KeycloakRealms/            #   hexalith-realm.json (local IdP realm import)
 │   │   └── Properties/launchSettings.json  # http profile :15100, OTLP :21100
 │   │
