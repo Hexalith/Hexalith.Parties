@@ -58,7 +58,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: references/Hexalith.Memories persisted-LRU tests
 source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
 reason: Incidental review found the new workflow recency field is tested across serialization and eviction separately, but not after serialize/restore at the 256-entry limit; a restored actor could evict a recently refreshed workflow and reapply a delayed transition.
-status: open
+status: done 2026-09-07
+resolution: already resolved: Memories commit 7331cd4ab82b71eaa7486f642ab482ccd045ca26, selected by the root gitlink, added Transition_RestoredRefreshedWorkflowAtLedgerLimitSurvivesEviction at CaseIngestionCounterLogicTests.cs:147.
 
 ### DW-8: Test intermediate Memories state migration
 
@@ -66,7 +67,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: references/Hexalith.Memories migration tests
 source_spec: `_bmad-output/implementation-artifacts/spec-gh-87517913711-fix-ci-commons-http-release-output.md`
 reason: Incidental review found no test for persisted state containing `AppliedTransitionSequences` while lacking the newer `AppliedTransitionWorkflowOrder`, leaving the immediate predecessor format's eviction queue reconstruction unverified.
-status: open
+status: done 2026-09-07
+resolution: already resolved: Memories commit 7331cd4ab82b71eaa7486f642ab482ccd045ca26 added Transition_PredecessorStateAtLedgerLimitRestoresRecencyBeforeEviction at CaseIngestionCounterLogicTests.cs:188.
 
 ### DW-9: Deliver granular EventStore.Client registration and coexistence proof
 
@@ -100,7 +102,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: EventStore.Aspire and consuming host authentication
 source_spec: `_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md`
 reason: This was split because the reusable EventStore.Aspire composition surface can ship independently before each host authentication configurator adopts ordered valid audiences.
-status: open
+status: done 2026-09-07
+resolution: already resolved: EventStore commit dfbbde37782fcb59b9fc4e7514107b20d263d9ba added ValidAudiences runtime configuration and ProductionAuthorityAuthenticationTests.cs:63-92 proves additional-audience acceptance and wrong-audience rejection.
 decision: 2026-09-06 Add owner-level audiences — Add ordered ValidAudiences to owner options and configurators, retain Audience as the primary backward-compatible value, and test the acceptance and rejection matrix.
 
 ### DW-13: Harden EventStore AppHost publish and credential scanning
@@ -536,7 +539,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: PartyMemoryIndexingService.TryCompensatingDeleteAsync
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `TryCompensatingDeleteAsync` gates cleanup on the current options snapshot even though configuration can change after ingestion and the unit retains its authoritative CaseId.
-status: open
+status: done 2026-09-07
+resolution: already resolved: Commit 90a7d090594745321aa8c851452f05ce809aa201 changed compensation to unit.CaseId; PartyMemoryIndexingService.cs:163-178 now validates and addresses deletion with the ingestion-time tenant and CaseId.
 
 ### DW-67: Resolve consumer validation artifacts from central package versions
 
@@ -552,7 +556,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: scripts/validate-consumer-package-references.py
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `scripts/validate-consumer-package-references.py` places `NUGET_PACKAGES` under the work directory's parent, so cleanup leaves packages that can mask missing-feed failures in later runs.
-status: open
+status: done 2026-09-07
+resolution: already resolved: validate-consumer-package-references.py creates projects below work_directory, locates NUGET_PACKAGES under that workspace, and removes the whole workspace before every run, a safe layout present since commit f22ebbb95af6b9ef9c80a10778290cb0d0b90cad.
 
 ### DW-69: Restrict consumer validation to configured NuGet sources
 
