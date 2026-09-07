@@ -2,7 +2,8 @@
 title: 'CI shard failure aggregation'
 type: 'bugfix'
 created: '2026-09-06'
-status: 'ready-for-dev'
+status: 'in-progress'
+baseline_commit: '904b0ca928616130ec0092983c3c0c346c8fc2e1'
 review_loop_iteration: 0
 followup_review_recommended: false
 baseline_revision: '311b141f70ccc24376b2bc4bbfe5ad1a462c21a3'

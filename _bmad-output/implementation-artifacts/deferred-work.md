@@ -885,8 +885,6 @@ reason: The script accepts `HEXALITH_RELEASE_SOURCE_CI_WORKFLOW=commitlint.yml` 
 status: done 2026-09-06
 resolution: already resolved: .github/workflows/release.yml:42-56 and :307 confine commitlint.yml to the typed bypass input; references/Hexalith.Builds/.github/workflows/domain-release.yml:472,1014 forwards only that selected input, release.config.cjs:12,22 merely invokes preflight, and no alternate caller exists.
 
-## Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-09-06)
-
 ### DW-111: Observe app-owned content focus and reduced-motion CSS at runtime, not as source greps.
 
 origin: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-09-06)
@@ -911,18 +909,42 @@ source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-do
 reason: `EvaluateProjectGraph` slices from the first `{` to end of string. Trailing restore/log text after the JSON object would throw `JsonException` instead of a graph assertion. Unverified whether current MSBuild emits trailing content on this invocation; settle by capturing a live `-getItem` payload. If true, severity is medium.
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
-  summary: Retire resolved Epic 8 closure deferrals from the accepted-wait set.
-  evidence: `ParseDeferrals` reads packed fields from each reason but not the ledger entry's first-class status, so a resolved entry whose reason remains can still satisfy `ExpectedDeferrals`.
-- source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
-  summary: Reconcile the README SDK prerequisite with global.json.
-  evidence: README still tells contributors to install .NET SDK 10.0.302 while global.json selects 10.0.400, and no maintained assertion prevents those values from drifting.
-- source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
-  summary: Prove a FrontComposer RCL static asset is served in source mode.
-  evidence: The source-mode static-asset test requests only `_framework/blazor.web.js`, so it does not prove that a selected FrontComposer source asset is available through the UI host.
-- source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
-  summary: Resolve the Fluent UI package root through NuGet and MSBuild configuration.
-  evidence: The style guard accepts an empty `NUGET_PACKAGES` value and otherwise assumes the default user cache, ignoring `RestorePackagesPath` and NuGet `globalPackagesFolder`.
-- source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
-  summary: Make Playwright web-server ownership deterministic and test its environment matrix.
-  evidence: Local `ASPNETCORE_ENVIRONMENT=Test` runs may reuse an unrelated process at the expected URL, while current checks only inspect configuration text and do not execute the CI/local and Test/Development matrix.
+### DW-114: Retire resolved Epic 8 closure deferrals from the accepted-wait set.
+
+origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-09-06)"), 2026-09-07
+location: tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs (ParseDeferrals)
+source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
+reason: `ParseDeferrals` reads packed fields from each reason but not the ledger entry's first-class status, so a resolved entry whose reason remains can still satisfy `ExpectedDeferrals`.
+status: open
+
+### DW-115: Reconcile the README SDK prerequisite with global.json.
+
+origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-09-06)"), 2026-09-07
+location: README.md and global.json
+source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
+reason: README still tells contributors to install .NET SDK 10.0.302 while global.json selects 10.0.400, and no maintained assertion prevents those values from drifting.
+status: open
+
+### DW-116: Prove a FrontComposer RCL static asset is served in source mode.
+
+origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-09-06)"), 2026-09-07
+location: tests/Hexalith.Parties.UI.Tests/PartiesUiHostCompositionTests.cs
+source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
+reason: The source-mode static-asset test requests only `_framework/blazor.web.js`, so it does not prove that a selected FrontComposer source asset is available through the UI host.
+status: open
+
+### DW-117: Resolve the Fluent UI package root through NuGet and MSBuild configuration.
+
+origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-09-06)"), 2026-09-07
+location: tests/Hexalith.Parties.UI.Tests/AccessibilityStyleGuardTests.cs (ResolveNuGetPackagesRoot)
+source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
+reason: The style guard accepts an empty `NUGET_PACKAGES` value and otherwise assumes the default user cache, ignoring `RestorePackagesPath` and NuGet `globalPackagesFolder`.
+status: open
+
+### DW-118: Make Playwright web-server ownership deterministic and test its environment matrix.
+
+origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-09-06)"), 2026-09-07
+location: tests/e2e/playwright.config.ts and tests/Hexalith.Parties.UI.Tests/PartiesUiHostCompositionTests.cs
+source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
+reason: Local `ASPNETCORE_ENVIRONMENT=Test` runs may reuse an unrelated process at the expected URL, while current checks only inspect configuration text and do not execute the CI/local and Test/Development matrix.
+status: open
