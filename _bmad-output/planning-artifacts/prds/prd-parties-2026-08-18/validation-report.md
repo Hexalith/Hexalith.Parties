@@ -1,24 +1,23 @@
 # Validation Report — Parties UI PRD
 
 - **PRD:** `_bmad-output/planning-artifacts/parties-ui-prd.md`
-- **Rubric:** `.claude/skills/bmad-prd/assets/prd-validation-checklist.md`
-- **Run at:** 2026-08-18T19:56:56+02:00
+- **Rubric:** `.agents/skills/bmad-prd/assets/prd-validation-checklist.md`
+- **Run at:** 2026-09-08T11:30:57+02:00
 - **Grade:** Fair
 
 ## Overall verdict
 
-This PRD does its declared job well: a compact, theater-free consolidation with a real precedence rule ("the source artifact owning the topic wins"), clean FR identification, a complete FR traceability matrix, and unusually honest scope ring-fencing — and its brownfield references check out on disk (all six §Source Artifacts paths exist; the Epics 1–5 `done` claim matches `sprint-status.yaml`). The risk sits on the non-FR half of its own promise: NFR coverage is not extractable from the traceability matrix, and the UX-DR ID scheme does not resolve in the artifact the PRD names as its authority — so readiness tooling gets first-class FRs but second-class NFR/UX-DR coverage.
+The v1.2.0 correction closed the Fair-grade identity holes: NFR rows exist, UX-DR1–16 are enumerated against `epics.md`, change control is real, the role model and the worst untestable phrases were tightened, and KMS is a named deployment gate. What is at risk is the new readiness surface itself. The NFR "Verified By" column cites a five-job CI topology this repository does not run, so a tool that extracts coverage gates from the Traceability Matrix will chase jobs that are not there. Residual scope cracks — the party picker missing from FR-Admin-3, NFR1 scoped to "Consumer-facing" while UX-DRs claim product-wide AA, and UX-DRs plus KMS sitting off the matrix the contract names — matter because this file is the chain-top index.
 
-The adversarial and source-fidelity reviewers materially shift the picture on currency and change control. The document was edited on 2026-07-06 and 2026-07-16 (git-verified) with the frontmatter date never bumped and no version, changelog, or owner; §Current Implementation Evidence is now stale (Epics 6–7 `done`, Epic 8 `in-progress` with stories 8.11–8.13 the PRD does not know exist); and — decisive for planning any fix — the file is **frozen byte-for-byte by an active fitness gate** (`EpicEightClosureFitnessTests.EpicEightAddsNoPrdFunctionalRequirement`, baseline 37f4ec8 = current HEAD), so every corrective edit must be batched as a governed non-Epic-8 change that advances the baseline. The adversarial reviewer rated three findings critical (canonical-in-name-only, false date, unrecoverable UX-DRs); this synthesis consolidates them to high — the evidence-based reviewers corroborate their substance at lower severity, and the readiness process's explicit reconciliation step blunts the worst-case reading — but their substance stands unrefuted, and together with the extraction gaps they set the grade at Fair rather than Good.
+The adversarial and source-fidelity reviewers shift the picture on two verified facts and one remaining structural attack. Story 8.9 is stated as `backlog` and is `blocked` as of `sprint-status.yaml` 2026-09-07; the Epic 8 PRD freeze is now inventory-only (currency edits do not break CI unless `### FR-*` / `### NFR*` headings change). The adversarial reviewer re-rated three findings critical (identity-only canonicity, matrix still hiding UX-DRs/KMS, false CI topology); this synthesis consolidates them to high — the evidence-based reviewers corroborate the CI and 8.9 facts at high, and the identity split is a documented decision the rubric still calls adequate. Together with the remaining extraction gaps they keep the grade at Fair rather than Good.
 
 ## Dimension verdicts
-
 - Decision-readiness — adequate
 - Substance over theater — strong
-- Strategic coherence — adequate (weighted lower for this shape)
+- Strategic coherence — adequate
 - Done-ness clarity — adequate
-- Scope honesty — strong
-- Downstream usability — adequate
+- Scope honesty — adequate
+- Downstream usability — thin
 - Shape fit — strong
 
 ## Findings by severity
@@ -29,106 +28,94 @@ Severities below are the consolidated (synthesis) ratings. Where a reviewer's or
 
 None after consolidation. The adversarial reviewer's three critical-rated findings appear under High with their original rating noted; their full adversarial statements are preserved in `review-adversarial-general.md`.
 
-### High (11)
+### High (7)
 
-**[Source-fidelity]** — PRD frozen byte-for-byte by an active fitness gate; any corrective edit fails CI (§ whole document)
-`EpicEightClosureFitnessTests.EpicEightAddsNoPrdFunctionalRequirement` (lines 153–178) asserts `git diff --name-only 37f4ec8` over the PRD and `epics.md` is empty; `BaselineCommit` 37f4ec8 is the current HEAD. It depends on the PRD's exact bytes — every fix in this report breaks the Epic 8 zero-PRD gate unless the baseline constant is advanced or the change is governed as an explicit non-Epic-8 correction with the test updated in the same change.
-Fix: Batch all PRD corrections into one governed docs change that also advances `BaselineCommit`, ideally after Story 8.10 closes; do not hand-edit the PRD in isolation.
+**[Rubric + Adversarial + Source-fidelity]** — NFR "Verified By" cites a CI topology this repository does not run (§Traceability Matrix NFR1 / NFR9 vs `.github/workflows/ci.yml`) *(adversarial rated critical)*
+The extractable gate names (`lint`, `test`, `ui-a11y`, `contract-test`, `report`) are not workflow jobs. Current CI is a reusable `Hexalith.Builds` `domain-ci.yml@main` caller whose jobs are `build-and-test`, `aspire-tests`, and `performance-tests`. Playwright a11y still lives in `tests/e2e`; Pact is unscaffolded at the root. A tool that trusts this column will look for gates that do not exist and can still report green.
+Fix: Name the jobs and test projects that actually run (`ci.yml` / `domain-ci.yml` tiers, plus the local Playwright lane), and mark NFR1 Playwright as out-of-CI until a workflow exists.
 
-**[Adversarial + Source-fidelity]** — Frontmatter date is false and the document mutates without change control (§ frontmatter vs §Current Implementation Evidence) *(adversarial rated critical)*
-`git log --follow` confirms material edits on 2026-07-06 (f93534e, added the Post-MVP maintenance block) and 2026-07-16 (df2cc6e, added the Scope invariant) with `date: 2026-06-27` never updated; no version, changelog, owner, or approver. The body cites a 2026-07-06 SCP and Epic 7 completion — facts later than the document's only date. Readiness tooling records this file's currency, so the false marker propagates into coverage snapshots.
-Fix: Add `version`, `last_updated` (true last edit: 2026-07-16), and an owner to frontmatter; add a changelog; scope "as of" claims per subsection; bump on every edit — coordinated with the freeze fix.
+**[Adversarial + Source-fidelity]** — Story 8.9 is stated as `backlog` but is `blocked` today (§Current Implementation Evidence vs `sprint-status.yaml`) *(rubric rated low)*
+The as-of 2026-08-18 roster still matches every Epic 8 row except 8.9. `sprint-status.yaml` (`last_updated: 2026-09-07`) marks `8-9-ui-frontcomposer-and-fluent-consolidation: blocked`. The 2026-09-06 key-freeze SCP ratified that status and chose "No PRD FR/NFR edits." FR identity is unaffected; a readiness run that trusts the roster without reconciling sprint-status would treat 8.9 as unstarted.
+Fix: Restamp the as-of date and change “8.9 `backlog`” to “8.9 `blocked`”, or drop the story-level roster and point at `sprint-status.yaml` as the only status source. Currency-only; does not break the inventory freeze.
 
-**[Rubric + Adversarial]** — NFR (and UX-DR) coverage not extractable from the traceability matrix (§ Traceability Matrix, §Purpose)
-The Purpose promises extraction of "FR/NFR coverage", but the matrix maps only the nine FRs; the sole NFR→epic mapping is one prose fragment ("Epic 6... supports NFR9"). NFR1–NFR8 and UX-DR1–16 have no epic, surface, or gate mapping anywhere. A tool extracting NFR coverage will crash, report 0%, or silently skip — all three defeat the document's purpose.
-Fix: Add matrix rows for NFR1–9 (and UX-DR1–16, or a "verified by" column naming the test lane/gate per NFR — e.g., NFR1→`ui-a11y` gate, NFR9→CI).
+**[Adversarial]** — Identity-only canonicity is a dodge, not a fix (§Purpose vs §Source Artifacts vs §Document Control) *(adversarial rated critical; rubric did not file)*
+The file still opens as the canonical readiness source, then confines canonicity to identity and scope and tells tooling that story records win on completed-work evidence. Sources remain unpinned. The rubric treats this split as a usable, stated decision; the adversarial reviewer says a readiness source that cannot produce a red verdict on substance is still false.
+Fix: Either make this file win — pin sources, put ACs and NFR thresholds here — or rename it a requirements index and stop telling readiness tooling this is the source.
 
-**[Rubric + Adversarial]** — UX-DR IDs unrecoverable from this file, and the declared authority does not define them (§ UX Requirements) *(adversarial rated critical; rubric rated medium)*
-Sixteen requirements are compressed into four range bullets with two ID/label count mismatches (DR8–12: 5 IDs glossed by 7 features; DR13–16: 4 IDs by 5). No injective ID-to-requirement mapping exists. The section names "the final UX design set" as authoritative, but `DESIGN.md`, `EXPERIENCE.md`, and `validation-report.md` contain zero occurrences of "UX-DR" — the IDs are defined in `epics.md` (e.g., line 267, "UX-DR1 — AA-safe brand fill"). The PRD points readers and tools at a source that does not contain the IDs it cites.
-Fix: Enumerate all 16 UX-DRs as individual one-line requirements, and cite `epics.md` as their defining source (or move the definitions into the design set and re-point).
+**[Rubric + Adversarial]** — Readiness contract extracts from a matrix that still omits UX-DRs and the KMS gate (§Document Control, §Traceability Matrix, §UX Requirements, §Deployment Gates) *(adversarial rated critical; rubric rated medium)*
+Document Control tells tooling to extract identity and epic/surface mapping from the Traceability Matrix. That matrix still has nine FR rows and nine NFR rows. UX-DR1–16 and the production-KMS go-live gate have no matrix row. Enumerating UX-DRs in a prose list closes the old "unrecoverable IDs" finding for a human; it does not put them on the surface the new contract blesses.
+Fix: Add UX-DR and GATE-KMS (or NFR) rows to the same matrix, or change the contract to name every extractable section.
 
-**[Source-fidelity + Rubric]** — §Current Implementation Evidence is stale against today's sprint status (§ Current Implementation Evidence)
-`sprint-status.yaml` (2026-08-18) shows `epic-6: done`, `epic-7: done`, `epic-8: in-progress` with 8.1–8.6 and 8.11–8.13 `done`, 8.7/8.8 `blocked`, 8.9 `backlog`, 8.10 `review`. The PRD describes Epic 8 only as "approved" backlog scope and knows nothing of stories 8.11–8.13 (added by the 2026-07-07/07-08 correct-course SCPs). A reader treating the section as evidence would conclude Epic 8 is un-started.
-Fix: Refresh with a current as-of date, Epic 6/7 done status, and Epic 8 story-level state — coordinated with the baseline-freeze fix.
+**[Adversarial]** — Still no acceptance criteria, no NFR thresholds, and no waived-category list (§Functional Requirements, §Non-Functional Requirements)
+Every FR is still capability prose. NFR2 still calls freshness "first-class" with no bound. There is still no performance, latency, availability, or browser-support NFR, and no sentence that those categories are waived. `.memlog.md` records this as an explicit deferral ("revisit if PRD becomes chain-top again").
+Fix: Attach 2–5 observable ACs per FR; quantify each NFR or list waived categories with a reason — or keep the deferral and stop claiming this file is the readiness source for substance.
 
-**[Adversarial]** — Canonical in name, subordinate in fact (§ Purpose vs §Source Artifacts) *(adversarial rated critical)*
-The PRD declares itself "the canonical ... requirements source", then rules that on any conflict "the source artifact owning the topic wins" — three domains that partition essentially everything the PRD contains. None of the six sources is pinned to a revision or hash, so a reader of this file alone cannot detect silent divergence; §Current Implementation Evidence itself instructs readiness validation to reconcile elsewhere. Consolidated to high because today's sources verify accurate and the reconciliation step is real — but the authority model is genuinely unfalsifiable as written.
-Fix: Either make it genuinely canonical (changes flow in via change control; this file wins), or rename it a "consolidated requirements index" and pin source revisions (commit SHA or content hash per source) in this file.
+**[Rubric + Adversarial]** — Party picker is a delivered MVP surface with no FR row (§FR-Admin-3, §Traceability Matrix vs `epics.md`) *(rubric rated medium)*
+Epics FR-Admin-3 includes the in-form `<hexalith-party-picker>`; Story 2.5 is `done`. This PRD's FR-Admin-3 names a radiogroup and omits the picker. UX-DR7 exists only in the prose list the readiness contract does not extract.
+Fix: Restore the picker to FR-Admin-3 (or add FR-Admin-5) and map it on the matrix to the create/edit routes plus the picker host.
 
-**[Adversarial]** — Untestable normative language throughout FRs/NFRs (§ FR-Consumer-3/4, NFR1, NFR4, NFR6, NFR7, FR-Admin-1/4)
-"Honestly", "plain", "usable target sizes" (WCAG 2.2 supplies the number — 24×24 CSS px, SC 2.5.8 — which the PRD declines to state), "communicated as a temporary state", "stale/degraded read handling" (handling defined nowhere), "bounded" (twice, no bound — also flagged by the rubric as its Done-ness medium), "the agreed domain deltas" (agreed where, recorded in what artifact). Each reduces coverage checking to keyword presence.
-Fix: Replace every adverbial quality with an observable criterion; name the artifact that records the agreed deltas.
+**[Adversarial]** — KMS is still a paragraph, not a fail-closed gate (§Deployment Gates, §Out of MVP Scope, `docs/architecture.md`) *(rubric rated medium)*
+There is no requirement ID, no matrix row, and the item remains listed as out of MVP. Verification is "read the GDPR notice in `docs/index.md`." Brownfield architecture still warns that `LocalDevKeyStorageBackend` is the only registered store and that there is no production-environment rejection guard.
+Fix: Give it a stable ID (`GATE-KMS` or NFR), put it on the matrix, keep it out of Out of MVP Scope, and name the fail-closed check if one exists — or state that the gate is documentary-only.
 
-**[Adversarial]** — No acceptance criteria, no NFR thresholds, whole NFR categories missing (§ Functional Requirements, §Non-Functional Requirements)
-Every FR is capability prose without acceptance criteria; every NFR is unquantified; no performance, latency, availability, capacity, concurrency, or browser-support NFR exists at all; NFR2 sets no bound on how stale data may be before the UI must say so. Moderated only by the fact that Epics 1–5 story records carry the acceptance evidence (per the precedence rule).
-Fix: Attach 2–5 verifiable acceptance criteria per FR, quantify each NFR, and explicitly declare waived NFR categories so absence is a decision, not a hole.
+### Medium (8)
 
-**[Adversarial]** — Three incompatible requirement ID grammars break mechanical extraction (§ FR-Shell, §NFR1, §UX Requirements)
-`FR-Shell` (no number), `FR-Admin-N`/`FR-Consumer-N`, `NFR1` (no hyphen), `UX-DRn`. A regex like `FR-[A-Za-z]+-\d+` misses FR-Shell; `NFR-\d+` misses every NFR. The document never declares which ID classes count as "functional requirements" for the Epic 7/8 scope invariant — a tool must guess whether UX-DRs participate.
-Fix: Normalize IDs, state the ID scheme in a conventions note, and declare which classes participate in functional-coverage counting.
+**[Rubric + Adversarial]** — NFR1 scopes AA to Consumer-facing while UX-DRs and Admin GDPR are product-wide (§NFR1, §UX-DR9, §UX-DR12)
+NFR1 opens "Consumer-facing surfaces target WCAG 2.2 AA." UX-DR12 is product-wide. Typed-name erasure confirmation, the party-picker combobox, and admin sheets are Admin surfaces. A tool that honors the "Consumer-facing" sentence can skip Admin a11y and still pass NFR1.
+Fix: State the AA target as product-wide, or list excluded Admin surfaces, and point verification at tests that actually cover Admin GDPR and the picker.
 
-**[Adversarial]** — Role model incoherent: DPO exists in FR-Admin-4 but not in the shell (§ FR-Shell vs §FR-Admin-4)
-FR-Shell routes exactly three roles; FR-Admin-4 then grants erasure and Art.30 powers to "DPO/Admin users" — a role the shell never routes, gates, or lands. Multi-role (Admin+Consumer) and no-role principals are also unspecified beyond the Consumer-specific NoPartyBinding state.
-Fix: Add a complete role/landing/navigation table covering Admin, TenantOwner, DPO, Consumer, multi-role, and no-role principals.
+**[Rubric]** — NFR7's owned UX-DR range disagrees with its matrix cell (§NFR7 vs §Traceability Matrix NFR7)
+Body: "UX-DR1 through UX-DR7." Matrix: "UX-DR1–UX-DR3." An extractor cannot tell whether brand discipline owns three token DRs or seven domain deltas.
+Fix: Make the body and the matrix cell name the same UX-DR set.
 
-**[Adversarial + Source-fidelity]** — Compliance-blocking KMS prerequisite buried in "Out of MVP Scope", and its documented home was retired (§ Out of MVP Scope)
-The production-KMS gate is a legal go-live prerequisite for the product's core GDPR purpose, yet it is phrased as a non-requirement in the section coverage tooling ignores; no FR, NFR, or gate owns it. Compounding it: `docs/deployment-security-checklist.md` — the checklist that owned this gate — was deleted by Story 8.13 (commit 30c5fd9), and `architecture.md:41` (a source artifact that "wins" per the PRD's own conflict rule) plus `project-context.md:257` still point at the dead path. The claim itself remains documented in `docs/index.md:86` and `docs/getting-started.md:446`.
-Fix: Promote the KMS gate to an NFR or explicit deployment-gate requirement with an owner and verification method; repoint `architecture.md:41` and `project-context.md` to the surviving KMS documentation.
+**[Adversarial + Source-fidelity]** — UX-DR one-liners drop criteria `epics.md` still gates (§UX Requirements vs `epics.md`) *(adversarial rated high; source-fidelity rated low)*
+v1.2.0 printed sixteen labels. Material omissions include UX-DR8's assertive half, UX-DR5 degraded/"showing last known", UX-DR12's live gap, and UX-DR6's danger-token / typed-name split. The PRD's precedence rule already sends detailed semantics to `epics.md`.
+Fix: Paste the `epics.md` one-sentence MUST per UX-DR, including current-gap clauses, or stop listing UX-DRs here and extract them from `epics.md` with a pinned revision.
 
-### Medium (6)
+**[Adversarial]** — The Epic 8 inventory freeze cannot see the sections added to close the last review (`EpicEightClosureFitnessTests.ExtractRequirementIds`)
+The regex sees heading-shaped `FR-*` / `NFR*` IDs only. UX-DR bullets, Deployment Gates, and the NFR table are invisible. The freeze would still pass if every UX-DR vanished. Source-fidelity confirms this is now inventory-only, not byte-for-byte, and that currency edits are allowed.
+Fix: Extract UX-DR and GATE IDs too, or stop claiming the freeze protects readiness extractability.
 
-**[Rubric]** — "Bounded" without a bound (§ FR-Admin-4, §FR-Consumer-4)
-"A bounded verification report" and "bounded audit metadata" state a bound exists but name neither the bound nor its owning record; Stories 3.5/3.6 own the evidence but the FRs don't cite them. (Overlaps the adversarial untestable-language finding; kept separately because the fix is narrower.)
-Fix: State the bound in one clause per FR, or cite the owning story/architecture record by name.
+**[Adversarial]** — NFR "Verified By" cells are unexecutable except the ones that are wrong (§Traceability Matrix NFR2–NFR8)
+Cells such as "freshness contract tests" and "GDPR and consent surface copy" name no test class, job, or command.
+Fix: One named job or test class per NFR, or an explicit `unverified` token.
 
-**[Adversarial]** — NFR3 asserts an enforcement the out-of-scope section defers (§ NFR3 vs §Out of MVP Scope)
-NFR3's "Parties-side defense-in-depth asserts `aggregateId == party_id`" sits against "Gateway-level data-subject/self principal support remains a future enhancement" with no statement of which layer enforces own-data-only today versus later.
-Fix: State which assertion exists now, at which seam, and what the deferred gateway enhancement adds.
+**[Adversarial]** — FR rows still have no verification column (§Traceability Matrix FR table)
+NFRs got a (false) gate column; the nine product FRs still map only to an epic and a path.
+Fix: Add the same Verified-By column to the FR table with story IDs and test names.
 
-**[Adversarial]** — Scope invariant excludes Epic 6 and strains against its own bullets (§ Current Implementation Evidence)
-The bolded invariant binds only Epics 7–8; Epic 6's identical claim is an ordinary bullet. Epic 7 is "completed partial platform-alignment scope" inside an invariant that says "maintenance scope only"; "partial platform-alignment" is defined nowhere.
-Fix: One invariant covering Epics 6–8 uniformly; drop or define "partial platform-alignment".
+**[Adversarial]** — Live freshness (SignalR) is a done Epic 1 requirement absent from this PRD (§NFR2 vs `epics.md` AR-D6 / Story 1.7)
+NFR2 mentions last-known rendering and optimistic echo, not SignalR subscribe + degraded-poll fallback.
+Fix: Add the SignalR subscribe + degraded-poll fallback as a normative NFR2 clause, or an FR-Shell/NFR2 AC.
 
-**[Adversarial]** — Unresolvable references inside the evidence and NFRs (§ Current Implementation Evidence, §NFR7, §FR-Admin-4)
-`D7` (an epics.md decision ID) is undefined in this file; "the agreed domain deltas" names no recording artifact; "existing typed client/gateway seams" names no seams.
-Fix: Define or link every imported identifier at first use.
+**[Source-fidelity]** — Post-2026-08-18 planning left the PRD’s implementation snapshot frozen on purpose (§Current Implementation Evidence; 2026-09-06 SCP)
+The 2026-09-06 SCP correctly said the PRD has no FR/NFR impact (I15) and then left a dated story-status table that readiness tooling is told to extract.
+Fix: Keep the zero-new-FR rule, but treat the evidence snapshot as a living pointer to `sprint-status.yaml`.
 
-**[Adversarial]** — FR-Consumer-4's cancellation window is undefined — by the PRD's own honesty standard (§ FR-Consumer-4)
-"Cancel erasure while cancellation is still allowed" defines no boundary event, while the same section forbids copy making timing promises the system cannot guarantee.
-Fix: Define the cancellation boundary as an event (e.g., "until the erasure obligation transitions to started").
+### Low (3)
 
-**[Adversarial + Source-fidelity]** — No readiness contract, and "Epic 7 preserves rollback paths" is superseded (§ Purpose; §Current Implementation Evidence, Epic 7 bullet)
-The document never states what constitutes coverage or which requirement classes gate readiness — different tools compute different verdicts. And the Epic 7 bullet's "preserves rollback paths" now misleads: the projection-rollback retention item was closed 2026-08-01 under Story 8.6 (rollback-only actor/rebuild/adapter paths removed after governed parity evidence); only the crypto/key-management retention (Story 8.7 gate) remains open.
-Fix: Add a short "readiness contract" section; qualify the Epic 7 bullet with the 2026-08-01 projection-path closure and the surviving crypto retention.
+**[Rubric + Adversarial]** — Residual adverbial copy requirements (§FR-Consumer-3, §FR-Consumer-4)
+"Grant and withdraw consent honestly" and "Copy must be plain, honest" remain adjectives. UX-DR13–16 own the observable copy rules.
+Fix: Drop the adverbs or replace them with the already-stated observables.
 
-### Low (5)
+**[Source-fidelity]** — UX-DR one-liners drop definitional halves that `epics.md` still requires (§UX Requirements)
+Covered in more detail under Medium. Residual compression on UX-DR5/9/10/13/16.
+Fix: Add the assertive/degraded/typed-name clauses if the one-liners are the extractable UX inventory.
 
-**[Rubric]** — Evidence snapshot ages without a refresh contract (§ Current Implementation Evidence) — subsumed by the High stale-evidence finding; the residual point is the missing refresh *contract*. Fix: re-stamp the snapshot date on each readiness run.
-
-**[Rubric]** — Validation rules unlocated (§ FR-Admin-3, §FR-Consumer-2) — "validated forms" doesn't say which artifact owns the validation contract. Fix: name the owning artifact.
-
-**[Rubric]** — Staleness trigger undefined (§ NFR2, §FR-Admin-1) — behavior once stale is testable, but the trigger lives elsewhere unnamed. Fix: cite the architecture's freshness/degraded-read contract.
-
-**[Rubric]** — No Glossary (whole document) — pattern vocabulary (tombstone, optimistic echo, bound Consumer, tenant warm-up) is consistent but undefined in-doc. Fix: optional ten-line glossary.
-
-**[Adversarial + Source-fidelity]** — NFR9 is a process gate, not a product NFR; frontmatter `status` is a role claim, not a lifecycle state; NFR8's "ServiceDefaults" wording predates the Story 8.4 Commons cutover (still literally true via `Hexalith.Commons.ServiceDefaults` in `src/Hexalith.Parties.UI/Program.cs:1,33,226`). Fix: label NFR9's class explicitly; split `status` into lifecycle + `role`; reword NFR8 to "Hexalith.Commons.ServiceDefaults" when the PRD is next unfrozen.
-
-## Verified accurate (source-fidelity)
-
-Eleven checked claims held up, including: all six §Source Artifacts paths exist; the full FR→Epic traceability matrix matches `epics.md` exactly; all nine matrix routes exist as real `@page` directives in AdminPortal/ConsumerPortal; "Epics 1–5 done" and "Epic 7 completed" match `sprint-status.yaml`; all five dependency-evidence stories (1.4, 3.5, 3.6, 4.1, 4.2) are `done`; all NFR9 build-gate claims hold (net10.0, warnings-as-errors, CPM, `.slnx`, xUnit v3, Playwright a11y, root-level submodules); the temporal-query deferral is real (no `get_party_name_at` MCP tool); readiness reports genuinely select this file as the PRD; no consumer parses section names or FR-ID strings programmatically — the only code-level dependency is the byte-for-byte freeze.
+**[Source-fidelity]** — Admin route templates use `{id}` while `@page` parameters are `{RoutePartyId}` (§Traceability Matrix)
+Paths match. `epics.md` also writes `{id}`. Parameter-name drift, not a missing surface.
+Fix: Optional note that the Blazor parameter is `RoutePartyId`.
 
 ## Mechanical notes
-
-- All six §Source Artifacts paths verified present on disk; `sprint-change-proposal-2026-07-06.md` resolves.
-- Sprint-status roundtrip: "Epics 1-5... done" matches; post-PRD-date drift: `epic-6: done`, `epic-7: done`, `epic-8: in-progress`.
-- ID continuity: FR-Shell + FR-Admin-1..4 + FR-Consumer-1..4 unique, no gaps; NFR1–NFR9 contiguous; matrix covers all nine FRs and only FRs.
-- UX-DR IDs: ranges only; absent from all three named UX design set files; defined individually in `epics.md`; two range/label count mismatches (DR8–12: 5 IDs / 7 labels; DR13–16: 4 IDs / 5 labels).
-- Assumptions Index roundtrip: vacuously consistent (no tags, no index). UJ protagonists: no UJs — shape-appropriate.
-- Glossary drift: none to drift against; `party_id`, "Bound Consumers", "last-known", "tombstone" used consistently.
-- Frontmatter: `date: 2026-06-27` predates the review date; `status: canonical-requirements-source` is a useful machine anchor and should stay stable.
+- Closed since 2026-08-18 (not re-filed): frontmatter `last_updated` / `version` / changelog; NFR identity table; UX-DR1–16 enumerated with `epics.md` as ID authority; FR-Shell role/landing rules; NFR3 now-vs-deferred seam; Epic 6 in the maintenance invariant; D7 / named GDPR seams; cancellation event; NFR8 `Hexalith.Commons.ServiceDefaults`; KMS promoted into §Deployment Gates.
+- All six §Source Artifacts paths present; KMS verification paths `docs/index.md` and `docs/getting-started.md` exist; `docs/deployment-security-checklist.md` remains retired.
+- Sprint-status roundtrip: Epics 1–7 `done`, Epic 8 `in-progress`. Story-level drift since 2026-08-18: 8.9 `backlog` → `blocked`; 8.7 / 8.8 remain `blocked`; 8.10 remains `review`.
+- ID continuity: FR-Shell + FR-Admin-1..4 + FR-Consumer-1..4 unique; NFR1–NFR9 contiguous; UX-DR1–UX-DR16 contiguous. Document Control declares which classes count as functional requirements.
+- Assumptions Index: vacuously consistent — no `[ASSUMPTION]` or `[NOTE FOR PM]` tags.
+- No UJs — shape-appropriate. Glossary still absent; `party_id`, "Bound Consumers", "last-known", "tombstone" remain consistent.
+- Epic 8 PRD freeze is inventory-only (`ExtractRequirementIds` on `### FR-*` / `### NFR*` headings). `epics.md` is still a git-diff freeze. Current and baseline inventories are the same 18 IDs. Currency edits do not break the gate unless those headings are added, removed, or reordered.
 
 ## Reviewer files
-
 - `review-rubric.md`
 - `review-adversarial-general.md`
 - `review-source-fidelity.md`
