@@ -20,18 +20,18 @@ public sealed class PlatformApiPrerequisitesTests
     // the bound exists so a hung child fails the lane with a diagnosable message instead of blocking.
     private const int ProcessTimeoutMilliseconds = 300_000;
     private const string AiToolsSha = "5f93d2ec8239494852c97032c819cb1689939e36";
-    private const string BuildsSha = "7b0b1837ce368e314b5e11b011b73603637a17e1";
+    private const string BuildsSha = "35c3d1e5b8a55a74a440b9c2cad4c5e18747b241";
     private const string CommonsSha = "6da79aed2daa4e199689331ee3196f7872c0988a";
 
     // Consumed by MainLayout for the shell landmarks and skip links (G4 work package F, delivered
     // under sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md).
-    // Recorded separately from the packaged 4.3.0 identity that CI and the released container use.
-    private const string FrontComposerSha = "7e0e6cc605853f7bf4f3f732505e208ea564cc9e";
-    private const string MemoriesSha = "15fdfaea7004d68e9b149e828503f832d049009a";
+    // Recorded separately from the packaged 4.4.0 identity that CI and the released container use.
+    private const string FrontComposerSha = "a0acb78f337116867c917dc78b0976f34389f275";
+    private const string MemoriesSha = "0b78968bfa8fd906790c47b72f2857ac83e748e5";
     private const string PolymorphicSerializationsSha = "8aeed1d27c9a050bc4bec6d89051aa00de306a69";
     private const string TenantsSha = "e7f366623733abdb64f173e9843edc7fc7d22193";
-    private const string PayloadProtectionEventStoreDescribe = "v3.103.0-2-gd45206f7";
-    private const string PayloadProtectionEventStoreSha = "d45206f7cbd80a112519c1d4687d7279a745f0c5";
+    private const string PayloadProtectionEventStoreDescribe = "v3.103.0-6-gc6efdbba";
+    private const string PayloadProtectionEventStoreSha = "c6efdbba6439370a5c674c12ed866c959624106a";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
     private const string PayloadProtectionSurface = "Payload protection engine package";
     private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";
@@ -203,7 +203,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["Memories submodule|Source (optional rich search)"] =
         [
             MemoriesSha,
-            "`v2.26.2-9-g15fdfaea`",
+            "`v2.26.2-10-g0b78968b`",
             "HexalithMemoriesVersion=2.26.2",
         ],
         ["Tenants AppHost topology|Source (diagnostic) and package `5.7.0` (default graph)"] =
@@ -645,7 +645,7 @@ public sealed class PlatformApiPrerequisitesTests
         // The shell slice consumes FrontComposer source, so its identity must appear in the matrix
         // reconciliation table alongside the package identity that actually ships.
         matrix.ShouldContain(FrontComposerSha);
-        matrix.ShouldContain("4.3.0");
+        matrix.ShouldContain("4.4.0");
 
         // Any present-tense `git ls-tree HEAD` receipt must name the identity HEAD actually records.
         // Historical receipts belong to the story that captured them and must be written with a dated
@@ -690,6 +690,7 @@ public sealed class PlatformApiPrerequisitesTests
         string catalog = File.ReadAllText(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"));
         catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">3.103.0</HexalithEventStoreVersion>");
         catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">2.30.0</HexalithCommonsVersion>");
+        catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">4.4.0</HexalithFrontComposerVersion>");
         catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">2.26.2</HexalithMemoriesVersion>");
         catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">5.7.0</HexalithTenantsVersion>");
         catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">1.1.1</HexalithPartiesVersion>");

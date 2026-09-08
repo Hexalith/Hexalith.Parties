@@ -6,7 +6,7 @@ namespace Hexalith.Parties.UI.Tests;
 
 public sealed partial class AccessibilityStyleGuardTests
 {
-    private const string PackagedFrontComposerShellVersion = "4.3.0";
+    private const string PackagedFrontComposerShellVersion = "4.4.0";
 
     private static readonly string[] AppOwnedRoots =
     [
@@ -64,7 +64,7 @@ public sealed partial class AccessibilityStyleGuardTests
         appRazor.ShouldContain("_content/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.styles.css");
         appRazor.ShouldContain("Hexalith.Parties.UI.styles.css");
 
-        // Packaged 4.3.0 is the CI/bUnit/container identity. Reading submodule wwwroot would skip
+        // Packaged 4.4.0 is the CI/bUnit/container identity. Reading submodule wwwroot would skip
         // on a package-mode clone and would not prove the asset that actually ships.
         string packagedCss = Path.Combine(
             ResolveNuGetPackagesRoot(),

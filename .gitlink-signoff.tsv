@@ -82,3 +82,9 @@ references/Hexalith.EventStore|d45206f7cbd80a112519c1d4687d7279a745f0c5|validate
 references/Hexalith.FrontComposer|7e0e6cc605853f7bf4f3f732505e208ea564cc9e|validated-advance|v4.3.0-67-g7e0e6cc6|jpiquot|2026-09-07
 references/Hexalith.Memories|15fdfaea7004d68e9b149e828503f832d049009a|validated-advance|v2.26.2-9-g15fdfaea|jpiquot|2026-09-07
 references/Hexalith.Tenants|e7f366623733abdb64f173e9843edc7fc7d22193|validated-advance|v5.7.0-31-ge7f36662|jpiquot|2026-09-07
+# --- 2026-09-08 latest packages and submodule refresh: root gitlinks already
+#     match origin/main; FrontComposer package identity moves to published 4.4.0. ---
+references/Hexalith.Builds|35c3d1e5b8a55a74a440b9c2cad4c5e18747b241|validated-advance|v4.27.2-9-g35c3d1e|jpiquot|2026-09-08
+references/Hexalith.EventStore|c6efdbba6439370a5c674c12ed866c959624106a|validated-advance|v3.103.0-6-gc6efdbba|jpiquot|2026-09-08
+references/Hexalith.FrontComposer|a0acb78f337116867c917dc78b0976f34389f275|validated-advance|v4.4.0-2-ga0acb78f|jpiquot|2026-09-08
+references/Hexalith.Memories|0b78968bfa8fd906790c47b72f2857ac83e748e5|validated-advance|v2.26.2-10-g0b78968b|jpiquot|2026-09-08

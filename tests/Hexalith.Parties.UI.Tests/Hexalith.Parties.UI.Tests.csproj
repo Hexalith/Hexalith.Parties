@@ -13,7 +13,7 @@
     <PackageReference Include="Hexalith.FrontComposer.Contracts" Condition="'$(HexalithFrontComposerFromSource)' != 'true'" />
     <ProjectReference Include="$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Shell\Hexalith.FrontComposer.Shell.csproj" Condition="'$(HexalithFrontComposerFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.FrontComposer.Shell" Condition="'$(HexalithFrontComposerFromSource)' != 'true'" />
-    <!-- Source-mode compiles against the submodule but still restores packaged 4.3.0 so
+    <!-- Source-mode compiles against the submodule but still restores packaged 4.4.0 so
          AccessibilityStyleGuardTests can pin forced-colors tokens without reading submodule wwwroot. -->
     <PackageReference Include="Hexalith.FrontComposer.Shell" Condition="'$(HexalithFrontComposerFromSource)' == 'true'">
       <IncludeAssets>none</IncludeAssets>

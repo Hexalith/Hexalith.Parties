@@ -53,7 +53,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.5.3` |
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.5` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.5.0-preview.1.260825-0345` |
-| Gateway/eventing | Hexalith.EventStore | package `3.103.0` by default; source gitlink `d45206f7cbd80a112519c1d4687d7279a745f0c5` when explicitly selected |
+| Gateway/eventing | Hexalith.EventStore | package `3.103.0` by default; source gitlink `c6efdbba6439370a5c674c12ed866c959624106a` when explicitly selected |
 | Tenancy | Hexalith.Tenants | package `5.7.0` by default; source gitlink `e7f366623733abdb64f173e9843edc7fc7d22193` when explicitly selected |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.2.0` |
@@ -63,10 +63,10 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | UI | Microsoft.FluentUI.AspNetCore.Components | `5.0.0-rc.5-26219.1` |
 | | Microsoft.AspNetCore.Components.CustomElements | `10.0.11` |
 | Rich search (opt) | Hexalith.Memories.Client.Rest | package `2.26.2` by default |
-| Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.17.x` |
+| Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.18.x` |
 | Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.9.0` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0-rc.1` |
-| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `3.2.2` / `4.3.0` / `6.2.0` / `2.9.0` / `4.14.0`† / `18.1.0` |
+| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.0` / `4.3.0` / `6.2.0` / `2.9.0` / `4.14.0`† / `18.1.0` |
 
 † `Testcontainers` is declared in `Directory.Packages.props` but referenced by **zero** test projects — container lifecycle is managed entirely by `Aspire.Hosting.Testing`. Treat it as dead config.
 
