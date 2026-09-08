@@ -86,7 +86,8 @@ origin: migrated from legacy ledger (flat source_spec "none"), 2026-09-06
 location: FrontComposer.AppHost or approved platform AppHost
 source_spec: none
 reason: This independently shippable platform-host change was split from the G8 owner-proof action because it depends on the EventStore Aspire and client-registration surfaces being proven first.
-status: open
+status: done 2026-09-08
+resolution: already resolved: references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.AppHost/Program.cs:54-81 composes Tenants and Parties through AddEventStoreDomainModule; references/Hexalith.FrontComposer/_bmad-output/implementation-artifacts/evidence/pact-provider-reconciliation/apphost-smoke.json:4,17-82 matches the current AppHost source hashes and records passed authenticated startup, command, query, projection, and clean shutdown proof.
 
 ### DW-11: Deliver the external runtime deployment handoff
 

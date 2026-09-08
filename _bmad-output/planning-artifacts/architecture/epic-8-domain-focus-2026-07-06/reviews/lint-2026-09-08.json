@@ -1,0 +1,9 @@
+{
+  "ok": true,
+  "spine": "ARCHITECTURE-SPINE.md",
+  "date": "2026-09-08",
+  "command": "uv run /home/administrator/projects/hexalith/parties/.agents/skills/bmad-architecture/scripts/lint_spine.py --workspace /home/administrator/projects/hexalith/parties/_bmad-output/planning-artifacts/architecture/epic-8-domain-focus-2026-07-06",
+  "total_findings": 0,
+  "by_severity": {},
+  "findings": []
+}
