@@ -2,7 +2,7 @@
 title: '8.7 Shared payload-protection adoption and parity'
 type: 'refactor'
 created: '2026-08-22'
-status: 'in-progress'
+status: 'blocked'
 baseline_commit: '3d3abef4279e41cf0025870152e3fc597e26f872'
 review_loop_iteration: 0
 context:
@@ -48,11 +48,11 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md` and `references/Hexalith.EventStore/_bmad-output/implementation-artifacts/8-11-g5-evidence-and-approval-closure.md` -- verify exact identities, approvals, API inventory, backend, and `available`; otherwise halt.
+- [x] `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md` and `references/Hexalith.EventStore/_bmad-output/implementation-artifacts/8-11-g5-evidence-and-approval-closure.md` -- verify exact identities, approvals, API inventory, backend, and `available`; otherwise halt. Halted `blocked` 2026-09-07: G5 is `needs-additive-api`; named missing receipts are in the Spec Change Log. No production or dependency changes.
 - [ ] `tests/Hexalith.Parties.Security.Tests/CryptoKeyManagementCompatibilityHarnessTests.cs` -- run local/shared vectors for v1/v2, AAD mutation/transplant, typed failures, tenant isolation, persisted restart state, and no-leak telemetry.
 - [ ] `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`, `src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs`, and `src/Hexalith.Parties/Domain/PartyDomainProcessor.cs` -- add reversible selection and neutralize local coupling while retaining v2-capable rollback and public APIs.
 - [ ] `tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs`, `tests/Hexalith.Parties.Security.Tests/ErasureVerificationServiceTests.cs`, and `tests/Hexalith.Parties.IntegrationTests/Security/EncryptionPipelineIntegrationTests.cs` -- prove real GDPR, erasure, rotation/retry, persisted state, and backward/forward switches.
-- [ ] `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`, `_bmad-output/implementation-artifacts/sprint-status.yaml`, and `_bmad-output/implementation-artifacts/tests/test-summary.md` -- record identities, totals, rollback proof, retained surfaces, and open KMS gates without crediting skips.
+- [ ] `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`, `_bmad-output/implementation-artifacts/sprint-status.yaml`, and `_bmad-output/implementation-artifacts/tests/test-summary.md` -- record identities, totals, rollback proof, retained surfaces, and open KMS gates without crediting skips. Closed-gate identities and missing receipts are recorded; dual-provider totals and post-v2 rollback proof remain unrun.
 
 **Acceptance Criteria:**
 - Given the current checkout lacks the G5 runtime packages and 8.11 closure, when execution begins, then it halts `blocked` with no production or dependency changes.
@@ -61,6 +61,8 @@ context:
 - Given every adoption gate is green, when the shared provider is selected, then the local v2-capable rollback path and published Parties security APIs remain intact for the deferred cleanup.
 
 ## Spec Change Log
+
+- 2026-09-07: Closed-gate halt. Live EventStore gitlink and checkout `d45206f7cbd80a112519c1d4687d7279a745f0c5` (`v3.103.0-2-gd45206f7`); package graph `3.103.0`. Spec frozen identity `c21bd749154d701c3b7d68e40d1008d3475e35c4` / `3.95.0` does not match live checkout; Ask First forbids adopting a new identity. G5 remains `needs-additive-api`. Missing receipts: EventStore `8-11-g5-evidence-and-approval-closure.md`; `Hexalith.EventStore.PayloadProtection` and `Hexalith.EventStore.PayloadProtection.AzureKeyVault` source projects and catalog package versions; runtime `pdenc-v2`, `IPersonalDataPolicy`, and `IErasureStateProvider`; EventStore Stories 8.2-8.11 remaining backlog; named G5 `available` approvals; dual-provider parity; post-v2 rollback; production KMS. `AddEventStoreDataProtection` and `NoOpEventPayloadProtectionService` are not the shared engine. No production, DI, or dependency changes. Local engine, adapter, DI, MOVE/KEEP files, and public APIs retained.
 
 ## Verification
 

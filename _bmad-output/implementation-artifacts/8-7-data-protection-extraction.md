@@ -46,6 +46,7 @@ so that Parties keeps GDPR policy without owning reusable crypto infrastructure.
   - [x] Record provenance after concurrent `/pushall` activity: the root gitlink and checkout both equal `82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7` (`v3.67.0-1-g82ed167c`). The synchronized checkout still contains no G5 engine, `pdenc-v2`, `IPersonalDataPolicy`, or `IErasureStateProvider`, and no owner-approved G5 packet authorizes it.
   - [x] Confirm Story 8.6 is `blocked` and record that the authoritative sequence conflicts with the draft Story 8.7 spec's “independent of 8.6” note.
   - [x] Mark Story 8.7 blocked and halt before production code, package, or submodule edits.
+  - [x] 2026-09-07 spec execution: revalidated G5 at live gitlink/checkout `d45206f7cbd80a112519c1d4687d7279a745f0c5` (`v3.103.0-2-gd45206f7`) / package `3.103.0`. Row remains `needs-additive-api`; halted with no production, DI, or dependency changes. Spec frozen identity `c21bd749`/`3.95.0` still does not match live checkout.
   - [ ] Before implementation resumes, update the existing G5 row with the named owner/reviewer, exact approved release or root gitlink, producer and consumer proof, frozen compatibility identities, and rollback instructions; change its status only when the review gate is genuinely satisfied.
   - [x] Resolve the `8.6 -> 8.7` sequence by completing 8.6 (done 2026-08-17). Parallel owner delivery still does not waive G5.
 
@@ -260,12 +261,14 @@ GPT-5 Codex
 - 2026-07-16T00:23:38+02:00 - Confirmed Story 8.6 is blocked and the approved Epic 8 sequence remains authoritative despite the draft 8.7 spec's contradictory design note.
 - 2026-07-16T00:23:38+02:00 - Halted before production, dependency, or submodule edits; all local crypto/key rollback files and registrations remain intact.
 - 2026-09-06T16:34:00+02:00 - Course correction: Story 8.6 is `done` (2026-08-17). Story 8.7 stays `blocked` on G5; completing 8.6 does not waive that gate.
+- 2026-09-07T23:02:00+02:00 - Spec `spec-8-7-data-protection-extraction.md` execution: G5 still `needs-additive-api` at EventStore `d45206f7cbd80a112519c1d4687d7279a745f0c5` / package `3.103.0`. Named missing receipts recorded; halted before production, dependency, or submodule edits.
 
 ### Completion Notes List
 
 - Source migration is blocked because no owner-approved G5 shared payload-protection engine, release/root pin, dual-path parity evidence, or exercised rollback is recorded. Story 8.6 is `done`; G5 remains the live halt.
 - The current root-approved and checked-out EventStore versions both lack `pdenc-v2`, `IPersonalDataPolicy`, `IErasureStateProvider`, and a shared payload engine; ASP.NET Core cursor Data Protection is not a substitute.
 - No production source, project/package dependency, or submodule pointer was changed and no product tests were run during story creation. The local implementation remains the required rollback path.
+- 2026-09-07 spec execution confirmed the same halt at EventStore `d45206f7` / package `3.103.0`. Dual-provider, GDPR, and post-v2 rollback suites were not run and are not credited.
 
 ### File List
 
@@ -277,3 +280,6 @@ GPT-5 Codex
 
 - `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `_bmad-output/implementation-artifacts/spec-8-7-data-protection-extraction.md`
+- `_bmad-output/implementation-artifacts/tests/test-summary.md`
+- `_bmad-output/implementation-artifacts/8-7-data-protection-extraction.md`

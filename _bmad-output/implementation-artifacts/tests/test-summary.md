@@ -775,3 +775,47 @@ blocker required (a zero-warning, zero-error Release build at a real committed
 gitlink) is met at `8aeed1d2`. The 8-3 reconciliation matrix's PolymorphicSerializations
 row has been updated to this gitlink, and `.gitlink-signoff.tsv` carries the matching
 `validated-advance` row (2026-09-06) authorizing this identity to ship in a release tag.
+
+## Story 8.7 Shared payload-protection adoption — closed-gate halt — 2026-09-07
+
+Spec `_bmad-output/implementation-artifacts/spec-8-7-data-protection-extraction.md` AC1 requires a `blocked` halt when G5 runtime packages and the EventStore 8.11 closure are missing. Execution verified the gate and stopped before production, DI, or dependency changes. Dual-provider, GDPR, and post-v2 rollback suites were not run and are not credited.
+
+### Identities
+
+| Mode | Identity | Result |
+| --- | --- | --- |
+| EventStore source gitlink and checkout | `d45206f7cbd80a112519c1d4687d7279a745f0c5` (`v3.103.0-2-gd45206f7`) | Match each other. Spec frozen pin `c21bd749154d701c3b7d68e40d1008d3475e35c4` / package `3.95.0` does not match; Ask First forbids adopting a new identity. Neither identity delivers G5. |
+| EventStore package graph | Builds catalog `HexalithEventStoreVersion=3.103.0` | No `Hexalith.EventStore.PayloadProtection` or `.AzureKeyVault` package version. |
+| G5 matrix row | `needs-additive-api` | Unchanged. Local MOVE/KEEP files, adapter, and DI remain. |
+
+### Missing receipts
+
+| Receipt | Inspection |
+| --- | --- |
+| EventStore 8.11 closure packet | `test ! -f references/Hexalith.EventStore/_bmad-output/implementation-artifacts/8-11-g5-evidence-and-approval-closure.md` — absent. Story `8-11-g5-evidence-and-approval-closure: backlog`. |
+| Runtime engine packages | Both `Hexalith.EventStore.PayloadProtection*.csproj` absent. Catalog has no PayloadProtection versions. |
+| Runtime APIs | `IPersonalDataPolicy`, `IErasureStateProvider`, and `pdenc-v2` have no matches under `references/Hexalith.EventStore/src`. |
+| EventStore predecessor stories | Stories 8.2-8.11 remain `backlog`. Story 8.1 `approved-authorized` authorizes only 8.2 preflight. |
+| Named G5 `available` approvals | Absent. Story 8.11 alone may record G5 `available`. |
+| Dual-provider parity / post-v2 rollback | Not run. Not credited. |
+| Production KMS | Still an independently blocking release gate. `LocalDevKeyStorageBackend` remains. |
+
+### Commands
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `git ls-tree HEAD references/Hexalith.EventStore` | Pass | `160000 commit d45206f7cbd80a112519c1d4687d7279a745f0c5 references/Hexalith.EventStore` |
+| `git -C references/Hexalith.EventStore rev-parse HEAD` | Pass | `d45206f7cbd80a112519c1d4687d7279a745f0c5` (matches gitlink) |
+| `git -C references/Hexalith.EventStore describe --tags --always HEAD` | Pass | `v3.103.0-2-gd45206f7` |
+| `test ! -f` on 8.11 closure and both PayloadProtection csproj files | Pass | All three absent. |
+| `rg -n -F 'IPersonalDataPolicy\|IErasureStateProvider\|pdenc-v2' references/Hexalith.EventStore/src` | Pass (no matches) | Runtime G5 surfaces are not in source. |
+| `rg -n -F 'TryAddSingleton<IEventPayloadProtectionService, NoOpEventPayloadProtectionService>' references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Configuration/ServiceCollectionExtensions.cs` | Pass | Default remains the no-op. Not the shared engine. |
+| Dual-provider harness, unit lane, topology lane, package-mode Security Release build | Not run | Closed-gate halt. Not credited as pass, skip, or fail. |
+
+### Retained rollback surfaces
+
+Parties still owns `PartyPayloadProtectionService`, `EventStorePartyPayloadProtectionAdapter`, local DI in `PartiesServiceCollectionExtensions`, `PartyDomainProcessor` coupling, all 18 MOVE files, all 5 KEEP files, and `CryptoKeyManagementCompatibilityHarnessTests`. Crypto-shredding remains default-on. The Epic 7 crypto-retention action stays `open`.
+
+### Totals
+
+Dual-provider totals: not run / not credited. No skips credited. Story 8.7 remains `blocked`.

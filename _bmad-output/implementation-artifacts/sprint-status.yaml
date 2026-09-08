@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-09-06
+# last_updated: 2026-09-07
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -45,7 +45,7 @@
 #   against this file: it rejects `blocked` and re-slugs titles. Refresh in place.
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-09-06
+last_updated: 2026-09-07
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -178,6 +178,12 @@ development_status:
   # package, or the Story 8.11 closure packet. G5 stays needs-additive-api,
   # the retention action stays open, and no Parties protection-path deletion
   # is authorized. Story 8.7 remains blocked.
+  # Revalidated 2026-09-07 at matching root gitlink and checkout
+  # d45206f7cbd80a112519c1d4687d7279a745f0c5 (v3.103.0-2-gd45206f7) /
+  # package 3.103.0: 8.11 closure, PayloadProtection projects/packages,
+  # pdenc-v2, IPersonalDataPolicy, and IErasureStateProvider remain absent.
+  # Spec 8.7 AC1 halt: no production or dependency changes. Story 8.7 remains
+  # blocked.
   8-7-data-protection-extraction: blocked
   # Story context revalidated 2026-07-31 after the latest root-submodule update.
   # All eight checkouts match their clean root gitlinks; only Builds (b529b66) and
