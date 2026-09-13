@@ -20,7 +20,7 @@ deferred: []
 
 **Problem:** The generic follow-up recommendations for completed Stories 8.2 and 8.3 have not been discharged against the current implementation. Independent inspection found that MCP scalar identifiers can be normalized past the Story 8.2 whitespace rejection rule, while the Story 8.3 evidence gate contains stale source receipts, skips its completed revision range, and contradicts two APIs present in the selected EventStore source.
 
-**Approach:** Apply only the bounded identifier and prerequisite-evidence corrections proven by the fresh review, add focused regression coverage, validate current package/source identities without changing prerequisite dispositions, and retire both source-spec follow-up flags after the evidence is green.
+**Approach:** Run and record one separately scoped independent review for each source story against its intent contract, acceptance criteria, and current affected implementation, treating the findings below as starting evidence rather than an exhaustive checklist. Apply only bounded findings, add focused regression coverage, validate current package/source identities without changing prerequisite dispositions, and have reviewer sessions that did not author the candidate changes assess the final candidate before retiring either source-spec follow-up flag. One independent reviewer may cover both stories when each has a separate scoped record.
 
 ## Boundaries & Constraints
 
@@ -56,7 +56,7 @@ deferred: []
 **Execution:**
 - `src/Hexalith.Parties.Mcp/Tools/PartiesMcpTools.cs` and `tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolDispatchTests.cs` -- stop trimming scalar semantic IDs before shared validation, preserve CSV parsing semantics, and cover bounded no-client failures -- restores Story 8.2's exact-input safety contract.
 - `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`, `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs`, and `docs/architecture.md` -- refresh current committed source receipts, record the two delivered EventStore symbols, narrow remaining gaps, and enforce completed historical scope -- makes Story 8.3 evidence reproducible without granting approval or widening migration scope.
-- `_bmad-output/implementation-artifacts/spec-8-2-identifier-correctness-and-zero-risk-hygiene.md` and `_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md` -- retire their generic follow-up flags only after focused verification passes and record this run's concrete disposition -- prevents an unverified administrative closure.
+- `_bmad-output/implementation-artifacts/spec-8-2-identifier-correctness-and-zero-risk-hygiene.md` and `_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md` -- append one review outcome per source story recording the reviewed baseline and final candidate (or exact baseline-relative diff), reviewer-session independence from the patch author, all findings and dispositions, and focused verification evidence; retire a flag only after its final-candidate record has no unresolved in-scope finding -- prevents an unverified administrative closure.
 - `_bmad-output/implementation-artifacts/spec-epic-8-followup-review.md` -- record any newly discovered valid but out-of-bounds finding in `deferred` with exact evidence; otherwise leave `deferred` empty -- keeps any new deferral specific without touching the orchestrator-owned ledger.
 
 **Acceptance Criteria:**
@@ -66,6 +66,7 @@ deferred: []
 - Given current parent gitlinks, selected checkout revisions, and central package values, when the prerequisite fitness suite runs in a clean selected-source graph, then exact source receipts match and package identities remain EventStore `3.102.0`, Commons `2.30.0`, Memories `2.26.1`, Tenants `5.7.0`, and Parties `1.1.1`.
 - Given the selected EventStore source exposes DAPR health registration and audience-aware JWT configuration, when the matrix is inspected, then it cites reproducible evidence for those symbols while retaining the remaining degraded-response, granular-client, integrated-topology, and rollback proof gates.
 - Given all bounded patches and focused checks pass, when the two completed source specs are inspected, then both follow-up flags are false and neither the deferred-work ledger nor `.bmad-loop` files changed.
+- Given both source specs recommend follow-up review, when closure is requested, then each has a recorded independent final-candidate review against its intent contract and acceptance criteria, identifies the reviewed revision or exact diff and every finding disposition, reports no unresolved in-scope finding, and records every valid out-of-bounds finding in this spec's `deferred` list; otherwise that source spec's follow-up flag remains true.
 
 ## Spec Change Log
 
