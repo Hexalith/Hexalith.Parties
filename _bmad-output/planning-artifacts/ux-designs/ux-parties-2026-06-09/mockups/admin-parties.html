@@ -13,8 +13,8 @@
    EXPERIENCE.md › State Patterns (Stale read/Degraded, Accepted-but-processing,
                     Tenant unavailable, Erased/Gone)
    EXPERIENCE.md › Key Flows 3 (erasure) & 4 (link a party via picker)
-   DESIGN.md › Layout & Spacing (master-detail, header 48px, nav 220px,
-               comfortable density), colors.accent, components.*
+   DESIGN.md › Layout & Spacing (master-detail; header/nav widths and density
+               are shell-owned, not restated), colors.accent, components.*
    Tokens are Fluent 2 values; names in comments map to --colorXxx custom props.
    =========================================================================== */
 :root{
@@ -107,6 +107,7 @@ body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);paddin
 </style>
 </head>
 <body>
+<p style="margin:8px 12px;padding:6px 10px;border:1px dashed #616161;font:12px/1.4 Segoe UI,sans-serif;color:#424242;max-width:60rem"><strong>Illustrative only — do not port.</strong> This mock hand-codes hex values, rem sizes, <code>.dot</code>/<code>.sw</code>/<code>.dialog</code>/<code>.toast</code>/<code>.b-*</code> classes and a fixed nav width to stand in for Fluent 2 tokens and FluentUI V5 / FrontComposer components. Build from <code>DESIGN.md</code> + <code>EXPERIENCE.md</code>; the spines win on every conflict.</p>
 
 <p class="caption">Admin · <strong>Parties</strong> master-detail with GDPR operations. Desktop, comfortable density. Below: erase typed-confirm dialog and the tenant-warming state.</p>
 
@@ -166,7 +167,7 @@ body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);paddin
               <div class="row"><span class="lbl">Export this party's data (portability)</span><button class="btn outline">Export</button></div>
               <div class="row"><span class="lbl">Restrict processing</span><button class="btn outline">Restrict</button></div>
               <div class="row"><span class="lbl">Erasure verification report</span><button class="btn subtle">View report</button></div>
-              <div class="row"><span class="lbl">Erase party — irreversible</span><button class="btn danger">Erase party</button></div>
+              <div class="row"><span class="lbl">Erase party — irreversible</span><button class="btn outline">Erase party</button></div>
             </div>
           </div>
         </div>
@@ -200,9 +201,9 @@ body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);paddin
     <div class="scrim">
       <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="erlbl">
         <h3 id="erlbl">Erase party — irreversible</h3>
-        <p>This permanently shreds Jordan Webb's personal data across all records. It can't be undone. To confirm, type the person's name.</p>
+        <p>This permanently deletes Jordan Webb's personal data. Records the law requires us to keep are retained and listed in the verification report. It can't be undone. To confirm, type <strong>Jordan Webb</strong> (spaces and capitals don't matter).</p>
         <input class="confirm-field" style="width:100%;font-family:var(--font)" aria-label="Type the person's name to confirm erasure" placeholder="Type “Jordan Webb” to confirm…">
-        <div class="acts"><button class="btn subtle">Cancel</button><button class="btn danger">Erase party</button></div>
+        <div class="acts"><button class="btn subtle" autofocus>Cancel</button><button class="btn danger" aria-disabled="true">Erase party</button></div>
       </div>
     </div>
   </div>

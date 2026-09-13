@@ -1,241 +1,123 @@
-# Accessibility Review — parties (re-review 2026-08-18)
+# Accessibility Review — parties
 
-> Lens: Accessibility (WCAG 2.2 AA), adversarial re-review of the finalized spine
-> pair (`DESIGN.md`, `EXPERIENCE.md`), the decision-log resolutions from the
-> 2026-06-09 review, and all five mockups. Contrast figures are computed (sRGB
-> relative luminance) against the exact hex declared in the spine and mock
-> `:root` blocks. Mocks are illustrative and the spine wins on conflict; mock
-> findings below are limited to defects a developer would copy.
+_Run: 2026-09-08 · lens: accessibility (WCAG 2.2 AA)_
+
+> Scope: `DESIGN.md` + `EXPERIENCE.md` (updated 2026-08-18) audited as an
+> implementable, testable a11y contract; `.memlog.md`; the five mockups; a
+> static spot-check of `src/Hexalith.Parties.{UI,AdminPortal,ConsumerPortal,Picker}`
+> and `tests/` only to judge whether spine rules are enforced. Contrast figures
+> are computed (sRGB relative luminance) from the hex the spines/mocks declare
+> and from the Fluent 2 alias-token mappings in the Fluent UI Blazor V5 theme
+> bundle (`colorStatus{X}Foreground1 = shade10 / tint30`, `Background1 =
+> tint60 / shade40`, `Background3 = primary`, `ForegroundInverted = tint30 /
+> shade10`, light / dark). Spine wins on conflict with any mock.
 
 ## Overall verdict
 
-The June criticals were genuinely fixed in the spine text — the contrast rebind,
-politeness split, combobox pattern, semantic controls, focus contract, and honest
-erasure copy are all findable, specific, and correctly worded; this remains one of
-the more accessibility-literate spine pairs I have reviewed. Two things keep it
-from a clean bill: the mock repoint was incomplete (the sign-in mock still paints
-link text in the raw 3.51:1 accent, and the restricted badge still hand-mixes the
-exact 4.44:1 tint the spine now forbids), and the spine's claimed WCAG **2.2** AA
-floor is silent on three of the criteria that are new in 2.2 where the product
-triggers them — most importantly 3.3.8 Accessible Authentication on the sign-in
-surface that gates every legal right downstream. No criticals; the highs are
-cheap, surgical fixes.
+The August update landed essentially every prior finding in spine text — 3.3.8,
+2.4.11, 3.2.6, forced-colors selection, detail-sheet focus, picker
+announcements, links-never-raw-accent, consumer no-transcription — and the pair
+now reads as a genuinely 2.2-aware contract. But the token layer under the
+visual spine is not as safe as its prose claims: the "matched AA pair" chosen
+for the GDPR destructive Confirm is not a pair at all (Fluent 2's
+`*ForegroundInverted` is a text tint for dark surfaces — **1.74:1 on
+`Background3` in light, 1.17:1 in dark**, and it is already shipped in code),
+the "Info" status token the freshness contract's third state binds to **does
+not exist in Fluent 2**, and the `brand-fill ≈ #00767f` premise that every
+primary button and link relies on is an estimate no one has read back from the
+running theme. Behaviourally, the one contract-level gap is that live regions
+are never required to be mounted before they change — the exact pattern the
+shipped `StatusLiveRegion` uses, which can make the core "Saved — updating…"
+experience silent for screen-reader users. One critical, three highs; the rest
+is medium/low polish and testability.
 
-## June resolutions — landed?
+## Prior findings (2026-08-18) status
 
-- **Contrast rebind (accent → `--colorBrandBackground` for filled buttons)** —
-  **landed** in DESIGN.md frontmatter (`brand-fill` token), §Colors (load-bearing
-  caveat, 3.51:1 stated), §Do's and Don'ts (two rows), and EXPERIENCE.md
-  §Accessibility Floor (1.4.3 note). All five mocks fill `.btn.primary` with
-  `--brand-fill:#00767f` (verified 5.39:1). **Caveat:** the log's claim "all 5
-  mocks repointed" is incomplete — `signin.html` `.alt a` still binds *text* to
-  the raw accent (see Findings, high).
-- **Live-region politeness split (polite vs `role=alert`)** — **landed** in
-  EXPERIENCE.md §Accessibility Floor (first bullet), §Component Patterns
-  (Command result toast row), §State Patterns (Validation rejected row). Mock
-  demonstration is partial (see Findings, low).
-- **Full WAI-ARIA combobox on the picker** — **landed** in EXPERIENCE.md
-  §Component Patterns (Party picker row names `role=combobox`, `aria-expanded`,
-  `aria-controls`, listbox/option roles, `aria-selected`,
-  `aria-activedescendant`, `aria-autocomplete=list`), folded into the re-skin
-  debt as intended; `create-edit-party.html` is wired accordingly.
-- **Semantic controls (consent `role=switch`; type `radiogroup`; real labeled
-  erase-confirm input; no interactive `<div>`s)** — **landed** in EXPERIENCE.md
-  §Accessibility Floor ("Real semantics, not styled divs") and §Component
-  Patterns; mocks updated (`consumer-privacy.html` switch is a real `<button
-  role="switch" aria-checked aria-labelledby>`; `admin-parties.html` confirm is a
-  real `<input aria-label>`; `create-edit-party.html` chooser is a `radiogroup`).
-- **Per-surface focus contract (trap/restore on dialogs, move-to-alert on
-  blocking errors, announce-only on optimistic saves)** — **landed** in
-  EXPERIENCE.md §Interaction Primitives (Focus management bullet) and
-  §Accessibility Floor. Gap remains for the tablet/phone detail sheet (see
-  Findings, medium).
-- **Erasure copy honesty (start-not-finish, cancellable-vs-permanent, neutral
-  ack, no success-green)** — **landed** in EXPERIENCE.md §Voice and Tone,
-  §State Patterns (Erasure requested / in progress row), §Component Patterns
-  (toast row); `consumer-privacy.html` State B matches (neutral `#1f2937` toast,
-  both halves stated, 30-day figure separated from the cancel window).
+- [resolved] Sign-in mock painted link text in raw accent (`signin.html` L39 `.alt a{color:var(--brand-fill)}`; DESIGN.md §Do's/Don'ts L233 "Bind link text to brand-fill"; §Colors L121–123).
+- [resolved] 3.3.8 Accessible Authentication unaddressed (EXPERIENCE.md §Foundation L36–41 "Authentication is delegated… 3.3.8 binds the IdP configuration"; §Accessibility Floor L186–191). Testability and the contradicting sign-in mock re-raised below (4-c, 8-a).
+- [resolved] Restricted badge hand-mixed 4.44:1 tint (`admin-parties.html` L76 `#bc4b09` on `#fff9f5` = **4.85:1**, matches Fluent `Warning Foreground1/Background1`).
+- [resolved] 2.4.11 Focus Not Obscured absent (EXPERIENCE.md §Interaction Primitives L161–163 `scroll-margin-top`, banners never overlay focus).
+- [resolved] 4.1.3 picker result states + export-ready silent (EXPERIENCE.md §Component Patterns picker row L110 "internal `role=status`"; §State Patterns "Export preparing / ready" L134; Flow 1 step 5; Flow 4 failure L324–326).
+- [resolved in spine · persisting in mocks and picker code] Selection indicators die in forced-colors (DESIGN.md §Do's/Don'ts L236; EXPERIENCE.md §Accessibility Floor L195–199). `admin-parties.html` L51/L71 `.nav a.active`/`.grow.sel`, `create-edit-party.html` L41/L50 `.seg .opt.on`/`.listbox .o.act` still tint + inset box-shadow with no `aria-current`; `PartyPicker.razor.css` L102–105/L147–154 sets every result button's border to `CanvasText` under forced-colors, so the selected one is indistinguishable. See 6-a.
+- [resolved] Tablet/phone detail sheet had no focus contract (EXPERIENCE.md §Interaction Primitives L153–160).
+- [resolved as text · untestable as written] Dark-mode contrast asserted, never gated (DESIGN.md §Colors L114–118 names an acceptance check but no method, owner, or tool). See 1-d.
+- [resolved] 3.2.6 no Help surface (EXPERIENCE.md §IA row "Help & contact" L60; §Accessibility Floor L200–202). No mock shows it — see 8-c.
+- [resolved] Validation-rejected mock lacked semantics (`create-edit-party.html` L92 `role="alert"`, L96/L99 `aria-invalid` + `aria-describedby`).
+- [resolved] Picker clear control was an `aria-hidden` span (`create-edit-party.html` L78 `<button aria-label="Clear selection">`; DESIGN.md §Components L220–221).
+- [resolved] Picker mock suppressed focus outline (`create-edit-party.html` L45 `.combo:focus-within{outline:2px solid var(--brand-fill)}`; DESIGN.md L218–220 "styled inside the shadow root").
+- [resolved · partial in mock] Consent `aria-describedby` never demonstrated (`consumer-privacy.html` L89/L93 `aria-describedby="c1-state"`; memlog notes no lawful-basis text exists on consent rows in the mock — acceptable, spine text still mandates purpose/basis association).
+- [resolved] Freshness indicator not a live region in mocks (`role="status"` on `.fresh`/`.freshbar` in all three mocks; `DataFreshnessIndicator.razor` L8 in code).
+- [resolved] Consumer typed confirmation underspecified (EXPERIENCE.md §Component Patterns L113 "no typed transcription (cognitive floor)"; Flow 5 step 2).
+- [resolved] Listbox options lacked per-option ids (`create-edit-party.html` L80–82 `o1..o3`; EXPERIENCE.md L110 "per-option `id`s").
 
 ## Findings
 
-- **[high]** **1.4.3 — Sign-in mock still paints text in the raw accent.**
-  `signin.html` `.alt a { color: var(--accent) }` renders the "Use your
-  organization account" SSO link in `#0097A7` on white = **3.51:1**, on the one
-  surface every user must pass. This is the exact failure mode the June critical
-  fixed, surviving in the mock the fix claimed to have repointed — and it
-  directly violates DESIGN.md §Colors ("raw accent … non-text accents only").
-  A developer copying the sign-in card ships an AA failure on the auth path.
-  *Fix:* repoint `.alt a` to `--brand-fill` (5.39:1) and add "links are text —
-  never raw accent" to the DESIGN.md Don't column so the rule visibly covers
-  hyperlinks, not just button fills.
+### 1. Contrast
 
-- **[high]** **3.3.8 Accessible Authentication (Minimum) — unaddressed on a
-  claimed WCAG 2.2 AA floor.** The Sign in surface is first-class in
-  EXPERIENCE.md §Information Architecture and mocked (`signin.html` email +
-  password + SSO), yet neither spine says anything about authentication
-  accessibility: nothing guarantees paste/password-manager support, the mock
-  inputs carry no `autocomplete="username"` / `"current-password"` tokens, and
-  no rule bans a cognitive-function test (CAPTCHA, memorized-transcription) or
-  requires an alternative. A consumer who cannot clear sign-in can exercise *no*
-  GDPR right — this gates the entire product. *Fix:* add to §Accessibility
-  Floor: sign-in must not block paste or autofill, must carry `autocomplete`
-  tokens, and must offer a non-cognitive-test path (SSO/passkey/email link
-  qualify); if authentication is delegated to the OIDC provider, say so
-  explicitly and make 3.3.8 a requirement on the chosen IdP configuration.
+- **[critical]** The GDPR destructive Confirm's "matched AA pair" is not a pair. `--colorStatusDangerForegroundInverted` is Fluent 2's *danger text colour for inverted (dark) neutral surfaces* — the theme bundle maps it to `cranberry.tint30` (`#dc626d`) in light and `cranberry.shade10` (`#b10e1c`) in dark — while `--colorStatusDangerBackground3` is `cranberry.primary` (`#c50f1f`) in both. Computed: **1.74:1 light, 1.17:1 dark.** The label of the single most consequential control in the product (in-dialog "Erase party" — irreversible crypto-shred) is near-invisible in both themes, and the binding is already shipped in `src/Hexalith.Parties.UI/Components/Shared/GdprDestructiveButton.razor.css` L12–14. The Aug rubric/drift reviews accepted this pair as "spine adopts code", so spine, code and decision log all agree on a wrong value; the admin mock hides it because `.btn.danger` hand-codes `#b10e1c` + white (7.12:1). (DESIGN.md frontmatter L55–57, §Components L204–208 · SC 1.4.3). *Where:* DESIGN (+ code). *Fix:* bind foreground to `--colorNeutralForegroundOnBrand` (white in both themes → **6.07:1** on `Background3`, 7.12:1 on `Background3Hover`, higher on `Pressed`); strike "AA-designed together" for this pair and add the rule "`*ForegroundInverted` is text-on-dark-neutral, never text-on-`Background3`"; add the pair to the dark-mode acceptance table (1-d).
+- **[high]** DESIGN binds two states to a token Fluent 2 does not emit. `--colorStatusInfoForeground1` (frontmatter L18 inherited list, L54 `freshness-indicator.degraded`, §Colors L110 "Processing / informational") has no definition: the Fluent 2 status family is `success / warning / danger` only (bundle `vt={success:"green",warning:"orange",danger:"cranberry"}`). A `var()` with no fallback makes the declaration invalid at computed-value time — the same silent-disappearance failure the spine itself bans for FAST tokens (§Do's/Don'ts L235). The FrontComposer shell alias `--fc-color-info: var(--colorStatusInfoForeground1)` (`FrontComposerShell.razor.css` L15) is equally empty, so the alias route doesn't rescue it. Result: the third freshness state (`degraded`, "showing last known") and the accepted-but-processing colour have no colour, undermining the 3-state contract the memlog just re-affirmed. (DESIGN.md L18/L54/L110 · SC 1.4.3, 1.4.11). *Where:* DESIGN. *Fix:* bind Info to an existing pair and state it — e.g. `--colorPaletteBlueForeground2` on `--colorPaletteBlueBackground2`, or neutral `--colorNeutralForeground2` on `--colorNeutralBackground3` — or route Info through components (`FluentMessageBar Intent.Info`, `FluentBadge Color.Informative`) and forbid any `--colorStatusInfo*` var; file the shell alias as an upstream FrontComposer defect.
+- **[high]** The AA story for every primary button and link rests on `brand-fill ≈ #00767f`, which is an estimate, not a read-back. Fluent UI Blazor V5 derives the brand ramp from `ThemeSettings(AccentColor, hueTorsion 0, vibrancy 0, mode, isExact:false)` (`FrontComposerShell.razor.cs` L678) with the Fluent Theme Designer curve (`keyColor / darkCp / lightCp`), and `--colorBrandBackground` is `brand[80]` light / `brand[70]` dark — the position where the key colour tends to land. If `brand[80]` resolves near the seed `#0097A7`, *every* filled primary ("New", "Create party", "Save changes", "Export my data", "Try again") and every link is ~3.5:1, and all five mocks hard-code `#00767f` so a developer would never notice. (DESIGN.md L13, §Colors L93–97 · SC 1.4.3). *Where:* DESIGN — spec-is-fine-but-untestable. *Fix:* record the *computed* `--colorBrandBackground` for light and dark (read from the running shell) in DESIGN.md with its ratio, and make it the acceptance value; if it misses 4.5:1, change the accent seed to a teal that is itself AA (e.g. `#00767f`), which also collapses the raw-accent/brand-fill split and removes the "non-text only" caveat entirely.
+- **[medium]** Dark-mode gate has no method. §Colors L114–118 says "acceptance check: … verify ≥4.5:1 in dark mode" but names no tool, table, owner or test; the e2e axe run (`tests/e2e/specs/parties-accessibility.spec.ts`) emulates `forcedColors`/`reducedMotion` but never `colorScheme: 'dark'`, and `AccessibilityStyleGuardTests` checks token *names*, not resolved contrast. Computed dark pairs from the bundle: Danger `Fg1 #dc626d` on `Bg1 #3f1011` = **4.65:1** (passes, thin), Warning `#faa06b`/`#4a1e04` = 6.97:1, Success `#54b054`/`#052505` = 6.06:1, Neutral3 `#adadad`/`#292929` = 6.48:1. (DESIGN.md L114–118 · SC 1.4.3). *Where:* DESIGN — spec-is-fine-but-untestable. *Fix:* add a small "computed pairs" table (light + dark hex and ratio) under §Colors and mandate an axe `color-contrast` pass with `colorScheme:'dark'` in the e2e spec; treat 4.65:1 as the floor to protect when tuning the danger tint.
+- **[low]** Mock input borders mislead on 1.4.11. All mocks draw inputs with a full `--stroke2 #d1d1d1` border (1.53:1 on white); Fluent 2's 3:1 field boundary is the *bottom* stroke `--colorNeutralStrokeAccessible` (`#616161`, 6.19:1), which DESIGN correctly lists as inherited. `.input.bad`'s `#f7d6d9` outline is 1.35:1 (the 1px danger border carries the state). (all mockups · SC 1.4.11). *Where:* mockup. *Fix:* annotate mocks "use `FluentTextInput` — boundary is the accessible bottom stroke, not this border".
 
-- **[medium]** **1.4.3 — Restricted badge in the mock still hand-mixes the tint
-  the spine forbids.** `admin-parties.html` `.b-restricted` is `#bc4b09` on
-  `#fbeee2` = **4.44:1** at 12px/600 — under the 4.5:1 floor, on a load-bearing
-  lifecycle state. DESIGN.md §Components (party-state-badge) now correctly
-  mandates matched `--colorStatus*Foreground1`-on-`Background1` token pairs and
-  even names this 4.44:1 hand-mix as the anti-pattern — but the mock was never
-  updated, so the reference rendering *is* the anti-pattern a developer will
-  copy. *Fix:* repoint the mock badge tints to the Fluent pair values (e.g.
-  warning fg on `#fff9f5` = 4.85:1) or annotate the badge CSS "illustrative —
-  use token pairs per DESIGN.md".
+### 2. Focus & keyboard
 
-- **[medium]** **2.4.11 Focus Not Obscured (Minimum) — not covered anywhere.**
-  The design ships the ingredients for obscured focus: a sticky grid header
-  (`admin-parties.html` `.grow.head { position: sticky }`), toasts and freshness
-  banners injected above content, and a fixed 48px app header. Neither spine
-  mentions 2.4.11, so nothing stops a keyboard user's focused row scrolling
-  under the sticky header or a toast landing over the focused control. *Fix:*
-  add to EXPERIENCE.md §Interaction Primitives: focused elements must remain at
-  least partially visible — `scroll-margin-top` ≥ header+sticky-row height on
-  focusable list/grid items; toasts/banners never overlay the element that holds
-  focus.
+- **[medium]** Dialog initial-focus target is unspecified — and must never be the destructive Confirm. §Interaction Primitives L153–154 covers trap and restore but not where focus lands on open. For the erase dialog (typed-confirm input + danger Confirm) the safe contract is focus → dialog heading or the confirm input, never the Confirm; the `GdprDestructiveButton` renders input then button, and `FluentDialog`'s default first-focusable may differ by trigger (Cancel vs Confirm). A `Space`/`Enter` bounce lands on an irreversible action. (EXPERIENCE.md L153–160 · SC 2.4.3, 3.3.4). *Where:* EXPERIENCE. *Fix:* add "on open, focus the dialog heading (`tabindex=-1`) or the first input; a destructive Confirm is never the initial focus and stays disabled until the typed value matches".
+- **[medium]** "Ring never suppressed" is enforced on one of four UI roots. `AccessibilityStyleGuardTests.AppOwnedRoots` = `src/Hexalith.Parties.UI/Components` only; `PartiesAdminPortal.razor.css` L52 sets `outline: 2px solid var(--accent-fill-rest)` — a FAST token that doesn't resolve in the V5 shell, so the shorthand is invalid and the focus ring on those admin elements is *gone*, exactly the failure the spine predicts (§Do's/Don'ts L235). Memlog lists "extend a11y style-guard roots to all four UI projects" as queued; until it lands the spine rule is unverifiable where it matters most (dense admin grid). (EXPERIENCE.md §Accessibility Floor L192–194 · SC 2.4.7). *Where:* spec-is-fine-but-untestable. *Fix:* extend `AppOwnedRoots` to AdminPortal/ConsumerPortal/Picker and add a guard forbidding `--*-rest`/`--accent-*`/`--neutral-*` FAST vars; state in the spine that the guard is the acceptance test.
+- **[low]** Focus destination when the focused thing disappears is unstated: an erased party's grid row becomes a tombstone or is removed; the phone detail "Back" restores the row — but Flow 3 step 5 flips the focused detail to `erased` and nothing says where focus goes if the row is filtered out ("Active" filter is on in the mock). (EXPERIENCE.md L153–160 · SC 2.4.3). *Where:* EXPERIENCE. *Fix:* "if the originating element is gone on restore, focus the list heading or the nearest row and announce".
+- **[low]** Shell-inherited keyboard claims are asserted, not contracted. §Interaction Primitives L145–146 promises "skip links (to content, to nav) as first tab stops" and a `Ctrl+K` palette; the shell evidence available shows a single `skip-to-main` link, and the palette's dialog semantics (role, trap, `Esc`, result announcements) are nowhere in this pair. (EXPERIENCE.md L145–146 · SC 2.4.1, 2.1.1). *Where:* EXPERIENCE — spec-is-fine-but-untestable. *Fix:* cite the FrontComposer contract by name/version or reduce the claim to what ships ("skip to content"), and add the palette to the e2e a11y route list.
+- **[low]** Grid "type-ahead into search" is a single-character shortcut; 2.1.4 is satisfied only if it is active solely while a grid row has focus. State that scope. (EXPERIENCE.md L147 · SC 2.1.4). *Where:* EXPERIENCE.
 
-- **[medium]** **4.1.3 — The live-region strategy misses the picker's async
-  states and the export-ready moment.** EXPERIENCE.md routes command results,
-  freshness transitions, and erasure progression through named live regions —
-  good — but two async changes have no announcement path: (a) the party picker's
-  result-state transitions (`Ready` result count, `Empty` "no matches",
-  `Degraded`/`LocalOnly` "limited results" — Flow 4's failure shows a *quiet
-  visual note* only), and (b) Flow 1's climax, where "a download appears" for
-  the export with no announced arrival — a blind consumer waiting on their
-  Art. 20 export hears nothing. *Fix:* mandate a `role=status` region inside the
-  picker announcing result count / empty / limited-results on state change
-  (§Component Patterns picker row), and an explicit polite announcement +
-  focusable "Download your export" control when the export readies (§State
-  Patterns or Flow 1).
+### 3. Live regions & status
 
-- **[medium]** **1.4.1/1.4.11 in forced-colors — the selected/active indicators
-  are exactly what Windows High Contrast strips.** The spine mandates
-  forced-colors support product-wide (§Accessibility Floor) but the design's
-  selection affordances are a background tint + `box-shadow: inset 3px 0 0
-  var(--accent)` (`admin-parties.html` `.nav a.active`, `.grow.sel`;
-  `create-edit-party.html` `.seg .opt.on`, `.listbox .o.act`) — forced-colors
-  mode removes both backgrounds and box-shadows, leaving the selected nav item,
-  selected grid row, chosen radio, and active combobox option visually
-  indistinguishable. *Fix:* specify a forced-colors-surviving indicator: a real
-  (transparent-until-forced) border or outline on selected/active states, plus
-  `aria-current`/`aria-selected` so AT state is independent of paint.
+- **[high]** Live regions must exist *before* their content changes — the spine never says so, and the shipped primitive does the opposite. `StatusLiveRegion.razor` L12–15 renders `<div role=… aria-live=…>` only when `Kind` is non-null, so the region and its first message are inserted together; most AT/browser pairs do not reliably announce `role=status`/`aria-live=polite` content that arrives with the node (`role=alert` is special-cased and usually survives). The core eventual-consistency moment — "Saved — updating…", "Preparing your export…", the consent "Saving…" — is the message most likely to go unheard, and the spine's politeness split is meaningless if polite regions are mute. (EXPERIENCE.md §Component Patterns L115, §Accessibility Floor L177–181 · SC 4.1.3). *Where:* EXPERIENCE (+ code). *Fix:* add to §Accessibility Floor: "each surface mounts its `role=status` and `role=alert` regions empty at render; only their text content changes; regions are never conditionally rendered", and make the bUnit `StatusLiveRegionTests` assert the empty-mount.
+- **[medium]** Three polite regions describe one transition. On stale→fresh or accepted→reconciled, the command status region ("Saved — updating…"), the freshness indicator (`role=status`, "Updating…"), and a banner (`role=status` in `admin-parties.html` L153 alongside `.freshbar role=status` L137) all update within the same tick, and the list *and* detail each carry an indicator — a screen-reader user hears two to four overlapping sentences for one event. (EXPERIENCE.md L114–115, L128–129 · SC 4.1.3). *Where:* EXPERIENCE (mocks demonstrate it). *Fix:* a one-voice rule — per view, exactly one region announces a given transition; the freshness indicator announces only when no command status region has announced the same reconciliation in the last N seconds, banners are `aria-live=off` when a status region exists, and only the *active* pane's indicator is live.
+- **[low]** Picker announcements should be debounced to the settled result set and phrased with a noun ("12 matching parties", "No matches", "Limited results — showing last known"), not fire per 300 ms query tick. (EXPERIENCE.md L110 · SC 4.1.3). *Where:* EXPERIENCE.
+- **[low]** "Auto-refresh; `aria-live` announces when fresh" should announce on state *change* only, never on each poll; re-rendering an unchanged live region re-announces in some AT. (EXPERIENCE.md L129 · SC 4.1.3, 2.2.2). *Where:* EXPERIENCE.
 
-- **[medium]** **2.4.3 — The tablet/phone detail sheet has no focus contract.**
-  §Interaction Primitives specifies trap/restore for *dialogs*, and §Responsive
-  & Platform turns the Admin detail into an "overlay/sheet over the list"
-  (640–1023px) and a full-screen page (<640px) — but nothing says whether the
-  sheet traps focus, where focus lands on open, or that back/close restores it
-  to the originating grid row. Dialog `Esc` behavior is also unstated (the
-  picker's `Esc` is specified; the erase dialog's is not). The phone-reflow
-  *mock* is a documented residual; this missing *spine text* is not. *Fix:*
-  extend the Focus management bullet: detail sheet behaves as a dialog on
-  tablet (trap, `Esc` closes, restore-to-row) and as a page on phone (focus to
-  heading on open, back restores the row); state `Esc` closes any `FluentDialog`.
+### 4. Forms & errors
 
-- **[medium]** **1.4.3/1.4.11 — Dark mode contrast is asserted, never gated.**
-  DESIGN.md verifies the AA story for light mode only (`brand-fill` ≈ `#00767f`,
-  5.39:1 on white). Dark mode relies on Fluent deriving tints from the *custom*
-  accent base `#0097A7` via `baseLayerLuminance` (frontmatter `accent-dark`) —
-  a derived ramp from a custom seed is not automatically AA for filled-button
-  text or status-token pairs, and no dark-mode target is stated anywhere. *Fix:*
-  add one line to DESIGN.md §Colors: the dark-theme derived brand fill and the
-  four status token pairs must be verified ≥4.5:1 in dark mode as an
-  acceptance check; if the derived fill misses, pin the dark brand fill
-  explicitly.
+- **[medium]** Rejection reasons come "from the `PartyCommandValidationRejected` event" with no mandate that they are human, localized, and suggest a fix — the mock shows "That doesn't look like an email address" but nothing stops a dev surfacing validator output ("'Email' must not be empty"), and consumers are told "We couldn't change this — please try again" (Flow 2 failure) with no reason at all. (EXPERIENCE.md L130, Flow 2 L288–289 · SC 3.3.1, 3.3.3). *Where:* EXPERIENCE. *Fix:* "rejection codes map to plain-language, field-scoped messages that name the field and the fix; consumer register never shows a validator string; the summary `role=alert` lists each error as a link to its field".
+- **[medium]** Typed-name confirmation has no matching rules. Code compares `StringComparison.Ordinal` (`GdprDestructiveButton.razor` L69): "jordan webb", a trailing space, or a decomposed diacritic ("Zoë" typed on a different keyboard) blocks a DPO from fulfilling a legal deadline, and the spine says only "type the person's name". (EXPERIENCE.md L113, L150–151 · SC 3.3.4 / cognitive floor). *Where:* EXPERIENCE. *Fix:* specify trim + case-insensitive + Unicode-normalized (NFKC, diacritic-folded) comparison, show the exact expected string in the dialog (selectable/copyable — paste allowed), and keep the input `autocomplete=off`.
+- **[medium]** 3.3.8 is placed correctly (delegated → IdP configuration) but has no verification artifact. "Verified per deployment" (L190) names no checklist, owner, or evidence; the repo already has a deployment-security checklist the spine cites for the KMS gate — 3.3.8 should live in the same place. Also `SignInRequired` re-auth (L137) and the `/no-party-binding` return path must not add an app-side cognitive step. (EXPERIENCE.md L186–191 · SC 3.3.8). *Where:* EXPERIENCE — spec-is-fine-but-untestable. *Fix:* "3.3.8 is a line item in the deployment checklist: Keycloak login theme allows paste/autofill, carries `autocomplete` tokens, no CAPTCHA/puzzle without an alternative, WebAuthn or magic-link enabled; evidence = checklist sign-off per tenant".
+- **[low]** The Validation rejected row mandates `aria-describedby` but not `aria-invalid="true"` on the field, nor that the summary alert links to fields; the mock has `aria-invalid` (L96/L99) — the spine should too. (EXPERIENCE.md L130 · SC 3.3.1, 4.1.2). *Where:* EXPERIENCE.
+- Not triggered: **3.3.7 Redundant Entry** — no data is re-requested across steps; the typed confirm is the essential-confirmation exception and is Admin-only. **3.3.4** is met by design: erasure (Admin) is confirmed via typed input; consumer deletion is reversible until it begins and confirmed; consent and profile edits are reversible.
 
-- **[medium]** **3.2.6 Consistent Help — no help surface exists at all.**
-  §State Patterns (Load failure) promises a "support path," but the
-  §Information Architecture table contains no Help/Contact surface, and nothing
-  specifies a consistent location for it across pages. A data subject exercising
-  a legal right who hits a wall (erasure stuck, export failing, identity
-  dispute) has no specified route to a human or the DPO — a GDPR Art. 12
-  facilitation concern as much as a 3.2.6 one. *Fix:* add a persistent,
-  consistently-placed help/contact affordance (footer or nav) to the IA for both
-  areas, and point the Load-failure "support path" at it.
+### 5. Target size / pointer
 
-- **[low]** **4.1.3/3.3.1 — The validation-rejected mock doesn't carry the
-  semantics the spine mandates.** In `create-edit-party.html`, the rejection
-  banner (`.banner.warn`) has no `role="alert"`, the `.err` messages have no
-  `id`/`aria-describedby` tie to their inputs, and the `.input.bad` fields lack
-  `aria-invalid="true"` — while §State Patterns requires `role=alert` +
-  `aria-describedby` for exactly this state. The spine wins, but this mock is
-  the named visual reference for the rejected state. *Fix:* wire the mock (or
-  annotate it) to match the spine's own mandate.
+- **[medium]** Consent switch target is under-specified and the mock shrinks it. `consumer-privacy.html` L61 draws a 40×22 px switch; the purpose `<label id="c1">` has no `for`/wrapping so clicking the text does nothing, leaving a 22 px-tall target for the anxious, phone-first user. The spine says "≥24px; aim ≥44px on touch" (L207) but doesn't make the row/label part of the target. (EXPERIENCE.md L112, L207 · SC 2.5.8). *Where:* EXPERIENCE + mockup. *Fix:* "the consent purpose label is the switch's `<label>` (click toggles); the whole row meets 44px on touch"; fix the mock with `<label for>` or a `FluentSwitch` with `Label`.
+- **[medium]** The 2.2 target-size claim is not gated. `tests/e2e/helpers/a11y.ts` L16 runs axe with `wcag2a/2aa/21a/21aa` only — no `wcag22aa`, so axe's `target-size` rule never runs against the dense admin grid, the picker's icon buttons, or the switches. (EXPERIENCE.md L207 · SC 2.5.8). *Where:* spec-is-fine-but-untestable. *Fix:* add `wcag22aa` to `WCAG_AA_TAGS` (report-only first if noisy) and name it in the spine as the acceptance mechanism.
+- **[low]** Picker clear "✕" in the mock is `padding:0` at 14 px inline beside the input — well under 24 px with no spacing exemption (`create-edit-party.html` L47/L78). The shipped `.hx-party-picker__icon-button` has `min-height: 2.25rem`; note the mock is wrong. (SC 2.5.8). *Where:* mockup.
+- Not triggered: **2.5.7 Dragging Movements** — no drag interactions.
 
-- **[low]** **4.1.2 — The picker's clear control is an `aria-hidden`
-  interactive span.** `create-edit-party.html` `.combo .clear` is `<span
-  aria-hidden="true">✕</span>` with `cursor:pointer` — invisible to AT,
-  unfocusable, unnamed; the spine's picker spec covers `Backspace`-to-clear but
-  never names the visible clear affordance's semantics. *Fix:* spec it as a real
-  `<button aria-label="Clear selection">` in the picker's Component Patterns
-  row (it ships inside the re-skin debt anyway).
+### 6. Forced-colors / high-contrast / reduced-motion
 
-- **[low]** **2.4.7 — The picker mock suppresses the focus outline.**
-  `create-edit-party.html` `.combo input { border:0; outline:0 }` leaves the
-  1px accent wrapper border (3.51:1, barely over the 3:1 non-text floor) as the
-  only focus cue — against §Accessibility Floor's "ring never suppressed."
-  Because the picker is a shadow-DOM custom element, the `--colorStrokeFocus2`
-  ring must be *explicitly* styled inside it. *Fix:* add "visible
-  `--colorStrokeFocus2` ring on the combobox input, styled within the shadow
-  root" to the picker re-skin debt item.
+- **[medium]** Selection indicators still die in forced-colors everywhere the spine's new rule isn't yet applied: nav active, selected grid row, active listbox option, chosen radio in the mocks (tint + inset shadow only; radio has a border but so do its siblings), and the picker's shipped `[aria-selected=true]` (border-colour + box-shadow, then `border-color: CanvasText` on *all* result buttons under forced-colors). AT state is fine (`aria-selected`/`aria-checked`) but a sighted Windows HC user loses the visual. (DESIGN.md L236; EXPERIENCE.md L195–199 · SC 1.4.1, 1.4.11). *Where:* mockup + code (spine is fine). *Fix:* in mocks and picker CSS give selected/active a distinct *shape* that survives forced-colors — e.g. `outline: 2px solid transparent` that becomes `Highlight` under `forced-colors`, or a leading `▸`/check glyph — and add `aria-current="page"` on the nav link.
+- **[low]** `prefers-reduced-motion` is mandated product-wide but the motion inventory is empty: skeleton shimmer (`FluentSkeleton Shimmer`), switch knob transition, drawer/dialog transitions, auto-scroll to the alert. The shipped `MainLayout.razor.css` L25–31 reduced-motion rule targets interactive elements only, so shimmer keeps animating. (EXPERIENCE.md L195–197 · SC 2.3.3 [AAA, but cheap]). *Where:* EXPERIENCE (+ code). *Fix:* enumerate: "under reduced motion, skeletons render static, no transitions on switches/banners, `scroll-behavior:auto` when moving focus to alerts".
 
-- **[low]** **1.3.1 — Consent purpose/basis `aria-describedby` is mandated but
-  never demonstrated.** `consumer-privacy.html` switches carry
-  `aria-labelledby` to the purpose name only; the state line ("Off — you won't
-  get product emails.") and the lawful-basis text are unassociated siblings.
-  The spine's mandate (§Component Patterns, consent control) is correct — make
-  sure the mock/real component ties the sub-text via `aria-describedby` so
-  state + basis are announced with the switch, and that the sub-text's
-  On/Off wording is updated in the same commit as `aria-checked`.
+### 7. Content & language
 
-- **[low]** **4.1.3 — Freshness indicator in the mocks is not itself a live
-  region.** The spine requires an `aria-live=polite` announcement on freshness
-  transitions (§Component Patterns), but `.fresh`/`.freshbar` in
-  `consumer-profile.html`, `consumer-privacy.html`, and `admin-parties.html`
-  carry no `role="status"` — a dev copying the markup ships a silent
-  stale→fresh change. *Fix:* add `role="status"` to the indicator's text node in
-  the mocks or annotate the mandate inline.
+- **[medium]** Document titles are unspecified and unimplemented. Neither spine mentions `<title>`; the IA table has routes but no title pattern; code has `<h1>` per page but no `PageTitle` (grep: none). Every consumer surface — and every browser tab/history entry a screen-reader user lands on — reads the same title. (EXPERIENCE.md §IA L48–60 · SC 2.4.2). *Where:* EXPERIENCE. *Fix:* add a title column/pattern to the IA table ("{Surface} — Parties", error states prefixed "Error: …") and mandate `<PageTitle>` per route.
+- **[medium]** Language of page/parts is unspecified. `App.razor` hard-codes `lang="en"`; the profile mock shows "Language: Français"; the ConsumerPortal has a `Resources` folder, so localization exists, yet the spine never says the `lang` attribute follows the resolved UI culture or that GDPR rights copy is delivered in the data subject's language (Art. 12 "clear and plain language" is hollow in the wrong language). (EXPERIENCE.md §Voice and Tone, §Accessibility Floor · SC 3.1.1, 3.1.2). *Where:* EXPERIENCE. *Fix:* "`<html lang>` reflects `CultureInfo.CurrentUICulture`; consumer surfaces ship in every tenant-supported culture; untranslated fragments carry their own `lang`".
+- **[low]** Heading hierarchy for master–detail is unstated and the mocks skip levels (`admin-parties.html` h2 → h4; `consumer-privacy.html` h1 → h3). (SC 1.3.1). *Where:* EXPERIENCE + mockup. *Fix:* "list page `h1`, detail name `h2`, detail sections `h3`; consumer cards `h2`".
+- **[low]** "as of HH:MM" is unqualified — no timezone/locale; code formats `InvariantCulture "HH:mm"`. A phone user in another zone reads a wrong hour. (EXPERIENCE.md L114 · SC 3.1.x / plain language). *Where:* EXPERIENCE. *Fix:* local time in the user's culture with a relative form ("as of 10:38, 3 min ago").
+- **[low]** Decorative glyphs are unhidden in mocks: nav emoji (📇 🏷️ 🔎 ⚙️), `●` in every badge ("black circle Active"), `⚠` in errors, "→" in "Manage all consent →". Spine says `FluentBadge`/icons, so real builds are fine — but annotate. (SC 1.1.1). *Where:* mockup.
 
-- **[low]** **Cognitive floor — the consumer-side typed confirmation is
-  underspecified.** §Component Patterns applies typed confirmation to
-  irreversible actions in *Both* areas, but only the Admin dialog is specified
-  ("type the person's name"); what a consumer must type for "Delete my data" is
-  never stated, and transcription is a real barrier for the anxious, occasional,
-  phone-first user the spine itself describes. *Fix:* specify the consumer
-  confirm explicitly and allow a lighter-but-safe equivalent (e.g. type DELETE,
-  or an explicit two-step with full-sentence consequence copy) — keep the
-  friction, drop the transcription burden.
+### 8. Mockups
 
-- **[low]** **4.1.2 — Listbox options lack per-option `id`s in the mock.** In
-  `create-edit-party.html` only the active option (`#o1`) has an `id`;
-  `aria-activedescendant` must retarget as the user arrows, which requires ids
-  on *all* options. Trivial, but the mock is the wiring reference. *Fix:* give
-  every `role="option"` an `id` in the mock.
+- **[medium]** `signin.html` contradicts the spine's delegated-IdP model: an app-rendered email + password card with no `autocomplete` tokens, a `role="form"` div, and an SSO *link*, on the surface EXPERIENCE now says "is the IdP's hosted page, not a page this app renders". A story-dev will build a local login form; a tester will look for 3.3.8 in the wrong place. (EXPERIENCE.md L36–41, L50 vs mock · SC 3.3.8). *Where:* mockup. *Fix:* replace the card with a "Redirecting to your organisation's sign-in…" interstitial + the return-routing diagram, or caption the card "IdP-hosted page — illustrative only; 3.3.8 requirements live in the deployment checklist".
+- **[medium]** Form labels are not associated in two mocks: `create-edit-party.html` L73–76/L95–99 and `consumer-profile.html` L73–75 use `<label>` with no `for` and inputs with no `id`; in the rejected state a screen reader hears "edit text, invalid, A name is required" without the field name. The spine's "labeled input" wording is right; the reference markup is not. (SC 1.3.1, 3.3.2, 4.1.2). *Where:* mockup. *Fix:* `for`/`id` pairs or `FluentTextInput Label=`.
+- **[low]** Help & contact (3.2.6) appears in no mock — none of the five has a footer/nav help affordance, so the persistent placement the spine mandates has no visual reference. *Where:* mockup.
+- **[low]** `admin-parties.html`: grid rows and the search box are click-target `<div>`s with no role/tabindex (spine bans interactive divs; the real `FluentDataGrid` is fine but this is the reference); the erase dialog's Confirm is enabled before any text is typed (spine/code disable until match); `.freshbar` and `.banner` are both `role=status` for one stale read (see 3-b). *Where:* mockup.
+- **[low]** `consumer-privacy.html` State B omits the PII-free request reference the spine mandates (L131, Flow 5 step 3); `consumer-profile.html` uses a `<button>` ("My data & privacy") for navigation — should be a link. *Where:* mockup.
 
-Not triggered / no finding: **2.5.7 Dragging Movements** (no drag interactions
-anywhere in the design); **3.3.7 Redundant Entry** (no re-requested data; the
-typed confirm is an essential-confirmation exception, softened further by the
-low finding above).
+## Strengths worth keeping
 
-## Known residuals (not re-flagged)
-
-- Phone-reflow mock for the Admin master–detail deferred (the *spine-text* focus
-  contract for that sheet is flagged above as new, separate from the mock).
-- Sub-24px decorative controls and 12px secondary text in mocks are
-  illustrative-only; real build floors consumer secondary text 13–14px and
-  applies 44px touch slop.
-- Picker FAST→Fluent-2 re-skin (plus its ARIA wiring) carried as design debt —
-  the two picker lows above should ride inside that same debt item.
-- PII handling of the admin typed-name confirm is spec-clean; implementation
-  keeps it in-memory.
+- The **politeness split** is stated once and cross-referenced everywhere it applies (status/freshness/optimistic saves polite; rejections/failures assertive), and the code centralizes it in `StatusPresentation` so the attribute pair can't drift per component.
+- **No-focus-steal on optimistic saves** with **focus-to-alert on blocking errors** is the right asymmetry and is stated as a rule, not an example.
+- **Consumer deletion = reversible request, single Confirm, no transcription**, while Admin erasure keeps the typed confirm — the cognitive floor is applied where the stakes and the user differ, not uniformly.
+- **Colour never carries state alone** is enforced structurally (badge = text label; freshness = dot + word), which is why forced-colors failures above are visual-only, not informational.
+- **3.3.8 placed on the IdP configuration** with the "a consumer who cannot clear sign-in can exercise no GDPR right" rationale — the correct boundary for a delegated-auth product.
+- **2.4.11 stated as a CSS mechanism** (`scroll-margin-top` ≥ sticky stack; banners never overlay focus) — implementable and checkable, not aspirational.
+- **Honest-rights posture**: no permanently-disabled rights buttons, Object rendered as a contact path, restriction keeps consent editable, tombstones without PII — these are accessibility wins for cognitive load as much as legal ones.
+- The **existing test scaffolding** (style-guard for focus suppression and raw hex, axe on real routes with `forcedColors`/`reducedMotion` emulation, bUnit tests on live regions) is the right shape; the findings above are mostly about widening its roots and tags, not inventing new tooling.

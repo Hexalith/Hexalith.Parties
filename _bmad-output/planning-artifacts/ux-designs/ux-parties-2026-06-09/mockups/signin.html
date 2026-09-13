@@ -50,18 +50,17 @@ label{display:block;font-size:13px;font-weight:600;color:var(--fg2);margin:0 0 5
 </style>
 </head>
 <body>
-<p class="caption">Shell · <strong>Sign in → role routing</strong>. One sign-in; role (claim <code>eventstore:tenant</code> / TenantOwner) decides the landing area.</p>
+<p style="margin:8px 12px;padding:6px 10px;border:1px dashed #616161;font:12px/1.4 Segoe UI,sans-serif;color:#424242;max-width:60rem"><strong>Illustrative only — do not port.</strong> This mock hand-codes hex values, rem sizes, <code>.dot</code>/<code>.sw</code>/<code>.dialog</code>/<code>.toast</code>/<code>.b-*</code> classes and a fixed nav width to stand in for Fluent 2 tokens and FluentUI V5 / FrontComposer components. Build from <code>DESIGN.md</code> + <code>EXPERIENCE.md</code>; the spines win on every conflict.</p>
+<p class="caption">Shell · <strong>Sign in → role routing</strong>. Sign-in is delegated to the tenant IdP (hosted page, not app-rendered); on return, role (claim <code>eventstore:tenant</code> / TenantOwner) decides the landing area.</p>
 
 <div class="win">
   <div class="chrome"><span class="url">parties-ui.example.com/signin</span></div>
   <div class="signin">
-    <div class="card" role="form" aria-label="Sign in">
+    <div class="card" role="status" aria-live="polite">
       <div class="brand"><span class="mark">P</span><span class="nm">Parties</span></div>
-      <p class="sub">Sign in to manage party records or your own data.</p>
-      <label for="u">Email</label><input id="u" class="input" value="you@example.com">
-      <label for="p">Password</label><input id="p" class="input" type="password" value="••••••••">
-      <button class="btn primary">Sign in</button>
-      <p class="alt">Single sign-on available · <a href="#">Use your organization account</a></p>
+      <p class="sub">Taking you to your organization's sign-in page…</p>
+      <p class="alt">Parties never shows its own password form: sign-in is the tenant identity provider's hosted page (OIDC challenge). Its configuration must allow paste and password managers and offer a non-cognitive path (SSO / passkey / email link) — WCAG 3.3.8, verified per deployment.</p>
+      <p class="alt"><a href="#">Not redirected? Continue to sign-in</a></p>
     </div>
   </div>
   <div class="route">

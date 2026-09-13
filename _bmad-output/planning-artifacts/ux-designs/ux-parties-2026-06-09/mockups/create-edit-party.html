@@ -60,6 +60,7 @@ label{display:block;font-size:13px;font-weight:600;color:var(--fg2);margin-botto
 </style>
 </head>
 <body>
+<p style="margin:8px 12px;padding:6px 10px;border:1px dashed #616161;font:12px/1.4 Segoe UI,sans-serif;color:#424242;max-width:60rem"><strong>Illustrative only — do not port.</strong> This mock hand-codes hex values, rem sizes, <code>.dot</code>/<code>.sw</code>/<code>.dialog</code>/<code>.toast</code>/<code>.b-*</code> classes and a fixed nav width to stand in for Fluent 2 tokens and FluentUI V5 / FrontComposer components. Build from <code>DESIGN.md</code> + <code>EXPERIENCE.md</code>; the spines win on every conflict.</p>
 <p class="caption">Admin · <strong>Create / Edit party</strong>. Left: editing with the in-form party picker open (Flow 4). Right: same form rejected by server-side validation (rejection event, input preserved).</p>
 
 <div class="win">
@@ -72,8 +73,8 @@ label{display:block;font-size:13px;font-weight:600;color:var(--fg2);margin-botto
       <h1>New party</h1>
       <div class="field"><label>Type <span class="req">*</span></label>
         <div class="seg" role="radiogroup" aria-label="Type"><div class="opt" role="radio" aria-checked="false" tabindex="-1">Person</div><div class="opt on" role="radio" aria-checked="true" tabindex="0">Organization</div></div></div>
-      <div class="field"><label>Legal name <span class="req">*</span></label>
-        <input class="input" value="Acme Holdings Ltd"></div>
+      <div class="field"><label for="ln1">Legal name <span class="req">*</span></label>
+        <input id="ln1" class="input" value="Acme Holdings Ltd"></div>
       <div class="field picker"><label>Primary contact</label>
         <div class="combo"><input role="combobox" aria-expanded="true" aria-controls="pl" aria-activedescendant="o1" aria-autocomplete="list" aria-label="Primary contact" value="acme cfo"><button type="button" class="clear" aria-label="Clear selection">✕</button><span aria-hidden="true">▾</span></div>
         <div class="listbox" id="pl" role="listbox" aria-label="Matching parties">
@@ -92,11 +93,11 @@ label{display:block;font-size:13px;font-weight:600;color:var(--fg2);margin-botto
       <div class="banner warn" role="alert">We couldn't save this party. Fix the highlighted field and try again — nothing you typed was lost.</div>
       <div class="field"><label>Type <span class="req">*</span></label>
         <div class="seg" role="radiogroup" aria-label="Type"><div class="opt on" role="radio" aria-checked="true" tabindex="0">Person</div><div class="opt" role="radio" aria-checked="false" tabindex="-1">Organization</div></div></div>
-      <div class="field"><label>Legal name <span class="req">*</span></label>
-        <input class="input bad" value="" aria-invalid="true" aria-describedby="err-name">
+      <div class="field"><label for="ln2">Legal name <span class="req">*</span></label>
+        <input id="ln2" class="input bad" value="" aria-invalid="true" aria-describedby="err-name">
         <div class="err" id="err-name">⚠ A name is required for a Person party.</div></div>
-      <div class="field"><label>Email</label>
-        <input class="input bad" value="marc@@example" aria-invalid="true" aria-describedby="err-email">
+      <div class="field"><label for="em2">Email</label>
+        <input id="em2" class="input bad" value="marc@@example" aria-invalid="true" aria-describedby="err-email">
         <div class="err" id="err-email">⚠ That doesn't look like an email address.</div></div>
       <div class="footer"><button class="btn subtle">Cancel</button><button class="btn primary">Create party</button></div>
     </div>

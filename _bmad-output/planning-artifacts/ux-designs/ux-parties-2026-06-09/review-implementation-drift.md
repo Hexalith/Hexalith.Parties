@@ -1,283 +1,118 @@
 # Implementation Drift Review — parties
 
-> Reviewed 2026-08-18 against `DESIGN.md` + `EXPERIENCE.md` (final, 2026-06-09) and
-> `.decision-log.md` residuals. Implementation state: Epics 4–8 built (AdminPortal,
-> ConsumerPortal, GDPR flows, a11y gates, MainLayout rework). Review only — no code
-> or spine changes were made. All paths relative to the repo root.
+_Run: 2026-09-08 · lens: implementation drift · baseline: spines updated 2026-08-18_
+
+> Static read of `src/Hexalith.Parties.{UI,AdminPortal,ConsumerPortal,Picker}` and the
+> four UI test projects + `tests/e2e` against `DESIGN.md` / `EXPERIENCE.md` (both
+> `updated: 2026-08-18`). Of the ~72 commits since the baseline, **7** touched UI
+> folders (`git log --since=2026-08-18 -- src/Hexalith.Parties.UI …`): they change
+> `MainLayout.razor(.css)`, `Program.cs` (reorder only), the UI-host test project, the
+> e2e package pins, and `HttpAdminPortalGdprClient.cs` (DW-5). **No AdminPortal,
+> ConsumerPortal or Picker `.razor`/`.css`/`.resx` file changed.** Paths relative to
+> the repo root. Review only — no code or spine edits.
 
 ## Overall verdict
 
-The **behavioral spine (EXPERIENCE.md) is implemented with high fidelity** — the
-status-kind vocabulary, the polite/assertive live-region split, consent
-`role=switch` + default-Off + lawful-basis honesty, the Admin typed-name erase
-dialog, and the regulated erasure/export microcopy are all in code, several of them
-near-verbatim and pinned by tests. The **visual spine (DESIGN.md) drifts materially
-at the token layer**: both portals style domain states against the legacy FAST
-`--*-rest` token family the spine explicitly bans (the exact debt the spine logged
-for the picker — which, ironically, is the one place it has been fixed), the danger
-fill carries hand-picked hex, and the per-area density promise (`--fc-spacing-unit`
-4px/6px) was never wired. Reconciliation direction: **fix code** for the token
-layer, IA reachability, and the consumer erasure pseudo-dialog; **update the spine**
-for a handful of places where the code made the better call (danger-fill token
-pair, inline status text instead of toasts, consumer erasure as
-reversible-until-begins).
+The 2026-08-18 update pass moved the **spines** to meet the code where the code was
+right, but the reciprocal **code** queue ("queued for bmad-build") has essentially
+**not shipped**: 0 of 12 queued fixes landed, 1 is partial (product-wide
+forced-colors/reduced-motion via `MainLayout`, which was not on the list but closes
+an Accessibility Floor gap). Every High from the prior review persists verbatim
+(consumer nav reachability, FAST `--*-rest` tokens across both portals, fake
+`role=dialog` consumer erasure confirm). The spine additions of 2026-08-18 have
+meanwhile **widened** the gap: the consent-paused-during-erasure rule, the verbatim
+cancel-too-late rejection copy, verified-deletion wording, the PII-free request
+reference, the Restricted consumer banner and the persistent Help & contact
+affordance are all specified and all absent. Direction is unchanged — **fix code**;
+the spines only need two small annotations (skip-link reachability nuance;
+"today only the picker honors forced-colors" is now false).
 
-## Drift findings
+## Queued fixes (2026-08-18) status
 
-### High
+| Fix | Status | Evidence |
+|---|---|---|
+| Consumer nav reachability (`/me/consent`, `/me/privacy` nav entries; Edit action on My profile) | **Not landed** | `src/Hexalith.Parties.UI/Composition/PartiesUiFrontComposerRegistration.cs:42-53` still registers exactly two entries ("Parties" → `/admin/parties`, "My space" → `/me`). Repo-wide grep for `/me/edit` and `/me/privacy` finds **no inbound `href`**; the only link to `/me/consent` remains `ConsumerPortal/Components/MyPrivacyPage.razor:94`. `MyProfilePage.razor` renders no Edit link (lines 12-161). |
+| Portals off FAST `--*-rest` tokens onto Fluent 2 | **Not landed** | Zero Fluent 2 migration in any portal CSS. FAST tokens still at `AdminPortal/Components/PartiesAdminPortal.razor.css:44-46,52,63-64,69-85,103,107,124`, `PartyGdprOperationsPanel.razor.css:18-30`, `CreateEditPartyPage.razor.css:14,25,48-57`; `ConsumerPortal/Components/MyProfilePage.razor.css:5,32,37,51-62,76,89,143-144`, `MyPrivacyPage.razor.css:5,32,37,49-60,83,120,127,133`, `MyConsentPage.razor.css:36`, `EditMyProfilePage.razor.css:20-22,37-38`, `ConsumerRouteShell.razor.css:5,18-19,30-36,44,51`. |
+| Consumer erasure confirm as real `FluentDialog` | **Not landed** | `MyPrivacyPage.razor:119` — still `<div class="hx-parties-profile__notice" role="dialog" aria-modal="true">` with no trap/restore. The only `FluentDialog` in the codebase is Admin (`PartyGdprOperationsPanel.razor:30`). |
+| Admin danger-fill hex → token pair | **Not landed** | `PartyGdprOperationsPanel.razor.css:18-30` — `var(--error-fill-rest, #b10e1c)` / `#8f0b16` / `#6f0811` / `#fff`. The compliant `GdprDestructiveButton.razor.css:11-15` (Background3 + ForegroundInverted) is still consumed only by the specimen (`Specimens/PartiesAccessibilitySpecimen.razor:35`). |
+| Freshness 3-state + "as of HH:MM" on real surfaces | **Not landed** | Host `DataFreshnessIndicator.razor:29-32` still maps everything non-current to `--degraded` (Warning, `.razor.css:19-21`); `AsOf` (`:16,42-45`) consumed by no real surface. Consumer `FreshnessStatus.razor:12-15` two-class; Admin `PartiesAdminPortal.razor:1618-1625` two-class, untimed `FreshnessStale`. No Info token anywhere. |
+| `--fc-spacing-unit` density per area | **Not landed** | `rg 'fc-spacing-unit|Density' src/` → **0 hits** in Parties code. FrontComposer does expose it (`references/Hexalith.FrontComposer/.../wwwroot/css/fc-density.css`, `FcDensityApplier.razor.cs` → `<body data-fc-density>`), so the contract is realizable but unwired. |
+| Shared `PartyStateBadge` (FluentBadge, Circular) in both portals | **Not landed** | `<PartyStateBadge` appears only in `Specimens/PartiesAccessibilitySpecimen.razor:30`. Admin still emits bespoke `hx-parties-admin__badge party-state-badge` (`PartiesAdminPortal.razor:1614`, CSS `:56-86`); Consumer shows lifecycle as plain `ProfileField` text (`MyProfilePage.razor:147`). `PartyStateBadge.razor:5` still `BadgeShape.Rounded`, not `Circular`. |
+| TenantUnavailable warming copy | **Not landed** | `AdminPortal/Services/AdminPortalLabels.cs:153,155` — `"Tenant context is unavailable"` / `"Select a tenant to browse parties"`; consumed at `PartiesAdminPortal.razor:566,581,592` and `PartyGdprOperationsPanel.razor:223`. No "warming up" string anywhere. |
+| Remove dead Object button, add contact path | **Not landed** | `MyConsentPage.razor:105-110` — `<FluentButton … Disabled="true">Object (Art. 21)</FluentButton>` unchanged; `ConsumerPortalResources.resx:372-373`. No contact-path copy in the resx. |
+| a11y style-guard roots → all four UI projects + axe on real routes | **Not landed** (file touched 3×, roots unchanged) | `tests/Hexalith.Parties.UI.Tests/AccessibilityStyleGuardTests.cs:11-14` — `AppOwnedRoots = ["src/Hexalith.Parties.UI/Components"]` only; the raw-hex rule therefore never sees `PartyGdprOperationsPanel.razor.css:18`. Axe still runs only on `/__parties/specimens/accessibility` (`tests/e2e/specs/parties-accessibility.spec.ts:5,23-34`); no other spec calls `expectNoBlockingAxeViolations`. |
+| Stale auto-refresh consumes shipped SignalR mechanism | **Not landed** | `IProjectionStream` / `OptimisticReconcile` / `PartiesProjectionSubscription` referenced only inside `src/Hexalith.Parties.UI/Services/*`; no `.razor` in any portal subscribes. |
+| _(Not queued, but landed)_ product-wide forced-colors + reduced-motion | **Partial / positive** | `UI/Components/Layout/MainLayout.razor.css:8-32` (commits `2b63ab9c`, `f8fd7404`) — app-owned `::deep :focus-visible` ring on `--colorStrokeFocus2`, `@media (forced-colors: active)` and `@media (prefers-reduced-motion: reduce)` over all interactive descendants; pinned by `AccessibilityStyleGuardTests.cs:84-105`. Closes the Floor's "product-wide" gap for focus/motion; does **not** touch the portals' own state colors. |
 
-- **[high]** EXPERIENCE §Information Architecture promises nav-reachable consumer
-  surfaces ("My consent — Nav → Consent", "My data & privacy — Nav → Privacy",
-  "Edit my profile — My profile → Edit") vs
-  `src/Hexalith.Parties.UI/Composition/PartiesUiFrontComposerRegistration.cs:42-53`,
-  which registers only **two** nav entries ("Parties" → `/admin/parties`, "My
-  space" → `/me`). `MyProfilePage.razor` renders **no Edit link**; the only inbound
-  link to `/me/consent` in the whole app is
-  `src/Hexalith.Parties.ConsumerPortal/Components/MyPrivacyPage.razor:94`, and
-  `/me/privacy` and `/me/edit` have **no inbound link anywhere** (verified by
-  repo-wide grep). The pages exist and work, but Marc cannot reach the Flow 1/2
-  surfaces without typing a URL. *Reconcile:* **fix code** (nav entries for
-  Consent/Privacy under the Consumer policy + an Edit action on My profile).
+**Tally:** landed 0 · partial 1 (unqueued) · not landed 12.
 
-- **[high]** DESIGN front-matter ("Do NOT redeclare Fluent 2 custom properties…
-  inherited Fluent 2 tokens"), §Components picker note and Do/Don't ("Don't ship…
-  against legacy FAST `--*-fill-rest` tokens") vs both portals' scoped CSS, which
-  styles **domain state colors and type against the legacy FAST V4 token family**
-  the spine says does not resolve in the V5 shell:
-  `src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor.css:52`
-  (`outline: 2px solid var(--accent-fill-rest)` — **no fallback**, so the
-  selected-row indicator computes to invalid and silently disappears), `:68-86`
-  (badge states on `--success/--warning/--error-*-rest`), `:102-108` (freshness on
-  `--success/--warning-foreground-rest`);
-  `PartyGdprOperationsPanel.razor.css:17-31` (`--error-fill-rest`);
-  `CreateEditPartyPage.razor.css:25,48-57`; consumer-side
-  `MyProfilePage.razor.css:5,32,37,51-62,143-144`, `MyPrivacyPage.razor.css:5,32,83,120,133`,
-  `ConsumerRouteShell.razor.css:5,18` (`--neutral-foreground-rest/-hint`,
-  `--neutral-stroke-rest`, `--type-ramp-*`). The decision-log confined this debt to
-  the **picker**; the portals re-introduced the pattern at scale while the picker
-  itself was fixed. *Reconcile:* **fix code** — map to `--colorNeutral*`,
-  `--colorStatus*Foreground1/Background1` pairs, `--fontSizeBase*`, per DESIGN.
+## Prior findings status
 
-- **[high]** EXPERIENCE §Interaction Primitives ("on **dialog** open trap focus, on
-  close restore to the trigger") + §Inspiration ("all confirmation is in-app
-  (`FluentDialog` + typed confirm)") vs
-  `src/Hexalith.Parties.ConsumerPortal/Components/MyPrivacyPage.razor:119-136`: the
-  consumer erasure confirmation is an **inline `<div role="dialog"
-  aria-modal="true">`** — not a `FluentDialog`, with **no focus trap and no focus
-  restore**, while claiming `aria-modal="true"` to AT (a semantics the page does
-  not honor). The Admin side does this correctly
-  (`PartyGdprOperationsPanel.razor:30-73` uses `FluentDialog Modal="true"`).
-  *Reconcile:* **fix code** (FluentDialog or drop the false `role=dialog`/
-  `aria-modal` and present it as an inline confirm section).
+- **persisting** [high] consumer surfaces not nav-reachable (`PartiesUiFrontComposerRegistration.cs:42-53`; no inbound link to `/me/edit`, `/me/privacy`).
+- **persisting** [high] both portals styled on legacy FAST `--*-rest` tokens; selected-row `outline: 2px solid var(--accent-fill-rest)` still has **no fallback** (`PartiesAdminPortal.razor.css:52`) so the visible selection indicator computes to invalid.
+- **persisting** [high] consumer erasure confirm is a `<div role="dialog" aria-modal="true">` without trap/restore (`MyPrivacyPage.razor:119-135`).
+- **persisting (code half) / resolved (spine half)** [medium] admin danger-fill hex (`PartyGdprOperationsPanel.razor.css:18-30`); DESIGN now binds the Background3/ForegroundInverted pair (`DESIGN.md:55-57`), so the host component is compliant and the admin panel is the sole offender.
+- **persisting** [medium] freshness collapses to two states, no as-of on real surfaces (`DataFreshnessIndicator.razor.css:19-21`, `FreshnessStatus.razor:12-15`, `PartiesAdminPortal.razor:1618-1625`).
+- **persisting** [medium] no per-area density wiring (0 hits for `fc-spacing-unit`).
+- **persisting** [medium] bespoke admin badge; shared `PartyStateBadge` unconsumed (`PartiesAdminPortal.razor:1614`, `.css:56-86`).
+- **persisting** [medium] TenantUnavailable copy is operator jargon (`AdminPortalLabels.cs:153`).
+- **persisting** [medium] permanently disabled Object button (`MyConsentPage.razor:105-110`) — now an explicit spine ban (`EXPERIENCE.md:94,112,243-247`), so severity rises to **high**.
+- **persisting** [medium] style-guard roots and axe coverage narrower than the Floor (`AccessibilityStyleGuardTests.cs:11-14`; `parties-accessibility.spec.ts:5`).
+- **persisting** [low] `PartyStateBadge` uses `BadgeShape.Rounded`, DESIGN says pill (`PartyStateBadge.razor:5`; `DESIGN.md:46,186`).
+- **superseded** [low] erase trigger Outline — spine blessed it (`DESIGN.md:209-211`, `EXPERIENCE.md:113`); `PartyGdprOperationsPanel.razor` compliant.
+- **superseded** [low] consumer erasure no typed confirm — spine adopted reversible/single-confirm (`EXPERIENCE.md:113`); the *dialog* half remains a High above.
+- **superseded** [low] "toast" wording — spine renamed to status region (`EXPERIENCE.md:115`); code compliant.
+- **superseded** [low] sign-in surface — spine documents IdP delegation (`EXPERIENCE.md:36-41,50`).
+- **superseded** [low] export mechanics — spine's Export preparing/ready row (`EXPERIENCE.md:134`) matches code: polite status (`MyPrivacyPage.razor:19`) + focusable Download button (`:46-53`).
+- **persisting** spine-only: stale auto-refresh; as-of on real surfaces; density; Object behavior.
+- **superseded** code-only: `/no-party-binding` — back-ported into IA + State Patterns (`EXPERIENCE.md:51,133`).
+- **persisting** code-only (still unspecified): admin pagination + search-mode buttons, EventStore-admin deep links, DPO operational summary panel, `/admin` landing redirect, specimen routes, e2e fixture scheme — see Reverse drift.
 
-### Medium
+## Findings
 
-- **[medium]** DESIGN §Colors "Avoid… hand-picked hex for party/GDPR states" and
-  Do/Don't ("Hand-pick hex for state colors — breaks dark mode + forced-colors")
-  vs `src/Hexalith.Parties.AdminPortal/Components/PartyGdprOperationsPanel.razor.css:18-30`:
-  the admin danger fill's effective values are literal hex (`#b10e1c`, `#8f0b16`,
-  `#6f0811`, `#fff`) because the primary vars are non-resolving FAST tokens.
-  Separately, the host component `GdprDestructiveButton.razor.css:11-15` binds
-  `--colorStatusDangerBackground3` + `--colorStatusDangerForegroundInverted` — a
-  **matched, AA-designed pair** — instead of DESIGN's declared
-  `components.gdpr-destructive-button.background: var(--colorStatusDangerForeground1)`
-  (a foreground token used as a fill). *Reconcile:* **fix code** for the admin hex;
-  **update spine** to adopt the Background3/ForegroundInverted pair the host
-  component ships (it is the more correct Fluent 2 binding).
+### DESIGN.md token drift
 
-- **[medium]** DESIGN `components.freshness-indicator` declares three states
-  (fresh=Success, stale=Warning, **degraded=Info**) vs every shipped indicator
-  collapsing to two: `src/Hexalith.Parties.UI/Components/Shared/DataFreshnessIndicator.razor.css:14-22`
-  (current=Success, everything-else=**Warning** — "Showing last known"/degraded
-  gets Warning, not Info), duplicated at
-  `ConsumerPortal/Components/MyProfilePage.razor.css:119-127` and
-  `AdminPortal/Components/PartiesAdminPortal.razor.css:102-108`. Also the spine's
-  stale "as of HH:MM" timestamp is rendered on **no real surface**: the host
-  component supports `AsOf` (`DataFreshnessIndicator.razor:42-45`) but only the
-  test specimen consumes it; consumer `FreshnessStatus.razor:17-23` and admin
-  `PartiesAdminPortal.razor:1616-1640` show untimed messages. *Reconcile:*
-  **decide** — either fix code to the 3-state Info mapping + as-of time, or
-  simplify the spine to the shipped 2-state model.
+- **[high]** Both portals still style state, type and strokes against the legacy FAST family DESIGN bans (`DESIGN.md:9,235`): `PartiesAdminPortal.razor.css:44-46,63-64` (`--type-ramp-*`, `--neutral-foreground-hint/-rest`), `:69-85` (badge tints on `--success/--warning/--error-{stroke,fill}-rest`), `:103,107` (freshness on `--success/--warning-foreground-rest`), `:124` (`--neutral-layer-1`); `CreateEditPartyPage.razor.css:14,25,48-57`; `MyProfilePage.razor.css:5,32,37,51-62,76,89,143-144`; `MyPrivacyPage.razor.css:5,32,37,49-60,83,120,127`; `MyConsentPage.razor.css:36`; `EditMyProfilePage.razor.css:20-22,37-38`; `ConsumerRouteShell.razor.css:5,18-19,30-36,44,51`. Where a fallback exists it is a system color or rem literal, so light/dark theming is silently lost; where none exists (`PartiesAdminPortal.razor.css:52,74-75`) the declaration is invalid at computed-value time. *Owner:* **code**. *Fix:* map to `--colorNeutralForeground1..4`, `--colorNeutralStroke1..2`, `--colorNeutralBackground1..2`, `--colorStatus*Foreground1/Background1` pairs, `--fontSizeBase200/300/400/500/600` + `--lineHeightBase*`, per `DESIGN.md:14-19,25-28`.
+- **[high]** Admin selected-row indicator is `outline: 2px solid var(--accent-fill-rest)` with **no fallback** (`PartiesAdminPortal.razor.css:50-54`); the row is left with `font-weight: 700` + `aria-current` (`PartiesAdminPortal.razor:110,1522-1525`) — no visible forced-colors-surviving border/outline in either mode, contrary to `DESIGN.md:236` and `EXPERIENCE.md:197-199`. The forced-colors block (`:148-152`) only sets `border-color`, which the rule never draws. *Owner:* **code**. *Fix:* `outline: var(--strokeWidthThick) solid var(--colorStrokeFocus2)` (or `--colorBrandStroke1`) and set `outline-color: Highlight` in the forced-colors block.
+- **[medium]** Admin danger fill resolves to literal hex (`PartyGdprOperationsPanel.razor.css:18-30`: `#b10e1c`, `#8f0b16`, `#6f0811`, `#fff`) because the primary vars are FAST tokens — the exact "hand-picked hex for GDPR states" DESIGN forbids (`DESIGN.md:120-121,229`). The compliant binding already exists in `GdprDestructiveButton.razor.css:11-23`. *Owner:* **code**. *Fix:* consume `<GdprDestructiveButton>` for the in-dialog Confirm, or copy its `--colorStatusDangerBackground3` / `ForegroundInverted` / `Background3Hover|Pressed` bindings.
+- **[medium]** Freshness indicator is two-state Warning everywhere; DESIGN's `degraded → Info` (`DESIGN.md:51-54,197-202`) has no token in code: `DataFreshnessIndicator.razor.css:19-21` (Warning for stale **and** degraded), `MyProfilePage.razor.css` consumer dot, `PartiesAdminPortal.razor.css:106-108`. No real surface renders "as of HH:MM" (`AsOf` unconsumed; `FreshnessStatus.razor:17-23`; `PartiesAdminPortal.razor:1621-1625`). *Owner:* **code**. *Fix:* add a `--stale` class (Warning + as-of from `StaleDataAge`/metadata timestamp) and remap `--degraded` to `--colorStatusInfoForeground1/Background1`; both portals should consume `<DataFreshnessIndicator>` rather than re-implementing.
+- **[medium]** Link text bound to `--accent-foreground-rest, LinkText` (`MyPrivacyPage.razor.css:131-135`) — DESIGN says links bind to `{colors.brand-fill}` = `--colorBrandBackground`, never accent (`DESIGN.md:122-123,233`). *Owner:* **code**. *Fix:* `color: var(--colorBrandForegroundLink)` (Fluent 2's AA link token) or `--colorBrandBackground` per spine.
+- **[medium]** Party-state badge is bespoke in Admin (`PartiesAdminPortal.razor:1614`; `.razor.css:56-86`, hand-mixed tints) and absent in Consumer (`MyProfilePage.razor:147-148` plain text) — DESIGN "Built on `FluentBadge`; never a bespoke element", used in *Both* areas (`DESIGN.md:186-195`; `EXPERIENCE.md:111`). The compliant `UI/Components/Shared/PartyStateBadge.razor` is reachable only from the specimen. *Owner:* **code**. *Fix:* move `PartyStateBadge` into a shared RCL both portals reference (or duplicate the FluentBadge markup per portal) and switch `Shape` to `BadgeShape.Circular` (`PartyStateBadge.razor:5` vs `DESIGN.md:46`).
+- **[medium]** Per-area density is unwired: no `--fc-spacing-unit`, no `data-fc-density`, no density option anywhere in Parties (`DESIGN.md:38-42,139-142`; `EXPERIENCE.md:27-28`). Consumer rhythm is hard-coded per page (`MyProfilePage.razor.css:3-7` etc.). FrontComposer's shell applies density via Fluxor `EffectiveDensity` → `<body data-fc-density>` (`references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Components/Layout/FcDensityApplier.razor.cs:12-18`) — a *user* preference, not a *route* posture, so "Admin comfortable / Consumer roomy" needs either a default-per-area seed or an area wrapper that sets `--fc-spacing-unit: 6px`. *Owner:* **code** (spine decision already re-affirmed 2026-08-18). *Fix:* set `--fc-spacing-unit: 6px` on the consumer area root (`ConsumerRouteShell`/`hx-parties-profile`) and express paddings/gaps as `calc(var(--fc-spacing-unit) * n)`.
+- **[low]** DESIGN's as-is inventory says the cold-load state uses `FluentSkeleton` and status regions render on `FluentMessageBar` (`DESIGN.md:177-180`); code has zero `FluentSkeleton`/`FluentMessageBar` — hand-rolled `hx-parties-profile__loading-line` spans (`MyProfilePage.razor:31-35`, `MyConsentPage.razor:34-38`) and `<p role="status">` regions. Behaviorally fine; visually the skeleton and message bar are un-Fluent. *Owner:* **code** for Skeleton (Hexalith UX rule "reuse over hand-rolling"); **spine** for MessageBar — soften to "may render on `FluentMessageBar`; a plain `role=status` paragraph is acceptable for single-line status" unless the design intent is the banner chrome.
+- **[low]** Picker focus ring inside the shadow root is `outline: 2px solid var(--hx-picker-accent)` (`PartyPicker.razor.css:107-112`) where `--hx-picker-accent = var(--colorBrandStroke1, … #0067b8)` (`:7`) — DESIGN's standing requirement is a **`--colorStrokeFocus2`** ring and no foreign-brand fallback hex (`DESIGN.md:217-221`). *Owner:* **code**. *Fix:* `outline-color: var(--colorStrokeFocus2)`; drop `#0067b8` or replace with a teal-family value.
 
-- **[medium]** DESIGN §Layout & Spacing ("Rhythm is set by FrontComposer density…
-  Admin comfortable `--fc-spacing-unit: 4px`, Consumer roomy `6px`) + EXPERIENCE
-  §Foundation defaults vs the codebase: **zero references** to `--fc-spacing-unit`
-  or any density configuration anywhere in `src/` (repo-wide grep). No code sets a
-  per-area density posture; consumer pages instead hard-code their own rhythm
-  (paddings + `font-size: 16px` in scoped CSS, e.g. `MyProfilePage.razor.css:3-7`).
-  The 16px consumer body itself **is** honored. *Reconcile:* **decide** — wire the
-  shell density per area, or rewrite DESIGN's spacing section to the shipped
-  hard-coded posture.
+### EXPERIENCE.md behavioral drift
 
-- **[medium]** DESIGN §Components party-state-badge ("Built on `FluentBadge`
-  (`Appearance.Tint`); **never a bespoke element**") vs
-  `src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor:121-122,204-205`
-  + `:1605-1614`: the Admin portal renders a **bespoke
-  `<span class="hx-parties-admin__badge party-state-badge">`** with hand-rolled CSS
-  (`PartiesAdminPortal.razor.css:56-86`). The compliant FluentBadge-based
-  `PartyStateBadge.razor` exists in the host (`UI/Components/Shared/`) but is
-  consumed **only by the accessibility specimen**. The Consumer profile shows
-  lifecycle state as plain text (`MyProfilePage.razor:147-148`) with no badge at
-  all (spine says badge is used in *Both* areas). Text labels always accompany
-  state everywhere ✔. *Reconcile:* **fix code** (move the shared component to an
-  RCL both portals can reference, or annotate the spine that RCL layering forces
-  per-portal implementations).
+- **[high]** IA nav-reachability rule (`EXPERIENCE.md:57-63`) unmet: no nav entry for Consent or Privacy, no Edit action on My profile, no inbound link at all to `/me/edit` or `/me/privacy` (`PartiesUiFrontComposerRegistration.cs:42-53`; `MyProfilePage.razor`). Marc cannot reach Flow 1/2/5 surfaces without typing URLs. *Owner:* **code**. *Fix:* add `FrontComposerNavEntry`s "My consent" → `/me/consent`, "My data & privacy" → `/me/privacy` under `ConsumerPolicy` (Order 2/3) and an Edit `FluentButton`/link on My profile → `/me/edit`. Consider renaming "My space" to "My profile" to match the IA table (`EXPERIENCE.md:56`).
+- **[high]** Consent is **not paused during erasure**: `MyConsentPage.razor` has no erasure-state input (only `_overview.IsErased`, `:52,223`); `IsDisabled => IsBusy || (!CurrentValue && ChannelId is null)` (`:436`). During `ErasurePending`/`KeyDestroyed` the switches stay enabled, the backend rejects, and the row shows the generic `ConsentSaveFailure` — the exact "'We couldn't change this' on a rejection that can never succeed during erasure" the spine bans (`EXPERIENCE.md:96,112,131`; Flow 5 step 3). No "Consent changes are paused while your data is being deleted." string exists (`rg -i paused` → 0). *Owner:* **code**. *Fix:* inject `IConsumerPrivacyErasureClient`, disable rows + show the paused copy when state ∉ {Active}.
+- **[high]** Object (Art. 21) rendered as a permanently disabled button (`MyConsentPage.razor:105-110`; resx `:372-373`) — now explicitly banned three times in the spine (`EXPERIENCE.md:94,112,243-247`). *Owner:* **code**. *Fix:* replace with the contact-path copy "You can object to this use — contact us and we'll review it." linked to Help & contact.
+- **[high]** Consumer erasure confirm claims `role="dialog" aria-modal="true"` on an inline `<div>` with no focus trap, no `Esc`, no restore (`MyPrivacyPage.razor:119-135`) — banned "fake dialog semantics" (`EXPERIENCE.md:113,153-154,245-247`; Flow 5 step 2). Confirm is also `ButtonAppearance.Outline` + a color class (`:128-133`) rather than the danger-filled in-dialog Confirm (`DESIGN.md:209-210`). *Owner:* **code**. *Fix:* `FluentDialog Modal="true"` (pattern at `PartyGdprOperationsPanel.razor:30-73`) with `<GdprDestructiveButton IsIrreversible="false">`-style danger Confirm and "Keep my data" secondary.
+- **[medium]** Cancel-too-late rejection is not verbatim and not reason-specific: `PrivacyErasureRejectedMessage` = "Deletion has already begun **or cannot be changed right now**." (`ConsumerPortalResources.resx:507-508`) for every `Rejected` outcome, vs spine "Deletion has already begun and cannot be cancelled." surfaced from the backend reason (`EXPERIENCE.md:131,342,348-349`). `ConsumerPrivacyErasureResult` carries no reason field (`Services/ConsumerPrivacyErasureResult.cs:5-8`). *Owner:* **code** (client + label). *Fix:* thread the backend rejection reason through the result and render it in the `role=alert`; fall back to the spine's exact sentence for the begun-already case.
+- **[medium]** Verified-deletion wording absent: the terminal `Erased` state renders `PrivacyErasurePermanent` "Once it's done, it's permanent - we can't undo it." (`MyPrivacyPage.razor:263`; resx `:498-499`) — a warning, not the spine's completion confirmation "We've deleted your data and verified it's gone" (`EXPERIENCE.md:131,343-346`). Intermediate `KeyDestroyed/Verifying/Verified` → "Deletion has begun. Cancellation is no longer available." is fine. *Owner:* **code**. *Fix:* new resx string for `Erased`.
+- **[medium]** PII-free request reference ("keep this number") is not shown at request time (`EXPERIENCE.md:131`, Flow 5 step 3); `ConsumerPrivacyErasureResult` has no reference/correlation field. *Owner:* **code** — or **spine** to mark the row blocked-on-backend if the erasure command does not return a reference. Story-dev needs one of the two before implementing Flow 5.
+- **[medium]** Restricted (Art. 18) consumer treatment absent: profile shows "Restricted" only as a `ProfileField` value (`MyProfilePage.razor:148`); no banner, no "Processing of your data is currently restricted — you can still change your consent choices." on profile/consent/privacy, no "You can ask us to restrict processing — contact us" on the privacy surface (`EXPERIENCE.md:95,132`). `MyConsentPage` is not restriction-aware at all (correctly leaves toggles enabled, by omission). *Owner:* **code**.
+- **[medium]** Help & contact persistent affordance (WCAG 3.2.6, `EXPERIENCE.md:60,200-202`) does not exist: no nav entry, footer link or route; the only support copy is prose in `UI/Components/Account/NoPartyBinding.razor:21`. Every "support path" in State Patterns therefore has no target. *Owner:* **code** (nav entry or shell footer slot; if FrontComposer offers no footer slot, register a `FrontComposerNavEntry` visible to both policies).
+- **[medium]** TenantUnavailable copy remains "Tenant context is unavailable" / "Select a tenant to browse parties" (`AdminPortalLabels.cs:153,155`) vs the mandated "Your workspace is still warming up — try again shortly" (`EXPERIENCE.md:138`, Flow 3 failure). *Owner:* **code**.
+- **[medium]** Accessibility Floor enforcement narrower than the Floor: style-guard roots scan only `src/Hexalith.Parties.UI/Components` (`AccessibilityStyleGuardTests.cs:11-14`), so raw hex in `PartyGdprOperationsPanel.razor.css:18` and FAST tokens across both portals pass CI; axe runs only on the synthetic specimen (`parties-accessibility.spec.ts:5,23-34`), never `/admin/parties*` or `/me*`. *Owner:* **code (tests)**. *Fix:* add the AdminPortal, ConsumerPortal and Picker `Components` roots + a FAST-token regex (`--(type-ramp|neutral|accent|palette|success|warning|error|info)-`) to the guard; add `expectNoBlockingAxeViolations` to `admin-parties-list.spec.ts` and `consumer-portal-routes.spec.ts`.
+- **[medium]** Stale reads never auto-refresh nor announce "when fresh" (`EXPERIENCE.md:129`): the shipped SignalR/`OptimisticReconcile` stack is unconsumed by any page (services only under `UI/Services/`). Consent does a one-shot `ReconcileAsync` re-query (`MyConsentPage.razor:300-337`), which is the closest thing. *Owner:* **code**. Backlog item, but it is stated as a contract, so a story-dev reading the spine will assume it exists.
+- **[low]** 2.4.11 focus-not-obscured: no `scroll-margin-top` on any focusable list/grid item in any UI CSS (`rg scroll-margin src` → 0) (`EXPERIENCE.md:161-163`). *Owner:* **code**. *Fix:* `scroll-margin-block-start: calc(var(--layout-header-height, 48px) + var(--spacingVerticalM))` on `.hx-parties-admin__row-button` and consumer switch rows.
+- **[low]** Consumer consent Empty copy "Nothing here needs a decision right now." (`EXPERIENCE.md:126`) is unreachable: purposes are a hard-coded two-item list (`MyConsentPage.razor:123-137`), so the list is never empty and the string does not exist. *Owner:* **spine** (annotate "when purposes are catalog-driven") or **code** when purposes become data.
+- **[low]** Skip links "as first tab stops" (`EXPERIENCE.md:145-146`): after hydration the shell moves focus to the route `<h1>`, advancing the sequential focus point past the skip links; the e2e only asserts order after seeding focus on `.fc-shell-root` (`parties-accessibility.spec.ts:37-63`), and the reachability question is deferred to FrontComposer (`_bmad-output/implementation-artifacts/deferred-work.md`, `frontcomposer-skip-link-reachability-after-route-focus`). *Owner:* **spine** — note the caveat and the shell dependency so the Floor does not over-promise.
+- **[low]** Picker Component Pattern is otherwise met: real clear `<button aria-label=Clear selection>` (`PartyPicker.razor:27-32`), internal `role=status` (`:46`), combobox roles (`:9-21`), per-option ids/`aria-activedescendant`. Only the focus-ring token differs (see DESIGN findings). No action beyond that.
 
-- **[medium]** EXPERIENCE §State Patterns TenantUnavailable ('Copy: "Your workspace
-  is still warming up — try again shortly," **not** "access denied"') vs
-  `src/Hexalith.Parties.AdminPortal/Services/AdminPortalLabels.cs:153` — `"Tenant
-  context is unavailable"` / `"Select a tenant to browse parties"`. Not an
-  access-denied framing, but technical operator jargon ("tenant context"), not the
-  reassuring warming-up copy the spine mandates for this exact state. *Reconcile:*
-  **fix copy** (or update the spine if the terse Admin register is deliberately
-  preferred here).
+### Reverse drift (code ahead of spine)
 
-- **[medium]** EXPERIENCE §Component Patterns consent row + Voice & Tone ("For a
-  legitimate-interest basis, **offer Object (Art. 21)**") vs
-  `src/Hexalith.Parties.ConsumerPortal/Components/MyConsentPage.razor:107-110`: the
-  Object button is rendered permanently **`Disabled="true"` with no handler** — a
-  control that can never be activated. The spine's honesty stance (no dead
-  controls implying agency) argues a rendered-but-inert Object button is worse
-  than deferring the surface. *Reconcile:* **decide** — build the objection flow,
-  or replace the dead button with copy + a support path until it exists.
+- **[medium]** Product-wide forced-colors + reduced-motion now exist via `MainLayout.razor.css:8-32` (`.parties-main-content ::deep :focus-visible` ring on `--colorStrokeFocus2`; `@media (forced-colors)`; `@media (prefers-reduced-motion)`), pinned by `AccessibilityStyleGuardTests.cs:84-105` and shipped in `2b63ab9c`/`f8fd7404`. The spine still says "today only the picker honors them" (`EXPERIENCE.md:195-197`). *Owner:* **spine**. *Fix:* replace the parenthetical with "app-owned ring/motion rules live in `MainLayout.razor.css`; portal-level state colors still must map to status tokens".
+- **[low]** `AccessibilityStyleGuardTests.cs:9,59-82` pins the packaged FrontComposer.Shell **4.4.0** stylesheet as the a11y identity (asserts `forced-colors` + `--colorStrokeFocus2` in `fc-shell.css`). Neither spine records the shell version the Floor is verified against. *Owner:* **spine** (one line in EXPERIENCE Foundation or DESIGN front-matter).
+- **[low]** Still specified nowhere (unchanged since 2026-08-18): admin list pagination and display-name/email/identifier search-mode buttons (`PartiesAdminPortal.razor:86-90,145-150`), EventStore-admin deep links (`AdminPortalEventStoreAdminLinks.cs`), DPO operational summary panel (`DpoOperationalSummaryPanel.razor`), `/admin` landing redirect (`Areas/AdminLanding.razor`), "No area assigned" landing (`RoleLandingRedirect.razor:14-21,44-48`), specimen routes (`Specimens/PartiesAccessibilitySpecimenRoutes.cs`), e2e fixture auth (`Program.cs`). *Owner:* **spine** — add a one-row-each "Admin extras" note to IA/Component Patterns, or explicitly scope them out.
+- **[info]** `HttpAdminPortalGdprClient.cs` (commit `dba4e4ec`, DW-5) hardens consent identifier handling; no UI-visible surface, no spine impact.
+- **[info]** Consumer nav label is "My space" (`PartiesUiFrontComposerRegistration.cs:50`; `Areas/ConsumerLanding.razor:10`) vs IA "My profile" (`EXPERIENCE.md:56`). Cosmetic; align whichever way when the nav entries are added.
 
-- **[medium]** EXPERIENCE §Accessibility Floor is **product-wide** vs what the
-  guard tests actually pin — a narrower floor:
-  `tests/Hexalith.Parties.UI.Tests/AccessibilityStyleGuardTests.cs:9-12` scans only
-  `src/Hexalith.Parties.UI/Components` (so the no-raw-hex / focus-suppression rules
-  never see AdminPortal/ConsumerPortal/Picker CSS — which is exactly where the hex
-  lives, `PartyGdprOperationsPanel.razor.css:18`);
-  `SharedDomainComponentStyleTests.cs:7-15` covers just the three host shared
-  components; and the axe pass runs only against the **synthetic specimen route**
-  (`tests/e2e/specs/parties-accessibility.spec.ts:5` —
-  `/__parties/specimens/accessibility`), never `/admin/parties*` or `/me*`.
-  `MainLayoutAccessibilityTests.cs:41-86` pins the spine's shell floor (skip links
-  first two tab stops → `#fc-main-content`/`#fc-nav`, one named nav + one main
-  landmark) faithfully ✔, and the behavioral e2e specs do cover many spine state
-  patterns on real routes (assertive validation, degraded-preserves-rows, empty +
-  clear-filters, phone sheet + focus restore, switch default-Off). *Reconcile:*
-  **fix tests** — extend the style-guard roots to all four UI projects and add axe
-  passes on the real admin/consumer routes.
+## Mechanical notes
 
-### Low
-
-- **[low]** DESIGN badge radius `{rounded.full}` (pill; "`{rounded.full}` is
-  reserved for the party-state badge") vs
-  `src/Hexalith.Parties.UI/Components/Shared/PartyStateBadge.razor:5` using
-  `BadgeShape.Rounded` (FluentUI's rounded-rectangle; the pill is
-  `BadgeShape.Circular`). The Admin bespoke badge *does* use the 999px pill
-  (`PartiesAdminPortal.razor.css:61`), so the two implementations also disagree
-  with each other. *Reconcile:* fix code (`Circular`).
-
-- **[low]** EXPERIENCE Flow 3 ("She clicks **Erase party** (danger fill)") vs
-  `PartyGdprOperationsPanel.razor:78-82`: the erase **trigger** is
-  `ButtonAppearance.Outline`; only the in-dialog Confirm carries the danger fill.
-  *Reconcile:* decide (outline trigger + filled confirm is arguably the safer
-  affordance; bless it in the spine or fill the trigger).
-
-- **[low]** EXPERIENCE §Component Patterns GDPR action button ("Both… irreversible
-  actions (erase) use… **typed confirmation**") vs consumer erasure
-  (`MyPrivacyPage.razor:117-136`): single Confirm/Keep buttons, no typed input.
-  The code reads the consumer *request* as reversible-until-begins (it is
-  cancellable), and `docs/accessibility.md:17-18` codifies that reading; the spine
-  text is ambiguous for the consumer case. *Reconcile:* **update spine** to state
-  explicitly that the consumer erasure *request* is the reversible pattern (or
-  mandate typed confirm there too).
-
-- **[low]** EXPERIENCE "Command result **toast**" vs the implementation using
-  inline `role=status`/`role=alert` text regions everywhere and **no toasts at
-  all** (`PartiesAdminPortal.razor:20`, `MyConsentPage.razor:18,87`,
-  `MyPrivacyPage.razor:19`). The behavioral contract (politeness split, no focus
-  steal, never a blocking `alert()` — repo-wide grep confirms zero native dialogs)
-  is fully honored; only the delivery vehicle differs. *Reconcile:* update spine
-  wording ("status region" rather than "toast").
-
-- **[low]** EXPERIENCE IA "Sign in — Shell — App entry" (+ `mockups/signin.html`)
-  vs the implementation delegating sign-in entirely to the OIDC provider:
-  `UI/Components/Routes.razor:15-18` challenges via `RedirectToChallenge`;
-  Keycloak's hosted page is the sign-in surface. Role routing after sign-in
-  matches the spine exactly (`RoleLandingRedirect.razor:30-48`, Admin/TenantOwner →
-  `/admin`, bound Consumer → `/me`). *Reconcile:* update spine (external IdP page
-  is the intended architecture).
-
-- **[low]** EXPERIENCE Flow 1 describes an async export job whose download
-  "appears when ready" vs `MyPrivacyPage.razor:378-424,426-458`: the export is
-  prepared in a single awaited call and downloaded from a circuit-buffered payload
-  via JS interop. The user-visible copy ("Preparing your export — … We'll show it
-  here the moment it's ready", `ConsumerPortalResources.resx`
-  `PrivacyExportPreparing`) and JSON machine-readability match the spine verbatim;
-  only the job mechanics are simplified. *Reconcile:* update spine or leave —
-  no user-visible contract broken (e2e even asserts the banned "under one minute"
-  phrasing is absent, `consumer-portal-routes.spec.ts:59`).
-
-## Spine-only (specified, not yet built)
-
-- **Auto-refresh on stale reads + "aria-live announces when fresh"** (EXPERIENCE
-  §State Patterns, Stale row): stale/degraded surfaces render static last-known
-  data with the polite message, but nothing refreshes automatically. The live
-  mechanism exists — SignalR projection stream, `OptimisticReconcile`, degraded
-  fallback (`UI/Services/`, registered at `UI/Program.cs:110-118`) — but **no page
-  consumes it** (the Program.cs comment says so explicitly). Backlog, not drift.
-- **Object (Art. 21) behavior** (§Component Patterns / Voice & Tone): control
-  rendered but inert (also listed as medium drift for the dead-control aspect).
-- **Per-area density posture** (DESIGN §Layout & Spacing): no density wiring
-  anywhere (also listed as medium drift because DESIGN states it as a token
-  contract, not a future).
-- **Stale "as of HH:MM" timestamps on real surfaces** (DESIGN
-  freshness-indicator): supported by the host component, surfaced nowhere real.
-
-## Code-only (built, never specified)
-
-- `/no-party-binding` fail-closed surface for an unbound Consumer
-  (`UI/Components/Account/NoPartyBinding.razor`; routed from
-  `RoleLandingRedirect.razor:41`) — a good fail-closed state the spine never
-  named; worth back-porting into EXPERIENCE §State Patterns.
-- "No area assigned" landing state for a user with neither role
-  (`RoleLandingRedirect.razor:14-21,44-48`).
-- `/admin` compatibility landing redirect (`UI/Components/Areas/AdminLanding.razor:1-17`).
-- Accessibility/picker specimen routes `/__parties/specimens/*`, config-gated to
-  Dev/Test (`UI/Components/Specimens/PartiesAccessibilitySpecimenRoutes.cs:23-30`).
-- Admin list **pagination** (`PartiesAdminPortal.razor:145-150`) and the
-  display-name/email/identifier **search-mode buttons** with rich-search probe
-  degradation (`:86-90`) — beyond the spine's "debounced search + type/active
-  filters".
-- EventStore-admin deep links from party detail and GDPR correlation links
-  (`PartiesAdminPortal.razor:359`,
-  `AdminPortal/Services/AdminPortalEventStoreAdminLinks.cs`).
-- DPO operational summary panel
-  (`AdminPortal/Components/DpoOperationalSummaryPanel.razor`) — the spine's GDPR
-  surface lists erase/restrict/consent/export/records/verify only.
-- Identity-binding provisioning machinery in the UI host
-  (`UI/IdentityBinding/*`, `UI/Program.cs:106-108`) — host plumbing with no UX
-  spine coverage (fine; it has no consumer-visible surface yet).
-- E2E fixture authentication scheme + fixture endpoints baked into the host
-  (`UI/Program.cs:54-73,221-224,228-240`) — test scaffolding.
-
-## Known debt confirmed
-
-- **Picker re-skin (FAST → Fluent 2) + combobox ARIA** — decision-log residual,
-  carried in both spines: **RESOLVED in code.**
-  `src/Hexalith.Parties.Picker/Components/PartyPicker.razor.css:2-8` now maps every
-  `--hx-picker-*` var onto Fluent 2 tokens (`--colorNeutralStroke1`,
-  `--colorNeutralBackground1/2`, `--colorNeutralForeground1/3`,
-  `--colorStatusDangerForeground1`), and `PartyPicker.razor:11-21,57-67` carries
-  the full WAI-ARIA combobox contract (`role=combobox`, `aria-expanded`,
-  `aria-controls`, `aria-autocomplete=list`, `aria-activedescendant`,
-  `role=listbox`/`option` + `aria-selected`), plus `forced-colors` and
-  `prefers-reduced-motion` blocks (`PartyPicker.razor.css:138,157`). The spines'
-  "design debt" annotations can be retired. One nit: the accent maps to
-  `--colorBrandStroke1` with a `#0067b8` (Microsoft-blue) literal fallback rather
-  than DESIGN's `{colors.accent}` teal — cosmetic, fallback-only.
-- **Mock-only sub-24px/12px secondary text; real build floors 13–14px** —
-  honored: consumer secondary text uses `--type-ramp-minus-1` = 14px equivalents
-  (e.g. `MyProfilePage.razor.css:89`), and the danger action floors 44px
-  (`PartyGdprOperationsPanel.razor.css:14`).
-- **Admin typed-name kept in-memory (PII residual)** — honored:
-  `PartyGdprOperationsPanel.razor:543-560` sends only `partyId`; the typed value
-  lives in `_erasureTypedName`, is compared locally, and is cleared on
-  close/cancel (`ClearErasureDialogState`, `:531-537`).
-- **Phone-reflow mock for Admin master-detail deferred** — the *behavior* is now
-  built and e2e-pinned: full-screen detail sheet + row-focus restore + zoom
-  narrow-emulation (`PartiesAdminPortal.razor.css:117-126`,
-  `tests/e2e/specs/admin-parties-list.spec.ts:500-543`). The deferred mock itself
-  is moot.
+- Commits since baseline touching UI folders: `2b63ab9c`, `f8fd7404`, `30795e62`, `904b0ca9`, `dba4e4ec`, `d354166c`, `38ca48b6` (7 of 72). `git diff 2b63ab9c~1..HEAD -- src/Hexalith.Parties.UI/Program.cs` is a reorder/re-comment with no new registrations.
+- Token sweep: `rg -n '--(type-ramp|neutral-|accent-|palette-|success-|warning-|error-|info-)[a-z-]*|-rest\b' src --glob '*.{css,razor}'` → 63 hits across 9 files, all AdminPortal/ConsumerPortal; Picker and UI host are clean. Raw hex: `PartyGdprOperationsPanel.razor.css` (4 values) + Picker fallbacks (7, permitted as fallbacks except `#0067b8`).
+- Zero hits: `fc-spacing-unit`, `scroll-margin`, `FluentSkeleton`, `FluentMessageBar`, `paused`, `warming`, `Help` (as an affordance), `<PartyStateBadge`/`<DataFreshnessIndicator`/`<GdprDestructiveButton` outside `Specimens/`.
+- Not verified statically: runtime rendering of `FluentDataGrid` row semantics, shell nav filtering by policy, IdP configuration (3.3.8) — all outside this lens.
+- Working tree carried unrelated modified/untracked files under `_bmad-output/planning-artifacts/architecture/…` and submodule pointer changes at review time; none were touched.

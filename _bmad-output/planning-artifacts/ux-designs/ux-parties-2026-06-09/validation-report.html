@@ -71,6 +71,9 @@
   .dim-card .dim-name { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
   .dim-card .dim-verdict { font-size: 14px; font-weight: 600; }
 
+  .sev-summary { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+  .sev-summary .badge { font-size: 12px; padding: 6px 12px; }
+
   section.dimension, section.reviewer-section { margin-bottom: 14px; }
   section.dimension details, section.reviewer-section details {
     background: var(--surface);
@@ -120,8 +123,6 @@
   .dim-body { padding: 4px 20px 18px; }
   .dim-judgment { color: var(--text); font-size: 14.5px; }
   .dim-judgment p { margin: 0 0 10px; }
-  .dim-judgment ul { margin: 0 0 10px; padding-left: 20px; }
-  .dim-judgment li { margin-bottom: 4px; }
 
   .findings-list { padding: 0 20px 4px; }
   article.finding {
@@ -153,6 +154,8 @@
   .finding-location { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; color: var(--muted); }
   .finding-note, .finding-fix { margin-top: 6px; font-size: 14px; }
   .finding-fix strong { color: var(--muted); font-weight: 500; }
+  .finding-note ul { margin: 4px 0 0; padding-left: 20px; }
+  .finding-note li { margin-bottom: 4px; }
 
   .reviewer-source {
     font-size: 12px;
@@ -171,6 +174,11 @@
   .mechanical h3 { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
   .mechanical ul { margin: 0; padding-left: 20px; }
   .mechanical li { margin-bottom: 4px; color: var(--text); }
+  .mechanical table { border-collapse: collapse; width: 100%; font-size: 13.5px; margin-top: 8px; }
+  .mechanical th, .mechanical td { text-align: left; padding: 6px 8px; border-top: 1px solid var(--border); vertical-align: top; }
+  .mechanical th { color: var(--muted); font-weight: 600; border-top: none; }
+
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.92em; background: rgba(120,113,108,0.08); padding: 1px 4px; border-radius: 3px; }
 
   footer.report-footer {
     margin-top: 40px;
@@ -189,422 +197,454 @@
     <header class="report-header">
       <div class="title">
         <h1>Parties UI — UX Design Validation Report</h1>
-        <div class="subtitle">_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09 · DESIGN.md + EXPERIENCE.md (final 2026-06-09) · re-validated 2026-08-18</div>
+        <div class="subtitle">_bmad-output/planning-artifacts/ux-designs/ux-parties-2026-06-09/{DESIGN.md, EXPERIENCE.md} · spines updated 2026-08-18 · lenses: rubric · implementation drift · accessibility · regulated language · Hexalith UX compliance</div>
       </div>
     </header>
 
     <div class="synthesis">
-      <p>A clean, genuinely source-extractable delta-spine pair: canonical shape on both files, committed tokens with load-bearing contrast caveats spelled out, a State Patterns section that actually carries the product's hardest problem (eventual consistency), and all five mocks linked with spine-wins stated. The one structural risk is <strong>source drift</strong>: the <code>sources</code> file (<code>project-context.md</code>) was revised 2026-06-21 — twelve days <em>after</em> finalize — and now carries consumer-binding (<code>/no-party-binding</code>) and Art. 18 restriction rules the spine pair does not reflect.</p>
-      <p>The three extra lenses shift the picture from "polish" to "reconcile." The <strong>behavioral spine is implemented with high fidelity</strong> — status-kind vocabulary, the polite/assertive live-region split, consent <code>role=switch</code> + default-Off + lawful-basis honesty, and the regulated erasure/export microcopy are in code near-verbatim and test-pinned; the picker's FAST→Fluent&nbsp;2 re-skin debt is <em>resolved in code</em> and its spine debt annotations can be retired. But <strong>DESIGN.md's token layer drifts materially in the build</strong>: both portals style domain states against the banned legacy FAST <code>--*-rest</code> tokens (one selected-row outline silently vanishes), the per-area density contract was never wired, consumer surfaces <code>/me/privacy</code> and <code>/me/edit</code> are unreachable by navigation, and the consumer erasure confirm is a fake modal (<code>aria-modal</code> without trap/restore).</p>
-      <p>All 18 June finalize resolutions (6 accessibility + 12 regulated-language) verifiably landed in the spine text — <strong>no criticals anywhere this round</strong>. The remaining exposure is <strong>under-specified rights</strong>: the Object (Art. 21) button promises a right the backend has no command for (flagged independently by two lenses; it ships today as a permanently disabled control), restriction (Art. 18) is invisible to the data subject, the sign-in surface lacks a WCAG 2.2 §3.3.8 Accessible Authentication mandate, and the sign-in mock still paints link text in the raw 3.51:1 accent. Totals: <strong>0 critical · 7 high · 22 medium · 24 low</strong>.</p>
+      <p>The 2026-08-18 update pass landed: every one of the thirteen prior rubric findings is resolved or superseded on disk, and the pair remains a disciplined, source-extractable delta contract with canonical shape on both files. What the rubric finds now is <strong>internal contradiction rather than omission</strong> — the three-state freshness contract is muddled at the State Patterns row (the <code>Degraded</code> read binds "last known" copy to the <em>stale/Warning</em> token while DESIGN says that copy is <em>degraded/Info</em>), Flow 3 and the admin mock paint the erase <em>trigger</em> danger-filled while both component tables say Outline, and Interaction Primitives still mandates typed confirmation for all destructive actions after the consumer path dropped it. The requirements chain also moved under the spine: the PRD (2026-09-08) and the frozen <code>epics.md</code> UX-DRs are undeclared sources with no <code>FR-*</code>/<code>UX-DR*</code> id cited anywhere, and <code>UX-DR6</code> still carries the danger binding the spine deliberately superseded.</p>
+      <p>The four extra lenses shift the picture from "reconcile the contradictions" to <strong>"two token-layer facts are wrong, and the reciprocal code queue never shipped."</strong> Accessibility computed the contrast of the GDPR destructive pair the August update adopted <em>from code</em> — <code>--colorStatusDangerBackground3</code> + <code>--colorStatusDangerForegroundInverted</code> — at <strong>1.74:1 light / 1.17:1 dark</strong>: the label on the irreversible "Erase party" Confirm is near-invisible in both themes, and spine, code and memlog all agree on the wrong value. This is the only critical this round; two other lenses recommended <em>propagating</em> that pair to the admin panel and that recommendation is withdrawn here. The same lens found that <code>--colorStatusInfoForeground1</code>, which the freshness <code>degraded</code> state binds to, <strong>does not exist in Fluent 2</strong> — which is why three lenses tripped on freshness independently. Hexalith UX compliance adds that <strong>per-area density</strong> is not a FrontComposer capability (density is one global, user-owned posture), so the code fix queued in August would build a rule violation; and that the spines transmit the FAST ban too narrowly, omit the <code>FluentAccordion</code> page-sections rule, and mandate no conformance guard.</p>
+      <p>Implementation drift confirms <strong>0 of the 12 code fixes queued on 2026-08-18 landed</strong> (one unqueued a11y item did: product-wide forced-colors/reduced-motion in <code>MainLayout.razor.css</code>). Every prior High persists — consumer surfaces unreachable by navigation, both portals on FAST tokens (63 hits across 9 files, none scanned by the style guard), a fake <code>role=dialog</code> erasure confirm, a dead Object button — and the August spine additions have widened the gap. Regulated language finds the consumer register plain, default-Off and dark-pattern-free, but over-promising at the rights' edges: "verified it's gone" is false under Art. 17(3) retention, the Admin <em>Lift restriction</em> dialog can breach Art. 18(3) silently, and an erased consumer who re-signs in a month later lands on the bug-shaped <code>/no-party-binding</code> page.</p>
+    </div>
+
+    <div class="sev-summary">
+      <span class="badge badge-sev-critical">critical 1</span>
+      <span class="badge badge-sev-high">high 17</span>
+      <span class="badge badge-sev-medium">medium 54</span>
+      <span class="badge badge-sev-low">low 52</span>
     </div>
 
     <div class="dimension-summary">
-      <div class="dim-card"><div class="dim-name">Flow coverage</div><div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div></div>
-      <div class="dim-card"><div class="dim-name">Token completeness</div><div class="dim-verdict" style="color: var(--verdict-strong)">strong</div></div>
+      <div class="dim-card"><div class="dim-name">Flow coverage</div><div class="dim-verdict" style="color: var(--verdict-strong)">strong</div></div>
+      <div class="dim-card"><div class="dim-name">Token completeness</div><div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div></div>
       <div class="dim-card"><div class="dim-name">Component coverage</div><div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div></div>
-      <div class="dim-card"><div class="dim-name">State coverage</div><div class="dim-verdict" style="color: var(--verdict-strong)">strong</div></div>
+      <div class="dim-card"><div class="dim-name">State coverage</div><div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div></div>
       <div class="dim-card"><div class="dim-name">Visual reference coverage</div><div class="dim-verdict" style="color: var(--verdict-strong)">strong</div></div>
       <div class="dim-card"><div class="dim-name">Bloat &amp; overspecification</div><div class="dim-verdict" style="color: var(--verdict-strong)">strong</div></div>
       <div class="dim-card"><div class="dim-name">Inheritance discipline</div><div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div></div>
       <div class="dim-card"><div class="dim-name">Shape fit</div><div class="dim-verdict" style="color: var(--verdict-strong)">strong</div></div>
     </div>
 
+    <!-- 1 Flow coverage -->
     <section class="dimension">
       <details>
-        <summary><h2>1 · Flow coverage</h2><span class="verdict-pill verdict-adequate">adequate</span></summary>
+        <summary><h2>1. Flow coverage</h2><span class="verdict-pill verdict-strong">strong</span></summary>
         <div class="dim-body"><div class="dim-judgment">
-          <p>All four Key Flows have a named protagonist, numbered steps, a bold Climax beat, and an explicit Failure path — the mechanical shape is flawless. Export (Flow 1), consent withdrawal (Flow 2), admin erasure incl. verification (Flow 3), and create/link via picker (Flow 4) are covered end-to-end. Gaps trace to source drift and the consumer erasure journey.</p>
+          <p>Every user-facing capability in <code>project-context.md</code>, cross-checked against the PRD's <code>FR-Shell</code>, <code>FR-Admin-1..4</code>, <code>FR-Consumer-1..4</code>, has a Key Flow with a named protagonist (Marc ×3, Priya ×2), numbered steps, a bold Climax beat and a Failure path — or an explicit "table-covered" closure note. Flow 5 (consumer erasure) landed from the prior review.</p>
         </div></div>
         <div class="findings-list">
           <article class="finding">
-            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">The unbound-consumer path is absent everywhere</h3><span class="finding-location">EXPERIENCE.md §IA, §State Patterns</span></header>
-            <div class="finding-note">The source mandates zero/multiple <code>party_id</code> claims → redirect <code>/no-party-binding</code>, yet that surface/state appears in neither the IA table, State Patterns, nor any flow. Every mis-provisioned consumer hits this dead end with no specified copy or recovery. The drift review found the code <em>already built it</em> (<code>NoPartyBinding.razor</code>) — spec it, don't invent it.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Add a <code>No party binding</code> state row (fail-closed, reassuring copy, support path) and a <code>/no-party-binding</code> IA entry, back-ported from the shipped surface.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Consumer self-service erasure has no Key Flow</h3><span class="finding-location">EXPERIENCE.md §Key Flows</span></header>
-            <div class="finding-note">The emotionally central GDPR journey (<code>RequestMyErasureAsync</code> / <code>CancelMyErasureAsync</code>) has copy and a state row, but the request→cancel-window→permanent narrative — including where the Cancel control lives — is never walked.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Add a fifth flow (Marc requests deletion, sees the cancellable state, optionally cancels) or extend Flow 1.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Restriction (Art. 18) and Edit-my-profile have no flow</h3><span class="finding-location">EXPERIENCE.md §Key Flows</span></header>
-            <div class="finding-note">Both have surfaces and component rules; simple enough that the tables carry them.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Optional — a one-line note that these are table-covered by design.</div>
+            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Export "preparing" string exists in two wordings</h3><span class="finding-location">EXPERIENCE §Voice and Tone L97 vs Flow 1 L263–264</span></header>
+            <div class="finding-note">PRD <code>UX-DR15</code> quotes the Flow 1 variant; the spine's own single-status-source rule (<code>UX-DR16</code>) is broken and the copy consumer must choose. Regulated-language lens flagged the same duplication.</div>
+            <div class="finding-fix"><strong>Fix:</strong> one canonical string (keep the Flow 1 form — shipped and in the PRD); Voice and Tone quotes it verbatim.</div>
           </article>
         </div>
       </details>
     </section>
 
+    <!-- 2 Token completeness -->
     <section class="dimension">
-      <details>
-        <summary><h2>2 · Token completeness</h2><span class="verdict-pill verdict-strong">strong</span></summary>
+      <details open>
+        <summary><h2>2. Token completeness</h2><span class="verdict-pill verdict-adequate">adequate</span></summary>
         <div class="dim-body"><div class="dim-judgment">
-          <p>All 26 <code>{path.to.token}</code> prose references resolve against the YAML. Owned colors carry hex; the delta-only inheritance strategy is executed cleanly — every inherited value is a <em>named</em> Fluent 2 custom property, unambiguous for a consumer with the Fluent 2 catalog. Contrast targets are stated exactly where load-bearing. All 5 mocks verified binding <code>--brand-fill:#00767f</code>.</p>
+          <p>Mechanically strong: all 32 <code>{path.to.token}</code> references in DESIGN.md and the one in EXPERIENCE.md resolve; the owned colour carries hex; contrast targets are stated for every load-bearing pair. Downgraded from the rubric's <em>strong</em> because the accessibility lens showed two bindings fail at the Fluent 2 layer — the destructive pair is not AA (critical, below) and the Info token does not exist — so a downstream consumer cannot extract a working colour for <code>degraded</code> or a readable Confirm label.</p>
         </div></div>
         <div class="findings-list">
           <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">gdpr-destructive-button binds a Foreground token as a button fill</h3><span class="finding-location">DESIGN.md frontmatter + §Components</span></header>
-            <div class="finding-note"><code>--colorStatusDangerForeground1</code> as fill: in dark theme Fluent flips <code>*Foreground1</code> to a light text tint — as a fill under white text it will fail AA, and the button's own text color is never specified. The drift review found the shipped host component already uses the correct matched pair (<code>Background3</code> + <code>ForegroundInverted</code>).</div>
-            <div class="finding-fix"><strong>Fix:</strong> Update the spine to the danger <em>background</em> ramp pair the code ships, and state the text color.</div>
+            <header><span class="badge badge-sev-critical">critical</span><h3 class="finding-title">GDPR destructive Confirm's "matched AA pair" is not a pair — 1.74:1 light / 1.17:1 dark</h3><span class="finding-location">DESIGN frontmatter L55–57, §Components L204–208 · GdprDestructiveButton.razor.css L12–14 · SC 1.4.3</span></header>
+            <div class="finding-note"><code>--colorStatusDangerForegroundInverted</code> is Fluent 2's danger <em>text</em> colour for dark neutral surfaces (<code>cranberry.tint30</code> light / <code>shade10</code> dark); on <code>--colorStatusDangerBackground3</code> (<code>cranberry.primary</code>) it is near-invisible in both themes. The admin mock hides it because <code>.btn.danger</code> hand-codes <code>#b10e1c</code> + white (7.12:1). The 2026-08-18 "spine adopts code" decision locked in the wrong value; the drift and compliance lenses this round recommended propagating the pair to the admin panel — withdrawn.</div>
+            <div class="finding-fix"><strong>Fix:</strong> bind foreground to <code>--colorNeutralForegroundOnBrand</code> (6.07:1 on <code>Background3</code>, 7.12:1 on hover); strike "AA-designed together" for this pair; add the rule "<code>*ForegroundInverted</code> is text-on-dark-neutral, never text-on-<code>Background3</code>"; add to the dark-mode acceptance table.</div>
+          </article>
+          <article class="finding">
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">DESIGN binds two states to a token Fluent 2 does not emit</h3><span class="finding-location">DESIGN L18, L54, L110 · SC 1.4.3, 1.4.11</span></header>
+            <div class="finding-note"><code>--colorStatusInfoForeground1</code> has no definition — the Fluent 2 status family is success / warning / danger only; the FrontComposer alias <code>--fc-color-info</code> is equally empty. A <code>var()</code> without fallback is invalid at computed-value time: the third freshness state and "processing / informational" have no colour — the silent-disappearance failure the spine itself bans for FAST tokens.</div>
+            <div class="finding-fix"><strong>Fix:</strong> bind Info to an existing pair and say so (e.g. <code>--colorPaletteBlueForeground2</code> on <code>--colorPaletteBlueBackground2</code>, or neutral <code>--colorNeutralForeground2</code> on <code>--colorNeutralBackground3</code>), or route Info through components (<code>FluentMessageBar Intent.Info</code>, <code>FluentBadge Color.Informative</code>) and forbid <code>--colorStatusInfo*</code>; file the shell alias as a FrontComposer defect.</div>
+          </article>
+          <article class="finding">
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title"><code>brand-fill ≈ #00767f</code> is an estimate never read back from the running theme</h3><span class="finding-location">DESIGN L13, §Colors L93–97 · SC 1.4.3</span></header>
+            <div class="finding-note">V5 derives the brand ramp from <code>ThemeSettings(AccentColor, …, isExact:false)</code>; <code>--colorBrandBackground</code> is <code>brand[80]</code> light / <code>brand[70]</code> dark — where the key colour tends to land. If it resolves near <code>#0097A7</code>, every filled primary and every link is ~3.5:1, and all five mocks hard-code <code>#00767f</code> so nobody would notice.</div>
+            <div class="finding-fix"><strong>Fix:</strong> record the computed <code>--colorBrandBackground</code> for light and dark with its ratio as the acceptance value; if it misses 4.5:1, change the accent seed to an AA-safe teal, which also collapses the raw-accent / brand-fill split.</div>
+          </article>
+          <article class="finding">
+            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Dark-mode brand fill is an uncommitted decision</h3><span class="finding-location">DESIGN L114–118</span></header>
+            <div class="finding-note">"If the derived fill misses, pin the dark brand fill" — a consumer cannot extract a dark value and does not know whether the check has run.</div>
+            <div class="finding-fix"><strong>Fix:</strong> run the check, record pass or a pinned <code>brand-fill-dark</code>.</div>
           </article>
         </div>
       </details>
     </section>
 
+    <!-- 3 Component coverage -->
     <section class="dimension">
       <details>
-        <summary><h2>3 · Component coverage</h2><span class="verdict-pill verdict-adequate">adequate</span></summary>
+        <summary><h2>3. Component coverage</h2><span class="verdict-pill verdict-adequate">adequate</span></summary>
         <div class="dim-body"><div class="dim-judgment">
-          <p>The four domain components (party-state badge, freshness indicator, GDPR button, party picker) each have a real DESIGN.md visual row <em>and</em> a real EXPERIENCE.md behavioral row — genuinely two-sided specs, with the picker's row carrying the full ARIA combobox contract. Inherited components are governed by the explicit "as-is, unchanged" inventory.</p>
+          <p>The four domain components and the consent / status-region / dialog / skeleton set each have a DESIGN visual home and an EXPERIENCE behavioural row with real rules; name pairing is explicit. Remaining: three components that are <em>behaved</em> but not <em>rendered</em>, and two internal contradictions in the GDPR button's behavioural family.</p>
         </div></div>
         <div class="findings-list">
           <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">The consent control has no visual home</h3><span class="finding-location">DESIGN.md §Components</span></header>
-            <div class="finding-note">A first-class, GDPR-load-bearing component with a rich behavioral row has no DESIGN.md Components row and no switch component (<code>FluentSwitch</code>) in the as-is inventory — a story-dev must guess what renders it.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Add <code>FluentSwitch</code> to the as-is list (or a brief DESIGN row if the visual deviates).</div>
+            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Flow 3 paints the erase trigger "danger fill"; both component tables say Outline</h3><span class="finding-location">EXPERIENCE L299 vs L113, DESIGN L209–211; mockups/admin-parties.html L169</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> "(outline trigger; the danger fill is on the dialog's Confirm)"; re-class the mock trigger <code>.btn.outline</code>.</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">FluentDialog, toast, and skeleton absent from the inherited inventory</h3><span class="finding-location">DESIGN.md §Components</span></header>
-            <div class="finding-note">All three are behaviorally specified in EXPERIENCE.md (dialog used 3×) but their rendering components are not in DESIGN.md's as-is list.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Extend the as-is list.</div>
+            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Interaction Primitives and Inspiration still mandate typed confirm for all destructive actions</h3><span class="finding-location">EXPERIENCE L150–152, L241–242 vs L113, Flow 5 step 2</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> scope to "Admin irreversible actions require typed confirmation; consumer reversible requests use a single dialog Confirm".</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Component name drift across spines</h3><span class="finding-location">DESIGN §Components ↔ EXPERIENCE §Component Patterns</span></header>
-            <div class="finding-note">"Data-freshness indicator" vs "Freshness indicator"; "GDPR destructive button" vs "GDPR action button" (deliberately wider, but the widening is implicit). Token keys are consistent.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Align names or note the widening explicitly.</div>
+            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Person/Organization chooser has no Component Patterns row; <code>FluentRadioGroup</code> absent from inventory</h3><span class="finding-location">EXPERIENCE L183; DESIGN L173–177; PRD UX-DR9</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> inventory entry + row: "Party type chooser — create only; no default; read-only on edit".</div>
+          </article>
+          <article class="finding">
+            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Tablet detail sheet has a full focus contract but no rendering component</h3><span class="finding-location">EXPERIENCE L154–157, L215–216; DESIGN inventory</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> name it (e.g. <code>FluentDrawer</code>, <code>Position.End</code>) in DESIGN Components and reference from Primitives.</div>
+          </article>
+          <article class="finding">
+            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">"Banner" and "Help &amp; contact" have no named component</h3><span class="finding-location">EXPERIENCE L129, L132, L163, L60</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> "in-page banners are <code>FluentMessageBar</code>; Help &amp; contact is a shell footer <code>FluentAnchor</code>".</div>
           </article>
         </div>
       </details>
     </section>
 
+    <!-- 4 State coverage -->
     <section class="dimension">
-      <details>
-        <summary><h2>4 · State coverage</h2><span class="verdict-pill verdict-strong">strong</span></summary>
+      <details open>
+        <summary><h2>4. State coverage</h2><span class="verdict-pill verdict-adequate">adequate</span></summary>
         <div class="dim-body"><div class="dim-judgment">
-          <p>The pair's best work: 14 state rows mapped to the <em>real</em> <code>StatusKind</code> / <code>PartyPickerSearchState</code> enums, including the states most specs forget — <code>DisplayNameOnly</code> partial projections, optimistic echo, <code>TenantUnavailable</code> warming copy, tombstoned <code>Gone</code>. Erasure gets the honest two-state treatment.</p>
+          <p>Eleven IA surfaces walked against seventeen State Patterns rows; the eventual-consistency core remains the pair's best work. The gap is a semantic collision inside the freshness rows plus three source-declared states with no treatment.</p>
         </div></div>
         <div class="findings-list">
           <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">No state row for restricted as a surface treatment</h3><span class="finding-location">EXPERIENCE.md §State Patterns</span></header>
-            <div class="finding-note"><code>restricted</code> exists as a badge value, but nothing says what restriction does to the UI — which admin actions gray out, what the consumer sees, and the source's subtle Art. 18(3) rule that consent edits stay <em>allowed</em> while restricted (but reject during erasure). Source-drift-related.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Add a <code>Restricted</code> state row: badge + which controls stay live (consent toggles) vs disabled, with the erasure-in-progress exception.</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Three-state freshness contract is internally inconsistent</h3><span class="finding-location">EXPERIENCE §State Patterns L129, §Voice and Tone L99 vs DESIGN L196–202, EXPERIENCE L114</span></header>
+            <div class="finding-note">"Stale read (<code>Degraded</code>)" binds the <em>last-known</em> copy to <code>{components.freshness-indicator.stale}</code> (Warning) while DESIGN defines that copy as <code>degraded</code>/Info and forbids Warning for it; <code>StatusKind.Degraded</code> — what code emits on a last-known-cache fallback — has no unambiguous token. Compounded by the missing Info token (§2) and the two-state code (drift).</div>
+            <div class="finding-fix"><strong>Fix:</strong> decide the Info colour first; then split L129 into <strong>Stale</strong> (age known → <code>stale</code> Warning + "as of HH:MM") and <strong>Degraded</strong> (<code>StatusKind.Degraded</code> / last-known → <code>degraded</code> + "Showing what we last knew — refreshing"); relabel L99 "(degraded read)".</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Export "preparing / ready" states are flow-only</h3><span class="finding-location">EXPERIENCE.md §Key Flows Flow 1 vs §State Patterns</span></header>
-            <div class="finding-note">Extractable only from prose.</div>
-            <div class="finding-fix"><strong>Fix:</strong> One <code>Export preparing / ready</code> row.</div>
+            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title"><code>FR-Shell</code> no-area and dual-role routing states absent</h3><span class="finding-location">EXPERIENCE Foundation L21–22, L38–39; PRD L66–76</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> "No area" state row (copy + Help &amp; contact path) and one Foundation sentence on dual-role precedence (Admin first).</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">My-consent empty state unspecified</h3><span class="finding-location">EXPERIENCE.md §State Patterns</span></header>
-            <div class="finding-note">The <code>Empty (NoData)</code> row is admin-list-shaped; a consumer with zero defined consent purposes is uncovered.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Extend the Empty row's surface column.</div>
+            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Erasure verification states (pending / verified / failed → Retry) absent</h3><span class="finding-location">EXPERIENCE §State Patterns; project-context.md L142–147</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> "Erasure verification" row — pending Info "Verifying deletion across records…"; verified neutral; failed <code>role=alert</code> + Retry, never success-green.</div>
+          </article>
+          <article class="finding">
+            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Gone/NotFound row omits Consumer profile after completed erasure; edit-over-stale-read untreated</h3><span class="finding-location">EXPERIENCE L140; L129–130</span></header>
+            <div class="finding-note">The regulated lens raises the erased-self case to high (see reviewer section) — the consumer must land on a tombstone, never <code>/no-party-binding</code>.</div>
           </article>
         </div>
       </details>
     </section>
 
+    <!-- 5 Visual reference coverage -->
     <section class="dimension">
       <details>
-        <summary><h2>5 · Visual reference coverage</h2><span class="verdict-pill verdict-strong">strong</span></summary>
+        <summary><h2>5. Visual reference coverage</h2><span class="verdict-pill verdict-strong">strong</span></summary>
         <div class="dim-body"><div class="dim-judgment">
-          <p>All 5 mockups linked inline from EXPERIENCE.md §IA with a parenthetical naming what each illustrates, re-mapped per-flow at §Key Flows; DESIGN.md additionally links the two component-bearing mocks. Zero orphans; "spine wins on conflict" stated in both spines. No findings.</p>
-        </div></div>
-      </details>
-    </section>
-
-    <section class="dimension">
-      <details>
-        <summary><h2>6 · Bloat &amp; overspecification</h2><span class="verdict-pill verdict-strong">strong</span></summary>
-        <div class="dim-body"><div class="dim-judgment">
-          <p>Both spines are disciplined delta documents: tables where tables work, no source restatement, no pixel specs where an inherited token covers it. DESIGN.md's editorial voice earns its place; EXPERIENCE.md prose stays behavioral. The dense picker row is at the edge but every clause is load-bearing against real code. No findings.</p>
-        </div></div>
-      </details>
-    </section>
-
-    <section class="dimension">
-      <details>
-        <summary><h2>7 · Inheritance discipline</h2><span class="verdict-pill verdict-adequate">adequate</span></summary>
-        <div class="dim-body"><div class="dim-judgment">
-          <p><code>sources</code> resolves; domain names are verbatim from source/code (<code>ProjectionFreshnessMetadata</code>, <code>StatusKind</code>, <code>party-selected</code>, routes, roles). Cross-spine deferrals all resolve. Consent-vs-lawful-basis and Object-not-toggle honesty rules mirror the source faithfully.</p>
+          <p>Five mocks, all linked inline from IA and per flow with a parenthetical naming what each illustrates; spine-wins stated once per spine; zero orphans, zero broken links; the 2026-08-18 mock patches are present.</p>
         </div></div>
         <div class="findings-list">
           <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Source drift: the frontmatter source was rewritten after finalize</h3><span class="finding-location">EXPERIENCE.md frontmatter vs project-context.md</span></header>
-            <div class="finding-note">The source gained Epics 4–5 consumer/GDPR rules on 2026-06-21, after both spines went <code>final</code> on 2026-06-09, and the spines were never re-validated against it. Concrete casualties: the <code>/no-party-binding</code> gap (§1) and the restriction row (§4).</div>
-            <div class="finding-fix"><strong>Fix:</strong> Run a spine refresh pass against the current source; bump <code>updated</code>.</div>
+            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title"><code>signin.html</code> renders an app-owned credential form the spine says the IdP owns</h3><span class="finding-location">mockups/signin.html L58–63 vs EXPERIENCE Foundation L36–41</span></header>
+            <div class="finding-note">Accessibility raises this to medium: a story-dev will build a local login form and a tester will look for 3.3.8 in the wrong place.</div>
+            <div class="finding-fix"><strong>Fix:</strong> replace with a "Redirecting to your organisation's sign-in…" interstitial + return-routing, or caption "IdP-hosted page — illustrative only".</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Unresolvable token shorthand <code>freshness.stale</code></h3><span class="finding-location">EXPERIENCE.md §State Patterns</span></header>
-            <div class="finding-note">The real token path is <code>components.freshness-indicator.stale</code>. Human-resolvable, machine-unresolvable.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Use the full path.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Consumer IA rows lack verbatim <code>/me/*</code> routes</h3><span class="finding-location">EXPERIENCE.md §Information Architecture</span></header>
-            <div class="finding-note">Admin surfaces carry verbatim routes but Consumer surfaces don't, though the source names the <code>/me/*</code> scope.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Add <code>/me/...</code> routes to the four consumer IA rows.</div>
+            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title"><code>admin-parties.html</code> fills the on-page erase trigger with hard-coded <code>#b10e1c</code></h3><span class="finding-location">mockups/admin-parties.html L62, L169</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> <code>.btn.outline</code> on the trigger; <code>.btn.danger</code> on the dialog Confirm only.</div>
           </article>
         </div>
       </details>
     </section>
 
+    <!-- 6 Bloat -->
     <section class="dimension">
       <details>
-        <summary><h2>8 · Shape fit</h2><span class="verdict-pill verdict-strong">strong</span></summary>
+        <summary><h2>6. Bloat &amp; overspecification</h2><span class="verdict-pill verdict-strong">strong</span></summary>
         <div class="dim-body"><div class="dim-judgment">
-          <p>DESIGN.md: all 8 canonical sections present, exactly in order; frontmatter complete with all five token families. EXPERIENCE.md: all 8 required defaults present and ordered, plus Responsive &amp; Platform (correctly triggered) and Inspiration &amp; Anti-patterns (earns its place). No dropped defaults, no invented sections. No findings.</p>
+          <p>Both spines stay delta documents; DESIGN's editorial voice is earned and confined; EXPERIENCE prose is behavioural throughout.</p>
+        </div></div>
+        <div class="findings-list">
+          <article class="finding">
+            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">IdP / 3.3.8 point stated twice; KMS launch gate restates deployment posture</h3><span class="finding-location">EXPERIENCE Foundation L36–44, Accessibility Floor L186–191</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> keep 3.3.8 in the Floor with a pointer from Foundation; reduce the launch gate to one clause.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <!-- 7 Inheritance -->
+    <section class="dimension">
+      <details>
+        <summary><h2>7. Inheritance discipline</h2><span class="verdict-pill verdict-adequate">adequate</span></summary>
+        <div class="dim-body"><div class="dim-judgment">
+          <p><code>sources</code> resolves; domain names are verbatim from source and code; cross-spine deferrals and the single EXPERIENCE token reference resolve. The exposure is one level up: the requirements chain now sitting <em>above</em> the spine is neither declared nor cited.</p>
+        </div></div>
+        <div class="findings-list">
+          <article class="finding">
+            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title"><code>sources</code> omits the PRD and epics; no <code>FR-*</code> / <code>UX-DR*</code> id appears in either spine</h3><span class="finding-location">EXPERIENCE frontmatter; parties-ui-prd.md (2026-09-08); epics.md §UX Design Requirements</span></header>
+            <div class="finding-note">The PRD declares the spines as <em>its</em> sources, so the inheritance is circular and unlabelled; a story-dev cannot trace <code>FR-Consumer-4</code> to Flow 1/5 without reading three documents side by side.</div>
+            <div class="finding-fix"><strong>Fix:</strong> declare both files; tag each Key Flow heading and State/Component row with the ids it realizes.</div>
+          </article>
+          <article class="finding">
+            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Spine silently supersedes frozen <code>UX-DR6</code> (danger binding) and <code>UX-DR5</code> (name)</h3><span class="finding-location">DESIGN L56, L196; epics.md L286–288</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> state the supersession in DESIGN Components; keep "Data-freshness indicator" as an alias.</div>
+          </article>
+          <article class="finding">
+            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Create / Edit party IA row lacks routes</h3><span class="finding-location">EXPERIENCE L54</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> add <code>/admin/parties/new</code>, <code>/admin/parties/{id}/edit</code>.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <!-- 8 Shape fit -->
+    <section class="dimension">
+      <details>
+        <summary><h2>8. Shape fit</h2><span class="verdict-pill verdict-strong">strong</span></summary>
+        <div class="dim-body"><div class="dim-judgment">
+          <p>DESIGN: all eight canonical sections in order, frontmatter complete. EXPERIENCE: all eight required defaults in reference order; Responsive &amp; Platform and Inspiration &amp; Anti-patterns correctly triggered. No findings.</p>
         </div></div>
       </details>
     </section>
 
+    <!-- Reviewer: implementation drift -->
     <section class="reviewer-section">
       <details>
         <summary><h2>Implementation drift review</h2><span class="reviewer-source">review-implementation-drift.md</span></summary>
         <div class="dim-body"><div class="dim-judgment">
-          <p>The behavioral spine (EXPERIENCE.md) is implemented with high fidelity — several contracts are in code near-verbatim and test-pinned. The visual spine (DESIGN.md) drifts materially at the token layer: both portals style domain states against the banned legacy FAST <code>--*-rest</code> tokens (the exact debt the spine logged for the picker — which is the one place it was fixed), the admin danger fill degrades to hand-picked hex, and the per-area density contract was never wired. Reconcile direction: <strong>fix code</strong> for tokens, IA reachability, and the consumer erasure pseudo-dialog; <strong>update the spine</strong> where code made the better call (danger-fill token pair, inline status regions instead of toasts, consumer erasure as reversible-until-begins).</p>
-          <ul>
-            <li><strong>Spine-only (backlog, 4):</strong> stale auto-refresh + aria-live-on-fresh (mechanism shipped, unconsumed); Object (Art. 21) behavior; per-area density; "as of HH:MM" stale timestamps on real surfaces.</li>
-            <li><strong>Code-only (never specified, 9):</strong> <code>/no-party-binding</code> surface (worth back-porting); no-area landing state; <code>/admin</code> redirect; specimen routes; admin pagination + search-mode buttons; EventStore deep links; DPO operational summary panel; identity-binding plumbing; e2e fixture auth.</li>
-            <li><strong>Known debt confirmed (4):</strong> picker FAST→Fluent 2 re-skin + full combobox ARIA is <strong>resolved in code</strong> (retire the spine debt annotations); typed-name PII residual honored; 14px secondary-text floor honored; phone-reflow behavior built and e2e-pinned (the deferred mock is moot).</li>
-          </ul>
+          <p>The 2026-08-18 update pass moved the <strong>spines</strong> to meet the code where the code was right, but the reciprocal <strong>code</strong> queue has essentially not shipped: <strong>0 of 12 queued fixes landed</strong>, 1 partial and unqueued (product-wide forced-colors / reduced-motion). Of ~72 commits since baseline, 7 touched UI folders and none changed an AdminPortal, ConsumerPortal or Picker <code>.razor</code>/<code>.css</code>/<code>.resx</code>. Every prior High persists verbatim and the spine additions of August have widened the gap. Direction unchanged — fix code; the spines need two annotations.</p>
         </div></div>
         <div class="findings-list">
           <article class="finding">
-            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Consumer surfaces /me/privacy and /me/edit are unreachable</h3><span class="finding-location">PartiesUiFrontComposerRegistration.cs:42-53</span></header>
-            <div class="finding-note">Only two nav entries registered ("Parties", "My space"); <code>MyProfilePage</code> renders no Edit link; <code>/me/privacy</code> and <code>/me/edit</code> have no inbound link anywhere. The pages exist and work, but Marc cannot reach the Flow 1/2 surfaces without typing a URL.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Fix code — nav entries for Consent/Privacy under the Consumer policy + an Edit action on My profile.</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Both portals still styled against the legacy FAST family — 63 hits / 9 files</h3><span class="finding-location">PartiesAdminPortal.razor.css · PartyGdprOperationsPanel.razor.css · CreateEditPartyPage.razor.css · MyProfilePage.razor.css · MyPrivacyPage.razor.css · MyConsentPage.razor.css · EditMyProfilePage.razor.css · ConsumerRouteShell.razor.css</span></header>
+            <div class="finding-note">Where a fallback exists it is a system colour or rem literal (theming silently lost); where none exists the declaration is invalid. Owner: code.</div>
+            <div class="finding-fix"><strong>Fix:</strong> map to <code>--colorNeutral*</code>, <code>--colorStatus*Foreground1/Background1</code>, <code>--fontSizeBase*</code> + <code>--lineHeightBase*</code> per DESIGN.</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Both portals style domain states against banned FAST V4 tokens</h3><span class="finding-location">PartiesAdminPortal.razor.css:52,68-86,102-108 + consumer CSS</span></header>
-            <div class="finding-note">Badge states, freshness colors, danger fills, and type sit on <code>--*-rest</code> / <code>--type-ramp-*</code> vars the spine says don't resolve in the V5 shell; the selected-row outline has no fallback and silently disappears. The decision log confined this debt to the picker; the portals re-introduced it at scale.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Fix code — map to <code>--colorNeutral*</code>, <code>--colorStatus*Foreground1/Background1</code> pairs, <code>--fontSizeBase*</code>, per DESIGN.</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Admin selected-row outline on <code>--accent-fill-rest</code> with no fallback — no visible selection indicator</h3><span class="finding-location">PartiesAdminPortal.razor.css:50-54, 148-152</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> <code>outline: var(--strokeWidthThick) solid var(--colorStrokeFocus2)</code>; <code>outline-color: Highlight</code> under forced-colors.</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Consumer erasure confirm is a fake modal</h3><span class="finding-location">MyPrivacyPage.razor:119-136</span></header>
-            <div class="finding-note">An inline <code>&lt;div role="dialog" aria-modal="true"&gt;</code> with no focus trap and no restore — claiming a semantics to AT the page doesn't honor. The Admin side does it correctly with <code>FluentDialog Modal="true"</code>.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Fix code — FluentDialog, or drop the false dialog semantics and present it as an inline confirm section.</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Consumer surfaces not nav-reachable</h3><span class="finding-location">PartiesUiFrontComposerRegistration.cs:42-53 · MyProfilePage.razor</span></header>
+            <div class="finding-note">Two nav entries only; no inbound link anywhere to <code>/me/edit</code> or <code>/me/privacy</code>; no Edit action on My profile.</div>
+            <div class="finding-fix"><strong>Fix:</strong> nav entries for Consent and Privacy under <code>ConsumerPolicy</code>; Edit link on My profile; align "My space" with IA "My profile".</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Admin danger fill is literal hex; host component ships a better pair than the spine</h3><span class="finding-location">PartyGdprOperationsPanel.razor.css:18-30 · GdprDestructiveButton.razor.css:11-15</span></header>
-            <div class="finding-note">Admin effective values are hand-picked hex because the primary FAST vars don't resolve; meanwhile the host's <code>GdprDestructiveButton</code> binds the matched AA pair <code>DangerBackground3</code>+<code>ForegroundInverted</code> instead of DESIGN's foreground-as-fill.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Fix the admin hex; update the spine to adopt the Background3/ForegroundInverted pair.</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Consent is not paused during erasure</h3><span class="finding-location">MyConsentPage.razor:52, 223, 436</span></header>
+            <div class="finding-note">Toggles stay live during <code>ErasurePending</code>/<code>KeyDestroyed</code>; backend rejects; row shows the generic "couldn't change this" copy the spine bans. No "paused" string exists.</div>
+            <div class="finding-fix"><strong>Fix:</strong> inject <code>IConsumerPrivacyErasureClient</code>; disable rows + paused copy when state ∉ {Active}.</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Freshness indicator collapsed to 2 states; "as of HH:MM" on no real surface</h3><span class="finding-location">DataFreshnessIndicator.razor.css:14-22 et al.</span></header>
-            <div class="finding-note">DESIGN declares fresh=Success / stale=Warning / degraded=Info; every shipped indicator maps degraded to Warning. The <code>AsOf</code> timestamp is supported by the host component but consumed only by the test specimen.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Decide — fix code to the 3-state Info mapping + as-of time, or simplify the spine to the shipped 2-state model.</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Object (Art. 21) rendered as a permanently disabled button</h3><span class="finding-location">MyConsentPage.razor:105-110 · ConsumerPortalResources.resx:372-373</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> replace with "You can object to this use — contact us and we'll review it." linked to Help &amp; contact.</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Per-area density contract never wired</h3><span class="finding-location">DESIGN §Layout &amp; Spacing vs repo-wide grep</span></header>
-            <div class="finding-note">Zero references to <code>--fc-spacing-unit</code> or any density configuration in <code>src/</code>; consumer pages hard-code their own rhythm. The 16px consumer body <em>is</em> honored.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Decide — wire the shell density per area, or rewrite DESIGN's spacing section to the shipped posture.</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Consumer erasure confirm is a fake dialog</h3><span class="finding-location">MyPrivacyPage.razor:119-135</span></header>
+            <div class="finding-note">Inline <code>&lt;div role="dialog" aria-modal="true"&gt;</code> with no trap, <code>Esc</code> or restore; Confirm is Outline + colour class.</div>
+            <div class="finding-fix"><strong>Fix:</strong> <code>FluentDialog Modal="true"</code> (pattern in <code>PartyGdprOperationsPanel.razor:30-73</code>) with a danger Confirm (after the critical rebind) and "Keep my data".</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Bespoke admin badge; compliant FluentBadge component used only by the specimen</h3><span class="finding-location">PartiesAdminPortal.razor:121-122,1605-1614</span></header>
-            <div class="finding-note">DESIGN mandates "built on FluentBadge, never a bespoke element"; the Admin portal hand-rolls a span, and the Consumer profile shows lifecycle state as plain text with no badge (spine says badge in <em>Both</em> areas).</div>
-            <div class="finding-fix"><strong>Fix:</strong> Move the shared <code>PartyStateBadge</code> to an RCL both portals reference, or annotate the spine.</div>
+            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Medium findings (14)</h3><span class="finding-location">DESIGN token drift · EXPERIENCE behavioural drift · reverse drift</span></header>
+            <div class="finding-note"><ul>
+              <li>Admin danger fill is literal hex (<code>PartyGdprOperationsPanel.razor.css:18-30</code>) — fix <em>after</em> the critical rebind, via one shared component.</li>
+              <li>Freshness two-state Warning everywhere; <code>AsOf</code> unconsumed — blocked on the Info-token decision.</li>
+              <li>Link text on <code>--accent-foreground-rest</code> (<code>MyPrivacyPage.razor.css:131-135</code>) → <code>FluentLink</code> / <code>--colorBrandForegroundLink</code>.</li>
+              <li>Bespoke admin badge; consumer plain text; shared <code>PartyStateBadge</code> specimen-only and <code>Rounded</code> not <code>Circular</code>.</li>
+              <li>Per-area density unwired — <strong>superseded by the compliance high; do not wire</strong>.</li>
+              <li>Cancel-too-late rejection hedged and not reason-specific; <code>ConsumerPrivacyErasureResult</code> has no reason field.</li>
+              <li>Verified-deletion wording absent for terminal <code>Erased</code> (see regulated high for the corrected wording).</li>
+              <li>PII-free request reference not shown; no reference field — code, or mark the row blocked-on-backend.</li>
+              <li>Restricted consumer treatment absent (banner, consent-still-editable copy, request path).</li>
+              <li>Help &amp; contact affordance does not exist; every "support path" dangles.</li>
+              <li>TenantUnavailable copy still "Tenant context is unavailable" (<code>AdminPortalLabels.cs:153,155</code>).</li>
+              <li>Style-guard roots + axe scope narrower than the Floor.</li>
+              <li>Stale auto-refresh / "announces when fresh" unconsumed.</li>
+              <li><em>Reverse drift:</em> product-wide forced-colors/reduced-motion now exists (<code>MainLayout.razor.css:8-32</code>); spine still says "today only the picker honors them" — <strong>spine</strong> annotation.</li>
+            </ul></div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">TenantUnavailable copy is operator jargon, not the mandated warming-up copy</h3><span class="finding-location">AdminPortalLabels.cs:153</span></header>
-            <div class="finding-note">"Tenant context is unavailable" vs the spine's "Your workspace is still warming up — try again shortly."</div>
-            <div class="finding-fix"><strong>Fix:</strong> Fix copy (or update the spine if the terse Admin register is deliberate).</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Object (Art. 21) button rendered permanently disabled</h3><span class="finding-location">MyConsentPage.razor:107-110</span></header>
-            <div class="finding-note"><code>Disabled="true"</code> with no handler — a control that can never be activated, against the spine's own no-dead-controls honesty stance. See the regulated-language HIGH for the backend-gap root cause.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Decide — build the objection flow, or replace the dead button with copy + a support path.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">The a11y gates pin a narrower floor than the spine claims</h3><span class="finding-location">AccessibilityStyleGuardTests.cs:9-12 · parties-accessibility.spec.ts:5</span></header>
-            <div class="finding-note">The style guard scans only <code>Hexalith.Parties.UI/Components</code> (never the portal CSS where the hex lives); axe runs only against the synthetic specimen route, never <code>/admin/parties*</code> or <code>/me*</code>. The MainLayout shell floor and many behavioral e2e specs are faithful.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Extend the style-guard roots to all four UI projects; add axe passes on real routes.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Badge shape Rounded vs the spine's pill; two implementations disagree</h3><span class="finding-location">PartyStateBadge.razor:5</span></header>
-            <div class="finding-fix"><strong>Fix:</strong> <code>BadgeShape.Circular</code>.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Erase trigger is Outline, not the flow's danger fill</h3><span class="finding-location">PartyGdprOperationsPanel.razor:78-82</span></header>
-            <div class="finding-fix"><strong>Fix:</strong> Decide — outline trigger + filled confirm is arguably safer; bless it in the spine or fill the trigger.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Consumer erasure request has no typed confirm; spine text ambiguous</h3><span class="finding-location">MyPrivacyPage.razor:117-136</span></header>
-            <div class="finding-note">Code + docs read the consumer <em>request</em> as reversible-until-begins (it is cancellable).</div>
-            <div class="finding-fix"><strong>Fix:</strong> Update the spine to state the consumer request is the reversible pattern (or mandate typed confirm there too).</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">"Toast" vs shipped inline status regions</h3><span class="finding-location">EXPERIENCE §Component Patterns vs portals</span></header>
-            <div class="finding-note">The politeness/no-focus-steal contract is fully honored; only the delivery vehicle differs (no toasts at all).</div>
-            <div class="finding-fix"><strong>Fix:</strong> Update spine wording to "status region".</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Sign-in is delegated to the OIDC provider's hosted page</h3><span class="finding-location">Routes.razor:15-18</span></header>
-            <div class="finding-note">Role routing after sign-in matches the spine exactly.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Update spine (external IdP page is the intended architecture) — dovetails with the a11y 3.3.8 finding.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Export prepared synchronously, not as an async job</h3><span class="finding-location">MyPrivacyPage.razor:378-458</span></header>
-            <div class="finding-note">User-visible copy and JSON format match the spine verbatim; only the job mechanics are simplified. No user-visible contract broken.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Update spine or leave.</div>
+            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Low findings (8)</h3><span class="finding-location">various</span></header>
+            <div class="finding-note"><code>FluentSkeleton</code>/<code>FluentMessageBar</code> inventoried, zero uses · picker focus ring on <code>--hx-picker-accent</code> with foreign <code>#0067b8</code> fallback · no <code>scroll-margin-top</code> anywhere · consent Empty copy unreachable (purposes hard-coded) · skip links "first tab stops" over-promises after route focus · picker Component Pattern otherwise met · no shell version recorded in the spine (code pins 4.4.0) · still unspecified: admin pagination/search modes, EventStore-admin links, DPO summary panel, <code>/admin</code> redirect, "No area assigned" landing, specimen routes.</div>
           </article>
         </div>
       </details>
     </section>
 
+    <!-- Reviewer: accessibility -->
     <section class="reviewer-section">
-      <details>
+      <details open>
         <summary><h2>Accessibility review (WCAG 2.2 AA)</h2><span class="reviewer-source">review-accessibility.md</span></summary>
         <div class="dim-body"><div class="dim-judgment">
-          <p>The June criticals were genuinely fixed in the spine text — all six resolutions are findable, specific, and correctly worded; this remains one of the more accessibility-literate spine pairs reviewed. Two things keep it from a clean bill: the mock repoint was incomplete (sign-in link text, restricted badge tint), and the claimed WCAG <strong>2.2</strong> AA floor is silent on new-in-2.2 criteria the product triggers — most importantly 3.3.8 on the sign-in that gates every legal right. Contrast figures computed exactly (brand-fill 5.39:1 confirmed AA); 2.5.7 and 3.3.7 verified not triggered.</p>
+          <p>All 16 prior findings landed in spine text (14 fully; 2 resolved-in-spine but persisting in mocks/picker code or untestable as written). The pair now reads as a genuinely 2.2-aware contract, but the token layer under DESIGN is not as safe as its prose claims: the GDPR destructive pair fails badly in both themes and is shipped (critical, in §2 above), the Info status token does not exist in Fluent 2, and the <code>brand-fill</code> premise has never been read back from the running theme. Behaviourally, the one contract-level gap is that live regions are not required to be mounted before they change — the exact pattern the shipped <code>StatusLiveRegion</code> uses.</p>
         </div></div>
         <div class="findings-list">
           <article class="finding">
-            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">1.4.3 — Sign-in mock still paints link text in the raw accent</h3><span class="finding-location">mockups/signin.html .alt a</span></header>
-            <div class="finding-note">"Use your organization account" renders in <code>#0097A7</code> on white = 3.51:1, on the one surface every user must pass — the exact failure mode the June critical fixed, surviving in the mock the fix claimed to have repointed.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Repoint <code>.alt a</code> to <code>--brand-fill</code> (5.39:1); add "links are text — never raw accent" to the DESIGN.md Don't column.</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Live regions must exist before their content changes — spine silent, shipped primitive does the opposite</h3><span class="finding-location">EXPERIENCE L115, L177–181 · StatusLiveRegion.razor L12–15 · SC 4.1.3</span></header>
+            <div class="finding-note">The region and its first message are inserted together; most AT/browser pairs do not reliably announce polite content that arrives with the node. "Saved — updating…", "Preparing your export…", consent "Saving…" are the messages most likely to go unheard; the politeness split is meaningless if polite regions are mute.</div>
+            <div class="finding-fix"><strong>Fix:</strong> Floor rule — regions mount empty at render, only text changes, never conditionally rendered; bUnit test asserts the empty mount.</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">3.3.8 Accessible Authentication unaddressed on a claimed WCAG 2.2 AA floor</h3><span class="finding-location">EXPERIENCE §IA (Sign in), §Accessibility Floor</span></header>
-            <div class="finding-note">Nothing guarantees paste/password-manager support, <code>autocomplete</code> tokens, or bans a cognitive-function test. A consumer who cannot clear sign-in can exercise <em>no</em> GDPR right.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Add to §Accessibility Floor: no paste/autofill blocking, <code>autocomplete</code> tokens, a non-cognitive-test path; if delegated to the IdP, say so and make 3.3.8 a requirement on its configuration.</div>
+            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Medium findings (14)</h3><span class="finding-location">contrast · focus · live regions · forms · targets · forced-colors · content · mockups</span></header>
+            <div class="finding-note"><ul>
+              <li>Dark-mode gate names no method/tool/owner; computed dark Danger <code>Fg1/Bg1</code> = 4.65:1 (thin) → "computed pairs" table + axe <code>colorScheme:'dark'</code>.</li>
+              <li>Dialog initial focus unspecified; must never be the destructive Confirm (2.4.3, 3.3.4).</li>
+              <li>"Ring never suppressed" enforced on one of four roots; admin outline sits on a non-resolving token (2.4.7).</li>
+              <li>Three polite regions describe one transition (status region + freshness + banner) → one-voice rule per view (4.1.3).</li>
+              <li>Rejection reasons not mandated human/localized/field-scoped; consumer gets no reason (3.3.1, 3.3.3).</li>
+              <li>Typed-name confirm has no matching rules (<code>Ordinal</code>); trim + case-insensitive + NFKC; show expected string; paste allowed (3.3.4).</li>
+              <li>3.3.8 placed correctly but has no verification artifact → deployment-checklist line item.</li>
+              <li>Consent switch target under-specified; mock label unassociated (22 px) → label is the switch's <code>&lt;label&gt;</code>, row ≥44 px touch (2.5.8).</li>
+              <li>2.5.8 not gated: axe tags lack <code>wcag22aa</code>.</li>
+              <li>Selection indicators die in forced-colors in mocks + picker CSS (1.4.1, 1.4.11).</li>
+              <li>Document titles unspecified and unimplemented — no <code>PageTitle</code> (2.4.2).</li>
+              <li>Language of page unspecified; <code>App.razor</code> hard-codes <code>lang="en"</code> while the product is localized (3.1.1).</li>
+              <li><code>signin.html</code> renders an app-owned email/password card the spine says the IdP owns (3.3.8).</li>
+              <li>Form labels unassociated in <code>create-edit-party.html</code> and <code>consumer-profile.html</code> (1.3.1, 3.3.2).</li>
+            </ul></div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">1.4.3 — Restricted badge mock hand-mixes the forbidden 4.44:1 tint</h3><span class="finding-location">mockups/admin-parties.html .b-restricted</span></header>
-            <div class="finding-note">DESIGN correctly mandates matched token pairs and names this exact hand-mix as the anti-pattern — but the mock was never updated, so the reference rendering <em>is</em> the anti-pattern.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Repoint the mock badge tints to the Fluent pair values, or annotate as illustrative.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">2.4.11 Focus Not Obscured — not covered anywhere</h3><span class="finding-location">EXPERIENCE §Interaction Primitives</span></header>
-            <div class="finding-note">Sticky grid header, injected toasts/banners, fixed 48px app header — nothing stops a focused row scrolling under the sticky header or a banner landing over the focused control.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Mandate <code>scroll-margin-top</code> on focusable grid items; banners never overlay the focused element.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">4.1.3 — Picker async states and the export-ready moment have no announcement path</h3><span class="finding-location">EXPERIENCE §Component Patterns, Flow 1</span></header>
-            <div class="finding-note">Picker result-state transitions are a quiet visual note only; a blind consumer waiting on their Art. 20 export hears nothing when the download appears.</div>
-            <div class="finding-fix"><strong>Fix:</strong> <code>role=status</code> region inside the picker; polite announcement + focusable "Download your export" control on ready.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">1.4.1/1.4.11 — Forced-colors strips every selected/active indicator</h3><span class="finding-location">mock nav/grid/segment/listbox selected states</span></header>
-            <div class="finding-note">Selection affordances are background tint + inset box-shadow — both removed in Windows High Contrast, leaving selected nav, row, radio, and active option indistinguishable.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Specify a forced-colors-surviving indicator (transparent-until-forced border/outline) + <code>aria-current</code>/<code>aria-selected</code>.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">2.4.3 — Tablet/phone detail sheet has no focus contract in spine text</h3><span class="finding-location">EXPERIENCE §Responsive &amp; Platform</span></header>
-            <div class="finding-note">Trap/restore is specified for <em>dialogs</em> only; the sheet's open-focus, <code>Esc</code>, and restore-to-row are unstated. (The behavior is now built and e2e-pinned — spec it to match.)</div>
-            <div class="finding-fix"><strong>Fix:</strong> Extend the Focus management bullet: sheet behaves as dialog on tablet, as page on phone; <code>Esc</code> closes any FluentDialog.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">1.4.3/1.4.11 — Dark-mode contrast asserted, never gated</h3><span class="finding-location">DESIGN §Colors</span></header>
-            <div class="finding-note">AA is verified for light mode only; dark mode relies on Fluent deriving tints from the custom accent seed — not automatically AA, and no dark target is stated.</div>
-            <div class="finding-fix"><strong>Fix:</strong> One line: dark-theme brand fill + four status pairs verified ≥4.5:1 as an acceptance check; pin the dark fill if the derived one misses.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">3.2.6 Consistent Help — no help surface exists at all</h3><span class="finding-location">EXPERIENCE §IA, §State Patterns (Load failure)</span></header>
-            <div class="finding-note">The Load-failure row promises a "support path" but no Help/Contact surface exists anywhere — a GDPR Art. 12 facilitation concern as much as a 3.2.6 one.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Persistent, consistently-placed help/contact affordance in both areas; point the support path at it.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Validation-rejected mock lacks the mandated semantics</h3><span class="finding-location">mockups/create-edit-party.html</span></header>
-            <div class="finding-note">No <code>role=alert</code>, no <code>aria-describedby</code> ties, no <code>aria-invalid</code> — while §State Patterns requires exactly these.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Wire or annotate the mock.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Picker clear control is an aria-hidden interactive span</h3><span class="finding-location">mockups/create-edit-party.html .combo .clear</span></header>
-            <div class="finding-fix"><strong>Fix:</strong> Spec a real <code>&lt;button aria-label="Clear selection"&gt;</code> in the picker row.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Picker mock suppresses the focus outline</h3><span class="finding-location">mockups/create-edit-party.html .combo input</span></header>
-            <div class="finding-fix"><strong>Fix:</strong> Explicit <code>--colorStrokeFocus2</code> ring styled inside the shadow root (ride the re-skin debt item).</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Consent purpose/basis aria-describedby mandated but never demonstrated</h3><span class="finding-location">mockups/consumer-privacy.html</span></header>
-            <div class="finding-fix"><strong>Fix:</strong> Tie state + basis sub-text via <code>aria-describedby</code>; update On/Off wording with <code>aria-checked</code> in the same commit.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Freshness indicator in mocks is not itself a live region</h3><span class="finding-location">3 mockups (.fresh / .freshbar)</span></header>
-            <div class="finding-fix"><strong>Fix:</strong> Add <code>role="status"</code> to the indicator's text node or annotate.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Consumer-side typed confirmation underspecified (cognitive burden)</h3><span class="finding-location">EXPERIENCE §Component Patterns</span></header>
-            <div class="finding-note">What a consumer must type for "Delete my data" is never stated; transcription is a real barrier for the anxious, phone-first user the spine itself describes.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Specify it; allow a lighter-but-safe equivalent (type DELETE, or explicit two-step) — keep the friction, drop the transcription.</div>
-          </article>
-          <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Listbox options lack per-option ids in the mock</h3><span class="finding-location">mockups/create-edit-party.html</span></header>
-            <div class="finding-fix"><strong>Fix:</strong> Give every <code>role="option"</code> an <code>id</code>.</div>
+            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Low findings (15)</h3><span class="finding-location">various</span></header>
+            <div class="finding-note">Mock input borders mislead on 1.4.11 · focus destination when the focused row disappears · shell keyboard claims asserted not contracted · grid type-ahead 2.1.4 scope · picker announcements debounce + noun phrasing · auto-refresh announces on change only · Validation row lacks <code>aria-invalid</code> + alert-links-to-fields · picker clear "✕" under 24 px in mock · reduced-motion inventory empty (shimmer, switch, drawer, scroll) · heading hierarchy unstated, mocks skip levels · "as of HH:MM" unqualified by zone/locale · decorative glyphs unhidden in mocks · Help &amp; contact in no mock · <code>admin-parties.html</code> interactive divs, Confirm enabled before typing, two <code>role=status</code> for one read · <code>consumer-privacy.html</code> State B lacks request reference; <code>consumer-profile.html</code> nav <code>&lt;button&gt;</code>.</div>
           </article>
         </div>
       </details>
     </section>
 
+    <!-- Reviewer: regulated language -->
     <section class="reviewer-section">
-      <details>
+      <details open>
         <summary><h2>Regulated language review (GDPR)</h2><span class="reviewer-source">review-regulated-language.md</span></summary>
         <div class="dim-body"><div class="dim-judgment">
-          <p>Every June regulated-language resolution genuinely landed in the spine text and the mocks (12/12 verified) — and the copy is remarkably backend-aligned: the <code>CancelPartyErasure</code> guard's own rejection message is the spine's cancel-window sentence in the imperative. The remaining exposure has shifted from dishonest promises to <strong>under-specified rights</strong>: the Object affordance references a right the backend has no command for, restriction is invisible to the data subject, and two erasure-time edge behaviors are unspecced.</p>
+          <p>All eight prior findings landed (7 resolved, 1 superseded). The consumer register is plain, default-Off, and free of dark patterns. The remaining exposure is <strong>over-promise and under-statement at the edges of the rights</strong> — none is a copy typo; each needs one spine row plus a backend/PRD decision.</p>
         </div></div>
         <div class="findings-list">
           <article class="finding">
-            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">"Object to this use" (Art. 21) promises a right the backend does not deliver</h3><span class="finding-location">EXPERIENCE §Voice and Tone, §Component Patterns, Flow 1 · Contracts/Commands</span></header>
-            <div class="finding-note">No Object/objection command, event, or workflow exists (24 commands verified, none Art. 21); no client method exists. The copy also implies pressing it stops the use, but Art. 21(1) objection can be refused on compelling-legitimate-grounds — the outcome is an <em>assessment</em>, not a toggle. Ships today as a permanently disabled button.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Either spec Object as a request-raising flow with honest review copy + add the backend command/DPO queue, or replace the button with a plainly-worded contact path and mark the spine row blocked-on-backend.</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">"We've deleted your data and verified it's gone" over-promises against Art. 17(3) retention</h3><span class="finding-location">EXPERIENCE §State Patterns erasure row (b), Flow 5 step 5 · consumer-privacy.html State B · Art. 17(3)(b), 30, 12(1)</span></header>
+            <div class="finding-note">The codebase has a <code>LegalObligation</code> basis and "Legal records"; <code>PrivacyProcessingErasedMessage</code> admits "bounded processing records may remain"; the event store retains ciphertext and rejection events.</div>
+            <div class="finding-fix"><strong>Fix:</strong> "We've deleted your personal data and verified it's gone. We keep only what the law makes us keep — {legal records category} — and a record that this deletion happened."; per-datum "Kept — legal requirement" shown <em>before</em> Confirm; backend exposes retained categories.</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Consent behavior during erasure is unspecced; the generic retry copy would be dishonest there</h3><span class="finding-location">EXPERIENCE §State Patterns, Flow 2</span></header>
-            <div class="finding-note">The backend rejects consent commands during erasure; Flow 2's failure copy ("please try again") invites a retry that can never succeed. The mock sidesteps it by omitting the consent card — a choice the spine never ratifies.</div>
-            <div class="finding-fix"><strong>Fix:</strong> In the erasure-in-progress row: consent toggles disabled with "Consent changes are paused while your data is being deleted"; surface the erasure-specific rejection reason, never the generic retry line.</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Admin <em>Lift restriction</em> has no inform-the-subject step</h3><span class="finding-location">EXPERIENCE §State Patterns Restricted row · AdminPortalLabels.cs:260-263 · Art. 18(3)</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> "Before lifting, the person must be told. Confirm you have informed them." with a required attestation checkbox; <code>LiftRestriction</code> carries <code>SubjectInformedAt</code>/channel (architecture).</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Restriction (Art. 18) is invisible to the data subject</h3><span class="finding-location">EXPERIENCE §IA, §State Patterns</span></header>
-            <div class="finding-note">Admin-only fulfillment is defensible; total invisibility is not (Art. 12 transparency, Art. 18(3) notice). The subtle guard — consent edits stay <em>allowed</em> while restricted — is unspecced, so a developer could "helpfully" disable the toggles and break it.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Consumer-facing restricted treatment ("…you can still change your consent choices"), a request path on the privacy surface, and a Component Patterns pin that consent toggles remain enabled while restricted.</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">The realistic completion-confirmation path routes an erased self to <code>/no-party-binding</code></h3><span class="finding-location">EXPERIENCE §State Patterns "No party binding", "Erased / Gone"; Flow 5 step 5 · Art. 12(1), 17</span></header>
+            <div class="finding-note">Deletion outlives any session; on re-sign-in the claim does not resolve and the spine shows "Your account isn't linked to a data record yet — contact us and we'll fix it" — bug-shaped copy that contradicts the deletion and invites re-binding. PRD <code>FR-Consumer-1</code> already requires a tombstone.</div>
+            <div class="finding-fix"><strong>Fix:</strong> extend "Erased / Gone" to Consumer — "Your data was deleted on {date}. Reference {ref}. Nothing else is held."; backend distinguishes claim→erased from claim→none (tombstone by hashed claim); reword Flow 5 step 5.</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">The erasure confirmation promise has no specced delivery channel or artifact</h3><span class="finding-location">EXPERIENCE §Voice and Tone · consumer-privacy.html State B</span></header>
-            <div class="finding-note">"We'll confirm when it's done" — to a person whose contact data is being crypto-shredded and whose claim binding will cease to resolve. Priya gets Flow 3's verification climax; Marc gets an unbacked promise.</div>
-            <div class="finding-fix"><strong>Fix:</strong> PII-free request reference at request time; status page confirms while the session lasts; word completion as verified deletion without exposing certificate internals.</div>
+            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Medium findings (10)</h3><span class="finding-location">rights · consent · erasure · transparency · admin</span></header>
+            <div class="finding-note"><ul>
+              <li>No Art. 12(3) response deadline on any "contact us" rights path → "We'll reply within a month…".</li>
+              <li>Retention period/criteria absent from "Things we keep" (Art. 13(2)(a), 15(1)(d)).</li>
+              <li>No surface names controller, DPO, or links the privacy notice (Art. 13(1)).</li>
+              <li>Per-row purpose description not mandated on consent rows; code already has it, spine and mock are behind.</li>
+              <li>"Cancel until deletion begins" never says when → decide the grace period; state it.</li>
+              <li>Consumer request reference and Admin <code>#SR-4471</code> not tied to one PII-free format.</li>
+              <li>Stale/degraded reads not framed for an Art. 15/20 response → export carries freshness; disable Export when <code>Degraded</code>.</li>
+              <li>Export scope, download validity, file retention unstated (Art. 20(1)).</li>
+              <li>Restriction reason is free text — special-category leak into immutable events → bounded picklist of the four grounds (Art. 18(1), 9).</li>
+              <li>Admin-recorded consent has no evidence-of-consent capture (Art. 7(1)).</li>
+            </ul></div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Consent Off-state sub-label in the mock drifts into loss-framing</h3><span class="finding-location">mockups/consumer-privacy.html State A</span></header>
-            <div class="finding-note">"no offers unless you turn this on" teases the benefit of opting in — the asymmetric nudge the spine's anti-pattern section bans.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Align every Off sub-label with the spine's neutral wording.</div>
+            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Low findings (12)</h3><span class="finding-location">various</span></header>
+            <div class="finding-note">Art. 19 recipient notification unaddressed (PRD) · Object sentence as 13 px sub-line vs Art. 21(4) · Art. 22 neither claimed nor excluded · consent rejection copy drifts spine/code · consumer stale mock lacks "as of" · export copy two variants · admin erase body "across all records" over-promises · TenantUnavailable mock body "your access is fine" · <code>#SR-</code> reference must never encode the ground · "Your data is safe" is an implied security guarantee → "Nothing about your data has changed — try again." · DESIGN lacks a symmetry rule for consent/erasure control pairs · verbatim-parity inventory recorded for <code>bmad-build</code> (two items not yet queued: hedged <code>PrivacyErasureRejectedMessage</code>; <code>ConsentObjectAction</code>).</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <!-- Reviewer: Hexalith UX compliance -->
+    <section class="reviewer-section">
+      <details open>
+        <summary><h2>Hexalith UX compliance review (FrontComposer + Fluent UI Blazor V5)</h2><span class="reviewer-source">review-hexalith-ux-compliance.md</span></summary>
+        <div class="dim-body"><div class="dim-judgment">
+          <p>Posture is right — delta only, Fluent 2 tokens by name, a real V5 inventory, shell behaviours mostly verified in FrontComposer source — but the spines fail to transmit three hard rules (full legacy-token family ban, <code>FluentAccordion</code> page-sections rule, enforceable conformance guard with a shrinking allowlist) and mandate one behaviour FrontComposer does not expose (per-area density). Several domain components are specified by ARIA outcome + token colours instead of V5 component + parameters, pushing devs toward forbidden CSS — drift already visible in the shipped portals.</p>
+        </div></div>
+        <div class="findings-list">
+          <article class="finding">
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">Per-area density is specified as shell behaviour FrontComposer does not expose</h3><span class="finding-location">DESIGN §Layout &amp; Spacing + frontmatter spacing.density-* · EXPERIENCE Foundation L27–28 · DensityPrecedence.cs · FcDensityApplier</span></header>
+            <div class="finding-note">Density is one global posture (viewport → user preference → <code>FcShellOptions.DefaultDensity</code> → factory <strong>Compact</strong>), applied once on <code>&lt;body data-fc-density&gt;</code>. The only per-element hook is a locked <code>data-fc-density</code> that silently overrides the user's Ctrl+, choice — against the spine's own ethic. The memlog has queued the code fix; the violation is about to be built.</div>
+            <div class="finding-fix"><strong>Fix:</strong> density is user-owned via the shell; set <code>DefaultDensity = Comfortable</code>; drop "Consumer roomy" or file a FrontComposer request for an area-scoped <code>DensitySurface</code>; Don't row "never set <code>--fc-spacing-unit</code> or <code>data-fc-density</code> in module code"; withdraw the queued fix.</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">"erase" leaks into consumer copy against the plain-verbs rule</h3><span class="finding-location">mockups/consumer-profile.html</span></header>
-            <div class="finding-fix"><strong>Fix:</strong> "…export or delete it."</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">FAST ban transmitted too narrowly (<code>--*-rest</code> only)</h3><span class="finding-location">DESIGN §Do's and Don'ts L235</span></header>
+            <div class="finding-note">The rule bans the families <code>--type-ramp-*</code>, <code>--neutral-*</code>, <code>--accent-*</code>, <code>--neutral-fill-*</code>, <code>--palette-*</code>; shipped <code>--type-ramp-*-font-size</code> and <code>--neutral-foreground-hint</code> pass a <code>--*-rest</code> reading.</div>
+            <div class="finding-fix"><strong>Fix:</strong> quote the families verbatim; mandate FrontComposer's <code>LegacyFluentToken</code> + <code>LegacyErrorToken</code> regexes as the guard.</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">The cancel-too-late race has no specced copy</h3><span class="finding-location">EXPERIENCE §State Patterns</span></header>
-            <div class="finding-note">On a stale read, "Cancel deletion" can be shown after the window closed; the backend's rejection string is already plain-language and honest.</div>
-            <div class="finding-fix"><strong>Fix:</strong> Add the rejection string to the erasure state row as the specified inline reason.</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title">No conformance guard mandated; the existing one scans one of four UI roots</h3><span class="finding-location">DESIGN §Do's and Don'ts · AccessibilityStyleGuardTests.cs:11-14</span></header>
+            <div class="finding-fix"><strong>Fix:</strong> DESIGN "Enforcement" paragraph mandating a Fluent-conformance test across all four UI projects mirroring FrontComposer's <code>FluentConformanceTests</code>, seeded with the eight current offenders as a shrinking allowlist; <code>wcag22aa</code> axe tag; axe on real routes.</div>
           </article>
           <article class="finding">
-            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">No spine acknowledgement of the README KMS launch gate</h3><span class="finding-location">EXPERIENCE §Foundation</span></header>
-            <div class="finding-note">The Consumer portal invites data subjects to submit personal data; nothing prevents it going live under the no-regulated-data-until-production-KMS caveat.</div>
-            <div class="finding-fix"><strong>Fix:</strong> One Foundation/rollout note: consumer surfaces launch to real data subjects only once the production-KMS prerequisite is met.</div>
+            <header><span class="badge badge-sev-high">high</span><h3 class="finding-title"><code>FluentAccordion</code> page-sections rule absent from both spines and from code</h3><span class="finding-location">DESIGN §Components · EXPERIENCE §IA / §Component Patterns</span></header>
+            <div class="finding-note">Qualifying surfaces: Admin GDPR operations (five sections), Party detail (Details + GDPR), Consumer "My data &amp; privacy". Mocks build <code>&lt;section&gt;&lt;h4&gt;</code> stacks.</div>
+            <div class="finding-fix"><strong>Fix:</strong> add the rule verbatim with a per-surface map (in / outside / default-expanded); note V5 uses <code>Header=</code> (v4 <code>Heading=</code> is silently dropped).</div>
+          </article>
+          <article class="finding">
+            <header><span class="badge badge-sev-medium">medium</span><h3 class="finding-title">Medium findings (7)</h3><span class="finding-location">inheritance · forbidden practices · component mapping · shell contract · mockups</span></header>
+            <div class="finding-note"><ul>
+              <li><code>typography.body-consumer</code> declares a literal 16px / 1.5 ramp with no allowed mechanism (1.5 ≠ <code>--lineHeightBase400</code>) → <code>FluentText Size="TextSize.Size400"</code>.</li>
+              <li>Freshness indicator specified as a hand-rolled "dot + label" → <code>FluentBadge Tint/Circular</code> + <code>BadgeColor</code>, or <code>FluentIcon</code> + <code>FluentText</code>.</li>
+              <li><code>&lt;hexalith-party-picker&gt;</code> blessed as-is with no written carve-out vs <code>FluentAutocomplete</code>/<code>FluentCombobox</code>.</li>
+              <li>"Bind link text to brand-fill" reads as CSS <code>color:</code> on <code>&lt;a&gt;</code> → <code>FluentLink</code>.</li>
+              <li>Party-state badge bound to <code>--colorStatus*Foreground1</code> tokens instead of <code>BadgeColor</code> parameters (V5 enum is <code>BadgeAppearance.Tint</code>).</li>
+              <li>State Patterns re-specifies routing the shell implements (<code>FcAggregateDetailPage</code>, <code>FcProjectionLoadingSkeleton</code>, <code>FcProjectionEmptyPlaceholder</code>, <code>FcPageLayout Mode=Constrained</code>) → map rows to shell primitives.</li>
+              <li>Neither spine states the <strong>no-port</strong> rule for mocks; mock headers invite porting (<code>.b-*</code> tints, <code>.dot</code>, <code>.sw</code>, <code>.dialog</code>, <code>.toast</code>, <code>220px</code> nav) → caption every mock; one line in DESIGN Components.</li>
+            </ul></div>
+          </article>
+          <article class="finding">
+            <header><span class="badge badge-sev-low">low</span><h3 class="finding-title">Low findings (9)</h3><span class="finding-location">various</span></header>
+            <div class="finding-note">Nav width "220px / 48px" restated; shell rail is 72 / 48 · <code>rounded.*</code> px literals; <code>full</code> 9999 vs 10000 · V4 theme vocabulary (<code>baseLayerLuminance</code>, <code>IThemeService</code>); the shell owns the theme call · focus ring re-drawn for Fluent components too · danger fill not labelled "allowed fallback"; hover/pressed tokens omitted · behavioural rows lack a "V5 component" column · status region: state <code>FluentMessageBar Intent</code>/<code>AriaLive</code> mapping · <code>PreventDismissOnEscape</code> must stay false for the erase dialog · existing guard asserts the ring recreation; narrow it with the spine.</div>
           </article>
         </div>
       </details>
     </section>
 
     <div class="mechanical">
-      <h3>Mechanical notes</h3>
+      <h3>Cross-lens clusters</h3>
       <ul>
-        <li>Name inconsistencies: "Data-freshness indicator" (DESIGN) ↔ "Freshness indicator" (EXPERIENCE); "GDPR destructive button" ↔ "GDPR action button". Token keys are consistent.</li>
-        <li><code>freshness.stale</code> (EXPERIENCE §State Patterns) is not a resolvable DESIGN token path — should be <code>components.freshness-indicator.stale</code>. All 26 <code>{…}</code> references inside DESIGN.md resolve; all 9 mockup links point at files that exist.</li>
-        <li>Frontmatter complete on both spines; <code>sources</code> resolves — but spine <code>updated: 2026-06-09</code> trails the source's <code>Last Updated: 2026-06-21</code> (the pair's only structural exposure).</li>
-        <li>Component inventory gaps: <code>FluentDialog</code>, toast, skeleton, and a switch for the consent control absent from DESIGN's as-is list.</li>
-        <li>Mock parity spot-check: all 5 mocks define <code>--brand-fill:#00767f</code> (decision-log resolution #1 verified on disk) — but <code>signin.html</code> link text and the restricted badge tint were missed by the June repoint.</li>
-        <li>Picker FAST→Fluent 2 re-skin debt is resolved in code — both spines' "design debt" annotations can be retired.</li>
-        <li>No Mermaid used in either spine — nothing to validate.</li>
+        <li><strong>Freshness contract</strong> — rubric high + accessibility high (Info token) + drift medium. Decide the Info colour, split the row, then the code fix.</li>
+        <li><strong>GDPR destructive pair</strong> — accessibility critical + drift medium + compliance low. Rebind foreground to <code>--colorNeutralForegroundOnBrand</code>, then one shared component.</li>
+        <li><strong>Density</strong> — compliance high vs drift medium. Spine/platform decision; pause the queued code fix.</li>
+        <li><strong>Erased self</strong> — regulated high + rubric low/medium. One "Erased / Gone — Consumer" row + backend tombstone decision.</li>
+        <li><strong>Enforcement</strong> — compliance high + drift medium + accessibility medium ×2. One conformance test mirroring FrontComposer's.</li>
+        <li><strong>Sign-in mock</strong> — rubric low + accessibility medium. Re-caption or replace the credential card.</li>
+        <li><strong>Export copy</strong> — rubric medium + regulated low. One string.</li>
+      </ul>
+      <h3 style="margin-top:16px">Queued code fixes (2026-08-18) — status</h3>
+      <table>
+        <tr><th>Fix</th><th>Status</th></tr>
+        <tr><td>Consumer nav reachability</td><td>not landed</td></tr>
+        <tr><td>Portals off FAST tokens onto Fluent 2</td><td>not landed</td></tr>
+        <tr><td>Consumer erasure confirm as real <code>FluentDialog</code></td><td>not landed</td></tr>
+        <tr><td>Admin danger-fill hex → token pair</td><td>not landed — <strong>target pair is wrong (critical)</strong></td></tr>
+        <tr><td>Freshness 3-state + as-of on real surfaces</td><td>not landed — <strong>blocked on Info-token decision</strong></td></tr>
+        <tr><td><code>--fc-spacing-unit</code> density per area</td><td>not landed — <strong>withdraw (compliance high)</strong></td></tr>
+        <tr><td>Shared <code>PartyStateBadge</code> in both portals</td><td>not landed</td></tr>
+        <tr><td>TenantUnavailable warming copy</td><td>not landed</td></tr>
+        <tr><td>Remove dead Object button, add contact path</td><td>not landed</td></tr>
+        <tr><td>Style-guard roots → all four UI projects + axe on real routes</td><td>not landed (roots unchanged)</td></tr>
+        <tr><td>Stale auto-refresh via SignalR</td><td>not landed</td></tr>
+        <tr><td><em>(unqueued)</em> product-wide forced-colors + reduced-motion</td><td>landed — spine needs the annotation</td></tr>
+      </table>
+      <h3 style="margin-top:16px">Mechanical notes</h3>
+      <ul>
+        <li>All 32 DESIGN and 1 EXPERIENCE <code>{…}</code> token references resolve; no Mermaid in either spine; frontmatter complete on both. <code>sources</code> resolves but omits the PRD and epics.</li>
+        <li>Name drift across the chain only: spine "Freshness indicator" ↔ frozen <code>UX-DR5</code> "Data-freshness indicator"; "GDPR destructive button" (DESIGN) / "GDPR action button" (EXPERIENCE, explicitly paired) ↔ <code>UX-DR6</code>.</li>
+        <li>Spine-vs-spine contradictions: erase trigger appearance (Flow 3 vs tables); typed-confirm scope (Primitives/Inspiration vs Component Patterns/Flow 5); freshness stale vs degraded (State Patterns/Voice vs DESIGN/Component Patterns); export copy (Voice vs Flow 1).</li>
+        <li>Token sweep in code: 63 FAST-family hits across 9 AdminPortal/ConsumerPortal files; Picker and UI host clean. Zero hits for <code>fc-spacing-unit</code>, <code>scroll-margin</code>, <code>FluentSkeleton</code>, <code>FluentMessageBar</code>, <code>FluentAccordion</code>, "paused", "warming".</li>
+        <li>Prior-finding disposition: rubric 12 resolved / 1 superseded; drift 3 Highs + 7 mediums persist, 5 lows superseded; accessibility 14 resolved / 2 partial; regulated 7 resolved / 1 superseded.</li>
+        <li>Unverified by reviewers (flagged, not asserted): <code>FluentButton.BackgroundColor/Color</code> accepting token strings; <code>FluentMessageBar</code> rendered <code>role</code>; V5 emitting every <code>--colorStatus*Background3Hover/Pressed</code>; packaged shell 4.4.0 nav width vs submodule HEAD.</li>
       </ul>
     </div>
 
     <footer class="report-footer">
       <div class="meta">
-        <span>Rubric: review-rubric.md</span>
-        <span>Reviewers: review-implementation-drift.md · review-accessibility.md · review-regulated-language.md</span>
-        <span>Generated: 2026-08-18T20:26:57+02:00</span>
+        <span>Rubric: .agents/skills/bmad-ux/references/validate.md</span>
+        <span>Reviewers: review-rubric.md · review-implementation-drift.md · review-accessibility.md · review-regulated-language.md · review-hexalith-ux-compliance.md</span>
+        <span>Generated: 2026-09-08T14:48:17+02:00</span>
       </div>
     </footer>
   </div>

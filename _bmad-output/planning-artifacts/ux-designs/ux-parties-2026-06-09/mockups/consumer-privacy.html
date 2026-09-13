@@ -71,6 +71,7 @@ body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);
 </style>
 </head>
 <body>
+<p style="margin:8px 12px;padding:6px 10px;border:1px dashed #616161;font:12px/1.4 Segoe UI,sans-serif;color:#424242;max-width:60rem"><strong>Illustrative only — do not port.</strong> This mock hand-codes hex values, rem sizes, <code>.dot</code>/<code>.sw</code>/<code>.dialog</code>/<code>.toast</code>/<code>.b-*</code> classes and a fixed nav width to stand in for Fluent 2 tokens and FluentUI V5 / FrontComposer components. Build from <code>DESIGN.md</code> + <code>EXPERIENCE.md</code>; the spines win on every conflict.</p>
 <p class="caption">Consumer · <strong>My data &amp; privacy</strong> — phone-first. Left: at rest (consent defaults Off; control vs. keep split). Right: deletion started (start-not-finish + permanence, neutral tone, stale read).</p>
 
 <!-- ============ STATE A — AT REST ============ -->
@@ -97,10 +98,10 @@ body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);
 
     <div class="card">
       <h3>Things we keep to run your account</h3>
-      <p class="lead">We need these to provide the service — they aren't consent toggles.</p>
+      <p class="lead">We need these to provide the service — they aren't consent toggles. We keep them for as long as you have an account, plus what the law requires.</p>
       <div class="datum"><div class="k">Name &amp; contact</div><div class="basis">To manage your account · basis: contract</div></div>
       <div class="datum"><div class="k">Sign-in history</div><div class="basis">To keep your account secure · basis: legitimate interest</div>
-        <div class="basis obj">You can object to this use — <a class="link" href="#contact">contact us</a> and we'll review it.</div></div>
+        <div class="basis obj">You can object to this use — <a class="link" href="#contact">contact us</a> and we'll review it. We'll reply within a month.</div></div>
     </div>
 
     <div class="card">
@@ -127,17 +128,19 @@ body{margin:0;background:#eceff1;font-family:var(--font);color:var(--fg1);
       <strong>We've started deleting your data.</strong>
       We'll confirm when it's done — usually within 30 days. You can cancel until
       deletion begins; once it's done, it's permanent and we can't undo it.
+      <br><strong>Reference RQ-7Q3K</strong> — keep this number if you contact us.
     </div>
 
     <div class="card">
       <h3>What's being deleted</h3>
       <div class="datum"><div class="k">Name &amp; contact</div><div class="basis tomb">Scheduled for deletion</div></div>
       <div class="datum"><div class="k">Sign-in history</div><div class="basis tomb">Scheduled for deletion</div></div>
+      <div class="datum"><div class="k">Legal records</div><div class="basis">Kept — legal requirement</div></div>
     </div>
 
     <div class="card">
       <h3>Changed your mind?</h3>
-      <p class="lead">You can still stop this — until deletion begins.</p>
+      <p class="lead">You can still stop this — until deletion begins. We'll tell you here when that is.</p>
       <div class="actions"><button class="btn outline">Cancel deletion</button></div>
     </div>
   </div>
