@@ -44,3 +44,4 @@ jobs:
         tests/Hexalith.Parties.Sample.Tests
         tests/Hexalith.Parties.Ci.Tests
       aspire-test-project: tests/Hexalith.Parties.IntegrationTests
+      aspire-continue-on-error: false

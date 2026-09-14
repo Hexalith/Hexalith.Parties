@@ -1009,3 +1009,11 @@ source_spec: `spec-safe-consent-identifiers.md`
 severity: medium
 reason: PartyAggregate.cs lines 412, 415, 423, 426, 1174, 1229 and 1305 still emit $"Contact channel '{id}' not found." / $"Identifier '{id}' not found.", so the same event type now has two message dialects depending on which command produced it. Those call sites belong to commands outside this story's intent contract and were not touched by it.
 status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-dotnet-10-0-401-and-submodules.md`
+  summary: Align the E2E Node type-definition major with the supported Node runtime floor.
+  evidence: `tests/e2e/package.json` supports Node `>=24.0.0` but used `@types/node` 26 before and after this refresh; choosing Node 24 declarations or raising the runtime floor is a pre-existing compatibility decision, not a consequence of the 26.5.1 patch update.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-dotnet-10-0-401-and-submodules.md`
+  summary: Reconcile the runtime-toolchain qualification packet with the selected CommunityToolkit Aspire Dapr package.
+  evidence: `validate-runtime-toolchain-evidence.py`, the evidence schema, and baseline expect `13.5.0-preview.1.260825-0345`, while the catalog already selected beta `.751` before this change and now selects beta `.752`; coordinated packet regeneration is required before that validator can qualify the live catalog.

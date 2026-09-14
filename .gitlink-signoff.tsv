@@ -94,3 +94,9 @@ references/Hexalith.Memories|0b78968bfa8fd906790c47b72f2857ac83e748e5|validated-
 references/Hexalith.EventStore|dfc0ac557c43363159b55bffb4d40feceab1f787|validated-advance|v3.104.0-1-gdfc0ac55|jpiquot|2026-09-13
 references/Hexalith.Memories|d99bc96371afbf55f8f37cd812c9e6cedba15b1d|validated-advance|v2.27.1-13-gd99bc963|jpiquot|2026-09-13
 references/Hexalith.Builds|2e2220b9e450b1ec1095594005e86cc565b8f7ee|validated-advance|v4.27.3-11-g2e2220b|jpiquot|2026-09-13
+# --- 2026-09-13 review reconciliation: current root identities and the
+#     bunit 2.11.3 catalog/audit successor. ---
+references/Hexalith.Commons|19d7d4d6b21160557b7449f55a0ad0f55e6d7dc6|validated-advance|v2.30.0-21-g19d7d4d|jpiquot|2026-09-13
+references/Hexalith.FrontComposer|b0ad2fb69bcf5e7aadd7b388d25415d0fba876d5|validated-advance|v4.4.0-8-gb0ad2fb6|jpiquot|2026-09-13
+references/Hexalith.Tenants|ff43dc941b01d4a68070f92dde0536f5ab1ef4df|validated-advance|v5.7.0-34-gff43dc94|jpiquot|2026-09-13
+references/Hexalith.Builds|aee01323579adeda952bf41b2f3e0e61785075c6|validated-advance|v4.27.3-13-gaee0132|jpiquot|2026-09-13

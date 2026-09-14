@@ -66,7 +66,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.18.x` |
 | Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.10.0` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |
-| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.1` / `4.3.0` / `6.2.0` / `2.10.3` / `4.15.0`† / `18.1.0` |
+| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.1` / `4.3.0` / `6.2.0` / `2.11.3` / `4.15.0`† / `18.1.0` |
 
 † `Testcontainers` is declared in `Directory.Packages.props` but referenced by **zero** test projects — container lifecycle is managed entirely by `Aspire.Hosting.Testing`. Treat it as dead config.
 

@@ -16,13 +16,29 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 /// </summary>
 /// <remarks>
 /// The test inspects the distributed-application model only — it never calls <c>StartAsync</c>, so
-/// no Docker/DAPR runtime is required. When the model itself cannot be constructed in the current
-/// environment (e.g. the AppHost's DAPR component files are not on the probe path), the test skips
-/// gracefully per the project's integration-lane convention rather than reporting a red failure.
+/// no Docker/DAPR runtime is required. The focused construction test reports model-construction
+/// failures directly; the environment-sensitive scenario tests retain their graceful skips.
 /// </remarks>
 [Collection("Non-parallel")]
 public sealed class PartiesUiTopologyTests
 {
+    [Fact]
+    public async Task AppHostModel_ConstructsEventStoreAndDaprResources()
+    {
+        IDistributedApplicationTestingBuilder builder = await DistributedApplicationTestingBuilder
+            .CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>()
+            .ConfigureAwait(true);
+
+        await using (builder)
+        {
+            HasDaprSidecar(RequireResource(builder, "eventstore")).ShouldBeTrue();
+            HasDaprSidecar(RequireResource(builder, "eventstore-admin")).ShouldBeTrue();
+            HasDaprSidecar(RequireResource(builder, "eventstore-admin-ui")).ShouldBeTrue();
+            _ = RequireResource(builder, "statestore");
+            _ = RequireResource(builder, "pubsub");
+        }
+    }
+
     [Fact]
     public async Task PartiesUiResource_HasNoDaprSidecar_WaitsForDependencies_AndAutoStarts()
     {

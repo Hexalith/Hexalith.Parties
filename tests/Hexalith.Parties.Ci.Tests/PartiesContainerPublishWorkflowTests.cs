@@ -64,6 +64,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain("tests/Hexalith.Parties.Sample.Tests");
         workflow.ShouldContain("tests/Hexalith.Parties.Ci.Tests");
         workflow.ShouldContain("aspire-test-project: tests/Hexalith.Parties.IntegrationTests");
+        workflow.ShouldContain("aspire-continue-on-error: false");
         workflow.ShouldNotContain("submodules: recursive");
 
         string sharedWorkflow = CiTestPaths.ReadRepoFile("references/Hexalith.Builds/.github/workflows/domain-ci.yml");
@@ -77,7 +78,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     [Fact]
     public void ReleaseWorkflowPublishesOnlyPartiesContainersThroughSharedDomainRelease()
     {
-        const string buildsExecutionSha = "2e2220b9e450b1ec1095594005e86cc565b8f7ee";
+        const string buildsExecutionSha = "aee01323579adeda952bf41b2f3e0e61785075c6";
         string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml");
 
         workflow.ShouldContain("on:\n  workflow_dispatch:");

@@ -20,7 +20,7 @@ public sealed class PlatformApiPrerequisitesTests
     // the bound exists so a hung child fails the lane with a diagnosable message instead of blocking.
     private const int ProcessTimeoutMilliseconds = 300_000;
     private const string AiToolsSha = "5f93d2ec8239494852c97032c819cb1689939e36";
-    private const string BuildsSha = "2e2220b9e450b1ec1095594005e86cc565b8f7ee";
+    private const string BuildsSha = "aee01323579adeda952bf41b2f3e0e61785075c6";
     private const string CommonsSha = "19d7d4d6b21160557b7449f55a0ad0f55e6d7dc6";
 
     // Consumed by MainLayout for the shell landmarks and skip links (G4 work package F, delivered
@@ -699,10 +699,12 @@ public sealed class PlatformApiPrerequisitesTests
         catalog.ShouldContain("<PackageVersion Include=\"xunit.v3.assert\" Version=\"4.0.1\" />");
         catalog.ShouldContain("<PackageVersion Include=\"xunit.v3.extensibility.core\" Version=\"4.0.1\" />");
         catalog.ShouldContain("<PackageVersion Include=\"xunit.runner.visualstudio\" Version=\"4.0.0\" />");
+        catalog.ShouldContain("<PackageVersion Include=\"bunit\" Version=\"2.11.3\" />");
 
         matrix.ShouldContain("Package (default Release graph)");
         matrix.ShouldContain("Source (explicit project-reference graph)");
         matrix.ShouldContain("The catalog's `2.30.0` package is a fallback, not current consumption proof.");
+        matrix.ShouldContain("Supersession clarification (2026-09-13)");
 
         string[] projectFiles =
         [
@@ -745,6 +747,21 @@ public sealed class PlatformApiPrerequisitesTests
                 .ShouldBeTrue($"{projectFile} selected Commons HTTP graph");
             selectedGraph.PackageReferences.Contains("Hexalith.Commons.Http", StringComparer.Ordinal)
                 .ShouldBeFalse($"{projectFile} selected Commons HTTP graph");
+        }
+
+        string[] memoriesConsumers = projectFiles
+            .Where(path => File.ReadAllText(path).Contains("HexalithMemoriesFromSource", StringComparison.Ordinal))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        memoriesConsumers.ShouldNotBeEmpty();
+        foreach (string projectFile in memoriesConsumers)
+        {
+            EvaluatedProjectGraph packageGraph = EvaluateProjectGraph(root, projectFile, useSource: false);
+            packageGraph.Properties["HexalithMemoriesVersion"].ShouldBe("2.27.1", projectFile);
+            packageGraph.PackageReferences.Any(static reference => reference.StartsWith("Hexalith.Memories.", StringComparison.Ordinal))
+                .ShouldBeTrue($"{projectFile} package graph");
+            packageGraph.ProjectReferences.Any(static reference => reference.Contains("/references/Hexalith.Memories/", StringComparison.Ordinal))
+                .ShouldBeFalse($"{projectFile} package graph");
         }
     }
 
@@ -920,7 +937,7 @@ public sealed class PlatformApiPrerequisitesTests
             "msbuild",
             relativeProject,
             "-nologo",
-            "-getProperty:HexalithEventStoreVersion,HexalithCommonsVersion,UseHexalithProjectReferences,HexalithEventStoreFromSource,HexalithCommonsHttpFromSource",
+            "-getProperty:HexalithEventStoreVersion,HexalithCommonsVersion,HexalithMemoriesVersion,UseHexalithProjectReferences,HexalithEventStoreFromSource,HexalithCommonsHttpFromSource,HexalithMemoriesFromSource",
             "-getItem:PackageReference,ProjectReference",
             $"-p:UseHexalithProjectReferences={useSource.ToString().ToLowerInvariant()}",
             "-p:NuGetAudit=false",
@@ -1565,6 +1582,14 @@ public sealed class PlatformApiPrerequisitesTests
         DescribeIdentityGap(checkout, expectedIdentity).ShouldBeEmpty(relativePath);
         RunGit(root, "-C", relativePath, "status", "--porcelain")
             .ShouldBeNullOrWhiteSpace($"{relativePath} must be clean for immutable consumption proof.");
+        RunGit(root, "-C", relativePath, "branch", "--show-current")
+            .ShouldBeNullOrWhiteSpace($"{relativePath} must use detached HEAD for immutable consumption proof.");
+
+        string[] initializedNestedSubmodules = RunGit(root, "-C", relativePath, "submodule", "status")
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(static status => !status.StartsWith("-", StringComparison.Ordinal))
+            .ToArray();
+        initializedNestedSubmodules.ShouldBeEmpty($"{relativePath} must not contain initialized nested submodules.");
     }
 
     private static string DescribeIdentityGap(string actualIdentity, string expectedIdentity)

@@ -295,14 +295,14 @@ jobs:
     # job.workflow_sha == builds-execution-sha). A missing or mismatched input is a
     # workflow startup_failure. @main cannot be used: main advances, so job.workflow_sha
     # would drift out of match. Replace both occurrences together.
-    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@2e2220b9e450b1ec1095594005e86cc565b8f7ee
+    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@aee01323579adeda952bf41b2f3e0e61785075c6
     with:
       solution: Hexalith.Parties.slnx
       timeout-minutes: 60
       environment-name: production
       governed-release: false
       publish-containers: true
-      builds-execution-sha: 2e2220b9e450b1ec1095594005e86cc565b8f7ee
+      builds-execution-sha: aee01323579adeda952bf41b2f3e0e61785075c6
       source-branch: main
       source-ci-workflow: ${{ needs.verify-source.outputs.source-ci-workflow }}
       package-manifest: tools/release-packages.json

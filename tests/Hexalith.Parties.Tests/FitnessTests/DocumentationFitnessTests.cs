@@ -125,6 +125,7 @@ public sealed class DocumentationFitnessTests
         string[] codeMapDocuments =
         [
             "docs/architecture.md",
+            "docs/development-guide.md",
             "docs/index.md",
             "docs/project-overview.md",
             "docs/source-tree-analysis.md",
@@ -137,6 +138,79 @@ public sealed class DocumentationFitnessTests
             documentation.ShouldContain(pinnedSdk, Case.Sensitive, relativePath);
             documentation.ShouldNotContain("10.0.400", Case.Sensitive, relativePath);
             documentation.ShouldNotContain("10.0.302", Case.Sensitive, relativePath);
+        }
+    }
+
+    [Fact]
+    public void MaintainedTechnologyTablesMatchCentralPackageCatalog()
+    {
+        string root = RepositoryRoot.Locate();
+        string catalog = Read(root, "references/Hexalith.Builds/Props/Directory.Packages.props");
+        (string PackageId, string Version)[] expectedCatalogVersions =
+        [
+            ("CommunityToolkit.Aspire.Hosting.Dapr", "13.5.1-beta.752"),
+            ("Dapr.Client", "1.18.7"),
+            ("Dapr.AspNetCore", "1.18.7"),
+            ("Dapr.Actors.AspNetCore", "1.18.7"),
+            ("Dapr.Actors.Generators", "1.18.7"),
+            ("Dapr.Actors", "1.18.7"),
+            ("Dapr.AI", "1.18.7"),
+            ("Dapr.AI.Microsoft.Extensions", "1.18.7"),
+            ("Dapr.Workflow", "1.18.7"),
+            ("Microsoft.AspNetCore.Authentication.JwtBearer", "10.0.12"),
+            ("Microsoft.AspNetCore.Components.CustomElements", "10.0.12"),
+            ("Microsoft.Extensions.Http.Resilience", "10.10.0"),
+            ("Microsoft.Extensions.ServiceDiscovery", "10.10.0"),
+            ("MinVer", "8.0.0"),
+            ("bunit", "2.11.3"),
+            ("Testcontainers", "4.15.0"),
+        ];
+
+        foreach ((string packageId, string version) in expectedCatalogVersions)
+        {
+            catalog.ShouldContain($"<PackageVersion Include=\"{packageId}\" Version=\"{version}\" />");
+        }
+
+        string architecture = Read(root, "docs/architecture.md");
+        string[] expectedArchitectureRows =
+        [
+            "| Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.7` |",
+            "| | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.5.1-beta.752` |",
+            "| AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.12` |",
+            "| | Microsoft.AspNetCore.Components.CustomElements | `10.0.12` |",
+            "| Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.10.0` |",
+            "| Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |",
+            "| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.1` / `4.3.0` / `6.2.0` / `2.11.3` / `4.15.0`† / `18.1.0` |",
+        ];
+        foreach (string expectedRow in expectedArchitectureRows)
+        {
+            architecture.ShouldContain(expectedRow);
+        }
+
+        string overview = Read(root, "docs/project-overview.md");
+        overview.ShouldContain("| Actors / pub-sub | DAPR | 1.18.7 |");
+        overview.ShouldContain("| AuthN | JWT Bearer | 10.0.12 |");
+        overview.ShouldContain("| UI | FluentUI Blazor + CustomElements | 5.0.0-rc.5-26219.1 / 10.0.12 |");
+        overview.ShouldContain("| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | 4.0.1 / 4.3.0 / 6.2.0 / 2.11.3 / 4.15.0 |");
+    }
+
+    [Fact]
+    public void ComponentInventoryDocumentsEveryRootSubmodule()
+    {
+        string root = RepositoryRoot.Locate();
+        string gitmodules = Read(root, ".gitmodules");
+        string inventory = Read(root, "docs/component-inventory.md");
+        string[] rootSubmodulePaths = Regex.Matches(
+                gitmodules,
+                @"(?m)^\s*path\s*=\s*(?<path>references/\S+)\s*$",
+                RegexOptions.CultureInvariant)
+            .Select(static match => match.Groups["path"].Value)
+            .ToArray();
+
+        rootSubmodulePaths.Length.ShouldBe(8);
+        foreach (string path in rootSubmodulePaths)
+        {
+            inventory.ShouldContain($"`{path}`", Case.Sensitive, path);
         }
     }
 
