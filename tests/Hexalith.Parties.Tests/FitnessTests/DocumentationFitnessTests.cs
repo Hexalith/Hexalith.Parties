@@ -121,7 +121,7 @@ public sealed class DocumentationFitnessTests
     public void CodeMapDocumentsThePinnedSdkVersion()
     {
         string root = RepositoryRoot.Locate();
-        const string pinnedSdk = "10.0.400";
+        const string pinnedSdk = "10.0.401";
         string[] codeMapDocuments =
         [
             "docs/architecture.md",
@@ -135,6 +135,7 @@ public sealed class DocumentationFitnessTests
         {
             string documentation = Read(root, relativePath);
             documentation.ShouldContain(pinnedSdk, Case.Sensitive, relativePath);
+            documentation.ShouldNotContain("10.0.400", Case.Sensitive, relativePath);
             documentation.ShouldNotContain("10.0.302", Case.Sensitive, relativePath);
         }
     }

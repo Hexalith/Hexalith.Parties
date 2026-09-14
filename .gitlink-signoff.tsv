@@ -88,3 +88,9 @@ references/Hexalith.Builds|35c3d1e5b8a55a74a440b9c2cad4c5e18747b241|validated-ad
 references/Hexalith.EventStore|c6efdbba6439370a5c674c12ed866c959624106a|validated-advance|v3.103.0-6-gc6efdbba|jpiquot|2026-09-08
 references/Hexalith.FrontComposer|a0acb78f337116867c917dc78b0976f34389f275|validated-advance|v4.4.0-2-ga0acb78f|jpiquot|2026-09-08
 references/Hexalith.Memories|0b78968bfa8fd906790c47b72f2857ac83e748e5|validated-advance|v2.26.2-10-g0b78968b|jpiquot|2026-09-08
+# --- 2026-09-13 SDK/package/submodule refresh: EventStore and Memories advance
+#     to verified origin/main heads. Builds records and audits the EventStore
+#     3.104.0, Dapr hosting beta.752, and xUnit 4.0.1 catalog selections. ---
+references/Hexalith.EventStore|dfc0ac557c43363159b55bffb4d40feceab1f787|validated-advance|v3.104.0-1-gdfc0ac55|jpiquot|2026-09-13
+references/Hexalith.Memories|d99bc96371afbf55f8f37cd812c9e6cedba15b1d|validated-advance|v2.27.1-13-gd99bc963|jpiquot|2026-09-13
+references/Hexalith.Builds|2e2220b9e450b1ec1095594005e86cc565b8f7ee|validated-advance|v4.27.3-11-g2e2220b|jpiquot|2026-09-13

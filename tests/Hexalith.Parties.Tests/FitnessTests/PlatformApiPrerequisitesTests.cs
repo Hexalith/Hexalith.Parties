@@ -20,18 +20,18 @@ public sealed class PlatformApiPrerequisitesTests
     // the bound exists so a hung child fails the lane with a diagnosable message instead of blocking.
     private const int ProcessTimeoutMilliseconds = 300_000;
     private const string AiToolsSha = "5f93d2ec8239494852c97032c819cb1689939e36";
-    private const string BuildsSha = "35c3d1e5b8a55a74a440b9c2cad4c5e18747b241";
-    private const string CommonsSha = "6da79aed2daa4e199689331ee3196f7872c0988a";
+    private const string BuildsSha = "2e2220b9e450b1ec1095594005e86cc565b8f7ee";
+    private const string CommonsSha = "19d7d4d6b21160557b7449f55a0ad0f55e6d7dc6";
 
     // Consumed by MainLayout for the shell landmarks and skip links (G4 work package F, delivered
     // under sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md).
     // Recorded separately from the packaged 4.4.0 identity that CI and the released container use.
-    private const string FrontComposerSha = "a0acb78f337116867c917dc78b0976f34389f275";
-    private const string MemoriesSha = "0b78968bfa8fd906790c47b72f2857ac83e748e5";
+    private const string FrontComposerSha = "b0ad2fb69bcf5e7aadd7b388d25415d0fba876d5";
+    private const string MemoriesSha = "d99bc96371afbf55f8f37cd812c9e6cedba15b1d";
     private const string PolymorphicSerializationsSha = "8aeed1d27c9a050bc4bec6d89051aa00de306a69";
-    private const string TenantsSha = "e7f366623733abdb64f173e9843edc7fc7d22193";
-    private const string PayloadProtectionEventStoreDescribe = "v3.103.0-6-gc6efdbba";
-    private const string PayloadProtectionEventStoreSha = "c6efdbba6439370a5c674c12ed866c959624106a";
+    private const string TenantsSha = "ff43dc941b01d4a68070f92dde0536f5ab1ef4df";
+    private const string PayloadProtectionEventStoreDescribe = "v3.104.0-1-gdfc0ac55";
+    private const string PayloadProtectionEventStoreSha = "dfc0ac557c43363159b55bffb4d40feceab1f787";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
     private const string PayloadProtectionSurface = "Payload protection engine package";
     private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";
@@ -175,7 +175,7 @@ public sealed class PlatformApiPrerequisitesTests
         [
             "Hexalith.Parties",
             "PackageReference",
-            "Released package `3.103.0`",
+            "Released package `3.104.0`",
         ],
         ["EventStore domain-service host and DataProtection/query SDK|Source (explicit project-reference graph)"] =
         [
@@ -187,29 +187,29 @@ public sealed class PlatformApiPrerequisitesTests
         [
             "Hexalith.Parties.Client",
             CommonsSha,
-            "`v2.30.0-19-g6da79ae`",
+            "`v2.30.0-21-g19d7d4d`",
         ],
         ["Builds central catalog|Source import"] =
         [
             "Directory.Packages.props",
             "does not import `Hexalith.Build.props` or `Hexalith.Package.props`",
             BuildsSha,
-            "EventStore `3.103.0`",
+            "EventStore `3.104.0`",
             "Commons `2.30.0`",
-            "Memories `2.26.2`",
+            "Memories `2.27.1`",
             "Tenants `5.7.0`",
             "Parties `1.1.1`",
         ],
         ["Memories submodule|Source (optional rich search)"] =
         [
             MemoriesSha,
-            "`v2.26.2-10-g0b78968b`",
-            "HexalithMemoriesVersion=2.26.2",
+            "`v2.27.1-13-gd99bc963`",
+            "HexalithMemoriesVersion=2.27.1",
         ],
         ["Tenants AppHost topology|Source (diagnostic) and package `5.7.0` (default graph)"] =
         [
             TenantsSha,
-            "`v5.7.0-31-ge7f36662`",
+            "`v5.7.0-34-gff43dc94`",
             "5.7.0",
         ],
     };
@@ -688,12 +688,17 @@ public sealed class PlatformApiPrerequisitesTests
         rootBuildTargets.ShouldNotContain("Hexalith.Build.props");
         rootBuildTargets.ShouldNotContain("Hexalith.Package.props");
         string catalog = File.ReadAllText(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"));
-        catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">3.103.0</HexalithEventStoreVersion>");
+        catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">3.104.0</HexalithEventStoreVersion>");
         catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">2.30.0</HexalithCommonsVersion>");
         catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">4.4.0</HexalithFrontComposerVersion>");
-        catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">2.26.2</HexalithMemoriesVersion>");
+        catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">2.27.1</HexalithMemoriesVersion>");
         catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">5.7.0</HexalithTenantsVersion>");
         catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">1.1.1</HexalithPartiesVersion>");
+        catalog.ShouldContain("<PackageVersion Include=\"CommunityToolkit.Aspire.Hosting.Dapr\" Version=\"13.5.1-beta.752\" />");
+        catalog.ShouldContain("<PackageVersion Include=\"xunit.v3\" Version=\"4.0.1\" />");
+        catalog.ShouldContain("<PackageVersion Include=\"xunit.v3.assert\" Version=\"4.0.1\" />");
+        catalog.ShouldContain("<PackageVersion Include=\"xunit.v3.extensibility.core\" Version=\"4.0.1\" />");
+        catalog.ShouldContain("<PackageVersion Include=\"xunit.runner.visualstudio\" Version=\"4.0.0\" />");
 
         matrix.ShouldContain("Package (default Release graph)");
         matrix.ShouldContain("Source (explicit project-reference graph)");
@@ -713,7 +718,7 @@ public sealed class PlatformApiPrerequisitesTests
         foreach (string projectFile in eventStoreConsumers)
         {
             EvaluatedProjectGraph packageGraph = EvaluateProjectGraph(root, projectFile, useSource: false);
-            packageGraph.Properties["HexalithEventStoreVersion"].ShouldBe("3.103.0", projectFile);
+            packageGraph.Properties["HexalithEventStoreVersion"].ShouldBe("3.104.0", projectFile);
             packageGraph.PackageReferences.Any(static reference => reference.StartsWith("Hexalith.EventStore.", StringComparison.Ordinal))
                 .ShouldBeTrue($"{projectFile} package graph");
             packageGraph.ProjectReferences.Any(static reference => reference.Contains("/references/Hexalith.EventStore/", StringComparison.Ordinal))
@@ -1375,7 +1380,7 @@ public sealed class PlatformApiPrerequisitesTests
         string finalLedger = ReadMatrix();
         finalLedger.ShouldContain("Story 8.10 final retained-identity reconciliation");
         finalLedger.ShouldContain(PayloadProtectionEventStoreSha);
-        finalLedger.ShouldContain("Released package `3.103.0`");
+        finalLedger.ShouldContain("Released package `3.104.0`");
         row.Status.ShouldBe("needs-additive-api");
 
         foreach (string path in RequiredAbsentPayloadProtectionPaths)

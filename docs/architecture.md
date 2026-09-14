@@ -13,7 +13,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Attribute | Value |
 |-----------|-------|
 | Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), exactly 13 projects under `src` plus one sample project + 15 runnable .NET test projects + 1 support host + Playwright e2e |
-| Primary language | C# / **.NET 10** (SDK pinned `10.0.400`) |
+| Primary language | C# / **.NET 10** (SDK pinned `10.0.401`) |
 | Architecture style | Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, gateway-fronted (EventStore) |
 | Orchestration | .NET Aspire 13.4 (`dotnet aspire run`) |
 | Eventing | DAPR pub/sub (Redis local; Kafka/RabbitMQ/Service Bus in prod) |
@@ -49,31 +49,31 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 
 | Category | Technology | Version |
 |----------|-----------|---------|
-| Runtime | .NET | `net10.0` (SDK `10.0.400`, rollForward latestPatch) |
+| Runtime | .NET | `net10.0` (SDK `10.0.401`, rollForward latestPatch) |
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.5.3` |
-| Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.5` |
-| | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.5.0-preview.1.260825-0345` |
-| Gateway/eventing | Hexalith.EventStore | package `3.103.0` by default; source gitlink `c6efdbba6439370a5c674c12ed866c959624106a` when explicitly selected |
-| Tenancy | Hexalith.Tenants | package `5.7.0` by default; source gitlink `e7f366623733abdb64f173e9843edc7fc7d22193` when explicitly selected |
+| Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.7` |
+| | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.5.1-beta.752` |
+| Gateway/eventing | Hexalith.EventStore | package `3.104.0` by default; source gitlink `dfc0ac557c43363159b55bffb4d40feceab1f787` when explicitly selected |
+| Tenancy | Hexalith.Tenants | package `5.7.0` by default; source gitlink `ff43dc941b01d4a68070f92dde0536f5ab1ef4df` when explicitly selected |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.2.0` |
-| AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.11` |
-| API docs | Microsoft.AspNetCore.OpenApi / Swashbuckle.SwaggerUI | `10.0.11` / `10.2.3` |
+| AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.12` |
+| API docs | Microsoft.AspNetCore.OpenApi / Swashbuckle.SwaggerUI | `10.0.12` / `10.2.3` |
 | MCP | ModelContextProtocol / .AspNetCore | `2.2.0` / `2.2.0` |
 | UI | Microsoft.FluentUI.AspNetCore.Components | `5.0.0-rc.5-26219.1` |
-| | Microsoft.AspNetCore.Components.CustomElements | `10.0.11` |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | package `2.26.2` by default |
+| | Microsoft.AspNetCore.Components.CustomElements | `10.0.12` |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | package `2.27.1` by default |
 | Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.18.x` |
-| Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.9.0` |
-| Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0-rc.1` |
-| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.0` / `4.3.0` / `6.2.0` / `2.9.0` / `4.14.0`† / `18.1.0` |
+| Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.10.0` |
+| Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |
+| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.1` / `4.3.0` / `6.2.0` / `2.10.3` / `4.15.0`† / `18.1.0` |
 
 † `Testcontainers` is declared in `Directory.Packages.props` but referenced by **zero** test projects — container lifecycle is managed entirely by `Aspire.Hosting.Testing`. Treat it as dead config.
 
 Solution-wide build settings (`Directory.Build.props`): `Nullable=enable`, `ImplicitUsings=enable`, **`TreatWarningsAsErrors=true`** (enforced by a build gate — see §11). Central package management via `Directory.Packages.props`.
 
 The AppHost SDK and Aspire packages are aligned at `13.5.3`; DAPR client,
-actors, and ASP.NET Core packages are aligned at `1.18.5`.
+actors, and ASP.NET Core packages are aligned at `1.18.7`.
 
 ---
 

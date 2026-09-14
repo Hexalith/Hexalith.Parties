@@ -18,7 +18,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     [InlineData("package.json", "package-lock.json", "semantic-release", "^25.0.9", "25.0.9")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@axe-core/playwright", "^4.13.0", "4.13.0")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@playwright/test", "^1.63.0", "1.63.0")]
-    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@types/node", "^26.5.0", "26.5.0")]
+    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@types/node", "^26.5.1", "26.5.1")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "typescript", "^7.0.2", "7.0.2")]
     public void DependencyManifestsAndLocksMatchSelectedVersions(
         string manifestPath,
@@ -77,7 +77,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     [Fact]
     public void ReleaseWorkflowPublishesOnlyPartiesContainersThroughSharedDomainRelease()
     {
-        const string buildsExecutionSha = "6daad3d501e97204eba66d971bba6a7103b85ccd";
+        const string buildsExecutionSha = "2e2220b9e450b1ec1095594005e86cc565b8f7ee";
         string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml");
 
         workflow.ShouldContain("on:\n  workflow_dispatch:");
@@ -369,7 +369,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         ci.ShouldContain("workflow_dispatch");
         ci.ShouldContain("bypass-validation");
         ci.ShouldContain("commitlint.yml");
-        ci.ShouldContain("EventStore 3.103.0");
+        ci.ShouldContain("EventStore 3.104.0");
         ci.ShouldContain("Package mode remains the authoritative CI and release path");
         ci.ShouldContain("source mode is diagnostic only");
         ci.ShouldContain("registry.hexalith.com/parties");
