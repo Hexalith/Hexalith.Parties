@@ -1,0 +1,39 @@
+@page "/parties"
+@page "/parties/overview"
+@using Hexalith.FrontComposer.Shell.Components.Layout
+@using Hexalith.Parties.AdminPortal.Services
+@using Hexalith.Parties.UI.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<PartiesOverviewResources> Localizer
+
+<PageTitle>@Localizer["Title"]</PageTitle>
+<FcPageLayout Mode="FcPageLayoutMode.Constrained">
+    <FcPageHeader Heading="@Localizer["Title"]" HeadingTabIndex="-1" />
+    <FcPageTabs ModuleRoute="/parties" DefaultTabId="overview" AriaLabel="@Localizer["TabsLabel"]" TestId="parties-overview-tabs">
+        <FcPageTab Id="overview" Header="@Localizer["Overview"]">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="12px" data-testid="parties-overview-destinations">
+                <AuthorizeView Policy="@PartiesUiAuthorization.AdminPolicy">
+                    <Authorized>
+                        <FluentAnchorButton Href="@PartiesAdminPortalManifest.Route" Appearance="ButtonAppearance.Outline" data-testid="parties-overview-admin">
+                            @Localizer["AdminDestination"]
+                        </FluentAnchorButton>
+                    </Authorized>
+                </AuthorizeView>
+                <AuthorizeView Policy="@PartiesUiAuthorization.ConsumerPolicy">
+                    <Authorized>
+                        <FluentAnchorButton Href="/me" Appearance="ButtonAppearance.Outline" data-testid="parties-overview-consumer">
+                            @Localizer["ConsumerDestination"]
+                        </FluentAnchorButton>
+                    </Authorized>
+                    <NotAuthorized>
+                        <AuthorizeView Policy="@PartiesUiAuthorization.AdminPolicy">
+                            <NotAuthorized>
+                                <FluentText As="TextTag.Paragraph" data-testid="parties-overview-no-access">@Localizer["NoAccess"]</FluentText>
+                            </NotAuthorized>
+                        </AuthorizeView>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </FluentStack>
+        </FcPageTab>
+    </FcPageTabs>
+</FcPageLayout>
