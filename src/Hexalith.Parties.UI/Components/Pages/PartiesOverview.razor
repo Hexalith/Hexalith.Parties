@@ -1,6 +1,7 @@
 @page "/parties"
 @page "/parties/overview"
 @using Hexalith.FrontComposer.Shell.Components.Layout
+@using Hexalith.FrontComposer.Contracts.Rendering
 @using Hexalith.Parties.AdminPortal.Services
 @using Hexalith.Parties.UI.Resources
 @using Microsoft.Extensions.Localization
@@ -25,9 +26,9 @@
                             @Localizer["ConsumerDestination"]
                         </FluentAnchorButton>
                     </Authorized>
-                    <NotAuthorized>
+                    <NotAuthorized Context="consumerAuthorization">
                         <AuthorizeView Policy="@PartiesUiAuthorization.AdminPolicy">
-                            <NotAuthorized>
+                            <NotAuthorized Context="adminAuthorization">
                                 <FluentText As="TextTag.Paragraph" data-testid="parties-overview-no-access">@Localizer["NoAccess"]</FluentText>
                             </NotAuthorized>
                         </AuthorizeView>
