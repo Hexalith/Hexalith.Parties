@@ -46,6 +46,8 @@ builder.Services.AddFluentUIComponents();
 builder.Services.AddHttpContextAccessor();
 
 // Quickstart chains AddLocalization + AddHexalithShellLocalization + AddHexalithFrontComposer.
+builder.Services.Configure<Hexalith.FrontComposer.Shell.Options.FrontComposerRouteOptions>(options =>
+    options.ReservedSegments.UnionWith(["admin", "me", "no-party-binding"]));
 builder.Services.AddHexalithFrontComposerQuickstart(o => o.ScanAssemblies(typeof(Program).Assembly));
 builder.Services.AddFrontComposerDevMode(builder.Environment);
 builder.Services.AddHexalithDomain<PartiesUiDomainMarker>();
@@ -211,6 +213,7 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddAdditionalAssemblies(
+        typeof(Hexalith.FrontComposer.Shell.Components.Layout.FcModuleLandingPage).Assembly,
         typeof(Hexalith.Parties.AdminPortal.Components.PartiesAdminPortal).Assembly,
         typeof(Hexalith.Parties.ConsumerPortal.Components.MyProfilePage).Assembly);
 
