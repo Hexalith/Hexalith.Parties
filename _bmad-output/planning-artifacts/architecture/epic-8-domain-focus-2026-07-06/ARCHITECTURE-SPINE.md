@@ -19,6 +19,9 @@ related:
 
 # Epic 8 Architecture Spine — Domain-Focus Refactoring & Platform Extraction
 
+**Approved McpCli course correction (2026-09-27):** `Hexalith.McpCli` is the target Hexalith-owned CLI/MCP surface for Parties operations that pass contract enrollment and authorization. Any proprietary module CLI, MCP host, plug-in, or planned adapter described below is an obsolete migration source or historical design, not a new target. The module retains its domain, UI, and security semantics; replacement or approved withdrawal and parity evidence precede retirement. External development CLIs are unaffected.
+
+
 ## 1. Purpose & Reconciliation Statement
 
 The 2026-07-06 change proposal that created Epic 8 reserved this path for an
@@ -87,7 +90,7 @@ substance and sheds reusable platform mechanics.
 | Aggregates, contracts, validators | Service defaults, correlation/ProblemDetails → Commons |
 | Projection/query **semantics** (folds, tenant guardrails) | Projection/query **mechanics** (actors, rebuild, cursor codec) → EventStore SDK |
 | GDPR **policy** + legal semantics | Generic crypto/key-management engine → EventStore/shared DataProtection |
-| Typed domain clients, domain UI, MCP tool **definitions** | Command/query envelopes + freshness metadata → EventStore.Contracts (G6), referencing Commons paging; paging primitives → Commons (Epic 7 AD-4); MCP plumbing → FrontComposer MCP host on Commons.Http (G11) |
+| Typed domain clients, domain UI, MCP tool **definitions** | Command/query envelopes + freshness metadata → EventStore.Contracts (G6), referencing Commons paging; paging primitives → Commons (Epic 7 AD-4); MCP/CLI presentation → `Hexalith.McpCli` from decorated Parties Contracts; the prior FrontComposer/Parties MCP plumbing is obsolete migration compatibility (G11) |
 | Tenant-claims **policy** (which claims Parties requires) | Tenant-claim transformation → EventStore.Authentication + Commons ULID helpers (owner decision 2026-07-16; G7/G9) |
 | Domain UI **semantics** (labels, GDPR copy, flows) | Status/freshness/reconcile/grid/picker UI primitives → FrontComposer (G4) |
 | Domain samples; no domain-owned AppHost in the target state | Build-root probing → Builds; reusable security/module helpers → EventStore.Aspire; canonical integrated local topology → FrontComposer.AppHost / approved platform AppHost owner; runtime deploy orchestration → platform-ops |

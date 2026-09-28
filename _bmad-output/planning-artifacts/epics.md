@@ -44,6 +44,9 @@ date: '2026-06-09'
 
 # parties - Epic Breakdown
 
+**Approved McpCli course correction (2026-09-27).** Story 8.8 MCP cleanup is part of the `Hexalith.McpCli` migration: Parties owns decorated Contracts, gateway behavior, and parity vectors; its `.Mcp` and FrontComposer MCP plumbing are obsolete compatibility. Completed cleanup remains historical evidence. McpCli Epic 5 owns final retirement.
+
+
 ## Overview
 
 This document provides the complete epic and story breakdown for **parties** (the
