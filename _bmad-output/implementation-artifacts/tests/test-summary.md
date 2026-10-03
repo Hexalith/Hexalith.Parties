@@ -819,3 +819,41 @@ Parties still owns `PartyPayloadProtectionService`, `EventStorePartyPayloadProte
 ### Totals
 
 Dual-provider totals: not run / not credited. No skips credited. Story 8.7 remains `blocked`.
+
+## Story 8.7 G5 revalidation — closed-gate halt — 2026-10-03
+
+At Parties `06714c166c090200ac87373b11d8243aa11b2126`, G5 remains `needs-additive-api` and Story 8.7
+remains `blocked`. This receipt supersedes the 2026-09-07 claims that policy
+contracts, v2 source, and the PayloadProtection core project are absent. It does
+not authorize a new dependency identity or claim provider adoption.
+
+| Identity | Observation |
+| --- | --- |
+| EventStore root gitlink and clean checkout | `2c58ffda41759e895ace4b9625c9bd931a217672` (`v3.111.0`), matching. |
+| Builds root gitlink and checkout | `688eec9a4333245cc0ff7772115c769094471863`, matching; imported catalog selects `HexalithEventStoreVersion=3.110.0`. |
+| Locked Story 8.7 identity | `c21bd749154d701c3b7d68e40d1008d3475e35c4` / `3.95.0`; unchanged. Live observation is not G5 adoption approval. |
+
+| Inspection command | Result |
+| --- | --- |
+| `git rev-parse HEAD` | `06714c166c090200ac87373b11d8243aa11b2126`. |
+| `git ls-tree HEAD references/Hexalith.EventStore`; `git -C references/Hexalith.EventStore rev-parse HEAD`; `git -C references/Hexalith.EventStore status --short`; `git -C references/Hexalith.EventStore describe --tags --always` | Matching `2c58ffda41759e895ace4b9625c9bd931a217672`, clean checkout, `v3.111.0`. |
+| `git ls-tree HEAD references/Hexalith.Builds`; `git -C references/Hexalith.Builds rev-parse HEAD`; `rg -n 'HexalithEventStoreVersion\|PayloadProtection' references/Hexalith.Builds/Props/Directory.Packages.props` | Matching `688eec9a4333245cc0ff7772115c769094471863`; `3.110.0`; no PayloadProtection catalog entries. |
+| `cat references/Hexalith.EventStore/src/Hexalith.EventStore.PayloadProtection/Hexalith.EventStore.PayloadProtection.csproj` | Core project exists, `IsPackable=false`; internal core and wire-format/context types, no approved runtime registration. |
+| `rg -n 'interface (IPersonalDataPolicy\|IErasureStateProvider)\|TryAddSingleton<IEventPayloadProtectionService\|Add.*PayloadProtection' references/Hexalith.EventStore/src -g '*.cs'` | Both public contracts present; server still selects the no-op default. |
+| `rg -n 'PayloadProtection' references/Hexalith.EventStore/tools/release-packages.json` | Exit 1, no package release enrollment; expected missing receipt. |
+| `test ! -f references/Hexalith.EventStore/_bmad-output/implementation-artifacts/8-11-g5-evidence-and-approval-closure.md`; `test ! -f references/Hexalith.EventStore/src/Hexalith.EventStore.PayloadProtection.AzureKeyVault/Hexalith.EventStore.PayloadProtection.AzureKeyVault.csproj` | Both absent; missing closure and production-backend delivery. |
+| `sed -n '245,290p' references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml` | Owner 8.2 `done`; 8.3 `in-progress`; compatibility, lifecycle, backend, integration, release, parity, post-v2 rollback, and closure (8.4-8.11) `backlog`. |
+| Static Python inventory assertions and `rg -n 'IEventPayloadProtectionService\|EventStorePartyPayloadProtectionAdapter\|PartyPayloadProtectionService' src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs` | All 24 retained files (18 MOVE + 5 KEEP + adapter) exist; local payload service, adapter factory registration, and LocalDev backend retained. |
+
+The named G5 availability approval, consumable provider/backend release, actual
+dual-provider GDPR/parity evidence, and post-v2 rollback proof remain missing.
+Parties 8.6 is done; its completion does not waive G5. Production KMS remains a
+separate release gate. No production, DI, dependency, or submodule changes were
+made; the locked spec block and original baseline remain unchanged.
+
+Product/unit/topology/dual-provider/GDPR/post-v2 suites were not run because the
+start gate is closed; no passes or skips are credited. Static gate inspection
+passed. Documentation validation passed: the frozen spec block and original
+baseline are byte-identical, sprint YAML data is unchanged, all new revision
+fields are canonical, the regenerated context is valid, and the File List
+matches the six changed documentation artifacts. `git diff --check` passed.

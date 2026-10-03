@@ -3,13 +3,13 @@ story_key: 8-7-data-protection-extraction
 story_id: "8.7"
 epic: "8"
 created: 2026-07-16T00:23:38+02:00
-revalidated: 2026-07-16T00:32:11+02:00
+revalidated: 2026-10-03
 source_status: backlog
 target_status: blocked
 baseline_commit_at_story_start: a35b151
-baseline_commit_at_revalidation: 6091d41
-eventstore_root_pin_at_revalidation: 82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7
-eventstore_checkout_at_revalidation: 82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7
+baseline_commit_at_revalidation: 06714c166c090200ac87373b11d8243aa11b2126
+eventstore_root_pin_at_revalidation: 2c58ffda41759e895ace4b9625c9bd931a217672
+eventstore_checkout_at_revalidation: 2c58ffda41759e895ace4b9625c9bd931a217672
 ---
 
 # Story 8.7: Data-protection extraction
@@ -17,6 +17,26 @@ eventstore_checkout_at_revalidation: 82ed167c1c78d4ff50d3f8eab43850bb6abd0fe7
 Status: blocked
 
 <!-- This story is complete enough for workflow intake, but production source migration is hard-gated by the Story 8.3 G5 row and the authoritative Epic 8 sequence. -->
+
+## Current Gate Revalidation — 2026-10-03
+
+G5 remains `needs-additive-api`; Story 8.7 remains `blocked`. EventStore's matching
+root gitlink and clean checkout are `2c58ffda41759e895ace4b9625c9bd931a217672` (`v3.111.0`);
+Builds `688eec9a4333245cc0ff7772115c769094471863` selects EventStore packages `3.110.0`.
+These observations do not authorize adoption beyond the locked specification's
+`c21bd749154d701c3b7d68e40d1008d3475e35c4` / `3.95.0` identity.
+
+EventStore has delivered public policy/erasure contracts and an internal v2 core
+project with `IsPackable=false`. Story 8.2 is `done`, 8.3 is `in-progress`, and
+8.4-8.11 remain `backlog`. The production-backend project, package enrollment,
+approved runtime provider, dual-provider parity, post-v2 rollback, and 8.11
+closure/availability approval remain missing. The older absence statements below
+are historical; the 2026-10-03 G5 receipt in the Story 8.3 matrix supersedes them.
+
+Parties 8.6 is `done`. Static inventory confirmed all 18 MOVE files, 5 KEEP files,
+the adapter, and local DI remain intact. No production, dependency, or submodule
+changes were made. Product tests were not run or credited. Commands and results
+are recorded in `tests/test-summary.md` under the 2026-10-03 receipt.
 
 ## Story
 
@@ -47,6 +67,7 @@ so that Parties keeps GDPR policy without owning reusable crypto infrastructure.
   - [x] Confirm Story 8.6 is `blocked` and record that the authoritative sequence conflicts with the draft Story 8.7 spec's “independent of 8.6” note.
   - [x] Mark Story 8.7 blocked and halt before production code, package, or submodule edits.
   - [x] 2026-09-07 spec execution: revalidated G5 at live gitlink/checkout `d45206f7cbd80a112519c1d4687d7279a745f0c5` (`v3.103.0-2-gd45206f7`) / package `3.103.0`. Row remains `needs-additive-api`; halted with no production, DI, or dependency changes. Spec frozen identity `c21bd749`/`3.95.0` still does not match live checkout.
+  - [x] 2026-10-03 gate audit: G5 remains `needs-additive-api` at EventStore `2c58ffda41759e895ace4b9625c9bd931a217672` (`v3.111.0`) / catalog `3.110.0`. Public policy/erasure contracts and internal non-packable v2 core now exist; runtime/backend/package, parity, rollback, and 8.11 closure are still incomplete. Retained all 24 MOVE/KEEP/adapter files and local DI; no production or dependency changes.
   - [ ] Before implementation resumes, update the existing G5 row with the named owner/reviewer, exact approved release or root gitlink, producer and consumer proof, frozen compatibility identities, and rollback instructions; change its status only when the review gate is genuinely satisfied.
   - [x] Resolve the `8.6 -> 8.7` sequence by completing 8.6 (done 2026-08-17). Parallel owner delivery still does not waive G5.
 
@@ -95,7 +116,7 @@ so that Parties keeps GDPR policy without owning reusable crypto infrastructure.
 
 ## Dev Notes
 
-### Story Classification and Current Blockers
+### Historical Start Blockers — 2026-07-16
 
 - Epic 8 is Class C post-MVP maintenance with zero new PRD functional coverage. This story preserves completed behavior and corrects the domain/platform ownership boundary. [Source: `_bmad-output/planning-artifacts/epics.md#Story-8.7-Data-protection-extraction`]
 - The Story 8.7 draft spec is explicitly `blocked-prerequisite`. The existing Story 8.3 G5 `Payload protection engine package` row remains `needs-additive-api`; the 2026-07-11 owner-routing proposal says routing is not delivery or approval. [Source: `_bmad-output/implementation-artifacts/spec-8-7-data-protection-extraction.md`; `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md#EventStore-Owner-Routing--2026-07-11`]
@@ -254,6 +275,7 @@ GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-10-03 - Revalidated G5 at Parties `06714c166c090200ac87373b11d8243aa11b2126` and matching EventStore `2c58ffda41759e895ace4b9625c9bd931a217672` (`v3.111.0`). Owner 8.2 is done, 8.3 in-progress, 8.4-8.11 backlog. Recorded partial contract/core delivery and remaining backend/package/parity/rollback/closure blockers; halted before production, dependency, or submodule changes.
 - 2026-07-16T00:23:38+02:00 - Loaded sprint status and selected requested story `8-7-data-protection-extraction` from `_bmad-output/implementation-artifacts/sprint-status.yaml` (`backlog`).
 - 2026-07-16T00:23:38+02:00 - Inspected the Story 8.3 G5 row; it remains `needs-additive-api` and owner routing explicitly remains non-delivery.
 - 2026-07-16T00:23:38+02:00 - Initial provenance inspection found an older root gitlink and newer user-owned checkout; neither contained the required G5 engine.
@@ -265,6 +287,7 @@ GPT-5 Codex
 
 ### Completion Notes List
 
+- 2026-10-03 gate audit supersedes the older source-absence statements: contracts and internal v2 source now exist, but no approved consumable G5 provider or closure does. Source migration stays blocked. Static inventory passed; dual-provider/GDPR/post-v2 suites were not run or credited.
 - Source migration is blocked because no owner-approved G5 shared payload-protection engine, release/root pin, dual-path parity evidence, or exercised rollback is recorded. Story 8.6 is `done`; G5 remains the live halt.
 - The current root-approved and checked-out EventStore versions both lack `pdenc-v2`, `IPersonalDataPolicy`, `IErasureStateProvider`, and a shared payload engine; ASP.NET Core cursor Data Protection is not a substitute.
 - No production source, project/package dependency, or submodule pointer was changed and no product tests were run during story creation. The local implementation remains the required rollback path.
@@ -278,6 +301,7 @@ GPT-5 Codex
 
 **Modified**
 
+- `_bmad-output/implementation-artifacts/epic-8-context.md`
 - `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 - `_bmad-output/implementation-artifacts/spec-8-7-data-protection-extraction.md`

@@ -184,6 +184,14 @@ development_status:
   # pdenc-v2, IPersonalDataPolicy, and IErasureStateProvider remain absent.
   # Spec 8.7 AC1 halt: no production or dependency changes. Story 8.7 remains
   # blocked.
+  # Revalidated 2026-10-03: this receipt supersedes the source-absence claims
+  # above. EventStore gitlink/clean checkout 2c58ffda41759e895ace4b9625c9bd931a217672
+  # (v3.111.0); Builds 688eec9a4333245cc0ff7772115c769094471863 selects 3.110.0.
+  # Public policy/erasure contracts and a non-packable internal v2 core exist.
+  # Owner 8.2 is done; 8.3 in-progress; 8.4-8.11 backlog. Runtime/backend/package,
+  # parity, post-v2 rollback, and 8.11 closure/approval remain missing.
+  # Parties 8.6 is done; G5 still gates 8.7. No dependency identity is adopted,
+  # no production/dependency changes, and no product tests are credited.
   8-7-data-protection-extraction: blocked
   # Story context revalidated 2026-07-31 after the latest root-submodule update.
   # All eight checkouts match their clean root gitlinks; only Builds (b529b66) and
@@ -369,6 +377,10 @@ action_items:
     # is reversible; the focused compatibility harness passes 19/19. Story 8.6
     # is in review, Story 8.7 remains blocked, and this retention action stays
     # open.
+    # 2026-10-03: owner contracts/core are partial delivery (8.2 done, 8.3
+    # in-progress); G5 closure/parity/rollback remain absent. The earlier 19/19
+    # total is historical; no product tests rerun. All 24 retained files and
+    # local DI verified intact. Story 8.6 done; 8.7 blocked; action stays open.
     action: "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open
