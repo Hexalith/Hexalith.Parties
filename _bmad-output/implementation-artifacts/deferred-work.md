@@ -1017,3 +1017,12 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-dotnet-10-0-401-and-submodules.md`
   summary: Reconcile the runtime-toolchain qualification packet with the selected CommunityToolkit Aspire Dapr package.
   evidence: `validate-runtime-toolchain-evidence.py`, the evidence schema, and baseline expect `13.5.0-preview.1.260825-0345`, while the catalog already selected beta `.751` before this change and now selects beta `.752`; coordinated packet regeneration is required before that validator can qualify the live catalog.
+
+### DW-124: Publish a FrontComposer Shell release carrying the module-landing route surface consumed by Parties.UI.
+
+origin: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-10-04)
+location: src/Hexalith.Parties.UI/Program.cs:49,216; src/Hexalith.Parties.UI/Components/Routes.razor:7; references/Hexalith.Builds/Props/Directory.Packages.props
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: Commit `37f1d04b` wires `FrontComposerRouteOptions.ReservedSegments` and `FcModuleLandingPage` into the UI host, but both types exist only in FrontComposer source (added 2026-09-27); the packaged `Hexalith.FrontComposer.Shell` `4.4.0` and `4.5.0` DLLs carry neither, so the package-mode UI build (the CI, bUnit, and released-container identity) cannot compile. Exit proof: a published Shell release containing both types, a Builds catalog bump selecting it, a green package-mode `Hexalith.Parties.UI` Release build, and matching 8.3 identity rows. Rollback: revert the `37f1d04b` routing wiring until that release exists.
+decision: 2026-10-04 Ship FrontComposer release — owner chose to publish a FrontComposer release carrying the types and bump the catalog rather than gate on source mode or revert; the extra G4 surface is recorded in the 8.3 matrix and the 8.9 deferral meanwhile.
+status: open

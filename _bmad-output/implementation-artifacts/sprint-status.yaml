@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-09-07
+# last_updated: 2026-10-04
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -45,7 +45,7 @@
 #   against this file: it rejects `blocked` and re-slugs titles. Refresh in place.
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-09-07
+last_updated: 2026-10-04
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -261,7 +261,14 @@ development_status:
   # spine §7 I4 row, .gitlink-signoff.tsv, and the PayloadProtectionEventStoreSha
   # test constant. The deferred-work heading-anchor fitness failure from Round 4
   # is closed (`ParseDeferrals` now selects packed `deferral_id:` lines).
-  8-10-final-readiness-documentation-and-retirement-gate: review
+  # Code review round 6, 2026-10-04 (Code Map chunk 882c0245..HEAD): all eight
+  # root gitlinks and the Builds catalog had moved past every recorded 8.10
+  # identity without sign-off; 5 of 36 closure fitness tests fail and the
+  # package-mode build is red (Contracts CS0246, commit 37d87f5a). Owner chose
+  # to authorize the HEAD identities, restore ls-tree HEAD pin proof, move the
+  # McpCli banner out of epics.md, and ship a FrontComposer release (DW-124).
+  # 20 patches remain open as action items; status moved review -> in-progress.
+  8-10-final-readiness-documentation-and-retirement-gate: in-progress
   # Added by Correct Course 2026-07-07
   # (sprint-change-proposal-2026-07-07-validation-ladder-runner.md).
   # QA/tooling maintenance story; independent of the 8.6-8.10 deletion sequence
