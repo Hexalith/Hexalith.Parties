@@ -120,3 +120,16 @@ references/Hexalith.Tenants|b63bdbba8613801bb488eaa9116f386e41a261f8|validated-a
 references/Hexalith.EventStore|cbbe41501ba722731bf36b2c343efdef4ac714fb|validated-advance|v3.111.0-10-gcbbe4150|jpiquot|2026-10-04
 references/Hexalith.FrontComposer|374bb83392d8ab4e8a8397cfd312d09948fb0b9d|validated-advance|v4.5.0-117-g374bb833|jpiquot|2026-10-04
 references/Hexalith.Tenants|cc348c9d7839ec7aad01649fc1c0e6f4fe672da4|validated-advance|v5.7.0-134-gcc348c9d|jpiquot|2026-10-04
+
+# --- Story 8.10 working-tree identity approval (2026-10-04): Administrator /
+#     jpiquot chose "approve working tree" for exactly these five clean
+#     fast-forward checkouts observed at Parties
+#     7c720c7f9879ecb469993b1d2dff2bdb72b96e1b (spec-8-10 "Working-tree
+#     identity reconciliation"). Source-pin selection only: no I16 parity,
+#     owner release, publishing, commit, or rollback deletion is approved.
+#     The gitlinks stay uncommitted until the human commits them.
+references/Hexalith.Builds|145ae921d9032f110b7371614939559e0aee202a|validated-advance|v4.29.1-16-g145ae92|jpiquot|2026-10-04
+references/Hexalith.EventStore|2242ad55a1b678828df8aa093fd92399c29af5bf|validated-advance|v3.112.0-2-g2242ad55|jpiquot|2026-10-04
+references/Hexalith.FrontComposer|2cc8dd3a3ac76c03f5ea6f6f92e65829306db470|validated-advance|v4.5.0-121-g2cc8dd3a|jpiquot|2026-10-04
+references/Hexalith.Memories|5b43fe2f8a0f04dc021921a077dff1a573c2ce5e|validated-advance|v2.28.0|jpiquot|2026-10-04
+references/Hexalith.Tenants|04e655cf070b17eced9daefb9eaa87a09ec60e81|validated-advance|v5.7.0-141-g04e655cf|jpiquot|2026-10-04

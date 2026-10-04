@@ -53,8 +53,8 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.6.0` |
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.10` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.0-preview.1.261001-0243` |
-| Gateway/eventing | Hexalith.EventStore | package `3.110.0` by default; approved source gitlink `cbbe41501ba722731bf36b2c343efdef4ac714fb` (explicit human approval 2026-10-04; parity unvalidated) |
-| Tenancy | Hexalith.Tenants | package `5.7.0` by default; approved source gitlink `cc348c9d7839ec7aad01649fc1c0e6f4fe672da4` (explicit human approval 2026-10-04; parity unvalidated) |
+| Gateway/eventing | Hexalith.EventStore | package `3.112.0` by default (Parties pre-import CPM pin); approved source gitlink `2242ad55a1b678828df8aa093fd92399c29af5bf` (`v3.112.0-2-g2242ad55`; working-tree approval 2026-10-04, root gitlink commit pending; parity unvalidated) |
+| Tenancy | Hexalith.Tenants | package `5.7.0` by default; approved source gitlink `04e655cf070b17eced9daefb9eaa87a09ec60e81` (`v5.7.0-141-g04e655cf`; working-tree approval 2026-10-04, root gitlink commit pending; parity unvalidated) |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.2.0` |
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.12` |

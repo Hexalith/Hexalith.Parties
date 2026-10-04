@@ -195,8 +195,10 @@ public sealed class DocumentationFitnessTests
             Read(root, document).ShouldContain($"Aspire {aspire}", Case.Sensitive, document);
         }
 
-        string eventStoreVersion = catalog.Descendants("HexalithEventStoreVersion").Single().Value;
-        Read(root, "docs/ci.md").ShouldContain($"catalog selects EventStore {eventStoreVersion}");
+        XDocument rootPackages = XDocument.Parse(Read(root, "Directory.Packages.props"));
+        string eventStoreVersion = rootPackages.Descendants("HexalithEventStoreVersion").SingleOrDefault()?.Value
+            ?? catalog.Descendants("HexalithEventStoreVersion").Single().Value;
+        Read(root, "docs/ci.md").ShouldContain($"package graph selects EventStore {eventStoreVersion}");
     }
 
     [Fact]

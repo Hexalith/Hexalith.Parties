@@ -4,10 +4,10 @@ epic: 8
 date: 2026-07-07
 updated: 2026-10-04
 status: final
-amendment: 2026-10-04 identity/documentation reconciliation (Round 6 plus explicit three-pin approval; parity pending); prior 2026-09-08 validation-driven (I19/I19a/I20 added; I1/I7/I10/I11/I14/I16 tightened; §2/§4/§5/§7 corrected; Inherited Invariants + Deferred added — see §10); prior 2026-08-18 amendment in §8
+amendment: 2026-10-04 identity/documentation reconciliation (Round 6, explicit three-pin approval, then working-tree five-pin approval; parity pending); prior 2026-09-08 validation-driven (I19/I19a/I20 added; I1/I7/I10/I11/I14/I16 tightened; §2/§4/§5/§7 corrected; Inherited Invariants + Deferred added — see §10); prior 2026-08-18 amendment in §8
 classification: post-MVP maintenance (Class C) — zero new PRD FRs
 closes-blocker: "Story 8.1 preserved 'missing Epic 8 architecture spine' blocker"
-open-condition: "Current root pins are approved; superseded parity receipts and the separate I16 re-validation approval remain unvalidated/pending (see §7a and the 8.3 I20 table)"
+open-condition: "EventStore package 3.112.0 and the five working-tree source pins are approved (root gitlink commit pending); superseded parity receipts and I16 re-validation remain unvalidated/pending (see §7a and the 8.3 I20 table)"
 related:
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-06.md
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-16-g7-g9-tenant-claims-ownership.md
@@ -430,7 +430,7 @@ sprint-status tracks.
 | I1a | Deferred | `8.8-runtime-boundary-cleanup` retains the Parties AppHost until integrated-topology, security, publish, and rollback parity exist; retirement additionally waits for `8.6-residual-review-debt` and `external-runtime-deployment` — every deferral whose exit proof or rollback names the Parties AppHost — to pass or be re-approved (I20) against the successor topology. |
 | I2 | Executable + Deferred | `RetiredLeafProjectFitnessTests` guards the EventStore SDK host shape and retired leaf boundaries at source level; `EventStoreGatewayE2ETests` adds topology-gated coverage (runs fully only with Docker/DAPR available); `8.6-residual-review-debt` owns authenticated end-to-end handler-discovery proof. |
 | I3 | Deferred | `8.6-residual-review-debt` (host/gateway/ACL switch-back seams), `8.7-data-protection-extraction`, `8.8-runtime-boundary-cleanup`, and `8.9-frontcomposer-ui-consolidation` retain every named local rollback path until parity is executable; `external-runtime-deployment` owns the release-recovery rollback path. |
-| I4 | Executable | `PlatformApiPrerequisitesTests` proves committed root gitlinks via `git ls-tree HEAD` plus clean matching checkouts and package/source graphs separately. Selected EventStore package `3.110.0` / source `cbbe41501ba722731bf36b2c343efdef4ac714fb`, Commons HTTP `116d26815eb81e35b3c161e1799e5ee12805fc0a` / package fallback `2.30.1`, Builds `688eec9a4333245cc0ff7772115c769094471863`, and FrontComposer `374bb83392d8ab4e8a8397cfd312d09948fb0b9d` / package `4.5.0` are recorded separately. All eight current source identities are approved in the 8.3 ledger/signoff: the three later EventStore, FrontComposer, and Tenants `cc348c9d7839ec7aad01649fc1c0e6f4fe672da4` pins at Parties `c782b68c5cf56a19e6a2a237f5f44e3043d5e461` received explicit Administrator / jpiquot approval on 2026-10-04. Source presence/compile and selection signoff do not certify parity. |
+| I4 | Executable | `PlatformApiPrerequisitesTests` proves committed root gitlinks via `git ls-tree HEAD` plus clean matching checkouts and package/source graphs separately. Selected EventStore package `3.112.0` (Parties pre-import CPM pin) / approved source `2242ad55a1b678828df8aa093fd92399c29af5bf`, Commons HTTP `116d26815eb81e35b3c161e1799e5ee12805fc0a` / package fallback `2.30.1`, Builds `145ae921d9032f110b7371614939559e0aee202a`, and FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` / package `4.5.0` are recorded separately. On 2026-10-04 Administrator / jpiquot approved exactly five working-tree identities (Builds, EventStore, FrontComposer, Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e`, and Tenants `04e655cf070b17eced9daefb9eaa87a09ec60e81`) in the 8.3 I20 five-pin row and signoff. Their root gitlink commit is pending: Parties HEAD `7c720c7f9879ecb469993b1d2dff2bdb72b96e1b` still records older unapproved pointers, so the committed-tree guard stays red until the human commits them. Superseded dated history: the Round 6 selection and the 2026-10-04 three-pin approval of EventStore `cbbe41501ba722731bf36b2c343efdef4ac714fb`, FrontComposer `374bb83392d8ab4e8a8397cfd312d09948fb0b9d`, and Tenants `cc348c9d7839ec7aad01649fc1c0e6f4fe672da4` at Parties `c782b68c5cf56a19e6a2a237f5f44e3043d5e461`. Source presence/compile and selection signoff do not certify parity. |
 | I5 | Executable | `ContractsPublicApiSnapshotTests`, `ClientPackageTests`, `PartyPickerPackagingTests`, `AdminPortalPackagingTests`, and `ConsumerPortalPackagingTests` preserve the public package surface. |
 | I6 | Executable + Deferred | `EventStoreGatewayRoutingTests`, `HttpPartiesQueryClientTests`, and `SelfScopedPartiesClientTests` preserve command/query behavior and self-scope; `8.8-runtime-boundary-cleanup` owns future shared-helper adoption. |
 | I7 | Executable + Deferred | `PartyAggregateConsentTests`, `PartyAggregateErasureTests`, and `ErasureVerificationServiceTests` preserve consent, restriction, and erasure behavior; `8.6-residual-review-debt` owns the residual erasure-certificate identity/status validation and Memories cleanup-race review debt. |
@@ -461,13 +461,16 @@ fitness test parses.
   can observe. Owner: whichever story changes a retained identity. Open I16
   items at 2026-10-04: prior I9/I10/I13/mandatory-lane receipts marked
   **unvalidated** at moved dependencies and the separate I16 parity approval.
-  The later EventStore/FrontComposer/Tenants identity-selection rows in the
-  8.3 I20 table are now explicitly approved by Administrator / jpiquot. The accessibility gate
-  uses `PlatformApiPrerequisitesTests.FrontComposerSha` as its single approved
-  stamp (`374bb83392d8ab4e8a8397cfd312d09948fb0b9d`). Historical Playwright
-  proof at `f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a` is unvalidated; no new
-  deletion is authorized by it. Owner: the changing story plus the named
-  Parties/EventStore/FrontComposer test owners.
+  The working-tree five-pin identity-selection row in the 8.3 I20 table
+  (Builds, EventStore, FrontComposer, Memories, Tenants) is explicitly approved
+  by Administrator / jpiquot; the root gitlink commit is pending. The
+  accessibility gate uses `PlatformApiPrerequisitesTests.FrontComposerSha` as
+  its single approved stamp (`2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`). The
+  2026-10-04 Playwright execution at superseded `374bb83392d8ab4e8a8397cfd312d09948fb0b9d`
+  and the historical proof at `f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a` are
+  unvalidated at that stamp; no new deletion is authorized by either. Owner:
+  the changing story plus the named Parties/EventStore/FrontComposer test
+  owners.
 - **I17 (deferral executors inherit the gate) — process gate, not executable.**
   Enforced at spec-authoring and review time. The `deferred-work.md` field
   vocabulary added 2026-08-19 (`authored_by_spec` / `activated_by_spec` /
@@ -498,10 +501,12 @@ evidence.
   `PartyAggregateErasureTests` already pin the aggregate as writer. Owner:
   8.7 spec author + EventStore G5 owner.
 - **I20 (approval record) — process gate, not executable.** The 8.3 matrix now
-  contains the approval table: the existing Round 6 identity-selection decision
-  and the explicit 2026-10-04 three-pin approval are recorded with exact scope
-  and provenance. Other applicable decision kinds remain pending. A populated selection row does
-  not certify I16 parity re-validation. Each applicable pending row needs its
+  contains the approval table: the existing Round 6 identity-selection decision,
+  the explicit 2026-10-04 three-pin approval, the EventStore `3.112.0` package
+  selection, and the later 2026-10-04 working-tree five-pin approval are
+  recorded with exact scope and provenance. Other applicable decision kinds
+  remain pending. A populated selection row does not certify I16 parity
+  re-validation. Each applicable pending row needs its
   decision, artifact, named human, date, and human/reviewer-gate authority before
   its action proceeds. Owner: the reviewer gate.
 
@@ -585,3 +590,19 @@ unvalidated; source Debug checks are diagnostics at the approved source identiti
 Story 8.10 and Epic 8 remain open; Stories 8.7–8.9 remain blocked. Module-landing
 routing is source-only adoption recorded under G4/DW-99 and awaits the DW-124
 FrontComposer release before package-mode UI proof.
+
+## 12. EventStore Package Selection — 2026-10-04
+
+Administrator / jpiquot directly requested EventStore `3.112.0`. Parties now
+pins `HexalithEventStoreVersion=3.112.0` before importing the shared catalog;
+package consumers remain separate from diagnostic source references. The 8.3
+I20 table records package selection only. Later committed/working source
+identities at Parties `7c720c7f9879ecb469993b1d2dff2bdb72b96e1b` are
+observations, not inferred source-pin or I16 parity approvals. Existing user
+checkout advances are preserved, and identity guards still require exact
+committed gitlinks plus clean matching checkouts. Current verification and
+remaining package/UI blockers are recorded in `tests/test-summary.md`.
+Later the same day the Administrator / jpiquot approved exactly the five
+working checkouts (8.3 I20 five-pin row, §7 I4); this section's "observations"
+wording is dated history. That approval grants no I16 parity, and the committed
+gitlinks remain pending until the human commits them.

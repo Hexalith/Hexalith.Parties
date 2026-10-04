@@ -206,8 +206,9 @@ development_status:
   # links and role=main/role=navigation landmarks — at FrontComposer root gitlink
   # 7a337a21d4ba261bf27aeb3feedde47789f0160a (original adoption); amended
   # 5cbc5583 (2026-09-05/06), f0c3b6fd (2026-09-07), b0ad2fb6
-  # (2026-09-13), bf40099f (Round 6), then 374bb833 (explicit human
-  # approval 2026-10-04). I13 parity remains unvalidated.
+  # (2026-09-13), bf40099f (Round 6), 374bb833 (explicit human
+  # approval 2026-10-04), then 2cc8dd3a (working-tree approval 2026-10-04;
+  # root gitlink commit pending). I13 parity remains unvalidated.
   # Work packages A-E (entity picker,
   # freshness indicator, live-region contract, file/JSON download, typed-name
   # confirmation) remain undelivered, so this story is blocked: a delivered
@@ -252,10 +253,11 @@ development_status:
   # identity, closing both polymorphicserializations-stylecop-fix-incomplete-
   # at-selected-gitlink and authorized-owner-fixes-not-immutable. A
   # .gitlink-signoff.tsv validated-advance row was added for both that
-  # identity and the previously-unsigned Commons advance. Status is `review`
-  # (matches the spec frontmatter `in-review`) -- this comment previously and
-  # incorrectly claimed a "moved review -> in-progress" transition that never
-  # happened at the value below.
+  # identity and the previously-unsigned Commons advance. Status was `review`
+  # on 2026-09-06 (matching the spec frontmatter `in-review` then) -- this
+  # comment previously and incorrectly claimed a "moved review -> in-progress"
+  # transition that had not happened. The later 2026-10-04 workflow halt set
+  # the current `in-progress` value (see the 2026-10-04 lines below).
   # Code review round 4, 2026-09-06: EventStore and Memories had drifted past
   # the round-3 identities (unauthorized, found by
   # PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph
@@ -277,7 +279,7 @@ development_status:
   # historical provenance. Round 6 approved the eight exact IDs in the
   # spec D1 / 8.3 I20 table. Administrator / jpiquot explicitly answered "yes"
   # to EventStore cbbe4150, FrontComposer 374bb833, and Tenants cc348c9d on
-  # 2026-10-04; current constants/signoff select those three existing pins.
+  # 2026-10-04 (superseded later that day by the working-tree approval below).
   # Prior I9/I10/I13 and mandatory lane receipts are unvalidated. Package mode
   # remains blocked by source-only EventStore identity-history Contracts and
   # FrontComposer route types (DW-124). Diagnostic source Debug results are
@@ -286,6 +288,24 @@ development_status:
   # Two closure guards repaired after review; nine regression cases pass.
   # Review follow-ups are DW-127–138. Required Release build rerun remains red
   # with 10 CS0246; workflow halts in-progress. No retirement/closure.
+  # Subsequent package approval: user requested EventStore 3.112.0; Parties CPM
+  # now pins it before the catalog import. Core package Release build passes.
+  # Latest focused package checks: 61 passed, 2 source-pin failures, no skips.
+  # Solution Release now fails 3 FrontComposer type errors (DW-124), replacing
+  # the older 10 EventStore contract errors. Later user source advances were
+  # preserved; no closure or source approval was inferred at that point.
+  # Working-tree identity approval, 2026-10-04: Administrator / jpiquot chose
+  # "approve working tree" for exactly Builds 145ae921 (v4.29.1-16), EventStore
+  # 2242ad55 (v3.112.0-2), FrontComposer 2cc8dd3a (v4.5.0-121), Memories
+  # 5b43fe2f (v2.28.0), and Tenants 04e655cf (v5.7.0-141). Signoff, test
+  # constants, 8.3 matrix/I20, spine, docs, and DW-99 now select them. The
+  # gitlinks stay uncommitted (HEAD 7c720c7f records older unapproved
+  # pointers), so the committed-tree guard stays red until the human commits
+  # them. Focused Release fitness: documentation 6/6, closure 26/26,
+  # prerequisites 14/16 (both failures are committed-gitlink assertions); a
+  # scratch-clone simulation with the gitlinks committed passes 48/48 and the
+  # RC diff gate. No parity (I16), release, publishing, or deletion approved;
+  # closure stays blocked by DW-124, the I16 approval, and I13 (DW-111).
   8-10-final-readiness-documentation-and-retirement-gate: in-progress
   # Added by Correct Course 2026-07-07
   # (sprint-change-proposal-2026-07-07-validation-ladder-runner.md).
