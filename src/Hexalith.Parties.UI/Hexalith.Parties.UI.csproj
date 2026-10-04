@@ -16,6 +16,8 @@
          suppression per the sanctioned escape valve (docs/build-gate.md; check-no-warning-override.sh
          remediation guidance). Remove this NoWarn once this host declares its first [Command]/[Projection]. -->
     <NoWarn>$(NoWarn);HFC1001</NoWarn>
+    <!-- The published FrontComposer 4.5.0 package predates route options; source builds use the new API. -->
+    <DefineConstants Condition="'$(HexalithFrontComposerFromSource)' == 'true'">$(DefineConstants);HFC_ROUTE_OPTIONS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
