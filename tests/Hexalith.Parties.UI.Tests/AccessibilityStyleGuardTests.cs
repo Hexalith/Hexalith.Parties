@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 using Shouldly;
 
@@ -6,8 +7,6 @@ namespace Hexalith.Parties.UI.Tests;
 
 public sealed partial class AccessibilityStyleGuardTests
 {
-    private const string PackagedFrontComposerShellVersion = "4.4.0";
-
     private static readonly string[] AppOwnedRoots =
     [
         "src/Hexalith.Parties.UI/Components",
@@ -64,17 +63,20 @@ public sealed partial class AccessibilityStyleGuardTests
         appRazor.ShouldContain("_content/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.styles.css");
         appRazor.ShouldContain("Hexalith.Parties.UI.styles.css");
 
-        // Packaged 4.4.0 is the CI/bUnit/container identity. Reading submodule wwwroot would skip
+        string packagedVersion = XDocument.Load(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"))
+            .Descendants("HexalithFrontComposerVersion").Single().Value;
+
+        // The catalog package is the CI/bUnit/container identity. Reading submodule wwwroot would skip
         // on a package-mode clone and would not prove the asset that actually ships.
         string packagedCss = Path.Combine(
             ResolveNuGetPackagesRoot(),
             "hexalith.frontcomposer.shell",
-            PackagedFrontComposerShellVersion,
+            packagedVersion,
             "staticwebassets",
             "css",
             "fc-shell.css");
         File.Exists(packagedCss).ShouldBeTrue(
-            $"Restore Hexalith.FrontComposer.Shell {PackagedFrontComposerShellVersion}; missing packaged stylesheet {packagedCss}.");
+            $"Restore Hexalith.FrontComposer.Shell {packagedVersion}; missing packaged stylesheet {packagedCss}.");
 
         string content = File.ReadAllText(packagedCss);
         content.ShouldContain("@media (forced-colors: active)", Case.Insensitive);

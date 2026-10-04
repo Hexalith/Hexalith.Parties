@@ -2,12 +2,12 @@
 title: Epic 8 Architecture Spine (Reconciliation)
 epic: 8
 date: 2026-07-07
-updated: 2026-09-08
+updated: 2026-10-04
 status: final
-amendment: 2026-09-08 validation-driven (I19/I19a/I20 added; I1/I7/I10/I11/I14/I16 tightened; §2/§4/§5/§7 corrected; Inherited Invariants + Deferred added — see §10); prior 2026-08-18 amendment in §8
+amendment: 2026-10-04 identity/documentation reconciliation (Round 6 plus explicit three-pin approval; parity pending); prior 2026-09-08 validation-driven (I19/I19a/I20 added; I1/I7/I10/I11/I14/I16 tightened; §2/§4/§5/§7 corrected; Inherited Invariants + Deferred added — see §10); prior 2026-08-18 amendment in §8
 classification: post-MVP maintenance (Class C) — zero new PRD FRs
 closes-blocker: "Story 8.1 preserved 'missing Epic 8 architecture spine' blocker"
-open-condition: "HEAD Builds gitlink a32cb422 is past the last I16-authorized pin 35c3d1e5 with no signoff — I16 stop in effect (see §7 I4, §10)"
+open-condition: "Current root pins are approved; superseded parity receipts and the separate I16 re-validation approval remain unvalidated/pending (see §7a and the 8.3 I20 table)"
 related:
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-06.md
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-16-g7-g9-tenant-claims-ownership.md
@@ -413,9 +413,9 @@ preserved "missing Epic 8 architecture spine" blocker is **CLOSED for planning
 purposes**. Remaining deletion-heavy migrations (8.6–8.10) are henceforth gated
 by §4 (per-spec readiness gate) rather than by the absence of this document.
 
-## 7. Story 8.10 Closure Evidence Map — 2026-08-18
+## 7. Story 8.10 Closure Evidence Map — 2026-10-04 (baseline 2026-08-18)
 
-The following map is the final Epic 8 disposition. “Executable” means the
+The following map records the current Epic 8 disposition; closure remains open. “Executable” means the
 retained implementation is guarded by a named automated test surface;
 “deferred” means the current path remains the rollback surface and the accepted
 entry in `deferred-work.md` owns the future exit proof. No deferred item is
@@ -430,7 +430,7 @@ sprint-status tracks.
 | I1a | Deferred | `8.8-runtime-boundary-cleanup` retains the Parties AppHost until integrated-topology, security, publish, and rollback parity exist; retirement additionally waits for `8.6-residual-review-debt` and `external-runtime-deployment` — every deferral whose exit proof or rollback names the Parties AppHost — to pass or be re-approved (I20) against the successor topology. |
 | I2 | Executable + Deferred | `RetiredLeafProjectFitnessTests` guards the EventStore SDK host shape and retired leaf boundaries at source level; `EventStoreGatewayE2ETests` adds topology-gated coverage (runs fully only with Docker/DAPR available); `8.6-residual-review-debt` owns authenticated end-to-end handler-discovery proof. |
 | I3 | Deferred | `8.6-residual-review-debt` (host/gateway/ACL switch-back seams), `8.7-data-protection-extraction`, `8.8-runtime-boundary-cleanup`, and `8.9-frontcomposer-ui-consolidation` retain every named local rollback path until parity is executable; `external-runtime-deployment` owns the release-recovery rollback path. |
-| I4 | Executable | `PlatformApiPrerequisitesTests` verifies package/source selection separately and pins the last **authorized** identity set (signoff 2026-09-08): EventStore package `3.103.0` / source `c6efdbba6439370a5c674c12ed866c959624106a`, Commons HTTP source `6da79aed2daa4e199689331ee3196f7872c0988a`, and Builds catalog `35c3d1e5b8a55a74a440b9c2cad4c5e18747b241`. Originally resolved (2026-08-18): superproject commit `2b63ab9` landed the gitlinks and closure tests; re-reconciled 2026-09-05, 2026-09-06, 2026-09-08. **Open condition (2026-09-08):** HEAD gitlink `references/Hexalith.Builds` is `a32cb422749352cce8dec948aa3e78c8f00eb4cf` (superproject commit `bf8daf98`), past the authorized pin with no signoff, test-constant, or matrix `unvalidated` marker — under I16 this is a stop on every Builds-relying deletion until `a32cb422` is re-validated and stamped in the test constant, matrix, and signoff. Restoring `35c3d1e5` is not a remedy: the only diff is `HexalithFrontComposerVersion` `4.3.0 → 4.4.0`, and the test, matrix, and signoff already assert `4.4.0`, so the authorized Builds pin and the authorized FrontComposer catalog value are mutually inconsistent until the re-stamp lands. The 8.3 matrix and `.gitlink-signoff.tsv` remain the durable record; this row is a snapshot of the authorized set, never of an unstamped HEAD. |
+| I4 | Executable | `PlatformApiPrerequisitesTests` proves committed root gitlinks via `git ls-tree HEAD` plus clean matching checkouts and package/source graphs separately. Selected EventStore package `3.110.0` / source `cbbe41501ba722731bf36b2c343efdef4ac714fb`, Commons HTTP `116d26815eb81e35b3c161e1799e5ee12805fc0a` / package fallback `2.30.1`, Builds `688eec9a4333245cc0ff7772115c769094471863`, and FrontComposer `374bb83392d8ab4e8a8397cfd312d09948fb0b9d` / package `4.5.0` are recorded separately. All eight current source identities are approved in the 8.3 ledger/signoff: the three later EventStore, FrontComposer, and Tenants `cc348c9d7839ec7aad01649fc1c0e6f4fe672da4` pins at Parties `c782b68c5cf56a19e6a2a237f5f44e3043d5e461` received explicit Administrator / jpiquot approval on 2026-10-04. Source presence/compile and selection signoff do not certify parity. |
 | I5 | Executable | `ContractsPublicApiSnapshotTests`, `ClientPackageTests`, `PartyPickerPackagingTests`, `AdminPortalPackagingTests`, and `ConsumerPortalPackagingTests` preserve the public package surface. |
 | I6 | Executable + Deferred | `EventStoreGatewayRoutingTests`, `HttpPartiesQueryClientTests`, and `SelfScopedPartiesClientTests` preserve command/query behavior and self-scope; `8.8-runtime-boundary-cleanup` owns future shared-helper adoption. |
 | I7 | Executable + Deferred | `PartyAggregateConsentTests`, `PartyAggregateErasureTests`, and `ErasureVerificationServiceTests` preserve consent, restriction, and erasure behavior; `8.6-residual-review-debt` owns the residual erasure-certificate identity/status validation and Memories cleanup-race review debt. |
@@ -459,12 +459,15 @@ fitness test parses.
   source selection separately and pins each retained identity. Its residual gap
   is that identity re-opening is a review-time obligation, not something a test
   can observe. Owner: whichever story changes a retained identity. Open I16
-  items at 2026-09-08: the Builds gitlink condition recorded in the I4 row, and
-  a FrontComposer stamp split — `PlatformApiPrerequisitesTests` and the HEAD
-  gitlink stand at `a0acb78f…` while `EpicEightClosureFitnessTests` and the
-  Playwright a11y receipt are stamped `f0c3b6fd…`; the I12/I13 receipts are
-  therefore at a superseded identity until the lane is re-run at `a0acb78f…`
-  or the receipt is marked unvalidated in the 8.3 matrix.
+  items at 2026-10-04: prior I9/I10/I13/mandatory-lane receipts marked
+  **unvalidated** at moved dependencies and the separate I16 parity approval.
+  The later EventStore/FrontComposer/Tenants identity-selection rows in the
+  8.3 I20 table are now explicitly approved by Administrator / jpiquot. The accessibility gate
+  uses `PlatformApiPrerequisitesTests.FrontComposerSha` as its single approved
+  stamp (`374bb83392d8ab4e8a8397cfd312d09948fb0b9d`). Historical Playwright
+  proof at `f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a` is unvalidated; no new
+  deletion is authorized by it. Owner: the changing story plus the named
+  Parties/EventStore/FrontComposer test owners.
 - **I17 (deferral executors inherit the gate) — process gate, not executable.**
   Enforced at spec-authoring and review time. The `deferred-work.md` field
   vocabulary added 2026-08-19 (`authored_by_spec` / `activated_by_spec` /
@@ -494,11 +497,13 @@ evidence.
   may adopt the engine. Existing `PartyAggregateConsentTests` and
   `PartyAggregateErasureTests` already pin the aggregate as writer. Owner:
   8.7 spec author + EventStore G5 owner.
-- **I20 (approval record) — process gate, not executable.** The approval
-  table does not yet exist in the 8.3 matrix reconciliation ledger; creating
-  it (empty, with the eight decision rows named in I20) is the first
-  companion follow-up of this amendment. Until it exists, no approval those
-  invariants name can be claimed. Owner: the reviewer gate.
+- **I20 (approval record) — process gate, not executable.** The 8.3 matrix now
+  contains the approval table: the existing Round 6 identity-selection decision
+  and the explicit 2026-10-04 three-pin approval are recorded with exact scope
+  and provenance. Other applicable decision kinds remain pending. A populated selection row does
+  not certify I16 parity re-validation. Each applicable pending row needs its
+  decision, artifact, named human, date, and human/reviewer-gate authority before
+  its action proceeds. Owner: the reviewer gate.
 
 ## 8. Validation & Amendment Record — 2026-08-18
 
@@ -529,10 +534,10 @@ re-opens it. A row here is a scheduled decision, not permission to diverge.
 | Infra / provider strategy and environment topology beyond local Aspire | `external-runtime-deployment` | Its activation spec; the spine binds only I1 tuples and I1a parity, not the provider. |
 | Key-ring, cursor, and DataProtection payload continuity across the AppHost cutover (I1a parity list) | **One decision** recorded once in the 8.3 ledger (I20) and binding both `8.7-data-protection-extraction` (key backend) and `8.8-runtime-boundary-cleanup` (successor topology) | Whichever of the two activation specs is authored first: either prove the successor unprotects predecessor payloads (cursor purposes included) or declare the invalidation window and the user-visible `InvalidCursor` / typed-unreadable behavior; the second spec inherits that row. |
 | FAST/v4 token purge and a token-purity guard for retained RCL CSS | `8.9-frontcomposer-ui-consolidation` | Its activation spec; I13 stays Deferred until the purge is executable. |
-| Fluent UI Blazor V5 is a release candidate (`5.0.0-rc.5-26219.1`) | Builds catalog, I13 | V5 GA: re-pin through the catalog; I13 rules do not change. |
+| Fluent UI Blazor V5 GA `5.0.0` is selected | Builds catalog, I13 | The catalog has reached GA; I13 parity/token-purge gates remain open at the selected identity. |
 | `EventStoreGatewayE2ETests` is a silent no-op without Docker/DAPR | `8.6-residual-review-debt` | Its topology proof: convert to an explicit skip or run in the topology lane. |
-| Epic 7 parent Stack table (SDK `10.0.302`, Dapr `1.18.4`, Aspire `13.4.6`, Fluent RC3) is behind live pins (`10.0.400` / `1.18.5` / `13.5.3` / RC5) | Epic 7 spine (parent) | An Epic 7 spine update; this child does not override the parent's seed, and I12 deliberately names no patch pins. |
-| 8.3 matrix G5 cell still names a superseded "retained" EventStore/Builds pair | Story 8.3 matrix owners | Next matrix reconciliation; the 8.10 table on the same page is authoritative meanwhile. |
+| Epic 7 parent Stack table (SDK `10.0.302`, Dapr `1.18.4`, Aspire `13.4.6`, Fluent RC3) is behind live pins (`10.0.401` / `1.18.10` / `13.6.0` / Fluent `5.0.0`) | Epic 7 spine (parent) | An Epic 7 spine update; this child does not override the parent's seed, and I12 deliberately names no patch pins. |
+| 8.3 historical G5 retained-pair wording | Story 8.3 matrix owners | Resolved 2026-10-04: the G5 cell labels both old pairs as dated inspection receipts; the current 8.10 graph is recorded separately. G5 itself remains needs-additive-api. |
 
 ## 10. Validation & Amendment Record — 2026-09-08
 
@@ -568,3 +573,15 @@ only coherent exit is re-validating and stamping `a32cb422`. Findings deferred
 with revisit conditions are in §9 and this folder's `.memlog.md`; known
 residuals accepted with reasons (I10 `ProjectionVersion` grammar waits on
 G6/DW-25; I20 table creation is a companion follow-up) are in the memlog.
+
+## 11. Identity and Receipt Reconciliation — 2026-10-04
+
+The Round 6 selection decision and the Administrator's explicit 2026-10-04
+approval of the three later HEAD pins are recorded in the 8.3 I20 table and
+signoff. This supersedes the old Builds V27 snapshot above. Identity selection
+does not certify parity re-validation. The mandatory
+Release/package/consumer/browser receipts and moved I9/I10/I13 parity claims are
+unvalidated; source Debug checks are diagnostics at the approved source identities.
+Story 8.10 and Epic 8 remain open; Stories 8.7–8.9 remain blocked. Module-landing
+routing is source-only adoption recorded under G4/DW-99 and awaits the DW-124
+FrontComposer release before package-mode UI proof.

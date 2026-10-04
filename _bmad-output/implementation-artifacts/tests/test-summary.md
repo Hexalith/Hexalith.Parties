@@ -533,35 +533,28 @@ selection fitness. Closure remains deliberately open because two required gates
 are red; no deferred migration or external deployment work is represented as
 delivered.
 
-### Retained immutable identities and rollback
+### Retained immutable identities and rollback — reconciled 2026-10-04
 
-- EventStore default package graph: `3.102.0`.
-- EventStore explicit source graph: root gitlink and checkout
-  `3c6a5e33f9fbaf8469047ba3de72f70ab4425e66`
-  (`v3.102.0-58-g3c6a5e33`).
-- Commons HTTP selected source graph: root gitlink and checkout
-  `6da79aed2daa4e199689331ee3196f7872c0988a`
-  (`v2.30.0-19-g6da79ae`); package `2.30.0` is fallback only.
-- Builds imported catalog: root gitlink and checkout
-  `6daad3d501e97204eba66d971bba6a7103b85ccd`; it selects EventStore
-  `3.102.0`, Commons `2.30.0`, Memories `2.26.1`, Tenants `5.7.0`, and
-  Parties `1.1.1`.
-- FrontComposer shell slice: source gitlink
-  `f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a` (`v4.3.0-37-gf0c3b6fd`); packaged
-  `4.3.0` remains the CI/bUnit/container identity.
-- Memories optional source: root gitlink and checkout
-  `7e9c2c387ee84b4d5c96c27f4cf613e13ff2c9e2` (`v2.26.2-4-g7e9c2c38`);
-  package mode remains catalog-selected `2.26.1`, with NuGet `2.26.2`
-  recorded as catalog-owned drift.
-- Tenants source graph: root gitlink and checkout
-  `f75cdacc8eca458778c7109fd3f713f8907bed02` (`v5.7.0-27-gf75cdacc`);
-  package mode uses `5.7.0`.
-- PolymorphicSerializations: `8aeed1d27c9a050bc4bec6d89051aa00de306a69`
-  (`v1.19.2-11-g8aeed1d`).
-- Rollback remains the current Parties payload-protection, authentication,
-  client/MCP/AppHost/build, UI, and local-topology implementations. Runtime
-  deployment rollback is owned by the external orchestrator and redeploys the
-  prior immutable image/configuration set.
+Parties `c782b68c5cf56a19e6a2a237f5f44e3043d5e461`, SDK `10.0.401`. The 8.3 reconciliation/I20 table
+is authoritative. The original Round 6 selection and the Administrator's explicit
+2026-10-04 approval of the three later pins select the following current source
+identities. Earlier affected parity receipts remain unvalidated; selection approval
+does not approve I16 parity, owner releases, publishing, or deletion.
+
+- AI.Tools: approved `3f194e17174994d308ec84af9ee2b5aa68674d0d` (`3f194e1`). Committed root gitlink and clean checkout match.
+- Builds: approved `688eec9a4333245cc0ff7772115c769094471863` (`v4.29.1-14-g688eec9`). Committed root gitlink and clean checkout match.
+- Commons: approved `116d26815eb81e35b3c161e1799e5ee12805fc0a` (`v2.30.1-15-g116d268`). Committed root gitlink and clean checkout match.
+- EventStore: approved `cbbe41501ba722731bf36b2c343efdef4ac714fb` (`v3.111.0-10-gcbbe4150`), explicit Administrator / jpiquot approval 2026-10-04. Committed root gitlink and clean checkout match. Prior Round 6 `b046425503c694d5857e8bba890351840fa52c26` is superseded.
+- FrontComposer: approved `374bb83392d8ab4e8a8397cfd312d09948fb0b9d` (`v4.5.0-117-g374bb833`), explicit Administrator / jpiquot approval 2026-10-04. Committed root gitlink and clean checkout match. Prior Round 6 `bf40099f81fcaeac324b7b4377513ac7d49cead4` is superseded.
+- Memories: approved `3d72927f4dac66af4968cc6726c4e96df292f2e4` (`v2.27.1-23-g3d72927f`). Committed root gitlink and clean checkout match.
+- PolymorphicSerializations: approved `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` (`v1.19.4`). Committed root gitlink and clean checkout match.
+- Tenants: approved `cc348c9d7839ec7aad01649fc1c0e6f4fe672da4` (`v5.7.0-134-gcc348c9d`), explicit Administrator / jpiquot approval 2026-10-04. Committed root gitlink and clean checkout match. Prior Round 6 `b63bdbba8613801bb488eaa9116f386e41a261f8` is superseded.
+- Builds selects EventStore `3.110.0`, Commons `2.30.1`, FrontComposer `4.5.0`,
+  Memories `2.27.1`, Tenants `5.7.0`, Parties `1.1.1`; source and package proof
+  remain separate. AI.Tools is instruction-only; Memories remains optional.
+- Rollback remains the Parties security, authentication, client/MCP/AppHost/build,
+  UI, and local-topology paths. External runtime recovery redeploys the prior
+  immutable images/configuration. No rollback seam is retired by this reconciliation.
 
 ### Initial validation receipts (superseded 2026-08-18)
 
@@ -587,7 +580,10 @@ phrase `Validation receipts` so the closure fitness parser cannot select it.
 | Playwright accessibility | **Blocked** | `npm --prefix tests/e2e run test:a11y`: 2 passed, 4 failed. Failures are the shell skip link navigating to the auth challenge instead of focusing `#parties-main-content`, keyboard focus consequently timing out, duplicate `Skip to content` strict-locator ambiguity between Parties and FrontComposer, and three polite status regions causing strict-locator ambiguity in the visual contract. The axe gate and raw-teal guard passed. Resolving this crosses the deferred Story 8.9 shell-consolidation boundary, so no gate or test was weakened. |
 | Static diff | Pass | `git diff --check` completed with no output. |
 
-### Open closure blockers
+### Historical closure blockers — 2026-08-18
+
+The dated blockers below retain their original evidence. Current blockers and
+execution outcomes are recorded in the canonical table and the 2026-10-04 packet.
 
 - blocker: `release-solution-polymorphic-stylecop`
   owner: `Hexalith.PolymorphicSerializations maintainers for the dependency fix; Amelia (Parties Developer) and Murat (Test Architect) for consuming-graph revalidation`
@@ -619,24 +615,27 @@ exercises an interactive Blazor UI rather than SSR-only output.
 ### Validation receipts
 
 Authoritative closure-gate table. Check names are canonical: the closure fitness
-test requires a `Release solution build` row and a `Playwright accessibility`
-row, and rejects any value that does not begin with `Pass` or that still names a
-blocker.
+test requires all six canonical Verification-lane rows (warning policy, Release
+build, all .NET tests, packages/consumers, npm/typecheck, and Playwright), and
+rejects values that are not `Pass` or that qualify a pass as blocked,
+unvalidated, failed, or skipped.
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| PolymorphicSerializations owner build and tests | Pass | At gitlink `0dca9e9d3f8b2a20ba426b84fa575ab4e7b5562b`, its Release build completed with 0 warnings and 0 errors and its test assembly passed 15/15. The compatible explicit-syntax preferences do not suppress StyleCop diagnostics. |
-| FrontComposer shell focus/theme tests | Pass | Direct focused execution of `Story13AccessibilityPrimitivesTests`, `FrontComposerShellTests`, `FcSystemThemeWatcherTests`, and `ThemeEffectsScopeTests` passed 50/50. Fluent `ThemeSettings.IsExact=false` keeps the configured teal as a palette seed instead of forcing the raw, non-AA brand background. |
-| Parties UI tests | Pass | `Hexalith.Parties.UI.Tests` passed 328/328 after the 2026-08-19 code-review repair of the app-owned focus-visible scope regression. |
-| Warning and nested-submodule policy | Pass | `bash scripts/check-no-warning-override.sh` and solution restore: no warning-override or nested-submodule regression. |
-| Release solution build | Pass | Re-measured 2026-09-06 at PolymorphicSerializations `8aeed1d27c9a050bc4bec6d89051aa00de306a69`: `dotnet build Hexalith.Parties.slnx -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` reports 0 warnings, 0 errors. The 16 SA1316 errors recorded at `0dca9e9d` are gone. |
-| All .NET test projects | Pass with owner-visible skips | `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults`: all 15 projects passed; 2,437 succeeded, 0 failed, 6 existing Story 12 topology skips. |
-| Package/API and package-only consumers | Pass | All 9 release packages were packed and validated at `0.0.0-story810`; client and portal package-only consumers built with 0 warnings and 0 errors. |
-| npm install and typecheck | Pass | `npm ci --prefix tests/e2e` found 0 vulnerabilities; `npm --prefix tests/e2e run typecheck` passed. |
-| Playwright accessibility | Pass | Re-measured 2026-09-07 after the toolchain update: the frozen accessibility sequence passed 6/6 with Playwright `1.63.0` at FrontComposer source gitlink `f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a` (`v4.3.0-37-gf0c3b6fd`), matching the current reconciliation table. I13 is still not discharged: the forced-colors check focuses `.fc-skip-link`, not a content control (DW-111). Packaged `4.3.0` remains the CI/bUnit/container identity and is recorded separately. |
-| Static diff | Pass | `git diff --check` completed with no output after remediation. |
+| PolymorphicSerializations owner build and tests | **Unvalidated** | Historical receipt, not rerun at the 2026-10-04 retained graph. At gitlink `0dca9e9d3f8b2a20ba426b84fa575ab4e7b5562b`, its Release build completed with 0 warnings and 0 errors and its test assembly passed 15/15. The compatible explicit-syntax preferences do not suppress StyleCop diagnostics. |
+| FrontComposer shell focus/theme tests | **Unvalidated** | Historical receipt, not rerun at the 2026-10-04 retained graph. Direct focused execution of `Story13AccessibilityPrimitivesTests`, `FrontComposerShellTests`, `FcSystemThemeWatcherTests`, and `ThemeEffectsScopeTests` passed 50/50. Fluent `ThemeSettings.IsExact=false` keeps the configured teal as a palette seed instead of forcing the raw, non-AA brand background. |
+| Parties UI tests | **Unvalidated (full lane)** | 2026-10-04 source-mode Debug focused checks: MainLayout 3/3, style 4/4, host composition 17/17, specimen scope 8/8; existing specimen route/component checks passed 7/7. Both source-mode Debug builds passed with 0 warnings/errors. These diagnostics do not certify the full package-mode UI lane. Historical full-lane receipt: 328/328 on 2026-08-19, unvalidated at current identities. |
+| Warning and nested-submodule policy | Pass | 2026-10-04 at Parties `c782b68c5cf56a19e6a2a237f5f44e3043d5e461`: `bash scripts/check-no-warning-override.sh` passed; root-declared submodule checkouts are clean and no nested submodule is initialized. After the explicit three-pin approval, `bash scripts/gitlink-rc-gate.sh --diff 882c02455bbdd6b76886fe3fba8bd24a24e2a057` passed for all eight current root gitlinks. |
+| Release solution build | **Blocked** | 2026-10-04 package mode: `dotnet restore Hexalith.Parties.slnx -p:Configuration=Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` passed; `dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` failed with 0 warnings and 10 CS0246 errors in Parties.Contracts. Selected EventStore package `3.110.0` lacks `IdentityAdmissionEvidence`, `IdentityHistoryPolicy`, `IdentityHistoryCustodyEvidence`, and `IIdentityHistoryEvent`; explicit source Debug builds succeed separately. Historical 2026-09-06 Release proof at PolySer `8aeed1d27c9a050bc4bec6d89051aa00de306a69` is unvalidated at the current graph. |
+| All .NET test projects | **Blocked** | 2026-10-04: the full 15-project Release lane was not run because the current package-mode Release compile fails as recorded above. Historical 2,437 pass / 6 topology skips from 2026-08-18 are unvalidated at current identities. Narrow source-mode Debug fitness is recorded separately below. |
+| Package/API and package-only consumers | **Blocked** | 2026-10-04: packing and package-only consumer validation were not run after the Release build failed. The no-build pack script requires fresh successful Release outputs; stale outputs cannot prove the current graph. Historical 9-package/consumer proof at `0.0.0-story810` is unvalidated. |
+| npm install and typecheck | Pass | 2026-10-04 at Parties `c782b68c5cf56a19e6a2a237f5f44e3043d5e461`, Node `26.4.0`, npm `11.18.0`: `npm ci --prefix tests/e2e` installed 9 packages with 0 vulnerabilities; `npm --prefix tests/e2e run typecheck` passed. |
+| Playwright accessibility | **Unvalidated (I13 parity incomplete)** | 2026-10-04 execution: `npm --prefix tests/e2e run test:a11y` passed 6/6 at FrontComposer source `374bb83392d8ab4e8a8397cfd312d09948fb0b9d` (`v4.5.0-117-g374bb833`), using the route-restricted valid-scope specimen fixture. Administrator / jpiquot subsequently approved this exact source pin on the same date; the executed tree is unchanged. This records passing execution at an approved immutable source identity, while the separate I16 parity approval and DW-111 content-control forced-colors focus proof remain pending. Packaged Shell `4.5.0` is a separate identity. |
+| Static diff | Pass | 2026-10-04: `git -c core.whitespace=cr-at-eol diff --check` passed. Existing CRLF is preserved as required by `.editorconfig`; `core.whitespace` is an invocation-only interpretation of CR at EOL, not a repository configuration change. |
 
-The green executable receipts are not yet immutable consumption receipts.
+The table separates current executions, blocked package gates, and unvalidated
+immutable parity. The current verification packet below records the exact
+commands/results; Story 8.10 and Epic 8 remain open.
 
 **Corrected 2026-08-19 (code review).** The paragraph previously here was
 written before the gitlinks were committed and is false at HEAD. Superproject
@@ -654,7 +653,11 @@ stamped at an identity that does not ship. PolymorphicSerializations `0dca9e9d`
 carries the StyleCop compatibility fix that cleared the 21-error Release build
 but is likewise unreleased.
 
-### Remaining immutable-receipt blocker
+### Historical immutable-receipt blocker — 2026-08-19
+
+This earlier blocker closed historically at the 2026-09-06 selected owner pin;
+its build proof is unvalidated at the current identity. The current packet below
+records the three approved current root gitlinks and package compile failure.
 
 - blocker: `authorized-owner-fixes-not-immutable`
   owner: `Hexalith.FrontComposer and Hexalith.PolymorphicSerializations maintainers for owner commits/releases; Amelia (Parties Developer) and Murat (Test Architect) for superproject selection and revalidation`
@@ -804,7 +807,7 @@ Spec `_bmad-output/implementation-artifacts/spec-8-7-data-protection-extraction.
 
 | Command | Result | Notes |
 | --- | --- | --- |
-| `git ls-tree HEAD references/Hexalith.EventStore` | Pass | `160000 commit d45206f7cbd80a112519c1d4687d7279a745f0c5 references/Hexalith.EventStore` |
+| `git ls-tree d354166c20704fb676818b2973a1bf866db40280 references/Hexalith.EventStore` | Pass | `160000 commit d45206f7cbd80a112519c1d4687d7279a745f0c5 references/Hexalith.EventStore` |
 | `git -C references/Hexalith.EventStore rev-parse HEAD` | Pass | `d45206f7cbd80a112519c1d4687d7279a745f0c5` (matches gitlink) |
 | `git -C references/Hexalith.EventStore describe --tags --always HEAD` | Pass | `v3.103.0-2-gd45206f7` |
 | `test ! -f` on 8.11 closure and both PayloadProtection csproj files | Pass | All three absent. |
@@ -836,8 +839,8 @@ not authorize a new dependency identity or claim provider adoption.
 | Inspection command | Result |
 | --- | --- |
 | `git rev-parse HEAD` | `06714c166c090200ac87373b11d8243aa11b2126`. |
-| `git ls-tree HEAD references/Hexalith.EventStore`; `git -C references/Hexalith.EventStore rev-parse HEAD`; `git -C references/Hexalith.EventStore status --short`; `git -C references/Hexalith.EventStore describe --tags --always` | Matching `2c58ffda41759e895ace4b9625c9bd931a217672`, clean checkout, `v3.111.0`. |
-| `git ls-tree HEAD references/Hexalith.Builds`; `git -C references/Hexalith.Builds rev-parse HEAD`; `rg -n 'HexalithEventStoreVersion\|PayloadProtection' references/Hexalith.Builds/Props/Directory.Packages.props` | Matching `688eec9a4333245cc0ff7772115c769094471863`; `3.110.0`; no PayloadProtection catalog entries. |
+| `git ls-tree 06714c166c090200ac87373b11d8243aa11b2126 references/Hexalith.EventStore`; `git -C references/Hexalith.EventStore rev-parse HEAD`; `git -C references/Hexalith.EventStore status --short`; `git -C references/Hexalith.EventStore describe --tags --always` | Matching `2c58ffda41759e895ace4b9625c9bd931a217672`, clean checkout, `v3.111.0`. |
+| `git ls-tree 06714c166c090200ac87373b11d8243aa11b2126 references/Hexalith.Builds`; `git -C references/Hexalith.Builds rev-parse HEAD`; `rg -n 'HexalithEventStoreVersion\|PayloadProtection' references/Hexalith.Builds/Props/Directory.Packages.props` | Matching `688eec9a4333245cc0ff7772115c769094471863`; `3.110.0`; no PayloadProtection catalog entries. |
 | `cat references/Hexalith.EventStore/src/Hexalith.EventStore.PayloadProtection/Hexalith.EventStore.PayloadProtection.csproj` | Core project exists, `IsPackable=false`; internal core and wire-format/context types, no approved runtime registration. |
 | `rg -n 'interface (IPersonalDataPolicy\|IErasureStateProvider)\|TryAddSingleton<IEventPayloadProtectionService\|Add.*PayloadProtection' references/Hexalith.EventStore/src -g '*.cs'` | Both public contracts present; server still selects the no-op default. |
 | `rg -n 'PayloadProtection' references/Hexalith.EventStore/tools/release-packages.json` | Exit 1, no package release enrollment; expected missing receipt. |
@@ -857,3 +860,180 @@ passed. Documentation validation passed: the frozen spec block and original
 baseline are byte-identical, sprint YAML data is unchanged, all new revision
 fields are canonical, the regenerated context is valid, and the File List
 matches the six changed documentation artifacts. `git diff --check` passed.
+
+
+## Story 8.10 Round 6 implementation verification before the three-pin approval — 2026-10-04
+
+Historical pre-approval packet: the post-approval packet below supersedes its pin
+failures and pending-selection status. These execution counts remain provenance.
+
+This packet records uncommitted Parties-owned repairs at parent revision
+`c782b68c5cf56a19e6a2a237f5f44e3043d5e461`; it records no new human approval.
+The exact eight approved and observed identities are listed above and in the
+8.3 reconciliation/I20 table. EventStore `cbbe41501ba722731bf36b2c343efdef4ac714fb`,
+FrontComposer `374bb83392d8ab4e8a8397cfd312d09948fb0b9d`, and Tenants
+`cc348c9d7839ec7aad01649fc1c0e6f4fe672da4` are later pending advances.
+Constants and signoff retain the previously approved identities. All root
+checkouts match committed gitlinks and are clean; no nested submodule was
+initialized or changed. Source compilation and fixture execution are diagnostic
+results, separate from approved consumption/parity receipts.
+
+### Repairs covered by this packet
+
+The reconciliation and signoff transcribe the existing Round 6 decision, keep
+pending advances explicit, restore committed-tree pin proof, and record all I20
+decision kinds. G5 contracts/core are partial delivery: owner 8.2 is done and 8.3
+is in progress; AzureKeyVault, catalog/release enrollment, dual-provider parity,
+rollback, and the 8.11 closure packet remain gates. The owner ADR field is
+`decision: adopted-amendment`; the exact check now reflects the existing
+September amendment. Independent G5 evidence is inspected before the expected
+pending pin failure. The crypto retention action and all rollback files remain.
+
+SDK/catalog expectations now derive from tracked configuration. Source-mode UI
+asset validation uses a CPM-compatible `PackageDownload` for packaged Shell
+`4.5.0`. Qualified `Pass (unvalidated)`, `Pass with skipped checks`, and `Pass
+with failed checks` receipts are rejected by meaningful closure-negative cases.
+The no-PRD scope check is restored; duplicate ledger decisions and unaddressed
+trailing entries are repaired, with DW-124–126 keeping owner work visible.
+
+MainLayout's older anonymous fixture had no FrontComposer tenant/user context.
+Current producer shell fixtures provide a valid scope because the shell guards
+navigation and content with `ScopeBoundaryService.IsCurrent`. The bUnit fixture
+now supplies that scope without changing its assertions. The browser host uses
+`PartiesAccessibilitySpecimenUserContextAccessor` only under the existing
+explicit specimen flag and Development/Test guard. Its synthetic scope applies
+only to the exact accessibility route; navigation to ordinary routes delegates
+to the selected authenticated accessor, including null/missing context. Eight
+focused cases prove the restriction and delegation. The first browser attempt
+failed 0/6 at the workspace-identity gate; the fixture repair restored 6/6.
+No shell/parity assertion or production authorization was weakened.
+
+### Exact commands and current outcomes
+
+Source-mode Debug restore/build commands below each completed successfully with
+0 build warnings and 0 build errors. They do not replace the package-mode Release
+gate:
+
+```sh
+dotnet restore tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:Configuration=Debug -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
+dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --no-restore -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
+dotnet restore tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:Configuration=Debug -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
+dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -c Debug --no-restore -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
+```
+
+| Command | Current outcome |
+| --- | --- |
+| `dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -noColor` | 39 total: Documentation 6/6 and closure 17/17 passed; prerequisites 14/16 passed. Both prerequisite failures ultimately identify the observed EventStore committed gitlink `cbbe41501ba722731bf36b2c343efdef4ac714fb` against approved `b046425503c694d5857e8bba890351840fa52c26`; the later prerequisite-only rerun below confirms independent G5 checks reach that pin guard. No skips. |
+| `dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -noColor` | 14/16 passed, 2 pending-identity failures, 0 skips, after fixing the exact amended ADR field. |
+| `dotnet tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll -class Hexalith.Parties.UI.Tests.AccessibilityStyleGuardTests -noColor` | 4/4 passed; the catalog-selected packaged Shell 4.5.0 CSS is present via PackageDownload. |
+| `dotnet tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll -class Hexalith.Parties.UI.Tests.PartiesAccessibilitySpecimenScopeTests -class Hexalith.Parties.UI.Tests.MainLayoutAccessibilityTests -class Hexalith.Parties.UI.Tests.PartiesUiHostCompositionTests -noColor` | 28/28 passed: new scope guards 8/8, unchanged MainLayout assertions 3/3, host composition 17/17. |
+| `dotnet tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll -class Hexalith.Parties.UI.Tests.PartiesAccessibilitySpecimenScopeTests -noColor` | Final renamed/documented guard class: 8/8 passed. |
+| `dotnet tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll -class Hexalith.Parties.UI.Tests.PartiesAccessibilitySpecimenTests -noColor` | Existing enabled/disabled specimen route/component checks: 7/7 passed. |
+| `bash scripts/check-no-warning-override.sh` | Passed. |
+| `bash scripts/gitlink-rc-gate.sh --diff 882c0245` | Failed exactly the three later unapproved EventStore, FrontComposer, and Tenants gitlinks; the other five have matching Round 6 signoff. |
+| `git diff 37f4ec826c6f4aea4651cfbad94fb6ab7fc4f0a0 -- _bmad-output/planning-artifacts/epics.md` | No output after removing the McpCli banner; zero new PRD functional requirement. |
+| `npm ci --prefix tests/e2e` | Passed: 9 packages installed, 0 vulnerabilities. Node 26.4.0 / npm 11.18.0. |
+| `npm --prefix tests/e2e run typecheck` | Passed. |
+| `npm --prefix tests/e2e run test:a11y` | After fixture repair, 6/6 passed at observed pending FrontComposer `374bb83392d8ab4e8a8397cfd312d09948fb0b9d`, with Playwright's source-mode Release Test host. This is execution evidence; approved immutable I13 parity remains unvalidated. |
+| `git -c core.whitespace=cr-at-eol diff --check` | Passed with existing CRLF preserved. |
+
+The package-mode commands and result are current and separate:
+
+```sh
+dotnet restore Hexalith.Parties.slnx -p:Configuration=Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
+dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
+```
+
+Restore passed; build failed with 0 warnings and 10 CS0246 errors in
+`Hexalith.Parties.Contracts` for `IdentityAdmissionEvidence`,
+`IdentityHistoryPolicy`, `IdentityHistoryCustodyEvidence`, and
+`IIdentityHistoryEvent`, absent from selected EventStore package `3.110.0`.
+The all-15-project Release test lane, no-build package/API pack, and package-only
+consumer checks were not run after that failed prerequisite. Their historical
+pass counts are unvalidated. The required baseline command
+`aspire run --detach --isolated --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj`
+also exited 2 during the package-mode build with the same 10 errors, before any
+resources started.
+
+Story 8.10 stays `in-progress`, Epic 8 stays `in-progress`, and Stories 8.7–8.9
+remain `blocked`. Pending identity selection, I16 re-validation approval,
+package compatibility/release work (including DW-124), full-lane proof, and the
+remaining I13 content-control proof prevent closure. This invocation authorizes
+no dependency advance, deletion, owner commitment, or publishing action.
+
+## Story 8.10 three-pin approval and verification — 2026-10-04
+
+Administrator / jpiquot explicitly answered "yes" to the request to approve exactly
+these existing current root pins at Parties `c782b68c5cf56a19e6a2a237f5f44e3043d5e461`:
+
+- EventStore `cbbe41501ba722731bf36b2c343efdef4ac714fb` (`v3.111.0-10-gcbbe4150`).
+- FrontComposer `374bb83392d8ab4e8a8397cfd312d09948fb0b9d` (`v4.5.0-117-g374bb833`).
+- Tenants `cc348c9d7839ec7aad01649fc1c0e6f4fe672da4` (`v5.7.0-134-gcc348c9d`).
+
+The 8.3 I20 table, `.gitlink-signoff.tsv`, shared identity constants, architecture
+spine, dependency documentation, deferral chronology, and sprint comments now
+record this approval. The prior Round 6 selection remains historical provenance.
+No gitlink, dependency checkout, package catalog, or owner repository was changed.
+Selection approval does not approve I16 parity, owner releases, publishing, owner
+commitments, or rollback deletion. D1's identity reconciliation is complete;
+Story 8.10 and Epic 8 remain `in-progress` with 8.7–8.9 `blocked`.
+
+Exact post-approval verification commands and results:
+
+| Command | Result |
+| --- | --- |
+| `dotnet restore tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:Configuration=Debug -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` | Passed. |
+| `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --no-restore -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` | Passed: 0 warnings and 0 errors. |
+| `dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -noColor` | Passed: 39/39; documentation 6, closure 17, prerequisites 16. No errors, failures, skips, or unrun cases. Both former pin failures are resolved; all eight exact committed gitlinks and clean matching checkouts pass, and package/source graph evaluation executes. |
+| `bash scripts/gitlink-rc-gate.sh --diff 882c02455bbdd6b76886fe3fba8bd24a24e2a057` | Passed: all eight current root gitlinks have matching `validated-advance` signoff. |
+
+The 39 passing focused UI checks and 6/6 Playwright execution in the preceding
+packet were run at these same unchanged source identities. Together with this
+fitness rerun, the unique focused .NET result is 78 passed, 0 failed, 0 skipped.
+These checks do not certify the full Release/package lane or discharge I13.
+
+The package-mode Release result remains blocked by the 10 CS0246 errors above:
+selected EventStore `3.110.0` lacks the identity-history types consumed by
+Parties.Contracts. Approval changed source identity records and guards, not the
+selected packages, so the failed package prerequisite has not been rerun. The
+full Release tests, pack/API, and package-only consumer checks remain blocked.
+DW-124 still requires a FrontComposer release/catalog/consumer packet; DW-111
+still requires content-control focus evidence. Other applicable I20 approvals,
+including I16 parity re-validation, remain pending. The original baseline and
+frozen intent are preserved; no retirement or closure is claimed.
+
+## Story 8.10 review repairs and final verification — 2026-10-04
+
+All three review layers returned against the preserved full baseline diff.
+The 20.3 MB / 2,093-file historical diff received bounded reachable-code review,
+not an exhaustive audit of every installed BMAD asset. The spec's Review Triage
+Log records all sixteen findings individually before grouping: two closure
+patches, twelve deferred existing root causes (DW-127–138), and one rejection.
+The two patches require all six Verification-lane receipts and stop parsing at
+level-one/two/three Markdown headings. Nine regression cases cover omissions
+and section boundaries; no expectation or closure requirement was weakened.
+
+Exact latest commands and results:
+
+| Command | Result |
+| --- | --- |
+| `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --no-restore -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` | Implementation-agent source build after the two review patches: passed, 0 warnings and 0 errors. |
+| `dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -noColor` | Implementation-agent focused check: 26/26 passed. |
+| `dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -noColor` | Parent rerun after reviewing the patches: 48/48 passed (6 documentation, 26 closure, 16 prerequisites); 0 errors/failures/skips/unrun cases. |
+| `dotnet restore tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -p:Configuration=Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` | Passed; matching package-mode assets restored before the required Release check. |
+| `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 && dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests` | Required first Verification command: exit 1, build failed with 0 warnings and 10 CS0246 errors in Parties.Contracts for IdentityAdmissionEvidence, IdentityHistoryPolicy, IdentityHistoryCustodyEvidence, and IIdentityHistoryEvent. Selected EventStore package 3.110.0 lacks these types. The chained Release assembly test did not run. |
+
+The latest unique focused .NET result is **87 passed / 0 failed / 0 skipped**:
+48 fitness plus the unchanged 39 focused UI cases. Browser execution remains
+6/6 at approved FrontComposer 374bb83392d8ab4e8a8397cfd312d09948fb0b9d, and the
+RC diff gate passes all eight approved root gitlinks. These source diagnostics
+remain separate from Release/package proof and the incomplete I13 content-focus
+and I16 parity approval packet.
+
+The required Release failure stops step-04 before step-05 under the build
+workflow's unfixable-verification rule. Story 8.10 and Epic 8 remain in-progress,
+Stories 8.7–8.9 remain blocked, and full Release tests, pack/API, and package-only
+consumers remain blocked. Resolving the package prerequisite requires owner
+release/catalog work beyond the three exact source-pin approvals. No such work,
+commit, push, package publication, or deletion occurred. The frozen intent and
+original baseline remain preserved.

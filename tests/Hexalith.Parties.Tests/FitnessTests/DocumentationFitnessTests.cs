@@ -1,4 +1,6 @@
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 using Shouldly;
 
@@ -74,7 +76,7 @@ public sealed class DocumentationFitnessTests
     {
         string root = RepositoryRoot.Locate();
         string[] sourceProjects = Directory.GetFiles(Path.Combine(root, "src"), "*.csproj", SearchOption.AllDirectories)
-            .Where(IsNotBuildOutput)
+            .Where(path => IsNotBuildOutput(root, path))
             .Select(path => Path.GetFileNameWithoutExtension(path)!)
             .Order(StringComparer.Ordinal)
             .ToArray();
@@ -83,7 +85,7 @@ public sealed class DocumentationFitnessTests
         Read(root, "Hexalith.Parties.slnx").ShouldContain("samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj");
 
         string[] testProjects = Directory.GetFiles(Path.Combine(root, "tests"), "*.csproj", SearchOption.AllDirectories)
-            .Where(IsNotBuildOutput)
+            .Where(path => IsNotBuildOutput(root, path))
             .Select(path => Path.GetFileNameWithoutExtension(path)!)
             .Order(StringComparer.Ordinal)
             .ToArray();
@@ -121,9 +123,11 @@ public sealed class DocumentationFitnessTests
     public void CodeMapDocumentsThePinnedSdkVersion()
     {
         string root = RepositoryRoot.Locate();
-        const string pinnedSdk = "10.0.401";
+        using JsonDocument globalJson = JsonDocument.Parse(Read(root, "global.json"));
+        string pinnedSdk = globalJson.RootElement.GetProperty("sdk").GetProperty("version").GetString()!;
         string[] codeMapDocuments =
         [
+            "README.md",
             "docs/architecture.md",
             "docs/development-guide.md",
             "docs/index.md",
@@ -136,8 +140,6 @@ public sealed class DocumentationFitnessTests
         {
             string documentation = Read(root, relativePath);
             documentation.ShouldContain(pinnedSdk, Case.Sensitive, relativePath);
-            documentation.ShouldNotContain("10.0.400", Case.Sensitive, relativePath);
-            documentation.ShouldNotContain("10.0.302", Case.Sensitive, relativePath);
         }
     }
 
@@ -145,53 +147,56 @@ public sealed class DocumentationFitnessTests
     public void MaintainedTechnologyTablesMatchCentralPackageCatalog()
     {
         string root = RepositoryRoot.Locate();
-        string catalog = Read(root, "references/Hexalith.Builds/Props/Directory.Packages.props");
-        (string PackageId, string Version)[] expectedCatalogVersions =
-        [
-            ("CommunityToolkit.Aspire.Hosting.Dapr", "13.5.1-beta.752"),
-            ("Dapr.Client", "1.18.7"),
-            ("Dapr.AspNetCore", "1.18.7"),
-            ("Dapr.Actors.AspNetCore", "1.18.7"),
-            ("Dapr.Actors.Generators", "1.18.7"),
-            ("Dapr.Actors", "1.18.7"),
-            ("Dapr.AI", "1.18.7"),
-            ("Dapr.AI.Microsoft.Extensions", "1.18.7"),
-            ("Dapr.Workflow", "1.18.7"),
-            ("Microsoft.AspNetCore.Authentication.JwtBearer", "10.0.12"),
-            ("Microsoft.AspNetCore.Components.CustomElements", "10.0.12"),
-            ("Microsoft.Extensions.Http.Resilience", "10.10.0"),
-            ("Microsoft.Extensions.ServiceDiscovery", "10.10.0"),
-            ("MinVer", "8.0.0"),
-            ("bunit", "2.11.3"),
-            ("Testcontainers", "4.15.0"),
-        ];
-
-        foreach ((string packageId, string version) in expectedCatalogVersions)
+        XDocument catalog = XDocument.Parse(Read(root, "references/Hexalith.Builds/Props/Directory.Packages.props"));
+        Dictionary<string, string> versions = catalog.Descendants("PackageVersion")
+            .ToDictionary(element => element.Attribute("Include")!.Value, element => element.Attribute("Version")!.Value, StringComparer.Ordinal);
+        string Version(string packageId) => versions[packageId];
+        string aspire = Version("Aspire.Hosting");
+        XDocument appHost = XDocument.Parse(Read(root, "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj"));
+        appHost.Root!.Attribute("Sdk")!.Value.ShouldBe($"Aspire.AppHost.Sdk/{aspire}");
+        foreach (string package in new[] { "Aspire.Hosting.Azure.AppContainers", "Aspire.Hosting.Docker", "Aspire.Hosting.Redis", "Aspire.Hosting.Testing" })
         {
-            catalog.ShouldContain($"<PackageVersion Include=\"{packageId}\" Version=\"{version}\" />");
+            Version(package).ShouldBe(aspire, package);
+        }
+
+        string dapr = Version("Dapr.Client");
+        foreach (string package in new[] { "Dapr.AspNetCore", "Dapr.Actors.AspNetCore", "Dapr.Actors.Generators", "Dapr.Actors", "Dapr.AI", "Dapr.AI.Microsoft.Extensions", "Dapr.Workflow" })
+        {
+            Version(package).ShouldBe(dapr, package);
         }
 
         string architecture = Read(root, "docs/architecture.md");
         string[] expectedArchitectureRows =
         [
-            "| Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.7` |",
-            "| | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.5.1-beta.752` |",
-            "| AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.12` |",
-            "| | Microsoft.AspNetCore.Components.CustomElements | `10.0.12` |",
-            "| Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.10.0` |",
-            "| Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |",
-            "| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.1` / `4.3.0` / `6.2.0` / `2.11.3` / `4.15.0`† / `18.1.0` |",
+            $"| Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `{aspire}` |",
+            $"| Actors & pub/sub | DAPR client/actors/AspNetCore | `{dapr}` |",
+            $"| | `CommunityToolkit.Aspire.Hosting.Dapr` | `{Version("CommunityToolkit.Aspire.Hosting.Dapr")}` |",
+            $"| AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `{Version("Microsoft.AspNetCore.Authentication.JwtBearer")}` |",
+            $"| | Microsoft.AspNetCore.Components.CustomElements | `{Version("Microsoft.AspNetCore.Components.CustomElements")}` |",
+            $"| UI | Microsoft.FluentUI.AspNetCore.Components | `{Version("Microsoft.FluentUI.AspNetCore.Components")}` |",
+            $"| Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `{Version("Microsoft.Extensions.Http.Resilience")}` |",
+            $"| Versioning | MinVer (git-tag SemVer, prefix `v`) | `{Version("MinVer")}` |",
+            $"| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `{Version("xunit.v3")}` / `{Version("Shouldly")}` / `{Version("NSubstitute")}` / `{Version("bunit")}` / `{Version("Testcontainers")}`† / `{Version("YamlDotNet")}` |",
         ];
         foreach (string expectedRow in expectedArchitectureRows)
         {
             architecture.ShouldContain(expectedRow);
         }
 
+        Version("Microsoft.Extensions.ServiceDiscovery").ShouldBe(Version("Microsoft.Extensions.Http.Resilience"));
+        architecture.ShouldContain($"aligned at `{aspire}`");
         string overview = Read(root, "docs/project-overview.md");
-        overview.ShouldContain("| Actors / pub-sub | DAPR | 1.18.7 |");
-        overview.ShouldContain("| AuthN | JWT Bearer | 10.0.12 |");
-        overview.ShouldContain("| UI | FluentUI Blazor + CustomElements | 5.0.0-rc.5-26219.1 / 10.0.12 |");
-        overview.ShouldContain("| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | 4.0.1 / 4.3.0 / 6.2.0 / 2.11.3 / 4.15.0 |");
+        overview.ShouldContain($"| Actors / pub-sub | DAPR | {dapr} |");
+        overview.ShouldContain($"| AuthN | JWT Bearer | {Version("Microsoft.AspNetCore.Authentication.JwtBearer")} |");
+        overview.ShouldContain($"| UI | FluentUI Blazor + CustomElements | {Version("Microsoft.FluentUI.AspNetCore.Components")} / {Version("Microsoft.AspNetCore.Components.CustomElements")} |");
+        overview.ShouldContain($"| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | {Version("xunit.v3")} / {Version("Shouldly")} / {Version("NSubstitute")} / {Version("bunit")} / {Version("Testcontainers")} |");
+        foreach (string document in new[] { "docs/architecture.md", "docs/index.md", "docs/project-overview.md" })
+        {
+            Read(root, document).ShouldContain($"Aspire {aspire}", Case.Sensitive, document);
+        }
+
+        string eventStoreVersion = catalog.Descendants("HexalithEventStoreVersion").Single().Value;
+        Read(root, "docs/ci.md").ShouldContain($"catalog selects EventStore {eventStoreVersion}");
     }
 
     [Fact]
@@ -313,9 +318,9 @@ public sealed class DocumentationFitnessTests
     /// Excludes generated or copied project files under <c>obj</c> and <c>bin</c> so a stale build
     /// output cannot fail the exact-inventory assertions as if it were real drift.
     /// </summary>
-    private static bool IsNotBuildOutput(string path)
-        => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
-            && !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
+    private static bool IsNotBuildOutput(string root, string path)
+        => !Path.GetRelativePath(root, path).Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+            && !Path.GetRelativePath(root, path).Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
 
     private static string Read(string root, string relativePath)
         => File.ReadAllText(Path.Combine(root, relativePath));

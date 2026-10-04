@@ -4,6 +4,7 @@ using AngleSharp.Dom;
 
 using Bunit;
 
+using Hexalith.FrontComposer.Contracts.Rendering;
 using Hexalith.FrontComposer.Shell.Extensions;
 using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.UI.Components.Layout;
@@ -13,6 +14,8 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.FluentUI.AspNetCore.Components;
+
+using NSubstitute;
 
 using Shouldly;
 
@@ -30,6 +33,15 @@ public sealed class MainLayoutAccessibilityTests : BunitContext
         Services.AddSingleton<IAuthorizationService, AllowAllAuthorizationService>();
         Services.AddFluentUIComponents();
         Services.AddHexalithFrontComposerQuickstart(o => o.ScanAssemblies(typeof(PartiesUiDomainMarker).Assembly));
+        // The shell requires a current tenant/user scope before rendering navigation and content.
+        // Supply the same valid context as the producer's layout fixtures.
+        Services.AddScoped<IUserContextAccessor>(_ =>
+        {
+            IUserContextAccessor accessor = Substitute.For<IUserContextAccessor>();
+            accessor.TenantId.Returns("test-tenant");
+            accessor.UserId.Returns("test-user");
+            return accessor;
+        });
         Services.AddHexalithDomain<PartiesUiDomainMarker>();
         BunitJSModuleInterop navModule = JSInterop.SetupModule("./_content/Microsoft.FluentUI.AspNetCore.Components/Components/Nav/FluentNav.razor.js");
         navModule.SetupVoid("Microsoft.FluentUI.Blazor.Nav.Initialize", _ => true);

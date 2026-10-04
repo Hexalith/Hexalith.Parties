@@ -464,7 +464,6 @@ source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk
 reason: PartySdkQueryService still returns actor-era failure reasons on the SDK path, which misleads operators after AC8 actor deletion.
 status: open
 decision: 2026-09-07 Compatible canonical aliases — Add semantic SDK and read-model aliases in EventStore.Contracts while preserving legacy wire values. Switch Parties source and tests to the aliases and retain old constants as obsolete compatible members.
-decision: 2026-09-07 Compatible canonical aliases — Add semantic SDK and read-model aliases in EventStore.Contracts while preserving legacy wire values. Switch Parties source and tests to the aliases and retain old constants as obsolete compatible members.
 
 ### DW-57: Move PartyEventTypeResolver out of the retired Actors folder
 
@@ -677,7 +676,6 @@ source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk
 reason: `PartyMemoryCleanupService.DeleteByPartyAsync` treats zero local mappings as cleaned even when state loss, legacy indexing, or configuration drift could leave remote units behind.
 status: open
 decision: 2026-09-07 Query Memories — Add or adopt a bounded Memories API that inventories units by canonical Parties source identity, reconcile local mappings from it, and require zero remote units before reporting cleanup complete.
-decision: 2026-09-07 Query Memories — Add or adopt a bounded Memories API that inventories units by canonical Parties source identity, reconcile local mappings from it, and require zero remote units before reporting cleanup complete.
 
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
@@ -806,7 +804,7 @@ status: open
 
 origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
 location: Parties UI RCLs and FrontComposer Contracts.UI/Shell
-reason: deferral_id: `8.9-frontcomposer-ui-consolidation` activated_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md` activation_authority: `_bmad-output/planning-artifacts/sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md` delivered_slices: `G4 work package F only (shell skip links and role="main"/role="navigation" landmarks), adopted 2026-08-18 at FrontComposer root gitlink 5cbc5583142a6774ff7813698ad98ec267b336f0. Work packages A-E remain undelivered and Story 8.9 stays blocked. App-owned focus-visible CSS isolation was repaired; I13 remains undischarged until Playwright focuses a content control (DW-111).` owner: `Hexalith.FrontComposer Contracts.UI/Shell owners + Sally (UX Designer) + Amelia (Parties Developer) + Murat (Test Architect)` exit_proof: `Deliver the complete G4 primitive set at an exact approved FrontComposer identity and pass producer bUnit plus Parties bUnit/Playwright parity for picker semantics, freshness/live regions, safe downloads, typed-name confirmation, skip links, forced colors, reduced motion, focus, and GDPR copy before changing Story 8.9 from blocked.` rollback: `Keep the Parties picker, freshness/status regions, download helpers, typed erasure confirmation, optimistic reconciliation, portal components, and current Fluent 2 styling until each replacement slice proves parity; revert a failed slice independently. The delivered shell slice rolls back by restoring the Parties-owned skip links, #parties-main-content, and #parties-app-navigation from the parent of superproject commit 2b63ab9 and pinning FrontComposer back to 97f44c499e83a0ffbf054febd0aab384054ea39e; that revert reinstates the duplicate skip-link strict-locator ambiguity the slice resolved, so it must be paired with a Playwright rerun.` evidence: `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md — FrontComposer UI primitives row; sprint-status.yaml keeps 8.9 blocked; tests/Hexalith.Parties.UI.Tests/MainLayoutAccessibilityTests.cs and _bmad-output/implementation-artifacts/tests/test-summary.md record the 2026-08-18 shell-slice adoption.`
+reason: deferral_id: `8.9-frontcomposer-ui-consolidation` activated_by_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md` activation_authority: `_bmad-output/planning-artifacts/sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md` delivered_slices: `G4 work package F only (shell skip links and role="main"/role="navigation" landmarks), adopted 2026-08-18 at FrontComposer root gitlink 7a337a21d4ba261bf27aeb3feedde47789f0160a; amended to 5cbc5583 on 2026-09-05/06, f0c3b6fd on 2026-09-07, b0ad2fb6 on 2026-09-13, and bf40099f in Round 6 (2026-10-04). Current 374bb833 was explicitly approved by Administrator / jpiquot on 2026-10-04; identity selection does not certify parity. Source-only FrontComposerRouteOptions / FcModuleLandingPage routing was adopted in 37f1d04b; package 4.5.0 lacks both, and DW-124 owns its release/catalog proof. All affected parity is unvalidated. Work packages A-E remain undelivered and Story 8.9 stays blocked. App-owned focus-visible CSS isolation was repaired; I13 remains undischarged until Playwright focuses a content control (DW-111).` owner: `Hexalith.FrontComposer Contracts.UI/Shell owners + Sally (UX Designer) + Amelia (Parties Developer) + Murat (Test Architect)` exit_proof: `Deliver the complete G4 primitive set at an exact approved FrontComposer identity and pass producer bUnit plus Parties bUnit/Playwright parity for picker semantics, freshness/live regions, safe downloads, typed-name confirmation, skip links, forced colors, reduced motion, focus, and GDPR copy before changing Story 8.9 from blocked.` rollback: `Keep the Parties picker, freshness/status regions, download helpers, typed erasure confirmation, optimistic reconciliation, portal components, and current Fluent 2 styling until each replacement slice proves parity; revert a failed slice independently. The delivered shell slice rolls back by restoring the Parties-owned skip links, #parties-main-content, and #parties-app-navigation from the parent of superproject commit 2b63ab9 and pinning FrontComposer back to 97f44c499e83a0ffbf054febd0aab384054ea39e; that revert reinstates the duplicate skip-link strict-locator ambiguity the slice resolved, so it must be paired with a Playwright rerun.` evidence: `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md — FrontComposer UI primitives row; sprint-status.yaml keeps 8.9 blocked; tests/Hexalith.Parties.UI.Tests/MainLayoutAccessibilityTests.cs and _bmad-output/implementation-artifacts/tests/test-summary.md record the 2026-08-18 shell-slice adoption.`
 status: open
 
 ### DW-100: Adopt FrontComposer per-record freshness, live-region, and optimistic-reconciliation primitives after G4-B/C delivery
@@ -889,7 +887,7 @@ resolution: Superseded by the user-approved default-branch-head policy in `spec-
 origin: code review of spec-8-10-final-readiness-documentation-and-retirement-gate (2026-09-06)
 location: .github/workflows/rc-gate.yml; tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-reason: rc-gate.yml enforces `.gitlink-signoff.tsv` only on a release-candidate-labeled PR or a push to `rc/**`/`release/**`/a `v*` tag — never an ordinary push to `main`, which is this repo's actual workflow. PlatformApiPrerequisitesTests hardcodes a SHA constant only for EventStore/Commons/Builds/FrontComposer; Tenants and Memories have no such pin. Together, an unauthorized or unreviewed Tenants/Memories gitlink bump on main is caught by nothing until someone reads the diff by hand — exactly the failure mode this review round found live at HEAD.
+reason: rc-gate.yml enforces `.gitlink-signoff.tsv` only on a release-candidate-labeled PR or a push to `rc/**`/`release/**`/a `v*` tag — never an ordinary push to `main`, which is this repo's actual workflow. PlatformApiPrerequisitesTests now pins all eight root identities, including Tenants and Memories, so that portion is complete. The RC signoff workflow still excludes ordinary main pushes; enabling owner-signoff enforcement there remains open.
 status: open
 
 ### DW-110: Verify validate-publication-preflight.sh's commitlint-proof path is only ever reachable through an authorized bypass.
@@ -917,7 +915,6 @@ source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-do
 reason: The skip-to-navigation link renders whenever `HasNavigation` is true, but `#fc-nav` mounts only when `HasNavigation && !IsSubCompactDesktopViewport`. On Tablet/Phone the href has no focus target. Parties consumes the shell and does not edit this submodule; route to FrontComposer shell owners.
 status: open
 decision: 2026-09-07 Hide compact link — Render Skip to navigation only when #fc-nav is mounted, preserve Skip to content, and add producer plus Parties viewport coverage.
-decision: 2026-09-07 Hide compact link — Render Skip to navigation only when #fc-nav is mounted, preserve Skip to content, and add producer plus Parties viewport coverage.
 
 ### DW-113: Parse only the first complete JSON object from MSBuild `-getProperty/-getItem` stdout.
 
@@ -940,8 +937,9 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-09-06)"), 2026-09-07
 location: README.md and global.json
 source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
-reason: README still tells contributors to install .NET SDK 10.0.302 while global.json selects 10.0.400, and no maintained assertion prevents those values from drifting.
-status: open
+reason: Historical drift: README prescribed SDK 10.0.302 while global.json now selects 10.0.401. Story 8.10 Round 6 updates README and derives the maintained-document fitness expectation directly from global.json.
+status: done 2026-10-04
+resolution: README and DocumentationFitnessTests now derive and guard the selected SDK; focused verification is recorded in tests/test-summary.md.
 
 ### DW-116: Prove a FrontComposer RCL static asset is served in source mode.
 
@@ -968,6 +966,7 @@ reason: Local `ASPNETCORE_ENVIRONMENT=Test` runs may reuse an unrelated process 
 status: open
 
 ### DW-119: RecordConsentValidator does not guard LawfulBasis with IsInEnum and RevokeConsentValidator leaves Reason unbounded, unlike every sibling command validator.
+
 origin: spec-deferred 5a330376d9e2
 location: src/Hexalith.Parties/Validation/RecordConsentValidator.cs and RevokeConsentValidator.cs
 source_spec: `spec-safe-consent-identifiers.md`
@@ -975,9 +974,9 @@ severity: medium
 reason: AddContactChannelValidator, AddIdentifierValidator and CreatePartyValidator all call IsInEnum on their enum property, and RestrictProcessingValidator bounds Reason to 256 characters. RecordConsent carries LawfulBasis straight into ConsentRecorded, so an out-of-range cast is persisted. Deferred rather than patched because the intent contract's Never clause forbids changing lawful-basis behaviour; adding the rule would reject commands that are accepted today.
 status: open
 decision: 2026-09-07 Tighten validation — Renegotiate the frozen contract, add IsInEnum for LawfulBasis, and cap revoke reasons at 256 characters. Propagate focused boundary tests without changing command or event wire shape.
-decision: 2026-09-07 Tighten validation — Renegotiate the frozen contract, add IsInEnum for LawfulBasis, and cap revoke reasons at 256 characters. Propagate focused boundary tests without changing command or event wire shape.
 
 ### DW-120: The deterministic lowercased ConsentId can collide when two contact channels differ only by letter case, while the channel lookup itself is ordinal case-sensitive.
+
 origin: spec-deferred 92120d4622ad
 location: src/Hexalith.Parties/Domain/PartyAggregate.cs:1362-1364
 source_spec: `spec-safe-consent-identifiers.md`
@@ -985,9 +984,9 @@ severity: medium
 reason: PartyAggregate.Handle(RecordConsent) builds $"{channelId}:{purpose}".ToLowerInvariant() while state.ContactChannels.Any(c => c.Id == command.ChannelId) compares ordinally, so channels "Ch-Email-1" and "ch-email-1" collapse onto one consent id. Both lines are unchanged by this story and the intent's Always clause requires preserving that generation, so this is pre-existing behaviour, not a regression.
 status: open
 decision: 2026-09-07 Reject case-only duplicates — Add case-insensitive channel uniqueness guards on creation and update while retaining existing consent IDs for nonconflicting states. Define safe handling for pre-existing ambiguous aggregates and add collision tests.
-decision: 2026-09-07 Reject case-only duplicates — Add case-insensitive channel uniqueness guards on creation and update while retaining existing consent IDs for nonconflicting states. Define safe handling for pre-existing ambiguous aggregates and add collision tests.
 
 ### DW-121: The consumer portal maps the client's new ArgumentException to a generic Failed outcome while the admin portal maps it to ValidationRejected.
+
 origin: spec-deferred 637e8540aa5c
 location: src/Hexalith.Parties.UI/Services/ConsumerConsentClient.cs:43-47,67-70
 source_spec: `spec-safe-consent-identifiers.md`
@@ -995,6 +994,7 @@ reason: PartiesAdminPortalApiClient.ExecuteGdprCommandAsync catches ArgumentExce
 status: open
 
 ### DW-122: No test asserts that the production DI extension registers the consent validators, and the domain processor fails open when a validator is missing.
+
 origin: spec-deferred f8aa7466374b
 location: src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs:376
 source_spec: `spec-safe-consent-identifiers.md`
@@ -1003,20 +1003,13 @@ reason: PartyDomainProcessorValidationTests.CreateInvoker builds its own AddVali
 status: open
 
 ### DW-123: ContactChannelNotFound and IdentifierNotFound still interpolate caller-supplied identifiers into their messages outside the two consent handlers.
+
 origin: spec-deferred 671760729b1e
 location: src/Hexalith.Parties/Domain/PartyAggregate.cs:412,415,423,426,1174,1229,1305
 source_spec: `spec-safe-consent-identifiers.md`
 severity: medium
 reason: PartyAggregate.cs lines 412, 415, 423, 426, 1174, 1229 and 1305 still emit $"Contact channel '{id}' not found." / $"Identifier '{id}' not found.", so the same event type now has two message dialects depending on which command produced it. Those call sites belong to commands outside this story's intent contract and were not touched by it.
 status: open
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-dotnet-10-0-401-and-submodules.md`
-  summary: Align the E2E Node type-definition major with the supported Node runtime floor.
-  evidence: `tests/e2e/package.json` supports Node `>=24.0.0` but used `@types/node` 26 before and after this refresh; choosing Node 24 declarations or raising the runtime floor is a pre-existing compatibility decision, not a consequence of the 26.5.1 patch update.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-dotnet-10-0-401-and-submodules.md`
-  summary: Reconcile the runtime-toolchain qualification packet with the selected CommunityToolkit Aspire Dapr package.
-  evidence: `validate-runtime-toolchain-evidence.py`, the evidence schema, and baseline expect `13.5.0-preview.1.260825-0345`, while the catalog already selected beta `.751` before this change and now selects beta `.752`; coordinated packet regeneration is required before that validator can qualify the live catalog.
 
 ### DW-124: Publish a FrontComposer Shell release carrying the module-landing route surface consumed by Parties.UI.
 
@@ -1026,3 +1019,151 @@ source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-do
 reason: Commit `37f1d04b` wires `FrontComposerRouteOptions.ReservedSegments` and `FcModuleLandingPage` into the UI host, but both types exist only in FrontComposer source (added 2026-09-27); the packaged `Hexalith.FrontComposer.Shell` `4.4.0` and `4.5.0` DLLs carry neither, so the package-mode UI build (the CI, bUnit, and released-container identity) cannot compile. Exit proof: a published Shell release containing both types, a Builds catalog bump selecting it, a green package-mode `Hexalith.Parties.UI` Release build, and matching 8.3 identity rows. Rollback: revert the `37f1d04b` routing wiring until that release exists.
 decision: 2026-10-04 Ship FrontComposer release — owner chose to publish a FrontComposer release carrying the types and bump the catalog rather than gate on source mode or revert; the extra G4 surface is recorded in the 8.3 matrix and the 8.9 deferral meanwhile.
 status: open
+
+### DW-125: Align E2E Node declarations with the supported runtime floor
+
+origin: Story 8.10 Round 6 ledger normalization (2026-10-04); preserved package-update deferral
+location: tests/e2e/package.json
+source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-dotnet-10-0-401-and-submodules.md`
+reason: Node >=24.0.0 is supported but @types/node selects major 26; choosing Node 24 declarations or raising the runtime floor remains a compatibility decision.
+status: open
+
+### DW-126: Reconcile the runtime-toolchain qualification packet
+
+origin: Story 8.10 Round 6 ledger normalization (2026-10-04); preserved package-update deferral
+location: scripts/validate-runtime-toolchain-evidence.py and the runtime-toolchain evidence schema/baseline
+source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-dotnet-10-0-401-and-submodules.md`
+reason: The validator/schema/baseline expect 13.5.0-preview.1.260825-0345; the selected CommunityToolkit.Aspire.Hosting.Dapr is now 13.6.0-preview.1.261001-0243. Coordinated packet regeneration is required to qualify the current catalog.
+status: open
+
+### DW-127: Align ineligible identity resolver and client replies
+
+origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
+location: src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs:58,79; src/Hexalith.Parties.Client/HttpPartiesIdentityClient.cs:58
+severity: medium
+status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  summary: Align server-produced Ineligible human/Unknown evidence with the public client validation contract.
+  evidence: Blind 1 and Verification 3 share this root cause: the resolver can return Ineligible with a live HumanBinding or Unknown classification, while the client turns those shapes into Unavailable/503. Both paths were already committed in 37d87f5a2869b076c651a58714d60f64647848bc and are unchanged by this repair. Exit proof: explicit fail-closed response semantics and producer/client round-trip tests for inactive, restricted, erasing, and unknown Parties.
+
+### DW-128: Validate binding command acknowledgments
+
+origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
+location: src/Hexalith.Parties.Client/HttpPartiesIdentityClient.cs:121-150
+severity: medium
+status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  summary: Reject empty or unrelated successful HTTP objects as binding command acknowledgments.
+  evidence: Blind 2: SubmitAsync deserializes any object without explicit false/rejected flags; SubmitCommandResponse permits default constructor values, and binding methods discard it. An empty object can complete the call without matching correlation/message identity. Pre-existing 37d87f5a2869b076c651a58714d60f64647848bc code, unchanged here. Exit proof: malformed, missing-field, and mismatched acknowledgment rejection plus valid acknowledgment acceptance.
+
+### DW-129: Reject ineffective identity-history snapshot protection
+
+origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
+location: src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs:294; src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs:90; tests/Hexalith.Parties.Security.Tests/IdentityHistoryProtectionTests.cs:39
+severity: high
+status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  summary: Require identity-history snapshot protection evidence before reporting protected metadata.
+  evidence: Blind 3: the snapshot provider result is wrapped without effectiveness validation; the synthetic test provider returns its input. History evidence has no profile PersonalData annotation, while the adapter reports the wrapper as Protected. Existing identity-feature code from 37d87f5a2869b076c651a58714d60f64647848bc, unchanged here. Exit proof: reject no-op custody snapshots and show persisted snapshot representation does not expose actor history. The synthetic test is not live custody qualification.
+
+### DW-130: Qualify ordinary replay after retained-history expiry
+
+origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
+location: src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs:143; src/Hexalith.Parties/Domain/PartyDomainProcessor.cs:669-716
+severity: high (unverified)
+status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  summary: Determine whether finite history expiry prevents ordinary Party command replay and establish value-free lifecycle continuity if needed.
+  evidence: Blind 4: command replay unwraps every history event, but fallback catches only destroyed profile keys. A live qualified custody expiry outcome was not exercised, so harm remains unverified. Existing identity-feature paths, unchanged here. Settle by advancing an actual qualified provider beyond expiry and running profile, erasure, and replay/switch-back commands; demonstrate replayable lifecycle state without expired actor values or record the exact failure.
+
+### DW-131: Validate identity fold wire representations
+
+origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
+location: src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs:39
+severity: medium
+status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  summary: Reject unsupported serialization formats and metadata versions before identity source folding.
+  evidence: Blind 5: the fold deserializes every payload as JSON without checking its StreamReadEvent format/version. The owner authoritative reader validates continuity; StreamReadPageValidator only requires nonblank format and metadata version >=1, not Party representation support. Existing 37d87f5a2869b076c651a58714d60f64647848bc code, unchanged here. Exit proof: supported representations pass and otherwise contiguous unsupported-format/version streams are rejected.
+
+### DW-132: Require test evidence on release validation bypass
+
+origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
+location: .github/workflows/release.yml:49,312
+severity: medium
+status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  summary: Ensure the Commitlint-only release bypass cannot substitute for required test evidence.
+  evidence: Blind 6: bypass-validation=true selects commitlint.yml exact-source proof while publication receives empty test-projects based on a CI-tested assumption. Protected operator approval supplies no test receipt. Existing workflow from 14d249fde316b0002aec84351d7a7cdf953d1d30, unchanged here. Exit proof: a release-policy decision and a test-backed path for the exact source; no release-policy change or publication is authorized by this entry.
+
+### DW-133: Exercise real Parties admission proof construction
+
+origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
+location: src/Hexalith.Parties/Authorization/PartyIdentityAuthority.cs:14-38; tests/Hexalith.Parties.Tests/Domain/PartyIdentityAdmissionTests.cs:25
+severity: medium
+status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  summary: Test real Parties identity admission scope construction rather than replacing the whole authority.
+  evidence: Blind 8: repository C# searches find only substituted IPartyIdentityAuthority consumers; the real wrapper builds payload digest, logical ID, message ID, operation and tenant/target scope before invoking the owner verifier. Existing identity-feature code, unchanged here. Exit proof: real-wrapper signed evidence acceptance and changed payload/scope/operation/message/logical ID, expiry, and missing-proof rejection before protected state unwrap.
+
+### DW-134: Make visual regression and baseline updates executable
+
+origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
+location: tests/e2e/specs/parties-accessibility.spec.ts:105; tests/e2e/package.json:11
+severity: medium
+status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  summary: Provide an actual image regression baseline and an update command that updates the asserted artifact.
+  evidence: Blind 9: the browser test attaches a screenshot and checks byte length, then compares manually read JSON text/visibility fields. No image matcher or JSON updater consumes --update-snapshots. Existing f8fd74045d95d441ee5adb0809a254307d0a24a6 test, unchanged here. Exit proof: deterministic layout/style image regression is detected and test:visual:update regenerates its asserted baseline.
+
+### DW-135: Observe content forced-colors and reduced-motion behavior
+
+origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
+location: tests/e2e/specs/parties-accessibility.spec.ts:85
+severity: medium
+status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  summary: Measure visible app-content focus and reduced-motion styles in the browser.
+  evidence: Blind 10: media emulation is asserted, but the sole style value is a truthy outlineColor on a shell skip link; no content control outline style/width or animation/transition duration is checked. Existing browser test, unchanged here. Exit proof: focus a representative app-owned control and verify visible normal/forced-colors outline plus reduced-motion behavior. I13 remains open; this entry supplies no parity approval.
+
+### DW-136: Audit the complete shell with axe
+
+origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
+location: tests/e2e/specs/parties-accessibility.spec.ts:25
+severity: medium
+status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  summary: Include navigation and skip links in the blocking accessibility scan.
+  evidence: Blind 11: axe includes only #fc-main-content, while requiredSelectors merely assert that navigation and skip links exist. Existing browser test, unchanged here. Exit proof: full-shell or dedicated omitted-region scans fail on navigation/skip-link accessibility regressions.
+
+### DW-137: Verify provisioning through the registered domain processor
+
+origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
+location: src/Hexalith.Parties/Domain/PartyDomainProcessor.cs:157-159; tests/Hexalith.Parties.Tests/Domain/PartyIdentityAdmissionTests.cs:22
+severity: medium
+status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  summary: Add successful provisioning-envelope verification through PartyDomainProcessor with emitted events and enriched result assertions.
+  evidence: Verification 1, pre-verified regression gap: aggregate tests supply hand-built Authorization and bypass the processor; processor tests cover only unsupported-policy rejection. Removing trusted Authorization injection can break registered command dispatch without those tests failing. Existing identity-feature paths from 37d87f5a2869b076c651a58714d60f64647848bc, unchanged here. Exit proof: accepted provisioning envelope yields creation/marker events and matching result identity at the processor boundary.
+
+### DW-138: Isolate wrong-purpose human custody rejection
+
+origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
+location: tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs:67
+severity: medium
+status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+  summary: Separate expired-interval and wrong-purpose client rejection cases.
+  evidence: Verification 2, pre-verified broken-verification gap: the current case combines an expired interval with other-purpose, so removing the purpose check still rejects on expiry. Existing identity-feature test from 37d87f5a2869b076c651a58714d60f64647848bc, unchanged here. Exit proof: otherwise valid current human evidence with the wrong purpose is rejected independently, and expired evidence with the correct purpose is rejected independently.

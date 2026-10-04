@@ -19,19 +19,20 @@ public sealed class PlatformApiPrerequisitesTests
     // Every child process here is a git query or an MSBuild evaluation. None should approach this;
     // the bound exists so a hung child fails the lane with a diagnosable message instead of blocking.
     private const int ProcessTimeoutMilliseconds = 300_000;
-    private const string AiToolsSha = "5f93d2ec8239494852c97032c819cb1689939e36";
-    private const string BuildsSha = "aee01323579adeda952bf41b2f3e0e61785075c6";
-    private const string CommonsSha = "19d7d4d6b21160557b7449f55a0ad0f55e6d7dc6";
+    private const string AiToolsSha = "3f194e17174994d308ec84af9ee2b5aa68674d0d";
+    private const string BuildsSha = "688eec9a4333245cc0ff7772115c769094471863";
+    private const string CommonsSha = "116d26815eb81e35b3c161e1799e5ee12805fc0a";
 
     // Consumed by MainLayout for the shell landmarks and skip links (G4 work package F, delivered
     // under sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md).
-    // Recorded separately from the packaged 4.4.0 identity that CI and the released container use.
-    private const string FrontComposerSha = "b0ad2fb69bcf5e7aadd7b388d25415d0fba876d5";
-    private const string MemoriesSha = "d99bc96371afbf55f8f37cd812c9e6cedba15b1d";
-    private const string PolymorphicSerializationsSha = "8aeed1d27c9a050bc4bec6d89051aa00de306a69";
-    private const string TenantsSha = "ff43dc941b01d4a68070f92dde0536f5ab1ef4df";
-    private const string PayloadProtectionEventStoreDescribe = "v3.104.0-1-gdfc0ac55";
-    private const string PayloadProtectionEventStoreSha = "dfc0ac557c43363159b55bffb4d40feceab1f787";
+    // Recorded separately from the packaged 4.5.0 identity that CI and the released container use.
+    /// <summary>Gets the FrontComposer source identity explicitly approved on 2026-10-04.</summary>
+    internal const string FrontComposerSha = "374bb83392d8ab4e8a8397cfd312d09948fb0b9d";
+    private const string MemoriesSha = "3d72927f4dac66af4968cc6726c4e96df292f2e4";
+    private const string PolymorphicSerializationsSha = "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375";
+    private const string TenantsSha = "cc348c9d7839ec7aad01649fc1c0e6f4fe672da4";
+    private const string PayloadProtectionEventStoreDescribe = "v3.111.0-10-gcbbe4150";
+    private const string PayloadProtectionEventStoreSha = "cbbe41501ba722731bf36b2c343efdef4ac714fb";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
     private const string PayloadProtectionSurface = "Payload protection engine package";
     private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";
@@ -41,7 +42,6 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
     [
         "references/Hexalith.EventStore/_bmad-output/implementation-artifacts/8-11-g5-evidence-and-approval-closure.md",
-        "references/Hexalith.EventStore/src/Hexalith.EventStore.PayloadProtection/Hexalith.EventStore.PayloadProtection.csproj",
         "references/Hexalith.EventStore/src/Hexalith.EventStore.PayloadProtection.AzureKeyVault/Hexalith.EventStore.PayloadProtection.AzureKeyVault.csproj",
     ];
 
@@ -77,8 +77,8 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly string[] RequiredPayloadProtectionStoryStatuses =
     [
         "8-1-shared-payload-protection-security-spec-and-adr: done",
-        "8-2-payload-protection-contracts-and-golden-vectors: backlog",
-        "8-3-pdenc-v2-core-cryptographic-engine: backlog",
+        "8-2-payload-protection-contracts-and-golden-vectors: done",
+        "8-3-pdenc-v2-core-cryptographic-engine: in-progress",
         "8-4-compatibility-readers-and-mixed-history-routing: backlog",
         "8-5-policy-and-key-lifecycle-mechanics: backlog",
         "8-6-azure-key-vault-production-adapter-conformance: backlog",
@@ -92,7 +92,7 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly string[] RequiredPositivePayloadProtectionSpecTokens =
     [
         "status: approved-authorized",
-        "decision: adopted",
+        "decision: adopted-amendment",
         "story_8_2_authorized: true",
         "Hexalith.EventStore.PayloadProtection",
         "Hexalith.EventStore.PayloadProtection.AzureKeyVault",
@@ -155,7 +155,7 @@ public sealed class PlatformApiPrerequisitesTests
             "json+pdenc-v1",
             "IPersonalDataPolicy",
             "IErasureStateProvider",
-            "8-2-payload-protection-contracts-and-golden-vectors: backlog",
+            "8-2-payload-protection-contracts-and-golden-vectors: done",
             "8-11-g5-evidence-and-approval-closure: backlog",
             "only this story can record",
         ],
@@ -175,7 +175,7 @@ public sealed class PlatformApiPrerequisitesTests
         [
             "Hexalith.Parties",
             "PackageReference",
-            "Released package `3.104.0`",
+            "Released package `3.110.0`",
         ],
         ["EventStore domain-service host and DataProtection/query SDK|Source (explicit project-reference graph)"] =
         [
@@ -187,15 +187,15 @@ public sealed class PlatformApiPrerequisitesTests
         [
             "Hexalith.Parties.Client",
             CommonsSha,
-            "`v2.30.0-21-g19d7d4d`",
+            "`v2.30.1-15-g116d268`",
         ],
         ["Builds central catalog|Source import"] =
         [
             "Directory.Packages.props",
             "does not import `Hexalith.Build.props` or `Hexalith.Package.props`",
             BuildsSha,
-            "EventStore `3.104.0`",
-            "Commons `2.30.0`",
+            "EventStore `3.110.0`",
+            "Commons `2.30.1`",
             "Memories `2.27.1`",
             "Tenants `5.7.0`",
             "Parties `1.1.1`",
@@ -203,13 +203,13 @@ public sealed class PlatformApiPrerequisitesTests
         ["Memories submodule|Source (optional rich search)"] =
         [
             MemoriesSha,
-            "`v2.27.1-13-gd99bc963`",
+            "`v2.27.1-23-g3d72927f`",
             "HexalithMemoriesVersion=2.27.1",
         ],
         ["Tenants AppHost topology|Source (diagnostic) and package `5.7.0` (default graph)"] =
         [
             TenantsSha,
-            "`v5.7.0-34-gff43dc94`",
+            "`v5.7.0-134-gcc348c9d`",
             "5.7.0",
         ],
     };
@@ -580,8 +580,8 @@ public sealed class PlatformApiPrerequisitesTests
     {
         DescribeRowTokenGaps("Commons row with EventStore 3.95.0 only", [CommonsSha])
             .ShouldBe([$"missing:{CommonsSha}"]);
-        DescribeRowTokenGaps($"Builds row {BuildsSha}", [BuildsSha, "Commons `2.30.0`"])
-            .ShouldBe(["missing:Commons `2.30.0`"]);
+        DescribeRowTokenGaps($"Builds row {BuildsSha}", [BuildsSha, "Commons `2.30.1`"])
+            .ShouldBe(["missing:Commons `2.30.1`"]);
     }
 
     [Fact]
@@ -645,7 +645,7 @@ public sealed class PlatformApiPrerequisitesTests
         // The shell slice consumes FrontComposer source, so its identity must appear in the matrix
         // reconciliation table alongside the package identity that actually ships.
         matrix.ShouldContain(FrontComposerSha);
-        matrix.ShouldContain("4.4.0");
+        matrix.ShouldContain("4.5.0");
 
         // Any present-tense `git ls-tree HEAD` receipt must name the identity HEAD actually records.
         // Historical receipts belong to the story that captured them and must be written with a dated
@@ -688,13 +688,13 @@ public sealed class PlatformApiPrerequisitesTests
         rootBuildTargets.ShouldNotContain("Hexalith.Build.props");
         rootBuildTargets.ShouldNotContain("Hexalith.Package.props");
         string catalog = File.ReadAllText(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"));
-        catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">3.104.0</HexalithEventStoreVersion>");
-        catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">2.30.0</HexalithCommonsVersion>");
-        catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">4.4.0</HexalithFrontComposerVersion>");
+        catalog.ShouldContain("<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">3.110.0</HexalithEventStoreVersion>");
+        catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">2.30.1</HexalithCommonsVersion>");
+        catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">4.5.0</HexalithFrontComposerVersion>");
         catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">2.27.1</HexalithMemoriesVersion>");
         catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">5.7.0</HexalithTenantsVersion>");
         catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">1.1.1</HexalithPartiesVersion>");
-        catalog.ShouldContain("<PackageVersion Include=\"CommunityToolkit.Aspire.Hosting.Dapr\" Version=\"13.5.1-beta.752\" />");
+        catalog.ShouldContain("<PackageVersion Include=\"CommunityToolkit.Aspire.Hosting.Dapr\" Version=\"13.6.0-preview.1.261001-0243\" />");
         catalog.ShouldContain("<PackageVersion Include=\"xunit.v3\" Version=\"4.0.1\" />");
         catalog.ShouldContain("<PackageVersion Include=\"xunit.v3.assert\" Version=\"4.0.1\" />");
         catalog.ShouldContain("<PackageVersion Include=\"xunit.v3.extensibility.core\" Version=\"4.0.1\" />");
@@ -703,14 +703,13 @@ public sealed class PlatformApiPrerequisitesTests
 
         matrix.ShouldContain("Package (default Release graph)");
         matrix.ShouldContain("Source (explicit project-reference graph)");
-        matrix.ShouldContain("The catalog's `2.30.0` package is a fallback, not current consumption proof.");
-        matrix.ShouldContain("Supersession clarification (2026-09-13)");
+        matrix.ShouldContain("The catalog's `2.30.1` package is a fallback, not current consumption proof.");
 
         string[] projectFiles =
         [
-            .. Directory.GetFiles(Path.Combine(root, "src"), "*.csproj", SearchOption.AllDirectories).Where(IsNotBuildOutput),
-            .. Directory.GetFiles(Path.Combine(root, "samples"), "*.csproj", SearchOption.AllDirectories).Where(IsNotBuildOutput),
-            .. Directory.GetFiles(Path.Combine(root, "tests"), "*.csproj", SearchOption.AllDirectories).Where(IsNotBuildOutput),
+            .. Directory.GetFiles(Path.Combine(root, "src"), "*.csproj", SearchOption.AllDirectories).Where(path => IsNotBuildOutput(root, path)),
+            .. Directory.GetFiles(Path.Combine(root, "samples"), "*.csproj", SearchOption.AllDirectories).Where(path => IsNotBuildOutput(root, path)),
+            .. Directory.GetFiles(Path.Combine(root, "tests"), "*.csproj", SearchOption.AllDirectories).Where(path => IsNotBuildOutput(root, path)),
         ];
         string[] eventStoreConsumers = projectFiles
             .Where(path => File.ReadAllText(path).Contains("HexalithEventStoreFromSource", StringComparison.Ordinal))
@@ -720,7 +719,7 @@ public sealed class PlatformApiPrerequisitesTests
         foreach (string projectFile in eventStoreConsumers)
         {
             EvaluatedProjectGraph packageGraph = EvaluateProjectGraph(root, projectFile, useSource: false);
-            packageGraph.Properties["HexalithEventStoreVersion"].ShouldBe("3.104.0", projectFile);
+            packageGraph.Properties["HexalithEventStoreVersion"].ShouldBe("3.110.0", projectFile);
             packageGraph.PackageReferences.Any(static reference => reference.StartsWith("Hexalith.EventStore.", StringComparison.Ordinal))
                 .ShouldBeTrue($"{projectFile} package graph");
             packageGraph.ProjectReferences.Any(static reference => reference.Contains("/references/Hexalith.EventStore/", StringComparison.Ordinal))
@@ -741,7 +740,7 @@ public sealed class PlatformApiPrerequisitesTests
         foreach (string projectFile in commonsConsumers)
         {
             EvaluatedProjectGraph selectedGraph = EvaluateProjectGraph(root, projectFile, useSource: false);
-            selectedGraph.Properties["HexalithCommonsVersion"].ShouldBe("2.30.0", projectFile);
+            selectedGraph.Properties["HexalithCommonsVersion"].ShouldBe("2.30.1", projectFile);
             selectedGraph.Properties["HexalithCommonsHttpFromSource"].ShouldBe("true", projectFile);
             selectedGraph.ProjectReferences.Any(static reference => reference.EndsWith("/Hexalith.Commons.Http.csproj", StringComparison.Ordinal))
                 .ShouldBeTrue($"{projectFile} selected Commons HTTP graph");
@@ -1382,22 +1381,10 @@ public sealed class PlatformApiPrerequisitesTests
         MatrixRow row,
         (string Pattern, string[] Paths, bool ExpectMatch)[] commands)
     {
-        string expectedGitlink = $"160000 {PayloadProtectionEventStoreSha} 0 {EventStoreRelativePath}";
-        RunGit(root, "ls-files", "--stage", "--", EventStoreRelativePath)
-            .Trim()
-            .Replace('\t', ' ')
-            .ShouldBe(expectedGitlink);
-
-        RunGit(root, "-C", EventStoreRelativePath, "rev-parse", "HEAD").Trim().ShouldBe(PayloadProtectionEventStoreSha);
-
-        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--always", "HEAD")
-            .Trim()
-            .ShouldBe(PayloadProtectionEventStoreDescribe);
-
         string finalLedger = ReadMatrix();
         finalLedger.ShouldContain("Story 8.10 final retained-identity reconciliation");
         finalLedger.ShouldContain(PayloadProtectionEventStoreSha);
-        finalLedger.ShouldContain("Released package `3.104.0`");
+        finalLedger.ShouldContain("Released package `3.110.0`");
         row.Status.ShouldBe("needs-additive-api");
 
         foreach (string path in RequiredAbsentPayloadProtectionPaths)
@@ -1405,6 +1392,13 @@ public sealed class PlatformApiPrerequisitesTests
             row.ValidationEvidence.ShouldContain($"`test ! -f {path}`");
             File.Exists(Path.Combine(root, path)).ShouldBeFalse(path);
         }
+
+        File.ReadAllText(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"))
+            .ShouldNotContain("Hexalith.EventStore.PayloadProtection", Case.Sensitive,
+                "G5 is not enrolled in the selected package catalog.");
+        File.ReadAllText(Path.Combine(root, "references/Hexalith.EventStore/tools/release-packages.json"))
+            .ShouldNotContain("Hexalith.EventStore.PayloadProtection", Case.Sensitive,
+                "G5 is not enrolled in the owner release inventory.");
 
         foreach (string status in RequiredPayloadProtectionStoryStatuses)
         {
@@ -1420,7 +1414,7 @@ public sealed class PlatformApiPrerequisitesTests
 
         string ownerSpec = File.ReadAllText(Path.Combine(root, EventStorePayloadProtectionSpecRelativePath));
         ExtractFrontMatterValue(ownerSpec, "status").ShouldBe("approved-authorized");
-        ExtractFrontMatterValue(ownerSpec, "decision").ShouldBe("adopted");
+        ExtractFrontMatterValue(ownerSpec, "decision").ShouldBe("adopted-amendment");
         ExtractFrontMatterValue(ownerSpec, "story_8_2_authorized").ShouldBe("true");
         HashSet<string> exactPackageCodeSpans = Regex.Matches(
                 ownerSpec,
@@ -1454,14 +1448,25 @@ public sealed class PlatformApiPrerequisitesTests
             @"\s+",
             " ",
             RegexOptions.CultureInvariant);
-        normalizedRetentionItem.ShouldContain("4bcf2484 (`v3.89.0-7-g4bcf2484`)");
-        normalizedRetentionItem.ShouldContain("Story 8.1 is approved, authorized, adopted, and done");
-        normalizedRetentionItem.ShouldContain("Story 8.2 remains backlog");
-        normalizedRetentionItem.ShouldContain("Stories 8.3-8.11 remain predecessor-gated backlog");
+        normalizedRetentionItem.ShouldContain("owner contracts/core are partial delivery (8.2 done, 8.3 in-progress)");
+        normalizedRetentionItem.ShouldContain("G5 closure/parity/rollback remain absent");
         normalizedRetentionItem.ShouldContain("Story 8.11 alone may record G5 `available` and unblock Parties Story 8.7");
         normalizedRetentionItem.ShouldContain("Story 8.7 remains blocked");
         normalizedRetentionItem.ShouldContain("retention action stays open");
         normalizedRetentionItem.ShouldContain("status: open");
+
+        // Inspect the independent G5 gates before verifying the approved committed identity.
+        string expectedGitlink = $"160000 commit {PayloadProtectionEventStoreSha} {EventStoreRelativePath}";
+        RunGit(root, "ls-tree", "HEAD", EventStoreRelativePath)
+            .Trim()
+            .Replace('\t', ' ')
+            .ShouldBe(expectedGitlink);
+
+        RunGit(root, "-C", EventStoreRelativePath, "rev-parse", "HEAD").Trim().ShouldBe(PayloadProtectionEventStoreSha);
+
+        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--always", "HEAD")
+            .Trim()
+            .ShouldBe(PayloadProtectionEventStoreDescribe);
     }
 
     private static bool HasPositiveFixedStringCommand(
@@ -1563,27 +1568,24 @@ public sealed class PlatformApiPrerequisitesTests
         return process.ExitCode == 0;
     }
 
-    private static bool IsNotBuildOutput(string path)
-        => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
-            && !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
+    private static bool IsNotBuildOutput(string root, string path)
+        => !Path.GetRelativePath(root, path).Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+            && !Path.GetRelativePath(root, path).Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
 
     private static void AssertGitlinkAndCheckout(string root, string relativePath, string expectedIdentity)
     {
-        string gitlink = RunGit(root, "ls-files", "--stage", "--", relativePath).Trim();
+        string gitlink = RunGit(root, "ls-tree", "HEAD", relativePath).Trim();
         string checkout = RunGit(root, "-C", relativePath, "rev-parse", "HEAD").Trim();
 
-        // Read the parent index rather than HEAD so the exact gitlink selected for an uncommitted
-        // release-candidate update is testable before the owning workflow creates a commit. The
-        // checkout is still verified independently below, so checkout-only drift cannot satisfy
-        // this assertion; CI reruns the same check after the index becomes the committed tree.
-        gitlink.Contains($"160000 {expectedIdentity} 0", StringComparison.Ordinal).ShouldBeTrue(
-            $"{relativePath} selected gitlink must match expected {expectedIdentity}; index entry was '{gitlink}'.");
+        // Only a committed root gitlink proves the selected source identity. Staging a
+        // different checkout must not satisfy the gate before it is committed.
+        gitlink.Replace('\t', ' ').ShouldBe(
+            $"160000 commit {expectedIdentity} {relativePath}",
+            $"{relativePath} committed gitlink must match approved {expectedIdentity}; HEAD entry was '{gitlink}'.");
 
         DescribeIdentityGap(checkout, expectedIdentity).ShouldBeEmpty(relativePath);
         RunGit(root, "-C", relativePath, "status", "--porcelain")
             .ShouldBeNullOrWhiteSpace($"{relativePath} must be clean for immutable consumption proof.");
-        RunGit(root, "-C", relativePath, "branch", "--show-current")
-            .ShouldBeNullOrWhiteSpace($"{relativePath} must use detached HEAD for immutable consumption proof.");
 
         string[] initializedNestedSubmodules = RunGit(root, "-C", relativePath, "submodule", "status")
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)

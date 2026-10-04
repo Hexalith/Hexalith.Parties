@@ -273,7 +273,7 @@ public sealed class PartiesUiHostCompositionTests
             });
 
         using HttpClient client = factory.CreateClient();
-        HttpResponseMessage response = await client.GetAsync(
+        using HttpResponseMessage response = await client.GetAsync(
             "/_framework/blazor.web.js",
             TestContext.Current.CancellationToken);
         byte[] body = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);

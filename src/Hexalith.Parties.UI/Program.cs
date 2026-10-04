@@ -196,6 +196,13 @@ if (authEnabled)
         o => o.TokenValidationParameters.RoleClaimType = "roles");
 }
 
+// The internal browser specimen needs a valid shell scope. Ordinary routes continue to use
+// the context selected above, and Production never registers this specimen wrapper.
+if (Hexalith.Parties.UI.Components.Specimens.PartiesAccessibilitySpecimenRoutes.IsEnabled(builder.Configuration, builder.Environment))
+{
+    PartiesAccessibilitySpecimenUserContextAccessor.Register(builder.Services);
+}
+
 WebApplication app = builder.Build();
 
 app.MapStaticAssets();

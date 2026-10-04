@@ -16,7 +16,6 @@ public sealed class EpicEightClosureFitnessTests
     private const string SprintStatusPath = "_bmad-output/implementation-artifacts/sprint-status.yaml";
     private const string Story86Path = "_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md";
     private const string TestSummaryPath = "_bmad-output/implementation-artifacts/tests/test-summary.md";
-    private const string FrontComposerSha = "f0c3b6fd7dbf0a750170b5ec72d09d17febb8f6a";
 
     private static readonly string[] ExpectedDeferrals =
     [
@@ -25,6 +24,16 @@ public sealed class EpicEightClosureFitnessTests
         "8.8-runtime-boundary-cleanup",
         "8.9-frontcomposer-ui-consolidation",
         "external-runtime-deployment",
+    ];
+
+    private static readonly string[] RequiredValidationReceiptChecks =
+    [
+        "Warning and nested-submodule policy",
+        "Release solution build",
+        "All .NET test projects",
+        "Package/API and package-only consumers",
+        "npm install and typecheck",
+        "Playwright accessibility",
     ];
 
     [Fact]
@@ -215,8 +224,6 @@ public sealed class EpicEightClosureFitnessTests
         string summary = Read(root, TestSummaryPath);
         summary.ShouldContain("Story 8.10 Final Readiness, Documentation, and Retirement Gate");
         Dictionary<string, string> receipts = ParseValidationReceipts(summary);
-        receipts.ContainsKey("Release solution build").ShouldBeTrue();
-        receipts.ContainsKey("Playwright accessibility").ShouldBeTrue();
         DescribeReceiptGaps(receipts).ShouldBeEmpty();
     }
 
@@ -230,10 +237,8 @@ public sealed class EpicEightClosureFitnessTests
         // Deliberately exercised regardless of story status. The closure gate reads these receipts
         // only once the story is already marked done, so a superseded or unparsable table would stay
         // invisible until the moment someone attempts closure and the gate proves unpassable.
-        receipts.ContainsKey("Release solution build").ShouldBeTrue(
-            "The closure gate requires a canonically named Release solution build receipt.");
-        receipts.ContainsKey("Playwright accessibility").ShouldBeTrue(
-            "The closure gate requires a canonically named Playwright accessibility receipt.");
+        DescribeMissingReceiptGaps(receipts).ShouldBeEmpty(
+            "Every spec Verification lane requires its canonical receipt row.");
 
         // Structural only -- deliberately NOT a greenness check. Greenness belongs to the closure
         // gate above. Asserting Pass here would mean a genuinely red gate has to be written up as
@@ -244,10 +249,13 @@ public sealed class EpicEightClosureFitnessTests
             receipt.Value.ShouldNotBeNullOrWhiteSpace(receipt.Key);
         }
 
-        ReadValidationReceiptEvidence(summary, "Playwright accessibility")
-            .Contains(FrontComposerSha, StringComparison.Ordinal)
-            .ShouldBeTrue(
-                "The authoritative accessibility receipt must prove the selected FrontComposer source identity.");
+        if (!receipts["Playwright accessibility"].Contains("unvalidated", StringComparison.OrdinalIgnoreCase))
+        {
+            ReadValidationReceiptEvidence(summary, "Playwright accessibility")
+                .Contains(PlatformApiPrerequisitesTests.FrontComposerSha, StringComparison.Ordinal)
+                .ShouldBeTrue(
+                    "The authoritative accessibility receipt must prove the selected FrontComposer source identity.");
+        }
     }
 
     [Theory]
@@ -259,14 +267,83 @@ public sealed class EpicEightClosureFitnessTests
     [Fact]
     public void BlockedOrFailedValidationReceiptFailsClosed()
     {
-        var receipts = new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["Release solution build"] = "**Blocked**",
-            ["Playwright accessibility"] = "Failed",
-        };
+        Dictionary<string, string> receipts = CreatePassingValidationReceipts();
+        receipts["Release solution build"] = "**Blocked**";
+        receipts["Playwright accessibility"] = "Failed";
 
         DescribeReceiptGaps(receipts).ShouldBe(["Release solution build:**Blocked**", "Playwright accessibility:Failed"]);
     }
+
+    [Theory]
+    [InlineData("Pass (unvalidated)")]
+    [InlineData("Pass with skipped checks")]
+    [InlineData("Pass with failed checks")]
+    public void QualifiedPassWithMissingValidationFailsClosed(string status)
+    {
+        Dictionary<string, string> receipts = CreatePassingValidationReceipts();
+        receipts["Playwright accessibility"] = status;
+
+        DescribeReceiptGaps(receipts).ShouldBe([$"Playwright accessibility:{status}"]);
+    }
+
+    /// <summary>
+    /// Verifies that the closure guard rejects omission of each required validation lane.
+    /// </summary>
+    [Theory]
+    [InlineData("Warning and nested-submodule policy")]
+    [InlineData("Release solution build")]
+    [InlineData("All .NET test projects")]
+    [InlineData("Package/API and package-only consumers")]
+    [InlineData("npm install and typecheck")]
+    [InlineData("Playwright accessibility")]
+    public void MissingRequiredValidationReceiptFailsClosed(string missingCheck)
+    {
+        Dictionary<string, string> receipts = CreatePassingValidationReceipts();
+        receipts.Remove(missingCheck).ShouldBeTrue();
+
+        DescribeReceiptGaps(receipts).ShouldBe([$"{missingCheck}:missing"]);
+    }
+
+    /// <summary>
+    /// Verifies that a later Markdown section cannot supply rows or evidence to the current table.
+    /// </summary>
+    [Theory]
+    [InlineData("# Later receipts")]
+    [InlineData("## Later receipts")]
+    [InlineData("### Later receipts")]
+    public void ValidationReceiptSectionEndsAtTheNextHeading(string heading)
+    {
+        string summary = $"""
+            ### Validation receipts
+
+            | Check | Result | Evidence |
+            | --- | --- | --- |
+            | Release solution build | Blocked | current build evidence |
+
+            {heading}
+
+            | Check | Result | Evidence |
+            | --- | --- | --- |
+            | Playwright accessibility | Pass | later unrelated evidence |
+            """;
+
+        Dictionary<string, string> receipts = ParseValidationReceipts(summary);
+
+        receipts.Keys.ShouldBe(["Release solution build"]);
+        ReadValidationReceiptEvidence(summary, "Release solution build").ShouldBe("current build evidence");
+        Should.Throw<ShouldAssertException>(() => ReadValidationReceiptEvidence(summary, "Playwright accessibility"));
+    }
+
+    private static Dictionary<string, string> CreatePassingValidationReceipts()
+        => new(StringComparer.Ordinal)
+        {
+            ["Warning and nested-submodule policy"] = "Pass",
+            ["Release solution build"] = "Pass",
+            ["All .NET test projects"] = "Pass",
+            ["Package/API and package-only consumers"] = "Pass",
+            ["npm install and typecheck"] = "Pass",
+            ["Playwright accessibility"] = "Pass",
+        };
 
     /// <summary>
     /// Collects test classes that can actually discharge an invariant: the class must be declared in
@@ -463,24 +540,40 @@ public sealed class EpicEightClosureFitnessTests
             @"(?m)^### Validation receipts[ \t]*\r?$",
             RegexOptions.CultureInvariant);
         headings.Count.ShouldBeGreaterThan(0, "Validation receipt heading is missing.");
-        int headingIndex = headings[^1].Index;
+        Match heading = headings[^1];
+        int headingIndex = heading.Index;
 
         // Bound the section at the next heading. Slicing to end of file swallows every later table,
         // so superseded blocker and remediation rows would decide the closure gate.
-        int nextHeadingIndex = summary.IndexOf("\n### ", headingIndex + 1, StringComparison.Ordinal);
-        return nextHeadingIndex < 0 ? summary[headingIndex..] : summary[headingIndex..nextHeadingIndex];
+        int contentIndex = headingIndex + heading.Length;
+        Match nextHeading = Regex.Match(
+            summary[contentIndex..],
+            @"(?m)^ {0,3}#{1,3}(?:[ \t]+|\r?$)",
+            RegexOptions.CultureInvariant);
+        return nextHeading.Success
+            ? summary[headingIndex..(contentIndex + nextHeading.Index)]
+            : summary[headingIndex..];
     }
 
+    private static string[] DescribeMissingReceiptGaps(IReadOnlyDictionary<string, string> receipts)
+        => RequiredValidationReceiptChecks
+            .Where(check => !receipts.ContainsKey(check))
+            .Select(static check => $"{check}:missing")
+            .ToArray();
+
     private static string[] DescribeReceiptGaps(IReadOnlyDictionary<string, string> receipts)
-        => receipts
+        => DescribeMissingReceiptGaps(receipts).Concat(receipts
             .Where(static receipt =>
             {
                 // Tolerate bold markup, but never accept a qualified pass that still names a blocker.
                 string value = receipt.Value.Trim('*', ' ');
                 return !value.StartsWith("Pass", StringComparison.OrdinalIgnoreCase)
-                    || value.Contains("block", StringComparison.OrdinalIgnoreCase);
+                    || value.Contains("block", StringComparison.OrdinalIgnoreCase)
+                    || value.Contains("unvalidated", StringComparison.OrdinalIgnoreCase)
+                    || value.Contains("fail", StringComparison.OrdinalIgnoreCase)
+                    || value.Contains("skip", StringComparison.OrdinalIgnoreCase);
             })
-            .Select(static receipt => $"{receipt.Key}:{receipt.Value}")
+            .Select(static receipt => $"{receipt.Key}:{receipt.Value}"))
             .ToArray();
 
     private static string NormalizeStoryStatus(string status)

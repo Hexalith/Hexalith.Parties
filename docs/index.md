@@ -7,7 +7,7 @@
 - **Type:** Monolith — single cohesive .NET 10 solution (backend, event-sourced domain service)
 - **Domain:** Party records (Person / Organization) — contact channels, identifiers, GDPR consent & erasure
 - **Architecture:** Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, fronted by the **Hexalith.EventStore** gateway
-- **Orchestration:** .NET Aspire 13.4 (`dotnet aspire run --project src/Hexalith.Parties.AppHost`)
+- **Orchestration:** .NET Aspire 13.6.0 (`dotnet aspire run --project src/Hexalith.Parties.AppHost`)
 - **Public surface:** EventStore `POST /api/v1/commands` & `/api/v1/queries` (`Domain="party"`); typed .NET client; `parties-mcp` (5 tools)
 - **Scale:** exactly 13 projects under `src` plus one sample project, 15 runnable .NET test projects plus one support host, and Playwright e2e — roughly 408 source `.cs`, 231 test `.cs`, and 36 `.razor` files (counts as of 2026-08-19; indicative, not gated)
 
@@ -86,7 +86,7 @@ Then follow [getting-started.md](./getting-started.md) for auth + first command/
 1. **GDPR crypto-shredding is implemented & enabled by default** (`Parties:CryptoShredding:IsEnabled=true`) despite the README's "not in MVP" notice — a separate switch from the MVP warning (`Parties:Compliance:GdprFeaturesActive`). 🚨 The **only** key store is `LocalDevKeyStorageBackend` (in-memory) with **no production guard/warning**, so a prod restart silently destroys all key material → unrecoverable personal data. Provision a real KMS first ([architecture.md §8](./architecture.md)).
 2. **MCP exposes exactly 5 tools** (`create_party`, `get_party`, `find_parties`, `update_party`, `delete_party`). `get_party_name_at` does **not** exist — temporal name-as-of queries are reserved, not implemented. *(The README + `getting-started.md` previously listed a phantom 6th `get_party_name_at` tool; corrected in this pass.)*
 3. **Projection/query actors and `ProjectionRebuildService` were retired in Story 8.6:** EventStore SDK handlers and read-model stores now own the mechanics; regression tests pin rebuild/live agreement ([architecture.md §6](./architecture.md)).
-4. **The AppHost SDK and Aspire packages are aligned at `13.5.3`.** `Testcontainers` is declared but unused.
+4. **The AppHost SDK and Aspire packages are aligned at `13.6.0`.** `Testcontainers` is declared but unused.
 5. **Submodules are now checked out** under `references/` in this working copy. A **fresh clone** must initialize the root build submodules (`Hexalith.Builds`, `Hexalith.Commons`, `Hexalith.EventStore`, `Hexalith.FrontComposer`, `Hexalith.PolymorphicSerializations`, and `Hexalith.Tenants`) without `--recursive`; `Hexalith.Memories` remains optional for rich search.
 
 ---

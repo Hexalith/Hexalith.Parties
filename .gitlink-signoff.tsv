@@ -100,3 +100,23 @@ references/Hexalith.Commons|19d7d4d6b21160557b7449f55a0ad0f55e6d7dc6|validated-a
 references/Hexalith.FrontComposer|b0ad2fb69bcf5e7aadd7b388d25415d0fba876d5|validated-advance|v4.4.0-8-gb0ad2fb6|jpiquot|2026-09-13
 references/Hexalith.Tenants|ff43dc941b01d4a68070f92dde0536f5ab1ef4df|validated-advance|v5.7.0-34-gff43dc94|jpiquot|2026-09-13
 references/Hexalith.Builds|aee01323579adeda952bf41b2f3e0e61785075c6|validated-advance|v4.27.3-13-gaee0132|jpiquot|2026-09-13
+
+# --- Story 8.10 Round 6 recorded decision (2026-10-04): authorizes only
+#     the eight identities named in the spec. The later three-pin approval
+#     is recorded separately below; selection signoff does not certify parity.
+references/Hexalith.AI.Tools|3f194e17174994d308ec84af9ee2b5aa68674d0d|validated-advance|3f194e1|jpiquot|2026-10-04
+references/Hexalith.Builds|688eec9a4333245cc0ff7772115c769094471863|validated-advance|v4.29.1-14-g688eec9|jpiquot|2026-10-04
+references/Hexalith.Commons|116d26815eb81e35b3c161e1799e5ee12805fc0a|validated-advance|v2.30.1-15-g116d268|jpiquot|2026-10-04
+references/Hexalith.EventStore|b046425503c694d5857e8bba890351840fa52c26|validated-advance|v3.111.0-2-gb0464255|jpiquot|2026-10-04
+references/Hexalith.FrontComposer|bf40099f81fcaeac324b7b4377513ac7d49cead4|validated-advance|v4.5.0-113-gbf40099f|jpiquot|2026-10-04
+references/Hexalith.Memories|3d72927f4dac66af4968cc6726c4e96df292f2e4|validated-advance|v2.27.1-23-g3d72927f|jpiquot|2026-10-04
+references/Hexalith.PolymorphicSerializations|98de6e013840ece9f0fa7c68ab7dcdf2bba3b375|validated-advance|v1.19.4|jpiquot|2026-10-04
+references/Hexalith.Tenants|b63bdbba8613801bb488eaa9116f386e41a261f8|validated-advance|v5.7.0-133-gb63bdbba|jpiquot|2026-10-04
+
+# --- Story 8.10 explicit human approval (2026-10-04): Administrator /
+#     jpiquot answered "yes" to the exact three current pins in the I20 table
+#     at Parties c782b68c5cf56a19e6a2a237f5f44e3043d5e461.
+#     No parity, owner release, publishing, or rollback deletion is approved.
+references/Hexalith.EventStore|cbbe41501ba722731bf36b2c343efdef4ac714fb|validated-advance|v3.111.0-10-gcbbe4150|jpiquot|2026-10-04
+references/Hexalith.FrontComposer|374bb83392d8ab4e8a8397cfd312d09948fb0b9d|validated-advance|v4.5.0-117-g374bb833|jpiquot|2026-10-04
+references/Hexalith.Tenants|cc348c9d7839ec7aad01649fc1c0e6f4fe672da4|validated-advance|v5.7.0-134-gcc348c9d|jpiquot|2026-10-04
