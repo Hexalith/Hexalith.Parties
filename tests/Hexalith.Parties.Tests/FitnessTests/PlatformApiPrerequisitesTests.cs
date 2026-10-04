@@ -11,7 +11,7 @@ namespace Hexalith.Parties.Tests.FitnessTests;
 public sealed class PlatformApiPrerequisitesTests
 {
     private const string EventStorePayloadProtectionSpecRelativePath = "references/Hexalith.EventStore/_bmad-output/implementation-artifacts/spec-shared-payload-protection-engine.md";
-    private const string EventStorePackageVersion = "3.112.0";
+    private const string EventStorePackageVersion = "3.113.0";
     private const string EventStoreRelativePath = "references/Hexalith.EventStore";
     private const string EventStoreSprintStatusRelativePath = "references/Hexalith.EventStore/_bmad-output/implementation-artifacts/sprint-status.yaml";
     private const string EventStoreStoryMigrationRelativePath = "references/Hexalith.EventStore/_bmad-output/planning-artifacts/story-id-migration-2026-08-01.md";
@@ -21,7 +21,7 @@ public sealed class PlatformApiPrerequisitesTests
     // the bound exists so a hung child fails the lane with a diagnosable message instead of blocking.
     private const int ProcessTimeoutMilliseconds = 300_000;
     private const string AiToolsSha = "3f194e17174994d308ec84af9ee2b5aa68674d0d";
-    private const string BuildsSha = "145ae921d9032f110b7371614939559e0aee202a";
+    private const string BuildsSha = "360a2b9c4e96809365a7de785be9a68152d5ac28";
     private const string CommonsSha = "116d26815eb81e35b3c161e1799e5ee12805fc0a";
 
     // Consumed by MainLayout for the shell landmarks and skip links (G4 work package F, delivered
@@ -31,9 +31,9 @@ public sealed class PlatformApiPrerequisitesTests
     internal const string FrontComposerSha = "2cc8dd3a3ac76c03f5ea6f6f92e65829306db470";
     private const string MemoriesSha = "5b43fe2f8a0f04dc021921a077dff1a573c2ce5e";
     private const string PolymorphicSerializationsSha = "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375";
-    private const string TenantsSha = "04e655cf070b17eced9daefb9eaa87a09ec60e81";
-    private const string PayloadProtectionEventStoreDescribe = "v3.112.0-2-g2242ad55";
-    private const string PayloadProtectionEventStoreSha = "2242ad55a1b678828df8aa093fd92399c29af5bf";
+    private const string TenantsSha = "72b8e4f508176b69826549e87b7b2a286f607fd1";
+    private const string PayloadProtectionEventStoreDescribe = "v3.113.0";
+    private const string PayloadProtectionEventStoreSha = "865cd9e49273dffbb1cdae85efeaf1aac322e09e";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
     private const string PayloadProtectionSurface = "Payload protection engine package";
     private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";
@@ -210,7 +210,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["Tenants AppHost topology|Source (diagnostic) and package `5.7.0` (default graph)"] =
         [
             TenantsSha,
-            "`v5.7.0-141-g04e655cf`",
+            "`v5.7.0-143-g72b8e4f5`",
             "5.7.0",
         ],
     };
@@ -696,7 +696,10 @@ public sealed class PlatformApiPrerequisitesTests
         catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">2.27.1</HexalithMemoriesVersion>");
         catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">5.7.0</HexalithTenantsVersion>");
         catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">1.1.1</HexalithPartiesVersion>");
-        catalog.ShouldContain("<PackageVersion Include=\"CommunityToolkit.Aspire.Hosting.Dapr\" Version=\"13.6.0-preview.1.261001-0243\" />");
+        // Builds 360a2b9c routes this version through a property whose unconditional value applies to
+        // every Parties project (only Hexalith.Folders.Aspire overrides it), so pin both halves exactly.
+        catalog.ShouldContain("<HexalithAspireHostingDaprVersion>13.6.0-preview.1.261001-0243</HexalithAspireHostingDaprVersion>");
+        catalog.ShouldContain("<PackageVersion Include=\"CommunityToolkit.Aspire.Hosting.Dapr\" Version=\"$(HexalithAspireHostingDaprVersion)\" />");
         catalog.ShouldContain("<PackageVersion Include=\"xunit.v3\" Version=\"4.0.1\" />");
         catalog.ShouldContain("<PackageVersion Include=\"xunit.v3.assert\" Version=\"4.0.1\" />");
         catalog.ShouldContain("<PackageVersion Include=\"xunit.v3.extensibility.core\" Version=\"4.0.1\" />");

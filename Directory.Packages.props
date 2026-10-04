@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <!-- Select the approved EventStore package release for Parties before importing the shared catalog. -->
-        <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == ''">3.112.0</HexalithEventStoreVersion>
+        <HexalithEventStoreVersion Condition="'$(HexalithEventStoreVersion)' == ''">3.113.0</HexalithEventStoreVersion>
         <!-- Define paths of the Hexalith packages props. -->
         <Hexalith1BuildPackageProps>$(MSBuildThisFileDirectory)references/Hexalith.Builds/Props/Directory.Packages.props</Hexalith1BuildPackageProps>
         <Hexalith2BuildPackageProps>$(MSBuildThisFileDirectory)../Hexalith.Builds/Props/Directory.Packages.props</Hexalith2BuildPackageProps>

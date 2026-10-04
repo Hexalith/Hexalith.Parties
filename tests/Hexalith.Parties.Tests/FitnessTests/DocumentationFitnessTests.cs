@@ -150,7 +150,12 @@ public sealed class DocumentationFitnessTests
         XDocument catalog = XDocument.Parse(Read(root, "references/Hexalith.Builds/Props/Directory.Packages.props"));
         Dictionary<string, string> versions = catalog.Descendants("PackageVersion")
             .ToDictionary(element => element.Attribute("Include")!.Value, element => element.Attribute("Version")!.Value, StringComparer.Ordinal);
-        string Version(string packageId) => versions[packageId];
+        IReadOnlyDictionary<string, string> catalogProperties = ReadDefaultCatalogProperties(catalog);
+        string Version(string packageId) => Regex.Replace(
+            versions[packageId],
+            @"\$\((?<name>[A-Za-z0-9_.]+)\)",
+            match => catalogProperties[match.Groups["name"].Value],
+            RegexOptions.CultureInvariant);
         string aspire = Version("Aspire.Hosting");
         XDocument appHost = XDocument.Parse(Read(root, "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj"));
         appHost.Root!.Attribute("Sdk")!.Value.ShouldBe($"Aspire.AppHost.Sdk/{aspire}");
@@ -326,4 +331,29 @@ public sealed class DocumentationFitnessTests
 
     private static string Read(string root, string relativePath)
         => File.ReadAllText(Path.Combine(root, relativePath));
+
+    /// <summary>
+    /// Evaluates the catalog properties that apply to a Parties project in document order:
+    /// unconditional assignments overwrite, <c>'$(Name)' == ''</c> defaults apply only when unset,
+    /// and any other condition (for example a different <c>MSBuildProjectName</c>) is skipped.
+    /// </summary>
+    private static IReadOnlyDictionary<string, string> ReadDefaultCatalogProperties(XDocument catalog)
+    {
+        Dictionary<string, string> properties = new(StringComparer.Ordinal);
+        foreach (XElement property in catalog.Descendants("PropertyGroup").Elements())
+        {
+            string name = property.Name.LocalName;
+            string? condition = property.Attribute("Condition")?.Value;
+            if (condition is null)
+            {
+                properties[name] = property.Value.Trim();
+            }
+            else if (string.Equals(condition.Replace(" ", string.Empty, StringComparison.Ordinal), $"'$({name})'==''", StringComparison.Ordinal))
+            {
+                properties.TryAdd(name, property.Value.Trim());
+            }
+        }
+
+        return properties;
+    }
 }

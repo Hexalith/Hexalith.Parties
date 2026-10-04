@@ -370,7 +370,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         ci.ShouldContain("workflow_dispatch");
         ci.ShouldContain("bypass-validation");
         ci.ShouldContain("commitlint.yml");
-        ci.ShouldContain("EventStore 3.104.0");
+        ci.ShouldContain($"package graph selects EventStore {ReadEffectiveEventStoreVersion()}");
         ci.ShouldContain("Package mode remains the authoritative CI and release path");
         ci.ShouldContain("source mode is diagnostic only");
         ci.ShouldContain("registry.hexalith.com/parties");
@@ -383,6 +383,16 @@ public sealed class PartiesContainerPublishWorkflowTests
         secrets.ShouldContain("Zot API key");
         secrets.ShouldNotContain("ZOT_REGISTRY_PASSWORD");
     }
+
+    /// <summary>
+    /// Reads the EventStore package version the Parties graph actually selects: the root pre-import
+    /// pin when present, otherwise the shared catalog default.
+    /// </summary>
+    private static string ReadEffectiveEventStoreVersion()
+        => System.Xml.Linq.XDocument.Load(CiTestPaths.RepoFile("Directory.Packages.props"))
+                .Descendants("HexalithEventStoreVersion").SingleOrDefault()?.Value
+            ?? System.Xml.Linq.XDocument.Load(CiTestPaths.RepoFile("references/Hexalith.Builds/Props/Directory.Packages.props"))
+                .Descendants("HexalithEventStoreVersion").Single().Value;
 
     private static string[] ArgumentValues(string[] arguments, string option)
     {

@@ -133,3 +133,17 @@ references/Hexalith.EventStore|2242ad55a1b678828df8aa093fd92399c29af5bf|validate
 references/Hexalith.FrontComposer|2cc8dd3a3ac76c03f5ea6f6f92e65829306db470|validated-advance|v4.5.0-121-g2cc8dd3a|jpiquot|2026-10-04
 references/Hexalith.Memories|5b43fe2f8a0f04dc021921a077dff1a573c2ce5e|validated-advance|v2.28.0|jpiquot|2026-10-04
 references/Hexalith.Tenants|04e655cf070b17eced9daefb9eaa87a09ec60e81|validated-advance|v5.7.0-141-g04e655cf|jpiquot|2026-10-04
+
+# --- Story 8.10 final identity approval (2026-10-05): Administrator /
+#     jpiquot approved exactly Builds 360a2b9c and Tenants 72b8e4f5 (committed
+#     in Parties 2bdb303b31739b7631036fc15ac21a012724ddb8) and the EventStore
+#     3.113.0 package + source update: root checkout at tag v3.113.0 (one
+#     fast-forward commit past 0dc44e46; root gitlink commit pending). The
+#     committed EventStore 547c938d / 0dc44e46 and Tenants b55f96d8 were never
+#     approved; the 2026-10-04 EventStore 2242ad55 and Tenants 04e655cf rows are
+#     superseded (never committed). I16 identity re-validation is approved for
+#     the final set, but only receipts rerun at these identities are Pass.
+#     No owner release, publishing, or rollback deletion is approved.
+references/Hexalith.Builds|360a2b9c4e96809365a7de785be9a68152d5ac28|validated-advance|v4.29.1-17-g360a2b9|jpiquot|2026-10-05
+references/Hexalith.EventStore|865cd9e49273dffbb1cdae85efeaf1aac322e09e|validated-advance|v3.113.0|jpiquot|2026-10-05
+references/Hexalith.Tenants|72b8e4f508176b69826549e87b7b2a286f607fd1|validated-advance|v5.7.0-143-g72b8e4f5|jpiquot|2026-10-05

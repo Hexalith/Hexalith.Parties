@@ -53,8 +53,8 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.6.0` |
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.10` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.0-preview.1.261001-0243` |
-| Gateway/eventing | Hexalith.EventStore | package `3.112.0` by default (Parties pre-import CPM pin); approved source gitlink `2242ad55a1b678828df8aa093fd92399c29af5bf` (`v3.112.0-2-g2242ad55`; working-tree approval 2026-10-04, root gitlink commit pending; parity unvalidated) |
-| Tenancy | Hexalith.Tenants | package `5.7.0` by default; approved source gitlink `04e655cf070b17eced9daefb9eaa87a09ec60e81` (`v5.7.0-141-g04e655cf`; working-tree approval 2026-10-04, root gitlink commit pending; parity unvalidated) |
+| Gateway/eventing | Hexalith.EventStore | package `3.113.0` by default (Parties pre-import CPM pin); approved source checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` (tag `v3.113.0`, the same release; approved 2026-10-05, root gitlink commit pending; parity counts only for receipts rerun at this identity) |
+| Tenancy | Hexalith.Tenants | package `5.7.0` by default; approved source gitlink `72b8e4f508176b69826549e87b7b2a286f607fd1` (`v5.7.0-143-g72b8e4f5`; approved 2026-10-05 and committed; parity counts only for receipts rerun at this identity) |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.2.0` |
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.12` |
@@ -74,6 +74,17 @@ Solution-wide build settings (`Directory.Build.props`): `Nullable=enable`, `Impl
 
 The AppHost SDK and Aspire packages are aligned at `13.6.0`; DAPR client,
 actors, and ASP.NET Core packages are aligned at `1.18.10`.
+
+Root source identities follow the Story 8.10 final set approved by
+Administrator / jpiquot on 2026-10-05 (authoritative record: the Story 8.3
+reconciliation and I20 approval tables): AI.Tools `3f194e17`, Builds
+`360a2b9c`, Commons `116d2681`, EventStore `865cd9e4` (`v3.113.0`),
+FrontComposer `2cc8dd3a`, Memories `5b43fe2f`, PolymorphicSerializations
+`98de6e01`, and Tenants `72b8e4f5`. The same decisions select EventStore
+package `3.113.0`, approve I16 identity re-validation for this set (a receipt
+counts as passing only when it was rerun at the stamped identity), and accept
+the missing I13 runtime focus, forced-colors, and reduced-motion proof as the
+named DW-111 deferral; I13 itself is not discharged.
 
 ---
 

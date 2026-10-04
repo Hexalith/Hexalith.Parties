@@ -622,20 +622,21 @@ unvalidated, failed, or skipped.
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| PolymorphicSerializations owner build and tests | **Unvalidated** | Historical receipt, not rerun at the 2026-10-04 retained graph or at the five working-tree identities approved 2026-10-04 (Builds `145ae921d9032f110b7371614939559e0aee202a`, EventStore `2242ad55a1b678828df8aa093fd92399c29af5bf`, FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`, Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e`, Tenants `04e655cf070b17eced9daefb9eaa87a09ec60e81`). At gitlink `0dca9e9d3f8b2a20ba426b84fa575ab4e7b5562b`, its Release build completed with 0 warnings and 0 errors and its test assembly passed 15/15. The compatible explicit-syntax preferences do not suppress StyleCop diagnostics. |
-| FrontComposer shell focus/theme tests | **Unvalidated** | Historical receipt, not rerun at the 2026-10-04 retained graph or at approved FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`. Direct focused execution of `Story13AccessibilityPrimitivesTests`, `FrontComposerShellTests`, `FcSystemThemeWatcherTests`, and `ThemeEffectsScopeTests` passed 50/50. Fluent `ThemeSettings.IsExact=false` keeps the configured teal as a palette seed instead of forcing the raw, non-AA brand background. |
-| Parties UI tests | **Unvalidated (full lane)** | 2026-10-04 source-mode Debug focused checks at superseded FrontComposer `374bb83392d8ab4e8a8397cfd312d09948fb0b9d`: MainLayout 3/3, style 4/4, host composition 17/17, specimen scope 8/8; existing specimen route/component checks passed 7/7. Not rerun at the five working-tree identities approved 2026-10-04 (Builds `145ae921d9032f110b7371614939559e0aee202a`, EventStore `2242ad55a1b678828df8aa093fd92399c29af5bf`, FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`, Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e`, Tenants `04e655cf070b17eced9daefb9eaa87a09ec60e81`). These diagnostics do not certify the full package-mode UI lane. Historical full-lane receipt: 328/328 on 2026-08-19, unvalidated at current identities. |
-| Warning and nested-submodule policy | **Unvalidated (approved gitlinks not committed)** | Rerun 2026-10-04 at Parties `7c720c7f9879ecb469993b1d2dff2bdb72b96e1b` with the five working-tree identities approved 2026-10-04 (Builds `145ae921d9032f110b7371614939559e0aee202a`, EventStore `2242ad55a1b678828df8aa093fd92399c29af5bf`, FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`, Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e`, Tenants `04e655cf070b17eced9daefb9eaa87a09ec60e81`) checked out: `bash scripts/check-no-warning-override.sh` passed; no nested submodule is initialized in any root submodule; `bash scripts/gitlink-rc-gate.sh` (working-tree mode) passed with validated-advance signoff for all five drifted checkouts. `bash scripts/gitlink-rc-gate.sh --diff 882c02455bbdd6b76886fe3fba8bd24a24e2a057` fails because committed HEAD still records unapproved intermediate pointers (EventStore `e968467c`, FrontComposer `37c8c6d2`, Memories `47027d35`, Tenants `c05fe317`) until the human commits the approved gitlinks; a scratch-clone simulation with the approved gitlinks committed passes all eight. |
-| Release solution build | **Blocked** | Last measured 2026-10-04 after the approved EventStore 3.112.0 update at Parties `7c720c7f9879ecb469993b1d2dff2bdb72b96e1b`, with the same working checkouts later approved (8.3 observation table): package-mode solution restore passed; the Release solution build failed with 0 warnings and 3 CS0234 errors in Parties.UI for FrontComposerRouteOptions and FcModuleLandingPage, absent from Shell 4.5.0 (DW-124). Not rerun in the working-tree approval pass. The core Parties.Tests package-mode Release build was rerun after the re-stamp and passed with 0 warnings/errors. |
-| All .NET test projects | **Blocked** | The complete 15-project Release lane remains blocked by the Parties.UI package build failure (DW-124) and was not rerun at the five working-tree identities approved 2026-10-04 (Builds `145ae921d9032f110b7371614939559e0aee202a`, EventStore `2242ad55a1b678828df8aa093fd92399c29af5bf`, FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`, Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e`, Tenants `04e655cf070b17eced9daefb9eaa87a09ec60e81`). Focused package-mode fitness after the 2026-10-04 re-stamp: documentation 6/6, closure 26/26, prerequisites 14/16; both failures are committed-gitlink assertions (HEAD records EventStore `e968467c7db5b5685894fa2b85cfa7ec14512a7c`, approved `2242ad55a1b678828df8aa093fd92399c29af5bf`). Earlier full-lane/source counts are historical. |
-| Package/API and package-only consumers | **Blocked** | 2026-10-04: packing and package-only consumer validation were not run because the Release solution build fails (DW-124), and were not rerun at the five working-tree identities approved 2026-10-04 (Builds `145ae921d9032f110b7371614939559e0aee202a`, EventStore `2242ad55a1b678828df8aa093fd92399c29af5bf`, FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`, Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e`, Tenants `04e655cf070b17eced9daefb9eaa87a09ec60e81`). The no-build pack script requires fresh successful Release outputs; stale outputs cannot prove the current graph. Historical 9-package/consumer proof at `0.0.0-story810` is unvalidated. |
-| npm install and typecheck | **Unvalidated** | Not rerun at the five working-tree identities approved 2026-10-04 (Builds `145ae921d9032f110b7371614939559e0aee202a`, EventStore `2242ad55a1b678828df8aa093fd92399c29af5bf`, FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`, Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e`, Tenants `04e655cf070b17eced9daefb9eaa87a09ec60e81`). Historical 2026-10-04 receipt at Parties `c782b68c5cf56a19e6a2a237f5f44e3043d5e461`, Node `26.4.0`, npm `11.18.0`: `npm ci --prefix tests/e2e` installed 9 packages with 0 vulnerabilities; `npm --prefix tests/e2e run typecheck` passed. |
-| Playwright accessibility | **Unvalidated (superseded identity; I13 parity incomplete)** | Historical 2026-10-04 execution: `npm --prefix tests/e2e run test:a11y` passed 6/6 at FrontComposer source `374bb83392d8ab4e8a8397cfd312d09948fb0b9d` (`v4.5.0-117-g374bb833`), using the route-restricted valid-scope specimen fixture. That identity is superseded by approved `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` (`v4.5.0-121-g2cc8dd3a`, `PlatformApiPrerequisitesTests.FrontComposerSha`), and the lane was not rerun there. The separate I16 parity approval and DW-111 content-control forced-colors focus proof also remain pending. Packaged Shell `4.5.0` is a separate identity. |
-| Static diff | Pass | Rerun 2026-10-04 after the working-tree identity reconciliation: `git -c core.whitespace=cr-at-eol diff --check` passed. Existing line endings are preserved; `core.whitespace` is an invocation-only interpretation of CR at EOL, not a repository configuration change. |
+| PolymorphicSerializations owner build and tests | **Unvalidated** | Owner build and tests were not rerun at the 2026-10-05 final set (PolymorphicSerializations `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375`); the 2026-10-05 Release solution build compiled this submodule (row below), which is not owner-test proof. Historical receipt: at gitlink `0dca9e9d3f8b2a20ba426b84fa575ab4e7b5562b`, its Release build completed with 0 warnings and 0 errors and its test assembly passed 15/15. The compatible explicit-syntax preferences do not suppress StyleCop diagnostics. |
+| FrontComposer shell focus/theme tests | **Unvalidated** | Producer tests were not rerun at the 2026-10-05 final set (FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`). Historical receipt: direct focused execution of `Story13AccessibilityPrimitivesTests`, `FrontComposerShellTests`, `FcSystemThemeWatcherTests`, and `ThemeEffectsScopeTests` passed 50/50. Fluent `ThemeSettings.IsExact=false` keeps the configured teal as a palette seed instead of forcing the raw, non-AA brand background. |
+| Parties UI tests | **Failed (4 tests, DW-141)** | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below), package mode inside the full Release lane: 339/343 passed, 4 failed, 0 skipped. All four failures are `PartiesOverviewTests` (`ConsumerPolicyShowsOnlyMySpace`, `AdminPolicyShowsOnlyAdministration`, `BothPoliciesShowEachAuthorizedDestinationOnce`, `NeitherPolicyShowsOneSafeNoAccessState`): `PartiesOverview.razor` passes `FcPageTabs ModuleRoute`, which packaged Shell `4.5.0` lacks (`InvalidOperationException`; DW-141). `MainLayoutAccessibilityTests`, `AccessibilityStyleGuardTests`, and the host-composition tests passed. |
+| Warning and nested-submodule policy | Pass | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below): `bash scripts/check-no-warning-override.sh` passed (also passed in the chained solution-build command recorded below); no nested submodule is initialized in any of the eight root submodules, and every root checkout is clean. `bash scripts/gitlink-rc-gate.sh` (working-tree mode) passed: the only drifted checkout, EventStore `865cd9e49273dffbb1cdae85efeaf1aac322e09e`, has 2026-10-05 `validated-advance` signoff. Identity, not warning policy: `bash scripts/gitlink-rc-gate.sh --diff 882c02455bbdd6b76886fe3fba8bd24a24e2a057` fails only for the committed never-approved EventStore `0dc44e46ccb7f56c3182b855c21f337173a1307f` until the human commits the approved gitlink; a scratch clone with it committed passes all eight. |
+| Release solution build | Pass | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below): `bash scripts/check-no-warning-override.sh && dotnet restore Hexalith.Parties.slnx -p:NuGetAudit=false && dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` exited 0 with Build succeeded, 0 Warning(s), 0 Error(s) in 00:02:02 (run by the Administrator's session before this pass and recorded in spec 8.10; not rerun, as the spec directs). The three former CS0234 DW-124 errors are gone (DW-124 resolved by `47e2da32`). The only later source edits are four test files, which compiled with 0 warnings and 0 errors in the Release lane builds below. |
+| All .NET test projects | **Failed (8 tests in 4 projects)** | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below): `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` ran all 15 projects: 2,624 tests, 2,608 passed, 10 failed, 6 skipped (the existing Story 12 `HealthEndpointE2ETests` Tier 3 skips); 10 projects passed. After the Ci.Tests version-derivation fix, `scripts/test.ps1 -Lane ci` passed 57/57, leaving 8 failures: Parties.Tests 610/612 (the two expected committed-gitlink assertions, HEAD `0dc44e46ccb7f56c3182b855c21f337173a1307f` versus approved `865cd9e49273dffbb1cdae85efeaf1aac322e09e`), Server.Tests 255/256 (DW-140), UI.Tests 339/343 (DW-141), and Contracts.Tests 179/180 (DW-142). DW-140 to DW-142 come from commits `37d87f5a` and `c069af07`, which no earlier full Release lane had reached. |
+| Package/API and package-only consumers | Pass | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below): `pkg_dir=$(mktemp -d /tmp/parties-810-packages.XXXXXX); consumer_dir=$(mktemp -d /tmp/parties-810-consumer.XXXXXX); python3 scripts/pack-release-packages.py "$pkg_dir" 0.0.0-story810 && python3 scripts/validate-nuget-packages.py "$pkg_dir" && python3 scripts/validate-consumer-package-references.py "$pkg_dir" --work-directory "$consumer_dir"` exited 0: 9 packages validated and the package-only client and portal consumers built with 0 warnings and 0 errors. `Hexalith.Parties.Contracts` depends on `Hexalith.EventStore.Contracts` `3.113.0`. It ran on package-mode Release outputs, after the test lane and before the source-mode Playwright build. |
+| npm install and typecheck | Pass | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below), Node `26.4.0`, npm `11.18.0`, TypeScript `7.0.2`: `npm ci --prefix tests/e2e` added 9 packages with 0 vulnerabilities; `npm --prefix tests/e2e run typecheck` passed. |
+| Playwright accessibility | Pass | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below): `npm --prefix tests/e2e run test:a11y` passed 6/6 (Playwright `1.63.0`, chromium) against the source-mode UI built from FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` (`v4.5.0-121-g2cc8dd3a`, `PlatformApiPrerequisitesTests.FrontComposerSha`) and EventStore `865cd9e49273dffbb1cdae85efeaf1aac322e09e`. Packaged Shell `4.5.0` is a separate identity. This lane does not discharge I13: the DW-111 content-control focus, forced-colors, and reduced-motion proof is the deferral the Administrator accepted on 2026-10-05. |
+| Static diff | Pass | Rerun 2026-10-05 after the final reconciliation: `git -c core.whitespace=cr-at-eol diff --check` passed. Existing line endings are preserved; `core.whitespace` is an invocation-only interpretation of CR at EOL, not a repository configuration change. |
 
-The table separates current executions, blocked package gates, and unvalidated
-immutable parity. The current verification packet below records the exact
-commands/results; Story 8.10 and Epic 8 remain open.
+The table separates lanes rerun at the 2026-10-05 final set from receipts that
+were not rerun and stay unvalidated. The 2026-10-05 verification section at the
+end of this file records the exact commands/results; Story 8.10 and Epic 8
+remain open.
 
 **Corrected 2026-08-19 (code review).** The paragraph previously here was
 written before the gitlinks were committed and is false at HEAD. Superproject
@@ -1135,3 +1136,85 @@ blocked by DW-124, the I16 parity approval, and I13 (DW-111). Story 8.10 and
 Epic 8 stay `in-progress`; Stories 8.7–8.9 stay `blocked`. No Git staging,
 commit, push, submodule reset/update, owner-repository edit, catalog change,
 publication, or rollback deletion occurred.
+
+## Story 8.10 final identity, approval, and EventStore 3.113.0 verification — 2026-10-05
+
+Authority: spec 8.10 "Final identity, approval, and EventStore 3.113.0
+reconciliation — 2026-10-05". Administrator / jpiquot decided: (1) approve
+exactly Builds `360a2b9c4e96809365a7de785be9a68152d5ac28` (`v4.29.1-17-g360a2b9`)
+and Tenants `72b8e4f508176b69826549e87b7b2a286f607fd1` (`v5.7.0-143-g72b8e4f5`);
+(2) update EventStore to `3.113.0` as package and source, with the root checkout at
+tag `v3.113.0` = `865cd9e49273dffbb1cdae85efeaf1aac322e09e`; (3) approve I16
+identity re-validation for the final set, where a receipt is `Pass` only when it
+was rerun at the stamped identity; (4) accept the missing I13 runtime proof as the
+named DW-111 deferral (I13 stays `Deferred`).
+
+| Root dependency | Final identity | `git describe --tags --always` | Committed at Parties `47e2da32`? |
+| --- | --- | --- | --- |
+| AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` | `3f194e1` | Yes |
+| Builds | `360a2b9c4e96809365a7de785be9a68152d5ac28` | `v4.29.1-17-g360a2b9` | Yes (`2bdb303b`) |
+| Commons | `116d26815eb81e35b3c161e1799e5ee12805fc0a` | `v2.30.1-15-g116d268` | Yes |
+| EventStore | `865cd9e49273dffbb1cdae85efeaf1aac322e09e` | `v3.113.0` | **No**: HEAD records never-approved `0dc44e46ccb7f56c3182b855c21f337173a1307f`; commit pending |
+| FrontComposer | `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` | `v4.5.0-121-g2cc8dd3a` | Yes (`2f6157d3`) |
+| Memories | `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e` | `v2.28.0` | Yes (`2f6157d3`) |
+| PolymorphicSerializations | `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` | `v1.19.4` | Yes |
+| Tenants | `72b8e4f508176b69826549e87b7b2a286f607fd1` | `v5.7.0-143-g72b8e4f5` | Yes (`2bdb303b`) |
+
+Packages: EventStore `3.113.0` (Parties pre-import pin; the Builds `360a2b9c`
+catalog itself still defaults to `3.112.0`), Commons `2.30.1`, FrontComposer
+`4.5.0`, Memories `2.27.1`, Tenants `5.7.0`. Each checkout was re-read before
+recording (`rev-parse`, `describe --tags --always`, `status --porcelain`): all
+eight match and are clean, and no nested submodule is initialized. Never
+approved: EventStore `547c938d52e4fd31b47783b9dd032528a5100549` (committed in
+`2f6157d3`) and `0dc44e46ccb7f56c3182b855c21f337173a1307f` (committed in
+`2bdb303b`), and Tenants `b55f96d89b839fd443ac589835880102add46d64` (committed in
+`2f6157d3`). Superseded and never committed: the 2026-10-04 approvals of
+EventStore `2242ad55` and Tenants `04e655cf`.
+
+Recorded in: `.gitlink-signoff.tsv` (2026-10-05 block, three `validated-advance`
+rows, owner `jpiquot`); `PlatformApiPrerequisitesTests` (`EventStorePackageVersion`
+`3.113.0`, `BuildsSha`, `PayloadProtectionEventStoreSha`/`Describe` `v3.113.0`,
+`TenantsSha`, Tenants describe literal; `AssertGitlinkAndCheckout` unchanged); the
+8.3 reconciliation rows, G4 row, four 2026-10-05 I20 rows (including the filled I16
+row and the I13/DW-111 row), and observation outcome; DW-99, DW-111 (decision),
+DW-124 (resolved by `47e2da32`), new DW-139 to DW-142; `docs/architecture.md`;
+`docs/ci.md`; spine frontmatter, §7 I4/I13, §7a I16, §7b I20, and §13; and the
+sprint-status Story 8.9/8.10 comments.
+
+Version-derivation fixes required by the approved Builds `360a2b9c` catalog and
+the `3.113.0` pin (no guard was weakened):
+
+- Builds `360a2b9c` routes `CommunityToolkit.Aspire.Hosting.Dapr` through
+  `$(HexalithAspireHostingDaprVersion)` (unconditional `13.6.0-preview.1.261001-0243`;
+  only `Hexalith.Folders.Aspire` overrides it). `DocumentationFitnessTests` now
+  resolves catalog property references the way MSBuild evaluates them for a
+  Parties project, and `PlatformApiPrerequisitesTests` pins both the property
+  value and the `PackageVersion` alias exactly.
+- `Hexalith.Parties.Ci.Tests` hard-coded `EventStore 3.104.0` for `docs/ci.md` and
+  read the EventStore version only from the shared catalog. Both now read the
+  effective version: the Parties root pin when present, else the catalog default.
+
+Exact commands and results:
+
+| Command | Result |
+| --- | --- |
+| `bash scripts/check-no-warning-override.sh && dotnet restore Hexalith.Parties.slnx -p:NuGetAudit=false && dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` | Recorded in spec 8.10 as already run at the final working-tree identities: exit 0, 0 warnings, 0 errors, 00:02:02. Not rerun, as directed. |
+| `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` (package mode by default) | Passed: 0 warnings, 0 errors. |
+| `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -noColor` | 48 total, 46 passed, 2 failed, 0 skipped. Both failures are the expected committed-gitlink assertions: `FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph` (`AssertGitlinkAndCheckout`) and `Matrix_ValidationEvidenceCommandsAreReproducible` (G5 `git ls-tree HEAD`) expect `865cd9e49273dffbb1cdae85efeaf1aac322e09e`, while HEAD records `0dc44e46ccb7f56c3182b855c21f337173a1307f`. Before the catalog-alias fix, `MaintainedTechnologyTablesMatchCentralPackageCatalog` also failed. |
+| Scratch-clone simulation (outside the repository): `git clone --shared` of Parties, the modified tracked files copied in, each root submodule cloned `--shared` at its current checkout, and only the EventStore gitlink committed in the scratch clone (`test: simulate committed eventstore v3.113.0 gitlink`, commitlint-valid); the same Release test assembly and RC diff gate run there | Fitness 48/48 passed (documentation 6, closure 26, prerequisites 16; 0 skipped), including the package/source graph evaluation, the G5 describe check, and the catalog assertions that the real-tree failure short-circuits; `bash scripts/gitlink-rc-gate.sh --diff 882c02455bbdd6b76886fe3fba8bd24a24e2a057` passed all eight. Diagnostic only, not commit proof. |
+| `bash scripts/gitlink-rc-gate.sh` | Passed: EventStore drift `865cd9e4` has `validated-advance` signoff; every other root gitlink is clean. |
+| `bash scripts/gitlink-rc-gate.sh --diff 882c02455bbdd6b76886fe3fba8bd24a24e2a057` | Failed as expected: only EventStore `0dc44e46` (committed, never approved); the other seven pass. Against `7c720c7f9879ecb469993b1d2dff2bdb72b96e1b`: Builds, FrontComposer, Memories, and Tenants pass; EventStore fails the same way. |
+| `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` | Exit 1. 15 projects, 2,624 tests: 2,608 passed, 10 failed, 6 skipped. Passed: Authentication 12, Client 156, Projections 236, Security 178, AdminPortal 184, ConsumerPortal 82, Picker 171, Mcp 57, Sample 58, IntegrationTests 36 (+6 Story 12 skips). Failed: Contracts 179/180 (DW-142), Server 255/256 (DW-140), UI 339/343 (DW-141), Parties.Tests 610/612 (EventStore committed gitlink), Ci 55/57 (stale EventStore expectations). |
+| `pwsh -NoProfile -File scripts/test.ps1 -Lane ci -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` (after the Ci.Tests fix) | Passed 57/57. |
+| `pkg_dir=$(mktemp -d /tmp/parties-810-packages.XXXXXX); consumer_dir=$(mktemp -d /tmp/parties-810-consumer.XXXXXX); python3 scripts/pack-release-packages.py "$pkg_dir" 0.0.0-story810 && python3 scripts/validate-nuget-packages.py "$pkg_dir" && python3 scripts/validate-consumer-package-references.py "$pkg_dir" --work-directory "$consumer_dir"` | Passed: 9 packages validated; package-only consumers built with 0 warnings and 0 errors; Contracts depends on EventStore.Contracts `3.113.0`. |
+| `npm ci --prefix tests/e2e && npm --prefix tests/e2e run typecheck` | Passed: 9 packages, 0 vulnerabilities; typecheck clean. |
+| `npm --prefix tests/e2e run test:a11y` | Passed 6/6 at FrontComposer source `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`; the web server was started by Playwright and stopped on completion. |
+| `bash scripts/check-no-warning-override.sh` (rerun after all edits) | Passed. |
+| `git -c core.whitespace=cr-at-eol diff --check` | Passed. |
+
+Closure stays open. The full Release lane is red (DW-140, DW-141, DW-142, and the
+uncommitted EventStore gitlink), and I13 is an accepted deferral, not discharged.
+Story 8.10 and Epic 8 stay `in-progress`; Stories 8.7–8.9 stay `blocked`. No Git
+staging, commit, push, submodule reset/update, owner-repository edit, catalog
+change, publication, or rollback deletion occurred in the repository; the only
+commit was made in the scratch clone.

@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-10-04
+# last_updated: 2026-10-05
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -45,7 +45,7 @@
 #   against this file: it rejects `blocked` and re-slugs titles. Refresh in place.
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-10-04
+last_updated: 2026-10-05
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -208,14 +208,16 @@ development_status:
   # 5cbc5583 (2026-09-05/06), f0c3b6fd (2026-09-07), b0ad2fb6
   # (2026-09-13), bf40099f (Round 6), 374bb833 (explicit human
   # approval 2026-10-04), then 2cc8dd3a (working-tree approval 2026-10-04;
-  # root gitlink commit pending). I13 parity remains unvalidated.
+  # committed in 2f6157d3; kept in the 2026-10-05 final set). I13 parity
+  # remains unvalidated.
   # Work packages A-E (entity picker,
   # freshness indicator, live-region contract, file/JSON download, typed-name
   # confirmation) remain undelivered, so this story is blocked: a delivered
   # slice never completes the owning story. The isolation wrapper in
   # MainLayout.razor repaired the dead ::deep focus CSS; I13 is still not
   # discharged because Playwright focuses .fc-skip-link, not a content control
-  # (DW-111). Retain every other Parties UI primitive.
+  # (DW-111, accepted as a named deferral on 2026-10-05). Retain every other
+  # Parties UI primitive.
   8-9-ui-frontcomposer-and-fluent-consolidation: blocked
   # Story 8.10 closure evidence, 2026-08-18: retained identities were EventStore
   # package 3.95.0 and source 454b4d100c8c095abf5077c6a8d408da6681e87e,
@@ -306,6 +308,27 @@ development_status:
   # scratch-clone simulation with the gitlinks committed passes 48/48 and the
   # RC diff gate. No parity (I16), release, publishing, or deletion approved;
   # closure stays blocked by DW-124, the I16 approval, and I13 (DW-111).
+  # Final identity and approval reconciliation, 2026-10-05 (Administrator /
+  # jpiquot, 8.3 I20 rows): (1) Builds 360a2b9c (v4.29.1-17) and Tenants
+  # 72b8e4f5 (v5.7.0-143) approved, both committed in 2bdb303b; the committed
+  # EventStore 547c938d/0dc44e46 and Tenants b55f96d8 were never approved, and
+  # the 2026-10-04 EventStore 2242ad55 / Tenants 04e655cf approvals were never
+  # committed and are superseded. (2) EventStore 3.113.0 as package (CPM pin)
+  # and source (checkout tag v3.113.0 = 865cd9e4; gitlink commit pending).
+  # (3) I16 identity re-validation approved for the final set; only receipts
+  # rerun at these identities are Pass. (4) I13 runtime proof accepted as the
+  # named DW-111 deferral; I13 is not discharged. Final set: AI.Tools 3f194e17,
+  # Builds 360a2b9c, Commons 116d2681, EventStore 865cd9e4, FrontComposer
+  # 2cc8dd3a, Memories 5b43fe2f, PolymorphicSerializations 98de6e01, Tenants
+  # 72b8e4f5. DW-124 resolved by 47e2da32 (source-mode route-option gate);
+  # DW-139 keeps the package-mode reserved-segment follow-up. Receipts at the
+  # final set: warning/nested policy, Release solution build, packages and
+  # consumers, npm typecheck, and Playwright 6/6 at FrontComposer 2cc8dd3a pass.
+  # The full Release lane fails 8 tests: 2 committed EventStore gitlink
+  # assertions (expected until the commit), plus DW-140 (restriction
+  # inventory), DW-141 (PartiesOverview FcPageTabs.ModuleRoute absent from
+  # Shell 4.5.0), and DW-142 (personal-data inventory). Closure stays blocked;
+  # the value stays in-progress.
   8-10-final-readiness-documentation-and-retirement-gate: in-progress
   # Added by Correct Course 2026-07-07
   # (sprint-change-proposal-2026-07-07-validation-ladder-runner.md).

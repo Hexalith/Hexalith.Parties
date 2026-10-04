@@ -71,7 +71,7 @@ pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure -ResultsDire
 
 CI and default local commands run in package mode (`UseNuGetDeps=true`, `UseHexalithProjectReferences=false`). If unpublished Hexalith packages block restore, record the package-mode blocker and rerun source-mode triage with `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false` only as diagnostic evidence.
 
-At the current baseline, the effective package graph selects EventStore 3.112.0 through the Parties version pin in `Directory.Packages.props`, set before importing the shared catalog. This release supplies the identity-history contracts and projection-rebuild APIs consumed by Parties. Package mode remains the authoritative CI and release path; source mode is diagnostic only and must not be used to hide package metadata or publication failures.
+At the current baseline, the effective package graph selects EventStore 3.113.0 through the Parties version pin in `Directory.Packages.props`, set before importing the shared catalog (whose own default is still 3.112.0 at the selected Builds identity, so the Parties pin governs). This release supplies the identity-history contracts and projection-rebuild APIs consumed by Parties, and the diagnostic source checkout `references/Hexalith.EventStore` is the same release (tag `v3.113.0`). Package mode remains the authoritative CI and release path; source mode is diagnostic only and must not be used to hide package metadata or publication failures.
 
 ## Secrets
 
