@@ -90,7 +90,11 @@ public sealed class EventStorePartyPayloadProtectionAdapter(
         object protectedState = await inner.ProtectSnapshotStateAsync(identity, state, cancellationToken).ConfigureAwait(false);
         EventStorePayloadProtectionMetadata metadata = protectedState is PartyPayloadProtectionService.ProtectedSnapshotState
             ? s_protectedMetadata
-            : EventStorePayloadProtectionMetadata.Unprotected();
+            : protectedState is IdentityHistorySnapshot
+                ? new EventStorePayloadProtectionMetadata(PayloadProtectionState.Protected,
+                    EventStorePayloadProtectionMetadata.CurrentMetadataVersion, "party-actor-history-v1",
+                    KeyAlias: null, ContentHint: "application/json", CompatibilityFlags: null)
+                : EventStorePayloadProtectionMetadata.Unprotected();
         return new SnapshotProtectionResult(protectedState, metadata);
     }
 
@@ -119,6 +123,31 @@ public sealed class EventStorePartyPayloadProtectionAdapter(
         if (metadataFailure is not null)
         {
             return PayloadUnprotectionOutcome.Unreadable(metadataFailure.Value, resolvedMetadata);
+        }
+
+        if (serializationFormat == "json+identity-history-v1")
+        {
+            if (resolvedMetadata is not { State: PayloadProtectionState.Protected, Scheme: "party-actor-history-v1" })
+            {
+                return PayloadUnprotectionOutcome.Unreadable(UnreadableProtectedDataReason.BytesMetadataMismatch, resolvedMetadata);
+            }
+
+            try
+            {
+                PayloadProtectionResult retained = await inner.UnprotectEventPayloadAsync(identity, eventTypeName, payloadBytes,
+                    serializationFormat, cancellationToken).ConfigureAwait(false);
+                return retained.SerializationFormat == "json"
+                    ? PayloadUnprotectionOutcome.FromResult(retained with { Metadata = resolvedMetadata })
+                    : PayloadUnprotectionOutcome.Unreadable(UnreadableProtectedDataReason.ConsistencyMismatch, resolvedMetadata);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch
+            {
+                return PayloadUnprotectionOutcome.Unreadable(UnreadableProtectedDataReason.ProviderUnavailable, resolvedMetadata);
+            }
         }
 
         ProtectedPayloadShape shape = InspectPayloadShape(payloadBytes);
@@ -169,7 +198,11 @@ public sealed class EventStorePartyPayloadProtectionAdapter(
         }
 
         if (resolvedMetadata.State == PayloadProtectionState.Protected
-            && state is not PartyPayloadProtectionService.ProtectedSnapshotState)
+            && state is not PartyPayloadProtectionService.ProtectedSnapshotState
+            && !(resolvedMetadata.Scheme == "party-actor-history-v1" && (state is IdentityHistorySnapshot
+                || state is JsonElement { ValueKind: JsonValueKind.Object } json
+                    && json.TryGetProperty("marker", out JsonElement marker) && marker.ValueKind == JsonValueKind.String
+                    && marker.GetString() == "identity-history-snapshot-v1")))
         {
             return SnapshotUnprotectionOutcome.Unreadable(UnreadableProtectedDataReason.ConsistencyMismatch, resolvedMetadata);
         }

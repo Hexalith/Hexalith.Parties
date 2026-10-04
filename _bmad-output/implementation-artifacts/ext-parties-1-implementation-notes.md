@@ -29,7 +29,11 @@ New names are proposals within the owning packages, not accepted published contr
 | Queries | `src/Hexalith.Parties.Contracts/Queries/ResolvePartyIdentity.cs`, `ResolveHumanActorBindingAt.cs`; `src/Hexalith.Parties/Queries/PartyIdentityQueryHandler.cs`, `HumanActorBindingAtQueryHandler.cs`. Implement IDomainQueryHandler behind the gateway with a shared verified-source reader; validate query/envelope/source/returned identity equality. Preserve typed internal failures and indistinguishable unauthorized public disclosure. |
 | Client | `src/Hexalith.Parties.Client/Abstractions/IPartiesIdentityClient.cs`, `HttpPartiesIdentityClient.cs` and DI registration. Explicit immutable per-call scope; separate stable logical intent from delivery attempts; never mutate shared PartiesClientOptions.Tenant. Existing general command/query interfaces remain compatible. |
 
-The stable actor issuer, administration policy and erasure/history policy are open in the primary spec. Do not fill them with JWT sub/oid, tenant role, Party ID or an implementation-chosen retention period. Public names and transport error codes can be decided during implementation; they are not additional permission questions.
+The user accepted the recommended solutions on 2026-10-03: a small Platform-owned durable actor registry, trusted-service-only writes for new actor attribution, and minimal finite Parties-owned history. Preserve existing authentication and Consumer operator linking. Private login-to-actor aliases need explicit verified enrollment/continuity; unknown or ambiguous logins remain ineligible. Do not infer a stable person from JWT sub/oid, email, tenant role or Party ID.
+
+Production issuer/operator trust and the versioned policy ID, finite duration and expiry trigger are explicit required settings, with no permissive or numerical production defaults. The exact production retention settings were requested asynchronously. Their absence denies binding operations and live qualification; it does not prevent deterministic contract/domain tests with synthetic policies. Public wire names and error codes remain implementation choices.
+
+The current SDK provides projection TTL for ephemeral coordination, not source-event/snapshot/backup expiry. Shared protection/custody must enforce purpose-separated history keys, irreversible expiry destruction and restore-safe anti-resurrection evidence before live history writes. Parties profile-key deletion destroys all Party key versions; retained attribution cannot share that lifecycle. Implement pure decisions and denial behavior while this provider is absent; do not register local-development keys or read filtering as a retention authority.
 
 ## Creation and retry rules
 
@@ -68,3 +72,86 @@ Create `eng/verify-ext-parties-1.ps1` with separate local and live qualification
 | Live persisted end state | `tests/Hexalith.Parties.IntegrationTests/Identity/PartyIdentityContractIntegrationTests.cs` | Inspect real stored events/read models after restart/restore, failure recovery and cross-tenant denial, rather than only HTTP codes/mock counts. |
 
 No builds, tests, runtime seams, migrations, deployments, owner messages, commits or submodule updates were performed in this planning run. Only the two new planning documents were written. The current artifacts do not populate target/date/command or AcceptedStatus in the Agents register. A verifier pathname is a deliverable to implement, not an already accepted compatibility command.
+
+## Approved implementation composition
+
+The human's “do recommended” selects the three recommendations and authorizes continuing the owner build. No additional approval is required for these already-selected choices. Required deployment policy/trust values remain unset until supplied; no fixture or synthetic policy can establish production availability.
+
+Current Parties HEAD was read as `06714c166c090200ac87373b11d8243aa11b2126` during this continuation; the earlier baseline table is historical investigation evidence. Concurrent 8.7 documentation/tracking changes belong to another session and are preserved.
+
+EventStore technical ownership: add the private registry under `src/Hexalith.EventStore.Server/Identity/` and `Actors/`, retaining its existing Dapr runtime/state store. A serialized registry namespace atomically owns alias uniqueness and expected revision. Persist purpose-separated keyed alias digests mapped to stable ULIDs/status/revision. Reads never enroll; alias links require verified operator/continuity evidence and actor capabilities. The purpose key and trusted writer configuration have no insecure defaults.
+
+Gateway provenance: add an asynchronous gateway-owned admission/enrichment hook in `src/Hexalith.EventStore/Controllers/CommandsController.cs`, default unchanged for unrelated commands. Reject caller-supplied owned evidence keys. Use a domain-separated proof bound to tenant/domain/aggregate, command type, message/logical intent, payload digest, verified human actor or Dapr workload, authority revision and validity. The existing trusted-effect proof pattern is reusable cryptographic design, not an existing proof on ordinary commands. Parties verifies this evidence through SDK admission before processing/unprotection.
+
+Platform ownership: `src/Hexalith.Platform.Identity/` supplies trusted issuer/operator/workload configuration and the gateway hook. `src/Hexalith.Platform.EventStoreHost/` composes the existing gateway, following the established composition-host pattern; `apphost.cs` retains the existing eventstore resource identity/state. This is one deployment, not a new authentication provider or public identity domain.
+
+Shared history-lifecycle seam: purpose-separated protection, policy/trigger/derived-expiry evidence, verified destruction outcome and restore-safe non-rollback lifecycle observation are mandatory. SDK contracts and missing-provider denial can be implemented now; current NoOp protection, local-dev key storage, backup DeferredValidation and projection TTL cannot satisfy live history custody. Bindings persist only when an enforceable accepted provider is installed. Cleanup must cover source recoverability, projections/caches and replay/restore anti-resurrection.
+
+The authoritative reader samples authorized head H, reads exact contiguous 1..H in bounded pages, then rechecks head H. On concurrent append it retries within a bound and returns stale/unavailable if no coherent checkpoint is obtained. Server-side event identity is checked before DTO conversion. `FromSequence` is exclusive; the next cursor is the last returned sequence. This is scoped source consistency, not the pending cryptographic verified-read contract.
+
+## Baseline runtime attempt
+
+Before source edits, the parent used the repository-local Aspire router/orchestration guidance and attempted `env UseHexalithProjectReferences=true UseNuGetDeps=false aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --non-interactive --format Json`. It exited 2: “Timed out waiting 120s for AppHost to start”; child output stopped at “Determining projects to restore...”. The CLI canceled and stopped its build child. An OpenSSL development-certificate trust warning was also emitted. Logs: `/home/administrator/.aspire/logs/cli_20261003T112322815_detach-child_5ee4c7a2642e41ef849c4d69bed4c05e.log`. A pre-existing Tenants AppHost was left untouched. No running Parties baseline or live qualification is claimed; use focused individual Debug/source project builds/tests as the required fallback.
+
+Source owner baselines were read directly: EventStore `2c58ffda41759e895ace4b9625c9bd931a217672`; Platform `2d1b76267bc6e75d2caab1019a17f1c45ceccf81`. Existing EventStore 6.5d spec edits and its simplification directory are user work, to preserve.
+
+## Implemented source and local verification (2026-10-03)
+
+This section supersedes the planning-only execution statement above. The spec remains `in-progress`. No production custody, policy, issuer/operator trust, persisted live evidence or Agents dependency acceptance is claimed.
+
+The shared SDK now supplies a scoped complete-prefix/head reader bounded by pages, events, bytes, attempts and whole-read time. It validates contiguous sequences, stable final head and every page identity; caller cancellation propagates. Shared gateway identity operations are recognized independently of installed admission, so missing providers and mismatched query EntityId deny before mediator or stream/state access. StreamsController rejects foreign actor-returned envelopes before payload unprotection.
+
+Platform composes one private global registry in the existing EventStore host, under canonical namespace `global-actors-v1`. Purpose-keyed exact issuer/subject aliases map to canonical ActorId ULIDs without tenant-dependent recreation. Alias retirement remains distinct from actor activity; approved replacement preserves the ActorId and denies the old alias. Registry writes require narrow configured sources, exact mutation scope and verified provenance. Reads never enroll. An independently signed bootstrap capability admits first approved enrollment; normal enrollment and binding administration require separately verified operator evidence. Gateway, registry, operator and bootstrap proofs use separate RSA verification/signing purposes; domain verifiers have only public keys and cannot mint accepted capabilities. Transient operator proofs are excluded from immutable retry intent.
+
+Parties adds deterministic new-Agent provisioning with immutable original results, exact retry/conflict handling and generic/composite reserved-namespace denial. Rejection-only state permits real creation. CreatedAt is recorded event data, never a replay wall clock. Human attribution records finite intervals, exact actor/version/source/custody and immutable transition intent; malformed non-finite intervals, intervals beyond custody and revocations without a live predecessor fail replay. Queries compare query/envelope/source identities before folding and reject future action times beyond observation. Historical reads require exact admitted actor access while allowing that actor to be currently revoked. Typed failures expose no profile data and no current-binding substitution.
+
+The narrow client uses immutable explicit per-call tenant scope, fresh delivery attempts and stable logical identity. It rejects foreign/degraded/malformed replies, unsupported outcomes/classifications, invalid actor/interval/custody evidence and explicitly rejected binding submissions. Existing generic clients, Consumer private login routing and ordinary stale UI reads remain compatible.
+
+The API snapshot is additive. Its test compares platform-neutral line endings so the repository-required UTF-8/CRLF snapshot text remains portable. All owned C#/project/props/PowerShell text was normalized to the owner CRLF requirement. This is formatting only; unrelated files and submodules were preserved.
+
+### Reproducible local evidence
+
+Evidence directory: `/tmp/ext-parties-1-verification`. `final-local-evidence.json` records each exact xUnit command, required class filter, passed count, build/test/XML paths and XML digest. `audit-existing-evidence.log` and `audit-required-classes.log` record successful total/per-class checks. Every configured wildcard matched at least one executed passing test; XML and logs have zero errors, failures, skipped or not-run tests. Latest relevant Debug/source builds report zero warnings/errors. First passing logs remain retained alongside focused reruns.
+
+| Owning assembly | Required class filters and passed counts | Total |
+| --- | --- | --- |
+| EventStore Contracts | StreamReadPageValidatorTests 12 | 12 |
+| EventStore Client | AuthoritativeEventStreamReaderTests 8; EventStoreGatewayClientTests 75; EventStoreGatewayClientStreamTests 7 | 90 |
+| EventStore Server | IdentityAdmissionTests 6; ActorRegistryTests 6; IdentityGatewayDenialTests 3; CommandsControllerTrustedExtensionTests 7; QueriesControllerTests 72; StreamsControllerTests 26 | 120 |
+| Platform Identity | PlatformIdentityAdmissionTests 2 | 2 |
+| Parties Contracts | PartyStateTests 26; PartyIdentityContractTests 2; ContractsPublicApiSnapshotTests 1 | 29 |
+| Parties Server | AgentPartyProvisioningTests 3; HumanActorBindingTests 4; PartyAggregateCreateTests 24; PartyAggregateCompositeTests 60 | 91 |
+| Parties domain/query | PartyIdentityAdmissionTests 3; PartyIdentityQueryHandlerTests 12; PartyDomainProcessorValidationTests 17; PartySdkQueryHandlerTests 54 | 86 |
+| Parties Security | IdentityHistoryProtectionTests 7; PartyPayloadProtectionServiceTests 23 | 30 |
+| Parties Client | HttpPartiesIdentityClientTests 7; HttpPartiesCommandClientTests 37; HttpPartiesQueryClientTests 30; DependencyInjectionTests 9 | 83 |
+| Parties UI | IdentityBindingBoundaryTests 5; IdentityBindingProvisioningServiceTests 14; PartyIdClaimResolverTests 11; SelfScopedPartiesClientTests 42 | 72 |
+
+Total: **615 passed** across ten owning assemblies. These are local unit/compatibility results. The final full Local script was not rerun over unchanged already-passing owner lanes; all its configured lanes were executed individually and its per-filter XML assertion was executed against the recorded evidence. The original script attempt stopped on a now-fixed compilation issue; no successful full-script execution is represented by that transcript. Verifier syntax validation passes.
+
+Parties/Platform Debug source builds use `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:NuGetAudit=false -m:1`. SDK owning builds use Debug, disabled NuGet audit, the same explicit Commons source root and `-m:1`. Each executable xUnit invocation uses `dotnet <assembly.dll> -class '*<ClassName>' ... -result-xml <evidence-path>`; full commands are in the manifest. Platform EventStoreHost also built successfully with zero warnings/errors (`/tmp/ext-platform-build.log`). No package-mode publication or deployment was performed.
+
+### Task and acceptance mapping
+
+| Required outcome | Implemented and locally verified | Incomplete qualification |
+| --- | --- | --- |
+| Provision / P-01–P-03 / AC1 | Stable tenant/Agent mapping vectors; immutable first result on exact/lost-ack-style retry; divergent/unmarked/generic/composite conflicts; rejection-only recovery | Real concurrent gateway delivery, persisted original end state, restart/restore and lost-ack failure injection |
+| Current identity / P-04–P-06 / AC2 | Complete-prefix/head reader; exact actor/source/target admission; unavailable/gapped/foreign/inactive/restricted/erased denial; missing/unsupported policy before unprotect; Consumer compatibility | Installed authenticated source/trust/custody qualification and production availability |
+| History / P-07–P-09 / AC3 | Finite pure replay; X before T/Y at T; original before revoke T and Gap at T; exact actor/version; revoked historical access; malformed/foreign/future source denial; purpose protection and typed snapshot profile-erasure fixture | Purpose-scoped retained-history reads after real profile erasure, production expiry destruction and backup/restore anti-resurrection; actual Party restart/restore persisted probes |
+| Isolation / P-04–P-06 and P-10 / AC4 | Wrong service/purpose/tenant/target and missing providers deny before effects; foreign raw envelopes deny before unprotect; explicit concurrent client tenant calls; registry alias exclusion and Consumer private mapping boundaries | Real foreign persisted-state and public log/count/existence invariance under installed runtime targets |
+| Complete installed verifier / AC5 | Executable Local checks, required-class XML audit, fail-closed Live gate | Authenticated live P-01–P-10 persisted-state/restart/restore/failure-injection implementation and execution. Planned integration test file was not added because the necessary retained-history source/custody capabilities do not exist |
+
+The processor/query execution task stays unchecked for the post-erasure source obligation. The verifier task stays unchecked because its live persisted probes are unimplemented. No acceptance criterion is promoted to installed live acceptance by the local results.
+
+### Required composition and concrete gates
+
+Platform is opt-in through existing AppHost configuration `Platform:Identity:Enabled`; it retains the existing EventStore deployment identity and authentication. `PlatformIdentity` supplies explicit trusted issuers, provisioner/writer/reader/operator/bootstrap sources, private alias key, registry service source and authority revision. `IdentityAdmission` supplies public gateway verification; `PlatformIdentity:GatewaySigning`, `RegistrySigning`, `RegistryVerification`, `OperatorVerification`, `BootstrapVerification` and `RegistryTrust` supply distinct purpose credentials and allowlists. Parties receives public verification only, `Parties:Identity` policy settings and an explicitly authenticated SDK gateway reader. Missing settings/providers deny identity availability; there are no permissive trust or retention defaults.
+
+Production policy ID, duration and expiry trigger remain pending. Only synthetic `binding-effective-at` is supported; arbitrary strings and the recommended eventual binding-closure/revocation/erasure trigger are denied. This implementation does not claim to deliver that recommendation. Overflowing derived expiry fails safely.
+
+`IIdentityHistoryCustody` requires purpose-separated event/snapshot protection, finite policy evidence, expiry destruction, monotonic lifecycle observation and restore-safe non-resurrection guarantees. No production provider is registered. Retained history protection requires `json+identity-history-v1`, protected metadata with `party-actor-history-v1`, and transformed nonempty bytes; a no-op provider is denied. Typed independently protected history can be unwrapped separately from destroyed profile keys in local custody fixtures. Serialized snapshots containing history are denied when the typed profile graph is unavailable.
+
+The shared public replay surface still fails closed on unreadable profile events. A complete Party prefix after real profile erasure therefore cannot feed historical authority, even if history events remain independently readable. The concrete missing SDK capability is a safe purpose-scoped retained-history source read/checkpoint; ordinary generic replay/privacy behavior was preserved. Production history custody, irreversible cleanup across projections/caches/source/backup and restore guarantees are also absent. No new deployment/authentication/provider project was introduced to hide these gaps.
+
+Live gate runs used isolated subprocess environments. `/tmp/ext-parties-1-verification/live-missing.log` records exit 1 with all twelve required inputs absent. `/tmp/ext-parties-1-verification/live-boundary-only.log` records exit 1 with non-authoritative sentinel strings supplied solely to exercise the unconditional capability gate. The latter is not configuration or target evidence; no live endpoint was contacted. Both gate text files explicitly deny live qualification, and no supplied JSON pass checklist can establish acceptance.
+
+The original EventStore/Platform baselines above remain the source-diff basis. During implementation, concurrent outside commits moved EventStore HEAD to `b51978dd1d2a3721ad239db2623e1560377c7583` and Platform HEAD to `909321c40e36074d345b707b942c74a7c8f5c075`. This agent did not stage, commit, merge, push, initialize submodules or alter unrelated owner planning documents. Existing EventStore user spec/simplification work and Platform concurrent cluster-operation documents remain outside this task.

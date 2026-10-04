@@ -7,7 +7,7 @@ namespace Hexalith.Parties.UI.Tests;
 public sealed class IdentityBindingBoundaryTests
 {
     [Fact]
-    public void IdentityBindingTypes_StayOutOfPartiesContractsAndEventStreamPaths()
+    public void ConsumerLoginAliases_StayOutOfPartiesContractsAndEventStreamPaths()
     {
         string[] forbiddenRoots =
         [
@@ -27,11 +27,12 @@ public sealed class IdentityBindingBoundaryTests
             }
 
             IReadOnlyCollection<string> offenders = Directory.EnumerateFiles(absoluteRoot, "*.cs", SearchOption.AllDirectories)
-                .Where(static path => File.ReadAllText(path).Contains("IdentityBinding", StringComparison.Ordinal))
+                .Where(static path => new[] { "IdentityBindingRecord", "IdentityBindingKey", "IdentityBindingAuditEntry", "IIdentityBindingStore", "Issuer", "Subject" }
+                    .Any(term => File.ReadAllText(path).Contains(term, StringComparison.Ordinal)))
                 .Select(path => Path.GetRelativePath(ProjectRoot(), path))
                 .ToList();
 
-            offenders.ShouldBeEmpty($"Identity binding must remain UI/BFF-owned, not in {root}.");
+            offenders.ShouldBeEmpty($"Consumer login alias mapping must remain UI/BFF-owned, not in {root}.");
         }
     }
 

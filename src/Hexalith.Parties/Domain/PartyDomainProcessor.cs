@@ -13,6 +13,10 @@ using Hexalith.EventStore.Contracts.Replay;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Parties.Contracts;
+using Hexalith.Parties.Authorization;
+using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Events.Rejections;
+using Microsoft.Extensions.Options;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Security;
@@ -31,7 +35,10 @@ internal sealed partial class PartyDomainProcessor(
     ILogger<PartyDomainProcessor> logger,
     IPartyErasureRecordStore? erasureRecordStore = null,
     PartyErasureOrchestrator? erasureOrchestrator = null,
-    IHttpContextAccessor? httpContextAccessor = null) : IDomainProcessor, IAggregateReplay
+    IHttpContextAccessor? httpContextAccessor = null,
+    IPartyIdentityAuthority? identityAuthority = null,
+    IIdentityHistoryCustody? identityHistoryCustody = null,
+    IOptions<PartyIdentityOptions>? identityOptions = null) : IDomainProcessor, IAggregateReplay
 {
     private const string PartyDomain = "party";
 
@@ -77,8 +84,85 @@ internal sealed partial class PartyDomainProcessor(
             return rejection;
         }
 
+        Type? resolvedType = ResolveCommandType(command.CommandType);
+        bool identityCommand = resolvedType == typeof(ProvisionAgentParty)
+            || resolvedType == typeof(EstablishHumanActorBinding)
+            || resolvedType == typeof(RebindHumanActorBinding)
+            || resolvedType == typeof(RevokeHumanActorBinding);
+        IdentityAdmissionEvidence? identityEvidence = null;
+        if (identityCommand)
+        {
+            identityEvidence = identityAuthority?.Admit(command).Evidence;
+            if (identityEvidence is not null)
+            {
+                try
+                {
+                    currentState = DomainStateReplay.SnapshotAware(currentState) ?? currentState;
+                }
+                catch (JsonException)
+                {
+                    return RejectionFor(command.CommandType, "Identity", "SourceUnavailable");
+                }
+            }
+
+            if (identityEvidence is null || !ValidateIdentityPayloadScope(command, resolvedType!)
+                || currentState is not null && currentState is not DomainServiceCurrentState
+                || currentState is DomainServiceCurrentState source && (source.LastSnapshotSequence < 0
+                    || source.CurrentSequence < source.LastSnapshotSequence
+                    || source.Events.Count != source.CurrentSequence - source.LastSnapshotSequence
+                    || source.Events.Where((item, index) => item.Metadata.SequenceNumber != source.LastSnapshotSequence + index + 1
+                        || item.Metadata.TenantId != command.TenantId || item.Metadata.Domain != command.Domain
+                        || item.Metadata.AggregateId != command.AggregateId).Any()))
+            {
+                return RejectionFor(command.CommandType, "Identity", "AuthorityUnavailable");
+            }
+
+            if (resolvedType != typeof(ProvisionAgentParty)
+                && (identityHistoryCustody is null || identityOptions?.Value.Policy is not { IsValid: true }))
+            {
+                return RejectionFor(command.CommandType, "Identity", "CustodyUnavailable");
+            }
+        }
+
+        if (identityCommand && resolvedType != typeof(ProvisionAgentParty))
+        {
+            using JsonDocument identityPayload = JsonDocument.Parse(command.Payload);
+            if (identityPayload.RootElement.GetProperty("policyId").GetString() != identityOptions!.Value.Policy!.PolicyId)
+            {
+                return RejectionFor(command.CommandType, "Identity", "PolicyUnavailable");
+            }
+        }
+
         object? unprotectedState = await UnprotectCurrentStateAsync(command, currentState, cancellationToken)
             .ConfigureAwait(false);
+
+        if (identityCommand)
+        {
+            PartyState? identityState = DomainStateReplay.Rehydrate<PartyState>(unprotectedState);
+            long sourcePosition = currentState is DomainServiceCurrentState source ? source.CurrentSequence : 0;
+            IdentityHistoryPolicy? policy = identityOptions?.Value.Policy;
+            IdentityHistoryCustodyEvidence? custodyEvidence = null;
+            if (resolvedType != typeof(ProvisionAgentParty))
+            {
+                using JsonDocument payload = JsonDocument.Parse(command.Payload);
+                DateTimeOffset effectiveAt = payload.RootElement.GetProperty("effectiveAt").GetDateTimeOffset();
+                custodyEvidence = await identityHistoryCustody!.AdmitAsync(command.AggregateIdentity, policy!, effectiveAt, cancellationToken)
+                    .ConfigureAwait(false);
+                if (custodyEvidence?.Satisfies(policy!, effectiveAt) != true)
+                {
+                    return RejectionFor(command.CommandType, "Identity", "CustodyUnavailable");
+                }
+            }
+
+            var authorization = new IdentityCommandAuthorization(identityEvidence!, sourcePosition, policy, custodyEvidence);
+            return resolvedType == typeof(ProvisionAgentParty)
+                ? PartyAggregate.Handle(JsonSerializer.Deserialize<ProvisionAgentParty>(command.Payload, PayloadJsonOptions)! with { Authorization = authorization }, identityState)
+                : resolvedType == typeof(EstablishHumanActorBinding)
+                    ? PartyAggregate.Handle(JsonSerializer.Deserialize<EstablishHumanActorBinding>(command.Payload, PayloadJsonOptions)! with { Authorization = authorization }, identityState)
+                    : resolvedType == typeof(RebindHumanActorBinding)
+                        ? PartyAggregate.Handle(JsonSerializer.Deserialize<RebindHumanActorBinding>(command.Payload, PayloadJsonOptions)! with { Authorization = authorization }, identityState)
+                        : PartyAggregate.Handle(JsonSerializer.Deserialize<RevokeHumanActorBinding>(command.Payload, PayloadJsonOptions)! with { Authorization = authorization }, identityState);
+        }
 
         // Allocate the aggregate per invocation so the framework's ProcessAsync cannot
         // accidentally retain transient state across concurrent calls. PartyAggregate.Handle
@@ -97,6 +181,22 @@ internal sealed partial class PartyDomainProcessor(
         DomainResult result = await aggregate.ProcessAsync(command, unprotectedState).ConfigureAwait(false);
         await SaveErasureStatusUpdatesAsync(result, cancellationToken).ConfigureAwait(false);
         return result;
+    }
+
+    private static bool ValidateIdentityPayloadScope(CommandEnvelope envelope, Type commandType)
+    {
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(envelope.Payload);
+            JsonElement root = commandType == typeof(ProvisionAgentParty)
+                ? document.RootElement.GetProperty("identity") : document.RootElement;
+            return root.GetProperty("tenantId").GetString() == envelope.TenantId
+                && root.GetProperty("partyId").GetString() == envelope.AggregateId;
+        }
+        catch (Exception exception) when (exception is JsonException or InvalidOperationException or KeyNotFoundException)
+        {
+            return false;
+        }
     }
 
     private async Task<DomainResult> InvokeRetryErasureVerificationAsync(

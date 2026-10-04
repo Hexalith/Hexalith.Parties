@@ -2,9 +2,10 @@
 title: 'EXT-PARTIES-1 Branch B authoritative identity'
 type: 'feature'
 created: '2026-10-03'
-status: 'draft'
+status: 'in-progress'
 route: 'dispatch'
 review_loop_iteration: 0
+baseline_commit: '5388884eec84b16545fdc008b2fc04547b0ed5b6'
 context:
   - '_bmad-output/implementation-artifacts/ext-parties-1-implementation-notes.md'
 ---
@@ -17,11 +18,13 @@ context:
 
 **Approach:** Deliver the complete Parties-owned Branch B provisioning, identity and actor-attribution contract through EventStore, with explicit client scope, pure durable history, fail-closed authorization and an executable compatibility verifier.
 
+**Approved decisions (2026-10-03):** Platform owns a small durable actor registry using existing authentication/hosting. Only its trusted identity service writes new actor bindings, with verified operator provenance. Parties owns minimal finite attribution history. Policy ID, duration and expiry trigger are required configuration with no production default; missing policy or enforceable custody blocks binding writes and live qualification. Profile erasure blocks current eligibility immediately; retained evidence uses an independently approved protection/expiry lifecycle.
+
 ## Boundaries & Constraints
 
 **Always:** Preserve Organization Party IDs and Consumer onboarding. Keep issuer/subject mappings outside Party streams; store only opaque actor attribution/version/interval/provenance. Verify authenticated tenant, operation and exact target before protected reads or mutation. Use EventStore SDK persistence and shared verified-source reads; reject unsupported authority/currentness. Preserve exact provisioning identity and first result on retry; inactive/restricted/erasing/erased Parties cannot become eligible. Person is the positive Human classification; Organization flags do not confer it.
 
-**Never:** Create replacement identities, infer legacy ownership, trust JWT roles/unsigned extensions/projection age as current authority, use PartyDetail as an identity result, persist tokens/subjects/PII, add direct Parties APIs/actors/state stores, change unrelated GDPR behavior, or promote EXT-PARTIES-1 from fixtures. Consumers and launch gates retain their existing dependency requirements.
+**Never:** Create replacement identities, infer legacy ownership, trust JWT roles/unsigned extensions/projection age, use PartyDetail as an identity result, put tokens/raw subjects/names/emails in Parties identity history, add direct Parties APIs/actors/state stores, change unrelated GDPR behavior, or promote availability from fixtures. Opaque references remain protected data; existing consumer/launch gates apply.
 
 ## I/O & Edge-Case Matrix
 
@@ -34,12 +37,6 @@ context:
 
 </frozen-after-approval>
 
-## Open Questions
-
-1. Stable actor authority: use a new Platform-owned issuer/continuity contract, or supply an existing accepted service contract? Neither subject claims nor current code prove alias/login-rotation continuity.
-2. Binding administration: restrict establish/revoke/rebind to the Platform identity service, or permit tenant operators under an explicit delegation/verification policy? Consumer TenantOwner authority alone cannot mint global actors.
-3. History policy: retain approved opaque attribution after erasure for a specified horizon, or require an approved external protected history authority? Supply duration, retained fields and erasure/restore rules; no indefinite retention is assumed.
-
 ## Code Map
 
 - `src/Hexalith.Parties/Domain/PartyAggregate.cs` and `src/Hexalith.Parties.Contracts/State/PartyState.cs` — reuse pure folds; non-null rejection state is not creation; Apply's wall clock is not history.
@@ -50,14 +47,16 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `references/Hexalith.EventStore/src/Hexalith.EventStore.Client/Streams/IAuthoritativeEventStreamReader.cs` — add the missing shared scoped complete-prefix/head evidence seam and its owner implementation/tests; do not reimplement it in Parties.
-- [ ] `src/Hexalith.Parties.Contracts/Commands/ProvisionAgentParty.cs`, `Events/AgentPartyProvisioned.cs`, and `Models/PartyIdentityEvidence.cs` — add closed safe provision/current/history results, binding commands/events and versioned ID mapping; one type per file. Companion supplies the full file map.
-- [ ] `src/Hexalith.Parties.Contracts/State/PartyState.cs` and `src/Hexalith.Parties/Domain/PartyAggregate.cs` — fold creation provenance and immutable intervals; enforce exact retry/conflict, rejection-only recovery and generic/composite bypass denial.
-- [ ] `src/Hexalith.Parties/Domain/PartyDomainProcessor.cs` and `Authorization/IPartyIdentityAuthority.cs` — enforce verified source/actor/target admission; missing authority/profile denies; add validators and composition.
-- [ ] `src/Hexalith.Parties/Queries/PartyIdentityQueryHandler.cs` and `HumanActorBindingAtQueryHandler.cs` — require complete source evidence, current human/liveness and exact historical basis; expose no PII or stale fallback.
-- [ ] `src/Hexalith.Parties.Client/Abstractions/IPartiesIdentityClient.cs` and `HttpPartiesIdentityClient.cs` — add explicit-scope gateway methods and stable logical retry IDs; validate returned scope/identity.
-- [ ] `_bmad-output/planning-artifacts/adr-consumer-party-id-binding.md` and `tests/Hexalith.Parties.UI.Tests/IdentityBindingBoundaryTests.cs` — document opaque attribution extension while preserving private login mapping and existing Consumer behavior.
-- [ ] `eng/verify-ext-parties-1.ps1` and the companion's owning test files — cover P-01–P-10, persisted recovery, authorization, isolation and wire compatibility; qualification fails on missing authority, targets or skipped required lanes.
+- [x] `../eventstore/src/Hexalith.EventStore.Client/Streams/IAuthoritativeEventStreamReader.cs` — add bounded authorized complete-prefix/head reads, server event-scope validation and tests.
+- [x] `../eventstore/src/Hexalith.EventStore.Server/Identity/` and `Actors/` — implement a private durable actor registry, verified capabilities and exact-command admission proofs using shared gateway hooks.
+- [x] `../platform/src/Hexalith.Platform.Identity/` and `Hexalith.Platform.EventStoreHost/` — configure trusted enrollment/alias administration and compose the existing eventstore deployment; preserve existing authentication.
+- [x] `../eventstore/src/Hexalith.EventStore.Contracts/Security/` — define the enforceable purpose/history lifecycle seam; missing custody/restore guarantees deny authority. Never equate projection TTL with source expiry.
+- [x] `src/Hexalith.Parties.Contracts/Commands/ProvisionAgentParty.cs`, `Events/AgentPartyProvisioned.cs`, `Models/PartyIdentityEvidence.cs` — add safe provision/current/history contracts and pure history; full file map in companion.
+- [x] `src/Hexalith.Parties.Contracts/State/PartyState.cs`, `src/Hexalith.Parties/Domain/PartyAggregate.cs` — enforce exact retry, conflicts, rejection-only recovery, immutable intervals and generic/composite bypass denial.
+- [ ] `src/Hexalith.Parties/Domain/PartyDomainProcessor.cs`, `Authorization/`, `Queries/` — verify source/target before unprotection, enforce retention capability and authoritative current/history reads.
+- [x] `src/Hexalith.Parties.Client/Abstractions/IPartiesIdentityClient.cs`, `HttpPartiesIdentityClient.cs` — implement scoped gateway calls with stable logical retry IDs and returned-evidence validation.
+- [x] `_bmad-output/planning-artifacts/adr-consumer-party-id-binding.md`, `tests/Hexalith.Parties.UI.Tests/IdentityBindingBoundaryTests.cs` — document opaque attribution extension preserving Consumer behavior.
+- [ ] `eng/verify-ext-parties-1.ps1` and companion test files — cover P-01–P-10; missing policy/custody/targets or skipped lanes fail live qualification.
 
 **Acceptance Criteria:**
 - Given lost acknowledgement/concurrent retries, when provisioning recovers, then one original Party/result survives and no alternate generic create can replace it.
@@ -68,15 +67,30 @@ context:
 
 ## Implementation Notes
 
+Implemented the shared complete-prefix/head reader, private global actor registry, purpose-separated asymmetric admission, Platform enrollment/bootstrap/operator verification, deterministic Agent provisioning, pure finite Human attribution, strict identity queries, explicit scoped client and Consumer compatibility extension. Checked execution items represent implemented source with passing local owning tests, not installed availability.
+
+The processor/query execution item remains open for erased-profile retained-history availability: the SDK public complete-prefix replay denies unreadable profile payloads after profile-key destruction and has no purpose-scoped retained-history source API. Independent event/snapshot custody is mandatory and missing custody denies binding writes. Typed retained-history snapshots preserve independently unwrapped history while profile fields are redacted; serialized history snapshots are denied when the typed protection graph is unavailable. Production policy/trust/custody and restore guarantees are not installed.
+
+The verifier execution item remains open. Local owning suites and each required class filter have recorded xUnit XML evidence; the script checks every filter and rejects skipped/not-run lanes. Live mode is an executable fail-closed gate, not implemented P-01–P-10 persisted-state/restart/restore/failure-injection probes. Both missing-input and sentinel-only boundary executions exit 1; no live availability is established.
+
 ## Spec Change Log
+
+2026-10-03: Recorded implemented local execution items and explicit incomplete owner capabilities. Intent, frozen boundaries, acceptance criteria and original baseline remain unchanged; status remains `in-progress`.
 
 ## Review Triage Log
 
+2026-10-03 parent implementation audit: read the baseline source diffs including untracked files, then reviewed every change since the initial source snapshot. Corrected findings cover public-key-only admission, global alias continuity, independent history/snapshot protection, returned/source scope validation, future-action denial, finite intervals and invalid revocation replay. No frozen intent, matrix or acceptance expectation was changed to satisfy implementation.
+
+The parent independently checked all ten xUnit XML files against the final manifest: **615 passing tests**, matching XML digests, and at least one actual passing test for every required class filter. Every frozen matrix row has executed passing local coverage: provisioning original retry/conflict, exact current source/actor, X-before-T/Y-at-T replay, and concurrent tenant-scoped client isolation. Additional stream-ingress tests deny all three foreign raw-envelope scopes before payload unprotection. Local coverage does not satisfy persisted live acceptance.
+
+Eight execution tasks are implemented and locally verified. The post-erasure history-source and live persisted-probe tasks remain unchecked. Production policy/trust/custody, real restart/restore and installed P-01–P-10 acceptance remain unresolved; the build stays `in-progress` and the next workflow review/completion stage has not been reached.
+
 ## Design Notes
 
-One goal spans Contracts/domain/SDK/client/tests. No deployment, production mutation or irreversible migration is proposed. New wire names are implementation proposals; launch acceptance remains separate. Legacy unmarked IDs fail closed pending an approved same-ID provenance procedure.
+One goal spans domain and shared infrastructure. No production mutation is proposed. Legacy unmarked IDs fail closed. Production custody/retention and other launch dependencies remain gates; local tests do not deliver them.
 
 ## Verification
 
-- Planned `pwsh -NoProfile -File eng/verify-ext-parties-1.ps1` — individual Debug/source builds/suites; distinct live qualification with persisted-state evidence.
-- `git diff --check` — document/source whitespace. This run performs planning validation only.
+- Executed individual Debug/source owner builds and filtered xUnit suites; retained logs/XML and per-class manifest are in `/tmp/ext-parties-1-verification`. The companion records commands, counts and acceptance mapping. The full final Local script was not rerun over already-passing unchanged owner lanes; all configured lanes were executed individually and audited from their XML.
+- Executed `pwsh -NoProfile -File eng/verify-ext-parties-1.ps1 -Mode Live` twice in isolated subprocess environments: required inputs absent, and sentinel strings supplied solely to test the capability gate. Both exit 1; no installed targets or persisted end states were exercised.
+- Checked verifier PowerShell syntax and repository-scoped whitespace with `git -c core.whitespace=cr-at-eol diff --check`; source files use UTF-8/CRLF. Production custody/history source and live acceptance remain incomplete.

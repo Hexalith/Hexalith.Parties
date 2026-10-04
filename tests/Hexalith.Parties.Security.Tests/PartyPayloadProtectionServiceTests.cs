@@ -669,6 +669,14 @@ public sealed class PartyPayloadProtectionServiceTests
         Dictionary<Type, bool> expectedClassification = new()
         {
             // Domain events with personal data
+            [typeof(AgentPartyProvisioned)] = true,
+            // Attribution is protected through IIdentityHistoryEvent custody, independently
+            // of the profile PersonalData attribute graph represented by this dictionary.
+            [typeof(HumanActorBindingEstablished)] = false,
+            [typeof(HumanActorBindingRebound)] = false,
+            [typeof(HumanActorBindingRevoked)] = false,
+            [typeof(Hexalith.Parties.Contracts.Events.Rejections.AgentPartyProvisioningRejected)] = false,
+            [typeof(Hexalith.Parties.Contracts.Events.Rejections.HumanActorBindingRejected)] = false,
             [typeof(PartyCreated)] = true, // PersonDetails has [PersonalData] fields
             [typeof(PersonDetailsUpdated)] = true,
             [typeof(ContactChannelAdded)] = true,

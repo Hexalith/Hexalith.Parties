@@ -107,7 +107,7 @@ public class PartyAggregateCreateTests
         HashSet<string> publicProperties = [.. typeof(PartyCreated)
             .GetProperties()
             .Select(p => p.Name)];
-        publicProperties.ShouldBe(["Type", "PersonDetails", "OrganizationDetails"], ignoreOrder: true);
+        publicProperties.ShouldBe(["Type", "PersonDetails", "OrganizationDetails", "CreatedAt"], ignoreOrder: true);
     }
 
     [Fact]
@@ -258,7 +258,7 @@ public class PartyAggregateCreateTests
     }
 
     [Fact]
-    public void Handle_CreatePartyWithDefaultType_AfterRejectionReplay_ReturnsNoOpWithNoDuplicateEvents()
+    public void Handle_CreatePartyWithDefaultType_AfterRejectionReplay_RemainsUncreatedAndRejectsInvalidRetry()
     {
         CreateParty command = new()
         {
@@ -274,8 +274,9 @@ public class PartyAggregateCreateTests
 
         var retryResult = PartyAggregate.Handle(command, replayedState);
 
-        retryResult.IsNoOp.ShouldBeTrue("Replaying a rejection must yield a non-null state and a retry must produce no duplicate events.");
-        retryResult.Events.ShouldBeEmpty();
+        replayedState.HasBeenCreated.ShouldBeFalse();
+        AssertContainsOnlyRejection<PartyCannotBeCreatedWithoutType>(retryResult);
+        replayedState.Type.ShouldBe(PartyType.Unknown);
     }
 
     [Fact]

@@ -17,7 +17,7 @@ using SemanticId = Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier;
 namespace Hexalith.Parties.Domain;
 
 [EventStoreDomain("party")]
-public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
+public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
     private const int DefaultMaxSubOperations = 100;
 
     public static int MaxSubOperations { get; set; } = DefaultMaxSubOperations;
@@ -50,8 +50,13 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
                 rejected: ["Party ID is invalid."]);
         }
 
-        // Idempotency: party already exists
-        if (state is not null) {
+        if (AgentPartyIdMapping.IsReserved(command.PartyId) || state?.AgentProvisioning is not null)
+        {
+            return CompositeConflict("Identity provisioning conflict.");
+        }
+
+        // Rejection-only state does not prove creation.
+        if (state is { HasBeenCreated: true } || state is not null && state.Type != default) {
             return new CompositeCommandResult(
                 events: [],
                 applied: [],
@@ -121,6 +126,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
         List<string> skipped = [];
 
         PartyCreated created = new() {
+            CreatedAt = DateTimeOffset.UtcNow,
             Type = command.Type,
             PersonDetails = command.PersonDetails,
             OrganizationDetails = command.OrganizationDetails,
@@ -690,8 +696,13 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
             return DomainResult.Rejection([new PartyCannotBeCreatedWithInvalidId()]);
         }
 
-        // AC#3: Idempotent — if state already exists, party was already created
-        if (state is not null) {
+        if (AgentPartyIdMapping.IsReserved(command.PartyId) || state?.AgentProvisioning is not null)
+        {
+            return DomainResult.Rejection([new CompositeOperationConflict { Message = "Identity provisioning conflict." }]);
+        }
+
+        // Explicit evidence preserves legacy creation and rejection-only recovery.
+        if (state is { HasBeenCreated: true } || state is not null && state.Type != default) {
             return DomainResult.NoOp();
         }
 
@@ -710,6 +721,7 @@ public sealed class PartyAggregate : EventStoreAggregate<PartyState> {
 
         // AC#1 + AC#2: Emit PartyCreated + PartyDisplayNameDerived
         PartyCreated created = new() {
+            CreatedAt = DateTimeOffset.UtcNow,
             Type = command.Type,
             PersonDetails = command.PersonDetails,
             OrganizationDetails = command.OrganizationDetails,

@@ -24,7 +24,7 @@ public sealed class ContractsPublicApiSnapshotTests
         }
 
         File.Exists(snapshotPath).ShouldBeTrue($"Missing public API snapshot at {snapshotPath}.");
-        string expected = File.ReadAllText(snapshotPath);
+        string expected = File.ReadAllText(snapshotPath).ReplaceLineEndings(Environment.NewLine);
 
         actual.ShouldBe(expected, "Public contract changes must be additive and intentional. Update the snapshot only with an explicit migration or additive-contract decision.");
     }

@@ -31,6 +31,11 @@ public static class PartiesClientServiceCollectionExtensions
                 options => !string.IsNullOrWhiteSpace(options.Tenant),
                 "Parties:Tenant configuration is required.");
 
+        services.AddHttpClient<IPartiesIdentityClient, HttpPartiesIdentityClient>(client =>
+        {
+            client.BaseAddress = validatedBaseAddress;
+        });
+
         services.AddHttpClient<IPartiesCommandClient, HttpPartiesCommandClient>(client =>
         {
             client.BaseAddress = validatedBaseAddress;

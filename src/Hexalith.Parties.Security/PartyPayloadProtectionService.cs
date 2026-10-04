@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using Hexalith.EventStore.Contracts.Events;
+using Hexalith.Parties.Contracts.State;
 using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Parties.Contracts;
@@ -23,7 +24,8 @@ public sealed partial class PartyPayloadProtectionService(
     IPartyKeyLifecycleService cryptoLifecycleService,
     DecryptionCircuitBreaker circuitBreaker,
     IOptionsMonitor<CryptoShreddingOptions> cryptoOptions,
-    ILogger<PartyPayloadProtectionService> logger) : IEventPayloadProtectionService
+    ILogger<PartyPayloadProtectionService> logger,
+    IIdentityHistoryCustody? identityHistoryCustody = null) : IEventPayloadProtectionService
 {
     internal const string ProtectedSerializationFormat = "json+pdenc-v1";
     internal const string RedactedSerializationFormat = "json-redacted";
@@ -49,6 +51,25 @@ public sealed partial class PartyPayloadProtectionService(
         if (!ShouldHandle(identity))
         {
             return new PayloadProtectionResult(payloadBytes, serializationFormat);
+        }
+
+        if (eventPayload is IIdentityHistoryEvent history)
+        {
+            if (identityHistoryCustody is null)
+            {
+                throw new InvalidOperationException("Independent identity history protection is unavailable.");
+            }
+
+            PayloadProtectionResult protectedHistory = await identityHistoryCustody.ProtectEventAsync(identity, eventTypeName, payloadBytes,
+                serializationFormat, history.Custody, cancellationToken).ConfigureAwait(false);
+            if (protectedHistory.SerializationFormat != "json+identity-history-v1"
+                || protectedHistory.Metadata is not { State: PayloadProtectionState.Protected, Scheme: "party-actor-history-v1" }
+                || protectedHistory.PayloadBytes.Length == 0 || protectedHistory.PayloadBytes.AsSpan().SequenceEqual(payloadBytes))
+            {
+                throw new InvalidOperationException("Independent identity history protection did not produce protected purpose evidence.");
+            }
+
+            return protectedHistory;
         }
 
         // Read options snapshot once per call for consistent behavior within a single event
@@ -111,6 +132,17 @@ public sealed partial class PartyPayloadProtectionService(
         ArgumentException.ThrowIfNullOrWhiteSpace(eventTypeName);
         ArgumentNullException.ThrowIfNull(payloadBytes);
         ArgumentException.ThrowIfNullOrWhiteSpace(serializationFormat);
+
+        if (string.Equals(serializationFormat, "json+identity-history-v1", StringComparison.Ordinal))
+        {
+            if (identityHistoryCustody is null)
+            {
+                throw new InvalidOperationException("Independent identity history protection is unavailable.");
+            }
+
+            return await identityHistoryCustody.UnprotectEventAsync(identity, eventTypeName, payloadBytes,
+                serializationFormat, cancellationToken).ConfigureAwait(false);
+        }
 
         if (!ShouldHandle(identity) || !string.Equals(serializationFormat, ProtectedSerializationFormat, StringComparison.Ordinal))
         {
@@ -237,7 +269,70 @@ public sealed partial class PartyPayloadProtectionService(
         }
     }
 
-    public async Task<object> ProtectSnapshotStateAsync(
+    /// <summary>Protects retained attribution independently of the existing profile lifecycle.</summary>
+    public async Task<object> ProtectSnapshotStateAsync(AggregateIdentity identity, object state, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        if (state is not PartyState && ContainsSerializedHistory(state))
+        {
+            // The SDK can hand snapshots to protection as object/JSON. Without a typed
+            // personal-data graph we cannot independently protect every profile field.
+            throw new InvalidOperationException("Serialized retained-history snapshots require typed Party state protection.");
+        }
+
+        object profile = await ProtectProfileSnapshotStateAsync(identity, state, cancellationToken).ConfigureAwait(false);
+        if (state is not Hexalith.Parties.Contracts.State.PartyState party || party.HumanActorTransitions.Count == 0)
+        {
+            return profile;
+        }
+
+        if (identityHistoryCustody is null)
+        {
+            throw new InvalidOperationException("Independent identity history snapshot protection is unavailable.");
+        }
+
+        object protectedHistory = await identityHistoryCustody.ProtectSnapshotAsync(identity, profile, cancellationToken).ConfigureAwait(false);
+        return new IdentityHistorySnapshot("identity-history-snapshot-v1", protectedHistory);
+    }
+
+    /// <summary>Checks retained purpose lifecycle before unprotecting history and profile state.</summary>
+    public async Task<object> UnprotectSnapshotStateAsync(AggregateIdentity identity, object state, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        IdentityHistorySnapshot? history = state as IdentityHistorySnapshot;
+        if (state is JsonElement element && element.ValueKind == JsonValueKind.Object
+            && TryReadSnapshotMarker(element, out string? marker))
+        {
+            if (marker == "identity-history-snapshot-v1")
+            {
+                history = element.Deserialize<IdentityHistorySnapshot>(s_jsonOptions)
+                    ?? throw new InvalidOperationException("Invalid identity history snapshot.");
+            }
+            else if (marker != ProtectedSnapshotMarker)
+            {
+                throw new InvalidOperationException("Unsupported snapshot purpose marker.");
+            }
+        }
+
+        if (history is not null && (history.Marker != "identity-history-snapshot-v1" || history.Payload is null))
+        {
+            throw new InvalidOperationException("Invalid identity history snapshot.");
+        }
+        if (history is not null)
+        {
+            if (identityHistoryCustody is null)
+            {
+                throw new InvalidOperationException("Independent identity history snapshot protection is unavailable.");
+            }
+
+            state = await identityHistoryCustody.UnprotectSnapshotAsync(identity, history.Payload, cancellationToken).ConfigureAwait(false)
+                ?? throw new InvalidOperationException("Retained identity history is unavailable.");
+        }
+
+        return await UnprotectProfileSnapshotStateAsync(identity, state, history is not null, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<object> ProtectProfileSnapshotStateAsync(
         AggregateIdentity identity,
         object state,
         CancellationToken cancellationToken = default)
@@ -279,9 +374,10 @@ public sealed partial class PartyPayloadProtectionService(
         }
     }
 
-    public async Task<object> UnprotectSnapshotStateAsync(
+    private async Task<object> UnprotectProfileSnapshotStateAsync(
         AggregateIdentity identity,
         object state,
+        bool retainedHistory,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(identity);
@@ -290,7 +386,9 @@ public sealed partial class PartyPayloadProtectionService(
         ProtectedSnapshotState? protectedState = state switch
         {
             ProtectedSnapshotState direct => direct,
-            JsonElement element => element.Deserialize<ProtectedSnapshotState>(s_jsonOptions),
+            JsonElement element when element.ValueKind == JsonValueKind.Object
+                && TryReadSnapshotMarker(element, out string? marker) && marker == ProtectedSnapshotMarker
+                    => element.Deserialize<ProtectedSnapshotState>(s_jsonOptions),
             _ => null,
         };
 
@@ -315,10 +413,69 @@ public sealed partial class PartyPayloadProtectionService(
             throw new InvalidOperationException("Protected snapshot payload is empty.");
         }
 
-        JsonNode? unprotected = await UnprotectNodeAsync(identity, targetType.FullName ?? targetType.Name, protectedRoot, cancellationToken).ConfigureAwait(false);
+        JsonNode? unprotected;
+        try
+        {
+            unprotected = await UnprotectNodeAsync(identity, targetType.FullName ?? targetType.Name, protectedRoot, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (retainedHistory && targetType == typeof(PartyState) && PartyEncryptionKeyDestroyedException.IsMatch(exception))
+        {
+            // Profile erasure removes profile leaves while independently retained attribution
+            // survives only after the outer custody lifecycle has allowed this read.
+            unprotected = RebuildWithoutEncryptedMarkers(protectedRoot);
+        }
+
         byte[] unprotectedBytes = JsonSerializer.SerializeToUtf8Bytes(unprotected, s_jsonOptions);
-        object? restored = JsonSerializer.Deserialize(unprotectedBytes, targetType, s_jsonOptions);
+        object? restored = retainedHistory && targetType == typeof(PartyState)
+            ? JsonSerializer.Deserialize<JsonElement>(unprotectedBytes)
+            : JsonSerializer.Deserialize(unprotectedBytes, targetType, s_jsonOptions);
         return restored ?? state;
+    }
+
+    private static bool TryReadSnapshotMarker(JsonElement element, out string? marker)
+    {
+        marker = null;
+        if (!element.TryGetProperty("marker", out JsonElement value) && !element.TryGetProperty("Marker", out value))
+        {
+            return false;
+        }
+
+        if (value.ValueKind != JsonValueKind.String)
+        {
+            throw new InvalidOperationException("Malformed snapshot purpose marker.");
+        }
+
+        marker = value.GetString();
+        return true;
+    }
+
+    private static bool ContainsSerializedHistory(object state)
+    {
+        JsonElement element = state is JsonElement json ? json : JsonSerializer.SerializeToElement(state, s_jsonOptions);
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        foreach (JsonProperty property in element.EnumerateObject())
+        {
+            if (property.Name.Equals("HumanBindingVersion", StringComparison.OrdinalIgnoreCase)
+                && (property.Value.ValueKind != JsonValueKind.Number || !property.Value.TryGetInt64(out long version) || version != 0))
+            {
+                return true;
+            }
+
+            if (property.Name.Equals("HumanActorBindings", StringComparison.OrdinalIgnoreCase)
+                || property.Name.Equals("HumanActorTransitions", StringComparison.OrdinalIgnoreCase))
+            {
+                if (property.Value.ValueKind != JsonValueKind.Array || property.Value.GetArrayLength() > 0)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static bool ShouldHandle(AggregateIdentity identity)
@@ -529,7 +686,12 @@ public sealed partial class PartyPayloadProtectionService(
                 {
                     if (array[i] is not null)
                     {
-                        array[i] = await UnprotectNodeAsync(identity, eventTypeName, array[i]!, cancellationToken).ConfigureAwait(false);
+                        JsonNode original = array[i]!;
+                        JsonNode? restored = await UnprotectNodeAsync(identity, eventTypeName, original, cancellationToken).ConfigureAwait(false);
+                        if (!ReferenceEquals(original, restored))
+                        {
+                            array[i] = restored;
+                        }
                     }
                 }
 

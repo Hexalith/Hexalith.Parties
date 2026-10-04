@@ -1,4 +1,6 @@
 using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Events.Rejections;
+using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 
@@ -9,6 +11,22 @@ public sealed class PartyState
     private readonly List<ContactChannel> _contactChannels = [];
     private readonly List<ConsentRecord> _consentRecords = [];
     private readonly List<PartyIdentifier> _identifiers = [];
+
+    /// <summary>Gets explicit creation evidence; rejection-only streams remain uncreated.</summary>
+    public bool HasBeenCreated { get; private set; }
+
+    /// <summary>Gets the immutable original Agent provisioning result, when marked.</summary>
+    [PersonalData]
+    public AgentPartyProvisioningResult? AgentProvisioning { get; private set; }
+
+    /// <summary>Gets immutable finite attribution intervals.</summary>
+    public IReadOnlyList<HumanActorBinding> HumanActorBindings { get; private set; } = [];
+
+    /// <summary>Gets exact original transition intents and results.</summary>
+    public IReadOnlyList<HumanActorBindingTransition> HumanActorTransitions { get; private set; } = [];
+
+    /// <summary>Gets the current binding transition revision, including revocations.</summary>
+    public long HumanBindingVersion { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -92,16 +110,106 @@ public sealed class PartyState
     public void Apply(CompositeOperationConflict e) => ArgumentNullException.ThrowIfNull(e);
 
     public void Apply(PartyCommandValidationRejected e) => ArgumentNullException.ThrowIfNull(e);
+    /// <summary>Applies a value-free provisioning rejection without mutating state.</summary>
+    public void Apply(AgentPartyProvisioningRejected e) => ArgumentNullException.ThrowIfNull(e);
+
+    /// <summary>Applies a value-free attribution rejection without mutating state.</summary>
+    public void Apply(HumanActorBindingRejected e) => ArgumentNullException.ThrowIfNull(e);
 #pragma warning restore CA1822
 
     public void Apply(PartyCreated e)
     {
         ArgumentNullException.ThrowIfNull(e);
-        CreatedAt = DateTimeOffset.UtcNow;
+        if (HasBeenCreated)
+        {
+            throw new InvalidOperationException("Duplicate creation evidence.");
+        }
+
+        HasBeenCreated = true;
+        CreatedAt = e.CreatedAt;
         Type = e.Type;
         Person = e.PersonDetails;
         Organization = e.OrganizationDetails;
         IsNaturalPerson = e.OrganizationDetails?.IsNaturalPerson ?? false;
+    }
+
+    /// <summary>Records immutable Agent ownership without inferring legacy ownership.</summary>
+    public void Apply(AgentPartyProvisioned e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        if (!HasBeenCreated || Type != PartyType.Organization || AgentProvisioning is not null)
+        {
+            throw new InvalidOperationException("Invalid provisioning history.");
+        }
+
+        AgentProvisioning = e.Result;
+    }
+
+    /// <summary>Records the first finite human interval.</summary>
+    public void Apply(HumanActorBindingEstablished e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        if (HumanBindingVersion != 0 || e.ExpectedBindingVersion != 0)
+        {
+            throw new InvalidOperationException("Invalid establishment history.");
+        }
+
+        AppendBinding(e.Binding, e.EffectiveAt, e.ExpectedBindingVersion);
+    }
+
+    /// <summary>Closes the predecessor and opens its successor at the same immutable instant.</summary>
+    public void Apply(HumanActorBindingRebound e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        CloseBinding(e.ExpectedBindingVersion, e.EffectiveAt);
+        AppendBinding(e.Binding, e.EffectiveAt, e.ExpectedBindingVersion);
+    }
+
+    /// <summary>Closes the recorded interval and persists the immutable revocation intent.</summary>
+    public void Apply(HumanActorBindingRevoked e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+        CloseBinding(e.ExpectedBindingVersion, e.EffectiveAt, requireLivePredecessor: true);
+        HumanBindingVersion = checked(HumanBindingVersion + 1);
+        HumanActorTransitions = [.. HumanActorTransitions,
+            new HumanActorBindingTransition(e.LogicalId, e.IntentDigest, HumanBindingVersion, null)];
+    }
+
+    private void CloseBinding(long expectedVersion, DateTimeOffset at, bool requireLivePredecessor = false)
+    {
+        if (HumanBindingVersion != expectedVersion)
+        {
+            throw new InvalidOperationException("Invalid binding revision history.");
+        }
+
+        if (requireLivePredecessor && HumanActorBindings.Count(binding =>
+                binding.Evidence.BindingVersion == expectedVersion && binding.Evidence.ValidFrom < at
+                && binding.Evidence.ValidUntil is { } end && at < end) != 1)
+        {
+            throw new InvalidOperationException("Invalid revocation interval history.");
+        }
+
+        HumanActorBindings = [.. HumanActorBindings.Select(binding => binding.Evidence.BindingVersion == expectedVersion
+            && binding.Evidence.ValidUntil > at && binding.Evidence.ValidFrom < at
+                ? binding with { Evidence = binding.Evidence with { ValidUntil = at } } : binding)];
+    }
+
+    private void AppendBinding(HumanActorBinding binding, DateTimeOffset at, long expectedVersion)
+    {
+        HumanActorBindingEvidence evidence = binding.Evidence;
+        if (!HasBeenCreated || Type != PartyType.Person || HumanBindingVersion != expectedVersion
+            || evidence.BindingVersion != expectedVersion + 1 || evidence.ValidFrom != at
+            || evidence.ValidUntil is not { } end || end <= at || end > evidence.Custody.ExpiresAt
+            || HumanActorBindings.Any(previous => previous.Evidence.ValidUntil is null
+                || previous.Evidence.ValidUntil > at))
+        {
+            throw new InvalidOperationException("Invalid binding interval history.");
+        }
+
+        HumanActorBindings = [.. HumanActorBindings, binding];
+        HumanBindingVersion = evidence.BindingVersion;
+        HumanActorTransitions = [.. HumanActorTransitions,
+            new HumanActorBindingTransition(binding.LogicalId, binding.IntentDigest, HumanBindingVersion, evidence)];
     }
 
     public void Apply(PersonDetailsUpdated e)

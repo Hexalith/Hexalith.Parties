@@ -64,6 +64,20 @@ type class Hexalith.Parties.Contracts.Commands.EraseParty interfaces:System.IEqu
   ctor ()
   property System.String PartyId required getset
   property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Commands.EstablishHumanActorBinding interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.EstablishHumanActorBinding>
+  ctor (System.String TenantId, System.String PartyId, System.String ActorId, System.Int64 ActorRevision, System.Int64 ExpectedPartyRevision, System.Int64 ExpectedBindingVersion, System.DateTimeOffset EffectiveAt, System.String LogicalId, System.String PolicyId)
+  property System.String ActorId getset
+  property System.Int64 ActorRevision getset
+  property Hexalith.Parties.Contracts.Models.IdentityCommandAuthorization Authorization getset
+  property System.DateTimeOffset EffectiveAt getset
+  property System.Int64 ExpectedBindingVersion getset
+  property System.Int64 ExpectedPartyRevision getset
+  property System.String LogicalId getset
+  property System.String OperatorProof getset
+  property System.String PartyId getset
+  property System.String PolicyId getset
+  property System.String TenantId getset
+  method System.Void Deconstruct(System.String& TenantId, System.String& PartyId, System.String& ActorId, System.Int64& ActorRevision, System.Int64& ExpectedPartyRevision, System.Int64& ExpectedBindingVersion, System.DateTimeOffset& EffectiveAt, System.String& LogicalId, System.String& PolicyId)
 type class Hexalith.Parties.Contracts.Commands.LiftRestriction interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.LiftRestriction>
   ctor ()
   property System.String ActorUserId getset
@@ -81,9 +95,29 @@ type class Hexalith.Parties.Contracts.Commands.MarkPartyEncryptionKeyDeleted int
   property System.DateTimeOffset DeletedAt required getset
   property System.String PartyId required getset
   property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Commands.ProvisionAgentParty interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.ProvisionAgentParty>
+  ctor (Hexalith.Parties.Contracts.ValueObjects.AgentPartyIdentity Identity)
+  property Hexalith.Parties.Contracts.Models.IdentityCommandAuthorization Authorization getset
+  property Hexalith.Parties.Contracts.ValueObjects.AgentPartyIdentity Identity getset
+  property System.String LogicalId get
+  method System.Void Deconstruct(Hexalith.Parties.Contracts.ValueObjects.AgentPartyIdentity& Identity)
 type class Hexalith.Parties.Contracts.Commands.ReactivateParty interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.ReactivateParty>
   ctor ()
   property System.String PartyId required getset
+type class Hexalith.Parties.Contracts.Commands.RebindHumanActorBinding interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RebindHumanActorBinding>
+  ctor (System.String TenantId, System.String PartyId, System.String ActorId, System.Int64 ActorRevision, System.Int64 ExpectedPartyRevision, System.Int64 ExpectedBindingVersion, System.DateTimeOffset EffectiveAt, System.String LogicalId, System.String PolicyId)
+  property System.String ActorId getset
+  property System.Int64 ActorRevision getset
+  property Hexalith.Parties.Contracts.Models.IdentityCommandAuthorization Authorization getset
+  property System.DateTimeOffset EffectiveAt getset
+  property System.Int64 ExpectedBindingVersion getset
+  property System.Int64 ExpectedPartyRevision getset
+  property System.String LogicalId getset
+  property System.String OperatorProof getset
+  property System.String PartyId getset
+  property System.String PolicyId getset
+  property System.String TenantId getset
+  method System.Void Deconstruct(System.String& TenantId, System.String& PartyId, System.String& ActorId, System.Int64& ActorRevision, System.Int64& ExpectedPartyRevision, System.Int64& ExpectedBindingVersion, System.DateTimeOffset& EffectiveAt, System.String& LogicalId, System.String& PolicyId)
 type class Hexalith.Parties.Contracts.Commands.RecordConsent interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RecordConsent>
   ctor ()
   property System.String ActorUserId getset
@@ -120,6 +154,20 @@ type class Hexalith.Parties.Contracts.Commands.RevokeConsent interfaces:System.I
   property System.String Reason getset
   property System.String Source getset
   property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Commands.RevokeHumanActorBinding interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RevokeHumanActorBinding>
+  ctor (System.String TenantId, System.String PartyId, System.String ActorId, System.Int64 ActorRevision, System.Int64 ExpectedPartyRevision, System.Int64 ExpectedBindingVersion, System.DateTimeOffset EffectiveAt, System.String LogicalId, System.String PolicyId)
+  property System.String ActorId getset
+  property System.Int64 ActorRevision getset
+  property Hexalith.Parties.Contracts.Models.IdentityCommandAuthorization Authorization getset
+  property System.DateTimeOffset EffectiveAt getset
+  property System.Int64 ExpectedBindingVersion getset
+  property System.Int64 ExpectedPartyRevision getset
+  property System.String LogicalId getset
+  property System.String OperatorProof getset
+  property System.String PartyId getset
+  property System.String PolicyId getset
+  property System.String TenantId getset
+  method System.Void Deconstruct(System.String& TenantId, System.String& PartyId, System.String& ActorId, System.Int64& ActorRevision, System.Int64& ExpectedPartyRevision, System.Int64& ExpectedBindingVersion, System.DateTimeOffset& EffectiveAt, System.String& LogicalId, System.String& PolicyId)
 type class Hexalith.Parties.Contracts.Commands.RotatePartyKey interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RotatePartyKey>
   ctor ()
   property System.Int32 NewKeyVersion required getset
@@ -154,6 +202,10 @@ type class Hexalith.Parties.Contracts.Commands.UpdatePersonDetails interfaces:Sy
   ctor ()
   property System.String PartyId required getset
   property Hexalith.Parties.Contracts.ValueObjects.PersonDetails PersonDetails required getset
+type class Hexalith.Parties.Contracts.Events.AgentPartyProvisioned interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.AgentPartyProvisioned>
+  ctor (Hexalith.Parties.Contracts.Models.AgentPartyProvisioningResult Result)
+  property Hexalith.Parties.Contracts.Models.AgentPartyProvisioningResult Result getset
+  method System.Void Deconstruct(Hexalith.Parties.Contracts.Models.AgentPartyProvisioningResult& Result)
 type class Hexalith.Parties.Contracts.Events.CompositeOperationConflict interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.CompositeOperationConflict>
   ctor ()
   property System.String Message getset
@@ -213,6 +265,28 @@ type class Hexalith.Parties.Contracts.Events.ErasureVerified interfaces:Hexalith
   property System.String TenantId required getset
   property System.String VerificationReportId required getset
   property System.DateTimeOffset VerifiedAt required getset
+type class Hexalith.Parties.Contracts.Events.HumanActorBindingEstablished interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Security.IIdentityHistoryEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.HumanActorBindingEstablished>
+  ctor (Hexalith.Parties.Contracts.State.HumanActorBinding Binding, System.DateTimeOffset EffectiveAt, System.Int64 ExpectedBindingVersion)
+  property Hexalith.Parties.Contracts.State.HumanActorBinding Binding getset
+  property Hexalith.EventStore.Contracts.Security.IdentityHistoryCustodyEvidence Custody get
+  property System.DateTimeOffset EffectiveAt getset
+  property System.Int64 ExpectedBindingVersion getset
+  method System.Void Deconstruct(Hexalith.Parties.Contracts.State.HumanActorBinding& Binding, System.DateTimeOffset& EffectiveAt, System.Int64& ExpectedBindingVersion)
+type class Hexalith.Parties.Contracts.Events.HumanActorBindingRebound interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Security.IIdentityHistoryEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.HumanActorBindingRebound>
+  ctor (Hexalith.Parties.Contracts.State.HumanActorBinding Binding, System.DateTimeOffset EffectiveAt, System.Int64 ExpectedBindingVersion)
+  property Hexalith.Parties.Contracts.State.HumanActorBinding Binding getset
+  property Hexalith.EventStore.Contracts.Security.IdentityHistoryCustodyEvidence Custody get
+  property System.DateTimeOffset EffectiveAt getset
+  property System.Int64 ExpectedBindingVersion getset
+  method System.Void Deconstruct(Hexalith.Parties.Contracts.State.HumanActorBinding& Binding, System.DateTimeOffset& EffectiveAt, System.Int64& ExpectedBindingVersion)
+type class Hexalith.Parties.Contracts.Events.HumanActorBindingRevoked interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Security.IIdentityHistoryEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.HumanActorBindingRevoked>
+  ctor (System.String LogicalId, System.String IntentDigest, System.Int64 ExpectedBindingVersion, System.DateTimeOffset EffectiveAt, Hexalith.EventStore.Contracts.Security.IdentityHistoryCustodyEvidence Custody)
+  property Hexalith.EventStore.Contracts.Security.IdentityHistoryCustodyEvidence Custody getset
+  property System.DateTimeOffset EffectiveAt getset
+  property System.Int64 ExpectedBindingVersion getset
+  property System.String IntentDigest getset
+  property System.String LogicalId getset
+  method System.Void Deconstruct(System.String& LogicalId, System.String& IntentDigest, System.Int64& ExpectedBindingVersion, System.DateTimeOffset& EffectiveAt, Hexalith.EventStore.Contracts.Security.IdentityHistoryCustodyEvidence& Custody)
 type class Hexalith.Parties.Contracts.Events.IdentifierAdded interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.IdentifierAdded>
   ctor ()
   property System.String IdentifierId required getset
@@ -258,6 +332,7 @@ type class Hexalith.Parties.Contracts.Events.PartyCommandValidationRejected inte
   property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.Events.PartyValidationFailure> Failures required getset
 type class Hexalith.Parties.Contracts.Events.PartyCreated interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.PartyCreated>
   ctor ()
+  property System.DateTimeOffset CreatedAt getset
   property Hexalith.Parties.Contracts.ValueObjects.OrganizationDetails OrganizationDetails getset
   property Hexalith.Parties.Contracts.ValueObjects.PersonDetails PersonDetails getset
   property Hexalith.Parties.Contracts.ValueObjects.PartyType Type required getset
@@ -343,6 +418,14 @@ type class Hexalith.Parties.Contracts.Events.ProcessingRestricted interfaces:Hex
   property System.DateTimeOffset RestrictedAt required getset
   property System.String RestrictedBy getset
   property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Events.Rejections.AgentPartyProvisioningRejected interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.Rejections.AgentPartyProvisioningRejected>
+  ctor (System.String ReasonCode)
+  property System.String ReasonCode getset
+  method System.Void Deconstruct(System.String& ReasonCode)
+type class Hexalith.Parties.Contracts.Events.Rejections.HumanActorBindingRejected interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,Hexalith.EventStore.Contracts.Events.IRejectionEvent,System.IEquatable<Hexalith.Parties.Contracts.Events.Rejections.HumanActorBindingRejected>
+  ctor (System.String ReasonCode)
+  property System.String ReasonCode getset
+  method System.Void Deconstruct(System.String& ReasonCode)
 type class Hexalith.Parties.Contracts.Events.RestrictionLifted interfaces:Hexalith.EventStore.Contracts.Events.IEventPayload,System.IEquatable<Hexalith.Parties.Contracts.Events.RestrictionLifted>
   ctor ()
   property System.String CorrelationId getset
@@ -350,6 +433,43 @@ type class Hexalith.Parties.Contracts.Events.RestrictionLifted interfaces:Hexali
   property System.String LiftedBy getset
   property System.String PartyId required getset
   property System.String TenantId required getset
+type class Hexalith.Parties.Contracts.Models.AgentPartyProvisioningResult interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.AgentPartyProvisioningResult>
+  ctor (Hexalith.Parties.Contracts.ValueObjects.AgentPartyIdentity Identity, System.Int64 ProvisioningRevision, System.String SourceId)
+  property Hexalith.Parties.Contracts.ValueObjects.AgentPartyIdentity Identity getset
+  property System.Int64 ProvisioningRevision getset
+  property System.String SourceId getset
+  method System.Void Deconstruct(Hexalith.Parties.Contracts.ValueObjects.AgentPartyIdentity& Identity, System.Int64& ProvisioningRevision, System.String& SourceId)
+type class Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence>
+  ctor (System.String TenantId, System.String PartyId, System.String ActorId, System.Int64 BindingVersion, System.Int64 ActorRevision, System.DateTimeOffset ValidFrom, System.Nullable<System.DateTimeOffset> ValidUntil, System.String SourceId, System.String ProvenanceId, Hexalith.EventStore.Contracts.Security.IdentityHistoryCustodyEvidence Custody)
+  property System.String ActorId getset
+  property System.Int64 ActorRevision getset
+  property System.Int64 BindingVersion getset
+  property Hexalith.EventStore.Contracts.Security.IdentityHistoryCustodyEvidence Custody getset
+  property System.String PartyId getset
+  property System.String ProvenanceId getset
+  property System.String SourceId getset
+  property System.String TenantId getset
+  property System.DateTimeOffset ValidFrom getset
+  property System.Nullable<System.DateTimeOffset> ValidUntil getset
+  method System.Void Deconstruct(System.String& TenantId, System.String& PartyId, System.String& ActorId, System.Int64& BindingVersion, System.Int64& ActorRevision, System.DateTimeOffset& ValidFrom, System.Nullable`1[[System.DateTimeOffset, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& ValidUntil, System.String& SourceId, System.String& ProvenanceId, Hexalith.EventStore.Contracts.Security.IdentityHistoryCustodyEvidence& Custody)
+type class Hexalith.Parties.Contracts.Models.HumanActorBindingResult interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.HumanActorBindingResult>
+  ctor (Hexalith.Parties.Contracts.ValueObjects.HumanActorBindingOutcome Outcome, System.Int32 ContractVersion, System.String TenantId, System.String PartyId, System.DateTimeOffset ActionAt, System.Int64 SourcePosition, System.String ObservationId, Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence Evidence)
+  property System.DateTimeOffset ActionAt getset
+  property System.Int32 ContractVersion getset
+  property Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence Evidence getset
+  property System.String ObservationId getset
+  property Hexalith.Parties.Contracts.ValueObjects.HumanActorBindingOutcome Outcome getset
+  property System.String PartyId getset
+  property System.Int64 SourcePosition getset
+  property System.String TenantId getset
+  method System.Void Deconstruct(Hexalith.Parties.Contracts.ValueObjects.HumanActorBindingOutcome& Outcome, System.Int32& ContractVersion, System.String& TenantId, System.String& PartyId, System.DateTimeOffset& ActionAt, System.Int64& SourcePosition, System.String& ObservationId, Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence& Evidence)
+type class Hexalith.Parties.Contracts.Models.IdentityCommandAuthorization interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.IdentityCommandAuthorization>
+  ctor (Hexalith.EventStore.Contracts.Security.IdentityAdmissionEvidence Admission, System.Int64 SourcePosition, Hexalith.EventStore.Contracts.Security.IdentityHistoryPolicy Policy, Hexalith.EventStore.Contracts.Security.IdentityHistoryCustodyEvidence Custody)
+  property Hexalith.EventStore.Contracts.Security.IdentityAdmissionEvidence Admission getset
+  property Hexalith.EventStore.Contracts.Security.IdentityHistoryCustodyEvidence Custody getset
+  property Hexalith.EventStore.Contracts.Security.IdentityHistoryPolicy Policy getset
+  property System.Int64 SourcePosition getset
+  method System.Void Deconstruct(Hexalith.EventStore.Contracts.Security.IdentityAdmissionEvidence& Admission, System.Int64& SourcePosition, Hexalith.EventStore.Contracts.Security.IdentityHistoryPolicy& Policy, Hexalith.EventStore.Contracts.Security.IdentityHistoryCustodyEvidence& Custody)
 type class Hexalith.Parties.Contracts.Models.MatchMetadata interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.MatchMetadata>
   ctor ()
   property System.String MatchType required getset
@@ -398,6 +518,25 @@ type class Hexalith.Parties.Contracts.Models.PartyDetailProjectionReadResult int
   ctor ()
   property Hexalith.Parties.Contracts.Models.PartyDetail Detail getset
   property Hexalith.Parties.Contracts.Models.ProjectionFreshnessMetadata Freshness required getset
+type class Hexalith.Parties.Contracts.Models.PartyIdentityEvidence interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.PartyIdentityEvidence>
+  ctor (System.Int32 ContractVersion, System.String TenantId, System.String PartyId, Hexalith.Parties.Contracts.ValueObjects.PartyIdentityClassification Classification, System.Boolean IsActive, System.Boolean IsRestricted, System.Boolean IsErasingOrErased, System.Int64 SourcePosition, System.DateTimeOffset ObservedAt, System.String ObservationId, Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence HumanBinding)
+  property Hexalith.Parties.Contracts.ValueObjects.PartyIdentityClassification Classification getset
+  property System.Int32 ContractVersion getset
+  property Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence HumanBinding getset
+  property System.Boolean IsActive getset
+  property System.Boolean IsErasingOrErased getset
+  property System.Boolean IsRestricted getset
+  property System.String ObservationId getset
+  property System.DateTimeOffset ObservedAt getset
+  property System.String PartyId getset
+  property System.Int64 SourcePosition getset
+  property System.String TenantId getset
+  method System.Void Deconstruct(System.Int32& ContractVersion, System.String& TenantId, System.String& PartyId, Hexalith.Parties.Contracts.ValueObjects.PartyIdentityClassification& Classification, System.Boolean& IsActive, System.Boolean& IsRestricted, System.Boolean& IsErasingOrErased, System.Int64& SourcePosition, System.DateTimeOffset& ObservedAt, System.String& ObservationId, Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence& HumanBinding)
+type class Hexalith.Parties.Contracts.Models.PartyIdentityResult interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.PartyIdentityResult>
+  ctor (Hexalith.Parties.Contracts.ValueObjects.PartyIdentityOutcome Outcome, Hexalith.Parties.Contracts.Models.PartyIdentityEvidence Evidence)
+  property Hexalith.Parties.Contracts.Models.PartyIdentityEvidence Evidence getset
+  property Hexalith.Parties.Contracts.ValueObjects.PartyIdentityOutcome Outcome getset
+  method System.Void Deconstruct(Hexalith.Parties.Contracts.ValueObjects.PartyIdentityOutcome& Outcome, Hexalith.Parties.Contracts.Models.PartyIdentityEvidence& Evidence)
 type class Hexalith.Parties.Contracts.Models.PartyIndexEntry interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.PartyIndexEntry>
   ctor ()
   property System.DateTimeOffset CreatedAt getset
@@ -467,6 +606,20 @@ type class Hexalith.Parties.Contracts.PartyExportFileName interfaces:
 type class Hexalith.Parties.Contracts.PartyProjectionNames interfaces:
 type class Hexalith.Parties.Contracts.PersonalDataAttribute base:System.Attribute interfaces:
   ctor ()
+type class Hexalith.Parties.Contracts.Queries.ResolveHumanActorBindingAt interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.ResolveHumanActorBindingAt>
+  ctor (System.String TenantId, System.String PartyId, System.DateTimeOffset ActionAt, System.String ExpectedActorId, System.Int64 ExpectedBindingVersion)
+  property System.DateTimeOffset ActionAt getset
+  property System.String ExpectedActorId getset
+  property System.Int64 ExpectedBindingVersion getset
+  property System.String PartyId getset
+  property System.String TenantId getset
+  method System.Void Deconstruct(System.String& TenantId, System.String& PartyId, System.DateTimeOffset& ActionAt, System.String& ExpectedActorId, System.Int64& ExpectedBindingVersion)
+type class Hexalith.Parties.Contracts.Queries.ResolvePartyIdentity interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.ResolvePartyIdentity>
+  ctor (System.String TenantId, System.String PartyId, System.String ExpectedActorId)
+  property System.String ExpectedActorId getset
+  property System.String PartyId getset
+  property System.String TenantId getset
+  method System.Void Deconstruct(System.String& TenantId, System.String& PartyId, System.String& ExpectedActorId)
 type class Hexalith.Parties.Contracts.Results.CompositeCommandResult base:Hexalith.EventStore.Contracts.Results.DomainResult interfaces:System.IEquatable<Hexalith.EventStore.Contracts.Results.DomainResult>,System.IEquatable<Hexalith.Parties.Contracts.Results.CompositeCommandResult>
   ctor (System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Events.IEventPayload> events, System.Collections.Generic.IReadOnlyList<System.String> applied, System.Collections.Generic.IReadOnlyList<System.String> skipped, System.Collections.Generic.IReadOnlyList<System.String> rejected, Hexalith.Parties.Contracts.Models.PartyDetail updatedPartyDetail)
   property System.Collections.Generic.IReadOnlyList<System.String> Applied get
@@ -478,6 +631,9 @@ type class Hexalith.Parties.Contracts.Results.PartyCommandResult base:Hexalith.E
   ctor (System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Events.IEventPayload> events, Hexalith.Parties.Contracts.Models.PartyDetail updatedPartyDetail)
   property System.String ResultPayload get
   property Hexalith.Parties.Contracts.Models.PartyDetail UpdatedPartyDetail get
+type class Hexalith.Parties.Contracts.Results.PartyIdentityCommandResult base:Hexalith.EventStore.Contracts.Results.DomainResult interfaces:System.IEquatable<Hexalith.EventStore.Contracts.Results.DomainResult>,System.IEquatable<Hexalith.Parties.Contracts.Results.PartyIdentityCommandResult>
+  ctor (System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Events.IEventPayload> events, System.Object result)
+  property System.String ResultPayload get
 type interface Hexalith.Parties.Contracts.Search.IPartySearchProvider interfaces:
   method Hexalith.Parties.Contracts.Models.PagedResult<Hexalith.Parties.Contracts.Models.PartySearchResult> Search(System.Collections.Generic.IEnumerable<Hexalith.Parties.Contracts.Models.PartyIndexEntry> entries, System.String query, System.Nullable<Hexalith.Parties.Contracts.ValueObjects.PartyType> typeFilter, System.Nullable<System.Boolean> activeFilter, System.Int32 page, System.Int32 pageSize, System.Threading.CancellationToken cancellationToken)
 type class Hexalith.Parties.Contracts.Security.CryptoShreddingOptions interfaces:System.IEquatable<Hexalith.Parties.Contracts.Security.CryptoShreddingOptions>
@@ -666,14 +822,32 @@ type class Hexalith.Parties.Contracts.Security.TenantKeyRotationStatus interface
   property System.DateTimeOffset StartedAt required getset
   property System.String TenantId required getset
   property System.Int32 TotalCount required getset
+type class Hexalith.Parties.Contracts.State.HumanActorBinding interfaces:System.IEquatable<Hexalith.Parties.Contracts.State.HumanActorBinding>
+  ctor (Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence Evidence, System.String LogicalId, System.String IntentDigest)
+  property Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence Evidence getset
+  property System.String IntentDigest getset
+  property System.String LogicalId getset
+  method System.Void Deconstruct(Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence& Evidence, System.String& LogicalId, System.String& IntentDigest)
+type class Hexalith.Parties.Contracts.State.HumanActorBindingTransition interfaces:System.IEquatable<Hexalith.Parties.Contracts.State.HumanActorBindingTransition>
+  ctor (System.String LogicalId, System.String IntentDigest, System.Int64 Version, Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence OriginalEvidence)
+  property System.String IntentDigest getset
+  property System.String LogicalId getset
+  property Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence OriginalEvidence getset
+  property System.Int64 Version getset
+  method System.Void Deconstruct(System.String& LogicalId, System.String& IntentDigest, System.Int64& Version, Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence& OriginalEvidence)
 type class Hexalith.Parties.Contracts.State.PartyState interfaces:
   ctor ()
+  property Hexalith.Parties.Contracts.Models.AgentPartyProvisioningResult AgentProvisioning getset
   property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.ValueObjects.ConsentRecord> ConsentRecords get
   property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.ValueObjects.ContactChannel> ContactChannels get
   property System.DateTimeOffset CreatedAt getset
   property System.String DisplayName getset
   property System.Nullable<System.DateTimeOffset> ErasedAt getset
   property Hexalith.Parties.Contracts.Security.ErasureStatus ErasureStatus getset
+  property System.Boolean HasBeenCreated getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.State.HumanActorBinding> HumanActorBindings getset
+  property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.State.HumanActorBindingTransition> HumanActorTransitions getset
+  property System.Int64 HumanBindingVersion getset
   property System.Collections.Generic.IReadOnlyList<Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier> Identifiers get
   property System.Boolean IsActive getset
   property System.Boolean IsNaturalPerson getset
@@ -703,7 +877,13 @@ type class Hexalith.Parties.Contracts.State.PartyState interfaces:
   method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyCannotAddDuplicateIdentifier e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.CompositeOperationConflict e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyCommandValidationRejected e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.Rejections.AgentPartyProvisioningRejected e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.Rejections.HumanActorBindingRejected e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyCreated e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.AgentPartyProvisioned e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.HumanActorBindingEstablished e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.HumanActorBindingRebound e)
+  method System.Void Apply(Hexalith.Parties.Contracts.Events.HumanActorBindingRevoked e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.PersonDetailsUpdated e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.OrganizationDetailsUpdated e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.ContactChannelAdded e)
@@ -727,6 +907,19 @@ type class Hexalith.Parties.Contracts.State.PartyState interfaces:
   method System.Void Apply(Hexalith.Parties.Contracts.Events.ErasureVerified e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyErased e)
   method System.Void Apply(Hexalith.Parties.Contracts.Events.PartyMerged e)
+type class Hexalith.Parties.Contracts.ValueObjects.AgentPartyIdMapping interfaces:
+  method System.String Create(System.String tenantId, System.String agentId)
+  method System.Boolean IsReserved(System.String partyId)
+type class Hexalith.Parties.Contracts.ValueObjects.AgentPartyIdentity interfaces:System.IEquatable<Hexalith.Parties.Contracts.ValueObjects.AgentPartyIdentity>
+  ctor (System.String TenantId, System.String AgentId, System.String PartyId, System.Int32 ContractVersion, System.String LogicalId, System.String CreationFingerprint, System.DateTimeOffset CreatedAt)
+  property System.String AgentId getset
+  property System.Int32 ContractVersion getset
+  property System.DateTimeOffset CreatedAt getset
+  property System.String CreationFingerprint getset
+  property System.String LogicalId getset
+  property System.String PartyId getset
+  property System.String TenantId getset
+  method System.Void Deconstruct(System.String& TenantId, System.String& AgentId, System.String& PartyId, System.Int32& ContractVersion, System.String& LogicalId, System.String& CreationFingerprint, System.DateTimeOffset& CreatedAt)
 type class Hexalith.Parties.Contracts.ValueObjects.ConsentIdentifier interfaces:
   method System.Boolean IsValidChannelId(System.String value)
   method System.Boolean IsValidConsentId(System.String value)
@@ -759,6 +952,14 @@ type enum Hexalith.Parties.Contracts.ValueObjects.ContactChannelType base:System
 type class Hexalith.Parties.Contracts.ValueObjects.EmailAddress interfaces:System.IEquatable<Hexalith.Parties.Contracts.ValueObjects.EmailAddress>
   ctor ()
   property System.String Address required getset
+type enum Hexalith.Parties.Contracts.ValueObjects.HumanActorBindingOutcome base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Ambiguous=3
+  enum Expired=6
+  enum Gap=2
+  enum Mismatch=4
+  enum Resolved=1
+  enum Revoked=5
+  enum Unavailable=0
 type enum Hexalith.Parties.Contracts.ValueObjects.IdentifierType base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
   enum CompanyRegistration=3
   enum NationalId=2
@@ -786,6 +987,16 @@ type class Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier interfaces:Sy
   property Hexalith.Parties.Contracts.ValueObjects.IdentifierType Type required getset
   property System.String Value required getset
   method System.Boolean IsValid(System.String value)
+type enum Hexalith.Parties.Contracts.ValueObjects.PartyIdentityClassification base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Agent=3
+  enum Human=1
+  enum Organization=2
+  enum Unknown=0
+type enum Hexalith.Parties.Contracts.ValueObjects.PartyIdentityOutcome base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
+  enum Conflict=3
+  enum Ineligible=2
+  enum Resolved=1
+  enum Unavailable=0
 type enum Hexalith.Parties.Contracts.ValueObjects.PartyType base:System.Enum interfaces:System.IComparable,System.IConvertible,System.IFormattable,System.ISpanFormattable
   enum Organization=2
   enum Person=1

@@ -189,3 +189,13 @@ fail-closed resolver and self-scoped accessor rather than redesigning them.
 
 Future self-registration or federation can be added as new provisioning options later, but
 they must feed the same runtime contract: one verified `party_id` claim or no data access.
+
+## Opaque actor attribution extension (EXT-PARTIES-1 Branch B)
+
+Consumer login aliases remain private UI/BFF issuer/subject → existing PartyId routing. The extension adds separately authorized opaque Human ActorId attribution to Parties history and one private global Platform actor registry. Raw issuer/subject mapping, credentials, roles and caller-supplied actor claims never become Parties identity evidence. Consumer and Organization PartyIds and ordinary stale UI cache behavior remain unchanged. Agent provisioning alone reserves the versioned deterministic Agent PartyId namespace.
+
+Trusted identity services submit explicit tenant/Party/actor commands with independently verified operator provenance through the shared gateway. Binding writes require a finite configured policy and independent purpose custody; no default production policy or custody provider is installed. The current development policy vocabulary supports only `binding-effective-at`; the recommended closure/revocation/erasure trigger remains a pending policy and custody design decision and is denied until implemented.
+
+Live qualification remains blocked by missing production trust/policy/custody and the shared SDK's lack of a purpose-scoped retained-history source read after profile erasure. Generic full replay continues to deny unreadable protected profile payloads. Local plaintext replay and synthetic custody tests demonstrate contracts and denial behavior only; they do not qualify erased-profile historical availability or backup/restore irreversibility. Serialized snapshots carrying attribution are denied when the typed personal-data protection graph is unavailable.
+
+Agent mapping v1 hashes UTF-8 `hexalith-agent-party-v1\0` + canonical tenant + `\0` + canonical Agent ULID with SHA-256, copies the first ten digest bytes after six zero timestamp bytes, and encodes the resulting 128 bits as a canonical Crockford ULID. For Agent `01HX0000000000000000000001`, canonical vectors are tenant-a → `0000000000TXYDY097JGTSDVEX` and tenant-b → `0000000000T5XCJN74D4TBDG0Y`. The zero-time namespace is reserved for new Agent provisioning only.

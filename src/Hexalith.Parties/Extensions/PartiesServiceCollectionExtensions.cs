@@ -1,3 +1,6 @@
+using Hexalith.EventStore.Client.Security;
+using Hexalith.EventStore.Client.Gateway;
+using Hexalith.EventStore.Client.Streams;
 using Dapr.Actors.Client;
 using Dapr.Client;
 
@@ -168,6 +171,15 @@ public static class PartiesServiceCollectionExtensions {
             .ValidateOnStart();
         _ = services.AddSingleton<PartySdkReadModelEraser>();
         _ = services.AddSingleton<PartySdkLastKnownReadModelCache>();
+        services.AddOptions<IdentityAdmissionOptions>().Bind(configuration.GetSection("IdentityAdmission"));
+        services.AddOptions<PartyIdentityOptions>().Bind(configuration.GetSection("Parties:Identity"));
+        services.TryAddSingleton<IIdentityAdmissionProof, IdentityAdmissionProof>();
+        services.TryAddScoped<IPartyIdentityAuthority, PartyIdentityAuthority>();
+        services.TryAddScoped<IAuthoritativeEventStreamReader>(provider =>
+            provider.GetService<IEventStoreGatewayClient>() is { } gateway
+                ? new AuthoritativeEventStreamReader(gateway, provider.GetRequiredService<TimeProvider>())
+                : new UnavailableIdentityStreamReader());
+        services.AddScoped<PartyIdentityQueryService>();
         _ = services.AddScoped<PartySdkQueryService>();
         _ = services.AddSingleton<PartyPayloadProtectionService>();
         _ = services.AddSingleton<EventStorePartyPayloadProtectionAdapter>();
