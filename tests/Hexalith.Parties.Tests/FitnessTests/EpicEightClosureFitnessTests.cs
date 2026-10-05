@@ -249,13 +249,34 @@ public sealed class EpicEightClosureFitnessTests
             receipt.Value.ShouldNotBeNullOrWhiteSpace(receipt.Key);
         }
 
-        if (!receipts["Playwright accessibility"].Contains("unvalidated", StringComparison.OrdinalIgnoreCase))
-        {
-            ReadValidationReceiptEvidence(summary, "Playwright accessibility")
-                .Contains(PlatformApiPrerequisitesTests.FrontComposerSha, StringComparison.Ordinal)
-                .ShouldBeTrue(
-                    "The authoritative accessibility receipt must prove the selected FrontComposer source identity.");
-        }
+        DescribeAccessibilityStampGaps(summary, receipts).ShouldBeEmpty(
+            "A clean Pass accessibility receipt must prove the selected FrontComposer source identity.");
+    }
+
+    /// <summary>
+    /// Verifies that only a clean Pass accessibility receipt must carry the selected FrontComposer
+    /// stamp, so an honest red receipt without it never breaks the structural check.
+    /// </summary>
+    [Theory]
+    [InlineData("**Blocked**", false, false)]
+    [InlineData("Failed", false, false)]
+    [InlineData("**Unvalidated**", false, false)]
+    [InlineData("Pass", true, false)]
+    [InlineData("Pass", false, true)]
+    [InlineData("**Pass**", false, true)]
+    public void AccessibilityStampIsRequiredOnlyForACleanPass(string result, bool stamped, bool expectGap)
+    {
+        string evidence = stamped ? $"6/6 at FrontComposer {PlatformApiPrerequisitesTests.FrontComposerSha}" : "6/6 at an unstamped tree";
+        string summary = $"""
+            ### Validation receipts
+
+            | Check | Result | Evidence |
+            | --- | --- | --- |
+            | Playwright accessibility | {result} | {evidence} |
+            """;
+
+        string[] expected = expectGap ? ["Playwright accessibility:frontcomposer-stamp"] : [];
+        DescribeAccessibilityStampGaps(summary, ParseValidationReceipts(summary)).ShouldBe(expected);
     }
 
     [Theory]
@@ -278,6 +299,9 @@ public sealed class EpicEightClosureFitnessTests
     [InlineData("Pass (unvalidated)")]
     [InlineData("Pass with skipped checks")]
     [InlineData("Pass with failed checks")]
+    [InlineData("Pass with errors")]
+    [InlineData("Pass (not run)")]
+    [InlineData("Pass (partial)")]
     public void QualifiedPassWithMissingValidationFailsClosed(string status)
     {
         Dictionary<string, string> receipts = CreatePassingValidationReceipts();
@@ -563,18 +587,29 @@ public sealed class EpicEightClosureFitnessTests
 
     private static string[] DescribeReceiptGaps(IReadOnlyDictionary<string, string> receipts)
         => DescribeMissingReceiptGaps(receipts).Concat(receipts
-            .Where(static receipt =>
-            {
-                // Tolerate bold markup, but never accept a qualified pass that still names a blocker.
-                string value = receipt.Value.Trim('*', ' ');
-                return !value.StartsWith("Pass", StringComparison.OrdinalIgnoreCase)
-                    || value.Contains("block", StringComparison.OrdinalIgnoreCase)
-                    || value.Contains("unvalidated", StringComparison.OrdinalIgnoreCase)
-                    || value.Contains("fail", StringComparison.OrdinalIgnoreCase)
-                    || value.Contains("skip", StringComparison.OrdinalIgnoreCase);
-            })
+            .Where(static receipt => !IsCleanPass(receipt.Value))
             .Select(static receipt => $"{receipt.Key}:{receipt.Value}"))
             .ToArray();
+
+    /// <summary>
+    /// Accepts only an exact <c>Pass</c> Result after trimming bold markup and spaces. Any qualified
+    /// pass ("Pass with errors", "Pass (not run)", "Pass (partial)", "Pass (unvalidated)", ...) is a gap:
+    /// a deny-list of blocker words would admit every qualifier it does not happen to name.
+    /// </summary>
+    private static bool IsCleanPass(string result)
+        => string.Equals(result.Trim('*', ' '), "Pass", StringComparison.Ordinal);
+
+    /// <summary>
+    /// Requires the selected FrontComposer source identity in the Playwright accessibility evidence,
+    /// but only when that Result is a clean <c>Pass</c>. An honest red or unvalidated receipt need not
+    /// carry the stamp, and must stay recordable without breaking the structural check.
+    /// </summary>
+    private static string[] DescribeAccessibilityStampGaps(string summary, IReadOnlyDictionary<string, string> receipts)
+        => IsCleanPass(receipts["Playwright accessibility"])
+            && !ReadValidationReceiptEvidence(summary, "Playwright accessibility")
+                .Contains(PlatformApiPrerequisitesTests.FrontComposerSha, StringComparison.Ordinal)
+            ? ["Playwright accessibility:frontcomposer-stamp"]
+            : [];
 
     private static string NormalizeStoryStatus(string status)
     {

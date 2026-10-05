@@ -1,8 +1,10 @@
 using System.Text.Json;
+using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Events.Rejections;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -31,6 +33,52 @@ public sealed class HumanActorBindingTests
     }
     private static EstablishHumanActorBinding Establish() => new("tenant-a", "party-1", FirstActor, 1, 1, 0, Start, "establish", "synthetic")
         { Authorization = Authorization(FirstActor, 1, Start), OperatorProof = "first-transient-proof" };
+    private static RebindHumanActorBinding Rebind(DateTimeOffset boundary) => new("tenant-a", "party-1", SecondActor, 1, 2, 1, boundary, "rebind", "synthetic")
+        { Authorization = Authorization(SecondActor, 2, boundary) };
+    private static RevokeHumanActorBinding Revoke(DateTimeOffset boundary) => new("tenant-a", "party-1", FirstActor, 1, 2, 1, boundary, "revoke", "synthetic")
+        { Authorization = Authorization(FirstActor, 2, boundary) };
+    private static ProcessingRestricted Restriction() => new() { PartyId = "party-1", TenantId = "tenant-a", RestrictedAt = Start.AddMinutes(30) };
+    private static PartyState BoundHuman()
+    {
+        PartyState state = Human();
+        state.Apply(PartyAggregate.Handle(Establish(), state).Events.Single().ShouldBeOfType<HumanActorBindingEstablished>());
+        return state;
+    }
+    private static void ShouldBeRefusedAsUnavailable(DomainResult result)
+    {
+        result.IsRejection.ShouldBeTrue();
+        result.Events.Single().ShouldBeOfType<HumanActorBindingRejected>().ReasonCode.ShouldBe("binding-unavailable");
+    }
+
+    [Fact]
+    public void RestrictedPersonParty_RefusesEstablishThatSucceedsUnrestricted()
+    {
+        PartyState state = Human();
+        EstablishHumanActorBinding command = Establish();
+        PartyAggregate.Handle(command, state).Events.Single().ShouldBeOfType<HumanActorBindingEstablished>();
+        state.Apply(Restriction());
+        ShouldBeRefusedAsUnavailable(PartyAggregate.Handle(command, state));
+    }
+
+    [Fact]
+    public void RestrictedBoundParty_RefusesRebindThatSucceedsUnrestricted()
+    {
+        PartyState state = BoundHuman();
+        RebindHumanActorBinding command = Rebind(Start.AddHours(1));
+        PartyAggregate.Handle(command, state).Events.Single().ShouldBeOfType<HumanActorBindingRebound>();
+        state.Apply(Restriction());
+        ShouldBeRefusedAsUnavailable(PartyAggregate.Handle(command, state));
+    }
+
+    [Fact]
+    public void RestrictedBoundParty_RefusesRevokeThatSucceedsUnrestricted()
+    {
+        PartyState state = BoundHuman();
+        RevokeHumanActorBinding command = Revoke(Start.AddHours(1));
+        PartyAggregate.Handle(command, state).Events.Single().ShouldBeOfType<HumanActorBindingRevoked>();
+        state.Apply(Restriction());
+        ShouldBeRefusedAsUnavailable(PartyAggregate.Handle(command, state));
+    }
 
     [Fact]
     public void SharedBoundary_PreservesActorVersionAndClosesPredecessor()

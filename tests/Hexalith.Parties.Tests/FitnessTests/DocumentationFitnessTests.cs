@@ -140,7 +140,24 @@ public sealed class DocumentationFitnessTests
         {
             string documentation = Read(root, relativePath);
             documentation.ShouldContain(pinnedSdk, Case.Sensitive, relativePath);
+
+            // Containing the pinned SDK is not enough: a stale SDK listed beside it must fail too.
+            FindStaleSdkTokens(documentation, pinnedSdk)
+                .ShouldBeEmpty($"{relativePath} must list only the pinned SDK {pinnedSdk}.");
         }
+    }
+
+    [Theory]
+    [InlineData("10.0.401", "SDK `10.0.401`.", "")]
+    [InlineData("10.0.401", "SDK `10.0.401`; formerly 10.0.302 and 10.0.400.", "10.0.302,10.0.400")]
+    [InlineData("10.0.401", "Hosting.Abstractions 10.0.8 and Aspire 13.6.0 are not SDK tokens; 110.0.302 is not either.", "")]
+    [InlineData("11.0.100", "SDK `11.0.100`; formerly 11.0.099 beside an unrelated 10.0.401.", "11.0.099")]
+    public void StaleSdkTokensAreReportedBesideThePinnedSdk(string pinnedSdk, string documentation, string expectedStaleTokens)
+    {
+        ArgumentNullException.ThrowIfNull(pinnedSdk);
+        ArgumentNullException.ThrowIfNull(expectedStaleTokens);
+        FindStaleSdkTokens(documentation, pinnedSdk)
+            .ShouldBe(expectedStaleTokens.Split(',', StringSplitOptions.RemoveEmptyEntries));
     }
 
     [Fact]
@@ -328,6 +345,20 @@ public sealed class DocumentationFitnessTests
     private static bool IsNotBuildOutput(string root, string path)
         => !Path.GetRelativePath(root, path).Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
             && !Path.GetRelativePath(root, path).Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
+
+    private static string[] FindStaleSdkTokens(string documentation, string pinnedSdk)
+    {
+        // Derive the feature band from the pinned SDK so the guard follows the next major/minor too.
+        string band = pinnedSdk[..pinnedSdk.LastIndexOf('.')];
+        return Regex.Matches(
+                documentation,
+                $@"(?<![0-9.]){Regex.Escape(band)}\.[0-9]{{3}}(?![0-9])",
+                RegexOptions.CultureInvariant)
+            .Select(static match => match.Value)
+            .Where(token => !string.Equals(token, pinnedSdk, StringComparison.Ordinal))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+    }
 
     private static string Read(string root, string relativePath)
         => File.ReadAllText(Path.Combine(root, relativePath));

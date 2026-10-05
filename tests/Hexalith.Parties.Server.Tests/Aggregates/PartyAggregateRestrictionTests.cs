@@ -257,6 +257,10 @@ public class PartyAggregateRestrictionTests {
             nameof(MarkErasureVerified),
             nameof(CompletePartyErasure),
             nameof(CancelPartyErasure),
+            nameof(ProvisionAgentParty), // Creation-only, never mutates a restricted party: an unmarked existing party gets occupied-unmarked-identity, a marked agent party with identical intent replays its original result with no events, otherwise intent-conflict; invalid authorization gets authority-unavailable.
+            nameof(EstablishHumanActorBinding), // Never mutates a restricted party: CanBind refuses it with binding-unavailable, an exact retry replays with no events, and a reused LogicalId with another digest gets intent-conflict.
+            nameof(RebindHumanActorBinding), // Never mutates a restricted party: CanBind refuses it with binding-unavailable, an exact retry replays with no events, and a reused LogicalId with another digest gets intent-conflict.
+            nameof(RevokeHumanActorBinding), // Never mutates a restricted party: CanBind refuses it with binding-unavailable, an exact retry replays with no events, and a reused LogicalId with another digest gets intent-conflict.
         ];
 
         // Get all Handle methods from PartyAggregate

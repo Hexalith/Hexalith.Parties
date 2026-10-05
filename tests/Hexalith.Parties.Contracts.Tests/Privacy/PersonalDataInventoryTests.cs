@@ -84,6 +84,7 @@ public sealed class PersonalDataInventoryTests
             [Key(typeof(PartyCreated), nameof(PartyCreated.Type))] = Classification.NonPersonalMetadata,
             [Key(typeof(PartyCreated), nameof(PartyCreated.PersonDetails))] = Classification.PersonalDataContainer,
             [Key(typeof(PartyCreated), nameof(PartyCreated.OrganizationDetails))] = Classification.TypeDependentContainer,
+            [Key(typeof(PartyCreated), nameof(PartyCreated.CreatedAt))] = Classification.NonPersonalMetadata,
             [Key(typeof(PersonDetailsUpdated), nameof(PersonDetailsUpdated.PersonDetails))] = Classification.PersonalDataContainer,
             [Key(typeof(OrganizationDetailsUpdated), nameof(OrganizationDetailsUpdated.OrganizationDetails))] = Classification.TypeDependentContainer,
             [Key(typeof(PartyDisplayNameDerived), nameof(PartyDisplayNameDerived.DisplayName))] = Classification.PersonalData,
@@ -116,6 +117,14 @@ public sealed class PersonalDataInventoryTests
             [Key(typeof(PartyState), nameof(PartyState.RestrictionReason))] = Classification.DeferredPrivacyDesign,
             [Key(typeof(PartyState), nameof(PartyState.ErasureStatus))] = Classification.NonPersonalMetadata,
             [Key(typeof(PartyState), nameof(PartyState.ErasedAt))] = Classification.NonPersonalMetadata,
+            [Key(typeof(PartyState), nameof(PartyState.HasBeenCreated))] = Classification.NonPersonalMetadata,
+            [Key(typeof(PartyState), nameof(PartyState.HumanBindingVersion))] = Classification.NonPersonalMetadata,
+            [Key(typeof(PartyState), nameof(PartyState.AgentProvisioning))] = Classification.PersonalData,
+
+            // DW-129: the actor-binding history carries ActorId / OperatorActorId; its classification
+            // and snapshot-protection evidence stay open under DW-129.
+            [Key(typeof(PartyState), nameof(PartyState.HumanActorBindings))] = Classification.DeferredPrivacyDesign,
+            [Key(typeof(PartyState), nameof(PartyState.HumanActorTransitions))] = Classification.DeferredPrivacyDesign,
 
             [Key(typeof(PartyDetail), nameof(PartyDetail.Id))] = Classification.NonPersonalMetadata,
             [Key(typeof(PartyDetail), nameof(PartyDetail.Type))] = Classification.NonPersonalMetadata,
@@ -218,6 +227,20 @@ public sealed class PersonalDataInventoryTests
             .ToArray();
 
         unexpectedlyMarked.ShouldBeEmpty("D6 keeps organization entity fields unmarked until type-dependent v1.1 handling is accepted.");
+    }
+
+    [Fact]
+    public void NonPersonalMetadataProperties_RemainUnmarked()
+    {
+        string[] unexpectedlyMarked = s_expectedClassifications
+            .Where(kvp => kvp.Value is Classification.NonPersonalMetadata)
+            .Select(kvp => ResolveProperty(kvp.Key))
+            .Where(property => property.IsDefined(typeof(PersonalDataAttribute), inherit: true))
+            .Select(property => $"{property.DeclaringType!.Name}.{property.Name}")
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        unexpectedlyMarked.ShouldBeEmpty("A [PersonalData]-marked property cannot be classified as non-personal metadata.");
     }
 
     [Fact]

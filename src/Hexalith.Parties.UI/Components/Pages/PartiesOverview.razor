@@ -10,7 +10,7 @@
 <PageTitle>@Localizer["Title"]</PageTitle>
 <FcPageLayout Mode="FcPageLayoutMode.Constrained">
     <FcPageHeader Heading="@Localizer["Title"]" HeadingTabIndex="-1" />
-    <FcPageTabs ModuleRoute="/parties" DefaultTabId="overview" AriaLabel="@Localizer["TabsLabel"]" TestId="parties-overview-tabs">
+    <FcPageTabs @attributes="ModuleRouteTabAttributes" AriaLabel="@Localizer["TabsLabel"]" TestId="parties-overview-tabs">
         <FcPageTab Id="overview" Header="@Localizer["Overview"]">
             <FluentStack Orientation="Orientation.Vertical" VerticalGap="12px" data-testid="parties-overview-destinations">
                 <AuthorizeView Policy="@PartiesUiAuthorization.AdminPolicy">

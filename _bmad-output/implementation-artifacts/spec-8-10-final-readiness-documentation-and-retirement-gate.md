@@ -2,9 +2,9 @@
 title: '8.10 Final readiness, documentation, and retirement gate'
 type: 'refactor'
 created: '2026-08-17'
-status: 'in-progress'
+status: 'done'
 baseline_commit: '37f4ec826c6f4aea4651cfbad94fb6ab7fc4f0a0'
-review_loop_iteration: 2
+review_loop_iteration: 3
 context:
   - '{project-root}/_bmad-output/planning-artifacts/architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md'
   - '{project-root}/_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md'
@@ -353,6 +353,73 @@ The approval authorizes recording, signing, and guarding these source pins only.
 
   Already run 2026-10-05 at the final working-tree identities (Parties `47e2da32` plus the EventStore `v3.113.0` checkout and the `3.113.0` pin), so do not rerun it: `bash scripts/check-no-warning-override.sh && dotnet restore Hexalith.Parties.slnx -p:NuGetAudit=false && dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` exited 0 with **Build succeeded, 0 Warning(s), 0 Error(s)** in 00:02:02. The former 3 CS0234 DW-124 errors are gone.
 
+### Closure-blocker resolution: DW-140, DW-141, DW-142 — 2026-10-05
+
+**State.** Parties `75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6` committed EventStore `865cd9e4`, so `git ls-tree HEAD references/` now records all eight final-set identities and the two committed-gitlink assertions should pass. The remaining closure failures are DW-140 (Server.Tests 1), DW-141 (UI.Tests 4), and DW-142 (Contracts.Tests 1).
+
+**Decisions, Administrator / jpiquot, 2026-10-05 (Ask First, answered).** Story 8.10 resolves the three entries, then proceeds toward closure only if every gate is green:
+1. **DW-140 (I7): exempt, then prove refusal.** Add `ProvisionAgentParty`, `EstablishHumanActorBinding`, `RebindHumanActorBinding`, and `RevokeHumanActorBinding` to the `exempt` inventory, each with a one-line justification. Production handlers stay unchanged. Provisioning is creation-only: a restricted party already exists, so the handler rejects it as an occupied identity, and an exact retry emits no events. The binding handlers refuse a restricted party through `CanBind` (`IsRestricted: false`) with `HumanActorBindingRejected("binding-unavailable")`, and an exact retry of a recorded transition emits no events.
+2. **DW-142 (I8): classify.** `PartyCreated.CreatedAt`, `PartyState.HasBeenCreated`, `PartyState.HumanBindingVersion`, and `PartyState.AgentProvisioning` (a non-natural agent organization) are `NonPersonalMetadata`. `PartyState.HumanActorBindings` and `PartyState.HumanActorTransitions` (they carry `ActorId` / `OperatorActorId`) are `DeferredPrivacyDesign`, bound to open DW-129. No `[PersonalData]` attribute or contract changes. **Amended 2026-10-05 after review (Edge 17), Administrator / jpiquot:** `PartyState.AgentProvisioning` is already marked `[PersonalData]` (`PartyState.cs:19-20`, identity feature `37d87f5a`), so it is classified `PersonalData`, not `NonPersonalMetadata`. A new inventory guard requires every `NonPersonalMetadata` row to be unmarked. The other five rows stand.
+3. **DW-141: gate behind source mode.** Packaged Shell `4.5.0` lacks both `FcPageTabs.ModuleRoute` and `FcPageTabs.DefaultTabId`. Pass `ModuleRoute="/parties"` and `DefaultTabId="overview"` only when `HFC_ROUTE_OPTIONS` is defined, through an `@attributes` dictionary in a new `PartiesOverview.razor.cs` partial (empty in package mode), matching `47e2da32`.
+
+No dependency, submodule, owner-repository, rollback-deletion, or PRD change. Do not stage or commit.
+
+- [x] `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateRestrictionTests.cs` -- decision 1 exemptions with justifications. — Reverted 2026-10-05 for review loop 3, then re-derived the same day per KEEP: the four commands are in `exempt`, each comment worded per the loop-3 patch.
+- [x] `tests/Hexalith.Parties.Server.Tests/Aggregates/HumanActorBindingTests.cs` -- reuse the existing fixtures to add discriminating coverage. An Establish that succeeds on the unrestricted person party is refused with `binding-unavailable` and no events after `ProcessingRestricted` is applied. Rebind and Revoke behave the same on a bound party that is then restricted. — Reverted 2026-10-05 for review loop 3, then re-derived the same day per KEEP: the helpers and the three `Restricted*_Refuses*ThatSucceedsUnrestricted` facts pass (Server.Tests 259/259).
+- [x] `tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs` -- decision 2 rows. — Reverted 2026-10-05 for review loop 3, then re-derived the same day per KEEP with amended decision 2 (`AgentProvisioning` = `PersonalData`).
+- [x] `src/Hexalith.Parties.UI/Components/Pages/PartiesOverview.razor` and new `PartiesOverview.razor.cs` -- decision 3. — Reverted 2026-10-05 for review loop 3, then re-derived the same day per KEEP: `@attributes="ModuleRouteTabAttributes"` plus the new `PartiesOverview.razor.cs` (empty in package mode); all five `PartiesOverviewTests` pass and the source-mode branch compiles.
+- [x] `_bmad-output/implementation-artifacts/deferred-work.md` -- DW-140/141/142: `status: done 2026-10-05` with `decision:` and `resolution:` lines naming the tests. DW-142's resolution names DW-129 as the open carrier for the binding classification. DW-139: add `PartiesOverview.razor` `ModuleRoute`/`DefaultTabId` to its location and exit proof. — done 2026-10-05.
+- [x] Current claims that the EventStore gitlink commit is pending -- spine frontmatter `open-condition`, `docs/architecture.md` (EventStore row), and the current 8.3 matrix EventStore rows: cite `75b4fa1f` as the commit. Keep dated sections as history. Append a dated spine §13 paragraph for decisions 1-3. — done 2026-10-05: spine `open-condition` and the §7 I4 row, the `docs/architecture.md` EventStore row, and the 8.3 reconciliation paragraph plus EventStore source row cite `75b4fa1f`; the dated I20 rows, signoff comments, and dated sections stay as history; spine §13 has the dated paragraph.
+- [x] Verify, then record in `tests/test-summary.md`: add a dated section and update the canonical `### Validation receipts` rows, stamped with the final set and the Parties tree under test (`75b4fa1f` plus this diff). Run: — Reverted 2026-10-05 for review loop 3, then rerun the same day with the loop-3 amendment's ordered verification; the receipts are in the test-summary review loop 3 subsection and the re-stamped canonical rows.
+  - the warning-policy, restore, and Release solution build command above (code changed, so rerun it);
+  - `dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release -m:1 -p:HexalithFrontComposerFromSource=true -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` (diagnostic source-mode compile of the gated branch; record separately; not a canonical row);
+  - `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` (expected 0 failures plus the six Story 12 skips) and `bash scripts/gitlink-rc-gate.sh`;
+  - the npm/typecheck/Playwright command and the package/consumer command in `## Verification`.
+
+  Fix only failures caused by this section. Record any other failure as a new DW entry and leave closure blocked. A canonical row reads `Pass` only when its lane ran green at this tree. Append a dated 8.10 comment in `sprint-status.yaml`; the value stays `in-progress` because the workflow's review step owns status transitions. Stop processes by PID, never with `pkill -f Hexalith.Parties.UI`.
+
+Acceptance for this section:
+- Given a restricted person party, when an otherwise-valid Establish, Rebind, or Revoke runs, then it is rejected with `binding-unavailable` and no events, while the same command succeeds unrestricted.
+- Given package mode (Shell `4.5.0`), when `PartiesOverview` renders, then all `PartiesOverviewTests` pass; given source mode, the gated `ModuleRoute`/`DefaultTabId` branch compiles.
+- Given the inventory, when Contracts.Tests runs, then every inspected property is classified and no `[PersonalData]` marking changed.
+
+### Review loop 3 amendment — 2026-10-05
+
+**Why.** The review of the closure-blocker resolution (Review Triage Log, 2026-10-05) found one bad_spec entry. Decision 2 classified `PartyState.AgentProvisioning` as `NonPersonalMetadata`, but the property is already marked `[PersonalData]`. The Administrator corrected decision 2 (see above) and deferred the E2E fixture-scope gap as DW-143, which already exists. The code of the section above was reverted. Re-derive it per the KEEP instructions in `## Spec Change Log`, apply the corrected decision 2, and apply the surviving review patches. No dependency, submodule, owner-repository, rollback-deletion, `[PersonalData]`-attribute, production-handler, or PRD change. Do not stage or commit.
+
+- [x] Re-derive the reverted tasks in the section above (restriction exemptions, binding refusal tests, inventory rows, `PartiesOverview` gate) per KEEP, then tick them. — done 2026-10-05: the restriction exemptions, binding refusal tests, inventory rows, and `PartiesOverview` gate were re-created per KEEP; the tasks above are ticked.
+- [x] `tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs` -- add `PartyState.AgentProvisioning` = `Classification.PersonalData` (amended decision 2), plus a `[Fact]` asserting that no `NonPersonalMetadata` row's property carries `[PersonalData]` (mirror `OrganizationEntityFields_RemainUnmarkedByDefault`). — done 2026-10-05: the row reads `Classification.PersonalData`, and `NonPersonalMetadataProperties_RemainUnmarked` passes; a mutation run that reclassified `AgentProvisioning` as `NonPersonalMetadata` made it fail.
+- [x] `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateRestrictionTests.cs` (Blind 6 / Edge 19 / Edge 20) -- each of the four exempt comments says the command never mutates a restricted party and lists the actual outcomes. Provisioning: an unmarked existing party gets `occupied-unmarked-identity`, a marked agent party with identical intent replays its original result with no events, otherwise `intent-conflict`, and invalid authorization gets `authority-unavailable`. Binding: a restricted party gets `binding-unavailable`, an exact retry replays with no events, and a reused LogicalId with another digest gets `intent-conflict`. — done 2026-10-05: each of the four comments says the command never mutates a restricted party and lists those outcomes.
+- [x] `tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs`: — done 2026-10-05: `IsCleanPass` accepts only an exact `Pass` and both checks use it; the three qualified values and a new `AccessibilityStampIsRequiredOnlyForACleanPass` theory (red receipts without the SHA produce no gap) pass.
+  - Edge 11: `DescribeReceiptGaps` accepts only an exact `Pass` after trimming `*` and spaces. Add `Pass with errors`, `Pass (not run)`, and `Pass (partial)` to `QualifiedPassWithMissingValidationFailsClosed`.
+  - Edge 12: `ValidationReceiptSectionResolvesToTheCurrentTableAndIsWellFormed` checks the FrontComposer SHA only when the Playwright Result is a clean `Pass`.
+- [x] `tests/Hexalith.Parties.Tests/FitnessTests/DocumentationFitnessTests.cs` (Blind 13 / Edge 16) -- `CodeMapDocumentsThePinnedSdkVersion` also asserts that every `10.0.\d{3}` token in each document equals the pinned SDK. — done 2026-10-05: `FindStaleSdkTokens` runs for each document; all seven list only `10.0.401`, and a new `StaleSdkTokensAreReportedBesideThePinnedSdk` theory reports a stale token beside the pinned one.
+- [x] `Directory.Packages.props` (Blind 12) -- extend the EventStore pin comment with its removal condition: drop the pin once the Builds catalog selects `3.113.0` or later. Comment only; the value is unchanged. — done 2026-10-05: the comment names the removal condition; the value stays `3.113.0`.
+- [x] `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md` (Blind 1) -- in the current reconciliation rows for Commons, Builds, FrontComposer, Memories, Tenants, PolymorphicSerializations, and AI.Tools, replace "at Parties HEAD `47e2da3244fd7d6d14e39bc30513b23504e9bc27`" with "at Parties `75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`". Dated I20 rows stay as written. — done 2026-10-05: the seven rows cite `75b4fa1f`; the dated I20 row keeps `47e2da32`.
+- [x] `_bmad-output/implementation-artifacts/deferred-work.md`: — done 2026-10-05: DW-142's decision and resolution are amended and name the new guard, DW-129 and DW-92 have dated `note:` lines, and DW-143 is unchanged.
+  - DW-142: amend the decision and resolution for `AgentProvisioning` = `PersonalData` (Edge 17 renegotiation) and name the new guard.
+  - DW-129 (Blind 8): add a `note:` that its exit proof also classifies `PartyState.HumanActorBindings` / `HumanActorTransitions` in `PersonalDataInventoryTests` (currently `DeferredPrivacyDesign`).
+  - DW-92 (Blind 11 group): add a dated `note:` that the effective EventStore version is the Parties pre-import pin `3.113.0` (catalog default `3.112.0`). The test-side lookups are DW-92 consolidation scope: `CommonsHttpRestoreRoutingTests`, `PartiesContainerPublishWorkflowTests.ReadEffectiveEventStoreVersion`, the `DocumentationFitnessTests` catalog evaluator, the `AccessibilityStyleGuardTests` FrontComposer lookup, and `PlatformApiPrerequisitesTests.EventStorePackageVersion`.
+  - Leave DW-143 unchanged.
+- [x] `_bmad-output/implementation-artifacts/sprint-status.yaml` (Blind 14) -- in the G5 retention action comment, change "Historical receipt:" to "Historical receipt (2026-08-01; superseded by the 2026-10-03 line below):". Also append a dated 8.10 loop-3 comment; the value stays `in-progress`. — done 2026-10-05: the label is changed and the dated loop-3 comment is appended; the value stays `in-progress`.
+- [x] `docs/component-inventory.md` (Blind 15) -- the banner says the external-dependency versions were refreshed 2026-10-04. — done 2026-10-05: the banner says refreshed 2026-10-04.
+- [x] Spine §13 and the test-summary closure-blocker section: correct their `AgentProvisioning` wording and add a dated loop-3 line. — done 2026-10-05: spine §13 decision 2 is corrected and has a dated *Review loop 3* paragraph; the test-summary closure-blocker authority text and change bullet are corrected, and the loop-3 subsection closes that section.
+- [x] Verify, then record in `tests/test-summary.md`: add a dated loop-3 subsection, and re-stamp the six canonical Verification rows plus "Parties UI tests" and "Static diff" to "`75b4fa1f` plus the loop-3 diff". Producer rows keep their 2026-10-05 reruns, because the identities are unchanged. Run, in order: — done 2026-10-05: all seven steps ran green in order and are recorded in the test-summary review loop 3 subsection; the eight rows are re-stamped and the producer rows are unchanged.
+  1. the warning-policy, restore, and Release solution build command;
+  2. the diagnostic source-mode `Hexalith.Parties.UI` build;
+  3. the full Release lane plus both `gitlink-rc-gate.sh` modes;
+  4. the package/consumer command;
+  5. npm/typecheck/Playwright;
+  6. the three fitness classes after the record edits;
+  7. `git -c core.whitespace=cr-at-eol diff --check`.
+
+  Record real results, fix only failures caused by this amendment, and stop processes by PID.
+
+Acceptance for this section:
+- Given `PartyState.AgentProvisioning` marked `[PersonalData]`, when Contracts.Tests runs, then it is classified `PersonalData`, and any `NonPersonalMetadata` row carrying `[PersonalData]` fails the new guard.
+- Given a receipt Result other than an exact `Pass`, when closure fitness evaluates it, then it is a gap; given a red Playwright receipt without the SHA, the structural test still passes.
+- Given a maintained document that lists a stale `10.0.xxx` SDK beside the pinned one, when documentation fitness runs, then it fails.
+
 **Acceptance Criteria:**
 - Given an incomplete 8.6-8.9 disposition, when closure fitness runs, then any missing owner, proof, rollback, or evidence names the gap and prevents closure.
 - Given package/source modes, when identity fitness runs, then receipts equal selected dependencies and unconsumed surfaces have explicit deferrals.
@@ -400,6 +467,26 @@ DW-124 retains FrontComposer release/catalog/consumer proof; the remaining I13
 content-control focus evidence and applicable I20 approvals remain pending.
 Story 8.10 and Epic 8 stay in progress; Stories 8.7–8.9 stay blocked. The frozen
 intent, original baseline, and frontmatter status are preserved.
+
+## Spec Change Log
+
+### 2026-10-05 — review loop 3 (bad_spec: Edge 17)
+
+- **Trigger:** Review of the closure-blocker resolution, Edge 17. `PartyState.AgentProvisioning` is marked `[PersonalData]`, yet decision 2 classified it `NonPersonalMetadata`, and no inventory guard caught the contradiction.
+- **Amended:** decision 2 in *Closure-blocker resolution* (Administrator / jpiquot renegotiation: `AgentProvisioning` → `PersonalData`), plus the new *Review loop 3 amendment* section with the surviving review patches. The Administrator deferred Verification 1 as DW-143. The frozen block is untouched.
+- **Known-bad state avoided:** an inventory that classifies a `[PersonalData]`-marked property as non-personal with no test to notice, which would let the inventory and the protection pipeline disagree silently.
+- **KEEP** (the first pass was verified green; re-create these changes as described here):
+  - `PartiesOverview.razor`: `<FcPageTabs @attributes="ModuleRouteTabAttributes" AriaLabel=… TestId="parties-overview-tabs">`, with `ModuleRoute` and `DefaultTabId` removed from the markup.
+  - New `PartiesOverview.razor.cs`:
+    - namespace `Hexalith.Parties.UI.Components.Pages`, `public partial class PartiesOverview`;
+    - `private static IReadOnlyDictionary<string, object> ModuleRouteTabAttributes { get; }`, an Ordinal dictionary holding `["ModuleRoute"] = "/parties"` and `["DefaultTabId"] = "overview"` only under `#if HFC_ROUTE_OPTIONS`, and empty otherwise;
+    - XML docs naming packaged Shell 4.5.0 and DW-139.
+  - `HumanActorBindingTests.cs`: helpers `Rebind(DateTimeOffset)` (SecondActor, ExpectedPartyRevision 2, binding version 1), `Revoke(DateTimeOffset)` (FirstActor, revision 2, version 1), `Restriction()` (`ProcessingRestricted` for party-1/tenant-a), `BoundHuman()` (applies the Establish event), and `ShouldBeRefusedAsUnavailable`. The three facts are `RestrictedPersonParty_RefusesEstablishThatSucceedsUnrestricted`, `RestrictedBoundParty_RefusesRebindThatSucceedsUnrestricted`, and `RestrictedBoundParty_RefusesRevokeThatSucceedsUnrestricted`. Each handles the command on the unrestricted state without applying the result, applies `ProcessingRestricted` to the same state, then asserts one `HumanActorBindingRejected("binding-unavailable")`.
+  - `PartyAggregateRestrictionTests.cs`: the four commands are in `exempt` with one-line comments, worded per the loop-3 patch.
+  - `PersonalDataInventoryTests.cs`:
+    - `PartyCreated.CreatedAt`, `PartyState.HasBeenCreated`, and `PartyState.HumanBindingVersion` are `NonPersonalMetadata`;
+    - `HumanActorBindings` and `HumanActorTransitions` are `DeferredPrivacyDesign`, with a DW-129 comment;
+    - `AgentProvisioning` follows the amended decision 2.
 
 ## Review Triage Log
 
@@ -463,6 +550,124 @@ in-progress and sprint status synchronized. Full Release tests, package/API and
 package-only consumers remain blocked. No commit, push, owner edit, catalog
 change, or rollback deletion occurred. Exact commands and receipts are in
 `_bmad-output/implementation-artifacts/tests/test-summary.md`.
+
+### Review of the closure-blocker resolution — 2026-10-05
+
+Review content is the delta from the last fully reviewed tree. The 2026-10-04
+baseline review read the whole 20 MB `37f4ec82…` diff at Parties `c782b68c…`. This
+round reviews `git diff c782b68c5cf56a19e6a2a237f5f44e3043d5e461` against the
+working tree, plus the untracked `PartiesOverview.razor.cs`: 447,490 bytes,
+covering commits `7c720c7f`, `2f6157d3`, `2bdb303b`, `47e2da32`, `75b4fa1f` and
+this pass's diff. All three layers returned: Blind 17 findings, Edge 22,
+Verification 2 gaps plus 1 other. No row matches a 2026-10-04 row, so nothing is
+carried.
+
+| Finding | Verdict | Evidence and route |
+| --- | --- | --- |
+| Edge 17 — `AgentProvisioning` is marked `[PersonalData]` | high | `PartyState.cs:19-20` marks `AgentProvisioning` `[PersonalData]`. Decision 2 and the new inventory row classify it `NonPersonalMetadata`, and no inventory test requires `NonPersonalMetadata` rows to be unmarked. Decision 2 rested on a wrong premise in the triage question ("non-natural agent organization"). bad_spec: decision 2 needs Administrator renegotiation. |
+| Verification 1 — E2E fixture routes get no shell scope | medium | Pre-verified gap. The AdminPortal E2E fixture keeps `NullUserContextAccessor`, and the `2cc8dd3a` shell renders `FcScopeBlocked` without a current scope. The admin, consumer and picker Playwright specs therefore cannot observe their flows. Only `test:a11y` is recorded, and CI runs no e2e job. The Code Map scoped the 2026-10-04 repair to the specimen route, and the spec does not settle a fixture user-context. intent_gap: Administrator. |
+| Verification other — fixture routes untracked | medium | Same root cause and route as Verification 1. |
+| Edge 11 — qualified pass accepted | medium | `DescribeReceiptGaps` accepts `Pass with errors`, `Pass (not run)` and `Pass (partial)`, because none contains block, unvalidated, fail or skip. Patch: accept only an exact `Pass` after trimming bold markup, and add those values to the qualified-pass theory. |
+| Edge 12 — SHA check fails honest red receipts | low | The structural test checks the FrontComposer SHA unless the Playwright Result says "unvalidated". An honest `**Blocked**` receipt without the SHA would break the build, contrary to the test's own comment. Patch: check the SHA only when that Result is a clean `Pass`. |
+| Blind 1 — matrix rows cite the old HEAD | low | Seven current 8.3 rows (lines 84-90) say "at Parties HEAD `47e2da32`", but HEAD is now `75b4fa1f`. Rows 154-155 are dated I20 history. Patch: cite `75b4fa1f` explicitly in the seven current rows. |
+| Blind 6 — DW-140 justifications imprecise | low | The comments say a restricted party "is rejected as an occupied identity" or gets `binding-unavailable`. The code also replays a marked agent party's original result, answers `intent-conflict` to a reused LogicalId with another digest, and `authority-unavailable` to bad authorization. The retry-before-`CanBind` ordering is already exercised by `RefreshedOperatorProof_RetriesImmutableOriginalAfterStateBecomesInactive`. Patch: reword the four comments to say "never mutates a restricted party" and list those exact outcomes. |
+| Edge 19 — provisioning outcome misstated | low | Same root cause as Blind 6; same patch. |
+| Edge 20 — intent-conflict on a restricted party | low | Same root cause as Blind 6; same patch. |
+| Blind 8 — DW-129 does not carry the classification | low | DW-129's summary and exit proof cover snapshot-protection effectiveness only, yet DW-142 names it as the carrier. Patch: add a DW-129 note that its exit proof also classifies `PartyState.HumanActorBindings` and `HumanActorTransitions` in `PersonalDataInventoryTests`. |
+| Blind 11 — divergent version lookups; DW-92 stale | low | The test-side lookups agree today, because only EventStore has a root pin, but would diverge for a root pin of another package. DW-92 still says to read EventStore from the Builds catalog, though the Parties pin governs. Patch: append a dated DW-92 note naming the effective pin and listing the test-side lookups as DW-92 scope. |
+| Edge 8 — style guard reads the FrontComposer catalog only | low | Same root cause as Blind 11; covered by that patch. |
+| Edge 9 — mini-evaluator ignores conditions | low | Same root cause as Blind 11; covered by that patch. |
+| Edge 15 — root-pin condition unchecked | low | Same root cause as Blind 11; covered by that patch. |
+| Edge 21 — "as MSBuild does" claim | low | Same root cause as Blind 11; covered by that patch. |
+| Blind 12 — pin has no removal condition | low | `Directory.Packages.props:4-5` explains the pin but not when to drop it. Patch: extend the comment with the removal condition (drop it once the Builds catalog selects `3.113.0` or later). |
+| Blind 13 — SDK guard lost negative checks | low | `c782b68c` had `ShouldNotContain("10.0.400")` and `("10.0.302")`; a stale SDK listed beside the pinned one now passes. All seven documents list only `10.0.401`. Patch: assert that every `10.0.\d{3}` token in each document equals the pinned SDK. |
+| Edge 16 — SDK guard deletion | low | Same root cause as Blind 13; same patch. |
+| Blind 14 — G5 comment only partly relabelled | low | The present-tense sentences after "Historical receipt:" read as current until the 2026-10-03 line. Patch: label the paragraph as the 2026-08-01 receipt, superseded by the 2026-10-03 line. |
+| Blind 15 — component-inventory banner stale | low | The banner says versions were refreshed 2026-09-05, but this delta changed Aspire, DAPR and FluentUI. Patch: correct the banner. Extending the table guard is rejected (new guard, low). |
+| Blind 2 — spec body contradicts the status | low | The dated sections still say in-progress. The fix would edit this build's spec. Reject. |
+| Edge 18 — "no events" wording | low | A rejection appends one `HumanActorBindingRejected` event, which the tests assert, and DW-140 says "no state-changing events". Only the spec's acceptance wording is loose, and fixing it would edit this build's spec. Reject. |
+| Blind 3 — specimen scope survives in-circuit navigation | low | Real, but the wrapper exists only in Development/Test with the specimen flag, and the fix needs forceLoad or circuit-snapshot logic. Reject. |
+| Edge 4 — in-circuit specimen exit | low | Same root cause as Blind 3. Reject. |
+| Edge 2 — PathBase, case or trailing slash | low | The comparison is an Ordinal `AbsolutePath` match. The specimen is a Development/Test Playwright fixture visited at its exact path. Reject. |
+| Edge 3 — torn TenantId/UserId read | low | Needs a navigation between two reads by one consumer. Blazor serializes circuit work, and the wrapper is Development/Test only. Reject. |
+| Edge 1 — uninitialized NavigationManager | maybe-false | No out-of-circuit `IUserContextAccessor` consumer exists in Parties or the FrontComposer Shell. If one appeared, it would throw only with the Development/Test specimen enabled, so the impact is low. Reject. |
+| Edge 5 — keyed descriptor | low | No keyed `IUserContextAccessor` is registered, and one would fail loudly at startup. Reject. |
+| Edge 6 — lifetime or disposal | false | `NullUserContextAccessor`, `ClaimsPrincipalUserContextAccessor` and `ServerCircuitUserContextAccessor` are scoped registrations that implement only `IUserContextAccessor`. Reject. |
+| Blind 4 — Register type path and Program gate untested | low | The type path (Test-env `NullUserContextAccessor`) runs in the green Playwright specimen lane. The Production theory row returns the authenticated context, and a missing registration fails loudly. Reject. |
+| Edge 7 — older sibling FrontComposer root | low | The root gitlink `2cc8dd3a` carries the route options, and an older sibling root fails loudly at compile time. Reject. |
+| Blind 9 — source branch only compiled | low | Both keys match the source `FcPageTabs` parameters at `2cc8dd3a`. Only the developer/Playwright source graph takes this branch, and no spec visits `/parties`. Tying the gate to source mode is decision 3. Reject; DW-139's exit proof removes the gate with green tests. |
+| Verification 2 — source branch never rendered | low | Pre-verified gap. Same root cause as Blind 9, and it affects the source graph only. The filed disposition is defer, but this change caused it, so defer does not apply. Reject (low; a new source-mode test lane). |
+| Blind 16 — superseded approvals still pass the RC gate | low | True: `ledger_has` accepts any `validated-advance` row. The 8.3 rollback paths deliberately name prior approved identities (for example Builds `145ae921`), and a withdrawal state needs a new ledger disposition and gate branch. Reject. |
+| Edge 14 — superseded signoff rows | low | Same root cause as Blind 16. Reject. |
+| Edge 13 — heading parser | low | test-summary has no fenced or setext headings, and the fix adds parsing logic. Reject. |
+| Blind 5 — fail-closed rule drops honest skip wording | false | The six Story 12 skips stay verbatim in the evidence column, and the gate deliberately treats any qualified Result as a gap. Reject. |
+| Blind 7 — revoke refused while restricted | false | Decision 1 chose "exempt + prove refusal" over the offered "allow revoke" option, and spine §13 records it. Reject. |
+| Blind 10 — package-mode reserved segments untested | false | Packaged Shell `4.5.0` has no `FcModuleLandingPage` or `/{Module}` route (DW-139), so nothing collides in package mode. Reject. |
+| Blind 17 — DW-127–138 format | false | They follow the step-04 defer template (`source_spec`/`summary`/`evidence`) plus origin, location, severity and status. Reject. |
+| Edge 10 — catalog duplicates throw | false | An exception on an input the catalog does not contain is a loud failure, not a silent pass. Reject. |
+| Edge 22 — no focused-fitness receipt row | false | The three fitness classes live in `Parties.Tests`, which the "All .NET test projects" receipt covers (612/612). Reject. |
+
+Routing: there is one bad_spec entry (Edge 17) and one intent_gap entry
+(Verification 1 and other). Both trigger a loopback and need the
+Administrator. The patch entries (Edge 11, Edge 12, Blind 1, Blind 6/Edge
+19/20, Blind 8, Blind 11 group, Blind 12, Blind 13/Edge 16, Blind 14, Blind 15)
+survive the loopback. No owner commitment, release, dependency change, or
+deletion is authorized by this triage.
+
+Resolution: the Administrator corrected decision 2 (`AgentProvisioning` →
+`PersonalData`, plus a guard) and deferred Verification 1 as DW-143. Review loop
+3 re-derived the code with the patches.
+
+### Review loop 3 — 2026-10-05
+
+This round reviews the same delta scope, `c782b68c…` to the working tree plus the
+untracked `PartiesOverview.razor.cs`: 488,177 bytes. All three layers returned:
+Blind 14 findings, Edge 18 (plus 1 claim), and Verification 2 gaps plus 1 other.
+Rows marked `carried` match a 2026-10-05 row whose code still reads as that row
+describes. They keep that row's verdict and route and are not patched again.
+
+| Finding | Verdict | Evidence and route |
+| --- | --- | --- |
+| L3 Blind 2 — gate tied to source mode, not capability | low | carried — Blind 9. Reject. |
+| L3 Blind 10 — superseded spec sections read as current | low | carried — Blind 2. Reject. |
+| L3 Verification 1 — specimen host wiring checked only by Playwright | low | carried — Blind 4 (same `Register`/`Program.cs:203-206` claim). Reject. |
+| L3 Verification 2 — source route-options branch unasserted | low | carried — Verification 2. Reject. |
+| L3 Verification other — style guard ignores a FrontComposer root pin | low | carried — Edge 8 (patched through the DW-92 note). |
+| L3 Edge 1 — superseded signoff rows still authorize | low | carried — Blind 16 / Edge 14. Reject. |
+| L3 Edge 3 — CommonsHttp root-pin condition | low | carried — Edge 15. |
+| L3 Edge 4 — style guard catalog-only lookup | low | carried — Edge 8. |
+| L3 Edge 5 — catalog conditions or duplicates | low | carried — Edge 9 / Edge 10. |
+| L3 Edge 9 — uninitialized NavigationManager | maybe-false | carried — Edge 1. Reject. |
+| L3 Edge 10 — specimen path case, slash, or PathBase | low | carried — Edge 2. Reject. |
+| L3 Edge 11 — torn TenantId/UserId read | low | carried — Edge 3. Reject. |
+| L3 Edge 12 — keyed, singleton, or missing original accessor | low | carried — Edge 5 / Edge 6 / Blind 4. Reject. |
+| L3 Edge 18 — "no events" claim | low | carried — Edge 18. Reject. |
+| L3 Blind 4 — closure gate checks identity only on the Playwright row | medium | True: the other required rows accept a stale `Pass`. The behavior is pre-existing: `c782b68c` had the same Playwright-only SHA check and identity-blind `DescribeReceiptGaps`. Defer (DW-144). |
+| L3 Edge 16 — stale `Pass` from an earlier identity passes the gate | medium | Same root cause as L3 Blind 4. Defer (DW-144). |
+| L3 Blind 5 — identity-feature contracts missing from the personal-data inventory | medium | True: `s_inspectedTypes` omits the binding commands, evidence, and nested identity records. These were added in `37d87f5a`, before this delta, and DW-142 classified only the six properties that failed. Pre-existing coverage gap. Defer (DW-145). |
+| L3 Blind 1 — pin has no automated tripwire | low | Any catalog move needs a Builds gitlink advance, which fails `PlatformApiPrerequisitesTests` (`BuildsSha`) until reconciled, and the pin comment now states the removal condition. Reject. |
+| L3 Edge 2 — catalog passes the root pin silently | low | Same root cause as L3 Blind 1. Reject. |
+| L3 Blind 3 — tree under test not content-addressed | low | The next commit is made from this working tree, and the record edits made after the lanes change no build input. A digest procedure is more than a direct fix. Reject. |
+| L3 Blind 6 — exemption-comment outcomes untested | low | `ProvisionAgentParty` never reads `IsRestricted`, so the existing `AgentPartyProvisioningTests` cover its outcomes. `RetryBinding` runs before `CanBind`, which the inactive-state retry test already exercises. Reject. |
+| L3 Edge 19 — decision 1 wording for agent parties | low | The test comments are already accurate, and fixing the wording would edit this build's spec. Reject. |
+| L3 Blind 7 — I7/I8 decisions recorded only in prose | low | I20's enumerated approval kinds (spine line 337) include neither restriction-inventory exemptions nor inventory classification. The decisions carry the named human and date in DW-140/DW-142 and spine §13. Reject. |
+| L3 Blind 8 — dated I20 rows lack an outcome | low | The decision 1 and decision 2 rows, and the 2026-10-05 `.gitlink-signoff.tsv` comment, still read "commit pending", whereas the five-pin row has an outcome note. Patch: append the outcome (committed in `75b4fa1f`). |
+| L3 Blind 9 — G4 rows omit DW-141 and DW-111; rollback commit unnamed | low | Patch: add the DW-141 gate and the 2026-10-05 DW-111 acceptance to the G4 cells, and name `2b63ab9` in the FrontComposer rollback. |
+| L3 Blind 11 — historical test-summary pointers stale | low | Patch: point both historical sections at the canonical table and the 2026-10-05 sections. |
+| L3 Blind 12 — Code Map omits the newly changed files | low | Fixing it would edit this build's spec. Reject. |
+| L3 Blind 13 — DW-143 under-recorded | low | Patch: add a `decision:` line to DW-143, and note in the canonical Playwright row that only `parties-accessibility.spec.ts` runs (the other specs fall under DW-143). |
+| L3 Blind 14 — RC diff base unexplained | low | Patch: add one test-summary sentence stating what `882c0245` is and why it bounds the RC diff. |
+| L3 Edge 6 — SDK regex hard-codes the 10.0 band | low | Patch: build the pattern from the pinned SDK's major.minor and add a theory case. |
+| L3 Edge 14 — untyped `FcPageTabs` parameter keys | low | Patch: use `nameof(FcPageTabs.ModuleRoute)` / `nameof(FcPageTabs.DefaultTabId)` inside the `#if`, so a source-mode rename fails at compile time. |
+| L3 Edge 7 — private-IP false positive | low | The failure would be loud, no maintained document contains such an address, and the suggested lookahead would miss sentence-final versions. Reject. |
+| L3 Edge 8 — stale Aspire/EventStore tokens | low | It needs a new guard. Reject. |
+| L3 Edge 15 — staged gitlink differs from HEAD | low | The gate proves the committed tree, and the next run sees the staged pointer at HEAD. Reject. |
+| L3 Edge 13 — package mode newly exposes the Shell `/home` route | false | Before `47e2da32` the router already included the Shell assembly through `typeof(FcModuleLandingPage).Assembly`; the commit only changed the anchor type to `FrontComposerShell`. Reject. |
+| L3 Edge 17 — detached-HEAD check deleted | false | A Round 6 review decision (spec line 262, option (a)) restored `ls-tree HEAD` and dropped the branch-name check, because SHA equality plus a clean tree already prove identity. Reject. |
+
+Routing: there is no intent_gap or bad_spec entry. The eight patch entries go to
+the loop-3 implementation agent; DW-144 and DW-145 are appended. No owner
+commitment, release, dependency change, or deletion is authorized by this triage.
 
 ## EventStore Package Update — 2026-10-04
 

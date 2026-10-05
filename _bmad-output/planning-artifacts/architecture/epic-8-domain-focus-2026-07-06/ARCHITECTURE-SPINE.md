@@ -4,10 +4,10 @@ epic: 8
 date: 2026-07-07
 updated: 2026-10-05
 status: final
-amendment: 2026-10-05 final identity/approval reconciliation (Builds/Tenants selection, EventStore 3.113.0 package and source, I16 re-validation approved for the final set, I13/DW-111 accepted deferral — see §13); prior 2026-10-04 identity/documentation reconciliation (Round 6, explicit three-pin approval, then working-tree five-pin approval); prior 2026-09-08 validation-driven (I19/I19a/I20 added; I1/I7/I10/I11/I14/I16 tightened; §2/§4/§5/§7 corrected; Inherited Invariants + Deferred added — see §10); prior 2026-08-18 amendment in §8
+amendment: 2026-10-05 final identity/approval reconciliation (Builds/Tenants selection, EventStore 3.113.0 package and source, I16 re-validation approved for the final set, I13/DW-111 accepted deferral — see §13), then the same-day DW-140/DW-141/DW-142 closure-blocker resolution and its review loop 3 correction (§13); prior 2026-10-04 identity/documentation reconciliation (Round 6, explicit three-pin approval, then working-tree five-pin approval); prior 2026-09-08 validation-driven (I19/I19a/I20 added; I1/I7/I10/I11/I14/I16 tightened; §2/§4/§5/§7 corrected; Inherited Invariants + Deferred added — see §10); prior 2026-08-18 amendment in §8
 classification: post-MVP maintenance (Class C) — zero new PRD FRs
 closes-blocker: "Story 8.1 preserved 'missing Epic 8 architecture spine' blocker"
-open-condition: "The 2026-10-05 final identity set is approved, including EventStore 3.113.0 package and source (EventStore root gitlink commit pending); I16 re-validation is approved but only receipts rerun at the stamped identities count as Pass (see §7a, the 8.3 I20 table, and tests/test-summary.md); I13 is not discharged (accepted DW-111 deferral)"
+open-condition: "The 2026-10-05 final identity set is approved, including EventStore 3.113.0 package and source (EventStore root gitlink committed in Parties `75b4fa1f`); I16 re-validation is approved but only receipts rerun at the stamped identities count as Pass (see §7a, the 8.3 I20 table, and tests/test-summary.md); I13 is not discharged (accepted DW-111 deferral)"
 related:
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-06.md
   - _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-16-g7-g9-tenant-claims-ownership.md
@@ -430,7 +430,7 @@ sprint-status tracks.
 | I1a | Deferred | `8.8-runtime-boundary-cleanup` retains the Parties AppHost until integrated-topology, security, publish, and rollback parity exist; retirement additionally waits for `8.6-residual-review-debt` and `external-runtime-deployment` — every deferral whose exit proof or rollback names the Parties AppHost — to pass or be re-approved (I20) against the successor topology. |
 | I2 | Executable + Deferred | `RetiredLeafProjectFitnessTests` guards the EventStore SDK host shape and retired leaf boundaries at source level; `EventStoreGatewayE2ETests` adds topology-gated coverage (runs fully only with Docker/DAPR available); `8.6-residual-review-debt` owns authenticated end-to-end handler-discovery proof. |
 | I3 | Deferred | `8.6-residual-review-debt` (host/gateway/ACL switch-back seams), `8.7-data-protection-extraction`, `8.8-runtime-boundary-cleanup`, and `8.9-frontcomposer-ui-consolidation` retain every named local rollback path until parity is executable; `external-runtime-deployment` owns the release-recovery rollback path. |
-| I4 | Executable | `PlatformApiPrerequisitesTests` proves committed root gitlinks via `git ls-tree HEAD` plus clean matching checkouts and package/source graphs separately. The 2026-10-05 final set (Administrator / jpiquot, 8.3 I20 rows for decisions 1 and 2) records separately: EventStore package `3.113.0` (Parties pre-import CPM pin) and source `865cd9e49273dffbb1cdae85efeaf1aac322e09e` (tag `v3.113.0`, the same release); Builds `360a2b9c4e96809365a7de785be9a68152d5ac28`; Tenants `72b8e4f508176b69826549e87b7b2a286f607fd1` / package `5.7.0`; Commons HTTP `116d26815eb81e35b3c161e1799e5ee12805fc0a` / package fallback `2.30.1`; FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` / package `4.5.0`; Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e` / package `2.27.1`; PolymorphicSerializations `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375`; AI.Tools `3f194e17174994d308ec84af9ee2b5aa68674d0d`. Every root gitlink except EventStore is committed at Parties HEAD `47e2da3244fd7d6d14e39bc30513b23504e9bc27`; the EventStore gitlink commit is pending (HEAD records the never-approved `0dc44e46ccb7f56c3182b855c21f337173a1307f`), so the committed-tree guard stays red for EventStore until the human commits it. Dated history: never-approved committed EventStore `547c938d52e4fd31b47783b9dd032528a5100549` / `0dc44e46ccb7f56c3182b855c21f337173a1307f` and Tenants `b55f96d89b839fd443ac589835880102add46d64`; superseded, never-committed 2026-10-04 approvals of EventStore `2242ad55a1b678828df8aa093fd92399c29af5bf` and Tenants `04e655cf070b17eced9daefb9eaa87a09ec60e81`; the superseded 2026-10-04 Builds `145ae921d9032f110b7371614939559e0aee202a`, three-pin, and Round 6 selections. Source presence/compile and selection signoff do not certify parity. |
+| I4 | Executable | `PlatformApiPrerequisitesTests` proves committed root gitlinks via `git ls-tree HEAD` plus clean matching checkouts and package/source graphs separately. The 2026-10-05 final set (Administrator / jpiquot, 8.3 I20 rows for decisions 1 and 2) records separately: EventStore package `3.113.0` (Parties pre-import CPM pin) and source `865cd9e49273dffbb1cdae85efeaf1aac322e09e` (tag `v3.113.0`, the same release); Builds `360a2b9c4e96809365a7de785be9a68152d5ac28`; Tenants `72b8e4f508176b69826549e87b7b2a286f607fd1` / package `5.7.0`; Commons HTTP `116d26815eb81e35b3c161e1799e5ee12805fc0a` / package fallback `2.30.1`; FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` / package `4.5.0`; Memories `5b43fe2f8a0f04dc021921a077dff1a573c2ce5e` / package `2.27.1`; PolymorphicSerializations `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375`; AI.Tools `3f194e17174994d308ec84af9ee2b5aa68674d0d`. Every root gitlink in the final set is committed: EventStore `865cd9e49273dffbb1cdae85efeaf1aac322e09e` in Parties `75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`, the other seven were already committed at Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27`, so `git ls-tree HEAD references/` records all eight and the committed-tree guard is green. Dated history: never-approved committed EventStore `547c938d52e4fd31b47783b9dd032528a5100549` / `0dc44e46ccb7f56c3182b855c21f337173a1307f` and Tenants `b55f96d89b839fd443ac589835880102add46d64`; superseded, never-committed 2026-10-04 approvals of EventStore `2242ad55a1b678828df8aa093fd92399c29af5bf` and Tenants `04e655cf070b17eced9daefb9eaa87a09ec60e81`; the superseded 2026-10-04 Builds `145ae921d9032f110b7371614939559e0aee202a`, three-pin, and Round 6 selections. Source presence/compile and selection signoff do not certify parity. |
 | I5 | Executable | `ContractsPublicApiSnapshotTests`, `ClientPackageTests`, `PartyPickerPackagingTests`, `AdminPortalPackagingTests`, and `ConsumerPortalPackagingTests` preserve the public package surface. |
 | I6 | Executable + Deferred | `EventStoreGatewayRoutingTests`, `HttpPartiesQueryClientTests`, and `SelfScopedPartiesClientTests` preserve command/query behavior and self-scope; `8.8-runtime-boundary-cleanup` owns future shared-helper adoption. |
 | I7 | Executable + Deferred | `PartyAggregateConsentTests`, `PartyAggregateErasureTests`, and `ErasureVerificationServiceTests` preserve consent, restriction, and erasure behavior; `8.6-residual-review-debt` owns the residual erasure-certificate identity/status validation and Memories cleanup-race review debt. |
@@ -630,3 +630,50 @@ runtime proof is the accepted DW-111 deferral, and I13 stays `Deferred`. §12's
 `3.112.0` selection is dated history. Lane receipts are in
 `tests/test-summary.md`; Story 8.10 stays in progress until its closure gate
 passes.
+
+**Closure-blocker resolution, 2026-10-05.** Parties `75b4fa1f` committed the
+EventStore `865cd9e4` gitlink, so all eight final-set identities are committed.
+The first full Release lane at the final set exposed three failures from commits
+`37d87f5a` and `c069af07` (DW-140, DW-141, DW-142). Administrator / jpiquot
+decided, in spec 8.10 "Closure-blocker resolution: DW-140, DW-141, DW-142 —
+2026-10-05": (1) DW-140 (I7): `ProvisionAgentParty` and the three human
+actor-binding commands are exempt from the `RejectIfRestricted` inventory, with
+production handlers unchanged; provisioning is creation-only, and the binding
+handlers refuse a restricted party through `CanBind` with `binding-unavailable`,
+now proven by focused `HumanActorBindingTests`; (2) DW-142 (I8):
+`PartyCreated.CreatedAt`, `PartyState.HasBeenCreated`, and `HumanBindingVersion`
+are non-personal metadata, `AgentProvisioning` is personal data because it is
+already marked `[PersonalData]` (decision amended in review loop 3, below), while
+`HumanActorBindings` and `HumanActorTransitions` are a deferred privacy design
+bound to open DW-129, with no `[PersonalData]` or contract change; (3) DW-141:
+`PartiesOverview` passes the
+source-only `FcPageTabs` `ModuleRoute`/`DefaultTabId` parameters only under
+`HFC_ROUTE_OPTIONS`, matching `47e2da32`, and DW-139 keeps the package-mode
+follow-up. No dependency, submodule, owner-repository, rollback-deletion, or PRD
+change was made. I13 stays `Deferred` (DW-111). Lane receipts are in
+`tests/test-summary.md`; Story 8.10 stays in progress until the review step
+owns the status transition.
+
+**Review loop 3, 2026-10-05.** Review of the closure-blocker resolution found
+that decision 2 had classified `PartyState.AgentProvisioning` as non-personal
+metadata although the property is marked `[PersonalData]` (Edge 17). Administrator
+/ jpiquot amended decision 2: `AgentProvisioning` is `PersonalData`, and a new
+inventory guard fails any `NonPersonalMetadata` row that carries `[PersonalData]`.
+The reverted closure-blocker code was re-derived with that correction, and the
+surviving review patches were applied (exact-`Pass` receipt gate, FrontComposer
+stamp only for a clean `Pass`, stale-SDK documentation guard, restriction
+exemption wording, EventStore pin removal condition). The E2E fixture-scope gap
+stays the open DW-143 deferral. No dependency, submodule, owner-repository,
+rollback-deletion, `[PersonalData]`-attribute, production-handler, or PRD change
+was made; I13 stays `Deferred` (DW-111). Rerun receipts are in
+`tests/test-summary.md`.
+
+**Closure, 2026-10-05.** The loop-3 review found no spec defect. Its eight
+patches were applied and every Verification lane was rerun green at Parties
+`75b4fa1f` plus the closing diff. Every canonical receipt row in
+`tests/test-summary.md` reads `Pass`, and the closure fitness gate passes with
+Story 8.10 `done`. As the Administrator directed ("fix all three, then close"),
+Story 8.10 and Epic 8 are `done` under the deferral-based closure this spine
+defines. Stories 8.7–8.9 stay `blocked` behind their accepted deferrals, and every
+rollback path is retained. I13 stays `Deferred` (DW-111). Open follow-ups:
+DW-139, DW-143, DW-144, DW-145.

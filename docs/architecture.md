@@ -53,7 +53,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.6.0` |
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.10` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.0-preview.1.261001-0243` |
-| Gateway/eventing | Hexalith.EventStore | package `3.113.0` by default (Parties pre-import CPM pin); approved source checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` (tag `v3.113.0`, the same release; approved 2026-10-05, root gitlink commit pending; parity counts only for receipts rerun at this identity) |
+| Gateway/eventing | Hexalith.EventStore | package `3.113.0` by default (Parties pre-import CPM pin); approved source checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` (tag `v3.113.0`, the same release; approved 2026-10-05, root gitlink committed in Parties `75b4fa1f`; parity counts only for receipts rerun at this identity) |
 | Tenancy | Hexalith.Tenants | package `5.7.0` by default; approved source gitlink `72b8e4f508176b69826549e87b7b2a286f607fd1` (`v5.7.0-143-g72b8e4f5`; approved 2026-10-05 and committed; parity counts only for receipts rerun at this identity) |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.2.0` |

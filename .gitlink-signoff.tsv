@@ -144,6 +144,7 @@ references/Hexalith.Tenants|04e655cf070b17eced9daefb9eaa87a09ec60e81|validated-a
 #     superseded (never committed). I16 identity re-validation is approved for
 #     the final set, but only receipts rerun at these identities are Pass.
 #     No owner release, publishing, or rollback deletion is approved.
+#     Outcome (2026-10-05): Parties 75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6 committed the EventStore 865cd9e4 gitlink, so all eight final-set gitlinks are committed.
 references/Hexalith.Builds|360a2b9c4e96809365a7de785be9a68152d5ac28|validated-advance|v4.29.1-17-g360a2b9|jpiquot|2026-10-05
 references/Hexalith.EventStore|865cd9e49273dffbb1cdae85efeaf1aac322e09e|validated-advance|v3.113.0|jpiquot|2026-10-05
 references/Hexalith.Tenants|72b8e4f508176b69826549e87b7b2a286f607fd1|validated-advance|v5.7.0-143-g72b8e4f5|jpiquot|2026-10-05

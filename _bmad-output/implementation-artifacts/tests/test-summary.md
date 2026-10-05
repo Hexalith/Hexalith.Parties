@@ -583,7 +583,8 @@ phrase `Validation receipts` so the closure fitness parser cannot select it.
 ### Historical closure blockers — 2026-08-18
 
 The dated blockers below retain their original evidence. Current blockers and
-execution outcomes are recorded in the canonical table and the 2026-10-04 packet.
+execution outcomes are recorded in the canonical `### Validation receipts` table
+and the 2026-10-05 sections at the end of this file.
 
 - blocker: `release-solution-polymorphic-stylecop`
   owner: `Hexalith.PolymorphicSerializations maintainers for the dependency fix; Amelia (Parties Developer) and Murat (Test Architect) for consuming-graph revalidation`
@@ -617,26 +618,37 @@ exercises an interactive Blazor UI rather than SSR-only output.
 Authoritative closure-gate table. Check names are canonical: the closure fitness
 test requires all six canonical Verification-lane rows (warning policy, Release
 build, all .NET tests, packages/consumers, npm/typecheck, and Playwright), and
-rejects values that are not `Pass` or that qualify a pass as blocked,
-unvalidated, failed, or skipped.
+accepts only an exact `Pass` Result (bold markup tolerated); any other or
+qualified value, such as `Pass (partial)` or `Pass with errors`, is a gap.
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| PolymorphicSerializations owner build and tests | **Unvalidated** | Owner build and tests were not rerun at the 2026-10-05 final set (PolymorphicSerializations `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375`); the 2026-10-05 Release solution build compiled this submodule (row below), which is not owner-test proof. Historical receipt: at gitlink `0dca9e9d3f8b2a20ba426b84fa575ab4e7b5562b`, its Release build completed with 0 warnings and 0 errors and its test assembly passed 15/15. The compatible explicit-syntax preferences do not suppress StyleCop diagnostics. |
-| FrontComposer shell focus/theme tests | **Unvalidated** | Producer tests were not rerun at the 2026-10-05 final set (FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`). Historical receipt: direct focused execution of `Story13AccessibilityPrimitivesTests`, `FrontComposerShellTests`, `FcSystemThemeWatcherTests`, and `ThemeEffectsScopeTests` passed 50/50. Fluent `ThemeSettings.IsExact=false` keeps the configured teal as a palette seed instead of forcing the raw, non-AA brand background. |
-| Parties UI tests | **Failed (4 tests, DW-141)** | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below), package mode inside the full Release lane: 339/343 passed, 4 failed, 0 skipped. All four failures are `PartiesOverviewTests` (`ConsumerPolicyShowsOnlyMySpace`, `AdminPolicyShowsOnlyAdministration`, `BothPoliciesShowEachAuthorizedDestinationOnce`, `NeitherPolicyShowsOneSafeNoAccessState`): `PartiesOverview.razor` passes `FcPageTabs ModuleRoute`, which packaged Shell `4.5.0` lacks (`InvalidOperationException`; DW-141). `MainLayoutAccessibilityTests`, `AccessibilityStyleGuardTests`, and the host-composition tests passed. |
-| Warning and nested-submodule policy | Pass | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below): `bash scripts/check-no-warning-override.sh` passed (also passed in the chained solution-build command recorded below); no nested submodule is initialized in any of the eight root submodules, and every root checkout is clean. `bash scripts/gitlink-rc-gate.sh` (working-tree mode) passed: the only drifted checkout, EventStore `865cd9e49273dffbb1cdae85efeaf1aac322e09e`, has 2026-10-05 `validated-advance` signoff. Identity, not warning policy: `bash scripts/gitlink-rc-gate.sh --diff 882c02455bbdd6b76886fe3fba8bd24a24e2a057` fails only for the committed never-approved EventStore `0dc44e46ccb7f56c3182b855c21f337173a1307f` until the human commits the approved gitlink; a scratch clone with it committed passes all eight. |
-| Release solution build | Pass | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below): `bash scripts/check-no-warning-override.sh && dotnet restore Hexalith.Parties.slnx -p:NuGetAudit=false && dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` exited 0 with Build succeeded, 0 Warning(s), 0 Error(s) in 00:02:02 (run by the Administrator's session before this pass and recorded in spec 8.10; not rerun, as the spec directs). The three former CS0234 DW-124 errors are gone (DW-124 resolved by `47e2da32`). The only later source edits are four test files, which compiled with 0 warnings and 0 errors in the Release lane builds below. |
-| All .NET test projects | **Failed (8 tests in 4 projects)** | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below): `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` ran all 15 projects: 2,624 tests, 2,608 passed, 10 failed, 6 skipped (the existing Story 12 `HealthEndpointE2ETests` Tier 3 skips); 10 projects passed. After the Ci.Tests version-derivation fix, `scripts/test.ps1 -Lane ci` passed 57/57, leaving 8 failures: Parties.Tests 610/612 (the two expected committed-gitlink assertions, HEAD `0dc44e46ccb7f56c3182b855c21f337173a1307f` versus approved `865cd9e49273dffbb1cdae85efeaf1aac322e09e`), Server.Tests 255/256 (DW-140), UI.Tests 339/343 (DW-141), and Contracts.Tests 179/180 (DW-142). DW-140 to DW-142 come from commits `37d87f5a` and `c069af07`, which no earlier full Release lane had reached. |
-| Package/API and package-only consumers | Pass | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below): `pkg_dir=$(mktemp -d /tmp/parties-810-packages.XXXXXX); consumer_dir=$(mktemp -d /tmp/parties-810-consumer.XXXXXX); python3 scripts/pack-release-packages.py "$pkg_dir" 0.0.0-story810 && python3 scripts/validate-nuget-packages.py "$pkg_dir" && python3 scripts/validate-consumer-package-references.py "$pkg_dir" --work-directory "$consumer_dir"` exited 0: 9 packages validated and the package-only client and portal consumers built with 0 warnings and 0 errors. `Hexalith.Parties.Contracts` depends on `Hexalith.EventStore.Contracts` `3.113.0`. It ran on package-mode Release outputs, after the test lane and before the source-mode Playwright build. |
-| npm install and typecheck | Pass | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below), Node `26.4.0`, npm `11.18.0`, TypeScript `7.0.2`: `npm ci --prefix tests/e2e` added 9 packages with 0 vulnerabilities; `npm --prefix tests/e2e run typecheck` passed. |
-| Playwright accessibility | Pass | Stamped 2026-10-05 at the final set (Parties `47e2da3244fd7d6d14e39bc30513b23504e9bc27` plus the EventStore `v3.113.0` checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` and the `3.113.0` pin; full set in the 2026-10-05 section below): `npm --prefix tests/e2e run test:a11y` passed 6/6 (Playwright `1.63.0`, chromium) against the source-mode UI built from FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` (`v4.5.0-121-g2cc8dd3a`, `PlatformApiPrerequisitesTests.FrontComposerSha`) and EventStore `865cd9e49273dffbb1cdae85efeaf1aac322e09e`. Packaged Shell `4.5.0` is a separate identity. This lane does not discharge I13: the DW-111 content-control focus, forced-colors, and reduced-motion proof is the deferral the Administrator accepted on 2026-10-05. |
-| Static diff | Pass | Rerun 2026-10-05 after the final reconciliation: `git -c core.whitespace=cr-at-eol diff --check` passed. Existing line endings are preserved; `core.whitespace` is an invocation-only interpretation of CR at EOL, not a repository configuration change. |
+| PolymorphicSerializations owner build and tests | Pass | Rerun 2026-10-05 at the final set in the clean committed root checkout `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` (`v1.19.4`; nested submodules left uninitialized; shared props resolve from the root `references/Hexalith.Builds`): `dotnet restore Hexalith.PolymorphicSerializations.slnx -p:NuGetAudit=false && dotnet build Hexalith.PolymorphicSerializations.slnx -c Release --no-restore --no-incremental -m:1 -p:NuGetAudit=false` built with 0 warnings and 0 errors, and direct xUnit v3 execution of `test/Hexalith.PolymorphicSerializations.Tests/bin/Release/net10.0/Hexalith.PolymorphicSerializations.Tests.dll` passed 15/15 (0 errors, 0 not run). The checkout stayed clean. Historical receipt: 15/15 at gitlink `0dca9e9d3f8b2a20ba426b84fa575ab4e7b5562b`. The compatible explicit-syntax preferences do not suppress StyleCop diagnostics. |
+| FrontComposer shell focus/theme tests | Pass | Rerun 2026-10-05 at the final set in the clean committed root checkout `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` (`v4.5.0-121-g2cc8dd3a`; nested submodules left uninitialized): `dotnet restore tests/Hexalith.FrontComposer.Shell.Tests/Hexalith.FrontComposer.Shell.Tests.csproj -p:NuGetAudit=false && dotnet build tests/Hexalith.FrontComposer.Shell.Tests/Hexalith.FrontComposer.Shell.Tests.csproj -c Release --no-restore --no-incremental -m:1 -p:NuGetAudit=false` built with 0 warnings and 0 errors; direct xUnit v3 execution with `-class` for `Components.Layout.Story13AccessibilityPrimitivesTests`, `Components.Layout.FrontComposerShellTests`, `Components.Layout.FcSystemThemeWatcherTests`, and `State.Theme.ThemeEffectsScopeTests` passed 64/64 (0 errors, 0 not run). The checkout stayed clean. Historical receipt: 50/50 for the same four classes at an earlier identity. Fluent `ThemeSettings.IsExact=false` keeps the configured teal as a palette seed instead of forcing the raw, non-AA brand background. Producer tests do not discharge I13 (accepted DW-111 deferral). |
+| Parties UI tests | Pass | Stamped 2026-10-05 (review loop 3, rerun after its review patches) at the final set and the Parties tree under test (`75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`, which commits all eight final-set gitlinks, plus the loop-3 diff and its review patches; full set and commands in the review loop 3 subsections at the end of this file), package mode inside the full Release lane: 343/343 passed, 0 failed, 0 skipped. All five `PartiesOverviewTests` pass because `PartiesOverview.razor` passes the source-only `FcPageTabs` `ModuleRoute`/`DefaultTabId` parameters only under `HFC_ROUTE_OPTIONS` (DW-141); `MainLayoutAccessibilityTests`, `AccessibilityStyleGuardTests`, and the host-composition tests passed. The gated source branch compiled separately (diagnostic, not this row): `dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release -m:1 -p:HexalithFrontComposerFromSource=true -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`, 0 warnings, 0 errors. |
+| Warning and nested-submodule policy | Pass | Stamped 2026-10-05 (review loop 3, rerun after its review patches) at the final set and the Parties tree under test (`75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`, which commits all eight final-set gitlinks, plus the loop-3 diff and its review patches; full set and commands in the review loop 3 subsections at the end of this file): `bash scripts/check-no-warning-override.sh` passed in the chained solution-build command below; no nested submodule is initialized in any of the eight root submodules, and every root checkout matches `git ls-tree HEAD references/` and is clean. `bash scripts/gitlink-rc-gate.sh` (working-tree mode) passed, and `bash scripts/gitlink-rc-gate.sh --diff 882c02455bbdd6b76886fe3fba8bd24a24e2a057` passed all eight root gitlinks (`BUMP ok — validated-advance` for each). |
+| Release solution build | Pass | Stamped 2026-10-05 (review loop 3, rerun after its review patches) at the final set and the Parties tree under test (`75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`, which commits all eight final-set gitlinks, plus the loop-3 diff and its review patches; full set and commands in the review loop 3 subsections at the end of this file): `bash scripts/check-no-warning-override.sh && dotnet restore Hexalith.Parties.slnx -p:NuGetAudit=false && dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` exited 0 with Build succeeded, 0 Warning(s), 0 Error(s) in 00:00:18.81 (incremental, after a restore that reset the source-mode Playwright outputs). Rerun because the loop-3 amendment changed code. |
+| All .NET test projects | Pass | Stamped 2026-10-05 (review loop 3, rerun after its review patches) at the final set and the Parties tree under test (`75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`, which commits all eight final-set gitlinks, plus the loop-3 diff and its review patches; full set and commands in the review loop 3 subsections at the end of this file): `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` exited 0 in 313 s; all 15 projects passed: 2,641 tests, 2,635 passed, 0 failed, 6 skipped (the existing Story 12 `HealthEndpointE2ETests` Tier 3 cases in IntegrationTests). Contracts 181/181 (DW-142 with `AgentProvisioning` = `PersonalData` plus the new `NonPersonalMetadataProperties_RemainUnmarked` guard), Server 259/259 (DW-140 exemptions plus three restricted-binding tests), UI 343/343 (DW-141), and Parties.Tests 625/625 (fitness additions for Edge 11, Edge 12, the stale-SDK guard, and the L3 Edge 6 SDK-band case). |
+| Package/API and package-only consumers | Pass | Stamped 2026-10-05 (review loop 3, rerun after its review patches) at the final set and the Parties tree under test (`75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`, which commits all eight final-set gitlinks, plus the loop-3 diff and its review patches; full set and commands in the review loop 3 subsections at the end of this file): `pkg_dir=$(mktemp -d /tmp/parties-810-packages.XXXXXX); consumer_dir=$(mktemp -d /tmp/parties-810-consumer.XXXXXX); python3 scripts/pack-release-packages.py "$pkg_dir" 0.0.0-story810 && python3 scripts/validate-nuget-packages.py "$pkg_dir" && python3 scripts/validate-consumer-package-references.py "$pkg_dir" --work-directory "$consumer_dir"` exited 0: 9 packages validated and the package-only client and portal consumers built with 0 warnings and 0 errors. The `Hexalith.Parties.Contracts` nuspec depends on `Hexalith.EventStore.Contracts` `3.113.0`. It ran on package-mode Release outputs, after the test lane and before the source-mode Playwright build. |
+| npm install and typecheck | Pass | Stamped 2026-10-05 (review loop 3, rerun after its review patches) at the final set and the Parties tree under test (`75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`, which commits all eight final-set gitlinks, plus the loop-3 diff and its review patches; full set and commands in the review loop 3 subsections at the end of this file), Node `26.4.0`, npm `11.18.0`, TypeScript `7.0.2`: `npm ci --prefix tests/e2e` added 9 packages with 0 vulnerabilities; `npm --prefix tests/e2e run typecheck` passed. |
+| Playwright accessibility | Pass | Stamped 2026-10-05 (review loop 3, rerun after its review patches) at the final set and the Parties tree under test (`75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`, which commits all eight final-set gitlinks, plus the loop-3 diff and its review patches; full set and commands in the review loop 3 subsections at the end of this file): `npm --prefix tests/e2e run test:a11y` passed 6/6 in 21.6 s (Playwright `1.63.0`, chromium) against the source-mode UI built from FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` (`v4.5.0-121-g2cc8dd3a`, `PlatformApiPrerequisitesTests.FrontComposerSha`) and EventStore `865cd9e49273dffbb1cdae85efeaf1aac322e09e`; port 5072 was free before the run, Playwright started the web server, and the port was free again afterwards. Packaged Shell `4.5.0` is a separate identity. This lane does not discharge I13: the DW-111 content-control focus, forced-colors, and reduced-motion proof is the deferral the Administrator accepted on 2026-10-05. Only `specs/parties-accessibility.spec.ts` runs in this lane (`test:a11y`); the admin, consumer, and picker specs are not run (DW-143). |
+| Static diff | Pass | Rerun 2026-10-05 (review loop 3, after its review patches) at Parties `75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6` plus the loop-3 diff: `git -c core.whitespace=cr-at-eol diff --check` passed, and the untracked `PartiesOverview.razor.cs` (CRLF) has no whitespace errors under the same setting. Existing line endings are preserved; `core.whitespace` is an invocation-only interpretation of CR at EOL, not a repository configuration change. |
 
-The table separates lanes rerun at the 2026-10-05 final set from receipts that
-were not rerun and stay unvalidated. The 2026-10-05 verification section at the
-end of this file records the exact commands/results; Story 8.10 and Epic 8
-remain open.
+The RC diff base `882c02455bbdd6b76886fe3fba8bd24a24e2a057` (2026-09-07,
+`chore(dependencies): update submodule references for Hexalith components`) is
+the Round 5 record commit, the last tree whose root gitlinks a Story 8.10 review
+round recorded; diffing HEAD against it makes `gitlink-rc-gate.sh --diff` demand a
+`validated-advance` signoff for every root pointer moved since then (Round 6
+through the 2026-10-05 final set).
+
+Every row in the table was rerun at the 2026-10-05 final set. The six
+Verification rows plus Parties UI tests and Static diff are stamped at
+`75b4fa1f` plus the review loop 3 diff; the two producer rows keep their
+2026-10-05 reruns because the producer identities did not change. The review
+loop 3 subsection at the end of this file records the exact commands and
+results. I13 remains an accepted deferral (DW-111), not a discharged invariant.
+Story 8.10 and Epic 8 closed `done` on 2026-10-05 after the review loop 3 patch
+rerun (see *Review loop 3 patch rerun* at the end of this file).
 
 **Corrected 2026-08-19 (code review).** The paragraph previously here was
 written before the gitlinks were committed and is false at HEAD. Superproject
@@ -657,8 +669,9 @@ but is likewise unreleased.
 ### Historical immutable-receipt blocker — 2026-08-19
 
 This earlier blocker closed historically at the 2026-09-06 selected owner pin;
-its build proof is unvalidated at the current identity. The current packet below
-records the three approved current root gitlinks and package compile failure.
+its build proof is unvalidated at the current identity. Current identities and
+receipts are recorded in the canonical `### Validation receipts` table and the
+2026-10-05 sections at the end of this file.
 
 - blocker: `authorized-owner-fixes-not-immutable`
   owner: `Hexalith.FrontComposer and Hexalith.PolymorphicSerializations maintainers for owner commits/releases; Amelia (Parties Developer) and Murat (Test Architect) for superproject selection and revalidation`
@@ -1218,3 +1231,200 @@ Story 8.10 and Epic 8 stay `in-progress`; Stories 8.7–8.9 stay `blocked`. No G
 staging, commit, push, submodule reset/update, owner-repository edit, catalog
 change, publication, or rollback deletion occurred in the repository; the only
 commit was made in the scratch clone.
+
+## Story 8.10 closure-blocker resolution (DW-140, DW-141, DW-142) — 2026-10-05
+
+Authority: spec 8.10 "Closure-blocker resolution: DW-140, DW-141, DW-142 —
+2026-10-05". Administrator / jpiquot decided: (1) DW-140 (I7): exempt
+`ProvisionAgentParty`, `EstablishHumanActorBinding`, `RebindHumanActorBinding`,
+and `RevokeHumanActorBinding` in the restriction inventory with one-line
+justifications, production handlers unchanged, and prove the binding refusal;
+(2) DW-142 (I8): classify `PartyCreated.CreatedAt`, `PartyState.HasBeenCreated`,
+and `PartyState.HumanBindingVersion` as `NonPersonalMetadata`,
+`PartyState.AgentProvisioning` as `PersonalData` (it is already marked
+`[PersonalData]`; corrected 2026-10-05 in review loop 3 — this pass first
+classified it `NonPersonalMetadata`), and `PartyState.HumanActorBindings` /
+`PartyState.HumanActorTransitions` as `DeferredPrivacyDesign` bound to open
+DW-129; (3) DW-141: pass `FcPageTabs` `ModuleRoute="/parties"` and
+`DefaultTabId="overview"` only under `HFC_ROUTE_OPTIONS`, through an
+`@attributes` dictionary in a new `PartiesOverview.razor.cs` partial, matching
+`47e2da32`.
+
+Tree under test: Parties `75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`
+(`build(deps): select eventstore 3.113.0 and final pins`) plus this uncommitted
+diff. `git ls-tree HEAD references/` records all eight final-set identities, each
+checkout matches and is clean, and no nested submodule is initialized: AI.Tools
+`3f194e17174994d308ec84af9ee2b5aa68674d0d`, Builds
+`360a2b9c4e96809365a7de785be9a68152d5ac28` (`v4.29.1-17-g360a2b9`), Commons
+`116d26815eb81e35b3c161e1799e5ee12805fc0a` (`v2.30.1-15-g116d268`), EventStore
+`865cd9e49273dffbb1cdae85efeaf1aac322e09e` (`v3.113.0`), FrontComposer
+`2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` (`v4.5.0-121-g2cc8dd3a`), Memories
+`5b43fe2f8a0f04dc021921a077dff1a573c2ce5e` (`v2.28.0`),
+PolymorphicSerializations `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375`
+(`v1.19.4`), Tenants `72b8e4f508176b69826549e87b7b2a286f607fd1`
+(`v5.7.0-143-g72b8e4f5`). Packages: EventStore `3.113.0` (Parties pre-import
+pin), Commons `2.30.1`, FrontComposer `4.5.0`, Memories `2.27.1`, Tenants `5.7.0`.
+
+Changes (no dependency, submodule, owner-repository, rollback-deletion, PRD,
+`[PersonalData]`, or production handler change):
+
+- `tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateRestrictionTests.cs`:
+  the four commands are in the `exempt` inventory, each with a one-line
+  justification.
+- `tests/Hexalith.Parties.Server.Tests/Aggregates/HumanActorBindingTests.cs`:
+  `RestrictedPersonParty_RefusesEstablishThatSucceedsUnrestricted`,
+  `RestrictedBoundParty_RefusesRebindThatSucceedsUnrestricted`, and
+  `RestrictedBoundParty_RefusesRevokeThatSucceedsUnrestricted` reuse the existing
+  fixtures. Each command first succeeds on the unrestricted person party, and is
+  then rejected with a single `HumanActorBindingRejected("binding-unavailable")`
+  and no state-changing event once `ProcessingRestricted` is applied to the same
+  state.
+- `tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs`:
+  the six decided classifications (as first applied; review loop 3 below
+  corrects `PartyState.AgentProvisioning` to `PersonalData`).
+- `src/Hexalith.Parties.UI/Components/Pages/PartiesOverview.razor` and new
+  `PartiesOverview.razor.cs`: `FcPageTabs @attributes="ModuleRouteTabAttributes"`,
+  filled with `ModuleRoute`/`DefaultTabId` only under `#if HFC_ROUTE_OPTIONS`
+  (empty in package mode).
+
+| Command | Result |
+| --- | --- |
+| `bash scripts/check-no-warning-override.sh && dotnet restore Hexalith.Parties.slnx -p:NuGetAudit=false && dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` | Exit 0: warning policy OK; Build succeeded, 0 Warning(s), 0 Error(s), 00:00:20.13 (incremental, the changed UI and test projects recompiled). |
+| `dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release -m:1 -p:HexalithFrontComposerFromSource=true -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` (diagnostic, not a canonical row) | Exit 0: 0 warnings, 0 errors against FrontComposer source `2cc8dd3a`. The source-mode `Hexalith.Parties.UI.dll` carries the gated `ModuleRoute`, `DefaultTabId`, and `no-party-binding` literals; the package-mode copy carries none. |
+| Focused package-mode checks from the Release build: `HumanActorBindingTests` + `PartyAggregateRestrictionTests`; `PersonalDataInventoryTests`; `PartiesOverviewTests` (assemblies run directly with `-class`) | 35/35, 4/4, and 5/5 passed; 0 skipped. |
+| `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` | Exit 0 in 5m29s; all 15 projects passed. 2,627 tests: 2,621 passed, 0 failed, 6 skipped (the existing Story 12 `HealthEndpointE2ETests` Tier 3 skips). Contracts 180, Authentication 12, Client 156, Server 259, Projections 236, Security 178, AdminPortal 184, ConsumerPortal 82, UI 343, Picker 171, Mcp 57, Parties.Tests 612, Sample 58, IntegrationTests 36 (+6 skipped), Ci 57. |
+| `bash scripts/gitlink-rc-gate.sh` | Passed: all root gitlinks validated or clean. |
+| `bash scripts/gitlink-rc-gate.sh --diff 882c02455bbdd6b76886fe3fba8bd24a24e2a057` | Passed: all eight root gitlinks `BUMP ok — validated-advance`, including EventStore `865cd9e4` now committed in `75b4fa1f`. |
+| `pkg_dir=$(mktemp -d /tmp/parties-810-packages.XXXXXX); consumer_dir=$(mktemp -d /tmp/parties-810-consumer.XXXXXX); python3 scripts/pack-release-packages.py "$pkg_dir" 0.0.0-story810 && python3 scripts/validate-nuget-packages.py "$pkg_dir" && python3 scripts/validate-consumer-package-references.py "$pkg_dir" --work-directory "$consumer_dir"` | Exit 0: 9 packages validated; package-only client and portal consumers built with 0 warnings and 0 errors; the Contracts nuspec depends on `Hexalith.EventStore.Contracts` `3.113.0`. |
+| `npm ci --prefix tests/e2e && npm --prefix tests/e2e run typecheck && npm --prefix tests/e2e run test:a11y` | Exit 0: 9 packages, 0 vulnerabilities; typecheck clean (TypeScript `7.0.2`); Playwright `1.63.0` chromium 6/6 passed in 22.8s against the source-mode UI at FrontComposer `2cc8dd3a`. Playwright started and stopped the web server; port 5072 was free before and after. |
+| `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -noColor` (rerun after the ledger, matrix, spine, docs, sprint-status, and receipt edits) | 48/48 passed (documentation 6, closure 26, prerequisites 16), 0 skipped. |
+| `git -c core.whitespace=cr-at-eol diff --check` | Passed; the new untracked `PartiesOverview.razor.cs` (CRLF) has no whitespace errors. |
+
+Ledger and record updates: DW-140, DW-141, and DW-142 are `done 2026-10-05` with
+`decision:` and `resolution:` lines; DW-142 names DW-129 as the open carrier;
+DW-139 gains `PartiesOverview.razor` `ModuleRoute`/`DefaultTabId` in its location
+and exit proof. The spine `open-condition`, §7 I4 row, `docs/architecture.md`
+EventStore row, and the current 8.3 matrix EventStore rows cite `75b4fa1f` as the
+EventStore gitlink commit; spine §13 has a dated paragraph for decisions 1-3.
+
+At this point all six mandatory Verification-lane receipts passed at this tree.
+The canonical table still held two **Unvalidated** producer receipts, rerun
+below. I13 is an accepted deferral (DW-111), not discharged.
+
+### Producer receipts rerun at the final set — 2026-10-05
+
+Both producer checkouts are the clean committed root gitlinks. Their nested
+submodules stayed uninitialized, and shared build props resolve from the root
+`references/Hexalith.Builds`. Build outputs are ignored and both checkouts
+stayed clean.
+
+| Command (run in the root checkout) | Result |
+| --- | --- |
+| `references/Hexalith.PolymorphicSerializations` at `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` (`v1.19.4`): `dotnet restore Hexalith.PolymorphicSerializations.slnx -p:NuGetAudit=false && dotnet build Hexalith.PolymorphicSerializations.slnx -c Release --no-restore --no-incremental -m:1 -p:NuGetAudit=false`, then `dotnet test/Hexalith.PolymorphicSerializations.Tests/bin/Release/net10.0/Hexalith.PolymorphicSerializations.Tests.dll -noColor` | Build: 0 warnings, 0 errors. Tests: 15/15 passed, 0 failed, 0 skipped. |
+| `references/Hexalith.FrontComposer` at `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470` (`v4.5.0-121-g2cc8dd3a`): `dotnet restore tests/Hexalith.FrontComposer.Shell.Tests/Hexalith.FrontComposer.Shell.Tests.csproj -p:NuGetAudit=false && dotnet build tests/Hexalith.FrontComposer.Shell.Tests/Hexalith.FrontComposer.Shell.Tests.csproj -c Release --no-restore --no-incremental -m:1 -p:NuGetAudit=false`, then the test DLL with `-class` for `Hexalith.FrontComposer.Shell.Tests.Components.Layout.{Story13AccessibilityPrimitivesTests,FrontComposerShellTests,FcSystemThemeWatcherTests}` and `Hexalith.FrontComposer.Shell.Tests.State.Theme.ThemeEffectsScopeTests` | Build: 0 warnings, 0 errors. Tests: 64/64 passed, 0 failed, 0 skipped. |
+
+Every canonical `### Validation receipts` row now reads `Pass` at the final set.
+Story 8.10 and Epic 8 stay `in-progress` until the workflow's review step moves
+them. Stories 8.7–8.9 stay `blocked`. No Git staging, commit, push, submodule
+reset or update, owner-repository edit, catalog change, publication, or rollback
+deletion occurred.
+
+### Review loop 3 — 2026-10-05
+
+Authority: spec 8.10 "Review loop 3 amendment — 2026-10-05". The review of the
+closure-blocker resolution found one bad_spec entry (Edge 17):
+`PartyState.AgentProvisioning` is marked `[PersonalData]` (`PartyState.cs:19-20`),
+yet decision 2 classified it `NonPersonalMetadata`. Administrator / jpiquot
+amended decision 2 (`AgentProvisioning` = `PersonalData`) and deferred the E2E
+fixture-scope gap as the existing DW-143. The first-pass closure-blocker code was
+reverted and re-derived per the spec's KEEP instructions with that correction.
+
+Tree under test: Parties `75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6` plus the
+uncommitted loop-3 diff. `git ls-tree HEAD references/` records the eight
+final-set identities, each checkout matches and is clean, and no nested submodule
+is initialized: AI.Tools `3f194e17174994d308ec84af9ee2b5aa68674d0d`, Builds
+`360a2b9c4e96809365a7de785be9a68152d5ac28`, Commons
+`116d26815eb81e35b3c161e1799e5ee12805fc0a`, EventStore
+`865cd9e49273dffbb1cdae85efeaf1aac322e09e` (`v3.113.0`), FrontComposer
+`2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`, Memories
+`5b43fe2f8a0f04dc021921a077dff1a573c2ce5e`, PolymorphicSerializations
+`98de6e013840ece9f0fa7c68ab7dcdf2bba3b375`, Tenants
+`72b8e4f508176b69826549e87b7b2a286f607fd1`. Packages: EventStore `3.113.0`
+(Parties pre-import pin), Commons `2.30.1`, FrontComposer `4.5.0`, Memories
+`2.27.1`, Tenants `5.7.0`. SDK `10.0.401`.
+
+Changes (no dependency, submodule, owner-repository, rollback-deletion,
+`[PersonalData]`-attribute, production-handler, or PRD change):
+
+- Re-derived per KEEP: the four `exempt` entries in
+  `PartyAggregateRestrictionTests` (each comment says the command never mutates a
+  restricted party and lists its actual outcomes); the `Rebind`, `Revoke`,
+  `Restriction`, `BoundHuman`, and `ShouldBeRefusedAsUnavailable` helpers and the
+  three `Restricted*_Refuses*ThatSucceedsUnrestricted` facts in
+  `HumanActorBindingTests`; the six inventory rows in `PersonalDataInventoryTests`
+  with `AgentProvisioning` = `PersonalData`; and the `PartiesOverview.razor`
+  `@attributes` gate with the new `PartiesOverview.razor.cs`.
+- New guard `PersonalDataInventoryTests.NonPersonalMetadataProperties_RemainUnmarked`
+  (mirrors `OrganizationEntityFields_RemainUnmarkedByDefault`). Mutation check:
+  temporarily reclassifying `AgentProvisioning` as `NonPersonalMetadata`, then
+  rebuilding Contracts.Tests, made exactly this guard fail (4/5); the source was
+  restored before the canonical build below.
+- `EpicEightClosureFitnessTests`: `IsCleanPass` accepts only an exact `Pass`
+  after trimming `*` and spaces (Edge 11; `Pass with errors`, `Pass (not run)`,
+  and `Pass (partial)` added to the qualified-pass theory), and the FrontComposer
+  stamp is required only for a clean `Pass` Playwright Result (Edge 12; new
+  `AccessibilityStampIsRequiredOnlyForACleanPass` theory).
+- `DocumentationFitnessTests.CodeMapDocumentsThePinnedSdkVersion` also fails any
+  `10.0.\d{3}` token other than the pinned SDK (Blind 13 / Edge 16; new
+  `StaleSdkTokensAreReportedBesideThePinnedSdk` theory).
+- Records: `Directory.Packages.props` pin comment gains its removal condition
+  (value unchanged), the seven current 8.3 reconciliation rows cite `75b4fa1f`,
+  DW-142 is amended, DW-129 and DW-92 gain dated notes, the sprint-status G5
+  receipt label and a loop-3 8.10 comment, the component-inventory banner date,
+  and spine §13 plus this file's closure-blocker wording.
+
+| Step | Command | Result |
+| --- | --- | --- |
+| 1 | `bash scripts/check-no-warning-override.sh && dotnet restore Hexalith.Parties.slnx -p:NuGetAudit=false && dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` | Exit 0: warning policy OK; Build succeeded, 0 Warning(s), 0 Error(s), 00:00:11.05 (incremental). An earlier attempt in this pass failed with one CA1062 error in the new SDK theory; the argument guard was added and the command rerun. |
+| 2 | `dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release -m:1 -p:HexalithFrontComposerFromSource=true -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` (diagnostic, not a canonical row) | Exit 0: 0 warnings, 0 errors against FrontComposer source `2cc8dd3a`. The source-mode `Hexalith.Parties.UI.dll` carries the `ModuleRoute`, `DefaultTabId`, and `no-party-binding` literals; the package-mode copy from step 1 carries none. |
+| 3a | `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` | Exit 0 in 312 s; all 15 projects passed. 2,640 tests: 2,634 passed, 0 failed, 6 skipped (the existing Story 12 `HealthEndpointE2ETests` Tier 3 skips). Contracts 181, Authentication 12, Client 156, Server 259, Projections 236, Security 178, AdminPortal 184, ConsumerPortal 82, UI 343, Picker 171, Mcp 57, Parties.Tests 624, Sample 58, IntegrationTests 36 (+6 skipped), Ci 57. |
+| 3b | `bash scripts/gitlink-rc-gate.sh` | Passed: all root gitlinks validated or clean. |
+| 3c | `bash scripts/gitlink-rc-gate.sh --diff 882c02455bbdd6b76886fe3fba8bd24a24e2a057` | Passed: all eight root gitlinks `BUMP ok — validated-advance`. |
+| 4 | `pkg_dir=$(mktemp -d /tmp/parties-810-packages.XXXXXX); consumer_dir=$(mktemp -d /tmp/parties-810-consumer.XXXXXX); python3 scripts/pack-release-packages.py "$pkg_dir" 0.0.0-story810 && python3 scripts/validate-nuget-packages.py "$pkg_dir" && python3 scripts/validate-consumer-package-references.py "$pkg_dir" --work-directory "$consumer_dir"` | Exit 0 in 23 s: 9 packages validated; package-only client and portal consumers built with 0 warnings and 0 errors; the Contracts nuspec depends on `Hexalith.EventStore.Contracts` `3.113.0`. |
+| 5 | `npm ci --prefix tests/e2e && npm --prefix tests/e2e run typecheck && npm --prefix tests/e2e run test:a11y` | Exit 0: 9 packages, 0 vulnerabilities; typecheck clean (TypeScript `7.0.2`); Playwright `1.63.0` chromium 6/6 passed in 13.1 s against the source-mode UI at FrontComposer `2cc8dd3a`. Port 5072 was free before and after; Playwright started and stopped the web server. |
+| 6 | `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -noColor` (assembly from step 3a, run after every record edit in this pass) | 60/60 passed (documentation 9, closure 35, prerequisites 16), 0 skipped; rerun after this row was written, with the same result. |
+| 7 | `git -c core.whitespace=cr-at-eol diff --check` | Passed; the untracked `PartiesOverview.razor.cs` (CRLF) has no whitespace errors under the same setting. |
+
+Every canonical `### Validation receipts` row reads `Pass`; the six
+Verification rows plus Parties UI tests and Static diff are re-stamped at
+`75b4fa1f` plus this diff, and the two producer rows keep their 2026-10-05
+reruns because the producer identities are unchanged. I13 remains an accepted
+deferral (DW-111), not discharged, and DW-143 stays open. Story 8.10 and Epic 8
+stay `in-progress` until the workflow's review step moves them; Stories 8.7–8.9
+stay `blocked`. No Git staging, commit, push, submodule reset or update,
+owner-repository edit, catalog change, publication, or rollback deletion
+occurred.
+
+### Review loop 3 patch rerun — 2026-10-05
+
+After the loop-3 review (Review Triage Log, *Review loop 3*), the implementation
+agent applied the eight patch entries: I20 outcome notes and a signoff comment,
+G4 cells, historical pointers, the RC diff-base sentence, the DW-143 decision and
+Playwright note, the SDK-band pattern, and `nameof` keys in
+`PartiesOverview.razor.cs`. The parent session then reran the spec's
+Verification lanes in order at Parties `75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6`
+plus the full uncommitted diff (final identity set unchanged):
+
+| Command | Result |
+| --- | --- |
+| `bash scripts/check-no-warning-override.sh && dotnet restore Hexalith.Parties.slnx -p:NuGetAudit=false && dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0` | Exit 0: 0 warnings, 0 errors, 00:00:18.81. |
+| `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults` | Exit 0 in 313 s; all 15 projects passed: 2,641 tests, 2,635 passed, 0 failed, 6 skipped (the existing Story 12 `HealthEndpointE2ETests` Tier 3 cases). |
+| `bash scripts/gitlink-rc-gate.sh && bash scripts/gitlink-rc-gate.sh --diff 882c02455bbdd6b76886fe3fba8bd24a24e2a057` | Pass: all eight root gitlinks `validated-advance` or clean. |
+| Package/consumer command from `## Verification` | Exit 0: 9 packages validated; package-only consumers built. |
+| `npm ci --prefix tests/e2e && npm --prefix tests/e2e run typecheck && npm --prefix tests/e2e run test:a11y` | Exit 0: 0 vulnerabilities; typecheck clean; Playwright 6/6 in 21.6 s at FrontComposer `2cc8dd3a`. |
+| Three fitness classes, direct xUnit v3 (`DocumentationFitnessTests`, `EpicEightClosureFitnessTests`, `PlatformApiPrerequisitesTests`) | 61/61 passed, 0 skipped. |
+| `git -c core.whitespace=cr-at-eol diff --check` | Passed. |
+
+The two producer receipts keep their 2026-10-05 reruns: PolymorphicSerializations
+`98de6e01` and FrontComposer `2cc8dd3a` are unchanged. DW-143, DW-144, and DW-145
+are open follow-ups; DW-111 (I13) stays an accepted deferral.
