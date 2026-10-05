@@ -150,23 +150,6 @@ development_status:
   8-3-platform-api-prerequisites: done
   8-4-leaf-project-retirement: done
   8-5-eventstore-domain-service-sdk-host-cutover: done
-  # Resumed 2026-08-01 by explicit user direction to use the latest EventStore
-  # (v3.89.0/c590590, later re-verified at 8f004ecf) after the formally
-  # owner-approved fa2d1c99 identity failed to compile the required
-  # tenant-shared rebuild API. That real-time authorization is formally
-  # recorded by sprint-change-proposal-2026-08-02-story-8-6-eventstore-
-  # identity-authorization-backfill.md (approved 2026-08-02), which also
-  # reconciled the 8.3 matrix rows and flagged an open follow-up: re-run the
-  # focused projection/query regression at the current EventStore pin
-  # (4bcf2484 as of Story 8.7's later revalidation) before treating it as
-  # re-validated for Story 8.6.
-  # Advanced to `review` 2026-08-09 after the bmad-build review pass patched
-  # TimeProvider DI, asymmetric checkpoint false-gaps, empty-event Max, null
-  # rebuild manifests, CaseId options reload, missing-CaseId search stall, and
-  # per-key LKG invalidation. Remaining non-blocking items are in deferred-work.md.
-  # Returned to `in-progress` 2026-08-09 after bmad-code-review DI+query-host
-  # sub-chunk applied 8 patches; Suggested Review Order chunks 2–4 still pending.
-  # Advanced to `done` 2026-08-17 after all review findings and follow-ups were verified clean.
   8-6-projection-and-query-sdk-migration: done
   # Story context created 2026-07-16; production migration remains blocked by
   # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
