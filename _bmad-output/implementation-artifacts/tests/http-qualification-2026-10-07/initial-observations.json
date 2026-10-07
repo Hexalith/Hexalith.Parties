@@ -1,0 +1,29 @@
+{
+  "repositories": {
+    "parties": {
+      "head": "34f57baccdf3e9fc2ec615f07499c6d274105851",
+      "status": "## main...origin/main\n M _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Client.Tests-tests.xml\n M _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Contracts.Tests-tests.xml\n M _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/local-evidence.json\n M eng/verify-ext-parties-1.ps1\n M src/Hexalith.Parties/Domain/PartyDomainProcessor.cs\n M tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs\n M tests/Hexalith.Parties.Tests/Gateway/PartiesProcessEndpointTests.cs\n M tests/Hexalith.Parties.UI.Tests/IdentityBindingBoundaryTests.cs\n?? _bmad-output/implementation-artifacts/ext-parties-1-replay-and-lifecycle-2026-10-07.md\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/README.md\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/attempt-3/\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/evidence.json\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Server.Tests-tests.xml\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Client.Tests-tests.xml\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Contracts.Tests-tests.xml\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Security.Tests-tests.xml\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Server.Tests-tests.xml\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Tests-tests.xml\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.UI.Tests-tests.xml\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Platform.Identity.Tests-tests.xml\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/owned-eventstore.patch\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/owned-parties.patch\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/review-final/\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/review-fixes/\n?? _bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/source-manifest.json\n",
+      "diff": " .../Hexalith.EventStore.Client.Tests-tests.xml     |   2 +-\n .../Hexalith.EventStore.Contracts.Tests-tests.xml  |   2 +-\n .../local-matrix/local-evidence.json               | 129 ++++++++++-\n eng/verify-ext-parties-1.ps1                       |  10 +-\n .../Domain/PartyDomainProcessor.cs                 | 133 ++++++------\n .../Domain/PartyDomainProcessorValidationTests.cs  | 239 ++++++++++++++++++++-\n .../Gateway/PartiesProcessEndpointTests.cs         |  84 +++++++-\n .../IdentityBindingBoundaryTests.cs                |   6 +-\n 8 files changed, 516 insertions(+), 89 deletions(-)\n"
+    },
+    "eventstore": {
+      "head": "4b1377a755636ec1eb0844de5901f0c73626ca59",
+      "status": "## main...origin/main\n",
+      "diff": ""
+    },
+    "platform": {
+      "head": "bed37580a4213edb3e4698525e530b85aa4a80ea",
+      "status": "## main...origin/main\n M _bmad-output/implementation-artifacts/spec-4-4-apply-publication-and-operations-repository-controls.md\n M _bmad-output/implementation-artifacts/sprint-status.yaml\n",
+      "diff": " .../spec-4-4-apply-publication-and-operations-repository-controls.md | 5 ++++-\n _bmad-output/implementation-artifacts/sprint-status.yaml             | 4 ++--\n 2 files changed, 6 insertions(+), 3 deletions(-)\n"
+    },
+    "agents": {
+      "head": "09d17fccfd564c9518486618c75b4505b474ec5f",
+      "status": "## main...origin/main\n M _bmad-output/implementation-artifacts/spec-5-4-owner-prerequisites.md\n",
+      "diff": " .../spec-5-4-owner-prerequisites.md                        | 14 ++++++++++++++\n 1 file changed, 14 insertions(+)\n"
+    }
+  },
+  "files": {
+    "src/Hexalith.Parties/Program.cs": "a20a3bf91324a25213328b8b94fc87280abe7c80b528df7624ebc00216528be8",
+    "tests/Hexalith.Parties.Tests/Gateway/PartiesProcessEndpointTests.cs": "f4a2fb4141326301109d110e773ea587df8dcdd97045f94243528099033aea32",
+    "eng/verify-ext-parties-1.ps1": "a2a054a34c172a7d1b9cd7f416f0ec361e19b553774071af9a0a789c1e720678"
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "results": {
+    "red-tests.xml": {
+      "total": 57,
+      "passed": 32,
+      "failed": 25
+    },
+    "final-processor-tests.xml": {
+      "total": 44,
+      "passed": 44,
+      "failed": 0
+    },
+    "final-tests.xml": {
+      "total": 57,
+      "passed": 44,
+      "failed": 13
+    },
+    "sdk-tests.xml": {
+      "total": 39,
+      "passed": 39,
+      "failed": 0
+    }
+  },
+  "artifacts": [
+    {
+      "path": "README.md",
+      "sha256": "c788bc9b4e1dccc48b0e17878c2b0b0b104db916db55f76a3d759039dfde37e8"
+    },
+    {
+      "path": "endpoint-startup-blocker.txt",
+      "sha256": "fba76bc8067f348b9d0d898f2d30980b39d07331ccf14a5ddbfb3279bbf976a4"
+    },
+    {
+      "path": "final-build-2.log",
+      "sha256": "bd4b88954b5ab221b7d3d008ef6e0c11794b3c022934288f323ca9b6a4bba2ff"
+    },
+    {
+      "path": "final-build.log",
+      "sha256": "b3e261e1d61922d7099e743455e0646daaa84a46853cd8b94ef10be6feaf8dab"
+    },
+    {
+      "path": "final-processor-tests.log",
+      "sha256": "332eace0456fab361fd15b2b81ca832d4064050068b30f8486a338e1f0d7138f"
+    },
+    {
+      "path": "final-processor-tests.xml",
+      "sha256": "3a5e03dc5c8e9874539affef330b247221b6a428762886b5423ab544e3fdbc3c"
+    },
+    {
+      "path": "final-tests.log",
+      "sha256": "c0ebd23eec0f359e0e7867ea6e0ba4b83b4d8365b411668d0020db03d86d5738"
+    },
+    {
+      "path": "final-tests.xml",
+      "sha256": "0d00bb58d6ecde2542622a7904cded48cbb6ce0217aa43ced560173e9d90c8c7"
+    },
+    {
+      "path": "green-build.log",
+      "sha256": "966875c0dc5ffab440dc755ecc7e55e0a3071ccd6b6d685b2db2965ce4677158"
+    },
+    {
+      "path": "green-processor-tests.log",
+      "sha256": "d51f074341a8a5d14ef5b2257aac2c3fc1ae96715a3ab9f7aadc34570b1309a8"
+    },
+    {
+      "path": "green-processor-tests.xml",
+      "sha256": "c9381336664c7a1703776d8c2b5abe272b03f2af1e319df35e10eb47568c9c44"
+    },
+    {
+      "path": "red-build-2.log",
+      "sha256": "6dbf401ad99eeb8171cfcc90cf4773f8c1fb0a3fe80509272eb4c93fbefe3217"
+    },
+    {
+      "path": "red-build-3.log",
+      "sha256": "7d1b1a596eaab48f57e1c85b17335a8ee4c7c43cc1e8f90345947d9ff9f43270"
+    },
+    {
+      "path": "red-build.log",
+      "sha256": "e59843120d53928c2eecc8260d12918100fd45d718e772626886ec42a8a6f07c"
+    },
+    {
+      "path": "red-tests.log",
+      "sha256": "0915e791a6eebc5051f93f8f95a162e645e8b3b3812ac14cd0f91e91d2fcb26b"
+    },
+    {
+      "path": "red-tests.xml",
+      "sha256": "79cc02252c9fe84013c847e3cded92bc5e7f98c3b97ccff7b873ce6c61ecab43"
+    },
+    {
+      "path": "review-source-hashes.json",
+      "sha256": "23782261694f278d6be62ade15fb0a7fda843168c72ff2e6469d9c8ef8218191"
+    },
+    {
+      "path": "sdk-build.log",
+      "sha256": "84067e076206b9b7404eaea5fe5d16c517cec3cbbcdef6b4f0cbcb8cfd166342"
+    },
+    {
+      "path": "sdk-tests.log",
+      "sha256": "7bf3f514b453816dca21b1722fe58fb751354a1b9b07f350d7415218e2881e88"
+    },
+    {
+      "path": "sdk-tests.xml",
+      "sha256": "92db8cbdb9010960ee13bbc2e70f46c9a06334d020a031ef75c769a5ee0b7509"
+    }
+  ]
+}

@@ -1,0 +1,637 @@
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/pre-change/src/Hexalith.Parties/Program.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/src/Hexalith.Parties/Program.cs
+index 0a576df3..fd45f60e 100644
+--- a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/pre-change/src/Hexalith.Parties/Program.cs
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/src/Hexalith.Parties/Program.cs
+@@ -52,28 +52,13 @@ app.UseAuthentication();
+ app.UseAuthorization();
+ app.UseCloudEvents();
+ 
+-// DAPR sidecar-internal endpoints — these are NOT public REST surfaces:
+-//   - app.MapSubscribeHandler() exposes POST /dapr/subscribe, the DAPR pub/sub
+-//     subscription-discovery callback. The Parties sidecar invokes it at startup to
+-//     learn which topics this app subscribes to. Never called by external clients.
+-//   - app.MapEventStoreDomainEvents() exposes POST /tenants/events, the Tenants
+-//     pub/sub event-delivery callback. The Parties sidecar delivers Tenants lifecycle
+-//     events here after the Tenants app publishes on the shared pubsub component.
+-//     Delivery is enforced by the pubsub component (scoped to parties + tenants in
+-//     the AppHost composition), not by service-invocation access control.
+-// Client-facing service-invocation access is blocked by AppHost DAPR
+-// accesscontrol.parties.yaml (defaultAction: deny; only eventstore may invoke the exact
+-// POST command, query, projection, and staged-rebuild routes listed there).
+-// EventStore is the public command/query gateway after Story 12.2.
+-app.MapSubscribeHandler();
++// Sidecar discovery, pub/sub delivery and actor runtime calls require the SDK's
++// authenticated Dapr application channel. Canonical gateway operations additionally
++// require a workload assertion for this service and their exact route operation.
++app.MapSubscribeHandler().RequireEventStoreSidecarChannel();
+ app.MapEventStoreDomainEvents();
+-// Canonical SDK endpoints include /process, /replay-state, /query, /project,
+-// /project/v2, staged /project/rebuild/* operations, and the
+-// /admin/operational-index-metadata discovery route.
+-// DAPR service invocation remains ACL-limited to EventStore and the exact POST
+-// operations in accesscontrol.parties.yaml.
++app.MapActorsHandlers().RequireEventStoreSidecarChannel();
+ app.UseEventStoreDomainService();
+-app.MapActorsHandlers();
+ 
+ app.Run();
+ 
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/pre-change/src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs
+index 948d7331..bc8a4448 100644
+--- a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/pre-change/src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs
+@@ -31,7 +31,8 @@ public sealed class DegradedResponseMiddleware(RequestDelegate next, HealthCheck
+         // - DAPR sidecar-internal callbacks: the sidecar invokes these during
+         //   startup, before its own health endpoint is guaranteed responsive.
+         string path = context.Request.Path.Value ?? string.Empty;
+-        if (path.Equals("/health", StringComparison.OrdinalIgnoreCase)
++        if (path.Equals("/healthz", StringComparison.OrdinalIgnoreCase)
++            || path.Equals("/health", StringComparison.OrdinalIgnoreCase)
+             || path.Equals("/alive", StringComparison.OrdinalIgnoreCase)
+             || path.Equals("/ready", StringComparison.OrdinalIgnoreCase)
+             || path.StartsWith("/actors/", StringComparison.OrdinalIgnoreCase)
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/pre-change/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessEndpointTests.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessEndpointTests.cs
+index ea73d583..dc3d2304 100644
+--- a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/pre-change/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessEndpointTests.cs
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessEndpointTests.cs
+@@ -18,6 +18,7 @@ using Hexalith.Parties.Contracts.Security;
+ using Hexalith.Parties.Contracts.ValueObjects;
+ using Hexalith.Parties.Compliance;
+ using Hexalith.Parties.Security;
++using Hexalith.EventStore.ServiceDefaults.Authentication;
+ 
+ using Microsoft.AspNetCore.Hosting;
+ using Microsoft.AspNetCore.Mvc.Testing;
+@@ -37,7 +38,7 @@ public sealed class PartiesProcessEndpointTests
+     public async Task PostProcess_InvokesRegisteredPartiesDomainProcessorAsync()
+     {
+         using var factory = new PartiesProcessTestFactory();
+-        using HttpClient client = factory.CreateClient();
++        using HttpClient client = factory.CreateAuthenticatedClient();
+         var command = new CommandEnvelope(
+             MessageId: "cmd-12-4-process",
+             TenantId: "tenant-a",
+@@ -78,7 +79,7 @@ public sealed class PartiesProcessEndpointTests
+         // round-trip (DomainResult.ResultPayload → DomainServiceWireResult.ResultPayload).
+         var payloadProcessor = new PayloadProducingDomainProcessor();
+         using var factory = new PartiesProcessTestFactory(payloadProcessor);
+-        using HttpClient client = factory.CreateClient();
++        using HttpClient client = factory.CreateAuthenticatedClient();
+         var command = new CommandEnvelope(
+             MessageId: "cmd-1-9-process-payload",
+             TenantId: "tenant-a",
+@@ -109,7 +110,7 @@ public sealed class PartiesProcessEndpointTests
+     public async Task PostProcess_WhenGdprFeaturesActive_DoesNotEmitMvpComplianceWarningHeaderAsync()
+     {
+         using var factory = new PartiesProcessTestFactory(gdprFeaturesActive: true);
+-        using HttpClient client = factory.CreateClient();
++        using HttpClient client = factory.CreateAuthenticatedClient();
+         var command = new CommandEnvelope(
+             MessageId: "cmd-3-10-active",
+             TenantId: "tenant-a",
+@@ -135,7 +136,7 @@ public sealed class PartiesProcessEndpointTests
+     public async Task PostProcess_InvalidPayload_UsesProductionProcessorValidationRejectionAsync()
+     {
+         using var factory = new PartiesProcessTestFactory(useProductionProcessor: true);
+-        using HttpClient client = factory.CreateClient();
++        using HttpClient client = factory.CreateAuthenticatedClient();
+         var command = new CommandEnvelope(
+             MessageId: "cmd-8-5-invalid-payload",
+             TenantId: "tenant-a",
+@@ -183,7 +184,7 @@ public sealed class PartiesProcessEndpointTests
+                 ? throw new PartyEncryptionKeyDestroyedException("tenant-a", partyId)
+                 : new PayloadProtectionResult(call.Arg<byte[]>(), "json"));
+         using var factory = new PartiesProcessTestFactory(useProductionProcessor: true, payloadProtectionService: protection);
+-        using HttpClient client = factory.CreateClient();
++        using HttpClient client = factory.CreateAuthenticatedClient();
+         var command = new CommandEnvelope(
+             MessageId: "cmd-review-lifecycle", TenantId: "tenant-a", Domain: "party", AggregateId: partyId,
+             CommandType: typeof(MarkPartyEncryptionKeyDeleted).FullName!,
+@@ -275,7 +276,7 @@ public sealed class PartiesProcessEndpointTests
+     public async Task PostProcess_CommonPartyDomainCaseVariants_ResolveProductionProcessorAsync(string domain)
+     {
+         using var factory = new PartiesProcessTestFactory(useProductionProcessor: true);
+-        using HttpClient client = factory.CreateClient();
++        using HttpClient client = factory.CreateAuthenticatedClient();
+         var command = new CommandEnvelope(
+             MessageId: $"cmd-8-5-domain-{domain}",
+             TenantId: "tenant-a",
+@@ -312,7 +313,7 @@ public sealed class PartiesProcessEndpointTests
+     public async Task PostReplayState_UsesProductionProcessorReplayCapabilityAsync()
+     {
+         using var factory = new PartiesProcessTestFactory(useProductionProcessor: true);
+-        using HttpClient client = factory.CreateClient();
++        using HttpClient client = factory.CreateAuthenticatedClient(EventStoreWorkloadOperations.DomainServiceReplayState);
+         var request = new AggregateReconstructionRequest(
+             TenantId: "tenant-a",
+             Domain: "party",
+@@ -348,105 +349,4 @@ public sealed class PartiesProcessEndpointTests
+ 
+     private static string RetiredGdprWarningHeader() => "X-" + "GDPR-Warning";
+ 
+-    private sealed class PartiesProcessTestFactory : WebApplicationFactory<Program>
+-    {
+-        private readonly IDomainProcessor? _registeredProcessor;
+-        private readonly bool _gdprFeaturesActive;
+-        private readonly bool _useProductionProcessor;
+-        private readonly IEventPayloadProtectionService? _payloadProtectionService;
+-
+-        public PartiesProcessTestFactory(bool gdprFeaturesActive = false)
+-        {
+-            Processor = new CapturingDomainProcessor();
+-            _registeredProcessor = Processor;
+-            _gdprFeaturesActive = gdprFeaturesActive;
+-        }
+-
+-        public PartiesProcessTestFactory(bool useProductionProcessor, bool gdprFeaturesActive = false,
+-            IEventPayloadProtectionService? payloadProtectionService = null)
+-        {
+-            _useProductionProcessor = useProductionProcessor;
+-            _payloadProtectionService = payloadProtectionService;
+-            _gdprFeaturesActive = gdprFeaturesActive;
+-        }
+-
+-        public PartiesProcessTestFactory(IDomainProcessor registeredProcessor, bool gdprFeaturesActive = false)
+-        {
+-            ArgumentNullException.ThrowIfNull(registeredProcessor);
+-            Processor = new CapturingDomainProcessor();
+-            _registeredProcessor = registeredProcessor;
+-            _gdprFeaturesActive = gdprFeaturesActive;
+-        }
+-
+-        public CapturingDomainProcessor? Processor { get; }
+-
+-        protected override void ConfigureWebHost(IWebHostBuilder builder)
+-        {
+-            ArgumentNullException.ThrowIfNull(builder);
+-
+-            builder.UseEnvironment("Development");
+-            builder.UseSetting(MvpComplianceWarning.ActivationConfigurationKey, _gdprFeaturesActive.ToString());
+-            builder.ConfigureTestServices(services =>
+-            {
+-                if (_payloadProtectionService is not null)
+-                {
+-                    services.AddSingleton(_payloadProtectionService);
+-                    services.AddSingleton(Substitute.For<IPartyErasureRecordStore>());
+-                }
+-
+-                if (!_useProductionProcessor)
+-                {
+-                    services.AddKeyedSingleton<IDomainProcessor>("party", (_, _) => _registeredProcessor!);
+-                    services.AddKeyedSingleton<IAsyncDomainProcessor>("party", (_, _) => (IAsyncDomainProcessor)_registeredProcessor!);
+-                }
+-            });
+-        }
+-    }
+-
+-    private sealed class CapturingDomainProcessor : IDomainProcessor, IAsyncDomainProcessor
+-    {
+-        private readonly List<CommandEnvelope> _receivedCommands = [];
+-
+-        public IReadOnlyList<CommandEnvelope> ReceivedCommands => _receivedCommands;
+-
+-        /// <inheritdoc />
+-        public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState, CancellationToken cancellationToken)
+-        {
+-            cancellationToken.ThrowIfCancellationRequested();
+-            return ProcessAsync(command, currentState);
+-        }
+-
+-        public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState)
+-        {
+-            ArgumentNullException.ThrowIfNull(command);
+-            _receivedCommands.Add(command);
+-            return Task.FromResult(DomainResult.Success(
+-                [new PartyCreated { Type = PartyType.Person }]));
+-        }
+-    }
+-
+-    private sealed class PayloadProducingDomainProcessor : IDomainProcessor, IAsyncDomainProcessor
+-    {
+-        /// <inheritdoc />
+-        public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState, CancellationToken cancellationToken)
+-        {
+-            cancellationToken.ThrowIfCancellationRequested();
+-            return ProcessAsync(command, currentState);
+-        }
+-
+-        public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState)
+-        {
+-            ArgumentNullException.ThrowIfNull(command);
+-            var detail = new PartyDetail
+-            {
+-                Id = command.AggregateId,
+-                Type = PartyType.Person,
+-                IsActive = true,
+-                DisplayName = "Ada Lovelace",
+-                SortName = "Lovelace, Ada",
+-            };
+-            IEventPayload[] events = [new PartyCreated { Type = PartyType.Person }];
+-            return Task.FromResult<DomainResult>(new PartyCommandResult(events, detail));
+-        }
+-    }
+ }
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessTestFactory.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessTestFactory.cs
+new file mode 100644
+index 00000000..3e782720
+--- /dev/null
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessTestFactory.cs
+@@ -0,0 +1,119 @@
++using System.Security.Cryptography;
++
++using Hexalith.EventStore.Client.Handlers;
++using Hexalith.EventStore.Contracts.Security;
++using Hexalith.EventStore.ServiceDefaults.Authentication;
++using Hexalith.Parties.Compliance;
++using Hexalith.Parties.Contracts.Security;
++
++using Microsoft.AspNetCore.Hosting;
++using Microsoft.AspNetCore.Mvc.Testing;
++using Microsoft.AspNetCore.TestHost;
++using Microsoft.Extensions.Configuration;
++using Microsoft.Extensions.DependencyInjection;
++using Microsoft.Extensions.Diagnostics.HealthChecks;
++using Microsoft.IdentityModel.Tokens;
++
++using NSubstitute;
++
++namespace Hexalith.Parties.Tests.Gateway;
++
++/// <summary>Runs the real Parties host with ephemeral Development credentials and the unchanged SDK security boundary.</summary>
++internal sealed class PartiesProcessTestFactory : WebApplicationFactory<Program>
++{
++    /// <summary>Gets the isolated sidecar channel token, with no production authority.</summary>
++    internal const string ChannelToken = "parties-owner-local-channel-token";
++    private readonly string _signingKey = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
++    private readonly IDomainProcessor? _registeredProcessor;
++    private readonly bool _gdprFeaturesActive;
++    private readonly bool _useProductionProcessor;
++    private readonly IEventPayloadProtectionService? _payloadProtectionService;
++
++    /// <summary>Creates a capturing processor fixture.</summary>
++    public PartiesProcessTestFactory(bool gdprFeaturesActive = false)
++    {
++        Processor = new CapturingDomainProcessor();
++        _registeredProcessor = Processor;
++        _gdprFeaturesActive = gdprFeaturesActive;
++    }
++
++    /// <summary>Creates a production replay/validation fixture with optional isolated protection.</summary>
++    public PartiesProcessTestFactory(bool useProductionProcessor, bool gdprFeaturesActive = false,
++        IEventPayloadProtectionService? payloadProtectionService = null)
++    {
++        _useProductionProcessor = useProductionProcessor;
++        _payloadProtectionService = payloadProtectionService;
++        _gdprFeaturesActive = gdprFeaturesActive;
++    }
++
++    /// <summary>Creates a fixture using an explicit test processor.</summary>
++    public PartiesProcessTestFactory(IDomainProcessor registeredProcessor, bool gdprFeaturesActive = false)
++    {
++        ArgumentNullException.ThrowIfNull(registeredProcessor);
++        Processor = new CapturingDomainProcessor();
++        _registeredProcessor = registeredProcessor;
++        _gdprFeaturesActive = gdprFeaturesActive;
++    }
++
++    /// <summary>Gets the capturing processor when this fixture owns one.</summary>
++    public CapturingDomainProcessor? Processor { get; }
++
++    /// <summary>Creates a client carrying a real SDK-issued assertion for exactly one audience and operation.</summary>
++    public HttpClient CreateAuthenticatedClient(string operation = EventStoreWorkloadOperations.DomainServiceProcess,
++        string audience = "parties")
++    {
++        HttpClient client = CreateClient();
++        string assertion = Services.GetRequiredService<IWorkloadAssertionIssuer>()
++            .IssueAsync(new WorkloadAssertionRequest(audience, operation), TestContext.Current.CancellationToken)
++            .AsTask().GetAwaiter().GetResult()
++            ?? throw new InvalidOperationException("The isolated fixture could not issue its workload assertion.");
++        client.DefaultRequestHeaders.Add(DaprAppChannelToken.HeaderName, ChannelToken);
++        client.DefaultRequestHeaders.Add(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName, assertion);
++        return client;
++    }
++
++    /// <inheritdoc />
++    protected override void ConfigureWebHost(IWebHostBuilder builder)
++    {
++        ArgumentNullException.ThrowIfNull(builder);
++        builder.UseEnvironment("Development");
++        builder.UseSetting(MvpComplianceWarning.ActivationConfigurationKey, _gdprFeaturesActive.ToString());
++        var settings = new Dictionary<string, string>
++        {
++            [DaprAppChannelToken.ConfigurationKey] = ChannelToken,
++            ["EventStore:DomainService:AppId"] = "parties",
++            ["Authentication:JwtBearer:Issuer"] = "parties-owner-local-issuer",
++            ["Authentication:JwtBearer:Audience"] = "hexalith-eventstore",
++            ["Authentication:JwtBearer:SigningKey"] = _signingKey,
++            ["Authentication:JwtBearer:AllowedAlgorithms:0"] = SecurityAlgorithms.HmacSha256,
++            ["Authentication:JwtBearer:RequireHttpsMetadata"] = "false",
++            ["Authentication:WorkloadIssuer:Workload"] = "eventstore",
++        };
++        foreach (KeyValuePair<string, string> setting in settings)
++        {
++            builder.UseSetting(setting.Key, setting.Value);
++        }
++
++        builder.ConfigureTestServices(services =>
++        {
++            // This fixture qualifies HTTP authentication, never backend readiness.
++            // Prevent Dapr/tenant health probes from invoking unqualified live seams.
++            HealthCheckService health = Substitute.For<HealthCheckService>();
++            health.CheckHealthAsync(Arg.Any<Func<HealthCheckRegistration, bool>?>(), Arg.Any<CancellationToken>())
++                .Returns(Task.FromResult(new HealthReport(new Dictionary<string, HealthReportEntry>(), TimeSpan.Zero)));
++            services.AddSingleton(health);
++
++            if (_payloadProtectionService is not null)
++            {
++                services.AddSingleton(_payloadProtectionService);
++                services.AddSingleton(Substitute.For<IPartyErasureRecordStore>());
++            }
++
++            if (!_useProductionProcessor)
++            {
++                services.AddKeyedSingleton<IDomainProcessor>("party", (_, _) => _registeredProcessor!);
++                services.AddKeyedSingleton<IAsyncDomainProcessor>("party", (_, _) => (IAsyncDomainProcessor)_registeredProcessor!);
++            }
++        });
++    }
++}
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/CapturingDomainProcessor.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/CapturingDomainProcessor.cs
+new file mode 100644
+index 00000000..414faf27
+--- /dev/null
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/CapturingDomainProcessor.cs
+@@ -0,0 +1,32 @@
++using Hexalith.EventStore.Client.Handlers;
++using Hexalith.EventStore.Contracts.Commands;
++using Hexalith.EventStore.Contracts.Results;
++using Hexalith.Parties.Contracts.Events;
++using Hexalith.Parties.Contracts.ValueObjects;
++
++namespace Hexalith.Parties.Tests.Gateway;
++
++/// <summary>Test processor used only by authenticated Parties endpoint fixtures.</summary>
++internal sealed class CapturingDomainProcessor : IDomainProcessor, IAsyncDomainProcessor
++{
++    private readonly List<CommandEnvelope> _receivedCommands = [];
++
++    /// <summary>Gets all commands admitted by the real HTTP security boundary.</summary>
++    public IReadOnlyList<CommandEnvelope> ReceivedCommands => _receivedCommands;
++
++    /// <inheritdoc />
++    public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState, CancellationToken cancellationToken)
++    {
++        cancellationToken.ThrowIfCancellationRequested();
++        return ProcessAsync(command, currentState);
++    }
++
++    /// <inheritdoc />
++    public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState)
++    {
++        ArgumentNullException.ThrowIfNull(command);
++        _receivedCommands.Add(command);
++        return Task.FromResult(DomainResult.Success(
++            [new PartyCreated { Type = PartyType.Person }]));
++    }
++}
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/PayloadProducingDomainProcessor.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/PayloadProducingDomainProcessor.cs
+new file mode 100644
+index 00000000..a842cd77
+--- /dev/null
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/PayloadProducingDomainProcessor.cs
+@@ -0,0 +1,37 @@
++using Hexalith.EventStore.Client.Handlers;
++using Hexalith.EventStore.Contracts.Commands;
++using Hexalith.EventStore.Contracts.Events;
++using Hexalith.EventStore.Contracts.Results;
++using Hexalith.Parties.Contracts.Events;
++using Hexalith.Parties.Contracts.Models;
++using Hexalith.Parties.Contracts.Results;
++using Hexalith.Parties.Contracts.ValueObjects;
++
++namespace Hexalith.Parties.Tests.Gateway;
++
++/// <summary>Test processor used only by authenticated Parties endpoint fixtures.</summary>
++internal sealed class PayloadProducingDomainProcessor : IDomainProcessor, IAsyncDomainProcessor
++{
++    /// <inheritdoc />
++    public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState, CancellationToken cancellationToken)
++    {
++        cancellationToken.ThrowIfCancellationRequested();
++        return ProcessAsync(command, currentState);
++    }
++
++    /// <inheritdoc />
++    public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState)
++    {
++        ArgumentNullException.ThrowIfNull(command);
++        var detail = new PartyDetail
++        {
++            Id = command.AggregateId,
++            Type = PartyType.Person,
++            IsActive = true,
++            DisplayName = "Ada Lovelace",
++            SortName = "Lovelace, Ada",
++        };
++        IEventPayload[] events = [new PartyCreated { Type = PartyType.Person }];
++        return Task.FromResult<DomainResult>(new PartyCommandResult(events, detail));
++    }
++}
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs
+new file mode 100644
+index 00000000..0dc9f184
+--- /dev/null
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs
+@@ -0,0 +1,167 @@
++using System.Net;
++using System.Net.Http.Json;
++using System.Text.Json;
++
++using Hexalith.EventStore.Contracts.Commands;
++using Hexalith.EventStore.DomainService;
++using Hexalith.EventStore.ServiceDefaults.Authentication;
++
++using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Hosting;
++using Microsoft.AspNetCore.Routing;
++using Microsoft.Extensions.DependencyInjection;
++using Microsoft.Extensions.Options;
++
++using Shouldly;
++
++namespace Hexalith.Parties.Tests.Gateway;
++
++/// <summary>Exercises the Parties host's real workload and sidecar boundary with isolated credentials.</summary>
++public sealed class PartiesDomainServiceSecurityTests
++{
++    /// <summary>Missing or forged channel/assertion fields never reach even an otherwise accepting processor.</summary>
++    [Theory]
++    [InlineData("missing", HttpStatusCode.Unauthorized)]
++    [InlineData("caller-header", HttpStatusCode.Unauthorized)]
++    [InlineData("channel-only", HttpStatusCode.Unauthorized)]
++    [InlineData("missing-channel", HttpStatusCode.Unauthorized)]
++    [InlineData("wrong-channel", HttpStatusCode.Unauthorized)]
++    [InlineData("duplicate-channel", HttpStatusCode.Unauthorized)]
++    [InlineData("forged-assertion", HttpStatusCode.Unauthorized)]
++    [InlineData("foreign-assertion", HttpStatusCode.Unauthorized)]
++    [InlineData("duplicate-assertion", HttpStatusCode.Unauthorized)]
++    [InlineData("conflicting-caller", HttpStatusCode.Unauthorized)]
++    [InlineData("human-bearer", HttpStatusCode.Unauthorized)]
++    [InlineData("wrong-audience", HttpStatusCode.Unauthorized)]
++    [InlineData("wrong-operation", HttpStatusCode.Forbidden)]
++    public async Task PostProcess_InvalidCredentials_DenyBeforeDomainWork(string scenario, HttpStatusCode expected)
++    {
++        using var factory = new PartiesProcessTestFactory();
++        using HttpClient client = factory.CreateAuthenticatedClient(
++            scenario == "wrong-operation" ? EventStoreWorkloadOperations.DomainServiceQuery : EventStoreWorkloadOperations.DomainServiceProcess,
++            scenario == "wrong-audience" ? "tenants" : "parties");
++        string assertion = client.DefaultRequestHeaders.GetValues(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName).Single();
++        switch (scenario)
++        {
++            case "missing":
++                client.DefaultRequestHeaders.Clear();
++                break;
++            case "caller-header":
++            case "channel-only":
++                client.DefaultRequestHeaders.Remove(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName);
++                client.DefaultRequestHeaders.Add(EventStoreWorkloadAuthenticationDefaults.DaprCallerHeaderName, "eventstore");
++                break;
++            case "missing-channel":
++                client.DefaultRequestHeaders.Remove(DaprAppChannelToken.HeaderName);
++                break;
++            case "wrong-channel":
++                client.DefaultRequestHeaders.Remove(DaprAppChannelToken.HeaderName);
++                client.DefaultRequestHeaders.Add(DaprAppChannelToken.HeaderName, "forged-channel");
++                break;
++            case "duplicate-channel":
++                client.DefaultRequestHeaders.Add(DaprAppChannelToken.HeaderName, PartiesProcessTestFactory.ChannelToken);
++                break;
++            case "forged-assertion":
++                client.DefaultRequestHeaders.Remove(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName);
++                client.DefaultRequestHeaders.Add(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName, "forged-assertion");
++                break;
++            case "foreign-assertion":
++                using (var foreign = new PartiesProcessTestFactory())
++                using (HttpClient foreignClient = foreign.CreateAuthenticatedClient())
++                {
++                    client.DefaultRequestHeaders.Remove(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName);
++                    client.DefaultRequestHeaders.Add(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName,
++                        foreignClient.DefaultRequestHeaders.GetValues(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName).Single());
++                }
++                break;
++            case "duplicate-assertion":
++                client.DefaultRequestHeaders.Add(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName, assertion);
++                break;
++            case "conflicting-caller":
++                client.DefaultRequestHeaders.Add(EventStoreWorkloadAuthenticationDefaults.DaprCallerHeaderName, "untrusted-service");
++                break;
++            case "human-bearer":
++                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + assertion);
++                break;
++        }
++
++        using HttpResponseMessage response = await client.PostAsJsonAsync("/process", Request(), TestContext.Current.CancellationToken);
++
++        response.StatusCode.ShouldBe(expected);
++        (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).ShouldBeEmpty();
++        factory.Processor.ShouldNotBeNull().ReceivedCommands.ShouldBeEmpty();
++    }
++
++    /// <summary>Sidecar discovery/configuration/health are usable with the channel token alone and deny forged channels.</summary>
++    [Theory]
++    [InlineData("/dapr/subscribe", "valid")]
++    [InlineData("/dapr/subscribe", "missing")]
++    [InlineData("/dapr/subscribe", "wrong")]
++    [InlineData("/dapr/subscribe", "duplicate")]
++    [InlineData("/dapr/config", "valid")]
++    [InlineData("/dapr/config", "missing")]
++    [InlineData("/dapr/config", "wrong")]
++    [InlineData("/dapr/config", "duplicate")]
++    [InlineData("/healthz", "valid")]
++    [InlineData("/healthz", "missing")]
++    [InlineData("/healthz", "wrong")]
++    [InlineData("/healthz", "duplicate")]
++    public async Task SidecarRoute_RequiresAuthenticatedChannel(string route, string channel)
++    {
++        using var factory = new PartiesProcessTestFactory();
++        using HttpClient client = factory.CreateClient();
++        if (channel != "missing")
++        {
++            client.DefaultRequestHeaders.Add(DaprAppChannelToken.HeaderName,
++                channel == "wrong" ? "forged-channel" : PartiesProcessTestFactory.ChannelToken);
++            if (channel == "duplicate")
++            {
++                client.DefaultRequestHeaders.Add(DaprAppChannelToken.HeaderName, PartiesProcessTestFactory.ChannelToken);
++            }
++        }
++
++        using HttpResponseMessage response = await client.GetAsync(route, TestContext.Current.CancellationToken);
++
++        response.StatusCode.ShouldBe(channel == "valid" ? HttpStatusCode.OK : HttpStatusCode.Unauthorized);
++        factory.Processor.ShouldNotBeNull().ReceivedCommands.ShouldBeEmpty();
++    }
++
++    /// <summary>Actor and tenant-delivery routes reject unauthenticated requests before dispatch or payload parsing.</summary>
++    [Theory]
++    [InlineData("/actors/PartyProjectionActor/party-1/method/Untrusted")]
++    [InlineData("/tenants/events")]
++    public async Task SidecarDelivery_MissingChannel_DeniesBeforeDispatch(string route)
++    {
++        using var factory = new PartiesProcessTestFactory();
++        using HttpClient client = factory.CreateClient();
++        using HttpResponseMessage response = await client.PostAsync(route, JsonContent.Create(new { }), TestContext.Current.CancellationToken);
++        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
++        factory.Processor.ShouldNotBeNull().ReceivedCommands.ShouldBeEmpty();
++    }
++
++    /// <summary>The complete actual endpoint inventory keeps canonical operation policies and actor/subscription channel policies.</summary>
++    [Fact]
++    public void ActualEndpointInventory_PassesUnchangedSdkAudit()
++    {
++        using var factory = new PartiesProcessTestFactory();
++        using HttpClient client = factory.CreateClient();
++        EndpointDataSource source = factory.Services.GetRequiredService<EndpointDataSource>();
++        AuthorizationPolicy? fallback = factory.Services.GetRequiredService<IOptions<AuthorizationOptions>>().Value.FallbackPolicy;
++        EventStoreDomainServiceEndpointInventory.Validate(source.Endpoints, fallback).ShouldBeEmpty();
++        RouteEndpoint[] endpoints = source.Endpoints.OfType<RouteEndpoint>().ToArray();
++        RouteEndpoint[] sidecar = endpoints.Where(endpoint => EventStoreDomainServiceEndpointInventory.IsSidecarOriginated(
++            endpoint, EventStoreDomainServiceRoutes.Normalize(endpoint.RoutePattern.RawText))).ToArray();
++        sidecar.ShouldNotBeEmpty();
++        sidecar.ShouldContain(endpoint => endpoint.RoutePattern.RawText!.StartsWith("actors/", StringComparison.Ordinal)
++            || endpoint.RoutePattern.RawText.StartsWith("/actors/", StringComparison.Ordinal));
++        foreach (RouteEndpoint endpoint in sidecar)
++        {
++            endpoint.Metadata.GetMetadata<IAllowAnonymous>().ShouldBeNull();
++            endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().ShouldContain(data => data.Policy == EventStoreDomainServicePolicies.SidecarChannel);
++        }
++    }
++
++    private static DomainServiceRequest Request() => new(new CommandEnvelope(
++        "security-denial-command", "tenant-a", "party", "party-1", "CreatePartyComposite", JsonSerializer.SerializeToUtf8Bytes(new { }),
++        "security-denial-correlation", null, "untrusted-user", null), null);
++}
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/pre-change/tests/Hexalith.Parties.Tests/HealthChecks/DegradedResponseMiddlewareTests.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/HealthChecks/DegradedResponseMiddlewareTests.cs
+index 69ac1357..169b2a40 100644
+--- a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/pre-change/tests/Hexalith.Parties.Tests/HealthChecks/DegradedResponseMiddlewareTests.cs
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/tests/Hexalith.Parties.Tests/HealthChecks/DegradedResponseMiddlewareTests.cs
+@@ -82,6 +82,7 @@ public sealed class DegradedResponseMiddlewareTests
+     }
+ 
+     [Theory]
++    [InlineData("/healthz")]
+     [InlineData("/dapr/config")]
+     [InlineData("/dapr/subscribe")]
+     [InlineData("/tenants/events")]
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/pre-change/eng/verify-ext-parties-1.ps1 b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/eng/verify-ext-parties-1.ps1
+index 8e0c4cd8..aaf300e0 100644
+--- a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/pre-change/eng/verify-ext-parties-1.ps1
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/post-change/eng/verify-ext-parties-1.ps1
+@@ -52,7 +52,7 @@ $lanes = @(
+     @{ Root=$PlatformRoot; Project='Hexalith.Platform.Identity.Tests'; Classes=@('*PlatformIdentityAdmissionTests'); Matrix='Global registry/bootstrap' },
+     @{ Root=$PartiesRoot; Project='Hexalith.Parties.Contracts.Tests'; Classes=@('*PartyStateTests', '*PartyIdentityContractTests', '*ContractsPublicApiSnapshotTests'); Matrix='History/compatibility' },
+     @{ Root=$PartiesRoot; Project='Hexalith.Parties.Server.Tests'; Classes=@('*AgentPartyProvisioningTests', '*HumanActorBindingTests', '*PartyAggregateCreateTests', '*PartyAggregateCompositeTests'); Matrix='Provision/history' },
+-    @{ Root=$PartiesRoot; Project='Hexalith.Parties.Tests'; Classes=@('*PartyIdentityAdmissionTests', '*PartyIdentityQueryHandlerTests', '*PartyDomainProcessorValidationTests', '*PartySdkQueryHandlerTests'); Matrix='Current identity/history/isolation' },
++    @{ Root=$PartiesRoot; Project='Hexalith.Parties.Tests'; Classes=@('*PartyIdentityAdmissionTests', '*PartyIdentityQueryHandlerTests', '*PartyDomainProcessorValidationTests', '*PartySdkQueryHandlerTests', '*PartiesProcessEndpointTests', '*PartiesDomainServiceSecurityTests'); Matrix='Current identity/history/isolation' },
+     @{ Root=$PartiesRoot; Project='Hexalith.Parties.Security.Tests'; Classes=@('*IdentityHistoryProtectionTests', '*PartyPayloadProtectionServiceTests'); Matrix='Custody separation/denial' },
+     @{ Root=$PartiesRoot; Project='Hexalith.Parties.Client.Tests'; Classes=@('*HttpPartiesIdentityClientTests', '*HttpPartiesCommandClientTests', '*HttpPartiesQueryClientTests', '*DependencyInjectionTests'); Matrix='Isolation/compatibility' },
+     @{ Root=$PartiesRoot; Project='Hexalith.Parties.UI.Tests'; Classes=@('*IdentityBindingBoundaryTests', '*IdentityBindingProvisioningServiceTests', '*PartyIdClaimResolverTests', '*SelfScopedPartiesClientTests'); Matrix='Consumer compatibility' }

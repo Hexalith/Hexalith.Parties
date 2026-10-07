@@ -1,0 +1,452 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
+
+using Hexalith.EventStore.Contracts.Commands;
+using Hexalith.EventStore.Contracts.Events;
+using Hexalith.EventStore.Contracts.Identity;
+using Hexalith.EventStore.Contracts.Security;
+using Hexalith.EventStore.Contracts.Replay;
+using Hexalith.EventStore.Contracts.Results;
+using Hexalith.EventStore.Client.Handlers;
+using Hexalith.Parties.Contracts.Commands;
+using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Results;
+using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.Compliance;
+using Hexalith.Parties.Security;
+
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+using NSubstitute;
+
+using Shouldly;
+
+namespace Hexalith.Parties.Tests.Gateway;
+
+public sealed class PartiesProcessEndpointTests
+{
+    [Fact]
+    public async Task PostProcess_InvokesRegisteredPartiesDomainProcessorAsync()
+    {
+        using var factory = new PartiesProcessTestFactory();
+        using HttpClient client = factory.CreateClient();
+        var command = new CommandEnvelope(
+            MessageId: "cmd-12-4-process",
+            TenantId: "tenant-a",
+            Domain: "party",
+            AggregateId: "party-process",
+            CommandType: "Hexalith.Parties.Contracts.Commands.CreatePartyComposite",
+            Payload: JsonSerializer.SerializeToUtf8Bytes(new { PartyId = "party-process" }),
+            CorrelationId: "cmd-12-4-process",
+            CausationId: null,
+            UserId: "user-a",
+            Extensions: null);
+
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "/process",
+            new DomainServiceRequest(command, CurrentState: null));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Headers.TryGetValues(MvpComplianceWarning.HeaderName, out IEnumerable<string>? warningValues).ShouldBeTrue();
+        string warning = warningValues.ShouldHaveSingleItem();
+        warning.ShouldBe(MvpComplianceWarning.Message);
+        warning.ShouldContain("not for regulated EU personal data");
+        warning.ShouldContain("v1.1");
+        warning.ShouldNotContain("tenant-a");
+        warning.ShouldNotContain("user-a");
+        response.Headers.Contains(RetiredGdprWarningHeader()).ShouldBeFalse();
+
+        DomainServiceWireResult result = (await response.Content.ReadFromJsonAsync<DomainServiceWireResult>())
+            .ShouldNotBeNull();
+        result.IsRejection.ShouldBeFalse();
+        result.Events.ShouldHaveSingleItem().EventTypeName.ShouldBe(typeof(PartyCreated).FullName);
+        factory.Processor.ShouldNotBeNull().ReceivedCommands.ShouldHaveSingleItem().Domain.ShouldBe("party");
+    }
+
+    [Fact]
+    public async Task PostProcess_PreservesResultPayloadAcrossPartiesHostWireSerializationAsync()
+    {
+        // P12: prove the enriched result payload survives the Parties /process endpoint
+        // round-trip (DomainResult.ResultPayload → DomainServiceWireResult.ResultPayload).
+        var payloadProcessor = new PayloadProducingDomainProcessor();
+        using var factory = new PartiesProcessTestFactory(payloadProcessor);
+        using HttpClient client = factory.CreateClient();
+        var command = new CommandEnvelope(
+            MessageId: "cmd-1-9-process-payload",
+            TenantId: "tenant-a",
+            Domain: "party",
+            AggregateId: "party-process-payload",
+            CommandType: "Hexalith.Parties.Contracts.Commands.CreatePartyComposite",
+            Payload: JsonSerializer.SerializeToUtf8Bytes(new { PartyId = "party-process-payload" }),
+            CorrelationId: "cmd-1-9-process-payload",
+            CausationId: null,
+            UserId: "user-a",
+            Extensions: null);
+
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "/process",
+            new DomainServiceRequest(command, CurrentState: null));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        DomainServiceWireResult result = (await response.Content.ReadFromJsonAsync<DomainServiceWireResult>())
+            .ShouldNotBeNull();
+        result.IsRejection.ShouldBeFalse();
+        result.ResultPayload.ShouldNotBeNullOrWhiteSpace();
+        result.ResultPayload.ShouldContain("\"id\":\"party-process-payload\"");
+        result.ResultPayload.ShouldContain("\"type\":\"Person\"");
+        result.ResultPayload.ShouldContain("\"displayName\":\"Ada Lovelace\"");
+    }
+
+    [Fact]
+    public async Task PostProcess_WhenGdprFeaturesActive_DoesNotEmitMvpComplianceWarningHeaderAsync()
+    {
+        using var factory = new PartiesProcessTestFactory(gdprFeaturesActive: true);
+        using HttpClient client = factory.CreateClient();
+        var command = new CommandEnvelope(
+            MessageId: "cmd-3-10-active",
+            TenantId: "tenant-a",
+            Domain: "party",
+            AggregateId: "party-process-active",
+            CommandType: "Hexalith.Parties.Contracts.Commands.CreatePartyComposite",
+            Payload: JsonSerializer.SerializeToUtf8Bytes(new { PartyId = "party-process-active" }),
+            CorrelationId: "cmd-3-10-active",
+            CausationId: null,
+            UserId: "user-a",
+            Extensions: null);
+
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "/process",
+            new DomainServiceRequest(command, CurrentState: null));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Headers.Contains(MvpComplianceWarning.HeaderName).ShouldBeFalse();
+        response.Headers.Contains(RetiredGdprWarningHeader()).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task PostProcess_InvalidPayload_UsesProductionProcessorValidationRejectionAsync()
+    {
+        using var factory = new PartiesProcessTestFactory(useProductionProcessor: true);
+        using HttpClient client = factory.CreateClient();
+        var command = new CommandEnvelope(
+            MessageId: "cmd-8-5-invalid-payload",
+            TenantId: "tenant-a",
+            Domain: "party",
+            AggregateId: "party-invalid-payload",
+            CommandType: typeof(Hexalith.Parties.Contracts.Commands.CreatePartyComposite).FullName!,
+            Payload: JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                PartyId = "party-invalid-payload",
+                Type = "Person",
+            }),
+            CorrelationId: "cmd-8-5-invalid-payload",
+            CausationId: null,
+            UserId: "user-a",
+            Extensions: null);
+
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "/process",
+            new DomainServiceRequest(command, CurrentState: null));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        DomainServiceWireResult result = (await response.Content.ReadFromJsonAsync<DomainServiceWireResult>())
+            .ShouldNotBeNull();
+        result.IsRejection.ShouldBeTrue();
+        DomainServiceWireEvent rejection = result.Events.ShouldHaveSingleItem();
+        rejection.EventTypeName.ShouldBe(typeof(PartyCommandValidationRejected).FullName);
+        string rejectionPayload = Encoding.UTF8.GetString(rejection.Payload.ShouldNotBeNull());
+        rejectionPayload.ShouldContain(nameof(Hexalith.Parties.Contracts.Commands.CreatePartyComposite.PersonDetails));
+        rejectionPayload.ShouldNotContain("tenant-a");
+        rejectionPayload.ShouldNotContain("user-a");
+        rejectionPayload.ShouldNotContain("party-invalid-payload");
+    }
+
+    [Theory]
+    [InlineData("none")]
+    [InlineData("metadata-version")]
+    [InlineData("event-contract")]
+    [InlineData("payload-version")]
+    public async Task PostProcess_SerializedLifecycleHistory_EnforcesProductionReplayBoundaryAsync(string corruption)
+    {
+        const string partyId = "party-endpoint-erasure";
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        protection.UnprotectEventPayloadAsync(Arg.Any<AggregateIdentity>(), Arg.Any<string>(), Arg.Any<byte[]>(),
+            Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => call.ArgAt<string>(3) == "json+pdenc-v1"
+                ? throw new PartyEncryptionKeyDestroyedException("tenant-a", partyId)
+                : new PayloadProtectionResult(call.Arg<byte[]>(), "json"));
+        using var factory = new PartiesProcessTestFactory(useProductionProcessor: true, payloadProtectionService: protection);
+        using HttpClient client = factory.CreateClient();
+        var command = new CommandEnvelope(
+            MessageId: "cmd-review-lifecycle", TenantId: "tenant-a", Domain: "party", AggregateId: partyId,
+            CommandType: typeof(MarkPartyEncryptionKeyDeleted).FullName!,
+            Payload: JsonSerializer.SerializeToUtf8Bytes(new MarkPartyEncryptionKeyDeleted
+            {
+                PartyId = partyId, TenantId = "tenant-a", DeletedAt = DateTimeOffset.Parse("2026-05-21T20:45:00Z"),
+            }),
+            CorrelationId: "cmd-review-lifecycle", CausationId: null, UserId: "admin", Extensions: null);
+        EventEnvelope Stored(long sequence, string type, byte[] payload, string format) => new(
+            new EventMetadata(MessageId: $"evt-review-{sequence}", AggregateId: partyId, AggregateType: "Party",
+                TenantId: command.TenantId, Domain: command.Domain, SequenceNumber: sequence, GlobalPosition: sequence,
+                Timestamp: DateTimeOffset.Parse("2026-05-21T20:40:00Z"), CorrelationId: command.CorrelationId,
+                CausationId: command.MessageId, UserId: command.UserId, DomainServiceVersion: "v1", EventTypeName: type,
+                MetadataVersion: sequence == 2 && corruption == "metadata-version" ? 2 : 1,
+                SerializationFormat: format), payload, Extensions: null);
+        EventEnvelope created = Stored(1, typeof(PartyCreated).FullName!, Encoding.UTF8.GetBytes(
+            """
+            {"type":1,"personDetails":{"$enc":true,"kid":"deleted-key","alg":"A256GCM","iv":"redacted","ct":"redacted"}}
+            """), "json+pdenc-v1");
+        EventEnvelope requested = Stored(2, typeof(ErasePartyRequested).FullName!,
+            JsonSerializer.SerializeToUtf8Bytes(new ErasePartyRequested
+            {
+                PartyId = partyId, TenantId = command.TenantId, RequestedAt = DateTimeOffset.Parse("2026-05-21T20:40:00Z"), RequestedBy = "admin",
+            }), "json");
+        EventMetadata metadata = corruption switch
+        {
+            "event-contract" => requested.Metadata with { EventContractType = "future-event" },
+            "payload-version" => requested.Metadata with { PayloadVersion = 2 },
+            _ => requested.Metadata,
+        };
+        requested = new EventEnvelope(metadata, requested.Payload, requested.Extensions);
+        var state = new DomainServiceCurrentState(null, [created, requested], LastSnapshotSequence: 0, CurrentSequence: 2);
+
+        // HTTP object binding presents CurrentState as JsonElement to the production processor.
+        HttpResponseMessage response = await client.PostAsJsonAsync("/process", new DomainServiceRequest(command, state));
+
+        if (corruption == "none")
+        {
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            DomainServiceWireResult result = (await response.Content.ReadFromJsonAsync<DomainServiceWireResult>()).ShouldNotBeNull();
+            result.IsRejection.ShouldBeFalse();
+            result.Events.ShouldHaveSingleItem().EventTypeName.ShouldBe(typeof(PartyEncryptionKeyDeleted).FullName);
+            await protection.Received(2).UnprotectEventPayloadAsync(Arg.Any<AggregateIdentity>(), Arg.Any<string>(),
+                Arg.Any<byte[]>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        }
+        else
+        {
+            response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+            await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+        }
+    }
+
+    [Fact]
+    public async Task ProductionAsyncProcessor_AlreadyCanceledToken_ThrowsBeforeProducingEventsAsync()
+    {
+        using var factory = new PartiesProcessTestFactory(useProductionProcessor: true);
+        using IServiceScope scope = factory.Services.CreateScope();
+        IAsyncDomainProcessor processor = scope.ServiceProvider.GetRequiredKeyedService<IAsyncDomainProcessor>("party");
+        string partyId = Guid.NewGuid().ToString("D");
+        var command = new CommandEnvelope(
+            MessageId: "cmd-release-canceled",
+            TenantId: "tenant-a",
+            Domain: "party",
+            AggregateId: partyId,
+            CommandType: typeof(CreatePartyComposite).FullName!,
+            Payload: JsonSerializer.SerializeToUtf8Bytes(new CreatePartyComposite
+            {
+                PartyId = partyId,
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+            }),
+            CorrelationId: "cmd-release-canceled",
+            CausationId: null,
+            UserId: "user-a",
+            Extensions: null);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        OperationCanceledException exception = await Should.ThrowAsync<OperationCanceledException>(
+            () => processor.ProcessAsync(command, currentState: null, cancellation.Token));
+
+        exception.CancellationToken.ShouldBe(cancellation.Token);
+    }
+
+    [Theory]
+    [InlineData("Party")]
+    [InlineData("PARTY")]
+    [InlineData("pArTy")]
+    public async Task PostProcess_CommonPartyDomainCaseVariants_ResolveProductionProcessorAsync(string domain)
+    {
+        using var factory = new PartiesProcessTestFactory(useProductionProcessor: true);
+        using HttpClient client = factory.CreateClient();
+        var command = new CommandEnvelope(
+            MessageId: $"cmd-8-5-domain-{domain}",
+            TenantId: "tenant-a",
+            Domain: domain,
+            AggregateId: "party-case-variant",
+            CommandType: typeof(CreatePartyComposite).FullName!,
+            Payload: JsonSerializer.SerializeToUtf8Bytes(new CreatePartyComposite
+            {
+                PartyId = "party-case-variant",
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails
+                {
+                    FirstName = "Ada",
+                    LastName = "Lovelace",
+                },
+            }),
+            CorrelationId: $"cmd-8-5-domain-{domain}",
+            CausationId: null,
+            UserId: "user-a",
+            Extensions: null);
+
+        HttpResponseMessage response = await client.PostAsJsonAsync(
+            "/process",
+            new DomainServiceRequest(command, CurrentState: null));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        DomainServiceWireResult result = (await response.Content.ReadFromJsonAsync<DomainServiceWireResult>())
+            .ShouldNotBeNull();
+        result.IsRejection.ShouldBeFalse();
+        result.Events.ShouldContain(e => e.EventTypeName == typeof(PartyCreated).FullName);
+    }
+
+    [Fact]
+    public async Task PostReplayState_UsesProductionProcessorReplayCapabilityAsync()
+    {
+        using var factory = new PartiesProcessTestFactory(useProductionProcessor: true);
+        using HttpClient client = factory.CreateClient();
+        var request = new AggregateReconstructionRequest(
+            TenantId: "tenant-a",
+            Domain: "party",
+            AggregateType: "Party",
+            AggregateId: "party-replay",
+            UpToSequence: 1,
+            Events:
+            [
+                new ReplayEventEnvelope(
+                    SequenceNumber: 1,
+                    EventTypeName: typeof(PartyCreated).FullName!,
+                    Payload: JsonSerializer.SerializeToUtf8Bytes(new PartyCreated { Type = PartyType.Person }),
+                    SerializationFormat: "json",
+                    MetadataVersion: 1,
+                    MessageId: "evt-8-5-party-created",
+                    CorrelationId: "replay-8-5",
+                    CausationId: "cmd-8-5-party-created"),
+            ],
+            IncludeTimeline: false,
+            RequestId: "replay-8-5");
+
+        HttpResponseMessage response = await client.PostAsJsonAsync("/replay-state", request);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        string content = await response.Content.ReadAsStringAsync();
+        using JsonDocument document = JsonDocument.Parse(content);
+        JsonElement result = document.RootElement;
+        result.GetProperty("status").GetString().ShouldBe(nameof(AggregateReconstructionStatus.Succeeded));
+        string? stateJson = result.GetProperty("stateJson").GetString();
+        stateJson.ShouldNotBeNullOrWhiteSpace();
+        stateJson!.ShouldContain(nameof(PartyType.Person));
+    }
+
+    private static string RetiredGdprWarningHeader() => "X-" + "GDPR-Warning";
+
+    private sealed class PartiesProcessTestFactory : WebApplicationFactory<Program>
+    {
+        private readonly IDomainProcessor? _registeredProcessor;
+        private readonly bool _gdprFeaturesActive;
+        private readonly bool _useProductionProcessor;
+        private readonly IEventPayloadProtectionService? _payloadProtectionService;
+
+        public PartiesProcessTestFactory(bool gdprFeaturesActive = false)
+        {
+            Processor = new CapturingDomainProcessor();
+            _registeredProcessor = Processor;
+            _gdprFeaturesActive = gdprFeaturesActive;
+        }
+
+        public PartiesProcessTestFactory(bool useProductionProcessor, bool gdprFeaturesActive = false,
+            IEventPayloadProtectionService? payloadProtectionService = null)
+        {
+            _useProductionProcessor = useProductionProcessor;
+            _payloadProtectionService = payloadProtectionService;
+            _gdprFeaturesActive = gdprFeaturesActive;
+        }
+
+        public PartiesProcessTestFactory(IDomainProcessor registeredProcessor, bool gdprFeaturesActive = false)
+        {
+            ArgumentNullException.ThrowIfNull(registeredProcessor);
+            Processor = new CapturingDomainProcessor();
+            _registeredProcessor = registeredProcessor;
+            _gdprFeaturesActive = gdprFeaturesActive;
+        }
+
+        public CapturingDomainProcessor? Processor { get; }
+
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            ArgumentNullException.ThrowIfNull(builder);
+
+            builder.UseEnvironment("Development");
+            builder.UseSetting(MvpComplianceWarning.ActivationConfigurationKey, _gdprFeaturesActive.ToString());
+            builder.ConfigureTestServices(services =>
+            {
+                if (_payloadProtectionService is not null)
+                {
+                    services.AddSingleton(_payloadProtectionService);
+                    services.AddSingleton(Substitute.For<IPartyErasureRecordStore>());
+                }
+
+                if (!_useProductionProcessor)
+                {
+                    services.AddKeyedSingleton<IDomainProcessor>("party", (_, _) => _registeredProcessor!);
+                    services.AddKeyedSingleton<IAsyncDomainProcessor>("party", (_, _) => (IAsyncDomainProcessor)_registeredProcessor!);
+                }
+            });
+        }
+    }
+
+    private sealed class CapturingDomainProcessor : IDomainProcessor, IAsyncDomainProcessor
+    {
+        private readonly List<CommandEnvelope> _receivedCommands = [];
+
+        public IReadOnlyList<CommandEnvelope> ReceivedCommands => _receivedCommands;
+
+        /// <inheritdoc />
+        public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return ProcessAsync(command, currentState);
+        }
+
+        public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState)
+        {
+            ArgumentNullException.ThrowIfNull(command);
+            _receivedCommands.Add(command);
+            return Task.FromResult(DomainResult.Success(
+                [new PartyCreated { Type = PartyType.Person }]));
+        }
+    }
+
+    private sealed class PayloadProducingDomainProcessor : IDomainProcessor, IAsyncDomainProcessor
+    {
+        /// <inheritdoc />
+        public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return ProcessAsync(command, currentState);
+        }
+
+        public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState)
+        {
+            ArgumentNullException.ThrowIfNull(command);
+            var detail = new PartyDetail
+            {
+                Id = command.AggregateId,
+                Type = PartyType.Person,
+                IsActive = true,
+                DisplayName = "Ada Lovelace",
+                SortName = "Lovelace, Ada",
+            };
+            IEventPayload[] events = [new PartyCreated { Type = PartyType.Person }];
+            return Task.FromResult<DomainResult>(new PartyCommandResult(events, detail));
+        }
+    }
+}

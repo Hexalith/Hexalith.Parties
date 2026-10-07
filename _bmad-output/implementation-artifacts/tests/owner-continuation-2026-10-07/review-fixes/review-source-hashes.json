@@ -1,0 +1,21 @@
+{
+  "scope": "Four review-fix paths only; original 784/115 evidence packet remains the pre-review snapshot.",
+  "sources": [
+    {
+      "path": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Domain/PartyDomainProcessor.cs",
+      "sha256": "fbdfe44eb7da69da15ca1bbb0bdd03ef85452de96eaad605aa28be94afff8685"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs",
+      "sha256": "5fffe40eb69a921f7b6ff8d50a7afefaa8f5fe9ad08b0c186ebbcbee94cb2f14"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessEndpointTests.cs",
+      "sha256": "f4a2fb4141326301109d110e773ea587df8dcdd97045f94243528099033aea32"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Security/RetainedIdentityHistorySourceReaderTests.cs",
+      "sha256": "ef9b9588e73f570001796459daf569162affe841d0b477d966fde2b72abda760"
+    }
+  ]
+}

@@ -96,32 +96,40 @@ internal sealed partial class PartyDomainProcessor(
             || resolvedType == typeof(EstablishHumanActorBinding)
             || resolvedType == typeof(RebindHumanActorBinding)
             || resolvedType == typeof(RevokeHumanActorBinding);
+        try
+        {
+            currentState = DomainStateReplay.SnapshotAware(currentState) ?? currentState;
+        }
+        catch (JsonException) when (identityCommand)
+        {
+            return RejectionFor(command.CommandType, "Identity", "SourceUnavailable");
+        }
+
         IdentityAdmissionEvidence? identityEvidence = null;
         if (identityCommand)
         {
             identityEvidence = identityAuthority?.Admit(command).Evidence;
-            if (identityEvidence is not null)
-            {
-                try
-                {
-                    currentState = DomainStateReplay.SnapshotAware(currentState) ?? currentState;
-                }
-                catch (JsonException)
-                {
-                    return RejectionFor(command.CommandType, "Identity", "SourceUnavailable");
-                }
-            }
-
             if (identityEvidence is null || !ValidateIdentityPayloadScope(command, resolvedType!)
                 || currentState is not null && currentState is not DomainServiceCurrentState
                 || currentState is DomainServiceCurrentState source && (source.LastSnapshotSequence < 0
                     || source.CurrentSequence < source.LastSnapshotSequence
-                    || source.Events.Count != source.CurrentSequence - source.LastSnapshotSequence
-                    || source.Events.Where((item, index) => item.Metadata.SequenceNumber != source.LastSnapshotSequence + index + 1
-                        || item.Metadata.TenantId != command.TenantId || item.Metadata.Domain != command.Domain
-                        || item.Metadata.AggregateId != command.AggregateId).Any()))
+                    || source.Events.Count != source.CurrentSequence - source.LastSnapshotSequence))
             {
                 return RejectionFor(command.CommandType, "Identity", "AuthorityUnavailable");
+            }
+
+            if (currentState is DomainServiceCurrentState identitySource)
+            {
+                long sequence = identitySource.LastSnapshotSequence;
+                foreach (EventEnvelope envelope in identitySource.Events)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (envelope.Metadata.SequenceNumber != ++sequence || envelope.Metadata.TenantId != command.TenantId
+                        || envelope.Metadata.Domain != command.Domain || envelope.Metadata.AggregateId != command.AggregateId)
+                    {
+                        return RejectionFor(command.CommandType, "Identity", "AuthorityUnavailable");
+                    }
+                }
             }
 
             if (resolvedType != typeof(ProvisionAgentParty)
@@ -634,25 +642,45 @@ internal sealed partial class PartyDomainProcessor(
             return currentState;
         }
 
-        // Validate the complete stored tail before protection can transform metadata or bytes.
+        // Validate and detach the complete stored tail before invoking any provider.
         // A redaction marker is an output of this boundary, never an admitted source format.
+        bool hasSnapshot = state.SnapshotState is not null
+            and not JsonElement { ValueKind: JsonValueKind.Null or JsonValueKind.Undefined };
         if (state.LastSnapshotSequence < 0 || state.CurrentSequence < state.LastSnapshotSequence
-            || state.LastSnapshotSequence > 0 && state.SnapshotState is null
-            || state.Events.Count != state.CurrentSequence - state.LastSnapshotSequence
-            || state.Events.Where((item, index) => item.Metadata.SequenceNumber != state.LastSnapshotSequence + index + 1
-                || item.Metadata.TenantId != command.TenantId || item.Metadata.Domain != command.Domain
-                || item.Metadata.AggregateId != command.AggregateId || item.Metadata.MetadataVersion != 1
-                || item.Metadata.EventContractType is not null || item.Metadata.PayloadVersion is not null
-                || item.Metadata.SerializationFormat is not ("json" or "json+pdenc-v1" or "json+identity-history-v1")).Any())
+            || state.LastSnapshotSequence == 0 && hasSnapshot
+            || state.LastSnapshotSequence > 0 && !hasSnapshot
+            || state.Events.Count != state.CurrentSequence - state.LastSnapshotSequence)
         {
             throw new InvalidOperationException("Party replay source metadata, scope or checkpoint is inconsistent.");
         }
 
-        EventEnvelope[] sourceEvents = [.. state.Events.Select(item =>
-            new EventEnvelope(item.Metadata, item.Payload.ToArray(), item.Extensions))];
-        object? snapshotState = state.SnapshotState is null
+        var sourceEvents = new EventEnvelope[state.Events.Count];
+        int index = 0;
+        foreach (EventEnvelope envelope in state.Events)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (envelope.Metadata.SequenceNumber != state.LastSnapshotSequence + index + 1
+                || envelope.Metadata.TenantId != command.TenantId || envelope.Metadata.Domain != command.Domain
+                || envelope.Metadata.AggregateId != command.AggregateId || envelope.Metadata.MetadataVersion != 1
+                || envelope.Metadata.EventContractType is not null || envelope.Metadata.PayloadVersion is not null
+                || envelope.Metadata.SerializationFormat is not ("json" or "json+pdenc-v1" or "json+identity-history-v1"))
+            {
+                throw new InvalidOperationException("Party replay source metadata, scope or checkpoint is inconsistent.");
+            }
+
+            sourceEvents[index++] = new EventEnvelope(envelope.Metadata, envelope.Payload.ToArray(), envelope.Extensions);
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        object? snapshotState = !hasSnapshot
             ? null
-            : await UnprotectSnapshotOrRedactAsync(command, state.SnapshotState, cancellationToken).ConfigureAwait(false);
+            : await payloadProtectionService.UnprotectSnapshotStateAsync(command.AggregateIdentity, state.SnapshotState!, cancellationToken)
+                .ConfigureAwait(false);
+        if (state.LastSnapshotSequence > 0
+            && snapshotState is null or JsonElement { ValueKind: JsonValueKind.Null or JsonValueKind.Undefined })
+        {
+            throw new InvalidOperationException("Party replay protection did not preserve the required snapshot.");
+        }
 
         var events = new List<EventEnvelope>(state.Events.Count);
         foreach (EventEnvelope envelope in sourceEvents)
@@ -663,25 +691,17 @@ internal sealed partial class PartyDomainProcessor(
 
             PayloadProtectionResult result = await UnprotectEnvelopeOrRedactAsync(command, envelope, cancellationToken).ConfigureAwait(false);
 
-            if (result.SerializationFormat != "json")
+            if (result.SerializationFormat != "json"
+                || result.Metadata is not { State: PayloadProtectionState.Unprotected,
+                    MetadataVersion: EventStorePayloadProtectionMetadata.CurrentMetadataVersion })
             {
-                throw new InvalidOperationException("Party replay protection did not produce supported application JSON.");
+                throw new InvalidOperationException("Party replay protection did not produce supported unprotected application JSON.");
             }
 
-            // The "no-op" fast path is signalled by the protection service returning the same
-            // byte[] reference and the same serialization format. Reference-equality on byte[]
-            // is fragile (a future defensive-clone change would silently break the optimization
-            // and force re-allocation on every event), but format equality keeps us safe in the
-            // common case where decryption was a no-op for un-protected events.
-            bool isNoOp = ReferenceEquals(result.PayloadBytes, envelope.Payload)
-                && string.Equals(result.SerializationFormat, envelope.Metadata.SerializationFormat, StringComparison.Ordinal);
-
-            events.Add(isNoOp
-                ? envelope
-                : new EventEnvelope(
-                    envelope.Metadata with { SerializationFormat = result.SerializationFormat },
-                    result.PayloadBytes,
-                    envelope.Extensions));
+            events.Add(new EventEnvelope(
+                envelope.Metadata with { SerializationFormat = result.SerializationFormat },
+                result.PayloadBytes,
+                envelope.Extensions));
         }
 
         return state with { SnapshotState = snapshotState, Events = events };
@@ -701,11 +721,12 @@ internal sealed partial class PartyDomainProcessor(
     {
         try
         {
+            // Preserve the validated bytes for destroyed-profile redaction even if the provider mutates its input.
             return await payloadProtectionService
                 .UnprotectEventPayloadAsync(
                     command.AggregateIdentity,
                     envelope.Metadata.EventTypeName,
-                    envelope.Payload,
+                    envelope.Payload.ToArray(),
                     envelope.Metadata.SerializationFormat,
                     cancellationToken)
                 .ConfigureAwait(false);
@@ -725,30 +746,8 @@ internal sealed partial class PartyDomainProcessor(
         }
     }
 
-    private async Task<object?> UnprotectSnapshotOrRedactAsync(
-        CommandEnvelope command,
-        object snapshotState,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            return await payloadProtectionService
-                .UnprotectSnapshotStateAsync(command.AggregateIdentity, snapshotState, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch (Exception ex) when (PartyEncryptionKeyDestroyedException.IsMatch(ex))
-        {
-            LogSnapshotRehydrationFallbackToRedaction(
-                ex.GetType().Name);
-            return null;
-        }
-    }
-
     [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to redacted event payload during rehydration for event {EventTypeName}: {ExceptionType}")]
     private partial void LogRehydrationFallbackToRedaction(string eventTypeName, string exceptionType);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Falling back to null snapshot during rehydration: {ExceptionType}")]
-    private partial void LogSnapshotRehydrationFallbackToRedaction(string exceptionType);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Rejecting Parties command with unresolved CommandType {CommandType}")]
     private partial void LogUnresolvedCommandType(string commandType);
