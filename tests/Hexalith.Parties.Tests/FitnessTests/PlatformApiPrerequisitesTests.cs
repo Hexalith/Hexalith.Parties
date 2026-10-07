@@ -40,6 +40,22 @@ public sealed class PlatformApiPrerequisitesTests
     private const string StartMarker = "<!-- platform-api-prerequisite-matrix:start -->";
     private const string EndMarker = "<!-- platform-api-prerequisite-matrix:end -->";
 
+    // Release selection is separate from the historical migration/parity receipt constants.
+    private const string CurrentReleaseEventStoreVersion = "3.115.0";
+    private const string CurrentReleaseEventStoreSha = "48ef7171b9532f390b7b41b61ba679ba1030c923";
+    private const string CurrentReleaseEventStoreDescribe = "v3.115.0-5-g48ef7171";
+    private static readonly IReadOnlyDictionary<string, string> CurrentReleaseGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["references/Hexalith.AI.Tools"] = AiToolsSha,
+        ["references/Hexalith.Builds"] = "397c94a4e246c90b21cf408790fa0d55bf32d795",
+        ["references/Hexalith.Commons"] = CommonsSha,
+        [EventStoreRelativePath] = CurrentReleaseEventStoreSha,
+        ["references/Hexalith.FrontComposer"] = "c561b3210f15206a90c39c82c58f2e5b1005cd60",
+        ["references/Hexalith.Memories"] = "b350c094ab4bc10bd2daf723f9e2c90ffdddae2a",
+        ["references/Hexalith.PolymorphicSerializations"] = PolymorphicSerializationsSha,
+        ["references/Hexalith.Tenants"] = "811447342e8f44b644a2074565e83f45519528fd",
+    };
+
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
     [
         "references/Hexalith.EventStore/_bmad-output/implementation-artifacts/8-11-g5-evidence-and-approval-closure.md",
@@ -634,40 +650,35 @@ public sealed class PlatformApiPrerequisitesTests
         string root = RepositoryRoot.Locate();
         string matrix = ReadMatrix();
 
-        AssertGitlinkAndCheckout(root, "references/Hexalith.AI.Tools", AiToolsSha);
-        AssertGitlinkAndCheckout(root, "references/Hexalith.EventStore", PayloadProtectionEventStoreSha);
-        AssertGitlinkAndCheckout(root, "references/Hexalith.Commons", CommonsSha);
-        AssertGitlinkAndCheckout(root, "references/Hexalith.Builds", BuildsSha);
-        AssertGitlinkAndCheckout(root, "references/Hexalith.FrontComposer", FrontComposerSha);
-        AssertGitlinkAndCheckout(root, "references/Hexalith.Memories", MemoriesSha);
-        AssertGitlinkAndCheckout(root, "references/Hexalith.PolymorphicSerializations", PolymorphicSerializationsSha);
-        AssertGitlinkAndCheckout(root, "references/Hexalith.Tenants", TenantsSha);
+        const string currentHeading = "### Current release selection — 2026-10-07";
+        int currentStart = matrix.IndexOf(currentHeading, StringComparison.Ordinal);
+        currentStart.ShouldBeGreaterThanOrEqualTo(0, currentHeading);
+        int historicalStart = matrix.IndexOf("### Story 8.10 final retained-identity reconciliation", currentStart, StringComparison.Ordinal);
+        historicalStart.ShouldBeGreaterThan(currentStart);
+        string currentSelection = matrix[currentStart..historicalStart];
+        currentSelection.ShouldContain($"EventStore package `{CurrentReleaseEventStoreVersion}`");
+        currentSelection.ShouldContain("Selection does not revalidate historical parity receipts");
+        foreach ((string path, string identity) in CurrentReleaseGitlinks)
+        {
+            string dependency = Path.GetFileName(path).Replace("Hexalith.", string.Empty, StringComparison.Ordinal);
+            string row = currentSelection.Split('\n', StringSplitOptions.TrimEntries)
+                .Single(line => line.StartsWith($"| {dependency} |", StringComparison.Ordinal));
+            row.Split('|', StringSplitOptions.TrimEntries)[2].Split(' ')[0].ShouldBe($"`{identity}`", path);
+            AssertGitlinkAndCheckout(root, path, identity);
+        }
 
-        // The shell slice consumes FrontComposer source, so its identity must appear in the matrix
-        // reconciliation table alongside the package identity that actually ships.
+        // Keep historical shell/a11y receipts bound to the identity at which they ran.
         matrix.ShouldContain(FrontComposerSha);
         matrix.ShouldContain("4.5.0");
 
-        // Any present-tense `git ls-tree HEAD` receipt must name the identity HEAD actually records.
-        // Historical receipts belong to the story that captured them and must be written with a dated
-        // placeholder instead of the literal HEAD, so a superseded pin cannot read as current proof.
-        Dictionary<string, string> currentGitlinks = new(StringComparer.Ordinal)
-        {
-            ["references/Hexalith.AI.Tools"] = AiToolsSha,
-            [EventStoreRelativePath] = PayloadProtectionEventStoreSha,
-            ["references/Hexalith.Commons"] = CommonsSha,
-            ["references/Hexalith.Builds"] = BuildsSha,
-            ["references/Hexalith.FrontComposer"] = FrontComposerSha,
-            ["references/Hexalith.Memories"] = MemoriesSha,
-            ["references/Hexalith.PolymorphicSerializations"] = PolymorphicSerializationsSha,
-            ["references/Hexalith.Tenants"] = TenantsSha,
-        };
+        // Any present-tense HEAD receipt must match current release selection. Historical
+        // receipts remain attached to their dated Parties revision and original evidence.
         foreach (Match receipt in Regex.Matches(
                      matrix,
                      @"git ls-tree HEAD (?<path>references/[A-Za-z.]+)`\s*->\s*`160000 commit (?<sha>[0-9a-f]{40})",
                      RegexOptions.CultureInvariant))
         {
-            if (currentGitlinks.TryGetValue(receipt.Groups["path"].Value, out string? expectedSha))
+            if (CurrentReleaseGitlinks.TryGetValue(receipt.Groups["path"].Value, out string? expectedSha))
             {
                 receipt.Groups["sha"].Value.ShouldBe(
                     expectedSha,
@@ -689,14 +700,14 @@ public sealed class PlatformApiPrerequisitesTests
         rootBuildTargets.ShouldNotContain("Hexalith.Build.props");
         rootBuildTargets.ShouldNotContain("Hexalith.Package.props");
         string catalog = File.ReadAllText(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"));
-        rootPackages.ShouldContain($"<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">{EventStorePackageVersion}</HexalithEventStoreVersion>");
+        rootPackages.ShouldContain($"<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">{CurrentReleaseEventStoreVersion}</HexalithEventStoreVersion>");
         catalog.ShouldContain("<PackageVersion Include=\"Hexalith.EventStore.Contracts\" Version=\"$(HexalithEventStoreVersion)\" />");
         catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">2.30.1</HexalithCommonsVersion>");
         catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">4.5.0</HexalithFrontComposerVersion>");
         catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">2.27.1</HexalithMemoriesVersion>");
         catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">5.7.0</HexalithTenantsVersion>");
         catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">1.1.1</HexalithPartiesVersion>");
-        // Builds 360a2b9c routes this version through a property whose unconditional value applies to
+        // The selected Builds catalog routes this version through a property whose unconditional value applies to
         // every Parties project (only Hexalith.Folders.Aspire overrides it), so pin both halves exactly.
         catalog.ShouldContain("<HexalithAspireHostingDaprVersion>13.6.0-preview.1.261001-0243</HexalithAspireHostingDaprVersion>");
         catalog.ShouldContain("<PackageVersion Include=\"CommunityToolkit.Aspire.Hosting.Dapr\" Version=\"$(HexalithAspireHostingDaprVersion)\" />");
@@ -724,7 +735,7 @@ public sealed class PlatformApiPrerequisitesTests
         foreach (string projectFile in eventStoreConsumers)
         {
             EvaluatedProjectGraph packageGraph = EvaluateProjectGraph(root, projectFile, useSource: false);
-            packageGraph.Properties["HexalithEventStoreVersion"].ShouldBe(EventStorePackageVersion, projectFile);
+            packageGraph.Properties["HexalithEventStoreVersion"].ShouldBe(CurrentReleaseEventStoreVersion, projectFile);
             packageGraph.PackageReferences.Any(static reference => reference.StartsWith("Hexalith.EventStore.", StringComparison.Ordinal))
                 .ShouldBeTrue($"{projectFile} package graph");
             packageGraph.ProjectReferences.Any(static reference => reference.Contains("/references/Hexalith.EventStore/", StringComparison.Ordinal))
@@ -1460,18 +1471,19 @@ public sealed class PlatformApiPrerequisitesTests
         normalizedRetentionItem.ShouldContain("retention action stays open");
         normalizedRetentionItem.ShouldContain("status: open");
 
-        // Inspect the independent G5 gates before verifying the approved committed identity.
-        string expectedGitlink = $"160000 commit {PayloadProtectionEventStoreSha} {EventStoreRelativePath}";
+        // Inspect the independent G5 gates before verifying the current release selection.
+        // This structural check does not refresh historical G5 runtime/parity receipts.
+        string expectedGitlink = $"160000 commit {CurrentReleaseEventStoreSha} {EventStoreRelativePath}";
         RunGit(root, "ls-tree", "HEAD", EventStoreRelativePath)
             .Trim()
             .Replace('\t', ' ')
             .ShouldBe(expectedGitlink);
 
-        RunGit(root, "-C", EventStoreRelativePath, "rev-parse", "HEAD").Trim().ShouldBe(PayloadProtectionEventStoreSha);
+        RunGit(root, "-C", EventStoreRelativePath, "rev-parse", "HEAD").Trim().ShouldBe(CurrentReleaseEventStoreSha);
 
         RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--always", "HEAD")
             .Trim()
-            .ShouldBe(PayloadProtectionEventStoreDescribe);
+            .ShouldBe(CurrentReleaseEventStoreDescribe);
     }
 
     private static bool HasPositiveFixedStringCommand(

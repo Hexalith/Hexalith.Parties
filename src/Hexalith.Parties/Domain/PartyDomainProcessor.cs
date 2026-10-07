@@ -38,7 +38,7 @@ internal sealed partial class PartyDomainProcessor(
     IHttpContextAccessor? httpContextAccessor = null,
     IPartyIdentityAuthority? identityAuthority = null,
     IIdentityHistoryCustody? identityHistoryCustody = null,
-    IOptions<PartyIdentityOptions>? identityOptions = null) : IDomainProcessor, IAggregateReplay
+    IOptions<PartyIdentityOptions>? identityOptions = null) : IDomainProcessor, IAsyncDomainProcessor, IAggregateReplay
 {
     private const string PartyDomain = "party";
 
@@ -57,6 +57,13 @@ internal sealed partial class PartyDomainProcessor(
             command,
             currentState,
             httpContextAccessor?.HttpContext?.RequestAborted ?? CancellationToken.None);
+
+    /// <inheritdoc />
+    Task<DomainResult> IAsyncDomainProcessor.ProcessAsync(
+        CommandEnvelope command,
+        object? currentState,
+        CancellationToken cancellationToken)
+        => ProcessAsync(command, currentState, cancellationToken);
 
     public bool CanReplayAggregateType(string aggregateType) => new PartyAggregate().CanReplayAggregateType(aggregateType);
 
@@ -178,7 +185,7 @@ internal sealed partial class PartyDomainProcessor(
                 .ConfigureAwait(false);
         }
 
-        DomainResult result = await aggregate.ProcessAsync(command, unprotectedState).ConfigureAwait(false);
+        DomainResult result = await aggregate.ProcessAsync(command, unprotectedState, cancellationToken).ConfigureAwait(false);
         await SaveErasureStatusUpdatesAsync(result, cancellationToken).ConfigureAwait(false);
         return result;
     }
@@ -639,6 +646,14 @@ internal sealed partial class PartyDomainProcessor(
             cancellationToken.ThrowIfCancellationRequested();
 
             PayloadProtectionResult result = await UnprotectEnvelopeOrRedactAsync(command, envelope, cancellationToken).ConfigureAwait(false);
+
+            // Redacted bytes are valid application JSON. Adapt only this in-memory replay
+            // copy to the SDK's JSON intake; persisted protection metadata and the
+            // security service's distinct redaction marker remain untouched.
+            if (string.Equals(result.SerializationFormat, "json-redacted", StringComparison.Ordinal))
+            {
+                result = result with { SerializationFormat = "json" };
+            }
 
             // The "no-op" fast path is signalled by the protection service returning the same
             // byte[] reference and the same serialization format. Reference-equality on byte[]

@@ -163,6 +163,38 @@ public sealed class PartiesProcessEndpointTests
         rejectionPayload.ShouldNotContain("party-invalid-payload");
     }
 
+    [Fact]
+    public async Task ProductionAsyncProcessor_AlreadyCanceledToken_ThrowsBeforeProducingEventsAsync()
+    {
+        using var factory = new PartiesProcessTestFactory(useProductionProcessor: true);
+        using IServiceScope scope = factory.Services.CreateScope();
+        IAsyncDomainProcessor processor = scope.ServiceProvider.GetRequiredKeyedService<IAsyncDomainProcessor>("party");
+        string partyId = Guid.NewGuid().ToString("D");
+        var command = new CommandEnvelope(
+            MessageId: "cmd-release-canceled",
+            TenantId: "tenant-a",
+            Domain: "party",
+            AggregateId: partyId,
+            CommandType: typeof(CreatePartyComposite).FullName!,
+            Payload: JsonSerializer.SerializeToUtf8Bytes(new CreatePartyComposite
+            {
+                PartyId = partyId,
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+            }),
+            CorrelationId: "cmd-release-canceled",
+            CausationId: null,
+            UserId: "user-a",
+            Extensions: null);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        OperationCanceledException exception = await Should.ThrowAsync<OperationCanceledException>(
+            () => processor.ProcessAsync(command, currentState: null, cancellation.Token));
+
+        exception.CancellationToken.ShouldBe(cancellation.Token);
+    }
+
     [Theory]
     [InlineData("Party")]
     [InlineData("PARTY")]
@@ -283,16 +315,24 @@ public sealed class PartiesProcessEndpointTests
                 if (!_useProductionProcessor)
                 {
                     services.AddKeyedSingleton<IDomainProcessor>("party", (_, _) => _registeredProcessor!);
+                    services.AddKeyedSingleton<IAsyncDomainProcessor>("party", (_, _) => (IAsyncDomainProcessor)_registeredProcessor!);
                 }
             });
         }
     }
 
-    private sealed class CapturingDomainProcessor : IDomainProcessor
+    private sealed class CapturingDomainProcessor : IDomainProcessor, IAsyncDomainProcessor
     {
         private readonly List<CommandEnvelope> _receivedCommands = [];
 
         public IReadOnlyList<CommandEnvelope> ReceivedCommands => _receivedCommands;
+
+        /// <inheritdoc />
+        public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return ProcessAsync(command, currentState);
+        }
 
         public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState)
         {
@@ -303,8 +343,15 @@ public sealed class PartiesProcessEndpointTests
         }
     }
 
-    private sealed class PayloadProducingDomainProcessor : IDomainProcessor
+    private sealed class PayloadProducingDomainProcessor : IDomainProcessor, IAsyncDomainProcessor
     {
+        /// <inheritdoc />
+        public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return ProcessAsync(command, currentState);
+        }
+
         public Task<DomainResult> ProcessAsync(CommandEnvelope command, object? currentState)
         {
             ArgumentNullException.ThrowIfNull(command);

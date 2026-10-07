@@ -1242,3 +1242,15 @@ source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-do
 severity: medium
 reason: `s_inspectedTypes` omits contracts that carry actor identities: `EstablishHumanActorBinding`, `RebindHumanActorBinding`, `RevokeHumanActorBinding`, `ResolveHumanActorBindingAt`, `HumanActorBindingEvidence`, and the nested `HumanActorBinding`, `HumanActorBindingTransition`, `AgentPartyProvisioningResult`, and `AgentPartyIdentity` records. Members of the `[PersonalData]`-marked `PartyState.AgentProvisioning` are neither marked nor classified. All of these were added by `37d87f5a2869b076c651a58714d60f64647848bc`, before this delta; DW-142 classified only the six properties that failed. This is an I8 decision for the Parties GDPR owners, related to DW-129. Exit proof: every identity-feature contract type is inspected, and each property is classified with its rationale. Rollback: revert the added inventory rows.
 status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Reconcile the upstream Tenants runtime project's administrator verifier contracts with a published EventStore SDK.
+  evidence: The retained Tenants source fails its dynamically launched package-mode build with CS0246 for IDomainServiceAdministratorVerifier and DomainServiceAdministratorClaim; neither type exists in published DomainService 3.115.0. Root solution package-mode compilation succeeds separately.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Include external dynamically launched runtime project graphs in orchestration dependency verification.
+  evidence: PlatformApiPrerequisitesTests inventories only owned src, samples, and tests projects, so it cannot detect the pre-existing upstream Tenants source/package mismatch before topology startup.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Extend the existing gateway command test with a direct persisted-stream and aggregate identity read.
+  evidence: The pre-existing test observes Completed status and positive eventCount but does not read stored events; completion follows EventPersister in the SDK, but an independent persisted-stream assertion would strengthen that boundary.

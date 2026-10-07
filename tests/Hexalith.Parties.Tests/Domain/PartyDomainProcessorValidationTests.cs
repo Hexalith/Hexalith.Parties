@@ -282,12 +282,19 @@ public sealed class PartyDomainProcessorValidationTests
             DeletedAt = DateTimeOffset.Parse("2026-05-21T20:45:00Z"),
         });
         DomainServiceCurrentState currentState = CreateErasurePendingStateWithProtectedCreatedEvent(command, partyId);
+        byte[] originalProtectedPayload = currentState.Events[0].Payload.ToArray();
+        EventMetadata originalMetadata = currentState.Events[0].Metadata with { };
 
         DomainResult result = await invoker.ProcessAsync(command, currentState, CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
         PartyEncryptionKeyDeleted deleted = result.Events.OfType<PartyEncryptionKeyDeleted>().ShouldHaveSingleItem();
         deleted.PartyId.ShouldBe(partyId);
+        // SDK replay receives a redacted JSON copy; the stored stream keeps its protection marker.
+        currentState.Events[0].Payload.ShouldBe(originalProtectedPayload);
+        currentState.Events[0].Metadata.ShouldBe(originalMetadata);
+        currentState.Events[0].Metadata.SerializationFormat.ShouldBe("json+pdenc-v1");
+        Encoding.UTF8.GetString(currentState.Events[0].Payload).ShouldContain("\"$enc\":true");
         await protection.Received(1).UnprotectEventPayloadAsync(
             Arg.Any<AggregateIdentity>(),
             typeof(PartyCreated).FullName!,

@@ -3,6 +3,7 @@ extern alias apphost;
 using System.Net;
 
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -34,6 +35,12 @@ namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 /// </remarks>
 public class PartiesAspireTopologyFixture : IAsyncLifetime
 {
+    /// <summary>The symmetric signing key used only by this test topology and its gateway token.</summary>
+    internal const string JwtSigningKey = "DevOnlySigningKey-AtLeast32Chars!";
+
+    /// <summary>The issuer used only by this test topology and its gateway token.</summary>
+    internal const string JwtIssuer = "hexalith-dev";
+
     private DistributedApplication? _app;
     private IDistributedApplicationTestingBuilder? _builder;
     private string? _previousEnableKeycloak;
@@ -100,6 +107,17 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             _builder = await DistributedApplicationTestingBuilder
                 .CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>()
                 .ConfigureAwait(false);
+
+            // The normal AppHost clears symmetric keys for its OIDC topology. Override
+            // the test resources after model construction when Keycloak is disabled.
+            foreach (string resourceName in new[] { "eventstore", "eventstore-admin", "parties", "parties-mcp", "tenants" })
+            {
+                _ = _builder.CreateResourceBuilder<ProjectResource>(resourceName)
+                    .WithEnvironment("Authentication__JwtBearer__Authority", string.Empty)
+                    .WithEnvironment("Authentication__JwtBearer__SigningKey", JwtSigningKey)
+                    .WithEnvironment("Authentication__JwtBearer__Issuer", JwtIssuer)
+                    .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false");
+            }
 
             _builder.Services.AddLogging(logging =>
             {

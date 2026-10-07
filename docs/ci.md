@@ -71,7 +71,9 @@ pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure -ResultsDire
 
 CI and default local commands run in package mode (`UseNuGetDeps=true`, `UseHexalithProjectReferences=false`). If unpublished Hexalith packages block restore, record the package-mode blocker and rerun source-mode triage with `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false` only as diagnostic evidence.
 
-At the current baseline, the effective package graph selects EventStore 3.113.0 through the Parties version pin in `Directory.Packages.props`, set before importing the shared catalog (whose own default is still 3.112.0 at the selected Builds identity, so the Parties pin governs). This release supplies the identity-history contracts and projection-rebuild APIs consumed by Parties, and the diagnostic source checkout `references/Hexalith.EventStore` is the same release (tag `v3.113.0`). Package mode remains the authoritative CI and release path; source mode is diagnostic only and must not be used to hide package metadata or publication failures.
+The effective package graph selects EventStore 3.115.0 through the Parties version pin in `Directory.Packages.props`, set before importing the shared catalog. Retained actor-history queries consume `IRetainedIdentityHistoryReader` and `RetainedIdentityHistoryStream`, which require this release. The catalog at the recorded Builds identity `397c94a4e246c90b21cf408790fa0d55bf32d795` defaults to 3.110.0, so the Parties pin governs the EventStore package family.
+
+The diagnostic source checkout `references/Hexalith.EventStore` is recorded at `48ef7171b9532f390b7b41b61ba679ba1030c923` (`v3.115.0-5-g48ef7171`); it is five commits beyond the package release. Package mode remains the authoritative CI and release path; source mode is diagnostic only and must not be used to hide package metadata or publication failures. The solution also builds its orchestration projects and the documented Commons HTTP/ServiceDefaults source fallbacks; these do not switch Parties' EventStore package consumers to source mode.
 
 ## Secrets
 

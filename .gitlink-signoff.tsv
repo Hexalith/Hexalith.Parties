@@ -148,3 +148,16 @@ references/Hexalith.Tenants|04e655cf070b17eced9daefb9eaa87a09ec60e81|validated-a
 references/Hexalith.Builds|360a2b9c4e96809365a7de785be9a68152d5ac28|validated-advance|v4.29.1-17-g360a2b9|jpiquot|2026-10-05
 references/Hexalith.EventStore|865cd9e49273dffbb1cdae85efeaf1aac322e09e|validated-advance|v3.113.0|jpiquot|2026-10-05
 references/Hexalith.Tenants|72b8e4f508176b69826549e87b7b2a286f607fd1|validated-advance|v5.7.0-143-g72b8e4f5|jpiquot|2026-10-05
+
+# --- 2026-10-07 Parties release selection: jpiquot authorized releasing the
+#     current repository and bypassing human validation in this session
+#     (spec-fix-ci-and-publish-release.md). These five pointers are already
+#     committed at Parties 45d653a7d7f14a75d5227fbd780db3fbf22f70fe.
+#     This records selection for the requested release only; automated CI,
+#     package validation, and publication gates still apply. It does not
+#     certify broader platform parity or discharge earlier migration gates.
+references/Hexalith.Builds|397c94a4e246c90b21cf408790fa0d55bf32d795|validated-advance|v4.30.0|jpiquot|2026-10-07
+references/Hexalith.EventStore|48ef7171b9532f390b7b41b61ba679ba1030c923|validated-advance|v3.115.0-5-g48ef7171|jpiquot|2026-10-07
+references/Hexalith.FrontComposer|c561b3210f15206a90c39c82c58f2e5b1005cd60|validated-advance|v4.6.0-5-gc561b321|jpiquot|2026-10-07
+references/Hexalith.Memories|b350c094ab4bc10bd2daf723f9e2c90ffdddae2a|validated-advance|v2.28.1-24-gb350c094|jpiquot|2026-10-07
+references/Hexalith.Tenants|811447342e8f44b644a2074565e83f45519528fd|validated-advance|v5.7.0-165-g81144734|jpiquot|2026-10-07

@@ -86,12 +86,15 @@ public static class PartiesServiceCollectionExtensions {
         // EventStore domain-service SDK invokes this keyed processor for POST /process.
         // Keep the Parties-specific compatibility behavior here until EventStore owns
         // validation, protected-state redaction, and erasure-status hooks.
+        // The SDK prefers the async route, so both contracts must retain the wrapper.
         _ = services.AddKeyedScoped<IDomainProcessor, PartyDomainProcessor>(PartyDomain);
+        _ = services.AddKeyedScoped<IAsyncDomainProcessor, PartyDomainProcessor>(PartyDomain);
         foreach (string domainKey in PartyDomainCaseVariants())
         {
             if (!string.Equals(domainKey, PartyDomain, StringComparison.Ordinal))
             {
                 _ = services.AddKeyedScoped<IDomainProcessor, PartyDomainProcessor>(domainKey);
+                _ = services.AddKeyedScoped<IAsyncDomainProcessor, PartyDomainProcessor>(domainKey);
             }
         }
 

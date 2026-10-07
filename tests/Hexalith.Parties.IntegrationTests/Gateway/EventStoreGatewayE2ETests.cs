@@ -34,6 +34,13 @@ public sealed class EventStoreGatewayE2ETests
     {
         if (!_fixture.IsAvailable)
         {
+            string reason = _fixture.UnavailableReason ?? "Aspire topology initialization did not complete.";
+            if (string.Equals(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase))
+            {
+                Assert.Fail(reason);
+            }
+
+            Assert.Skip(reason);
             return;
         }
 
@@ -124,8 +131,8 @@ public sealed class EventStoreGatewayE2ETests
 
     private static class GatewayJwt
     {
-        private const string SigningKey = "DevOnlySigningKey-AtLeast32Chars!";
-        private const string Issuer = "hexalith-dev";
+        private const string SigningKey = PartiesAspireTopologyFixture.JwtSigningKey;
+        private const string Issuer = PartiesAspireTopologyFixture.JwtIssuer;
         private const string Audience = "hexalith-eventstore";
 
         public static string GenerateToken()

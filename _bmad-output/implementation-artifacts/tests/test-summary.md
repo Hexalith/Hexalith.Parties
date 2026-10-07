@@ -1497,3 +1497,90 @@ artifacts. The recorded G5 reproduction command also passed 32/32 after the edit
 context and already-CRLF sprint file. `git -c core.whitespace=cr-at-eol diff --check`
 passes with the repository's `.editorconfig` CRLF convention; no whitespace or
 build policy file was changed.
+
+
+## CI repair and current release selection — 2026-10-07
+
+This evidence belongs to Parties baseline
+`45d653a7d7f14a75d5227fbd780db3fbf22f70fe` plus the release repair patch. The
+current source selections are recorded separately in the prerequisite matrix's
+2026-10-07 section and `.gitlink-signoff.tsv`. EventStore runtime package consumers
+select `3.115.0`; diagnostic EventStore source is
+`48ef7171b9532f390b7b41b61ba679ba1030c923` (`v3.115.0-5-g48ef7171`). The older
+2026-10-05 migration, producer, accessibility, and approval receipts retain their
+original identities and results; this release selection does not revalidate them.
+
+The new SDK prefers `IAsyncDomainProcessor`. Parties now registers its existing
+validation/protection/erasure wrapper for both processor contracts and passes the
+request cancellation token into aggregate processing. Destroyed-key replay adapts
+only its redacted in-memory JSON copy to the SDK intake; stored event metadata and
+the security service's redaction marker remain unchanged.
+
+| Local command | Fresh result |
+| --- | --- |
+| `dotnet build Hexalith.Parties.slnx --configuration Release -m:1 -p:UseNuGetDeps=true -p:UseHexalithProjectReferences=false` | Initial dependency-aligned build and final source-patch build: exit 0, zero warnings/errors, without an EventStore command-line override; final build took 13.72 s. Actual host/projection/client assets select EventStore packages `3.115.0`. |
+| `pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory /tmp/parties-release-tests` | Initial discovery run: 14/15 projects passed; 2,727 tests, 2,714 passed, 7 failed, 6 pre-existing Tier 3 health skips. Seven service-project failures exposed async routing, redacted replay metadata, and stale historical identity checks; focused repairs and reruns are recorded below. This initial run is not the final all-project release verdict. |
+| `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartiesProcessEndpointTests -class Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests` | 25/25 passed after the routing and replay fixes, zero skips. Endpoint/privacy assertions were preserved. |
+| `dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -noColor` | 61/61 passed, zero skips. Current gitlink/package assertions use the release selection; historical consumption/a11y constants and receipts remain dated. G5 status, absent-provider/enrollment, rollback, and approval checks still run. |
+| `python3 scripts/pack-release-packages.py /tmp/parties-release-packages 0.0.0-ci-test` and `python3 scripts/validate-nuget-packages.py /tmp/parties-release-packages` | Exit 0; exactly nine manifest packages packed and passed metadata/dependency validation. |
+| `python3 scripts/validate-consumer-package-references.py /tmp/parties-release-packages --work-directory /tmp/parties-release-consumers` | Exit 0; isolated package-only client and portal consumers built with zero warnings/errors. This configured smoke test locally packs support packages from checked-out source; it is separate from the published EventStore package proof in the authoritative solution build. |
+| `bash scripts/gitlink-rc-gate.sh --worktree`; `bash scripts/gitlink-rc-gate.sh --diff v1.1.1`; `bash scripts/check-no-warning-override.sh`; `git -c core.whitespace=cr-at-eol diff --check` | All passed. The whitespace check honors the existing `.editorconfig` CRLF convention. Plain `git diff --check` still flags CRLF in modified `.props`/source lines; no Git whitespace configuration was changed. |
+
+Aspire baseline was observed through `aspire start`, `aspire describe`, and
+`aspire wait parties --timeout 10`: Parties, EventStore, UI, Keycloak, and their
+sidecars were healthy; the Tenants host was `Finished` with a healthy sidecar.
+The explicitly started app was stopped with `aspire stop` before source edits.
+That start also stopped the owned topology test instance that the CLI had
+identified as the running AppHost. Consequently the initial topology pass is not
+credited as live gateway proof. Its existing gateway test returns early when its
+fixture is unavailable, independently of the six declared health-test skips; a
+clean topology rerun is required for the final handoff.
+
+FrontComposer's current source delegates projection/lifecycle announcements to
+`FcSurfaceStatus`, whose markup contains `aria-live="polite"`. Reproducible source
+inspection commands now check that delegation and shared region. This structural
+finding does not refresh runtime accessibility parity at the advanced source pin.
+No submodule content, gitlink, package inventory, container inventory, release
+protection, or historical approval was changed. Final all-project reruns, source
+review, GitHub CI, release dispatch/approval, and independent publication evidence
+remain the parent release session's gates.
+
+Final combined rerun of the five endpoint, processor, prerequisite, closure, and documentation classes after evidence edits: **86/86 passed**, zero skips (8.393 s). The parent subsequently reported the full service project passing **696/696**.
+
+### Fresh topology fixture repair and local runtime limits — 2026-10-07
+
+The clean topology rerun exposed an invalid fixture configuration: disabling
+Keycloak left neither an Authority nor a SigningKey because the normal AppHost
+clears symmetric keys for OIDC. The fixture now applies its intended symmetric
+JWT settings to the test resources after model construction and shares the test
+key/issuer with the gateway token. Production authentication guards and AppHost
+policy are unchanged. The gateway test now dynamically skips an unavailable
+fixture with its actual reason; all command/status/event assertions remain active
+when the infrastructure starts.
+
+| Local command | Fresh result |
+| --- | --- |
+| `dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj --configuration Release -m:1` | Exit 0; zero warnings/errors, 3.95 s. Log: `/tmp/parties-release-topology-patched-build.log`. |
+| `dotnet test tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj --configuration Release --no-build --verbosity minimal --results-directory /tmp/parties-release-topology-patched-results --report-xunit-trx --report-xunit-trx-filename Hexalith.Parties.IntegrationTests.trx` | Exit 0; 42 total, **35 passed, 7 skipped, zero failed**, 3m 16s. Log: `/tmp/parties-release-topology-patched-tests.log`. Six skips are the existing declared health deferrals. |
+| Gateway TRX result `CreatePartyCommand_ThroughEventStoreGateway_CompletesWithPersistedEventCountAsync` | `NotExecuted`, explicit reason: `TimeoutException: Endpoint did not become ready within 00:03:00. Url: /health. Last status: ServiceUnavailable. Last error: n/a`. This result is not credited as live gateway proof. |
+
+Read-only Aspire observation confirmed Parties, EventStore, and EventStore Admin
+reached Running/Healthy after the JWT fix. Dapr sidecars independently exited
+with `failed to add target .../statestore: no space left on device`; the parent
+confirmed 38 GB of free disk space and exhausted file-watch resources. The
+Tenants runtime build also failed CS0246 for
+`IDomainServiceAdministratorVerifier` and `DomainServiceAdministratorClaim`.
+Inspection of the published DomainService 3.115.0 package DLL found neither type
+name; both exist in the retained newer EventStore source. Passing version 3.115.0
+to that runtime build would not supply the missing contracts. No source-reference
+workaround, submodule edit, root pointer update, or production policy change was
+made. Independent review, final all-project reconciliation, fresh-runner GitHub
+CI, and publication verification remain assigned to the parent release session.
+
+Parent final service verification: `dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --no-build --results-directory /tmp/parties-release-tests-final --report-xunit-trx --report-xunit-trx-filename Hexalith.Parties.Tests.trx` passed 696/696, zero skips, after all service fixes. Release tooling npm audit verified all 499 registry signatures and 120 attestations. Fresh-runner GitHub CI and publication are still pending.
+
+### Review fixes and required CI gateway execution — 2026-10-07
+
+All three review lenses completed; two reused prior threads because the runtime rejected additional fresh reviewer creation. The triage is recorded in the release repair spec. CI now fails an unavailable gateway fixture with its actual reason; local runs still report an explicit skip. Production keyed async cancellation, exact protected-input immutability, and named dependency-table identities are verified by focused tests. Both affected test projects built with zero warnings/errors and the three affected service classes passed **42/42**, zero skips (8.434 s). The real gateway negative check under `GITHUB_ACTIONS=true` returned **one failed, zero skipped**, exit 1, with the recorded `/health` 503 timeout (193.788 s). That proves the guard and is not successful live gateway evidence. The post-review solution Release build passed with zero warnings/errors (13.61 s). The pre-existing upstream Tenants runtime compile mismatch and wider orchestration/storage-read coverage gaps are recorded in `deferred-work.md`. Remote CI and publication remain pending.
+
+Full post-review service project: **697/697 passed**, zero skips (18.867 s; `/tmp/parties-release-post-review-service.log`, TRX `/tmp/parties-release-post-review-service-results/Hexalith.Parties.Tests.trx`). This includes the new production async cancellation case.
