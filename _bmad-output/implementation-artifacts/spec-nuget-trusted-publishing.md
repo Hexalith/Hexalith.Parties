@@ -1,6 +1,6 @@
 ---
 title: Connect the Parties NuGet trusted publishing policy
-status: in-review
+status: done
 route: dispatch
 baseline_commit: a3e5ef3b92a56fb03adc0e7e3235ff5ca158ab9a
 review_loop_iteration: 0
@@ -89,3 +89,11 @@ Verification-gap review reported no findings. All review threads were reused bec
 Source `cdd72b1d4a73013b04e909b5e3d82b59e61386d1` passed Commitlint 37607041104 and CodeQL 37607041095. CI 37607041148 passed its build, nine-package consumer validation, and all 2,713 build-and-test cases with zero skips. Its required Aspire job failed again (35 passed, six existing health skips, one gateway timeout). The launched Tenants source reports CS0246 for `IDomainServiceAdministratorVerifier` and `DomainServiceAdministratorClaim`; fresh NuGet indexes still select EventStore Contracts/DomainService 3.115.0.
 
 Release 37607197353 passed exact-main/source proof, registry-floor, shared preparation, root gitlink gate, and the caller-owned NuGet OIDC login. All nine 1.2.0 packages were pushed and independently downloaded; package identity/version/source commit and EventStore dependency versions match. Receipt: `tests/nuget-trusted-publishing-2026-10-07/registry-publication-1.2.0.json`. All three OCI indexes were published and passed metadata validation. Domain/MCP liveness passed both architectures; UI startup failed on invariant globalization because localization needs culture `en`. Semantic Release therefore did not create the GitHub Release; publication acceptance stays open pending `spec-fix-ui-container-globalization.md` and a fresh 1.2.1 release. Retain the published 1.2.0 tag/packages/images. No duplicate-push bypass or tag deletion is permitted.
+
+## Verified completion — 2026-10-07
+
+Protected Release [37609885094](https://github.com/Hexalith/Hexalith.Parties/actions/runs/37609885094) succeeded with the user-authorized validation bypass at exact source `34f57baccdf3e9fc2ec615f07499c6d274105851`. Caller-owned NuGet login, preparation, root gitlink validation, publication and downstream exact-source verification all pass. [GitHub Release v1.2.1](https://github.com/Hexalith/Hexalith.Parties/releases/tag/v1.2.1) was published at 2026-10-07T10:59:03Z.
+
+Independent NuGet index requests and package downloads verified all nine 1.2.1 identities/versions, exact repository commit and EventStore 3.115.0 dependencies. The three container indexes pass OCI provenance validation; all six digest-pinned platform startup/liveness checks and their cleanup pass. Receipts: `tests/nuget-trusted-publishing-2026-10-07/registry-publication-1.2.1.json` and `release-1.2.1-summary.json`. Existing 1.2.0 packages/images/tag remain untouched.
+
+Commitlint 37609806697 and CodeQL 37609806812 pass. CI 37609806709 passes Release build, isolated package consumers and 2,713/2,713 build-and-test cases with zero skips. Its required Aspire job remains failed: 35 passed, six existing health skips, one gateway timeout. The launched upstream Tenants source still reports CS0246 for `IDomainServiceAdministratorVerifier` and `DomainServiceAdministratorClaim`, absent from published EventStore Contracts/DomainService 3.115.0. That unresolved upstream publication boundary belongs to the original full-CI spec, which stays in-review. These scoped trusted-publishing/UI-container acceptance criteria are complete; no claim of green full CI or refreshed platform parity is made.

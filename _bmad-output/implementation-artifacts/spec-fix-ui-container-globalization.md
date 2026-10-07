@@ -1,6 +1,6 @@
 ---
 title: Restore localized UI startup in release containers
-status: in-review
+status: done
 route: dispatch
 baseline_commit: cdd72b1d4a73013b04e909b5e3d82b59e61386d1
 review_loop_iteration: 0
@@ -35,3 +35,11 @@ The published UI output ran as the `app` user on the official Alpine extra amd64
 Blind and verification-gap reviews report no findings. Reused review threads limit independence; the edge lens is performed by the implementation thread and must be described as self-review. The exact full candidate passes pinned commitlint with zero problems/warnings (`/tmp/parties-ui-globalization-commitlint.log`). Actual published OCI identity and both-platform startup remain acceptance evidence for the next protected Release, not a claim based solely on configuration.
 
 Edge-case self-review also reports zero findings after tracing post-project property imports, both musl RID evaluations, explicit base/family precedence, .NET 10 environment precedence, and the official image's environment. All three prescribed lenses are collected; no findings require a patch.
+
+## Verified completion — 2026-10-07
+
+Protected Release [37609885094](https://github.com/Hexalith/Hexalith.Parties/actions/runs/37609885094) succeeded with the user-authorized validation bypass at exact source `34f57baccdf3e9fc2ec615f07499c6d274105851`. Caller-owned NuGet login, preparation, root gitlink validation, publication and downstream exact-source verification all pass. [GitHub Release v1.2.1](https://github.com/Hexalith/Hexalith.Parties/releases/tag/v1.2.1) was published at 2026-10-07T10:59:03Z.
+
+Independent NuGet index requests and package downloads verified all nine 1.2.1 identities/versions, exact repository commit and EventStore 3.115.0 dependencies. The three container indexes pass OCI provenance validation; all six digest-pinned platform startup/liveness checks and their cleanup pass. Receipts: `tests/nuget-trusted-publishing-2026-10-07/registry-publication-1.2.1.json` and `release-1.2.1-summary.json`. Existing 1.2.0 packages/images/tag remain untouched.
+
+Commitlint 37609806697 and CodeQL 37609806812 pass. CI 37609806709 passes Release build, isolated package consumers and 2,713/2,713 build-and-test cases with zero skips. Its required Aspire job remains failed: 35 passed, six existing health skips, one gateway timeout. The launched upstream Tenants source still reports CS0246 for `IDomainServiceAdministratorVerifier` and `DomainServiceAdministratorClaim`, absent from published EventStore Contracts/DomainService 3.115.0. That unresolved upstream publication boundary belongs to the original full-CI spec, which stays in-review. These scoped trusted-publishing/UI-container acceptance criteria are complete; no claim of green full CI or refreshed platform parity is made.
