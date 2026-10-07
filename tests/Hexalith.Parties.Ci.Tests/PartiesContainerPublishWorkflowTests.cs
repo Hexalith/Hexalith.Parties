@@ -306,10 +306,23 @@ public sealed class PartiesContainerPublishWorkflowTests
         }
 
         string release = CiTestPaths.ReadRepoFile(".github/workflows/release.yml").Replace("\r\n", "\n");
-        string releaseTriggers = release[..release.IndexOf("\nconcurrency:", StringComparison.Ordinal)];
-        releaseTriggers.ShouldContain("on:\n  workflow_dispatch:\n");
-        releaseTriggers.ShouldNotContain("\n  push:\n");
-        releaseTriggers.ShouldNotContain("\n  pull_request:\n");
+        RequireManualReleaseTrigger(release);
+    }
+
+    [Theory]
+    [InlineData("push")]
+    [InlineData("pull_request")]
+    [InlineData("schedule")]
+    [InlineData("repository_dispatch")]
+    [InlineData("workflow_run")]
+    [InlineData("issue_comment")]
+    public void ManualReleaseTriggerContractRejectsAdditionalAutomaticEvents(string automaticEvent)
+    {
+        string release = CiTestPaths.ReadRepoFile(".github/workflows/release.yml").Replace("\r\n", "\n");
+        string mutated = release.Replace("on:\n  workflow_dispatch:\n", $"on:\n  workflow_dispatch:\n  {automaticEvent}:\n");
+
+        mutated.ShouldNotBe(release);
+        Assert.Throws<ShouldAssertException>(() => RequireManualReleaseTrigger(mutated));
     }
 
     [Fact]
@@ -554,6 +567,15 @@ public sealed class PartiesContainerPublishWorkflowTests
         secrets.ShouldContain("HEXALITH_ZOT_API_KEY");
         secrets.ShouldContain("Zot API key");
         secrets.ShouldNotContain("ZOT_REGISTRY_PASSWORD");
+    }
+
+    private static void RequireManualReleaseTrigger(string workflow)
+    {
+        int start = workflow.IndexOf("\non:\n", StringComparison.Ordinal);
+        int end = workflow.IndexOf("\nconcurrency:", StringComparison.Ordinal);
+        start.ShouldBeGreaterThan(0);
+        end.ShouldBeGreaterThan(start);
+        workflow[start..end].Trim().ShouldBe("on:\n  workflow_dispatch:");
     }
 
     private static string ReadReleaseJob(string? workflow = null)

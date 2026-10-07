@@ -2,7 +2,7 @@
 title: 'Align Parties CI/CD with EventStore and Tenants'
 type: 'bugfix'
 created: '2026-08-01'
-status: 'in-review'
+status: 'done'
 baseline_commit: '92ee9c1b23a444db5c0ea44ec99ad9ffeef16e83'
 review_loop_iteration: 0
 context:
@@ -82,7 +82,7 @@ Verification:
 
 ### Release-gate decision — 2026-10-07
 
-The user explicitly selected "Yes — remove bypass and require full CI". This resolves the earlier ambiguity and restores the frozen strict-CI invariant. Remove `bypass-validation` and dynamic source-proof selection from the Parties caller, require literal `ci.yml` through preparation and publication, and reject `commitlint.yml` in the Parties publication-preflight wrapper. Update executable and static CI guard coverage and active docs. Preserve the newer caller-owned NuGet OIDC flow, immutable shared prepare action, complete nine-package/three-container set, registry-floor and gitlink gates, and the original baseline. No dependency update, upstream edit, Git mutation, external configuration, or release dispatch is authorized or needed. Record the package-mode build blocker separately without claiming green full CI.
+The user explicitly selected "Yes — remove bypass and require full CI". This resolves the earlier ambiguity and restores the frozen strict-CI invariant. Remove `bypass-validation` and dynamic source-proof selection from the Parties caller, require literal `ci.yml` through preparation and publication, and reject `commitlint.yml` in the Parties publication-preflight wrapper. Update executable and static CI guard coverage and active docs. Preserve the newer caller-owned NuGet OIDC flow, immutable shared prepare action, complete nine-package/three-container set, registry-floor and gitlink gates, and the original baseline. No dependency update, upstream edit, external configuration, or release dispatch is authorized or needed. The explicitly invoked build workflow requires a local parent-repository completion commit; its scope excludes concurrent work and every submodule. Record the package-mode build blocker separately without claiming green full CI.
 
 Resumed checkout before this gate change: `2fb9e545adbb2f974abf3791b726a2f29750bcf9`. An external session committed the independent tests/docs and query-deadline work between turns; preserve that history and scope the new review to this gate change while retaining the original full-baseline artifact.
 
@@ -118,7 +118,33 @@ At the August specification baseline, the shared publisher froze a singular `con
 | --- | --- |
 | Pull request | `CommitlintAndDependabotUseReleaseCompatibleCommitContracts` verifies edited PR events, direct main pushes, and current title forwarding. |
 | Main push | `MainPushRunsCiAndCodeQlWhileReleaseRequiresManualDispatch` verifies both main-push triggers and the manual-only release trigger. |
-| Invalid release dispatch | `SourceGateRejectsInvalidDispatchOrIncompletePushEvidence` executes twelve rejected dispatch/proof cases; legacy-bypass fixtures also fail when only Commitlint is green. `SourceGateRunsOutsideTheProtectedReleaseEnvironment` verifies ordering and credential isolation. |
+| Invalid release dispatch | `SourceGateRejectsInvalidDispatchOrIncompletePushEvidence` executes 22 rejected dispatch/proof cases, including malformed response shapes, invalid run IDs, and both API failure boundaries; legacy-bypass fixtures also fail when only Commitlint is green. `SourceGateRunsOutsideTheProtectedReleaseEnvironment` verifies ordering and credential isolation. |
 | Valid release | CI inventory/wrapper tests preserve nine packages and three container repositories. Shared publisher tests `test_main_freezes_and_revalidates_three_container_repositories`, `test_package_and_multi_container_destinations_are_checked_as_one_set`, and `test_multi_container_sequence_rejects_set_drift_before_publish` exercise all phases, collision rejection, and identity drift. |
 
-All covering checks ran in the 85-test Parties CI lane and the 135-test shared publisher suite with no skips. The original full-baseline diff is retained separately; cold review targets the seven source/test/documentation files changed by the user-confirmed strict gate, excluding the spec account and unrelated concurrent query work. No claim of a green package-mode application build or remote publication is made.
+All covering checks ran in the final 101-test Parties CI lane and the 135-test shared publisher suite with no skips. The original full-baseline diff is retained separately; cold review targets the seven source/test/documentation files changed by the user-confirmed strict gate, excluding the spec account and unrelated concurrent query work. No claim of a green package-mode application build or remote publication is made.
+
+
+## Review Triage Log
+
+All three context-free layers completed before triage. Edge-case review returned no findings; verification-gap review returned no findings. Blind review returned the six rows below. Review used the scoped code diff; its original full-baseline counterpart retains unrelated historical and concurrent changes.
+
+| Finding | Verdict | Evidence and route |
+| --- | --- | --- |
+| B1: initial CI response shape and run identity | medium | Confirmed with jq that object-shaped `workflow_runs` and matching runs without IDs pass the caller selector. The strict source gate must reject incomplete evidence before approval; add array/object and positive integer run-ID validation plus fixtures. Patch. |
+| B2: manual-only trigger test accepts other automatic events | medium | The new test excludes only push and pull-request events; a schedule insertion retains all its passing assertions. That contract would miss an automatic publication regression. Assert the complete release trigger set is exactly workflow_dispatch. Patch. |
+| B3: CI endpoint API failure lacks a fixture | low | The existing api-failure stub exits before returning the main-ref response, so the subsequent CI request failure is not exercised. Add a distinct CI request failure fixture that rejects after the successful main lookup. Patch. |
+| B4: late preparation/publication proof is only static | false | The actual immutable shared preparation and publisher bytes match the tested checkout. Nine preparation tests passed, including late checkout/live-main drift and missing/non-success push CI. The 135 publisher tests passed, including stale/missing source and a source race during probing. Those executable tests refute the absence of late-boundary proof coverage. Reject. |
+| B5: workflow-value variants can regress across phases | false | The wrapper has one branch-free exact ci.yml check shared by both phases, with unset and empty values equivalent through shell expansion. Hermetic probes confirmed unset, uppercase, whitespace-prefixed/suffixed and path-prefixed values reject in all ten verify/publish combinations before shared execution. Both phases also have committed CI-positive and Commitlint-negative coverage; no normalization or phase-specific acceptance defect occurs. Reject. |
+| B6: missing recovery instructions after retiring bypass | low | Active docs state the new requirement but omit how an operator recovers missing/failed/canceled exact-source push evidence. Add concise original-push rerun/current-main redispatch guidance, distinguish non-push runs, and retain the existing upstream-package prerequisite. Patch. |
+
+Additional verification: `python3 Tools/test-prepare-domain-release.py` from `references/Hexalith.Builds` passed 9/9. The tested preparation and publisher paths have no byte differences against the existing immutable release identity. No dependency or upstream change is required by these review patches.
+
+### Final review fixes and verification — 2026-10-07
+
+- Resolved B1, B2, B3, and B6: the unprotected gate requires an object response with a workflow-runs array and a positive integer run ID; malformed proof fails before approval. Contract mutation tests reject six additional automatic release triggers. A distinct CI-endpoint failure fixture verifies rejection after the successful main lookup. Operator documentation explains original-push reruns and current-main redispatch. No review findings were deferred; B4 and B5 were rejected with executable evidence above.
+- `actionlint -no-color .github/workflows/*.yml`: passed after all patches.
+- `bash -n scripts/*.sh && bash scripts/check-no-warning-override.sh`: passed after all patches.
+- `pwsh -NoProfile -File scripts/test.ps1 -Lane ci -Configuration Release`: passed after all patches, 101 tests, zero failures or skips. Log: `/tmp/parties-ci-alignment-final-ci.log`.
+- `python3 -m unittest discover -s Github/publish-containers/tests -p 'test_*.py'` from `references/Hexalith.Builds`: passed after all patches, 135 tests, zero failures or skips. Log: `/tmp/parties-ci-alignment-final-publisher.log`.
+- `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1`: exit 1, zero warnings and two CS1061 errors at `src/Hexalith.Parties/Program.cs:64` and `:66`. EventStore 3.115.0 still lacks `RequireEventStoreSidecarChannel`. Log: `/tmp/parties-ci-alignment-final-build.log`. This unchanged external package prerequisite blocks full CI and release eligibility; the gate implementation is complete without bypassing it.
+- Preserved the original baseline and frozen intent. Completion records only this reviewed Parties scope; concurrent query work and all submodule content and pointers remain outside the commit.

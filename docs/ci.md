@@ -34,6 +34,8 @@ rerunning those tests.
 
 Release is an explicit operator action through `workflow_dispatch`; pushes to `main` run CI but never publish. Before the protected release job is requested, the caller proves that the dispatch selected the current `main` tip and has a successful exact-source push run of `ci.yml`. That full-CI proof is fixed in the caller gate, shared preparation, and publication environment; the Parties publication wrapper accepts only `ci.yml`. The preparation action, its `builds-execution-sha` input, and nested publishing tools must resolve to the same reviewed immutable Hexalith.Builds commit.
 
+If exact-source push CI is missing, failed, or canceled, find the original `main` push run for the intended commit under Actions → CI. Wait for a running attempt to finish, or use **Re-run all jobs** (or `gh run rerun RUN_ID`) on the failed or canceled original run. A rerun retains the original commit SHA and ref, as documented in [GitHub's rerun instructions](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs). Wait until that push run completes successfully, then dispatch Release again from current `main`. If `main` advanced, its new tip requires its own successful push CI. If no original push run exists, CI from a normal reviewed `main` push must establish the required evidence. Successful scheduled or `repository_dispatch` runs cannot substitute for push proof. The unresolved EventStore package prerequisite described below must still be resolved before full CI can succeed.
+
 The `production` environment must require human reviewers and allow deployments only from `main`. After approval, shared preparation:
 
 - installs npm dependencies from `package-lock.json` and verifies their signatures;

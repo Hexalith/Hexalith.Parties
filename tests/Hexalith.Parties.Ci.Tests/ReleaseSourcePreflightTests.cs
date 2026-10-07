@@ -27,10 +27,20 @@ public sealed class ReleaseSourcePreflightTests
     [InlineData("failed-ci")]
     [InlineData("running-ci")]
     [InlineData("malformed-ci")]
+    [InlineData("array-ci-response")]
+    [InlineData("object-ci-runs")]
+    [InlineData("missing-ci-id")]
+    [InlineData("null-ci-id")]
+    [InlineData("zero-ci-id")]
+    [InlineData("negative-ci-id")]
+    [InlineData("fractional-ci-id")]
+    [InlineData("string-ci-id")]
+    [InlineData("boolean-ci-id")]
     [InlineData("api-failure")]
+    [InlineData("ci-api-failure")]
     public void SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(string scenario)
     {
-        (int exitCode, string error, string[] requests, string _) = RunSourceGate(scenario);
+        (int exitCode, string error, string[] requests, string outputs) = RunSourceGate(scenario);
 
         exitCode.ShouldNotBe(0, scenario);
         error.ShouldNotBeNullOrWhiteSpace();
@@ -41,9 +51,11 @@ public sealed class ReleaseSourcePreflightTests
             "invalid-live-main" => "The live main SHA could not be resolved safely.",
             "stale-main" => "The dispatched source is no longer the live main tip.",
             "api-failure" => "Fixture GitHub API failure.",
+            "ci-api-failure" => "Fixture CI-runs API failure.",
             _ => "No successful push ci.yml run exists for the exact current main SHA.",
         };
         error.ShouldContain(expectedFailure);
+        outputs.ShouldBeEmpty();
         if (scenario is "non-main" or "invalid-dispatch")
         {
             requests.ShouldBeEmpty("Invalid dispatch identity must fail before any GitHub API request.");
@@ -52,6 +64,14 @@ public sealed class ReleaseSourcePreflightTests
         if (scenario is "invalid-live-main" or "stale-main")
         {
             requests.ShouldNotContain("repos/Hexalith/Hexalith.Parties/actions/workflows/ci.yml/runs");
+        }
+
+        if (scenario == "ci-api-failure")
+        {
+            int mainLookup = Array.IndexOf(requests, "repos/Hexalith/Hexalith.Parties/git/ref/heads/main");
+            int ciLookup = Array.IndexOf(requests, "repos/Hexalith/Hexalith.Parties/actions/workflows/ci.yml/runs");
+            mainLookup.ShouldBeGreaterThanOrEqualTo(0);
+            ciLookup.ShouldBeGreaterThan(mainLookup);
         }
     }
 
@@ -158,6 +178,10 @@ public sealed class ReleaseSourcePreflightTests
                       exit 0
                       ;;
                     */actions/workflows/ci.yml/runs)
+                      if [ "$FAKE_SCENARIO" = ci-api-failure ]; then
+                        echo 'Fixture CI-runs API failure.' >&2
+                        exit 1
+                      fi
                       printf '%s\n' "$FAKE_CI_RUNS"
                       exit 0
                       ;;
@@ -177,16 +201,41 @@ public sealed class ReleaseSourcePreflightTests
 
             Dictionary<string, object> run = new()
             {
+                ["id"] = 123456789,
                 ["head_sha"] = scenario == "wrong-ci-sha" ? OtherSha : SourceSha,
                 ["head_branch"] = scenario == "wrong-ci-branch" ? "other" : "main",
                 ["event"] = scenario == "wrong-ci-event" ? "pull_request" : "push",
                 ["status"] = scenario == "running-ci" ? "in_progress" : "completed",
                 ["conclusion"] = scenario == "failed-ci" ? "failure" : "success",
             };
-            string ciRuns = scenario == "malformed-ci" ? "{}" : JsonSerializer.Serialize(new
+            if (scenario == "missing-ci-id")
             {
-                workflow_runs = scenario == "missing-ci" ? Array.Empty<Dictionary<string, object>>() : [run],
-            });
+                run.Remove("id");
+            }
+            else
+            {
+                run["id"] = scenario switch
+                {
+                    "null-ci-id" => null!,
+                    "zero-ci-id" => 0,
+                    "negative-ci-id" => -1,
+                    "fractional-ci-id" => 1.5,
+                    "string-ci-id" => "123456789",
+                    "boolean-ci-id" => true,
+                    _ => 123456789,
+                };
+            }
+
+            string ciRuns = scenario switch
+            {
+                "malformed-ci" => "{}",
+                "array-ci-response" => JsonSerializer.Serialize(new[] { new { workflow_runs = new[] { run } } }),
+                "object-ci-runs" => JsonSerializer.Serialize(new { workflow_runs = new { matching = run } }),
+                _ => JsonSerializer.Serialize(new
+                {
+                    workflow_runs = scenario == "missing-ci" ? Array.Empty<Dictionary<string, object>>() : [run],
+                }),
+            };
             ProcessStartInfo start = new("bash")
             {
                 WorkingDirectory = CiTestPaths.RepositoryRoot,

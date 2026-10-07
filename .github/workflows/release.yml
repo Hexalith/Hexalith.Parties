@@ -60,13 +60,19 @@ jobs:
             -f status=success \
             -f per_page=100)"
           if ! printf '%s\n' "$ci_runs" | jq -e --arg sha "$DISPATCH_SHA" '
-            [.workflow_runs[] | select(
-              .head_sha == $sha and
-              .head_branch == "main" and
-              .event == "push" and
-              .status == "completed" and
-              .conclusion == "success"
-            )] | length > 0
+            def positive_integer:
+              if type == "number" then . > 0 and . == floor else false end;
+            if type == "object" and (.workflow_runs | type == "array") then
+              [.workflow_runs[] | select(
+                type == "object" and
+                (.id | positive_integer) and
+                .head_sha == $sha and
+                .head_branch == "main" and
+                .event == "push" and
+                .status == "completed" and
+                .conclusion == "success"
+              )] | length > 0
+            else false end
           ' >/dev/null; then
             echo "No successful push ci.yml run exists for the exact current main SHA." >&2
             exit 1
