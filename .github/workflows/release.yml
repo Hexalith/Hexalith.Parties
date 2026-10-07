@@ -1,17 +1,11 @@
 name: Release
 
 # Publication is an explicit operator action. The unprotected preflight proves the
-# dispatch selected the current main tip and that exact source already has the selected
-# successful push proof before the protected release environment is entered. Ordinary
+# dispatch selected the current main tip and that exact source already has a successful
+# push CI run before the protected release environment is entered. Ordinary
 # pushes and pull requests run CI only (see Hexalith.Builds ci-cd-standards.md, "Release Gates").
 on:
   workflow_dispatch:
-    inputs:
-      bypass-validation:
-        description: 'Use successful exact-source Commitlint proof instead of CI proof.'
-        required: false
-        default: false
-        type: boolean
 
 concurrency:
   group: release-production
@@ -25,37 +19,20 @@ jobs:
     name: Verify exact green main source
     runs-on: ubuntu-latest
     outputs:
-      source-ci-workflow: ${{ steps.select-source-proof.outputs.source-ci-workflow }}
       release-floor-tag: ${{ steps.registry-floor.outputs.release-floor-tag }}
     permissions:
       actions: read
       contents: read
     steps:
-      - name: Require current main with selected exact-source proof
-        id: select-source-proof
+      - name: Require current main with successful exact-source CI
         shell: bash
         env:
-          BYPASS_VALIDATION: ${{ inputs['bypass-validation'] }}
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           DISPATCH_REF: ${{ github.ref }}
           DISPATCH_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          case "$BYPASS_VALIDATION" in
-            false)
-              source_ci_workflow="ci.yml"
-              ;;
-            true)
-              source_ci_workflow="commitlint.yml"
-              ;;
-            *)
-              echo "bypass-validation must resolve to exactly true or false." >&2
-              exit 1
-              ;;
-          esac
-          printf 'source-ci-workflow=%s\n' "$source_ci_workflow" >> "$GITHUB_OUTPUT"
-
           if [ "$DISPATCH_REF" != "refs/heads/main" ]; then
             echo "Release must be dispatched from refs/heads/main." >&2
             exit 1
@@ -75,14 +52,14 @@ jobs:
             exit 1
           fi
 
-          source_runs="$(gh api --method GET \
-            "repos/${REPOSITORY}/actions/workflows/${source_ci_workflow}/runs" \
+          ci_runs="$(gh api --method GET \
+            "repos/${REPOSITORY}/actions/workflows/ci.yml/runs" \
             -f branch=main \
             -f event=push \
             -f head_sha="$DISPATCH_SHA" \
             -f status=success \
             -f per_page=100)"
-          if ! printf '%s\n' "$source_runs" | jq -e --arg sha "$DISPATCH_SHA" '
+          if ! printf '%s\n' "$ci_runs" | jq -e --arg sha "$DISPATCH_SHA" '
             [.workflow_runs[] | select(
               .head_sha == $sha and
               .head_branch == "main" and
@@ -91,7 +68,7 @@ jobs:
               .conclusion == "success"
             )] | length > 0
           ' >/dev/null; then
-            echo "No successful push ${source_ci_workflow} run exists for the exact current main SHA." >&2
+            echo "No successful push ci.yml run exists for the exact current main SHA." >&2
             exit 1
           fi
 
@@ -309,7 +286,7 @@ jobs:
           solution: Hexalith.Parties.slnx
           builds-execution-sha: 397c94a4e246c90b21cf408790fa0d55bf32d795
           source-branch: main
-          source-ci-workflow: ${{ needs.verify-source.outputs.source-ci-workflow }}
+          source-ci-workflow: ci.yml
           package-manifest: tools/release-packages.json
           expected-package-count: 9
           publication-flag: ${{ vars.HEXALITH_RELEASE_PUBLISH_ENABLED }}
@@ -355,7 +332,7 @@ jobs:
           HEXALITH_BUILDS_EXECUTION_SHA: 397c94a4e246c90b21cf408790fa0d55bf32d795
           HEXALITH_RELEASE_ENVIRONMENT: production
           HEXALITH_RELEASE_SOURCE_BRANCH: main
-          HEXALITH_RELEASE_SOURCE_CI_WORKFLOW: ${{ needs.verify-source.outputs.source-ci-workflow }}
+          HEXALITH_RELEASE_SOURCE_CI_WORKFLOW: ci.yml
           HEXALITH_RELEASE_PACKAGE_MANIFEST: tools/release-packages.json
           HEXALITH_RELEASE_EXPECTED_PACKAGE_COUNT: '9'
           HEXALITH_RELEASE_RESERVED_VERSION: ''

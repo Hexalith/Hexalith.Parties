@@ -26,7 +26,7 @@ The publishing identity must have rights to create/update these repositories:
 
 Prefer a dedicated CI identity for durable production use. A human-mapped test identity is acceptable only for temporary validation, with the API key rotated or deleted immediately after confirmation.
 
-Store the two Zot release secrets in the protected GitHub environment named `production`. Configure required reviewers and restrict deployments to `main`; the manual release must not reach these credentials until its unprotected exact-source gate succeeds and an authorized reviewer approves the environment. Ordinary releases require successful exact-source `ci.yml` proof; the typed `bypass-validation=true` path requires successful exact-source `commitlint.yml` proof. Shared preparation repeats the selected proof before NuGet login.
+Store the two Zot release secrets in the protected GitHub environment named `production`. Configure required reviewers and restrict deployments to `main`; the manual release must not reach these credentials until its unprotected exact-source gate proves current `main` with successful push `ci.yml` evidence and an authorized reviewer approves the environment. Shared preparation repeats that full-CI proof before NuGet login, and the publication wrapper requires `ci.yml` at both verify and publish boundaries.
 
 Credentials do not resolve the current EventStore package API prerequisite. Package-mode verification on 2026-10-07 against 3.115.0 reports CS1061 for `RequireEventStoreSidecarChannel`; green CI requires a compatible owner-published EventStore package and a separately approved dependency update. See [ci.md](ci.md). Environment, secret, and trusted-policy configuration remain operator-owned prerequisites.
 

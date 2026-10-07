@@ -98,12 +98,12 @@ public sealed class PartiesContainerPublishWorkflowTests
         preparation.ShouldContain($"builds-execution-sha: {BuildsExecutionSha}\n");
         preparation.ShouldContain("solution: Hexalith.Parties.slnx\n");
         preparation.ShouldContain("source-branch: main\n");
-        preparation.ShouldContain("source-ci-workflow: ${{ needs.verify-source.outputs.source-ci-workflow }}\n");
+        preparation.ShouldContain("source-ci-workflow: ci.yml\n");
         preparation.ShouldContain("package-manifest: tools/release-packages.json\n");
         preparation.ShouldContain("expected-package-count: 9\n");
         publisher.ShouldContain("uses: ./.hexalith/builds-execution/Github/publish-containers\n");
         publisher.ShouldContain($"builds-execution-sha: {BuildsExecutionSha}\n");
-        workflow.ShouldContain("actions/workflows/${source_ci_workflow}/runs");
+        workflow.ShouldContain("actions/workflows/ci.yml/runs");
 
         string[] expectedContainers =
         [
@@ -264,7 +264,7 @@ public sealed class PartiesContainerPublishWorkflowTests
             $"HEXALITH_BUILDS_EXECUTION_SHA: {BuildsExecutionSha}",
             "HEXALITH_RELEASE_ENVIRONMENT: production",
             "HEXALITH_RELEASE_SOURCE_BRANCH: main",
-            "HEXALITH_RELEASE_SOURCE_CI_WORKFLOW: ${{ needs.verify-source.outputs.source-ci-workflow }}",
+            "HEXALITH_RELEASE_SOURCE_CI_WORKFLOW: ci.yml",
             "HEXALITH_RELEASE_PACKAGE_MANIFEST: tools/release-packages.json",
             "HEXALITH_RELEASE_EXPECTED_PACKAGE_COUNT: '9'",
             "HEXALITH_RELEASE_RESERVED_VERSION: ''",
@@ -280,38 +280,36 @@ public sealed class PartiesContainerPublishWorkflowTests
     }
 
     [Fact]
-    public void ReleaseWorkflowSelectsSourceProofFromTypedBypassValidationInput()
+    public void ReleaseWorkflowRequiresFixedFullCiProofAtEveryPublicationBoundary()
     {
         string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml");
 
-        workflow.ShouldContain("bypass-validation:");
-        workflow.ShouldContain("required: false");
-        workflow.ShouldContain("default: false");
-        workflow.ShouldContain("type: boolean");
-        workflow.ShouldContain("BYPASS_VALIDATION: ${{ inputs['bypass-validation'] }}");
-        workflow.ShouldContain("source_ci_workflow=\"ci.yml\"");
-        workflow.ShouldContain("source_ci_workflow=\"commitlint.yml\"");
-        workflow.ShouldContain("bypass-validation must resolve to exactly true or false.");
-        workflow.ShouldContain("source-ci-workflow: ${{ steps.select-source-proof.outputs.source-ci-workflow }}");
-        workflow.ShouldContain("source-ci-workflow: ${{ needs.verify-source.outputs.source-ci-workflow }}");
+        workflow.ShouldContain("actions/workflows/ci.yml/runs");
+        ReadReleaseStep("Prepare domain release").ShouldContain("source-ci-workflow: ci.yml\n");
+        ReadReleaseStep("Semantic Release").ShouldContain("HEXALITH_RELEASE_SOURCE_CI_WORKFLOW: ci.yml\n");
+        workflow.ShouldNotContain("bypass-validation");
+        workflow.ShouldNotContain("BYPASS_VALIDATION");
+        workflow.ShouldNotContain("commitlint.yml");
+        workflow.ShouldNotContain("select-source-proof");
+        workflow.ShouldNotContain("outputs.source-ci-workflow");
+        workflow.ShouldNotContain("inputs:");
+    }
 
-        int falseBranch = workflow.IndexOf("false)", StringComparison.Ordinal);
-        int trueBranch = workflow.IndexOf("true)", StringComparison.Ordinal);
-        int malformedBranch = workflow.IndexOf("*)", StringComparison.Ordinal);
-        int ciAssignment = workflow.IndexOf("source_ci_workflow=\"ci.yml\"", StringComparison.Ordinal);
-        int commitlintAssignment = workflow.IndexOf("source_ci_workflow=\"commitlint.yml\"", StringComparison.Ordinal);
-        int malformedMessage = workflow.IndexOf(
-            "bypass-validation must resolve to exactly true or false.",
-            StringComparison.Ordinal);
+    [Fact]
+    public void MainPushRunsCiAndCodeQlWhileReleaseRequiresManualDispatch()
+    {
+        foreach (string path in new[] { ".github/workflows/ci.yml", ".github/workflows/codeql.yml" })
+        {
+            string workflow = CiTestPaths.ReadRepoFile(path).Replace("\r\n", "\n");
+            string triggers = workflow[..workflow.IndexOf("\nconcurrency:", StringComparison.Ordinal)];
+            triggers.ShouldContain("on:\n  push:\n    branches: [main]\n");
+        }
 
-        falseBranch.ShouldBeGreaterThan(0);
-        trueBranch.ShouldBeGreaterThan(falseBranch);
-        malformedBranch.ShouldBeGreaterThan(trueBranch);
-        ciAssignment.ShouldBeGreaterThan(falseBranch);
-        ciAssignment.ShouldBeLessThan(trueBranch);
-        commitlintAssignment.ShouldBeGreaterThan(trueBranch);
-        commitlintAssignment.ShouldBeLessThan(malformedBranch);
-        malformedMessage.ShouldBeGreaterThan(malformedBranch);
+        string release = CiTestPaths.ReadRepoFile(".github/workflows/release.yml").Replace("\r\n", "\n");
+        string releaseTriggers = release[..release.IndexOf("\nconcurrency:", StringComparison.Ordinal)];
+        releaseTriggers.ShouldContain("on:\n  workflow_dispatch:\n");
+        releaseTriggers.ShouldNotContain("\n  push:\n");
+        releaseTriggers.ShouldNotContain("\n  pull_request:\n");
     }
 
     [Fact]
@@ -376,9 +374,9 @@ public sealed class PartiesContainerPublishWorkflowTests
         containerTargets.ShouldNotContain("Hexalith.EventStore");
 
         publicationPreflight.ShouldContain("readonly expected_package_count=9");
-        publicationPreflight.ShouldContain("ci.yml|commitlint.yml");
         publicationPreflight.ShouldContain(
-            "HEXALITH_RELEASE_SOURCE_CI_WORKFLOW must be exactly ci.yml or commitlint.yml.");
+            "HEXALITH_RELEASE_SOURCE_CI_WORKFLOW must be exactly ci.yml.");
+        publicationPreflight.ShouldNotContain("commitlint.yml");
         publicationPreflight.ShouldContain("--container-repository \"registry.hexalith.com/parties\"");
         publicationPreflight.ShouldContain("--container-repository \"registry.hexalith.com/parties-mcp\"");
         publicationPreflight.ShouldContain("--container-repository \"registry.hexalith.com/parties-ui\"");
@@ -423,9 +421,7 @@ public sealed class PartiesContainerPublishWorkflowTests
 
     [Theory]
     [InlineData("verify", "ci.yml")]
-    [InlineData("verify", "commitlint.yml")]
     [InlineData("publish", "ci.yml")]
-    [InlineData("publish", "commitlint.yml")]
     public void PublicationPreflightWrapperForwardsAllowedSourceWorkflowUnchanged(
         string phase,
         string sourceCiWorkflow)
@@ -445,10 +441,14 @@ public sealed class PartiesContainerPublishWorkflowTests
     }
 
     [Theory]
-    [InlineData("nightly.yml")]
-    [InlineData("ci.yaml")]
-    [InlineData("")]
-    public void PublicationPreflightWrapperRejectsUnknownSourceWorkflowBeforeSharedPreflight(string sourceCiWorkflow)
+    [InlineData("verify", "commitlint.yml")]
+    [InlineData("publish", "commitlint.yml")]
+    [InlineData("verify", "nightly.yml")]
+    [InlineData("verify", "ci.yaml")]
+    [InlineData("verify", "")]
+    public void PublicationPreflightWrapperRejectsOtherSourceWorkflowBeforeSharedPreflight(
+        string phase,
+        string sourceCiWorkflow)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -456,10 +456,10 @@ public sealed class PartiesContainerPublishWorkflowTests
         }
 
         (int exitCode, string error, bool preflightInvoked, string[] _) =
-            RunPublicationPreflightWrapper("verify", ExpectedPackageCount.ToString(), sourceCiWorkflow);
+            RunPublicationPreflightWrapper(phase, ExpectedPackageCount.ToString(), sourceCiWorkflow);
 
         exitCode.ShouldNotBe(0);
-        error.ShouldContain("must be exactly ci.yml or commitlint.yml");
+        error.ShouldContain("must be exactly ci.yml.");
         preflightInvoked.ShouldBeFalse();
     }
 
@@ -534,8 +534,9 @@ public sealed class PartiesContainerPublishWorkflowTests
         ci.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main");
         ci.ShouldContain($"Hexalith/Hexalith.Builds/Github/prepare-domain-release@{BuildsExecutionSha}");
         ci.ShouldContain("workflow_dispatch");
-        ci.ShouldContain("bypass-validation");
-        ci.ShouldContain("commitlint.yml");
+        ci.ShouldContain("successful exact-source push run of `ci.yml`");
+        ci.ShouldNotContain("bypass-validation");
+        secrets.ShouldNotContain("bypass-validation");
         ci.ShouldContain($"package graph selects EventStore {ReadEffectiveEventStoreVersion()}");
         ci.ShouldContain("Package mode remains the authoritative CI and release path");
         ci.ShouldContain("source mode is diagnostic only");

@@ -26,22 +26,20 @@ Coverage is intentionally not enabled yet in `ci.yml`; the local `coverage` lane
 CI explicitly selects the shared workflow's `microsoft-testing-platform`
 command contract. Test evidence uses the xUnit v3 MTP-native TRX reporter;
 VSTest-only `--logger` and `--collect` options are not passed to Parties test
-executables. Ordinary Release (`bypass-validation=false`) reuses successful
-exact-source `ci.yml` evidence without duplicating those test tiers. Authorized
-bypass (`bypass-validation=true`) instead requires successful exact-source
-`commitlint.yml` proof. Shared release preparation restores and builds without
+executables. Release reuses successful exact-source `ci.yml` evidence without
+duplicating those test tiers. Shared release preparation restores and builds without
 rerunning those tests.
 
 ## Release
 
-Release is an explicit operator action through `workflow_dispatch`; pushes to `main` run CI but never publish. Before the protected release job is requested, the caller proves that the dispatch selected the current `main` tip. The optional boolean `bypass-validation` input defaults to `false` and then requires a successful exact-source push run of `ci.yml`; `true` requires a successful exact-source push run of `commitlint.yml` instead. Any other value is rejected before secrets or publish. The preparation action, its `builds-execution-sha` input, and nested publishing tools must resolve to the same reviewed immutable Hexalith.Builds commit.
+Release is an explicit operator action through `workflow_dispatch`; pushes to `main` run CI but never publish. Before the protected release job is requested, the caller proves that the dispatch selected the current `main` tip and has a successful exact-source push run of `ci.yml`. That full-CI proof is fixed in the caller gate, shared preparation, and publication environment; the Parties publication wrapper accepts only `ci.yml`. The preparation action, its `builds-execution-sha` input, and nested publishing tools must resolve to the same reviewed immutable Hexalith.Builds commit.
 
 The `production` environment must require human reviewers and allow deployments only from `main`. After approval, shared preparation:
 
 - installs npm dependencies from `package-lock.json` and verifies their signatures;
 - restores and builds `Hexalith.Parties.slnx`;
 - permits publication only when `HEXALITH_RELEASE_PUBLISH_ENABLED` is exactly lowercase `true`;
-- requires the explicit NuGet creator account in repository variable `NUGET_USER` and revalidates the exact dispatched `main` SHA against the selected source-proof workflow (`ci.yml` or, when bypassing, `commitlint.yml`).
+- requires the explicit NuGet creator account in repository variable `NUGET_USER` and revalidates the exact dispatched `main` SHA against successful push proof from `ci.yml`.
 
 The enabled job then prepares arm64 emulation and the shared container publisher, authenticates through SHA-pinned `NuGet/login@8d196754b4036150537f80ac539e15c2f1028841`, and runs semantic-release. Login and publication are skipped when preparation reports a frozen release. Semantic-release:
 

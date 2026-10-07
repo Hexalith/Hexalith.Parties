@@ -30,7 +30,7 @@ public sealed class ReleaseSourcePreflightTests
     [InlineData("api-failure")]
     public void SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(string scenario)
     {
-        (int exitCode, string error, string[] requests, string _) = RunSourceGate(scenario, "false");
+        (int exitCode, string error, string[] requests, string _) = RunSourceGate(scenario);
 
         exitCode.ShouldNotBe(0, scenario);
         error.ShouldNotBeNullOrWhiteSpace();
@@ -56,44 +56,40 @@ public sealed class ReleaseSourcePreflightTests
     }
 
     /// <summary>
-    /// Verifies the selected proof must bind the exact current main SHA and a completed push.
+    /// Verifies full CI proof must bind the exact current main SHA and a completed push.
     /// </summary>
-    /// <param name="bypassValidation">The typed dispatch input's shell representation.</param>
-    /// <param name="sourceWorkflow">The source proof workflow selected by the caller.</param>
-    [Theory]
-    [InlineData("false", "ci.yml")]
-    [InlineData("true", "commitlint.yml")]
-    public void SourceGateAcceptsOnlySuccessfulExactCurrentMainPush(
-        string bypassValidation,
-        string sourceWorkflow)
+    [Fact]
+    public void SourceGateAcceptsOnlySuccessfulExactCurrentMainPush()
     {
-        (int exitCode, string error, string[] requests, string outputs) = RunSourceGate("green", bypassValidation);
+        (int exitCode, string error, string[] requests, string outputs) = RunSourceGate("green");
 
         exitCode.ShouldBe(0, error);
         requests.ShouldContain("repos/Hexalith/Hexalith.Parties/git/ref/heads/main");
-        requests.ShouldContain($"repos/Hexalith/Hexalith.Parties/actions/workflows/{sourceWorkflow}/runs");
+        requests.ShouldContain("repos/Hexalith/Hexalith.Parties/actions/workflows/ci.yml/runs");
         requests.ShouldContain($"head_sha={SourceSha}");
         requests.ShouldContain("branch=main");
         requests.ShouldContain("event=push");
         requests.ShouldContain("status=success");
-        outputs.ShouldContain($"source-ci-workflow={sourceWorkflow}\n");
+        outputs.ShouldBeEmpty("The source-proof workflow is fixed and must not be selected through an output.");
     }
 
     /// <summary>
-    /// Verifies malformed dispatch input fails before source lookup or proof selection.
+    /// Verifies legacy bypass values and successful Commitlint cannot replace missing full CI proof.
     /// </summary>
-    /// <param name="bypassValidation">An invalid typed input representation.</param>
+    /// <param name="legacyBypassValidation">A value supplied through the retired bypass environment.</param>
     [Theory]
     [InlineData("")]
+    [InlineData("true")]
     [InlineData("TRUE")]
     [InlineData("unknown")]
-    public void SourceGateRejectsInvalidBypassInputBeforeAnyApiRequest(string bypassValidation)
+    public void LegacyBypassValuesCannotSubstituteCommitlintForFullCi(string legacyBypassValidation)
     {
-        (int exitCode, string error, string[] requests, string outputs) = RunSourceGate("green", bypassValidation);
+        (int exitCode, string error, string[] requests, string outputs) = RunSourceGate("missing-ci", legacyBypassValidation);
 
         exitCode.ShouldNotBe(0);
-        error.ShouldContain("bypass-validation must resolve to exactly true or false.");
-        requests.ShouldBeEmpty();
+        error.ShouldContain("No successful push ci.yml run exists for the exact current main SHA.");
+        requests.ShouldContain("repos/Hexalith/Hexalith.Parties/actions/workflows/ci.yml/runs");
+        requests.ShouldNotContain("repos/Hexalith/Hexalith.Parties/actions/workflows/commitlint.yml/runs");
         outputs.ShouldBeEmpty();
     }
 
@@ -122,11 +118,11 @@ public sealed class ReleaseSourcePreflightTests
     /// Extracts and runs the tracked caller's actual source proof, without publication commands.
     /// </summary>
     /// <param name="scenario">The GitHub API fixture scenario.</param>
-    /// <param name="bypassValidation">The dispatch input value.</param>
+    /// <param name="legacyBypassValidation">Optional retired bypass environment fixture.</param>
     /// <returns>The gate exit code, stderr, API arguments, and workflow outputs.</returns>
     private static (int ExitCode, string Error, string[] Requests, string Outputs) RunSourceGate(
         string scenario,
-        string bypassValidation)
+        string? legacyBypassValidation = null)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -161,8 +157,12 @@ public sealed class ReleaseSourcePreflightTests
                       printf '%s\n' "$FAKE_LIVE_MAIN_SHA"
                       exit 0
                       ;;
-                    */actions/workflows/*/runs)
+                    */actions/workflows/ci.yml/runs)
                       printf '%s\n' "$FAKE_CI_RUNS"
+                      exit 0
+                      ;;
+                    */actions/workflows/commitlint.yml/runs)
+                      printf '%s\n' "$FAKE_COMMITLINT_RUNS"
                       exit 0
                       ;;
                   esac
@@ -197,7 +197,11 @@ public sealed class ReleaseSourcePreflightTests
             start.ArgumentList.Add("-c");
             start.ArgumentList.Add(script);
             start.Environment["PATH"] = $"{temporary}{Path.PathSeparator}{start.Environment["PATH"]}";
-            start.Environment["BYPASS_VALIDATION"] = bypassValidation;
+            start.Environment.Remove("BYPASS_VALIDATION");
+            if (legacyBypassValidation is not null)
+            {
+                start.Environment["BYPASS_VALIDATION"] = legacyBypassValidation;
+            }
             start.Environment["GH_TOKEN"] = "fixture-token";
             start.Environment["REPOSITORY"] = "Hexalith/Hexalith.Parties";
             start.Environment["DISPATCH_REF"] = scenario == "non-main" ? "refs/heads/other" : "refs/heads/main";
@@ -212,6 +216,7 @@ public sealed class ReleaseSourcePreflightTests
                 _ => SourceSha,
             };
             start.Environment["FAKE_CI_RUNS"] = ciRuns;
+            start.Environment["FAKE_COMMITLINT_RUNS"] = JsonSerializer.Serialize(new { workflow_runs = new[] { run } });
 
             using Process process = new() { StartInfo = start };
             process.Start().ShouldBeTrue();

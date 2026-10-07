@@ -51,6 +51,105 @@ public sealed class PartyIdentityQueryHandlerTests
         return (new(authority, TimeProvider.System, reader, custody, historyReader, options), authority, reader, custody, historyReader, options);
     }
 
+    /// <summary>Unsupported current-source observations and unreadable attribution fail before custody lookup.</summary>
+    [Theory]
+    [InlineData("missing-observation")]
+    [InlineData("blank-observation")]
+    [InlineData("default-observation-time")]
+    [InlineData("ciphertext-format")]
+    [InlineData("opaque-payload")]
+    [InlineData("unsupported-protection-state")]
+    [InlineData("unsupported-format")]
+    [InlineData("unsupported-protection-version")]
+    [InlineData("binding-after-observation")]
+    [InlineData("rebind-after-observation")]
+    [InlineData("revoke-after-observation")]
+    public async Task InvalidCurrentSourceEvidence_DeniesBeforeCustody(string corruption)
+    {
+        DateTimeOffset boundary = Start.AddHours(1);
+        IEventPayload[] events = [new PartyCreated { Type = PartyType.Person, CreatedAt = Start.AddDays(-1) }, Events()[1]];
+        if (corruption == "rebind-after-observation")
+        {
+            HumanActorBindingEvidence successor = Binding() with { BindingVersion = 2, ValidFrom = boundary,
+                ValidUntil = boundary.AddDays(10), Custody = Binding().Custody with { ExpiresAt = boundary.AddDays(10) } };
+            events = [.. events, new HumanActorBindingRebound(new(successor, "rebind", "rebind-digest"), boundary, 1)];
+        }
+        else if (corruption == "revoke-after-observation")
+        {
+            events = [.. events, new HumanActorBindingRevoked("revoke", "revoke-digest", 1, boundary, Binding().Custody)];
+        }
+
+        var fixture = Service(events);
+        AuthoritativeStreamReadResult original = await fixture.Reader.ReadAsync(new("tenant-a", "party", "party-1"), TestContext.Current.CancellationToken);
+        AuthoritativeEventStream stream = original.Stream!;
+        stream = corruption switch
+        {
+            "missing-observation" => stream with { ObservationId = null! },
+            "blank-observation" => stream with { ObservationId = " " },
+            "default-observation-time" => stream with { ObservedAt = default },
+            "binding-after-observation" => stream with { ObservedAt = Start.AddTicks(-1) },
+            "rebind-after-observation" or "revoke-after-observation" => stream with { ObservedAt = boundary.AddTicks(-1) },
+            _ => stream with { Events = [stream.Events[0], stream.Events[1] with
+                {
+                    SerializationFormat = corruption switch
+                    {
+                        "ciphertext-format" => "json+identity-history-v1",
+                        "unsupported-format" => "unsupported",
+                        _ => "json",
+                    },
+                    ProtectionMetadata = corruption switch
+                    {
+                        "ciphertext-format" => EventStorePayloadProtectionMetadata.Unprotected(PayloadProtectionState.Protected)
+                            with { Scheme = "party-actor-history-v1" },
+                        "opaque-payload" => EventStorePayloadProtectionMetadata.ProviderOpaque(),
+                        "unsupported-protection-state" => EventStorePayloadProtectionMetadata.Unprotected((PayloadProtectionState)99),
+                        "unsupported-protection-version" => EventStorePayloadProtectionMetadata.Unprotected() with { MetadataVersion = 2 },
+                        _ => EventStorePayloadProtectionMetadata.Unprotected(),
+                    },
+                }] },
+        };
+        fixture.Reader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<CancellationToken>())
+            .Returns(new AuthoritativeStreamReadResult(stream, null));
+
+        PartyIdentityResult result = await fixture.Service.ResolveAsync(Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)), TestContext.Current.CancellationToken);
+
+        result.Outcome.ShouldBe(PartyIdentityOutcome.Unavailable);
+        result.Evidence.ShouldBeNull();
+        await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+    }
+
+    /// <summary>Readable JSON preserves eligibility with legacy, plaintext or successfully decrypted protection provenance.</summary>
+    [Theory]
+    [InlineData("legacy")]
+    [InlineData("unprotected")]
+    [InlineData("protected-provenance")]
+    public async Task SupportedCurrentSourceProtectionMetadata_PreservesEvidence(string metadata)
+    {
+        var fixture = Service(Events());
+        AuthoritativeStreamReadResult original = await fixture.Reader.ReadAsync(new("tenant-a", "party", "party-1"), TestContext.Current.CancellationToken);
+        AuthoritativeEventStream stream = original.Stream! with
+        {
+            Events = [.. original.Stream!.Events.Select(item => item with
+                {
+                    ProtectionMetadata = metadata switch
+                    {
+                        "legacy" => null,
+                        "protected-provenance" => EventStorePayloadProtectionMetadata.Unprotected(PayloadProtectionState.Protected)
+                            with { Scheme = item.EventTypeName == typeof(HumanActorBindingEstablished).FullName
+                                ? "party-actor-history-v1" : "parties-aes-gcm-json-fields" },
+                        _ => EventStorePayloadProtectionMetadata.Unprotected(),
+                    },
+                })],
+        };
+        fixture.Reader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<CancellationToken>())
+            .Returns(new AuthoritativeStreamReadResult(stream, null));
+
+        PartyIdentityResult result = await fixture.Service.ResolveAsync(Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)), TestContext.Current.CancellationToken);
+
+        result.Outcome.ShouldBe(PartyIdentityOutcome.Resolved);
+        result.Evidence!.HumanBinding!.ActorId.ShouldBe(Actor);
+    }
+
     /// <summary>Suspended current reads cannot release a binding outside its completion interval or source observation.</summary>
     [Theory]
     [InlineData("interval-expiry")]
@@ -74,7 +173,8 @@ public sealed class PartyIdentityQueryHandlerTests
             "reader", null, Actor, 1, true, Start.AddDays(-1), Start.AddDays(20), 1);
         fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(new PartyIdentityAdmissionResult(grant, null));
         AuthoritativeStreamReadResult source = await fixture.Reader.ReadAsync(new("tenant-a", "party", "party-1"), TestContext.Current.CancellationToken);
-        DateTimeOffset observedAt = change == "binding-rollback" ? Start.AddHours(-1) : Start.AddDays(1);
+        // The source is coherent before custody suspends; the rollback occurs during that await.
+        DateTimeOffset observedAt = Start.AddDays(1);
         fixture.Reader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<CancellationToken>())
             .Returns(source with { Stream = source.Stream! with { ObservedAt = observedAt } });
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
