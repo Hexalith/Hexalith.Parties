@@ -1,18 +1,20 @@
 [
   {
-    "XmlLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "Matrix": "Shared source contract validation",
+    "BuildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Contracts.Tests-build.log",
+    "Project": "Hexalith.EventStore.Contracts.Tests",
     "TestLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Contracts.Tests-tests.log",
     "Classes": [
       "*StreamReadPageValidatorTests",
       "*RetainedIdentityHistoryValidatorTests"
     ],
-    "BuildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Contracts.Tests-build.log",
-    "Matrix": "Shared source contract validation",
-    "Project": "Hexalith.EventStore.Contracts.Tests",
-    "Summary": "   Hexalith.EventStore.Contracts.Tests  Total: 23, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.184s"
+    "Summary": "   Hexalith.EventStore.Contracts.Tests  Total: 23, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.196s",
+    "XmlLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Contracts.Tests-tests.xml"
   },
   {
-    "XmlLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Client.Tests-tests.xml",
+    "Matrix": "Shared source/isolation",
+    "BuildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Client.Tests-build.log",
+    "Project": "Hexalith.EventStore.Client.Tests",
     "TestLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Client.Tests-tests.log",
     "Classes": [
       "*AuthoritativeEventStreamReaderTests",
@@ -20,104 +22,7 @@
       "*EventStoreGatewayClientStreamTests",
       "*RetainedIdentityHistoryReaderTests"
     ],
-    "BuildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Client.Tests-build.log",
-    "Matrix": "Shared source/isolation",
-    "Project": "Hexalith.EventStore.Client.Tests",
-    "Summary": "   Hexalith.EventStore.Client.Tests  Total: 107, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.609s"
-  },
-  {
-    "XmlLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Server.Tests-tests.xml",
-    "TestLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Server.Tests-tests.log",
-    "Classes": [
-      "*IdentityAdmissionTests",
-      "*ActorRegistryTests",
-      "*IdentityGatewayDenialTests",
-      "*CommandsControllerTrustedExtensionTests",
-      "*QueriesControllerTests",
-      "*StreamsControllerTests",
-      "*RetainedIdentityHistorySourceReaderTests"
-    ],
-    "BuildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Server.Tests-build.log",
-    "Matrix": "Isolation/actor authority",
-    "Project": "Hexalith.EventStore.Server.Tests",
-    "Summary": "   Hexalith.EventStore.Server.Tests  Total: 156, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.830s"
-  },
-  {
-    "XmlLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Platform.Identity.Tests-tests.xml",
-    "TestLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Platform.Identity.Tests-tests.log",
-    "Classes": [
-      "*PlatformIdentityAdmissionTests"
-    ],
-    "BuildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Platform.Identity.Tests-build.log",
-    "Matrix": "Global registry/bootstrap",
-    "Project": "Hexalith.Platform.Identity.Tests",
-    "Summary": "   Hexalith.Platform.Identity.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.222s"
-  },
-  {
-    "XmlLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Contracts.Tests-tests.xml",
-    "TestLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Contracts.Tests-tests.log",
-    "Classes": [
-      "*PartyStateTests",
-      "*PartyIdentityContractTests",
-      "*ContractsPublicApiSnapshotTests"
-    ],
-    "BuildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Contracts.Tests-build.log",
-    "Matrix": "History/compatibility",
-    "Project": "Hexalith.Parties.Contracts.Tests",
-    "Summary": "   Hexalith.Parties.Contracts.Tests  Total: 29, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.187s"
-  },
-  {
-    "XmlLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Server.Tests-tests.xml",
-    "TestLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Server.Tests-tests.log",
-    "Classes": [
-      "*AgentPartyProvisioningTests",
-      "*HumanActorBindingTests",
-      "*PartyAggregateCreateTests",
-      "*PartyAggregateCompositeTests"
-    ],
-    "BuildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Server.Tests-build.log",
-    "Matrix": "Provision/history",
-    "Project": "Hexalith.Parties.Server.Tests",
-    "Summary": "   Hexalith.Parties.Server.Tests  Total: 94, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.342s"
-  },
-  {
-    "XmlLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Tests-tests.xml",
-    "TestLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Tests-tests.log",
-    "Classes": [
-      "*PartyIdentityAdmissionTests",
-      "*PartyIdentityQueryHandlerTests",
-      "*PartyDomainProcessorValidationTests",
-      "*PartySdkQueryHandlerTests"
-    ],
-    "BuildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Tests-build.log",
-    "Matrix": "Current identity/history/isolation",
-    "Project": "Hexalith.Parties.Tests",
-    "Summary": "   Hexalith.Parties.Tests  Total: 173, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.462s"
-  },
-  {
-    "XmlLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Security.Tests-tests.xml",
-    "TestLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Security.Tests-tests.log",
-    "Classes": [
-      "*IdentityHistoryProtectionTests",
-      "*PartyPayloadProtectionServiceTests"
-    ],
-    "BuildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Security.Tests-build.log",
-    "Matrix": "Custody separation/denial",
-    "Project": "Hexalith.Parties.Security.Tests",
-    "Summary": "   Hexalith.Parties.Security.Tests  Total: 30, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.357s"
-  },
-  {
-    "XmlLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Client.Tests-tests.xml",
-    "TestLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Client.Tests-tests.log",
-    "Classes": [
-      "*HttpPartiesIdentityClientTests",
-      "*HttpPartiesCommandClientTests",
-      "*HttpPartiesQueryClientTests",
-      "*DependencyInjectionTests"
-    ],
-    "BuildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.Parties.Client.Tests-build.log",
-    "Matrix": "Isolation/compatibility",
-    "Project": "Hexalith.Parties.Client.Tests",
-    "Summary": "   Hexalith.Parties.Client.Tests  Total: 98, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.349s"
+    "Summary": "   Hexalith.EventStore.Client.Tests  Total: 107, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.418s",
+    "XmlLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Client.Tests-tests.xml"
   }
 ]

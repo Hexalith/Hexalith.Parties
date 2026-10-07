@@ -87,7 +87,9 @@ public sealed class IdentityBindingBoundaryTests
 
     private static string ProjectRoot(string? relativePath = null)
     {
-        string current = AppContext.BaseDirectory;
+        // The owner verifier builds into an isolated artifacts directory outside the source tree.
+        // It runs each suite from its owning repository so source-boundary checks inspect that tree.
+        string current = Environment.CurrentDirectory;
         while (!File.Exists(Path.Combine(current, "Hexalith.Parties.slnx")))
         {
             DirectoryInfo? parent = Directory.GetParent(current);
