@@ -1,0 +1,12 @@
+{
+  "command": [
+    "aspire",
+    "describe",
+    "--apphost",
+    "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+    "--non-interactive",
+    "--format",
+    "Json"
+  ],
+  "exitCode": 0
+}

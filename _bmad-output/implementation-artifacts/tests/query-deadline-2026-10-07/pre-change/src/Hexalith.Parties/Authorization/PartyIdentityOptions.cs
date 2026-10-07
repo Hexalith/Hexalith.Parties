@@ -5,9 +5,6 @@ namespace Hexalith.Parties.Authorization;
 /// <summary>Required attribution policy configuration; unset settings deny binding writes, binding reads and live qualification.</summary>
 public sealed class PartyIdentityOptions
 {
-    /// <summary>Gets or sets the whole-query operational timeout, greater than zero and at most the SDK's thirty-second bound.</summary>
-    public TimeSpan QueryTimeout { get; set; } = TimeSpan.FromSeconds(30);
-
     /// <summary>Gets or sets the approved versioned retention policy.</summary>
     public string? PolicyId { get; set; }
 
