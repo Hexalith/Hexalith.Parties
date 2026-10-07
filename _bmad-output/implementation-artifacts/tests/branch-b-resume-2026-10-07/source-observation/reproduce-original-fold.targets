@@ -1,0 +1,8 @@
+<Project>
+  <Target Name="ReproduceOriginalIdentityFold" BeforeTargets="CoreCompile" Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties'">
+    <ItemGroup>
+      <Compile Remove="Queries/PartyIdentitySourceFold.cs" />
+      <Compile Include="/tmp/ext-parties-1-source-validation-20261007/before-PartyIdentitySourceFold.cs" />
+    </ItemGroup>
+  </Target>
+</Project>
