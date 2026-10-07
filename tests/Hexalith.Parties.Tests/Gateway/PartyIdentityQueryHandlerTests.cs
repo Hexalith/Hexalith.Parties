@@ -780,6 +780,127 @@ public sealed class PartyIdentityQueryHandlerTests
         }
     }
 
+    /// <summary>Accepted 365-day intervals retain their exact boundary and source positions through serialized restore.</summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Accepted365DayPolicy_RebindAndRestoredHistoryPreserveOriginalBoundary(bool restored)
+    {
+        const string successorActor = "01HX0000000000000000000002";
+        DateTimeOffset boundary = Start.AddDays(180);
+        HumanActorBindingEvidence first = Binding() with
+        {
+            ValidUntil = Start.AddDays(365),
+            Custody = Binding().Custody with { PolicyId = "party-actor-retention-v1", ExpiresAt = Start.AddDays(365) },
+        };
+        HumanActorBindingEvidence second = first with
+        {
+            ActorId = successorActor, BindingVersion = 2, ValidFrom = boundary, ValidUntil = boundary.AddDays(365),
+            Custody = first.Custody with { ExpiresAt = boundary.AddDays(365), LifecycleRevision = 2, EvidenceId = "successor-custody" },
+        };
+        var fixture = Service(Events()[0], new HumanActorBindingEstablished(new(first, "first", "first-digest"), Start, 0),
+            new HumanActorBindingRebound(new(second, "second", "second-digest"), boundary, 1));
+        DateTimeOffset now = Start.AddDays(200);
+        var policy = new PartyIdentityOptions { PolicyId = "party-actor-retention-v1", Retention = TimeSpan.FromDays(365), ExpiryTrigger = "binding-effective-at" };
+        fixture.Options.CurrentValue.Returns(policy);
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        clock.GetUtcNow().Returns(now);
+        RetainedIdentityHistoryReadResult captured = await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"),
+            RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken);
+        RetainedIdentityHistoryStream source = captured.Stream! with { ObservedAt = now, ValidUntil = now.AddMinutes(1) };
+        if (restored)
+        {
+            source = JsonSerializer.Deserialize<RetainedIdentityHistoryStream>(JsonSerializer.SerializeToUtf8Bytes(source, PartiesJsonOptions.Default), PartiesJsonOptions.Default)!;
+        }
+        fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new RetainedIdentityHistoryReadResult(source, null));
+        string requestedActor = Actor;
+        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(_ => new PartyIdentityAdmissionResult(
+            new(new("tenant-a", "party", "party-1", "Read", "c", "c", "d"), "reader", null, requestedActor, 1, true,
+                Start, Start.AddDays(600), 1), null));
+        var service = new PartyIdentityQueryService(fixture.Authority, clock, custody: fixture.Custody, historyReader: fixture.HistoryReader, identityOptions: fixture.Options);
+        HumanActorBindingResult before = await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", boundary.AddTicks(-1), Actor, 1)), TestContext.Current.CancellationToken);
+        before.Outcome.ShouldBe(HumanActorBindingOutcome.Resolved);
+        before.BindingSourcePosition.ShouldBe(2);
+        before.Evidence!.ActorId.ShouldBe(Actor);
+        before.Evidence.ValidUntil.ShouldBe(boundary);
+        before.Evidence.Custody.ExpiresAt.ShouldBe(Start.AddDays(365));
+        requestedActor = successorActor;
+        HumanActorBindingResult at = await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", boundary, successorActor, 2)), TestContext.Current.CancellationToken);
+        at.Outcome.ShouldBe(HumanActorBindingOutcome.Resolved);
+        at.BindingSourcePosition.ShouldBe(3);
+        at.Evidence.ShouldBe(second);
+        await fixture.Reader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default);
+    }
+
+    /// <summary>Restored readable bytes and optimistic custody cannot restart the accepted immutable expiry clock.</summary>
+    [Theory]
+    [InlineData(-1, HumanActorBindingOutcome.Resolved)]
+    [InlineData(0, HumanActorBindingOutcome.Expired)]
+    [InlineData(1, HumanActorBindingOutcome.Expired)]
+    public async Task Accepted365DayPolicy_RestoredBytesRespectExclusiveExpiry(int ticks, HumanActorBindingOutcome expected)
+    {
+        HumanActorBindingEvidence binding = Binding() with
+        {
+            ValidUntil = Start.AddDays(365),
+            Custody = Binding().Custody with { PolicyId = "party-actor-retention-v1", ExpiresAt = Start.AddDays(365) },
+        };
+        var fixture = Service(Events()[0], new HumanActorBindingEstablished(new(binding, "logical", "digest"), Start, 0));
+        fixture.Options.CurrentValue.Returns(new PartyIdentityOptions { PolicyId = "party-actor-retention-v1", Retention = TimeSpan.FromDays(365), ExpiryTrigger = "binding-effective-at" });
+        DateTimeOffset now = binding.Custody.ExpiresAt.AddTicks(ticks);
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        clock.GetUtcNow().Returns(now);
+        RetainedIdentityHistoryReadResult captured = await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"), RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken);
+        RetainedIdentityHistoryStream restored = JsonSerializer.Deserialize<RetainedIdentityHistoryStream>(
+            JsonSerializer.SerializeToUtf8Bytes(captured.Stream! with { ObservedAt = now, ValidUntil = now.AddMinutes(1) }, PartiesJsonOptions.Default), PartiesJsonOptions.Default)!;
+        fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new RetainedIdentityHistoryReadResult(restored, null));
+        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(new PartyIdentityAdmissionResult(new(new("tenant-a", "party", "party-1", "Read", "c", "c", "d"), "reader", null, Actor, 1, true, Start, Start.AddDays(600), 1), null));
+        var service = new PartyIdentityQueryService(fixture.Authority, clock, custody: fixture.Custody, historyReader: fixture.HistoryReader, identityOptions: fixture.Options);
+
+        HumanActorBindingResult result = await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, Actor, 1)), TestContext.Current.CancellationToken);
+
+        result.Outcome.ShouldBe(expected);
+        if (expected == HumanActorBindingOutcome.Expired)
+        {
+            result.Evidence.ShouldBeNull();
+            result.BindingSourcePosition.ShouldBe(0);
+            await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+        }
+        restored.Events[0].Payload.ShouldBe(captured.Stream!.Events[0].Payload);
+    }
+
+    /// <summary>A profile exclusion cannot supply missing version evidence for a successor after predecessor destruction.</summary>
+    [Fact]
+    public async Task ExpiredPredecessorOmitted_SuccessorReadRemainsUnavailable()
+    {
+        const string successorActor = "01HX0000000000000000000002";
+        DateTimeOffset boundary = Start.AddDays(180);
+        HumanActorBindingEvidence successor = Binding() with
+        {
+            ActorId = successorActor, BindingVersion = 2, ValidFrom = boundary, ValidUntil = boundary.AddDays(365),
+            Custody = Binding().Custody with { PolicyId = "party-actor-retention-v1", ExpiresAt = boundary.AddDays(365), LifecycleRevision = 2 },
+        };
+        var fixture = Service(Events()[0], new HumanActorBindingEstablished(new(Binding(), "first", "digest"), Start, 0),
+            new HumanActorBindingRebound(new(successor, "second", "digest-2"), boundary, 1));
+        fixture.Options.CurrentValue.Returns(new PartyIdentityOptions { PolicyId = "party-actor-retention-v1", Retention = TimeSpan.FromDays(365), ExpiryTrigger = "binding-effective-at" });
+        DateTimeOffset now = Start.AddDays(366);
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        clock.GetUtcNow().Returns(now);
+        RetainedIdentityHistoryReadResult captured = await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"), RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken);
+        RetainedIdentityHistoryStream missing = captured.Stream! with { ObservedAt = now, ValidUntil = now.AddMinutes(1), Events = [captured.Stream!.Events[1]], ExcludedSequences = [1, 2] };
+        RetainedIdentityHistoryValidator.IsComplete(new(missing.Identity, missing.Purpose), missing, now).ShouldBeTrue();
+        fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new RetainedIdentityHistoryReadResult(missing, null));
+        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(new PartyIdentityAdmissionResult(new(new("tenant-a", "party", "party-1", "Read", "c", "c", "d"), "reader", null, successorActor, 1, true, Start, Start.AddDays(600), 1), null));
+        var service = new PartyIdentityQueryService(fixture.Authority, clock, custody: fixture.Custody, historyReader: fixture.HistoryReader, identityOptions: fixture.Options);
+
+        HumanActorBindingResult result = await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", boundary, successorActor, 2)), TestContext.Current.CancellationToken);
+
+        result.Outcome.ShouldBe(HumanActorBindingOutcome.Unavailable);
+        result.Evidence.ShouldBeNull();
+        result.BindingSourcePosition.ShouldBe(0);
+        await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+    }
+
     private static PartyIdentityOptions PolicyOptions() => new()
     {
         PolicyId = "synthetic",

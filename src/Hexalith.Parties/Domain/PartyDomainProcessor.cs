@@ -634,12 +634,28 @@ internal sealed partial class PartyDomainProcessor(
             return currentState;
         }
 
+        // Validate the complete stored tail before protection can transform metadata or bytes.
+        // A redaction marker is an output of this boundary, never an admitted source format.
+        if (state.LastSnapshotSequence < 0 || state.CurrentSequence < state.LastSnapshotSequence
+            || state.LastSnapshotSequence > 0 && state.SnapshotState is null
+            || state.Events.Count != state.CurrentSequence - state.LastSnapshotSequence
+            || state.Events.Where((item, index) => item.Metadata.SequenceNumber != state.LastSnapshotSequence + index + 1
+                || item.Metadata.TenantId != command.TenantId || item.Metadata.Domain != command.Domain
+                || item.Metadata.AggregateId != command.AggregateId || item.Metadata.MetadataVersion != 1
+                || item.Metadata.EventContractType is not null || item.Metadata.PayloadVersion is not null
+                || item.Metadata.SerializationFormat is not ("json" or "json+pdenc-v1" or "json+identity-history-v1")).Any())
+        {
+            throw new InvalidOperationException("Party replay source metadata, scope or checkpoint is inconsistent.");
+        }
+
+        EventEnvelope[] sourceEvents = [.. state.Events.Select(item =>
+            new EventEnvelope(item.Metadata, item.Payload.ToArray(), item.Extensions))];
         object? snapshotState = state.SnapshotState is null
             ? null
             : await UnprotectSnapshotOrRedactAsync(command, state.SnapshotState, cancellationToken).ConfigureAwait(false);
 
         var events = new List<EventEnvelope>(state.Events.Count);
-        foreach (EventEnvelope envelope in state.Events)
+        foreach (EventEnvelope envelope in sourceEvents)
         {
             // Per-iteration cancellation: streams of thousands of events were previously
             // un-cancellable inside this loop because only the network call observed CT.
@@ -647,12 +663,9 @@ internal sealed partial class PartyDomainProcessor(
 
             PayloadProtectionResult result = await UnprotectEnvelopeOrRedactAsync(command, envelope, cancellationToken).ConfigureAwait(false);
 
-            // Redacted bytes are valid application JSON. Adapt only this in-memory replay
-            // copy to the SDK's JSON intake; persisted protection metadata and the
-            // security service's distinct redaction marker remain untouched.
-            if (string.Equals(result.SerializationFormat, "json-redacted", StringComparison.Ordinal))
+            if (result.SerializationFormat != "json")
             {
-                result = result with { SerializationFormat = "json" };
+                throw new InvalidOperationException("Party replay protection did not produce supported application JSON.");
             }
 
             // The "no-op" fast path is signalled by the protection service returning the same
@@ -697,12 +710,18 @@ internal sealed partial class PartyDomainProcessor(
                     cancellationToken)
                 .ConfigureAwait(false);
         }
-        catch (Exception ex) when (PartyEncryptionKeyDestroyedException.IsMatch(ex))
+        catch (Exception ex) when (envelope.Metadata.SerializationFormat == "json+pdenc-v1"
+            && PartyEncryptionKeyDestroyedException.IsMatch(ex))
         {
             LogRehydrationFallbackToRedaction(
                 envelope.Metadata.EventTypeName,
                 ex.GetType().Name);
-            return PartyPayloadProtectionService.RedactProtectedPayload(envelope.Payload, envelope.Metadata.SerializationFormat);
+            PayloadProtectionResult redacted = PartyPayloadProtectionService.RedactProtectedPayload(envelope.Payload, envelope.Metadata.SerializationFormat);
+            // Only locally generated profile redaction may enter strict SDK JSON replay.
+            // Stored envelopes and the security service's audit marker remain unchanged.
+            return redacted.SerializationFormat == "json-redacted"
+                ? redacted with { SerializationFormat = "json" }
+                : throw new InvalidOperationException("Party profile redaction did not produce supported application JSON.");
         }
     }
 

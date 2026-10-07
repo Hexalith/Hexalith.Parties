@@ -1,0 +1,12 @@
+{
+  "Summary": "   Hexalith.EventStore.Contracts.Tests  Total: 23, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.198s",
+  "XmlLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Contracts.Tests-tests.xml",
+  "Matrix": "Shared source contract validation",
+  "BuildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Contracts.Tests-build.log",
+  "Project": "Hexalith.EventStore.Contracts.Tests",
+  "Classes": [
+    "*StreamReadPageValidatorTests",
+    "*RetainedIdentityHistoryValidatorTests"
+  ],
+  "TestLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/owner-continuation-2026-10-07/local-matrix/Hexalith.EventStore.Contracts.Tests-tests.log"
+}

@@ -1,0 +1,32 @@
+{
+  "description": "Desired settings for the nuget.org Trusted Publishing form; this file is not an API request and does not register or activate the policy.",
+  "policyName": "hexalith-parties-production",
+  "packageOwner": "Hexalith",
+  "provider": "GitHub",
+  "repositoryOwner": "Hexalith",
+  "repository": "Hexalith.Parties",
+  "workflowFile": "release.yml",
+  "environment": "production",
+  "scope": "Push only new package versions",
+  "packageGlobPattern": "Hexalith.Parties.*",
+  "packageIds": [
+    "Hexalith.Parties.Contracts",
+    "Hexalith.Parties.Client",
+    "Hexalith.Parties.AdminPortal",
+    "Hexalith.Parties.ConsumerPortal",
+    "Hexalith.Parties.Picker",
+    "Hexalith.Parties.Authentication",
+    "Hexalith.Parties.Projections",
+    "Hexalith.Parties.Security",
+    "Hexalith.Parties.Testing"
+  ],
+  "setupUrl": "https://www.nuget.org/account/TrustedPublishing",
+  "documentationUrl": "https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing",
+  "workflowRequirements": [
+    "Use the NuGet profile username of the policy creator when requesting a temporary API key; the package owner can differ.",
+    "Grant id-token: write to the publishing job in the reusable workflow and to the calling job.",
+    "Exchange a GitHub OIDC token with audience https://www.nuget.org for a temporary key shortly before publication.",
+    "Supply that temporary key to the existing NuGet push command instead of the long-lived NUGET_API_KEY secret.",
+    "Preserve the production environment and exact main-source release gates."
+  ]
+}

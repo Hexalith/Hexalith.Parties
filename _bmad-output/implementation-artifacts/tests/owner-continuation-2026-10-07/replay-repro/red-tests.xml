@@ -1,0 +1,236 @@
+<assemblies schema-version="3" id="5412707a-ed9c-4b8f-a8d1-ae503f9eeb56" computer="DESKTOP-VIOG240" user="administrator" start-rtf="2026-10-07T09:40:42.9491531+00:00" finish-rtf="2026-10-07T09:40:43.2998191+00:00" timestamp="10/07/2026 11:40:43"><assembly environment="64-bit (x64) .NET 10.0.12 [collection-per-class, parallel (collections, 14 threads)]" id="9b2be626-83cf-4592-af8d-db5d61dde8a1" name="/tmp/parties54-continuation-artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll" run-date="2026-10-07" run-time="09:40:42" start-rtf="2026-10-07T09:40:42.9491531+00:00" test-framework="xUnit.net v3 4.0.1+8ed8aa354c" target-framework=".NETCoreApp,Version=v10.0" errors="0" failed="12" finish-rtf="2026-10-07T09:40:43.2998191+00:00" not-run="0" passed="0" skipped="0" time="0.351" time-rtf="00:00:00.3510000" total="12"><collection name="Test collection for Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests (id: ddb4603e57cf903087f16478b1c3f6290d45df24f759ccf49c44a7e8f2fab4cb)" id="9b53da4f-7d55-4ad0-b271-9a41c4915113" failed="12" not-run="0" passed="0" skipped="0" time="0.235" time-rtf="00:00:00.2350000" total="12"><test id="c6286f52-a375-40c4-8e5f-c6c0a84958eb" name="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_DestroyedHistoryKey_CannotUseProfileRedactionFallback" result="Fail" time="0.19" time-rtf="00:00:00.1900000" start-rtf="2026-10-07T09:40:43.0188849+00:00" finish-rtf="2026-10-07T09:40:43.2224390+00:00" type="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests" method="ProcessAsync_DestroyedHistoryKey_CannotUseProfileRedactionFallback" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs" source-line="366"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : Task `CreateInvoker(protection) .ProcessAsync(command, state, TestContext.Current.CancellationToken)`
+    should throw
+Hexalith.Parties.Security.PartyEncryptionKeyDestroyedException
+    but threw
+System.NullReferenceException</message><stack-trace>   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&amp; currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+   at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
+   at Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_DestroyedHistoryKey_CannotUseProfileRedactionFallback() in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs:line 381
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="93fca406-f3e4-4e9d-8c92-32c743a954da" name="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(corruption: \&quot;stored-redacted\&quot;)" result="Fail" time="0.036" time-rtf="00:00:00.0360000" start-rtf="2026-10-07T09:40:43.2370977+00:00" finish-rtf="2026-10-07T09:40:43.2740118+00:00" type="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests" method="ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs" source-line="306"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : Task `CreateInvoker(protection) .ProcessAsync(command, untrusted, TestContext.Current.CancellationToken)`
+    should throw
+System.InvalidOperationException
+    but did not</message><stack-trace>   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&amp; currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+   at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
+   at Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(String corruption) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs:line 355
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="df73b90e-e429-48c3-beae-e80a320dee47" name="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(corruption: \&quot;provider-redacted\&quot;)" result="Fail" time="0.001" time-rtf="00:00:00.0010000" start-rtf="2026-10-07T09:40:43.2741031+00:00" finish-rtf="2026-10-07T09:40:43.2758692+00:00" type="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests" method="ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs" source-line="306"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : Task `CreateInvoker(protection) .ProcessAsync(command, untrusted, TestContext.Current.CancellationToken)`
+    should throw
+System.InvalidOperationException
+    but did not</message><stack-trace>   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&amp; currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+   at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
+   at Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(String corruption) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs:line 355
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="6fe4f360-24f4-40ba-93b9-e55a8d50410b" name="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(corruption: \&quot;metadata-version\&quot;)" result="Fail" time="0.006" time-rtf="00:00:00.0060000" start-rtf="2026-10-07T09:40:43.2759276+00:00" finish-rtf="2026-10-07T09:40:43.2829583+00:00" type="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests" method="ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs" source-line="306"><failure exception-type="NSubstitute.Exceptions.ReceivedCallsException"><message>NSubstitute.Exceptions.ReceivedCallsException : Expected to receive no calls matching:
+\tUnprotectEventPayloadAsync(any AggregateIdentity, any String, any Byte[], any String, any CancellationToken)
+Actually received 2 matching calls:
+\tUnprotectEventPayloadAsync(tenant-a:party:party-1, \"Hexalith.Parties.Contracts.Events.PartyCreated\", Byte[], \"json\", System.Threading.CancellationToken)
+\tUnprotectEventPayloadAsync(tenant-a:party:party-1, \"Hexalith.Parties.Contracts.Events.ErasePartyRequested\", Byte[], \"json\", System.Threading.CancellationToken)
+</message><stack-trace>   at NSubstitute.Core.ReceivedCallsExceptionThrower.Throw(ICallSpecification callSpecification, IEnumerable`1 matchingCalls, IEnumerable`1 nonMatchingCalls, Quantity requiredQuantity)
+   at NSubstitute.Routing.Handlers.CheckReceivedCallsHandler.Handle(ICall call)
+   at NSubstitute.Routing.Route.Handle(ICall call)
+   at NSubstitute.Core.CallRouter.Route(ICall call)
+   at NSubstitute.Proxies.CastleDynamicProxy.CastleForwardingInterceptor.Intercept(IInvocation invocation)
+   at Castle.DynamicProxy.AbstractInvocation.Proceed()
+   at NSubstitute.Proxies.CastleDynamicProxy.ProxyIdInterceptor.Intercept(IInvocation invocation)
+   at Castle.DynamicProxy.AbstractInvocation.Proceed()
+   at Castle.Proxies.ObjectProxy.UnprotectEventPayloadAsync(AggregateIdentity identity, String eventTypeName, Byte[] payloadBytes, String serializationFormat, CancellationToken cancellationToken)
+   at Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(String corruption) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs:line 362
+--- End of stack trace from previous location ---</stack-trace></failure></test><test id="594cb82a-0197-4cfe-9c46-104c2f26d712" name="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(corruption: \&quot;event-contract\&quot;)" result="Fail" time="0.001" time-rtf="00:00:00.0010000" start-rtf="2026-10-07T09:40:43.2830424+00:00" finish-rtf="2026-10-07T09:40:43.2847331+00:00" type="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests" method="ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs" source-line="306"><failure exception-type="NSubstitute.Exceptions.ReceivedCallsException"><message>NSubstitute.Exceptions.ReceivedCallsException : Expected to receive no calls matching:
+\tUnprotectEventPayloadAsync(any AggregateIdentity, any String, any Byte[], any String, any CancellationToken)
+Actually received 2 matching calls:
+\tUnprotectEventPayloadAsync(tenant-a:party:party-1, \"Hexalith.Parties.Contracts.Events.PartyCreated\", Byte[], \"json\", System.Threading.CancellationToken)
+\tUnprotectEventPayloadAsync(tenant-a:party:party-1, \"Hexalith.Parties.Contracts.Events.ErasePartyRequested\", Byte[], \"json\", System.Threading.CancellationToken)
+</message><stack-trace>   at NSubstitute.Core.ReceivedCallsExceptionThrower.Throw(ICallSpecification callSpecification, IEnumerable`1 matchingCalls, IEnumerable`1 nonMatchingCalls, Quantity requiredQuantity)
+   at NSubstitute.Routing.Handlers.CheckReceivedCallsHandler.Handle(ICall call)
+   at NSubstitute.Routing.Route.Handle(ICall call)
+   at NSubstitute.Core.CallRouter.Route(ICall call)
+   at NSubstitute.Proxies.CastleDynamicProxy.CastleForwardingInterceptor.Intercept(IInvocation invocation)
+   at Castle.DynamicProxy.AbstractInvocation.Proceed()
+   at NSubstitute.Proxies.CastleDynamicProxy.ProxyIdInterceptor.Intercept(IInvocation invocation)
+   at Castle.DynamicProxy.AbstractInvocation.Proceed()
+   at Castle.Proxies.ObjectProxy.UnprotectEventPayloadAsync(AggregateIdentity identity, String eventTypeName, Byte[] payloadBytes, String serializationFormat, CancellationToken cancellationToken)
+   at Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(String corruption) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs:line 362
+--- End of stack trace from previous location ---</stack-trace></failure></test><test id="50873e08-7315-4565-9946-23d5784a1268" name="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(corruption: \&quot;payload-version\&quot;)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-07T09:40:43.2847982+00:00" finish-rtf="2026-10-07T09:40:43.2860844+00:00" type="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests" method="ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs" source-line="306"><failure exception-type="NSubstitute.Exceptions.ReceivedCallsException"><message>NSubstitute.Exceptions.ReceivedCallsException : Expected to receive no calls matching:
+\tUnprotectEventPayloadAsync(any AggregateIdentity, any String, any Byte[], any String, any CancellationToken)
+Actually received 2 matching calls:
+\tUnprotectEventPayloadAsync(tenant-a:party:party-1, \"Hexalith.Parties.Contracts.Events.PartyCreated\", Byte[], \"json\", System.Threading.CancellationToken)
+\tUnprotectEventPayloadAsync(tenant-a:party:party-1, \"Hexalith.Parties.Contracts.Events.ErasePartyRequested\", Byte[], \"json\", System.Threading.CancellationToken)
+</message><stack-trace>   at NSubstitute.Core.ReceivedCallsExceptionThrower.Throw(ICallSpecification callSpecification, IEnumerable`1 matchingCalls, IEnumerable`1 nonMatchingCalls, Quantity requiredQuantity)
+   at NSubstitute.Routing.Handlers.CheckReceivedCallsHandler.Handle(ICall call)
+   at NSubstitute.Routing.Route.Handle(ICall call)
+   at NSubstitute.Core.CallRouter.Route(ICall call)
+   at NSubstitute.Proxies.CastleDynamicProxy.CastleForwardingInterceptor.Intercept(IInvocation invocation)
+   at Castle.DynamicProxy.AbstractInvocation.Proceed()
+   at NSubstitute.Proxies.CastleDynamicProxy.ProxyIdInterceptor.Intercept(IInvocation invocation)
+   at Castle.DynamicProxy.AbstractInvocation.Proceed()
+   at Castle.Proxies.ObjectProxy.UnprotectEventPayloadAsync(AggregateIdentity identity, String eventTypeName, Byte[] payloadBytes, String serializationFormat, CancellationToken cancellationToken)
+   at Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(String corruption) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs:line 362
+--- End of stack trace from previous location ---</stack-trace></failure></test><test id="3f98269a-3b7c-44a5-8923-76091557547e" name="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(corruption: \&quot;tenant\&quot;)" result="Fail" time="0.001" time-rtf="00:00:00.0010000" start-rtf="2026-10-07T09:40:43.2861453+00:00" finish-rtf="2026-10-07T09:40:43.2873462+00:00" type="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests" method="ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs" source-line="306"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : Task `CreateInvoker(protection) .ProcessAsync(command, untrusted, TestContext.Current.CancellationToken)`
+    should throw
+System.InvalidOperationException
+    but did not</message><stack-trace>   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&amp; currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+   at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
+   at Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(String corruption) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs:line 355
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="1c7218f9-87a9-4d58-a116-f6d0cb3f61f4" name="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(corruption: \&quot;domain\&quot;)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-07T09:40:43.2873989+00:00" finish-rtf="2026-10-07T09:40:43.2884159+00:00" type="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests" method="ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs" source-line="306"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : Task `CreateInvoker(protection) .ProcessAsync(command, untrusted, TestContext.Current.CancellationToken)`
+    should throw
+System.InvalidOperationException
+    but did not</message><stack-trace>   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&amp; currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+   at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
+   at Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(String corruption) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs:line 355
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="c2c7f6b4-9d82-4d0e-a91d-182cd6c23daf" name="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(corruption: \&quot;aggregate\&quot;)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-07T09:40:43.2884697+00:00" finish-rtf="2026-10-07T09:40:43.2894244+00:00" type="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests" method="ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs" source-line="306"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : Task `CreateInvoker(protection) .ProcessAsync(command, untrusted, TestContext.Current.CancellationToken)`
+    should throw
+System.InvalidOperationException
+    but did not</message><stack-trace>   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&amp; currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+   at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
+   at Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(String corruption) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs:line 355
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="38773af3-24dc-46fe-8193-60a4260ab802" name="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(corruption: \&quot;sequence-gap\&quot;)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-07T09:40:43.2894741+00:00" finish-rtf="2026-10-07T09:40:43.2903363+00:00" type="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests" method="ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs" source-line="306"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : Task `CreateInvoker(protection) .ProcessAsync(command, untrusted, TestContext.Current.CancellationToken)`
+    should throw
+System.InvalidOperationException
+    but did not</message><stack-trace>   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&amp; currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+   at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
+   at Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(String corruption) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs:line 355
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="a5628cdb-3b3f-47ce-abe0-a396207f3665" name="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(corruption: \&quot;checkpoint\&quot;)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-07T09:40:43.2903856+00:00" finish-rtf="2026-10-07T09:40:43.2912395+00:00" type="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests" method="ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs" source-line="306"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : Task `CreateInvoker(protection) .ProcessAsync(command, untrusted, TestContext.Current.CancellationToken)`
+    should throw
+System.InvalidOperationException
+    but did not</message><stack-trace>   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&amp; currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+   at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
+   at Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(String corruption) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs:line 355
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="10cb2fd1-b01c-4c1c-808c-396ee6768a3e" name="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(corruption: \&quot;missing-snapshot\&quot;)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-07T09:40:43.2912856+00:00" finish-rtf="2026-10-07T09:40:43.2921565+00:00" type="Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests" method="ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs" source-line="306"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : Task `CreateInvoker(protection) .ProcessAsync(command, untrusted, TestContext.Current.CancellationToken)`
+    should throw
+System.InvalidOperationException
+    but did not</message><stack-trace>   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&amp; currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+   at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
+   at Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(String corruption) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs:line 355
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test></collection></assembly></assemblies>

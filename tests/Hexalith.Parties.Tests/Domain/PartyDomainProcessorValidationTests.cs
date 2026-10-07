@@ -303,6 +303,85 @@ public sealed class PartyDomainProcessorValidationTests
             Arg.Any<CancellationToken>());
     }
 
+    [Theory]
+    [InlineData("stored-redacted")]
+    [InlineData("provider-redacted")]
+    [InlineData("metadata-version")]
+    [InlineData("event-contract")]
+    [InlineData("payload-version")]
+    [InlineData("tenant")]
+    [InlineData("domain")]
+    [InlineData("aggregate")]
+    [InlineData("sequence-gap")]
+    [InlineData("checkpoint")]
+    [InlineData("missing-snapshot")]
+    public async Task ProcessAsync_UntrustedReplayHistory_RejectsBeforeLifecycleEffect(string corruption)
+    {
+        string partyId = "party-1";
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        protection.UnprotectEventPayloadAsync(Arg.Any<AggregateIdentity>(), Arg.Any<string>(), Arg.Any<byte[]>(),
+            Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(call => new PayloadProtectionResult((byte[])call[2], corruption == "provider-redacted" ? "json-redacted" : "json"));
+        CommandEnvelope command = CreateCommand(new MarkPartyEncryptionKeyDeleted
+        {
+            PartyId = partyId,
+            TenantId = "tenant-a",
+            DeletedAt = DateTimeOffset.Parse("2026-05-21T20:45:00Z"),
+        });
+        DomainServiceCurrentState valid = CreateErasurePendingStateWithProtectedCreatedEvent(command, partyId);
+        EventEnvelope created = CreateEventEnvelope(command, 1, typeof(PartyCreated).FullName!,
+            JsonSerializer.SerializeToUtf8Bytes(new PartyCreated { Type = PartyType.Person }),
+            corruption == "stored-redacted" ? "json-redacted" : "json", corruption == "metadata-version" ? 2 : 1);
+        EventMetadata metadata = corruption switch
+        {
+            "event-contract" => created.Metadata with { EventContractType = "future-event" },
+            "payload-version" => created.Metadata with { PayloadVersion = 2 },
+            "tenant" => created.Metadata with { TenantId = "tenant-b" },
+            "domain" => created.Metadata with { Domain = "other" },
+            "aggregate" => created.Metadata with { AggregateId = "foreign-party" },
+            _ => created.Metadata,
+        };
+        EventEnvelope requested = corruption == "sequence-gap"
+            ? CreateEventEnvelope(command, 3, typeof(ErasePartyRequested).FullName!, valid.Events[1].Payload, "json")
+            : valid.Events[1];
+        DomainServiceCurrentState untrusted = valid with
+        {
+            Events = [new(metadata, created.Payload, created.Extensions), requested],
+            CurrentSequence = corruption == "checkpoint" ? 3 : 2,
+            LastSnapshotSequence = corruption == "missing-snapshot" ? 1 : 0,
+        };
+        byte[] originalPayload = untrusted.Events[0].Payload.ToArray();
+
+        await Should.ThrowAsync<InvalidOperationException>(() => CreateInvoker(protection)
+            .ProcessAsync(command, untrusted, TestContext.Current.CancellationToken));
+
+        untrusted.Events[0].Payload.ShouldBe(originalPayload);
+        untrusted.Events[0].Metadata.ShouldBe(metadata);
+        if (corruption != "provider-redacted")
+        {
+            await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+        }
+    }
+
+    [Fact]
+    public async Task ProcessAsync_DestroyedHistoryKey_CannotUseProfileRedactionFallback()
+    {
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        protection.UnprotectEventPayloadAsync(Arg.Any<AggregateIdentity>(), Arg.Any<string>(), Arg.Any<byte[]>(),
+            "json+identity-history-v1", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new PartyEncryptionKeyDestroyedException("tenant-a", "party-1"));
+        CommandEnvelope command = CreateCommand(new MarkPartyEncryptionKeyDeleted
+        {
+            PartyId = "party-1", TenantId = "tenant-a", DeletedAt = DateTimeOffset.Parse("2026-05-21T20:45:00Z"),
+        });
+        DomainServiceCurrentState state = CreateErasurePendingStateWithProtectedCreatedEvent(command, "party-1");
+        state = state with { Events = [CreateEventEnvelope(command, 1, typeof(HumanActorBindingEstablished).FullName!,
+            "{}"u8.ToArray(), "json+identity-history-v1"), state.Events[1]] };
+
+        await Should.ThrowAsync<PartyEncryptionKeyDestroyedException>(() => CreateInvoker(protection)
+            .ProcessAsync(command, state, TestContext.Current.CancellationToken));
+    }
+
     [Fact]
     public async Task ProcessAsync_UnknownCommandType_ReturnsUnresolvedCommandTypeRejection()
     {
@@ -721,7 +800,8 @@ public sealed class PartyDomainProcessorValidationTests
         long sequenceNumber,
         string eventTypeName,
         byte[] payload,
-        string serializationFormat)
+        string serializationFormat,
+        int metadataVersion = 1)
         => new(
             new EventMetadata(
                 MessageId: $"01HX0000000000000000000{sequenceNumber:00}",
@@ -737,7 +817,7 @@ public sealed class PartyDomainProcessorValidationTests
                 UserId: command.UserId,
                 DomainServiceVersion: "v1",
                 EventTypeName: eventTypeName,
-                MetadataVersion: 1,
+                MetadataVersion: metadataVersion,
                 SerializationFormat: serializationFormat),
             payload,
             Extensions: null);
