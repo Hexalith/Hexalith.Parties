@@ -1,0 +1,104 @@
+{
+  "scope": "Six review fixes; focused verification only, full verification reserved for root",
+  "source": {
+    "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Program.cs": {
+      "before": "b87128a2021779d8e79b99e0507fae891f3cf0f13b08b375bd9f80452953d043",
+      "after": "6586fe56963122fb0efedbdf4f2f078ba7413c3d90bad8bc4ef2aef29995cc06"
+    },
+    "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs": {
+      "before": "91977291c505c89a427f84a6c7436a19be67ecdae6a5b3bfeee37e7d1887603c",
+      "after": "e86b93c0954d5896a72c1c7e421b6083a1ac315bc0a9797c97c922898265a4bb"
+    },
+    "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/HealthChecks/DegradedResponseMiddlewareTests.cs": {
+      "before": "747af5c43aa0913e164e2c182d0c3abd32ac9affc873f527551115079090d572",
+      "after": "beebdc16b1ea71900dc1621795ba1a812605e45f93ac120bb5031672903befaa"
+    },
+    "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessTestFactory.cs": {
+      "before": "f1b49dcb00b7d9565db1bfa1e390a9721d29d5edf3c39c513566cb6c34e180df",
+      "after": "2cc67dbc309dd795d970a057bc33dafdbab69724afeea1383dae3a2350805d7d"
+    },
+    "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs": {
+      "before": "498804c3004ea3aef569de096a236c1dd8bc5f6ea5d4fa21b8957640959dcf2a",
+      "after": "25ca6866b7272c6dfae55b94c7aa75949fef1616cf2dfed8713f7b0b15d31003"
+    },
+    "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Security/RetainedIdentityHistorySourceReaderTests.cs": {
+      "before": "d54434f298cd6ec3e873c96e14669f84dcb5cc682404d66363d3af6160542676",
+      "after": "a7b0c403a6a9d68bc1c516866a277f901d6143bdb8a2e3460ba85e29e09c7a03"
+    }
+  },
+  "commands": "commands.json",
+  "commands_sha256": "d179606ca3f66ab2577ea198f8df348e9fb8eada38d1cb80317ff685ddd0b4f8",
+  "artifact_manifest": "artifact-manifest.json",
+  "artifact_manifest_sha256": "b7547660959f0008f5bc4d8d1f5e81ce6c0597c33a17dcbcc3afdc1bf0c2366b",
+  "results": {
+    "architecture-final-tests.xml": {
+      "sha256": "02399281c85252093035d0ba77ee12d2dc478c5de3922711e6d3597c28e1a8e6",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      }
+    },
+    "parties-tests.xml": {
+      "sha256": "b7d1b0dc5e6b8a1e01e11fdefe4cda32fe1daca279e0d2c9ceb56f1c53e70de6",
+      "counts": {
+        "total": 61,
+        "passed": 61,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      }
+    },
+    "source-tests.xml": {
+      "sha256": "e60ad303c48012a1f570fae6859c5253c9d0010cd4455b93c678363ccc9a76c5",
+      "counts": {
+        "total": 48,
+        "passed": 48,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      }
+    },
+    "architecture-tests.xml": {
+      "sha256": "5764125400f61b969749f5097a3d8eab144b33e44a953da046e169cfe5328edf",
+      "counts": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      }
+    }
+  },
+  "final_focused_passes": 110,
+  "production_qualified": false,
+  "source_lifecycle_is_synthetic": true,
+  "builds": {
+    "parties-build.log": {
+      "sha256": "a430b0678896e56a37db7da531df4f639a9a8b9ad66e6a92f801e8d8a2ac2cba",
+      "warnings": 0,
+      "errors": 0
+    },
+    "source-build.log": {
+      "sha256": "b66fbb123f4259237b3b8dd74119e94eb18b82cd5595cdcededa8e3637874029",
+      "warnings": 0,
+      "errors": 0
+    }
+  },
+  "logs": {
+    "parties-tests.log": "5f8e708154778318cce90731dc2b3771a15ddd3a1432fd4a39fae9a0b100f65f",
+    "source-tests.log": "0626d8d3ee2f613f77ab7d5796b858d708f979250bf1261832aaa2814b9f436b",
+    "architecture-final-tests.log": "b6795dd1899d03acbf831c3cf2dd516419d3a887554196c55bd1b506f0ee7ffe",
+    "architecture-tests.log": "24efddc03a5e837fe55dad75c6cad9010a0cf7998525058a0032fc2000b11416",
+    "parties-build.log": "a430b0678896e56a37db7da531df4f639a9a8b9ad66e6a92f801e8d8a2ac2cba",
+    "source-build.log": "b66fbb123f4259237b3b8dd74119e94eb18b82cd5595cdcededa8e3637874029"
+  },
+  "architecture_copy_matches_original": true,
+  "preserved_blocker": "The first unchanged architecture method invocation failed because its RepositoryRoot helper cannot discover the Parties root above /tmp; identical built outputs were copied under ignored Parties/bin and the guard passed unchanged."
+}

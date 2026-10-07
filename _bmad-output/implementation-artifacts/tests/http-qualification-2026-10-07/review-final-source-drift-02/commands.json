@@ -1,0 +1,27 @@
+[
+  {
+    "argv": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "Local",
+      "-EventStoreRoot",
+      "/home/administrator/projects/hexalith/eventstore",
+      "-PlatformRoot",
+      "/home/administrator/projects/hexalith/platform",
+      "-EvidenceDirectory",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix",
+      "-ArtifactsDirectory",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-ko66imqb",
+      "-MemoriesRoot",
+      "/tmp/parties-http-review-final-no-memories"
+    ],
+    "workingDirectory": "/home/administrator/projects/hexalith/parties",
+    "combinedOutput": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-runner.log",
+    "startedUtc": "2026-10-07T11:30:58.628486+00:00",
+    "exitCode": 1,
+    "outputSha256": "48d0192d67a6ada3846c76255bc7fe95f848cb44d076a0eaa7bf1cde3db94de8"
+  }
+]

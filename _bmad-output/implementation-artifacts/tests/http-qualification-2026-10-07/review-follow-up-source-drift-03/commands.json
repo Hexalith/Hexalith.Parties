@@ -1,0 +1,114 @@
+[
+  {
+    "argv": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "Local",
+      "-EventStoreRoot",
+      "/home/administrator/projects/hexalith/eventstore",
+      "-PlatformRoot",
+      "/home/administrator/projects/hexalith/platform",
+      "-EvidenceDirectory",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-current/local-matrix",
+      "-ArtifactsDirectory",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-s5uuxv4a",
+      "-MemoriesRoot",
+      "/tmp/parties-http-review-final-no-memories"
+    ],
+    "workingDirectory": "/home/administrator/projects/hexalith/parties",
+    "combinedOutput": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-current/local-runner.log",
+    "startedUtc": "2026-10-07T11:40:31.874515+00:00",
+    "exitCode": 0,
+    "outputSha256": "ac759f5a236e6ba9f26a85ef4cbf10be9431f837af771abfe4545e0b185f1338"
+  },
+  {
+    "argv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-s5uuxv4a/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+      "-class",
+      "*DegradedResponseMiddlewareTests",
+      "-class",
+      "*HealthEndpointIntegrationTests",
+      "-class",
+      "*ServiceDefaultsCompatibilityTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-current/host-health.xml"
+    ],
+    "workingDirectory": "/home/administrator/projects/hexalith/parties",
+    "combinedOutput": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-current/host-health.log",
+    "startedUtc": "2026-10-07T11:42:08.362946+00:00",
+    "exitCode": 0,
+    "outputSha256": "7ee47f5efa3272f50829082641a69639254db3a7379f19eb1c10d708fe96f4e1"
+  },
+  {
+    "argv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-s5uuxv4a/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+      "-method",
+      "*Program_SourceContainsOnlyActorHostMappingsAndDocumentedDaprInternalExceptions",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-current/architecture.xml"
+    ],
+    "workingDirectory": "/home/administrator/projects/hexalith/parties",
+    "combinedOutput": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-current/architecture.log",
+    "startedUtc": "2026-10-07T11:42:10.551899+00:00",
+    "exitCode": 0,
+    "outputSha256": "530a3ae9278623ac6e9eee9ea5d68cbcc85a1720c2ba7c021a98ac5223c7fbfa"
+  },
+  {
+    "argv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-s5uuxv4a/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.Tests.dll",
+      "-class",
+      "*LegacyCommandReplayInputTests",
+      "-class",
+      "*DomainProcessorStateRehydratorTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-current/shared-replay.xml"
+    ],
+    "workingDirectory": "/home/administrator/projects/hexalith/eventstore",
+    "combinedOutput": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-current/shared-replay.log",
+    "startedUtc": "2026-10-07T11:42:10.961471+00:00",
+    "exitCode": 0,
+    "outputSha256": "98416132195067b25117a6d9e8106c6040707154cd35ab322090adca8ecf7c8a"
+  },
+  {
+    "argv": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Platform.Custody.Tests/Hexalith.Platform.Custody.Tests.csproj",
+      "-c",
+      "Debug",
+      "--artifacts-path",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-s5uuxv4a",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+      "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+      "-p:HexalithMemoriesRoot=/tmp/parties-http-review-final-no-memories",
+      "-p:NuGetAudit=false",
+      "-m:1"
+    ],
+    "workingDirectory": "/home/administrator/projects/hexalith/platform",
+    "combinedOutput": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-current/custody-build.log",
+    "startedUtc": "2026-10-07T11:42:12.057536+00:00",
+    "exitCode": 0,
+    "outputSha256": "935b2a59df966e41327c64f451d985163ac01bdd49c2d23ffbce4e93185a8818"
+  },
+  {
+    "argv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-s5uuxv4a/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.Platform.Custody.Tests.dll",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-current/custody.xml"
+    ],
+    "workingDirectory": "/home/administrator/projects/hexalith/platform",
+    "combinedOutput": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-current/custody.log",
+    "startedUtc": "2026-10-07T11:42:14.532481+00:00",
+    "exitCode": 0,
+    "outputSha256": "aa1332453e2593a620ee367d10a7567afe5ccaee49005d63aa9d6896db2500b8"
+  }
+]

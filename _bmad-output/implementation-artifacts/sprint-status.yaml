@@ -103,12 +103,6 @@ development_status:
   epic-5-retrospective: done
 
   # ── Epic 6: Internal Code Consolidation (Class A) ────────────────────────
-  # Added by Correct Course 2026-06-28 (sprint-change-proposal-2026-06-28.md).
-  # In-repo deduplication; shared anchors land in Hexalith.Parties.Contracts
-  # (+ a new Hexalith.Parties.Authentication lib for A3). No cross-repo work.
-  # Conditional maintenance scope only: supports NFR9/maintainability and covers
-  # no new PRD functional requirements.
-  # Readiness remediation 2026-06-28 added canonical epics.md detail and story files.
   epic-6: done
   6-1-shared-claim-types-and-extraction-helpers-a1-a5: done
   6-2-canonical-wire-json-serializer-options-a2: done
@@ -120,10 +114,6 @@ development_status:
   epic-6-retrospective: done
 
   # ── Epic 7: Platform Alignment — adopt Commons/EventStore (Class B) ───────
-  # PM/Architect implementation plan approved 2026-06-29:
-  # _bmad-output/planning-artifacts/epic-7-implementation-plan-2026-06-29.md.
-  # Post-MVP platform maintenance only; no new PRD functional requirements.
-  # Stories 7.1-7.8 are done. Final readiness preserved deferred cleanup for Epic 8.
   epic-7: done
   7-1-platform-target-destination-adr-and-release-rollback-plan: done
   7-2-commons-service-defaults-correlation-problemdetails-and-paging: done
@@ -136,14 +126,6 @@ development_status:
   epic-7-retrospective: done
 
   # ── Epic 8: Domain-Focus Refactoring and Platform Extraction (Class C) ───
-  # Added by Correct Course 2026-07-06; reconciled 2026-07-07:
-  # sprint-change-proposal-2026-07-06.md + sprint-change-proposal-2026-07-07.md.
-  # Post-MVP maintenance only; no new PRD functional requirements.
-  # Specs 8.1-8.5 done. Epic 8 architecture spine APPROVED (reconciled) 2026-07-07:
-  # planning-artifacts/architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md.
-  # Deletion-heavy migrations 8.6-8.10 are no longer blocked by a missing spine;
-  # each remaining spec must satisfy that spine's per-spec readiness gate (§4)
-  # before a dev session.
   epic-8: done
   8-1-baseline-and-release-blocker-stabilization: done
   8-2-identifier-correctness-and-zero-risk-hygiene: done

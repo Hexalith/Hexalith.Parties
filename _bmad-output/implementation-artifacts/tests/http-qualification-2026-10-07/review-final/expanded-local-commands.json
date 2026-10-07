@@ -1,0 +1,406 @@
+[
+  {
+    "project": "Hexalith.EventStore.Contracts.Tests",
+    "workingDirectory": "/home/administrator/projects/hexalith/eventstore",
+    "buildArgv": [
+      "dotnet",
+      "build",
+      "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Contracts.Tests/Hexalith.EventStore.Contracts.Tests.csproj",
+      "-c",
+      "Debug",
+      "--artifacts-path",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+      "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+      "-p:HexalithMemoriesRoot=/tmp/parties-http-review-final-no-memories",
+      "-p:NuGetAudit=false",
+      "-m:1"
+    ],
+    "testArgv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Contracts.Tests.dll",
+      "-class",
+      "*StreamReadPageValidatorTests",
+      "-class",
+      "*RetainedIdentityHistoryValidatorTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.EventStore.Contracts.Tests-tests.xml"
+    ],
+    "testEnvironmentOverride": {
+      "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+    },
+    "restoresPreviousEnvironmentValue": true,
+    "buildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.EventStore.Contracts.Tests-build.log",
+    "testLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "xml": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.EventStore.Contracts.Tests-tests.xml"
+  },
+  {
+    "project": "Hexalith.EventStore.Client.Tests",
+    "workingDirectory": "/home/administrator/projects/hexalith/eventstore",
+    "buildArgv": [
+      "dotnet",
+      "build",
+      "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Client.Tests/Hexalith.EventStore.Client.Tests.csproj",
+      "-c",
+      "Debug",
+      "--artifacts-path",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+      "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+      "-p:HexalithMemoriesRoot=/tmp/parties-http-review-final-no-memories",
+      "-p:NuGetAudit=false",
+      "-m:1"
+    ],
+    "testArgv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.Tests.dll",
+      "-class",
+      "*AuthoritativeEventStreamReaderTests",
+      "-class",
+      "*EventStoreGatewayClientTests",
+      "-class",
+      "*EventStoreGatewayClientStreamTests",
+      "-class",
+      "*RetainedIdentityHistoryReaderTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.EventStore.Client.Tests-tests.xml"
+    ],
+    "testEnvironmentOverride": {
+      "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+    },
+    "restoresPreviousEnvironmentValue": true,
+    "buildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.EventStore.Client.Tests-build.log",
+    "testLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.EventStore.Client.Tests-tests.log",
+    "xml": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.EventStore.Client.Tests-tests.xml"
+  },
+  {
+    "project": "Hexalith.EventStore.Server.Tests",
+    "workingDirectory": "/home/administrator/projects/hexalith/eventstore",
+    "buildArgv": [
+      "dotnet",
+      "build",
+      "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj",
+      "-c",
+      "Debug",
+      "--artifacts-path",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+      "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+      "-p:HexalithMemoriesRoot=/tmp/parties-http-review-final-no-memories",
+      "-p:NuGetAudit=false",
+      "-m:1"
+    ],
+    "testArgv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Server.Tests.dll",
+      "-class",
+      "*IdentityAdmissionTests",
+      "-class",
+      "*ActorRegistryTests",
+      "-class",
+      "*IdentityGatewayDenialTests",
+      "-class",
+      "*CommandsControllerTrustedExtensionTests",
+      "-class",
+      "*QueriesControllerTests",
+      "-class",
+      "*StreamsControllerTests",
+      "-class",
+      "*RetainedIdentityHistorySourceReaderTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.EventStore.Server.Tests-tests.xml"
+    ],
+    "testEnvironmentOverride": {
+      "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+    },
+    "restoresPreviousEnvironmentValue": true,
+    "buildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.EventStore.Server.Tests-build.log",
+    "testLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.EventStore.Server.Tests-tests.log",
+    "xml": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.EventStore.Server.Tests-tests.xml"
+  },
+  {
+    "project": "Hexalith.Platform.Identity.Tests",
+    "workingDirectory": "/home/administrator/projects/hexalith/platform",
+    "buildArgv": [
+      "dotnet",
+      "build",
+      "/home/administrator/projects/hexalith/platform/tests/Hexalith.Platform.Identity.Tests/Hexalith.Platform.Identity.Tests.csproj",
+      "-c",
+      "Debug",
+      "--artifacts-path",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+      "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+      "-p:HexalithMemoriesRoot=/tmp/parties-http-review-final-no-memories",
+      "-p:NuGetAudit=false",
+      "-m:1"
+    ],
+    "testArgv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.Platform.Identity.Tests.dll",
+      "-class",
+      "*PlatformIdentityAdmissionTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Platform.Identity.Tests-tests.xml"
+    ],
+    "testEnvironmentOverride": {
+      "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+    },
+    "restoresPreviousEnvironmentValue": true,
+    "buildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Platform.Identity.Tests-build.log",
+    "testLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Platform.Identity.Tests-tests.log",
+    "xml": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Platform.Identity.Tests-tests.xml"
+  },
+  {
+    "project": "Hexalith.Parties.Contracts.Tests",
+    "workingDirectory": "/home/administrator/projects/hexalith/parties",
+    "buildArgv": [
+      "dotnet",
+      "build",
+      "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+      "-c",
+      "Debug",
+      "--artifacts-path",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+      "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+      "-p:HexalithMemoriesRoot=/tmp/parties-http-review-final-no-memories",
+      "-p:NuGetAudit=false",
+      "-m:1"
+    ],
+    "testArgv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.Contracts.Tests.dll",
+      "-class",
+      "*PartyStateTests",
+      "-class",
+      "*PartyIdentityContractTests",
+      "-class",
+      "*ContractsPublicApiSnapshotTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Contracts.Tests-tests.xml"
+    ],
+    "testEnvironmentOverride": {
+      "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+    },
+    "restoresPreviousEnvironmentValue": true,
+    "buildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Contracts.Tests-build.log",
+    "testLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Contracts.Tests-tests.log",
+    "xml": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Contracts.Tests-tests.xml"
+  },
+  {
+    "project": "Hexalith.Parties.Server.Tests",
+    "workingDirectory": "/home/administrator/projects/hexalith/parties",
+    "buildArgv": [
+      "dotnet",
+      "build",
+      "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj",
+      "-c",
+      "Debug",
+      "--artifacts-path",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+      "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+      "-p:HexalithMemoriesRoot=/tmp/parties-http-review-final-no-memories",
+      "-p:NuGetAudit=false",
+      "-m:1"
+    ],
+    "testArgv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl/bin/Hexalith.Parties.Server.Tests/debug/Hexalith.Parties.Server.Tests.dll",
+      "-class",
+      "*AgentPartyProvisioningTests",
+      "-class",
+      "*HumanActorBindingTests",
+      "-class",
+      "*PartyAggregateCreateTests",
+      "-class",
+      "*PartyAggregateCompositeTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Server.Tests-tests.xml"
+    ],
+    "testEnvironmentOverride": {
+      "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+    },
+    "restoresPreviousEnvironmentValue": true,
+    "buildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Server.Tests-build.log",
+    "testLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Server.Tests-tests.log",
+    "xml": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Server.Tests-tests.xml"
+  },
+  {
+    "project": "Hexalith.Parties.Tests",
+    "workingDirectory": "/home/administrator/projects/hexalith/parties",
+    "buildArgv": [
+      "dotnet",
+      "build",
+      "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Debug",
+      "--artifacts-path",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+      "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+      "-p:HexalithMemoriesRoot=/tmp/parties-http-review-final-no-memories",
+      "-p:NuGetAudit=false",
+      "-m:1"
+    ],
+    "testArgv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+      "-class",
+      "*PartyIdentityAdmissionTests",
+      "-class",
+      "*PartyIdentityQueryHandlerTests",
+      "-class",
+      "*PartyDomainProcessorValidationTests",
+      "-class",
+      "*PartySdkQueryHandlerTests",
+      "-class",
+      "*PartiesProcessEndpointTests",
+      "-class",
+      "*PartiesDomainServiceSecurityTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Tests-tests.xml"
+    ],
+    "testEnvironmentOverride": {
+      "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+    },
+    "restoresPreviousEnvironmentValue": true,
+    "buildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Tests-build.log",
+    "testLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Tests-tests.log",
+    "xml": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Tests-tests.xml"
+  },
+  {
+    "project": "Hexalith.Parties.Security.Tests",
+    "workingDirectory": "/home/administrator/projects/hexalith/parties",
+    "buildArgv": [
+      "dotnet",
+      "build",
+      "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj",
+      "-c",
+      "Debug",
+      "--artifacts-path",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+      "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+      "-p:HexalithMemoriesRoot=/tmp/parties-http-review-final-no-memories",
+      "-p:NuGetAudit=false",
+      "-m:1"
+    ],
+    "testArgv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl/bin/Hexalith.Parties.Security.Tests/debug/Hexalith.Parties.Security.Tests.dll",
+      "-class",
+      "*IdentityHistoryProtectionTests",
+      "-class",
+      "*PartyPayloadProtectionServiceTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Security.Tests-tests.xml"
+    ],
+    "testEnvironmentOverride": {
+      "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+    },
+    "restoresPreviousEnvironmentValue": true,
+    "buildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Security.Tests-build.log",
+    "testLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Security.Tests-tests.log",
+    "xml": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Security.Tests-tests.xml"
+  },
+  {
+    "project": "Hexalith.Parties.Client.Tests",
+    "workingDirectory": "/home/administrator/projects/hexalith/parties",
+    "buildArgv": [
+      "dotnet",
+      "build",
+      "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+      "-c",
+      "Debug",
+      "--artifacts-path",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+      "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+      "-p:HexalithMemoriesRoot=/tmp/parties-http-review-final-no-memories",
+      "-p:NuGetAudit=false",
+      "-m:1"
+    ],
+    "testArgv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl/bin/Hexalith.Parties.Client.Tests/debug/Hexalith.Parties.Client.Tests.dll",
+      "-class",
+      "*HttpPartiesIdentityClientTests",
+      "-class",
+      "*HttpPartiesCommandClientTests",
+      "-class",
+      "*HttpPartiesQueryClientTests",
+      "-class",
+      "*DependencyInjectionTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Client.Tests-tests.xml"
+    ],
+    "testEnvironmentOverride": {
+      "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+    },
+    "restoresPreviousEnvironmentValue": true,
+    "buildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Client.Tests-build.log",
+    "testLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Client.Tests-tests.log",
+    "xml": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.Client.Tests-tests.xml"
+  },
+  {
+    "project": "Hexalith.Parties.UI.Tests",
+    "workingDirectory": "/home/administrator/projects/hexalith/parties",
+    "buildArgv": [
+      "dotnet",
+      "build",
+      "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Debug",
+      "--artifacts-path",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+      "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+      "-p:HexalithMemoriesRoot=/tmp/parties-http-review-final-no-memories",
+      "-p:NuGetAudit=false",
+      "-m:1"
+    ],
+    "testArgv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-bbon82tl/bin/Hexalith.Parties.UI.Tests/debug/Hexalith.Parties.UI.Tests.dll",
+      "-class",
+      "*IdentityBindingBoundaryTests",
+      "-class",
+      "*IdentityBindingProvisioningServiceTests",
+      "-class",
+      "*PartyIdClaimResolverTests",
+      "-class",
+      "*SelfScopedPartiesClientTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.UI.Tests-tests.xml"
+    ],
+    "testEnvironmentOverride": {
+      "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+    },
+    "restoresPreviousEnvironmentValue": true,
+    "buildLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.UI.Tests-build.log",
+    "testLog": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.UI.Tests-tests.log",
+    "xml": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/local-matrix/Hexalith.Parties.UI.Tests-tests.xml"
+  }
+]

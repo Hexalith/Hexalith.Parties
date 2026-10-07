@@ -1,0 +1,9 @@
+## main...origin/main
+ M _bmad-output/implementation-artifacts/sprint-status.yaml
+ M src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs
+ M src/Hexalith.Parties/Program.cs
+ M tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs
+ M tests/Hexalith.Parties.Tests/Gateway/PartiesProcessTestFactory.cs
+ M tests/Hexalith.Parties.Tests/HealthChecks/DegradedResponseMiddlewareTests.cs
+?? _bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-final/
+?? _bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/

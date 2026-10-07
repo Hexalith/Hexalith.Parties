@@ -1,0 +1,11 @@
+# HTTP/source review fixes — focused verification
+
+All six requested review groups are corrected. The fixture replaces inherited JWT/Parties/workload option binders with its explicit isolated contract, retaining real SDK handlers, validators and authorization policies. A hostile inherited OIDC/array/workload configuration case verifies the exact resulting options and an authenticated successful request. Caller-header-only and channel-only cases are distinct; existing credential-conflict coverage remains, and valid human-token-only plus correctly signed disallowed-workload cases independently prove token validity before zero-domain-work denial.
+
+The actual inventory now requires every catalog operational route with POST support before policy validation. `/healthz/` passes the same middleware infrastructure bypass as `/healthz`; both direct no-probe coverage and all four actual channel outcomes execute for the alias. Accurate DAPR route/ACL documentation restores the original architecture guard's required strings without changing that guard.
+
+The earlier restored decoded-evidence substitution cases remain. Two additional cases hold restored decoded evidence fixed while an independent synthetic lifecycle owner changes its accepted receipt or revision. The restarted real retained-source reader denies release and preserves original stored bytes. This remains synthetic source evidence, with no production custody or destruction/restore qualification.
+
+Focused verification passed **61 HTTP/security/middleware cases + 48 retained-source cases + 1 unchanged named architecture case = 110 passes**, with zero errors/failures/skips/not-run and both normal Debug builds reporting zero warnings/errors. No wider matrix or prior passing lane is reused here. Root performs full final verification separately.
+
+[Machine evidence](evidence.json), [exact commands](commands.json), [source hashes](source-manifest.json), [artifact hashes](artifact-manifest.json), pre/post source snapshots and `owned-review-fixes.patch` preserve this separate correction. The first architecture invocation failed only because its unchanged root-discovery helper climbs `AppContext.BaseDirectory` from `/tmp`; identical outputs were copied under ignored Parties `bin/owner-http-review-fixes` and the unchanged method passed. That failed log/XML remains intact.

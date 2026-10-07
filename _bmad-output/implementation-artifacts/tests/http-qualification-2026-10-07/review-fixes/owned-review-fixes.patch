@@ -1,0 +1,324 @@
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/pre-change/src/Hexalith.Parties/Program.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/post-change/src/Hexalith.Parties/Program.cs
+index fd45f60e..b7fe667c 100644
+--- a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/pre-change/src/Hexalith.Parties/Program.cs
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/post-change/src/Hexalith.Parties/Program.cs
+@@ -52,6 +52,12 @@ app.UseAuthentication();
+ app.UseAuthorization();
+ app.UseCloudEvents();
+ 
++// DAPR sidecar-internal discovery (/dapr/subscribe), configuration (/dapr/config),
++// actor health (/healthz) and actor invocation routes are infrastructure callbacks.
++// The POST /tenants/events pub/sub delivery route receives Tenants lifecycle events;
++// these callbacks are not client APIs. Service-invocation accesscontrol.parties.yaml
++// is deny by default: only eventstore may invoke the exact POST SDK command, query,
++// projection, replay and /admin/operational-index-metadata discovery routes.
+ // Sidecar discovery, pub/sub delivery and actor runtime calls require the SDK's
+ // authenticated Dapr application channel. Canonical gateway operations additionally
+ // require a workload assertion for this service and their exact route operation.
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/pre-change/src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/post-change/src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs
+index bc8a4448..3a3b394e 100644
+--- a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/pre-change/src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/post-change/src/Hexalith.Parties/Middleware/DegradedResponseMiddleware.cs
+@@ -30,7 +30,7 @@ public sealed class DegradedResponseMiddleware(RequestDelegate next, HealthCheck
+         //   sidecar → routed back to /actors/* → middleware runs health checks again → infinite loop
+         // - DAPR sidecar-internal callbacks: the sidecar invokes these during
+         //   startup, before its own health endpoint is guaranteed responsive.
+-        string path = context.Request.Path.Value ?? string.Empty;
++        string path = (context.Request.Path.Value ?? string.Empty).TrimEnd('/');
+         if (path.Equals("/healthz", StringComparison.OrdinalIgnoreCase)
+             || path.Equals("/health", StringComparison.OrdinalIgnoreCase)
+             || path.Equals("/alive", StringComparison.OrdinalIgnoreCase)
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/pre-change/tests/Hexalith.Parties.Tests/HealthChecks/DegradedResponseMiddlewareTests.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/post-change/tests/Hexalith.Parties.Tests/HealthChecks/DegradedResponseMiddlewareTests.cs
+index 169b2a40..7d2b01f8 100644
+--- a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/pre-change/tests/Hexalith.Parties.Tests/HealthChecks/DegradedResponseMiddlewareTests.cs
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/post-change/tests/Hexalith.Parties.Tests/HealthChecks/DegradedResponseMiddlewareTests.cs
+@@ -83,6 +83,7 @@ public sealed class DegradedResponseMiddlewareTests
+ 
+     [Theory]
+     [InlineData("/healthz")]
++    [InlineData("/healthz/")]
+     [InlineData("/dapr/config")]
+     [InlineData("/dapr/subscribe")]
+     [InlineData("/tenants/events")]
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/pre-change/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessTestFactory.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/post-change/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessTestFactory.cs
+index 3e782720..42b424bb 100644
+--- a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/pre-change/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessTestFactory.cs
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/post-change/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessTestFactory.cs
+@@ -10,8 +10,10 @@ using Microsoft.AspNetCore.Hosting;
+ using Microsoft.AspNetCore.Mvc.Testing;
+ using Microsoft.AspNetCore.TestHost;
+ using Microsoft.Extensions.Configuration;
+-using Microsoft.Extensions.DependencyInjection;
+-using Microsoft.Extensions.Diagnostics.HealthChecks;
++using Microsoft.Extensions.DependencyInjection;
++using Microsoft.Extensions.DependencyInjection.Extensions;
++using Microsoft.Extensions.Diagnostics.HealthChecks;
++using Microsoft.Extensions.Options;
+ using Microsoft.IdentityModel.Tokens;
+ 
+ using NSubstitute;
+@@ -94,15 +96,40 @@ internal sealed class PartiesProcessTestFactory : WebApplicationFactory<Program>
+             builder.UseSetting(setting.Key, setting.Value);
+         }
+ 
+-        builder.ConfigureTestServices(services =>
+-        {
+-            // This fixture qualifies HTTP authentication, never backend readiness.
+-            // Prevent Dapr/tenant health probes from invoking unqualified live seams.
+-            HealthCheckService health = Substitute.For<HealthCheckService>();
+-            health.CheckHealthAsync(Arg.Any<Func<HealthCheckRegistration, bool>?>(), Arg.Any<CancellationToken>())
+-                .Returns(Task.FromResult(new HealthReport(new Dictionary<string, HealthReportEntry>(), TimeSpan.Zero)));
+-            services.AddSingleton(health);
+-
++        builder.ConfigureTestServices(services =>
++        {
++            // Replace only configuration binders, preserving real authentication
++            // handlers, validation and authorization. Parent/environment Authority,
++            // collection entries and workload settings cannot enter this fixture.
++            IConfiguration isolated = new ConfigurationBuilder().AddInMemoryCollection(settings.Select(setting => new KeyValuePair<string, string?>(setting.Key, setting.Value))).Build();
++            services.RemoveAll<IConfigureOptions<JwtBearerAuthenticationOptions>>();
++            services.AddOptions<JwtBearerAuthenticationOptions>(EventStoreWorkloadAuthenticationDefaults.JwtContractOptionsName)
++                .Bind(isolated.GetSection(EventStoreWorkloadAuthenticationDefaults.JwtContractSection));
++            services.RemoveAll<IConfigureOptions<Hexalith.Parties.Authentication.PartiesAuthenticationOptions>>();
++            services.AddOptions<Hexalith.Parties.Authentication.PartiesAuthenticationOptions>()
++                .Bind(isolated.GetSection(EventStoreWorkloadAuthenticationDefaults.JwtContractSection));
++            services.RemoveAll<IConfigureOptions<WorkloadAuthenticationOptions>>();
++            services.AddOptions<WorkloadAuthenticationOptions>(EventStoreWorkloadAuthenticationDefaults.WorkloadScheme)
++                .Configure(options =>
++                {
++                    options.Audience = "parties";
++                    options.AllowedCallers = ["eventstore"];
++                    options.MaximumLifetimeSeconds = WorkloadAuthenticationOptions.DefaultMaximumLifetimeSeconds;
++                });
++            services.RemoveAll<IConfigureOptions<WorkloadAssertionIssuerOptions>>();
++            services.AddOptions<WorkloadAssertionIssuerOptions>().Configure(options =>
++            {
++                options.Workload = "eventstore";
++                options.LifetimeSeconds = WorkloadAssertionIssuerOptions.DefaultLifetimeSeconds;
++            });
++
++            // This fixture qualifies HTTP authentication, never backend readiness.
++            // Prevent Dapr/tenant health probes from invoking unqualified live seams.
++            HealthCheckService health = Substitute.For<HealthCheckService>();
++            health.CheckHealthAsync(Arg.Any<Func<HealthCheckRegistration, bool>?>(), Arg.Any<CancellationToken>())
++                .Returns(Task.FromResult(new HealthReport(new Dictionary<string, HealthReportEntry>(), TimeSpan.Zero)));
++            services.AddSingleton(health);
++
+             if (_payloadProtectionService is not null)
+             {
+                 services.AddSingleton(_payloadProtectionService);
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/pre-change/tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/post-change/tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs
+index 0dc9f184..c9d1f888 100644
+--- a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/pre-change/tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/post-change/tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs
+@@ -1,5 +1,6 @@
+ using System.Net;
+ using System.Net.Http.Json;
++using System.Text;
+ using System.Text.Json;
+ 
+ using Hexalith.EventStore.Contracts.Commands;
+@@ -7,10 +8,14 @@ using Hexalith.EventStore.DomainService;
+ using Hexalith.EventStore.ServiceDefaults.Authentication;
+ 
+ using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Authentication.JwtBearer;
+ using Microsoft.AspNetCore.Hosting;
++using Microsoft.AspNetCore.Http;
+ using Microsoft.AspNetCore.Routing;
+ using Microsoft.Extensions.DependencyInjection;
+ using Microsoft.Extensions.Options;
++using Microsoft.IdentityModel.JsonWebTokens;
++using Microsoft.IdentityModel.Tokens;
+ 
+ using Shouldly;
+ 
+@@ -32,6 +37,8 @@ public sealed class PartiesDomainServiceSecurityTests
+     [InlineData("duplicate-assertion", HttpStatusCode.Unauthorized)]
+     [InlineData("conflicting-caller", HttpStatusCode.Unauthorized)]
+     [InlineData("human-bearer", HttpStatusCode.Unauthorized)]
++    [InlineData("human-bearer-only", HttpStatusCode.Unauthorized)]
++    [InlineData("disallowed-workload", HttpStatusCode.Unauthorized)]
+     [InlineData("wrong-audience", HttpStatusCode.Unauthorized)]
+     [InlineData("wrong-operation", HttpStatusCode.Forbidden)]
+     public async Task PostProcess_InvalidCredentials_DenyBeforeDomainWork(string scenario, HttpStatusCode expected)
+@@ -47,9 +54,11 @@ public sealed class PartiesDomainServiceSecurityTests
+                 client.DefaultRequestHeaders.Clear();
+                 break;
+             case "caller-header":
++                client.DefaultRequestHeaders.Clear();
++                client.DefaultRequestHeaders.Add(EventStoreWorkloadAuthenticationDefaults.DaprCallerHeaderName, "eventstore");
++                break;
+             case "channel-only":
+                 client.DefaultRequestHeaders.Remove(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName);
+-                client.DefaultRequestHeaders.Add(EventStoreWorkloadAuthenticationDefaults.DaprCallerHeaderName, "eventstore");
+                 break;
+             case "missing-channel":
+                 client.DefaultRequestHeaders.Remove(DaprAppChannelToken.HeaderName);
+@@ -83,6 +92,24 @@ public sealed class PartiesDomainServiceSecurityTests
+             case "human-bearer":
+                 client.DefaultRequestHeaders.Add("Authorization", "Bearer " + assertion);
+                 break;
++            case "human-bearer-only":
++                string human = SignedToken(factory.Services, "hexalith-eventstore");
++                TokenValidationResult humanValidation = await new JsonWebTokenHandler().ValidateTokenAsync(human,
++                    factory.Services.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>()
++                        .Get(JwtBearerDefaults.AuthenticationScheme).TokenValidationParameters);
++                humanValidation.IsValid.ShouldBeTrue();
++                client.DefaultRequestHeaders.Remove(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName);
++                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + human);
++                break;
++            case "disallowed-workload":
++                string disallowed = SignedToken(factory.Services, "parties", "untrusted-service");
++                TokenValidationResult workloadValidation = await new JsonWebTokenHandler().ValidateTokenAsync(disallowed,
++                    factory.Services.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>()
++                        .Get(EventStoreWorkloadAuthenticationDefaults.WorkloadScheme).TokenValidationParameters);
++                workloadValidation.IsValid.ShouldBeTrue();
++                client.DefaultRequestHeaders.Remove(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName);
++                client.DefaultRequestHeaders.Add(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName, disallowed);
++                break;
+         }
+ 
+         using HttpResponseMessage response = await client.PostAsJsonAsync("/process", Request(), TestContext.Current.CancellationToken);
+@@ -106,6 +133,10 @@ public sealed class PartiesDomainServiceSecurityTests
+     [InlineData("/healthz", "missing")]
+     [InlineData("/healthz", "wrong")]
+     [InlineData("/healthz", "duplicate")]
++    [InlineData("/healthz/", "valid")]
++    [InlineData("/healthz/", "missing")]
++    [InlineData("/healthz/", "wrong")]
++    [InlineData("/healthz/", "duplicate")]
+     public async Task SidecarRoute_RequiresAuthenticatedChannel(string route, string channel)
+     {
+         using var factory = new PartiesProcessTestFactory();
+@@ -147,8 +178,14 @@ public sealed class PartiesDomainServiceSecurityTests
+         using HttpClient client = factory.CreateClient();
+         EndpointDataSource source = factory.Services.GetRequiredService<EndpointDataSource>();
+         AuthorizationPolicy? fallback = factory.Services.GetRequiredService<IOptions<AuthorizationOptions>>().Value.FallbackPolicy;
+-        EventStoreDomainServiceEndpointInventory.Validate(source.Endpoints, fallback).ShouldBeEmpty();
+         RouteEndpoint[] endpoints = source.Endpoints.OfType<RouteEndpoint>().ToArray();
++        foreach (EventStoreDomainServiceRoute route in EventStoreDomainServiceRoutes.Operational)
++        {
++            endpoints.ShouldContain(endpoint => EventStoreDomainServiceRoutes.Normalize(endpoint.RoutePattern.RawText) == route.Route
++                && endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()!.HttpMethods.Contains(HttpMethods.Post));
++        }
++
++        EventStoreDomainServiceEndpointInventory.Validate(source.Endpoints, fallback).ShouldBeEmpty();
+         RouteEndpoint[] sidecar = endpoints.Where(endpoint => EventStoreDomainServiceEndpointInventory.IsSidecarOriginated(
+             endpoint, EventStoreDomainServiceRoutes.Normalize(endpoint.RoutePattern.RawText))).ToArray();
+         sidecar.ShouldNotBeEmpty();
+@@ -161,6 +198,69 @@ public sealed class PartiesDomainServiceSecurityTests
+         }
+     }
+ 
++    /// <summary>Inherited OIDC, collection and workload configuration cannot weaken or disable the isolated real boundary.</summary>
++    [Fact]
++    public async Task InheritedAuthenticationSettings_CannotAlterFixtureContracts()
++    {
++        using var factory = new PartiesProcessTestFactory();
++        using var inherited = factory.WithWebHostBuilder(builder =>
++        {
++            builder.UseSetting("Authentication:JwtBearer:Authority", "https://unavailable.example.test");
++            builder.UseSetting("Authentication:JwtBearer:ValidAudiences:0", "untrusted-audience");
++            builder.UseSetting("Authentication:JwtBearer:AllowedAlgorithms:1", SecurityAlgorithms.RsaSha256);
++            builder.UseSetting("Authentication:Workload:Audience", "untrusted-audience");
++            builder.UseSetting("Authentication:Workload:AllowedCallers:0", "untrusted-service");
++            builder.UseSetting("Authentication:Workload:AllowedCallers:1", "other-untrusted-service");
++            builder.UseSetting("Authentication:Workload:MaximumLifetimeSeconds", "0");
++            builder.UseSetting("Authentication:WorkloadIssuer:Workload", "untrusted-service");
++            builder.UseSetting("Authentication:WorkloadIssuer:LifetimeSeconds", "0");
++            builder.UseSetting("Authentication:WorkloadIssuer:TokenEndpoint", "https://unavailable.example.test/token");
++        });
++        using HttpClient client = inherited.CreateClient();
++        JwtBearerAuthenticationOptions contract = inherited.Services.GetRequiredService<IOptionsMonitor<JwtBearerAuthenticationOptions>>()
++            .Get(EventStoreWorkloadAuthenticationDefaults.JwtContractOptionsName);
++        contract.Authority.ShouldBeNull();
++        contract.ValidAudiences.ShouldBeEmpty();
++        contract.AllowedAlgorithms.ShouldBe([SecurityAlgorithms.HmacSha256]);
++        WorkloadAuthenticationOptions workload = inherited.Services.GetRequiredService<IOptionsMonitor<WorkloadAuthenticationOptions>>()
++            .Get(EventStoreWorkloadAuthenticationDefaults.WorkloadScheme);
++        workload.Audience.ShouldBe("parties");
++        workload.AllowedCallers.ShouldBe(["eventstore"]);
++        workload.MaximumLifetimeSeconds.ShouldBe(WorkloadAuthenticationOptions.DefaultMaximumLifetimeSeconds);
++        WorkloadAssertionIssuerOptions issuer = inherited.Services.GetRequiredService<IOptions<WorkloadAssertionIssuerOptions>>().Value;
++        issuer.Workload.ShouldBe("eventstore");
++        issuer.LifetimeSeconds.ShouldBe(WorkloadAssertionIssuerOptions.DefaultLifetimeSeconds);
++        issuer.TokenEndpoint.ShouldBeNull();
++        string assertion = (await inherited.Services.GetRequiredService<IWorkloadAssertionIssuer>().IssueAsync(
++            new("parties", EventStoreWorkloadOperations.DomainServiceProcess), TestContext.Current.CancellationToken)).ShouldNotBeNull();
++        client.DefaultRequestHeaders.Add(DaprAppChannelToken.HeaderName, PartiesProcessTestFactory.ChannelToken);
++        client.DefaultRequestHeaders.Add(EventStoreWorkloadAuthenticationDefaults.AssertionHeaderName, assertion);
++
++        using HttpResponseMessage response = await client.PostAsJsonAsync("/process", Request(), TestContext.Current.CancellationToken);
++
++        response.StatusCode.ShouldBe(HttpStatusCode.OK);
++        factory.Processor.ShouldNotBeNull().ReceivedCommands.ShouldHaveSingleItem();
++    }
++
++    private static string SignedToken(IServiceProvider services, string audience, string? caller = null)
++    {
++        JwtBearerAuthenticationOptions contract = services.GetRequiredService<IOptionsMonitor<JwtBearerAuthenticationOptions>>()
++            .Get(EventStoreWorkloadAuthenticationDefaults.JwtContractOptionsName);
++        var claims = new Dictionary<string, object> { ["sub"] = "isolated-human" };
++        if (caller is not null)
++        {
++            claims[EventStoreWorkloadAuthenticationDefaults.CallerClaimType] = caller;
++            claims[EventStoreWorkloadAuthenticationDefaults.OperationClaimType] = EventStoreWorkloadOperations.DomainServiceProcess;
++        }
++
++        DateTime now = DateTime.UtcNow;
++        return new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
++        {
++            Issuer = contract.Issuer, Audience = audience, IssuedAt = now, NotBefore = now, Expires = now.AddMinutes(2), Claims = claims,
++            SigningCredentials = new(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(contract.SigningKey!)), SecurityAlgorithms.HmacSha256),
++        });
++    }
++
+     private static DomainServiceRequest Request() => new(new CommandEnvelope(
+         "security-denial-command", "tenant-a", "party", "party-1", "CreatePartyComposite", JsonSerializer.SerializeToUtf8Bytes(new { }),
+         "security-denial-correlation", null, "untrusted-user", null), null);
+diff --git a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/pre-change/eventstore/tests/Hexalith.EventStore.Server.Tests/Security/RetainedIdentityHistorySourceReaderTests.cs b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/post-change/eventstore/tests/Hexalith.EventStore.Server.Tests/Security/RetainedIdentityHistorySourceReaderTests.cs
+index b4ec5aec..827d9b16 100644
+--- a/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/pre-change/eventstore/tests/Hexalith.EventStore.Server.Tests/Security/RetainedIdentityHistorySourceReaderTests.cs
++++ b/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/post-change/eventstore/tests/Hexalith.EventStore.Server.Tests/Security/RetainedIdentityHistorySourceReaderTests.cs
+@@ -501,6 +501,40 @@ public sealed class RetainedIdentityHistorySourceReaderTests
+         }
+     }
+ 
++    /// <summary>Restored decoded evidence stays fixed while independent synthetic authority advances its receipt or revision.</summary>
++    [Theory]
++    [InlineData(false)]
++    [InlineData(true)]
++    public async Task RestoredOriginalEvidence_ChangedIndependentLifecycleDeniesRelease(bool changeRevision)
++    {
++        RetainedIdentityHistorySourceReader reader = Arrange();
++        EventEnvelope[] stored = [Stored(1, "Profile", "sealed-profile"), Stored(2, typeof(HistoryCustodyProbeEvent).FullName!, "sealed-history")];
++        byte[] backup = JsonSerializer.SerializeToUtf8Bytes(stored);
++        IdentityHistoryCustodyEvidence decoded = Evidence();
++        IdentityHistoryCustodyEvidence accepted = decoded;
++        _actor.ReadEventsRangeAsync(0, 2, 100).Returns(stored);
++        _custody.UnprotectEventAsync(Arg.Any<AggregateIdentity>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
++            .Returns(new PayloadProtectionResult(JsonSerializer.SerializeToUtf8Bytes(new HistoryCustodyProbeEvent(decoded)), "json"));
++        _custody.CanReadAsync(Arg.Any<AggregateIdentity>(), Arg.Any<IdentityHistoryCustodyEvidence>(), Arg.Any<CancellationToken>())
++            .Returns(call => call.Arg<AggregateIdentity>() == _identity && call.Arg<IdentityHistoryCustodyEvidence>() == accepted);
++        (await reader.ReadAsync(_principal, Request(), TestContext.Current.CancellationToken)).IsAuthoritative.ShouldBeTrue();
++        _custody.ClearReceivedCalls();
++
++        EventEnvelope[] restored = JsonSerializer.Deserialize<EventEnvelope[]>(backup)!;
++        _actor.ReadEventsRangeAsync(0, 2, 100).Returns(restored);
++        accepted = changeRevision ? accepted with { LifecycleRevision = accepted.LifecycleRevision + 1 }
++            : accepted with { EvidenceId = "independent-successor-receipt" };
++        var restarted = new RetainedIdentityHistorySourceReader(_actors, _admission, _custody, _clock);
++
++        RetainedIdentityHistoryReadResult result = await restarted.ReadAsync(_principal, Request(), TestContext.Current.CancellationToken);
++
++        result.Stream.ShouldBeNull();
++        result.FailureReason.ShouldBe("history-custody-unavailable-or-expired");
++        await _custody.Received(1).CanReadAsync(_identity, decoded, Arg.Any<CancellationToken>());
++        JsonSerializer.SerializeToUtf8Bytes(restored).ShouldBe(backup);
++        JsonSerializer.Serialize(result).ShouldNotContain(accepted.EvidenceId);
++    }
++
+     private void ArrangeCompleteSource()
+         => _actor.ReadEventsRangeAsync(0, 2, 100).Returns([Stored(1, "Profile", "sealed"), Stored(2, typeof(HistoryCustodyProbeEvent).FullName!, "sealed-history")]);
+ 

@@ -1,0 +1,4 @@
+## main...origin/main
+ M _bmad-output/implementation-artifacts/spec-5-4-owner-prerequisites.md
+ M _bmad-output/implementation-artifacts/story-5-4-owner-commitments-2026-10-07.md
+?? _bmad-output/implementation-artifacts/tests/parties-http-qualification-2026-10-07/

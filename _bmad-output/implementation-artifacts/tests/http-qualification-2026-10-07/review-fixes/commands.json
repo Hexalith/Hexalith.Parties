@@ -1,0 +1,111 @@
+[
+  {
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "argv": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Debug",
+      "--artifacts-path",
+      "/tmp/parties-http-review-fixes-artifacts",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+      "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+      "-p:HexalithMemoriesRoot=/tmp/parties-http-qualification-no-memories",
+      "-p:NuGetAudit=false",
+      "-m:1"
+    ],
+    "log": "parties-build.log",
+    "exit_code": 0
+  },
+  {
+    "cwd": "/home/administrator/projects/hexalith/eventstore",
+    "argv": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj",
+      "-c",
+      "Debug",
+      "--artifacts-path",
+      "/tmp/parties-http-review-fixes-source-artifacts",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+      "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+      "-p:HexalithMemoriesRoot=/tmp/parties-http-qualification-no-memories",
+      "-p:NuGetAudit=false",
+      "-m:1"
+    ],
+    "log": "source-build.log",
+    "exit_code": 0
+  },
+  {
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "argv": [
+      "dotnet",
+      "/tmp/parties-http-review-fixes-artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+      "-class",
+      "*PartiesProcessEndpointTests",
+      "-class",
+      "*PartiesDomainServiceSecurityTests",
+      "-class",
+      "*DegradedResponseMiddlewareTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/parties-tests.xml"
+    ],
+    "log": "parties-tests.log",
+    "exit_code": 0
+  },
+  {
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "argv": [
+      "dotnet",
+      "/tmp/parties-http-review-fixes-artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+      "-method",
+      "*Program_SourceContainsOnlyActorHostMappingsAndDocumentedDaprInternalExceptions",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/architecture-tests.xml"
+    ],
+    "log": "architecture-tests.log",
+    "exit_code": 1
+  },
+  {
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "argv": [
+      "cp",
+      "-a",
+      "/tmp/parties-http-review-fixes-artifacts/bin/Hexalith.Parties.Tests/debug/.",
+      "bin/owner-http-review-fixes/"
+    ],
+    "purpose": "Preserve unchanged architecture guard root discovery; identical compiled binaries, ignored repository bin location",
+    "exit_code": 0
+  },
+  {
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "argv": [
+      "dotnet",
+      "bin/owner-http-review-fixes/Hexalith.Parties.Tests.dll",
+      "-method",
+      "*Program_SourceContainsOnlyActorHostMappingsAndDocumentedDaprInternalExceptions",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/architecture-final-tests.xml"
+    ],
+    "log": "architecture-final-tests.log",
+    "exit_code": 0
+  },
+  {
+    "cwd": "/home/administrator/projects/hexalith/eventstore",
+    "argv": [
+      "dotnet",
+      "/tmp/parties-http-review-fixes-source-artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Server.Tests.dll",
+      "-class",
+      "*RetainedIdentityHistorySourceReaderTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/http-qualification-2026-10-07/review-fixes/source-tests.xml"
+    ],
+    "log": "source-tests.log",
+    "exit_code": 0
+  }
+]

@@ -1,0 +1,42 @@
+{
+  "recordedUtc": "2026-10-07T11:32:34.305198+00:00",
+  "reason": "Concurrent unowned EventStore replay edits produced six compile errors in the Parties.Server.Tests lane. No failed lane was skipped or waived.",
+  "sourceDrift": {
+    "/home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore.Client/Handlers/DomainProcessorStateRehydrator.cs": {
+      "before": "c8870eae771021f34257c29032a3d3df22a721223a0262ebdfe0dc4d21c3873c",
+      "after": "5075b8a75edc8a7f073a3917f5090c39ce8bf4817f7227af8a295382709f8e41"
+    }
+  },
+  "files": {
+    "eventstore-status-before.txt": "1c502efc4772520abca5d56a3bfe7d5b2daf96cddad2f8acc9008a132d163d91",
+    "eventstore-diff-before.patch": "487c1953e22e330a0b68121b8bf17bca7bdf07d83629967d7a5ffb0fa802d97a",
+    "source-before.json": "6ab25f3a6f0e982438c410369749ca63ab9fae72f34220a30f83eb428c367104",
+    "agents-status-before.txt": "51df3f7c5578a6632c005520e79a98d9932d4efe5e4206cd95c10e8f0cf2128c",
+    "platform-status-before.txt": "a660f1a2d0bdf1eadb7d92a7103f8f0634e38ad10b297786795df9025ff322dc",
+    "verification-driver.py": "413e4b987998529ee90c058955c43a77975c6ab3de27be6505d9a9eeadfe8046",
+    "commands.json": "ad47773faa3a275da0535195d343f4a5a05768556044e0426407d6f1fb79568d",
+    "source-after-failure.json": "6153649c4292d401d1371de37d1c5c7f27e1ac051db530ccb530f637194f0a67",
+    "parties-diff-before.patch": "18455cb316d6b70af419b5cf69aa8846f3b1c48535a1e492139893edc87c1a02",
+    "platform-diff-before.patch": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "agents-diff-before.patch": "ce640c568f2f6a27b3e3274bf73223a13437e65c33f08b38626df56dd4e6d74b",
+    "parties-status-before.txt": "ecbd42f9a9be3ae2b2d64d8eb6bf59d46f44cc07510b421e4868d8e423fa9602",
+    "local-runner.log": "48d0192d67a6ada3846c76255bc7fe95f848cb44d076a0eaa7bf1cde3db94de8",
+    "local-matrix/Hexalith.Parties.Server.Tests-build.log": "3a11597eb614c05dfc96f6374c4d12faa68f56dab874630427662075725fff5e",
+    "local-matrix/Hexalith.Parties.Contracts.Tests-tests.log": "25b782e1c8d25782d79c5c9b852972ac5f5be3fd520330926c9949bab51e375a",
+    "local-matrix/Hexalith.EventStore.Client.Tests-build.log": "18181073a080e00ee41d2e30aaf68cec7764128d274a4c103ebdb56c1a26c27e",
+    "local-matrix/Hexalith.EventStore.Contracts.Tests-build.log": "00aa737fda7d8e410d11c08521cae921647d696705bb2c9e1a38faa5426d7b1c",
+    "local-matrix/Hexalith.EventStore.Contracts.Tests-tests.log": "197a036cdbe71f08b8b8e0b9a7cefb22980023a2eae4f42234de270d5411c68f",
+    "local-matrix/Hexalith.EventStore.Server.Tests-tests.log": "9d5464d1769db900d6e6faa2b8d0272164e393a49cd59cc658c8169a9de44139",
+    "local-matrix/Hexalith.EventStore.Client.Tests-tests.log": "0c37ffa85fbf462fe95587b2645444b2b710d8dc715a4140d7f3d0501a7c89bb",
+    "local-matrix/Hexalith.Platform.Identity.Tests-build.log": "66da258b8cbf52ad8b9831b4f7a7885b433485126ae3584a0efe10b71d10ba41",
+    "local-matrix/Hexalith.Platform.Identity.Tests-tests.xml": "01a4ec7f37fc18626edaf77a9742f3540b999905d5677f4f1dcd3d4876438b42",
+    "local-matrix/Hexalith.EventStore.Contracts.Tests-tests.xml": "ee42a5f6281d26b4a35c79a9d88a7746aa4314e07707065dd8422b7b791baa76",
+    "local-matrix/Hexalith.EventStore.Client.Tests-tests.xml": "4a03043b189f7d34d2b2011582b7f898c6e1b54f7e3cbc540d6c6df4ab62b4cf",
+    "local-matrix/Hexalith.Parties.Contracts.Tests-build.log": "22fcfc4264b00a624a4c365ed7cfac0f88df6b43a182495a5bdd7856f9b98ce7",
+    "local-matrix/Hexalith.EventStore.Server.Tests-build.log": "c2b4c4856e1a00937d4006eb55e2973e442b99c98f1e89d4e17add593a5ca33c",
+    "local-matrix/Hexalith.Platform.Identity.Tests-tests.log": "d6a318f3c6c7400ce5fe2b176a4b57185aded23ec81991f0e1b22853fedf584b",
+    "local-matrix/local-evidence.json": "7f02e6f452ce8afd81337cb8b4b88a927feaedd5924c33b557e0dd21d966d1e9",
+    "local-matrix/Hexalith.Parties.Contracts.Tests-tests.xml": "750405681d380ffbf6b37f668fd7afecb4a1575b34c8dff48e6e701c71a1a70f",
+    "local-matrix/Hexalith.EventStore.Server.Tests-tests.xml": "b94adcc31ac92d3345251b43e5d051b299fe5b741bd1ca0f87de49951d0c6684"
+  }
+}

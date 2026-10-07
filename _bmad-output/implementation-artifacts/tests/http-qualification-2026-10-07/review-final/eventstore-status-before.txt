@@ -1,0 +1,9 @@
+## main...origin/main
+ M _bmad-output/implementation-artifacts/epic-6-context.md
+ M _bmad-output/planning-artifacts/architecture.md
+ M _bmad-output/planning-artifacts/architecture/architecture-eventstore-2026-07-05/.memlog.md
+ M src/Hexalith.EventStore.Client/Handlers/DomainProcessorStateRehydrator.cs
+ M src/Hexalith.EventStore.Client/Handlers/LegacyCommandReplayInput.cs
+ M tests/Hexalith.EventStore.Server.Tests/Security/RetainedIdentityHistorySourceReaderTests.cs
+?? _bmad-output/planning-artifacts/architecture/architecture-eventstore-2026-07-05/reviews/phase-4-architecture-handoff-2026-10-07b.md
+?? src/Hexalith.EventStore.Client/Handlers/LegacyCommandReplayJsonAdmission.cs

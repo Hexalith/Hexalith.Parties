@@ -1,0 +1,155 @@
+{
+  "builds": {
+    "local-matrix/Hexalith.Parties.Server.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "7b946b167a4f022593868955c32224c1187b1d5fb52910ea8b346be49a0a60a6"
+    },
+    "local-matrix/Hexalith.Parties.UI.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "ea5ce1f24a410b84f2c7b23071e9b8534f5078d991692034fd739291c1906ddf"
+    },
+    "local-matrix/Hexalith.EventStore.Client.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "a9e9372530485256de515ef0bf3137d8b84e52b074e46f4cae84d2ab0d3130a5"
+    },
+    "local-matrix/Hexalith.Parties.Client.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "114c2db05d8a561f1a092e57f34cab7a7e4f76c40686cee1091ad2eb358ee3e5"
+    },
+    "local-matrix/Hexalith.EventStore.Contracts.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "3177b3b3220803bb47c10a8e3a5abe1e67bac51cb7377af77c1badcce2c39902"
+    },
+    "local-matrix/Hexalith.Platform.Identity.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "0476683272effff4dc9dfd068ca7cc44f41058eaaa8d967136a45532b315e8c3"
+    },
+    "local-matrix/Hexalith.Parties.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "392da76aaa41c6fb371533775e45f011d4641f4376f4bc41c446f0177e6bba7c"
+    },
+    "local-matrix/Hexalith.Parties.Contracts.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "5b940168b7135a364f761fafe0a8fcbf5be08c8888c42095f34e9567fbdb3d06"
+    },
+    "local-matrix/Hexalith.EventStore.Server.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "aa1f4ec5511fa07c748f2806b408aed208173d20be484d53b49ee63d6527d8f9"
+    },
+    "local-matrix/Hexalith.Parties.Security.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "59a8eb9ca621c48e723f2020a7cffb847b46c18bdabe16ed5d18fe02071eb562"
+    },
+    "custody-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "f1c195c420628e9a2bcff90a383b45abbcd5f9137b7ca6f424804e37e6105300"
+    }
+  },
+  "startedHeads": {
+    "agents": "09d17fccfd564c9518486618c75b4505b474ec5f",
+    "parties": "d519cec885fe32e77452bfe66048e04db22ffd0e",
+    "eventstore": "02e99bfa282ace7d56a1d7d7ad5c0321f63293e3",
+    "platform": "bed37580a4213edb3e4698525e530b85aa4a80ea"
+  },
+  "finishedHeads": {
+    "agents": "09d17fccfd564c9518486618c75b4505b474ec5f",
+    "parties": "d519cec885fe32e77452bfe66048e04db22ffd0e",
+    "eventstore": "02e99bfa282ace7d56a1d7d7ad5c0321f63293e3",
+    "platform": "bed37580a4213edb3e4698525e530b85aa4a80ea"
+  },
+  "artifactsDirectory": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k",
+  "sourceFiles": 3740,
+  "sourceDrift": {
+    "/home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore.Client/Handlers/LegacyCommandReplayJsonAdmission.cs": {
+      "before": null,
+      "after": "3deb61e8831894e2d043cfac39c0bd2a49b2d744c791bab49f68417a1796f392"
+    }
+  },
+  "xml": {
+    "host-health.xml": {
+      "passes": 30,
+      "sha256": "d115c3bddc05de418d387b9dd4ce8d2a7e4b4a4678a1d59773978ac27f9eca06",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll"
+    },
+    "architecture.xml": {
+      "passes": 1,
+      "sha256": "2436052ff6b32ac1c1dde09530622243646accc0745eb5d11d79cb6a6d2ca74d",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll"
+    },
+    "shared-replay.xml": {
+      "passes": 22,
+      "sha256": "c018996749a3ce8cedd9b0db71c8be08b405313789070228205e99f81bb2662f",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.Tests.dll"
+    },
+    "custody.xml": {
+      "passes": 115,
+      "sha256": "372081821cd34cc6dbcb271f2af940f735ce07d95732d88ce3448a3000ffd3ee",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.Platform.Custody.Tests.dll"
+    },
+    "local-matrix/Hexalith.Parties.Security.Tests-tests.xml": {
+      "passes": 30,
+      "sha256": "3ab4f9d57e60fbc017d6a02a340c16779ba2f1437cd3f3447d136aadc2fc48c5",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.Parties.Security.Tests/debug/Hexalith.Parties.Security.Tests.dll"
+    },
+    "local-matrix/Hexalith.Parties.Server.Tests-tests.xml": {
+      "passes": 94,
+      "sha256": "490309ecfe5d04a61dfcce3c5f8fcc8ecd47bfc8a9b2c6979caec62f13f6fca4",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.Parties.Server.Tests/debug/Hexalith.Parties.Server.Tests.dll"
+    },
+    "local-matrix/Hexalith.Platform.Identity.Tests-tests.xml": {
+      "passes": 2,
+      "sha256": "64f34bb05b14f299f032b25a49de2080cad1c048dea6f4ab40b2ae62776f618c",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.Platform.Identity.Tests.dll"
+    },
+    "local-matrix/Hexalith.EventStore.Contracts.Tests-tests.xml": {
+      "passes": 23,
+      "sha256": "39766d86c8a494fe014e555c1d16b53c32931facda3a3e5b5f9bb07a0c505b42",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Contracts.Tests.dll"
+    },
+    "local-matrix/Hexalith.EventStore.Client.Tests-tests.xml": {
+      "passes": 107,
+      "sha256": "d5855518bd212c688fa4188e7eb9e956aadffc806cf22511fc40924fbbd296ff",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.Tests.dll"
+    },
+    "local-matrix/Hexalith.Parties.UI.Tests-tests.xml": {
+      "passes": 72,
+      "sha256": "64c27074ecb3e9154b1cf442200a46c3766a156066a884944d58b452448b8c75",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.Parties.UI.Tests/debug/Hexalith.Parties.UI.Tests.dll"
+    },
+    "local-matrix/Hexalith.Parties.Tests-tests.xml": {
+      "passes": 236,
+      "sha256": "328b2acb0861d2fddb7db07e283e14d10eb54c499a6e128c549e0b8aafcd2f82",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll"
+    },
+    "local-matrix/Hexalith.Parties.Client.Tests-tests.xml": {
+      "passes": 98,
+      "sha256": "f0ab6cc3b5b2dad81fec9d93f86baafa9f989ebe1548b4aa76c9280e569e8502",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.Parties.Client.Tests/debug/Hexalith.Parties.Client.Tests.dll"
+    },
+    "local-matrix/Hexalith.Parties.Contracts.Tests-tests.xml": {
+      "passes": 29,
+      "sha256": "41d363933ed6b4ce3492209c29891b13887fa4ad9be7f43f07aec3a6da4c0e3d",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.Contracts.Tests.dll"
+    },
+    "local-matrix/Hexalith.EventStore.Server.Tests-tests.xml": {
+      "passes": 168,
+      "sha256": "f6fc63d378f1173313f077e451fff151cc9aaf44dd2e87e9db0d2801fd2d061c",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-http-review-final-hkavp60k/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Server.Tests.dll"
+    }
+  },
+  "distinctPasses": 1027,
+  "sourcesSha256": "0dec137b4fdcf37c2a5bf53fe55696c92b81d47274c81111cf9602f2926f54ef",
+  "artifactManifestSha256": "842bd7779d92092ebd61341143f0dc6cde5e54e2edd6e0bd528fb3a87e66eddf",
+  "commandsSha256": "8d8650ec2b83eaaa758e9c56cdac16cc43226880eff86c0f7d7c748210e41b9d"
+}

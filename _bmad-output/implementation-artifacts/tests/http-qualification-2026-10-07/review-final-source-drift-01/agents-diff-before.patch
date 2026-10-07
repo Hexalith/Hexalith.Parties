@@ -1,0 +1,46 @@
+diff --git a/_bmad-output/implementation-artifacts/spec-5-4-owner-prerequisites.md b/_bmad-output/implementation-artifacts/spec-5-4-owner-prerequisites.md
+index 70af653..0f8c053 100644
+--- a/_bmad-output/implementation-artifacts/spec-5-4-owner-prerequisites.md
++++ b/_bmad-output/implementation-artifacts/spec-5-4-owner-prerequisites.md
+@@ -204,3 +204,41 @@ Positive successor access after predecessor destruction, qualified production cu
+ | B8 | All retained/excluded metadata corruption variants execute in UnsupportedStoredMetadata_DeniesBeforeCustody; the final retained-source class has 39 passes. |
+ 
+ Every source assertion above executed in root's final 802-test matrix. The four added HTTP cases remain part of the separately blocked 13-case class and are never counted as passing.
++
++## Active HTTP and qualification continuation — 2026-10-07
++
++The user explicitly requests continuation of this approved parent. First resolve the Parties HTTP startup audit blocker by adopting the existing EventStore SDK sidecar/workload security contract for Dapr subscription/configuration, actor routes and `/healthz`. Update the authenticated endpoint fixture without weakening startup audit, authorization, strict replay or retained-history validation. Run all 13 existing `PartiesProcessEndpointTests`, then rerun the complete ten-lane owner Local matrix. Capture commands, logs/XML, canonical revisions, worktree observations, source/artifact hashes and independent review in a new packet separate from every prior packet.
++
++Then advance custody/expiry/restore qualification toward a complete Parties target using the accepted 365-day effective-at policy. Inspect current owning technical seams and add feasible executable source qualification without inventing a new public continuation contract, production custody or live destruction/restore results. Keep positive successor-after-expired-predecessor and any other unresolved contract requirements explicit. Prior owner tasks remain open; do not implement unrelated Conversations or host deliverables in this continuation. Preserve unrelated edits and the original Story 5.4 draft/backlog and external availability gates. Do not stage, commit, push, deploy, update submodules or send owner messages.
++
++Continuation tasks:
++- [x] Parties host and authenticated test fixture adopt SDK security policies; all original 13 HTTP endpoint cases execute and pass, with meaningful denial/sidecar regression evidence.
++- [x] Complete owner Local source matrix executes afresh with retained assertions/gates and separate exact command/log/XML/hash evidence.
++- [x] Feasible custody/expiry/restore source qualification advances with executable evidence; missing production contracts, target qualification and all-copy/restore receipts remain explicit.
++- [ ] Independent review and root verification are recorded in the fresh packet, parent and owner commitment record without claiming full parent completion.
++
++For this continuation, the frozen matrix's applicable scope is Branch B identity, retained history and fail-closed missing custody/policy. Trusted-envelope, Conversations and independent spool remain other owner tasks and cannot be marked delivered by Parties source evidence.
++
++### HTTP continuation delivered for independent review
++
++[Fresh Parties packet](../../../parties/_bmad-output/implementation-artifacts/ext-parties-1-http-and-source-qualification-2026-10-07.md) records 850/850 across the ten owner Local lanes, all original 13 HTTP cases, 28 new real SDK security cases, seven new serialized-restore source denials, 12 additional middleware cases and fresh 115/115 Platform custody tests: 977 distinct passes. All owning source Debug builds report zero warnings/errors. Root read both scoped owner patches and independently checked every XML test, required class and warning-free build; the original 13 executed names are preserved exactly. Review is of this bounded continuation; the incomplete parent remains in-progress and the original Story 5.4 remains draft/backlog.
++
++The fixture supplies synthetic healthy backend status and ephemeral Development credentials; only HTTP authentication, policy metadata and production replay behavior are established. Restore cases use synthetic independent custody. No production health/custody readiness, all-copy destruction receipt, qualified nonrollback restore or positive successor continuation is claimed. Independent review and final root source/artifact/gate checks are pending in a separate [root packet](tests/parties-http-qualification-2026-10-07/root-matrix-audit.json).
++
++### HTTP continuation Review Triage Log
++
++All three context-free layers completed. Root rendered each verdict before grouping; [individual findings](tests/parties-http-qualification-2026-10-07/review/findings.md) and the initial diff remain separate from earlier reviews.
++
++| Finding | Verdict | Route | Evidence |
++| --- | --- | --- | --- |
++| B1 | medium | patch | Host configuration can inherit Authority alongside the fixture's symmetric key, which the SDK rejects; isolate the fixture's credential and workload options without changing real handlers/policies. |
++| B2 | medium | patch | The two switch cases share a request containing both channel and caller header. Make caller-header-only and channel-only independent vectors. |
++| B3 | medium | patch | Current case executes the intended conflicting-credential guard, but supplies no valid human-only JWT. Retain conflict coverage and add human-only denial under the configured bearer contract. |
++| B4 | medium | patch | Foreign signature fails signature verification; conflicting unsigned caller fails a different guard. Add a correctly signed disallowed-caller vector under the exact configured allow-list. |
++| B5 | low | reject | The actual 401/empty-body checks and unchanged ASP.NET authorization middleware prove missing-channel rejection before route execution; command counts add no actor/consumer proof. Complete positive persisted actor/pubsub delivery remains explicitly unqualified. Instrumenting those backends adds complexity beyond a direct correction; no complete dispatch/state-store claim is made by this continuation. |
++| B6 | medium | patch | Validation covers existing endpoints only. Require every SDK catalog POST route before checking its unchanged policies so removal cannot silently pass. |
++| B7 | medium | patch | Existing variants demonstrate altered decoded evidence rejection. Preserve them and add fixed decoded restored evidence against independently changed accepted receipt/revision, explicitly remaining synthetic. |
++| E1 | medium | patch | ASP.NET matches a trailing slash while the infrastructure exemption compares an exact path. Normalize trailing slashes and execute direct no-probe plus real channel cases. |
++| V1 | medium | patch | Normal-CI source assertions require the removed route/ACL documentation strings. Restore accurate documentation alongside the new SDK security explanation and execute the unchanged architecture guard with source discoverable. |
++
++Narrow patch groups: fixture isolation, independent credential vectors, expected catalog presence, independent restored-lifecycle changes, trailing-slash infrastructure normalization and preserved host documentation. No public contract, production policy or approval change is needed. Shared replay files were edited concurrently after the first matrix; the earlier source hashes remain historical evidence and final fresh verification must capture that preserved current source.

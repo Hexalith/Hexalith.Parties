@@ -1,0 +1,14 @@
+## main...origin/main
+A  .github/CODEOWNERS
+A  _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T111755Z-local-preparation/SHA256SUMS
+A  _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T111755Z-local-preparation/local-validation.json
+A  _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T111755Z-local-preparation/proposed-changes.json
+A  _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T111755Z-local-preparation/retained-baseline-preflight.json
+A  _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T111755Z-local-preparation/retained-discovery-verification.json
+A  _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T111755Z-local-preparation/summary.md
+M  _bmad-output/implementation-artifacts/spec-4-4-apply-publication-and-operations-repository-controls.md
+M  _bmad-output/implementation-artifacts/sprint-status.yaml
+A  eng/repository-controls/README.md
+A  eng/repository-controls/controls.py
+A  eng/repository-controls/desired-state.json
+A  eng/repository-controls/test_controls.py
