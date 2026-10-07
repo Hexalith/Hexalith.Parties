@@ -151,61 +151,8 @@ development_status:
   8-4-leaf-project-retirement: done
   8-5-eventstore-domain-service-sdk-host-cutover: done
   8-6-projection-and-query-sdk-migration: done
-  # Story context created 2026-07-16; production migration remains blocked by
-  # the unproven G5 shared payload engine and authoritative 8.6 -> 8.7 sequence.
-  # G5 receipt revalidated 2026-08-04 at the current EventStore identity
-  # v3.91.0 (1d6e9321acfc416768c1c78e9facf573c9c41f71) per
-  # sprint-change-proposal-2026-08-04.md: the release adds Story 8.6's
-  # shared-projection rebuild completion mechanics only, not pdenc-v2,
-  # IPersonalDataPolicy, IErasureStateProvider, the production key-backend
-  # package, or the Story 8.11 closure packet. G5 stays needs-additive-api,
-  # the retention action stays open, and no Parties protection-path deletion
-  # is authorized. Story 8.7 remains blocked.
-  # Revalidated 2026-09-07 at matching root gitlink and checkout
-  # d45206f7cbd80a112519c1d4687d7279a745f0c5 (v3.103.0-2-gd45206f7) /
-  # package 3.103.0: 8.11 closure, PayloadProtection projects/packages,
-  # pdenc-v2, IPersonalDataPolicy, and IErasureStateProvider remain absent.
-  # Spec 8.7 AC1 halt: no production or dependency changes. Story 8.7 remains
-  # blocked.
-  # Revalidated 2026-10-03: this receipt supersedes the source-absence claims
-  # above. EventStore gitlink/clean checkout 2c58ffda41759e895ace4b9625c9bd931a217672
-  # (v3.111.0); Builds 688eec9a4333245cc0ff7772115c769094471863 selects 3.110.0.
-  # Public policy/erasure contracts and a non-packable internal v2 core exist.
-  # Owner 8.2 is done; 8.3 in-progress; 8.4-8.11 backlog. Runtime/backend/package,
-  # parity, post-v2 rollback, and 8.11 closure/approval remain missing.
-  # Parties 8.6 is done; G5 still gates 8.7. No dependency identity is adopted,
-  # no production/dependency changes, and no product tests are credited.
-  # Revalidated 2026-10-05: EventStore v3.113.0 / package 3.113.0; observed
-  # Builds 90f3836dd7482db35c2c187a50999b99215919b0 also selects 3.113.0.
-  # All 32 G5 static checks passed; runtime/release, dual-provider parity,
-  # post-v2 rollback, 8.11 closure, and I2/I19a classification remain missing.
-  # All 24 retained files and local DI intact; no production/dependency edits.
   8-7-data-protection-extraction: blocked
-  # Story context revalidated 2026-07-31 after the latest root-submodule update.
-  # All eight checkouts match their clean root gitlinks; only Builds (b529b66) and
-  # Tenants (2cd7edf) moved from the prior snapshot, without delivering an 8.8 owner
-  # surface. EventStore fa2d1c9 proof still does not match current e4618d9/v3.86.0;
-  # root/origin baseline ed007f8 also fails commitlint (type/subject empty and an
-  # overlong body line). The sequence and G5/G7-G9/G8/G11/Commons/Builds proof stay open.
   8-8-client-mcp-apphost-build-and-deploy-cleanup: blocked
-  # Delivered-slice record, 2026-08-19
-  # (sprint-change-proposal-2026-08-19-story-8-10-frontcomposer-shell-slice-backfill.md).
-  # Story 8.10 adopted G4 work package F only — the FrontComposer shell skip
-  # links and role=main/role=navigation landmarks — at FrontComposer root gitlink
-  # 7a337a21d4ba261bf27aeb3feedde47789f0160a (original adoption); amended
-  # 5cbc5583 (2026-09-05/06), f0c3b6fd (2026-09-07), b0ad2fb6
-  # (2026-09-13), bf40099f (Round 6), 374bb833 (explicit human
-  # approval 2026-10-04), then 2cc8dd3a (working-tree approval 2026-10-04;
-  # committed in 2f6157d3; kept in the 2026-10-05 final set). I13 parity
-  # remains unvalidated.
-  # Work packages A-E (entity picker,
-  # freshness indicator, live-region contract, file/JSON download, typed-name
-  # confirmation) remain undelivered, so this story is blocked: a delivered
-  # slice never completes the owning story. The isolation wrapper in
-  # MainLayout.razor repaired the dead ::deep focus CSS; I13 is still not
-  # discharged because Playwright focuses .fc-skip-link, not a content control
-  # (DW-111, accepted as a named deferral on 2026-10-05). Retain every other
-  # Parties UI primitive.
   8-9-ui-frontcomposer-and-fluent-consolidation: blocked
   8-10-final-readiness-documentation-and-retirement-gate: done
   8-11-validation-fallback-ladder-runner-and-guidance: done
