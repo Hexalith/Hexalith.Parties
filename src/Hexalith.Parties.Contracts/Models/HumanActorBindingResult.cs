@@ -18,4 +18,8 @@ public sealed record HumanActorBindingResult(
     DateTimeOffset ActionAt,
     long SourcePosition,
     string? ObservationId,
-    HumanActorBindingEvidence? Evidence);
+    HumanActorBindingEvidence? Evidence)
+{
+    /// <summary>Gets the original source position that established the returned binding interval.</summary>
+    public long BindingSourcePosition { get; init; }
+}

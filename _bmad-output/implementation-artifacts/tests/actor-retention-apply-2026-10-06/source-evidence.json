@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-06",
+  "scope": "local retention application; production disabled",
+  "baseline_commit": "b3794a4dcbe2fff3e9ea5c420a3c4695e2d1a8ca",
+  "observed_heads": {
+    "agents": "b252fcfde51bd04317ce5843a0a42bfe4dce5170",
+    "parties": "b3794a4dcbe2fff3e9ea5c420a3c4695e2d1a8ca",
+    "eventstore": "253980f9eb63cc5a7d96be7c8676197e78f39d67"
+  },
+  "source_files": [
+    {
+      "path": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs",
+      "sha256": "999280447dcd4969e19b62ace1d1f10328fff53d893c2c4dfac6fc93d6ebd928"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Authorization/PartyIdentityOptions.cs",
+      "sha256": "a67302db5f47ee45fb972ce0a1ae28204f3e153f4ccc5aee6000b4524257e77c"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs",
+      "sha256": "bfa7ff1402b3641ca91cbc31a2902ea5fa5f8fdf41eb4ad672f786a2256d205f"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs",
+      "sha256": "14bbb4de36e5378b4811f7f50567b3b19f182e7e4a9f12cc498615cf8ca89c34"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs",
+      "sha256": "967c93a1d5acc22222884ebdcc31284de2129ed56c604ce34ee4cbabe4d35769"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs",
+      "sha256": "0bb08d7cebf4e02e8ad284cd8dc274a634d39e83a710bc37a761fd2caff723d7"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/planning-artifacts/actor-history-retention-policy-v1.md",
+      "sha256": "2a502ed825f110fc73e16e16353ba2ded6bd125a09f25e03f9f7226ae6cab9fe"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/planning-artifacts/adr-consumer-party-id-binding.md",
+      "sha256": "a313fdc6e88d56643aa119a654d6f545dcb5d69b30441ae4ed8dad4e3a8aacb1"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/ext-parties-1-retention-application-2026-10-06.md",
+      "sha256": "344697e7370fe57d2c5482ac38675e37032141b0b8327d2a23bb595058e6810c"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore.Contracts/Security/IdentityHistoryPolicy.cs",
+      "sha256": "d32c3ba4c1724b29b918793e0f566f1d2905d6268af5ebccf62476e99721df27"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore.Contracts/Security/IdentityHistoryCustodyEvidence.cs",
+      "sha256": "299291c4c38f8c6c089d36529517a0f3946bd375a41ea8594a0ed150375b2b70"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/actor-retention-apply-2026-10-06/build.log",
+      "sha256": "c7a46da8103dfc36aef8ad7248f9d0d7979dcfb37f694ddec20599fbfde5ffd8"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/actor-retention-apply-2026-10-06/tests.log",
+      "sha256": "884d93cf838be82e3ce6e64955ecf5482f89360a2d8171b0a26e738fd3176a93"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/actor-retention-apply-2026-10-06/tests.xml",
+      "sha256": "71068a2ccb68c7ec829db84d52dfb76b6b1601a4f8b31445ea5963c084c8d19a"
+    },
+    {
+      "path": "/tmp/hexalith-agents54-retention-artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+      "sha256": "8a83782c4ab61d505655e1419241b954f6b3de4010bb1af788b3cc03db23ea5a"
+    }
+  ],
+  "commands": [
+    "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --artifacts-path /tmp/hexalith-agents54-retention-artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/parties-no-memories-source -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -m:1",
+    "dotnet /tmp/hexalith-agents54-retention-artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll -class '*PartyIdentityQueryHandlerTests' -class '*PartyIdentityAdmissionTests' -result-xml /tmp/parties-story54-retention-tests-20261006.xml"
+  ],
+  "test_result": {
+    "total": 78,
+    "passed": 78,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "not_run": 0,
+    "new_policy_cases": 26,
+    "new_tests": [
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.PolicyChangesDuringAwait_DenyWithoutRelabelingExpiry(historical: False, inCustody: False, remove: False)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.PolicyChangesDuringAwait_DenyWithoutRelabelingExpiry(historical: True, inCustody: False, remove: False)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.PolicyChangesDuringAwait_DenyWithoutRelabelingExpiry(historical: False, inCustody: True, remove: False)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.PolicyChangesDuringAwait_DenyWithoutRelabelingExpiry(historical: True, inCustody: True, remove: False)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.PolicyChangesDuringAwait_DenyWithoutRelabelingExpiry(historical: False, inCustody: False, remove: True)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.PolicyChangesDuringAwait_DenyWithoutRelabelingExpiry(historical: True, inCustody: False, remove: True)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.PolicyChangesDuringAwait_DenyWithoutRelabelingExpiry(historical: False, inCustody: True, remove: True)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.PolicyChangesDuringAwait_DenyWithoutRelabelingExpiry(historical: True, inCustody: True, remove: True)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.UnconfiguredPolicy_DeniesBothBindingReads(missing: \\\"unregistered\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.UnconfiguredPolicy_DeniesBothBindingReads(missing: \\\"missing-id\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.UnconfiguredPolicy_DeniesBothBindingReads(missing: \\\"blank-id\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.UnconfiguredPolicy_DeniesBothBindingReads(missing: \\\"missing-duration\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.UnconfiguredPolicy_DeniesBothBindingReads(missing: \\\"zero-duration\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.UnconfiguredPolicy_DeniesBothBindingReads(missing: \\\"missing-trigger\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.UnconfiguredPolicy_DeniesBothBindingReads(missing: \\\"unsupported-trigger\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.PolicyChangesAtFinalAuthority_DenyBothReads(historical: False, remove: False)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.PolicyChangesAtFinalAuthority_DenyBothReads(historical: True, remove: False)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.PolicyChangesAtFinalAuthority_DenyBothReads(historical: False, remove: True)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.PolicyChangesAtFinalAuthority_DenyBothReads(historical: True, remove: True)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.MismatchedPolicy_DeniesBothBindingReadsWithoutCustody(mismatch: \\\"policy-version\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.MismatchedPolicy_DeniesBothBindingReadsWithoutCustody(mismatch: \\\"duration\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.MismatchedPolicy_DeniesBothBindingReadsWithoutCustody(mismatch: \\\"recorded-expiry\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.MismatchedPolicy_DeniesBothBindingReadsWithoutCustody(mismatch: \\\"purpose\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.MismatchedPolicy_DeniesBothBindingReadsWithoutCustody(mismatch: \\\"source-expiry\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.MismatchedPolicy_DeniesBothBindingReadsWithoutCustody(mismatch: \\\"restore\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.MismatchedPolicy_DeniesBothBindingReadsWithoutCustody(mismatch: \\\"derived-copies\\\")"
+    ]
+  },
+  "production_policy_approved": false,
+  "live_qualified": false,
+  "independent_review_completed": false,
+  "prior_broad_result": "489/490; unchanged strict json-redacted SDK replay failure; not rerun for this slice"
+}

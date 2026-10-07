@@ -12,12 +12,24 @@ using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Queries;
 using Hexalith.Parties.Contracts.ValueObjects;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Hexalith.Parties.Client;
 
 /// <summary>Identity gateway client that never reads or mutates shared ambient tenant options.</summary>
-public sealed class HttpPartiesIdentityClient(HttpClient httpClient) : IPartiesIdentityClient
+/// <param name="httpClient">The scoped gateway transport.</param>
+/// <param name="timeProvider">The clock used to validate evidence at completion.</param>
+[method: ActivatorUtilitiesConstructor]
+public sealed class HttpPartiesIdentityClient(HttpClient httpClient, TimeProvider? timeProvider = null) : IPartiesIdentityClient
 {
+    private readonly TimeProvider _completionClock = timeProvider ?? TimeProvider.System;
+
+    /// <summary>Creates a gateway client using the system completion clock.</summary>
+    /// <param name="httpClient">The scoped gateway transport.</param>
+    public HttpPartiesIdentityClient(HttpClient httpClient) : this(httpClient, TimeProvider.System)
+    {
+    }
+
     /// <inheritdoc/>
     public async Task<AgentPartyProvisioningResult> ProvisionAgentPartyAsync(string tenantId, ProvisionAgentParty command,
         CancellationToken cancellationToken = default)
@@ -55,14 +67,16 @@ public sealed class HttpPartiesIdentityClient(HttpClient httpClient) : IPartiesI
         ArgumentNullException.ThrowIfNull(query);
         ValidateScope(tenantId, query.TenantId, query.PartyId);
         PartyIdentityResult result = await QueryAsync<ResolvePartyIdentity, PartyIdentityResult>(tenantId, query.PartyId, query, cancellationToken).ConfigureAwait(false);
+        DateTimeOffset completedAt = _completionClock.GetUtcNow();
         if (!Enum.IsDefined(result.Outcome) || result.Outcome != PartyIdentityOutcome.Resolved && result.Evidence?.HumanBinding is not null
             || result.Evidence is { } evidence && (evidence.ContractVersion != 1 || evidence.TenantId != tenantId
             || evidence.PartyId != query.PartyId || evidence.SourcePosition <= 0 || string.IsNullOrWhiteSpace(evidence.ObservationId)
-            || evidence.ObservedAt == default || evidence.Classification is not (PartyIdentityClassification.Human
-                or PartyIdentityClassification.Organization or PartyIdentityClassification.Agent)
+            || evidence.ObservedAt == default || evidence.ObservedAt > completedAt || evidence.Classification is not (PartyIdentityClassification.Human
+                or PartyIdentityClassification.Organization)
             || evidence.HumanBinding is { } binding && (evidence.Classification != PartyIdentityClassification.Human
                 || binding.ActorId != query.ExpectedActorId || !Matches(binding, tenantId, query.PartyId)
-                || evidence.ObservedAt < binding.ValidFrom || evidence.ObservedAt >= binding.ValidUntil))
+                || evidence.ObservedAt < binding.ValidFrom || evidence.ObservedAt >= binding.ValidUntil
+                || completedAt < binding.ValidFrom || completedAt >= binding.ValidUntil || completedAt >= binding.Custody.ExpiresAt))
             || result.Outcome == PartyIdentityOutcome.Resolved && (result.Evidence is not { } resolved
                 || !resolved.IsActive || resolved.IsRestricted || resolved.IsErasingOrErased
                 || resolved.Classification == PartyIdentityClassification.Unknown
@@ -81,13 +95,16 @@ public sealed class HttpPartiesIdentityClient(HttpClient httpClient) : IPartiesI
         ArgumentNullException.ThrowIfNull(query);
         ValidateScope(tenantId, query.TenantId, query.PartyId);
         HumanActorBindingResult result = await QueryAsync<ResolveHumanActorBindingAt, HumanActorBindingResult>(tenantId, query.PartyId, query, cancellationToken).ConfigureAwait(false);
+        DateTimeOffset completedAt = _completionClock.GetUtcNow();
         if (!Enum.IsDefined(result.Outcome) || result.Outcome != HumanActorBindingOutcome.Resolved && result.Evidence is not null
-            || result.ContractVersion != 1 || result.TenantId != tenantId || result.PartyId != query.PartyId || result.ActionAt != query.ActionAt
+            || query.ActionAt > completedAt || result.ContractVersion != 1 || result.TenantId != tenantId || result.PartyId != query.PartyId || result.ActionAt != query.ActionAt
             || result.Evidence is { } binding && (!Matches(binding, tenantId, query.PartyId)
                 || binding.ActorId != query.ExpectedActorId || binding.BindingVersion != query.ExpectedBindingVersion
+                || completedAt >= binding.Custody.ExpiresAt
                 || query.ActionAt < binding.ValidFrom || binding.ValidUntil is { } until && query.ActionAt >= until)
             || result.Outcome == HumanActorBindingOutcome.Resolved && (result.Evidence is null
-                || result.SourcePosition <= 0 || string.IsNullOrWhiteSpace(result.ObservationId)))
+                || result.SourcePosition <= 0 || result.BindingSourcePosition <= 0
+                || result.BindingSourcePosition > result.SourcePosition || string.IsNullOrWhiteSpace(result.ObservationId)))
         {
             throw Unavailable();
         }

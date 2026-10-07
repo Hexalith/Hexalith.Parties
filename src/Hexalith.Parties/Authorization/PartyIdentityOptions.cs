@@ -2,7 +2,7 @@ using Hexalith.EventStore.Contracts.Security;
 
 namespace Hexalith.Parties.Authorization;
 
-/// <summary>Required attribution policy configuration; unset settings deny writes and live qualification.</summary>
+/// <summary>Required attribution policy configuration; unset settings deny binding writes, binding reads and live qualification.</summary>
 public sealed class PartyIdentityOptions
 {
     /// <summary>Gets or sets the approved versioned retention policy.</summary>

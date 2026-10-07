@@ -175,6 +175,11 @@ development_status:
   # parity, post-v2 rollback, and 8.11 closure/approval remain missing.
   # Parties 8.6 is done; G5 still gates 8.7. No dependency identity is adopted,
   # no production/dependency changes, and no product tests are credited.
+  # Revalidated 2026-10-05: EventStore v3.113.0 / package 3.113.0; observed
+  # Builds 90f3836dd7482db35c2c187a50999b99215919b0 also selects 3.113.0.
+  # All 32 G5 static checks passed; runtime/release, dual-provider parity,
+  # post-v2 rollback, 8.11 closure, and I2/I19a classification remain missing.
+  # All 24 retained files and local DI intact; no production/dependency edits.
   8-7-data-protection-extraction: blocked
   # Story context revalidated 2026-07-31 after the latest root-submodule update.
   # All eight checkouts match their clean root gitlinks; only Builds (b529b66) and
@@ -310,6 +315,11 @@ action_items:
     # in-progress); G5 closure/parity/rollback remain absent. The earlier 19/19
     # total is historical; no product tests rerun. All 24 retained files and
     # local DI verified intact. Story 8.6 done; 8.7 blocked; action stays open.
+    # 2026-10-05: EventStore v3.113.0 still lacks G5 runtime/release enrollment,
+    # dual-provider parity, post-v2 rollback, and 8.11 availability closure.
+    # I2/I19a classification approval also remains pending. All 24 files and
+    # local DI retained; 32 static G5 checks pass; product suites unrun.
+    # Story 8.7 remains blocked; retention action stays open.
     action: "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open

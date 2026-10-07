@@ -110,8 +110,22 @@ public sealed class ContractsPublicApiSnapshotTests
         return type.FullName ?? type.Name;
     }
 
-    private static string FindProjectDirectory()
+    private static string FindProjectDirectory([CallerFilePath] string sourceFile = "")
     {
+        // SDK --artifacts-path places binaries outside the repository, and the
+        // runner may change its working directory to the assembly directory.
+        string sourceCandidate = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourceFile)!, ".."));
+        if (File.Exists(Path.Combine(sourceCandidate, "Hexalith.Parties.Contracts.Tests.csproj")))
+        {
+            return sourceCandidate;
+        }
+
+        string currentCandidate = Path.Combine(Directory.GetCurrentDirectory(), "tests", "Hexalith.Parties.Contracts.Tests");
+        if (File.Exists(Path.Combine(currentCandidate, "Hexalith.Parties.Contracts.Tests.csproj")))
+        {
+            return currentCandidate;
+        }
+
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         while (directory is not null)
         {

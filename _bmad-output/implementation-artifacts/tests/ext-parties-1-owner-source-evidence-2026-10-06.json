@@ -1,0 +1,434 @@
+{
+  "record": "EXT-PARTIES-1",
+  "date": "2026-10-06",
+  "scope": "Owner-local prerequisite implementation/source fixtures only",
+  "acceptedStatus": "Uncommitted",
+  "acceptedTargetVersionOrCommit": "TBD",
+  "acceptedIntegrationDate": "TBD",
+  "acceptedCompatibilityCommand": "TBD",
+  "baseHeads": {
+    "Parties": "b3794a4dcbe2fff3e9ea5c420a3c4695e2d1a8ca",
+    "EventStore": "785d58fc99ce4c2751c0546ca6368e993c654ed9",
+    "Platform": "711a70fd94794ef1aea1b91f5524136b0d660468"
+  },
+  "headsAreBaseObservationsOnly": true,
+  "workingTreesIncludeUncommittedChanges": true,
+  "focusedSourceLanes": [
+    {
+      "project": "Hexalith.Parties.Tests",
+      "build": {
+        "executable": "dotnet",
+        "arguments": [
+          "build",
+          "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+          "-c",
+          "Debug",
+          "--artifacts-path",
+          "/tmp/hexalith-agents54-parties-artifacts",
+          "-p:UseHexalithProjectReferences=true",
+          "-p:UseNuGetDeps=false",
+          "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+          "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+          "-p:HexalithMemoriesRoot=/tmp/parties-no-memories-source",
+          "-p:NuGetAudit=false",
+          "-m:1",
+          "-p:MinVerVersionOverride=1.0.0"
+        ],
+        "workingDirectory": "/home/administrator/projects/hexalith/parties"
+      },
+      "test": {
+        "executable": "dotnet",
+        "arguments": [
+          "/tmp/hexalith-agents54-parties-artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+          "-class",
+          "*PartyIdentityQueryHandlerTests",
+          "-class",
+          "*PartyIdentityAdmissionTests",
+          "-result-xml",
+          "/tmp/parties-story54-reviewfix-tests-20261006.xml"
+        ],
+        "workingDirectory": "/home/administrator/projects/hexalith/parties"
+      },
+      "total": 52,
+      "passed": 52,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 0,
+      "errors": 0,
+      "files": [
+        {
+          "path": "/tmp/parties-story54-reviewfix-build-20261006.log",
+          "bytes": 5360,
+          "sha256": "8f286cc870880eb6f0197ff97891ca7c5053ea79ea31238c30b63b9ea62724e8"
+        },
+        {
+          "path": "/tmp/parties-story54-reviewfix-tests-20261006.log",
+          "bytes": 425,
+          "sha256": "fe70d08b9d6966d4756da2505c50f20605fc63171f309877e5cc7b751da645a6"
+        },
+        {
+          "path": "/tmp/parties-story54-reviewfix-tests-20261006.xml",
+          "bytes": 35009,
+          "sha256": "3f54d045db8751176d39adc45deecd8ba0beb74bdccfedf7b5b2346f1e2ed589"
+        }
+      ]
+    },
+    {
+      "project": "Hexalith.Parties.Client.Tests",
+      "build": {
+        "executable": "dotnet",
+        "arguments": [
+          "build",
+          "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+          "-c",
+          "Debug",
+          "--artifacts-path",
+          "/tmp/hexalith-agents54-parties-artifacts",
+          "-p:UseHexalithProjectReferences=true",
+          "-p:UseNuGetDeps=false",
+          "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+          "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+          "-p:NuGetAudit=false",
+          "-m:1"
+        ],
+        "workingDirectory": "/home/administrator/projects/hexalith/parties"
+      },
+      "test": {
+        "executable": "dotnet",
+        "arguments": [
+          "/tmp/hexalith-agents54-parties-artifacts/bin/Hexalith.Parties.Client.Tests/debug/Hexalith.Parties.Client.Tests.dll",
+          "-class",
+          "*HttpPartiesIdentityClientTests",
+          "-class",
+          "*DependencyInjectionTests",
+          "-result-xml",
+          "/tmp/parties-story54-retained-client-final-tests-20261006.xml"
+        ],
+        "workingDirectory": "/home/administrator/projects/hexalith/parties"
+      },
+      "total": 18,
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 0,
+      "errors": 0,
+      "files": [
+        {
+          "path": "/tmp/parties-story54-retained-client-final-build-20261006.log",
+          "bytes": 3124,
+          "sha256": "f55c08a16476c0e8f3d95a30298cd5ebbd46f35c9d183f2f6770c87012aa3946"
+        },
+        {
+          "path": "/tmp/parties-story54-retained-client-final-tests-20261006.log",
+          "bytes": 460,
+          "sha256": "78a9f14252793ddb46db26be966a0b90926b418d2e57768901624ba65c0a87e2"
+        },
+        {
+          "path": "/tmp/parties-story54-retained-client-final-tests-20261006.xml",
+          "bytes": 12525,
+          "sha256": "748bedea5fd264be72d1bc5ab7a288f39105e89ef2ce14cd59b8c4957b6e0205"
+        }
+      ],
+      "reusedUnchangedEvidence": true
+    },
+    {
+      "project": "Hexalith.Parties.Contracts.Tests",
+      "build": {
+        "executable": "dotnet",
+        "arguments": [
+          "build",
+          "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+          "-c",
+          "Debug",
+          "--artifacts-path",
+          "/tmp/hexalith-agents54-parties-artifacts",
+          "-p:UseHexalithProjectReferences=true",
+          "-p:UseNuGetDeps=false",
+          "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+          "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+          "-p:NuGetAudit=false",
+          "-m:1"
+        ],
+        "workingDirectory": "/home/administrator/projects/hexalith/parties"
+      },
+      "test": {
+        "executable": "dotnet",
+        "arguments": [
+          "/tmp/hexalith-agents54-parties-artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.Contracts.Tests.dll",
+          "-class",
+          "*PartyIdentityContractTests",
+          "-class",
+          "*ContractsPublicApiSnapshotTests",
+          "-result-xml",
+          "/tmp/parties-story54-retained-contracts-final2-tests-20261006.xml"
+        ],
+        "workingDirectory": "/home/administrator/projects/hexalith/parties"
+      },
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 0,
+      "errors": 0,
+      "files": [
+        {
+          "path": "/tmp/parties-story54-retained-contracts-final2-build-20261006.log",
+          "bytes": 3133,
+          "sha256": "90141ceb6a5a05c7e1d8e1a97b80cc564c3efb79127d6ed4a9761637b3916cf0"
+        },
+        {
+          "path": "/tmp/parties-story54-retained-contracts-final2-tests-20261006.log",
+          "bytes": 474,
+          "sha256": "8bc888999533a52f1df06f274ff632ba0572f725942833b4657d4883d0eae6f1"
+        },
+        {
+          "path": "/tmp/parties-story54-retained-contracts-final2-tests-20261006.xml",
+          "bytes": 3449,
+          "sha256": "d123e2ae171392ef679303cd422617541eed385daf3631083f56933a7b4c3baf"
+        }
+      ],
+      "reusedUnchangedEvidence": true
+    }
+  ],
+  "focusedTotal": 73,
+  "sourceFiles": [
+    {
+      "path": "/home/administrator/projects/hexalith/parties/eng/verify-ext-parties-1.ps1",
+      "bytes": 8255,
+      "sha256": "81e5340d2efe060616d594ff56b9a8736dc564edf872e2e18286f77269704352"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/eng/verify-ext-parties-history-readiness.ps1",
+      "bytes": 12891,
+      "sha256": "0e080e653a931466a03c4597f7c2ff0551fc878d6d912b155d1e47cd2ccca230"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs",
+      "bytes": 13625,
+      "sha256": "747f33405744d46390b1aad2e337d72acb0a4accf76d7124af8e10cdf66d5255"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs",
+      "bytes": 6897,
+      "sha256": "bfa7ff1402b3641ca91cbc31a2902ea5fa5f8fdf41eb4ad672f786a2256d205f"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/RetainedHumanActorBinding.cs",
+      "bytes": 459,
+      "sha256": "8f5bd2a7de7fa65a54a2134efa33dfc62a03d7c212449f5f9c1230dc911d7349"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Client/HttpPartiesIdentityClient.cs",
+      "bytes": 11710,
+      "sha256": "2399209e396a6182f5aae0cb918df1a7de6ce71505106a5760dc699af2453f3e"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Models/HumanActorBindingResult.cs",
+      "bytes": 1216,
+      "sha256": "2f8c6b2b165851080d03474c716de3e238f5351051b3961e0a7b003de5cc124b"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs",
+      "bytes": 38913,
+      "sha256": "9bac86fdaa45223a1a3b16e9ead7231feff93e585d2524b10793a11a5d02e3be"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs",
+      "bytes": 7653,
+      "sha256": "74db9bca1360fe9f2def41d995b444d7b7acc83edc5de1d7e98b543e82ace773"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/Package/ContractsPublicApiSnapshotTests.cs",
+      "bytes": 6468,
+      "sha256": "e24bc116414368e3108e2400fafb4d3fa9528633d12d4c4fefefd5160b2e2d16"
+    },
+    {
+      "path": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/Package/ContractsPublicApiSnapshot.txt",
+      "bytes": 86558,
+      "sha256": "8bb9bff4a030792e704b51767a0022c40d30fc68e6e20168b7d31566c319e406"
+    }
+  ],
+  "verifierGateSmoke": {
+    "scriptsParse": true,
+    "readinessMissingInputsExit": 1,
+    "readinessUncommittedRegisterExit": 1,
+    "httpCallsObserved": 0,
+    "liveMissingInputsExit": 1,
+    "files": [
+      {
+        "path": "/tmp/parties-story54-verifier-parser-20261006.ps1",
+        "bytes": 597,
+        "sha256": "0f89dce790bd3888a1f12ef38763b1e6dbcbbd8733afcc06aae17abef735418a"
+      },
+      {
+        "path": "/tmp/parties-story54-verifier-parser-20261006.log",
+        "bytes": 44,
+        "sha256": "0d7150276e3e95ca44f456ad663a83973714f4e3b047210f5885d301b15b4d87"
+      },
+      {
+        "path": "/tmp/parties-story54-readiness-gates-smoke-20261006.py",
+        "bytes": 2101,
+        "sha256": "1527b829e89448730f86ee6e27c0db1303e8d7af1045f0c6f5223d2f7f840721"
+      },
+      {
+        "path": "/tmp/parties-story54-readiness-gates-smoke-20261006.log",
+        "bytes": 125,
+        "sha256": "4f0f9fbc0c78e0518b77f0fc6c171ef23484be56924a13c01d1f1fdcced4933a"
+      },
+      {
+        "path": "/tmp/parties-story54-readiness-missing-inputs-20261006.log",
+        "bytes": 743,
+        "sha256": "b60add40db8bac1c2e8f01e3157ffebbfe362d011e6d3d5ecbae173cca040c99"
+      },
+      {
+        "path": "/tmp/parties-story54-readiness-register-gate-20261006.log",
+        "bytes": 448,
+        "sha256": "3f447630e9cc93c1c51913ca0f5455677e696d5c29b15f3943f78e7c42ad99dc"
+      },
+      {
+        "path": "/tmp/parties-story54-live-gate-20261006.log",
+        "bytes": 377,
+        "sha256": "494a7f949c8dadf3383453f1a00e4a0de3f31274188ca5bf97fab7eb4391dafc"
+      }
+    ]
+  },
+  "localVerifier": {
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "Local",
+      "-ArtifactsDirectory",
+      "/tmp/parties-story54-local-verifier-20261006/artifacts",
+      "-EvidenceDirectory",
+      "/tmp/parties-story54-local-verifier-20261006"
+    ],
+    "exit": 1,
+    "executedTests": 490,
+    "passed": 489,
+    "failed": 1,
+    "skipped": 0,
+    "sourceRevisionNote": "This run preceded the two final alias-negative fixtures. Those fixtures passed in the final focused domain lane.",
+    "blocker": "PartyDomainProcessorValidationTests.ProcessAsync_ProtectedHistoricalPayloadWithDestroyedKey_RedactsAndContinuesRehydration rejects json-redacted in the sibling EventStore strict replay path.",
+    "unrunProjects": [
+      "Hexalith.Parties.Security.Tests",
+      "Hexalith.Parties.Client.Tests",
+      "Hexalith.Parties.UI.Tests"
+    ],
+    "files": [
+      {
+        "path": "/tmp/parties-story54-local-verifier-20261006/local-evidence.json",
+        "bytes": 4225,
+        "sha256": "cd745ca35e7271caa7df564ba7654dc9c48d98bc392c71b287e96fc8e64341fd"
+      },
+      {
+        "path": "/tmp/parties-story54-local-verifier-20261006.log",
+        "bytes": 4007,
+        "sha256": "354abb32306389bda4881e0afdfe1780ff6f61f4b49a8d2cc0c8eafd52891f29"
+      },
+      {
+        "path": "/tmp/parties-story54-local-verifier-20261006/Hexalith.EventStore.Client.Tests-tests.xml",
+        "bytes": 68152,
+        "sha256": "15aa257795353f4271f395402fc2367e017838cec4ce8a73bbb35a2e51590817"
+      },
+      {
+        "path": "/tmp/parties-story54-local-verifier-20261006/Hexalith.EventStore.Contracts.Tests-tests.xml",
+        "bytes": 16014,
+        "sha256": "720bbf1cdc8b1402467081641a209fcab8b9febe9400e66f31b7acd25fecfab8"
+      },
+      {
+        "path": "/tmp/parties-story54-local-verifier-20261006/Hexalith.EventStore.Server.Tests-tests.xml",
+        "bytes": 92301,
+        "sha256": "a9b324aed77f94906c942e7cc928442ae8fb450b75046b327993ab402c7e5ccc"
+      },
+      {
+        "path": "/tmp/parties-story54-local-verifier-20261006/Hexalith.Parties.Contracts.Tests-tests.xml",
+        "bytes": 18693,
+        "sha256": "3bf41d81e7a211aaf93ef19fec0fbbbec1ab19a8721a2a9fe6c35c368acf99f8"
+      },
+      {
+        "path": "/tmp/parties-story54-local-verifier-20261006/Hexalith.Parties.Server.Tests-tests.xml",
+        "bytes": 63309,
+        "sha256": "53dc3f6193c8fd65df3ac6ea5246815fed336a5363201ab893a26682c64193fd"
+      },
+      {
+        "path": "/tmp/parties-story54-local-verifier-20261006/Hexalith.Parties.Tests-tests.xml",
+        "bytes": 72763,
+        "sha256": "8e5cad8f3375a6c407fa39dfc86421554691bcf60ab4623749e3b21ebda88821"
+      },
+      {
+        "path": "/tmp/parties-story54-local-verifier-20261006/Hexalith.Platform.Identity.Tests-tests.xml",
+        "bytes": 2521,
+        "sha256": "7006ec02c7d1c144161290ef2accdcff66c01de8c9bc68e6bac755d7bae8b13e"
+      }
+    ]
+  },
+  "liveCallsPerformed": 0,
+  "liveQualificationEstablished": false,
+  "productionPolicySelected": false,
+  "productionCustodyProviderInstalled": false,
+  "historicalFocusedSourceLanes": [
+    {
+      "project": "Hexalith.Parties.Tests",
+      "build": {
+        "executable": "dotnet",
+        "arguments": [
+          "build",
+          "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+          "-c",
+          "Debug",
+          "--artifacts-path",
+          "/tmp/hexalith-agents54-parties-artifacts",
+          "-p:UseHexalithProjectReferences=true",
+          "-p:UseNuGetDeps=false",
+          "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+          "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+          "-p:HexalithMemoriesRoot=/tmp/parties-no-memories-source",
+          "-p:NuGetAudit=false",
+          "-m:1"
+        ],
+        "workingDirectory": "/home/administrator/projects/hexalith/parties"
+      },
+      "test": {
+        "executable": "dotnet",
+        "arguments": [
+          "/tmp/hexalith-agents54-parties-artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+          "-class",
+          "*PartyIdentityQueryHandlerTests",
+          "-class",
+          "*PartyIdentityAdmissionTests",
+          "-result-xml",
+          "/tmp/parties-story54-retained-domain-final3-tests-20261006.xml"
+        ],
+        "workingDirectory": "/home/administrator/projects/hexalith/parties"
+      },
+      "total": 38,
+      "passed": 38,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 0,
+      "errors": 0,
+      "files": [
+        {
+          "path": "/tmp/parties-story54-retained-domain-final3-build-20261006.log",
+          "bytes": 5360,
+          "sha256": "8c6aeec82b0b1d1b0c65e4a23d9152b6170094cd081adcefa75271f9da8cfb44"
+        },
+        {
+          "path": "/tmp/parties-story54-retained-domain-final3-tests-20261006.log",
+          "bytes": 425,
+          "sha256": "4862071e94478c416f5baf7d2b0f24f416e29328d177b8296063fae5326db1ac"
+        },
+        {
+          "path": "/tmp/parties-story54-retained-domain-final3-tests-20261006.xml",
+          "bytes": 25965,
+          "sha256": "33f5cef8f0d72285b6d7855b003eb20a14b9489137b26d61abbf1d011df1b8d4"
+        }
+      ]
+    }
+  ],
+  "reviewFixObservedHead": "b3794a4dcbe2fff3e9ea5c420a3c4695e2d1a8ca",
+  "reviewFix": "Entry, bounded outstanding waits, post-await and terminal caller cancellation; 14 new cases, including cancelled false/true custody returns without final authority lookup."
+}

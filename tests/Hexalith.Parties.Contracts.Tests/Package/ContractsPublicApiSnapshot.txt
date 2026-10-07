@@ -455,6 +455,7 @@ type class Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence interface
 type class Hexalith.Parties.Contracts.Models.HumanActorBindingResult interfaces:System.IEquatable<Hexalith.Parties.Contracts.Models.HumanActorBindingResult>
   ctor (Hexalith.Parties.Contracts.ValueObjects.HumanActorBindingOutcome Outcome, System.Int32 ContractVersion, System.String TenantId, System.String PartyId, System.DateTimeOffset ActionAt, System.Int64 SourcePosition, System.String ObservationId, Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence Evidence)
   property System.DateTimeOffset ActionAt getset
+  property System.Int64 BindingSourcePosition getset
   property System.Int32 ContractVersion getset
   property Hexalith.Parties.Contracts.Models.HumanActorBindingEvidence Evidence getset
   property System.String ObservationId getset
