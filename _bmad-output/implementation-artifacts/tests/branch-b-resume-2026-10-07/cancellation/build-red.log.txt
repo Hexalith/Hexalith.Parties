@@ -1,0 +1,70 @@
+  Determining projects to restore...
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/Hexalith.Commons.Http.csproj (in 100 ms).
+  Restored /home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore.Admin.Abstractions/Hexalith.EventStore.Admin.Abstractions.csproj (in 183 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj (in 183 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj (in 183 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj (in 2 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Client/Hexalith.Tenants.Client.csproj (in 11 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/Hexalith.Commons.ServiceDefaults.csproj (in 212 ms).
+  Restored /home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore.ServiceDefaults/Hexalith.EventStore.ServiceDefaults.csproj (in 213 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj (in 3 ms).
+  Restored /home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore.DomainService/Hexalith.EventStore.DomainService.csproj (in 212 ms).
+  Restored /home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore/Hexalith.EventStore.csproj (in 214 ms).
+  Restored /home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj (in 3 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Hexalith.Tenants.Contracts.csproj (in 4 ms).
+  Restored /home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore.Gateway/Hexalith.EventStore.Gateway.csproj (in 10 ms).
+  Restored /home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore.Client/Hexalith.EventStore.Client.csproj (in 232 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj (in 232 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj (in 238 ms).
+  Restored /home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore.Server/Hexalith.EventStore.Server.csproj (in 240 ms).
+  Restored /home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore.Testing/Hexalith.EventStore.Testing.csproj (in 241 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Server/Hexalith.Tenants.Server.csproj (in 49 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Testing/Hexalith.Tenants.Testing.csproj (in 50 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons/Hexalith.Commons.csproj (in 288 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Hexalith.Parties.csproj (in 67 ms).
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj (in 265 ms).
+  Hexalith.Commons.UniqueIds -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Commons.UniqueIds/debug/Hexalith.Commons.UniqueIds.dll
+  Successfully created package '/tmp/ext-parties-1-cancellation-20261007/artifacts/package/debug/Hexalith.Commons.UniqueIds.1.0.0.nupkg'.
+  Successfully created package '/tmp/ext-parties-1-cancellation-20261007/artifacts/package/debug/Hexalith.Commons.UniqueIds.1.0.0.snupkg'.
+  Hexalith.EventStore.Contracts -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.Contracts/debug/Hexalith.EventStore.Contracts.dll
+  Hexalith.Parties.Contracts -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Parties.Contracts/debug/Hexalith.Parties.Contracts.dll
+  Hexalith.Parties.Authentication -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Parties.Authentication/debug/Hexalith.Parties.Authentication.dll
+  Hexalith.EventStore.Client -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.Client/debug/Hexalith.EventStore.Client.dll
+  Hexalith.EventStore.ServiceDefaults -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.ServiceDefaults/debug/Hexalith.EventStore.ServiceDefaults.dll
+  Hexalith.EventStore.DomainService -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.DomainService/debug/Hexalith.EventStore.DomainService.dll
+  Hexalith.Parties.Projections -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Parties.Projections/debug/Hexalith.Parties.Projections.dll
+  Hexalith.Commons.Http -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Commons.Http/debug/Hexalith.Commons.Http.dll
+  Successfully created package '/tmp/ext-parties-1-cancellation-20261007/artifacts/package/debug/Hexalith.Commons.Http.1.0.0.nupkg'.
+  Successfully created package '/tmp/ext-parties-1-cancellation-20261007/artifacts/package/debug/Hexalith.Commons.Http.1.0.0.snupkg'.
+  Hexalith.Parties.Security -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Parties.Security/debug/Hexalith.Parties.Security.dll
+  Hexalith.Commons -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Commons/debug/Hexalith.Commons.dll
+  Hexalith.Commons.UniqueIds -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Commons.UniqueIds/debug/Hexalith.Commons.UniqueIds.dll
+  Successfully created package '/tmp/ext-parties-1-cancellation-20261007/artifacts/package/debug/Hexalith.Commons.UniqueIds.3.115.0.nupkg'.
+  Successfully created package '/tmp/ext-parties-1-cancellation-20261007/artifacts/package/debug/Hexalith.Commons.UniqueIds.3.115.0.snupkg'.
+  Hexalith.EventStore.Contracts -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.Contracts/debug/Hexalith.EventStore.Contracts.dll
+  Hexalith.Tenants.Contracts -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Tenants.Contracts/debug/Hexalith.Tenants.Contracts.dll
+  Hexalith.EventStore.Client -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.Client/debug/Hexalith.EventStore.Client.dll
+  Hexalith.Tenants.Client -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Tenants.Client/debug/Hexalith.Tenants.Client.dll
+  Hexalith.Parties -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Parties/debug/Hexalith.Parties.dll
+  Hexalith.Parties.Testing -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Parties.Testing/debug/Hexalith.Parties.Testing.dll
+  Hexalith.EventStore.Admin.Abstractions -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.Admin.Abstractions/debug/Hexalith.EventStore.Admin.Abstractions.dll
+  Hexalith.EventStore.Server -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.Server/debug/Hexalith.EventStore.Server.dll
+  Hexalith.EventStore.Gateway -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.Gateway/debug/Hexalith.EventStore.Gateway.dll
+  Hexalith.EventStore -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore/debug/Hexalith.EventStore.dll
+  Hexalith.EventStore.Testing -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.Testing/debug/Hexalith.EventStore.Testing.dll
+  Hexalith.Commons.ServiceDefaults -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Commons.ServiceDefaults/debug/Hexalith.Commons.ServiceDefaults.dll
+  The package Hexalith.Commons.ServiceDefaults.1.0.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package '/tmp/ext-parties-1-cancellation-20261007/artifacts/package/debug/Hexalith.Commons.ServiceDefaults.1.0.0.nupkg'.
+  Successfully created package '/tmp/ext-parties-1-cancellation-20261007/artifacts/package/debug/Hexalith.Commons.ServiceDefaults.1.0.0.snupkg'.
+  Hexalith.EventStore.ServiceDefaults -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.ServiceDefaults/debug/Hexalith.EventStore.ServiceDefaults.dll
+  Hexalith.EventStore.DomainService -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.DomainService/debug/Hexalith.EventStore.DomainService.dll
+  Hexalith.EventStore.Server -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.Server/debug/Hexalith.EventStore.Server.dll
+  Hexalith.Tenants.Server -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Tenants.Server/debug/Hexalith.Tenants.Server.dll
+  Hexalith.Tenants.Testing -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Tenants.Testing/debug/Hexalith.Tenants.Testing.dll
+  Hexalith.Parties.Tests -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:15.91

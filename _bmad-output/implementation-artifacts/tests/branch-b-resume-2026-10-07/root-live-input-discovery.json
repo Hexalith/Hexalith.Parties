@@ -1,0 +1,184 @@
+{
+  "observedAt": "2026-10-07T14:04:53.704801+00:00",
+  "purpose": "User requested independent discovery of live Branch B inputs; read-only inspection, no activation or qualification.",
+  "repositories": {
+    "parties": "f4c5e83dfb884ef086bbdbad479955564ea16d9c",
+    "eventstore": "40c92e085d8a6463d469c1b340c410fec84a690f",
+    "platform": "5f945450d4140fd190594a30b60a603521ec4e30",
+    "agents": "c92cfdb5607fa15aa56a613e86c6227406504351"
+  },
+  "readOnlyObservations": [
+    {
+      "command": [
+        "kubectl",
+        "config",
+        "get-contexts",
+        "-o",
+        "name"
+      ],
+      "exitCode": 0,
+      "contexts": [
+        "jpiquot@local"
+      ]
+    },
+    {
+      "command": [
+        "kubectl",
+        "--context",
+        "jpiquot@local",
+        "get",
+        "deployments,statefulsets",
+        "-A",
+        "-o",
+        "custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name,IMAGES:.spec.template.spec.containers[*].image",
+        "--request-timeout=10s"
+      ],
+      "exitCode": 0,
+      "result": "No Parties, EventStore, Platform identity, or actor-history custody workload found. OpenBao hexalith-keys exists but has no located qualified IIdentityHistoryCustody adapter."
+    },
+    {
+      "command": [
+        "kubectl",
+        "--context",
+        "jpiquot@local",
+        "get",
+        "ingress",
+        "-A",
+        "-o",
+        "custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name,HOSTS:.spec.rules[*].host",
+        "--request-timeout=10s"
+      ],
+      "exitCode": 0,
+      "result": "Ingress hosts are repository.tache.ai, auth.tache.ai, llm.tache.ai, registry.hexalith.com and registry.tache.ai. No Parties or EventStore gateway ingress."
+    },
+    {
+      "command": [
+        "docker",
+        "ps",
+        "--format",
+        "{{.Names}}\t{{.Image}}\t{{.Status}}"
+      ],
+      "exitCode": 0,
+      "containerNames": [
+        "dapr_placement",
+        "dapr_scheduler",
+        "dapr_redis",
+        "dapr_zipkin"
+      ]
+    },
+    {
+      "command": [
+        "rg",
+        "-n",
+        "--glob",
+        "*.cs",
+        "--glob",
+        "!**/references/**",
+        "--glob",
+        "!**/tests/**",
+        "--glob",
+        "!**/test/**",
+        "--glob",
+        "!**/obj/**",
+        "--glob",
+        "!**/bin/**",
+        "--glob",
+        "!**/_bmad-output/**",
+        ":\\s*IIdentityHistoryCustody|Add(Singleton|Scoped|Transient)<IIdentityHistoryCustody|TryAdd(Singleton|Scoped|Transient)<IIdentityHistoryCustody",
+        "/home/administrator/projects/hexalith"
+      ],
+      "exitCode": 1,
+      "result": "No production implementation or generic DI registration matched in workspace source. A separate scan of owner tests finds only Platform IdentityHistoryCleanupFixture."
+    },
+    {
+      "inspection": "Process environment names only",
+      "result": "No EXT_PARTIES environment variable is set; no credential values were printed."
+    },
+    {
+      "inspection": "GitHub connector GET https://api.github.com/repos/Hexalith/Hexalith.Parties/issues/54 and /comments",
+      "issueUrl": "https://github.com/Hexalith/Hexalith.Parties/issues/54",
+      "state": "open",
+      "comments": 0,
+      "result": "No accepted target, integration date, or full live compatibility command in the issue or replies."
+    },
+    {
+      "inspection": "Canonical Agents external-dependency register EXT-PARTIES-1 section",
+      "path": "../agents/_bmad-output/planning-artifacts/external-dependency-register.md",
+      "acceptedStatus": "Uncommitted",
+      "targetVersionOrCommit": "TBD",
+      "targetIntegrationDate": "TBD",
+      "compatibilityCommand": "TBD"
+    },
+    {
+      "inspection": "Approved policy and current shared source/custody contracts",
+      "policyPath": "_bmad-output/planning-artifacts/actor-history-retention-policy-v1.md",
+      "policyId": "party-actor-retention-v1",
+      "retentionDays": 365,
+      "expiryTrigger": "binding-effective-at",
+      "result": "Policy scope/duration are approved. Production custody/restore qualification remains absent. RetainedIdentityHistoryStream excludes only profile/non-attribution positions; IIdentityHistoryCustody has no authenticated actor-free expired-transition or all-copy receipt transport."
+    }
+  ],
+  "azureReadOnlyObservations": [
+    {
+      "command": [
+        "az",
+        "resource",
+        "list",
+        "--subscription",
+        "97ee7505-af6f-427d-9741-2dce0ab5ae8a",
+        "--query",
+        "[].{name:name,type:type,location:location}",
+        "-o",
+        "json"
+      ],
+      "account": "Stradal-we-sub02",
+      "exitCode": 1,
+      "blocker": "MSAL token cache has no login for the selected account; az login is required."
+    },
+    {
+      "command": [
+        "az",
+        "resource",
+        "list",
+        "--subscription",
+        "12dca1a0-fe5b-4841-93db-04a5b58b6085",
+        "--query",
+        "[].{name:name,type:type,location:location}",
+        "-o",
+        "json"
+      ],
+      "account": "ITANEO",
+      "exitCode": 0,
+      "resourceCount": 8,
+      "matchingTargets": [
+        {
+          "name": "hexalithevidence",
+          "type": "Microsoft.Storage/storageAccounts",
+          "location": "francecentral"
+        }
+      ]
+    },
+    {
+      "command": [
+        "az",
+        "resource",
+        "list",
+        "--subscription",
+        "09355027-e6c8-4fbc-a674-888be8fecc07",
+        "--query",
+        "[].{name:name,type:type,location:location}",
+        "-o",
+        "json"
+      ],
+      "account": "MCPP Subscription",
+      "exitCode": 0,
+      "resourceCount": 0,
+      "matchingTargets": []
+    }
+  ],
+  "limits": [
+    "Discovery is limited to the configured Kubernetes context, Docker daemon, current environment, workspace source/records, accessible cached Azure accounts, and the referenced GitHub issue.",
+    "One Azure subscription is inaccessible without new authentication. Generic key storage and evidence storage do not qualify an actor-history provider.",
+    "No missing approval, target, integration date, provider, receipt or live test result was inferred from this discovery."
+  ]
+}

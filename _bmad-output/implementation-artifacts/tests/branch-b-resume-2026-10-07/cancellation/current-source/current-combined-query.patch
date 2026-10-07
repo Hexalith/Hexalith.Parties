@@ -1,0 +1,540 @@
+diff --git a/eng/verify-ext-parties-1.ps1 b/eng/verify-ext-parties-1.ps1
+index aaf300e0..78b701b7 100644
+--- a/eng/verify-ext-parties-1.ps1
++++ b/eng/verify-ext-parties-1.ps1
+@@ -52,7 +52,7 @@ $lanes = @(
+     @{ Root=$PlatformRoot; Project='Hexalith.Platform.Identity.Tests'; Classes=@('*PlatformIdentityAdmissionTests'); Matrix='Global registry/bootstrap' },
+     @{ Root=$PartiesRoot; Project='Hexalith.Parties.Contracts.Tests'; Classes=@('*PartyStateTests', '*PartyIdentityContractTests', '*ContractsPublicApiSnapshotTests'); Matrix='History/compatibility' },
+     @{ Root=$PartiesRoot; Project='Hexalith.Parties.Server.Tests'; Classes=@('*AgentPartyProvisioningTests', '*HumanActorBindingTests', '*PartyAggregateCreateTests', '*PartyAggregateCompositeTests'); Matrix='Provision/history' },
+-    @{ Root=$PartiesRoot; Project='Hexalith.Parties.Tests'; Classes=@('*PartyIdentityAdmissionTests', '*PartyIdentityQueryHandlerTests', '*PartyDomainProcessorValidationTests', '*PartySdkQueryHandlerTests', '*PartiesProcessEndpointTests', '*PartiesDomainServiceSecurityTests'); Matrix='Current identity/history/isolation' },
++    @{ Root=$PartiesRoot; Project='Hexalith.Parties.Tests'; Classes=@('*PartyIdentityAdmissionTests', '*PartyIdentityQueryHandlerTests', '*PartyIdentityRetentionConfigurationTests', '*PartyDomainProcessorValidationTests', '*PartySdkQueryHandlerTests', '*PartiesProcessEndpointTests', '*PartiesDomainServiceSecurityTests'); Matrix='Current identity/history/isolation' },
+     @{ Root=$PartiesRoot; Project='Hexalith.Parties.Security.Tests'; Classes=@('*IdentityHistoryProtectionTests', '*PartyPayloadProtectionServiceTests'); Matrix='Custody separation/denial' },
+     @{ Root=$PartiesRoot; Project='Hexalith.Parties.Client.Tests'; Classes=@('*HttpPartiesIdentityClientTests', '*HttpPartiesCommandClientTests', '*HttpPartiesQueryClientTests', '*DependencyInjectionTests'); Matrix='Isolation/compatibility' },
+     @{ Root=$PartiesRoot; Project='Hexalith.Parties.UI.Tests'; Classes=@('*IdentityBindingBoundaryTests', '*IdentityBindingProvisioningServiceTests', '*PartyIdClaimResolverTests', '*SelfScopedPartiesClientTests'); Matrix='Consumer compatibility' }
+diff --git a/src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs b/src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs
+index 2c8ed7c2..7abe7c35 100644
+--- a/src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs
++++ b/src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs
+@@ -9,27 +9,40 @@ internal sealed class PartyIdentityQueryDeadline : IDisposable
+     private readonly TimeSpan _timeout;
+     private readonly CancellationTokenSource _timeoutSource;
+     private readonly CancellationTokenSource _linkedSource;
++    private readonly CancellationTokenSource _providerSource = new();
++    private Task? _providerCancellation;
+ 
+-    /// <summary>Starts one finite deadline measured by the owning service's clock.</summary>
+-    public PartyIdentityQueryDeadline(TimeSpan timeout, TimeProvider timeProvider, CancellationToken callerToken)
++    /// <summary>Starts the remaining timer for one finite budget measured from query entry.</summary>
++    public PartyIdentityQueryDeadline(TimeSpan timeout, TimeProvider timeProvider, CancellationToken callerToken, long startedAt)
+     {
+         _callerToken = callerToken;
+         _timeProvider = timeProvider;
+-        _startedAt = timeProvider.GetTimestamp();
++        _startedAt = startedAt;
+         _timeout = timeout;
+-        _timeoutSource = new(timeout, timeProvider);
++        TimeSpan remaining = timeout - timeProvider.GetElapsedTime(startedAt);
++        _timeoutSource = new(remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, timeProvider);
+         _linkedSource = CancellationTokenSource.CreateLinkedTokenSource(callerToken, _timeoutSource.Token);
+     }
+ 
+     /// <summary>Rejects caller cancellation first, then elapsed or timer-expired deadlines.</summary>
+     public void ThrowIfCancellationRequested()
+     {
++        if (_callerToken.IsCancellationRequested)
++        {
++            CancelProvider();
++        }
++
+         _callerToken.ThrowIfCancellationRequested();
+         if (_timeProvider.GetElapsedTime(_startedAt) >= _timeout)
+         {
+             _timeoutSource.Cancel();
+         }
+ 
++        if (_linkedSource.IsCancellationRequested)
++        {
++            CancelProvider();
++        }
++
+         _linkedSource.Token.ThrowIfCancellationRequested();
+     }
+ 
+@@ -37,15 +50,41 @@ internal sealed class PartyIdentityQueryDeadline : IDisposable
+     public async Task<T> ReadAsync<T>(Func<CancellationToken, Task<T>> read)
+     {
+         ThrowIfCancellationRequested();
+-        CancellationToken token = _linkedSource.Token;
++        CancellationToken token = _providerSource.Token;
+         Task<T> pending = Task.Run(() => read(token), token);
+         // A provider can fault after the caller has stopped waiting. Observe that fault
+         // without ever resuming the identity query or releasing its result.
+         _ = pending.ContinueWith(static task => { _ = task.Exception; }, CancellationToken.None,
+             TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+-        T result = await pending.WaitAsync(token).ConfigureAwait(false);
+-        ThrowIfCancellationRequested();
+-        return result;
++        try
++        {
++            // The query's private token has no provider callbacks. A provider may block
++            // indefinitely in its own cancellation callback without delaying this wait.
++            T result = await pending.WaitAsync(_linkedSource.Token).ConfigureAwait(false);
++            ThrowIfCancellationRequested();
++            return result;
++        }
++        finally
++        {
++            if (_linkedSource.IsCancellationRequested)
++            {
++                CancelProvider();
++            }
++        }
++    }
++
++    private void CancelProvider()
++    {
++        if (_providerCancellation is not null)
++        {
++            return;
++        }
++
++        // CancelAsync signals the token immediately and runs provider callbacks away
++        // from the query continuation. Callback failures must never release evidence.
++        _providerCancellation = _providerSource.CancelAsync();
++        _ = _providerCancellation.ContinueWith(static task => { _ = task.Exception; }, CancellationToken.None,
++            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+     }
+ 
+     /// <inheritdoc/>
+@@ -53,5 +92,15 @@ internal sealed class PartyIdentityQueryDeadline : IDisposable
+     {
+         _linkedSource.Dispose();
+         _timeoutSource.Dispose();
++        if (_providerCancellation is { IsCompleted: false } cancellation)
++        {
++            // Cleanup also stays independent of callbacks that have not returned yet.
++            _ = cancellation.ContinueWith(static (_, state) => ((CancellationTokenSource)state!).Dispose(),
++                _providerSource, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
++        }
++        else
++        {
++            _providerSource.Dispose();
++        }
+     }
+ }
+diff --git a/src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs b/src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs
+index d2e47305..46f430e1 100644
+--- a/src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs
++++ b/src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs
+@@ -28,6 +28,7 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
+     {
+         ArgumentNullException.ThrowIfNull(envelope);
+         cancellationToken.ThrowIfCancellationRequested();
++        long startedAt = timeProvider.GetTimestamp();
+         try
+         {
+             PartyIdentityOptions? options = identityOptions?.CurrentValue;
+@@ -38,7 +39,7 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
+                 return new(PartyIdentityOutcome.Unavailable, null);
+             }
+ 
+-            using var deadline = new PartyIdentityQueryDeadline(timeout, timeProvider, cancellationToken);
++            using var deadline = new PartyIdentityQueryDeadline(timeout, timeProvider, cancellationToken, startedAt);
+             deadline.ThrowIfCancellationRequested();
+             IdentityHistoryPolicy? policy = options?.Policy;
+             ResolvePartyIdentity? query = JsonSerializer.Deserialize<ResolvePartyIdentity>(envelope.Payload, PartiesJsonOptions.Default);
+@@ -153,6 +154,7 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
+     {
+         ArgumentNullException.ThrowIfNull(envelope);
+         cancellationToken.ThrowIfCancellationRequested();
++        long startedAt = timeProvider.GetTimestamp();
+         ResolveHumanActorBindingAt? query = null;
+         try
+         {
+@@ -165,7 +167,7 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
+                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
+             }
+ 
+-            using var deadline = new PartyIdentityQueryDeadline(timeout, timeProvider, cancellationToken);
++            using var deadline = new PartyIdentityQueryDeadline(timeout, timeProvider, cancellationToken, startedAt);
+             deadline.ThrowIfCancellationRequested();
+             IdentityHistoryPolicy? policy = options?.Policy;
+             if (query is null || !Matches(envelope, query.TenantId, query.PartyId)
+diff --git a/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs b/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs
+index d7ef6626..592b355a 100644
+--- a/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs
++++ b/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs
+@@ -930,13 +930,22 @@ public sealed class PartyIdentityQueryHandlerTests
+         var (clock, advance) = DeadlineClock();
+         var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, fixture.HistoryReader, fixture.Options);
+         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        var providerReturned = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+         CancellationToken providerToken = default;
+         Action complete;
++        async Task<T> FinishProviderAsync<T>(Task<T> pending, CancellationToken token)
++        {
++            providerToken = token;
++            entered.TrySetResult();
++            try { return await pending.ConfigureAwait(false); }
++            finally { providerReturned.TrySetResult(); }
++        }
++
+         if (inCustody)
+         {
+             var pending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+             fixture.Custody.CanReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<IdentityHistoryCustodyEvidence>(), Arg.Any<CancellationToken>())
+-                .Returns(call => { providerToken = call.Arg<CancellationToken>(); entered.TrySetResult(); return pending.Task; });
++                .Returns(call => FinishProviderAsync(pending.Task, call.Arg<CancellationToken>()));
+             complete = () => { if (lateFault) { pending.SetException(new HttpRequestException("late synthetic fault")); } else { pending.SetResult(true); } };
+         }
+         else if (historical)
+@@ -944,7 +953,7 @@ public sealed class PartyIdentityQueryHandlerTests
+             RetainedIdentityHistoryReadResult valid = await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"), RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken);
+             var pending = new TaskCompletionSource<RetainedIdentityHistoryReadResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+             fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+-                .Returns(call => { providerToken = call.Arg<CancellationToken>(); entered.TrySetResult(); return pending.Task; });
++                .Returns(call => FinishProviderAsync(pending.Task, call.Arg<CancellationToken>()));
+             complete = () => { if (lateFault) { pending.SetException(new HttpRequestException("late synthetic fault")); } else { pending.SetResult(valid); } };
+         }
+         else
+@@ -952,7 +961,7 @@ public sealed class PartyIdentityQueryHandlerTests
+             AuthoritativeStreamReadResult valid = await fixture.Reader.ReadAsync(new("tenant-a", "party", "party-1"), TestContext.Current.CancellationToken);
+             var pending = new TaskCompletionSource<AuthoritativeStreamReadResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+             fixture.Reader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<CancellationToken>())
+-                .Returns(call => { providerToken = call.Arg<CancellationToken>(); entered.TrySetResult(); return pending.Task; });
++                .Returns(call => FinishProviderAsync(pending.Task, call.Arg<CancellationToken>()));
+             complete = () => { if (lateFault) { pending.SetException(new HttpRequestException("late synthetic fault")); } else { pending.SetResult(valid); } };
+         }
+ 
+@@ -963,8 +972,9 @@ public sealed class PartyIdentityQueryHandlerTests
+         await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+         providerToken.IsCancellationRequested.ShouldBeTrue();
+         int authorityCalls = fixture.Authority.ReceivedCalls().Count();
++        providerReturned.Task.IsCompleted.ShouldBeFalse();
+         complete();
+-        await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++        await providerReturned.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+         fixture.Authority.ReceivedCalls().Count().ShouldBe(authorityCalls);
+         if (!inCustody)
+         {
+@@ -1142,7 +1152,306 @@ public sealed class PartyIdentityQueryHandlerTests
+         exception.CancellationToken.ShouldBe(caller.Token);
+     }
+ 
+-    private static (TimeProvider Clock, Action<TimeSpan, bool> Advance) DeadlineClock()
++    /// <summary>Provider cancellation callbacks cannot hold deadline or caller result completion hostage.</summary>
++    [Theory]
++    [InlineData(false, false, "timer")]
++    [InlineData(true, false, "timer")]
++    [InlineData(false, true, "timer")]
++    [InlineData(true, true, "timer")]
++    [InlineData(false, false, "elapsed")]
++    [InlineData(true, false, "elapsed")]
++    [InlineData(false, true, "elapsed")]
++    [InlineData(true, true, "elapsed")]
++    [InlineData(false, false, "caller")]
++    [InlineData(true, false, "caller")]
++    [InlineData(false, true, "caller")]
++    [InlineData(true, true, "caller")]
++    public async Task BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion(bool historical, bool inCustody, string trigger)
++    {
++        var fixture = Service(Events());
++        var (clock, advance) = DeadlineClock();
++        using var caller = new CancellationTokenSource();
++        using var release = new ManualResetEventSlim();
++        var providerEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        var cancellationEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        var cancellationReturned = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        CancellationToken providerToken = default;
++        Action complete;
++        if (inCustody)
++        {
++            var pending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
++            fixture.Custody.CanReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<IdentityHistoryCustodyEvidence>(), Arg.Any<CancellationToken>())
++                .Returns(call => { providerToken = call.Arg<CancellationToken>(); providerEntered.TrySetResult(); return pending.Task; });
++            complete = () => pending.TrySetResult(true);
++        }
++        else if (historical)
++        {
++            RetainedIdentityHistoryReadResult valid = await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"), RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken);
++            var pending = new TaskCompletionSource<RetainedIdentityHistoryReadResult>(TaskCreationOptions.RunContinuationsAsynchronously);
++            fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
++                .Returns(call => { providerToken = call.Arg<CancellationToken>(); providerEntered.TrySetResult(); return pending.Task; });
++            complete = () => pending.TrySetResult(valid);
++        }
++        else
++        {
++            AuthoritativeStreamReadResult valid = await fixture.Reader.ReadAsync(new("tenant-a", "party", "party-1"), TestContext.Current.CancellationToken);
++            var pending = new TaskCompletionSource<AuthoritativeStreamReadResult>(TaskCreationOptions.RunContinuationsAsynchronously);
++            fixture.Reader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<CancellationToken>())
++                .Returns(call => { providerToken = call.Arg<CancellationToken>(); providerEntered.TrySetResult(); return pending.Task; });
++            complete = () => pending.TrySetResult(valid);
++        }
++
++        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, fixture.HistoryReader, fixture.Options);
++        Task result = trigger == "caller" ? InvokeIdentityAsync(service, historical, caller.Token) : AssertUnavailableAsync(service, historical);
++        await providerEntered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++        // Register after the query suspended, making this provider callback the last callback
++        // registered on its token. It remains blocked until the test's finally releases it.
++        using CancellationTokenRegistration registration = providerToken.Register(() =>
++        {
++            cancellationEntered.TrySetResult();
++            release.Wait(TestContext.Current.CancellationToken);
++            cancellationReturned.TrySetResult();
++        });
++        Task cancellation = Task.CompletedTask;
++        try
++        {
++            if (trigger == "elapsed")
++            {
++                advance(TimeSpan.FromSeconds(30), false);
++                complete();
++            }
++            else
++            {
++                cancellation = Task.Run(() =>
++                {
++                    if (trigger == "caller") { caller.Cancel(); }
++                    else { advance(TimeSpan.FromSeconds(30), true); }
++                }, TestContext.Current.CancellationToken);
++            }
++
++            await cancellationEntered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++            if (trigger == "caller")
++            {
++                OperationCanceledException exception = await Should.ThrowAsync<OperationCanceledException>(() => result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken));
++                exception.CancellationToken.ShouldBe(caller.Token);
++            }
++            else
++            {
++                await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++            }
++
++            cancellationReturned.Task.IsCompleted.ShouldBeFalse();
++            providerToken.IsCancellationRequested.ShouldBeTrue();
++            if (!inCustody)
++            {
++                await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
++            }
++        }
++        finally
++        {
++            release.Set();
++            complete();
++            await cancellationReturned.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++            await cancellation.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++            try { await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken); }
++            catch (OperationCanceledException) when (caller.IsCancellationRequested) { }
++        }
++    }
++
++    /// <summary>Initial options access consumes the same budget instead of resetting the source timer.</summary>
++    [Theory]
++    [InlineData(false, false)]
++    [InlineData(true, false)]
++    [InlineData(false, true)]
++    [InlineData(true, true)]
++    public async Task WholeQueryDeadline_SetupTimeConsumesOperationBudget(bool historical, bool exhausted)
++    {
++        var fixture = Service(Events());
++        var (clock, advance) = DeadlineClock();
++        PartyIdentityOptions configured = PolicyOptions();
++        configured.QueryTimeout = TimeSpan.FromSeconds(10);
++        int optionsReads = 0;
++        fixture.Options.CurrentValue.Returns(_ =>
++        {
++            if (++optionsReads == 1) { advance(TimeSpan.FromSeconds(exhausted ? 10 : 7), false); }
++            return configured;
++        });
++        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        var pending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
++        fixture.Custody.CanReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<IdentityHistoryCustodyEvidence>(), Arg.Any<CancellationToken>())
++            .Returns(_ => { entered.SetResult(); return pending.Task; });
++        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, fixture.HistoryReader, fixture.Options);
++        Task result = AssertUnavailableAsync(service, historical);
++        if (!exhausted)
++        {
++            await entered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++            advance(TimeSpan.FromSeconds(2), true);
++            result.IsCompleted.ShouldBeFalse();
++            advance(TimeSpan.FromSeconds(1), true);
++        }
++
++        await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++        if (exhausted)
++        {
++            fixture.Authority.DidNotReceiveWithAnyArgs().Admit(default(QueryEnvelope)!);
++            await fixture.Reader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default);
++            await fixture.HistoryReader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default!, default);
++        }
++        else
++        {
++            clock.Received(1).CreateTimer(Arg.Any<TimerCallback>(), Arg.Any<object?>(), TimeSpan.FromSeconds(3), Timeout.InfiniteTimeSpan);
++        }
++
++        pending.TrySetResult(true);
++    }
++
++    /// <summary>Caller cancellation before verdict release wins an already-started deadline or dependency fault.</summary>
++    [Theory]
++    [InlineData(false, "deadline")]
++    [InlineData(true, "deadline")]
++    [InlineData(false, "fault")]
++    [InlineData(true, "fault")]
++    public async Task CallerCancellationAfterDeadlineOrFaultBeforeVerdict_PreservesOriginalToken(bool historical, string trigger)
++    {
++        var fixture = Service(Events());
++        using var caller = new CancellationTokenSource();
++        using var releaseVerdict = new ManualResetEventSlim();
++        var disposing = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        var (clock, advance) = DeadlineClock(() =>
++        {
++            disposing.TrySetResult();
++            releaseVerdict.Wait(TestContext.Current.CancellationToken);
++        });
++        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        var pending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
++        fixture.Custody.CanReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<IdentityHistoryCustodyEvidence>(), Arg.Any<CancellationToken>())
++            .Returns(_ => { entered.SetResult(); return pending.Task; });
++        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, fixture.HistoryReader, fixture.Options);
++        Task result = InvokeIdentityAsync(service, historical, caller.Token);
++        Task failure = Task.CompletedTask;
++        try
++        {
++            await entered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++            failure = Task.Run(() =>
++            {
++                if (trigger == "deadline") { advance(TimeSpan.FromSeconds(30), true); }
++                else { pending.SetException(new HttpRequestException("synthetic fault before caller cancellation")); }
++            }, TestContext.Current.CancellationToken);
++            // Timer disposal holds either deadline cancellation or failed-await cleanup
++            // after the failure starts and before the query can release a verdict.
++            await disposing.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++            result.IsCompleted.ShouldBeFalse();
++            await caller.CancelAsync();
++        }
++        finally
++        {
++            releaseVerdict.Set();
++            pending.TrySetResult(true);
++        }
++
++        OperationCanceledException exception = await Should.ThrowAsync<OperationCanceledException>(() => result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken));
++        exception.CancellationToken.ShouldBe(caller.Token);
++        await failure.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++    }
++
++    /// <summary>A shortened budget accepts valid evidence immediately before its exclusive deadline.</summary>
++    [Theory]
++    [InlineData(false)]
++    [InlineData(true)]
++    public async Task ShortQueryDeadline_ImmediatelyBeforeExpiryStillResolves(bool historical)
++    {
++        var fixture = Service(Events());
++        var (clock, advance) = DeadlineClock();
++        PartyIdentityOptions configured = PolicyOptions();
++        configured.QueryTimeout = TimeSpan.FromSeconds(5);
++        fixture.Options.CurrentValue.Returns(configured);
++        fixture.Custody.CanReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<IdentityHistoryCustodyEvidence>(), Arg.Any<CancellationToken>())
++            .Returns(_ => { advance(TimeSpan.FromSeconds(5) - TimeSpan.FromTicks(1), false); return true; });
++        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, fixture.HistoryReader, fixture.Options);
++        if (historical)
++        {
++            HumanActorBindingResult result = await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, Actor, 1)), TestContext.Current.CancellationToken);
++            result.Outcome.ShouldBe(HumanActorBindingOutcome.Resolved);
++            result.Evidence!.ActorId.ShouldBe(Actor);
++            result.SourcePosition.ShouldBe(2);
++            result.BindingSourcePosition.ShouldBe(2);
++            result.ObservationId.ShouldBe("history-observation");
++        }
++        else
++        {
++            PartyIdentityResult result = await service.ResolveAsync(Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)), TestContext.Current.CancellationToken);
++            result.Outcome.ShouldBe(PartyIdentityOutcome.Resolved);
++            result.Evidence!.HumanBinding!.ActorId.ShouldBe(Actor);
++            result.Evidence.SourcePosition.ShouldBe(2);
++        }
++    }
++
++    /// <summary>A delayed timer cannot release evidence after final authority consumes the last budget instant.</summary>
++    [Theory]
++    [InlineData(false)]
++    [InlineData(true)]
++    public async Task WholeQueryDeadline_FinalAuthorityExpiryDeniesTerminalEvidence(bool historical)
++    {
++        var fixture = Service(Events());
++        var (clock, advance) = DeadlineClock();
++        PartyIdentityAdmissionResult admitted = fixture.Authority.Admit(Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)));
++        int authorityCalls = 0;
++        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(_ =>
++        {
++            if (++authorityCalls == (historical ? 3 : 2)) { advance(TimeSpan.FromSeconds(30), false); }
++            return admitted;
++        });
++        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, fixture.HistoryReader, fixture.Options);
++        await AssertUnavailableAsync(service, historical);
++        authorityCalls.ShouldBe(historical ? 3 : 2);
++        TestContext.Current.CancellationToken.IsCancellationRequested.ShouldBeFalse();
++    }
++
++    /// <summary>A late failing provider callback remains independent of the completed safe verdict.</summary>
++    [Theory]
++    [InlineData(false)]
++    [InlineData(true)]
++    public async Task ProviderCancellationCallbackFaultAfterDeadline_DoesNotAffectVerdict(bool historical)
++    {
++        var fixture = Service(Events());
++        var (clock, advance) = DeadlineClock();
++        using var release = new ManualResetEventSlim();
++        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        var cancelEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        var cancelReturned = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        var pending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
++        CancellationToken providerToken = default;
++        fixture.Custody.CanReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<IdentityHistoryCustodyEvidence>(), Arg.Any<CancellationToken>())
++            .Returns(call => { providerToken = call.Arg<CancellationToken>(); entered.SetResult(); return pending.Task; });
++        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, fixture.HistoryReader, fixture.Options);
++        Task result = AssertUnavailableAsync(service, historical);
++        await entered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++        using CancellationTokenRegistration registration = providerToken.Register(() =>
++        {
++            cancelEntered.TrySetResult();
++            release.Wait(TestContext.Current.CancellationToken);
++            cancelReturned.TrySetResult();
++            throw new InvalidOperationException("synthetic late provider cancellation fault");
++        });
++        try
++        {
++            advance(TimeSpan.FromSeconds(30), true);
++            await cancelEntered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++            await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++            cancelReturned.Task.IsCompleted.ShouldBeFalse();
++            providerToken.IsCancellationRequested.ShouldBeTrue();
++        }
++        finally
++        {
++            release.Set();
++            pending.TrySetResult(true);
++            await cancelReturned.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++        }
++
++        result.IsCompletedSuccessfully.ShouldBeTrue();
++    }
++
++    private static (TimeProvider Clock, Action<TimeSpan, bool> Advance) DeadlineClock(Action? onDispose = null)
+     {
+         TimeProvider clock = Substitute.For<TimeProvider>();
+         DateTimeOffset now = DateTimeOffset.UtcNow.AddSeconds(1);
+@@ -1157,8 +1466,10 @@ public sealed class PartyIdentityQueryHandlerTests
+         {
+             callback = call.Arg<TimerCallback>();
+             state = call.ArgAt<object?>(1);
+-            dueAt = call.ArgAt<TimeSpan>(2).Ticks;
+-            return Substitute.For<ITimer>();
++            dueAt = Interlocked.Read(ref timestamp) + call.ArgAt<TimeSpan>(2).Ticks;
++            ITimer timer = Substitute.For<ITimer>();
++            if (onDispose is not null) { timer.When(item => item.Dispose()).Do(_ => onDispose()); }
++            return timer;
+         });
+         return (clock, (elapsed, fire) =>
+         {

@@ -1,0 +1,34 @@
+# Parties query deadline source evidence — 2026-10-07
+
+This packet implements the approved Agents prerequisite parent's active B06 query-deadline continuation. It covers owner-local source behavior only. Independent root review and root verification remain pending when this packet is first delivered.
+
+Current and historical queries use one operational deadline, defaulting to thirty seconds and allowing a configured positive value no greater than the existing SDK bound. The injected TimeProvider supplies both the deadline timer and monotonic elapsed-time checks. Source invocation, source completion, custody and verdict release consume the same budget. Provider invocation runs asynchronously so a provider blocked before returning its Task cannot hold query completion indefinitely. Deadline expiry returns typed Unavailable with no identity evidence and requests provider cancellation. Caller cancellation preserves the original caller token, including a deadline/fault race.
+
+Retention policy, Branch B classification, source-completeness/custody/freshness checks and startup authorization were preserved. Historical failure results retain the request's safe tenant/Party/action scope. Operational timeout configuration supplies no retention policy or production custody.
+
+## Executed evidence
+
+- [Focused commands and build](focused-build-command.json), [test command](focused-tests-command.json) and [XML](focused-tests.xml): 121/121 across query-handler and configuration classes, zero errors/failures/skips/not-run; Debug build has zero warnings/errors. This is initial overlapping evidence before the final narrow historical-scope correction.
+- [Complete fresh verification](initial-verification/evidence.json): 887/887 in every original Local lane and 6/6 operational/retention configuration cases; **893 distinct passes**. No focused result is double-counted. All ten Debug builds have zero warnings/errors.
+- [Exact commands](initial-verification/commands.json), [runner log](initial-verification/local-runner.log), [all lane logs/XML and executed required-class checks](initial-verification/local-matrix/local-evidence.json), [configuration XML](initial-verification/operational-configuration.xml), [verification driver](initial-verification/verification-driver.py).
+- [Before-source hashes](initial-verification/source-before.json) and [after-source hashes](initial-verification/source-after.json): 3,743 source/configuration files match, with no source drift. [Artifact hashes](initial-verification/artifact-manifest.json) cover 4,667 produced DLL/PDB/JSON files. The evidence manifest records canonical HEADs, worktree observations and command/log/XML hashes.
+- [Scoped comparison against captured pre-change source](scoped-initial-diff.patch), [five review-source hashes](review-source-hashes.json) and `review-source/` preserve the selected implementation separately from external source history.
+
+The 28 new query vectors execute eight noncooperative source/custody deadline cases with late success/fault, four synchronously blocked provider cases, two cumulative source/custody cases with the same operation token, two monotonic-expiry cases with delayed timer callbacks, eight invalid configured-bound cases, and four caller-cancellation/deadline/fault races. Existing pre-cancelled and suspended-reader/custody tests now also assert original caller-token identity. Existing fake observation clocks were given real monotonic timestamps/timers without changing their original assertions. Four additional configuration cases cover independent override binding and the default bound; the two existing approved-policy/withdrawal cases execute again.
+
+## Aspire baseline and history observations
+
+[Exact isolated startup command/result](aspire-start-command.json) and [log](aspire-start.log) preserve the required pre-edit baseline. Startup exited 2: current package-mode Parties Program.cs lines 64/66 could not resolve RequireEventStoreSidecarChannel (zero warnings, two compile errors), with a separate untrusted OpenSSL developer-certificate warning. [Describe](aspire-describe-command.json) reported no running AppHost. No preexisting app was stopped, no nested submodule was initialized, and the source Local matrix uses the existing project-reference flags rather than weakening package/startup gates. The observed EventStore package floor 3.115.0 does not establish package-mode host/security compatibility; that prerequisite remains open.
+
+The initial Parties HEAD was `ba67abbc3a2ca7cc3e63697d0f5a3c6231668cc2`. An external commit advanced it to `cacebd3f2402e6c1c17af85be83d62b42a7072c5` and included runtime deadline files during this implementation. The matrix began and ended at that latter Parties HEAD. Platform advanced externally from `bed37580a4213edb3e4698525e530b85aa4a80ea` to `5f945450d4140fd190594a30b60a603521ec4e30` during verification, with no source drift in the captured matrix. These are observations, not Git actions by this workflow. No staging, commit, push, branch, dependency update or deployment was performed.
+
+## Remaining qualification and limits
+
+Task dispatch bounds result release; it cannot forcibly terminate an uncooperative provider's own worker. Providers must honor cancellation to reclaim their resources. No production provider or live health/custody behavior is qualified by these synthetic suspended-provider tests.
+
+Positive successor-after-expired/destroyed-predecessor access still needs the authenticated actor-free continuation contract. Rollout inventory, independent current actor-revocation authority, installed qualified production custody, durable all-copy destruction/lost-ack receipts, nonrollback restore and complete P-01–P-10 exact-target/date/commands remain open. The original Story 5.4 stays draft/backlog, external records remain unavailable, the full parent stays in-progress, and earlier full owner tasks remain unchecked. No owner acceptance, deployment, live destructive result or consuming seam execution is inferred.
+
+
+## Final reviewed closure
+
+The initial pending review status above is superseded. [Root review and independent audit](../../../../../agents/_bmad-output/implementation-artifacts/tests/parties-query-deadline-2026-10-07/README.md) record all three review layers, seven corrected findings, two explicitly deferred existing qualification requirements and the final scoped source hashes. [Final fresh owner run](review-final/evidence.json) passes **919/919 distinct cases** in all ten Local lanes with warning-free Debug builds and no source drift. The included six configuration cases and targeted 141 result are not double-counted. Root checks **3,749** sources and **4,667** artifacts, required classes and original HTTP names. The source continuation is complete; the package-mode baseline blocker and all remaining production/full-target requirements above remain open.

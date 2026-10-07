@@ -28,6 +28,8 @@ Prefer a dedicated CI identity for durable production use. A human-mapped test i
 
 Store the two Zot release secrets in the protected GitHub environment named `production`. Configure required reviewers and restrict deployments to `main`; the manual release must not reach these credentials until its unprotected exact-source gate succeeds and an authorized reviewer approves the environment. Ordinary releases require successful exact-source `ci.yml` proof; the typed `bypass-validation=true` path requires successful exact-source `commitlint.yml` proof. Shared preparation repeats the selected proof before NuGet login.
 
+Credentials do not resolve the current EventStore package API prerequisite. Package-mode verification on 2026-10-07 against 3.115.0 reports CS1061 for `RequireEventStoreSidecarChannel`; green CI requires a compatible owner-published EventStore package and a separately approved dependency update. See [ci.md](ci.md). Environment, secret, and trusted-policy configuration remain operator-owned prerequisites.
+
 ## Required For Pact Contract Gates
 
 - `PACT_BROKER_BASE_URL`: Pact Broker or PactFlow base URL.

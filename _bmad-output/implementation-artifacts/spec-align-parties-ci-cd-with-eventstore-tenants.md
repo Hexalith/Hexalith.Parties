@@ -49,12 +49,12 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `references/Hexalith.Builds/Github/publish-containers/{publication_preflight.py,publish-containers.sh,tests/,README.md}` -- make publication identity and destination evidence canonical for one-or-more container repositories while retaining single-container compatibility; work from the Builds repository and stop before commit/push without approval.
+- [x] `references/Hexalith.Builds/Github/publish-containers/{publication_preflight.py,publish-containers.sh,tests/,README.md}` -- make publication identity and destination evidence canonical for one-or-more container repositories while retaining single-container compatibility; work from the Builds repository and stop before commit/push without approval.
 - [ ] `.github/workflows/release.yml` -- mirror the hardened EventStore/Tenants caller: `workflow_dispatch`, non-cancelling release concurrency, unprotected exact-green-main preflight, job-scoped permissions, protected environment, immutable Builds SHA/input equality, count `9`, explicit secrets, and post-publication source verification.
-- [ ] `tools/release-packages.json`, `scripts/validate-publication-preflight.sh`, `release.config.cjs` -- declare nine packages and three containers, freeze/revalidate the shared identity, and remove duplicate-skipping publication behavior.
-- [ ] `.github/workflows/commitlint.yml`, `.github/dependabot.yml` -- validate edited PR titles plus direct `main` pushes and replace forbidden `chore(deps)` prefixes with `build(deps)`.
-- [ ] `tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs` -- replace obsolete string checks with fail-closed caller, inventory, multi-container, and semantic-release contract coverage.
-- [ ] `docs/ci.md`, `docs/architecture.md`, `docs/ci-secrets-checklist.md` -- document manual release operation, protected-environment prerequisites, immutable Builds identity, and the unresolved EventStore package prerequisite.
+- [x] `tools/release-packages.json`, `scripts/validate-publication-preflight.sh`, `release.config.cjs` -- declare nine packages and three containers, freeze/revalidate the shared identity, and remove duplicate-skipping publication behavior.
+- [x] `.github/workflows/commitlint.yml`, `.github/dependabot.yml` -- validate edited PR titles plus direct `main` pushes and replace forbidden `chore(deps)` prefixes with `build(deps)`.
+- [x] `tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs` -- replace obsolete string checks with fail-closed caller, inventory, multi-container, and semantic-release contract coverage.
+- [x] `docs/ci.md`, `docs/architecture.md`, `docs/ci-secrets-checklist.md` -- document manual release operation, protected-environment prerequisites, immutable Builds identity, and the unresolved EventStore package prerequisite.
 
 **Acceptance Criteria:**
 - Given the resulting workflows and support files, when static CI contract tests and workflow lint run, then Parties matches the EventStore/Tenants release invariants without losing any package or container destination.
@@ -63,9 +63,25 @@ context:
 
 ## Spec Change Log
 
+### Implementation evidence — 2026-10-07
+
+- Loaded both frontmatter context files and audited the present checkout. Preserved `baseline_commit` and the frozen intent. Most requested safeguards already exist: manual dispatch, non-cancelling concurrency, protected `production`, job permissions, explicit credentials, nine-package inventory, complete three-container preflight, immutable Builds identity, collision rejection, and publication-source verification. Commitlint already covers edited PR titles and main pushes; dependency prefixes already use `build(deps)` or `ci(deps)`.
+- The shared publisher at the existing reviewed release identity `397c94a4e246c90b21cf408790fa0d55bf32d795` already implements canonical multi-container identities and complete destination checks while preserving singular compatibility. Its publisher and reusable-workflow bytes are unchanged in the current Builds checkout. No Builds edit, commit, push, or gitlink change was needed.
+- The October trusted-publishing implementation supersedes the task's reusable-workflow-only wiring: Parties has a caller-owned protected job, immutable shared preparation, and official NuGet login supplying a short-lived key. Preserved that authentication mechanism. The current `bypass-validation=true` path selects exact-source Commitlint proof, conflicting with this frozen spec's unconditional green CI requirement; the gate decision awaits explicit clarification, and release behavior remains unchanged. Strict-green-CI acceptance is therefore incomplete.
+- Added `tests/Hexalith.Parties.Ci.Tests/ReleaseSourcePreflightTests.cs` to execute the actual caller shell against mocked GitHub responses. Twelve rejection cases cover non-main/invalid/stale source, absent/wrong-SHA/wrong-branch/non-push/incomplete/failed proof, malformed API data, and API failure. Three invalid typed-input fixtures (empty, `TRUE`, and unknown) fail before any API request. Success fixtures verify both current proof selections and exact SHA/branch/event request arguments. A structural check verifies the source gate has no protected environment or publication secrets and precedes the release dependency.
+- Updated `docs/ci.md`, `docs/architecture.md`, and `docs/ci-secrets-checklist.md` with the current package-mode API prerequisite without altering dependencies, host security calls, projection-rebuild code, GitHub configuration, or dispatching a release.
+
+Verification:
+
+- `actionlint -no-color .github/workflows/*.yml`: passed.
+- `python3 -m unittest discover -s Github/publish-containers/tests -p 'test_*.py'` from `references/Hexalith.Builds`: passed, 135 tests, including mocked three-container verify/publish/container identity and collision contracts.
+- `bash -n scripts/*.sh && bash scripts/check-no-warning-override.sh`: passed.
+- `pwsh -NoProfile -File scripts/test.ps1 -Lane ci -Configuration Release`: passed, 84 tests, no failures or skips.
+- Initial `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1` encountered stale source-mode assets (278 CS0234/CS0246 errors). Default Release restore of the focused Contracts project followed by its package-mode build passed. `dotnet restore Hexalith.Parties.slnx -p:Configuration=Release` then passed; rerunning the exact full-build command failed with two CS1061 errors at `src/Hexalith.Parties/Program.cs:64` and `:66`, because published EventStore 3.115.0 lacks `RequireEventStoreSidecarChannel`. The host assets identify all EventStore dependencies as packages. Today's blocker is distinct from the spec's historical EventStore 3.88.0 projection-rebuild CS0246 failure. Full-CI acceptance remains incomplete until a compatible package is published and an approved dependency update succeeds.
+
 ## Design Notes
 
-The current shared publisher freezes a singular `container_repository`; its loop then reuses that evidence for each mapping, so Parties' second image changes the identity. The fix belongs in Hexalith.Builds and must preserve EventStore/Tenants single-image callers. The EventStore package mismatch is an independent upstream delivery prerequisite, not a reason to violate package-mode CI.
+At the August specification baseline, the shared publisher froze a singular `container_repository` and reused its evidence for each mapping, changing the identity for Parties' second image. That platform-owned issue is now resolved in the existing immutable publisher: its canonical container set supports all three Parties images while preserving EventStore/Tenants single-image callers. The EventStore package mismatch is an independent upstream delivery prerequisite, not a reason to violate package-mode CI.
 
 ## Verification
 

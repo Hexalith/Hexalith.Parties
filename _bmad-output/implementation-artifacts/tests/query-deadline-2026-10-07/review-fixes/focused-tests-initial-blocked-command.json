@@ -1,0 +1,11 @@
+{
+  "command": [
+    "dotnet",
+    "/home/administrator/projects/hexalith/parties/artifacts/query-deadline-2026-10-07-review-fixes/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+    "-class",
+    "*PartyIdentityQueryHandlerTests",
+    "-result-xml",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/review-fixes/focused-tests.xml"
+  ],
+  "exitCode": -15
+}

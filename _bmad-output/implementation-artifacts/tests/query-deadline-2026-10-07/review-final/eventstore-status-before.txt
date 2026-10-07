@@ -1,0 +1,22 @@
+## main...origin/main
+ M _bmad-output/planning-artifacts/ux-designs/ux-eventstore-2026-07-05/.memlog.md
+ M _bmad-output/planning-artifacts/ux-designs/ux-eventstore-2026-07-05/DESIGN.md
+ M _bmad-output/planning-artifacts/ux-designs/ux-eventstore-2026-07-05/EXPERIENCE.md
+ M _bmad-output/planning-artifacts/ux-designs/ux-eventstore-2026-07-05/index.md
+ M _bmad-output/planning-artifacts/ux.md
+ M references/Hexalith.Memories
+ M references/Hexalith.Platform
+ M src/Hexalith.EventStore.Client/Aggregates/AggregateReplayer.cs
+ M src/Hexalith.EventStore.Client/Aggregates/EventStoreAggregate.cs
+ M src/Hexalith.EventStore.Client/Aggregates/LegacyReplayInput.cs
+ M src/Hexalith.EventStore.Client/Hexalith.EventStore.Client.csproj
+ M src/Hexalith.EventStore.Client/Registration/EventStoreServiceCollectionExtensions.cs
+ M src/Hexalith.EventStore.DomainService/DomainServiceRequestRouter.cs
+ M tests/Hexalith.EventStore.Client.Tests/Registration/AddEventStoreTests.cs
+ M tests/Hexalith.EventStore.DomainService.Tests/EventEvolutionLegacyIntakeTests.cs
+?? scripts/verify-event-evolution-replay-routing.py
+?? src/Hexalith.EventStore.Client/Aggregates/IAdmittedLegacyAggregateReplay.cs
+?? tests/Hexalith.EventStore.DomainService.Tests/CustomAsyncReplayAggregate.cs
+?? tests/Hexalith.EventStore.DomainService.Tests/CustomSyncReplayAggregate.cs
+?? tests/Hexalith.EventStore.DomainService.Tests/LegacyAggregateReplayRoutingTests.cs
+?? tests/Hexalith.EventStore.DomainService.Tests/ReplayAdmissionProbeCollection.cs

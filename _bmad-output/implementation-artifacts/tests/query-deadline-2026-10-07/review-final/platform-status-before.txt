@@ -1,0 +1,42 @@
+## story/4-4-repository-controls...origin/story/4-4-repository-controls
+ M _bmad-output/implementation-artifacts/spec-4-4-apply-publication-and-operations-repository-controls.md
+ M eng/repository-controls/controls.py
+ M eng/repository-controls/test_controls.py
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/applied-controls.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/builds-administrator-bypass-mutation-result.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/builds-administrator-bypass-pre-change-discovery.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/builds-administrator-bypass-preflight.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/builds-administrator-bypass-readback.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/builds-administrator-bypass-review.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/builds-administrator-bypass-reviewed-proposal.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/codeowners-publication-receipt.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/connector-app-observations.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/custody-observations.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/discovery-after-controls.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/local-validation.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/organization-read-default-mutation-result.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/organization-read-default-pre-change-discovery.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/organization-read-default-preflight.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/organization-read-default-readback.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/organization-read-default-review.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/organization-read-default-reviewed-proposal.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-immutable-tags-mutation-result.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-immutable-tags-pre-change-discovery.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-immutable-tags-preflight.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-immutable-tags-readback.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-immutable-tags-review.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-immutable-tags-reviewed-proposal.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-main-reviewed-changes-mutation-result.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-main-reviewed-changes-pre-change-discovery.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-main-reviewed-changes-preflight.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-main-reviewed-changes-readback.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-main-reviewed-changes-review.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-main-reviewed-changes-reviewed-proposal.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-tag-creation-authorization-mutation-result.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-tag-creation-authorization-pre-change-discovery.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-tag-creation-authorization-preflight.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-tag-creation-authorization-readback.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-tag-creation-authorization-review.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/platform-tag-creation-authorization-reviewed-proposal.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/verification-after-controls.json
+?? _bmad-output/implementation-artifacts/evidence/epic-4/4-4/20261007T135137Z-live/verification-before-diagnostic-fix.json

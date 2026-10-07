@@ -1,0 +1,27 @@
+{
+  "passes": 141,
+  "failed": 0,
+  "skipped": 0,
+  "notRun": 0,
+  "concurrentBlockingCallbackTestPreserved": true,
+  "blockingCallbackCases": 12,
+  "source": {
+    "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs": "ce91ab42c8ef445a6955975582ca16f27826522d5c09085c238bcb66de3e809b",
+    "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs": "73342fcff1a19186340549cc8740eb34b7f2f313e376065b8e370299ebbdec5f",
+    "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "cb7d738a3edd91976c676258330e921c3e10a903506dbcfc6218ffa176e7b8d1"
+  },
+  "logs": {
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/review-fixes/focused-tests.xml": "e869be8477dcc3220db409e9d08bb182e34aaa3c793065521c51bc91e57762c9",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/review-fixes/focused-tests.log": "9807150e9aed616708ac6a9ac023f4932c5f4e92e17cebe0fa26c051643ca3b0",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/review-fixes/focused-build-final.log": "cf6b1a0dec331d8c14655db148bc0cabdfdce82a00378cce568c9d485ab82c62",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/review-fixes/focused-build-command.json": "741368d642c4ab706915560ec2efe2433d66531cf9e55ad17e8637675387b57e",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/review-fixes/focused-tests-command.json": "8e4ca17153441132a7fbe36e2b29c59d0408f97ed812f9ffa358f882a60d6106",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/review-fixes/focused-build-final-command.json": "741368d642c4ab706915560ec2efe2433d66531cf9e55ad17e8637675387b57e",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/review-fixes/focused-build.log": "5e077d14fe832f3c91d61d5475f5dc3518a282731b642d4e63bde5de9739e929",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/review-fixes/focused-tests-initial-blocked-command.json": "299f10cbf9de3b898d38551480e2ce116cdde9d10ab64df0ad3755e9eb6dc8a5",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/review-fixes/focused-tests-initial-blocked.log": "62d916d4e8646d27d9e8506ccad37ff8ddce3caafc9ad5bca4481c8f890c72f7"
+  },
+  "buildWarnings": 0,
+  "buildErrors": 0,
+  "fullVerification": "Root-owned; not rerun by implementation agent."
+}

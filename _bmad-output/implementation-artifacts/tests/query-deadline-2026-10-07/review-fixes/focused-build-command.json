@@ -1,0 +1,19 @@
+{
+  "command": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+    "-c",
+    "Debug",
+    "--artifacts-path",
+    "/home/administrator/projects/hexalith/parties/artifacts/query-deadline-2026-10-07-review-fixes",
+    "-p:UseHexalithProjectReferences=true",
+    "-p:UseNuGetDeps=false",
+    "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+    "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+    "-p:HexalithMemoriesRoot=/tmp/parties-query-deadline-no-memories",
+    "-p:NuGetAudit=false",
+    "-m:1"
+  ],
+  "exitCode": 0
+}

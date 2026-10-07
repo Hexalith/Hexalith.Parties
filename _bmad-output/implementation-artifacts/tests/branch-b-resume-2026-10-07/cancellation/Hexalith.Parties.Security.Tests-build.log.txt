@@ -1,0 +1,18 @@
+  Determining projects to restore...
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj (in 143 ms).
+  6 of 7 projects are up-to-date for restore.
+  Hexalith.Commons.UniqueIds -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Commons.UniqueIds/debug/Hexalith.Commons.UniqueIds.dll
+  Successfully created package '/tmp/ext-parties-1-cancellation-20261007/artifacts/package/debug/Hexalith.Commons.UniqueIds.1.0.0.nupkg'.
+  Successfully created package '/tmp/ext-parties-1-cancellation-20261007/artifacts/package/debug/Hexalith.Commons.UniqueIds.1.0.0.snupkg'.
+  Hexalith.EventStore.Contracts -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.EventStore.Contracts/debug/Hexalith.EventStore.Contracts.dll
+  Hexalith.Parties.Contracts -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Parties.Contracts/debug/Hexalith.Parties.Contracts.dll
+  Hexalith.Commons.Http -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Commons.Http/debug/Hexalith.Commons.Http.dll
+  Hexalith.Parties.Security -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Parties.Security/debug/Hexalith.Parties.Security.dll
+  Hexalith.Parties.Testing -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Parties.Testing/debug/Hexalith.Parties.Testing.dll
+  Hexalith.Parties.Security.Tests -> /tmp/ext-parties-1-cancellation-20261007/artifacts/bin/Hexalith.Parties.Security.Tests/debug/Hexalith.Parties.Security.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.49

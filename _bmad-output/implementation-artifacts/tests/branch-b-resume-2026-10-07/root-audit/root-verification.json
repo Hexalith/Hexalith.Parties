@@ -1,0 +1,83 @@
+{
+  "observedAt": "2026-10-07T14:17:04.863381+00:00",
+  "commands": [
+    {
+      "command": [
+        "dotnet",
+        "build",
+        "/tmp/parties-pdb-source-audit-a2sepmxk/PdbAudit.csproj",
+        "-c",
+        "Debug",
+        "-p:NuGetAudit=false",
+        "-m:1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "python3",
+        "/tmp/parties-root-matrix-audit.py",
+        "eng/verify-ext-parties-1.ps1",
+        "/tmp/ext-parties-1-cancellation-20261007/full-local-current",
+        "/tmp/ext-parties-1-cancellation-20261007/root-current-matrix-audit.json"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "dotnet",
+        "/tmp/parties-pdb-source-audit-a2sepmxk/bin/Debug/net10.0/PdbAudit.dll",
+        "/home/administrator/projects/hexalith",
+        "/tmp/ext-parties-1-cancellation-20261007/artifacts-current",
+        "/tmp/ext-parties-1-cancellation-20261007/root-current-pdb-source-audit.json"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "currentLocalPassed": 919,
+  "requiredLanes": 10,
+  "frozenMatrixRowsCoveredByExecutedLocalTests": 4,
+  "blockingCallbackRegressionsPassed": 12,
+  "compiledCurrentSource": {
+    "matchedDocuments": 3391,
+    "portablePdbCopies": 337,
+    "mismatches": 0,
+    "skipped": 0
+  },
+  "scopedDiffReview": "Read the owned three-file cancellation/verifier patch and expanded current query-service/deadline/test diff independently. No further source defect identified in that scoped review.",
+  "previousAttempt": {
+    "localPassed": 905,
+    "sourceDocumentMismatches": 48,
+    "uniqueChangedSourcePaths": 5,
+    "qualification": "Retained earlier snapshot; superseded by latest 919 run and matching PDB audit."
+  },
+  "preservedFrozenIntentSha256": "a83c931980f35b9f2cfd569bcceb0f5900a4cd4177396060a88ca711807d878d",
+  "originalSpecBaseline": "5388884eec84b16545fdc008b2fc04547b0ed5b6",
+  "canonicalObservedHead": "f4c5e83dfb884ef086bbdbad479955564ea16d9c",
+  "verifiedCurrentFiles": {
+    "eng/verify-ext-parties-1.ps1": "20e26ff57715d4a6915f98cb3bcde199215cccb428cbdf4ffd12caeb17aec36e",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs": "ce91ab42c8ef445a6955975582ca16f27826522d5c09085c238bcb66de3e809b",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "cb7d738a3edd91976c676258330e921c3e10a903506dbcfc6218ffa176e7b8d1",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs": "73342fcff1a19186340549cc8740eb34b7f2f313e376065b8e370299ebbdec5f"
+  },
+  "ownedScope": [
+    "eng/verify-ext-parties-1.ps1",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs"
+  ],
+  "externalQueryChanges": "Entry-time budget accounting and supplemental tests were authored concurrently outside this workflow; preserved and included in final verification.",
+  "artifactDigests": {
+    "matrix-audit.py.txt": "95fd70cccfdd96368cf1252dbc8aba96b39c6828e9552b33d8bff620c72241d4",
+    "PdbAudit.csproj.txt": "5500354786e3863d0990ac6092d8373c56e1220912384c8e2b77cc2a456d9b41",
+    "PdbAudit.Program.cs.txt": "71282b802bbf2aaee09566f6e1a148f2250dc12b79639c9a7cfd2e0ddbef4c34",
+    "current-pdb-source-audit.json": "ea093a76df26034ac1cb84a66c93728fe900493b1f71925aca33a7089942348a",
+    "current-matrix-audit.json": "b971fecac589511e7841fd1cd28e820682b270348744fd68d8d93fd7266fbde5",
+    "initial-pdb-source-audit.json": "7e0deddb93c407ad279a8e90c68d11da7a3b0986985d63f140627037a5f52831",
+    "initial-matrix-audit.json": "c791276d5191a9367aa1e443cf507d78004548230c68830aec83017fee9bb4d5"
+  },
+  "limits": [
+    "Portable PDB checks validate compiled C# source documents at the audit instant, not noncompiled configuration, arbitrary later changes, production targets or qualification.",
+    "Full parent source/task/acceptance completion and subsequent BMad final review remain open because production custody, continuation and P-01-P-10 live qualification are unavailable.",
+    "No complete baseline-to-current repository review is claimed; scoped implementation review and complete required Local lane audit are recorded separately."
+  ]
+}

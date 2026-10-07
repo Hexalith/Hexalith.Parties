@@ -81,6 +81,8 @@ The effective package graph selects EventStore 3.115.0 through the Parties versi
 
 The diagnostic source checkout `references/Hexalith.EventStore` is recorded at `98da5a04e6df33ba026cbaae46d1777acdca7a21` (`v3.115.0-8-g98da5a04`); it is eight commits beyond the package release. Package mode remains the authoritative CI and release path; source mode is diagnostic only and must not be used to hide package metadata or publication failures. The solution also builds its orchestration projects and the documented Commons HTTP/ServiceDefaults source fallbacks; these do not switch Parties' EventStore package consumers to source mode.
 
+Package-mode verification on 2026-10-07 remains blocked by an upstream API prerequisite. After a default Release restore, `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1` reports CS1061 at `src/Hexalith.Parties/Program.cs:64` and `:66`: the restored EventStore 3.115.0 packages do not expose `RequireEventStoreSidecarChannel` for `IEndpointConventionBuilder`. The August alignment spec's EventStore 3.88.0 projection-rebuild CS0246 failure is historical; it must not be reported as today's failure. Green package-mode CI still requires an owner-published compatible EventStore package and a separately approved dependency update. Keep the host security calls and projection-rebuild work intact while that prerequisite is unresolved.
+
 ## Secrets
 
 Required release variables, NuGet policy configuration, and Zot secrets are listed in [ci-secrets-checklist.md](ci-secrets-checklist.md). Zot automation uses `HEXALITH_ZOT_USERNAME` and `HEXALITH_ZOT_API_KEY`; the API key is generated after Zot Keycloak/OIDC login and replaces the password for Docker-compatible clients.

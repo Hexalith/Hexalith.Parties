@@ -1,0 +1,17 @@
+## main...origin/main
+ M _bmad-output/implementation-artifacts/ext-parties-1-implementation-notes.md
+ M _bmad-output/implementation-artifacts/spec-align-parties-ci-cd-with-eventstore-tenants.md
+ M _bmad-output/implementation-artifacts/spec-ext-parties-1-branch-b-authoritative-identity.md
+ M docs/architecture.md
+ M docs/ci-secrets-checklist.md
+ M docs/ci.md
+ M eng/verify-ext-parties-1.ps1
+ M src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs
+ M src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs
+ M tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs
+?? _bmad-output/implementation-artifacts/ext-parties-1-query-deadline-2026-10-07.md
+?? _bmad-output/implementation-artifacts/tests/branch-b-resume-2026-10-07/
+?? _bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/README.md
+?? _bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/review-final/
+?? _bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/review-fixes/
+?? tests/Hexalith.Parties.Ci.Tests/ReleaseSourcePreflightTests.cs

@@ -1,0 +1,22 @@
+Building Hexalith.EventStore.Contracts.Tests
+   Hexalith.EventStore.Contracts.Tests  Total: 23, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.190s
+Building Hexalith.EventStore.Client.Tests
+   Hexalith.EventStore.Client.Tests  Total: 107, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.566s
+Building Hexalith.EventStore.Server.Tests
+   Hexalith.EventStore.Server.Tests  Total: 168, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.845s
+Building Hexalith.Platform.Identity.Tests
+   Hexalith.Platform.Identity.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.337s
+Building Hexalith.Parties.Contracts.Tests
+   Hexalith.Parties.Contracts.Tests  Total: 29, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.240s
+Building Hexalith.Parties.Server.Tests
+   Hexalith.Parties.Server.Tests  Total: 94, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.378s
+Building Hexalith.Parties.Tests
+   Hexalith.Parties.Tests  Total: 282, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 14.126s
+Building Hexalith.Parties.Security.Tests
+   Hexalith.Parties.Security.Tests  Total: 30, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.393s
+Building Hexalith.Parties.Client.Tests
+   Hexalith.Parties.Client.Tests  Total: 98, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.601s
+Building Hexalith.Parties.UI.Tests
+   Hexalith.Parties.UI.Tests  Total: 72, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.328s
+Local verification passed. Evidence: /tmp/ext-parties-1-cancellation-20261007/full-local
+Live qualification is not established; LiveReadiness performs only owner-configured read probes and Live retains the complete qualification gate.
