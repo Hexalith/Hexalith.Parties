@@ -1,0 +1,153 @@
+{
+  "version": "1.2.0",
+  "source_sha": "cdd72b1d4a73013b04e909b5e3d82b59e61386d1",
+  "packages": [
+    {
+      "id": "Hexalith.Parties.AdminPortal",
+      "version": "1.2.0",
+      "source_sha": "cdd72b1d4a73013b04e909b5e3d82b59e61386d1",
+      "bytes": 134104,
+      "event_store_dependencies": [
+        {
+          "id": "Hexalith.EventStore.Client",
+          "version": "3.115.0",
+          "exclude": "Build,Analyzers"
+        },
+        {
+          "id": "Hexalith.EventStore.Contracts",
+          "version": "3.115.0",
+          "exclude": "Build,Analyzers"
+        }
+      ],
+      "verified": true
+    },
+    {
+      "id": "Hexalith.Parties.Authentication",
+      "version": "1.2.0",
+      "source_sha": "cdd72b1d4a73013b04e909b5e3d82b59e61386d1",
+      "bytes": 22676,
+      "event_store_dependencies": [
+        {
+          "id": "Hexalith.EventStore.Contracts",
+          "version": "3.115.0",
+          "exclude": "Build,Analyzers"
+        }
+      ],
+      "verified": true
+    },
+    {
+      "id": "Hexalith.Parties.Client",
+      "version": "1.2.0",
+      "source_sha": "cdd72b1d4a73013b04e909b5e3d82b59e61386d1",
+      "bytes": 56726,
+      "event_store_dependencies": [
+        {
+          "id": "Hexalith.EventStore.Contracts",
+          "version": "3.115.0",
+          "exclude": "Build,Analyzers"
+        }
+      ],
+      "verified": true
+    },
+    {
+      "id": "Hexalith.Parties.ConsumerPortal",
+      "version": "1.2.0",
+      "source_sha": "cdd72b1d4a73013b04e909b5e3d82b59e61386d1",
+      "bytes": 77343,
+      "event_store_dependencies": [
+        {
+          "id": "Hexalith.EventStore.Contracts",
+          "version": "3.115.0",
+          "exclude": "Build,Analyzers"
+        }
+      ],
+      "verified": true
+    },
+    {
+      "id": "Hexalith.Parties.Contracts",
+      "version": "1.2.0",
+      "source_sha": "cdd72b1d4a73013b04e909b5e3d82b59e61386d1",
+      "bytes": 112923,
+      "event_store_dependencies": [
+        {
+          "id": "Hexalith.EventStore.Contracts",
+          "version": "3.115.0",
+          "exclude": "Build,Analyzers"
+        }
+      ],
+      "verified": true
+    },
+    {
+      "id": "Hexalith.Parties.Picker",
+      "version": "1.2.0",
+      "source_sha": "cdd72b1d4a73013b04e909b5e3d82b59e61386d1",
+      "bytes": 55868,
+      "event_store_dependencies": [
+        {
+          "id": "Hexalith.EventStore.Contracts",
+          "version": "3.115.0",
+          "exclude": "Build,Analyzers"
+        }
+      ],
+      "verified": true
+    },
+    {
+      "id": "Hexalith.Parties.Projections",
+      "version": "1.2.0",
+      "source_sha": "cdd72b1d4a73013b04e909b5e3d82b59e61386d1",
+      "bytes": 58524,
+      "event_store_dependencies": [
+        {
+          "id": "Hexalith.EventStore.Client",
+          "version": "3.115.0",
+          "exclude": "Build,Analyzers"
+        },
+        {
+          "id": "Hexalith.EventStore.DomainService",
+          "version": "3.115.0",
+          "exclude": "Build,Analyzers"
+        },
+        {
+          "id": "Hexalith.EventStore.Contracts",
+          "version": "3.115.0",
+          "exclude": "Build,Analyzers"
+        },
+        {
+          "id": "Hexalith.EventStore.ServiceDefaults",
+          "version": "3.115.0",
+          "exclude": "Build,Analyzers"
+        }
+      ],
+      "verified": true
+    },
+    {
+      "id": "Hexalith.Parties.Security",
+      "version": "1.2.0",
+      "source_sha": "cdd72b1d4a73013b04e909b5e3d82b59e61386d1",
+      "bytes": 77181,
+      "event_store_dependencies": [
+        {
+          "id": "Hexalith.EventStore.Contracts",
+          "version": "3.115.0",
+          "exclude": "Build,Analyzers"
+        }
+      ],
+      "verified": true
+    },
+    {
+      "id": "Hexalith.Parties.Testing",
+      "version": "1.2.0",
+      "source_sha": "cdd72b1d4a73013b04e909b5e3d82b59e61386d1",
+      "bytes": 28223,
+      "event_store_dependencies": [
+        {
+          "id": "Hexalith.EventStore.Contracts",
+          "version": "3.115.0",
+          "exclude": "Build,Analyzers"
+        }
+      ],
+      "verified": true
+    }
+  ],
+  "failures": []
+}

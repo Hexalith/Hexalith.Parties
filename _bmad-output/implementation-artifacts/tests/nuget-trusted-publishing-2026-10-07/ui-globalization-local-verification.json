@@ -1,0 +1,44 @@
+{
+  "effective_properties": {
+    "Hexalith.Parties.UI": {
+      "ContainerBaseImage": "mcr.microsoft.com/dotnet/aspnet:10.0-alpine-extra",
+      "ContainerFamily": "alpine-extra",
+      "InvariantGlobalization": "false",
+      "UseNuGetDeps": "true",
+      "UseHexalithProjectReferences": "false",
+      "ContainerUser": "app"
+    },
+    "Hexalith.Parties": {
+      "ContainerBaseImage": "mcr.microsoft.com/dotnet/aspnet:10.0-alpine",
+      "ContainerFamily": "alpine",
+      "InvariantGlobalization": "",
+      "UseNuGetDeps": "true",
+      "UseHexalithProjectReferences": "false",
+      "ContainerUser": "app"
+    },
+    "Hexalith.Parties.Mcp": {
+      "ContainerBaseImage": "mcr.microsoft.com/dotnet/aspnet:10.0-alpine",
+      "ContainerFamily": "alpine",
+      "InvariantGlobalization": "",
+      "UseNuGetDeps": "true",
+      "UseHexalithProjectReferences": "false",
+      "ContainerUser": "app"
+    }
+  },
+  "published_runtime_invariant": false,
+  "local_smoke": {
+    "image": "mcr.microsoft.com/dotnet/aspnet:10.0-alpine-extra",
+    "platform": "linux/amd64",
+    "runtime_directory": "/tmp/parties-ui-globalization-publish",
+    "endpoint": "/alive",
+    "verified": true,
+    "http_status": 200,
+    "response": "Healthy",
+    "cleanup": "pass"
+  },
+  "focused_workflow_tests": {
+    "total": 41,
+    "failed": 0,
+    "skipped": 0
+  }
+}

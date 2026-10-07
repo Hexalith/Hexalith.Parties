@@ -18,8 +18,8 @@
   <PropertyGroup Condition="'$(EnableContainer)' == 'true'">
     <IsPackable>false</IsPackable>
     <IsPublishable>true</IsPublishable>
-    <ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:10.0-alpine</ContainerBaseImage>
-    <ContainerFamily>alpine</ContainerFamily>
+    <ContainerBaseImage Condition="'$(ContainerBaseImage)' == ''">mcr.microsoft.com/dotnet/aspnet:10.0-alpine</ContainerBaseImage>
+    <ContainerFamily Condition="'$(ContainerFamily)' == ''">alpine</ContainerFamily>
     <ContainerRegistry Condition="'$(ContainerRegistry)' == ''">registry.hexalith.com</ContainerRegistry>
     <ContainerImageTag Condition="'$(ContainerImageTags)' == '' and '$(ContainerImageTag)' == ''">$(ContainerProvenanceReleaseVersion)</ContainerImageTag>
     <ContainerUser>app</ContainerUser>

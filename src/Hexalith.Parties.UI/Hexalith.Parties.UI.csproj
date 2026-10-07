@@ -6,6 +6,9 @@
     <IsPublishable>true</IsPublishable>
     <EnableContainer>true</EnableContainer>
     <ContainerRepository>parties-ui</ContainerRepository>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:10.0-alpine-extra</ContainerBaseImage>
+    <ContainerFamily>alpine-extra</ContainerFamily>
     <!-- TargetFramework (net10.0), Nullable, ImplicitUsings, TreatWarningsAsErrors all inherited
          from Directory.Build.props — DO NOT redeclare. -->
     <!-- HFC1001 (FrontComposer.SourceTools analyzer, Warning): "No [Command] or [Projection]
