@@ -1,11 +1,11 @@
 # CI/CD Pipeline
 
-Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds reusable workflows.
+Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and actions.
 
 ## Workflows
 
 - `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main`.
-- `.github/workflows/release.yml` is a manual `workflow_dispatch` caller of `Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@<reviewed-40-character-SHA>`, pinned together with its `builds-execution-sha` input to that same commit.
+- `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@397c94a4e246c90b21cf408790fa0d55bf32d795` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation for pull requests.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
 - `.github/workflows/codeql.yml` delegates C# CodeQL scanning.
@@ -27,26 +27,32 @@ CI explicitly selects the shared workflow's `microsoft-testing-platform`
 command contract. Test evidence uses the xUnit v3 MTP-native TRX reporter;
 VSTest-only `--logger` and `--collect` options are not passed to Parties test
 executables. Ordinary Release (`bypass-validation=false`) reuses successful
-exact-source `ci.yml` evidence and leaves `test-projects` empty so it does not
-duplicate those test tiers. Authorized bypass (`bypass-validation=true`) instead
-requires successful exact-source `commitlint.yml` proof and still leaves
-`test-projects` empty.
+exact-source `ci.yml` evidence without duplicating those test tiers. Authorized
+bypass (`bypass-validation=true`) instead requires successful exact-source
+`commitlint.yml` proof. Shared release preparation restores and builds without
+rerunning those tests.
 
 ## Release
 
-Release is an explicit operator action through `workflow_dispatch`; pushes to `main` run CI but never publish. Before the protected release job is requested, the caller proves that the dispatch selected the current `main` tip. The optional boolean `bypass-validation` input defaults to `false` and then requires a successful exact-source push run of `ci.yml`; `true` requires a successful exact-source push run of `commitlint.yml` instead. Any other value is rejected before secrets or publish. The reusable workflow and nested publishing tools must resolve to the same reviewed immutable Hexalith.Builds commit.
+Release is an explicit operator action through `workflow_dispatch`; pushes to `main` run CI but never publish. Before the protected release job is requested, the caller proves that the dispatch selected the current `main` tip. The optional boolean `bypass-validation` input defaults to `false` and then requires a successful exact-source push run of `ci.yml`; `true` requires a successful exact-source push run of `commitlint.yml` instead. Any other value is rejected before secrets or publish. The preparation action, its `builds-execution-sha` input, and nested publishing tools must resolve to the same reviewed immutable Hexalith.Builds commit.
 
-The `production` environment must require human reviewers and allow deployments only from `main`. After approval, semantic-release:
+The `production` environment must require human reviewers and allow deployments only from `main`. After approval, shared preparation:
 
-- installs npm dependencies from `package-lock.json`;
+- installs npm dependencies from `package-lock.json` and verifies their signatures;
 - restores and builds `Hexalith.Parties.slnx`;
-- revalidates the exact dispatched `main` SHA against the selected source-proof workflow (`ci.yml` or, when bypassing, `commitlint.yml`);
+- permits publication only when `HEXALITH_RELEASE_PUBLISH_ENABLED` is exactly lowercase `true`;
+- requires the explicit NuGet creator account in repository variable `NUGET_USER` and revalidates the exact dispatched `main` SHA against the selected source-proof workflow (`ci.yml` or, when bypassing, `commitlint.yml`).
+
+The enabled job then prepares arm64 emulation and the shared container publisher, authenticates through SHA-pinned `NuGet/login@8d196754b4036150537f80ac539e15c2f1028841`, and runs semantic-release. Login and publication are skipped when preparation reports a frozen release. Semantic-release:
+
 - packs and validates Parties NuGet packages through `scripts/pack-release-packages.py`, `scripts/validate-nuget-packages.py`, and `scripts/validate-consumer-package-references.py`;
-- publishes NuGet packages with `NUGET_API_KEY`;
+- publishes NuGet packages with the short-lived `NUGET_API_KEY` supplied exclusively by the login output;
 - publishes exactly these Parties-owned containers to Zot through the shared release publisher:
   - `registry.hexalith.com/parties`
   - `registry.hexalith.com/parties-mcp`
   - `registry.hexalith.com/parties-ui`
+
+The active NuGet trusted publishing policy has package owner `Hexalith`, creator account `jpiquot`, GitHub repository `Hexalith/Hexalith.Parties`, workflow filename `release.yml`, and environment `production`. Set `NUGET_USER=jpiquot` as a repository variable; the creator account is distinct from the package owner and GitHub actor. Authentication stays in the Parties job because NuGet matches the caller workflow identity; [NuGet/login issue 6](https://github.com/NuGet/login/issues/6) records the reusable-workflow limitation. No long-lived NuGet secret or fallback is used. Local policy JSON records registration and does not create a policy in NuGet.
 
 The publication preflight freezes the exact source, nine-package manifest, and complete three-container destination set. It rejects missing credentials, identity drift, or an existing package/container version before the first publication write; duplicate skipping is deliberately disabled.
 
@@ -73,11 +79,11 @@ CI and default local commands run in package mode (`UseNuGetDeps=true`, `UseHexa
 
 The effective package graph selects EventStore 3.115.0 through the Parties version pin in `Directory.Packages.props`, set before importing the shared catalog. Retained actor-history queries consume `IRetainedIdentityHistoryReader` and `RetainedIdentityHistoryStream`, which require this release. The catalog at the recorded Builds identity `397c94a4e246c90b21cf408790fa0d55bf32d795` defaults to 3.110.0, so the Parties pin governs the EventStore package family.
 
-The diagnostic source checkout `references/Hexalith.EventStore` is recorded at `48ef7171b9532f390b7b41b61ba679ba1030c923` (`v3.115.0-5-g48ef7171`); it is five commits beyond the package release. Package mode remains the authoritative CI and release path; source mode is diagnostic only and must not be used to hide package metadata or publication failures. The solution also builds its orchestration projects and the documented Commons HTTP/ServiceDefaults source fallbacks; these do not switch Parties' EventStore package consumers to source mode.
+The diagnostic source checkout `references/Hexalith.EventStore` is recorded at `98da5a04e6df33ba026cbaae46d1777acdca7a21` (`v3.115.0-8-g98da5a04`); it is eight commits beyond the package release. Package mode remains the authoritative CI and release path; source mode is diagnostic only and must not be used to hide package metadata or publication failures. The solution also builds its orchestration projects and the documented Commons HTTP/ServiceDefaults source fallbacks; these do not switch Parties' EventStore package consumers to source mode.
 
 ## Secrets
 
-Required release secrets are listed in [ci-secrets-checklist.md](ci-secrets-checklist.md). Zot automation uses `HEXALITH_ZOT_USERNAME` and `HEXALITH_ZOT_API_KEY`; the API key is generated after Zot Keycloak/OIDC login and replaces the password for Docker-compatible clients.
+Required release variables, NuGet policy configuration, and Zot secrets are listed in [ci-secrets-checklist.md](ci-secrets-checklist.md). Zot automation uses `HEXALITH_ZOT_USERNAME` and `HEXALITH_ZOT_API_KEY`; the API key is generated after Zot Keycloak/OIDC login and replaces the password for Docker-compatible clients.
 
 ## Pact Readiness
 

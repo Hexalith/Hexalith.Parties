@@ -6,6 +6,7 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class PartiesContainerPublishWorkflowTests
 {
     private const int ExpectedPackageCount = 9;
+    private const string BuildsExecutionSha = "397c94a4e246c90b21cf408790fa0d55bf32d795";
     private static readonly TimeSpan PublicationPreflightTimeout = TimeSpan.FromSeconds(10);
 
     [Theory]
@@ -76,33 +77,47 @@ public sealed class PartiesContainerPublishWorkflowTests
     }
 
     [Fact]
-    public void ReleaseWorkflowPublishesOnlyPartiesContainersThroughSharedDomainRelease()
+    public void ReleaseWorkflowPublishesOnlyPartiesContainersThroughSharedDomainPreparation()
     {
-        const string buildsExecutionSha = "aee01323579adeda952bf41b2f3e0e61785075c6";
-        string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml");
+        string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml").Replace("\r\n", "\n");
+        string release = ReadReleaseJob();
+        string preparation = ReadReleaseStep("Prepare domain release");
+        string publisher = ReadReleaseStep("Prepare release container publisher");
 
         workflow.ShouldContain("on:\n  workflow_dispatch:");
         workflow.ShouldNotContain("on:\n  push:");
-        workflow.ShouldContain($"Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@{buildsExecutionSha}");
-        workflow.ShouldContain($"builds-execution-sha: {buildsExecutionSha}");
-        workflow.ShouldNotContain("domain-release.yml@main");
-        workflow.ShouldContain("needs: verify-source");
+        release.ShouldContain("    needs: verify-source\n    runs-on: ubuntu-latest\n    timeout-minutes: 60\n    environment: production\n");
+        release.ShouldContain("      actions: read\n");
+        release.ShouldContain("      contents: write\n");
+        release.ShouldContain("      id-token: write\n");
+        release.ShouldContain("      issues: write\n");
+        release.ShouldContain("      pull-requests: write\n");
+        release.ShouldNotContain("attestations:");
+        release.ShouldNotContain("domain-release.yml@");
+        preparation.ShouldContain($"uses: Hexalith/Hexalith.Builds/Github/prepare-domain-release@{BuildsExecutionSha}\n");
+        preparation.ShouldContain($"builds-execution-sha: {BuildsExecutionSha}\n");
+        preparation.ShouldContain("solution: Hexalith.Parties.slnx\n");
+        preparation.ShouldContain("source-branch: main\n");
+        preparation.ShouldContain("source-ci-workflow: ${{ needs.verify-source.outputs.source-ci-workflow }}\n");
+        preparation.ShouldContain("package-manifest: tools/release-packages.json\n");
+        preparation.ShouldContain("expected-package-count: 9\n");
+        publisher.ShouldContain("uses: ./.hexalith/builds-execution/Github/publish-containers\n");
+        publisher.ShouldContain($"builds-execution-sha: {BuildsExecutionSha}\n");
         workflow.ShouldContain("actions/workflows/${source_ci_workflow}/runs");
-        workflow.ShouldContain("source-ci-workflow: ${{ needs.verify-source.outputs.source-ci-workflow }}");
-        workflow.ShouldContain("environment-name: production");
-        workflow.ShouldContain("governed-release: false");
-        workflow.ShouldContain("attestations: write");
-        workflow.ShouldContain("id-token: write");
-        workflow.ShouldContain("publish-containers: true");
-        workflow.ShouldContain("expected-package-count: 9");
-        workflow.ShouldContain("require-publication-authority: false");
-        workflow.ShouldContain("test-projects: ''");
-        workflow.ShouldContain("src/Hexalith.Parties/Hexalith.Parties.csproj|parties");
-        workflow.ShouldContain("src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj|parties-mcp");
-        workflow.ShouldContain("src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj|parties-ui");
-        workflow.ShouldContain("NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}");
-        workflow.ShouldContain("HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME }}");
-        workflow.ShouldContain("HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_API_KEY }}");
+
+        string[] expectedContainers =
+        [
+            "src/Hexalith.Parties/Hexalith.Parties.csproj|parties",
+            "src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj|parties-mcp",
+            "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj|parties-ui",
+        ];
+        foreach (string step in new[] { publisher, ReadReleaseStep("Semantic Release") })
+        {
+            step.Split('\n').Select(line => line.Trim())
+                .Where(line => line.StartsWith("src/", StringComparison.Ordinal)).ToArray()
+                .ShouldBe(expectedContainers);
+        }
+
         workflow.ShouldContain("verify-publication:");
         workflow.ShouldNotContain("secrets: inherit");
         workflow.ShouldNotContain("tests/Hexalith.Parties.Ci.Tests");
@@ -111,6 +126,157 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldNotContain("|tenants");
         workflow.ShouldNotContain("|memories");
         workflow.ShouldNotContain(":latest");
+    }
+
+    [Fact]
+    public void ReleaseWorkflowUsesDispatchedCheckoutAndTemporaryCallerOwnedNuGetKey()
+    {
+        string release = ReadReleaseJob();
+        string checkout = ReadReleaseStep("Check out dispatched source");
+        string preparation = ReadReleaseStep("Prepare domain release");
+        string login = ReadReleaseStep("NuGet trusted publishing login");
+        string publication = ReadReleaseStep("Semantic Release");
+
+        checkout.ShouldContain("uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1");
+        checkout.ShouldContain("ref: ${{ github.sha }}\n");
+        checkout.ShouldContain("fetch-depth: 0\n");
+        checkout.ShouldContain("submodules: false\n");
+        checkout.ShouldContain("persist-credentials: false\n");
+        preparation.ShouldContain("id: prepare\n");
+        preparation.ShouldContain("nuget-user: ${{ vars.NUGET_USER }}\n");
+        login.ShouldContain("id: nuget-login\n");
+        login.ShouldContain("uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841");
+        login.ShouldContain("user: ${{ vars.NUGET_USER }}\n");
+        publication.ShouldContain("NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}\n");
+        release.Split('\n').Count(line => line.TrimStart().StartsWith("NUGET_API_KEY:", StringComparison.Ordinal))
+            .ShouldBe(1);
+        release.ShouldNotContain("secrets.NUGET_API_KEY");
+        release.ShouldNotContain("github.actor");
+        release.ShouldNotContain("github.repository_owner");
+        release.IndexOf("id: nuget-login", StringComparison.Ordinal)
+            .ShouldBeGreaterThan(release.IndexOf("id: prepare", StringComparison.Ordinal));
+        release.IndexOf("name: Semantic Release", StringComparison.Ordinal)
+            .ShouldBeGreaterThan(release.IndexOf("id: nuget-login", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void ReleaseWorkflowGatesAuthenticationAndPublicationOnSharedFreezeVerdict()
+    {
+        ReadReleaseStep("Prepare domain release").ShouldContain(
+            "publication-flag: ${{ vars.HEXALITH_RELEASE_PUBLISH_ENABLED }}\n");
+
+        foreach (string name in new[]
+        {
+            "Validate changed root gitlinks before publication",
+            "Set up arm64 emulation",
+            "Prepare release container publisher",
+            "NuGet trusted publishing login",
+            "Semantic Release",
+        })
+        {
+            ReadReleaseStep(name).ShouldContain("if: ${{ steps.prepare.outputs.publish-enabled == 'true' }}\n");
+        }
+
+        string emulation = ReadReleaseStep("Set up arm64 emulation");
+        emulation.ShouldContain("uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a");
+        emulation.ShouldContain("platforms: arm64\n");
+        string evidence = ReadReleaseStep("Upload complete release evidence");
+        evidence.ShouldContain("if: ${{ always() }}\n");
+        evidence.ShouldContain("uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a");
+        evidence.ShouldContain("path: .hexalith/release-evidence/**\n");
+        evidence.ShouldContain("include-hidden-files: true\n");
+        evidence.ShouldContain("retention-days: 30\n");
+    }
+
+    [Fact]
+    public void ReleaseWorkflowValidatesRootGitlinksAgainstProvedFloorBeforeLogin()
+    {
+        string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml").Replace("\r\n", "\n");
+        string release = ReadReleaseJob();
+        string gate = ReadReleaseStep("Validate changed root gitlinks before publication");
+
+        workflow.ShouldContain("\n      release-floor-tag: ${{ steps.registry-floor.outputs.release-floor-tag }}\n");
+        workflow.ShouldContain("\n        id: registry-floor\n");
+        int floorProved = workflow.IndexOf(
+            "Release tag floor ${floor_tag} is at or above every published version of the declared packages.",
+            StringComparison.Ordinal);
+        int floorExported = workflow.IndexOf(
+            "printf 'release-floor-tag=%s\\n' \"$floor_tag\" >> \"$GITHUB_OUTPUT\"",
+            StringComparison.Ordinal);
+        floorProved.ShouldBeGreaterThan(0);
+        floorExported.ShouldBeGreaterThan(floorProved);
+        gate.ShouldContain("\n        shell: bash\n");
+        gate.ShouldContain("\n          RELEASE_FLOOR_TAG: ${{ needs.verify-source.outputs.release-floor-tag }}\n");
+        gate.ShouldContain("\n        run: bash scripts/gitlink-rc-gate.sh --diff \"$RELEASE_FLOOR_TAG\"\n");
+        int gatePosition = release.IndexOf("name: Validate changed root gitlinks before publication", StringComparison.Ordinal);
+        gatePosition.ShouldBeGreaterThan(release.IndexOf("id: prepare", StringComparison.Ordinal));
+        gatePosition.ShouldBeLessThan(release.IndexOf("id: nuget-login", StringComparison.Ordinal));
+        gatePosition.ShouldBeLessThan(release.IndexOf("name: Semantic Release", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void ReleaseWorkflowSkipsPublicationVerificationWhenFrozen()
+    {
+        string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml").Replace("\r\n", "\n");
+        ReadReleaseJob().ShouldContain(
+            "\n    outputs:\n      publish-enabled: ${{ steps.prepare.outputs.publish-enabled }}\n");
+        int verificationStart = workflow.IndexOf("  verify-publication:\n", StringComparison.Ordinal);
+        verificationStart.ShouldBeGreaterThan(0);
+        string verification = workflow[verificationStart..];
+        verification.ShouldContain("\n    needs: release\n    if: ${{ needs.release.outputs.publish-enabled == 'true' }}\n");
+    }
+
+    [Theory]
+    [InlineData("if: ${{ steps.prepare.outputs.publish-enabled == 'true' }}", false)]
+    [InlineData("if: ${{ steps.prepare.outputs.publish-enabled == 'true' }}", true)]
+    [InlineData("uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841", false)]
+    [InlineData("uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841", true)]
+    public void ReleaseWorkflowStructureRejectsAuthenticationFieldsOnlyInComments(string requiredField, bool inlineComment)
+    {
+        ArgumentNullException.ThrowIfNull(requiredField);
+        const string loginName = "NuGet trusted publishing login";
+        string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml").Replace("\r\n", "\n");
+        string originalLogin = workflow.Split("      - name: ", StringSplitOptions.None)
+            .Single(step => step.StartsWith($"{loginName}\n", StringComparison.Ordinal));
+        string fieldLine = originalLogin.Split('\n')
+            .Single(line => line.TrimStart().StartsWith(requiredField, StringComparison.Ordinal));
+        string replacement = inlineComment
+            ? $"        {requiredField.Split(':')[0]}: unapproved # {requiredField}"
+            : $"        # {requiredField}";
+        string mutatedWorkflow = workflow.Replace(originalLogin, originalLogin.Replace(fieldLine, replacement));
+
+        ReadReleaseStep(loginName).ShouldContain(requiredField);
+        string mutatedLogin = ReadReleaseStep(loginName, ReadReleaseJob(mutatedWorkflow));
+        Assert.Throws<ShouldAssertException>(() => mutatedLogin.ShouldContain(requiredField));
+    }
+
+    [Fact]
+    public void ReleaseWorkflowPreservesCompleteSemanticReleasePreflightEnvironment()
+    {
+        string publication = ReadReleaseStep("Semantic Release");
+        foreach (string entry in new[]
+        {
+            "GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}",
+            "HEXALITH_CONTAINER_PROJECTS: |",
+            "HEXALITH_ZOT_REGISTRY: ${{ vars.HEXALITH_ZOT_REGISTRY || 'registry.hexalith.com' }}",
+            "HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME }}",
+            "HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_API_KEY }}",
+            $"HEXALITH_BUILDS_EXECUTION_SHA: {BuildsExecutionSha}",
+            "HEXALITH_RELEASE_ENVIRONMENT: production",
+            "HEXALITH_RELEASE_SOURCE_BRANCH: main",
+            "HEXALITH_RELEASE_SOURCE_CI_WORKFLOW: ${{ needs.verify-source.outputs.source-ci-workflow }}",
+            "HEXALITH_RELEASE_PACKAGE_MANIFEST: tools/release-packages.json",
+            "HEXALITH_RELEASE_EXPECTED_PACKAGE_COUNT: '9'",
+            "HEXALITH_RELEASE_RESERVED_VERSION: ''",
+            "HEXALITH_RELEASE_AUTHORITY_ISSUE_URL: ''",
+            "HEXALITH_RELEASE_AUTHORITY_OWNER: ''",
+            "HEXALITH_RELEASE_REQUIRE_AUTHORITY: 'false'",
+        })
+        {
+            publication.ShouldContain($"          {entry}\n");
+        }
+
+        publication.ShouldContain("run: npm exec --no -- semantic-release\n");
     }
 
     [Fact]
@@ -366,7 +532,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         string secrets = CiTestPaths.ReadRepoFile("docs/ci-secrets-checklist.md");
 
         ci.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main");
-        ci.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@");
+        ci.ShouldContain($"Hexalith/Hexalith.Builds/Github/prepare-domain-release@{BuildsExecutionSha}");
         ci.ShouldContain("workflow_dispatch");
         ci.ShouldContain("bypass-validation");
         ci.ShouldContain("commitlint.yml");
@@ -378,11 +544,34 @@ public sealed class PartiesContainerPublishWorkflowTests
         ci.ShouldContain("registry.hexalith.com/parties-ui");
         ci.ShouldContain("does not apply runtime deployment manifests");
         secrets.ShouldContain("NUGET_API_KEY");
+        ci.ShouldContain("NUGET_USER");
+        secrets.ShouldContain("NUGET_USER=jpiquot");
+        secrets.ShouldContain("package owner `Hexalith`");
+        secrets.ShouldContain("short-lived");
+        secrets.ShouldContain("no fallback");
         secrets.ShouldContain("HEXALITH_ZOT_USERNAME");
         secrets.ShouldContain("HEXALITH_ZOT_API_KEY");
         secrets.ShouldContain("Zot API key");
         secrets.ShouldNotContain("ZOT_REGISTRY_PASSWORD");
     }
+
+    private static string ReadReleaseJob(string? workflow = null)
+    {
+        workflow = (workflow ?? CiTestPaths.ReadRepoFile(".github/workflows/release.yml")).Replace("\r\n", "\n");
+        int start = workflow.IndexOf("  release:\n", StringComparison.Ordinal);
+        int end = workflow.IndexOf("  verify-publication:\n", StringComparison.Ordinal);
+        start.ShouldBeGreaterThan(0);
+        end.ShouldBeGreaterThan(start);
+        return string.Join('\n', workflow[start..end].Split('\n').Select(line =>
+        {
+            int comment = line.IndexOf('#');
+            return comment < 0 ? line : line[..comment].TrimEnd();
+        }));
+    }
+
+    private static string ReadReleaseStep(string name, string? release = null)
+        => (release ?? ReadReleaseJob()).Split("      - name: ", StringSplitOptions.None)
+            .Single(step => step.StartsWith($"{name}\n", StringComparison.Ordinal));
 
     /// <summary>
     /// Reads the EventStore package version the Parties graph actually selects: the root pre-import

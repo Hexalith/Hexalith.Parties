@@ -10,9 +10,13 @@ No secrets are required for the current .NET build and test jobs.
 
 Configure these before running `.github/workflows/release.yml`:
 
-- `NUGET_API_KEY`: NuGet API key used by semantic-release to publish Parties packages.
+- Repository variable `NUGET_USER=jpiquot`: the individual NuGet account that created the trusted publishing policy. Do not substitute the package owner `Hexalith` or derive this account from the GitHub actor.
+- An active NuGet trusted publishing policy for package owner `Hexalith`, GitHub repository `Hexalith/Hexalith.Parties`, workflow filename `release.yml`, and environment `production`. The local policy JSON records the user-reported registration; it does not configure NuGet.
+- Repository variable `HEXALITH_RELEASE_PUBLISH_ENABLED`: set exactly lowercase `true` to allow publication. Set an explicit repository value to avoid unintentionally inheriting an organization value; other values keep login and publication frozen.
 - `HEXALITH_ZOT_USERNAME`: Zot username / mapped Keycloak identity used by GitHub Actions. This is the username passed to `docker login registry.hexalith.com`.
 - `HEXALITH_ZOT_API_KEY`: Zot API key generated after Keycloak/OIDC login for that identity. The Zot API key replaces the password in Docker/.NET container publish authentication.
+
+The protected Parties job requests `id-token: write` and uses SHA-pinned official `NuGet/login` after successful shared preparation. Semantic-release receives `NUGET_API_KEY` only from that login's masked, short-lived output, with no fallback to `secrets.NUGET_API_KEY`. A stored long-lived NuGet key is not required, and this change does not delete existing secrets.
 
 The publishing identity must have rights to create/update these repositories:
 
@@ -22,7 +26,7 @@ The publishing identity must have rights to create/update these repositories:
 
 Prefer a dedicated CI identity for durable production use. A human-mapped test identity is acceptable only for temporary validation, with the API key rotated or deleted immediately after confirmation.
 
-Store the three release secrets in the protected GitHub environment named `production`. Configure required reviewers and restrict deployments to `main`; the manual release must not reach these credentials until its unprotected exact-source CI gate succeeds and an authorized reviewer approves the environment.
+Store the two Zot release secrets in the protected GitHub environment named `production`. Configure required reviewers and restrict deployments to `main`; the manual release must not reach these credentials until its unprotected exact-source gate succeeds and an authorized reviewer approves the environment. Ordinary releases require successful exact-source `ci.yml` proof; the typed `bypass-validation=true` path requires successful exact-source `commitlint.yml` proof. Shared preparation repeats the selected proof before NuGet login.
 
 ## Required For Pact Contract Gates
 

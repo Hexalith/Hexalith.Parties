@@ -34,6 +34,7 @@ public sealed class PlatformApiPrerequisitesTests
     private const string TenantsSha = "72b8e4f508176b69826549e87b7b2a286f607fd1";
     private const string PayloadProtectionEventStoreDescribe = "v3.113.0";
     private const string PayloadProtectionEventStoreSha = "865cd9e49273dffbb1cdae85efeaf1aac322e09e";
+    private const string PayloadProtectionPartiesReceiptSha = "75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6";
     private const string PayloadProtectionRetentionAction = "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback.";
     private const string PayloadProtectionSurface = "Payload protection engine package";
     private const string SpecRelativePath = "_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md";
@@ -42,8 +43,8 @@ public sealed class PlatformApiPrerequisitesTests
 
     // Release selection is separate from the historical migration/parity receipt constants.
     private const string CurrentReleaseEventStoreVersion = "3.115.0";
-    private const string CurrentReleaseEventStoreSha = "48ef7171b9532f390b7b41b61ba679ba1030c923";
-    private const string CurrentReleaseEventStoreDescribe = "v3.115.0-5-g48ef7171";
+    private const string CurrentReleaseEventStoreSha = "98da5a04e6df33ba026cbaae46d1777acdca7a21";
+    private const string CurrentReleaseEventStoreDescribe = "v3.115.0-8-g98da5a04";
     private static readonly IReadOnlyDictionary<string, string> CurrentReleaseGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = AiToolsSha,
@@ -51,7 +52,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.Commons"] = CommonsSha,
         [EventStoreRelativePath] = CurrentReleaseEventStoreSha,
         ["references/Hexalith.FrontComposer"] = "c561b3210f15206a90c39c82c58f2e5b1005cd60",
-        ["references/Hexalith.Memories"] = "b350c094ab4bc10bd2daf723f9e2c90ffdddae2a",
+        ["references/Hexalith.Memories"] = "14bb1c17b66ad0fa053ad0ed332c82fdd85f3887",
         ["references/Hexalith.PolymorphicSerializations"] = PolymorphicSerializationsSha,
         ["references/Hexalith.Tenants"] = "811447342e8f44b644a2074565e83f45519528fd",
     };
@@ -666,6 +667,10 @@ public sealed class PlatformApiPrerequisitesTests
             row.Split('|', StringSplitOptions.TrimEntries)[2].Split(' ')[0].ShouldBe($"`{identity}`", path);
             AssertGitlinkAndCheckout(root, path, identity);
         }
+
+        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--match", $"v{CurrentReleaseEventStoreVersion}", "--abbrev=8", "HEAD")
+            .Trim()
+            .ShouldBe(CurrentReleaseEventStoreDescribe);
 
         // Keep historical shell/a11y receipts bound to the identity at which they ran.
         matrix.ShouldContain(FrontComposerSha);
@@ -1471,19 +1476,21 @@ public sealed class PlatformApiPrerequisitesTests
         normalizedRetentionItem.ShouldContain("retention action stays open");
         normalizedRetentionItem.ShouldContain("status: open");
 
-        // Inspect the independent G5 gates before verifying the current release selection.
-        // This structural check does not refresh historical G5 runtime/parity receipts.
-        string expectedGitlink = $"160000 commit {CurrentReleaseEventStoreSha} {EventStoreRelativePath}";
-        RunGit(root, "ls-tree", "HEAD", EventStoreRelativePath)
+        // Current structural G5 gates remain independent of the dated identity receipt.
+        // Verify that receipt at its original Parties commit without refreshing runtime/parity proof.
+        string expectedGitlink = $"160000 commit {PayloadProtectionEventStoreSha} {EventStoreRelativePath}";
+        RunGit(root, "ls-tree", PayloadProtectionPartiesReceiptSha, EventStoreRelativePath)
             .Trim()
             .Replace('\t', ' ')
             .ShouldBe(expectedGitlink);
 
-        RunGit(root, "-C", EventStoreRelativePath, "rev-parse", "HEAD").Trim().ShouldBe(CurrentReleaseEventStoreSha);
-
-        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--always", "HEAD")
+        RunGit(root, "-C", EventStoreRelativePath, "rev-parse", "--verify", $"{PayloadProtectionEventStoreSha}^{{commit}}")
             .Trim()
-            .ShouldBe(CurrentReleaseEventStoreDescribe);
+            .ShouldBe(PayloadProtectionEventStoreSha);
+
+        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--exact-match", "--match", PayloadProtectionEventStoreDescribe, PayloadProtectionEventStoreSha)
+            .Trim()
+            .ShouldBe(PayloadProtectionEventStoreDescribe);
     }
 
     private static bool HasPositiveFixedStringCommand(

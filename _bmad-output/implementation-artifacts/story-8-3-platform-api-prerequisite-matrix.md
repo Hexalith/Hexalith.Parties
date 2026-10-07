@@ -54,18 +54,21 @@ Administrator / jpiquot authorized release of the current Parties repository in
 `spec-fix-ci-and-publish-release.md`. EventStore package `3.115.0` is selected
 before the shared catalog import because retained actor-history consumers require
 its APIs. Builds' recorded catalog defaults to `3.110.0`; the root pin governs.
-The following root pointers already belong to Parties baseline
-`45d653a7d7f14a75d5227fbd780db3fbf22f70fe` and match their checkouts. The release
-selection ledger records authorization for the five changed pointers.
+The following root pointers are recorded at Parties
+`a3e5ef3b92a56fb03adc0e7e3235ff5ca158ab9a` and match their checkouts. The owner
+advanced EventStore and Memories after the initial release-repair baseline
+`45d653a7d7f14a75d5227fbd780db3fbf22f70fe`; this current selection supersedes
+only their earlier diagnostic pointers. Package versions and dated parity
+receipts retain their original identities.
 
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` | Instruction baseline; unchanged. |
 | Builds | `397c94a4e246c90b21cf408790fa0d55bf32d795` | Imported package catalog and build tooling. |
 | Commons | `116d26815eb81e35b3c161e1799e5ee12805fc0a` | Existing HTTP/ServiceDefaults source fallbacks; unchanged. |
-| EventStore | `48ef7171b9532f390b7b41b61ba679ba1030c923` (`v3.115.0-5-g48ef7171`) | Diagnostic/orchestration source; Parties runtime consumers restore package `3.115.0`. |
+| EventStore | `98da5a04e6df33ba026cbaae46d1777acdca7a21` (`v3.115.0-8-g98da5a04`) | Diagnostic/orchestration source; Parties runtime consumers restore package `3.115.0`. |
 | FrontComposer | `c561b3210f15206a90c39c82c58f2e5b1005cd60` | Current diagnostic source selection; package `4.5.0` remains selected. |
-| Memories | `b350c094ab4bc10bd2daf723f9e2c90ffdddae2a` | Current diagnostic source selection; package `2.27.1` remains selected. |
+| Memories | `14bb1c17b66ad0fa053ad0ed332c82fdd85f3887` | Current diagnostic source selection; package `2.27.1` remains selected. |
 | PolymorphicSerializations | `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` | Existing solution source dependency; unchanged. |
 | Tenants | `811447342e8f44b644a2074565e83f45519528fd` | Current diagnostic/orchestration source selection; package `5.7.0` remains selected. |
 
@@ -74,7 +77,11 @@ migration rollback paths. The dated 2026-10-05 reconciliation and its approvals
 remain below. Fresh 2026-10-07 Release/test evidence is recorded separately in
 `tests/test-summary.md`; no wider platform parity is claimed. The G5 structural
 and rollback checks run against the current source selection while its missing
-provider/enrollment/closure gates remain closed.
+provider/enrollment/closure gates remain closed. The historical G5 gitlink and
+release-tag receipt is verified at Parties
+`75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6` and EventStore
+`865cd9e49273dffbb1cdae85efeaf1aac322e09e` (`v3.113.0`); the live release
+selection is checked separately.
 
 The historical FrontComposer `2cc8dd3a` component directly contained
 `aria-live="polite"` and a `private string AriaLive` member. At the current

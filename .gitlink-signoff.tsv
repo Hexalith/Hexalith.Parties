@@ -161,3 +161,12 @@ references/Hexalith.EventStore|48ef7171b9532f390b7b41b61ba679ba1030c923|validate
 references/Hexalith.FrontComposer|c561b3210f15206a90c39c82c58f2e5b1005cd60|validated-advance|v4.6.0-5-gc561b321|jpiquot|2026-10-07
 references/Hexalith.Memories|b350c094ab4bc10bd2daf723f9e2c90ffdddae2a|validated-advance|v2.28.1-24-gb350c094|jpiquot|2026-10-07
 references/Hexalith.Tenants|811447342e8f44b644a2074565e83f45519528fd|validated-advance|v5.7.0-165-g81144734|jpiquot|2026-10-07
+
+# --- 2026-10-07 continuation of the user-authorized Parties release selection.
+#     These diagnostic pointers are already committed at Parties a3e5ef3b92a56fb03adc0e7e3235ff5ca158ab9a.
+#     The user requested release and validation bypass in the active session;
+#     current-source fitness checks pass while dated G5/parity gates remain
+#     independent. This records the selected root graph without moving gitlinks
+#     or claiming a published upstream SDK or refreshed platform parity.
+references/Hexalith.EventStore|98da5a04e6df33ba026cbaae46d1777acdca7a21|validated-advance|v3.115.0-8-g98da5a04|jpiquot|2026-10-07
+references/Hexalith.Memories|14bb1c17b66ad0fa053ad0ed332c82fdd85f3887|validated-advance|v2.28.1-25-g14bb1c17|jpiquot|2026-10-07

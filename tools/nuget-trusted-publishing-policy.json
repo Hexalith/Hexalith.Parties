@@ -1,14 +1,17 @@
 {
-  "description": "Desired settings for the nuget.org Trusted Publishing form; this file is not an API request and does not register or activate the policy.",
-  "policyName": "hexalith-parties-production",
+  "description": "User-reported active nuget.org Trusted Publishing policy; this file records settings and does not register or activate the policy.",
+  "policyName": "Hexalith.Parties",
   "packageOwner": "Hexalith",
-  "provider": "GitHub",
+  "provider": "GitHubActions",
   "repositoryOwner": "Hexalith",
   "repository": "Hexalith.Parties",
   "workflowFile": "release.yml",
   "environment": "production",
-  "scope": "Push only new package versions",
-  "packageGlobPattern": "Hexalith.Parties.*",
+  "scope": [
+    "Push new packages and package versions",
+    "Unlist or relist package versions"
+  ],
+  "packageGlobPattern": "*",
   "packageIds": [
     "Hexalith.Parties.Contracts",
     "Hexalith.Parties.Client",
@@ -24,9 +27,17 @@
   "documentationUrl": "https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing",
   "workflowRequirements": [
     "Use the NuGet profile username of the policy creator when requesting a temporary API key; the package owner can differ.",
-    "Grant id-token: write to the publishing job in the reusable workflow and to the calling job.",
+    "Grant id-token: write to the publishing job defined directly in the Parties release.yml workflow.",
+    "Run authentication in the Parties job so NuGet sees the registered repository workflow identity; use the shared Builds prepare-domain-release composite for preparation.",
     "Exchange a GitHub OIDC token with audience https://www.nuget.org for a temporary key shortly before publication.",
     "Supply that temporary key to the existing NuGet push command instead of the long-lived NUGET_API_KEY secret.",
     "Preserve the production environment and exact main-source release gates."
-  ]
+  ],
+  "nugetUser": "jpiquot",
+  "repositoryOwnerId": 80614290,
+  "repositoryId": 1170072276,
+  "registration": {
+    "status": "Active",
+    "evidence": "Operator-provided NuGet policy details; authenticated OIDC exchange and publication verification remain pending."
+  }
 }

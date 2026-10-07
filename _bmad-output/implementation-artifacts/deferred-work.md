@@ -1254,3 +1254,7 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
   summary: Extend the existing gateway command test with a direct persisted-stream and aggregate identity read.
   evidence: The pre-existing test observes Completed status and positive eventCount but does not read stored events; completion follows EventPersister in the SDK, but an independent persisted-stream assertion would strengthen that boundary.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-nuget-trusted-publishing.md`
+  summary: Extend the persistent release verification job to validate all declared NuGet registry package bytes and repository commit metadata.
+  evidence: The pre-existing verify-publication job checks a GitHub Release tag only; this task performs independent nine-package download/metadata verification after Release rather than treating that tag as package publication evidence.

@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       source-ci-workflow: ${{ steps.select-source-proof.outputs.source-ci-workflow }}
+      release-floor-tag: ${{ steps.registry-floor.outputs.release-floor-tag }}
     permissions:
       actions: read
       contents: read
@@ -95,6 +96,7 @@ jobs:
           fi
 
       - name: Require registry versions at or below the release tag floor
+        id: registry-floor
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -275,54 +277,106 @@ jobs:
             exit 1
           fi
           echo "Release tag floor ${floor_tag} is at or above every published version of the declared packages."
+          printf 'release-floor-tag=%s\n' "$floor_tag" >> "$GITHUB_OUTPUT"
 
   release:
     needs: verify-source
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+    outputs:
+      publish-enabled: ${{ steps.prepare.outputs.publish-enabled }}
     permissions:
       actions: read
-      attestations: write
       contents: write
       id-token: write
       issues: write
       pull-requests: write
-    # GitHub validates the maximum permissions of every job in a called workflow,
-    # including the skipped governed-release job, so attestations/id-token must be
-    # granted here even though `governed-release` stays false. The legacy job
-    # inherits this set. Do not add attestation or signing steps here.
-    # domain-release.yml enforces a supply-chain identity check: the reusable workflow
-    # must be pinned to an exact 40-hex Builds commit and the caller must pass
-    # builds-execution-sha equal to that same SHA (the reusable job validates
-    # job.workflow_sha == builds-execution-sha). A missing or mismatched input is a
-    # workflow startup_failure. @main cannot be used: main advances, so job.workflow_sha
-    # would drift out of match. Replace both occurrences together.
-    uses: Hexalith/Hexalith.Builds/.github/workflows/domain-release.yml@aee01323579adeda952bf41b2f3e0e61785075c6
-    with:
-      solution: Hexalith.Parties.slnx
-      timeout-minutes: 60
-      environment-name: production
-      governed-release: false
-      publish-containers: true
-      builds-execution-sha: aee01323579adeda952bf41b2f3e0e61785075c6
-      source-branch: main
-      source-ci-workflow: ${{ needs.verify-source.outputs.source-ci-workflow }}
-      package-manifest: tools/release-packages.json
-      expected-package-count: 9
-      require-publication-authority: false
-      # CI (the verify-source gate above) already tested this exact head; leave
-      # test-projects empty so the release path does not duplicate the test compute.
-      test-projects: ''
-      container-projects: |
-        src/Hexalith.Parties/Hexalith.Parties.csproj|parties
-        src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj|parties-mcp
-        src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj|parties-ui
-    secrets:
-      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-      HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME }}
-      HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_API_KEY }}
+    # NuGet matches the Parties policy to this caller-owned job's workflow identity.
+    # Preparation and nested publishing tools use the same immutable Builds commit.
+    steps:
+      - name: Check out dispatched source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          submodules: false
+          persist-credentials: false
+      - name: Prepare domain release
+        id: prepare
+        uses: Hexalith/Hexalith.Builds/Github/prepare-domain-release@397c94a4e246c90b21cf408790fa0d55bf32d795
+        with:
+          solution: Hexalith.Parties.slnx
+          builds-execution-sha: 397c94a4e246c90b21cf408790fa0d55bf32d795
+          source-branch: main
+          source-ci-workflow: ${{ needs.verify-source.outputs.source-ci-workflow }}
+          package-manifest: tools/release-packages.json
+          expected-package-count: 9
+          publication-flag: ${{ vars.HEXALITH_RELEASE_PUBLISH_ENABLED }}
+          nuget-user: ${{ vars.NUGET_USER }}
+      - name: Validate changed root gitlinks before publication
+        if: ${{ steps.prepare.outputs.publish-enabled == 'true' }}
+        shell: bash
+        env:
+          RELEASE_FLOOR_TAG: ${{ needs.verify-source.outputs.release-floor-tag }}
+        run: bash scripts/gitlink-rc-gate.sh --diff "$RELEASE_FLOOR_TAG"
+      - name: Set up arm64 emulation
+        if: ${{ steps.prepare.outputs.publish-enabled == 'true' }}
+        uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a # v4.3.0
+        with:
+          platforms: arm64
+      - name: Prepare release container publisher
+        if: ${{ steps.prepare.outputs.publish-enabled == 'true' }}
+        uses: ./.hexalith/builds-execution/Github/publish-containers
+        with:
+          builds-execution-sha: 397c94a4e246c90b21cf408790fa0d55bf32d795
+          container-projects: |
+            src/Hexalith.Parties/Hexalith.Parties.csproj|parties
+            src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj|parties-mcp
+            src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj|parties-ui
+      - name: NuGet trusted publishing login
+        id: nuget-login
+        if: ${{ steps.prepare.outputs.publish-enabled == 'true' }}
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ vars.NUGET_USER }}
+      - name: Semantic Release
+        if: ${{ steps.prepare.outputs.publish-enabled == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+          HEXALITH_CONTAINER_PROJECTS: |
+            src/Hexalith.Parties/Hexalith.Parties.csproj|parties
+            src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj|parties-mcp
+            src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj|parties-ui
+          HEXALITH_ZOT_REGISTRY: ${{ vars.HEXALITH_ZOT_REGISTRY || 'registry.hexalith.com' }}
+          HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME }}
+          HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_API_KEY }}
+          HEXALITH_BUILDS_EXECUTION_SHA: 397c94a4e246c90b21cf408790fa0d55bf32d795
+          HEXALITH_RELEASE_ENVIRONMENT: production
+          HEXALITH_RELEASE_SOURCE_BRANCH: main
+          HEXALITH_RELEASE_SOURCE_CI_WORKFLOW: ${{ needs.verify-source.outputs.source-ci-workflow }}
+          HEXALITH_RELEASE_PACKAGE_MANIFEST: tools/release-packages.json
+          HEXALITH_RELEASE_EXPECTED_PACKAGE_COUNT: '9'
+          HEXALITH_RELEASE_RESERVED_VERSION: ''
+          HEXALITH_RELEASE_AUTHORITY_ISSUE_URL: ''
+          HEXALITH_RELEASE_AUTHORITY_OWNER: ''
+          HEXALITH_RELEASE_REQUIRE_AUTHORITY: 'false'
+        run: npm exec --no -- semantic-release
+      - name: Upload complete release evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .hexalith/release-evidence/**
+          if-no-files-found: warn
+          include-hidden-files: true
+          retention-days: 30
 
   verify-publication:
     name: Verify exact source was published
     needs: release
+    if: ${{ needs.release.outputs.publish-enabled == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
