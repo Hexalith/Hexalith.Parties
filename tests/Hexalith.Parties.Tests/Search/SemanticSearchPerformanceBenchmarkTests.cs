@@ -14,6 +14,7 @@ namespace Hexalith.Parties.Tests.Search;
 /// Performance benchmark tests for SemanticPartySearchProvider.
 /// Verifies NFR2/NFR4 compliance: search latency &lt; 500ms at scale.
 /// </summary>
+[Collection(LocalSearchPerformanceCollection.Name)]
 public class SemanticSearchPerformanceBenchmarkTests(ITestOutputHelper output)
 {
     private readonly SemanticPartySearchProvider _provider = new();
