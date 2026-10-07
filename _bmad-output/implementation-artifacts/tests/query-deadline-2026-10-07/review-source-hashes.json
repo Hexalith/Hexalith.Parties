@@ -1,0 +1,7 @@
+{
+  "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Authorization/PartyIdentityOptions.cs": "13d53019d103f379159aa91371930d1504e8f95cdb8ca2941d88ec5b32e46689",
+  "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs": "f95e9831c49ec64829607f6c57e95c95e266951c49042dc4f252c55fa81a0bfe",
+  "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs": "f1a150c34d61fe8055b214b26a819b018c0bae6ccb971c54bfcd0ccdb344c020",
+  "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "7c1e86de0189b3fd3bd82c23d52fcddf6858b784affee28bc23bf5165f4f5c13",
+  "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityRetentionConfigurationTests.cs": "45c265a699cd410df25a90ae44a6f11314f60ea7c9518a1f80c07fc45b3a1e2b"
+}

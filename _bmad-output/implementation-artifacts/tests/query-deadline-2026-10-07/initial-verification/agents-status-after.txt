@@ -1,0 +1,3 @@
+## main...origin/main
+ M _bmad-output/implementation-artifacts/spec-5-4-owner-prerequisites.md
+?? _bmad-output/implementation-artifacts/tests/parties-query-deadline-2026-10-07/

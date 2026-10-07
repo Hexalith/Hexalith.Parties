@@ -1,0 +1,731 @@
+--- a/src/Hexalith.Parties/Authorization/PartyIdentityOptions.cs
++++ b/src/Hexalith.Parties/Authorization/PartyIdentityOptions.cs
+@@ -5,6 +5,9 @@
+ /// <summary>Required attribution policy configuration; unset settings deny binding writes, binding reads and live qualification.</summary>
+ public sealed class PartyIdentityOptions
+ {
++    /// <summary>Gets or sets the whole-query operational timeout, greater than zero and at most the SDK's thirty-second bound.</summary>
++    public TimeSpan QueryTimeout { get; set; } = TimeSpan.FromSeconds(30);
++
+     /// <summary>Gets or sets the approved versioned retention policy.</summary>
+     public string? PolicyId { get; set; }
+ 
+--- /dev/null
++++ b/src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs
+@@ -0,0 +1,57 @@
++namespace Hexalith.Parties.Queries;
++
++/// <summary>One monotonic operational budget for source invocation, custody and evidence release.</summary>
++internal sealed class PartyIdentityQueryDeadline : IDisposable
++{
++    private readonly CancellationToken _callerToken;
++    private readonly TimeProvider _timeProvider;
++    private readonly long _startedAt;
++    private readonly TimeSpan _timeout;
++    private readonly CancellationTokenSource _timeoutSource;
++    private readonly CancellationTokenSource _linkedSource;
++
++    /// <summary>Starts one finite deadline measured by the owning service's clock.</summary>
++    public PartyIdentityQueryDeadline(TimeSpan timeout, TimeProvider timeProvider, CancellationToken callerToken)
++    {
++        _callerToken = callerToken;
++        _timeProvider = timeProvider;
++        _startedAt = timeProvider.GetTimestamp();
++        _timeout = timeout;
++        _timeoutSource = new(timeout, timeProvider);
++        _linkedSource = CancellationTokenSource.CreateLinkedTokenSource(callerToken, _timeoutSource.Token);
++    }
++
++    /// <summary>Rejects caller cancellation first, then elapsed or timer-expired deadlines.</summary>
++    public void ThrowIfCancellationRequested()
++    {
++        _callerToken.ThrowIfCancellationRequested();
++        if (_timeProvider.GetElapsedTime(_startedAt) >= _timeout)
++        {
++            _timeoutSource.Cancel();
++        }
++
++        _linkedSource.Token.ThrowIfCancellationRequested();
++    }
++
++    /// <summary>Bounds both synchronous provider invocation and its noncooperative returned task.</summary>
++    public async Task<T> ReadAsync<T>(Func<CancellationToken, Task<T>> read)
++    {
++        ThrowIfCancellationRequested();
++        CancellationToken token = _linkedSource.Token;
++        Task<T> pending = Task.Run(() => read(token), token);
++        // A provider can fault after the caller has stopped waiting. Observe that fault
++        // without ever resuming the identity query or releasing its result.
++        _ = pending.ContinueWith(static task => { _ = task.Exception; }, CancellationToken.None,
++            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
++        T result = await pending.WaitAsync(token).ConfigureAwait(false);
++        ThrowIfCancellationRequested();
++        return result;
++    }
++
++    /// <inheritdoc/>
++    public void Dispose()
++    {
++        _linkedSource.Dispose();
++        _timeoutSource.Dispose();
++    }
++}
+--- a/src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs
++++ b/src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs
+@@ -30,35 +30,45 @@
+         cancellationToken.ThrowIfCancellationRequested();
+         try
+         {
+-            IdentityHistoryPolicy? policy = identityOptions?.CurrentValue.Policy;
++            PartyIdentityOptions? options = identityOptions?.CurrentValue;
++            TimeSpan timeout = options?.QueryTimeout ?? TimeSpan.FromSeconds(30);
++            if (timeout <= TimeSpan.Zero || timeout > TimeSpan.FromSeconds(30))
++            {
++                cancellationToken.ThrowIfCancellationRequested();
++                return new(PartyIdentityOutcome.Unavailable, null);
++            }
++
++            using var deadline = new PartyIdentityQueryDeadline(timeout, timeProvider, cancellationToken);
++            deadline.ThrowIfCancellationRequested();
++            IdentityHistoryPolicy? policy = options?.Policy;
+             ResolvePartyIdentity? query = JsonSerializer.Deserialize<ResolvePartyIdentity>(envelope.Payload, PartiesJsonOptions.Default);
+             if (query is null || !Matches(envelope, query.TenantId, query.PartyId))
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return new(PartyIdentityOutcome.Unavailable, null);
+             }
+ 
+             IdentityAdmissionEvidence? admitted = authority.Admit(envelope).Evidence;
+             if (admitted is null || reader is null)
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
+-                return new(PartyIdentityOutcome.Unavailable, null);
+-            }
+-
+-            cancellationToken.ThrowIfCancellationRequested();
+-            AuthoritativeStreamReadResult read = await reader.ReadAsync(new(query.TenantId, "party", query.PartyId), cancellationToken).WaitAsync(cancellationToken).ConfigureAwait(false);
+-            cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
++                return new(PartyIdentityOutcome.Unavailable, null);
++            }
++
++            deadline.ThrowIfCancellationRequested();
++            AuthoritativeStreamReadResult read = await deadline.ReadAsync(token => reader.ReadAsync(new(query.TenantId, "party", query.PartyId), token)).ConfigureAwait(false);
++            deadline.ThrowIfCancellationRequested();
+             if (!read.IsAuthoritative || !MatchesSource(envelope, read.Stream)
+                 || read.Stream!.ObservedAt > timeProvider.GetUtcNow())
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return new(PartyIdentityOutcome.Unavailable, null);
+             }
+ 
+             PartyState state = PartyIdentitySourceFold.Fold(read.Stream!);
+             if (!state.HasBeenCreated)
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return new(PartyIdentityOutcome.Unavailable, null);
+             }
+ 
+@@ -72,7 +82,7 @@
+             {
+                 if (!PolicyIsCurrent(policy))
+                 {
+-                    cancellationToken.ThrowIfCancellationRequested();
++                    deadline.ThrowIfCancellationRequested();
+                     return new(PartyIdentityOutcome.Unavailable, null);
+                 }
+ 
+@@ -85,16 +95,15 @@
+                 {
+                     if (!candidates[0].Custody.Satisfies(policy!, candidates[0].ValidFrom))
+                     {
+-                        cancellationToken.ThrowIfCancellationRequested();
++                        deadline.ThrowIfCancellationRequested();
+                         return new(PartyIdentityOutcome.Unavailable, null);
+                     }
+ 
+-                    bool canRead = await custody.CanReadAsync(read.Stream!.Identity, candidates[0].Custody, cancellationToken)
+-                        .WaitAsync(cancellationToken).ConfigureAwait(false);
+-                    cancellationToken.ThrowIfCancellationRequested();
++                    bool canRead = await deadline.ReadAsync(token => custody.CanReadAsync(read.Stream!.Identity, candidates[0].Custody, token)).ConfigureAwait(false);
++                    deadline.ThrowIfCancellationRequested();
+                     if (!PolicyIsCurrent(policy))
+                     {
+-                        cancellationToken.ThrowIfCancellationRequested();
++                        deadline.ThrowIfCancellationRequested();
+                         return new(PartyIdentityOutcome.Unavailable, null);
+                     }
+ 
+@@ -108,14 +117,14 @@
+             }
+ 
+             IdentityAdmissionEvidence? currentAuthority = authority.Admit(envelope).Evidence;
+-            cancellationToken.ThrowIfCancellationRequested();
++            deadline.ThrowIfCancellationRequested();
+             DateTimeOffset completedAt = timeProvider.GetUtcNow();
+             if (completedAt < read.Stream!.ObservedAt || !SameAuthority(admitted, currentAuthority, completedAt)
+                 || requiresHumanPolicy && !PolicyIsCurrent(policy)
+                 || binding is not null && (!currentAuthority!.ActorActive || completedAt < binding.ValidFrom || completedAt >= binding.ValidUntil
+                     || completedAt >= binding.Custody.ExpiresAt))
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return new(PartyIdentityOutcome.Unavailable, null);
+             }
+ 
+@@ -123,12 +132,13 @@
+             var evidence = new PartyIdentityEvidence(1, query.TenantId, query.PartyId, classification,
+                 state.IsActive, state.IsRestricted, state.ErasureStatus != ErasureStatus.Active,
+                 source.Head, source.ObservedAt, source.ObservationId, binding);
+-            cancellationToken.ThrowIfCancellationRequested();
++            deadline.ThrowIfCancellationRequested();
+             return new(eligible && classification != PartyIdentityClassification.Unknown
+                 ? PartyIdentityOutcome.Resolved : PartyIdentityOutcome.Ineligible, evidence);
+         }
+         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+         {
++            cancellationToken.ThrowIfCancellationRequested();
+             throw;
+         }
+         catch (Exception)
+@@ -146,41 +156,51 @@
+         ResolveHumanActorBindingAt? query = null;
+         try
+         {
+-            IdentityHistoryPolicy? policy = identityOptions?.CurrentValue.Policy;
+             query = JsonSerializer.Deserialize<ResolveHumanActorBindingAt>(envelope.Payload, PartiesJsonOptions.Default);
++            PartyIdentityOptions? options = identityOptions?.CurrentValue;
++            TimeSpan timeout = options?.QueryTimeout ?? TimeSpan.FromSeconds(30);
++            if (timeout <= TimeSpan.Zero || timeout > TimeSpan.FromSeconds(30))
++            {
++                cancellationToken.ThrowIfCancellationRequested();
++                return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
++            }
++
++            using var deadline = new PartyIdentityQueryDeadline(timeout, timeProvider, cancellationToken);
++            deadline.ThrowIfCancellationRequested();
++            IdentityHistoryPolicy? policy = options?.Policy;
+             if (query is null || !Matches(envelope, query.TenantId, query.PartyId)
+                 || string.IsNullOrWhiteSpace(query.ExpectedActorId) || query.ExpectedBindingVersion <= 0
+                 || authority.Admit(envelope).Evidence is not { } admitted
+                 || admitted.TargetActorId != query.ExpectedActorId || historyReader is null || custody is null
+                 || !PolicyIsCurrent(policy))
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
+-                return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
+-            }
+-
+-            cancellationToken.ThrowIfCancellationRequested();
+-            RetainedIdentityHistoryReadResult read = await historyReader.ReadAsync(new(query.TenantId, "party", query.PartyId),
+-                RetainedIdentityHistoryReadRequest.AttributionPurpose, cancellationToken).WaitAsync(cancellationToken).ConfigureAwait(false);
+-            cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
++                return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
++            }
++
++            deadline.ThrowIfCancellationRequested();
++            RetainedIdentityHistoryReadResult read = await deadline.ReadAsync(token => historyReader.ReadAsync(new(query.TenantId, "party", query.PartyId),
++                RetainedIdentityHistoryReadRequest.AttributionPurpose, token)).ConfigureAwait(false);
++            deadline.ThrowIfCancellationRequested();
+             if (!PolicyIsCurrent(policy) || !read.IsAuthoritative || read.Stream is not { } retainedSource
+                 || retainedSource.Identity != new AggregateIdentity(query.TenantId, "party", query.PartyId)
+                 || !RetainedIdentityHistoryValidator.IsComplete(new(retainedSource.Identity,
+                     RetainedIdentityHistoryReadRequest.AttributionPurpose), retainedSource, timeProvider.GetUtcNow()))
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
+             }
+ 
+             if (query.ActionAt > read.Stream!.ObservedAt || read.Stream.ObservedAt > timeProvider.GetUtcNow())
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
+             }
+ 
+             IReadOnlyList<RetainedHumanActorBinding> history = RetainedHumanActorHistoryFold.Fold(read.Stream!);
+             if (!SameAuthority(admitted, authority.Admit(envelope).Evidence, timeProvider.GetUtcNow()) || !PolicyIsCurrent(policy))
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
+             }
+ 
+@@ -188,41 +208,41 @@
+                 .Where(item => item.Evidence.ValidFrom <= query.ActionAt && (item.Evidence.ValidUntil is null || query.ActionAt < item.Evidence.ValidUntil))];
+             if (matches.Length != 1)
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return HistoryFailure(query, matches.Length == 0 ? HumanActorBindingOutcome.Gap : HumanActorBindingOutcome.Ambiguous);
+             }
+ 
+             HumanActorBindingEvidence evidence = matches[0].Evidence;
+             if (!evidence.Custody.Satisfies(policy!, evidence.ValidFrom))
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
+             }
+ 
+             if (evidence.ActorId != query.ExpectedActorId || evidence.BindingVersion != query.ExpectedBindingVersion)
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return HistoryFailure(query, HumanActorBindingOutcome.Mismatch);
+             }
+ 
+             if (timeProvider.GetUtcNow() >= evidence.Custody.ExpiresAt)
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return HistoryFailure(query, HumanActorBindingOutcome.Expired);
+             }
+ 
+-            bool canRead = await custody.CanReadAsync(read.Stream!.Identity, evidence.Custody, cancellationToken).WaitAsync(cancellationToken).ConfigureAwait(false);
+-            cancellationToken.ThrowIfCancellationRequested();
++            bool canRead = await deadline.ReadAsync(token => custody.CanReadAsync(read.Stream!.Identity, evidence.Custody, token)).ConfigureAwait(false);
++            deadline.ThrowIfCancellationRequested();
+             DateTimeOffset completedAt = timeProvider.GetUtcNow();
+             if (!PolicyIsCurrent(policy))
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
+             }
+ 
+             if (!canRead || completedAt >= evidence.Custody.ExpiresAt)
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return HistoryFailure(query, HumanActorBindingOutcome.Expired);
+             }
+ 
+@@ -230,13 +250,13 @@
+             completedAt = timeProvider.GetUtcNow();
+             if (!PolicyIsCurrent(policy))
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
+             }
+ 
+             if (completedAt >= evidence.Custody.ExpiresAt)
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
+                 return HistoryFailure(query, HumanActorBindingOutcome.Expired);
+             }
+ 
+@@ -244,16 +264,17 @@
+                 || !RetainedIdentityHistoryValidator.IsComplete(new(retainedSource.Identity,
+                     RetainedIdentityHistoryReadRequest.AttributionPurpose), retainedSource, completedAt))
+             {
+-                cancellationToken.ThrowIfCancellationRequested();
+-                return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
+-            }
+-
+-            cancellationToken.ThrowIfCancellationRequested();
++                deadline.ThrowIfCancellationRequested();
++                return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
++            }
++
++            deadline.ThrowIfCancellationRequested();
+             return new(HumanActorBindingOutcome.Resolved, 1, query.TenantId, query.PartyId, query.ActionAt,
+                 read.Stream.Head, read.Stream.ObservationId, evidence) { BindingSourcePosition = matches[0].SourcePosition };
+         }
+         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+         {
++            cancellationToken.ThrowIfCancellationRequested();
+             throw;
+         }
+         catch (Exception)
+--- a/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs
++++ b/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs
+@@ -68,6 +68,7 @@
+         var fixture = Service(Events()[0], new HumanActorBindingEstablished(new(binding, "logical", "digest"), Start, 0));
+         DateTimeOffset now = Start.AddDays(2);
+         TimeProvider clock = Substitute.For<TimeProvider>();
++        ConfigureSystemTimer(clock);
+         clock.GetUtcNow().Returns(_ => now);
+         var grant = new IdentityAdmissionEvidence(new("tenant-a", "party", "party-1", "Read", "c", "c", "d"),
+             "reader", null, Actor, 1, true, Start.AddDays(-1), Start.AddDays(20), 1);
+@@ -134,6 +135,7 @@
+         var fixture = Service(Events());
+         DateTimeOffset now = Start.AddDays(9);
+         TimeProvider clock = Substitute.For<TimeProvider>();
++        ConfigureSystemTimer(clock);
+         clock.GetUtcNow().Returns(_ => now);
+         var admitted = new IdentityAdmissionEvidence(new("tenant-a", "party", "party-1", "Read", "c", "c", "d"),
+             "reader", null, Actor, 1, false, Start, Start.AddDays(20), 1);
+@@ -186,6 +188,7 @@
+         source = source with { Stream = source.Stream! with { ValidUntil = deadline } };
+         fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(source);
+         TimeProvider clock = Substitute.For<TimeProvider>();
++        ConfigureSystemTimer(clock);
+         clock.GetUtcNow().Returns(_ => now);
+         fixture.Custody.CanReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<IdentityHistoryCustodyEvidence>(), Arg.Any<CancellationToken>())
+             .Returns(_ => { now = deadline; return true; });
+@@ -499,7 +502,8 @@
+         var fixture = Service(Events());
+         using var caller = new CancellationTokenSource();
+         await caller.CancelAsync();
+-        await Should.ThrowAsync<OperationCanceledException>(() => InvokeIdentityAsync(fixture.Service, historical, caller.Token));
++        OperationCanceledException exception = await Should.ThrowAsync<OperationCanceledException>(() => InvokeIdentityAsync(fixture.Service, historical, caller.Token));
++        exception.CancellationToken.ShouldBe(caller.Token);
+         fixture.Authority.DidNotReceiveWithAnyArgs().Admit(default(QueryEnvelope)!);
+         await fixture.Reader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default);
+         await fixture.HistoryReader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default!, default);
+@@ -564,7 +568,8 @@
+         Task result = InvokeIdentityAsync(fixture.Service, historical, caller.Token);
+         await entered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+         await caller.CancelAsync();
+-        await Should.ThrowAsync<OperationCanceledException>(() => result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken));
++        OperationCanceledException exception = await Should.ThrowAsync<OperationCanceledException>(() => result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken));
++        exception.CancellationToken.ShouldBe(caller.Token);
+     }
+ 
+     /// <summary>Verifies custody cancels then returns  does not consult final authority or release identity.</summary>
+@@ -771,6 +776,11 @@
+             result.Outcome.ShouldBe(HumanActorBindingOutcome.Unavailable);
+             result.Evidence.ShouldBeNull();
+             result.BindingSourcePosition.ShouldBe(0);
++            result.SourcePosition.ShouldBe(0);
++            result.ObservationId.ShouldBeNull();
++            result.TenantId.ShouldBe("tenant-a");
++            result.PartyId.ShouldBe("party-1");
++            result.ActionAt.ShouldBe(Start);
+         }
+         else
+         {
+@@ -804,6 +814,7 @@
+         var policy = new PartyIdentityOptions { PolicyId = "party-actor-retention-v1", Retention = TimeSpan.FromDays(365), ExpiryTrigger = "binding-effective-at" };
+         fixture.Options.CurrentValue.Returns(policy);
+         TimeProvider clock = Substitute.For<TimeProvider>();
++        ConfigureSystemTimer(clock);
+         clock.GetUtcNow().Returns(now);
+         RetainedIdentityHistoryReadResult captured = await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"),
+             RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken);
+@@ -849,6 +860,7 @@
+         fixture.Options.CurrentValue.Returns(new PartyIdentityOptions { PolicyId = "party-actor-retention-v1", Retention = TimeSpan.FromDays(365), ExpiryTrigger = "binding-effective-at" });
+         DateTimeOffset now = binding.Custody.ExpiresAt.AddTicks(ticks);
+         TimeProvider clock = Substitute.For<TimeProvider>();
++        ConfigureSystemTimer(clock);
+         clock.GetUtcNow().Returns(now);
+         RetainedIdentityHistoryReadResult captured = await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"), RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken);
+         RetainedIdentityHistoryStream restored = JsonSerializer.Deserialize<RetainedIdentityHistoryStream>(
+@@ -885,6 +897,7 @@
+         fixture.Options.CurrentValue.Returns(new PartyIdentityOptions { PolicyId = "party-actor-retention-v1", Retention = TimeSpan.FromDays(365), ExpiryTrigger = "binding-effective-at" });
+         DateTimeOffset now = Start.AddDays(366);
+         TimeProvider clock = Substitute.For<TimeProvider>();
++        ConfigureSystemTimer(clock);
+         clock.GetUtcNow().Returns(now);
+         RetainedIdentityHistoryReadResult captured = await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"), RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken);
+         RetainedIdentityHistoryStream missing = captured.Stream! with { ObservedAt = now, ValidUntil = now.AddMinutes(1), Events = [captured.Stream!.Events[1]], ExcludedSequences = [1, 2] };
+@@ -901,6 +914,267 @@
+         await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+     }
+ 
++    /// <summary>One deadline cancels noncooperative source/custody and cannot admit a late success or fault.</summary>
++    [Theory]
++    [InlineData(false, false, false)]
++    [InlineData(true, false, false)]
++    [InlineData(false, true, false)]
++    [InlineData(true, true, false)]
++    [InlineData(false, false, true)]
++    [InlineData(true, false, true)]
++    [InlineData(false, true, true)]
++    [InlineData(true, true, true)]
++    public async Task WholeQueryDeadline_NonCooperativeDependencyDeniesLateEvidence(bool historical, bool inCustody, bool lateFault)
++    {
++        var fixture = Service(Events());
++        var (clock, advance) = DeadlineClock();
++        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, fixture.HistoryReader, fixture.Options);
++        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        CancellationToken providerToken = default;
++        Action complete;
++        if (inCustody)
++        {
++            var pending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
++            fixture.Custody.CanReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<IdentityHistoryCustodyEvidence>(), Arg.Any<CancellationToken>())
++                .Returns(call => { providerToken = call.Arg<CancellationToken>(); entered.TrySetResult(); return pending.Task; });
++            complete = () => { if (lateFault) { pending.SetException(new HttpRequestException("late synthetic fault")); } else { pending.SetResult(true); } };
++        }
++        else if (historical)
++        {
++            RetainedIdentityHistoryReadResult valid = await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"), RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken);
++            var pending = new TaskCompletionSource<RetainedIdentityHistoryReadResult>(TaskCreationOptions.RunContinuationsAsynchronously);
++            fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
++                .Returns(call => { providerToken = call.Arg<CancellationToken>(); entered.TrySetResult(); return pending.Task; });
++            complete = () => { if (lateFault) { pending.SetException(new HttpRequestException("late synthetic fault")); } else { pending.SetResult(valid); } };
++        }
++        else
++        {
++            AuthoritativeStreamReadResult valid = await fixture.Reader.ReadAsync(new("tenant-a", "party", "party-1"), TestContext.Current.CancellationToken);
++            var pending = new TaskCompletionSource<AuthoritativeStreamReadResult>(TaskCreationOptions.RunContinuationsAsynchronously);
++            fixture.Reader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<CancellationToken>())
++                .Returns(call => { providerToken = call.Arg<CancellationToken>(); entered.TrySetResult(); return pending.Task; });
++            complete = () => { if (lateFault) { pending.SetException(new HttpRequestException("late synthetic fault")); } else { pending.SetResult(valid); } };
++        }
++
++        Task result = AssertUnavailableAsync(service, historical);
++        await entered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++        result.IsCompleted.ShouldBeFalse();
++        advance(TimeSpan.FromSeconds(30), true);
++        await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++        providerToken.IsCancellationRequested.ShouldBeTrue();
++        int authorityCalls = fixture.Authority.ReceivedCalls().Count();
++        complete();
++        await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++        fixture.Authority.ReceivedCalls().Count().ShouldBe(authorityCalls);
++        if (!inCustody)
++        {
++            await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
++        }
++    }
++
++    /// <summary>The budget covers providers blocked synchronously before returning their task.</summary>
++    [Theory]
++    [InlineData(false, false)]
++    [InlineData(true, false)]
++    [InlineData(false, true)]
++    [InlineData(true, true)]
++    public async Task WholeQueryDeadline_SynchronousProviderInvocationIsBounded(bool historical, bool inCustody)
++    {
++        var fixture = Service(Events());
++        var (clock, advance) = DeadlineClock();
++        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, fixture.HistoryReader, fixture.Options);
++        using var release = new ManualResetEventSlim();
++        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        var returned = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        CancellationToken providerToken = default;
++        void Block(CancellationToken token)
++        {
++            providerToken = token;
++            entered.TrySetResult();
++            release.Wait(TestContext.Current.CancellationToken);
++            returned.TrySetResult();
++        }
++
++        if (inCustody)
++        {
++            fixture.Custody.CanReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<IdentityHistoryCustodyEvidence>(), Arg.Any<CancellationToken>())
++                .Returns(call => { Block(call.Arg<CancellationToken>()); return Task.FromResult(true); });
++        }
++        else if (historical)
++        {
++            RetainedIdentityHistoryReadResult valid = await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"), RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken);
++            fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
++                .Returns(call => { Block(call.Arg<CancellationToken>()); return Task.FromResult(valid); });
++        }
++        else
++        {
++            AuthoritativeStreamReadResult valid = await fixture.Reader.ReadAsync(new("tenant-a", "party", "party-1"), TestContext.Current.CancellationToken);
++            fixture.Reader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<CancellationToken>())
++                .Returns(call => { Block(call.Arg<CancellationToken>()); return Task.FromResult(valid); });
++        }
++
++        Task result = Task.Run(() => AssertUnavailableAsync(service, historical), TestContext.Current.CancellationToken);
++        try
++        {
++            await entered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++            advance(TimeSpan.FromSeconds(30), true);
++            await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++            providerToken.IsCancellationRequested.ShouldBeTrue();
++        }
++        finally
++        {
++            release.Set();
++            await returned.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++        }
++    }
++
++    /// <summary>Source and custody consume one budget and receive the same cancellable operation token.</summary>
++    [Theory]
++    [InlineData(false)]
++    [InlineData(true)]
++    public async Task WholeQueryDeadline_SourceAndCustodyShareCumulativeBudget(bool historical)
++    {
++        var fixture = Service(Events());
++        var (clock, advance) = DeadlineClock();
++        PartyIdentityOptions configured = PolicyOptions();
++        configured.QueryTimeout = TimeSpan.FromSeconds(10);
++        fixture.Options.CurrentValue.Returns(configured);
++        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, fixture.HistoryReader, fixture.Options);
++        var sourceEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        var custodyEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        var custodyPending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
++        CancellationToken sourceToken = default;
++        CancellationToken custodyToken = default;
++        Action releaseSource;
++        if (historical)
++        {
++            RetainedIdentityHistoryReadResult valid = await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"), RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken);
++            var source = new TaskCompletionSource<RetainedIdentityHistoryReadResult>(TaskCreationOptions.RunContinuationsAsynchronously);
++            fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
++                .Returns(call => { sourceToken = call.Arg<CancellationToken>(); sourceEntered.SetResult(); return source.Task; });
++            releaseSource = () => source.SetResult(valid);
++        }
++        else
++        {
++            AuthoritativeStreamReadResult valid = await fixture.Reader.ReadAsync(new("tenant-a", "party", "party-1"), TestContext.Current.CancellationToken);
++            var source = new TaskCompletionSource<AuthoritativeStreamReadResult>(TaskCreationOptions.RunContinuationsAsynchronously);
++            fixture.Reader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<CancellationToken>())
++                .Returns(call => { sourceToken = call.Arg<CancellationToken>(); sourceEntered.SetResult(); return source.Task; });
++            releaseSource = () => source.SetResult(valid);
++        }
++
++        fixture.Custody.CanReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<IdentityHistoryCustodyEvidence>(), Arg.Any<CancellationToken>())
++            .Returns(call => { custodyToken = call.Arg<CancellationToken>(); custodyEntered.SetResult(); return custodyPending.Task; });
++        Task result = AssertUnavailableAsync(service, historical);
++        await sourceEntered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++        advance(TimeSpan.FromSeconds(7), true);
++        result.IsCompleted.ShouldBeFalse();
++        releaseSource();
++        await custodyEntered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++        sourceToken.ShouldBe(custodyToken);
++        advance(TimeSpan.FromSeconds(3), true);
++        await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++        custodyToken.IsCancellationRequested.ShouldBeTrue();
++        custodyPending.SetResult(true);
++        clock.Received(1).CreateTimer(Arg.Any<TimerCallback>(), Arg.Any<object?>(), TimeSpan.FromSeconds(10), Timeout.InfiniteTimeSpan);
++    }
++
++    /// <summary>Monotonic elapsed checks deny late evidence even if a timer callback is delayed.</summary>
++    [Theory]
++    [InlineData(false)]
++    [InlineData(true)]
++    public async Task WholeQueryDeadline_ElapsedBeforeTimerCallbackDeniesEvidence(bool historical)
++    {
++        var fixture = Service(Events());
++        var (clock, advance) = DeadlineClock();
++        fixture.Custody.CanReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<IdentityHistoryCustodyEvidence>(), Arg.Any<CancellationToken>())
++            .Returns(_ => { advance(TimeSpan.FromSeconds(30), false); return true; });
++        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, fixture.HistoryReader, fixture.Options);
++        await AssertUnavailableAsync(service, historical);
++        fixture.Authority.Received(historical ? 2 : 1).Admit(Arg.Any<QueryEnvelope>());
++    }
++
++    /// <summary>Invalid operational bounds fail closed before authority, source or custody invocation.</summary>
++    [Theory]
++    [InlineData(false, 0L)]
++    [InlineData(true, 0L)]
++    [InlineData(false, -1L)]
++    [InlineData(true, -1L)]
++    [InlineData(false, 300_000_001L)]
++    [InlineData(true, 300_000_001L)]
++    [InlineData(false, long.MaxValue)]
++    [InlineData(true, long.MaxValue)]
++    public async Task InvalidQueryTimeout_DeniesBeforeAnyProvider(bool historical, long ticks)
++    {
++        var fixture = Service(Events());
++        PartyIdentityOptions configured = PolicyOptions();
++        configured.QueryTimeout = TimeSpan.FromTicks(ticks);
++        fixture.Options.CurrentValue.Returns(configured);
++        await AssertUnavailableAsync(fixture.Service, historical);
++        fixture.Authority.DidNotReceiveWithAnyArgs().Admit(default(QueryEnvelope)!);
++        await fixture.Reader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default);
++        await fixture.HistoryReader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default!, default);
++        await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
++    }
++
++    /// <summary>Caller cancellation wins a concurrent deadline/fault and preserves the original token.</summary>
++    [Theory]
++    [InlineData(false, false)]
++    [InlineData(true, false)]
++    [InlineData(false, true)]
++    [InlineData(true, true)]
++    public async Task CallerCancellationRacesDeadlineAndFault_PreservesOriginalToken(bool historical, bool expire)
++    {
++        var fixture = Service(Events());
++        var (clock, advance) = DeadlineClock();
++        using var caller = new CancellationTokenSource();
++        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
++        var pending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
++        fixture.Custody.CanReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<IdentityHistoryCustodyEvidence>(), Arg.Any<CancellationToken>())
++            .Returns(_ => { entered.SetResult(); return pending.Task; });
++        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, fixture.HistoryReader, fixture.Options);
++        Task result = InvokeIdentityAsync(service, historical, caller.Token);
++        await entered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
++        await caller.CancelAsync();
++        if (expire) { advance(TimeSpan.FromSeconds(30), true); }
++        pending.SetException(new HttpRequestException("synthetic racing fault"));
++        OperationCanceledException exception = await Should.ThrowAsync<OperationCanceledException>(() => result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken));
++        exception.CancellationToken.ShouldBe(caller.Token);
++    }
++
++    private static (TimeProvider Clock, Action<TimeSpan, bool> Advance) DeadlineClock()
++    {
++        TimeProvider clock = Substitute.For<TimeProvider>();
++        DateTimeOffset now = DateTimeOffset.UtcNow.AddSeconds(1);
++        long timestamp = 0;
++        TimerCallback? callback = null;
++        object? state = null;
++        long dueAt = long.MaxValue;
++        clock.TimestampFrequency.Returns(TimeSpan.TicksPerSecond);
++        clock.GetTimestamp().Returns(_ => Interlocked.Read(ref timestamp));
++        clock.GetUtcNow().Returns(_ => now + TimeSpan.FromTicks(Interlocked.Read(ref timestamp)));
++        clock.CreateTimer(Arg.Any<TimerCallback>(), Arg.Any<object?>(), Arg.Any<TimeSpan>(), Arg.Any<TimeSpan>()).Returns(call =>
++        {
++            callback = call.Arg<TimerCallback>();
++            state = call.ArgAt<object?>(1);
++            dueAt = call.ArgAt<TimeSpan>(2).Ticks;
++            return Substitute.For<ITimer>();
++        });
++        return (clock, (elapsed, fire) =>
++        {
++            long current = Interlocked.Add(ref timestamp, elapsed.Ticks);
++            if (fire && current >= dueAt) { callback!(state); }
++        });
++    }
++
++    private static void ConfigureSystemTimer(TimeProvider clock)
++    {
++        clock.TimestampFrequency.Returns(TimeProvider.System.TimestampFrequency);
++        clock.GetTimestamp().Returns(_ => TimeProvider.System.GetTimestamp());
++        clock.CreateTimer(Arg.Any<TimerCallback>(), Arg.Any<object?>(), Arg.Any<TimeSpan>(), Arg.Any<TimeSpan>()).Returns(call =>
++            TimeProvider.System.CreateTimer(call.Arg<TimerCallback>(), call.ArgAt<object?>(1), call.ArgAt<TimeSpan>(2), call.ArgAt<TimeSpan>(3)));
++    }
++
+     private static PartyIdentityOptions PolicyOptions() => new()
+     {
+         PolicyId = "synthetic",
+--- a/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityRetentionConfigurationTests.cs
++++ b/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityRetentionConfigurationTests.cs
+@@ -12,6 +12,32 @@
+ /// <summary>Verifies the approved host policy through the same options binding used by Parties.</summary>
+ public sealed class PartyIdentityRetentionConfigurationTests
+ {
++    /// <summary>Operational query timeouts bind independently of the accepted history lifetime.</summary>
++    [Theory]
++    [InlineData("00:00:05", 5)]
++    [InlineData("00:00:00", 0)]
++    [InlineData("00:00:31", 31)]
++    public void HostConfiguration_QueryTimeoutBindsWithoutChangingRetention(string configured, int seconds)
++    {
++        IConfigurationRoot configuration = new ConfigurationBuilder().AddConfiguration(LoadConfiguration())
++            .AddInMemoryCollection(new Dictionary<string, string?> { ["Parties:Identity:QueryTimeout"] = configured }).Build();
++        using ServiceProvider services = new ServiceCollection()
++            .AddOptions<PartyIdentityOptions>().Bind(configuration.GetSection("Parties:Identity"))
++            .Services.BuildServiceProvider();
++        PartyIdentityOptions options = services.GetRequiredService<IOptionsMonitor<PartyIdentityOptions>>().CurrentValue;
++        options.QueryTimeout.ShouldBe(TimeSpan.FromSeconds(seconds));
++        options.Policy!.Retention.ShouldBe(TimeSpan.FromDays(365));
++    }
++
++    /// <summary>The unconfigured operational budget is the existing SDK maximum, without supplying a retention policy.</summary>
++    [Fact]
++    public void QueryTimeout_DefaultIsThirtySecondsWithoutImplicitRetentionPolicy()
++    {
++        var options = new PartyIdentityOptions();
++        options.QueryTimeout.ShouldBe(TimeSpan.FromSeconds(30));
++        options.Policy.ShouldBeNull();
++    }
++
+     /// <summary>The actual host JSON supplies fixed days, without extending the clock after erasure or restore.</summary>
+     [Fact]
+     public void HostConfiguration_BindsApproved365FixedDays()

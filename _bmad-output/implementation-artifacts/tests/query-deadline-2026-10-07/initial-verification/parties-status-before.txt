@@ -1,0 +1,9 @@
+## main...origin/main
+ M src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs
+ M tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs
+ M tests/Hexalith.Parties.Tests/Gateway/PartyIdentityRetentionConfigurationTests.cs
+?? _bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/focused-build-command.json
+?? _bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/focused-tests-command.json
+?? _bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/focused-tests.xml
+?? _bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/initial-verification/
+?? _bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/pre-change/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityRetentionConfigurationTests.cs

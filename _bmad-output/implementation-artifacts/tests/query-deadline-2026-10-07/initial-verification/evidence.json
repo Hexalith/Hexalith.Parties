@@ -1,0 +1,130 @@
+{
+  "builds": {
+    "local-matrix/Hexalith.Parties.Server.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "cfb7552568193d5e5debfc769b620c00ad83dcb66e660d91c2349e2d66c2ca6e"
+    },
+    "local-matrix/Hexalith.Parties.UI.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "d43363d5a8668b6085cc6a1ff1507bb7e4dcdbfafb2766bacc087744c89346e5"
+    },
+    "local-matrix/Hexalith.EventStore.Client.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "355f0a804269f15be11bb11f74b9ebccaa262b879104b3aa810727247acd4130"
+    },
+    "local-matrix/Hexalith.Parties.Client.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "6e0e3ed65f2253e8c2f76b5fa73172cf788cb8bcf4de4edae7988de87e9fa7ea"
+    },
+    "local-matrix/Hexalith.EventStore.Contracts.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "1fe1567fc043fdce77c49c2e7be9d24745ad5b1849558d2fe09d7ed4a9d6b16a"
+    },
+    "local-matrix/Hexalith.Platform.Identity.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "469f1842bb60cba1ab8b305fd06e95b1ec7d3b6abf2736ab5b13b5cb65dea0af"
+    },
+    "local-matrix/Hexalith.Parties.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "d310f0cd8d5e35a3208f10b3f04bc76e76b775e539412dbb0014c6f7b98cbd01"
+    },
+    "local-matrix/Hexalith.Parties.Contracts.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "f4f068d61a70dbceb36416d31314ce42c4bf1bf84c3561a0567d23f82ccbcf84"
+    },
+    "local-matrix/Hexalith.EventStore.Server.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "cb98a287077c53c63bff04cf8d169fcb14fd9ec3de414b93f95e98de452ed68c"
+    },
+    "local-matrix/Hexalith.Parties.Security.Tests-build.log": {
+      "warnings": 0,
+      "errors": 0,
+      "sha256": "93a2eeb10ac5c85cf6857a3399b3cd91e58f1bdec8066cf215884f29799ca58b"
+    }
+  },
+  "startedHeads": {
+    "agents": "c92cfdb5607fa15aa56a613e86c6227406504351",
+    "parties": "cacebd3f2402e6c1c17af85be83d62b42a7072c5",
+    "eventstore": "40c92e085d8a6463d469c1b340c410fec84a690f",
+    "platform": "bed37580a4213edb3e4698525e530b85aa4a80ea"
+  },
+  "finishedHeads": {
+    "agents": "c92cfdb5607fa15aa56a613e86c6227406504351",
+    "parties": "cacebd3f2402e6c1c17af85be83d62b42a7072c5",
+    "eventstore": "40c92e085d8a6463d469c1b340c410fec84a690f",
+    "platform": "5f945450d4140fd190594a30b60a603521ec4e30"
+  },
+  "artifactsDirectory": "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf",
+  "sourceFiles": 3743,
+  "sourceDrift": {},
+  "xml": {
+    "operational-configuration.xml": {
+      "passes": 6,
+      "sha256": "9d287561f6ffd7538aaa3bb307a36953cfb5115d524189994f35de1db1172d87",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll"
+    },
+    "local-matrix/Hexalith.Parties.Security.Tests-tests.xml": {
+      "passes": 30,
+      "sha256": "e0bfc060f498ea9358777c01e90cc8f0a94febe6cb6375bcb2fb8163ff4172b9",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf/bin/Hexalith.Parties.Security.Tests/debug/Hexalith.Parties.Security.Tests.dll"
+    },
+    "local-matrix/Hexalith.Parties.Server.Tests-tests.xml": {
+      "passes": 94,
+      "sha256": "e4778d31c255577b26c26fb00506626c8463f04ee6c78880e5440ded0f307346",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf/bin/Hexalith.Parties.Server.Tests/debug/Hexalith.Parties.Server.Tests.dll"
+    },
+    "local-matrix/Hexalith.Platform.Identity.Tests-tests.xml": {
+      "passes": 2,
+      "sha256": "e16d74203a1cb7c95191965a075514b994133eeb896c7940a3ee3122d5c6338d",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.Platform.Identity.Tests.dll"
+    },
+    "local-matrix/Hexalith.EventStore.Contracts.Tests-tests.xml": {
+      "passes": 23,
+      "sha256": "6da0f3b530e4a827febdf8d40e8f009718a5ead8f36f4bc3a41fbc32956488d3",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Contracts.Tests.dll"
+    },
+    "local-matrix/Hexalith.EventStore.Client.Tests-tests.xml": {
+      "passes": 107,
+      "sha256": "386273b907c1e52f26bf1bc6cdb42c32f0cbd0fbf6d09621f2126b0d5f10b666",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.Tests.dll"
+    },
+    "local-matrix/Hexalith.Parties.UI.Tests-tests.xml": {
+      "passes": 72,
+      "sha256": "c7d0ae11d021442d301489e8233a6f677f891d92d83190ceff7fa864b1cdb0ab",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf/bin/Hexalith.Parties.UI.Tests/debug/Hexalith.Parties.UI.Tests.dll"
+    },
+    "local-matrix/Hexalith.Parties.Tests-tests.xml": {
+      "passes": 264,
+      "sha256": "3bbe47addeddfe1034f4a338d63e616494f3ff3eebeaaf144ac57db25afe2755",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll"
+    },
+    "local-matrix/Hexalith.Parties.Client.Tests-tests.xml": {
+      "passes": 98,
+      "sha256": "4ccd59616c9fc6302adfb36e3f3f39070dcdda57ae7d1272a886026582a0027e",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf/bin/Hexalith.Parties.Client.Tests/debug/Hexalith.Parties.Client.Tests.dll"
+    },
+    "local-matrix/Hexalith.Parties.Contracts.Tests-tests.xml": {
+      "passes": 29,
+      "sha256": "c8fb120a568ec02541b12a11a6a96f8b8e7f1631ddca175416009f744842bd5d",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.Contracts.Tests.dll"
+    },
+    "local-matrix/Hexalith.EventStore.Server.Tests-tests.xml": {
+      "passes": 168,
+      "sha256": "d9ad9cb3ee54edcdfad2bf059ef4c8b0086ff61ed1d00b56b9e5e37765a71434",
+      "assembly": "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Server.Tests.dll"
+    }
+  },
+  "distinctPasses": 893,
+  "sourcesSha256": "b31e47569adbd516b291012b2b5f179d6c53e811c6e22c1a46231f9141cd0ecd",
+  "artifactManifestSha256": "667ac0bf744a7a3cc824b30515b23c5725753b62e49c8284f44e9ee6195f56ae",
+  "commandsSha256": "def8bd84f7dd1d4b27b5d43f28bfad75c7e34dd0c722d4654690d49d9e7dcb7b"
+}

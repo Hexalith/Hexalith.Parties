@@ -1,0 +1,42 @@
+[
+  {
+    "argv": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "Local",
+      "-EventStoreRoot",
+      "/home/administrator/projects/hexalith/eventstore",
+      "-PlatformRoot",
+      "/home/administrator/projects/hexalith/platform",
+      "-EvidenceDirectory",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/initial-verification/local-matrix",
+      "-ArtifactsDirectory",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf",
+      "-MemoriesRoot",
+      "/tmp/parties-query-deadline-no-memories"
+    ],
+    "workingDirectory": "/home/administrator/projects/hexalith/parties",
+    "combinedOutput": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/initial-verification/local-runner.log",
+    "startedUtc": "2026-10-07T13:55:35.633811+00:00",
+    "exitCode": 0,
+    "outputSha256": "d6e2cc53926fc129d41f5091d5eea2e670742223e10b1673e73dccb63d2cf72b"
+  },
+  {
+    "argv": [
+      "dotnet",
+      "/home/administrator/projects/hexalith/parties/artifacts/story54-query-deadline-eac2tomf/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+      "-class",
+      "*PartyIdentityRetentionConfigurationTests",
+      "-result-xml",
+      "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/initial-verification/operational-configuration.xml"
+    ],
+    "workingDirectory": "/home/administrator/projects/hexalith/parties",
+    "combinedOutput": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/query-deadline-2026-10-07/initial-verification/operational-configuration.log",
+    "startedUtc": "2026-10-07T13:57:20.960779+00:00",
+    "exitCode": 0,
+    "outputSha256": "3dd3b7bd5f9d67dac77bcae2832941596aa0d644863e334d2cbc1b098733e374"
+  }
+]
