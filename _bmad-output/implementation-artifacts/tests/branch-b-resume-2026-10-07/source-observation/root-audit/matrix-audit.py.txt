@@ -1,0 +1,45 @@
+import argparse, datetime, fnmatch, hashlib, json, re, xml.etree.ElementTree as E
+from pathlib import Path
+parser=argparse.ArgumentParser()
+parser.add_argument('verifier')
+parser.add_argument('evidence_dir')
+parser.add_argument('output')
+args=parser.parse_args()
+verifier=Path(args.verifier)
+evidence=Path(args.evidence_dir)
+source=verifier.read_text()
+lanes=re.findall(r"@\{ Root=.*?Project='([^']+)'; Classes=@\(([^)]*)\); Matrix='([^']*)' \}",source)
+assert len(lanes)==10, f'Expected ten configured lanes, got {len(lanes)}'
+all_tests=[]
+results=[]
+for project,class_text,matrix in lanes:
+    patterns=re.findall(r"'([^']+)'",class_text)
+    xml_path=evidence/(project+'-tests.xml')
+    test_log=evidence/(project+'-tests.log')
+    build_log=evidence/(project+'-build.log')
+    tests=E.parse(xml_path).findall('.//test')
+    assert tests and all(t.attrib.get('result')=='Pass' for t in tests),project
+    output=test_log.read_text()
+    summary=re.findall(r'Total: (\d+), Errors: (\d+), Failed: (\d+), Skipped: (\d+), Not Run: (\d+)',output)[-1]
+    assert tuple(map(int,summary))==(len(tests),0,0,0,0),project
+    build=build_log.read_text()
+    assert 'Build succeeded.' in build and re.search(r'0 Warning\(s\)',build) and re.search(r'0 Error\(s\)',build),project
+    covered={pattern:sum(fnmatch.fnmatchcase(t.attrib.get('type',''),pattern) for t in tests) for pattern in patterns}
+    assert all(covered.values()),covered
+    results.append({'project':project,'passed':len(tests),'requiredClasses':covered,'xmlSha256':hashlib.sha256(xml_path.read_bytes()).hexdigest()})
+    all_tests.extend(t.attrib for t in tests)
+matrix_methods={
+    'Provision': ['ExactLostAckRetry_ReturnsOriginalWithoutAnotherCreationAndRejectsChangedIntent','RejectionOnlyStream_AllowsCreationWhileUnmarkedOrganizationConflicts'],
+    'Current identity': ['CurrentHuman_RequiresCompleteSourceAndCurrentExactActor','InactiveOrRestrictedHuman_ReturnsIneligibleWithoutUsableBinding','ForeignAuthoritativeSourceAndFutureAction_DenyWithNoEvidence'],
+    'History': ['HistoricalReplay_BeforeBoundaryReturnsOriginalAndAtBoundaryReturnsSuccessor','SerializedRetainedSource_ReconstructsBothIntervalsWithoutProfileOrCurrentBinding','RetainedCertificateOrEventSubstitution_DeniesWithoutProfileFallback'],
+    'Isolation': ['ConcurrentTenantCalls_KeepEveryRequestAndEvidenceInItsExplicitScope','WrongAuthorizedActor_DeniesBeforeSourceRead','ForeignAuthoritativeSourceAndFutureAction_DenyWithNoEvidence']}
+matrix={}
+for row,methods in matrix_methods.items():
+    mapped={method:[t.get('name','') for t in all_tests if method in t.get('name','')] for method in methods}
+    assert all(mapped.values()),row
+    matrix[row]=mapped
+callbacks=[t.get('name','') for t in all_tests if 'BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion' in t.get('name','')]
+assert len(callbacks)==12,len(callbacks)
+report={'observedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'totalPassed':sum(x['passed'] for x in results),'lanes':results,'frozenMatrixExecutedLocalCoverage':matrix,'blockingCallbackRegressions':callbacks,'limitations':'Audits executed Local XML and warning-free build evidence. Local fixtures do not prove live persisted end-state, restore/destruction, installed custody, complete owner acceptance, or current source correspondence; source correspondence is audited separately.'}
+Path(args.output).write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps({'output':args.output,'passed':report['totalPassed'],'laneCount':len(results),'matrixRows':len(matrix),'callbackRegressions':len(callbacks)}))

@@ -1,0 +1,87 @@
+{
+  "commands": [
+    "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --no-build --format Json --non-interactive",
+    "aspire wait parties --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --timeout 20 --non-interactive",
+    "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+    "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive"
+  ],
+  "partiesWaitExitCode": 0,
+  "partiesWaitSeconds": 19.8,
+  "resources": [
+    {
+      "displayName": "eventstore-admin-dapr-cli",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "eventstore-admin-ui-dapr-cli",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "eventstore-admin-ui",
+      "state": "NotStarted"
+    },
+    {
+      "displayName": "eventstore-admin",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "eventstore-dapr-cli",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "eventstore",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "parties-dapr-cli",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "parties-mcp",
+      "state": "NotStarted"
+    },
+    {
+      "displayName": "parties-ui",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "parties",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "security-eventstore-client-password",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "security-eventstore-client-username",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "security",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "tenants-dapr-cli",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "tenants",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    }
+  ],
+  "ownedAppHostStopped": true,
+  "limits": "Existing binaries (--no-build) prove baseline liveness only. Endpoints, authorization tokens and process details omitted. Not installed Branch B qualification."
+}

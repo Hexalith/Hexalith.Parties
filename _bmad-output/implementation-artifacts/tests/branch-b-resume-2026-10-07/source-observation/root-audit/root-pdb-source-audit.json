@@ -1,0 +1,117 @@
+{
+  "matchedSourceCount": 3392,
+  "checkedPdbCount": 337,
+  "changed": [
+    {
+      "pdb": "artifacts-after/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.EventStore.DomainService/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.EventStore.Gateway/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.EventStore.Sample/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.EventStore.Server/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.EventStore.Testing/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.EventStore/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.Parties.Projections/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.Parties.Server.Tests/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.Parties.Tests/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.Parties/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.Platform.Identity/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.Tenants.Server/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.Tenants.Testing/debug/Hexalith.EventStore.Client.pdb",
+      "path": "eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs",
+      "expected": "ebb1649eab15923d96af48e685c64ddb17cb77ca67747ee2373a9c4a9a4f51d5",
+      "actual": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+    }
+  ],
+  "skipped": [],
+  "limitations": "Checks compiled C# documents under the workspace only; does not validate configuration files, restore choices, production targets, or full feature acceptance.",
+  "fullTemporaryAuditSha256": "f172d5cf7531d7d0beb5b4f67cdbc19844c58f50a74f18ee8beaea1d2cf5db65"
+}

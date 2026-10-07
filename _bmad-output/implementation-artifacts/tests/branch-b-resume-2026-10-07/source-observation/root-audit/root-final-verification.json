@@ -1,0 +1,36 @@
+{
+  "observedAt": "2026-10-07T14:51:22.601055+00:00",
+  "localExecutedTests": 933,
+  "requiredOwnerLanes": 10,
+  "frozenMatrixRows": 4,
+  "blockingCancellationRegressions": 12,
+  "confirmedFailingBeforeNewCases": 11,
+  "focusedPassingAfterCases": 18,
+  "portablePdb": {
+    "uniqueWorkspaceSourceDocuments": 3393,
+    "checkedPdbCopies": 337,
+    "mismatches": 0,
+    "skipped": 0,
+    "auditedSourceSha256": {
+      "src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs": "dd73d29bf327506bf9bdf846d8e202ce3ef07fb149944799759c461c64608120",
+      "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "193c1bb99223f4e6ee7385dba6d94a6d4dc5fc91b4e41a48ddbd27015918864a"
+    },
+    "fullTemporaryAuditSha256": "9cc820a844bcb16ca252ce5303512fd1d9eeb95eade9b8c80c15133212cce44b"
+  },
+  "parentReview": {
+    "reviewedChanges": "Complete current identity source/test patch from starting Parties revision 2fb9e545adbb2f974abf3791b726a2f29750bcf9; supported SDK metadata semantics checked against shared StreamsController and Parties payload adapter.",
+    "correctedFinding": "Successfully decrypted JSON retains Protected provenance; new fold accepts both known readable metadata states.",
+    "frozenIntentUnchanged": true,
+    "originalSpecBaselinePreserved": "5388884eec84b16545fdc008b2fc04547b0ed5b6",
+    "status": "in-progress",
+    "openProductionLiveTasks": 2,
+    "completeHistoricalBaselineDiffCaptured": true,
+    "completeHistoricalBaselineDiffReviewed": false
+  },
+  "concurrency": {
+    "initialRun": "One EventStore.Client source changed after compilation; preserved initial result and repeated Local.",
+    "currentRun": "EventStore Sample/Program.cs subsequently changed; preserved prior lane and refreshed EventStore.Server.Tests only.",
+    "externalGitMovement": "Unrelated external Parties commits captured the two source changes. Workflow performed no staging/commit/push, preserved external work, and makes no unchanged-whole-worktree claim."
+  },
+  "limits": "Final ten-owner Local XML plus one focused owning-lane refresh. Compiled C# correspondence is an observation at audit time; configuration, installed production custody, persisted live P-01\u2013P-10, restore, receipt durability and successor continuity are not qualified."
+}

@@ -1,0 +1,21 @@
+{
+  "matchedSourceCount": 3391,
+  "checkedPdbCount": 337,
+  "changed": [
+    {
+      "pdb": "artifacts-after/bin/Hexalith.EventStore.Sample/debug/Hexalith.EventStore.Sample.pdb",
+      "path": "eventstore/samples/Hexalith.EventStore.Sample/Program.cs",
+      "expected": "d4dae1d2f654046530b168caff5b8fbc5dd75ecab00c837206d3112ddba925c4",
+      "actual": "bedfd288d82960f0ce1ff98ae1ffbe8e0fbf554674de0045d56d2b33b422fcbd"
+    },
+    {
+      "pdb": "artifacts-after/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Sample.pdb",
+      "path": "eventstore/samples/Hexalith.EventStore.Sample/Program.cs",
+      "expected": "d4dae1d2f654046530b168caff5b8fbc5dd75ecab00c837206d3112ddba925c4",
+      "actual": "bedfd288d82960f0ce1ff98ae1ffbe8e0fbf554674de0045d56d2b33b422fcbd"
+    }
+  ],
+  "skipped": [],
+  "limitations": "Checks compiled C# documents under the workspace only; does not validate configuration files, restore choices, production targets, or full feature acceptance.",
+  "fullTemporaryAuditSha256": "27de2fbd46f2584a51218929605ec47cea3d6de979f073c219263dfd2030e086"
+}

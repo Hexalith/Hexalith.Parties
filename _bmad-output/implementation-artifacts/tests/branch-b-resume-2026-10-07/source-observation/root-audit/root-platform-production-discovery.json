@@ -1,0 +1,41 @@
+{
+  "observedAt": "2026-10-07T14:47:16.139888+00:00",
+  "productionOwner": "Hexalith.Platform",
+  "ownershipSource": "User clarification during this workflow run",
+  "observedOwnerHeads": {
+    "parties": "0d72186fe3e031d34665969255cc23ce265d793c",
+    "platform": "60c2b0dec172261d27461f30cc0c001334a7b861",
+    "eventstore": "40c92e085d8a6463d469c1b340c410fec84a690f"
+  },
+  "observations": [
+    {
+      "source": "platform/docs/implementation/actor-history-lifecycle-2026-10-07.md",
+      "result": "Cleanup helper exists; qualified provider, all-copy destruction receipts, restore safety, successor continuity and live qualification remain unavailable."
+    },
+    {
+      "source": "platform/src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs",
+      "result": "Registers IdentityHistoryCleanup but no IIdentityHistoryCustody provider/backend."
+    },
+    {
+      "source": "platform/src/Hexalith.Platform.EventStoreHost/Program.cs",
+      "result": "Registers Platform identity enrollment; no actor-history custody backend."
+    },
+    {
+      "command": "rg -n --glob *.cs with production-source exclusions for IIdentityHistoryCustody implementation/DI registrations across /home/administrator/projects/hexalith",
+      "exitCode": 1,
+      "result": "No production implementation or generic interface registration found."
+    },
+    {
+      "command": "kubectl --context jpiquot@local get deployments,statefulsets -A -o custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name --request-timeout=10s",
+      "exitCode": 0,
+      "result": "No Parties, EventStore or Platform identity/custody workload found. An OpenBao key store exists; its presence does not supply the absent SDK adapter/qualification."
+    },
+    {
+      "command": "Process environment names only",
+      "result": "All 12 verifier-required EXT_PARTIES inputs absent; no secret values printed."
+    }
+  ],
+  "liveCommand": "pwsh -NoProfile -File eng/verify-ext-parties-1.ps1 -Mode Live -EvidenceDirectory /tmp/ext-parties-1-source-validation-20261007/root-live",
+  "liveExitCode": 1,
+  "limits": "Read-only discovery of the current workspace, configured Kubernetes context and current process environment. No external source modified, credentials obtained, deployment activated or live acceptance inferred."
+}

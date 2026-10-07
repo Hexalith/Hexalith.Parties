@@ -1,0 +1,183 @@
+{
+  "observedAt": "2026-10-07T14:46:18.636458+00:00",
+  "totalPassed": 933,
+  "lanes": [
+    {
+      "project": "Hexalith.EventStore.Contracts.Tests",
+      "passed": 23,
+      "requiredClasses": {
+        "*StreamReadPageValidatorTests": 12,
+        "*RetainedIdentityHistoryValidatorTests": 11
+      },
+      "xmlSha256": "5c54259fbaf88758a4e7ebb591b31a676c4f2bfc02435c6d58cc5392b15aa386"
+    },
+    {
+      "project": "Hexalith.EventStore.Client.Tests",
+      "passed": 107,
+      "requiredClasses": {
+        "*AuthoritativeEventStreamReaderTests": 8,
+        "*EventStoreGatewayClientTests": 76,
+        "*EventStoreGatewayClientStreamTests": 7,
+        "*RetainedIdentityHistoryReaderTests": 16
+      },
+      "xmlSha256": "d4acdf1ff0bc06e2b5399380af735b884726c8bd26aef801aa5d80957f1b4c73"
+    },
+    {
+      "project": "Hexalith.EventStore.Server.Tests",
+      "passed": 168,
+      "requiredClasses": {
+        "*IdentityAdmissionTests": 6,
+        "*ActorRegistryTests": 6,
+        "*IdentityGatewayDenialTests": 3,
+        "*CommandsControllerTrustedExtensionTests": 7,
+        "*QueriesControllerTests": 72,
+        "*StreamsControllerTests": 26,
+        "*RetainedIdentityHistorySourceReaderTests": 48
+      },
+      "xmlSha256": "6f23011b51ca932c9dd65394c5d52b435468aaceb7f59694a05cb39fa7039fda"
+    },
+    {
+      "project": "Hexalith.Platform.Identity.Tests",
+      "passed": 2,
+      "requiredClasses": {
+        "*PlatformIdentityAdmissionTests": 2
+      },
+      "xmlSha256": "57fa8cacdd1676c8ceb51613f67d86f50079ac55b03ce36ce14eb61aa546c2a4"
+    },
+    {
+      "project": "Hexalith.Parties.Contracts.Tests",
+      "passed": 29,
+      "requiredClasses": {
+        "*PartyStateTests": 26,
+        "*PartyIdentityContractTests": 2,
+        "*ContractsPublicApiSnapshotTests": 1
+      },
+      "xmlSha256": "e90121655a4701b6db9568ebddf3fa4ecd2f2001d5b3ed2794db420d111d5c9a"
+    },
+    {
+      "project": "Hexalith.Parties.Server.Tests",
+      "passed": 94,
+      "requiredClasses": {
+        "*AgentPartyProvisioningTests": 3,
+        "*HumanActorBindingTests": 7,
+        "*PartyAggregateCreateTests": 24,
+        "*PartyAggregateCompositeTests": 60
+      },
+      "xmlSha256": "20a3f84f2fa88da784415a87222cb2eee7b13570ed4958d3495ebe8f8dfc7152"
+    },
+    {
+      "project": "Hexalith.Parties.Tests",
+      "passed": 310,
+      "requiredClasses": {
+        "*PartyIdentityAdmissionTests": 3,
+        "*PartyIdentityQueryHandlerTests": 155,
+        "*PartyIdentityRetentionConfigurationTests": 6,
+        "*PartyDomainProcessorValidationTests": 44,
+        "*PartySdkQueryHandlerTests": 54,
+        "*PartiesProcessEndpointTests": 13,
+        "*PartiesDomainServiceSecurityTests": 35
+      },
+      "xmlSha256": "4b6eb312d825c7453721862a4700331aec589a25f395105bf18f68c8ba6b0ffe"
+    },
+    {
+      "project": "Hexalith.Parties.Security.Tests",
+      "passed": 30,
+      "requiredClasses": {
+        "*IdentityHistoryProtectionTests": 7,
+        "*PartyPayloadProtectionServiceTests": 23
+      },
+      "xmlSha256": "c82dfc49f3b173271cf5c060ca84852f2593bfd03593d6833ca3212e5f2890e7"
+    },
+    {
+      "project": "Hexalith.Parties.Client.Tests",
+      "passed": 98,
+      "requiredClasses": {
+        "*HttpPartiesIdentityClientTests": 18,
+        "*HttpPartiesCommandClientTests": 37,
+        "*HttpPartiesQueryClientTests": 30,
+        "*DependencyInjectionTests": 13
+      },
+      "xmlSha256": "c13e55200b7f30e6b53013395b0b7b7cdd2799d8aef8c8b550584874881d07f9"
+    },
+    {
+      "project": "Hexalith.Parties.UI.Tests",
+      "passed": 72,
+      "requiredClasses": {
+        "*IdentityBindingBoundaryTests": 5,
+        "*IdentityBindingProvisioningServiceTests": 14,
+        "*PartyIdClaimResolverTests": 11,
+        "*SelfScopedPartiesClientTests": 42
+      },
+      "xmlSha256": "5d2eb0037498278753f2248b6a6bd2a61215f0b6bbe8471f86e2833ab1f5732d"
+    }
+  ],
+  "frozenMatrixExecutedLocalCoverage": {
+    "Provision": {
+      "ExactLostAckRetry_ReturnsOriginalWithoutAnotherCreationAndRejectsChangedIntent": [
+        "Hexalith.Parties.Server.Tests.Aggregates.AgentPartyProvisioningTests.ExactLostAckRetry_ReturnsOriginalWithoutAnotherCreationAndRejectsChangedIntent"
+      ],
+      "RejectionOnlyStream_AllowsCreationWhileUnmarkedOrganizationConflicts": [
+        "Hexalith.Parties.Server.Tests.Aggregates.AgentPartyProvisioningTests.RejectionOnlyStream_AllowsCreationWhileUnmarkedOrganizationConflicts"
+      ]
+    },
+    "Current identity": {
+      "CurrentHuman_RequiresCompleteSourceAndCurrentExactActor": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentHuman_RequiresCompleteSourceAndCurrentExactActor"
+      ],
+      "InactiveOrRestrictedHuman_ReturnsIneligibleWithoutUsableBinding": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InactiveOrRestrictedHuman_ReturnsIneligibleWithoutUsableBinding(inactive: True)",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InactiveOrRestrictedHuman_ReturnsIneligibleWithoutUsableBinding(inactive: False)"
+      ],
+      "ForeignAuthoritativeSourceAndFutureAction_DenyWithNoEvidence": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.ForeignAuthoritativeSourceAndFutureAction_DenyWithNoEvidence"
+      ]
+    },
+    "History": {
+      "HistoricalReplay_BeforeBoundaryReturnsOriginalAndAtBoundaryReturnsSuccessor": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.HistoricalReplay_BeforeBoundaryReturnsOriginalAndAtBoundaryReturnsSuccessor"
+      ],
+      "SerializedRetainedSource_ReconstructsBothIntervalsWithoutProfileOrCurrentBinding": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.SerializedRetainedSource_ReconstructsBothIntervalsWithoutProfileOrCurrentBinding"
+      ],
+      "RetainedCertificateOrEventSubstitution_DeniesWithoutProfileFallback": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.RetainedCertificateOrEventSubstitution_DeniesWithoutProfileFallback(corruption: \\\"gap\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.RetainedCertificateOrEventSubstitution_DeniesWithoutProfileFallback(corruption: \\\"overlap\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.RetainedCertificateOrEventSubstitution_DeniesWithoutProfileFallback(corruption: \\\"profile-substitution\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.RetainedCertificateOrEventSubstitution_DeniesWithoutProfileFallback(corruption: \\\"wrong-purpose\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.RetainedCertificateOrEventSubstitution_DeniesWithoutProfileFallback(corruption: \\\"foreign-binding\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.RetainedCertificateOrEventSubstitution_DeniesWithoutProfileFallback(corruption: \\\"transit-expiry\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.RetainedCertificateOrEventSubstitution_DeniesWithoutProfileFallback(corruption: \\\"missing-authority\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.RetainedCertificateOrEventSubstitution_DeniesWithoutProfileFallback(corruption: \\\"future-observation\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.RetainedCertificateOrEventSubstitution_DeniesWithoutProfileFallback(corruption: \\\"short-name-substitution\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.RetainedCertificateOrEventSubstitution_DeniesWithoutProfileFallback(corruption: \\\"assembly-qualified-substitution\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.RetainedCertificateOrEventSubstitution_DeniesWithoutProfileFallback(corruption: \\\"namespace-alias-substitution\\\")"
+      ]
+    },
+    "Isolation": {
+      "ConcurrentTenantCalls_KeepEveryRequestAndEvidenceInItsExplicitScope": [
+        "Hexalith.Parties.Client.Tests.HttpPartiesIdentityClientTests.ConcurrentTenantCalls_KeepEveryRequestAndEvidenceInItsExplicitScope"
+      ],
+      "WrongAuthorizedActor_DeniesBeforeSourceRead": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.WrongAuthorizedActor_DeniesBeforeSourceRead"
+      ],
+      "ForeignAuthoritativeSourceAndFutureAction_DenyWithNoEvidence": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.ForeignAuthoritativeSourceAndFutureAction_DenyWithNoEvidence"
+      ]
+    }
+  },
+  "blockingCallbackRegressions": [
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion(historical: False, inCustody: False, trigger: \\\"timer\\\")",
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion(historical: True, inCustody: False, trigger: \\\"timer\\\")",
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion(historical: False, inCustody: True, trigger: \\\"timer\\\")",
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion(historical: True, inCustody: True, trigger: \\\"timer\\\")",
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion(historical: False, inCustody: False, trigger: \\\"elapsed\\\")",
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion(historical: True, inCustody: False, trigger: \\\"elapsed\\\")",
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion(historical: False, inCustody: True, trigger: \\\"elapsed\\\")",
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion(historical: True, inCustody: True, trigger: \\\"elapsed\\\")",
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion(historical: False, inCustody: False, trigger: \\\"caller\\\")",
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion(historical: True, inCustody: False, trigger: \\\"caller\\\")",
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion(historical: False, inCustody: True, trigger: \\\"caller\\\")",
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.BlockingProviderCancellationCallback_DoesNotDelayQueryCompletion(historical: True, inCustody: True, trigger: \\\"caller\\\")"
+  ],
+  "limitations": "Audits executed Local XML and warning-free build evidence. Local fixtures do not prove live persisted end-state, restore/destruction, installed custody, complete owner acceptance, or current source correspondence; source correspondence is audited separately."
+}

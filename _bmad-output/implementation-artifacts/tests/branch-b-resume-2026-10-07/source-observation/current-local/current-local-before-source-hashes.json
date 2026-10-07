@@ -1,0 +1,5 @@
+{
+  "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs": "dd73d29bf327506bf9bdf846d8e202ce3ef07fb149944799759c461c64608120",
+  "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "193c1bb99223f4e6ee7385dba6d94a6d4dc5fc91b4e41a48ddbd27015918864a",
+  "/home/administrator/projects/hexalith/eventstore/src/Hexalith.EventStore.Client/Events/EventEvolutionManagedLoadObserver.cs": "3d2d881a730df4a830fe2e645d476d10db68ff9d867877efb0cd56bee079fc9f"
+}

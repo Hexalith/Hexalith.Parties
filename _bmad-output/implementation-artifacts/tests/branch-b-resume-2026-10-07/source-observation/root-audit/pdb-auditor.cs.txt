@@ -1,0 +1,67 @@
+using System.Reflection.Metadata;
+using System.Security.Cryptography;
+using System.Text.Json;
+
+var projectRoot = Path.GetFullPath(args[0]);
+var artifactRoot = Path.GetFullPath(args[1]);
+var outputPath = Path.GetFullPath(args[2]);
+var matched = new Dictionary<string, string>(StringComparer.Ordinal);
+var changed = new List<object>();
+var skipped = new List<object>();
+var assemblies = new List<object>();
+foreach (var pdb in Directory.EnumerateFiles(artifactRoot, "Hexalith.*.pdb", SearchOption.AllDirectories)
+    .Where(path => path.Contains("/bin/", StringComparison.Ordinal)).Order(StringComparer.Ordinal))
+{
+    try
+    {
+        using var stream = File.OpenRead(pdb);
+        using var provider = MetadataReaderProvider.FromPortablePdbStream(stream);
+        var reader = provider.GetMetadataReader();
+        var checkedDocuments = 0;
+        foreach (var handle in reader.Documents)
+        {
+            var document = reader.GetDocument(handle);
+            var path = reader.GetString(document.Name);
+            if (!path.StartsWith(projectRoot + "/", StringComparison.Ordinal))
+                continue;
+            if (!File.Exists(path))
+            {
+                skipped.Add(new { pdb, path, reason = "Source document no longer exists" });
+                continue;
+            }
+            var algorithm = reader.GetGuid(document.HashAlgorithm);
+            var expected = reader.GetBlobBytes(document.Hash);
+            byte[] actual;
+            using (var source = File.OpenRead(path))
+            {
+                if (algorithm == new Guid("8829d00f-11b8-4213-878b-770e8597ac16"))
+                    actual = SHA256.HashData(source);
+                else if (algorithm == new Guid("ff1816ec-aa5e-4d10-87f7-6f4963833460"))
+                    actual = SHA1.HashData(source);
+                else
+                {
+                    skipped.Add(new { pdb, path, reason = "Unsupported source checksum algorithm" });
+                    continue;
+                }
+            }
+            checkedDocuments++;
+            if (!expected.SequenceEqual(actual))
+                changed.Add(new { pdb, path, expected = Convert.ToHexString(expected).ToLowerInvariant(), actual = Convert.ToHexString(actual).ToLowerInvariant() });
+            else
+                matched[path] = Convert.ToHexString(actual).ToLowerInvariant();
+        }
+        if (checkedDocuments > 0)
+            assemblies.Add(new { pdb, checkedDocuments, sha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(pdb))).ToLowerInvariant() });
+    }
+    catch (BadImageFormatException)
+    {
+        skipped.Add(new { pdb, reason = "Not a portable PDB" });
+    }
+}
+var result = new { matchedSourceCount = matched.Count, checkedPdbCount = assemblies.Count,
+    changed, skipped, matched, assemblies,
+    limitations = "Checks compiled C# documents under the workspace only; does not validate configuration files, restore choices, production targets, or full feature acceptance." };
+File.WriteAllText(outputPath, JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }) + "\n");
+Console.WriteLine(JsonSerializer.Serialize(new { outputPath, matchedSourceCount = matched.Count,
+    checkedPdbCount = assemblies.Count, mismatches = changed.Count, skipped = skipped.Count }));
+return changed.Count > 0 ? 1 : 0;
