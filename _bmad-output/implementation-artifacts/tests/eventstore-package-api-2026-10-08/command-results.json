@@ -1,0 +1,18 @@
+[
+  {
+    "command": "dotnet restore Hexalith.Parties.slnx",
+    "started_at_utc": "2026-10-08T06:38:20.448564+00:00",
+    "finished_at_utc": "2026-10-08T06:38:22.240310+00:00",
+    "elapsed_seconds": 1.79,
+    "exit_code": 0,
+    "log": "restore.log"
+  },
+  {
+    "command": "dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1",
+    "started_at_utc": "2026-10-08T06:38:38.826607+00:00",
+    "finished_at_utc": "2026-10-08T06:38:54.698239+00:00",
+    "elapsed_seconds": 15.87,
+    "exit_code": 1,
+    "log": "release-build.log"
+  }
+]
