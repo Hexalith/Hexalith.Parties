@@ -43,28 +43,29 @@ public sealed class PlatformApiPrerequisitesTests
 
     // Release selection is separate from the historical migration/parity receipt constants.
     private const string CurrentReleaseEventStoreVersion = "3.117.1";
-    private const string CurrentCatalogEventStoreVersion = "3.115.0";
-    private const string CurrentReleaseEventStoreSha = "b830d9829af70536d2a3fd21c5e2a23b2ca2f256";
-    private const string CurrentReleaseEventStoreDescribe = "v3.117.0";
+    private const string CurrentCatalogEventStoreVersion = "3.117.1";
+    private const string CurrentReleaseEventStoreSha = "9542d3c9f48bf9ce1c57f2ef68904703eaba56cc";
+    private const string CurrentReleaseEventStoreDescribe = "v3.117.1-5-g9542d3c9";
+    private const string CurrentReleaseEventStoreTag = "v3.117.1";
     private static readonly IReadOnlyDictionary<string, string> CurrentReleaseGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = AiToolsSha,
-        ["references/Hexalith.Builds"] = "ad52c5bdd4361c59eedf12a16620150006403584",
+        ["references/Hexalith.Builds"] = "6f07763bd955d22ace0123798add528dc933bf51",
         ["references/Hexalith.Commons"] = CommonsSha,
         [EventStoreRelativePath] = CurrentReleaseEventStoreSha,
-        ["references/Hexalith.FrontComposer"] = "c561b3210f15206a90c39c82c58f2e5b1005cd60",
-        ["references/Hexalith.Memories"] = "aac6d9054cb138881e6e49c8e48233553123ffce",
+        ["references/Hexalith.FrontComposer"] = "0e114214007c22f5cdbac21a6853cff4208340ee",
+        ["references/Hexalith.Memories"] = "3e18d0dcdceb387eff89862c382637da89ad7e47",
         ["references/Hexalith.PolymorphicSerializations"] = PolymorphicSerializationsSha,
-        ["references/Hexalith.Tenants"] = "86aa888301b40cda12b000f68d9292d53cd93efe",
+        ["references/Hexalith.Tenants"] = "1dffe336c9fde823b7b8ed6df9d63019dae64b90",
     };
 
     private static readonly IReadOnlyDictionary<string, string> CurrentSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["references/Hexalith.Builds"] = "v4.30.0-5-gad52c5bd",
+        ["references/Hexalith.Builds"] = "v4.30.0-13-g6f07763b",
         [EventStoreRelativePath] = CurrentReleaseEventStoreDescribe,
-        ["references/Hexalith.FrontComposer"] = "v4.6.0-5-gc561b321",
-        ["references/Hexalith.Memories"] = "v2.28.1-34-gaac6d905",
-        ["references/Hexalith.Tenants"] = "v5.7.0-171-g86aa8883",
+        ["references/Hexalith.FrontComposer"] = "v4.6.0-7-g0e114214",
+        ["references/Hexalith.Memories"] = "v2.28.1-36-g3e18d0dc",
+        ["references/Hexalith.Tenants"] = "v5.7.0-179-g1dffe336",
     };
 
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
@@ -702,7 +703,7 @@ public sealed class PlatformApiPrerequisitesTests
             }
         }
 
-        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--match", CurrentReleaseEventStoreDescribe, "--abbrev=8", "HEAD")
+        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--match", CurrentReleaseEventStoreTag, "--abbrev=8", "HEAD")
             .Trim()
             .ShouldBe(CurrentReleaseEventStoreDescribe);
 

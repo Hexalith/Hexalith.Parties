@@ -55,17 +55,17 @@ and Parties package upgrade on 2026-10-08. EventStore package `3.117.1` is
 selected before the shared catalog import because sidecar-channel authorization
 requires the API first published in `3.117.0`. The previously verified Builds
 catalog defaulted to `3.115.0`; the workspace catalog now also selects `3.117.1`.
-This package patch does not update source pointers. The table retains the earlier
-verified source observation; concurrent workspace advances are recorded in
-[the 3.117.1 receipt](tests/eventstore-3.117.1-consumer-2026-10-08/README.md).
-The following root pointers describe the selected graph. The EventStore pointer
-is committed with this upgrade; the other pointers were already selected by the
-workspace. This refresh grants no new owner approval and does not revalidate
+The table records the owner-committed graph at Parties
+`998c0b649d7bbf01e0fed4cc79924662dd16cc91`, verified against each clean checkout.
+The package patch and advanced source checkouts have separate identities;
+[the 3.117.1 receipt](tests/eventstore-3.117.1-consumer-2026-10-08/README.md)
+retains its original observations. This refresh grants no new owner approval and
+does not revalidate
 historical parity, release, consumer, or rollback receipts. Package values are
 EventStore `3.117.1`, Commons `2.30.1`, Memories `2.27.1`, Tenants `5.7.0`,
 FrontComposer `4.6.0`, and Parties `1.1.1`.
 
-After committing the upgrade, reproduce each source receipt with
+Reproduce each source receipt at the recorded Parties revision with
 `git ls-tree HEAD references/Hexalith.<dependency>`,
 `git -C references/Hexalith.<dependency> rev-parse HEAD`,
 `git -C references/Hexalith.<dependency> describe --tags --always --abbrev=8 HEAD`,
@@ -77,13 +77,13 @@ checks are in [the package upgrade receipt](tests/eventstore-package-upgrade-202
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` | Instruction baseline; unchanged. |
-| Builds | `ad52c5bdd4361c59eedf12a16620150006403584` (`v4.30.0-5-gad52c5bd`) | Imported package catalog and build tooling. |
+| Builds | `6f07763bd955d22ace0123798add528dc933bf51` (`v4.30.0-13-g6f07763b`) | Imported package catalog and build tooling. |
 | Commons | `116d26815eb81e35b3c161e1799e5ee12805fc0a` | Existing HTTP/ServiceDefaults source fallbacks; unchanged. |
-| EventStore | `b830d9829af70536d2a3fd21c5e2a23b2ca2f256` (`v3.117.0`) | Diagnostic/orchestration source; Parties runtime consumers restore package `3.117.1`; source identity remains separately recorded. |
-| FrontComposer | `c561b3210f15206a90c39c82c58f2e5b1005cd60` (`v4.6.0-5-gc561b321`) | Current diagnostic source selection; package `4.6.0` is selected by the unchanged Builds catalog. |
-| Memories | `aac6d9054cb138881e6e49c8e48233553123ffce` (`v2.28.1-34-gaac6d905`) | Current diagnostic source selection; package `2.27.1` remains selected. |
+| EventStore | `9542d3c9f48bf9ce1c57f2ef68904703eaba56cc` (`v3.117.1-5-g9542d3c9`) | Diagnostic/orchestration source; Parties runtime consumers restore package `3.117.1`; source identity remains separately recorded. |
+| FrontComposer | `0e114214007c22f5cdbac21a6853cff4208340ee` (`v4.6.0-7-g0e114214`) | Current diagnostic source selection; package `4.6.0` is selected by the unchanged Builds catalog. |
+| Memories | `3e18d0dcdceb387eff89862c382637da89ad7e47` (`v2.28.1-36-g3e18d0dc`) | Current diagnostic source selection; package `2.27.1` remains selected. |
 | PolymorphicSerializations | `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` | Existing solution source dependency; unchanged. |
-| Tenants | `86aa888301b40cda12b000f68d9292d53cd93efe` (`v5.7.0-171-g86aa8883`) | Current diagnostic/orchestration source selection; package `5.7.0` remains selected. |
+| Tenants | `1dffe336c9fde823b7b8ed6df9d63019dae64b90` (`v5.7.0-179-g1dffe336`) | Current diagnostic/orchestration source selection; package `5.7.0` remains selected. |
 
 Selection does not revalidate historical parity receipts or authorize deletion of
 migration rollback paths. The dated 2026-10-05 reconciliation and its approvals
@@ -98,7 +98,7 @@ selection is checked separately.
 
 The historical FrontComposer `2cc8dd3a` component directly contained
 `aria-live="polite"` and a `private string AriaLive` member. At the current
-`c561b321` selection, both projection-connection and lifecycle components delegate
+`0e114214` selection, both projection-connection and lifecycle components delegate
 announcements to `FcSurfaceStatus`, which contains the polite status region.
 The marked matrix's reproducible structural commands now check that delegation
 and the shared region. This is source inspection, not refreshed accessibility
@@ -232,7 +232,29 @@ The original selection row transcribes the Round 6 reviewer-recorded decision in
 | I19 store reclassification / class-(b) test set | Touched stores, semantics, and approved consistency tests | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 | §2 divergence from Epic 7 | G7/G9 historical SCP and 2026-09-27 McpCli course correction: authority backfill required | Pending — named accountable owner | Pending | Pending; no approval inferred from routing, source presence, or compile. |
 
-### Story 8.7 G5 gate revalidation — 2026-10-05
+### Story 8.7 G5 gate revalidation — 2026-10-08
+
+At Parties `998c0b649d7bbf01e0fed4cc79924662dd16cc91`, EventStore's root gitlink and clean checkout match
+`9542d3c9f48bf9ce1c57f2ef68904703eaba56cc` (`v3.117.1-5-g9542d3c9`); Builds' root gitlink and clean checkout
+match `6f07763bd955d22ace0123798add528dc933bf51` (`v4.30.0-13-g6f07763`). Both catalogs select EventStore
+`3.117.1`. These observations supersede the 2026-10-05 inspection for Story 8.7;
+they do not change the dated G5 row, I20 approvals, or frozen adoption identity.
+
+| Gate evidence | Current inspection | Disposition |
+| --- | --- | --- |
+| Owner contracts/core | Public policy/erasure hooks and internal v2 core exist; core is `IsPackable=false`. Owner 8.2 is `done`, 8.3 is `in-progress`. | Partial delivery; existing owner approvals do not grant G5 availability. |
+| Compatibility, lifecycle, backend, runtime, release | Owner 8.4-8.8 remain `backlog`; AzureKeyVault project absent; payload packages absent from catalog and release inventory; server still defaults to the no-op. | No consumable approved provider. |
+| Consumer parity and rollback | Owner 8.9/8.10 remain `backlog`; real dual-provider GDPR parity and post-v2 switch-back unproven. | Adoption and deletion remain gated. |
+| Availability and policy ownership | Owner 8.11 remains `backlog`; closure packet absent; G5 availability and I2/I19a hook-classification approvals missing. | G5 stays `needs-additive-api`; 8.7 stays `blocked`. |
+| Parties continuity | 8.6 is `done`; all 24 MOVE/KEEP/adapter files, local harness, and local DI remain. | Sequence satisfied; crypto-retention remains `open`. |
+
+All 32 recorded G5 static checks, retained-file/DI checks, and matching-clean-identity
+assertions passed. Exact commands/results appear in `tests/test-summary.md`.
+No product/dual-provider/GDPR/post-v2 suites were run or credited. Production KMS
+remains a separate release gate. No production, dependency, submodule, frozen-spec,
+approval-table, or sprint-status data change occurred.
+
+### Historical Story 8.7 G5 gate revalidation — 2026-10-05
 
 At Parties `b3794a4dcbe2fff3e9ea5c420a3c4695e2d1a8ca`, EventStore's root gitlink and clean checkout
 match `865cd9e49273dffbb1cdae85efeaf1aac322e09e` (`v3.113.0`). Builds' root gitlink and clean

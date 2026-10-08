@@ -249,6 +249,11 @@ action_items:
     # I2/I19a classification approval also remains pending. All 24 files and
     # local DI retained; 32 static G5 checks pass; product suites unrun.
     # Story 8.7 remains blocked; retention action stays open.
+    # 2026-10-08: observed EventStore 9542d3c9 / package 3.117.1 and Builds
+    # 6f07763b match clean root checkouts. Owner 8.2 done, 8.3 in-progress,
+    # 8.4-8.11 backlog; G5 closure/parity/rollback remain absent; I2/I19a pending.
+    # All 32 static checks and retained-file/DI checks passed; product suites
+    # unrun. Story 8.7 stays blocked; retention action stays open.
     action: "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open

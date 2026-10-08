@@ -1892,3 +1892,98 @@ byte-identical (SHA256
 This consolidated section is appended; all earlier evidence text is preserved.
 
 Post-evidence focused documentation/prerequisite validation: `dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -noColor` passed **43/43**, zero errors/failed/skipped/not-run (9.252 s). Log: `TestResults/bmad-revalidation-20261008/documentation-final-fitness.log`. This separate focused check does not add duplicate executions to the broad-lane counts.
+
+## Story 8.7 G5 revalidation — closed-gate halt — 2026-10-08
+
+At Parties `998c0b649d7bbf01e0fed4cc79924662dd16cc91`, G5 remains
+`needs-additive-api`; Story 8.7 remains `blocked`. This receipt supersedes the
+2026-10-05 inspection for this story. It grants no approval, adoption, parity,
+or deletion authority and changes no Story 8.10 closure or accepted deferral.
+
+| Identity | Current observation |
+| --- | --- |
+| EventStore root gitlink and clean checkout | `9542d3c9f48bf9ce1c57f2ef68904703eaba56cc`, `v3.117.1-5-g9542d3c9`. |
+| Builds root gitlink and clean checkout | `6f07763bd955d22ace0123798add528dc933bf51`, `v4.30.0-13-g6f07763`. |
+| Parties pre-import package pin and Builds catalog | Both select EventStore `3.117.1`. |
+| Frozen Story 8.7 identity | Historical `c21bd749154d701c3b7d68e40d1008d3475e35c4` / `3.95.0`, unchanged; reconcile with an approved G5 identity before activation. |
+
+| Command / procedure | Result |
+| --- | --- |
+| `git rev-parse HEAD`; `git ls-tree HEAD references/Hexalith.EventStore references/Hexalith.Builds` | Parties and root identities above. |
+| `git -C references/Hexalith.EventStore rev-parse HEAD`; `git -C references/Hexalith.EventStore status --short --branch`; `git -C references/Hexalith.EventStore describe --tags --always` | Matching clean checkout, `main...origin/main`, `v3.117.1-5-g9542d3c9`. |
+| `git -C references/Hexalith.Builds rev-parse HEAD`; `git -C references/Hexalith.Builds status --short --branch`; `git -C references/Hexalith.Builds describe --tags --always` | Matching clean checkout, `main...origin/main`, `v4.30.0-13-g6f07763`. |
+| `rg -n 'HexalithEventStoreVersion\|PayloadProtection' Directory.Packages.props references/Hexalith.Builds/Props/Directory.Packages.props` | Both select `3.117.1`; no payload package enrollment. |
+| `cat references/Hexalith.EventStore/src/Hexalith.EventStore.PayloadProtection/Hexalith.EventStore.PayloadProtection.csproj` | Internal v2 core exists with `IsPackable=false`; it supplies no consumable runtime provider. |
+| Matrix G5 static procedure below | Exit 0; 32/32 checks passed. Contracts/spec markers and owner statuses exist; no-op registration remains; backend/closure paths and catalog/release enrollment are absent. |
+| Retained-file/DI and package procedure below | Exit 0; all 24 MOVE/KEEP/adapter files, local harness, and four local DI registrations retained; both package selectors are `3.117.1`. |
+
+Reproduce the static inspections from the repository root:
+
+```bash
+python3 - <<'PY_CHECK'
+from pathlib import Path
+import re
+import shlex
+import subprocess
+import xml.etree.ElementTree as ET
+matrix = Path('_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md').read_text()
+row = next(line for line in matrix.splitlines() if line.startswith('| Payload protection engine package |'))
+assert row.split('|')[3].strip() == 'needs-additive-api'
+commands = re.findall(r'`(rg -n -F [^`]+|test ! -f [^`]+)`(\s*\(expected no matches\))?', row)
+for command, absent in commands:
+    result = subprocess.run(shlex.split(command), capture_output=True, text=True)
+    assert result.returncode == (1 if absent else 0), (command, result.returncode, result.stderr)
+assert len(commands) == 32
+print('PASS: 32/32 recorded G5 static checks')
+story = Path('_bmad-output/implementation-artifacts/8-7-data-protection-extraction.md').read_text()
+inventory = story.split('### File Ownership and Change Boundaries')[1].split('Likely UPDATE/rebind surfaces')[0]
+paths = re.findall(r'^- `(src/[^`]+\.cs)`', inventory, re.M)
+assert len(paths) == 24
+for path in paths:
+    assert Path(path).is_file(), path
+assert Path('tests/Hexalith.Parties.Security.Tests/CryptoKeyManagementCompatibilityHarnessTests.cs').is_file()
+di = Path('src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs').read_text()
+for marker in [
+    'AddSingleton<IKeyStorageBackend, LocalDevKeyStorageBackend>()',
+    'AddSingleton<PartyPayloadProtectionService>()',
+    'AddSingleton<EventStorePartyPayloadProtectionAdapter>()',
+    'AddSingleton<IEventPayloadProtectionService>(sp => sp.GetRequiredService<EventStorePartyPayloadProtectionAdapter>())',
+]:
+    assert marker in di, marker
+print('PASS: 24 retained files, local harness and four local DI registrations')
+for path in ['Directory.Packages.props', 'references/Hexalith.Builds/Props/Directory.Packages.props']:
+    assert ET.parse(path).find('.//HexalithEventStoreVersion').text == '3.117.1'
+print('PASS: both package selectors are 3.117.1')
+PY_CHECK
+```
+
+Owner 8.2 is `done`, 8.3 is `in-progress`, and 8.4-8.11 remain `backlog`.
+Public hooks and internal v2 source are partial delivery. Existing approvals cover
+owner specification/contracts/requirements; they do not grant G5 availability.
+Missing receipts: compatibility/key-lifecycle/persistence integration, consumable
+runtime provider, AzureKeyVault backend, package/release enrollment, real
+local-versus-shared GDPR parity, rollback after persisted v2 writes, owner 8.11
+availability closure, and I2/I19a policy-hook classification. Production KMS is
+also an independently enforced release prerequisite. Parties 8.6 is `done`;
+crypto-retention remains `open`.
+
+This Story 8.7 audit updated six documentation artifacts. The approved spec block and original
+baseline, G5 matrix row, I20 approval table, and sprint YAML data are preserved.
+This audit made no production, DI, dependency, submodule, or public API changes. Product,
+unit/topology, dual-provider/GDPR, and post-v2 suites were not run or credited.
+Concurrent edits to other files and the matrix source table were preserved and
+are outside this audit. The context was regenerated because two planning documents were newer; it
+preserves blocked/migration gates and adds the approved actor-history retention
+constraints with production qualification still pending.
+
+Documentation preservation checks passed: frozen spec block/original baseline
+byte-identical, original G5 row and I20 approval table preserved, sprint YAML data
+unchanged, context current, File List covering all six audit artifacts, and new
+revision fields canonical. The documented static procedure was rerun from this
+receipt and passed; a separate reviewer independently reproduced it with no
+material findings. Four additional concurrently edited files and the matrix's
+source-table updates were preserved and excluded from this audit's scope.
+
+`git diff --check` exits 2 because changed CRLF lines are classified as trailing
+whitespace. `git -c core.whitespace=cr-at-eol diff --check` passes with the
+repository CRLF convention. No whitespace configuration or build gate changed.
