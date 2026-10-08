@@ -4,7 +4,7 @@ type: 'bugfix'
 created: '2026-07-07T08:39:58+02:00'
 status: 'done'
 review_loop_iteration: 0
-followup_review_recommended: true
+followup_review_recommended: false
 baseline_revision: 'd6d3bbb26d04e2aeebe6326726bc084163f40bd3'
 final_revision: '6725d50e58746766801236596f26c5e6d986bad3'
 context:
@@ -212,3 +212,17 @@ Verification performed:
 Residual risks:
 - Full root `Hexalith.Parties.Tests` Release source-mode remains blocked by the Story 8.1 `Hexalith.Memories` Release guard.
 - Full root `Hexalith.Parties.Tests` Debug source-mode still has the five pre-existing Story 8.1 tenant-event failures.
+
+## Independent Follow-up Review — 2026-10-08
+
+Reviewer session: `/root/verification_gap`, separate from patch author `/root/implementation` and the coordinating agent. The reviewer read this source spec fully and checked its intent contract, acceptance criteria, and current affected implementation. Final candidate: parent baseline `c095134f6ec648560954d6f0fc76858fd1d7cd0e` plus the five-file implementation diff, SHA-256 `ddf348a754f3dfb33d4b250a031801d1cfe4207216a3bbf89daa2cf17a627dd2`. Reconstruct with `git diff c095134f6ec648560954d6f0fc76858fd1d7cd0e -- src/Hexalith.Parties.Mcp/Tools/PartiesMcpTools.cs tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolDispatchTests.cs tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs _bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md docs/architecture.md`. Historical `baseline_revision` and `final_revision` remain unchanged.
+
+Outcome: no unresolved in-scope finding; `followup_review_recommended: false`.
+
+- Initial finding, patched and independently verified: scalar MCP identifiers were trimmed before validation. Exact scalar inputs now reach the shared rule, including whitespace-only failures, with bounded results and no client calls.
+- VG-1, patched: space/tab-only CSV cases for both removal parameters assert bounded failures and no client access. Valid delimiter whitespace still dispatches exact trimmed list items.
+- BH-5, patched: payload bounds precede removal-list allocation; oversized delimiter-only cases cover the bounded size failure.
+- BH-9, patched: caller-supplied readable, ULID, and legacy GUID IDs survive exactly; null/empty create IDs generate sortable IDs.
+- SR-1, deferred outside this bounded production scope: explicit null composite operation lists can throw in the original validators instead of producing a bounded domain rejection. Exact source evidence is recorded in [the follow-up spec](spec-epic-8-followup-review.md)'s `deferred` list; no new runtime reproducer was run.
+
+Verification: final Debug source build succeeded with zero warnings/errors; `PartiesMcpToolDispatchTests` passed 83/83, no skips. `IdentifierHygieneFitnessTests` ran in the combined 36/36 prerequisite/hygiene pass, no skips. Shared rule, aggregate validation, sortable generation sites, conditional references, targeted semantic GUID scans, and tracked-cache scans were independently inspected. These results were obtained in an isolated local checkout at the parent baseline and exact clean committed root gitlinks, because concurrent external work modified the active workspace and restore assets. External work was preserved. The prior consent-ID compatibility deferral remains outside this review's scalar-ID goal.

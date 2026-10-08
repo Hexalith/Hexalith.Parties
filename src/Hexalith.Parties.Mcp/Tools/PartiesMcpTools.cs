@@ -199,7 +199,7 @@ internal sealed class PartiesMcpTools(
                     return ValidationFailed(PartiesMcpToolNames.CreateParty, "party type");
                 }
 
-                string effectivePartyId = string.IsNullOrWhiteSpace(partyId) ? NewId() : partyId.Trim();
+                string effectivePartyId = string.IsNullOrEmpty(partyId) ? NewId() : partyId;
                 if (!IsSafePartyId(effectivePartyId))
                 {
                     return ValidationFailed(PartiesMcpToolNames.CreateParty, "partyId");
@@ -276,8 +276,6 @@ internal sealed class PartiesMcpTools(
                 string? effectiveFamilyName = FirstNonEmpty(familyName, lastName);
                 string? effectiveAddIdentifierType = FirstNonEmpty(addIdentifierType, !string.IsNullOrWhiteSpace(addVatNumber) ? "VAT" : null);
                 string? effectiveAddIdentifierValue = FirstNonEmpty(addIdentifierValue, addVatNumber);
-                string[] effectiveRemoveContactIds = CombineIds(removeContactChannelId, removeContactChannelIds);
-                string[] effectiveRemoveIdentifierIds = CombineIds(removeIdentifierId, removeIdentifierIds);
                 if (ExceedsToolPayloadLimit(
                     partyId,
                     effectiveGivenName,
@@ -308,6 +306,9 @@ internal sealed class PartiesMcpTools(
                         "parties-mcp-payload-too-large",
                         "The update_party request exceeds the supported MCP payload size.");
                 }
+
+                string[] effectiveRemoveContactIds = CombineIds(removeContactChannelId, removeContactChannelIds);
+                string[] effectiveRemoveIdentifierIds = CombineIds(removeIdentifierId, removeIdentifierIds);
 
                 PartiesMcpToolResult? semanticIdValidation =
                     ValidateOptionalSemanticId(PartiesMcpToolNames.UpdateParty, nameof(updateContactChannelId), updateContactChannelId)
@@ -526,7 +527,7 @@ internal sealed class PartiesMcpTools(
         => PartyIdentifier.IsValid(partyId);
 
     private static PartiesMcpToolResult? ValidateOptionalSemanticId(string toolName, string field, string? value)
-        => string.IsNullOrWhiteSpace(value) || PartyIdentifier.IsValid(value.Trim())
+        => string.IsNullOrEmpty(value) || PartyIdentifier.IsValid(value)
             ? null
             : ValidationFailed(toolName, field);
 
@@ -789,7 +790,7 @@ internal sealed class PartiesMcpTools(
             }
 
             ContactChannel? currentContact = currentParty?.ContactChannels
-                .FirstOrDefault(channel => string.Equals(channel.Id, updateContactChannelId.Trim(), StringComparison.Ordinal));
+                .FirstOrDefault(channel => string.Equals(channel.Id, updateContactChannelId, StringComparison.Ordinal));
             if (currentParty is not null && currentContact is null)
             {
                 return null;
@@ -803,7 +804,7 @@ internal sealed class PartiesMcpTools(
             updateContacts.Add(new UpdateContactChannel
             {
                 PartyId = partyId,
-                ContactChannelId = updateContactChannelId.Trim(),
+                ContactChannelId = updateContactChannelId,
                 Type = parsedContactType ?? currentContact?.Type,
                 Value = string.IsNullOrWhiteSpace(updateContactChannelValue) ? currentContact?.Value : updateContactChannelValue.Trim(),
                 IsPreferred = updateContactChannelPreferred ?? currentContact?.IsPreferred,
@@ -935,9 +936,9 @@ internal sealed class PartiesMcpTools(
     private static string[] CombineIds(string? singleValue, string? csvValues)
     {
         List<string> values = [];
-        if (!string.IsNullOrWhiteSpace(singleValue))
+        if (!string.IsNullOrEmpty(singleValue))
         {
-            values.Add(singleValue.Trim());
+            values.Add(singleValue);
         }
 
         values.AddRange(SplitCsv(csvValues));
@@ -945,9 +946,9 @@ internal sealed class PartiesMcpTools(
     }
 
     private static string[] SplitCsv(string? value)
-        => string.IsNullOrWhiteSpace(value)
+        => string.IsNullOrEmpty(value)
             ? []
-            : [.. value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+            : [.. value.Split(',', StringSplitOptions.TrimEntries)];
 
     private static DateTimeOffset? ParseDateOfBirth(string? value)
     {

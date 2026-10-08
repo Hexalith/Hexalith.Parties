@@ -2,7 +2,8 @@
 title: 'Epic 8 follow-up review'
 type: 'bugfix'
 created: '2026-09-07'
-status: 'ready-for-dev'
+status: 'done'
+baseline_commit: 'c095134f6ec648560954d6f0fc76858fd1d7cd0e'
 review_loop_iteration: 0
 followup_review_recommended: false
 baseline_revision: '971eeab7c1a9f242a46cd0326db7c5dee6f67404'
@@ -11,7 +12,13 @@ context:
   - '{project-root}/_bmad-output/implementation-artifacts/spec-8-2-identifier-correctness-and-zero-risk-hygiene.md'
   - '{project-root}/_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md'
 warnings: [multiple-goals, oversized]
-deferred: []
+deferred:
+  - source_spec: 'spec-8-3-platform-api-prerequisites.md'
+    summary: 'Retain the historical Story 8.3 final review object in owner-managed published evidence or refs'
+    evidence: 'Final revision edfe6762a7ff45976c19d09e0ae281d1bb94b4f8 resolves locally, but git for-each-ref --contains and git rev-list --all --objects show no retaining ref. An ordinary fresh clone may lack it. Local shared-object validation passes; the guard correctly fails closed when absent. Publishing or creating retaining refs is outside this bounded run.'
+  - source_spec: 'spec-8-2-identifier-correctness-and-zero-risk-hygiene.md'
+    summary: 'Reject explicit null composite operation lists with bounded domain validation outcomes'
+    evidence: 'CreatePartyCompositeValidator.cs:100-101 and UpdatePartyCompositeValidator.cs:111-118 dereference nullable-by-deserialization lists. Their rules at :41-43 and :21-23 call these helpers; PartyDomainProcessor.cs:546 deserializes with PartiesJsonOptions.Default and validates outside the deserialization catch at :566-568. Explicit contactChannels:null or removeIdentifierIds:null can therefore propagate an exception instead of PartyCommandValidationRejected. Source-established behavior; no new runtime reproducer was run. Validator/domain-host edits are excluded from this follow-up patch.'
 ---
 
 <intent-contract>
@@ -54,23 +61,57 @@ deferred: []
 ## Tasks & Acceptance
 
 **Execution:**
-- `src/Hexalith.Parties.Mcp/Tools/PartiesMcpTools.cs` and `tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolDispatchTests.cs` -- stop trimming scalar semantic IDs before shared validation, preserve CSV parsing semantics, and cover bounded no-client failures -- restores Story 8.2's exact-input safety contract.
-- `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`, `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs`, and `docs/architecture.md` -- refresh current committed source receipts, record the two delivered EventStore symbols, narrow remaining gaps, and enforce completed historical scope -- makes Story 8.3 evidence reproducible without granting approval or widening migration scope.
-- `_bmad-output/implementation-artifacts/spec-8-2-identifier-correctness-and-zero-risk-hygiene.md` and `_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md` -- append one review outcome per source story recording the reviewed baseline and final candidate (or exact baseline-relative diff), reviewer-session independence from the patch author, all findings and dispositions, and focused verification evidence; retire a flag only after its final-candidate record has no unresolved in-scope finding -- prevents an unverified administrative closure.
-- `_bmad-output/implementation-artifacts/spec-epic-8-followup-review.md` -- record any newly discovered valid but out-of-bounds finding in `deferred` with exact evidence; otherwise leave `deferred` empty -- keeps any new deferral specific without touching the orchestrator-owned ledger.
+- [x] `src/Hexalith.Parties.Mcp/Tools/PartiesMcpTools.cs` and `tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolDispatchTests.cs` -- stop trimming scalar semantic IDs before shared validation, preserve CSV parsing semantics, and cover bounded no-client failures -- restores Story 8.2's exact-input safety contract.
+- [x] `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`, `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs`, and `docs/architecture.md` -- refresh current committed source receipts, record the two delivered EventStore symbols, narrow remaining gaps, and enforce completed historical scope -- makes Story 8.3 evidence reproducible without granting approval or widening migration scope.
+- [x] `_bmad-output/implementation-artifacts/spec-8-2-identifier-correctness-and-zero-risk-hygiene.md` and `_bmad-output/implementation-artifacts/spec-8-3-platform-api-prerequisites.md` -- append one review outcome per source story recording the reviewed baseline and final candidate (or exact baseline-relative diff), reviewer-session independence from the patch author, all findings and dispositions, and focused verification evidence; retire a flag only after its final-candidate record has no unresolved in-scope finding -- prevents an unverified administrative closure.
+- [x] `_bmad-output/implementation-artifacts/spec-epic-8-followup-review.md` -- record any newly discovered valid but out-of-bounds finding in `deferred` with exact evidence; otherwise leave `deferred` empty -- keeps any new deferral specific without touching the orchestrator-owned ledger.
 
 **Acceptance Criteria:**
 - Given any scalar MCP semantic identifier containing leading or trailing whitespace, when the tool validates it, then it returns the existing bounded validation failure and neither query nor command client is accessed.
 - Given a comma-delimited MCP removal list with delimiter-adjacent whitespace, when it is parsed, then valid trimmed list items continue through the established dispatch path.
 - Given the completed Story 8.3 spec, when the no-production-migration fitness test runs, then it validates the recorded baseline-to-final range and fails closed for missing revisions or forbidden paths rather than returning because status is `done`.
-- Given current parent gitlinks, selected checkout revisions, and central package values, when the prerequisite fitness suite runs in a clean selected-source graph, then exact source receipts match and package identities remain EventStore `3.102.0`, Commons `2.30.0`, Memories `2.26.1`, Tenants `5.7.0`, and Parties `1.1.1`.
+- Given current parent gitlinks, selected checkout revisions, and central package values, when the prerequisite fitness suite runs in a clean selected-source graph, then exact source receipts match and package identities remain at the current selected values: EventStore `3.115.0`, Commons `2.30.1`, Memories `2.27.1`, Tenants `5.7.0`, and Parties `1.1.1`.
 - Given the selected EventStore source exposes DAPR health registration and audience-aware JWT configuration, when the matrix is inspected, then it cites reproducible evidence for those symbols while retaining the remaining degraded-response, granular-client, integrated-topology, and rollback proof gates.
 - Given all bounded patches and focused checks pass, when the two completed source specs are inspected, then both follow-up flags are false and neither the deferred-work ledger nor `.bmad-loop` files changed.
 - Given both source specs recommend follow-up review, when closure is requested, then each has a recorded independent final-candidate review against its intent contract and acceptance criteria, identifies the reviewed revision or exact diff and every finding disposition, reports no unresolved in-scope finding, and records every valid out-of-bounds finding in this spec's `deferred` list; otherwise that source spec's follow-up flag remains true.
 
 ## Spec Change Log
 
+- 2026-10-08: Reconciled the stale package-identity acceptance criterion with the selected root catalog at baseline `c095134f6ec648560954d6f0fc76858fd1d7cd0e`. No package selection changes are authorized; preserve historical approvals and receipts separately from current source observations.
+
 ## Review Triage Log
+
+### 2026-10-08 — Independent workflow review
+
+Review sessions `blind_hunter`, `edge_case_hunter`, and `verification_gap` did not author the implementation. They reviewed the scoped baseline-relative candidate at `c095134f6ec648560954d6f0fc76858fd1d7cd0e`; implementation-diff SHA-256 was `08f7a0555ba34e06caf5800ea07d5b7828d952f3188c96969c306037419ff7a6`. The full workspace diff was also captured separately; concurrent external changes were excluded from this candidate and preserved.
+
+| Finding | Verdict | Route | Evidence and disposition |
+| --- | --- | --- | --- |
+| BH-1 historical final object lacks retaining refs | medium | defer | The object resolves locally, but neither `git for-each-ref --contains=edfe6762a7ff45976c19d09e0ae281d1bb94b4f8` nor `git rev-list --all --objects` retains it. Record this pre-existing owner-evidence availability issue in frontmatter; retain fail-closed behavior and do not create or publish refs. |
+| BH-2 Git-quoted Unicode paths | medium | patch | Git quotes non-ASCII names without `-z`; the leading quote bypasses the production prefix filter. Use NUL-delimited historical diff output. |
+| BH-3 rename hides production deletion | medium | patch | Rename detection reports only an allowed destination. Disable rename detection so both changed paths are inspected. |
+| BH-4 dependency migration inputs omitted | medium | patch | `.gitmodules` and `references/` changes are currently outside the predicate despite Story 8.3's read-only dependency boundary. Include them in historical scope. |
+| BH-5 CSV allocation precedes bounds | medium | patch | `CombineIds` runs before the payload return; retained empty entries amplify oversized comma-only inputs. Move parsing below the existing bounds check. |
+| BH-6 prose can replace delivered-symbol commands | medium | patch | Token checks plus any remaining successful commands do not require the named delivered symbols' exact searches. Require those commands and add audience/options evidence. |
+| BH-7 catalog default lacks direct assertion | low | patch | Current package/source identity checks constrain the catalog, but the new default claim warrants a direct existing-style assertion. |
+| BH-8 plain diff check conflicts with required CRLF | low | reject | The finding requests editing this build's spec, rejected by the review workflow. Record the exact CRLF-aware verification result without changing line-ending policy or Git configuration. |
+| BH-9 positive create-ID branches untested | medium | patch | Existing create tests cover generated/readable IDs, while new branching needs exact ULID/GUID preservation and explicit empty-input generation cases. |
+| EC-1 Git-quoted filenames | medium | patch | Independently confirms BH-2; addressed by the same NUL-delimited diff fix. |
+| EC-2 production-to-allowed rename | medium | patch | Independently confirms BH-3; addressed by disabling rename detection. |
+| EC-3 historical scope claim | medium | patch | The claim is incomplete for the two verified Git output cases in EC-1/EC-2; both fixes discharge it. |
+| VG-1 whitespace-only CSV coverage | medium | patch | Restoring `IsNullOrWhiteSpace` leaves current CSV tests green and silently drops supplied invalid lists. Add no-client whitespace-only cases for both CSV parameters. |
+| VG-2 completed-status branch coverage | medium | patch | Removing the completed-branch helper call leaves direct helper negative controls green. Route the ordinary fact and completed fixtures through the same status-dependent routine. |
+
+All bounded patch entries are applied and independently verified against the final candidate. Both source specs now record separate final review outcomes with no unresolved in-scope finding and closed follow-up flags. The orchestrator-owned ledger is untouched, as required by this run's explicit boundaries.
+
+
+### 2026-10-08 — Final source-story review findings
+
+| Finding | Verdict | Route | Evidence and disposition |
+| --- | --- | --- | --- |
+| SR-1 explicit null composite operation lists | medium | defer | The original validators count and enumerate lists without null guards; JSON can assign null and domain validation runs outside the deserialize catch. Recorded in frontmatter with exact source evidence, for a separate validator/domain-host fix. These production surfaces are explicitly excluded from this follow-up's intent. |
+
+Two compile-time corrections were also applied during validation: the new Shouldly string assertion uses its supported `Case.Sensitive` overload, and the new public path theory validates its argument for CA1062. Warning policy remains unchanged.
 
 ## Design Notes
 
@@ -85,3 +126,21 @@ The recorded `final_revision` values are review commits on historical branches r
 - `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -class Hexalith.Parties.Tests.FitnessTests.IdentifierHygieneFitnessTests` -- expected: both focused fitness classes pass.
 - `git ls-files '*.csproj.lscache' '*.lscache'` and targeted `rg` scans for semantic GUID parsing/generation -- expected: no tracked caches or forbidden semantic GUID usage.
 - `git diff --check` plus explicit status/diff inspection limited to this spec's Code Map and prohibited paths -- expected: no whitespace errors, ledger edits, submodule/gitlink changes, or overwritten concurrent work.
+
+**Final verification — 2026-10-08:**
+
+Final implementation candidate: baseline `c095134f6ec648560954d6f0fc76858fd1d7cd0e`, five-file diff SHA-256 `ddf348a754f3dfb33d4b250a031801d1cfe4207216a3bbf89daa2cf17a627dd2`. Independent reviewer `/root/verification_gap` confirmed separate Story 8.2/8.3 outcomes, every finding disposition, and no unresolved in-scope finding. Both source follow-up flags are false; the two out-of-bounds findings remain in this spec's `deferred` list.
+
+Validation ran in `/tmp/parties-epic8-followup-xwk7xveq`, a temporary local checkout of the exact parent baseline with all ten root-declared repositories at their committed gitlinks and no initialized nested submodules. Only this run's owned candidate files were overlaid. The active workspace's concurrent changes were preserved and excluded from this candidate.
+
+- `dotnet build tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj -c Debug --no-restore -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` — pass, zero warnings/errors.
+- `dotnet ./tests/Hexalith.Parties.Mcp.Tests/bin/Debug/net10.0/Hexalith.Parties.Mcp.Tests.dll -class Hexalith.Parties.Mcp.Tests.PartiesMcpToolDispatchTests` — pass, 83/83, no skips.
+- `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --no-restore -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` — pass, zero warnings/errors.
+- `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -class Hexalith.Parties.Tests.FitnessTests.IdentifierHygieneFitnessTests` — pass, 36/36, no skips; includes completed-status missing-revision/forbidden-path controls, raw Unicode/newline paths, rename deletion fixtures, dependency inputs, and delivered-command controls.
+- `git ls-files '*.csproj.lscache' '*.lscache'` and targeted semantic GUID parsing/generation scans — pass, no matches.
+- `git -c core.whitespace=cr-at-eol diff --check --` followed by this run's eight owned paths — pass. Plain Git whitespace checking treats the required CRLF additions as trailing whitespace in this repository; no repository setting or line-ending rule was weakened.
+- Scoped status/diff checks — no changes to the deferred-work ledger, `.bmad-loop`, package selections, sign-off ledger, sprint status, or test summaries. No committed root gitlink changed; EventStore's concurrent dirty content belongs to external work.
+
+The first active-workspace prescribed `--no-restore` MCP build failed with MSB3243/CS1704 from mixed source/package `Hexalith.Commons.UniqueIds` restore assets. A focused source restore succeeded, but concurrent work replaced assets before the next build. Isolated source builds with restore, followed by the exact final `--no-restore` checks above, resolved this environmental blocker. Two newly introduced compile diagnostics (Shouldly overload CS1503 and theory argument CA1062) were corrected without changing warning policy.
+
+Evidence logs: `/tmp/parties-epic8-isolated-mcp-build-final.log`, `/tmp/parties-epic8-isolated-mcp-tests-final.log`, `/tmp/parties-epic8-isolated-fitness-build-final.log`, and `/tmp/parties-epic8-isolated-fitness-tests-final.log`. Focused local evidence does not renew platform owner approval/parity, prove fresh-clone historical-object retention, or claim full CI/release readiness.

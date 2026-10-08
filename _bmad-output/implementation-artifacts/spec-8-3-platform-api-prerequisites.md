@@ -4,7 +4,7 @@ type: 'chore'
 created: '2026-07-07T10:50:18+02:00'
 status: 'done'
 review_loop_iteration: 0
-followup_review_recommended: true
+followup_review_recommended: false
 baseline_revision: '12c56f78274f5acba6385594f40652c071890540'
 final_revision: 'edfe6762a7ff45976c19d09e0ae281d1bb94b4f8'
 context:
@@ -205,3 +205,21 @@ Residual risks:
 - Full `Hexalith.Parties.Tests` Release source-mode remains blocked by the Story 8.1 `Hexalith.Memories` Release guard.
 - Full `Hexalith.Parties.Tests` Debug source-mode still has the five pre-existing tenant-event failures recorded by Stories 8.1 and 8.2.
 - Several matrix rows remain `needs-additive-api` or `blocked`; later migration stories must not consume those areas until owner proof and rollback evidence are recorded.
+
+## Independent Follow-up Review — 2026-10-08
+
+Reviewer session: `/root/verification_gap`, separate from patch author `/root/implementation` and the coordinating agent. The reviewer read this source spec fully and checked its intent contract, acceptance criteria, and current affected implementation. Final candidate: parent baseline `c095134f6ec648560954d6f0fc76858fd1d7cd0e` plus the five-file implementation diff, SHA-256 `ddf348a754f3dfb33d4b250a031801d1cfe4207216a3bbf89daa2cf17a627dd2`. Reconstruct with `git diff c095134f6ec648560954d6f0fc76858fd1d7cd0e -- src/Hexalith.Parties.Mcp/Tools/PartiesMcpTools.cs tests/Hexalith.Parties.Mcp.Tests/PartiesMcpToolDispatchTests.cs tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs _bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md docs/architecture.md`. Historical `baseline_revision` and `final_revision` remain unchanged.
+
+Outcome: no unresolved in-scope finding; `followup_review_recommended: false`.
+
+- Initial findings, patched and independently verified: current committed source receipts and describes now match the selected clean graph, and delivered EventStore DAPR-health/JWT APIs have reproducible evidence without promoting prerequisite statuses.
+- VG-2, patched: the ordinary gate and negative controls enter the same status-dependent routine; completed scope uses the original recorded historical range, with missing-baseline/final and forbidden-path failures.
+- BH-2/EC-1, patched: NUL-delimited Git output preserves Unicode/newline paths for filtering.
+- BH-3/EC-2/EC-3, patched: disabled rename detection exposes forbidden source deletions.
+- BH-4, patched: historical filtering includes `.gitmodules` and `references/` dependency inputs.
+- BH-6, patched: positive executable commands must identify the exact delivered health/JWT/options/audience source paths; command-removal and wrong-evidence cases fail.
+- BH-7, patched: the selected catalog's EventStore default is directly asserted.
+- BH-8, rejected as a request to edit this build's spec under the workflow rule. Verification records the CRLF-aware command below, preserving the required line-ending policy.
+- BH-1, deferred outside this run's ownership: historical final commit `edfe6762a7ff45976c19d09e0ae281d1bb94b4f8` resolves locally but has no retaining ref. Owner-managed publication/retention is needed for ordinary fresh clones; missing revisions still fail closed. Exact evidence is recorded in [the follow-up spec](spec-epic-8-followup-review.md)'s `deferred` list.
+
+Verification: final Debug source build succeeded with zero warnings/errors; `PlatformApiPrerequisitesTests` plus `IdentifierHygieneFitnessTests` passed 36/36, no skips. The recorded original `baseline_revision..final_revision` contains only the original artifacts/tests. Effective selected packages remain EventStore 3.115.0, Commons 2.30.1, Memories 2.27.1, Tenants 5.7.0, and Parties 1.1.1. Checks ran in an isolated local checkout at the parent baseline and exact clean committed root gitlinks, using locally available historical objects; these focused results do not establish fresh-clone availability, new owner approval, historical platform parity, or release readiness. Concurrent external work and unresolved rollback/prerequisite gates were preserved.

@@ -53,8 +53,8 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.6.0` |
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.10` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.0-preview.1.261001-0243` |
-| Gateway/eventing | Hexalith.EventStore | package `3.115.0` by default (Parties pre-import CPM pin); historical approved source checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` (tag `v3.113.0`; approved 2026-10-05, root gitlink committed in Parties `75b4fa1f`; parity counts only for receipts rerun at this identity) |
-| Tenancy | Hexalith.Tenants | package `5.7.0` by default; approved source gitlink `72b8e4f508176b69826549e87b7b2a286f607fd1` (`v5.7.0-143-g72b8e4f5`; approved 2026-10-05 and committed; parity counts only for receipts rerun at this identity) |
+| Gateway/eventing | Hexalith.EventStore | package `3.115.0` by default (Parties pre-import CPM pin); current committed source gitlink and clean checkout `4cc77f9554395e84539e173e94b8f0b4df14d643` (`v3.115.0-18-g4cc77f95`, observed at Parties `c095134f` on 2026-10-08); source observation grants no new owner approval or parity |
+| Tenancy | Hexalith.Tenants | package `5.7.0` by default; current committed source gitlink and clean checkout `bd87d68ed5fcf10eb5177286da6cc4bbe8907222` (`v5.7.0-166-gbd87d68e`, observed at Parties `c095134f` on 2026-10-08); historical owner approvals and parity remain bound to their original identities |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.2.0` |
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.12` |

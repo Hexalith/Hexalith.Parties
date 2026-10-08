@@ -43,18 +43,27 @@ public sealed class PlatformApiPrerequisitesTests
 
     // Release selection is separate from the historical migration/parity receipt constants.
     private const string CurrentReleaseEventStoreVersion = "3.115.0";
-    private const string CurrentReleaseEventStoreSha = "98da5a04e6df33ba026cbaae46d1777acdca7a21";
-    private const string CurrentReleaseEventStoreDescribe = "v3.115.0-8-g98da5a04";
+    private const string CurrentReleaseEventStoreSha = "4cc77f9554395e84539e173e94b8f0b4df14d643";
+    private const string CurrentReleaseEventStoreDescribe = "v3.115.0-18-g4cc77f95";
     private static readonly IReadOnlyDictionary<string, string> CurrentReleaseGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = AiToolsSha,
-        ["references/Hexalith.Builds"] = "397c94a4e246c90b21cf408790fa0d55bf32d795",
+        ["references/Hexalith.Builds"] = "af20682ac8fc420068a731ecb87cff84727a3d53",
         ["references/Hexalith.Commons"] = CommonsSha,
         [EventStoreRelativePath] = CurrentReleaseEventStoreSha,
         ["references/Hexalith.FrontComposer"] = "c561b3210f15206a90c39c82c58f2e5b1005cd60",
-        ["references/Hexalith.Memories"] = "14bb1c17b66ad0fa053ad0ed332c82fdd85f3887",
+        ["references/Hexalith.Memories"] = "e1c72dabc7a2a2464e34a1b46422ec2ddfbb1cda",
         ["references/Hexalith.PolymorphicSerializations"] = PolymorphicSerializationsSha,
-        ["references/Hexalith.Tenants"] = "811447342e8f44b644a2074565e83f45519528fd",
+        ["references/Hexalith.Tenants"] = "bd87d68ed5fcf10eb5177286da6cc4bbe8907222",
+    };
+
+    private static readonly IReadOnlyDictionary<string, string> CurrentSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["references/Hexalith.Builds"] = "v4.30.0-2-gaf20682a",
+        [EventStoreRelativePath] = CurrentReleaseEventStoreDescribe,
+        ["references/Hexalith.FrontComposer"] = "v4.6.0-5-gc561b321",
+        ["references/Hexalith.Memories"] = "v2.28.1-32-ge1c72dab",
+        ["references/Hexalith.Tenants"] = "v5.7.0-166-gbd87d68e",
     };
 
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
@@ -157,6 +166,7 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly IReadOnlyDictionary<string, string[]> RequiredEvidenceTokensBySurface = new Dictionary<string, string[]>(StringComparer.Ordinal)
     {
         ["EventStore domain-service host"] = ["AddEventStoreDomainService", "UseEventStoreDomainService"],
+        ["EventStore degraded response and DAPR health checks"] = ["AddEventStoreDaprHealthChecks", "DegradedResponseMiddleware", "DaprStateStoreHealthCheck", "DaprPubSubHealthCheck"],
         ["EventStore projection/query SDK"] = ["IDomainProjectionHandler", "IDomainQueryHandler", "IReadModelStore", "IQueryCursorCodec"],
         ["EventStore DataProtection"] = ["AddEventStoreDataProtection", "DaprXmlRepository", "AddEventStoreQueryCursorCodec"],
         ["Payload protection engine package"] =
@@ -179,13 +189,29 @@ public sealed class PlatformApiPrerequisitesTests
         ],
         ["EventStore client envelopes/freshness/error codes"] = ["IEventStoreGatewayClient", "QueryResponseMetadata", "QueryProblemReasonCodes", "GatewayProblemDetailsExtensions"],
         ["Tenant claims transformation"] = [PartiesClaimTypes.EventStoreTenant, "AggregateIdentity.IsValid(string)", "UniqueIdHelper.IsValidUlid(string)"],
-        ["Aspire publish helpers"] = ["AddEventStoreDomainModule", "WithJwtBearerSecurity", "WithEventStoreJwtAuthentication(audience)", "AddEventStoreGatewayClient"],
+        ["Aspire publish helpers"] = ["AddEventStoreDomainModule", "WithJwtBearerSecurity", "WithEventStoreJwtAuthentication", "HexalithEventStoreJwtAuthenticationOptions", "PrimaryAudience", "ValidAudiences", "AddEventStoreGatewayClient"],
         ["FrontComposer UI primitives"] = ["FcEntityPicker", "FcDestructiveConfirmationDialog", "FileDownload", "JsonDownload"],
         ["Commons HTTP helpers"] = ["HttpClientRegistration", "BoundedProblemDetailsReader", "HttpCorrelation"],
         ["MCP, deep-link, and search probes"] = ["GetContext()", "IFrontComposerMcpTenantToolGate", "TryAddWithoutValidation", "BuildCorrelationLink", "GetRichSearchCapabilityAsync"],
         ["Builds shared props/targets"] = ["TreatWarningsAsErrors", "Directory.Packages.props"],
         ["Package publishing/source-mode CI"] = ["Hexalith.Commons.Http", "Hexalith.Commons.ServiceDefaults", "Hexalith.Tenants.Client", "Hexalith.Tenants.Testing"],
     };
+
+    private static readonly IReadOnlyDictionary<string, (string Pattern, string Path)[]> RequiredDeliveredApiCommands =
+        new Dictionary<string, (string Pattern, string Path)[]>(StringComparer.Ordinal)
+        {
+            ["EventStore degraded response and DAPR health checks"] =
+            [
+                ("AddEventStoreDaprHealthChecks", "references/Hexalith.EventStore/src/Hexalith.EventStore/HealthChecks/HealthCheckBuilderExtensions.cs"),
+            ],
+            ["Aspire publish helpers"] =
+            [
+                ("WithEventStoreJwtAuthentication", "references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/HexalithEventStoreSecurityExtensions.cs"),
+                ("HexalithEventStoreJwtAuthenticationOptions", "references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/HexalithEventStoreJwtAuthenticationOptions.cs"),
+                ("PrimaryAudience", "references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/HexalithEventStoreJwtAuthenticationOptions.cs"),
+                ("ValidAudiences", "references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/HexalithEventStoreJwtAuthenticationOptions.cs"),
+            ],
+        };
 
     private static readonly IReadOnlyDictionary<string, string[]> RequiredFinalConsumptionRows = new Dictionary<string, string[]>(StringComparer.Ordinal)
     {
@@ -651,7 +677,7 @@ public sealed class PlatformApiPrerequisitesTests
         string root = RepositoryRoot.Locate();
         string matrix = ReadMatrix();
 
-        const string currentHeading = "### Current release selection — 2026-10-07";
+        const string currentHeading = "### Current source observation — 2026-10-08";
         int currentStart = matrix.IndexOf(currentHeading, StringComparison.Ordinal);
         currentStart.ShouldBeGreaterThanOrEqualTo(0, currentHeading);
         int historicalStart = matrix.IndexOf("### Story 8.10 final retained-identity reconciliation", currentStart, StringComparison.Ordinal);
@@ -666,6 +692,13 @@ public sealed class PlatformApiPrerequisitesTests
                 .Single(line => line.StartsWith($"| {dependency} |", StringComparison.Ordinal));
             row.Split('|', StringSplitOptions.TrimEntries)[2].Split(' ')[0].ShouldBe($"`{identity}`", path);
             AssertGitlinkAndCheckout(root, path, identity);
+            if (CurrentSourceDescribes.TryGetValue(path, out string? describe))
+            {
+                row.ShouldContain($"`{describe}`", Case.Sensitive, path);
+                RunGit(root, "-C", path, "describe", "--tags", "--always", "--abbrev=8", "HEAD")
+                    .Trim()
+                    .ShouldBe(describe, path);
+            }
         }
 
         RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--match", $"v{CurrentReleaseEventStoreVersion}", "--abbrev=8", "HEAD")
@@ -706,6 +739,7 @@ public sealed class PlatformApiPrerequisitesTests
         rootBuildTargets.ShouldNotContain("Hexalith.Package.props");
         string catalog = File.ReadAllText(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"));
         rootPackages.ShouldContain($"<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">{CurrentReleaseEventStoreVersion}</HexalithEventStoreVersion>");
+        catalog.ShouldContain($"<HexalithEventStoreVersion Condition=\"'$(HexalithEventStoreVersion)' == ''\">{CurrentReleaseEventStoreVersion}</HexalithEventStoreVersion>");
         catalog.ShouldContain("<PackageVersion Include=\"Hexalith.EventStore.Contracts\" Version=\"$(HexalithEventStoreVersion)\" />");
         catalog.ShouldContain("<HexalithCommonsVersion Condition=\"'$(HexalithCommonsVersion)' == ''\">2.30.1</HexalithCommonsVersion>");
         catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">4.5.0</HexalithFrontComposerVersion>");
@@ -858,6 +892,7 @@ public sealed class PlatformApiPrerequisitesTests
         {
             (string Pattern, string[] Paths, bool ExpectMatch)[] commands = ExtractRgCommands(row.ValidationEvidence).ToArray();
             commands.ShouldNotBeEmpty(row.Surface);
+            AssertDeliveredApiCommands(row.Surface, commands);
 
             foreach ((string pattern, string[] paths, bool expectMatch) in commands)
             {
@@ -871,18 +906,159 @@ public sealed class PlatformApiPrerequisitesTests
         }
     }
 
+    [Theory]
+    [InlineData("EventStore degraded response and DAPR health checks", "AddEventStoreDaprHealthChecks")]
+    [InlineData("Aspire publish helpers", "WithEventStoreJwtAuthentication")]
+    [InlineData("Aspire publish helpers", "HexalithEventStoreJwtAuthenticationOptions")]
+    [InlineData("Aspire publish helpers", "PrimaryAudience")]
+    [InlineData("Aspire publish helpers", "ValidAudiences")]
+    public void DeliveredApiCommandEvidenceCannotBeReplacedByProse(string surface, string pattern)
+    {
+        string evidence = ReadRows()[surface].ValidationEvidence;
+        string path = RequiredDeliveredApiCommands[surface].Single(command => command.Pattern == pattern).Path;
+        string command = $"`rg -n -F '{pattern}' {path}`";
+        evidence.ShouldContain(command);
+        string withoutCommand = evidence.Replace(command, string.Empty, StringComparison.Ordinal);
+
+        Should.Throw<ShouldAssertException>(() => AssertDeliveredApiCommands(surface, ExtractRgCommands(withoutCommand)))
+            .Message.ShouldContain(pattern);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void DeliveredApiCommandEvidenceRequiresPositiveExactSourcePaths(bool expectMatch)
+    {
+        const string surface = "EventStore degraded response and DAPR health checks";
+        (string pattern, string path) = RequiredDeliveredApiCommands[surface].Single();
+        (string Pattern, string[] Paths, bool ExpectMatch)[] commands =
+        [
+            (pattern, expectMatch ? [path, "references/Hexalith.EventStore/src"] : [path], expectMatch),
+        ];
+
+        Should.Throw<ShouldAssertException>(() => AssertDeliveredApiCommands(surface, commands))
+            .Message.ShouldContain(pattern);
+    }
+
+    private static void AssertDeliveredApiCommands(
+        string surface,
+        IEnumerable<(string Pattern, string[] Paths, bool ExpectMatch)> commands)
+    {
+        if (!RequiredDeliveredApiCommands.TryGetValue(surface, out (string Pattern, string Path)[]? required))
+        {
+            return;
+        }
+
+        foreach ((string pattern, string path) in required)
+        {
+            commands.Any(command => command.ExpectMatch
+                    && string.Equals(command.Pattern, pattern, StringComparison.Ordinal)
+                    && command.Paths.Length == 1
+                    && string.Equals(command.Paths[0], path, StringComparison.Ordinal))
+                .ShouldBeTrue($"{surface}: positive rg -n -F '{pattern}' command must name the exact source path {path}.");
+        }
+    }
+
     [Fact]
     public void CurrentStoryDiff_DoesNotModifyUnapprovedProductionMigrationPaths()
     {
         string root = RepositoryRoot.Locate();
         string spec = File.ReadAllText(Path.Combine(root, SpecRelativePath));
         string status = ReadFrontmatterValue(spec, "status");
-        if (string.Equals(status, "done", StringComparison.OrdinalIgnoreCase))
+        string baselineRevision = ReadFrontmatterValue(spec, "baseline_revision");
+        string? finalRevision = string.Equals(status, "done", StringComparison.OrdinalIgnoreCase)
+            ? ReadFrontmatterValue(spec, "final_revision")
+            : null;
+
+        AssertStoryMigrationScope(root, status, baselineRevision, finalRevision);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CompletedStoryMigrationScopeFailsClosedForMissingRevisions(bool missingBaseline)
+    {
+        string root = RepositoryRoot.Locate();
+        string spec = File.ReadAllText(Path.Combine(root, SpecRelativePath));
+        string baseline = ReadFrontmatterValue(spec, "baseline_revision");
+        string final = ReadFrontmatterValue(spec, "final_revision");
+        const string missingRevision = "0000000000000000000000000000000000000000";
+
+        Should.Throw<ShouldAssertException>(() => AssertStoryMigrationScope(
+                root,
+                "done",
+                missingBaseline ? missingRevision : baseline,
+                missingBaseline ? final : missingRevision))
+            .Message.ShouldContain(missingBaseline ? "baseline revision" : "final revision");
+    }
+
+    [Fact]
+    public void CompletedStoryMigrationScopeRejectsForbiddenProductionPaths()
+    {
+        string root = RepositoryRoot.Locate();
+        string spec = File.ReadAllText(Path.Combine(root, SpecRelativePath));
+        string baseline = ReadFrontmatterValue(spec, "baseline_revision");
+        const string laterRevision = "c095134f6ec648560954d6f0fc76858fd1d7cd0e";
+
+        // Later Epic 8 migrations are authorized separately, but would be forbidden in the
+        // recorded Story 8.3 range. This negative control proves that completed scope is checked.
+        Should.Throw<ShouldAssertException>(() => AssertStoryMigrationScope(root, "done", baseline, laterRevision))
+            .Message.ShouldContain("src/Hexalith.Parties");
+    }
+
+    [Theory]
+    [InlineData("src/Hexalith.Parties/Domain/Épreuve.cs")]
+    [InlineData("src/Hexalith.Parties/Domain/Line\nBreak.cs")]
+    [InlineData("src/Hexalith.Parties/Domain/PartyAggregate.cs")]
+    [InlineData(".gitmodules")]
+    [InlineData("references/Hexalith.EventStore")]
+    [InlineData("references/Hexalith.Builds")]
+    [InlineData("references/Directory.Build.targets")]
+    public void CompletedStoryMigrationScopeRejectsRawForbiddenPathsAndRenamedDeletions(string forbiddenPath)
+    {
+        ArgumentNullException.ThrowIfNull(forbiddenPath);
+
+        string root = RepositoryRoot.Locate();
+        string spec = File.ReadAllText(Path.Combine(root, SpecRelativePath));
+        string baseline = ReadFrontmatterValue(spec, "baseline_revision");
+        string final = ReadFrontmatterValue(spec, "final_revision");
+
+        string ReadFixtureDiff(string[] arguments)
         {
-            return;
+            arguments.ShouldBe(["diff", "--no-renames", "--name-only", "-z", $"{baseline}..{final}", "--"]);
+            // A production-to-test rename must report the deleted source as well as its
+            // destination. NUL separators keep Unicode and newline-containing paths raw.
+            return $"{forbiddenPath}\0tests/Hexalith.Parties.Tests/Renamed.cs\0";
         }
 
-        string baselineRevision = ReadFrontmatterValue(spec, "baseline_revision");
+        Should.Throw<ShouldAssertException>(() => AssertStoryMigrationScope(root, "done", baseline, final, ReadFixtureDiff))
+            .Message.ShouldContain(forbiddenPath.Split('\n')[0]);
+    }
+
+    private static void AssertStoryMigrationScope(
+        string root,
+        string status,
+        string baselineRevision,
+        string? finalRevision,
+        Func<string[], string>? readCompletedDiff = null)
+    {
+        if (string.Equals(status, "done", StringComparison.OrdinalIgnoreCase))
+        {
+            GitObjectExists(root, baselineRevision).ShouldBeTrue($"Story 8.3 baseline revision is missing: {baselineRevision}");
+            finalRevision.ShouldNotBeNullOrWhiteSpace("Story 8.3 final revision is missing.");
+            GitObjectExists(root, finalRevision!).ShouldBeTrue($"Story 8.3 final revision is missing: {finalRevision}");
+
+            string[] arguments = ["diff", "--no-renames", "--name-only", "-z", $"{baselineRevision}..{finalRevision}", "--"];
+            // The fixture reader exercises the same completed branch without creating commits
+            // or modifying the repository. The ordinary gate always reads the actual git diff.
+            string diffNames = readCompletedDiff is null ? RunGit(root, arguments) : readCompletedDiff(arguments);
+            string[] forbiddenChanges = diffNames
+                .Split('\0', StringSplitOptions.RemoveEmptyEntries)
+                .Where(IsForbiddenCompletedStoryMigrationPath)
+                .ToArray();
+            forbiddenChanges.ShouldBeEmpty($"Story 8.3 historical scope {baselineRevision}..{finalRevision}");
+            return;
+        }
 
         if (string.Equals(baselineRevision, "NO_VCS", StringComparison.Ordinal))
         {
@@ -891,24 +1067,29 @@ public sealed class PlatformApiPrerequisitesTests
 
         GitObjectExists(root, baselineRevision).ShouldBeTrue(baselineRevision);
 
-        string diffNames = RunGit(root, "diff", "--name-only", baselineRevision, "--");
+        string currentDiffNames = RunGit(root, "diff", "--name-only", baselineRevision, "--");
         string untrackedNames = RunGit(root, "ls-files", "--others", "--exclude-standard");
-        string[] changedPaths = string.Concat(diffNames, "\n", untrackedNames)
+        string[] changedPaths = string.Concat(currentDiffNames, "\n", untrackedNames)
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .ToArray();
 
-        string[] forbiddenChanges = changedPaths
+        string[] currentForbiddenChanges = changedPaths
             .Where(IsForbiddenStoryMigrationPath)
             .Where(static path => !ApprovedEpic8MigrationPaths.Contains(path, StringComparer.Ordinal))
             .ToArray();
 
-        forbiddenChanges.ShouldBeEmpty();
+        currentForbiddenChanges.ShouldBeEmpty();
 
         foreach (string approvedPath in changedPaths.Where(static path => ApprovedEpic8MigrationPaths.Contains(path, StringComparer.Ordinal)))
         {
             AssertApprovedEpic8DiffIsNarrow(root, baselineRevision, approvedPath);
         }
     }
+
+    private static bool IsForbiddenCompletedStoryMigrationPath(string path)
+        => IsForbiddenStoryMigrationPath(path)
+            || string.Equals(path, ".gitmodules", StringComparison.Ordinal)
+            || path.StartsWith("references/", StringComparison.Ordinal);
 
     private static IReadOnlyDictionary<string, string> ParseFinalConsumptionRows(string matrix)
     {
@@ -1605,7 +1786,7 @@ public sealed class PlatformApiPrerequisitesTests
         // different checkout must not satisfy the gate before it is committed.
         gitlink.Replace('\t', ' ').ShouldBe(
             $"160000 commit {expectedIdentity} {relativePath}",
-            $"{relativePath} committed gitlink must match approved {expectedIdentity}; HEAD entry was '{gitlink}'.");
+            $"{relativePath} committed gitlink must match selected {expectedIdentity}; HEAD entry was '{gitlink}'.");
 
         DescribeIdentityGap(checkout, expectedIdentity).ShouldBeEmpty(relativePath);
         RunGit(root, "-C", relativePath, "status", "--porcelain")

@@ -139,8 +139,11 @@ public sealed class PartiesMcpToolDispatchTests
         result.Data.ShouldBeNull();
     }
 
-    [Fact]
-    public async Task CreatePartyDispatchesCompositeCommandThroughTypedCommandClient()
+    [Theory]
+    [InlineData("party-1")]
+    [InlineData("01ARZ3NDEKTSV4RRFFQ69G5FAV")]
+    [InlineData("12345678-1234-5678-90ab-cdef12345678")]
+    public async Task CreatePartyDispatchesCompositeCommandThroughTypedCommandClient(string partyId)
     {
         IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
         commandClient.CreatePartyCompositeWithResultAsync(Arg.Any<CreatePartyComposite>(), Arg.Any<CancellationToken>())
@@ -148,7 +151,7 @@ public sealed class PartiesMcpToolDispatchTests
         var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
 
         PartiesMcpToolResult result = await tools.CreateParty(
-            partyId: "party-1",
+            partyId: partyId,
             partyType: "person",
             givenName: "Ada",
             familyName: "Lovelace",
@@ -165,7 +168,7 @@ public sealed class PartiesMcpToolDispatchTests
 
         await commandClient.Received(1).CreatePartyCompositeWithResultAsync(
             Arg.Is<CreatePartyComposite>(command =>
-                command != null && command.PartyId == "party-1"
+                command != null && command.PartyId == partyId
                 && command.Type == PartyType.Person
                 && command.PersonDetails!.FirstName == "Ada"
                 && command.PersonDetails.LastName == "Lovelace"
@@ -174,8 +177,10 @@ public sealed class PartiesMcpToolDispatchTests
             Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task CreatePartyWithoutCallerSuppliedIdsGeneratesSortableUniqueIds()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public async Task CreatePartyWithoutCallerSuppliedIdsGeneratesSortableUniqueIds(string? partyId)
     {
         CreatePartyComposite? captured = null;
         IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
@@ -186,6 +191,7 @@ public sealed class PartiesMcpToolDispatchTests
         var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
 
         PartiesMcpToolResult result = await tools.CreateParty(
+            partyId: partyId,
             partyType: "person",
             givenName: "Ada",
             familyName: "Lovelace",
@@ -361,10 +367,17 @@ public sealed class PartiesMcpToolDispatchTests
     [Theory]
     [InlineData("party/unsafe")]
     [InlineData("tenant-a:parties:party-1")]
+    [InlineData(" party-1")]
+    [InlineData("party-1 ")]
+    [InlineData("\tparty-1")]
+    [InlineData("party-1\u00a0")]
+    [InlineData("party 1")]
+    [InlineData(" ")]
     public async Task CreatePartyRejectsUnsafeCallerSuppliedPartyIdBeforeCallingClient(string partyId)
     {
         IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
-        var tools = new PartiesMcpTools(commandClient, Substitute.For<IPartiesQueryClient>(), AuthenticatedContext());
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        var tools = new PartiesMcpTools(commandClient, queryClient, AuthenticatedContext());
 
         PartiesMcpToolResult result = await tools.CreateParty(
             partyId: partyId,
@@ -374,8 +387,10 @@ public sealed class PartiesMcpToolDispatchTests
 
         result.Status.ShouldBe("failed");
         result.Category.ShouldBe("validation_failed");
-        result.Message.ShouldContain("partyId");
-        await commandClient.DidNotReceiveWithAnyArgs().CreatePartyCompositeWithResultAsync(default!, default);
+        result.Code.ShouldBe("parties-mcp-validation-failed");
+        result.Message.ShouldBe("The partyId argument is missing or invalid.");
+        queryClient.ReceivedCalls().ShouldBeEmpty();
+        commandClient.ReceivedCalls().ShouldBeEmpty();
     }
 
     [Fact]
@@ -554,8 +569,8 @@ public sealed class PartiesMcpToolDispatchTests
         PartiesMcpToolResult result = await tools.UpdateParty(
             partyId: "party-1",
             addEmail: "new@example.test",
-            removeContactChannelIds: "contact-1, contact-2",
-            removeIdentifierIds: "identifier-1, identifier-2",
+            removeContactChannelIds: " contact-1 ,\t contact-2\t ",
+            removeIdentifierIds: " identifier-1\t, identifier-2 ",
             active: false,
             cancellationToken: CancellationToken.None);
 
@@ -697,6 +712,111 @@ public sealed class PartiesMcpToolDispatchTests
         result.Message.ShouldNotContain("contact/unsafe");
         await queryClient.DidNotReceiveWithAnyArgs().GetPartyAsync(default!, default);
         await commandClient.DidNotReceiveWithAnyArgs().UpdatePartyCompositeWithResultAsync(default!, default!, default);
+    }
+
+    [Theory]
+    [InlineData("partyId", " party-1")]
+    [InlineData("partyId", "party-1 ")]
+    [InlineData("partyId", " ")]
+    [InlineData("updateContactChannelId", " contact-1")]
+    [InlineData("updateContactChannelId", "contact-1 ")]
+    [InlineData("updateContactChannelId", "\tcontact-1")]
+    [InlineData("updateContactChannelId", "contact-1\u00a0")]
+    [InlineData("updateContactChannelId", " ")]
+    [InlineData("removeContactChannelId", " contact-1")]
+    [InlineData("removeContactChannelId", "contact-1 ")]
+    [InlineData("removeContactChannelId", " ")]
+    [InlineData("removeIdentifierId", " identifier-1")]
+    [InlineData("removeIdentifierId", "identifier-1 ")]
+    [InlineData("removeIdentifierId", " ")]
+    public async Task UpdatePartyRejectsWhitespaceInScalarIdsBeforeAnyClientAccess(string field, string value)
+    {
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        var tools = new PartiesMcpTools(commandClient, queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.UpdateParty(
+            partyId: field == "partyId" ? value : "party-1",
+            givenName: "Ada",
+            active: false,
+            updateContactChannelId: field == "updateContactChannelId" ? value : null,
+            removeContactChannelId: field == "removeContactChannelId" ? value : null,
+            removeIdentifierId: field == "removeIdentifierId" ? value : null,
+            cancellationToken: CancellationToken.None);
+
+        string validationField = field switch
+        {
+            "removeContactChannelId" => "removeContactChannelIds",
+            "removeIdentifierId" => "removeIdentifierIds",
+            _ => field,
+        };
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("validation_failed");
+        result.Code.ShouldBe("parties-mcp-validation-failed");
+        result.Message.ShouldBe($"The {validationField} argument is missing or invalid.");
+        queryClient.ReceivedCalls().ShouldBeEmpty();
+        commandClient.ReceivedCalls().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(" ", true)]
+    [InlineData("\t", true)]
+    [InlineData(" ", false)]
+    [InlineData("\t", false)]
+    [InlineData("contact-1,,contact-2", true)]
+    [InlineData("contact-1, ,contact-2", true)]
+    [InlineData(",contact-1", true)]
+    [InlineData("contact-1,", true)]
+    [InlineData("contact-1, contact/unsafe", true)]
+    [InlineData("identifier-1,,identifier-2", false)]
+    [InlineData("identifier-1, ,identifier-2", false)]
+    [InlineData("identifier-1, identifier/unsafe", false)]
+    public async Task UpdatePartyRejectsInvalidOrEmptyCsvRemovalItemsBeforeAnyClientAccess(string value, bool contact)
+    {
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        var tools = new PartiesMcpTools(commandClient, queryClient, AuthenticatedContext());
+
+        PartiesMcpToolResult result = await tools.UpdateParty(
+            partyId: "party-1",
+            givenName: "Ada",
+            active: false,
+            removeContactChannelIds: contact ? value : null,
+            removeIdentifierIds: contact ? null : value,
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("validation_failed");
+        result.Code.ShouldBe("parties-mcp-validation-failed");
+        result.Message.ShouldBe($"The {(contact ? "removeContactChannelIds" : "removeIdentifierIds")} argument is missing or invalid.");
+        queryClient.ReceivedCalls().ShouldBeEmpty();
+        commandClient.ReceivedCalls().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task UpdatePartyRejectsOversizedDelimiterOnlyRemovalListsBeforeAnyClientAccess(bool contact)
+    {
+        IPartiesCommandClient commandClient = Substitute.For<IPartiesCommandClient>();
+        IPartiesQueryClient queryClient = Substitute.For<IPartiesQueryClient>();
+        var tools = new PartiesMcpTools(commandClient, queryClient, AuthenticatedContext());
+        string value = new(',', 513);
+
+        PartiesMcpToolResult result = await tools.UpdateParty(
+            partyId: "party-1",
+            givenName: "Ada",
+            active: false,
+            removeContactChannelIds: contact ? value : null,
+            removeIdentifierIds: contact ? null : value,
+            cancellationToken: CancellationToken.None);
+
+        result.Status.ShouldBe("failed");
+        result.Category.ShouldBe("validation_failed");
+        result.Code.ShouldBe("parties-mcp-payload-too-large");
+        result.Message.ShouldBe("The update_party request exceeds the supported MCP payload size.");
+        queryClient.ReceivedCalls().ShouldBeEmpty();
+        commandClient.ReceivedCalls().ShouldBeEmpty();
     }
 
     [Fact]
