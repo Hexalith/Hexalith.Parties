@@ -7,9 +7,9 @@ revalidated: 2026-10-08
 source_status: backlog
 target_status: blocked
 baseline_commit_at_story_start: a35b151
-baseline_commit_at_revalidation: 998c0b649d7bbf01e0fed4cc79924662dd16cc91
-eventstore_root_pin_at_revalidation: 9542d3c9f48bf9ce1c57f2ef68904703eaba56cc
-eventstore_checkout_at_revalidation: 9542d3c9f48bf9ce1c57f2ef68904703eaba56cc
+baseline_commit_at_revalidation: 9e74c2b66ea0e201c6a4f9200e875627fed3b541
+eventstore_root_pin_at_revalidation: 8dd7dc2ecdb2c06ecb900676042aa42b66619ee0
+eventstore_checkout_at_revalidation: 8dd7dc2ecdb2c06ecb900676042aa42b66619ee0
 ---
 
 # Story 8.7: Data-protection extraction
@@ -18,7 +18,32 @@ Status: blocked
 
 <!-- This story is complete enough for workflow intake, but production source migration is hard-gated by the Story 8.3 G5 row and the authoritative Epic 8 sequence. -->
 
-## Current Gate Revalidation — 2026-10-08
+## Current Gate Revalidation — 2026-10-08 (retry at 9e74c2b6)
+
+G5 remains `needs-additive-api`; Story 8.7 remains `blocked`. At Parties
+`9e74c2b66ea0e201c6a4f9200e875627fed3b541`, matching clean root checkouts are EventStore
+`8dd7dc2ecdb2c06ecb900676042aa42b66619ee0` (`v3.117.1-7-g8dd7dc2e`) and Builds
+`a283481c69393dcba911db6a0edcb152167238cc` (`v4.30.1-3-ga283481`). Both package selectors
+remain `3.117.1`. These observations grant no new adoption or G5 approval.
+
+EventStore's newer owner 8.3 core/postreview receipts explicitly grant no
+successor, provider, package, deployment, or G5 authority. Owner 8.3 remains
+`in-progress`; 8.4-8.11 remain `backlog`. A consumable runtime provider,
+compatibility/lifecycle/persistence integration, AzureKeyVault backend,
+package/release enrollment, dual-provider GDPR parity, post-v2 rollback,
+owner 8.11 closure, and I2/I19a classification approval remain missing.
+Parties 8.6 is `done`; the original frozen adoption identity still requires
+approved reconciliation before activation.
+
+The existing static procedure passed all 32 G5 checks; all 24 retained
+MOVE/KEEP/adapter files, the local harness, four local DI registrations, and
+matching clean source identities were verified. Exact commands and results are
+in `tests/test-summary.md` under "Story 8.7 G5 retry at 9e74c2b6". Only this
+story, its spec change log, and the test summary were updated. Production,
+dependencies, frozen intent/original baseline, matrix approvals, and sprint
+status are preserved. Product and provider-parity suites were not run or credited.
+
+## Historical Gate Revalidation — 2026-10-08
 
 G5 remains `needs-additive-api`; Story 8.7 remains `blocked`. At Parties
 `998c0b649d7bbf01e0fed4cc79924662dd16cc91`, EventStore's root gitlink and clean checkout match

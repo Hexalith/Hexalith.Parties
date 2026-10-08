@@ -2347,3 +2347,64 @@ Final workflow state: implementation, verification and independent review are
 complete; spec status is `done`. The exact local-commit message passes pinned
 commitlint 21.2.2 with zero problems/warnings; successful validation and the
 message SHA256 are preserved in the final raw evidence directory.
+
+## Story 8.7 G5 retry at 9e74c2b6 — 2026-10-08
+
+G5 stays `needs-additive-api`; Story 8.7 stays `blocked`. This retry supersedes
+the earlier Story 8.7 source inspection only. It grants no approval, dependency
+adoption, parity credit, or deletion authority.
+
+| Inspection command | Result |
+| --- | --- |
+| `git rev-parse HEAD` | Parties `9e74c2b66ea0e201c6a4f9200e875627fed3b541`; working tree clean before this audit. |
+| `git ls-tree HEAD references/Hexalith.EventStore references/Hexalith.Builds` | EventStore `8dd7dc2ecdb2c06ecb900676042aa42b66619ee0`; Builds `a283481c69393dcba911db6a0edcb152167238cc`. |
+| `git -C references/Hexalith.EventStore rev-parse HEAD` | Matches the root gitlink above. |
+| `git -C references/Hexalith.EventStore status --short --branch` | Clean `main...origin/main [behind 1]`; no update performed. |
+| `git -C references/Hexalith.EventStore describe --tags --always` | `v3.117.1-7-g8dd7dc2e`. |
+| `git -C references/Hexalith.Builds rev-parse HEAD` | Matches the root gitlink above. |
+| `git -C references/Hexalith.Builds status --short --branch` | Clean `main...origin/main [behind 1]`; no update performed. |
+| `git -C references/Hexalith.Builds describe --tags --always` | `v4.30.1-3-ga283481`. |
+| Reproduction procedure below | Exit 0: 32/32 G5 static checks; 24 retained MOVE/KEEP/adapter files, local harness, four DI registrations; both package selectors `3.117.1`; matching clean source identities. |
+
+The procedure reuses the unchanged static check from the earlier 2026-10-08
+receipt in this file and checks current source identities independently:
+
+```bash
+python3 - <<'PY_AUDIT'
+from pathlib import Path
+import subprocess
+summary = Path('_bmad-output/implementation-artifacts/tests/test-summary.md').read_text()
+receipt = summary.split('## Story 8.7 G5 revalidation — closed-gate halt — 2026-10-08', 1)[1]
+procedure = receipt.split("python3 - <<'PY_CHECK'\n", 1)[1].split('\nPY_CHECK', 1)[0]
+exec(compile(procedure, 'recorded-g5-static-procedure', 'exec'))
+for dependency in ['Hexalith.EventStore', 'Hexalith.Builds']:
+    path = f'references/{dependency}'
+    root_pin = subprocess.check_output(['git', 'ls-tree', 'HEAD', path], text=True).split()[2]
+    checkout = subprocess.check_output(['git', '-C', path, 'rev-parse', 'HEAD'], text=True).strip()
+    status = subprocess.check_output(['git', '-C', path, 'status', '--porcelain'], text=True)
+    assert root_pin == checkout and not status, (path, root_pin, checkout, status)
+    print(f'PASS: matching clean {dependency} root pin/checkout {checkout}')
+PY_AUDIT
+```
+
+An independent read-only workflow investigator confirmed owner 8.2 `done`,
+8.3 `in-progress`, and 8.4-8.11 `backlog`. Updated owner core/postreview evidence
+in `references/Hexalith.EventStore/_bmad-output/implementation-artifacts/8-3-pdenc-v2-core-cryptographic-engine.md`
+and `references/Hexalith.EventStore/_bmad-output/implementation-artifacts/evidence/story-8-3/verification-2026-10-08-postreview.md`
+is partial delivery and explicitly grants no successor/package/provider/G5
+approval. Runtime registration still supplies the no-op; AzureKeyVault,
+package/release enrollment, real dual-provider GDPR parity, post-v2 rollback,
+owner 8.11 availability closure, and I2/I19a classification approval are missing.
+Production KMS remains a separate release prerequisite. Parties 8.6 is done.
+
+This audit modifies only Story 8.7, its spec change log, and this summary.
+Frozen intent/original baseline, the G5 matrix row and approval tables, sprint
+status, local production/DI/public APIs, and dependencies remain unchanged.
+Product, unit/topology, dual-provider/GDPR, and post-v2 suites were not run or
+credited; static passes confirm the closed gate and retention safeguards.
+
+`git diff --check` exits 2 because Git treats the required CRLF endings as
+trailing whitespace. `git -c core.whitespace=cr-at-eol diff --check` passes
+without changing repository configuration. Documentation preservation checks
+confirm the frozen spec block/original baseline and historical receipts are
+byte-identical; the matrix/approvals and sprint status are unchanged.
