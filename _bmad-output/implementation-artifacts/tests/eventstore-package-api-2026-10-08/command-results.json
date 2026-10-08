@@ -64,5 +64,44 @@
     "exit_code": 0,
     "log": "docs-ci-contract.log",
     "log_sha256": "d67cb51ff065888f6357fca8e0812e07d7d18552973254e6319768f4865d9b5f"
+  },
+  {
+    "command": "python3 _bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-08/probe-package.py",
+    "started_at_utc": "2026-10-08T06:53:06.254614+00:00",
+    "finished_at_utc": "2026-10-08T06:53:06.570923+00:00",
+    "exit_code": 0,
+    "log": "package-probe-replay.log",
+    "log_sha256": "342043a3111b8f525a26df0e2867074707f1ad1610629874cc7ff301ca00db9c",
+    "result": "Fresh probe reproduces all nine original index hashes and the original DomainService package/API inspection."
+  },
+  {
+    "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -method Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.CiDocsDescribeSharedCiReleaseAndZotApiKeyPublishContract",
+    "started_at_utc": "2026-10-08T06:54:02.616085+00:00",
+    "finished_at_utc": "2026-10-08T06:54:02.892655+00:00",
+    "elapsed_seconds": 0.28,
+    "exit_code": 1,
+    "log": "docs-ci-contract-final.log",
+    "log_sha256": "d6e5e26b5cccd5b3edf4d4de5fa91ece826dede148d97203515538bf44a09330",
+    "purpose": "Verify final documentation after review patches."
+  },
+  {
+    "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -method Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.CiDocsDescribeSharedCiReleaseAndZotApiKeyPublishContract",
+    "started_at_utc": "2026-10-08T06:54:56.041939+00:00",
+    "finished_at_utc": "2026-10-08T06:54:56.288213+00:00",
+    "elapsed_seconds": 0.25,
+    "exit_code": 0,
+    "log": "docs-ci-contract-corrected.log",
+    "log_sha256": "889beddb6124698531a564122ed3b9114be12c5b23bfcffa649e93630eb9a4de",
+    "purpose": "Verify final documentation after preserving the existing bypass-name exclusion contract."
+  },
+  {
+    "command": "pwsh -NoProfile -File scripts/test.ps1 -Lane ci -Configuration Release -ResultsDirectory _bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-08/final",
+    "started_at_utc": "2026-10-08T06:55:31.157212+00:00",
+    "finished_at_utc": "2026-10-08T06:55:37.269197+00:00",
+    "elapsed_seconds": 6.11,
+    "exit_code": 0,
+    "log": "ci-lane-final.log",
+    "log_sha256": "76827b0e526c9483f72ae3d129b7cadb364afc92f215cf6fdd859caf4dc2e0b2",
+    "purpose": "Verify the complete CI lane after all review/documentation corrections."
   }
 ]

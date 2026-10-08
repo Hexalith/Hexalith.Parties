@@ -2,7 +2,7 @@
 title: 'Resolve the EventStore package API mismatch'
 type: 'bugfix'
 created: '2026-10-07'
-status: 'in-progress'
+status: 'done'
 route: 'oneshot'
 review_loop_iteration: 0
 context: []
@@ -73,3 +73,53 @@ full-CI proof for the exact current main commit before release.
   adding only this run's preliminary JSON receipts. Root submodule checkouts and
   every stamped build/host/release input remained unchanged. Source receipts
   record both identities; no exact-current-main full-CI success is claimed.
+- Blind Hunter review returned eight findings. Each was checked against the
+  EventStore release workflow, package manifest, SDK authentication helpers,
+  route catalog, and retained receipts; all were resolved with documentation or
+  evidence corrections. No findings were deferred and no runtime code was added.
+- The handoff now names upstream exact-source full CI, non-bypass publication,
+  the full coordinated package inventory, published API/provenance/dependency
+  inspection, topology-owner credential wiring, and successful persisted-state
+  and callback/credential acceptance evidence. Retained raw NuGet index snapshots
+  match the initial probe hashes; `probe-package.py` reproduced the observation,
+  and `upstream-history.json` retains the three source-history check results.
+- The final focused CI documentation-contract check rejected the legacy input
+  literal in `docs/ci.md`, including the upstream-only mention. Moved the exact
+  EventStore dispatch input to the handoff receipt and linked it from CI docs;
+  preserved the existing test and all release-gate enforcement.
+
+- Final focused documentation check and complete CI lane passed after the
+  correction: 101 CI tests, zero failures/skips. Final source/input stamps confirm
+  no runtime, dependency, release-gate, or root checkout changes by this workflow.
+  The spec is complete for the no-compatible-package handoff branch; the Release
+  compiler blocker remains documented. No commit or push was made by this run.
+
+## Review Triage Log
+
+- F1 — medium, patch: `docs/ci.md` ambiguously called domain-service invocations
+  gateway operational routes. Upstream `security-model.md` distinguishes public
+  JwtBearer APIs from internal workload assertions; corrected the boundary.
+- F2 — medium, patch: the handoff did not identify the upstream manual release
+  or its Commitlint-only bypass. Verified `release.yml`; now require successful
+  exact-source push full CI, `bypass-validation=false`, and returned release evidence.
+- F3 — low, patch: the nine inspected consumer indexes did not identify the full
+  publisher inventory. Verified `tools/release-packages.json` has 14 entries;
+  linked the authoritative manifest and required one coordinated release version.
+- F4 — medium, patch: "verified release" lacked artifact acceptance criteria.
+  The SDK declares the public generic extension constrained to
+  `IEndpointConventionBuilder`; the handoff now requires that API, descendant
+  provenance, hashes, and matching resolved ServiceDefaults/family versions.
+- F5 — medium, patch: the acknowledged absent credential wiring lacked a concrete
+  owner/action handoff. Verified the two app-channel helpers, workload-client
+  helper, and scoped issuer contract; documented the integrated-topology owner,
+  receiving app/sidecar pairs, and optional audience/operation grants. Runtime
+  implementation stays a post-publication follow-up within the stated scope.
+- F6 — medium, patch: runtime verification had no explicit success criteria.
+  Documented persisted state after a gateway command, accepted sidecar callbacks,
+  denied missing/forged credentials without writes, and no skipped required checks.
+- F7 — low, patch: index hashes and derived results alone did not retain the full
+  observed content or replay procedure. Saved nine matching raw index snapshots
+  and a standalone probe; execution reproduced all original index/package hashes.
+- F8 — low, patch: source-history command results were only described in prose.
+  Re-ran the tag, introducing-symbol history, and ancestry checks; recorded exact
+  argument arrays, UTC times, outputs, and successful exit codes in JSON.

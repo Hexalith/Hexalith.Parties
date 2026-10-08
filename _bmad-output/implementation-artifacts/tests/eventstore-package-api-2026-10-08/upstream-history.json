@@ -1,0 +1,53 @@
+{
+  "upstream_checkout_sha": "91aae06d49a23bac15be6a4bb363f37140bece4b",
+  "checks": [
+    {
+      "argv": [
+        "git",
+        "-C",
+        "references/Hexalith.EventStore",
+        "rev-parse",
+        "v3.115.0^{commit}"
+      ],
+      "started_at_utc": "2026-10-08T06:51:57.226983+00:00",
+      "finished_at_utc": "2026-10-08T06:51:57.229481+00:00",
+      "exit_code": 0,
+      "stdout": "283b07a52c9c70e1c940164a7011ee8c3ad98b2d",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "references/Hexalith.EventStore",
+        "log",
+        "--format=%H %s",
+        "-S",
+        "RequireEventStoreSidecarChannel",
+        "--",
+        "src/Hexalith.EventStore.DomainService/EventStoreDomainServiceSecurityExtensions.cs"
+      ],
+      "started_at_utc": "2026-10-08T06:51:57.229499+00:00",
+      "finished_at_utc": "2026-10-08T06:51:57.247029+00:00",
+      "exit_code": 0,
+      "stdout": "c4d5455a3b79ca1ba0113a286cf2432b2cace7fb feat(security): enforce workload credentials at the internal and domain-service trust boundary",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "references/Hexalith.EventStore",
+        "merge-base",
+        "--is-ancestor",
+        "283b07a52c9c70e1c940164a7011ee8c3ad98b2d",
+        "c4d5455a3b79ca1ba0113a286cf2432b2cace7fb"
+      ],
+      "started_at_utc": "2026-10-08T06:51:57.247051+00:00",
+      "finished_at_utc": "2026-10-08T06:51:57.249553+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

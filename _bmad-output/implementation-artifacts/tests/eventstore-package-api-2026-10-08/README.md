@@ -13,12 +13,32 @@ with UTC observation times and response hashes. DomainService, ServiceDefaults,
 Client, Contracts, Server, Testing, Aspire, SignalR, and Gateway all end at
 3.115.0, with no prereleases or later versions. The freshly downloaded
 DomainService package and DLL match the previous receipt's hashes and the DLL
-still lacks the `RequireEventStoreSidecarChannel` metadata name.
+still lacks the `RequireEventStoreSidecarChannel` metadata name. These nine
+identities are the inspected Parties consumer subset; the complete publisher
+inventory currently contains 14 packages, as linked in the publication handoff.
+
+The original index contents are retained in [nuget-indexes](nuget-indexes/).
+They were captured again during review and match the initial probe hashes byte
+for byte. To capture a fresh observation without overwriting this receipt, run:
+
+```bash
+python3 _bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-08/probe-package.py
+```
+
+[probe-package.py](probe-package.py) uses only Python's standard library and prints
+the new temporary output directory. It retains each index response, downloads the
+3.115.0 package without installing it, reads the nuspec repository commit, and
+checks the DLL for the metadata-name bytes. An absent name proves this assembly
+cannot provide the API; a present name alone would not prove a usable public
+generic method. The future published-package handoff therefore also requires
+public API/dependency inspection and a successful consumer build.
 
 The package's repository commit and the resolved upstream `v3.115.0` tag are both
 `283b07a52c9c70e1c940164a7011ee8c3ad98b2d`. Source history first adds the API at
 [`c4d5455a3b79ca1ba0113a286cf2432b2cace7fb`](https://github.com/Hexalith/Hexalith.EventStore/commit/c4d5455a3b79ca1ba0113a286cf2432b2cace7fb).
-The following read-only checks confirmed the tag, introducing commit, and ordering:
+[upstream-history.json](upstream-history.json) records the exact argument arrays,
+UTC times, outputs, and successful exit codes for the following read-only tag,
+introducing-commit, and ancestry checks:
 
 ```bash
 git -C references/Hexalith.EventStore rev-parse 'v3.115.0^{commit}'
@@ -88,3 +108,27 @@ the introducing commit and ServiceDefaults authentication support. Parties can
 then select the actual published version and verify package-mode restore,
 Release solution build, test lanes, and gateway/sidecar credentials in the full
 topology. Publication alone does not prove runtime or release readiness.
+
+## Upstream publication input
+
+This applies to the EventStore owner's manual `release.yml` only: its
+`workflow_dispatch` input `bypass-validation` must be `false` for this handoff.
+That selects successful exact-source push `ci.yml`; the Commitlint-only selection
+is insufficient. The upstream owner must return the full-CI/test and release
+artifacts described in `docs/ci.md`. No release dispatch was performed by this
+workflow. Parties' own release gate always requires full CI for its exact
+current main commit.
+
+The final documentation-contract check initially rejected the upstream input's
+literal name in `docs/ci.md`, whose contract excludes the retired Parties bypass
+name anywhere in that file. The EventStore-only spelling is retained here and
+linked from the CI handoff; the existing test and release gates were preserved.
+
+After that correction, the focused documentation test passed and the full CI
+lane was rerun against the final documentation: **101 passed, 0 failed, 0
+skipped**. [ci-results-final.json](ci-results-final.json) records the final TRX
+hash, counters and run times, with the same test names/outcomes as the initial
+run. [source-final.json](source-final.json) records the final observed revision
+and confirms the stamped runtime/build/release inputs and root checkout set
+remain unchanged. The broad Release build remains blocked by the two missing-API
+errors already reproduced; no successful full-CI release proof is claimed.
