@@ -1,0 +1,36 @@
+{
+  "qualification": "PinnedPackageCompatibilityFailure",
+  "command": [
+    "dotnet",
+    "build",
+    "src/Hexalith.Parties/Hexalith.Parties.csproj",
+    "-c",
+    "Debug",
+    "--artifacts-path",
+    "/tmp/ext-parties-1-branch-b-policy-20261008/package-artifacts",
+    "-p:UseHexalithProjectReferences=false",
+    "-p:UseNuGetDeps=true",
+    "-p:HexalithMemoriesRoot=/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode",
+    "-p:NuGetAudit=false",
+    "-m:1"
+  ],
+  "workingDirectory": "/home/administrator/projects/hexalith/parties",
+  "exitCode": 1,
+  "warnings": 0,
+  "errors": 3,
+  "diagnostics": [
+    "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs(29,27): error CS0246: The type or namespace name 'ExpiredIdentityHistoryCertificate' could not be found (are you missing a using directive or an assembly reference?) [/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Hexalith.Parties.csproj]",
+    "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs(30,28): error CS1061: 'RetainedIdentityHistoryStream' does not contain a definition for 'ExpiredEvents' and no accessible extension method 'ExpiredEvents' accepting a first argument of type 'RetainedIdentityHistoryStream' could be found (are you missing a using directive or an assembly reference?) [/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Hexalith.Parties.csproj]",
+    "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs(31,58): error CS0246: The type or namespace name 'ExpiredIdentityHistoryCertificate' could not be found (are you missing a using directive or an assembly reference?) [/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Hexalith.Parties.csproj]"
+  ],
+  "resolvedEventStorePackages": [
+    "Hexalith.EventStore.Client/3.117.1",
+    "Hexalith.EventStore.Contracts/3.117.1",
+    "Hexalith.EventStore.DomainService/3.117.1",
+    "Hexalith.EventStore.ServiceDefaults/3.117.1"
+  ],
+  "assetsSha256": "a387faae95cb5a21e7a54ed6eca67d551992206f2620291c53ec53bca2e4b0c8",
+  "logSha256": "15721d4c5d3c6fe6015a18e8a69e11091730256528af7b9eec94226d7873beb6",
+  "sourceSha256": "5c1597a90cb521a72c0bf31cc9492050e2783cebedf70326b77202a7f9e02144",
+  "scope": "Externally added continuation source uses ExpiredIdentityHistoryCertificate/ExpiredEvents absent from pinned 3.117.1 package. No pin or external source was changed to bypass this failure."
+}

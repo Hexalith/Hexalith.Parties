@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Hexalith.EventStore.Client.Streams;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Queries;
@@ -396,6 +397,52 @@ public sealed class PartyIdentityQueryHandlerTests
         result.BindingSourcePosition.ShouldBe(0);
         await fixture.Reader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default);
         await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+    }
+
+    /// <summary>An expired transition after a retained binding cannot be accepted as an expired prefix.</summary>
+    [Theory]
+    [InlineData(nameof(HumanActorBindingEstablished))]
+    [InlineData(nameof(HumanActorBindingRebound))]
+    [InlineData(nameof(HumanActorBindingRevoked))]
+    public async Task ExpiredTransitionAfterRetainedBinding_DeniesBeforeCustody(string eventName)
+    {
+        var fixture = Service(Events());
+        RetainedIdentityHistoryReadResult original = await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"),
+            RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken);
+        RetainedIdentityHistoryStream stream = original.Stream!;
+        JsonNode serialized = JsonSerializer.SerializeToNode(stream, PartiesJsonOptions.Default)!;
+        serialized["head"] = stream.Head + 1;
+        // Keep the fixture compatible with older packages that have no expired-transition API.
+        // An expired prefix may support successor continuity; an expired suffix must still be denied.
+        serialized["expiredEvents"] = JsonSerializer.SerializeToNode(new[]
+        {
+            new
+            {
+                stream.Identity,
+                stream.Purpose,
+                SourceSequence = stream.Head + 1,
+                EventTypeName = $"Hexalith.Parties.Contracts.Events.{eventName}",
+                SealedPayloadDigest = new string('a', 64),
+                DestructionReceiptId = "fixture-destruction-receipt",
+                LifecycleRevision = 1L,
+                AuthorityRevision = "fixture-terminal-r1",
+                stream.ObservedAt,
+                stream.ValidUntil,
+                ContractVersion = 1,
+            },
+        }, PartiesJsonOptions.Default);
+        RetainedIdentityHistoryStream extended = serialized.Deserialize<RetainedIdentityHistoryStream>(PartiesJsonOptions.Default)!;
+        fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new RetainedIdentityHistoryReadResult(extended, null));
+
+        HumanActorBindingResult result = await fixture.Service.ResolveAtAsync(
+            Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, Actor, 1)), TestContext.Current.CancellationToken);
+
+        result.Outcome.ShouldBe(HumanActorBindingOutcome.Unavailable);
+        result.Evidence.ShouldBeNull();
+        result.BindingSourcePosition.ShouldBe(0);
+        await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+        await fixture.Reader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default);
     }
 
     [Fact]
@@ -1012,6 +1059,65 @@ public sealed class PartyIdentityQueryHandlerTests
         result.Evidence.ShouldBeNull();
         result.BindingSourcePosition.ShouldBe(0);
         await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+    }
+
+    /// <summary>Actor-free exact-source terminal proof permits only the retained successor; malformed proof never supplies continuity.</summary>
+    [Theory]
+    [InlineData("valid", HumanActorBindingOutcome.Resolved)]
+    [InlineData("foreign", HumanActorBindingOutcome.Unavailable)]
+    [InlineData("wrong-policy", HumanActorBindingOutcome.Unavailable)]
+    [InlineData("expired", HumanActorBindingOutcome.Unavailable)]
+    [InlineData("unknown-contract", HumanActorBindingOutcome.Unavailable)]
+    [InlineData("wrong-transition", HumanActorBindingOutcome.Unavailable)]
+    [InlineData("overlap", HumanActorBindingOutcome.Unavailable)]
+    public async Task ExpiredPredecessorCertifiedWithoutActor_ResolvesOnlyRetainedSuccessor(string vector, HumanActorBindingOutcome expected)
+    {
+        const string successorActor = "01HX0000000000000000000002";
+        DateTimeOffset boundary = Start.AddDays(180);
+        HumanActorBindingEvidence successor = Binding() with
+        {
+            ActorId = successorActor, BindingVersion = 2, ValidFrom = boundary, ValidUntil = boundary.AddDays(365),
+            Custody = Binding().Custody with { PolicyId = "party-actor-retention-v1", ExpiresAt = boundary.AddDays(365), LifecycleRevision = 2 },
+        };
+        var fixture = Service(Events()[0], new HumanActorBindingEstablished(new(Binding(), "first", "digest"), Start, 0),
+            new HumanActorBindingRebound(new(successor, "second", "digest-2"), boundary, 1));
+        fixture.Options.CurrentValue.Returns(new PartyIdentityOptions { PolicyId = "party-actor-retention-v1", Retention = TimeSpan.FromDays(365), ExpiryTrigger = "binding-effective-at" });
+        DateTimeOffset now = Start.AddDays(366);
+        TimeProvider clock = Substitute.For<TimeProvider>(); ConfigureSystemTimer(clock); clock.GetUtcNow().Returns(now);
+        RetainedIdentityHistoryReadResult captured = await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"),
+            RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken);
+        var certificate = new ExpiredIdentityHistoryCertificate(captured.Stream!.Identity, captured.Stream.Purpose, "party-actor-retention-v1", 2,
+            typeof(HumanActorBindingEstablished).FullName!, new string('A', 64), "opaque-terminal-receipt", 4, "current-lifecycle", now, now.AddMinutes(1));
+        certificate = vector switch
+        {
+            "foreign" => certificate with { Identity = new("tenant-foreign", "party", "party-1") },
+            "wrong-policy" => certificate with { PolicyId = "unaccepted-policy" },
+            "expired" => certificate with { ValidUntil = now },
+            "unknown-contract" => certificate with { ContractVersion = 2 },
+            "wrong-transition" => certificate with { EventTypeName = typeof(HumanActorBindingRebound).FullName! },
+            "overlap" => certificate with { SourceSequence = 3 },
+            _ => certificate,
+        };
+        var retained = captured.Stream with { ObservedAt = now, ValidUntil = now.AddMinutes(1), Events = [captured.Stream.Events[1]],
+            ExcludedSequences = [1], ExpiredEvents = [certificate] };
+        // Round-trip the actual additive certificate transport; it contains neither predecessor payload nor actor.
+        byte[] transport = JsonSerializer.SerializeToUtf8Bytes(retained, PartiesJsonOptions.Default);
+        System.Text.Encoding.UTF8.GetString(transport).ShouldNotContain(Actor);
+        var restored = JsonSerializer.Deserialize<RetainedIdentityHistoryStream>(transport, PartiesJsonOptions.Default)!;
+        fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new RetainedIdentityHistoryReadResult(restored, null));
+        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(new PartyIdentityAdmissionResult(new(new("tenant-a", "party", "party-1", "Read", "c", "c", "d"),
+            "reader", null, successorActor, 1, true, Start, Start.AddDays(600), 1), null));
+        var service = new PartyIdentityQueryService(fixture.Authority, clock, custody: fixture.Custody, historyReader: fixture.HistoryReader, identityOptions: fixture.Options);
+        var result = await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", boundary, successorActor, 2)),
+            TestContext.Current.CancellationToken);
+        result.Outcome.ShouldBe(expected);
+        if (expected == HumanActorBindingOutcome.Resolved)
+        { result.Evidence!.ActorId.ShouldBe(successorActor); result.BindingSourcePosition.ShouldBe(3); result.Evidence.ValidUntil.ShouldBe(boundary.AddDays(365)); }
+        else { result.Evidence.ShouldBeNull(); result.BindingSourcePosition.ShouldBe(0); }
+        // No retained actor-free prefix can recreate the expired predecessor's relationship.
+        (await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, Actor, 1)),
+            TestContext.Current.CancellationToken)).Evidence.ShouldBeNull();
     }
 
     /// <summary>One deadline cancels noncooperative source/custody and cannot admit a late success or fault.</summary>

@@ -1,0 +1,50 @@
+[
+  {
+    "name": "live-missing",
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "Live",
+      "-EvidenceDirectory",
+      "/tmp/ext-parties-1-branch-b-policy-20261008/live-missing"
+    ],
+    "exitCode": 1,
+    "endpointAccess": false,
+    "scope": "All EXT_PARTIES_ variables cleared"
+  },
+  {
+    "name": "live-capability-sentinel",
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "Live",
+      "-EvidenceDirectory",
+      "/tmp/ext-parties-1-branch-b-policy-20261008/live-capability-sentinel"
+    ],
+    "exitCode": 1,
+    "endpointAccess": false,
+    "scope": "All EXT_PARTIES_ variables cleared; non-authoritative sentinels supplied only for capability gate"
+  },
+  {
+    "name": "readiness-missing",
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "LiveReadiness",
+      "-EvidenceDirectory",
+      "/tmp/ext-parties-1-branch-b-policy-20261008/readiness-missing"
+    ],
+    "exitCode": 1,
+    "endpointAccess": false,
+    "scope": "All EXT_PARTIES_ variables cleared"
+  }
+]

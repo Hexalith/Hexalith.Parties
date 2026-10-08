@@ -199,7 +199,7 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
             }
 
-            IReadOnlyList<RetainedHumanActorBinding> history = RetainedHumanActorHistoryFold.Fold(read.Stream!);
+            IReadOnlyList<RetainedHumanActorBinding> history = RetainedHumanActorHistoryFold.Fold(read.Stream!, policy!.PolicyId);
             if (!SameAuthority(admitted, authority.Admit(envelope).Evidence, timeProvider.GetUtcNow()) || !PolicyIsCurrent(policy))
             {
                 deadline.ThrowIfCancellationRequested();

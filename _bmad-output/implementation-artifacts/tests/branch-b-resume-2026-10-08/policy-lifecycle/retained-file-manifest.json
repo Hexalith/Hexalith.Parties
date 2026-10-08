@@ -1,0 +1,682 @@
+[
+  {
+    "retainedPath": "verification-manifest.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/verification-manifest.json",
+    "sha256": "bbc3607b0fa4d34dfdeb02e420fd5bd45aa4164b0462f6e631a7fc7a0af233f8"
+  },
+  {
+    "retainedPath": "selected-local-evidence.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/selected-local-evidence.json",
+    "sha256": "888d0e59f109bb0d09b85bb22ca3c9f7d21320793b99d1a8725c083e321a3444"
+  },
+  {
+    "retainedPath": "run-receipts.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/run-receipts.json",
+    "sha256": "5dab520d1edc8efe426536b791eb7d2e04f4b8f7e50c5896652caec114c72b76"
+  },
+  {
+    "retainedPath": "root-independent-audit.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/root-independent-audit.json",
+    "sha256": "31278f2864779665db446aed0a69deb10edb0eada274498df497fd18dd414562"
+  },
+  {
+    "retainedPath": "platform-inspection.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/platform-inspection.json",
+    "sha256": "50bf2ffb60ff0bb7c5a4cd67dfbaec0dea6396b979f9df665ab108db04584fd7"
+  },
+  {
+    "retainedPath": "pinned-package-receipt.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/pinned-package-receipt.json",
+    "sha256": "5b8fc96906ea7847874a609845d3709298db91b2a41ae2ad8fb0409242fae00f"
+  },
+  {
+    "retainedPath": "custody-repair-receipt.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/custody-repair-receipt.json",
+    "sha256": "40667bd7800a40ff24853fa7528d1bcd8c4b4a72a4cd86c8d33a9f29bd22dd17"
+  },
+  {
+    "retainedPath": "live-gate-receipts.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/live-gate-receipts.json",
+    "sha256": "b90f4ab2750e4073c6ac3014af11daf72620dc3af683155241ca6743a2289e7d"
+  },
+  {
+    "retainedPath": "preflight.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/preflight.json",
+    "sha256": "749445dbb129cfb56194600cb56fd42402c5b402f56065442c2139a89d891a99"
+  },
+  {
+    "retainedPath": "verifier-change.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/verifier-change.json",
+    "sha256": "24c8018821be3d10e83834a50bb167ae8441032b1443a97daf44c16b849cf72f"
+  },
+  {
+    "retainedPath": "owned-test-name-change.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/owned-test-name-change.json",
+    "sha256": "8f791902e070192ea2c288b6550ce80391c765af1f07a061ec6d3660d0c5e3a1"
+  },
+  {
+    "retainedPath": "owned-platform-test-compile-fix.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/owned-platform-test-compile-fix.json",
+    "sha256": "a66b64c2ff58491f3180173c0a967a5a62c4146ad6a180c06794026e16d58811"
+  },
+  {
+    "retainedPath": "custody-repair-intervening-source.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/custody-repair-intervening-source.json",
+    "sha256": "b2dc5aa00e4a003c53def145fb130b64c09c2d46d39e743a8d4fd6c242f432b1"
+  },
+  {
+    "retainedPath": "baseline-resources.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/baseline-resources.json",
+    "sha256": "0c2ea7a99cecdf751cb152bed4da1cd9490a2a0ed87213db6992c3866c7a6a7f"
+  },
+  {
+    "retainedPath": "baseline-commands.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/baseline-commands.json",
+    "sha256": "3f87693f7c9d974c984d44b0fa8ee7c7d4006ed88fc5e2e0f68c270397e04bf4"
+  },
+  {
+    "retainedPath": "current-dependency-record.md",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-dependency-record.md",
+    "sha256": "e5858d5d5fa2ffc9b3938986f2d12873e24df4da8bb9037fe13b14fb17153cdd"
+  },
+  {
+    "retainedPath": "remaining-lane-commands.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/remaining-lane-commands.json",
+    "sha256": "9f0cea1ff0fb827c88f2991a2a1fd407501ba1a59e1f7941190a14d0b768dd0d"
+  },
+  {
+    "retainedPath": "source-before.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/source-before.json",
+    "sha256": "4a831b37fb34843ae1a813e3a746fbeb64cbef10cbdd3fad473b849282b3da29"
+  },
+  {
+    "retainedPath": "source-after.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/source-after.json",
+    "sha256": "bb2c5ce0577585af3e927b643de5192805f96245bed995f783d156f82da22433"
+  },
+  {
+    "retainedPath": "initial-source-before.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/initial-source-before.json",
+    "sha256": "7ebe135d5af8b3caaa864d510d4736e83cebecf65533406bb689c2711376ec58"
+  },
+  {
+    "retainedPath": "initial-source-after.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/initial-source-after.json",
+    "sha256": "11bef021835ed4218129975da86e830786b2c6051f4c44c6dcaf1f20bea3dbac"
+  },
+  {
+    "retainedPath": "initial-verification-manifest.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/initial-verification-manifest.json",
+    "sha256": "28e489b0105d7db6ebff9aafeb743d9d43a23a321c178346b69f2981732c891d"
+  },
+  {
+    "retainedPath": "blocked-refresh-source-before.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/blocked-refresh-source-before.json",
+    "sha256": "5046d515a33a0551b6f923ec344b374cc4259f1f26baf54555506596af66ccf0"
+  },
+  {
+    "retainedPath": "receipts/local-console.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local-console.log",
+    "sha256": "8c5eb91e5d07c97c1089cb5ba3cc7501cc4c5ebd31cfa8d44a1ade15efb9b52b"
+  },
+  {
+    "retainedPath": "receipts/final-local-console.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local-console.log",
+    "sha256": "8bd439825fbad0836802bd24b2046548ceca5c84f021cdc07a1f10220387baec"
+  },
+  {
+    "retainedPath": "receipts/current-local-console.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local-console.log",
+    "sha256": "d97f0b9f018b98df63b7ca080699bbc82fafd0c40ac3773a6ca64d93f18e0899"
+  },
+  {
+    "retainedPath": "receipts/remaining-lanes-console.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/remaining-lanes-console.log",
+    "sha256": "1254c0577fd87935fcfda3bc1979db5105afc1f5620e20271bd5c06829daf3a7"
+  },
+  {
+    "retainedPath": "receipts/pinned-package-host-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/pinned-package-host-build.log",
+    "sha256": "15721d4c5d3c6fe6015a18e8a69e11091730256528af7b9eec94226d7873beb6"
+  },
+  {
+    "retainedPath": "receipts/custody-repair-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/custody-repair-build.log",
+    "sha256": "e1dd50e70bd0ff5538f1205c048c2f974ec63e485b7f73cda3fc7cb9ba4938c2"
+  },
+  {
+    "retainedPath": "receipts/custody-repair-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/custody-repair-tests.log",
+    "sha256": "eb1a6cede8c4d637df19ecb346635cfc798643d702ca44ff07fe8b8dfc286b4c"
+  },
+  {
+    "retainedPath": "receipts/custody-repair-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/custody-repair-tests.xml",
+    "sha256": "ccc708f0a79f113c9ec7e6371aa7cf639a458117226a947278f1f9a9d99268ac"
+  },
+  {
+    "retainedPath": "receipts/custody-repair-intervening-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/custody-repair-intervening-build.log",
+    "sha256": "93dfb32a49c361494dec8e94583e5caed9b9a7f5c44f1e151b16e8e7579ae966"
+  },
+  {
+    "retainedPath": "receipts/unsupported-partition-red-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/unsupported-partition-red-build.log",
+    "sha256": "492b6e44c5e2f5084af15acf7f7facc4e79d9865c275d08fd5b1c26624d01396"
+  },
+  {
+    "retainedPath": "receipts/unsupported-partition-red.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/unsupported-partition-red.log",
+    "sha256": "1269817bbfbd9d2eb32bdc5d623ebc2616b9c17b477e3a4aaf44ba28542725ed"
+  },
+  {
+    "retainedPath": "receipts/unsupported-partition-red.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/unsupported-partition-red.xml",
+    "sha256": "4000023edf9eaf38c0b6e8859a0372be166be61c005989a12971566086bcf052"
+  },
+  {
+    "retainedPath": "receipts/parse-verifiers.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/parse-verifiers.log",
+    "sha256": "e13ed48a8272e587e87d59c47917dc0caa4750922fa66a5294952b2632c32017"
+  },
+  {
+    "retainedPath": "receipts/baseline-wait.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/baseline-wait.log",
+    "sha256": "7e695e35deefbab20edd7f63de38a3311243c2dc03383b21552e370710d01bca"
+  },
+  {
+    "retainedPath": "receipts/baseline-stop.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/baseline-stop.log",
+    "sha256": "bf49d5e492f84354743815419a7c6859da4af309f2f95d997ab8887f2503257d"
+  },
+  {
+    "retainedPath": "receipts/platform-baseline-describe.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/platform-baseline-describe.json",
+    "sha256": "3544ceb6d9770ba4a72e429a8a73eec3313c482365c4b8c35784f3709e4a0571"
+  },
+  {
+    "retainedPath": "receipts/platform-baseline-stop.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/platform-baseline-stop.log",
+    "sha256": "087df2907dabde5a3ac0971acdda004bbfc9c98de43f1f1affbe2940b579a53a"
+  },
+  {
+    "retainedPath": "receipts/live-missing.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/live-missing.log",
+    "sha256": "494a7f949c8dadf3383453f1a00e4a0de3f31274188ca5bf97fab7eb4391dafc"
+  },
+  {
+    "retainedPath": "receipts/live-capability-sentinel.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/live-capability-sentinel.log",
+    "sha256": "e18e0c34120a1ada20ee7dd5c67e43b910fb8317c4043a6d4ceaea35325ed104"
+  },
+  {
+    "retainedPath": "receipts/readiness-missing.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/readiness-missing.log",
+    "sha256": "299d899bf5bce585d1a27fe51bf9dda5113ade24fff714fe15fb66b0aaf0fa29"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.EventStore.Client.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.EventStore.Client.Tests-build.log",
+    "sha256": "5a07f8d6a5da755d4bf397dd473a1db6e8b0e1bc52d22090507f56a770f5e6c7"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.EventStore.Client.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.EventStore.Client.Tests-tests.log",
+    "sha256": "0560eae03e62853200becef4d2d655ee0a2dc8375adde474a9a6e8cb99bcf8d6"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.EventStore.Client.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.EventStore.Client.Tests-tests.xml",
+    "sha256": "bc974236cb72110efbc6409485eeaab2919c31a6250777f78128916b7bbf35f4"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.EventStore.Contracts.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.EventStore.Contracts.Tests-build.log",
+    "sha256": "d63dc917bd14fd81be0cc68bfd0abba3a1bb67e0e8f81fd3aa9f4a8f100e9a02"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "sha256": "4c1ff3a9035b12fb2b68f3212aa1663d3275a083c843f79bfaf82f80d393cfa4"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "sha256": "15d27676b4468fd1794907827b98b59c66ef00b09467c616550ff5edd1198f92"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.EventStore.Server.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.EventStore.Server.Tests-build.log",
+    "sha256": "ab75539bd3d414e3d7bce69697349e19db7914ee3024452450fa8cbaf50f068d"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.EventStore.Server.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.EventStore.Server.Tests-tests.log",
+    "sha256": "74dc89d9b535f614cff31d61ac44db0653441f13fccc7ba6b31f3ecb1e773d51"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.EventStore.Server.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.EventStore.Server.Tests-tests.xml",
+    "sha256": "096b8793db3b80bc762efb565e94710a50b4217942dfd8a5468b606de30f1024"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Client.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Client.Tests-build.log",
+    "sha256": "d2fcc80d82846fcb74a017b2b08df14d09a717b1ee78e885dfcd1ff9aba16f79"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Client.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Client.Tests-tests.log",
+    "sha256": "a355ebf57baf1eacedec98cfdf5a30524d465d233ccdfaa939dd24686d810c5a"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Client.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Client.Tests-tests.xml",
+    "sha256": "e3eb27df77d9afc48745099047a85d486ec65726ca13a0a3b51d7a8f0eb09e03"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Contracts.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Contracts.Tests-build.log",
+    "sha256": "388f50f86e522b3456fa63036c85d374cb41a6bca7c9a11a0c724ae95df6acc1"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Contracts.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Contracts.Tests-tests.log",
+    "sha256": "86193c0e923be764f643ac68691cf4a4cbc1c8d039ff1cf19501f6f06a5e5761"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Contracts.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Contracts.Tests-tests.xml",
+    "sha256": "22775282ed12a02895c1bef0e9feafbaf9a763f33b8d2eeab4bb98166f7f94c7"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Security.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Security.Tests-build.log",
+    "sha256": "4a8207e03790abec435618015a0ff66d07ca8df69df773ccde53fed68218e537"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Security.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Security.Tests-tests.log",
+    "sha256": "d53eee735ce9d25cc6bb8eea703fdf3d1e5e6a0b2ff2882abcafb3d80a22fb61"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Security.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Security.Tests-tests.xml",
+    "sha256": "c9ac81e94ca6dcffc067851474c69fe34a844a43bd68dacd3e04f5d057348cf1"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Server.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Server.Tests-build.log",
+    "sha256": "60a691b932a79f5b2e0b13e21d3455b6297ec961e07ef080024eed8800ae8e18"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Server.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Server.Tests-tests.log",
+    "sha256": "dd13ed314b30d2a199024339785e09a045a15f193368c67cfeaeff89e43d8926"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Server.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Server.Tests-tests.xml",
+    "sha256": "5fb7e4b25234d93eb3adf9b31aa53744de14150565689c8a3b3e9c7911f2a71b"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Tests-build.log",
+    "sha256": "423950ec3abdfc0188f5aa7ad20b589cee8368ea08c5837b5f4ee4f711df2bee"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Tests-tests.log",
+    "sha256": "d2469dfe2d3baa5df1d54e698527003acea5e35b97345d85cb588c6ab2f839c6"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.Tests-tests.xml",
+    "sha256": "5985d67724b7557c112ebd257923d2b6676ff41a12cc950c7923bcbb6a8406e8"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.UI.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.UI.Tests-build.log",
+    "sha256": "d5f26fa3bf4ee2d4bb4a517c7140018b70c9e5bcaabf25093a3c05b06d6a0ae7"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.UI.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.UI.Tests-tests.log",
+    "sha256": "7a01def359aafd11b8351c588553938485dd7f8400ad03879cf54a751336af45"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Parties.UI.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Parties.UI.Tests-tests.xml",
+    "sha256": "fa7cd81bb03f86c48e500bb51b1d09db14e5bfcd141e87322ee719433d04693b"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Platform.Custody.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Platform.Custody.Tests-build.log",
+    "sha256": "0dc351fa3149b09175f936ac3660a52aad9f97578796206907318bfd1f15ff72"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Platform.Custody.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Platform.Custody.Tests-tests.log",
+    "sha256": "2156f22dba57a25f1b09617846f7865693c10b229287a42014aec15f70b08b32"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Platform.Custody.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Platform.Custody.Tests-tests.xml",
+    "sha256": "b692f54fead69cfe7311d1e926777707132757bc32097bc959d8d592cea2ae2f"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Platform.Identity.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Platform.Identity.Tests-build.log",
+    "sha256": "86081124e2538801963911777961f9b37ea06ca6147abee3bafbfee4488b0c24"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Platform.Identity.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Platform.Identity.Tests-tests.log",
+    "sha256": "a9362224dd318a2fbe556cf085158f07d01f3e24346d4b9d6fcc6e4166d7f515"
+  },
+  {
+    "retainedPath": "original-local/Hexalith.Platform.Identity.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/Hexalith.Platform.Identity.Tests-tests.xml",
+    "sha256": "d37355492633fc56b950790c45f4b7726b5883995546f3de3886252862eff146"
+  },
+  {
+    "retainedPath": "original-local/eventstore-version.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/eventstore-version.log",
+    "sha256": "c8f60ecb825d78de893b91c9719c4c40271eeca89993553ad01278bcace37c06"
+  },
+  {
+    "retainedPath": "original-local/eventstore-version.stderr.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/eventstore-version.stderr.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "retainedPath": "original-local/local-evidence.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/local/local-evidence.json",
+    "sha256": "1f219ec5deabeee622c12086f1926ead39a15d35d58392e7f6a5d26169248bc5"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.EventStore.Client.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.EventStore.Client.Tests-build.log",
+    "sha256": "5e6a866daad7d3dfaef4eceb70a9546ffa084d9e2734451de844d2d7db7db4c5"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.EventStore.Client.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.EventStore.Client.Tests-tests.log",
+    "sha256": "c1873224ce24bee0b0c5a7aeb9a14ec427ea8ad0aeecb8404e0df30b5217f481"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.EventStore.Client.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.EventStore.Client.Tests-tests.xml",
+    "sha256": "c2acebee4d2792335b7152f881073d7d857db840389c58cdeda6d8b153530724"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.EventStore.Contracts.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.EventStore.Contracts.Tests-build.log",
+    "sha256": "14bd117f6ef503e0a8791748bb9a5b646460ea71b82cc57d0fe0167468de8539"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "sha256": "e3bdd8de4de76ad4912735330e1d2695cc52115b3f4fb7db4ad9d3ff05c18f66"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "sha256": "51db567f0a435df851653661fcdabcca240e975629daac1f2bf2449b854f3199"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.EventStore.Server.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.EventStore.Server.Tests-build.log",
+    "sha256": "09ea17674839555d42c1aea280c7dee046e6886170b5cc2780480e4f0286eee0"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.EventStore.Server.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.EventStore.Server.Tests-tests.log",
+    "sha256": "b3de24116873c40fc9a609e27597ad038bd2883e0ae139332f0f205d5f77a118"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.EventStore.Server.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.EventStore.Server.Tests-tests.xml",
+    "sha256": "cda68c6bd713e21e9550f2fce6287471ca6f6faa7d05e89ab963d21d19599f4b"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Client.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Client.Tests-build.log",
+    "sha256": "4323de2bea5ae8a402f98f5588983a87c55800b225adfc117911657fa6506e44"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Client.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Client.Tests-tests.log",
+    "sha256": "5ea27dc678e4c7dfdc3f9376da22a61835d07d7b50e81b8b4ff7db2dcd14c89a"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Client.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Client.Tests-tests.xml",
+    "sha256": "ed8d8eaf8ec4d0d31057c9d2cd8fc431afe4396e7465d5054c8a6f241a26347c"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Contracts.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Contracts.Tests-build.log",
+    "sha256": "cd6dc70f9df4888ff2d7704c0bd67b7966b6638be4b56d2e65708337409e3939"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Contracts.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Contracts.Tests-tests.log",
+    "sha256": "c2daaf54f5086c0646d3fd4ba0f2c7586fa94c999559c0cc5ee0a214058cb6e4"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Contracts.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Contracts.Tests-tests.xml",
+    "sha256": "75df7037be9248a7d5d56fe8d8d3ef2ad4290e7faffeaa7d0375f56ac58fc7c4"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Security.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Security.Tests-build.log",
+    "sha256": "fecef7850b8c7bce18a317dbaa4a3b065650d029fa503b2c2569a7bfd433c978"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Security.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Security.Tests-tests.log",
+    "sha256": "b0c7c2e198be1c1295e98c20c302401ac369a517d8a0e36f8401a1d8919e48e6"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Security.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Security.Tests-tests.xml",
+    "sha256": "44f5c1e224345f4070c6688f4ff9d2d4df8053992c5abee8230654d656d72895"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Server.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Server.Tests-build.log",
+    "sha256": "9e188546499317dfe7c407507a87b62311ba3b3af8b73b64903489b2f6581953"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Server.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Server.Tests-tests.log",
+    "sha256": "44c8af77fbd3b42c58e208d60d6c4338747840a8ca32317ad47e183aa0194fa5"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Server.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Server.Tests-tests.xml",
+    "sha256": "f2f6dd86ff5a31a50427820546fb70648811479ca6c3eeb8636c3d09e66a998f"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Tests-build.log",
+    "sha256": "37bf95c6c8f4203a4fbfd046337ad222c97904dc9f9222fe843e1c667abe7750"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Tests-tests.log",
+    "sha256": "ef8cde80d2129ebe6191f794bd95758b766eaf0f740c9b64292205b6b3ed7e9f"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Tests-tests.xml",
+    "sha256": "42ece83fa1ec0aec116b890f6673077935d76e243a8622bda2a337554c4d234d"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.UI.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.UI.Tests-build.log",
+    "sha256": "c107fac867405305faa0a60098dce4c3b0b19ce4844a093babc52616b22b0d0e"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.UI.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.UI.Tests-tests.log",
+    "sha256": "93b8261701f8e053b572e1571920c60ac83f3dd461c3c9fe28ebe0eb5f72bf81"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Parties.UI.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.UI.Tests-tests.xml",
+    "sha256": "5d223a1f0ce5596e0d688d7d18d5b1cb79651ccd41a427a046be1cfa75011c25"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Platform.Custody.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Platform.Custody.Tests-build.log",
+    "sha256": "07ecadde0993b433d3fd5b1919eaf1d0aa1d2785e20975e68981cac680b1c648"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Platform.Identity.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Platform.Identity.Tests-build.log",
+    "sha256": "a917bd9039ad34f4fa6283e28cc5b14c362985ba79e8faa75911a390c517ef2b"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Platform.Identity.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Platform.Identity.Tests-tests.log",
+    "sha256": "5242ab43e9fc07777effc5c67c5da5340c5549a5705831521a2bbc8a22398988"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/Hexalith.Platform.Identity.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Platform.Identity.Tests-tests.xml",
+    "sha256": "f8cb1109032ee37cd65ed73fff9649c32e04522632fd4e39db81e6ea7483ca79"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/eventstore-version.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/eventstore-version.log",
+    "sha256": "c8f60ecb825d78de893b91c9719c4c40271eeca89993553ad01278bcace37c06"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/eventstore-version.stderr.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/eventstore-version.stderr.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/local-evidence.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/local-evidence.json",
+    "sha256": "647b42fc016f783d40f9f4316bbc3e9d5df87d81c3b75298adfebb9be85c66ef"
+  },
+  {
+    "retainedPath": "failed-refresh-and-remaining-lanes/selected-local-evidence.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/selected-local-evidence.json",
+    "sha256": "272f74f8f6fe75cd89f874a0ea0eae8777b219d9f3a3fd7ea6bb80a25fe175ab"
+  },
+  {
+    "retainedPath": "latest-failed-local/Hexalith.EventStore.Client.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Client.Tests-build.log",
+    "sha256": "6fc2c20bc40a96b502247e383f5be762deff887a30de9cf29571fea76173e9a4"
+  },
+  {
+    "retainedPath": "latest-failed-local/Hexalith.EventStore.Client.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Client.Tests-tests.log",
+    "sha256": "56a396e8206f1332030ae622f53ba4b7582e397fd323653d8bc67ab8f4a33100"
+  },
+  {
+    "retainedPath": "latest-failed-local/Hexalith.EventStore.Client.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Client.Tests-tests.xml",
+    "sha256": "5ce58eef7b5260393b9e0dc0e63c635505478f9bf9a250ed1f73e6b1d6944a11"
+  },
+  {
+    "retainedPath": "latest-failed-local/Hexalith.EventStore.Contracts.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Contracts.Tests-build.log",
+    "sha256": "3430f8b35608be3ebd7eb6b3911845fcdb4550001bd2db0615fd206da1e96806"
+  },
+  {
+    "retainedPath": "latest-failed-local/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "sha256": "2539700b02dd201a4a5844ffe778dc2320c5f83093d71f1aacdeecc64dd23eb6"
+  },
+  {
+    "retainedPath": "latest-failed-local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "sha256": "8cf837729cd8d313ce5debdf0101fd765f91a0c28d9cc5810518f3f7f64c2c79"
+  },
+  {
+    "retainedPath": "latest-failed-local/Hexalith.EventStore.Server.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Server.Tests-build.log",
+    "sha256": "dcac6657492de8ce097f00929e1139c52bff3f3a2a8c997b21033d7c55339745"
+  },
+  {
+    "retainedPath": "latest-failed-local/Hexalith.EventStore.Server.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Server.Tests-tests.log",
+    "sha256": "f82ea117d3b9323bfb7f99cc4ad0a5ba9e8a4437f39f40e998e254ef801f9e74"
+  },
+  {
+    "retainedPath": "latest-failed-local/Hexalith.EventStore.Server.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Server.Tests-tests.xml",
+    "sha256": "3ef58722c05cca5f98d4102b71660a8b2097a70120c573aed8a9336d99f153ec"
+  },
+  {
+    "retainedPath": "latest-failed-local/Hexalith.Platform.Custody.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.Platform.Custody.Tests-build.log",
+    "sha256": "0f7bd6a41acfc37a7511f87aa2563190564dcff8b375cb463daad1a5dd18c2d2"
+  },
+  {
+    "retainedPath": "latest-failed-local/Hexalith.Platform.Identity.Tests-build.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.Platform.Identity.Tests-build.log",
+    "sha256": "0c3b37443e48136f1c820e2572ab46a308c67d6f5abb3b877eba1102b947d7f3"
+  },
+  {
+    "retainedPath": "latest-failed-local/Hexalith.Platform.Identity.Tests-tests.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.Platform.Identity.Tests-tests.log",
+    "sha256": "2cd57ababd98f5b7b69e221b6b0397adf98f9ddcb1bbe6286d0b8aacd25c2bba"
+  },
+  {
+    "retainedPath": "latest-failed-local/Hexalith.Platform.Identity.Tests-tests.xml",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.Platform.Identity.Tests-tests.xml",
+    "sha256": "e8dd9742f2942a011b69e21dc31a8630d12d1cfe7920ea3cc27c6f00edc9bce7"
+  },
+  {
+    "retainedPath": "latest-failed-local/eventstore-version.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/eventstore-version.log",
+    "sha256": "c8f60ecb825d78de893b91c9719c4c40271eeca89993553ad01278bcace37c06"
+  },
+  {
+    "retainedPath": "latest-failed-local/eventstore-version.stderr.log",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/eventstore-version.stderr.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "retainedPath": "latest-failed-local/local-evidence.json",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/local-evidence.json",
+    "sha256": "4e1539092c779f60eb9c947df2d3dbff32bbd4ff878ac32cc0881a3bbe99a4f9"
+  },
+  {
+    "retainedPath": "receipts/live-missing/live-gate.txt",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/live-missing/live-gate.txt",
+    "sha256": "b60753bd1e52b607eb2f91bdc4cb3bbd67b760c8a87814215fb91ceb2cd9bdfd"
+  },
+  {
+    "retainedPath": "receipts/live-capability-sentinel/live-gate.txt",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/live-capability-sentinel/live-gate.txt",
+    "sha256": "98954a20c6675bf848cb35e575a5db2cc536e55c7c72d6b85cd39f6aecbaea33"
+  },
+  {
+    "retainedPath": "reproduction/audit-local-evidence.py",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/audit-local-evidence.py",
+    "sha256": "025c248f7a43621ef85a1fa0ad785bb47e92a44477f370a5e37cd99857c09768"
+  },
+  {
+    "retainedPath": "reproduction/audit-initial-local-evidence.py",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/audit-initial-local-evidence.py",
+    "sha256": "bbe283e25238f04a29c171bb091a56bf884a550a8c0740cb14728475674ecb50"
+  },
+  {
+    "retainedPath": "reproduction/run-remaining-lanes.py",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/run-remaining-lanes.py",
+    "sha256": "9a1ffb57593cf8aeb814163bdbdbdf183c1b0b8cb2ce5da12e10fe2fb1d3256b"
+  },
+  {
+    "retainedPath": "reproduction/parse-verifiers.ps1",
+    "originalPath": "/tmp/ext-parties-1-branch-b-policy-20261008/parse-verifiers.ps1",
+    "sha256": "cbe3d009cbef12ab5e42535ea7b744d12d36f30a42d98b832ea0c8bc6d2ecaad"
+  }
+]

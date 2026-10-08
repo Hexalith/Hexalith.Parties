@@ -1,0 +1,6 @@
+{
+  "path": "/home/administrator/projects/hexalith/parties/eng/verify-ext-parties-1.ps1",
+  "beforeSha256": "dd9a08565cc2e117ffc12ffcd132094d03c5051e9e9be0770d4473615e9541ba",
+  "afterSha256": "19f76f5e5ca919760159c72a830604d67be69d0485b7aac03e83061ad35e9962",
+  "change": "Require the existing Platform policy/lifecycle test class in the custody Local lane"
+}

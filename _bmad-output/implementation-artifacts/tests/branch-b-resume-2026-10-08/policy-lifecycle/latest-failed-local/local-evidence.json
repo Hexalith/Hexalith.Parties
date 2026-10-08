@@ -1,0 +1,56 @@
+[
+  {
+    "Matrix": "Shared source contract validation",
+    "Classes": [
+      "*StreamReadPageValidatorTests",
+      "*RetainedIdentityHistoryValidatorTests"
+    ],
+    "BuildLog": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Contracts.Tests-build.log",
+    "Project": "Hexalith.EventStore.Contracts.Tests",
+    "TestLog": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "Summary": "   Hexalith.EventStore.Contracts.Tests  Total: 23, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.166s",
+    "XmlLog": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Contracts.Tests-tests.xml"
+  },
+  {
+    "Matrix": "Shared source/isolation",
+    "Classes": [
+      "*AuthoritativeEventStreamReaderTests",
+      "*EventStoreGatewayClientTests",
+      "*EventStoreGatewayClientStreamTests",
+      "*RetainedIdentityHistoryReaderTests"
+    ],
+    "BuildLog": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Client.Tests-build.log",
+    "Project": "Hexalith.EventStore.Client.Tests",
+    "TestLog": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Client.Tests-tests.log",
+    "Summary": "   Hexalith.EventStore.Client.Tests  Total: 151, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.488s",
+    "XmlLog": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Client.Tests-tests.xml"
+  },
+  {
+    "Matrix": "Isolation/actor authority",
+    "Classes": [
+      "*IdentityAdmissionTests",
+      "*ActorRegistryTests",
+      "*IdentityGatewayDenialTests",
+      "*CommandsControllerTrustedExtensionTests",
+      "*QueriesControllerTests",
+      "*StreamsControllerTests",
+      "*RetainedIdentityHistorySourceReaderTests"
+    ],
+    "BuildLog": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Server.Tests-build.log",
+    "Project": "Hexalith.EventStore.Server.Tests",
+    "TestLog": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Server.Tests-tests.log",
+    "Summary": "   Hexalith.EventStore.Server.Tests  Total: 168, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.707s",
+    "XmlLog": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Server.Tests-tests.xml"
+  },
+  {
+    "Matrix": "Global registry/bootstrap",
+    "Classes": [
+      "*PlatformIdentityAdmissionTests"
+    ],
+    "BuildLog": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.Platform.Identity.Tests-build.log",
+    "Project": "Hexalith.Platform.Identity.Tests",
+    "TestLog": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.Platform.Identity.Tests-tests.log",
+    "Summary": "   Hexalith.Platform.Identity.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.196s",
+    "XmlLog": "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.Platform.Identity.Tests-tests.xml"
+  }
+]

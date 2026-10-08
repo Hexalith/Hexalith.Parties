@@ -1,0 +1,8 @@
+{
+  "capturedAtUtc": "2026-10-08T17:32:58.197042+00:00",
+  "path": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs",
+  "beforeSha256": "566a2b00ffc791637469c0a92f889fba7c562208a1a1c35e96bfb721e69fe8b2",
+  "afterSha256": "6a742e7ffd63ad8fc6dcb327e9b6c7c8d1547ff5ebeb13a90e206e321c243fc8",
+  "change": "Rename only the new three-case suffix-ordering regression and clarify its comments; no expectation or external source change",
+  "verificationContext": "Final Local had reached EventStore lanes; Parties domain lane had not yet built"
+}

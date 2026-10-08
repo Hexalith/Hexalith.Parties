@@ -1,0 +1,649 @@
+{
+  "qualification": "SelectedLocalOnly",
+  "completeLocalExitCode": 1,
+  "localCommand": [
+    "pwsh",
+    "-NoProfile",
+    "-File",
+    "eng/verify-ext-parties-1.ps1",
+    "-Mode",
+    "Local",
+    "-EventStoreRoot",
+    "/home/administrator/projects/hexalith/eventstore",
+    "-PlatformRoot",
+    "/home/administrator/projects/hexalith/platform",
+    "-EvidenceDirectory",
+    "/tmp/ext-parties-1-branch-b-policy-20261008/current-local",
+    "-ArtifactsDirectory",
+    "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts",
+    "-MemoriesRoot",
+    "/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode"
+  ],
+  "sourceVersion": "3.117.1",
+  "ownerLaneCount": 11,
+  "requiredClassCount": 41,
+  "passed": 1215,
+  "requiredPassed": 1205,
+  "supplementalPassed": 10,
+  "lanes": [
+    {
+      "scope": "Normal current or fallback source build; see retained exact command",
+      "supplementalClasses": {},
+      "requiredPassed": 23,
+      "supplementalPassed": 0,
+      "project": "Hexalith.EventStore.Contracts.Tests",
+      "matrix": "Shared source contract validation",
+      "passed": 23,
+      "requiredClasses": {
+        "*StreamReadPageValidatorTests": 12,
+        "*RetainedIdentityHistoryValidatorTests": 11
+      },
+      "buildCommand": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Contracts.Tests/Hexalith.EventStore.Contracts.Tests.csproj",
+        "-c",
+        "Debug",
+        "--artifacts-path",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithMemoriesRoot=/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode",
+        "-p:NuGetAudit=false",
+        "-m:1",
+        "-p:HexalithEventStoreVersion=3.117.1"
+      ],
+      "testCommand": [
+        "dotnet",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Contracts.Tests.dll",
+        "-class",
+        "*StreamReadPageValidatorTests",
+        "-class",
+        "*RetainedIdentityHistoryValidatorTests",
+        "-result-xml",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Contracts.Tests-tests.xml"
+      ],
+      "testEnvironment": {
+        "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+      },
+      "buildLogSha256": "3430f8b35608be3ebd7eb6b3911845fcdb4550001bd2db0615fd206da1e96806",
+      "testLogSha256": "2539700b02dd201a4a5844ffe778dc2320c5f83093d71f1aacdeecc64dd23eb6",
+      "xmlSha256": "8cf837729cd8d313ce5debdf0101fd765f91a0c28d9cc5810518f3f7f64c2c79",
+      "assemblySha256": "44060b506fd62d1819344c46b891a022d35d6ab23f00cccb0a6b3d05203a22df",
+      "pdbSha256": "b9a247dbd4952203e43107fb6fcfb466bd335c9d748855503f6025e9f41f66e5"
+    },
+    {
+      "scope": "Normal current or fallback source build; see retained exact command",
+      "supplementalClasses": {},
+      "requiredPassed": 151,
+      "supplementalPassed": 0,
+      "project": "Hexalith.EventStore.Client.Tests",
+      "matrix": "Shared source/isolation",
+      "passed": 151,
+      "requiredClasses": {
+        "*AuthoritativeEventStreamReaderTests": 36,
+        "*EventStoreGatewayClientTests": 76,
+        "*EventStoreGatewayClientStreamTests": 7,
+        "*RetainedIdentityHistoryReaderTests": 32
+      },
+      "buildCommand": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Client.Tests/Hexalith.EventStore.Client.Tests.csproj",
+        "-c",
+        "Debug",
+        "--artifacts-path",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithMemoriesRoot=/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode",
+        "-p:NuGetAudit=false",
+        "-m:1",
+        "-p:HexalithEventStoreVersion=3.117.1"
+      ],
+      "testCommand": [
+        "dotnet",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.Tests.dll",
+        "-class",
+        "*AuthoritativeEventStreamReaderTests",
+        "-class",
+        "*EventStoreGatewayClientTests",
+        "-class",
+        "*EventStoreGatewayClientStreamTests",
+        "-class",
+        "*RetainedIdentityHistoryReaderTests",
+        "-result-xml",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Client.Tests-tests.xml"
+      ],
+      "testEnvironment": {
+        "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+      },
+      "buildLogSha256": "6fc2c20bc40a96b502247e383f5be762deff887a30de9cf29571fea76173e9a4",
+      "testLogSha256": "56a396e8206f1332030ae622f53ba4b7582e397fd323653d8bc67ab8f4a33100",
+      "xmlSha256": "5ce58eef7b5260393b9e0dc0e63c635505478f9bf9a250ed1f73e6b1d6944a11",
+      "assemblySha256": "7dedde156888c44eaba712f7c6104472c4c66e8c37d446e0da2d5933fadfb814",
+      "pdbSha256": "b6a546071348e740d15f06fad7995112f1564417beca3c00e22cc02b73881dde"
+    },
+    {
+      "scope": "Normal current or fallback source build; see retained exact command",
+      "supplementalClasses": {},
+      "requiredPassed": 168,
+      "supplementalPassed": 0,
+      "project": "Hexalith.EventStore.Server.Tests",
+      "matrix": "Isolation/actor authority",
+      "passed": 168,
+      "requiredClasses": {
+        "*IdentityAdmissionTests": 6,
+        "*ActorRegistryTests": 6,
+        "*IdentityGatewayDenialTests": 3,
+        "*CommandsControllerTrustedExtensionTests": 7,
+        "*QueriesControllerTests": 72,
+        "*StreamsControllerTests": 26,
+        "*RetainedIdentityHistorySourceReaderTests": 48
+      },
+      "buildCommand": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj",
+        "-c",
+        "Debug",
+        "--artifacts-path",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithMemoriesRoot=/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode",
+        "-p:NuGetAudit=false",
+        "-m:1",
+        "-p:HexalithEventStoreVersion=3.117.1"
+      ],
+      "testCommand": [
+        "dotnet",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Server.Tests.dll",
+        "-class",
+        "*IdentityAdmissionTests",
+        "-class",
+        "*ActorRegistryTests",
+        "-class",
+        "*IdentityGatewayDenialTests",
+        "-class",
+        "*CommandsControllerTrustedExtensionTests",
+        "-class",
+        "*QueriesControllerTests",
+        "-class",
+        "*StreamsControllerTests",
+        "-class",
+        "*RetainedIdentityHistorySourceReaderTests",
+        "-result-xml",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.EventStore.Server.Tests-tests.xml"
+      ],
+      "testEnvironment": {
+        "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+      },
+      "buildLogSha256": "dcac6657492de8ce097f00929e1139c52bff3f3a2a8c997b21033d7c55339745",
+      "testLogSha256": "f82ea117d3b9323bfb7f99cc4ad0a5ba9e8a4437f39f40e998e254ef801f9e74",
+      "xmlSha256": "3ef58722c05cca5f98d4102b71660a8b2097a70120c573aed8a9336d99f153ec",
+      "assemblySha256": "bba53374e605d1c332d5d6921d39d772e17ddb708ddfec137e9ec1a59268026a",
+      "pdbSha256": "9cef047792e9a1fd8f9774e665381ae830b8382eafebc9cf86fae75daa448b0f"
+    },
+    {
+      "scope": "Normal current or fallback source build; see retained exact command",
+      "supplementalClasses": {},
+      "requiredPassed": 2,
+      "supplementalPassed": 0,
+      "project": "Hexalith.Platform.Identity.Tests",
+      "matrix": "Global registry/bootstrap",
+      "passed": 2,
+      "requiredClasses": {
+        "*PlatformIdentityAdmissionTests": 2
+      },
+      "buildCommand": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/platform/tests/Hexalith.Platform.Identity.Tests/Hexalith.Platform.Identity.Tests.csproj",
+        "-c",
+        "Debug",
+        "--artifacts-path",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithMemoriesRoot=/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode",
+        "-p:NuGetAudit=false",
+        "-m:1",
+        "-p:HexalithEventStoreVersion=3.117.1"
+      ],
+      "testCommand": [
+        "dotnet",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.Platform.Identity.Tests.dll",
+        "-class",
+        "*PlatformIdentityAdmissionTests",
+        "-result-xml",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/current-local/Hexalith.Platform.Identity.Tests-tests.xml"
+      ],
+      "testEnvironment": {
+        "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+      },
+      "buildLogSha256": "0c3b37443e48136f1c820e2572ab46a308c67d6f5abb3b877eba1102b947d7f3",
+      "testLogSha256": "2cd57ababd98f5b7b69e221b6b0397adf98f9ddcb1bbe6286d0b8aacd25c2bba",
+      "xmlSha256": "e8dd9742f2942a011b69e21dc31a8630d12d1cfe7920ea3cc27c6f00edc9bce7",
+      "assemblySha256": "eaf765d6243a3ab3511de44ee3f844346bc4a3b60965a5c395d6cec7b01dcd39",
+      "pdbSha256": "58758d569e2890b691325341ece64d5b75c52b9d5de3f809620645a57179f4b3"
+    },
+    {
+      "scope": "Normal repaired custody build and synthetic tests preceded the later external Fr34ProtectionGate source blocker",
+      "supplementalClasses": {
+        "*DeletionCapabilityRevocationSubscriberTests": 10
+      },
+      "requiredPassed": 171,
+      "supplementalPassed": 10,
+      "project": "Hexalith.Platform.Custody.Tests",
+      "matrix": "Custody prerequisites/policy/lifecycle/expiry/denial",
+      "passed": 181,
+      "requiredClasses": {
+        "*CustodyPrerequisiteTests": 68,
+        "*IdentityHistoryCleanupTests": 47,
+        "*IdentityHistoryCustodyPolicyTests": 56
+      },
+      "buildCommand": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Platform.Custody.Tests/Hexalith.Platform.Custody.Tests.csproj",
+        "-c",
+        "Debug",
+        "--artifacts-path",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/custody-repair-artifacts",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithMemoriesRoot=/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode",
+        "-p:HexalithEventStoreVersion=3.117.1",
+        "-p:NuGetAudit=false",
+        "-m:1"
+      ],
+      "testCommand": [
+        "dotnet",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/custody-repair-artifacts/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.Platform.Custody.Tests.dll",
+        "-class",
+        "*CustodyPrerequisiteTests",
+        "-class",
+        "*IdentityHistoryCleanupTests",
+        "-class",
+        "*IdentityHistoryCustodyPolicyTests",
+        "-class",
+        "*DeletionCapabilityRevocationSubscriberTests",
+        "-result-xml",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/custody-repair-tests.xml"
+      ],
+      "testEnvironment": {},
+      "buildLogSha256": "e1dd50e70bd0ff5538f1205c048c2f974ec63e485b7f73cda3fc7cb9ba4938c2",
+      "testLogSha256": "eb1a6cede8c4d637df19ecb346635cfc798643d702ca44ff07fe8b8dfc286b4c",
+      "xmlSha256": "ccc708f0a79f113c9ec7e6371aa7cf639a458117226a947278f1f9a9d99268ac",
+      "assemblySha256": "883295f99f5a066d6e1cb1d88eb0738d917538e7963e4f0bf243ab8a8e345f47",
+      "pdbSha256": "79ed42b8f07b287a86e9eacf8d6a1be1c093b07dc0153acfb3b24c05a1390054"
+    },
+    {
+      "scope": "Normal current or fallback source build; see retained exact command",
+      "supplementalClasses": {},
+      "requiredPassed": 29,
+      "supplementalPassed": 0,
+      "project": "Hexalith.Parties.Contracts.Tests",
+      "matrix": "History/compatibility",
+      "passed": 29,
+      "requiredClasses": {
+        "*PartyStateTests": 26,
+        "*PartyIdentityContractTests": 2,
+        "*ContractsPublicApiSnapshotTests": 1
+      },
+      "buildCommand": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+        "-c",
+        "Debug",
+        "--artifacts-path",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithMemoriesRoot=/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode",
+        "-p:NuGetAudit=false",
+        "-m:1",
+        "-p:HexalithEventStoreVersion=3.117.1"
+      ],
+      "testCommand": [
+        "dotnet",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.Contracts.Tests.dll",
+        "-class",
+        "*PartyStateTests",
+        "-class",
+        "*PartyIdentityContractTests",
+        "-class",
+        "*ContractsPublicApiSnapshotTests",
+        "-result-xml",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Contracts.Tests-tests.xml"
+      ],
+      "testEnvironment": {
+        "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+      },
+      "buildLogSha256": "cd6dc70f9df4888ff2d7704c0bd67b7966b6638be4b56d2e65708337409e3939",
+      "testLogSha256": "c2daaf54f5086c0646d3fd4ba0f2c7586fa94c999559c0cc5ee0a214058cb6e4",
+      "xmlSha256": "75df7037be9248a7d5d56fe8d8d3ef2ad4290e7faffeaa7d0375f56ac58fc7c4",
+      "assemblySha256": "e08906cf263ee7304f09528252d68ffc64d652a43fa96c5e711fe2f6d0a33d8e",
+      "pdbSha256": "b502900aebdfc43689065e3083c0506f39fd8588f849b7ee2e15a7fde660a811"
+    },
+    {
+      "scope": "Normal current or fallback source build; see retained exact command",
+      "supplementalClasses": {},
+      "requiredPassed": 94,
+      "supplementalPassed": 0,
+      "project": "Hexalith.Parties.Server.Tests",
+      "matrix": "Provision/history",
+      "passed": 94,
+      "requiredClasses": {
+        "*AgentPartyProvisioningTests": 3,
+        "*HumanActorBindingTests": 7,
+        "*PartyAggregateCreateTests": 24,
+        "*PartyAggregateCompositeTests": 60
+      },
+      "buildCommand": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj",
+        "-c",
+        "Debug",
+        "--artifacts-path",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithMemoriesRoot=/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode",
+        "-p:NuGetAudit=false",
+        "-m:1",
+        "-p:HexalithEventStoreVersion=3.117.1"
+      ],
+      "testCommand": [
+        "dotnet",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts/bin/Hexalith.Parties.Server.Tests/debug/Hexalith.Parties.Server.Tests.dll",
+        "-class",
+        "*AgentPartyProvisioningTests",
+        "-class",
+        "*HumanActorBindingTests",
+        "-class",
+        "*PartyAggregateCreateTests",
+        "-class",
+        "*PartyAggregateCompositeTests",
+        "-result-xml",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Server.Tests-tests.xml"
+      ],
+      "testEnvironment": {
+        "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+      },
+      "buildLogSha256": "9e188546499317dfe7c407507a87b62311ba3b3af8b73b64903489b2f6581953",
+      "testLogSha256": "44c8af77fbd3b42c58e208d60d6c4338747840a8ca32317ad47e183aa0194fa5",
+      "xmlSha256": "f2f6dd86ff5a31a50427820546fb70648811479ca6c3eeb8636c3d09e66a998f",
+      "assemblySha256": "8ce30066486d5aef23e52944bff01028c03ecc82d586a5305a069f8d707025a8",
+      "pdbSha256": "8c59ce91db3c3007c04928119fb2421e07c381cda00446f2c4e9523f47bf5f9b"
+    },
+    {
+      "scope": "Normal current or fallback source build; see retained exact command",
+      "supplementalClasses": {},
+      "requiredPassed": 367,
+      "supplementalPassed": 0,
+      "project": "Hexalith.Parties.Tests",
+      "matrix": "Current identity/history/isolation",
+      "passed": 367,
+      "requiredClasses": {
+        "*PartyIdentityAdmissionTests": 50,
+        "*PartyIdentityQueryHandlerTests": 165,
+        "*PartyIdentityRetentionConfigurationTests": 6,
+        "*PartyDomainProcessorValidationTests": 44,
+        "*PartySdkQueryHandlerTests": 54,
+        "*PartiesProcessEndpointTests": 13,
+        "*PartiesDomainServiceSecurityTests": 35
+      },
+      "buildCommand": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Debug",
+        "--artifacts-path",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithMemoriesRoot=/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode",
+        "-p:NuGetAudit=false",
+        "-m:1",
+        "-p:HexalithEventStoreVersion=3.117.1"
+      ],
+      "testCommand": [
+        "dotnet",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll",
+        "-class",
+        "*PartyIdentityAdmissionTests",
+        "-class",
+        "*PartyIdentityQueryHandlerTests",
+        "-class",
+        "*PartyIdentityRetentionConfigurationTests",
+        "-class",
+        "*PartyDomainProcessorValidationTests",
+        "-class",
+        "*PartySdkQueryHandlerTests",
+        "-class",
+        "*PartiesProcessEndpointTests",
+        "-class",
+        "*PartiesDomainServiceSecurityTests",
+        "-result-xml",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Tests-tests.xml"
+      ],
+      "testEnvironment": {
+        "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+      },
+      "buildLogSha256": "37bf95c6c8f4203a4fbfd046337ad222c97904dc9f9222fe843e1c667abe7750",
+      "testLogSha256": "ef8cde80d2129ebe6191f794bd95758b766eaf0f740c9b64292205b6b3ed7e9f",
+      "xmlSha256": "42ece83fa1ec0aec116b890f6673077935d76e243a8622bda2a337554c4d234d",
+      "assemblySha256": "eec205567b427b7e6b0c892af8a96abd6b6fb9ca261fae74ba8e45e000872f0d",
+      "pdbSha256": "5c73dfe8e8c9c6cb7de34c0e5d96b005cc3298b9b6475876739721b3105a4eea"
+    },
+    {
+      "scope": "Normal current or fallback source build; see retained exact command",
+      "supplementalClasses": {},
+      "requiredPassed": 30,
+      "supplementalPassed": 0,
+      "project": "Hexalith.Parties.Security.Tests",
+      "matrix": "Custody separation/denial",
+      "passed": 30,
+      "requiredClasses": {
+        "*IdentityHistoryProtectionTests": 7,
+        "*PartyPayloadProtectionServiceTests": 23
+      },
+      "buildCommand": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj",
+        "-c",
+        "Debug",
+        "--artifacts-path",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithMemoriesRoot=/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode",
+        "-p:NuGetAudit=false",
+        "-m:1",
+        "-p:HexalithEventStoreVersion=3.117.1"
+      ],
+      "testCommand": [
+        "dotnet",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts/bin/Hexalith.Parties.Security.Tests/debug/Hexalith.Parties.Security.Tests.dll",
+        "-class",
+        "*IdentityHistoryProtectionTests",
+        "-class",
+        "*PartyPayloadProtectionServiceTests",
+        "-result-xml",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Security.Tests-tests.xml"
+      ],
+      "testEnvironment": {
+        "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+      },
+      "buildLogSha256": "fecef7850b8c7bce18a317dbaa4a3b065650d029fa503b2c2569a7bfd433c978",
+      "testLogSha256": "b0c7c2e198be1c1295e98c20c302401ac369a517d8a0e36f8401a1d8919e48e6",
+      "xmlSha256": "44f5c1e224345f4070c6688f4ff9d2d4df8053992c5abee8230654d656d72895",
+      "assemblySha256": "95fa3a49184e6baaab503f7f05f36c38b531cb018fb573f1c5057a7591e96aa4",
+      "pdbSha256": "d0e0b7d863d6d4da7c00c98cfa32b9fd96201409562ff64471f1c2aaa5eb9e50"
+    },
+    {
+      "scope": "Normal current or fallback source build; see retained exact command",
+      "supplementalClasses": {},
+      "requiredPassed": 98,
+      "supplementalPassed": 0,
+      "project": "Hexalith.Parties.Client.Tests",
+      "matrix": "Isolation/compatibility",
+      "passed": 98,
+      "requiredClasses": {
+        "*HttpPartiesIdentityClientTests": 18,
+        "*HttpPartiesCommandClientTests": 37,
+        "*HttpPartiesQueryClientTests": 30,
+        "*DependencyInjectionTests": 13
+      },
+      "buildCommand": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+        "-c",
+        "Debug",
+        "--artifacts-path",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithMemoriesRoot=/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode",
+        "-p:NuGetAudit=false",
+        "-m:1",
+        "-p:HexalithEventStoreVersion=3.117.1"
+      ],
+      "testCommand": [
+        "dotnet",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts/bin/Hexalith.Parties.Client.Tests/debug/Hexalith.Parties.Client.Tests.dll",
+        "-class",
+        "*HttpPartiesIdentityClientTests",
+        "-class",
+        "*HttpPartiesCommandClientTests",
+        "-class",
+        "*HttpPartiesQueryClientTests",
+        "-class",
+        "*DependencyInjectionTests",
+        "-result-xml",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.Client.Tests-tests.xml"
+      ],
+      "testEnvironment": {
+        "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+      },
+      "buildLogSha256": "4323de2bea5ae8a402f98f5588983a87c55800b225adfc117911657fa6506e44",
+      "testLogSha256": "5ea27dc678e4c7dfdc3f9376da22a61835d07d7b50e81b8b4ff7db2dcd14c89a",
+      "xmlSha256": "ed8d8eaf8ec4d0d31057c9d2cd8fc431afe4396e7465d5054c8a6f241a26347c",
+      "assemblySha256": "74674749a41786859bcd7b8465c0d02a3ddae2e83da9f62732c6feda0f124bef",
+      "pdbSha256": "03396be20551bb4248b9df04b773706357a434ec5898d06cf1467266ed9811eb"
+    },
+    {
+      "scope": "Normal current or fallback source build; see retained exact command",
+      "supplementalClasses": {},
+      "requiredPassed": 72,
+      "supplementalPassed": 0,
+      "project": "Hexalith.Parties.UI.Tests",
+      "matrix": "Consumer compatibility",
+      "passed": 72,
+      "requiredClasses": {
+        "*IdentityBindingBoundaryTests": 5,
+        "*IdentityBindingProvisioningServiceTests": 14,
+        "*PartyIdClaimResolverTests": 11,
+        "*SelfScopedPartiesClientTests": 42
+      },
+      "buildCommand": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "-c",
+        "Debug",
+        "--artifacts-path",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithMemoriesRoot=/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode",
+        "-p:NuGetAudit=false",
+        "-m:1",
+        "-p:HexalithEventStoreVersion=3.117.1"
+      ],
+      "testCommand": [
+        "dotnet",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-artifacts/bin/Hexalith.Parties.UI.Tests/debug/Hexalith.Parties.UI.Tests.dll",
+        "-class",
+        "*IdentityBindingBoundaryTests",
+        "-class",
+        "*IdentityBindingProvisioningServiceTests",
+        "-class",
+        "*PartyIdClaimResolverTests",
+        "-class",
+        "*SelfScopedPartiesClientTests",
+        "-result-xml",
+        "/tmp/ext-parties-1-branch-b-policy-20261008/final-local/Hexalith.Parties.UI.Tests-tests.xml"
+      ],
+      "testEnvironment": {
+        "HEXALITH_PARTIES_SOURCE_ROOT": "/home/administrator/projects/hexalith/parties"
+      },
+      "buildLogSha256": "c107fac867405305faa0a60098dce4c3b0b19ce4844a093babc52616b22b0d0e",
+      "testLogSha256": "93b8261701f8e053b572e1571920c60ac83f3dd461c3c9fe28ebe0eb5f72bf81",
+      "xmlSha256": "5d223a1f0ce5596e0d688d7d18d5b1cb79651ccd41a427a046be1cfa75011c25",
+      "assemblySha256": "f034ae630966340da8a5151a2785000892c53a38cd289f4db70d0f1e5021fe8c",
+      "pdbSha256": "e24730c31976b2bbdd3aa2fcb5ecedd291eb9b74956b296d84049a1b93bd847d"
+    }
+  ],
+  "sourceDrift": [
+    {
+      "owner": "Platform",
+      "path": "/home/administrator/projects/hexalith/platform/src/Hexalith.Platform.Custody/Fr34ProtectionGate.cs",
+      "beforeSha256": "fb8e8e75a5159d499be593008e8db274f90e926ba73cc3461e4b8483bee18883",
+      "afterSha256": "ba0bebac201cadf979117e7f6712cb2aaeea733da850abc17d86c5230503000b"
+    },
+    {
+      "owner": "Platform",
+      "path": "/home/administrator/projects/hexalith/platform/tests/Hexalith.Platform.Custody.Tests/Fr34ProtectionGateTests.cs",
+      "beforeSha256": null,
+      "afterSha256": "93157224c2ed9344a8ca2b56a23d3cd01572a9f3bd453ba54fc24b080334046a"
+    }
+  ],
+  "sourceFingerprintScope": "Source/build/config documents captured before and rescanned after; source drift is not compiled-source proof",
+  "completeLocalBlockers": [
+    "Earlier refresh: DeletionCapabilityRevocationSubscriberTests.cs:28/:31 CS0121; narrow repair passed separately",
+    "Latest refresh: Fr34ProtectionGate.cs:37 CS0117 SchemaVersion member unavailable; external source preserved"
+  ],
+  "otherRetainedEvidence": {
+    "originalCompleteLocal": "initial-verification-manifest.json",
+    "failedRefresh": "final-local-console.log",
+    "failedCurrentRefresh": "current-local-console.log",
+    "remainingNormalLanes": "remaining-lane-commands.json",
+    "repairedCustody": "custody-repair-receipt.json"
+  },
+  "incomplete": [
+    "Production IIdentityHistoryCustody provider and installed independent history/event/snapshot custody",
+    "Irreversible all-copy destruction receipts and nonrollback restore qualification",
+    "Production qualification of externally added actor-free successor continuation after predecessor expiry/destruction",
+    "Complete installed P-01-P-10 persisted-state/restart/restore/failure-injection probes and exact accepted target/command"
+  ]
+}

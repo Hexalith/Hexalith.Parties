@@ -1,0 +1,40 @@
+{
+  "capturedAtUtc": "2026-10-08T17:29:09.238332+00:00",
+  "request": "User asked to check in Hexalith.Platform",
+  "scope": "Local owner source, host registration, policy/lifecycle documents, and verification environment references; no endpoint invocation",
+  "repositories": [
+    {
+      "root": "/home/administrator/projects/hexalith/platform",
+      "head": "f5a0d72f9b72e88008562147a7085da0607d55f7",
+      "sourceCustodyImplementations": [],
+      "expiredCertificateCustodyImplementations": [],
+      "installedTargetSourceReferences": [],
+      "reviewedFileHashes": {
+        "src/Hexalith.Platform.EventStoreHost/Program.cs": "fd60679a622660955669bfba29ee55e98e8a8a57ef6d60f30015dc40cfa42764",
+        "src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8",
+        "docs/implementation/actor-history-lifecycle-2026-10-07.md": "78cf9ffe55eeea1eef02d861af2f6cac282f3c513207aa9064fe8dd4ad6bdd74",
+        "_bmad-output/implementation-artifacts/spec-plat-actor-history-1-t1-immutable-custody-contracts.md": "095e6f552d73afdfb68479650c121254e1330a76f73ea1590cc048c6285ddbeb"
+      }
+    },
+    {
+      "root": "/home/administrator/projects/hexalith/parties/references/Hexalith.Platform",
+      "head": "f5a0d72f9b72e88008562147a7085da0607d55f7",
+      "sourceCustodyImplementations": [],
+      "expiredCertificateCustodyImplementations": [],
+      "installedTargetSourceReferences": [],
+      "reviewedFileHashes": {
+        "src/Hexalith.Platform.EventStoreHost/Program.cs": "fd60679a622660955669bfba29ee55e98e8a8a57ef6d60f30015dc40cfa42764",
+        "src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8",
+        "docs/implementation/actor-history-lifecycle-2026-10-07.md": "78cf9ffe55eeea1eef02d861af2f6cac282f3c513207aa9064fe8dd4ad6bdd74",
+        "_bmad-output/implementation-artifacts/spec-plat-actor-history-1-t1-immutable-custody-contracts.md": "095e6f552d73afdfb68479650c121254e1330a76f73ea1590cc048c6285ddbeb"
+      }
+    }
+  ],
+  "findings": [
+    "Approved policy is party-actor-retention-v1, 365 fixed days from binding-effective-at.",
+    "Platform lifecycle document explicitly states no production adapter/backend was selected.",
+    "Platform AddPlatformCustody registers cleanup with an optional provider; it does not register IIdentityHistoryCustody.",
+    "The done actor-history contracts spec explicitly leaves Q1-Q7/F1/F2 unresolved.",
+    "No production identity-history provider or installed P-01-P-10 target configuration found in the inspected source. Generic installation/recovery evidence does not qualify this capability."
+  ]
+}

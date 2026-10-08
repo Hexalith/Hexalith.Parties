@@ -1,0 +1,45 @@
+{
+  "canonicalAuditedManifest": "verification-manifest.json",
+  "canonicalManifestSha256": "bbc3607b0fa4d34dfdeb02e420fd5bd45aa4164b0462f6e631a7fc7a0af233f8",
+  "originalCompleteLocal": {
+    "exitCode": 0,
+    "passed": 1195,
+    "sourceScope": "Run-start original bytes; later external movement disclosed in initial-verification-manifest.json"
+  },
+  "firstRefresh": {
+    "exitCode": 1,
+    "log": "final-local-console.log",
+    "diagnostics": "DeletionCapabilityRevocationSubscriberTests.cs:28/:31 CS0121; narrow explicit callback-return repair passed in separate custody-repair-receipt.json"
+  },
+  "latestRefresh": {
+    "exitCode": 1,
+    "log": "current-local-console.log",
+    "diagnostics": "Fr34ProtectionGate.cs:37 CS0117 SchemaVersion missing; external source changed afterward and was preserved"
+  },
+  "remainingLanes": {
+    "exitCode": 0,
+    "exactCommands": "remaining-lane-commands.json",
+    "scope": "Six normally built Parties lanes, no exclusions or restore overrides"
+  },
+  "custodyRepair": {
+    "exitCode": 0,
+    "passed": 181,
+    "requiredPassed": 171,
+    "supplementalPassed": 10,
+    "receipt": "custody-repair-receipt.json",
+    "scope": "Normal owner build before later unrelated FR-34 source blocker"
+  },
+  "interveningCustodyFailure": {
+    "exitCode": 1,
+    "log": "custody-repair-intervening-build.log",
+    "scope": "Owner switched callbacks to async faults during build and reverted them before guarded follow-up could write"
+  },
+  "pinnedPackageHost": "pinned-package-receipt.json",
+  "liveGates": "live-gate-receipts.json",
+  "rootAudit": "root-independent-audit.json",
+  "platformInspection": "platform-inspection.json",
+  "frozenIntentSha256": "80b5cb8795f4bbf7f92cb6715564ad5e1c87b1d4159fd78e877f29c2cfd2d81f",
+  "agentGitWrites": false,
+  "productionMutation": false,
+  "installedIdentityAvailability": false
+}

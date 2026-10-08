@@ -1,0 +1,8 @@
+{
+  "capturedAtUtc": "2026-10-08T17:36:55.419168+00:00",
+  "path": "/home/administrator/projects/hexalith/platform/tests/Hexalith.Platform.Custody.Tests/DeletionCapabilityRevocationSubscriberTests.cs",
+  "beforeSha256": "0019ab5305cf3993468e77bfed1a470a583df8045f40e49bcc7fecc8331d1abd",
+  "afterSha256": "5f1595bb6b869bd81c78b1ad7feccef3755eba3141e0458c1ccac4ae3716220d",
+  "change": "Specify exact Returns generic arguments on the two throwing callbacks; preserve lost acknowledgement side effects and assertions",
+  "baseline": "Isolated default Platform AppHost started with zero opt-in resources, inspected and stopped; production availability not exercised"
+}

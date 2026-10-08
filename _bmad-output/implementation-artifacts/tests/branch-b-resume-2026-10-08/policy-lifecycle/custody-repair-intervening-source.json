@@ -1,0 +1,7 @@
+{
+  "capturedAtUtc": "2026-10-08T17:39:00.021397+00:00",
+  "path": "/home/administrator/projects/hexalith/platform/tests/Hexalith.Platform.Custody.Tests/DeletionCapabilityRevocationSubscriberTests.cs",
+  "sha256": "5f1595bb6b869bd81c78b1ad7feccef3755eba3141e0458c1ccac4ae3716220d",
+  "externalMovement": "Callbacks changed to Task.FromException during build, then reverted to original throw style before a guarded follow-up edit could write",
+  "followupEdit": "Aborted without source mutation"
+}

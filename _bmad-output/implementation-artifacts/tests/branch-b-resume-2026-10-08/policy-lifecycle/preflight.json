@@ -1,0 +1,16 @@
+{
+  "syntaxCommand": [
+    "pwsh",
+    "-NoProfile",
+    "-File",
+    "/tmp/ext-parties-1-branch-b-policy-20261008/parse-verifiers.ps1",
+    "-Root",
+    "/home/administrator/projects/hexalith/parties"
+  ],
+  "syntaxExitCode": 0,
+  "frozenIntentSha256": "80b5cb8795f4bbf7f92cb6715564ad5e1c87b1d4159fd78e877f29c2cfd2d81f",
+  "dependencyRegisterPath": "/home/administrator/projects/hexalith/agents/_bmad-output/planning-artifacts/external-dependency-register.md",
+  "dependencyRegisterSha256": "184e16c05b57527abcdbd8588ae0c9fa10fe4c6093a53e66a509e9aa39fbcccb",
+  "providerRegistrationSource": "../platform/src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs",
+  "providerAvailability": "No production IIdentityHistoryCustody implementation or registration in Platform src; policy/lifecycle contracts do not register it"
+}

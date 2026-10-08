@@ -1,0 +1,49 @@
+{
+  "qualification": "LocalSyntheticOnly",
+  "buildExitCode": 0,
+  "testExitCode": 0,
+  "passed": 181,
+  "requiredPassed": 171,
+  "supplementalPassed": 10,
+  "classes": {
+    "CustodyPrerequisiteTests": 68,
+    "IdentityHistoryCleanupTests": 47,
+    "IdentityHistoryCustodyPolicyTests": 56,
+    "DeletionCapabilityRevocationSubscriberTests": 10
+  },
+  "sourcePath": "/home/administrator/projects/hexalith/platform/tests/Hexalith.Platform.Custody.Tests/DeletionCapabilityRevocationSubscriberTests.cs",
+  "sourceSha256": "5f1595bb6b869bd81c78b1ad7feccef3755eba3141e0458c1ccac4ae3716220d",
+  "xmlSha256": "ccc708f0a79f113c9ec7e6371aa7cf639a458117226a947278f1f9a9d99268ac",
+  "buildCommand": [
+    "dotnet",
+    "build",
+    "tests/Hexalith.Platform.Custody.Tests/Hexalith.Platform.Custody.Tests.csproj",
+    "-c",
+    "Debug",
+    "--artifacts-path",
+    "/tmp/ext-parties-1-branch-b-policy-20261008/custody-repair-artifacts",
+    "-p:UseHexalithProjectReferences=true",
+    "-p:UseNuGetDeps=false",
+    "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore",
+    "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+    "-p:HexalithMemoriesRoot=/tmp/ext-parties-1-branch-b-policy-20261008/optional-memories-package-mode",
+    "-p:HexalithEventStoreVersion=3.117.1",
+    "-p:NuGetAudit=false",
+    "-m:1"
+  ],
+  "testCommand": [
+    "dotnet",
+    "/tmp/ext-parties-1-branch-b-policy-20261008/custody-repair-artifacts/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.Platform.Custody.Tests.dll",
+    "-class",
+    "*CustodyPrerequisiteTests",
+    "-class",
+    "*IdentityHistoryCleanupTests",
+    "-class",
+    "*IdentityHistoryCustodyPolicyTests",
+    "-class",
+    "*DeletionCapabilityRevocationSubscriberTests",
+    "-result-xml",
+    "/tmp/ext-parties-1-branch-b-policy-20261008/custody-repair-tests.xml"
+  ],
+  "scope": "Normal owning build; no exclusions or dependencies changed; synthetic lost acknowledgement/order proofs do not establish installed custody or revocation registration"
+}

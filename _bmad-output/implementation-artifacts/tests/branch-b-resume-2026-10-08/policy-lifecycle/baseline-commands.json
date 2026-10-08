@@ -1,0 +1,19 @@
+{
+  "start": {
+    "command": "env UseHexalithProjectReferences=true UseNuGetDeps=false aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --non-interactive --format Json",
+    "exitCode": 0,
+    "scope": "isolated local AppHost; raw dashboard URL omitted"
+  },
+  "wait": {
+    "command": "aspire wait parties --status healthy --timeout 30 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "exitCode": 0
+  },
+  "describe": {
+    "command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --format Json",
+    "exitCode": 0
+  },
+  "stop": {
+    "command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "exitCode": 0
+  }
+}

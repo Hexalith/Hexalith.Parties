@@ -13,7 +13,7 @@ namespace Hexalith.Parties.Queries;
 internal static class RetainedHumanActorHistoryFold
 {
     /// <summary>Preserves original binding positions and rejects incomplete, foreign or inconsistent lifecycle history.</summary>
-    public static IReadOnlyList<RetainedHumanActorBinding> Fold(RetainedIdentityHistoryStream stream)
+    public static IReadOnlyList<RetainedHumanActorBinding> Fold(RetainedIdentityHistoryStream stream, string policyId)
     {
         ArgumentNullException.ThrowIfNull(stream);
         if (stream.Identity.Domain != "party" || !RetainedIdentityHistoryValidator.IsComplete(
@@ -25,8 +25,30 @@ internal static class RetainedHumanActorHistoryFold
         var bindings = new List<RetainedHumanActorBinding>();
         var logicalIds = new HashSet<string>(StringComparer.Ordinal);
         long version = 0;
-        foreach (StreamReadEvent item in stream.Events)
+        var transitions = stream.Events.Select(item => (Position: item.SequenceNumber, Event: (StreamReadEvent?)item,
+                Expired: (ExpiredIdentityHistoryCertificate?)null))
+            .Concat(stream.ExpiredEvents.Select(certificate => (Position: certificate.SourceSequence,
+                Event: (StreamReadEvent?)null, Expired: (ExpiredIdentityHistoryCertificate?)certificate)))
+            .OrderBy(item => item.Position);
+        foreach (var transition in transitions)
         {
+            if (transition.Expired is { } expired)
+            {
+                // Existing ciphertext contract/position and current terminal destruction proof
+                // authenticate version continuity without recovering any expired relationship.
+                // The accepted fixed effective-at lifetime permits only an expired prefix.
+                if (bindings.Count != 0 || expired.PolicyId != policyId) { throw InvalidHistory(); }
+                if (expired.EventTypeName == typeof(HumanActorBindingEstablished).FullName)
+                {
+                    if (version != 0) { throw InvalidHistory(); }
+                }
+                else if (expired.EventTypeName != typeof(HumanActorBindingRebound).FullName
+                    && expired.EventTypeName != typeof(HumanActorBindingRevoked).FullName || version == 0)
+                { throw InvalidHistory(); }
+                version = checked(version + 1);
+                continue;
+            }
+            StreamReadEvent item = transition.Event ?? throw InvalidHistory();
             string eventName = item.EventTypeName;
             if (eventName == typeof(HumanActorBindingEstablished).FullName)
             {
