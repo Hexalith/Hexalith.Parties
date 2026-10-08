@@ -56,7 +56,7 @@ selected before the shared catalog import because sidecar-channel authorization
 requires the API first published in `3.117.0`. The previously verified Builds
 catalog defaulted to `3.115.0`; the workspace catalog now also selects `3.117.1`.
 The table records the owner-committed graph at Parties
-`998c0b649d7bbf01e0fed4cc79924662dd16cc91`, verified against each clean checkout.
+`ccaf77399d92be696e44ecb8ab17acf77d97646a`, verified against each clean checkout.
 The package patch and advanced source checkouts have separate identities;
 [the 3.117.1 receipt](tests/eventstore-3.117.1-consumer-2026-10-08/README.md)
 retains its original observations. This refresh grants no new owner approval and
@@ -77,13 +77,13 @@ checks are in [the package upgrade receipt](tests/eventstore-package-upgrade-202
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` | Instruction baseline; unchanged. |
-| Builds | `6f07763bd955d22ace0123798add528dc933bf51` (`v4.30.0-13-g6f07763b`) | Imported package catalog and build tooling. |
+| Builds | `f717a87c26a8266bdde95d18f998ef2ab366d43a` (`v4.30.1`) | Imported package catalog and build tooling. |
 | Commons | `116d26815eb81e35b3c161e1799e5ee12805fc0a` | Existing HTTP/ServiceDefaults source fallbacks; unchanged. |
 | EventStore | `9542d3c9f48bf9ce1c57f2ef68904703eaba56cc` (`v3.117.1-5-g9542d3c9`) | Diagnostic/orchestration source; Parties runtime consumers restore package `3.117.1`; source identity remains separately recorded. |
 | FrontComposer | `0e114214007c22f5cdbac21a6853cff4208340ee` (`v4.6.0-7-g0e114214`) | Current diagnostic source selection; package `4.6.0` is selected by the unchanged Builds catalog. |
 | Memories | `3e18d0dcdceb387eff89862c382637da89ad7e47` (`v2.28.1-36-g3e18d0dc`) | Current diagnostic source selection; package `2.27.1` remains selected. |
 | PolymorphicSerializations | `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` | Existing solution source dependency; unchanged. |
-| Tenants | `1dffe336c9fde823b7b8ed6df9d63019dae64b90` (`v5.7.0-179-g1dffe336`) | Current diagnostic/orchestration source selection; package `5.7.0` remains selected. |
+| Tenants | `fcdcb4205a3f6e46f736cdd3e6f2b20ca2f241df` (`v5.7.0-180-gfcdcb420`) | Current diagnostic/orchestration source selection; package `5.7.0` remains selected. |
 
 Selection does not revalidate historical parity receipts or authorize deletion of
 migration rollback paths. The dated 2026-10-05 reconciliation and its approvals

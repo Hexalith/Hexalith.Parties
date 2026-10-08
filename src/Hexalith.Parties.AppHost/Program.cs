@@ -88,6 +88,7 @@ daprMtls?.ConfigureProjectSidecar(eventStore);
 daprMtls?.ConfigureProjectSidecar(adminServer);
 
 IResourceBuilder<ProjectResource> parties = builder.AddProject<Projects.Hexalith_Parties>("parties")
+    .WithEnvironment("EventStore__DomainService__AppId", "parties")
     .WithDaprSidecar(sidecar =>
     {
         _ = sidecar.WithOptions(new DaprSidecarOptions
@@ -112,6 +113,7 @@ IResourceBuilder<ProjectResource> partiesMcp = builder.AddProject<Projects.Hexal
 _ = partiesMcp.WithEnvironment("Parties__Mcp__EventStoreGatewayBaseUrl", ReferenceExpression.Create($"{eventStore.GetEndpoint("http")}"));
 
 IResourceBuilder<ProjectResource> tenants = builder.AddProject("tenants", tenantsProjectPath)
+    .WithEnvironment("EventStore__DomainService__AppId", "tenants")
     .WithDaprSidecar(sidecar =>
     {
         _ = sidecar.WithOptions(new DaprSidecarOptions

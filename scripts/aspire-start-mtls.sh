@@ -17,6 +17,17 @@ scheduler_container="hexalith-parties-dapr-scheduler"
 scheduler_grpc_binding="127.0.0.1:55006"
 scheduler_health_binding="127.0.0.1:18082"
 
+read_configured_port_binding() {
+    local container_name="$1"
+    local container_port="$2"
+
+    # Docker's runtime port listing is empty while a container is stopped. Inspect
+    # its persistent bindings before deciding whether the existing container is safe to start.
+    docker container inspect \
+        --format "{{range (index .HostConfig.PortBindings \"${container_port}/tcp\")}}{{.HostIp}}:{{.HostPort}}{{println}}{{end}}" \
+        "${container_name}"
+}
+
 verify_control_plane_container() {
     local container_name="$1"
     local expected_role="$2"
@@ -32,8 +43,8 @@ verify_control_plane_container() {
     configured_role="$(docker container inspect --format '{{index .Config.Labels "hexalith.parties.dapr.role"}}' "${container_name}")"
     configured_image="$(docker container inspect --format '{{.Config.Image}}' "${container_name}")"
     configured_credentials_mount="$(docker container inspect --format '{{range .Mounts}}{{if eq .Destination "/var/run/secrets/dapr.io/tls"}}{{.Source}}{{end}}{{end}}' "${container_name}")"
-    configured_grpc_binding="$(docker port "${container_name}" "${grpc_container_port}/tcp" 2>/dev/null || true)"
-    configured_health_binding="$(docker port "${container_name}" 8080/tcp 2>/dev/null || true)"
+    configured_grpc_binding="$(read_configured_port_binding "${container_name}" "${grpc_container_port}")"
+    configured_health_binding="$(read_configured_port_binding "${container_name}" 8080)"
 
     if [[ "${configured_role}" != "${expected_role}" \
         || "${configured_image}" != "${sentry_image}" \
@@ -93,8 +104,8 @@ if docker container inspect "${sentry_container}" >/dev/null 2>&1; then
     configured_image="$(docker container inspect --format '{{.Config.Image}}' "${sentry_container}")"
     configured_mount="$(docker container inspect --format '{{range .Mounts}}{{if eq .Destination "/var/run/dapr/credentials"}}{{.Source}}{{end}}{{end}}' "${sentry_container}")"
     configured_sentry_configuration="$(docker container inspect --format '{{range .Mounts}}{{if eq .Destination "/etc/dapr/sentry.yaml"}}{{.Source}}{{end}}{{end}}' "${sentry_container}")"
-    configured_grpc_binding="$(docker port "${sentry_container}" 50001/tcp 2>/dev/null || true)"
-    configured_health_binding="$(docker port "${sentry_container}" 18080/tcp 2>/dev/null || true)"
+    configured_grpc_binding="$(read_configured_port_binding "${sentry_container}" 50001)"
+    configured_health_binding="$(read_configured_port_binding "${sentry_container}" 18080)"
     if [[ "${configured_image}" != "${sentry_image}" ]]; then
         echo "Existing ${sentry_container} uses '${configured_image}', expected '${sentry_image}'." >&2
         exit 1

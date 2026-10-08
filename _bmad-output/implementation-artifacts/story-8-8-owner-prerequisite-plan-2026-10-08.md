@@ -244,7 +244,7 @@ Builds `Hexalith.Build.props`, `Hexalith.Package.props` and shared catalog.
 
 **Deliver:** Exact selected source/package identity and facet-specific validation.
 Current committed Commons is `116d26815eb81e35b3c161e1799e5ee12805fc0a`; Builds is
-`6f07763bd955d22ace0123798add528dc933bf51` at Parties `998c0b649d7bbf01e0fed4cc79924662dd16cc91`. Historical main-row identities differ.
+`f717a87c26a8266bdde95d18f998ef2ab366d43a` at Parties `ccaf77399d92be696e44ecb8ab17acf77d97646a`. Historical main-row identities differ.
 An identity mismatch alone does not justify requesting new APIs. A focused shared
 registration adoption is possible once gates close. Keep unsupported root probes,
 Parties sensitive-detail scrubbing and correlation compatibility adapters.

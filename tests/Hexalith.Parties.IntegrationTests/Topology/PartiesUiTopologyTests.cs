@@ -36,6 +36,25 @@ public sealed class PartiesUiTopologyTests
             HasDaprSidecar(RequireResource(builder, "eventstore-admin-ui")).ShouldBeTrue();
             _ = RequireResource(builder, "statestore");
             _ = RequireResource(builder, "pubsub");
+
+            // Workload assertions target the DAPR app id. The SDK's fallback to the
+            // assembly name would reject the gateway's otherwise valid credentials.
+            foreach (string appId in new[] { "parties", "tenants" })
+            {
+                IResource resource = RequireResource(builder, appId);
+                var context = new EnvironmentCallbackContext(
+                    new DistributedApplicationExecutionContext(DistributedApplicationOperation.Publish),
+                    resource,
+                    new Dictionary<string, object>(),
+                    CancellationToken.None);
+                foreach (EnvironmentCallbackAnnotation annotation in
+                         resource.Annotations.OfType<EnvironmentCallbackAnnotation>())
+                {
+                    await annotation.Callback(context).ConfigureAwait(true);
+                }
+
+                context.EnvironmentVariables["EventStore__DomainService__AppId"].ToString().ShouldBe(appId);
+            }
         }
     }
 

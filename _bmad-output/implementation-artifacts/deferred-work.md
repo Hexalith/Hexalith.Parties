@@ -1262,3 +1262,47 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-unblock-eventstore-api-publication.md`
   summary: Commit the existing Story 8.8 available-row identity gate correction through its owning work.
   evidence: The committed isolated integration run fails AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity because spec-8-8 lacks the required heading; the main working tree already contains the 10-line correction as separate user work and this task preserves it unstaged.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+  summary: D1 — Preserve coordinated Detail/Processing slots when recording an unresolved first projection delivery.
+  evidence: The detail handler creates only Processing on first unresolved delivery, then rejects all subsequent retries at the missing-slot guard (69–87, 245–265); verified medium, pre-existing at 890119f1.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+  summary: D2 — Set an explicit SDK receiver identity for the optional sample resource matching its DAPR app ID.
+  evidence: AppHost sample at Program.cs:237 lacks the parties/tenants AppId binding; SDK fallback uses ApplicationName when DAPR_APP_ID is absent in the observed child path; verified medium, pre-existing.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+  summary: D3 — Resolve the optional Memories resource endpoint for local Aspire runs.
+  evidence: Program.cs:217 supplies http://memories:8080/ in run mode although Memories is a host project with an Aspire-assigned endpoint; verified medium, pre-existing.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+  summary: D4 — Align Memories cleanup, compensation and health probing with the versioned server route without accepting a routing 404 as proof of erasure.
+  evidence: PartyMemoryCleanupService.cs:52 and indexing compensation use api/tenants, while the selected server maps /api/v1/tenants; success-on-404 can discard cleanup inventory; verified high, pre-existing.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+  summary: D5 — Persist the canonical terminal Memories unit identity after duplicate ingestion.
+  evidence: Indexing stores accepted workflow ID, but the duplicate workflow branch can return a different ExistingMemoryUnitId after the preflight TTL expires or fails open; source mapping replacement then loses the deletable ID; verified high, pre-existing.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+  summary: D6 — Retain Memories cleanup reconciliation until ingestion and deletion have reached their terminal states.
+  evidence: Cleanup discards mappings on HTTP success/404 although CaseService schedules deletion asynchronously and accepted ingestion may not yet have materialized a unit; verified high, pre-existing.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+  summary: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
+  evidence: ReplaceMappingsAsync uses unconditional SaveStateAsync/DeleteStateAsync after a cleanup snapshot; a concurrent ETag-protected indexing addition can be overwritten; verified high, pre-existing.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+  summary: D8 — Preserve durable reconciliation for cancellation after Memories accepts ingest but before the Parties mapping persists.
+  evidence: Indexing rethrows caller cancellation at the mapping-write boundary without compensation, while the server workflow can continue producing a unit; verified high, pre-existing.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+  summary: D9 — Bound last-known-cache generation bookkeeping while retaining in-flight read invalidation.
+  evidence: Missing-detail reads call EvictDetail; _keyGenerations never expires or participates in the cache capacity limit; distinct valid missing IDs grow the singleton indefinitely; verified medium, pre-existing.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+  summary: D10 — Prevent a second Parties instance from serving cached personal data after another instance completes erasure.
+  evidence: Erasure delegates evict only the local singleton; the other host can serve pre-erasure detail/index from degraded fallback without authoritative erasure revalidation; verified high, pre-existing.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+  summary: D11 — Fence rebuild search notifications against erasure after the canonical index snapshot is read.
+  evidence: CompleteRebuildAsync snapshots once before awaited removals and later publishes retained entries; the search adapter has no canonical reread/version fence, so completed cleanup can be followed by republishing erased data; verified high, pre-existing.

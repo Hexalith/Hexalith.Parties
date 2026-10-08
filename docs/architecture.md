@@ -54,7 +54,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.10` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.0-preview.1.261001-0243` |
 | Gateway/eventing | Hexalith.EventStore | package `3.117.1` by default (Parties pre-import CPM pin); current committed source gitlink and clean checkout `9542d3c9f48bf9ce1c57f2ef68904703eaba56cc` (`v3.117.1-5-g9542d3c9`); package API/consumer proof is recorded separately from historical migration parity |
-| Tenancy | Hexalith.Tenants | package `5.7.0` by default; current committed source gitlink and clean checkout `1dffe336c9fde823b7b8ed6df9d63019dae64b90` (`v5.7.0-179-g1dffe336`, recorded at Parties `998c0b649d7bbf01e0fed4cc79924662dd16cc91` on 2026-10-08); historical owner approvals and parity remain bound to their original identities |
+| Tenancy | Hexalith.Tenants | package `5.7.0` by default; current committed source gitlink and clean checkout `fcdcb4205a3f6e46f736cdd3e6f2b20ca2f241df` (`v5.7.0-180-gfcdcb420`, recorded at Parties `ccaf77399d92be696e44ecb8ab17acf77d97646a` on 2026-10-08); historical owner approvals and parity remain bound to their original identities |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.2.0` |
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.12` |
@@ -124,7 +124,7 @@ an owner-approved preserve-or-replace map and consumer proof before handoff.
 | `keycloak` | container | conditional | Local IdP (run mode only; publish uses external `tache` realm). |
 | `redis` | (DAPR backing) | — | **Not** an Aspire resource — provided by `dapr init` at `127.0.0.1:6379` for local development. |
 
-`statestore` and `pubsub` DAPR components are created by `AddHexalithEventStore(...)` and wired into each sidecar. Local run-mode DAPR component YAML lives in `src/Hexalith.Parties.AppHost/DaprComponents/`; production Dapr components are owned by the external deployment orchestrator.
+`statestore` and `pubsub` DAPR components are created by `AddHexalithEventStore(...)` and wired into each sidecar. Local run-mode DAPR component YAML lives in `src/Hexalith.Parties.AppHost/DaprComponents/`; production Dapr components are owned by the external deployment orchestrator. The AppHost sets `EventStore:DomainService:AppId` to the corresponding DAPR app ID (`parties` or `tenants`). This keeps the SDK workload receiver audience aligned with the gateway invocation target; assembly-name fallback would reject valid internal assertions.
 
 ---
 
