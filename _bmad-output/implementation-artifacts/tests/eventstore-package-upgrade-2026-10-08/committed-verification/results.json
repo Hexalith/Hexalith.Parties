@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "f0004ffea4ee0fcc00fbbc99457f9ec1a9414f34",
+  "layout": "physical detached root and root-dependency worktrees; no nested initialization",
+  "rootDependenciesUnchanged": true,
+  "initialSourceStatus": "",
+  "sourceInputsChangedAfterInitialChecks": [
+    "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs"
+  ],
+  "changeReason": "After the initial integration failures, update the stale FrontComposer catalog assertion from 4.5.0 to 4.6.0. The focused current-root gitlink and both-mode graph fitness case then passes.",
+  "correctionTestPassed": true,
+  "normalReleaseBuild": {
+    "exitCode": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "domainServiceOutputDllSha256": "a7d0238939bd7cb877fa2cf649f73a8141ca935f8e473cdf786c45997a9b1db6",
+  "remainingIntegrationFailure": "AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity: committed Story 8.8 is missing its available-row identity heading; the user working tree already contains the separate fix."
+}

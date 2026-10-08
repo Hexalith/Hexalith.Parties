@@ -1,0 +1,9 @@
+{
+  "observedAtUtc": "2026-10-08T09:48:41.426929+00:00",
+  "command": "node_modules/.bin/commitlint --config commitlint.config.mjs --verbose < /tmp/parties-eventstore-package-upgrade-2026-10-08/proof-commit-message.txt",
+  "version": "21.2.2",
+  "message": "test: record published eventstore consumer proof\n\nAlign the current FrontComposer receipt with the selected catalog.\nRetain physical-checkout build and test evidence with source stamps.\n\nRecord the separate Story 8.8 documentation gate failure while\npreserving its existing uncommitted correction.\n",
+  "messageSha256": "7b519585102749138d2e1ee8f26a6b510dd4b63919f07bb3197e854b9b9b18cf",
+  "exitCode": 0,
+  "output": "\u29d7   --- input ---\ntest: record published eventstore consumer proof\n\nAlign the current FrontComposer receipt with the selected catalog.\nRetain physical-checkout build and test evidence with source stamps.\n\nRecord the separate Story 8.8 documentation gate failure while\npreserving its existing uncommitted correction.\n\u2714   found 0 problems, 0 warnings\n"
+}

@@ -1,0 +1,18 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Hexalith.Parties.Contracts -> /tmp/parties-eventstore-committed-f0004ffe/src/Hexalith.Parties.Contracts/bin/Release/net10.0/Hexalith.Parties.Contracts.dll
+  Hexalith.Parties.Authentication -> /tmp/parties-eventstore-committed-f0004ffe/src/Hexalith.Parties.Authentication/bin/Release/net10.0/Hexalith.Parties.Authentication.dll
+  Hexalith.Parties.Projections -> /tmp/parties-eventstore-committed-f0004ffe/src/Hexalith.Parties.Projections/bin/Release/net10.0/Hexalith.Parties.Projections.dll
+  Hexalith.Commons.Http -> /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/bin/Release/net10.0/Hexalith.Commons.Http.dll
+  Hexalith.Parties.Security -> /tmp/parties-eventstore-committed-f0004ffe/src/Hexalith.Parties.Security/bin/Release/net10.0/Hexalith.Parties.Security.dll
+  Hexalith.Parties -> /tmp/parties-eventstore-committed-f0004ffe/src/Hexalith.Parties/bin/Release/net10.0/Hexalith.Parties.dll
+  Hexalith.Parties.Testing -> /tmp/parties-eventstore-committed-f0004ffe/src/Hexalith.Parties.Testing/bin/Release/net10.0/Hexalith.Parties.Testing.dll
+  Hexalith.Parties.EventStoreGateway.TestHost -> /tmp/parties-eventstore-committed-f0004ffe/tests/Hexalith.Parties.EventStoreGateway.TestHost/bin/Release/net10.0/Hexalith.Parties.EventStoreGateway.TestHost.dll
+  Hexalith.Commons.ServiceDefaults -> /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/bin/Release/net10.0/Hexalith.Commons.ServiceDefaults.dll
+  Hexalith.Parties.Tests -> /tmp/parties-eventstore-committed-f0004ffe/tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.55

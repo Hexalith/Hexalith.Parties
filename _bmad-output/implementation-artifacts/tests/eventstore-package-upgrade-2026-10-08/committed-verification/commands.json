@@ -1,0 +1,100 @@
+[
+  {
+    "name": "restore",
+    "command": [
+      "dotnet",
+      "restore",
+      "Hexalith.Parties.slnx"
+    ],
+    "workingDirectory": "/tmp/parties-eventstore-committed-f0004ffe",
+    "startedAtUtc": "2026-10-08T09:37:26.570023+00:00",
+    "completedAtUtc": "2026-10-08T09:37:28.879609+00:00",
+    "exitCode": 0
+  },
+  {
+    "name": "build",
+    "command": [
+      "dotnet",
+      "build",
+      "Hexalith.Parties.slnx",
+      "--configuration",
+      "Release",
+      "--no-restore",
+      "-m:1"
+    ],
+    "workingDirectory": "/tmp/parties-eventstore-committed-f0004ffe",
+    "startedAtUtc": "2026-10-08T09:37:28.879983+00:00",
+    "completedAtUtc": "2026-10-08T09:37:52.684731+00:00",
+    "exitCode": 0
+  },
+  {
+    "name": "guard",
+    "command": [
+      "bash",
+      "scripts/check-no-warning-override.sh"
+    ],
+    "workingDirectory": "/tmp/parties-eventstore-committed-f0004ffe",
+    "startedAtUtc": "2026-10-08T09:37:52.685039+00:00",
+    "completedAtUtc": "2026-10-08T09:37:52.799073+00:00",
+    "exitCode": 0
+  },
+  {
+    "name": "unit",
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "scripts/test.ps1",
+      "-Lane",
+      "unit",
+      "-Configuration",
+      "Release",
+      "-ContinueOnFailure",
+      "-ResultsDirectory",
+      "/tmp/parties-eventstore-committed-verification-physical/unit-trx"
+    ],
+    "workingDirectory": "/tmp/parties-eventstore-committed-f0004ffe",
+    "startedAtUtc": "2026-10-08T09:37:52.799283+00:00",
+    "completedAtUtc": "2026-10-08T09:38:53.922879+00:00",
+    "exitCode": 0
+  },
+  {
+    "name": "ci",
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "scripts/test.ps1",
+      "-Lane",
+      "ci",
+      "-Configuration",
+      "Release",
+      "-ResultsDirectory",
+      "/tmp/parties-eventstore-committed-verification-physical/ci-trx"
+    ],
+    "workingDirectory": "/tmp/parties-eventstore-committed-f0004ffe",
+    "startedAtUtc": "2026-10-08T09:38:53.923130+00:00",
+    "completedAtUtc": "2026-10-08T09:38:59.105014+00:00",
+    "exitCode": 0
+  },
+  {
+    "name": "integration",
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "scripts/test.ps1",
+      "-Lane",
+      "integration",
+      "-Configuration",
+      "Release",
+      "-ContinueOnFailure",
+      "-ResultsDirectory",
+      "/tmp/parties-eventstore-committed-verification-physical/integration-trx"
+    ],
+    "workingDirectory": "/tmp/parties-eventstore-committed-f0004ffe",
+    "startedAtUtc": "2026-10-08T09:38:59.105249+00:00",
+    "completedAtUtc": "2026-10-08T09:39:15.343011+00:00",
+    "exitCode": 1
+  }
+]

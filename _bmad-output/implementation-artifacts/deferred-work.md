@@ -1258,3 +1258,7 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-nuget-trusted-publishing.md`
   summary: Extend the persistent release verification job to validate all declared NuGet registry package bytes and repository commit metadata.
   evidence: The pre-existing verify-publication job checks a GitHub Release tag only; this task performs independent nine-package download/metadata verification after Release rather than treating that tag as package publication evidence.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-unblock-eventstore-api-publication.md`
+  summary: Commit the existing Story 8.8 available-row identity gate correction through its owning work.
+  evidence: The committed isolated integration run fails AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity because spec-8-8 lacks the required heading; the main working tree already contains the 10-line correction as separate user work and this task preserves it unstaged.

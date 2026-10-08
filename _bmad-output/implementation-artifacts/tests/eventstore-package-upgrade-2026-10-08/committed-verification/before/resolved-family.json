@@ -1,0 +1,131 @@
+{
+  "src/Hexalith.Parties/obj/project.assets.json": [
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0",
+    "Hexalith.EventStore.DomainService/3.117.0",
+    "Hexalith.EventStore.ServiceDefaults/3.117.0"
+  ],
+  "src/Hexalith.Parties.AdminPortal/obj/project.assets.json": [
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "src/Hexalith.Parties.AppHost/obj/project.assets.json": [
+    "Hexalith.EventStore.Aspire/3.117.0"
+  ],
+  "src/Hexalith.Parties.Authentication/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "src/Hexalith.Parties.Client/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "src/Hexalith.Parties.ConsumerPortal/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "src/Hexalith.Parties.Contracts/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "src/Hexalith.Parties.Mcp/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "src/Hexalith.Parties.Picker/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "src/Hexalith.Parties.Projections/obj/project.assets.json": [
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0",
+    "Hexalith.EventStore.DomainService/3.117.0",
+    "Hexalith.EventStore.ServiceDefaults/3.117.0"
+  ],
+  "src/Hexalith.Parties.Security/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "src/Hexalith.Parties.Testing/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "src/Hexalith.Parties.UI/obj/project.assets.json": [
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0",
+    "Hexalith.EventStore.SignalR/3.117.0"
+  ],
+  "tests/Hexalith.Parties.AdminPortal.Tests/obj/project.assets.json": [
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "tests/Hexalith.Parties.Authentication.Tests/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "tests/Hexalith.Parties.Client.Tests/obj/project.assets.json": [
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "tests/Hexalith.Parties.ConsumerPortal.Tests/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "tests/Hexalith.Parties.Contracts.Tests/obj/project.assets.json": [
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "tests/Hexalith.Parties.EventStoreGateway.TestHost/obj/project.assets.json": [
+    "Hexalith.EventStore.Admin.Abstractions/3.117.0",
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0",
+    "Hexalith.EventStore.DomainService/3.117.0",
+    "Hexalith.EventStore.Gateway/3.117.0",
+    "Hexalith.EventStore.Server/3.117.0",
+    "Hexalith.EventStore.ServiceDefaults/3.117.0"
+  ],
+  "tests/Hexalith.Parties.IntegrationTests/obj/project.assets.json": [
+    "Hexalith.EventStore.Aspire/3.117.0",
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0",
+    "Hexalith.EventStore.DomainService/3.117.0",
+    "Hexalith.EventStore.Server/3.117.0",
+    "Hexalith.EventStore.ServiceDefaults/3.117.0"
+  ],
+  "tests/Hexalith.Parties.Mcp.Tests/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "tests/Hexalith.Parties.Picker.Tests/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "tests/Hexalith.Parties.Projections.Tests/obj/project.assets.json": [
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0",
+    "Hexalith.EventStore.DomainService/3.117.0",
+    "Hexalith.EventStore.ServiceDefaults/3.117.0"
+  ],
+  "tests/Hexalith.Parties.Sample.Tests/obj/project.assets.json": [
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0",
+    "Hexalith.EventStore.DomainService/3.117.0",
+    "Hexalith.EventStore.Server/3.117.0",
+    "Hexalith.EventStore.ServiceDefaults/3.117.0"
+  ],
+  "tests/Hexalith.Parties.Security.Tests/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ],
+  "tests/Hexalith.Parties.Server.Tests/obj/project.assets.json": [
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0",
+    "Hexalith.EventStore.DomainService/3.117.0",
+    "Hexalith.EventStore.ServiceDefaults/3.117.0"
+  ],
+  "tests/Hexalith.Parties.Tests/obj/project.assets.json": [
+    "Hexalith.EventStore.Admin.Abstractions/3.117.0",
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0",
+    "Hexalith.EventStore.DomainService/3.117.0",
+    "Hexalith.EventStore.Gateway/3.117.0",
+    "Hexalith.EventStore.Server/3.117.0",
+    "Hexalith.EventStore.ServiceDefaults/3.117.0",
+    "Hexalith.EventStore.Testing/3.117.0"
+  ],
+  "tests/Hexalith.Parties.UI.Tests/obj/project.assets.json": [
+    "Hexalith.EventStore.Client/3.117.0",
+    "Hexalith.EventStore.Contracts/3.117.0",
+    "Hexalith.EventStore.SignalR/3.117.0"
+  ],
+  "samples/Hexalith.Parties.Sample/obj/project.assets.json": [
+    "Hexalith.EventStore.Contracts/3.117.0"
+  ]
+}

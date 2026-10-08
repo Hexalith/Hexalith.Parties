@@ -320,7 +320,10 @@
     }
   ],
   "finalAppHostBuild": "passed",
-  "committedIdentityFitness": "pending_upgrade_commit",
+  "committedIdentityFitness": "passed_after_frontcomposer_receipt_correction",
   "integratedTopologyAcceptanceVerified": false,
-  "partiesReleaseDispatched": false
+  "partiesReleaseDispatched": false,
+  "committedVerification": "committed-verification/results.json",
+  "wholeCommittedIntegrationLanePassed": false,
+  "remainingCommittedIntegrationFailure": "AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity: committed Story 8.8 is missing its available-row identity heading; the user working tree already contains the separate fix."
 }

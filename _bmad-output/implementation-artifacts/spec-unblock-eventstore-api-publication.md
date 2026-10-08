@@ -173,3 +173,21 @@ main advanced; the completed normal publication is recorded below.
    probe were replayed successfully.
 10. **low — patched during review:** Architecture still cited the previous current
     Tenants pointer. It now matches the committed selection and prerequisite matrix.
+
+
+### Committed-check follow-up
+
+The normal fresh Release build passes in physical detached root-dependency
+checkouts. A preliminary shared-link layout produced path/analyzer failures and
+was discarded as unsuitable for build proof. The committed domain host output
+contains the exact downloaded DomainService DLL hash.
+
+The committed integration run found a stale current FrontComposer catalog
+assertion/receipt (`4.5.0` versus the already-selected catalog's `4.6.0`); those
+current values were corrected while historical `4.5.0` parity remains intact.
+It also exposed the pre-existing Story 8.8 missing `Block If — available-row
+identities` heading at committed HEAD. The user already has the correction in
+uncommitted work; it remains preserved and unstaged by this task. This separate
+documentation gate blocks a claim that the whole committed integration lane is
+green. The package API fix, ordinary fresh Release build, unit lane, CI contract
+lane, and sidecar-security checks are verified independently.

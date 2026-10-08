@@ -116,10 +116,37 @@ root dependency's committed and checked-out identity/status. Capture it before
 and after checks to detect concurrent edits. The initial `input-files.json`
 records selected inputs only; it does not attest the whole dirty workspace used
 by the initial local checks. The committed upgrade is separately verified in an
-isolated checkout before push, with matching before/after full source manifests.
+isolated checkout before push, with full source manifests and explicit accounting for the subsequent fitness-only correction.
 
 Sanitized per-case outcomes and counters are retained in
 [test-results.json](test-results.json), omitting runtime console output and
 attachments. Exact restore/build outputs are retained under
 [build-logs](build-logs/build-aligned-apphost.log.txt). Original result hashes refer
 to the temporary full outputs; the retained summaries are separately inspectable.
+
+
+## Committed physical-checkout verification
+
+[committed-verification/results.json](committed-verification/results.json) binds
+fresh verification to Parties `f0004ffea4ee0fcc00fbbc99457f9ec1a9414f34` and all ten
+committed root dependencies. Physical detached worktrees reproduce the ordinary
+layout; an initial shared-link attempt was unsuitable for build proof because
+paths and analyzer configuration differed. No nested submodule was initialized.
+The fresh normal restore, Release build, guard, unit lane, and CI contract lane
+pass. The domain host output contains the exact verified public DomainService DLL.
+
+The first integration lane passed 905/907 Parties cases and 58/58 Sample cases.
+One stale current FrontComposer catalog assertion was corrected to the existing
+`4.6.0` catalog value; the focused committed-pointer/both-mode dependency fitness
+case then passed. Complete source/test/build input hashes and dependency stamps
+show no other source changes across this verification. The working copy contains
+the one recorded post-test fitness correction; it does not claim an unchanged
+source tree for that corrective replay.
+
+The remaining committed failure is the pre-existing Story 8.8 missing
+`Block If — available-row identities` heading. Its 10-line correction already
+exists in separate user work and is preserved unstaged by this task. That gate
+prevents claiming a green complete committed integration lane or Parties full-CI
+release readiness. The actual published package API and fresh consumer Release
+build are verified. Per-case outcomes and the two original failure messages are
+retained in [the committed results](committed-verification/test-results.json).

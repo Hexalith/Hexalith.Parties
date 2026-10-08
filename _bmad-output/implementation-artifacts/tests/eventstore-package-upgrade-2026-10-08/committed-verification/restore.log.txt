@@ -1,0 +1,31 @@
+  Determining projects to restore...
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/Hexalith.Commons.Http.csproj (in 195 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj (in 246 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj (in 80 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Abstractions/Hexalith.EventStore.Admin.Abstractions.csproj (in 241 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/Hexalith.FrontComposer.Contracts.UI.csproj (in 244 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server/Hexalith.EventStore.Admin.Server.csproj (in 251 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/Hexalith.EventStore.SignalR.csproj (in 251 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/Hexalith.Commons.ServiceDefaults.csproj (in 5 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj (in 258 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore.ServiceDefaults/Hexalith.EventStore.ServiceDefaults.csproj (in 263 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Hexalith.EventStore.Server.csproj (in 309 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/Hexalith.FrontComposer.Schema.csproj (in 7 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.csproj (in 8 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.Tenants/src/Hexalith.Tenants.Testing/Hexalith.Tenants.Testing.csproj (in 312 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj (in 2 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj (in 258 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Hexalith.Tenants.Contracts.csproj (in 2 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Mcp/Hexalith.FrontComposer.Mcp.csproj (in 12 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore.Testing/Hexalith.EventStore.Testing.csproj (in 276 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/Hexalith.EventStore.Client.csproj (in 6 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj (in 257 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.Tenants/src/Hexalith.Tenants.Server/Hexalith.Tenants.Server.csproj (in 8 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore.DomainService/Hexalith.EventStore.DomainService.csproj (in 8 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.Tenants/src/Hexalith.Tenants.Client/Hexalith.Tenants.Client.csproj (in 8 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore.Gateway/Hexalith.EventStore.Gateway.csproj (in 21 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/Hexalith.EventStore.Aspire.csproj (in 301 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.SourceTools/Hexalith.FrontComposer.SourceTools.csproj (in 16 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations/Hexalith.PolymorphicSerializations.csproj (in 56 ms).
+  Restored /tmp/parties-eventstore-committed-f0004ffe/references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations.CodeGenerators/Hexalith.PolymorphicSerializations.CodeGenerators.csproj (in 82 ms).
+  30 of 59 projects are up-to-date for restore.

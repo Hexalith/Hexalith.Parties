@@ -59,7 +59,7 @@ is committed with this upgrade; the other pointers were already selected by the
 workspace. This refresh grants no new owner approval and does not revalidate
 historical parity, release, consumer, or rollback receipts. Package values are
 EventStore `3.117.0`, Commons `2.30.1`, Memories `2.27.1`, Tenants `5.7.0`,
-FrontComposer `4.5.0`, and Parties `1.1.1`.
+FrontComposer `4.6.0`, and Parties `1.1.1`.
 
 After committing the upgrade, reproduce each source receipt with
 `git ls-tree HEAD references/Hexalith.<dependency>`,
@@ -76,7 +76,7 @@ checks are in [the package upgrade receipt](tests/eventstore-package-upgrade-202
 | Builds | `ad52c5bdd4361c59eedf12a16620150006403584` (`v4.30.0-5-gad52c5bd`) | Imported package catalog and build tooling. |
 | Commons | `116d26815eb81e35b3c161e1799e5ee12805fc0a` | Existing HTTP/ServiceDefaults source fallbacks; unchanged. |
 | EventStore | `b830d9829af70536d2a3fd21c5e2a23b2ca2f256` (`v3.117.0`) | Diagnostic/orchestration source; Parties runtime consumers restore package `3.117.0`. |
-| FrontComposer | `c561b3210f15206a90c39c82c58f2e5b1005cd60` (`v4.6.0-5-gc561b321`) | Current diagnostic source selection; package `4.5.0` remains selected. |
+| FrontComposer | `c561b3210f15206a90c39c82c58f2e5b1005cd60` (`v4.6.0-5-gc561b321`) | Current diagnostic source selection; package `4.6.0` is selected by the unchanged Builds catalog. |
 | Memories | `aac6d9054cb138881e6e49c8e48233553123ffce` (`v2.28.1-34-gaac6d905`) | Current diagnostic source selection; package `2.27.1` remains selected. |
 | PolymorphicSerializations | `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` | Existing solution source dependency; unchanged. |
 | Tenants | `86aa888301b40cda12b000f68d9292d53cd93efe` (`v5.7.0-171-g86aa8883`) | Current diagnostic/orchestration source selection; package `5.7.0` remains selected. |
