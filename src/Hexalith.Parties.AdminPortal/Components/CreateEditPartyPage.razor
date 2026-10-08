@@ -128,12 +128,12 @@
             </fieldset>
 
             <div class="hx-party-form__actions">
-                <FluentButton role="button" Appearance="ButtonAppearance.Primary"
+                <FluentButton aria-disabled="@((_submitting || _detailsUnavailable) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary"
                               Type="ButtonType.Submit"
                               Disabled="@(_submitting || _detailsUnavailable)">
                     @SubmitLabel
                 </FluentButton>
-                <FluentButton role="button" Appearance="ButtonAppearance.Outline" OnClick="CancelAsync" Disabled="@_submitting">
+                <FluentButton aria-disabled="@(_submitting ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline" OnClick="CancelAsync" Disabled="@_submitting">
                     @EffectiveLabels.Cancel
                 </FluentButton>
             </div>

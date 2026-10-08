@@ -56,7 +56,7 @@
                         </div>
                     </ChildContent>
                     <ActionTemplate>
-                        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+                        <FluentButton aria-disabled="@(_isBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                       Disabled="@_isBusy"
                                       OnClick="CancelErasure">
                             @Labels.GdprCancel
@@ -74,13 +74,13 @@
         }
         else
         {
-            <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+            <FluentButton aria-disabled="@((!CanRequestErasure) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                           Disabled="@(!CanRequestErasure)"
                           OnClick="BeginErasureConfirmation">
                 @Labels.RequestErasure
             </FluentButton>
         }
-        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+        <FluentButton aria-disabled="@((!CanRefreshErasureStatus) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                       Disabled="@(!CanRefreshErasureStatus)"
                       OnClick="RefreshErasureStatusFromUiAsync">
             @Labels.GdprRefreshStatus
@@ -91,7 +91,7 @@
         }
         @if (CanRetryVerification)
         {
-            <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+            <FluentButton aria-disabled="@(_isBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                           Disabled="@_isBusy"
                           OnClick="RetryVerificationAsync">
                 @Labels.GdprRetryVerification
@@ -106,7 +106,7 @@
             }
             else
             {
-                <FluentButton role="button" Appearance="ButtonAppearance.Outline" Disabled="true">
+                <FluentButton aria-disabled="true" role="button" Appearance="ButtonAppearance.Outline" Disabled="true">
                     @Labels.EventStoreAdminUnavailable
                 </FluentButton>
             }

@@ -40,12 +40,9 @@ Preserve public Client/Contracts/RCL shapes, self-scope, domain behavior, freshn
 | Named health probe | Timeout/cancellation/byte/depth bounds; Available/LocalOnly/Degraded mapping | Missing/wrong-type/malformed/oversized/disabled/non-success fails safely; cancellation propagates |
 | Topology handoff | Healthy EventStore/Parties/Tenants; approved MCP/UI, optional-resource and Docker/Kubernetes/ACA map | Keep Parties AppHost until security/publish/continuity/rollback proof passes |
 
+**Accepted decisions — 2026-10-08:** `do recommended` keeps 8.8 consumer-only with separate owner prerequisite planning. Require predecessor key-ring/cursor/payload compatibility, restart and switch-back proof; preserve identities/purposes/formats until 8.7 proves replacements. No invalidation is selected. Record the shared 8.7/8.8 continuity decision through I20 before activation; delivery/parity/release approval remains separate.
+
 </frozen-after-approval>
-
-## Open Questions
-
-1. Scope — retain the gated Parties consumer plan (recommended), or authorize separate owner-repository prerequisite planning? Neither waives sequence/approval gates.
-2. Continuity — prove predecessor key-ring/cursor/payload compatibility (recommended), or approve explicit invalidation with InvalidCursor/typed-unreadable outcomes? A single I20 owner decision must bind 8.7 and 8.8.
 
 ## Code Map
 

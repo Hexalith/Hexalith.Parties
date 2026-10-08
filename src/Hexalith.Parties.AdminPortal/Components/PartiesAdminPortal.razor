@@ -84,9 +84,9 @@
     </div>
 
     <div class="hx-parties-admin__search-modes" aria-label="@EffectiveLabels.SearchModesRegion">
-        <FluentButton role="button" Disabled="true">@EffectiveLabels.DisplayNameMode</FluentButton>
-        <FluentButton role="button" Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.EmailMode</FluentButton>
-        <FluentButton role="button" Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.IdentifierMode</FluentButton>
+        <FluentButton aria-disabled="true" role="button" Disabled="true">@EffectiveLabels.DisplayNameMode</FluentButton>
+        <FluentButton aria-disabled="@((!IsRichSearchAvailable) ? "true" : "false")" role="button" Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.EmailMode</FluentButton>
+        <FluentButton aria-disabled="@((!IsRichSearchAvailable) ? "true" : "false")" role="button" Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.IdentifierMode</FluentButton>
     </div>
 
     <div class="hx-parties-admin__layout" data-detail-open="@DetailSurfaceOpen">
@@ -99,7 +99,7 @@
                 <p class="hx-parties-admin__skeleton" role="status" aria-live="polite">@EffectiveLabels.Loading</p>
             }
 
-            <FluentDataGrid Items="@RowsQuery"
+            <FluentDataGrid role="grid" Items="@RowsQuery"
                             GridTemplateColumns="2fr 1fr 1fr 1fr 1fr"
                             DisplayMode="DataGridDisplayMode.Table"
                             aria-label="@EffectiveLabels.PartiesGrid">
@@ -143,9 +143,9 @@
             }
 
             <nav class="hx-parties-admin__paging" aria-label="@EffectiveLabels.PagingRegion">
-                <FluentButton role="button" Disabled="@(_page <= 1 || _isLoading)" OnClick="PreviousPageAsync">@EffectiveLabels.Previous</FluentButton>
+                <FluentButton aria-disabled="@((_page <= 1 || _isLoading) ? "true" : "false")" role="button" Disabled="@(_page <= 1 || _isLoading)" OnClick="PreviousPageAsync">@EffectiveLabels.Previous</FluentButton>
                 <span>@EffectiveLabels.Page @_page @EffectiveLabels.Of @_totalPages, @_totalCount @EffectiveLabels.TotalCount</span>
-                <FluentButton role="button" Disabled="@(!_hasNextPage || _isLoading)" OnClick="NextPageAsync">@EffectiveLabels.Next</FluentButton>
+                <FluentButton aria-disabled="@((!_hasNextPage || _isLoading) ? "true" : "false")" role="button" Disabled="@(!_hasNextPage || _isLoading)" OnClick="NextPageAsync">@EffectiveLabels.Next</FluentButton>
             </nav>
         </div>
 
@@ -164,12 +164,12 @@
                     <h2 tabindex="-1" @ref="_detailHeadingRef">@DetailHeadingText</h2>
                     <div class="hx-parties-admin__detail-actions">
                         <FluentButton role="button" Appearance="ButtonAppearance.Outline" OnClick="CloseDetailAsync">@EffectiveLabels.DetailClose</FluentButton>
-                        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+                        <FluentButton aria-disabled="@((!CanEditSelectedParty) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                       Disabled="@(!CanEditSelectedParty)"
                                       OnClick="NavigateToEditParty">
                             @EffectiveLabels.EditParty
                         </FluentButton>
-                        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+                        <FluentButton aria-disabled="@((!CanNavigateSelectedPartyGdpr) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                       Disabled="@(!CanNavigateSelectedPartyGdpr)"
                                       OnClick="NavigateToGdprParty">
                             @EffectiveLabels.GdprOperations
@@ -364,7 +364,7 @@
                     }
                     else
                     {
-                        <FluentButton role="button" Appearance="ButtonAppearance.Outline" Disabled="true">
+                        <FluentButton aria-disabled="true" role="button" Appearance="ButtonAppearance.Outline" Disabled="true">
                             @EffectiveLabels.EventStoreAdminUnavailable
                         </FluentButton>
                     }

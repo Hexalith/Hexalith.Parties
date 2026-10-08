@@ -1,0 +1,104 @@
+{
+  "observed_at_utc": "2026-10-08T08:05:46.883937+00:00",
+  "packages": [
+    {
+      "id": "hexalith.eventstore.domainservice",
+      "index_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.domainservice/index.json",
+      "observed_at_utc": "2026-10-08T08:05:46.785239+00:00",
+      "index_sha256": "9d71a95cfd01e30e95f25d69757ae503e1ea9d81b9d3ca00b0ef07a966efd581",
+      "version_count": 139,
+      "latest": "3.115.0",
+      "prereleases": [],
+      "newer_than_3_115_0": []
+    },
+    {
+      "id": "hexalith.eventstore.servicedefaults",
+      "index_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.servicedefaults/index.json",
+      "observed_at_utc": "2026-10-08T08:05:46.817818+00:00",
+      "index_sha256": "9d71a95cfd01e30e95f25d69757ae503e1ea9d81b9d3ca00b0ef07a966efd581",
+      "version_count": 139,
+      "latest": "3.115.0",
+      "prereleases": [],
+      "newer_than_3_115_0": []
+    },
+    {
+      "id": "hexalith.eventstore.client",
+      "index_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.client/index.json",
+      "observed_at_utc": "2026-10-08T08:05:46.789265+00:00",
+      "index_sha256": "3d3703b731595fd6e8d4d6135677457c3317c6af8a6a4886f7f819329d4c24ed",
+      "version_count": 179,
+      "latest": "3.115.0",
+      "prereleases": [],
+      "newer_than_3_115_0": []
+    },
+    {
+      "id": "hexalith.eventstore.contracts",
+      "index_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.contracts/index.json",
+      "observed_at_utc": "2026-10-08T08:05:46.780281+00:00",
+      "index_sha256": "3d3703b731595fd6e8d4d6135677457c3317c6af8a6a4886f7f819329d4c24ed",
+      "version_count": 179,
+      "latest": "3.115.0",
+      "prereleases": [],
+      "newer_than_3_115_0": []
+    },
+    {
+      "id": "hexalith.eventstore.server",
+      "index_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.server/index.json",
+      "observed_at_utc": "2026-10-08T08:05:46.781550+00:00",
+      "index_sha256": "3d3703b731595fd6e8d4d6135677457c3317c6af8a6a4886f7f819329d4c24ed",
+      "version_count": 179,
+      "latest": "3.115.0",
+      "prereleases": [],
+      "newer_than_3_115_0": []
+    },
+    {
+      "id": "hexalith.eventstore.testing",
+      "index_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.testing/index.json",
+      "observed_at_utc": "2026-10-08T08:05:46.779570+00:00",
+      "index_sha256": "3d3703b731595fd6e8d4d6135677457c3317c6af8a6a4886f7f819329d4c24ed",
+      "version_count": 179,
+      "latest": "3.115.0",
+      "prereleases": [],
+      "newer_than_3_115_0": []
+    },
+    {
+      "id": "hexalith.eventstore.aspire",
+      "index_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.aspire/index.json",
+      "observed_at_utc": "2026-10-08T08:05:46.784939+00:00",
+      "index_sha256": "3d3703b731595fd6e8d4d6135677457c3317c6af8a6a4886f7f819329d4c24ed",
+      "version_count": 179,
+      "latest": "3.115.0",
+      "prereleases": [],
+      "newer_than_3_115_0": []
+    },
+    {
+      "id": "hexalith.eventstore.signalr",
+      "index_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.signalr/index.json",
+      "observed_at_utc": "2026-10-08T08:05:46.817161+00:00",
+      "index_sha256": "d96a941b0673e9fb2095a535a4d5da8ed364d3fad1dc456311f39313337fbcf9",
+      "version_count": 180,
+      "latest": "3.115.0",
+      "prereleases": [],
+      "newer_than_3_115_0": []
+    },
+    {
+      "id": "hexalith.eventstore.gateway",
+      "index_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.gateway/index.json",
+      "observed_at_utc": "2026-10-08T08:05:46.784630+00:00",
+      "index_sha256": "1657386c6dacab6c447333b65b545b08de804015a54b048f2b613fdbecfa20c9",
+      "version_count": 122,
+      "latest": "3.115.0",
+      "prereleases": [],
+      "newer_than_3_115_0": []
+    }
+  ],
+  "domainservice_3_115_0": {
+    "download_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.domainservice/3.115.0/hexalith.eventstore.domainservice.3.115.0.nupkg",
+    "nupkg_sha256": "c3821b9099dcaee1df2887e1f4cb26ecaf38d11f87a381c2b5b899948c2a48f9",
+    "repository_commit": "283b07a52c9c70e1c940164a7011ee8c3ad98b2d",
+    "dll": "lib/net10.0/Hexalith.EventStore.DomainService.dll",
+    "dll_sha256": "49c662528f872d27b165ac7eaf53d9288102f0659a11c4e94d391d827564e574",
+    "contains_require_event_store_sidecar_channel_metadata_name": false
+  },
+  "upstream_api_introducing_commit": "c4d5455a3b79ca1ba0113a286cf2432b2cace7fb"
+}

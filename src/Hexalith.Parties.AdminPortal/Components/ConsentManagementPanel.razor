@@ -16,7 +16,7 @@
                       OptionText="Labels.LawfulBasisLabel"
                       Label="@Labels.GdprLawfulBasis"
                       AriaLabel="@Labels.GdprLawfulBasis" />
-        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+        <FluentButton aria-disabled="@((!CanAdd) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                       Disabled="@(!CanAdd)"
                       OnClick="Add">
             @Labels.AddConsent
@@ -50,7 +50,7 @@
                     </dl>
                     @if (consent.IsActive)
                     {
-                        <FluentButton role="button" Appearance="ButtonAppearance.Subtle"
+                        <FluentButton aria-disabled="@((!CanRevoke) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Subtle"
                                       Disabled="@(!CanRevoke)"
                                       OnClick="@(() => BeginRevokeConfirmation(consent.ConsentId))">
                             @Labels.RevokeConsent
@@ -62,12 +62,12 @@
                                 <p>@Labels.GdprConfirmRevokeConsentMessage</p>
                                 <p role="status" aria-live="polite" data-gdpr-confirmation-live>@Labels.GdprConfirmationOpened</p>
                                 <div class="hx-parties-admin__gdpr-actions">
-                                    <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+                                    <FluentButton aria-disabled="@((!CanRevoke) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                                   Disabled="@(!CanRevoke)"
                                                   OnClick="CancelRevokeConfirmation">
                                         @Labels.GdprCancel
                                     </FluentButton>
-                                    <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+                                    <FluentButton aria-disabled="@((!CanRevoke) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                                   Disabled="@(!CanRevoke)"
                                                   OnClick="ConfirmRevokeAsync">
                                         @Labels.GdprConfirm

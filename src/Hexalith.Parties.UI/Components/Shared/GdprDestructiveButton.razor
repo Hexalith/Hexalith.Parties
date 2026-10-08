@@ -15,7 +15,7 @@
         </p>
     }
 
-    <FluentButton role="button" Appearance="@ButtonAppearance"
+    <FluentButton aria-disabled="@(IsButtonDisabled ? "true" : "false")" role="button" Appearance="@ButtonAppearance"
                   Class="@ButtonClass"
                   Disabled="@IsButtonDisabled"
                   OnClick="ConfirmAsync">

@@ -25,7 +25,7 @@ test.describe('Admin parties list', () => {
 
     await chooseOption(page, 'Party type', 'Person');
     await chooseOption(page, 'Active state', 'Active');
-    await page.getByLabel('Search parties').fill('Ada');
+    await page.getByRole('searchbox', { name: 'Search parties' }).fill('Ada');
 
     await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toBeVisible();
     await expect(page.getByText('Display-name search only')).toBeVisible();
@@ -43,7 +43,7 @@ test.describe('Admin parties list', () => {
 
     await chooseOption(page, 'Party type', 'Person');
     await chooseOption(page, 'Active state', 'Active');
-    await page.getByLabel('Search parties').fill('Elodie Brule');
+    await page.getByRole('searchbox', { name: 'Search parties' }).fill('Elodie Brule');
 
     await expect(page.getByRole('button', { name: 'Élodie Brûlé' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toHaveCount(0);
@@ -64,7 +64,7 @@ test.describe('Admin parties list', () => {
   test('normalized display-name search keeps deterministic row ordering', async ({ page, request }) => {
     await gotoAdmin(page);
 
-    await page.getByLabel('Search parties').fill('Jose');
+    await page.getByRole('searchbox', { name: 'Search parties' }).fill('Jose');
 
     await expect(page.getByRole('button', { name: 'Jose Alpha' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'José Zeta' })).toBeVisible();
@@ -86,7 +86,7 @@ test.describe('Admin parties list', () => {
 
     await chooseOption(page, 'Party type', 'Organization');
     await chooseOption(page, 'Active state', 'Active');
-    await page.getByLabel('Search parties').fill('Paging');
+    await page.getByRole('searchbox', { name: 'Search parties' }).fill('Paging');
 
     await expect(page.getByRole('button', { name: 'Paging Party 01' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Paging Party 21' })).toHaveCount(0);
@@ -104,7 +104,7 @@ test.describe('Admin parties list', () => {
     await gotoAdmin(page);
 
     await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toBeVisible();
-    await page.getByLabel('Search parties').fill('stale');
+    await page.getByRole('searchbox', { name: 'Search parties' }).fill('stale');
 
     await expect(page.getByText('Data may be stale or degraded')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toBeVisible();
@@ -113,12 +113,12 @@ test.describe('Admin parties list', () => {
   test('empty search has a clear-filters recovery path', async ({ page }) => {
     await gotoAdmin(page);
 
-    await page.getByLabel('Search parties').fill('NoMatch');
+    await page.getByRole('searchbox', { name: 'Search parties' }).fill('NoMatch');
 
     await expect(page.getByText('No parties match.')).toBeVisible();
     await page.getByRole('button', { name: 'Clear', exact: true }).click();
 
-    await expect(page.getByLabel('Search parties')).toHaveValue('');
+    await expect(page.getByRole('searchbox', { name: 'Search parties' })).toHaveValue('');
     await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toBeVisible();
   });
 
@@ -138,7 +138,7 @@ test.describe('Admin parties list', () => {
     await gridRegion.focus();
     await page.keyboard.press('a');
 
-    await expect(page.getByLabel('Search parties')).toBeFocused();
+    await expect(page.getByRole('searchbox', { name: 'Search parties' })).toBeFocused();
   });
 
   test('desktop row click and direct route render the existing party detail surface', async ({ page, request }) => {
@@ -190,10 +190,10 @@ test.describe('Admin parties list', () => {
     await expect(detail.getByText('Certificate unavailable')).toBeVisible();
     await expect(detail.getByText('Blocked on accepted EventStore-fronted Parties client/gateway contract')).toBeVisible();
 
-    await detail.getByLabel('Channel id').fill('news-email');
-    await detail.getByLabel('Purpose').fill('newsletter');
+    await detail.getByRole('textbox', { name: 'Channel id', exact: true }).fill('news-email');
+    await detail.getByRole('textbox', { name: 'Purpose', exact: true }).fill('newsletter');
     await expect(detail.getByRole('button', { name: 'Add consent' })).toBeEnabled();
-    await detail.getByLabel('Restriction reason').fill('contains-sensitive-operator-note');
+    await detail.getByRole('textbox', { name: 'Restriction reason', exact: true }).fill('contains-sensitive-operator-note');
 
     await detail.getByRole('button', { name: 'Processing records' }).click();
     await expect(detail.getByRole('status').filter({ hasText: 'Operation completed' })).toBeVisible();
@@ -277,7 +277,7 @@ test.describe('Admin parties list', () => {
     await expect(page.locator(`#${labelledBy}`)).toHaveText('Erase party');
     await expect(page.getByRole('dialog')).toHaveCount(1);
     await expect(eraseDialog.getByText('irreversible verification')).toBeVisible();
-    const typedConfirmInput = eraseDialog.getByLabel('Type the selected party display name');
+    const typedConfirmInput = eraseDialog.getByRole('textbox', { name: 'Type the selected party display name', exact: true });
     await expect(typedConfirmInput).toBeFocused();
     const describedBy = await typedConfirmInput.getAttribute('aria-describedby');
     if (!describedBy) {
@@ -295,7 +295,7 @@ test.describe('Admin parties list', () => {
 
     await detail.getByRole('button', { name: 'Request erasure' }).click();
     const reopenedEraseDialog = page.getByRole('dialog', { name: 'Erase party' });
-    await reopenedEraseDialog.getByLabel('Type the selected party display name').fill('Grace Hopper');
+    await reopenedEraseDialog.getByRole('textbox', { name: 'Type the selected party display name', exact: true }).fill('Grace Hopper');
     await expect(reopenedEraseDialog.getByRole('status').filter({ hasText: 'Erase action enabled.' })).toBeVisible();
     await expect(reopenedEraseDialog.getByRole('button', { name: 'Erase' })).toBeEnabled();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
@@ -420,10 +420,10 @@ test.describe('Admin parties list', () => {
     await page.waitForURL('**/admin/parties/new');
     await expect(page.getByRole('heading', { name: 'Create party' })).toBeVisible();
     await expect(page.getByRole('radiogroup', { name: 'Party type' })).toBeVisible();
-    await page.getByLabel('First name').fill('Katherine');
-    await page.getByLabel('Last name').fill('Johnson');
+    await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Katherine');
+    await page.getByRole('textbox', { name: 'Last name', exact: true }).fill('Johnson');
     await chooseOption(page, 'Contact type', 'Email');
-    await page.getByLabel('Contact value').fill('katherine@example.test');
+    await page.getByRole('textbox', { name: 'Contact value', exact: true }).fill('katherine@example.test');
 
     await page.getByRole('button', { name: 'Create party' }).click();
 
@@ -445,8 +445,8 @@ test.describe('Admin parties list', () => {
     await page.getByRole('button', { name: 'Edit' }).click();
     await page.waitForURL('**/admin/parties/ada-lovelace/edit');
     await expect(page.getByRole('heading', { name: 'Edit party' })).toBeVisible();
-    await expect(page.getByLabel('First name')).toHaveValue('Ada');
-    await page.getByLabel('Last name').fill('Byron');
+    await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Ada');
+    await page.getByRole('textbox', { name: 'Last name', exact: true }).fill('Byron');
 
     await page.getByRole('button', { name: 'Save changes' }).click();
 
@@ -458,25 +458,25 @@ test.describe('Admin parties list', () => {
   test('validation alert is assertive and preserves entered values', async ({ page }) => {
     await page.goto(`${ADMIN_ROUTE}/new`);
     await expect(page.getByRole('heading', { name: 'Create party' })).toBeVisible();
-    await page.getByLabel('First name').fill('Katherine');
+    await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Katherine');
 
     await page.getByRole('button', { name: 'Create party' }).click();
 
     await expect(page.getByRole('alert').filter({ hasText: 'Fix the highlighted fields and retry.' })).toBeVisible();
-    await expect(page.getByLabel('First name')).toHaveValue('Katherine');
+    await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Katherine');
   });
 
   test('gateway validation rejection is announced without losing entered values', async ({ page }) => {
     await page.goto(`${ADMIN_ROUTE}/new`);
     await expect(page.getByRole('heading', { name: 'Create party' })).toBeVisible();
-    await page.getByLabel('First name').fill('Katherine');
-    await page.getByLabel('Last name').fill('Reject');
+    await page.getByRole('textbox', { name: 'First name', exact: true }).fill('Katherine');
+    await page.getByRole('textbox', { name: 'Last name', exact: true }).fill('Reject');
 
     await page.getByRole('button', { name: 'Create party' }).click();
 
     await expect(page.getByRole('alert').filter({ hasText: 'Fix the highlighted fields and retry.' })).toBeVisible();
-    await expect(page.getByLabel('First name')).toHaveValue('Katherine');
-    await expect(page.getByLabel('Last name')).toHaveValue('Reject');
+    await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toHaveValue('Katherine');
+    await expect(page.getByRole('textbox', { name: 'Last name', exact: true })).toHaveValue('Reject');
     await expect(page).toHaveURL(/\/admin\/parties\/new$/);
     await expect(page.getByText('corr-validation')).toHaveCount(0);
     await expect(page.getByText('PersonDetails.LastName')).toHaveCount(0);
@@ -491,7 +491,7 @@ test.describe('Admin parties list', () => {
       document.documentElement.style.zoom = '2';
     });
 
-    await expect(page.getByLabel('First name')).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'First name', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Create party' })).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     expect(overflow).toBe(false);
@@ -558,7 +558,7 @@ test.describe('Admin parties list', () => {
     await detail.getByRole('button', { name: 'Back to list' }).click();
     await page.waitForURL('**/admin/parties');
     await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toBeVisible();
-    await expect(page.getByLabel('Search parties')).toBeFocused();
+    await expect(page.getByRole('searchbox', { name: 'Search parties' })).toBeFocused();
   });
 });
 
@@ -580,7 +580,7 @@ const gotoAdmin = async (page: Page): Promise<void> => {
 };
 
 const chooseOption = async (page: Page, label: string, option: string): Promise<void> => {
-  await page.getByLabel(label).click();
+  await page.getByRole('combobox', { name: label, exact: true }).click();
   await page.getByRole('option', { name: option, exact: true }).click();
 };
 

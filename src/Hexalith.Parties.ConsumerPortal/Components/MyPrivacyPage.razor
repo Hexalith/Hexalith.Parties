@@ -37,7 +37,7 @@
             }
 
             <div class="hx-parties-privacy__actions">
-                <FluentButton role="button" Appearance="ButtonAppearance.Primary"
+                <FluentButton aria-disabled="@(_isPreparing ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary"
                               Disabled="@_isPreparing"
                               OnClick="PrepareExportAsync">
                     @ConsumerPortalLabels.PrivacyExportAction
@@ -45,7 +45,7 @@
 
                 @if (CanDownload)
                 {
-                    <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+                    <FluentButton aria-disabled="@(_isDownloading ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                   Disabled="@_isDownloading"
                                   OnClick="DownloadAsync">
                         @ConsumerPortalLabels.PrivacyExportDownload
@@ -120,12 +120,12 @@
                     <h3 id="@_erasureConfirmId">@ConsumerPortalLabels.PrivacyErasureConfirmTitle</h3>
                     <p>@ConsumerPortalLabels.PrivacyErasureConfirmMessage</p>
                     <div class="hx-parties-privacy__actions">
-                        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+                        <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                       Disabled="@_erasureBusy"
                                       OnClick="DismissErasureConfirmation">
                             @ConsumerPortalLabels.PrivacyErasureKeepData
                         </FluentButton>
-                        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+                        <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                       class="hx-parties-privacy__danger-action"
                                       Disabled="@_erasureBusy"
                                       OnClick="RequestErasureAsync">
@@ -138,7 +138,7 @@
             <div class="hx-parties-privacy__actions">
                 @if (CanRequestErasure)
                 {
-                    <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+                    <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                   class="hx-parties-privacy__danger-action"
                                   Disabled="@_erasureBusy"
                                   OnClick="BeginErasureConfirmation">
@@ -147,7 +147,7 @@
                 }
                 else if (CanCancelErasure)
                 {
-                    <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+                    <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                   Disabled="@_erasureBusy"
                                   OnClick="CancelErasureAsync">
                         @ConsumerPortalLabels.PrivacyErasureCancelAction

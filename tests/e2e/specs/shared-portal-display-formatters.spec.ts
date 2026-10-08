@@ -38,7 +38,7 @@ test.describe('Shared portal display formatters', () => {
     await expectDefinition(sectionWithHeading(detail, 'Operational summary'), 'Restricted party', 'No');
     await expectDefinition(sectionWithHeading(detail, 'Operational summary'), 'Pending erasure', 'No');
 
-    await detail.getByLabel('Restriction reason').fill('display formatter e2e');
+    await detail.getByRole('textbox', { name: 'Restriction reason', exact: true }).fill('display formatter e2e');
     await detail.getByRole('button', { name: 'Restrict processing' }).click();
     await detail.getByRole('group', { name: 'Confirm restriction' }).getByRole('button', { name: 'Confirm' }).click();
 
@@ -61,8 +61,8 @@ test.describe('Shared portal display formatters', () => {
     await page.goto('/me/edit');
 
     await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
-    await expect(page.getByLabel('Date of birth')).toHaveValue('');
-    await expect(page.getByLabel('Date of birth')).not.toHaveValue(/AM|PM/);
+    await expect(page.getByRole('textbox', { name: 'Date of birth', exact: true })).toHaveValue('');
+    await expect(page.getByRole('textbox', { name: 'Date of birth', exact: true })).not.toHaveValue(/AM|PM/);
   });
 });
 

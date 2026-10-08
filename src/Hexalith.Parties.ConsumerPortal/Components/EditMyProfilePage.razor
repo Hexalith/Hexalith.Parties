@@ -109,12 +109,12 @@
                     }
 
                     <div class="hx-parties-edit-profile__actions">
-                        <FluentButton role="button" Appearance="ButtonAppearance.Primary"
+                        <FluentButton aria-disabled="@(_isSaving ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary"
                                       Type="ButtonType.Submit"
                                       Disabled="@_isSaving">
                             @ConsumerPortalLabels.EditProfileSave
                         </FluentButton>
-                        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+                        <FluentButton aria-disabled="@(_isSaving ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                                       Type="ButtonType.Button"
                                       Disabled="@_isSaving"
                                       OnClick="CancelAsync">

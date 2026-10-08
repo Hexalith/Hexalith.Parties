@@ -1,0 +1,33 @@
+{
+  "status": "pass",
+  "checks": [
+    "YAML and frozen block",
+    "accepted choices and no unresolved intent questions",
+    "context and Markdown links",
+    "CRLF and trailing whitespace",
+    "10 bounded owner tasks",
+    "8.7/8.8 remain blocked",
+    "9 raw NuGet index hashes",
+    "scoped Git whitespace"
+  ],
+  "documents": [
+    {
+      "path": "_bmad-output/implementation-artifacts/spec-8-8-client-mcp-apphost-build-and-deploy-cleanup.md",
+      "sha256": "87e5e83589ff95367f2ff9f0681b4487d565efc367a7b7b00fac9d4206d4b2f8"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/story-8-8-readiness-2026-10-08.md",
+      "sha256": "7f9823be25ebbaf274323ad866c08d42c56797010d7503462c1e7a02259cfeb1"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/story-8-8-owner-prerequisite-plan-2026-10-08.md",
+      "sha256": "17da1f860baab1a742b5464303571edea6c539d8a5942d84fa4a206c81c3b03e"
+    }
+  ],
+  "probe_command": "python3 _bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-08/probe-package.py",
+  "probe_exit_code": 0,
+  "observed_at_utc": "2026-10-08T08:05:46.883937+00:00",
+  "whitespace_command": "git -c core.whitespace=cr-at-eol diff --check -- _bmad-output/implementation-artifacts/spec-8-8-client-mcp-apphost-build-and-deploy-cleanup.md",
+  "product_tests_run": false,
+  "scope": "planning documents and fresh package-observation receipt only"
+}

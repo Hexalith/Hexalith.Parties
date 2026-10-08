@@ -38,7 +38,7 @@ builder.AddHexalithServiceDefaults(ConfigurePartiesServiceDefaults);
 builder.Host.UseDefaultServiceProvider(o => o.ValidateScopes = true);
 
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents(options => options.RootComponents.RegisterHexalithPartyPickerCustomElement());
 
 builder.Services.AddFluentUIComponents();
 

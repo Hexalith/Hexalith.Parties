@@ -139,3 +139,41 @@ A direct whitespace scan also covers this new report. This accommodates the
 tracked EditorConfig CRLF rule without changing repository configuration or gates.
 Concurrent edits outside these two planning documents are outside this run's
 validation scope.
+
+## Accepted path and owner-task planning — 2026-10-08
+
+The user's `do recommended` selected consumer-only Story 8.8 with separate owner
+prerequisite tasks, predecessor key/cursor/payload compatibility and exercised
+rollback. Open intent questions are resolved in the draft spec. Technical sequence,
+API, owner approval, exact-identity and parity gates remain closed; neither spec nor
+sprint state is promoted to ready/done. DW-98 is not activated. The continuity choice
+must enter the I20 ledger through the human/reviewer gate before either 8.7 or 8.8
+activation relies on it. No invalidation or resequencing is selected.
+
+The [owner-task plan](story-8-8-owner-prerequisite-plan-2026-10-08.md) contains ten
+separate delivery/validation items in dependency order, with owner repository,
+target paths, outputs, validation and retention conditions. Its first item continues
+the existing completed local EventStore CI repair rather than duplicating it.
+Full exact-current-main CI and coordinated owner publication remain required.
+
+A fresh read-only package probe was run with:
+
+`python3 _bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-08/probe-package.py`
+
+Result: exit 0. The retained
+[probe receipt](tests/story-8-8-planning-2026-10-08/package-probe.json) and raw index
+responses record observation at 2026-10-08T08:05:46.883937+00:00. All nine consumer
+indexes still end at 3.115.0, without newer or prerelease versions; the downloaded
+DomainService assembly still lacks the required API metadata name. The package
+and DLL hashes match the earlier observation. G12 remains resolved; this is the
+later installed API/publication gap.
+
+Parties advanced externally to `71d5f036ea87cf360af4de09f8fcb616faef2e1a` before this
+planning update. The relevant root gitlinks and central package selection remain
+as previously observed, with McpCli additionally at
+`e159f82b7528797fc245045625ff387d65294ba9`. EventStore and other production/test
+paths have concurrent user-owned changes; they are preserved. No fresh product or
+full-CI validation is claimed for that working tree. This run writes only the
+consumer spec, this readiness supplement, the owner-task plan and fresh probe
+receipt. No owner patch, package selection, root pointer, approval ledger or
+production migration is changed by these planning decisions.
