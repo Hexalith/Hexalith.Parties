@@ -177,3 +177,19 @@ full-CI validation is claimed for that working tree. This run writes only the
 consumer spec, this readiness supplement, the owner-task plan and fresh probe
 receipt. No owner patch, package selection, root pointer, approval ledger or
 production migration is changed by these planning decisions.
+
+## Published API follow-up — EventStore 3.117.1
+
+The original 3.115.0 observation and failed baseline above are historical.
+EventStore published the API in 3.117.0; after the user's 3.117.1 publication
+update, Parties verified all 14 downloaded 3.117.1 packages, exact release source
+`0dad344d37343f589d859d6d8d6701283122b338`, the public generic sidecar-channel
+extension and coherent dependencies. Parties now pins 3.117.1. Its serialized
+package-mode restore and Release solution build pass with zero warnings and errors;
+all 29 consumer asset graphs select that family.
+
+[The 3.117.1 receipt](tests/eventstore-3.117.1-consumer-2026-10-08/README.md)
+retains current package/build/test evidence and concurrent source-pointer limits.
+This resolves the publication/API/compiler prerequisite only. The remaining
+Story 8.7/G5, row identity/approval/parity, continuity and runtime topology gates
+keep Story 8.8 blocked and the consumer spec draft. The frozen intent is unchanged.

@@ -1,0 +1,35 @@
+{
+  "properties": {
+    "UseNuGetDeps": "true",
+    "UseHexalithProjectReferences": "false",
+    "HexalithEventStoreFromSource": "",
+    "HexalithEventStoreVersion": "3.117.1"
+  },
+  "packageReferences": [
+    "Hexalith.Commons",
+    "Hexalith.EventStore.Client",
+    "Hexalith.EventStore.DomainService",
+    "Hexalith.Tenants.Client",
+    "Hexalith.Memories.Client.Rest",
+    "Dapr.AspNetCore",
+    "Dapr.Actors.AspNetCore",
+    "Microsoft.Extensions.Logging.Abstractions",
+    "FluentValidation",
+    "FluentValidation.DependencyInjectionExtensions",
+    "MediatR",
+    "Microsoft.AspNetCore.Authentication.JwtBearer"
+  ],
+  "projectReferences": [
+    "../Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj",
+    "../Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj",
+    "../Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj",
+    "../Hexalith.Parties.Security/Hexalith.Parties.Security.csproj",
+    "/home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/Hexalith.Commons.Http.csproj"
+  ],
+  "hostDll": {
+    "path": "src/Hexalith.Parties/bin/Release/net10.0/Hexalith.EventStore.DomainService.dll",
+    "sha256": "bc29babfc12dc25f524d79c8f0c7a29666a9ab17f71c13329592dbda4c65ae71",
+    "matchesPublishedPackage": true,
+    "version": "3.117.1"
+  }
+}

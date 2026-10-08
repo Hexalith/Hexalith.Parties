@@ -13,7 +13,7 @@ No invalidation, erasure-policy change or resequencing is selected.
 
 ## Execution order
 
-First finish the existing EventStore publication handoff. Advance the existing
+The P1 EventStore publication handoff is delivered; see its follow-up below. Advance the existing
 8.7/G5 owner work and collect proof for already-delivered G6/G8-A APIs. Prepare the
 small missing client, authentication, MCP and AdminPortal tasks independently in
 their owner repositories. The integrated topology handoff follows those inputs;
@@ -57,11 +57,22 @@ verifies the downloaded package API/provenance and coherent family, selects that
 actual version through its own dependency change, restores and builds package-mode
 Release, and runs its applicable lanes. Runtime credential acceptance remains P9.
 
-**Current observation:** The fresh
+**Initial observation:** The fresh
 [package probe](tests/story-8-8-planning-2026-10-08/package-probe.json), observed at
 2026-10-08T08:05:46.883937+00:00, still finds 3.115.0 as latest for all nine indexes.
 DomainService's assembly still lacks the required metadata name. This confirms
-publication remains necessary; it does not reopen resolved G12.
+publication was necessary at that observation; it did not reopen resolved G12.
+
+**Publication follow-up:** EventStore first published the API in `3.117.0`.
+Following the user's `eventstore 3.117.1 published` update, Parties verified all
+14 public `3.117.1` packages at source
+`0dad344d37343f589d859d6d8d6701283122b338`, the public generic extension and
+coherent family dependencies, then selected `3.117.1`. The serialized package-mode
+restore and Release solution build pass with zero warnings and errors.
+[The consumer receipt](tests/eventstore-3.117.1-consumer-2026-10-08/README.md)
+records the remaining checks and their scope. P1's publication/API/compiler handoff
+is resolved; P2/Story 8.7, P9 runtime credential acceptance and per-row owner proof
+remain separate. No Story 8.8 production migration is activated.
 
 ## P2 — Finish the existing G5/Story 8.7 compatibility gate
 

@@ -87,7 +87,7 @@ rollback until the required owner/reviewer acceptance is recorded.
 
 ## Verification
 
-- `dotnet build Hexalith.Parties.slnx -c Release -m:1` — package gate; current focused baseline fails CS1061 at Program.cs:64/66.
+- `dotnet build Hexalith.Parties.slnx -c Release -m:1` — package gate. The historical 3.115.0 CS1061 baseline is resolved; the separate [3.117.1 handoff receipt](tests/eventstore-3.117.1-consumer-2026-10-08/README.md) records a passing Release build. Runtime and migration gates remain required.
 - `pwsh scripts/test.ps1 -Lane ci` and `pwsh scripts/test.ps1 -Lane topology` — publication/topology proof without skipped required checks.
 - Build individual Client/Mcp/AdminPortal/Authentication/host/UI test projects; invoke xUnit v3 DLLs directly for the report's parity/package/switch-back tests. Require owner API/security/bounds and actual publish proof.
 - Scoped Git whitespace and document checks — planning validation only.

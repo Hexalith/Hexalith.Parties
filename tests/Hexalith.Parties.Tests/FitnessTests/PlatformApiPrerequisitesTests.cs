@@ -42,7 +42,7 @@ public sealed class PlatformApiPrerequisitesTests
     private const string EndMarker = "<!-- platform-api-prerequisite-matrix:end -->";
 
     // Release selection is separate from the historical migration/parity receipt constants.
-    private const string CurrentReleaseEventStoreVersion = "3.117.0";
+    private const string CurrentReleaseEventStoreVersion = "3.117.1";
     private const string CurrentCatalogEventStoreVersion = "3.115.0";
     private const string CurrentReleaseEventStoreSha = "b830d9829af70536d2a3fd21c5e2a23b2ca2f256";
     private const string CurrentReleaseEventStoreDescribe = "v3.117.0";
@@ -702,7 +702,7 @@ public sealed class PlatformApiPrerequisitesTests
             }
         }
 
-        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--match", $"v{CurrentReleaseEventStoreVersion}", "--abbrev=8", "HEAD")
+        RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--match", CurrentReleaseEventStoreDescribe, "--abbrev=8", "HEAD")
             .Trim()
             .ShouldBe(CurrentReleaseEventStoreDescribe);
 

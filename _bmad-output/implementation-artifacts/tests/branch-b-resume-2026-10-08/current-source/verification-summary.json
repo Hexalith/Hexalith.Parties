@@ -1,0 +1,27 @@
+{
+  "completeLocalExitCode": 1,
+  "selectedPassingCases": 988,
+  "selectedPassingOwnerLanes": 10,
+  "passingRequiredClassFilters": 36,
+  "blockedRequiredClassFilters": [
+    "*AuthoritativeEventStreamReaderTests",
+    "*EventStoreGatewayClientTests",
+    "*EventStoreGatewayClientStreamTests",
+    "*RetainedIdentityHistoryReaderTests"
+  ],
+  "installedQualification": false,
+  "productionCustodyRegistered": false,
+  "approvedPolicy": {
+    "policyId": "party-actor-retention-v1",
+    "retentionDays": 365,
+    "expiryTrigger": "binding-effective-at"
+  },
+  "dependencyRecord": {
+    "owner": "Project owner (user declaration 2026-10-07), acting as Parties Maintainer",
+    "targetIntegrationDate": "2026-10-08",
+    "targetVersionOrCommit": "TBD",
+    "compatibilityCommand": "TBD",
+    "acceptedStatus": "Uncommitted"
+  },
+  "sourceLimits": "Sources moved externally during execution. Root audit matches eight selected source files to run-start bytes; no unchanged-worktree or Portable-PDB audit is claimed. EventStore Client lane was not executed."
+}

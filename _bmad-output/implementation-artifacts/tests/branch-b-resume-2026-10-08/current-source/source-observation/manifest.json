@@ -1,0 +1,27 @@
+[
+  {
+    "path": "/home/administrator/projects/hexalith/agents/_bmad-output/planning-artifacts/external-dependency-register.md",
+    "copy": "/tmp/ext-parties-1-current-20261008/source-observation/external-dependency-register.md",
+    "sha256": "184e16c05b57527abcdbd8588ae0c9fa10fe4c6093a53e66a509e9aa39fbcccb"
+  },
+  {
+    "path": "/home/administrator/projects/hexalith/platform/src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs",
+    "copy": "/tmp/ext-parties-1-current-20261008/source-observation/PlatformCustodyServiceCollectionExtensions.cs",
+    "sha256": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8"
+  },
+  {
+    "path": "/home/administrator/projects/hexalith/platform/docs/implementation/actor-history-lifecycle-2026-10-07.md",
+    "copy": "/tmp/ext-parties-1-current-20261008/source-observation/actor-history-lifecycle-2026-10-07.md",
+    "sha256": "78cf9ffe55eeea1eef02d861af2f6cac282f3c513207aa9064fe8dd4ad6bdd74"
+  },
+  {
+    "path": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/appsettings.json",
+    "copy": "/tmp/ext-parties-1-current-20261008/source-observation/appsettings.json",
+    "sha256": "3974bb0107f9c6789f27a2c82ce84685febd2e9e1394b3875146b005a64ab063"
+  },
+  {
+    "path": "/home/administrator/projects/hexalith/parties/eng/verify-ext-parties-1.ps1",
+    "copy": "/tmp/ext-parties-1-current-20261008/source-observation/verify-ext-parties-1.ps1",
+    "sha256": "1a444d3dd2fa59d6c5a57e64477726e801f264f0189ffea7357c67184fd57249"
+  }
+]

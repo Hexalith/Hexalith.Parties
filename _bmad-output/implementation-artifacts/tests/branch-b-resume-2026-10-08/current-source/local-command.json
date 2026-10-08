@@ -1,0 +1,40 @@
+{
+  "command": [
+    "pwsh",
+    "-NoProfile",
+    "-File",
+    "eng/verify-ext-parties-1.ps1",
+    "-Mode",
+    "Local",
+    "-EventStoreRoot",
+    "/home/administrator/projects/hexalith/eventstore",
+    "-PlatformRoot",
+    "/home/administrator/projects/hexalith/platform",
+    "-EvidenceDirectory",
+    "/tmp/ext-parties-1-current-20261008/local",
+    "-ArtifactsDirectory",
+    "/tmp/ext-parties-1-current-20261008/artifacts",
+    "-MemoriesRoot",
+    "/tmp/ext-parties-1-current-20261008/optional-memories-package-mode"
+  ],
+  "workingDirectory": "/home/administrator/projects/hexalith/parties",
+  "exitCode": 1,
+  "selectedEventStoreVersion": "3.117.1",
+  "blockedProject": "Hexalith.EventStore.Client.Tests",
+  "errors": [
+    {
+      "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Client.Tests/Events/EventLocalImplementationBindingTests.cs",
+      "line": 24,
+      "code": "CS1503",
+      "message": "Argument 1: cannot convert from 'method group' to 'System.Action'"
+    },
+    {
+      "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Client.Tests/Events/EventLocalImplementationBindingTests.cs",
+      "line": 26,
+      "code": "CS1503",
+      "message": "Argument 1: cannot convert from 'method group' to 'System.Action'"
+    }
+  ],
+  "rawBuildLog": "local/Hexalith.EventStore.Client.Tests-build.log",
+  "scope": "Complete Local failed; no exclusions, restore overrides or dependency changes were made by this continuation"
+}

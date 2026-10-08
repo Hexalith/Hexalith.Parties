@@ -1,0 +1,74 @@
+{
+  "parties": {
+    "beforeHead": "890119f1b4ced37ccec34787c812f064199fb3ef",
+    "afterHead": "890119f1b4ced37ccec34787c812f064199fb3ef",
+    "changedDocuments": [
+      {
+        "path": "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs",
+        "beforeSha256": "3571393a8aaecf872330368cace5be9e7a74a06a4da96b0ac2799ed770b57300",
+        "afterSha256": "0f4e0e1331fc4313c89a6d607c86033e86ad9e7e3d34a38dac19fe0ed6aaf7c5"
+      }
+    ]
+  },
+  "eventstore": {
+    "beforeHead": "9542d3c9f48bf9ce1c57f2ef68904703eaba56cc",
+    "afterHead": "9542d3c9f48bf9ce1c57f2ef68904703eaba56cc",
+    "changedDocuments": [
+      {
+        "path": "src/Hexalith.EventStore.Client/Events/EventImplementationBinding.cs",
+        "beforeSha256": "58c8966ca2ebc9386073bb7f3fdad0e5023c2b6a62333a98287f3bbfcae9de72",
+        "afterSha256": "c06ceab4b6fda44e32d9e0cad10cc5a63338ac46430eb0923944819fbfd0f6ad"
+      },
+      {
+        "path": "src/Hexalith.EventStore.Client/Streams/AuthoritativeStreamReadDeadline.cs",
+        "beforeSha256": "9a4ff419079ee62a4824529528545a3b076679f2b6dfd35d0dd0b3793ecf906c",
+        "afterSha256": "e9d239c0467bf8bad586dd799a9b04f71092bb110d64b4e1ef73fd0fce71b09b"
+      },
+      {
+        "path": "src/Hexalith.EventStore.Client/Streams/RetainedIdentityHistoryReader.cs",
+        "beforeSha256": "f5435575a42a9f698841663f1ef616014bf9dd4ae1f72195614e82791f635d5c",
+        "afterSha256": "7524b2c64d3586a91137ad20f2b7e4743f84c826e6414f06cfbb63d033ff1b4f"
+      },
+      {
+        "path": "tests/Hexalith.EventStore.Client.Tests/Events/EventEvolutionServiceTests.cs",
+        "beforeSha256": "74689a6feb753a2379991ceae03999e715024b00c6578e1423fa3fe5328cc229",
+        "afterSha256": "ffc95a26c60f05c53484a3973e6caca83bf41ab5c46cd36ce246782e0b6f0a86"
+      },
+      {
+        "path": "tests/Hexalith.EventStore.Client.Tests/Events/EventRuntimeOptionsBindingTests.cs",
+        "beforeSha256": null,
+        "afterSha256": "37fcb282b5df3ce2c678c69445a7b014d5b80ad88cea0a5a2c1f13b9899f93a2"
+      },
+      {
+        "path": "tests/Hexalith.EventStore.Client.Tests/Streams/RetainedHistorySuspendedContent.cs",
+        "beforeSha256": "c0ec81158cb2e4f0e3ec25045a479d944a905bcaaa7fd0db5c3e09a59d8b33b1",
+        "afterSha256": "94a5fbcd49bb7c67963e4fd90c6f7f27408ba6c0ab9069a126045fcca7a1d19e"
+      },
+      {
+        "path": "tests/Hexalith.EventStore.Client.Tests/Streams/RetainedHistorySuspendedHandler.cs",
+        "beforeSha256": "b44b7d7f37f1b4a51c9c781c23d6274a8c6f377949f3b52e73d872abdfef73dd",
+        "afterSha256": "128c5aa9f86e6d7922ce5505bf747e31c1b0a79da9df7df94e84988840170f46"
+      },
+      {
+        "path": "tests/Hexalith.EventStore.Client.Tests/Streams/RetainedHistorySuspendedStream.cs",
+        "beforeSha256": "7fcbe5608005d20a320695e8952e89f01b0a6b24d6f86b954dcb6efd2d8d420c",
+        "afterSha256": "8d97051922a2cba9fca553126718c26c7ea0c369782412e37260b00d9f86a78d"
+      },
+      {
+        "path": "tests/Hexalith.EventStore.Client.Tests/Streams/RetainedHistoryTimeProvider.cs",
+        "beforeSha256": "0ba6651106225d71937ef3c38f6e12c0574ed7baddc2672e6eec7fad7cc9d2a1",
+        "afterSha256": "8f8aac15e4c25e5fae91207205312a47c5b2eb070b97985b5e2be8a556637cdc"
+      },
+      {
+        "path": "tests/Hexalith.EventStore.Client.Tests/Streams/RetainedIdentityHistoryReaderTests.cs",
+        "beforeSha256": "de9b34bc332d7a192bc8c9358db1d0daa19772e488431569207cca6c6e9ee9c4",
+        "afterSha256": "4ba6f48e99cbe0477022dfb962771c36048aa941a018885b0146d8977577d498"
+      }
+    ]
+  },
+  "platform": {
+    "beforeHead": "eb864b75439371d2bd8fd8047bccb291c699d84c",
+    "afterHead": "eb864b75439371d2bd8fd8047bccb291c699d84c",
+    "changedDocuments": []
+  }
+}

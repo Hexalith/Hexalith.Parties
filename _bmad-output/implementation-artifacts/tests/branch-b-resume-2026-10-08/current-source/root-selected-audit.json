@@ -1,0 +1,216 @@
+{
+  "scope": "Independent parent audit of selected local execution; full Local failed and no installed qualification",
+  "passed": 988,
+  "executedLanes": 10,
+  "passingRequiredClasses": 36,
+  "blockedRequiredLane": "Hexalith.EventStore.Client.Tests: CS1503 at EventLocalImplementationBindingTests.cs lines 24 and 26",
+  "results": [
+    {
+      "project": "Hexalith.EventStore.Contracts.Tests",
+      "passed": 23,
+      "xmlSha256": "f654781b23f6db2a693e81c8fd1784212f01f9d0f6371df15cfeaa9799196008",
+      "requiredClassCounts": {
+        "*StreamReadPageValidatorTests": 12,
+        "*RetainedIdentityHistoryValidatorTests": 11
+      }
+    },
+    {
+      "project": "Hexalith.EventStore.Server.Tests",
+      "passed": 168,
+      "xmlSha256": "d59473cc43dbef022cc7f2f21b9e2bdf2e26670add40e3535d7b15924544f35e",
+      "requiredClassCounts": {
+        "*IdentityAdmissionTests": 6,
+        "*ActorRegistryTests": 6,
+        "*IdentityGatewayDenialTests": 3,
+        "*CommandsControllerTrustedExtensionTests": 7,
+        "*QueriesControllerTests": 72,
+        "*StreamsControllerTests": 26,
+        "*RetainedIdentityHistorySourceReaderTests": 48
+      }
+    },
+    {
+      "project": "Hexalith.Platform.Identity.Tests",
+      "passed": 2,
+      "xmlSha256": "fbc85610f7c33de5d490be2d3d10bce39d3b923c8fa96eed7c1fc4f0f0c13eed",
+      "requiredClassCounts": {
+        "*PlatformIdentityAdmissionTests": 2
+      }
+    },
+    {
+      "project": "Hexalith.Platform.Custody.Tests",
+      "passed": 115,
+      "xmlSha256": "c5839b7a0e3c72931116a0f4d1fc066891431361100d5786f4893223202ca4cf",
+      "requiredClassCounts": {
+        "*CustodyPrerequisiteTests": 68,
+        "*IdentityHistoryCleanupTests": 47
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Contracts.Tests",
+      "passed": 29,
+      "xmlSha256": "2a7ca290ce6400d9b803e315bfe561fdec6b106c4aa91a8c28cc5e1bd8b3b1bc",
+      "requiredClassCounts": {
+        "*PartyStateTests": 26,
+        "*PartyIdentityContractTests": 2,
+        "*ContractsPublicApiSnapshotTests": 1
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Server.Tests",
+      "passed": 94,
+      "xmlSha256": "73efda906ef2e5be29353dde91e92b9f5c8b7e5377c4090c68a37d1ec9de800e",
+      "requiredClassCounts": {
+        "*AgentPartyProvisioningTests": 3,
+        "*HumanActorBindingTests": 7,
+        "*PartyAggregateCreateTests": 24,
+        "*PartyAggregateCompositeTests": 60
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Tests",
+      "passed": 357,
+      "xmlSha256": "d13d0d3ca62fee525aceab23a45782b68b0fa96f1adaaed69d6d80d40c8a81e1",
+      "requiredClassCounts": {
+        "*PartyIdentityAdmissionTests": 50,
+        "*PartyIdentityQueryHandlerTests": 155,
+        "*PartyIdentityRetentionConfigurationTests": 6,
+        "*PartyDomainProcessorValidationTests": 44,
+        "*PartySdkQueryHandlerTests": 54,
+        "*PartiesProcessEndpointTests": 13,
+        "*PartiesDomainServiceSecurityTests": 35
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Security.Tests",
+      "passed": 30,
+      "xmlSha256": "d8a5d03ac3f1e46c087f533566606bad7a261dd71cbf466837294f641448737a",
+      "requiredClassCounts": {
+        "*IdentityHistoryProtectionTests": 7,
+        "*PartyPayloadProtectionServiceTests": 23
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Client.Tests",
+      "passed": 98,
+      "xmlSha256": "d5c0adee56ee8a1d4a2482c62b8eded9d59c1ab08c680b7ae33f0cc1de85e306",
+      "requiredClassCounts": {
+        "*HttpPartiesIdentityClientTests": 18,
+        "*HttpPartiesCommandClientTests": 37,
+        "*HttpPartiesQueryClientTests": 30,
+        "*DependencyInjectionTests": 13
+      }
+    },
+    {
+      "project": "Hexalith.Parties.UI.Tests",
+      "passed": 72,
+      "xmlSha256": "cb47301703a69f254a196523302828f8e6e28202d58fa55cc1ffc765a87c1948",
+      "requiredClassCounts": {
+        "*IdentityBindingBoundaryTests": 5,
+        "*IdentityBindingProvisioningServiceTests": 14,
+        "*PartyIdClaimResolverTests": 11,
+        "*SelfScopedPartiesClientTests": 42
+      }
+    }
+  ],
+  "matrixExecutedLocalEvidence": {
+    "Provision": {
+      "ExactLostAckRetry_ReturnsOriginalWithoutAnotherCreationAndRejectsChangedIntent": [
+        "Hexalith.Parties.Server.Tests.Aggregates.AgentPartyProvisioningTests.ExactLostAckRetry_ReturnsOriginalWithoutAnotherCreationAndRejectsChangedIntent"
+      ],
+      "RejectionOnlyStream_AllowsCreationWhileUnmarkedOrganizationConflicts": [
+        "Hexalith.Parties.Server.Tests.Aggregates.AgentPartyProvisioningTests.RejectionOnlyStream_AllowsCreationWhileUnmarkedOrganizationConflicts"
+      ]
+    },
+    "Current identity": {
+      "CurrentHuman_RequiresCompleteSourceAndCurrentExactActor": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentHuman_RequiresCompleteSourceAndCurrentExactActor"
+      ],
+      "InvalidCurrentSourceEvidence_DeniesBeforeCustody": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidCurrentSourceEvidence_DeniesBeforeCustody(corruption: \\\"missing-observation\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidCurrentSourceEvidence_DeniesBeforeCustody(corruption: \\\"blank-observation\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidCurrentSourceEvidence_DeniesBeforeCustody(corruption: \\\"default-observation-time\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidCurrentSourceEvidence_DeniesBeforeCustody(corruption: \\\"ciphertext-format\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidCurrentSourceEvidence_DeniesBeforeCustody(corruption: \\\"opaque-payload\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidCurrentSourceEvidence_DeniesBeforeCustody(corruption: \\\"unsupported-protection-state\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidCurrentSourceEvidence_DeniesBeforeCustody(corruption: \\\"unsupported-format\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidCurrentSourceEvidence_DeniesBeforeCustody(corruption: \\\"unsupported-protection-version\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidCurrentSourceEvidence_DeniesBeforeCustody(corruption: \\\"binding-after-observation\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidCurrentSourceEvidence_DeniesBeforeCustody(corruption: \\\"rebind-after-observation\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidCurrentSourceEvidence_DeniesBeforeCustody(corruption: \\\"revoke-after-observation\\\")"
+      ],
+      "WrongAuthorizedActor_DeniesBeforeSourceRead": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.WrongAuthorizedActor_DeniesBeforeSourceRead"
+      ]
+    },
+    "History": {
+      "HistoricalReplay_BeforeBoundaryReturnsOriginalAndAtBoundaryReturnsSuccessor": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.HistoricalReplay_BeforeBoundaryReturnsOriginalAndAtBoundaryReturnsSuccessor"
+      ],
+      "HistoricalRead_DoesNotRequireCurrentActorActivityAndHonorsHalfOpenBoundary": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.HistoricalRead_DoesNotRequireCurrentActorActivityAndHonorsHalfOpenBoundary"
+      ],
+      "ExpiredPredecessorOmitted_SuccessorReadRemainsUnavailable": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.ExpiredPredecessorOmitted_SuccessorReadRemainsUnavailable"
+      ]
+    },
+    "Isolation": {
+      "ForeignAuthoritativeSourceAndFutureAction_DenyWithNoEvidence": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.ForeignAuthoritativeSourceAndFutureAction_DenyWithNoEvidence"
+      ],
+      "ConcurrentTenantCalls_KeepEveryRequestAndEvidenceInItsExplicitScope": [
+        "Hexalith.Parties.Client.Tests.HttpPartiesIdentityClientTests.ConcurrentTenantCalls_KeepEveryRequestAndEvidenceInItsExplicitScope"
+      ]
+    }
+  },
+  "selectedSourceObservations": [
+    {
+      "owner": "parties",
+      "path": "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs",
+      "sha256": "f88a5c782a5055d2476acf76565424e95642dacc1cc5bb600cf17cfab9bb5ee5",
+      "matchesRunStart": true
+    },
+    {
+      "owner": "parties",
+      "path": "src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs",
+      "sha256": "73342fcff1a19186340549cc8740eb34b7f2f313e376065b8e370299ebbdec5f",
+      "matchesRunStart": true
+    },
+    {
+      "owner": "parties",
+      "path": "src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs",
+      "sha256": "bfa7ff1402b3641ca91cbc31a2902ea5fa5f8fdf41eb4ad672f786a2256d205f",
+      "matchesRunStart": true
+    },
+    {
+      "owner": "parties",
+      "path": "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs",
+      "sha256": "193c1bb99223f4e6ee7385dba6d94a6d4dc5fc91b4e41a48ddbd27015918864a",
+      "matchesRunStart": true
+    },
+    {
+      "owner": "parties",
+      "path": "tests/Hexalith.Parties.Server.Tests/Aggregates/AgentPartyProvisioningTests.cs",
+      "sha256": "104c3e9976f8777bde23ccf5b6503ace796785254efdcc5a7aa4c25d72a2eda3",
+      "matchesRunStart": true
+    },
+    {
+      "owner": "parties",
+      "path": "tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs",
+      "sha256": "429e6592e4c06fb39efbdf585dca4e26814cb8f08670a571f100b5363e68bd0b",
+      "matchesRunStart": true
+    },
+    {
+      "owner": "platform",
+      "path": "src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs",
+      "sha256": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8",
+      "matchesRunStart": true
+    },
+    {
+      "owner": "platform",
+      "path": "src/Hexalith.Platform.Custody/IdentityHistoryCleanup.cs",
+      "sha256": "459bf37506ff2c5a3de43ced6e93b93f64abc14e2736e3f462044a7f6ff3c79a",
+      "matchesRunStart": true
+    }
+  ],
+  "sourceLimit": "Selected files match run-start bytes; no complete worktree stability or Portable PDB audit claimed."
+}

@@ -1,0 +1,470 @@
+{
+  "observedAtUtc": "2026-10-08T11:59:23.761910+00:00",
+  "partiesHead": "890119f1b4ced37ccec34787c812f064199fb3ef",
+  "workingTreeProof": true,
+  "sdk": "10.0.401",
+  "restore": {
+    "command": [
+      "dotnet",
+      "restore",
+      "Hexalith.Parties.slnx",
+      "--disable-parallel",
+      "-m:1",
+      "-nr:false",
+      "-v:normal"
+    ],
+    "environment": {
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0"
+    },
+    "startedAtUtc": "2026-10-08T11:52:56.030760+00:00",
+    "elapsedSeconds": 6.282626193999022,
+    "exitCode": 0
+  },
+  "build": {
+    "command": [
+      "dotnet",
+      "build",
+      "Hexalith.Parties.slnx",
+      "--configuration",
+      "Release",
+      "--no-restore",
+      "-m:1",
+      "-nr:false"
+    ],
+    "environment": {
+      "DOTNET_CLI_USE_MSBUILD_SERVER": "0"
+    },
+    "startedAtUtc": "2026-10-08T11:53:18.320871+00:00",
+    "elapsedSeconds": 18.320306615001755,
+    "exitCode": 0
+  },
+  "tests": [
+    {
+      "name": "contracts",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/contracts.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:56:58.523969+00:00",
+      "elapsedSeconds": 11.041014898997673,
+      "exitCode": 0,
+      "tests": {
+        "total": 181,
+        "passed": 181,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "673812b514cf48f8433ae3987e9a4a063f9cdd5fc670e173b7583d4c8637fffe",
+      "logSha256": "fcd4a8347ffca4f5faa744d9e5cfadb5310f261dcc750fba63c85e3b0bad8877"
+    },
+    {
+      "name": "authentication",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Authentication.Tests/bin/Release/net10.0/Hexalith.Parties.Authentication.Tests.dll",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/authentication.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:09.565407+00:00",
+      "elapsedSeconds": 0.356076056999882,
+      "exitCode": 0,
+      "tests": {
+        "total": 12,
+        "passed": 12,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "830569d0c3dabc117bdab3156c74c42905e98bb04d55d8253bdb16d2fd5abe41",
+      "logSha256": "2a6a9ab4403b9bc398533abd6a1a8e588a982179cff5766a5c8d513a0742e173"
+    },
+    {
+      "name": "client",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Client.Tests/bin/Release/net10.0/Hexalith.Parties.Client.Tests.dll",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/client.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:09.921791+00:00",
+      "elapsedSeconds": 23.662218213001324,
+      "exitCode": 0,
+      "tests": {
+        "total": 171,
+        "passed": 171,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "792ad50d9ecf1b888c25553407257296ecb3df7ad66bcd4661f012191f761786",
+      "logSha256": "fdc3bbb2de547c51255a585bd14a3dbb01159acf91a6ea5ce4157844001f9417"
+    },
+    {
+      "name": "server",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Server.Tests/bin/Release/net10.0/Hexalith.Parties.Server.Tests.dll",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/server.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:33.582944+00:00",
+      "elapsedSeconds": 0.6690756300013163,
+      "exitCode": 0,
+      "tests": {
+        "total": 259,
+        "passed": 259,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "883780ad78a1f6d46e1aadb2cab0f12662f298fa9456fea4cf9815a2bc753ca7",
+      "logSha256": "82959c5ff4ceb57a429d68853dc8331f9e0b63d0f9cbf7652ea34cf59cc7acd9"
+    },
+    {
+      "name": "projections",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.Tests.dll",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/projections.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:34.252309+00:00",
+      "elapsedSeconds": 0.7627322750013263,
+      "exitCode": 0,
+      "tests": {
+        "total": 236,
+        "passed": 236,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "d9a3c11d840b5b8ef1a94359bcd64b00d0898051964e514bb538bba288ca95c7",
+      "logSha256": "286d85dd60ce884c02d7616c696c4a10ffcacee523f2f7cbffcb0e64f7cba3a6"
+    },
+    {
+      "name": "security",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Security.Tests/bin/Release/net10.0/Hexalith.Parties.Security.Tests.dll",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/security.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:35.015426+00:00",
+      "elapsedSeconds": 0.8115903889993206,
+      "exitCode": 0,
+      "tests": {
+        "total": 178,
+        "passed": 178,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "8dc41adc37e27702a270ebf0d5da9b16cfc09871cf6e8c2882f554b8dabf10c5",
+      "logSha256": "ae6912069d45b8e7da16399f77f5afd114d39f8688aa4350303c377aa414a72d"
+    },
+    {
+      "name": "adminportal",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/adminportal.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:35.827310+00:00",
+      "elapsedSeconds": 2.991780042000755,
+      "exitCode": 0,
+      "tests": {
+        "total": 190,
+        "passed": 190,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "1e8d5dafd6f423c3d83d2367e6a18511ac316a78d4fd466e4c58ce9e2f0b0969",
+      "logSha256": "f43911a487a1d904326a0fecf00f795a2b6a4e4cadef29dd28822ac5f596b5d2"
+    },
+    {
+      "name": "consumerportal",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Release/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/consumerportal.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:38.819394+00:00",
+      "elapsedSeconds": 1.0939993309984857,
+      "exitCode": 0,
+      "tests": {
+        "total": 82,
+        "passed": 82,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "5ecc4ce3ef3142513e5471d083126af9e1392d59941afe09511753467cebccfb",
+      "logSha256": "66eac7699cef78c7e8b3975ee72b54813af4a156fd70a559b356cd3ed7fc660d"
+    },
+    {
+      "name": "ui",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/ui.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:39.913680+00:00",
+      "elapsedSeconds": 2.0566816229984397,
+      "exitCode": 0,
+      "tests": {
+        "total": 349,
+        "passed": 349,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "3f8ec871abb72c717f45175101c5f9b0839dcb5b27f673bd2c877b3b14775c54",
+      "logSha256": "8b9aeb9daa6f7f0cb808e126eccecf7dfcce85660c358f518cb971aa39295714"
+    },
+    {
+      "name": "picker",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Picker.Tests/bin/Release/net10.0/Hexalith.Parties.Picker.Tests.dll",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/picker.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:41.970626+00:00",
+      "elapsedSeconds": 1.3485311020012887,
+      "exitCode": 0,
+      "tests": {
+        "total": 171,
+        "passed": 171,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "c127374870dc984a9afa7a306250f504305c528a6abe5e83394d91e296ad75f2",
+      "logSha256": "c78dcf7e788644e16613817e4c05180520aacf0bed33e394188a301323573f62"
+    },
+    {
+      "name": "mcp",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Mcp.Tests/bin/Release/net10.0/Hexalith.Parties.Mcp.Tests.dll",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/mcp.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:43.319488+00:00",
+      "elapsedSeconds": 0.7266810500004794,
+      "exitCode": 0,
+      "tests": {
+        "total": 94,
+        "passed": 94,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "5c12c8443778d15e3b0a7bf03050e640fb426903fee2ce911d5af4c2d1b45f4c",
+      "logSha256": "af113e50370e0e8433f8673cacbebbffc3b22234bd655dea811e2824390d1a67"
+    },
+    {
+      "name": "ci",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/ci.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:44.046612+00:00",
+      "elapsedSeconds": 2.657423586002551,
+      "exitCode": 0,
+      "tests": {
+        "total": 101,
+        "passed": 101,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "adfde3dea14850520c40ef1308d732d6654ec0211a9ebee55881a095eb939a4e",
+      "logSha256": "3245015d799f931933a390d67d61e89605156281c74e0e7aa4639c2a997ff4de"
+    },
+    {
+      "name": "sidecar-security",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.Gateway.PartiesDomainServiceSecurityTests",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/sidecar-security.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:46.704398+00:00",
+      "elapsedSeconds": 6.901208380000753,
+      "exitCode": 0,
+      "tests": {
+        "total": 35,
+        "passed": 35,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "d7b2981de1c7f33b30b6c86dc5191fd4a0d8bb82c4cd4d23101192b63e6ef5ff",
+      "logSha256": "7282f5b5fd75f43ec0db6d96bc03d1db1aa1a29a9d01ef04601f43703c98bb3f"
+    },
+    {
+      "name": "documentation-fitness",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/documentation-fitness.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:53.604514+00:00",
+      "elapsedSeconds": 0.4505959759990219,
+      "exitCode": 0,
+      "tests": {
+        "total": 10,
+        "passed": 10,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "a7eac9a9dbd3851d5cac4e0de61c3515b3422ee2b6a51ad611f2769ceb148743",
+      "logSha256": "385d31b7e6d7b5ebe0d719bd479daabb1febce996d80ae1c0f91963b064029ea"
+    },
+    {
+      "name": "dependency-identity",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-method",
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+        "-xml",
+        "/tmp/parties-eventstore-3.117.1-2026-10-08/dependency-identity.xml"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:54.055437+00:00",
+      "elapsedSeconds": 0.5351128029979009,
+      "exitCode": 1,
+      "tests": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "resultXmlSha256": "98fa3daa51855c9fbd79970669219fdd04d8521d2f3561c887f9f1b211edd28a",
+      "failureMessage": "Shouldly.ShouldAssertException : gitlink.Replace('\\\\t', ' ')\n    should be\n\\\"160000 commit ad52c5bdd4361c59eedf12a16620150006403584 references/Hexalith.Builds\\\"\n    but was\n\\\"160000 commit 893db14b25843db140942d839e4d659584221315 references/Hexalith.Builds\\\"\n    difference\nDifference     |       |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |        \n               |      \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/       \nIndex          | ...  14   15   16   17   18   19   20   21   22   23   24   25   26   27   28   29   30   31   32   33   34   ...  \nExpected Value | ...  a    d    5    2    c    5    b    d    d    4    3    6    1    c    5    9    e    e    d    f    1    ...  \nActual Value   | ...  8    9    3    d    b    1    4    b    2    5    8    4    3    d    b    1    4    0    9    4    2    ...  \nExpected Code  | ...  97   100  53   50   99   53   98   100  100  52   51   54   49   99   53   57   101  101  100  102  49   ...  \nActual Code    | ...  56   57   51   100  98   49   52   98   50   53   56   52   51   100  98   49   52   48   57   52   50   ...  \n\nDifference     |       |    |    |    |    |    |    |    |    |         |    |    |    |    |    |    |    |    |    |             \n               |      \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/       \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/  \\\\|/            \nIndex          | ...  34   35   36   37   38   39   40   41   42   43   44   45   46   47   48   49   50   51   52   53   54   ...  \nExpected Value | ...  1    2    a    1    6    6    2    0    1    5    0    0    0    6    4    0    3    5    8    4    \\\\s   ...  \nActual Value   | ...  2    d    8    3    9    e    4    d    6    5    9    5    8    4    2    2    1    3    1    5    \\\\s   ...  \nExpected Code  | ...  49   50   97   49   54   54   50   48   49   53   48   48   48   54   52   48   51   53   56   52   32   ...  \nActual Code    | ...  50   100  56   51   57   101  52   100  54   53   57   53   56   52   50   50   49   51   49   53   32   ...  \n\nAdditional Info:\n    references/Hexalith.Builds committed gitlink must match selected ad52c5bdd4361c59eedf12a16620150006403584; HEAD entry was '160000 commit 893db14b25843db140942d839e4d659584221315\\treferences/Hexalith.Builds'.",
+      "logSha256": "23f76370dcbbec2fd463887bcbdbcc8572ded175bf08c7ed9fa4b53e171a890f"
+    },
+    {
+      "name": "warning-guard",
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "startedAtUtc": "2026-10-08T11:57:54.590898+00:00",
+      "elapsedSeconds": 0.4662825070008694,
+      "exitCode": 0,
+      "logSha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604"
+    }
+  ],
+  "sourceInputCount": 858,
+  "beforeInputManifestSha256": "58137bfdf72313b698443e8d1628794a8d6a8e4f5c71480cd22d964a48e06156",
+  "afterInputManifestSha256": "ef5478e2eac94513fbd162e33b3b3753e35fc781a4588434881b50d736e1e273",
+  "changedSourceBuildTestInputs": [],
+  "changedDependencyIdentities": [],
+  "rootDependencies": {
+    "references/Hexalith.AI.Tools": {
+      "committed": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "checkout": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "status": ""
+    },
+    "references/Hexalith.Builds": {
+      "committed": "893db14b25843db140942d839e4d659584221315",
+      "checkout": "6f07763bd955d22ace0123798add528dc933bf51",
+      "status": ""
+    },
+    "references/Hexalith.Commons": {
+      "committed": "116d26815eb81e35b3c161e1799e5ee12805fc0a",
+      "checkout": "116d26815eb81e35b3c161e1799e5ee12805fc0a",
+      "status": ""
+    },
+    "references/Hexalith.EventStore": {
+      "committed": "7d76df4981fb070c4d84d817bf6fc800f27d0adb",
+      "checkout": "9542d3c9f48bf9ce1c57f2ef68904703eaba56cc",
+      "status": ""
+    },
+    "references/Hexalith.FrontComposer": {
+      "committed": "0e114214007c22f5cdbac21a6853cff4208340ee",
+      "checkout": "0e114214007c22f5cdbac21a6853cff4208340ee",
+      "status": ""
+    },
+    "references/Hexalith.McpCli": {
+      "committed": "e159f82b7528797fc245045625ff387d65294ba9",
+      "checkout": "e159f82b7528797fc245045625ff387d65294ba9",
+      "status": ""
+    },
+    "references/Hexalith.Memories": {
+      "committed": "0b59bba531a7677e6944fd5e2da9d5170d06ff3c",
+      "checkout": "3e18d0dcdceb387eff89862c382637da89ad7e47",
+      "status": ""
+    },
+    "references/Hexalith.Platform": {
+      "committed": "48d5c6e64087bb33232651d8b59422e95185c699",
+      "checkout": "48d5c6e64087bb33232651d8b59422e95185c699",
+      "status": ""
+    },
+    "references/Hexalith.PolymorphicSerializations": {
+      "committed": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+      "checkout": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+      "status": ""
+    },
+    "references/Hexalith.Tenants": {
+      "committed": "e3bfdcc8cd3b3d9769e24f461b812d0a4f96cfcf",
+      "checkout": "1846c7128cf0f6b16f9e62f38032bcab78e26e38",
+      "status": ""
+    }
+  },
+  "initialWorkingTreeStatus": " M Directory.Packages.props\n M tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs\n",
+  "localEvidenceDirectory": "/tmp/parties-eventstore-3.117.1-2026-10-08",
+  "limitations": [
+    "Original default solution restore produced no output for 162 seconds and was interrupted; only the subsequent successful serialized restore is accepted as restore proof.",
+    "The normal unit-lane script stalled at Determining projects to restore and was terminated with exit 143. All unit and CI contract assemblies were subsequently run directly from the fresh Release build.",
+    "The source-identity fitness case fails at the pre-existing Builds committed-gitlink mismatch; it was not waived or corrected by this package-only patch.",
+    "Runtime topology, migration parity, and exact-source full CI/release readiness are separate gates and are not claimed."
+  ],
+  "buildLogs": [
+    {
+      "retainedPath": "build.log.txt",
+      "originalLogSha256": "edd2909022da27c7b447d6002c2afd21eb347e3bc776f2d588fd545d8a81edd1",
+      "retainedLogSha256": "378c7870039318049b734c97cd21c4da94d1a90fe6b856bce412717d78e79b68",
+      "normalization": "CRLF and trailing whitespace only"
+    },
+    {
+      "retainedPath": "restore.log.txt",
+      "originalLogSha256": "72b86010b4d202b639bee9ec9b6cd532e62917f7e02640efd8ffea79be9db056",
+      "retainedLogSha256": "1537e1b8a73751243dac0ec752199a752b1d910f4caffb9cd188aba8cef0f7f1",
+      "normalization": "CRLF and trailing whitespace only"
+    }
+  ]
+}

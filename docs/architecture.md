@@ -53,7 +53,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.6.1` |
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.10` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.0-preview.1.261001-0243` |
-| Gateway/eventing | Hexalith.EventStore | package `3.117.0` by default (Parties pre-import CPM pin); selected source gitlink and clean checkout `b830d9829af70536d2a3fd21c5e2a23b2ca2f256` (`v3.117.0`); package API/consumer proof is recorded separately from historical migration parity |
+| Gateway/eventing | Hexalith.EventStore | package `3.117.1` by default (Parties pre-import CPM pin); previously verified source selection `b830d9829af70536d2a3fd21c5e2a23b2ca2f256` (`v3.117.0`); package API/consumer proof is recorded separately from historical migration parity |
 | Tenancy | Hexalith.Tenants | package `5.7.0` by default; current committed source gitlink and clean checkout `86aa888301b40cda12b000f68d9292d53cd93efe` (`v5.7.0-171-g86aa8883`, selected on 2026-10-08); historical owner approvals and parity remain bound to their original identities |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.2.0` |
@@ -86,11 +86,11 @@ counts as passing only when it was rerun at the stamped identity), and accept
 the missing I13 runtime focus, forced-colors, and reduced-motion proof as the
 named DW-111 deferral; I13 itself is not discharged.
 
-The current package pin is EventStore `3.117.0`, published from
-`b830d9829af70536d2a3fd21c5e2a23b2ca2f256` through successful exact-source full
-CI and the normal release workflow. The [package upgrade receipt](../_bmad-output/implementation-artifacts/tests/eventstore-package-upgrade-2026-10-08/README.md)
-verifies the actual published sidecar-channel API and the ordinary package-mode
-Release solution build with zero warnings and errors. The October 5 source
+The current package pin is EventStore `3.117.1`, published from
+`0dad344d37343f589d859d6d8d6701283122b338`. The [3.117.1 consumer receipt](../_bmad-output/implementation-artifacts/tests/eventstore-3.117.1-consumer-2026-10-08/README.md)
+records downloaded package provenance, the sidecar-channel API and current
+consumer verification. The [3.117.0 receipt](../_bmad-output/implementation-artifacts/tests/eventstore-package-upgrade-2026-10-08/README.md)
+retains the earlier normal-release and consumer-build evidence. The October 5 source
 approvals and parity receipts retain their historical scope. Integrated topology
 acceptance and successful exact-source Parties full CI remain separate release
 readiness gates.

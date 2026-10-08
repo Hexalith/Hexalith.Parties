@@ -1,0 +1,247 @@
+[
+  {
+    "path": "local/Hexalith.EventStore.Client.Tests-build.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/local/Hexalith.EventStore.Client.Tests-build.log",
+    "sha256": "c5ba9ec7a41c6fb3d723de01fed11ff6eb163f80f8098b03058e7ba41117de82"
+  },
+  {
+    "path": "local/Hexalith.EventStore.Contracts.Tests-build.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/local/Hexalith.EventStore.Contracts.Tests-build.log",
+    "sha256": "388e29d750dcc064ddeb0f36769570acc80b65b15885682998d740e24bee9ea8"
+  },
+  {
+    "path": "local/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/local/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "sha256": "19e81b8c7c903fc074eb4d839803cfb9f82ebb5cdf87e92965384217fa39c041"
+  },
+  {
+    "path": "local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "sha256": "f654781b23f6db2a693e81c8fd1784212f01f9d0f6371df15cfeaa9799196008"
+  },
+  {
+    "path": "local/eventstore-version.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/local/eventstore-version.log",
+    "sha256": "c8f60ecb825d78de893b91c9719c4c40271eeca89993553ad01278bcace37c06"
+  },
+  {
+    "path": "local/eventstore-version.stderr.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/local/eventstore-version.stderr.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "local/local-evidence.json",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/local/local-evidence.json",
+    "sha256": "ccaaa5160bf4eae9bab61f1b6b8e769c834d7b3e369105787d899f4044d7e167"
+  },
+  {
+    "path": "remaining/Hexalith.EventStore.Server.Tests-build.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.EventStore.Server.Tests-build.log",
+    "sha256": "2519b5910ded59b57f2333f24c50aed75fb267720ea4900ff57d3efa29cce05f"
+  },
+  {
+    "path": "remaining/Hexalith.EventStore.Server.Tests-tests.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.EventStore.Server.Tests-tests.log",
+    "sha256": "63602b39e1f9ecc14cbf0e887b0d8bd254aa9dd8f23b01881dfabe381384f912"
+  },
+  {
+    "path": "remaining/Hexalith.EventStore.Server.Tests-tests.xml",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.EventStore.Server.Tests-tests.xml",
+    "sha256": "d59473cc43dbef022cc7f2f21b9e2bdf2e26670add40e3535d7b15924544f35e"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Client.Tests-build.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Client.Tests-build.log",
+    "sha256": "de9346f766b1af055cc45cf69b60b4512b5901edb7c1b1b77f7480d23107f19e"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Client.Tests-tests.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Client.Tests-tests.log",
+    "sha256": "118efd109446ead6ce97790b77b85698628a7c32f37a565e9ae1a031e0af98b5"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Client.Tests-tests.xml",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Client.Tests-tests.xml",
+    "sha256": "d5c0adee56ee8a1d4a2482c62b8eded9d59c1ab08c680b7ae33f0cc1de85e306"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Contracts.Tests-build.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Contracts.Tests-build.log",
+    "sha256": "0779eddc87b2287b320c5fc6896ddf5c9b9d997518cd5703bd78480362535f80"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Contracts.Tests-tests.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Contracts.Tests-tests.log",
+    "sha256": "2740b591e9f6047ccf8bf608ab9efec9fa76a8820e01ef87914515685555017c"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Contracts.Tests-tests.xml",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Contracts.Tests-tests.xml",
+    "sha256": "2a7ca290ce6400d9b803e315bfe561fdec6b106c4aa91a8c28cc5e1bd8b3b1bc"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Security.Tests-build.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Security.Tests-build.log",
+    "sha256": "c56b3a9c9bbc8ec30a93e99bc10d7f1a1178ddc189b8015d7012bc2abaeef6d4"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Security.Tests-tests.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Security.Tests-tests.log",
+    "sha256": "ccbb9e99acb8f05a4f3398713030d40fcb1d8314b4cb78879049b96af163f40a"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Security.Tests-tests.xml",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Security.Tests-tests.xml",
+    "sha256": "d8a5d03ac3f1e46c087f533566606bad7a261dd71cbf466837294f641448737a"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Server.Tests-build.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Server.Tests-build.log",
+    "sha256": "8b7a70099b3b37893ca1c908a74650c7da74b6e19e35ee9a8b5736786ea93180"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Server.Tests-tests.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Server.Tests-tests.log",
+    "sha256": "eca8d3f0de29b7e9f50251264ffa46ea7a526bff736c7532560f6fa7fe494d19"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Server.Tests-tests.xml",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Server.Tests-tests.xml",
+    "sha256": "73efda906ef2e5be29353dde91e92b9f5c8b7e5377c4090c68a37d1ec9de800e"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Tests-build.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Tests-build.log",
+    "sha256": "3926ec3a7adeadfd3800b5b525812f201a6d0f9278e1dfc7add138b3b79ae40c"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Tests-tests.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Tests-tests.log",
+    "sha256": "d2864ed7d6af48150139aa87794a8641d22bdee58571e2b6c644287f5d601ff5"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.Tests-tests.xml",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.Tests-tests.xml",
+    "sha256": "d13d0d3ca62fee525aceab23a45782b68b0fa96f1adaaed69d6d80d40c8a81e1"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.UI.Tests-build.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.UI.Tests-build.log",
+    "sha256": "559bcdef2f9229c0c327e150e18dbcd787237481f6354e055b92e82e9985da0b"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.UI.Tests-tests.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.UI.Tests-tests.log",
+    "sha256": "50fbccd74e2505a17ccef6c4f58e18a02bcddf6275c8828395ee72808b700b53"
+  },
+  {
+    "path": "remaining/Hexalith.Parties.UI.Tests-tests.xml",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Parties.UI.Tests-tests.xml",
+    "sha256": "cb47301703a69f254a196523302828f8e6e28202d58fa55cc1ffc765a87c1948"
+  },
+  {
+    "path": "remaining/Hexalith.Platform.Custody.Tests-build.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Platform.Custody.Tests-build.log",
+    "sha256": "14501828a8a3e5596fb490215457fa8d07b684c8b61b0f1403c17b76ba3d86cf"
+  },
+  {
+    "path": "remaining/Hexalith.Platform.Custody.Tests-tests.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Platform.Custody.Tests-tests.log",
+    "sha256": "47ef029a50e4c995d072bf738e8c81b791662f116232ab37bd3e8fc74e806337"
+  },
+  {
+    "path": "remaining/Hexalith.Platform.Custody.Tests-tests.xml",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Platform.Custody.Tests-tests.xml",
+    "sha256": "c5839b7a0e3c72931116a0f4d1fc066891431361100d5786f4893223202ca4cf"
+  },
+  {
+    "path": "remaining/Hexalith.Platform.Identity.Tests-build.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Platform.Identity.Tests-build.log",
+    "sha256": "99401e40aa88ceb2497ecbb702f0161f10430dd59ab28552e340f5672b4c62ab"
+  },
+  {
+    "path": "remaining/Hexalith.Platform.Identity.Tests-tests.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Platform.Identity.Tests-tests.log",
+    "sha256": "fe16e44588512c62f8819c9411f26e6290b3b141f60383e443ff84a329a7cf3d"
+  },
+  {
+    "path": "remaining/Hexalith.Platform.Identity.Tests-tests.xml",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/Hexalith.Platform.Identity.Tests-tests.xml",
+    "sha256": "fbc85610f7c33de5d490be2d3d10bce39d3b923c8fa96eed7c1fc4f0f0c13eed"
+  },
+  {
+    "path": "remaining/manifest.json",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/remaining/manifest.json",
+    "sha256": "4e9953d8fd51496061f99b8de65e73544b3104d58da633e6651a45c958cbacfe"
+  },
+  {
+    "path": "source-observation/PlatformCustodyServiceCollectionExtensions.cs",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/source-observation/PlatformCustodyServiceCollectionExtensions.cs",
+    "sha256": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8"
+  },
+  {
+    "path": "source-observation/actor-history-lifecycle-2026-10-07.md",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/source-observation/actor-history-lifecycle-2026-10-07.md",
+    "sha256": "78cf9ffe55eeea1eef02d861af2f6cac282f3c513207aa9064fe8dd4ad6bdd74"
+  },
+  {
+    "path": "source-observation/appsettings.json",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/source-observation/appsettings.json",
+    "sha256": "3974bb0107f9c6789f27a2c82ce84685febd2e9e1394b3875146b005a64ab063"
+  },
+  {
+    "path": "source-observation/external-dependency-register.md",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/source-observation/external-dependency-register.md",
+    "sha256": "184e16c05b57527abcdbd8588ae0c9fa10fe4c6093a53e66a509e9aa39fbcccb"
+  },
+  {
+    "path": "source-observation/manifest.json",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/source-observation/manifest.json",
+    "sha256": "1ef11ce377dd10c288b6f49a31c98c1569aebc263b4346b1d24ec683bad7ca9e"
+  },
+  {
+    "path": "source-observation/verify-ext-parties-1.ps1",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/source-observation/verify-ext-parties-1.ps1",
+    "sha256": "1a444d3dd2fa59d6c5a57e64477726e801f264f0189ffea7357c67184fd57249"
+  },
+  {
+    "path": "root-selected-audit.json",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/root-selected-audit.json",
+    "sha256": "b795dc8a4fd5575b28784a49a115ee3d17e1478a6997c59d184f5fe86aa65894"
+  },
+  {
+    "path": "source-movement.json",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/source-movement.json",
+    "sha256": "e5fe9fdd20df8e5ebe3f507651a93d7199f2ef318d47b6044327872a1c0d57e4"
+  },
+  {
+    "path": "live-gates.json",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/live-gates.json",
+    "sha256": "ecfe256922fba0a69a77f0fe674243d110b5c023f91d6b1a5930fd7ea0f808fa"
+  },
+  {
+    "path": "live-missing.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/live-missing.log",
+    "sha256": "494a7f949c8dadf3383453f1a00e4a0de3f31274188ca5bf97fab7eb4391dafc"
+  },
+  {
+    "path": "live-sentinel.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/live-sentinel.log",
+    "sha256": "e18e0c34120a1ada20ee7dd5c67e43b910fb8317c4043a6d4ceaea35325ed104"
+  },
+  {
+    "path": "readiness-missing.log",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/readiness-missing.log",
+    "sha256": "299d899bf5bce585d1a27fe51bf9dda5113ade24fff714fe15fb66b0aaf0fa29"
+  },
+  {
+    "path": "live-missing/live-gate.txt",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/live-missing/live-gate.txt",
+    "sha256": "b60753bd1e52b607eb2f91bdc4cb3bbd67b760c8a87814215fb91ceb2cd9bdfd"
+  },
+  {
+    "path": "live-sentinel/live-gate.txt",
+    "originalExecutionPath": "/tmp/ext-parties-1-current-20261008/live-sentinel/live-gate.txt",
+    "sha256": "98954a20c6675bf848cb35e575a5db2cc536e55c7c72d6b85cd39f6aecbaea33"
+  }
+]

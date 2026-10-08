@@ -1,0 +1,220 @@
+Build started 10/08/2026 13:52:56.
+Project "/home/administrator/projects/hexalith/parties/Hexalith.Parties.slnx" on node 1 (Restore target(s)).
+ValidateSolutionConfiguration:
+  Building solution configuration "Debug|Any CPU".
+_GetAllRestoreProjectPathItems:
+  Determining projects to restore...
+Project "/home/administrator/projects/hexalith/parties/Hexalith.Parties.slnx" (1) is building "/home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/Hexalith.Commons.Http.csproj" (2:8) on node 1 (_GenerateProjectRestoreGraph target(s)).
+AddPrunePackageReferences:
+  Loading prune package data from PrunePackageData folder
+  Failed to load prune package data from PrunePackageData folder, loading from targeting packs instead
+  Looking for targeting packs in /home/administrator/.dotnet/packs/Microsoft.NETCore.App.Ref
+  Pack directories found: /home/administrator/.dotnet/packs/Microsoft.NETCore.App.Ref/10.0.12
+  /home/administrator/.dotnet/packs/Microsoft.NETCore.App.Ref/10.0.11
+  /home/administrator/.dotnet/packs/Microsoft.NETCore.App.Ref/10.0.10
+  Found package overrides file /home/administrator/.dotnet/packs/Microsoft.NETCore.App.Ref/10.0.12/data/PackageOverrides.txt
+  Loading prune package data from PrunePackageData folder
+  Failed to load prune package data from PrunePackageData folder, loading from targeting packs instead
+  Looking for targeting packs in /home/administrator/.dotnet/packs/Microsoft.AspNetCore.App.Ref
+  Pack directories found: /home/administrator/.dotnet/packs/Microsoft.AspNetCore.App.Ref/10.0.12
+  /home/administrator/.dotnet/packs/Microsoft.AspNetCore.App.Ref/10.0.11
+  /home/administrator/.dotnet/packs/Microsoft.AspNetCore.App.Ref/10.0.10
+  Found package overrides file /home/administrator/.dotnet/packs/Microsoft.AspNetCore.App.Ref/10.0.12/data/PackageOverrides.txt
+Done Building Project "/home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/Hexalith.Commons.Http.csproj" (_GenerateProjectRestoreGraph target(s)).
+Project "/home/administrator/projects/hexalith/parties/Hexalith.Parties.slnx" (1) is building "/home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj" (4:5) on node 1 (_GenerateProjectRestoreGraph target(s)).
+AddPrunePackageReferences:
+  Loading prune package data from PrunePackageData folder
+  Failed to load prune package data from PrunePackageData folder, loading from targeting packs instead
+  Looking for targeting packs in /home/administrator/.dotnet/packs/Microsoft.NETCore.App.Ref
+  Pack directories found: /home/administrator/.dotnet/packs/Microsoft.NETCore.App.Ref/10.0.12
+  /home/administrator/.dotnet/packs/Microsoft.NETCore.App.Ref/10.0.11
+  /home/administrator/.dotnet/packs/Microsoft.NETCore.App.Ref/10.0.10
+  Found package overrides file /home/administrator/.dotnet/packs/Microsoft.NETCore.App.Ref/10.0.12/data/PackageOverrides.txt
+Done Building Project "/home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj" (_GenerateProjectRestoreGraph target(s)).
+Project "/home/administrator/projects/hexalith/parties/Hexalith.Parties.slnx" (1) is building "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj" (18:14) on node 1 (_GenerateProjectRestoreGraph target(s)).
+Project "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj" (18:14) is building "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj" (18:18) on node 1 (_GenerateProjectRestoreGraphPerFramework target(s)).
+AddPrunePackageReferences:
+  Loaded prune package data from framework packages
+Done Building Project "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj" (_GenerateProjectRestoreGraphPerFramework target(s)).
+Done Building Project "/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj" (_GenerateProjectRestoreGraph target(s)).
+Restore:
+  X.509 certificate chain validation will use the fallback certificate bundle at '/home/administrator/.dotnet/sdk/10.0.401/trustedroots/codesignctl.pem'.
+  X.509 certificate chain validation will use the fallback certificate bundle at '/home/administrator/.dotnet/sdk/10.0.401/trustedroots/timestampctl.pem'.
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj (in 31 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj...
+    CACHE https://api.nuget.org/v3/vulnerabilities/index.json
+    CACHE https://api.nuget.org/v3-vulnerabilities/2026.10.06.23.47.38/vulnerability.base.json
+    CACHE https://api.nuget.org/v3-vulnerabilities/2026.10.06.23.47.38/2026.10.07.23.47.44/vulnerability.update.json
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj (in 208 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Security.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj (in 14 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AdminPortal/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj (in 10 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/samples/Hexalith.Parties.Sample/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/samples/Hexalith.Parties.Sample/Hexalith.Parties.Sample.csproj (in 7 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Testing/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Testing/Hexalith.Tenants.Testing.csproj (in 2 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Hexalith.Parties.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/src/Hexalith.Parties/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Hexalith.Parties.csproj (in 38 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj...
+    GET https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.signalr/index.json
+    OK https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.signalr/index.json 239ms
+    GET https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.signalr/3.117.1/hexalith.eventstore.signalr.3.117.1.nupkg
+    OK https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.signalr/3.117.1/hexalith.eventstore.signalr.3.117.1.nupkg 121ms
+  Installed Hexalith.EventStore.SignalR 3.117.1 from https://api.nuget.org/v3/index.json to /home/administrator/.nuget/packages/hexalith.eventstore.signalr/3.117.1 with content hash 97J158iYzj6MKNHnUGr23+KkXnqBS+UCFKBJKVxqsIYGXhFeek6darR3YcQXytcTQGsihomDZhS6a5tALrNhaQ==.
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.UI/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj (in 594 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Testing/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj (in 6 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj (in 14 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj (in 5 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Authentication.Tests/Hexalith.Parties.Authentication.Tests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Authentication.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Authentication.Tests/Hexalith.Parties.Authentication.Tests.csproj (in 8 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Testing/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Testing/Hexalith.EventStore.Testing.csproj (in 4 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/Hexalith.EventStore.SignalR.csproj (in 1 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.ServiceDefaults/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.ServiceDefaults/Hexalith.EventStore.ServiceDefaults.csproj (in 1 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Server/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Hexalith.EventStore.Server.csproj (in 3 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Gateway/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Gateway/Hexalith.EventStore.Gateway.csproj (in 5 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.DomainService/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.DomainService/Hexalith.EventStore.DomainService.csproj (in 3 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj (in 0.8 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/Hexalith.EventStore.Client.csproj (in 1 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Mcp.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj (in 19 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj (in 136 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.EventStoreGateway.TestHost/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj (in 11 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj (in 15 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations.CodeGenerators/Hexalith.PolymorphicSerializations.CodeGenerators.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations.CodeGenerators/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations.CodeGenerators/Hexalith.PolymorphicSerializations.CodeGenerators.csproj (in 13 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.SourceTools/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.SourceTools/Hexalith.FrontComposer.SourceTools.csproj (in 1 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.csproj (in 2 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/Hexalith.FrontComposer.Schema.csproj (in 2 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.ConsumerPortal.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj (in 13 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Security/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj (in 6 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj (in 4 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.ConsumerPortal/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj (in 8 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Client/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj (in 7 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Authentication/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj (in 4 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Sample.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj (in 15 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Projections.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj (in 11 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Picker.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj (in 15 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj (in 5 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server/Hexalith.EventStore.Admin.Server.csproj (in 3 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj (in 4 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj (in 23 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj (in 62 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Server.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj (in 20 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Projections/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj (in 9 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Picker/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj (in 7 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Mcp/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj (in 10 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Mcp/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Mcp/Hexalith.FrontComposer.Mcp.csproj (in 4 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj (in 1 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/Hexalith.FrontComposer.Contracts.UI.csproj (in 2 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/Hexalith.EventStore.Aspire.csproj (in 1 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Abstractions/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Abstractions/Hexalith.EventStore.Admin.Abstractions.csproj (in 1 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj (in 1 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/Hexalith.Commons.ServiceDefaults.csproj (in 1 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/Hexalith.Commons.Http.csproj (in 1 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.AdminPortal.Tests/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj (in 19 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Server/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Server/Hexalith.Tenants.Server.csproj (in 2 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Hexalith.Tenants.Contracts.csproj (in 1 ms).
+  Assets file has not changed. Skipping assets file writing. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Client/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Client/Hexalith.Tenants.Client.csproj (in 2 ms).
+  Restoring packages for /home/administrator/projects/hexalith/parties/references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations/Hexalith.PolymorphicSerializations.csproj...
+  Writing assets file to disk. Path: /home/administrator/projects/hexalith/parties/references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations/obj/project.assets.json
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations/Hexalith.PolymorphicSerializations.csproj (in 6 ms).
+
+  NuGet Config files used:
+      /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/nuget.config
+      /home/administrator/.nuget/NuGet/NuGet.Config
+      /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/nuget.config
+
+  Feeds used:
+      https://api.nuget.org/v3/index.json
+
+  Installed:
+      1 package(s) to /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj
+      1 package(s) to /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj
+  27 of 59 projects are up-to-date for restore.
+Done Building Project "/home/administrator/projects/hexalith/parties/Hexalith.Parties.slnx" (Restore target(s)).
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.93

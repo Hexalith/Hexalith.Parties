@@ -52,7 +52,7 @@ $eventStoreProject = Join-Path $EventStoreRoot 'src/Hexalith.EventStore.Contract
 $versionArguments = @('msbuild', $eventStoreProject, '-nologo', '-getProperty:HexalithEventStoreVersion',
     '-p:Configuration=Debug', '-p:UseHexalithProjectReferences=true', '-p:NuGetAudit=false')
 $eventStoreVersion = (& dotnet @versionArguments 2> (Join-Path $EvidenceDirectory 'eventstore-version.stderr.log') | Out-String).Trim()
-if ($LASTEXITCODE -ne 0 -or $eventStoreVersion -notmatch '\A\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?\z') {
+if ($LASTEXITCODE -ne 0 -or $eventStoreVersion -notmatch '^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$') {
     throw 'Cannot resolve the selected EventStore source version for a consistent Local build graph.'
 }
 $eventStoreVersion | Set-Content -LiteralPath (Join-Path $EvidenceDirectory 'eventstore-version.log')

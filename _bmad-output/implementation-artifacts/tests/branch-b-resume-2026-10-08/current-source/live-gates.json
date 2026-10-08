@@ -1,0 +1,50 @@
+[
+  {
+    "case": "live-missing",
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "Live",
+      "-EvidenceDirectory",
+      "/tmp/ext-parties-1-current-20261008/live-missing"
+    ],
+    "exitCode": 1,
+    "endpointAccess": "No; missing inputs or unconditional complete capability gate before transport",
+    "sentinelInputs": false
+  },
+  {
+    "case": "live-sentinel",
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "Live",
+      "-EvidenceDirectory",
+      "/tmp/ext-parties-1-current-20261008/live-sentinel"
+    ],
+    "exitCode": 1,
+    "endpointAccess": "No; missing inputs or unconditional complete capability gate before transport",
+    "sentinelInputs": true
+  },
+  {
+    "case": "readiness-missing",
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "LiveReadiness",
+      "-EvidenceDirectory",
+      "/tmp/ext-parties-1-current-20261008/readiness-missing"
+    ],
+    "exitCode": 1,
+    "endpointAccess": "No; missing inputs or unconditional complete capability gate before transport",
+    "sentinelInputs": false
+  }
+]
