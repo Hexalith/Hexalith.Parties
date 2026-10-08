@@ -1,0 +1,8 @@
+{
+  "command": "bash scripts/check-no-warning-override.sh",
+  "started_at_utc": "2026-10-08T06:39:58.576286+00:00",
+  "finished_at_utc": "2026-10-08T06:39:58.955630+00:00",
+  "elapsed_seconds": 0.38,
+  "exit_code": 0,
+  "log": "warning-submodule-guard.log"
+}

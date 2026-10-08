@@ -1,0 +1,41 @@
+{
+  "parties_head": "f2886c604f642c5d730f8b615a554206a2b35300",
+  "files": {
+    "Directory.Packages.props": {
+      "worktree_sha256": "7ad7742e7bc37c60645a3ae25bd1f988e311bbecbddc0f6ea24a497754bd3ccb",
+      "head_sha256": "7ad7742e7bc37c60645a3ae25bd1f988e311bbecbddc0f6ea24a497754bd3ccb"
+    },
+    "Directory.Build.props": {
+      "worktree_sha256": "60bfac9468a7d5560405045a87ae4a0d350687348f0a59cd1c7cdffb2b41d4b8",
+      "head_sha256": "60bfac9468a7d5560405045a87ae4a0d350687348f0a59cd1c7cdffb2b41d4b8"
+    },
+    "Directory.Build.targets": {
+      "worktree_sha256": "a9dd7be2cd742bdfcdf50e1dffec892c56909c0393620ff3cae9635da78e94df",
+      "head_sha256": "a9dd7be2cd742bdfcdf50e1dffec892c56909c0393620ff3cae9635da78e94df"
+    },
+    "src/Hexalith.Parties/Program.cs": {
+      "worktree_sha256": "6586fe56963122fb0efedbdf4f2f078ba7413c3d90bad8bc4ef2aef29995cc06",
+      "head_sha256": "6586fe56963122fb0efedbdf4f2f078ba7413c3d90bad8bc4ef2aef29995cc06"
+    },
+    "src/Hexalith.Parties/Hexalith.Parties.csproj": {
+      "worktree_sha256": "a86c5c17f0e0e3a4f2869e31c5d6dc4cc22092d8df102df488872ccce51c29cc",
+      "head_sha256": "a86c5c17f0e0e3a4f2869e31c5d6dc4cc22092d8df102df488872ccce51c29cc"
+    },
+    ".github/workflows/ci.yml": {
+      "worktree_sha256": "2f725cfc04cc7c42e0c681966d8210d6632b4d5f07d59adf125130ac7b022c7c",
+      "head_sha256": "2f725cfc04cc7c42e0c681966d8210d6632b4d5f07d59adf125130ac7b022c7c"
+    },
+    ".github/workflows/release.yml": {
+      "worktree_sha256": "b00a9cd8b49c3b4c31f4e2fdbe780ceb79efda1595aa0b77afccdf4dd14ebc00",
+      "head_sha256": "b00a9cd8b49c3b4c31f4e2fdbe780ceb79efda1595aa0b77afccdf4dd14ebc00"
+    },
+    "scripts/validate-publication-preflight.sh": {
+      "worktree_sha256": "08dfb423fc514f0da6cdbf65e1fd372ffdff2630b76aef630b48fc897bcd5921",
+      "head_sha256": "08dfb423fc514f0da6cdbf65e1fd372ffdff2630b76aef630b48fc897bcd5921"
+    },
+    "scripts/test.ps1": {
+      "worktree_sha256": "ff92ef2a2c4b2d4015b4b3739cdaf6f0991afa2e43a9f35fa85423205da7253a",
+      "head_sha256": "ff92ef2a2c4b2d4015b4b3739cdaf6f0991afa2e43a9f35fa85423205da7253a"
+    }
+  }
+}

@@ -81,11 +81,11 @@ The effective package graph selects EventStore 3.115.0 through the Parties versi
 
 Package mode remains the authoritative CI and release path; source mode is diagnostic only and must not be used to hide package metadata or publication failures. The solution also builds its orchestration projects and the documented Commons HTTP/ServiceDefaults source fallbacks; these do not switch Parties' EventStore package consumers to source mode.
 
-Package-mode verification on 2026-10-07 remains blocked by an upstream publication prerequisite. `dotnet restore Hexalith.Parties.slnx` succeeds, but `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1` exits 1 with 0 warnings and 2 CS1061 errors at `src/Hexalith.Parties/Program.cs:64` and `:66`: the restored EventStore 3.115.0 packages do not expose `RequireEventStoreSidecarChannel` for `IEndpointConventionBuilder`. The August EventStore 3.88.0 projection-rebuild CS0246 failure is historical. Keep the host security calls and projection-rebuild work intact.
+Package-mode verification on 2026-10-08 remains blocked by an upstream publication prerequisite. `dotnet restore Hexalith.Parties.slnx` succeeds, but `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1` exits 1 with 0 warnings and 2 CS1061 errors at `src/Hexalith.Parties/Program.cs:64` and `:66`: the restored EventStore 3.115.0 packages do not expose `RequireEventStoreSidecarChannel` for `IEndpointConventionBuilder`. The August EventStore 3.88.0 projection-rebuild CS0246 failure is historical. Keep the host security calls and projection-rebuild work intact.
 
 ### Required EventStore publication
 
-The live NuGet v3 indexes checked on 2026-10-07 end at 3.115.0 for DomainService, ServiceDefaults, Client, Contracts, Server, Testing, Aspire, SignalR, and Gateway, with no prereleases. The downloaded [DomainService 3.115.0 package](https://www.nuget.org/packages/Hexalith.EventStore.DomainService/3.115.0) has repository commit `283b07a52c9c70e1c940164a7011ee8c3ad98b2d`; its assembly does not contain the extension. There is currently no published version to select instead.
+The live NuGet v3 indexes checked on 2026-10-08 end at 3.115.0 for DomainService, ServiceDefaults, Client, Contracts, Server, Testing, Aspire, SignalR, and Gateway, with no prereleases. The downloaded [DomainService 3.115.0 package](https://www.nuget.org/packages/Hexalith.EventStore.DomainService/3.115.0) has repository commit `283b07a52c9c70e1c940164a7011ee8c3ad98b2d`; its assembly does not contain the extension. There is currently no published version to select instead.
 
 The API first appears in upstream [commit c4d5455a3b79ca1ba0113a286cf2432b2cace7fb](https://github.com/Hexalith/Hexalith.EventStore/commit/c4d5455a3b79ca1ba0113a286cf2432b2cace7fb), after [v3.115.0](https://github.com/Hexalith/Hexalith.EventStore/releases/tag/v3.115.0). The required change is already implemented upstream; EventStore owners must publish it:
 
@@ -96,7 +96,7 @@ The API first appears in upstream [commit c4d5455a3b79ca1ba0113a286cf2432b2cace7
 - Once the packages are publicly available, update the central `HexalithEventStoreVersion` pin in Parties to the verified release so the installed family advances together. Re-run package-mode restore, Release solution build, and test lanes, including the gateway/sidecar security tests. Retain the current pin until that release is published.
 - After the normal reviewed main push, require successful full `ci.yml` for that exact current main commit before dispatching Release. Passing the local CI test lane validates workflow contracts; it cannot replace the mandatory full-CI release proof.
 
-The verification receipt is in [`eventstore-package-api-2026-10-07`](../_bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-07/README.md).
+The current verification receipt is in [`eventstore-package-api-2026-10-08`](../_bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-08/README.md); the [2026-10-07 receipt](../_bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-07/README.md) remains historical evidence.
 
 ## Secrets
 

@@ -53,3 +53,23 @@ full-CI proof for the exact current main commit before release.
 - Concurrent external work advanced EventStore and Platform submodule pointers.
   These changes were not made or reverted by this workflow; the focused host
   build confirms the package blocker independently of those source checkouts.
+- Resumed on 2026-10-08. External work committed the earlier handoff and receipts
+  during startup as Parties revision `450b1ddb6dde38a4431f300033d2c7d3eba27830`.
+  This run preserves that work and records a separate dated verification receipt.
+- Rechecked all nine public NuGet indexes and downloaded DomainService 3.115.0:
+  the publication prerequisite still exists and the package/assembly hashes match
+  the earlier receipt. Source history confirms the required API commit follows
+  the published v3.115.0 commit.
+- Refreshed `docs/ci.md` and `docs/architecture.md` to the current evidence; corrected
+  the stale 3.113.0 current-package claim and release-readiness wording while
+  retaining the historical source approvals. No runtime or dependency edits.
+- Current verification: restore passed; serialized Release solution and focused
+  host builds both failed with only the two expected CS1061 errors and no warnings.
+  All 101 CI-lane tests passed without skips; the warning/submodule guard passed.
+  Receipt: `tests/eventstore-package-api-2026-10-08/README.md`, with sanitized
+  command/test/package/dependency evidence and unchanged source/input stamps.
+- External work advanced the root revision again to
+  `f2886c604f642c5d730f8b615a554206a2b35300` while evidence was being collected,
+  adding only this run's preliminary JSON receipts. Root submodule checkouts and
+  every stamped build/host/release input remained unchanged. Source receipts
+  record both identities; no exact-current-main full-CI success is claimed.

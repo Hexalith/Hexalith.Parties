@@ -5,7 +5,8 @@
     "finished_at_utc": "2026-10-08T06:38:22.240310+00:00",
     "elapsed_seconds": 1.79,
     "exit_code": 0,
-    "log": "restore.log"
+    "log": "restore.log",
+    "log_sha256": "a93d1b22ec80f8055e3d79c206ab752a0c7b8aa4d5beb17ba9b609ccdbec7850"
   },
   {
     "command": "dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1",
@@ -13,6 +14,55 @@
     "finished_at_utc": "2026-10-08T06:38:54.698239+00:00",
     "elapsed_seconds": 15.87,
     "exit_code": 1,
-    "log": "release-build.log"
+    "log": "release-build.log",
+    "log_sha256": "a93978b15b6f37c9a4545e79ded574431d5734138b70772699887f784fa2f19a",
+    "warning_count": 0,
+    "error_count": 2,
+    "diagnostics": [
+      "Program.cs(64,27): error CS1061: 'IEndpointConventionBuilder' does not contain a definition for 'RequireEventStoreSidecarChannel' and no accessible extension method 'RequireEventStoreSidecarChannel' accepting a first argument of type 'IEndpointConventionBuilder' could be found (are you missing a using directive or an assembly reference?)",
+      "Program.cs(66,25): error CS1061: 'IEndpointConventionBuilder' does not contain a definition for 'RequireEventStoreSidecarChannel' and no accessible extension method 'RequireEventStoreSidecarChannel' accepting a first argument of type 'IEndpointConventionBuilder' could be found (are you missing a using directive or an assembly reference?)"
+    ]
+  },
+  {
+    "command": "dotnet build src/Hexalith.Parties/Hexalith.Parties.csproj --configuration Release --no-restore -m:1",
+    "started_at_utc": "2026-10-08T06:39:36.780808+00:00",
+    "finished_at_utc": "2026-10-08T06:39:38.607981+00:00",
+    "elapsed_seconds": 1.83,
+    "exit_code": 1,
+    "log": "focused-host-build.log",
+    "log_sha256": "b088e19cbb575117cac5566aca588c198964248d9a1a0746699a9b6f71c70337",
+    "warning_count": 0,
+    "error_count": 2,
+    "diagnostics": [
+      "Program.cs(64,27): error CS1061: 'IEndpointConventionBuilder' does not contain a definition for 'RequireEventStoreSidecarChannel' and no accessible extension method 'RequireEventStoreSidecarChannel' accepting a first argument of type 'IEndpointConventionBuilder' could be found (are you missing a using directive or an assembly reference?)",
+      "Program.cs(66,25): error CS1061: 'IEndpointConventionBuilder' does not contain a definition for 'RequireEventStoreSidecarChannel' and no accessible extension method 'RequireEventStoreSidecarChannel' accepting a first argument of type 'IEndpointConventionBuilder' could be found (are you missing a using directive or an assembly reference?)"
+    ]
+  },
+  {
+    "command": "pwsh -NoProfile -File scripts/test.ps1 -Lane ci -ResultsDirectory _bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-08",
+    "started_at_utc": "2026-10-08T06:39:57.415701+00:00",
+    "finished_at_utc": "2026-10-08T06:40:02.468543+00:00",
+    "elapsed_seconds": 5.05,
+    "exit_code": 0,
+    "log": "ci-lane.log",
+    "log_sha256": "be59c2581cd0d6ffe41df74eb0be593a98827cf104e8797576adab0ad89a0140"
+  },
+  {
+    "command": "bash scripts/check-no-warning-override.sh",
+    "started_at_utc": "2026-10-08T06:39:58.576286+00:00",
+    "finished_at_utc": "2026-10-08T06:39:58.955630+00:00",
+    "elapsed_seconds": 0.38,
+    "exit_code": 0,
+    "log": "warning-submodule-guard.log",
+    "log_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604"
+  },
+  {
+    "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -method Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.CiDocsDescribeSharedCiReleaseAndZotApiKeyPublishContract",
+    "started_at_utc": "2026-10-08T06:45:49.595750+00:00",
+    "finished_at_utc": "2026-10-08T06:45:49.845084+00:00",
+    "elapsed_seconds": 0.25,
+    "exit_code": 0,
+    "log": "docs-ci-contract.log",
+    "log_sha256": "d67cb51ff065888f6357fca8e0812e07d7d18552973254e6319768f4865d9b5f"
   }
 ]

@@ -1,0 +1,540 @@
+{
+  "source_artifact": "Hexalith.Parties.Ci.Tests.trx",
+  "source_sha256": "071ddd2b1c903cd780ae4b9c54113506d0a75dcd7cac0928a27729eca4173309",
+  "run_id": "aefb4fa4-0b39-4085-b16d-94992833f8bb",
+  "times": {
+    "creation": "2026-10-08T06:40:00.3418946+00:00",
+    "queuing": "2026-10-08T06:40:00.3418946+00:00",
+    "start": "2026-10-08T06:40:00.3418946+00:00",
+    "finish": "2026-10-08T06:40:02.1178728+00:00"
+  },
+  "summary": {
+    "outcome": "Completed"
+  },
+  "counters": {
+    "total": "101",
+    "executed": "101",
+    "passed": "101",
+    "failed": "0",
+    "error": "0",
+    "timeout": "0",
+    "aborted": "0",
+    "inconclusive": "0",
+    "passedButRunAborted": "0",
+    "notRunnable": "0",
+    "notExecuted": "0",
+    "disconnected": "0",
+    "warning": "0",
+    "completed": "0",
+    "inProgress": "0",
+    "pending": "0"
+  },
+  "sanitization": "Only test names, outcomes, durations, times and counters are retained; machine/user identity, paths and captured output are omitted.",
+  "results": [
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ReleaseWorkflowRequiresFixedFullCiProofAtEveryPublicationBoundary",
+      "outcome": "Passed",
+      "duration": "00:00:00.0140000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.StandaloneSolutionTests.CanonicalSolutionIncludesOwnedPackageBuiltGatewayTestHost",
+      "outcome": "Passed",
+      "duration": "00:00:00.0150000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.AssistantCommitMessageInstructionsTests.CommitlintIgnoredDefaultsMustStillBeRejected",
+      "outcome": "Passed",
+      "duration": "00:00:00.0140000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.AssistantCommitMessageInstructionsTests.DocumentationOnlyGenerationRequiresAValidatedTypedMessage",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.AssistantCommitMessageInstructionsTests.InvalidConventionalShapeMustBeReplaced",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.AssistantCommitMessageInstructionsTests.AssistantEntryPointsAreByteIdentical",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.AssistantCommitMessageInstructionsTests.UnavailableToolingMustBeReportedWithoutClaimingValidation",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.AssistantCommitMessageInstructionsTests.PersistentProjectContextUsesTheCommitlintAwareHexalithPolicy",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.AssistantCommitMessageInstructionsTests.SupportedAssistantSurfacesReceiveTheCompleteGenerationContract",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.PublicationPreflightWrapperForwardsAllowedSourceWorkflowUnchanged(phase: \"publish\", sourceCiWorkflow: \"ci.yml\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0100000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.StandaloneSolutionTests.AppHostUsesPathsForExternalTopologyProjects",
+      "outcome": "Passed",
+      "duration": "00:00:00.0130000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.StandaloneSolutionTests.GatewayTestsSelectHostByDependencyMode",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.PublicationPreflightWrapperForwardsAllowedSourceWorkflowUnchanged(phase: \"verify\", sourceCiWorkflow: \"ci.yml\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0050000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.PublicationPreflightWrapperRejectsPackageCountDriftBeforeSharedPreflight(packageCount: null)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.PublicationPreflightWrapperRejectsPackageCountDriftBeforeSharedPreflight(packageCount: \"8\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0020000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.PublicationPreflightWrapperRejectsPackageCountDriftBeforeSharedPreflight(packageCount: \"\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.PublicationPreflightWrapperRejectsPackageCountDriftBeforeSharedPreflight(packageCount: \"10\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"failed-ci\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0580000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ServerAndIntegrationTestsReplaceObsoleteCollectionBehaviorWithNonParallelCollections",
+      "outcome": "Passed",
+      "duration": "00:00:00.0110000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.PublicationPreflightWrapperRejectsOtherSourceWorkflowBeforeSharedPreflight(phase: \"verify\", sourceCiWorkflow: \"nightly.yml\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0020000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.StandaloneSolutionTests.StandaloneSolutionContainsEveryOwnedProjectAndNoReferenceEntries",
+      "outcome": "Passed",
+      "duration": "00:00:00.0240000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.PublicationPreflightWrapperRejectsOtherSourceWorkflowBeforeSharedPreflight(phase: \"verify\", sourceCiWorkflow: \"\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.PublicationPreflightWrapperRejectsOtherSourceWorkflowBeforeSharedPreflight(phase: \"verify\", sourceCiWorkflow: \"commitlint.yml\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"missing-ci-id\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0110000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.PublicationPreflightWrapperRejectsOtherSourceWorkflowBeforeSharedPreflight(phase: \"verify\", sourceCiWorkflow: \"ci.yaml\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.PublicationPreflightWrapperRejectsOtherSourceWorkflowBeforeSharedPreflight(phase: \"publish\", sourceCiWorkflow: \"commitlint.yml\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.DependencyManifestsAndLocksMatchSelectedVersions(manifestPath: \"package.json\", lockPath: \"package-lock.json\", packageName: \"@semantic-release/release-notes-generator\", expectedRange: \"^14.1.1\", expectedResolvedVersion: \"14.1.1\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0030000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.DependencyManifestsAndLocksMatchSelectedVersions(manifestPath: \"tests/e2e/package.json\", lockPath: \"tests/e2e/package-lock.json\", packageName: \"typescript\", expectedRange: \"^7.0.2\", expectedResolvedVersion: \"7.0.2\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.DependencyManifestsAndLocksMatchSelectedVersions(manifestPath: \"package.json\", lockPath: \"package-lock.json\", packageName: \"@commitlint/cli\", expectedRange: \"^21.2.2\", expectedResolvedVersion: \"21.2.2\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"wrong-ci-event\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0100000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.DependencyManifestsAndLocksMatchSelectedVersions(manifestPath: \"package.json\", lockPath: \"package-lock.json\", packageName: \"@commitlint/config-conventional\", expectedRange: \"^21.2.2\", expectedResolvedVersion: \"21.2.2\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"non-main\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0060000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.DependencyManifestsAndLocksMatchSelectedVersions(manifestPath: \"package.json\", lockPath: \"package-lock.json\", packageName: \"@semantic-release/commit-analyzer\", expectedRange: \"^13.0.1\", expectedResolvedVersion: \"13.0.1\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0060000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.DependencyManifestsAndLocksMatchSelectedVersions(manifestPath: \"tests/e2e/package.json\", lockPath: \"tests/e2e/package-lock.json\", packageName: \"@axe-core/playwright\", expectedRange: \"^4.13.0\", expectedResolvedVersion: \"4.13.0\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.DependencyManifestsAndLocksMatchSelectedVersions(manifestPath: \"package.json\", lockPath: \"package-lock.json\", packageName: \"@semantic-release/github\", expectedRange: \"^12.0.9\", expectedResolvedVersion: \"12.0.9\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.DependencyManifestsAndLocksMatchSelectedVersions(manifestPath: \"package.json\", lockPath: \"package-lock.json\", packageName: \"semantic-release\", expectedRange: \"^25.0.9\", expectedResolvedVersion: \"25.0.9\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.DependencyManifestsAndLocksMatchSelectedVersions(manifestPath: \"tests/e2e/package.json\", lockPath: \"tests/e2e/package-lock.json\", packageName: \"@playwright/test\", expectedRange: \"^1.63.0\", expectedResolvedVersion: \"1.63.0\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.DependencyManifestsAndLocksMatchSelectedVersions(manifestPath: \"package.json\", lockPath: \"package-lock.json\", packageName: \"@semantic-release/exec\", expectedRange: \"^7.1.0\", expectedResolvedVersion: \"7.1.0\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.DependencyManifestsAndLocksMatchSelectedVersions(manifestPath: \"tests/e2e/package.json\", lockPath: \"tests/e2e/package-lock.json\", packageName: \"@types/node\", expectedRange: \"^26.5.1\", expectedResolvedVersion: \"26.5.1\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ReleaseSupportFilesDeclareSemanticReleaseAndSecretContracts",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"object-ci-runs\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0110000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"stale-main\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0050000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ReleaseWorkflowStructureRejectsAuthenticationFieldsOnlyInComments(requiredField: \"if: ${{ steps.prepare.outputs.publish-enabled == '\"\u00b7\u00b7\u00b7, inlineComment: True)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0180000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ReleaseWorkflowStructureRejectsAuthenticationFieldsOnlyInComments(requiredField: \"uses: NuGet/login@8d196754b4036150537f80ac539e15c2\"\u00b7\u00b7\u00b7, inlineComment: False)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ReleaseWorkflowStructureRejectsAuthenticationFieldsOnlyInComments(requiredField: \"uses: NuGet/login@8d196754b4036150537f80ac539e15c2\"\u00b7\u00b7\u00b7, inlineComment: True)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ReleaseWorkflowStructureRejectsAuthenticationFieldsOnlyInComments(requiredField: \"if: ${{ steps.prepare.outputs.publish-enabled == '\"\u00b7\u00b7\u00b7, inlineComment: False)",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ReleaseWorkflowValidatesRootGitlinksAgainstProvedFloorBeforeLogin",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"negative-ci-id\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0100000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"invalid-dispatch\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ReleasePackageManifestDeclaresExactNinePackageInventory",
+      "outcome": "Passed",
+      "duration": "00:00:00.0040000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ReleaseWorkflowPublishesOnlyPartiesContainersThroughSharedDomainPreparation",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.CiWorkflowDelegatesToSharedDomainCiWithPartiesTestLanes",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ReleaseWorkflowPreservesCompleteSemanticReleasePreflightEnvironment",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ReleaseWorkflowUsesDispatchedCheckoutAndTemporaryCallerOwnedNuGetKey",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ReleaseWorkflowGatesAuthenticationAndPublicationOnSharedFreezeVerdict",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"array-ci-response\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0090000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ManualReleaseTriggerContractRejectsAdditionalAutomaticEvents(automaticEvent: \"schedule\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0060000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ManualReleaseTriggerContractRejectsAdditionalAutomaticEvents(automaticEvent: \"push\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ManualReleaseTriggerContractRejectsAdditionalAutomaticEvents(automaticEvent: \"issue_comment\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ManualReleaseTriggerContractRejectsAdditionalAutomaticEvents(automaticEvent: \"pull_request\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0010000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ManualReleaseTriggerContractRejectsAdditionalAutomaticEvents(automaticEvent: \"workflow_run\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ManualReleaseTriggerContractRejectsAdditionalAutomaticEvents(automaticEvent: \"repository_dispatch\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"fractional-ci-id\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0120000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.PublicationPreflightWrapperForwardsExactPackageAndContainerSet(phase: \"verify\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0050000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.PublicationPreflightWrapperForwardsExactPackageAndContainerSet(phase: \"publish\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0040000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.CiDocsDescribeSharedCiReleaseAndZotApiKeyPublishContract",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.CommitlintAndDependabotUseReleaseCompatibleCommitContracts",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ReleaseWorkflowSkipsPublicationVerificationWhenFrozen",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.MainPushRunsCiAndCodeQlWhileReleaseRequiresManualDispatch",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"wrong-ci-sha\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0090000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"missing-ci\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0090000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"zero-ci-id\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0090000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"ci-api-failure\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0080000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"running-ci\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0110000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"api-failure\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0040000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"wrong-ci-branch\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0090000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"boolean-ci-id\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0100000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"invalid-live-main\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0040000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.PythonProcessHarnessDrainsBothStreamsAndEnforcesTimeout",
+      "outcome": "Passed",
+      "duration": "00:00:00.2240000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"string-ci-id\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0100000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"malformed-ci\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0100000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(scenario: \"null-ci-id\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0100000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.LegacyBypassValuesCannotSubstituteCommitlintForFullCi(legacyBypassValidation: \"true\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0100000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.NuspecValidatorPreservesAndValidatesEveryDependencyGroup",
+      "outcome": "Passed",
+      "duration": "00:00:00.0400000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.LegacyBypassValuesCannotSubstituteCommitlintForFullCi(legacyBypassValidation: \"TRUE\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0090000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.LegacyBypassValuesCannotSubstituteCommitlintForFullCi(legacyBypassValidation: \"\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0100000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.LegacyBypassValuesCannotSubstituteCommitlintForFullCi(legacyBypassValidation: \"unknown\")",
+      "outcome": "Passed",
+      "duration": "00:00:00.0100000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRunsOutsideTheProtectedReleaseEnvironment",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateAcceptsOnlySuccessfulExactCurrentMainPush",
+      "outcome": "Passed",
+      "duration": "00:00:00.0110000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.SupportPackingRequiresExactProducedPackageMetadata",
+      "outcome": "Passed",
+      "duration": "00:00:00.0650000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.MsbuildPropertyResolverTracksCentralVersionChanges",
+      "outcome": "Passed",
+      "duration": "00:00:00.2520000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.MsbuildPropertyResolverTranslatesLaunchAndTimeoutFailures",
+      "outcome": "Passed",
+      "duration": "00:00:00.0690000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.ReleasePackingKeepsCommonsHttpDependencyOnPublishedSupportVersion",
+      "outcome": "Passed",
+      "duration": "00:00:00.0030000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.CommonsHttpPackageReferencesHaveMatchingSourceFallback",
+      "outcome": "Passed",
+      "duration": "00:00:00.0170000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.ConsumerAssetsRejectStaleSelectedEventStorePackage",
+      "outcome": "Passed",
+      "duration": "00:00:00.0260000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.ConsumerSupportProjectsAreDirectSolutionMembers",
+      "outcome": "Passed",
+      "duration": "00:00:00.0290000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.MsbuildPropertyResolverRejectsEmptyAndUnresolvedValues",
+      "outcome": "Passed",
+      "duration": "00:00:00.0500000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.ConsumerSupportFeedUsesResolvedVersionForBothCommonsPackages",
+      "outcome": "Passed",
+      "duration": "00:00:00.0260000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.MsbuildPropertyResolverReturnsCurrentCentralVersion",
+      "outcome": "Passed",
+      "duration": "00:00:00.7910000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.SyntheticCentralVersionFlowsThroughEveryPackageScriptMainPath",
+      "outcome": "Passed",
+      "duration": "00:00:00.0650000"
+    },
+    {
+      "testName": "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.DirectoryBuildPropsDeclaresNarrowCommonsHttpSourceFallback",
+      "outcome": "Passed",
+      "duration": "00:00:00.0000000"
+    }
+  ]
+}

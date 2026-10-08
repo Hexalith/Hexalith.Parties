@@ -1,0 +1,18 @@
+{
+  "observed_at_utc": "2026-10-08T06:42:00.520636+00:00",
+  "parties_head": "f2886c604f642c5d730f8b615a554206a2b35300",
+  "branch": "main",
+  "worktree_status": "M _bmad-output/implementation-artifacts/spec-resolve-eventstore-package-api-mismatch.md\n M _bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-08/command-results.json\n M docs/architecture.md\n M docs/ci.md\n?? _bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-08/ci-results.json\n?? _bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-08/dependency-mode.json\n?? _bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-08/guard-result.json\n?? _bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-08/input-files.json",
+  "root_submodules": [
+    "3f194e17174994d308ec84af9ee2b5aa68674d0d references/Hexalith.AI.Tools (heads/main)",
+    " af20682ac8fc420068a731ecb87cff84727a3d53 references/Hexalith.Builds (v4.30.0-2-gaf20682)",
+    " 116d26815eb81e35b3c161e1799e5ee12805fc0a references/Hexalith.Commons (v2.30.1-15-g116d268)",
+    " 91aae06d49a23bac15be6a4bb363f37140bece4b references/Hexalith.EventStore (v3.115.0-16-g91aae06d)",
+    " c561b3210f15206a90c39c82c58f2e5b1005cd60 references/Hexalith.FrontComposer (v4.6.0-5-gc561b321)",
+    " e159f82b7528797fc245045625ff387d65294ba9 references/Hexalith.McpCli (heads/main)",
+    " e1c72dabc7a2a2464e34a1b46422ec2ddfbb1cda references/Hexalith.Memories (v2.28.1-32-ge1c72dab)",
+    " 332a7d8104e3f6c9aaa57cbc7f07afb5fa0859de references/Hexalith.Platform (heads/main)",
+    " 98de6e013840ece9f0fa7c68ab7dcdf2bba3b375 references/Hexalith.PolymorphicSerializations (v1.19.4)",
+    " 811447342e8f44b644a2074565e83f45519528fd references/Hexalith.Tenants (v5.7.0-165-g81144734)"
+  ]
+}

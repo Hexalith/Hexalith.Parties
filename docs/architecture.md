@@ -4,7 +4,7 @@
 
 ## 1. Executive summary
 
-Hexalith.Parties is a **ready-to-deploy party-management domain service** for people and organizations (contact channels + identifiers). It is built as an **event-sourced, CQRS** microservice that runs as an **EventStore SDK domain-service host behind the Hexalith.EventStore gateway**. Consumers never call the domain host directly — public command/query traffic enters EventStore (`POST /api/v1/commands` and `/api/v1/queries`, `Domain="party"`), which authenticates, validates tenancy/RBAC, and routes the work to the `parties` host over DAPR service invocation.
+Hexalith.Parties is a **party-management domain service** for people and organizations (contact channels + identifiers). It is built as an **event-sourced, CQRS** microservice that runs as an **EventStore SDK domain-service host behind the Hexalith.EventStore gateway**. Consumers never call the domain host directly — public command/query traffic enters EventStore (`POST /api/v1/commands` and `/api/v1/queries`, `Domain="party"`), which authenticates, validates tenancy/RBAC, and routes the work to the `parties` host over DAPR service invocation.
 
 It is **not** an auth provider, CRM, or identity server — it is the party/contact data backbone behind your own application logic.
 
@@ -53,7 +53,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.6.0` |
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.10` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.0-preview.1.261001-0243` |
-| Gateway/eventing | Hexalith.EventStore | package `3.113.0` by default (Parties pre-import CPM pin); approved source checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` (tag `v3.113.0`, the same release; approved 2026-10-05, root gitlink committed in Parties `75b4fa1f`; parity counts only for receipts rerun at this identity) |
+| Gateway/eventing | Hexalith.EventStore | package `3.115.0` by default (Parties pre-import CPM pin); historical approved source checkout `865cd9e49273dffbb1cdae85efeaf1aac322e09e` (tag `v3.113.0`; approved 2026-10-05, root gitlink committed in Parties `75b4fa1f`; parity counts only for receipts rerun at this identity) |
 | Tenancy | Hexalith.Tenants | package `5.7.0` by default; approved source gitlink `72b8e4f508176b69826549e87b7b2a286f607fd1` (`v5.7.0-143-g72b8e4f5`; approved 2026-10-05 and committed; parity counts only for receipts rerun at this identity) |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.2.0` |
@@ -75,7 +75,7 @@ Solution-wide build settings (`Directory.Build.props`): `Nullable=enable`, `Impl
 The AppHost SDK and Aspire packages are aligned at `13.6.0`; DAPR client,
 actors, and ASP.NET Core packages are aligned at `1.18.10`.
 
-Root source identities follow the Story 8.10 final set approved by
+Historical root source identities follow the Story 8.10 final set approved by
 Administrator / jpiquot on 2026-10-05 (authoritative record: the Story 8.3
 reconciliation and I20 approval tables): AI.Tools `3f194e17`, Builds
 `360a2b9c`, Commons `116d2681`, EventStore `865cd9e4` (`v3.113.0`),
@@ -85,6 +85,13 @@ package `3.113.0`, approve I16 identity re-validation for this set (a receipt
 counts as passing only when it was rerun at the stamped identity), and accept
 the missing I13 runtime focus, forced-colors, and reduced-motion proof as the
 named DW-111 deferral; I13 itself is not discharged.
+
+The current package pin is EventStore `3.115.0`; those October 5 source approvals
+and parity receipts describe the historical set. The [2026-10-08 package
+verification receipt](../_bmad-output/implementation-artifacts/tests/eventstore-package-api-2026-10-08/README.md)
+records the current root checkout identities and the unresolved Release build
+prerequisite. A package publication and its subsequent consumer verification are
+required before release readiness can be established.
 
 ---
 
@@ -244,7 +251,7 @@ scripts/  # local test runner, package validation, and Parties container publish
 
 - Exactly **15 runnable .NET test projects plus one support host** (`Hexalith.Parties.EventStoreGateway.TestHost`) and the Playwright e2e workspace, uniformly **xUnit v3** for runnable .NET tests (Shouldly + NSubstitute; bunit for Blazor). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|ci|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.Ci.Tests` validates static GitHub Actions publication contracts and executes the release source-gate shell against mocked GitHub API fixtures. Architectural fitness tests pin contract/dependency boundaries.
 - **CI/CD:** `.github/workflows/ci.yml` delegates restore/build/package-consumer validation and test tiers to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main`; `.github/workflows/release.yml` is a manual caller that requires current `main` and successful exact-source push proof from `ci.yml` before protected approval. Shared preparation and the complete Parties-owned container publisher use one reviewed immutable Hexalith.Builds commit, with caller-owned NuGet trusted publishing. The publication wrapper enforces the same full-CI proof. Submodules are checked out as **root-repository submodules only, never recursive**. See [ci.md](ci.md), [build-gate.md](build-gate.md), [ci-secrets-checklist.md](ci-secrets-checklist.md).
-- **Package API prerequisite:** the 2026-10-07 package-mode Release build against EventStore 3.115.0 fails with two CS1061 errors for `RequireEventStoreSidecarChannel` in the domain-service host. No compatible version is published: EventStore must release the coordinated package family containing upstream commit `c4d5455a3b79ca1ba0113a286cf2432b2cace7fb`, including DomainService and ServiceDefaults authentication support, before Parties can advance its central version pin. Preserve the security/rebuild calls, package-mode dependencies, and mandatory exact-source full-CI release proof. The older EventStore 3.88.0 rebuild CS0246 failure is historical. See [ci.md](ci.md#required-eventstore-publication) for the upstream handoff and verification receipt.
+- **Package API prerequisite:** the 2026-10-08 package-mode Release build against EventStore 3.115.0 fails with two CS1061 errors for `RequireEventStoreSidecarChannel` in the domain-service host. No compatible version is published: EventStore must release the coordinated package family containing upstream commit `c4d5455a3b79ca1ba0113a286cf2432b2cace7fb`, including DomainService and ServiceDefaults authentication support, before Parties can advance its central version pin. Preserve the security/rebuild calls, package-mode dependencies, and mandatory exact-source full-CI release proof. The older EventStore 3.88.0 rebuild CS0246 failure is historical. See [ci.md](ci.md#required-eventstore-publication) for the upstream handoff and verification receipt.
 
 ---
 

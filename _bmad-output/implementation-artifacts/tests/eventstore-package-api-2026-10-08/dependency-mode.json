@@ -1,0 +1,35 @@
+{
+  "observed_at_utc": "2026-10-08T06:39:38.325919+00:00",
+  "command": "dotnet msbuild src/Hexalith.Parties/Hexalith.Parties.csproj -p:Configuration=Release -getProperty:UseNuGetDeps,UseHexalithProjectReferences,HexalithEventStoreFromSource,HexalithEventStoreVersion -getItem:PackageReference,ProjectReference",
+  "assets_file": "src/Hexalith.Parties/obj/project.assets.json",
+  "assets_sha256": "80bc674eff4aa783349d09036a9b1ca36dfb7029d9ae0a8826f78ffebdc92772",
+  "properties": {
+    "UseNuGetDeps": "true",
+    "UseHexalithProjectReferences": "false",
+    "HexalithEventStoreFromSource": "",
+    "HexalithEventStoreVersion": "3.115.0"
+  },
+  "eventstore_package_references": [
+    "Hexalith.EventStore.Client",
+    "Hexalith.EventStore.DomainService"
+  ],
+  "eventstore_project_references": [],
+  "resolved_eventstore_libraries": {
+    "Hexalith.EventStore.Client/3.115.0": {
+      "type": "package",
+      "path": "hexalith.eventstore.client/3.115.0"
+    },
+    "Hexalith.EventStore.Contracts/3.115.0": {
+      "type": "package",
+      "path": "hexalith.eventstore.contracts/3.115.0"
+    },
+    "Hexalith.EventStore.DomainService/3.115.0": {
+      "type": "package",
+      "path": "hexalith.eventstore.domainservice/3.115.0"
+    },
+    "Hexalith.EventStore.ServiceDefaults/3.115.0": {
+      "type": "package",
+      "path": "hexalith.eventstore.servicedefaults/3.115.0"
+    }
+  }
+}
