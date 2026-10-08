@@ -1,0 +1,160 @@
+{
+  "lanes": [
+    {
+      "project": "Hexalith.EventStore.Contracts.Tests",
+      "passed": 23,
+      "xmlSha256": "8f958a9e1a582ceea42fc9e1d8ae2f356302d58cb33637c48bbefd86ecf28796",
+      "requiredClasses": {
+        "*StreamReadPageValidatorTests": 12,
+        "*RetainedIdentityHistoryValidatorTests": 11
+      },
+      "scope": "normal owner build"
+    },
+    {
+      "project": "Hexalith.EventStore.Client.Tests",
+      "passed": 107,
+      "xmlSha256": "eb4479fff8189869531dff80f9937e933fcdabe57db6f25a35d306a897246328",
+      "requiredClasses": {
+        "*AuthoritativeEventStreamReaderTests": 8,
+        "*EventStoreGatewayClientTests": 76,
+        "*EventStoreGatewayClientStreamTests": 7,
+        "*RetainedIdentityHistoryReaderTests": 16
+      },
+      "scope": "normal owner build"
+    },
+    {
+      "project": "Hexalith.EventStore.Server.Tests",
+      "passed": 168,
+      "xmlSha256": "5882f4109a1366f433278437dbcbc90842f1db03a985fac835cdcefa592a1117",
+      "requiredClasses": {
+        "*IdentityAdmissionTests": 6,
+        "*ActorRegistryTests": 6,
+        "*IdentityGatewayDenialTests": 3,
+        "*CommandsControllerTrustedExtensionTests": 7,
+        "*QueriesControllerTests": 72,
+        "*StreamsControllerTests": 26,
+        "*RetainedIdentityHistorySourceReaderTests": 48
+      },
+      "scope": "normal owner build"
+    },
+    {
+      "project": "Hexalith.Platform.Identity.Tests",
+      "passed": 2,
+      "xmlSha256": "f1de87924102f000a0eba47d4923d897f133d1b71e15c8a9d5d79455213c9eeb",
+      "requiredClasses": {
+        "*PlatformIdentityAdmissionTests": 2
+      },
+      "scope": "normal owner build"
+    },
+    {
+      "project": "Hexalith.Parties.Contracts.Tests",
+      "passed": 29,
+      "xmlSha256": "e8ec979fd59c26ab4a52b273306444cd01b934238effad4cdecaab1d195307af",
+      "requiredClasses": {
+        "*PartyStateTests": 26,
+        "*PartyIdentityContractTests": 2,
+        "*ContractsPublicApiSnapshotTests": 1
+      },
+      "scope": "normal owner build"
+    },
+    {
+      "project": "Hexalith.Parties.Server.Tests",
+      "passed": 94,
+      "xmlSha256": "ae1fdedac6a6d6dabda8c329740a9539c8c1b9cabc46f1ba8ac6b0ebca6cf5c6",
+      "requiredClasses": {
+        "*AgentPartyProvisioningTests": 3,
+        "*HumanActorBindingTests": 7,
+        "*PartyAggregateCreateTests": 24,
+        "*PartyAggregateCompositeTests": 60
+      },
+      "scope": "normal owner build"
+    },
+    {
+      "project": "Hexalith.Parties.Tests",
+      "passed": 357,
+      "xmlSha256": "6fbcd8cbba86d068d447ebf00bf044be20c026d518a24f949d8512228c0fd4e7",
+      "requiredClasses": {
+        "*PartyIdentityAdmissionTests": 50,
+        "*PartyIdentityQueryHandlerTests": 155,
+        "*PartyIdentityRetentionConfigurationTests": 6,
+        "*PartyDomainProcessorValidationTests": 44,
+        "*PartySdkQueryHandlerTests": 54,
+        "*PartiesProcessEndpointTests": 13,
+        "*PartiesDomainServiceSecurityTests": 35
+      },
+      "scope": "temporary two-fitness-file exclusion and retained assets"
+    },
+    {
+      "project": "Hexalith.Parties.Security.Tests",
+      "passed": 30,
+      "xmlSha256": "d58c604823fb13b864fd9e9ec5562e21f0fe3ed7c3077e3552066f1c1a08c358",
+      "requiredClasses": {
+        "*IdentityHistoryProtectionTests": 7,
+        "*PartyPayloadProtectionServiceTests": 23
+      },
+      "scope": "normal owner build"
+    },
+    {
+      "project": "Hexalith.Parties.Client.Tests",
+      "passed": 98,
+      "xmlSha256": "0cccf59c6093d2fbaaaec8db233a4916a49669995f3fed5b4372a3bd3645b497",
+      "requiredClasses": {
+        "*HttpPartiesIdentityClientTests": 18,
+        "*HttpPartiesCommandClientTests": 37,
+        "*HttpPartiesQueryClientTests": 30,
+        "*DependencyInjectionTests": 13
+      },
+      "scope": "normal owner build"
+    },
+    {
+      "project": "Hexalith.Parties.UI.Tests",
+      "passed": 72,
+      "xmlSha256": "58708bff1959db12df17738e2fcd74e010577c9994a3695550c8b66742992c8b",
+      "requiredClasses": {
+        "*IdentityBindingBoundaryTests": 5,
+        "*IdentityBindingProvisioningServiceTests": 14,
+        "*PartyIdClaimResolverTests": 11,
+        "*SelfScopedPartiesClientTests": 42
+      },
+      "scope": "normal owner build"
+    }
+  ],
+  "totalPassingSelectedCases": 980,
+  "admissionCases": 50,
+  "localMatrixCoverage": {
+    "Provision": [
+      "Hexalith.Parties.Server.Tests.Aggregates.AgentPartyProvisioningTests.ExactLostAckRetry_ReturnsOriginalWithoutAnotherCreationAndRejectsChangedIntent"
+    ],
+    "Current identity": [
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentHuman_RequiresCompleteSourceAndCurrentExactActor"
+    ],
+    "History": [
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.HistoricalReplay_BeforeBoundaryReturnsOriginalAndAtBoundaryReturnsSuccessor"
+    ],
+    "Isolation": [
+      "Hexalith.Parties.Client.Tests.HttpPartiesIdentityClientTests.ConcurrentTenantCalls_KeepEveryRequestAndEvidenceInItsExplicitScope"
+    ]
+  },
+  "compiledSourceAudit": [
+    {
+      "source": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Domain/PartyDomainProcessor.cs",
+      "sha256": "f88a5c782a5055d2476acf76565424e95642dacc1cc5bb600cf17cfab9bb5ee5",
+      "match": true
+    },
+    {
+      "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyIdentityAdmissionTests.cs",
+      "sha256": "781231ad9a8c50fab6802d77508532c41ed871e2a499df2bb447e0c8931df819",
+      "match": true
+    }
+  ],
+  "frozenIntentUnchanged": true,
+  "completeLocalGatePassed": false,
+  "liveQualificationEstablished": false,
+  "limitations": [
+    "normal complete Local gate failed with concurrent CS1503 fitness compilation error",
+    "later normal restore failed with NU1109 Swagger UI 10.3.0 versus central 10.2.3",
+    "Parties domain lane uses two explicitly omitted fitness files and retained pre-movement assets",
+    "No unchanged whole-worktree assertion; concurrent owner changes preserved",
+    "Production custody, restore, continuation and installed P-01-P-10 remain unqualified"
+  ]
+}

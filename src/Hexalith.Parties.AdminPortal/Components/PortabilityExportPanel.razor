@@ -1,6 +1,6 @@
 <section aria-labelledby="@($"portability-export-heading-{InstanceId}")">
     <h4 id="@($"portability-export-heading-{InstanceId}")">@Labels.ExportPartyData</h4>
-    <FluentButton Appearance="ButtonAppearance.Outline"
+    <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                   Disabled="@(!CanExport)"
                   OnClick="Export">
         @Labels.ExportPartyData

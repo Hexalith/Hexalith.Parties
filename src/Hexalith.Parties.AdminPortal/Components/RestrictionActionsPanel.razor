@@ -3,14 +3,14 @@
     <FluentTextInput Value="@Reason"
                      ValueChanged="ReasonChanged"
                      Label="@Labels.GdprRestrictionReason"
-                     aria-label="@Labels.GdprRestrictionReason" />
+                     AriaLabel="@Labels.GdprRestrictionReason" />
     <div class="hx-parties-admin__gdpr-actions">
-        <FluentButton Appearance="ButtonAppearance.Outline"
+        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                       Disabled="@(!CanRestrict)"
                       OnClick="@(() => BeginConfirmation(RestrictionAction.Restrict))">
             @Labels.RestrictProcessing
         </FluentButton>
-        <FluentButton Appearance="ButtonAppearance.Outline"
+        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                       Disabled="@(!CanLift)"
                       OnClick="@(() => BeginConfirmation(RestrictionAction.Lift))">
             @Labels.LiftRestriction
@@ -23,12 +23,12 @@
             <p>@ConfirmationMessage(pendingAction)</p>
             <p role="status" aria-live="polite" data-gdpr-confirmation-live>@Labels.GdprConfirmationOpened</p>
             <div class="hx-parties-admin__gdpr-actions">
-                <FluentButton Appearance="ButtonAppearance.Outline"
+                <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                               Disabled="@IsPendingActionDisabled(pendingAction)"
                               OnClick="CancelConfirmation">
                     @Labels.GdprCancel
                 </FluentButton>
-                <FluentButton Appearance="ButtonAppearance.Outline"
+                <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                               Disabled="@IsPendingActionDisabled(pendingAction)"
                               OnClick="ConfirmPendingActionAsync">
                     @Labels.GdprConfirm

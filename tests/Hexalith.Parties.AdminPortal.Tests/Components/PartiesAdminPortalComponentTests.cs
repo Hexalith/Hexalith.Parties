@@ -3724,7 +3724,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         {
             cut.Find("h1").TextContent.ShouldBe("Tiers");
             FluentTextInput search = cut.FindComponent<FluentTextInput>().Instance;
-            search.AdditionalAttributes!["aria-label"].ShouldBe("Rechercher des tiers");
+            search.AriaLabel.ShouldBe("Rechercher des tiers");
             search.Placeholder.ShouldBe("Nom affiche");
             cut.Markup.ShouldContain("Aucun tiers");
             cut.Markup.ShouldContain("Personne");

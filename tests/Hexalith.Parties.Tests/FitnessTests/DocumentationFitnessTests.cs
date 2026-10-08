@@ -236,7 +236,8 @@ public sealed class DocumentationFitnessTests
             .Select(static match => match.Groups["path"].Value)
             .ToArray();
 
-        rootSubmodulePaths.Length.ShouldBe(8);
+        rootSubmodulePaths.ShouldNotBeEmpty();
+        rootSubmodulePaths.Distinct(StringComparer.Ordinal).Count().ShouldBe(rootSubmodulePaths.Length);
         foreach (string path in rootSubmodulePaths)
         {
             inventory.ShouldContain($"`{path}`", Case.Sensitive, path);

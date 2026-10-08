@@ -1,6 +1,6 @@
 <section aria-labelledby="@($"processing-records-heading-{InstanceId}")">
     <h4 id="@($"processing-records-heading-{InstanceId}")">@Labels.GdprProcessingRecords</h4>
-    <FluentButton Appearance="ButtonAppearance.Outline"
+    <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                   Disabled="@(!CanRefresh)"
                   OnClick="Refresh">
         @Labels.ProcessingRecords

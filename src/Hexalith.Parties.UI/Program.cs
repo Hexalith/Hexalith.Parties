@@ -7,6 +7,7 @@ using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Client.Extensions;
 using Hexalith.Parties.ConsumerPortal.Services;
 using Hexalith.Parties.Contracts.Authorization;
+using Hexalith.Parties.Picker.Extensions;
 using Hexalith.Parties.UI;
 using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.UI.Components;
@@ -54,6 +55,7 @@ builder.Services.AddHexalithFrontComposerQuickstart(o => o.ScanAssemblies(typeof
 builder.Services.AddFrontComposerDevMode(builder.Environment);
 builder.Services.AddHexalithDomain<PartiesUiDomainMarker>();
 builder.Services.AddHexalithPartiesAdminPortal();
+builder.Services.AddHexalithPartyPicker();
 
 bool adminPortalE2eFixtureEnabled = PartiesAdminPortalE2eFixture.IsEnabled(builder.Configuration, builder.Environment);
 if (adminPortalE2eFixtureEnabled)
@@ -69,6 +71,7 @@ if (adminPortalE2eFixtureEnabled)
             _ => { });
     builder.Services.AddSingleton<PartiesAdminPortalE2eFixtureState>();
     builder.Services.Replace(ServiceDescriptor.Scoped<AuthenticationStateProvider, PartiesAdminPortalE2eAuthenticationStateProvider>());
+    builder.Services.Replace(ServiceDescriptor.Scoped<Hexalith.FrontComposer.Contracts.Rendering.IUserContextAccessor, PartiesAdminPortalE2eUserContextAccessor>());
     builder.Services.Replace(ServiceDescriptor.Scoped<IAdminPortalAuthorizationService, PartiesAdminPortalE2eAuthorizationService>());
     builder.Services.Replace(ServiceDescriptor.Scoped<IPartiesAdminPortalApiClient, PartiesAdminPortalE2eApiClient>());
     builder.Services.Replace(ServiceDescriptor.Scoped<IAdminPortalGdprClient, PartiesAdminPortalE2eApiClient>());

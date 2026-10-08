@@ -94,8 +94,21 @@ public class KeyManagementIntegrationTests
         // And the payload was encrypted
         result.SerializationFormat.ShouldBe("json+pdenc-v1");
         string protectedJson = Encoding.UTF8.GetString(result.PayloadBytes);
-        protectedJson.ShouldNotContain("Ada");
-        protectedJson.ShouldNotContain("Lovelace");
+        // Ciphertext can contain a short name by chance; reject plaintext JSON values
+        // and assert both personal-data fields are encrypted envelopes.
+        protectedJson.ShouldNotContain(JsonSerializer.Serialize(payload.PersonDetails.FirstName), Case.Sensitive);
+        protectedJson.ShouldNotContain(JsonSerializer.Serialize(payload.PersonDetails.LastName), Case.Sensitive);
+        using JsonDocument protectedDocument = JsonDocument.Parse(result.PayloadBytes);
+        JsonElement person = protectedDocument.RootElement.GetProperty(nameof(PartyCreated.PersonDetails));
+        foreach (string propertyName in new[] { nameof(PersonDetails.FirstName), nameof(PersonDetails.LastName) })
+        {
+            JsonElement encrypted = person.GetProperty(propertyName);
+            encrypted.ValueKind.ShouldBe(JsonValueKind.Object);
+            encrypted.GetProperty("$enc").GetBoolean().ShouldBeTrue();
+            encrypted.GetProperty("alg").GetString().ShouldBe("AES256GCM");
+            encrypted.GetProperty("kv").GetInt32().ShouldBe(1);
+            encrypted.GetProperty("c").GetString().ShouldNotBeNullOrEmpty();
+        }
     }
 
     /// <summary>

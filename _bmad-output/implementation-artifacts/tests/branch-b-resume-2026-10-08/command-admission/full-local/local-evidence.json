@@ -1,0 +1,83 @@
+[
+  {
+    "TestLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "Matrix": "Shared source contract validation",
+    "Project": "Hexalith.EventStore.Contracts.Tests",
+    "Summary": "   Hexalith.EventStore.Contracts.Tests  Total: 23, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.162s",
+    "BuildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Contracts.Tests-build.log",
+    "XmlLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "Classes": [
+      "*StreamReadPageValidatorTests",
+      "*RetainedIdentityHistoryValidatorTests"
+    ]
+  },
+  {
+    "TestLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Client.Tests-tests.log",
+    "Matrix": "Shared source/isolation",
+    "Project": "Hexalith.EventStore.Client.Tests",
+    "Summary": "   Hexalith.EventStore.Client.Tests  Total: 107, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.350s",
+    "BuildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Client.Tests-build.log",
+    "XmlLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Client.Tests-tests.xml",
+    "Classes": [
+      "*AuthoritativeEventStreamReaderTests",
+      "*EventStoreGatewayClientTests",
+      "*EventStoreGatewayClientStreamTests",
+      "*RetainedIdentityHistoryReaderTests"
+    ]
+  },
+  {
+    "TestLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Server.Tests-tests.log",
+    "Matrix": "Isolation/actor authority",
+    "Project": "Hexalith.EventStore.Server.Tests",
+    "Summary": "   Hexalith.EventStore.Server.Tests  Total: 168, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.673s",
+    "BuildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Server.Tests-build.log",
+    "XmlLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Server.Tests-tests.xml",
+    "Classes": [
+      "*IdentityAdmissionTests",
+      "*ActorRegistryTests",
+      "*IdentityGatewayDenialTests",
+      "*CommandsControllerTrustedExtensionTests",
+      "*QueriesControllerTests",
+      "*StreamsControllerTests",
+      "*RetainedIdentityHistorySourceReaderTests"
+    ]
+  },
+  {
+    "TestLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Platform.Identity.Tests-tests.log",
+    "Matrix": "Global registry/bootstrap",
+    "Project": "Hexalith.Platform.Identity.Tests",
+    "Summary": "   Hexalith.Platform.Identity.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.193s",
+    "BuildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Platform.Identity.Tests-build.log",
+    "XmlLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Platform.Identity.Tests-tests.xml",
+    "Classes": [
+      "*PlatformIdentityAdmissionTests"
+    ]
+  },
+  {
+    "TestLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Contracts.Tests-tests.log",
+    "Matrix": "History/compatibility",
+    "Project": "Hexalith.Parties.Contracts.Tests",
+    "Summary": "   Hexalith.Parties.Contracts.Tests  Total: 29, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.207s",
+    "BuildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Contracts.Tests-build.log",
+    "XmlLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Contracts.Tests-tests.xml",
+    "Classes": [
+      "*PartyStateTests",
+      "*PartyIdentityContractTests",
+      "*ContractsPublicApiSnapshotTests"
+    ]
+  },
+  {
+    "TestLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Server.Tests-tests.log",
+    "Matrix": "Provision/history",
+    "Project": "Hexalith.Parties.Server.Tests",
+    "Summary": "   Hexalith.Parties.Server.Tests  Total: 94, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.320s",
+    "BuildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Server.Tests-build.log",
+    "XmlLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Server.Tests-tests.xml",
+    "Classes": [
+      "*AgentPartyProvisioningTests",
+      "*HumanActorBindingTests",
+      "*PartyAggregateCreateTests",
+      "*PartyAggregateCompositeTests"
+    ]
+  }
+]

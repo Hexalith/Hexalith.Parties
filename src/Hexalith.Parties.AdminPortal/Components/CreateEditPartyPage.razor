@@ -128,12 +128,12 @@
             </fieldset>
 
             <div class="hx-party-form__actions">
-                <FluentButton Appearance="ButtonAppearance.Primary"
+                <FluentButton role="button" Appearance="ButtonAppearance.Primary"
                               Type="ButtonType.Submit"
                               Disabled="@(_submitting || _detailsUnavailable)">
                     @SubmitLabel
                 </FluentButton>
-                <FluentButton Appearance="ButtonAppearance.Outline" OnClick="CancelAsync" Disabled="@_submitting">
+                <FluentButton role="button" Appearance="ButtonAppearance.Outline" OnClick="CancelAsync" Disabled="@_submitting">
                     @EffectiveLabels.Cancel
                 </FluentButton>
             </div>

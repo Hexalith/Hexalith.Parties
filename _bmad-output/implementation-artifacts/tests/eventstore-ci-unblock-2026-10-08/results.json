@@ -1,0 +1,135 @@
+{
+  "upstreamBaseCommit": "4cc77f9554395e84539e173e94b8f0b4df14d643",
+  "sdk": "10.0.401",
+  "failedCiRun": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/37742090359",
+  "checks": [
+    {
+      "command": "dotnet build tests/Hexalith.EventStore.Contracts.Tests/Hexalith.EventStore.Contracts.Tests.csproj --configuration Release -m:1",
+      "workingDirectory": "references/Hexalith.EventStore",
+      "exitCode": 0,
+      "warnings": 0,
+      "errors": 0,
+      "logSha256": "40cc9e5c253f0cea1f526b951d912968e0b8ed24ab9064dda2eec95856c2cd0b"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj --configuration Release -m:1",
+      "workingDirectory": "references/Hexalith.EventStore",
+      "exitCode": 0,
+      "warnings": 0,
+      "errors": 0,
+      "logSha256": "a72c2ea5813b6731655303a72c947fc807590726c4de0e73b5aa64a4b4223873"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.EventStore.ProviderVerification.Tests/Hexalith.EventStore.ProviderVerification.Tests.csproj --configuration Release -m:1",
+      "workingDirectory": "references/Hexalith.EventStore",
+      "exitCode": 0,
+      "warnings": 0,
+      "errors": 0,
+      "logSha256": "ec8c3ec949cab251436f51e46fe8a976fec407f41cfccf87a7a783287ab7e25a"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.EventStore.Client.Tests/Hexalith.EventStore.Client.Tests.csproj --configuration Release -m:1",
+      "workingDirectory": "references/Hexalith.EventStore",
+      "exitCode": 0,
+      "warnings": 0,
+      "errors": 0,
+      "logSha256": "84de5d846f19af0c82824b1d02f2ff5e603c59d343c463bff86906e18ebfb409"
+    },
+    {
+      "command": "dotnet tests/Hexalith.EventStore.Contracts.Tests/bin/Release/net10.0/Hexalith.EventStore.Contracts.Tests.dll -class Hexalith.EventStore.Contracts.Tests.Packaging.ContractsPackageDependencyTests",
+      "workingDirectory": "owning-repository",
+      "exitCode": 0,
+      "total": 36,
+      "passed": 36,
+      "skipped": 0,
+      "errors": 0,
+      "failed": 0,
+      "notRun": 0,
+      "logSha256": "46ee625d86194e0ab9607d00c3a9a9f1e14ecd12fadf4591dc3fac48873153f0"
+    },
+    {
+      "command": "dotnet tests/Hexalith.EventStore.Contracts.Tests/bin/Release/net10.0/Hexalith.EventStore.Contracts.Tests.dll -method Hexalith.EventStore.Contracts.Tests.Packaging.ContractsPackageDependencyTests.PublishedPackageObservationExclusions_RequireSealedContent",
+      "workingDirectory": "owning-repository",
+      "exitCode": 0,
+      "total": 1,
+      "passed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "failed": 0,
+      "notRun": 0,
+      "logSha256": "bd511bffc1460c9745269e920e762f968dee55ececee4dc271bcbb906834a9e7"
+    },
+    {
+      "command": "dotnet tests/Hexalith.EventStore.Server.Tests/bin/Release/net10.0/Hexalith.EventStore.Server.Tests.dll -class Hexalith.EventStore.Server.Tests.Security.SecretsProtectionTests",
+      "workingDirectory": "owning-repository",
+      "exitCode": 0,
+      "total": 70,
+      "passed": 70,
+      "skipped": 0,
+      "errors": 0,
+      "failed": 0,
+      "notRun": 0,
+      "logSha256": "2dcffdaea8bd1652dce53945768aea80270fe4a185227a3b7411a2c6bb228356"
+    },
+    {
+      "command": "dotnet tests/Hexalith.EventStore.Server.Tests/bin/Release/net10.0/Hexalith.EventStore.Server.Tests.dll",
+      "workingDirectory": "owning-repository",
+      "exitCode": 0,
+      "total": 3952,
+      "passed": 3927,
+      "skipped": 25,
+      "errors": 0,
+      "failed": 0,
+      "notRun": 0,
+      "logSha256": "1e579cf677e7d040efa52ab084c6654db6e5a08f18e3bffa7a5f07e2f6133dff"
+    },
+    {
+      "command": "dotnet tests/Hexalith.EventStore.Client.Tests/bin/Release/net10.0/Hexalith.EventStore.Client.Tests.dll -class Hexalith.EventStore.Client.Tests.Events.EventEvolutionProofFramingTests",
+      "workingDirectory": "owning-repository",
+      "exitCode": 0,
+      "total": 26,
+      "passed": 26,
+      "skipped": 0,
+      "errors": 0,
+      "failed": 0,
+      "notRun": 0,
+      "logSha256": "cb9cf8caaabb211c7ea3ef4dd2a91762f3ae1d635e9154d23a5dd2e6b042d7d9"
+    },
+    {
+      "command": "dotnet bin/Hexalith.EventStore.ProviderVerification.Tests.dll -class Hexalith.EventStore.ProviderVerification.Tests.RealKestrelPactTests",
+      "workingDirectory": "isolated-fixture",
+      "exitCode": 0,
+      "total": 3,
+      "passed": 3,
+      "skipped": 0,
+      "errors": 0,
+      "failed": 0,
+      "notRun": 0,
+      "logSha256": "fdda47e221133e163c36ec08b448ec4d9b2fdc5881046f65763a9afc2b1da626"
+    },
+    {
+      "command": "dotnet tests/Hexalith.EventStore.Contracts.Tests/bin/Release/net10.0/Hexalith.EventStore.Contracts.Tests.dll -method Hexalith.EventStore.Contracts.Tests.Packaging.ContractsPackageDependencyTests.SharedConsumerAuthorityValidatorPassesForEveryTrackedMsBuildSurfaceAsync",
+      "workingDirectory": "owning-repository",
+      "exitCode": 0,
+      "total": 1,
+      "passed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "failed": 0,
+      "notRun": 0,
+      "logSha256": "8c31631c6443735a5b4674e9ff4536eafaeaaf44427a73c0c14af26d74629b7e"
+    }
+  ],
+  "sourceFileSha256": {
+    "tests/Hexalith.EventStore.Client.Tests/Events/EventEvolutionProofFramingTests.cs": "c19a3f69a09e74a5259e0f94f09703dad3f7c87967161987a714f3fc653d3424",
+    "tests/Hexalith.EventStore.Contracts.Tests/Packaging/ContractsPackageDependencyTests.cs": "899181ad0ce4b9ae7e4ef7c6d81593c83aea3f325e96f6af756d66513ebd3596",
+    "tests/Hexalith.EventStore.ProviderVerification/ProviderVerificationHost.cs": "dafc52925e8fbcefb8c816093cc3fbf65082800530142672eb9453dc7f75fbb1",
+    "tests/Hexalith.EventStore.Server.Tests/Security/SecretsProtectionTests.cs": "7b78c329ecf4676d332c7d4d68ce4bd5c757282e10175f84a4e3729c16ba4b71"
+  },
+  "providerFixtureCommit": "c561b3210f15206a90c39c82c58f2e5b1005cd60",
+  "fullProviderSuiteVerified": false,
+  "fullCiVerified": false,
+  "packagePublished": false,
+  "releaseDispatched": false,
+  "liveMainObservedAfterChecks": "d87c969b6518751fafec9fbd01733d885b2efbfe"
+}

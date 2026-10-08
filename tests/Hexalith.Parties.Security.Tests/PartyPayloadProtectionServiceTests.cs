@@ -88,9 +88,10 @@ public sealed class PartyPayloadProtectionServiceTests
         string protectedJson = Encoding.UTF8.GetString(result.PayloadBytes);
 
         // Personal data fields should be encrypted
-        protectedJson.ShouldNotContain("Ada");
-        protectedJson.ShouldNotContain("Lovelace");
-        protectedJson.ShouldNotContain("1815");
+        // Match complete plaintext JSON values, not random substrings in ciphertext.
+        protectedJson.ShouldNotContain(JsonSerializer.Serialize(payload.PersonDetails.FirstName), Case.Sensitive);
+        protectedJson.ShouldNotContain(JsonSerializer.Serialize(payload.PersonDetails.LastName), Case.Sensitive);
+        protectedJson.ShouldNotContain(JsonSerializer.Serialize(payload.PersonDetails.DateOfBirth), Case.Sensitive);
 
         // Non-PII fields should remain plaintext
         protectedJson.ShouldContain("\"type\"");

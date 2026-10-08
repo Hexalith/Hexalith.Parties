@@ -46,7 +46,7 @@
         <section class="hx-parties-profile__section hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
             <h2 id="@_failureId">@ConsumerPortalLabels.EditProfileFailureTitle</h2>
             <p>@ConsumerPortalLabels.EditProfileFailureMessage</p>
-            <FluentButton Class="hx-parties-profile__retry"
+            <FluentButton role="button" Class="hx-parties-profile__retry"
                           Appearance="ButtonAppearance.Outline"
                           OnClick="RetryAsync">
                 @ConsumerPortalLabels.EditProfileRetry
@@ -100,7 +100,7 @@
                             <FluentCheckbox Value="@_model.OrganizationIsNaturalPerson"
                                             ValueChanged="OnOrganizationIsNaturalPersonChanged"
                                             Label="@ConsumerPortalLabels.MyProfileNaturalPerson"
-                                            AdditionalAttributes="FieldAttributes(nameof(EditProfileModel.OrganizationIsNaturalPerson), ConsumerPortalLabels.MyProfileNaturalPerson)" />
+                                            AdditionalAttributes="FieldAttributes(nameof(EditProfileModel.OrganizationIsNaturalPerson))" />
                             <p id="@HintId(nameof(EditProfileModel.OrganizationIsNaturalPerson))" class="hx-parties-edit-profile__hint">
                                 @ConsumerPortalLabels.EditProfileFieldHint
                             </p>
@@ -109,12 +109,12 @@
                     }
 
                     <div class="hx-parties-edit-profile__actions">
-                        <FluentButton Appearance="ButtonAppearance.Primary"
+                        <FluentButton role="button" Appearance="ButtonAppearance.Primary"
                                       Type="ButtonType.Submit"
                                       Disabled="@_isSaving">
                             @ConsumerPortalLabels.EditProfileSave
                         </FluentButton>
-                        <FluentButton Appearance="ButtonAppearance.Outline"
+                        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                                       Type="ButtonType.Button"
                                       Disabled="@_isSaving"
                                       OnClick="CancelAsync">
@@ -584,14 +584,15 @@
             builder.AddAttribute(4, "ValueChanged", EventCallback.Factory.Create<string>(this, changed));
             builder.AddAttribute(5, "TextInputType", TextInputType.Text);
             builder.AddAttribute(6, "Label", label);
-            builder.AddAttribute(7, "AdditionalAttributes", FieldAttributes(propertyName, label));
+            builder.AddAttribute(7, "AriaLabel", label);
+            builder.AddAttribute(8, "AdditionalAttributes", FieldAttributes(propertyName));
             builder.CloseComponent();
-            builder.OpenElement(8, "p");
-            builder.AddAttribute(9, "id", HintId(propertyName));
-            builder.AddAttribute(10, "class", "hx-parties-edit-profile__hint");
-            builder.AddContent(11, ConsumerPortalLabels.EditProfileFieldHint);
+            builder.OpenElement(9, "p");
+            builder.AddAttribute(10, "id", HintId(propertyName));
+            builder.AddAttribute(11, "class", "hx-parties-edit-profile__hint");
+            builder.AddContent(12, ConsumerPortalLabels.EditProfileFieldHint);
             builder.CloseElement();
-            builder.AddContent(12, FieldError(propertyName));
+            builder.AddContent(13, FieldError(propertyName));
             builder.CloseElement();
         };
 
@@ -610,10 +611,9 @@
             builder.CloseElement();
         };
 
-    private IReadOnlyDictionary<string, object> FieldAttributes(string propertyName, string accessibleName)
+    private IReadOnlyDictionary<string, object> FieldAttributes(string propertyName)
         => new Dictionary<string, object>(StringComparer.Ordinal)
         {
-            ["aria-label"] = accessibleName,
             ["aria-describedby"] = $"{HintId(propertyName)} {ErrorId(propertyName)}",
             ["aria-invalid"] = (_editContext?.GetValidationMessages(_editContext.Field(propertyName)).Any() == true).ToString().ToLowerInvariant(),
         };

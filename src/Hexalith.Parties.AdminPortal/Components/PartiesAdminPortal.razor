@@ -25,7 +25,7 @@
                          ValueChanged="OnQueryChangedAsync"
                          TextInputType="TextInputType.Search"
                          Label="@EffectiveLabels.Search"
-                         aria-label="@EffectiveLabels.SearchAriaLabel"
+                         AriaLabel="@EffectiveLabels.SearchAriaLabel"
                          Placeholder="@EffectiveLabels.SearchPlaceholder"
                          @ref="_searchInputRef" />
         <FluentSelect TOption="string" TValue="string"
@@ -34,48 +34,48 @@
                       ValueChanged="OnTypeChangedAsync"
                       OptionText="PartyTypeOptionLabel"
                       Label="@EffectiveLabels.PartyType"
-                      aria-label="@EffectiveLabels.PartyType" />
+                      AriaLabel="@EffectiveLabels.PartyType" />
         <FluentSelect TOption="string" TValue="string"
                       Items="@_activeStateOptions"
                       Value="@_filters.ActiveValue"
                       ValueChanged="OnActiveChangedAsync"
                       OptionText="ActiveStateOptionLabel"
                       Label="@EffectiveLabels.ActiveState"
-                      aria-label="@EffectiveLabels.ActiveState" />
+                      AriaLabel="@EffectiveLabels.ActiveState" />
         <FluentTextInput Value="@_filters.CreatedAfterValue"
                          ValueChanged="OnCreatedAfterChanged"
                          TextInputType="TextInputType.Text"
                          Label="@EffectiveLabels.CreatedAfter"
-                         aria-label="@EffectiveLabels.CreatedAfter"
+                         AriaLabel="@EffectiveLabels.CreatedAfter"
                          Placeholder="@EffectiveLabels.DateFilterPlaceholder"
                          Disabled="@FiltersDisabledInSearchMode" />
         <FluentTextInput Value="@_filters.CreatedBeforeValue"
                          ValueChanged="OnCreatedBeforeChanged"
                          TextInputType="TextInputType.Text"
                          Label="@EffectiveLabels.CreatedBefore"
-                         aria-label="@EffectiveLabels.CreatedBefore"
+                         AriaLabel="@EffectiveLabels.CreatedBefore"
                          Placeholder="@EffectiveLabels.DateFilterPlaceholder"
                          Disabled="@FiltersDisabledInSearchMode" />
         <FluentTextInput Value="@_filters.ModifiedAfterValue"
                          ValueChanged="OnModifiedAfterChanged"
                          TextInputType="TextInputType.Text"
                          Label="@EffectiveLabels.ModifiedAfter"
-                         aria-label="@EffectiveLabels.ModifiedAfter"
+                         AriaLabel="@EffectiveLabels.ModifiedAfter"
                          Placeholder="@EffectiveLabels.DateFilterPlaceholder"
                          Disabled="@FiltersDisabledInSearchMode" />
         <FluentTextInput Value="@_filters.ModifiedBeforeValue"
                          ValueChanged="OnModifiedBeforeChanged"
                          TextInputType="TextInputType.Text"
                          Label="@EffectiveLabels.ModifiedBefore"
-                         aria-label="@EffectiveLabels.ModifiedBefore"
+                         AriaLabel="@EffectiveLabels.ModifiedBefore"
                          Placeholder="@EffectiveLabels.DateFilterPlaceholder"
                          Disabled="@FiltersDisabledInSearchMode" />
-        <FluentButton Appearance="ButtonAppearance.Primary" OnClick="NavigateToCreateParty">@EffectiveLabels.CreateParty</FluentButton>
-        <FluentButton Appearance="ButtonAppearance.Primary" OnClick="SubmitSearchAsync">@EffectiveLabels.Submit</FluentButton>
-        <FluentButton Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
+        <FluentButton role="button" Appearance="ButtonAppearance.Primary" OnClick="NavigateToCreateParty">@EffectiveLabels.CreateParty</FluentButton>
+        <FluentButton role="button" Appearance="ButtonAppearance.Primary" OnClick="SubmitSearchAsync">@EffectiveLabels.Submit</FluentButton>
+        <FluentButton role="button" Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
         @if (RetryAvailable)
         {
-            <FluentButton Appearance="ButtonAppearance.Outline"
+            <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                           AutoFocus="@(_pendingFocus == FocusTarget.RetryButton)"
                           OnClick="RetryAsync">
                 @EffectiveLabels.Retry
@@ -84,9 +84,9 @@
     </div>
 
     <div class="hx-parties-admin__search-modes" aria-label="@EffectiveLabels.SearchModesRegion">
-        <FluentButton Disabled="true">@EffectiveLabels.DisplayNameMode</FluentButton>
-        <FluentButton Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.EmailMode</FluentButton>
-        <FluentButton Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.IdentifierMode</FluentButton>
+        <FluentButton role="button" Disabled="true">@EffectiveLabels.DisplayNameMode</FluentButton>
+        <FluentButton role="button" Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.EmailMode</FluentButton>
+        <FluentButton role="button" Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.IdentifierMode</FluentButton>
     </div>
 
     <div class="hx-parties-admin__layout" data-detail-open="@DetailSurfaceOpen">
@@ -104,7 +104,7 @@
                             DisplayMode="DataGridDisplayMode.Table"
                             aria-label="@EffectiveLabels.PartiesGrid">
                 <TemplateColumn Title="@EffectiveLabels.DisplayNameColumn" Context="row">
-                    <FluentButton Appearance="ButtonAppearance.Subtle"
+                    <FluentButton role="button" Appearance="ButtonAppearance.Subtle"
                                   Class="@RowButtonClass(row)"
                                   AutoFocus="@ShouldAutoFocusRow(row)"
                                   aria-current="@RowAriaCurrent(row)"
@@ -137,15 +137,15 @@
                     <p>@EmptyText</p>
                     @if (HasActiveFilters)
                     {
-                        <FluentButton Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
+                        <FluentButton role="button" Appearance="ButtonAppearance.Outline" OnClick="ClearFiltersAsync">@EffectiveLabels.Clear</FluentButton>
                     }
                 </div>
             }
 
             <nav class="hx-parties-admin__paging" aria-label="@EffectiveLabels.PagingRegion">
-                <FluentButton Disabled="@(_page <= 1 || _isLoading)" OnClick="PreviousPageAsync">@EffectiveLabels.Previous</FluentButton>
+                <FluentButton role="button" Disabled="@(_page <= 1 || _isLoading)" OnClick="PreviousPageAsync">@EffectiveLabels.Previous</FluentButton>
                 <span>@EffectiveLabels.Page @_page @EffectiveLabels.Of @_totalPages, @_totalCount @EffectiveLabels.TotalCount</span>
-                <FluentButton Disabled="@(!_hasNextPage || _isLoading)" OnClick="NextPageAsync">@EffectiveLabels.Next</FluentButton>
+                <FluentButton role="button" Disabled="@(!_hasNextPage || _isLoading)" OnClick="NextPageAsync">@EffectiveLabels.Next</FluentButton>
             </nav>
         </div>
 
@@ -163,13 +163,13 @@
                 <div class="hx-parties-admin__detail-header">
                     <h2 tabindex="-1" @ref="_detailHeadingRef">@DetailHeadingText</h2>
                     <div class="hx-parties-admin__detail-actions">
-                        <FluentButton Appearance="ButtonAppearance.Outline" OnClick="CloseDetailAsync">@EffectiveLabels.DetailClose</FluentButton>
-                        <FluentButton Appearance="ButtonAppearance.Outline"
+                        <FluentButton role="button" Appearance="ButtonAppearance.Outline" OnClick="CloseDetailAsync">@EffectiveLabels.DetailClose</FluentButton>
+                        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                                       Disabled="@(!CanEditSelectedParty)"
                                       OnClick="NavigateToEditParty">
                             @EffectiveLabels.EditParty
                         </FluentButton>
-                        <FluentButton Appearance="ButtonAppearance.Outline"
+                        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                                       Disabled="@(!CanNavigateSelectedPartyGdpr)"
                                       OnClick="NavigateToGdprParty">
                             @EffectiveLabels.GdprOperations
@@ -364,7 +364,7 @@
                     }
                     else
                     {
-                        <FluentButton Appearance="ButtonAppearance.Outline" Disabled="true">
+                        <FluentButton role="button" Appearance="ButtonAppearance.Outline" Disabled="true">
                             @EffectiveLabels.EventStoreAdminUnavailable
                         </FluentButton>
                     }

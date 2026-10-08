@@ -8,7 +8,11 @@ using Hexalith.Parties.UI.Services;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+using NSubstitute;
 
 using Shouldly;
 
@@ -16,6 +20,56 @@ namespace Hexalith.Parties.UI.Tests;
 
 public sealed class PartiesAdminPortalE2eFixtureTests
 {
+    [Theory]
+    [InlineData("true", "Test", true)]
+    [InlineData("false", "Test", false)]
+    [InlineData("true", "Development", false)]
+    [InlineData("true", "Production", false)]
+    public void FixtureRequiresExplicitConfigurationAndTestEnvironment(string enabled, string environmentName, bool expected)
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [PartiesAdminPortalE2eFixture.EnabledConfigurationKey] = enabled,
+            })
+            .Build();
+        IHostEnvironment environment = Substitute.For<IHostEnvironment>();
+        environment.EnvironmentName.Returns(environmentName);
+
+        PartiesAdminPortalE2eFixture.IsEnabled(configuration, environment).ShouldBe(expected);
+    }
+
+    [Fact]
+    public async Task FixtureShellScopeWithoutCookiePreservesAnonymousAuthorizationAsync()
+    {
+        var accessor = new HttpContextAccessor { HttpContext = new DefaultHttpContext() };
+        var shellContext = new PartiesAdminPortalE2eUserContextAccessor(accessor);
+        var authentication = new PartiesAdminPortalE2eAuthenticationStateProvider(accessor);
+
+        shellContext.TenantId.ShouldBe("test-tenant");
+        shellContext.UserId.ShouldBe("anonymous-e2e");
+        (await authentication.GetAuthenticationStateAsync()).User.Identity.ShouldNotBeNull().IsAuthenticated.ShouldBeFalse();
+        (await new PartiesAdminPortalE2eAuthorizationService(accessor).GetAuthorizationStateAsync())
+            .ShouldBe(AdminPortalAuthorizationState.Unauthenticated);
+    }
+
+    [Fact]
+    public async Task FixtureShellScopePreservesConsumerMissingTenantClaimsAndRoleRestrictionsAsync()
+    {
+        var accessor = new HttpContextAccessor { HttpContext = new DefaultHttpContext() };
+        accessor.HttpContext.Request.Headers.Cookie = $"{PartiesAdminPortalE2eFixture.ConsumerCookieName}=no-tenant";
+        var shellContext = new PartiesAdminPortalE2eUserContextAccessor(accessor);
+        var authentication = new PartiesAdminPortalE2eAuthenticationStateProvider(accessor);
+
+        shellContext.UserId.ShouldBe("consumer-e2e");
+        var principal = (await authentication.GetAuthenticationStateAsync()).User;
+        principal.FindFirst(PartiesClaimTypes.EventStoreTenant).ShouldBeNull();
+        principal.IsInRole(PartiesRoles.Consumer).ShouldBeTrue();
+        principal.IsInRole(PartiesRoles.Admin).ShouldBeFalse();
+        (await new PartiesAdminPortalE2eAuthorizationService(accessor).GetAuthorizationStateAsync())
+            .ShouldBe(AdminPortalAuthorizationState.Unauthenticated);
+    }
+
     [Fact]
     public async Task AuthenticationHandler_WithAdminFixtureCookie_AuthenticatesRequestAsync()
     {

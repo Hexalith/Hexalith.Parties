@@ -6,6 +6,7 @@ using System.Text.Json;
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.DomainService;
 using Hexalith.EventStore.ServiceDefaults.Authentication;
+using Hexalith.Parties.Contracts.Authorization;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -246,7 +247,7 @@ public sealed class PartiesDomainServiceSecurityTests
     {
         JwtBearerAuthenticationOptions contract = services.GetRequiredService<IOptionsMonitor<JwtBearerAuthenticationOptions>>()
             .Get(EventStoreWorkloadAuthenticationDefaults.JwtContractOptionsName);
-        var claims = new Dictionary<string, object> { ["sub"] = "isolated-human" };
+        var claims = new Dictionary<string, object> { [PartiesClaimTypes.Subject] = "isolated-human" };
         if (caller is not null)
         {
             claims[EventStoreWorkloadAuthenticationDefaults.CallerClaimType] = caller;

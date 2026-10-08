@@ -38,7 +38,7 @@ internal sealed partial class PartyDomainProcessor(
     IHttpContextAccessor? httpContextAccessor = null,
     IPartyIdentityAuthority? identityAuthority = null,
     IIdentityHistoryCustody? identityHistoryCustody = null,
-    IOptions<PartyIdentityOptions>? identityOptions = null) : IDomainProcessor, IAsyncDomainProcessor, IAggregateReplay
+    IOptionsMonitor<PartyIdentityOptions>? identityOptions = null) : IDomainProcessor, IAsyncDomainProcessor, IAggregateReplay
 {
     private const string PartyDomain = "party";
 
@@ -106,6 +106,7 @@ internal sealed partial class PartyDomainProcessor(
         }
 
         IdentityAdmissionEvidence? identityEvidence = null;
+        IdentityHistoryPolicy? identityPolicy = null;
         if (identityCommand)
         {
             identityEvidence = identityAuthority?.Admit(command).Evidence;
@@ -132,8 +133,9 @@ internal sealed partial class PartyDomainProcessor(
                 }
             }
 
+            identityPolicy = identityOptions?.CurrentValue.Policy;
             if (resolvedType != typeof(ProvisionAgentParty)
-                && (identityHistoryCustody is null || identityOptions?.Value.Policy is not { IsValid: true }))
+                && (identityHistoryCustody is null || identityPolicy is not { IsValid: true }))
             {
                 return RejectionFor(command.CommandType, "Identity", "CustodyUnavailable");
             }
@@ -142,7 +144,7 @@ internal sealed partial class PartyDomainProcessor(
         if (identityCommand && resolvedType != typeof(ProvisionAgentParty))
         {
             using JsonDocument identityPayload = JsonDocument.Parse(command.Payload);
-            if (identityPayload.RootElement.GetProperty("policyId").GetString() != identityOptions!.Value.Policy!.PolicyId)
+            if (identityPayload.RootElement.GetProperty("policyId").GetString() != identityPolicy!.PolicyId)
             {
                 return RejectionFor(command.CommandType, "Identity", "PolicyUnavailable");
             }
@@ -153,9 +155,21 @@ internal sealed partial class PartyDomainProcessor(
 
         if (identityCommand)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (identityAuthority?.Admit(command).Evidence != identityEvidence)
+            {
+                return RejectionFor(command.CommandType, "Identity", "AuthorityUnavailable");
+            }
+
+            if (resolvedType != typeof(ProvisionAgentParty) && identityOptions?.CurrentValue.Policy != identityPolicy)
+            {
+                return RejectionFor(command.CommandType, "Identity", "PolicyUnavailable");
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
             PartyState? identityState = DomainStateReplay.Rehydrate<PartyState>(unprotectedState);
             long sourcePosition = currentState is DomainServiceCurrentState source ? source.CurrentSequence : 0;
-            IdentityHistoryPolicy? policy = identityOptions?.Value.Policy;
+            IdentityHistoryPolicy? policy = identityPolicy;
             IdentityHistoryCustodyEvidence? custodyEvidence = null;
             if (resolvedType != typeof(ProvisionAgentParty))
             {
@@ -163,12 +177,26 @@ internal sealed partial class PartyDomainProcessor(
                 DateTimeOffset effectiveAt = payload.RootElement.GetProperty("effectiveAt").GetDateTimeOffset();
                 custodyEvidence = await identityHistoryCustody!.AdmitAsync(command.AggregateIdentity, policy!, effectiveAt, cancellationToken)
                     .ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
                 if (custodyEvidence?.Satisfies(policy!, effectiveAt) != true)
                 {
                     return RejectionFor(command.CommandType, "Identity", "CustodyUnavailable");
                 }
             }
 
+            // Replay and custody may outlast the admission or reload its policy. Reverify
+            // the original evidence at dispatch, then observe any provider cancellation.
+            if (identityAuthority?.Admit(command).Evidence != identityEvidence)
+            {
+                return RejectionFor(command.CommandType, "Identity", "AuthorityUnavailable");
+            }
+
+            if (resolvedType != typeof(ProvisionAgentParty) && identityOptions?.CurrentValue.Policy != policy)
+            {
+                return RejectionFor(command.CommandType, "Identity", "PolicyUnavailable");
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
             var authorization = new IdentityCommandAuthorization(identityEvidence!, sourcePosition, policy, custodyEvidence);
             return resolvedType == typeof(ProvisionAgentParty)
                 ? PartyAggregate.Handle(JsonSerializer.Deserialize<ProvisionAgentParty>(command.Payload, PayloadJsonOptions)! with { Authorization = authorization }, identityState)

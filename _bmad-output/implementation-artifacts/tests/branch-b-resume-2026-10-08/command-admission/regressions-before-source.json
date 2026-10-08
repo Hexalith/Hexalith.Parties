@@ -1,0 +1,10 @@
+[
+  {
+    "path": "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs",
+    "sha256": "fbdfe44eb7da69da15ca1bbb0bdd03ef85452de96eaad605aa28be94afff8685"
+  },
+  {
+    "path": "tests/Hexalith.Parties.Tests/Domain/PartyIdentityAdmissionTests.cs",
+    "sha256": "2cc8ddaba6310353bf58efdc26dac9dd2b4ed90ecd8b72c6adbb23e260f62bd9"
+  }
+]

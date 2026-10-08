@@ -42,7 +42,7 @@
         <section class="hx-parties-profile__section hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
             <h2 id="@_failureId">@ConsumerPortalLabels.ConsentFailureTitle</h2>
             <p>@ConsumerPortalLabels.ConsentFailureMessage</p>
-            <FluentButton Class="hx-parties-profile__retry"
+            <FluentButton role="button" Class="hx-parties-profile__retry"
                           Appearance="ButtonAppearance.Outline"
                           OnClick="RetryAsync">
                 @ConsumerPortalLabels.MyProfileRetry
@@ -104,7 +104,7 @@
                             </div>
                             @if (row.ShowObjectAction)
                             {
-                                <FluentButton Appearance="ButtonAppearance.Outline"
+                                <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                                               Disabled="true">
                                     @ConsumerPortalLabels.ConsentObjectAction
                                 </FluentButton>

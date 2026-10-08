@@ -1,0 +1,21 @@
+# Command admission verification — 2026-10-08
+
+The admission fix rechecks the original authority after provider waits and replay, observes current retention policy through `IOptionsMonitor`, and checks caller cancellation immediately before dispatch. The spec remains `in-progress`; both production execution tasks remain open.
+
+The first red suite executed **37 cases: 27 failed, 10 passed**. The expanded final suite passed **50/50**; actual configuration-reload and final-verification cases were added after that red run. Nine normally built owner lanes passed **623 selected cases**. The supplemental required domain filters passed **357/357**, including those same 50 admission cases. The selected total is **980 across ten owner XML files**, with no double counting of the focused rerun.
+
+The normal complete Local gate failed. This exact command ran from the Parties repository root and exited 1 after its first six passing lanes:
+
+```powershell
+pwsh -NoProfile -File eng/verify-ext-parties-1.ps1 -Mode Local -EventStoreRoot /home/administrator/projects/hexalith/eventstore -PlatformRoot /home/administrator/projects/hexalith/platform -EvidenceDirectory /tmp/ext-parties-1-command-admission/full-local -ArtifactsDirectory /tmp/ext-parties-1-command-admission/full-local-artifacts -MemoriesRoot /tmp/ext-parties-1-command-admission/optional-memories-package-mode
+```
+
+[The broad transcript](full-local-run.log) and [failed domain build](full-local/Hexalith.Parties.Tests-build.log) retain the external `PlatformApiPrerequisitesTests.cs:681` CS1503 errors. A [later normal restore attempt](focused-fallback-build-two-exclusions.log) records NU1109: external EventStore requires Swagger UI 10.3.0 while Parties centrally selects 10.2.3. No owner files, dependencies or warning gates were changed to hide either blocker.
+
+The supplemental domain build copied the earlier successfully restored assets into a separate execution directory, used `--no-restore`, and used [this temporary import](focused-build.targets) to exclude exactly `FitnessTests/PlatformApiPrerequisitesTests.cs` and dependent `FitnessTests/EpicEightClosureFitnessTests.cs`. Neither file is a required identity filter. The [focused build log](final-focused-build.log) records zero warnings/errors; the [required domain XML](final-required-domain-lane.xml) records 357 passing selected cases. This is supplemental class execution, not a full-project or complete-Local pass. Restore assets, binaries and the unused replacement class are not retained here.
+
+The [retained manifest](final-verification-manifest.json) contains exact per-owner commands, XML digests, class counts and fallback limitations. Its existing `/tmp` paths are **original execution locations**. `receiptRetention.retainedFiles` maps each raw receipt to its path here and records its original path, byte count and SHA-256. The [original execution manifest](execution-manifest-original.json), [independent root audit](root-verification.json), logs and XML are copied byte-for-byte. The root audit confirms all 38 required classes, all four frozen matrix rows locally covered, and Portable-PDB/current-source matches for the changed processor and tests.
+
+[Before regression XML](regressions-before.xml), [final regression XML](final-regressions-after.xml), and all nine normal owner XML/log pairs are retained. The UI transcript without the verifier source-root environment is retained separately as `full-local/*without-source-root.*`; the correct invocation passed all 72 UI cases. Concurrent outside source/dependency changes were preserved; no unchanged-whole-worktree claim is made.
+
+[Filtered runtime observation](baseline-resources.json) records the isolated owned AppHost's Healthy Parties resource. It was subsequently stopped through its explicit AppHost path. [Live gate records](live-gates.json) preserve missing-input and non-authoritative sentinel runs, both exit 1, with no endpoint access. Production independent custody, qualified all-copy destruction/nonrollback restore, approved successor continuation and installed P-01–P-10 persisted-state/restart/restore/failure-injection targets remain unavailable. Local health and selected passing tests do not establish installed identity availability.

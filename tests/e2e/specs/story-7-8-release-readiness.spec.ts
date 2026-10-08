@@ -11,6 +11,9 @@ const READINESS_PATH = '_bmad-output/planning-artifacts/epic-7-final-readiness-2
 const LOCAL_ADAPTER_PATH = 'src/Hexalith.Parties.Projections/Services/LocalPartyProjectionPlatformAdapter.cs';
 const ADAPTER_MODE_PATH = 'src/Hexalith.Parties.Projections/Configuration/PartyProjectionPlatformAdapterMode.cs';
 const REBUILD_SERVICE_PATH = 'src/Hexalith.Parties.Projections/Services/ProjectionRebuildService.cs';
+const MIGRATION_STORY_PATH = '_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md';
+const DETAIL_HANDLER_PATH = 'src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs';
+const INDEX_HANDLER_PATH = 'src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs';
 const SERVICE_REGISTRATION_PATH = 'src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs';
 const PAYLOAD_ADAPTER_PATH = 'src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs';
 const PAYLOAD_SERVICE_PATH = 'src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs';
@@ -115,11 +118,11 @@ test.describe('Story 7.8 release rollback cleanup and readiness gate', () => {
     expect(readiness).toContain('Drifted root gitlinks must be owner-validated or reset before a release candidate is tagged.');
   });
 
-  test('preserves rollback-only projection, crypto, and UI cleanup paths until proof exists', () => {
+  test('preserves the historical rollback decision and checks its approved SDK retirement', () => {
     const readiness = readRepositoryFile(READINESS_PATH);
-    const localAdapter = readRepositoryFile(LOCAL_ADAPTER_PATH);
-    const adapterMode = readRepositoryFile(ADAPTER_MODE_PATH);
-    const rebuildService = readRepositoryFile(REBUILD_SERVICE_PATH);
+    const migration = readRepositoryFile(MIGRATION_STORY_PATH);
+    const detail = readRepositoryFile(DETAIL_HANDLER_PATH);
+    const index = readRepositoryFile(INDEX_HANDLER_PATH);
     const registrations = readRepositoryFile(SERVICE_REGISTRATION_PATH);
     const payloadAdapter = readRepositoryFile(PAYLOAD_ADAPTER_PATH);
     const payloadService = readRepositoryFile(PAYLOAD_SERVICE_PATH);
@@ -134,11 +137,14 @@ test.describe('Story 7.8 release rollback cleanup and readiness gate', () => {
     expect(readiness).toContain('Deferred');
     expect(readiness).toContain('Preserved');
 
-    expect(localAdapter).toContain('LocalPartyProjectionPlatformAdapter');
-    expect(adapterMode).toContain('Local');
-    expect(rebuildService).toContain('EnsureTrustedPartyIdsAvailable');
-    expect(rebuildService).toContain('GetProcessingRecordsAsync');
-    expect(registrations).toContain('PartyProjectionPlatformAdapterMode.Local');
+    expect(migration).toContain('Administrator chose option 1');
+    expect(migration).toContain('SDK-only verification matrix');
+    for (const path of [LOCAL_ADAPTER_PATH, ADAPTER_MODE_PATH, REBUILD_SERVICE_PATH]) {
+      expect(existsSync(resolve(REPOSITORY_ROOT, path)), `${path} remains retired by Story 8.6`).toBe(false);
+    }
+    expect(detail).toContain('IAsyncDomainProjectionRebuildHandler');
+    expect(index).toContain('IAsyncDomainSharedProjectionRebuildCompletionHandler');
+    expect(registrations).toContain('AddScoped<PartySdkQueryService>');
     expect(registrations).toContain('EventStorePartyPayloadProtectionAdapter');
     expect(payloadAdapter).toContain('PartyPayloadProtectionService inner');
     expect(payloadService).toContain('ProtectedSerializationFormat');

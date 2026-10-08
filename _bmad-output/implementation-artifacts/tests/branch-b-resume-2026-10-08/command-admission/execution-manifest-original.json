@@ -1,0 +1,250 @@
+{
+  "completeLocalGate": "Failed",
+  "completeLocalCommand": "pwsh -NoProfile -File eng/verify-ext-parties-1.ps1 -Mode Local -EventStoreRoot /home/administrator/projects/hexalith/eventstore -PlatformRoot /home/administrator/projects/hexalith/platform -EvidenceDirectory /tmp/ext-parties-1-command-admission/full-local -ArtifactsDirectory /tmp/ext-parties-1-command-admission/full-local-artifacts -MemoriesRoot /tmp/ext-parties-1-command-admission/optional-memories-package-mode",
+  "completeLocalLog": "/tmp/ext-parties-1-command-admission/full-local-run.log",
+  "broadBlocker": "External PlatformApiPrerequisitesTests.cs:681 two CS1503 errors",
+  "subsequentRestoreBlocker": "NU1109 Swashbuckle.AspNetCore.SwaggerUI downgrade from external EventStore 10.3.0 to Parties central 10.2.3; no dependency override",
+  "installedIdentityAvailability": false,
+  "normalOwnerLanes": [
+    {
+      "project": "Hexalith.EventStore.Contracts.Tests",
+      "scope": "normal-required-owner-lane",
+      "buildCommand": "dotnet build /home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Contracts.Tests/Hexalith.EventStore.Contracts.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-command-admission/full-local-artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-command-admission/optional-memories-package-mode -p:NuGetAudit=false -m:1",
+      "testCommand": "env HEXALITH_PARTIES_SOURCE_ROOT=/home/administrator/projects/hexalith/parties dotnet /tmp/ext-parties-1-command-admission/full-local-artifacts/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Contracts.Tests.dll -class '*StreamReadPageValidatorTests' -class '*RetainedIdentityHistoryValidatorTests' -result-xml /tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+      "buildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Contracts.Tests-build.log",
+      "testLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Contracts.Tests-tests.log",
+      "xml": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+      "xmlSha256": "8f958a9e1a582ceea42fc9e1d8ae2f356302d58cb33637c48bbefd86ecf28796",
+      "passed": 23,
+      "requiredClassPassedCounts": {
+        "*StreamReadPageValidatorTests": 12,
+        "*RetainedIdentityHistoryValidatorTests": 11
+      }
+    },
+    {
+      "project": "Hexalith.EventStore.Client.Tests",
+      "scope": "normal-required-owner-lane",
+      "buildCommand": "dotnet build /home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Client.Tests/Hexalith.EventStore.Client.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-command-admission/full-local-artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-command-admission/optional-memories-package-mode -p:NuGetAudit=false -m:1",
+      "testCommand": "env HEXALITH_PARTIES_SOURCE_ROOT=/home/administrator/projects/hexalith/parties dotnet /tmp/ext-parties-1-command-admission/full-local-artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.Tests.dll -class '*AuthoritativeEventStreamReaderTests' -class '*EventStoreGatewayClientTests' -class '*EventStoreGatewayClientStreamTests' -class '*RetainedIdentityHistoryReaderTests' -result-xml /tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Client.Tests-tests.xml",
+      "buildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Client.Tests-build.log",
+      "testLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Client.Tests-tests.log",
+      "xml": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Client.Tests-tests.xml",
+      "xmlSha256": "eb4479fff8189869531dff80f9937e933fcdabe57db6f25a35d306a897246328",
+      "passed": 107,
+      "requiredClassPassedCounts": {
+        "*AuthoritativeEventStreamReaderTests": 8,
+        "*EventStoreGatewayClientTests": 76,
+        "*EventStoreGatewayClientStreamTests": 7,
+        "*RetainedIdentityHistoryReaderTests": 16
+      }
+    },
+    {
+      "project": "Hexalith.EventStore.Server.Tests",
+      "scope": "normal-required-owner-lane",
+      "buildCommand": "dotnet build /home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-command-admission/full-local-artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-command-admission/optional-memories-package-mode -p:NuGetAudit=false -m:1",
+      "testCommand": "env HEXALITH_PARTIES_SOURCE_ROOT=/home/administrator/projects/hexalith/parties dotnet /tmp/ext-parties-1-command-admission/full-local-artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Server.Tests.dll -class '*IdentityAdmissionTests' -class '*ActorRegistryTests' -class '*IdentityGatewayDenialTests' -class '*CommandsControllerTrustedExtensionTests' -class '*QueriesControllerTests' -class '*StreamsControllerTests' -class '*RetainedIdentityHistorySourceReaderTests' -result-xml /tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Server.Tests-tests.xml",
+      "buildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Server.Tests-build.log",
+      "testLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Server.Tests-tests.log",
+      "xml": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.EventStore.Server.Tests-tests.xml",
+      "xmlSha256": "5882f4109a1366f433278437dbcbc90842f1db03a985fac835cdcefa592a1117",
+      "passed": 168,
+      "requiredClassPassedCounts": {
+        "*IdentityAdmissionTests": 6,
+        "*ActorRegistryTests": 6,
+        "*IdentityGatewayDenialTests": 3,
+        "*CommandsControllerTrustedExtensionTests": 7,
+        "*QueriesControllerTests": 72,
+        "*StreamsControllerTests": 26,
+        "*RetainedIdentityHistorySourceReaderTests": 48
+      }
+    },
+    {
+      "project": "Hexalith.Platform.Identity.Tests",
+      "scope": "normal-required-owner-lane",
+      "buildCommand": "dotnet build /home/administrator/projects/hexalith/platform/tests/Hexalith.Platform.Identity.Tests/Hexalith.Platform.Identity.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-command-admission/full-local-artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-command-admission/optional-memories-package-mode -p:NuGetAudit=false -m:1",
+      "testCommand": "env HEXALITH_PARTIES_SOURCE_ROOT=/home/administrator/projects/hexalith/parties dotnet /tmp/ext-parties-1-command-admission/full-local-artifacts/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.Platform.Identity.Tests.dll -class '*PlatformIdentityAdmissionTests' -result-xml /tmp/ext-parties-1-command-admission/full-local/Hexalith.Platform.Identity.Tests-tests.xml",
+      "buildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Platform.Identity.Tests-build.log",
+      "testLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Platform.Identity.Tests-tests.log",
+      "xml": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Platform.Identity.Tests-tests.xml",
+      "xmlSha256": "f1de87924102f000a0eba47d4923d897f133d1b71e15c8a9d5d79455213c9eeb",
+      "passed": 2,
+      "requiredClassPassedCounts": {
+        "*PlatformIdentityAdmissionTests": 2
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Contracts.Tests",
+      "scope": "normal-required-owner-lane",
+      "buildCommand": "dotnet build /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-command-admission/full-local-artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-command-admission/optional-memories-package-mode -p:NuGetAudit=false -m:1",
+      "testCommand": "env HEXALITH_PARTIES_SOURCE_ROOT=/home/administrator/projects/hexalith/parties dotnet /tmp/ext-parties-1-command-admission/full-local-artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.Contracts.Tests.dll -class '*PartyStateTests' -class '*PartyIdentityContractTests' -class '*ContractsPublicApiSnapshotTests' -result-xml /tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Contracts.Tests-tests.xml",
+      "buildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Contracts.Tests-build.log",
+      "testLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Contracts.Tests-tests.log",
+      "xml": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Contracts.Tests-tests.xml",
+      "xmlSha256": "e8ec979fd59c26ab4a52b273306444cd01b934238effad4cdecaab1d195307af",
+      "passed": 29,
+      "requiredClassPassedCounts": {
+        "*PartyStateTests": 26,
+        "*PartyIdentityContractTests": 2,
+        "*ContractsPublicApiSnapshotTests": 1
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Server.Tests",
+      "scope": "normal-required-owner-lane",
+      "buildCommand": "dotnet build /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-command-admission/full-local-artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-command-admission/optional-memories-package-mode -p:NuGetAudit=false -m:1",
+      "testCommand": "env HEXALITH_PARTIES_SOURCE_ROOT=/home/administrator/projects/hexalith/parties dotnet /tmp/ext-parties-1-command-admission/full-local-artifacts/bin/Hexalith.Parties.Server.Tests/debug/Hexalith.Parties.Server.Tests.dll -class '*AgentPartyProvisioningTests' -class '*HumanActorBindingTests' -class '*PartyAggregateCreateTests' -class '*PartyAggregateCompositeTests' -result-xml /tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Server.Tests-tests.xml",
+      "buildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Server.Tests-build.log",
+      "testLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Server.Tests-tests.log",
+      "xml": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Server.Tests-tests.xml",
+      "xmlSha256": "ae1fdedac6a6d6dabda8c329740a9539c8c1b9cabc46f1ba8ac6b0ebca6cf5c6",
+      "passed": 94,
+      "requiredClassPassedCounts": {
+        "*AgentPartyProvisioningTests": 3,
+        "*HumanActorBindingTests": 7,
+        "*PartyAggregateCreateTests": 24,
+        "*PartyAggregateCompositeTests": 60
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Security.Tests",
+      "scope": "normal-individual-required-owner-lane-after-full-gate-stopped",
+      "buildCommand": "dotnet build /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-command-admission/full-local-artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-command-admission/optional-memories-package-mode -p:NuGetAudit=false -m:1",
+      "testCommand": "dotnet /tmp/ext-parties-1-command-admission/full-local-artifacts/bin/Hexalith.Parties.Security.Tests/debug/Hexalith.Parties.Security.Tests.dll -class '*IdentityHistoryProtectionTests' -class '*PartyPayloadProtectionServiceTests' -result-xml /tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Security.Tests-tests.xml",
+      "buildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Security.Tests-build.log",
+      "testLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Security.Tests-tests.log",
+      "xml": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Security.Tests-tests.xml",
+      "xmlSha256": "d58c604823fb13b864fd9e9ec5562e21f0fe3ed7c3077e3552066f1c1a08c358",
+      "passed": 30,
+      "requiredClassPassedCounts": {
+        "*IdentityHistoryProtectionTests": 7,
+        "*PartyPayloadProtectionServiceTests": 23
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Client.Tests",
+      "scope": "normal-individual-required-owner-lane-after-full-gate-stopped",
+      "buildCommand": "dotnet build /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-command-admission/full-local-artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-command-admission/optional-memories-package-mode -p:NuGetAudit=false -m:1",
+      "testCommand": "dotnet /tmp/ext-parties-1-command-admission/full-local-artifacts/bin/Hexalith.Parties.Client.Tests/debug/Hexalith.Parties.Client.Tests.dll -class '*HttpPartiesIdentityClientTests' -class '*HttpPartiesCommandClientTests' -class '*HttpPartiesQueryClientTests' -class '*DependencyInjectionTests' -result-xml /tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Client.Tests-tests.xml",
+      "buildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Client.Tests-build.log",
+      "testLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Client.Tests-tests.log",
+      "xml": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.Client.Tests-tests.xml",
+      "xmlSha256": "0cccf59c6093d2fbaaaec8db233a4916a49669995f3fed5b4372a3bd3645b497",
+      "passed": 98,
+      "requiredClassPassedCounts": {
+        "*HttpPartiesIdentityClientTests": 18,
+        "*HttpPartiesCommandClientTests": 37,
+        "*HttpPartiesQueryClientTests": 30,
+        "*DependencyInjectionTests": 13
+      }
+    },
+    {
+      "project": "Hexalith.Parties.UI.Tests",
+      "scope": "normal-individual-required-owner-lane-after-full-gate-stopped",
+      "buildCommand": "dotnet build /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-command-admission/full-local-artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-command-admission/optional-memories-package-mode -p:NuGetAudit=false -m:1",
+      "testCommand": "env HEXALITH_PARTIES_SOURCE_ROOT=/home/administrator/projects/hexalith/parties dotnet /tmp/ext-parties-1-command-admission/full-local-artifacts/bin/Hexalith.Parties.UI.Tests/debug/Hexalith.Parties.UI.Tests.dll -class '*IdentityBindingBoundaryTests' -class '*IdentityBindingProvisioningServiceTests' -class '*PartyIdClaimResolverTests' -class '*SelfScopedPartiesClientTests' -result-xml /tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.UI.Tests-tests.xml",
+      "buildLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.UI.Tests-build.log",
+      "testLog": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.UI.Tests-tests.log",
+      "xml": "/tmp/ext-parties-1-command-admission/full-local/Hexalith.Parties.UI.Tests-tests.xml",
+      "xmlSha256": "58708bff1959db12df17738e2fcd74e010577c9994a3695550c8b66742992c8b",
+      "passed": 72,
+      "requiredClassPassedCounts": {
+        "*IdentityBindingBoundaryTests": 5,
+        "*IdentityBindingProvisioningServiceTests": 14,
+        "*PartyIdClaimResolverTests": 11,
+        "*SelfScopedPartiesClientTests": 42
+      }
+    }
+  ],
+  "supplementalRequiredDomainLane": {
+    "project": "Hexalith.Parties.Tests",
+    "scope": "supplemental-focused-required-class-execution; not a normal full-project/full-Local pass",
+    "buildCommand": "dotnet build /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --no-restore --artifacts-path /tmp/ext-parties-1-command-admission/retained-assets-artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-command-admission/optional-memories-package-mode -p:NuGetAudit=false -p:CustomAfterMicrosoftCommonTargets=/tmp/ext-parties-1-command-admission/focused-build.targets -m:1",
+    "testCommand": "env HEXALITH_PARTIES_SOURCE_ROOT=/home/administrator/projects/hexalith/parties dotnet /tmp/ext-parties-1-command-admission/retained-assets-artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll -class '*PartyIdentityAdmissionTests' -class '*PartyIdentityQueryHandlerTests' -class '*PartyIdentityRetentionConfigurationTests' -class '*PartyDomainProcessorValidationTests' -class '*PartySdkQueryHandlerTests' -class '*PartiesProcessEndpointTests' -class '*PartiesDomainServiceSecurityTests' -result-xml /tmp/ext-parties-1-command-admission/final-required-domain-lane.xml",
+    "buildLog": "/tmp/ext-parties-1-command-admission/final-focused-build.log",
+    "testLog": "/tmp/ext-parties-1-command-admission/final-required-domain-lane.log",
+    "restoredAssets": "Copied successfully restored pre-movement obj/assets from full-local-artifacts to retained-assets-artifacts; --no-restore prevents dependency override",
+    "temporaryImport": "/tmp/ext-parties-1-command-admission/focused-build.targets",
+    "excludedUnrelatedFiles": [
+      "FitnessTests/PlatformApiPrerequisitesTests.cs",
+      "FitnessTests/EpicEightClosureFitnessTests.cs"
+    ],
+    "xml": "/tmp/ext-parties-1-command-admission/final-required-domain-lane.xml",
+    "xmlSha256": "6fbcd8cbba86d068d447ebf00bf044be20c026d518a24f949d8512228c0fd4e7",
+    "passed": 357,
+    "requiredClassPassedCounts": {
+      "*PartyIdentityAdmissionTests": 50,
+      "*PartyIdentityQueryHandlerTests": 155,
+      "*PartyIdentityRetentionConfigurationTests": 6,
+      "*PartyDomainProcessorValidationTests": 44,
+      "*PartySdkQueryHandlerTests": 54,
+      "*PartiesProcessEndpointTests": 13,
+      "*PartiesDomainServiceSecurityTests": 35
+    }
+  },
+  "selectedRequiredPassesAcrossNormalAndSupplementalExecutions": 980,
+  "regressionsBefore": {
+    "total": 37,
+    "failed": 27,
+    "passed": 10,
+    "xml": "/tmp/ext-parties-1-command-admission/regressions-before.xml",
+    "sourceSnapshot": "/tmp/ext-parties-1-command-admission/regressions-before-source.json"
+  },
+  "finalFocusedRegressions": {
+    "xml": "/tmp/ext-parties-1-command-admission/final-regressions-after.xml",
+    "xmlSha256": "e9f73447382e7997ccddd1c0d70c46216fbebc7b2085ceddf0f0a9d300791e01",
+    "passed": 50,
+    "requiredClassPassedCounts": {
+      "*PartyIdentityAdmissionTests": 50
+    }
+  },
+  "ownedFinalSource": [
+    {
+      "path": "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs",
+      "sha256": "f88a5c782a5055d2476acf76565424e95642dacc1cc5bb600cf17cfab9bb5ee5",
+      "lineEndings": "CRLF"
+    },
+    {
+      "path": "tests/Hexalith.Parties.Tests/Domain/PartyIdentityAdmissionTests.cs",
+      "sha256": "781231ad9a8c50fab6802d77508532c41ed871e2a499df2bb447e0c8931df819",
+      "lineEndings": "CRLF"
+    }
+  ],
+  "liveGates": [
+    {
+      "command": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "eng/verify-ext-parties-1.ps1",
+        "-Mode",
+        "Live",
+        "-EvidenceDirectory",
+        "/tmp/ext-parties-1-command-admission/live-missing"
+      ],
+      "exitCode": 1,
+      "scope": "Missing-input gate",
+      "endpointAccess": false
+    },
+    {
+      "command": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "eng/verify-ext-parties-1.ps1",
+        "-Mode",
+        "Live",
+        "-EvidenceDirectory",
+        "/tmp/ext-parties-1-command-admission/live-sentinels"
+      ],
+      "exitCode": 1,
+      "scope": "Non-authoritative sentinel capability gate; no installed target or credential",
+      "endpointAccess": false
+    }
+  ],
+  "scopeNotes": [
+    "External repository, UI, MCP, security, gateway and dependency changes were preserved; no unchanged-whole-worktree claim",
+    "Prior UI invocation omitted the original verifier source-root environment and failed 5 source-discovery cases; logs/XML retained as *without-source-root; correct invocation passed all 72",
+    "Two original production execution tasks remain open; spec baseline/frozen intent/status unchanged",
+    "No production custody, restore/failure-injection target, actor-free continuation or installed P-01-P-10 acceptance is provided"
+  ]
+}

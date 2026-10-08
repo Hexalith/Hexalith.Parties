@@ -1,0 +1,32 @@
+[
+  {
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "Live",
+      "-EvidenceDirectory",
+      "/tmp/ext-parties-1-command-admission/live-missing"
+    ],
+    "exitCode": 1,
+    "scope": "Missing-input gate",
+    "endpointAccess": false
+  },
+  {
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "Live",
+      "-EvidenceDirectory",
+      "/tmp/ext-parties-1-command-admission/live-sentinels"
+    ],
+    "exitCode": 1,
+    "scope": "Non-authoritative sentinel capability gate; no installed target or credential",
+    "endpointAccess": false
+  }
+]

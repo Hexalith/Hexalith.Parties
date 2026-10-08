@@ -36,10 +36,10 @@ test.describe('Consumer portal route shells', () => {
       await expect(page.getByRole('heading', { name: route.heading })).toBeVisible();
       await expect(page.getByRole('status').filter({ hasText: route.status })).toBeVisible();
       if (route.path === '/me') {
-        await expect(page.getByText('Consumer E2E')).toBeVisible();
+        await expect(page.getByRole('main').getByText('Consumer E2E')).toBeVisible();
         await expect(page.getByRole('heading', { name: 'Profile details' })).toBeVisible();
       } else if (route.path === '/me/edit') {
-        await expect(page.getByText('Consumer E2E')).toBeVisible();
+        await expect(page.getByRole('main').getByText('Consumer E2E')).toBeVisible();
         await expect(page.getByRole('heading', { name: 'Editable details' })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Save changes' })).toBeVisible();
       } else if (route.path === '/me/consent') {
@@ -125,8 +125,8 @@ test.describe('Consumer portal route shells', () => {
     await page.getByRole('button', { name: 'Save changes' }).click();
 
     await expect.poll(async () => (await latestUpdateRequest(request))?.partyId ?? null).toBe('party-bound-001');
-    await expect(page.getByRole('status')).toHaveCount(1);
-    await expect(page.getByRole('status')).toContainText('Saved');
+    await expect(page.locator('.hx-parties-profile').getByRole('status')).toHaveCount(1);
+    await expect(page.locator('.hx-parties-profile').getByRole('status')).toContainText('Saved');
     await expect(page.getByLabel('First name')).toHaveValue('Updated');
     await expect(page.getByText('Updated Consumer')).toBeVisible();
     expect(new URL(page.url()).pathname).toBe('/me/edit');
@@ -190,16 +190,16 @@ test.describe('Consumer portal route shells', () => {
     await marketing.click();
 
     await expect.poll(async () => (await latestAddConsentRequest(request))?.partyId ?? null).toBe('party-bound-001');
-    await expect(page.getByRole('status')).toHaveCount(1);
-    await expect(page.getByRole('status')).toContainText('Saved');
+    await expect(page.locator('.hx-parties-profile').getByRole('status')).toHaveCount(1);
+    await expect(page.locator('.hx-parties-profile').getByRole('status')).toContainText('Saved');
     await expect(marketing).toHaveAttribute('aria-checked', 'true');
     await expect(page.getByText('consumer@example.test')).toHaveCount(0);
 
     await marketing.click();
 
     await expect.poll(async () => (await latestRevokeConsentRequest(request))?.partyId ?? null).toBe('party-bound-001');
-    await expect(page.getByRole('status')).toHaveCount(1);
-    await expect(page.getByRole('status')).toContainText('Saved');
+    await expect(page.locator('.hx-parties-profile').getByRole('status')).toHaveCount(1);
+    await expect(page.locator('.hx-parties-profile').getByRole('status')).toContainText('Saved');
     await expect(marketing).toHaveAttribute('aria-checked', 'false');
     await expect.poll(async () => await gdprRequestCounts(request)).toEqual({
       addConsent: 1,
@@ -229,7 +229,7 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByText('Machine-readable JSON')).toBeVisible();
     await page.getByRole('button', { name: 'Export my data' }).click();
 
-    await expect(page.getByRole('status')).toContainText('Your JSON export is ready.');
+    await expect(page.getByRole('status').filter({ hasText: 'Your JSON export is ready.' })).toContainText('Your JSON export is ready.');
     await expect.poll(async () => (await latestExportRequest(request))?.partyId ?? null).toBe('party-bound-001');
     await expect(page.getByText('Preparing your export - this can take a little while.')).toHaveCount(0);
     await expect(page.getByText('under one minute')).toHaveCount(0);
@@ -381,7 +381,7 @@ test.describe('Consumer portal route shells', () => {
 
     await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Delete my data' })).toBeVisible();
-    await expect(page.getByRole('status')).toContainText("Once it's done, it's permanent - we can't undo it.");
+    await expect(page.getByRole('status').filter({ hasText: "Once it's done, it's permanent - we can't undo it." })).toContainText("Once it's done, it's permanent - we can't undo it.");
     await expect(page.getByRole('button', { name: 'Cancel deletion request' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Delete my data' })).toHaveCount(0);
     await expect(page.getByText('reversible')).toHaveCount(0);
@@ -412,7 +412,7 @@ test.describe('Consumer portal route shells', () => {
     });
 
     await page.getByRole('button', { name: 'Export my data' }).click();
-    await expect(page.getByRole('status')).toContainText('Your JSON export is ready.');
+    await expect(page.getByRole('status').filter({ hasText: 'Your JSON export is ready.' })).toContainText('Your JSON export is ready.');
     await expect.poll(async () => (await latestExportRequest(request))?.partyId ?? null).toBe('party-bound-001');
 
     await page.getByRole('button', { name: 'Download JSON' }).click();

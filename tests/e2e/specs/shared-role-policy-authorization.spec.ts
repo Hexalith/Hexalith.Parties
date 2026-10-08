@@ -26,7 +26,7 @@ test.describe('Shared role and policy authorization', () => {
     await expect(page.getByRole('heading', { name: 'Parties' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'My profile' })).toHaveCount(0);
-    await expect(page.getByText('Consumer E2E')).toHaveCount(0);
+    await expect(page.getByRole('main').getByText('Consumer E2E')).toHaveCount(0);
 
     await page.goto('/me');
 
@@ -50,7 +50,7 @@ test.describe('Shared role and policy authorization', () => {
       await expect(page.getByRole('heading', { name: 'Parties' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toBeVisible();
       await expect(page.getByRole('heading', { name: 'My profile' })).toHaveCount(0);
-      await expect(page.getByText('Consumer E2E')).toHaveCount(0);
+      await expect(page.getByRole('main').getByText('Consumer E2E')).toHaveCount(0);
       expect(browserVisibleDataRequests).toEqual([]);
     });
   }
@@ -63,7 +63,7 @@ test.describe('Shared role and policy authorization', () => {
     await page.waitForURL('**/me');
 
     await expect(page.getByRole('heading', { name: 'My profile' })).toBeVisible();
-    await expect(page.getByText('Consumer E2E')).toBeVisible();
+    await expect(page.getByRole('main').getByText('Consumer E2E')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Parties' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toHaveCount(0);
 

@@ -60,7 +60,7 @@ public sealed partial class AccessibilityStyleGuardTests
     {
         string root = FindRepositoryRoot();
         string appRazor = File.ReadAllText(Path.Combine(root, "src/Hexalith.Parties.UI/Components/App.razor"));
-        appRazor.ShouldContain("_content/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.styles.css");
+        appRazor.ShouldContain("_content/Hexalith.FrontComposer.Shell/css/fc-shell.css");
         appRazor.ShouldContain("Hexalith.Parties.UI.styles.css");
 
         string packagedVersion = XDocument.Load(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"))

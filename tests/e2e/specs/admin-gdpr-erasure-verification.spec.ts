@@ -83,7 +83,7 @@ test.describe('Admin GDPR erasure verification contract', () => {
     const report = detail.locator('section[aria-labelledby^="erasure-report-heading-"]');
     await expect(report.getByRole('status')).toContainText('Verification not yet available');
     await expect(report.getByText('The erasure status remains available')).toBeVisible();
-    await expect(detail.getByText('EventStore GDPR client contract does not expose erasure certificate or retry verification yet.')).toBeVisible();
+    await expect(detail.getByText('Blocked on accepted EventStore-fronted Parties client/gateway contract')).toBeVisible();
     await expect(detail.getByRole('button', { name: 'Refresh erasure status' })).toBeEnabled();
     await expect(detail.getByRole('button', { name: 'Request erasure' })).toBeEnabled();
     await expect(detail.getByRole('button', { name: 'Processing records' })).toBeEnabled();

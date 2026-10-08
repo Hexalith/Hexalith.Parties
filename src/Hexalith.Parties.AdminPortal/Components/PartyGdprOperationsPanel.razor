@@ -56,12 +56,12 @@
                         </div>
                     </ChildContent>
                     <ActionTemplate>
-                        <FluentButton Appearance="ButtonAppearance.Outline"
+                        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                                       Disabled="@_isBusy"
                                       OnClick="CancelErasure">
                             @Labels.GdprCancel
                         </FluentButton>
-                        <FluentButton Appearance="ButtonAppearance.Primary"
+                        <FluentButton role="button" Appearance="ButtonAppearance.Primary"
                                       Class="hx-parties-admin__danger-action"
                                       Disabled="@(!CanConfirmErasure)"
                                       aria-disabled="@(!CanConfirmErasure)"
@@ -74,13 +74,13 @@
         }
         else
         {
-            <FluentButton Appearance="ButtonAppearance.Outline"
+            <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                           Disabled="@(!CanRequestErasure)"
                           OnClick="BeginErasureConfirmation">
                 @Labels.RequestErasure
             </FluentButton>
         }
-        <FluentButton Appearance="ButtonAppearance.Outline"
+        <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                       Disabled="@(!CanRefreshErasureStatus)"
                       OnClick="RefreshErasureStatusFromUiAsync">
             @Labels.GdprRefreshStatus
@@ -91,7 +91,7 @@
         }
         @if (CanRetryVerification)
         {
-            <FluentButton Appearance="ButtonAppearance.Outline"
+            <FluentButton role="button" Appearance="ButtonAppearance.Outline"
                           Disabled="@_isBusy"
                           OnClick="RetryVerificationAsync">
                 @Labels.GdprRetryVerification
@@ -106,7 +106,7 @@
             }
             else
             {
-                <FluentButton Appearance="ButtonAppearance.Outline" Disabled="true">
+                <FluentButton role="button" Appearance="ButtonAppearance.Outline" Disabled="true">
                     @Labels.EventStoreAdminUnavailable
                 </FluentButton>
             }
