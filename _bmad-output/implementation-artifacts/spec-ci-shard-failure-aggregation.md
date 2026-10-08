@@ -2,7 +2,7 @@
 title: 'CI shard failure aggregation'
 type: 'bugfix'
 created: '2026-09-06'
-status: 'in-review'
+status: 'done'
 baseline_commit: '904b0ca928616130ec0092983c3c0c346c8fc2e1'
 review_loop_iteration: 0
 followup_review_recommended: false
@@ -113,3 +113,59 @@ Individual test steps finish successfully after recording expected test-process 
 - `bash -n` against each extracted `run: |` shard and aggregate-gate body -- expected: every generated shell body parses.
 - `git diff --check` in both owning repositories -- expected: no whitespace errors.
 - PowerShell parser check for `scripts/test.ps1` plus a content diff -- expected: clean parse and no local-runner changes.
+
+### Resumed review verification — 2026-10-08
+
+The shared aggregation implementation was already committed in Builds before
+this run. Three independent review layers were completed, all 13 new findings
+were triaged above, and the accepted corrections were applied. Nothing was
+added to the deferred-work ledger.
+
+- `pwsh -NoProfile -File ./Tools/test-domain-workflow-test-platforms.ps1`
+  from `references/Hexalith.Builds` — exit 0, **207 assertions passed**
+  (169 before the review corrections).
+- `bash -n` on each extracted literal Tier 1/Tier 2 body and the aggregate
+  gate — all five passed after the corrections.
+- Seven temporary workflow mutations — all returned exit 1 from the harness:
+  swapped platform outputs, swapped tier outputs, integration before Dapr,
+  removed TRX cleanup, removed infrastructure summary row, unescaped report
+  annotation path, and removed MTP infrastructure-exit guard.
+- `scripts/test.ps1` PowerShell parser — no parse errors. A shimmed local unit
+  lane stopped after one failed project by default (exit 1); with
+  `-ContinueOnFailure`, all 11 projects ran and the complete summary ended
+  with exit 1; an all-passing continued run executed 11 projects and exited 0.
+- Builds `git diff --check` and Parties
+  `git diff --check -- _bmad-output/implementation-artifacts/spec-ci-shard-failure-aggregation.md`
+  — both exit 0. The broader Parties `git diff --check` returned exit 2 on
+  pre-existing CRLF Story 8.7 and test-summary edits;
+  `git -c core.whitespace=cr-at-eol diff --check` passed without changing
+  repository configuration or those edits.
+- SHA-256 preservation checks passed for the Parties CI caller,
+  `scripts/test.ps1`, deferred-work ledger, shared release workflow, and
+  central package props. Coverage validation, upload arguments, project
+  inventory, dependency pins, and the parent's submodule gitlink were preserved.
+
+Review provenance: the recorded workspace baseline is
+`904b0ca928616130ec0092983c3c0c346c8fc2e1`; its Builds gitlink resolves to
+`6daad3d501e97204eba66d971bba6a7103b85ccd`. The saved workspace diff includes
+all changes since that baseline. Reviewers received the three aggregation
+files' unified diff against that owning-repository baseline, avoiding unrelated
+subsequent workspace work. The reviewed Builds starting HEAD was
+`58d9b546b4741a246121ab40fc3945703db2e19b`.
+
+Validation covers workflow structure and shimmed process behavior. No live
+GitHub Actions run was started or credited.
+
+Local completion commit in Builds: `86817400f62122246f55124fe6774c7677b872fd`.
+The Parties index retains the original Builds gitlink `58d9b546b4741a246121ab40fc3945703db2e19b`;
+this task does not enroll a submodule revision change or push either repository.
+
+Commit validation used the repository lockfile versions: Builds commitlint
+`21.2.3` and Parties commitlint `21.2.2`. The exact full candidates
+`fix(ci): harden shard failure aggregation` and
+`docs: complete shard aggregation review` each passed with exit 0. Builds'
+installed CLI was older than its lockfile, so its locked toolchain and
+byte-identical configuration were restored in a temporary directory. The
+initial temporary-directory `--edit` attempt returned exit 1 because it lacked
+a Git root; validating the same full candidate through stdin from Builds
+succeeded. No package or lockfile was changed.
