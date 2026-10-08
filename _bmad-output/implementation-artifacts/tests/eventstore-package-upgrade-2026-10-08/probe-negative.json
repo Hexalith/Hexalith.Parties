@@ -1,0 +1,15 @@
+{
+  "command": [
+    "python3",
+    "-O",
+    "_bmad-output/implementation-artifacts/tests/eventstore-package-upgrade-2026-10-08/probe-published.py",
+    "3.117.0",
+    "3600d196799b7bbc5398a6d126e918171f07a2d3",
+    "/tmp/parties-eventstore-probe-negative",
+    "references/Hexalith.EventStore",
+    "/tmp/parties-eventstore-api-verifier/bin/Release/net10.0/Verifier.dll"
+  ],
+  "expectedFailureExitCode": 1,
+  "successProofAbsent": true,
+  "provenanceMismatchCount": 14
+}

@@ -1,0 +1,15 @@
+{
+  "partiesHeadBeforeUpgradeCommit": "28fff255a18a7de540631c792034a8df5a33c980",
+  "files": {
+    "Directory.Packages.props": "f2305524b5631f05ec0c0803792501922c6ba6f5e0a88eeb643ef074c70f8441",
+    "Directory.Build.props": "60bfac9468a7d5560405045a87ae4a0d350687348f0a59cd1c7cdffb2b41d4b8",
+    "Directory.Build.targets": "a9dd7be2cd742bdfcdf50e1dffec892c56909c0393620ff3cae9635da78e94df",
+    "global.json": "25b36d45123efa1d03786506dadad7546069f8563cddd4b509849b5c3631e9f5",
+    "Hexalith.Parties.slnx": "7fcbebe6f2ef20e226a70411d3f3891e9825f87a965f9e715092c925a6c590a5",
+    "src/Hexalith.Parties/Program.cs": "6586fe56963122fb0efedbdf4f2f078ba7413c3d90bad8bc4ef2aef29995cc06",
+    "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs": "c66d64b295c620c8f7756ebf3ea6c45c8f2cbb06cc6bc5a5f626a3f64fe6f9f6",
+    "references/Hexalith.Builds/Props/Directory.Packages.props": "1dc07cfee8ad94111cb1e42f017125c16ebdd6aca886158ed3a8cb19726ab3f2",
+    "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj": "01f91d9958d2af3eeabb6826fc0727a90f93b0f6566dfada308da816748315f0"
+  },
+  "eventStoreSource": "b830d9829af70536d2a3fd21c5e2a23b2ca2f256"
+}

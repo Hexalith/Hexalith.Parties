@@ -1,0 +1,26 @@
+[
+  {
+    "testName": "Hexalith.EventStore.DomainService.Tests.EventStoreDomainServiceExtensionsTests.EndpointInventory_RequiresTheSidecarChannelPolicyOnSidecarRoutes(premapped: \"secured\", expectedRoute: null)",
+    "outcome": "Passed"
+  },
+  {
+    "testName": "Hexalith.EventStore.DomainService.Tests.EventStoreDomainServiceExtensionsTests.EndpointInventory_RequiresTheSidecarChannelPolicyOnSidecarRoutes(premapped: \"subscribe\", expectedRoute: \"/dapr/subscribe\")",
+    "outcome": "Passed"
+  },
+  {
+    "testName": "Hexalith.EventStore.DomainService.Tests.EventStoreDomainServiceExtensionsTests.EndpointInventory_RequiresTheSidecarChannelPolicyOnSidecarRoutes(premapped: \"actors\", expectedRoute: \"/actors/\")",
+    "outcome": "Passed"
+  },
+  {
+    "testName": "Hexalith.EventStore.DomainService.Tests.EventStoreDomainServiceExtensionsTests.EndpointInventory_RequiresTheSidecarChannelPolicyOnSidecarRoutes(premapped: \"subscription\", expectedRoute: \"/widget/premapped-events\")",
+    "outcome": "Passed"
+  },
+  {
+    "testName": "Hexalith.EventStore.DomainService.Tests.EventStoreDomainServiceExtensionsTests.UseEventStoreDomainService_EveryNonProbeEndpointRequiresCredentials",
+    "outcome": "Passed"
+  },
+  {
+    "testName": "Hexalith.EventStore.DomainService.Tests.DomainServiceTrustBoundaryTests.SubscriptionRoute_RequiresTheAppChannelToken",
+    "outcome": "Passed"
+  }
+]

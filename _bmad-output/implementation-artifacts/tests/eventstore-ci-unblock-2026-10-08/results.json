@@ -128,8 +128,40 @@
   },
   "providerFixtureCommit": "c561b3210f15206a90c39c82c58f2e5b1005cd60",
   "fullProviderSuiteVerified": false,
-  "fullCiVerified": false,
-  "packagePublished": false,
-  "releaseDispatched": false,
-  "liveMainObservedAfterChecks": "d87c969b6518751fafec9fbd01733d885b2efbfe"
+  "fullCiVerified": true,
+  "packagePublished": true,
+  "releaseDispatched": true,
+  "liveMainObservedAfterChecks": "d87c969b6518751fafec9fbd01733d885b2efbfe",
+  "publicationFollowThrough": {
+    "userAuthorized": true,
+    "authoritativePushedCommit": "3600d196799b7bbc5398a6d126e918171f07a2d3",
+    "commitCreatedByThisSession": false,
+    "reviewedPatchMatchesPushedCommit": true,
+    "ciRun": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/37747659600",
+    "ciStatus": "success",
+    "releaseInput": {
+      "bypass-validation": false
+    },
+    "releaseAttempts": [
+      {
+        "run": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/37748683711",
+        "source": "3600d196799b7bbc5398a6d126e918171f07a2d3",
+        "conclusion": "failure",
+        "reason": "source-no-longer-current",
+        "nugetPackagesPublished": false
+      }
+    ],
+    "nextMainSource": "b830d9829af70536d2a3fd21c5e2a23b2ca2f256",
+    "nextCiRun": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/37749252540",
+    "nextCiStatus": "success",
+    "concurrentCommitlintOnlyRunCancelled": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/37750156314",
+    "normalReleaseRetry": "https://github.com/Hexalith/Hexalith.EventStore/actions/runs/37750172086",
+    "publishedVersion": "3.117.0",
+    "releaseConclusion": "success",
+    "releasedSource": "b830d9829af70536d2a3fd21c5e2a23b2ca2f256",
+    "nugetAvailability": "all_14_public_feed_packages_verified",
+    "releaseArtifact": "release-evidence-37750172086-1",
+    "releaseArtifactId": 11538710241,
+    "consumerReceipt": "../eventstore-package-upgrade-2026-10-08/README.md"
+  }
 }

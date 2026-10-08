@@ -1,0 +1,86 @@
+{
+  "builds": {
+    "action_sha": "22a578b576a515d2af214fe81859447fffc97981",
+    "files": {
+      "oci_registry_validator.py": "0fff2281ecb9d8a46c48d65d1b0de58b724f2439138da43395004232e5942045",
+      "publication_preflight.py": "f87b48e649092cc68de8f07977bae48c65f0570007f60de42887201988ee0062",
+      "publish-containers.sh": "7e64bb1f744b9e3cb793df5c47813d15db00aaa8bc76e1875088f259574e9622",
+      "smoke-container-platforms.sh": "f11865658a24ecea906da087d8446c7f631dc5a9328e294676534d590ef0e89e",
+      "smoke_container_platforms.py": "7f1161d6f477c77ddf6a1e2f381df03451168565dd8cabc28010ab23db443491"
+    },
+    "workflow_sha": "22a578b576a515d2af214fe81859447fffc97981"
+  },
+  "container_repositories": [
+    "registry.hexalith.com/eventstore"
+  ],
+  "container_repository": "registry.hexalith.com/eventstore",
+  "environment": "production",
+  "packages": {
+    "ids": [
+      "Hexalith.EventStore.Contracts",
+      "Hexalith.EventStore.Client",
+      "Hexalith.EventStore.Server",
+      "Hexalith.EventStore.SignalR",
+      "Hexalith.EventStore.Testing",
+      "Hexalith.EventStore.Testing.Integration",
+      "Hexalith.EventStore.Aspire",
+      "Hexalith.EventStore.ServiceDefaults",
+      "Hexalith.EventStore.DomainService",
+      "Hexalith.EventStore.RestApi.Generators",
+      "Hexalith.EventStore.Gateway",
+      "Hexalith.EventStore.Admin.Abstractions",
+      "Hexalith.EventStore.Admin.Cli",
+      "Hexalith.EventStore.Admin.Server"
+    ],
+    "manifest_sha256": "6b0b70b856839d4117bcd969f6a2de0093c477c109cb79f3f2882b1f05effcae",
+    "normalized_ids": [
+      "hexalith.eventstore.contracts",
+      "hexalith.eventstore.client",
+      "hexalith.eventstore.server",
+      "hexalith.eventstore.signalr",
+      "hexalith.eventstore.testing",
+      "hexalith.eventstore.testing.integration",
+      "hexalith.eventstore.aspire",
+      "hexalith.eventstore.servicedefaults",
+      "hexalith.eventstore.domainservice",
+      "hexalith.eventstore.restapi.generators",
+      "hexalith.eventstore.gateway",
+      "hexalith.eventstore.admin.abstractions",
+      "hexalith.eventstore.admin.cli",
+      "hexalith.eventstore.admin.server"
+    ]
+  },
+  "platforms": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "repository": "Hexalith/Hexalith.EventStore",
+  "run": {
+    "actor": "jpiquot",
+    "attempt": "1",
+    "event": "workflow_dispatch",
+    "id": "37750172086",
+    "number": "974",
+    "ref": "refs/heads/main",
+    "triggering_actor": "jpiquot",
+    "workflow_ref": "Hexalith/Hexalith.EventStore/.github/workflows/release.yml@refs/heads/main",
+    "workflow_sha": "b830d9829af70536d2a3fd21c5e2a23b2ca2f256"
+  },
+  "schema": "hexalith.release-publication-preflight.v4",
+  "source": {
+    "branch": "main",
+    "ci_run": {
+      "conclusion": "success",
+      "event": "push",
+      "head_branch": "main",
+      "head_sha": "b830d9829af70536d2a3fd21c5e2a23b2ca2f256",
+      "id": 37749252540,
+      "status": "completed"
+    },
+    "ci_workflow": "ci.yml",
+    "live_sha": "b830d9829af70536d2a3fd21c5e2a23b2ca2f256",
+    "ref": "refs/heads/main"
+  },
+  "source_sha": "b830d9829af70536d2a3fd21c5e2a23b2ca2f256",
+  "version": "3.117.0"
+}

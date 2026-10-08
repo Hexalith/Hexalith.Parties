@@ -107,3 +107,69 @@ upstream test projects and record the remaining publication prerequisite.
   during validation, changing command API documentation and an unrelated Server
   integration test. These local patches remain on the recorded base; publication
   requires incorporating current main and passing its exact-source full CI.
+
+## Approved publication follow-through
+
+The user answered `yes` to committing/pushing the verified fixes, waiting for
+successful full CI, publishing through the normal release workflow, and updating
+Parties to the actually published package. Concurrent workspace work had already
+committed and pushed the exact reviewed patch as
+`3600d196799b7bbc5398a6d126e918171f07a2d3`. This session created no duplicate
+commit. The selected full commit passes the owning pinned commitlint, and push CI
+run `37747659600` subsequently passed. The initial release then stopped because
+main advanced; the completed normal publication is recorded below.
+
+
+### Publication and consumer result — 2026-10-08
+
+- The initial normal release stopped before package publication because live main
+  advanced. The selected source `b830d9829af70536d2a3fd21c5e2a23b2ca2f256`
+  passed full push CI `37749252540`, including all required sidecar-security
+  cases. Normal Release `37750172086` used `bypass-validation=false`, passed all
+  source/publication gates, and published `v3.117.0`. No validation gate was
+  weakened.
+- All 14 actual public NuGet packages were downloaded and matched the release
+  commit/version. The DomainService assembly exposes the required public generic
+  endpoint-builder extension; its Client and ServiceDefaults dependencies both
+  select `3.117.0`. Parties now pins that published version before the shared
+  catalog import. Security calls and package-mode defaults are preserved.
+- Normal solution restore and Release build pass with zero warnings and errors.
+  All 11 unit-test projects, 101 CI contract tests, and 35 sidecar-security cases
+  pass. A documentation fitness failure exposed AppHost SDK `13.6.0` against the
+  already-selected Builds catalog's Aspire `13.6.1`; the SDK and maintained version
+  tables were aligned, and all 10 documentation checks now pass.
+- The current source identity receipt and fitness constants now reflect the
+  existing Builds, Memories, and Tenants pointers plus the released EventStore
+  pointer. Historical source approvals, parity receipts, and rollback obligations
+  retain their scope. The immutable current-root identity fitness check runs
+  after the upgrade commit and before push. No nested submodules were initialized.
+- Exact public package, dependency graph, build, and consumer test evidence is in
+  [the upgrade receipt](tests/eventstore-package-upgrade-2026-10-08/README.md).
+  Integrated topology runtime acceptance and Parties exact-source full CI remain
+  distinct from resolving this package API mismatch.
+
+
+### Consumer upgrade review triage
+
+1. **medium — patched:** Python optimization removed assert-based provenance and
+   dependency checks. Explicit exceptions now retain these checks under `-O`.
+2. **medium — patched:** A failed replay could leave stale success evidence in a
+   reused directory. The probe invalidates prior success/failure outputs first.
+3. **medium — patched:** Temporary-only test outputs limited auditability. The
+   receipt now retains sanitized per-case outcomes/counters and exact build logs.
+4. **medium — patched:** Selected-input hashes did not bind concurrent source/test
+   changes. Local observations retain that limitation; the committed upgrade is
+   verified in an isolated checkout with a complete source manifest before push.
+5. **low — patched:** OCI proof referenced five omitted raw files. All five public
+   manifest/config artifacts are now retained and their recorded hashes match.
+6. **low — patched:** Graph replay instructions omitted extraction commands. The
+   receipt now includes a replayable graph/input observation script and command.
+7. **low — patched:** An earlier journal paragraph still described CI as running.
+   It now records the completed first CI and the subsequent source-drift stop.
+8. **medium — patched during review:** Release inventory was read from mutable
+   checkout content. The probe now reads/hashes the manifest from the exact SHA.
+9. **medium — patched during review:** Metadata proof omitted declaring-type and
+   receiver/return/extension checks. The strengthened verifier and public package
+   probe were replayed successfully.
+10. **low — patched during review:** Architecture still cited the previous current
+    Tenants pointer. It now matches the committed selection and prerequisite matrix.

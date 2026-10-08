@@ -1,0 +1,85 @@
+  Determining projects to restore...
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations/Hexalith.PolymorphicSerializations.csproj (in 257 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj (in 276 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Hexalith.Tenants.Contracts.csproj (in 258 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj (in 256 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj (in 268 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/Hexalith.EventStore.Client.csproj (in 276 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj (in 254 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations.CodeGenerators/Hexalith.PolymorphicSerializations.CodeGenerators.csproj (in 272 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.csproj (in 271 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Client/Hexalith.Tenants.Client.csproj (in 257 ms).
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj (in 276 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj (in 313 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/Hexalith.FrontComposer.Contracts.UI.csproj (in 3 ms).
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj (in 9 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj (in 299 ms).
+  Restored /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj (in 279 ms).
+  43 of 59 projects are up-to-date for restore.
+  Hexalith.Commons.Http -> /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/bin/Release/net10.0/Hexalith.Commons.Http.dll
+  Hexalith.Commons.ServiceDefaults -> /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/bin/Release/net10.0/Hexalith.Commons.ServiceDefaults.dll
+  Hexalith.Commons.UniqueIds -> /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Release/net10.0/Hexalith.Commons.UniqueIds.dll
+  Hexalith.EventStore.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/bin/Release/net10.0/Hexalith.EventStore.Contracts.dll
+  Hexalith.EventStore.Admin.Abstractions -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Abstractions/bin/Release/net10.0/Hexalith.EventStore.Admin.Abstractions.dll
+  Hexalith.EventStore.Admin.Server -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server/bin/Release/net10.0/Hexalith.EventStore.Admin.Server.dll
+  Hexalith.EventStore.ServiceDefaults -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.ServiceDefaults/bin/Release/net10.0/Hexalith.EventStore.ServiceDefaults.dll
+  Hexalith.EventStore.Admin.Server.Host -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/bin/Release/net10.0/Hexalith.EventStore.Admin.Server.Host.dll
+  Hexalith.EventStore.Client -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/bin/Release/net10.0/Hexalith.EventStore.Client.dll
+  Hexalith.EventStore.SignalR -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/bin/Release/net10.0/Hexalith.EventStore.SignalR.dll
+  Hexalith.EventStore.Admin.UI -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/bin/Release/net10.0/Hexalith.EventStore.Admin.UI.dll
+  Hexalith.EventStore.Aspire -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/bin/Release/net10.0/Hexalith.EventStore.Aspire.dll
+  Hexalith.EventStore.DomainService -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.DomainService/bin/Release/net10.0/Hexalith.EventStore.DomainService.dll
+  Hexalith.EventStore.Server -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Server/bin/Release/net10.0/Hexalith.EventStore.Server.dll
+  Hexalith.EventStore.Testing -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Testing/bin/Release/net10.0/Hexalith.EventStore.Testing.dll
+  Hexalith.EventStore.Gateway -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Gateway/bin/Debug/net10.0/Hexalith.EventStore.Gateway.dll
+  Hexalith.EventStore -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Release/net10.0/Hexalith.EventStore.dll
+  Hexalith.FrontComposer.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/bin/Release/net10.0/Hexalith.FrontComposer.Contracts.dll
+  Hexalith.FrontComposer.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/bin/Release/netstandard2.0/Hexalith.FrontComposer.Contracts.dll
+  Hexalith.FrontComposer.Schema -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/bin/Release/net10.0/Hexalith.FrontComposer.Schema.dll
+  Hexalith.FrontComposer.Mcp -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Mcp/bin/Release/net10.0/Hexalith.FrontComposer.Mcp.dll
+  Hexalith.FrontComposer.Schema -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/bin/Release/netstandard2.0/Hexalith.FrontComposer.Schema.dll
+  Hexalith.FrontComposer.Contracts.UI -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/bin/Debug/net10.0/Hexalith.FrontComposer.Contracts.UI.dll
+  Hexalith.FrontComposer.Shell -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/bin/Release/net10.0/Hexalith.FrontComposer.Shell.dll
+  Hexalith.FrontComposer.SourceTools -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.SourceTools/bin/Release/netstandard2.0/Hexalith.FrontComposer.SourceTools.dll
+  Hexalith.PolymorphicSerializations.CodeGenerators -> /home/administrator/projects/hexalith/parties/references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations.CodeGenerators/bin/Release/netstandard2.0/Hexalith.PolymorphicSerializations.CodeGenerators.dll
+  Hexalith.PolymorphicSerializations -> /home/administrator/projects/hexalith/parties/references/Hexalith.PolymorphicSerializations/src/libraries/Hexalith.PolymorphicSerializations/bin/Release/net10.0/Hexalith.PolymorphicSerializations.dll
+  Hexalith.Tenants.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/bin/Release/net10.0/Hexalith.Tenants.Contracts.dll
+  Hexalith.Tenants.Client -> /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Client/bin/Release/net10.0/Hexalith.Tenants.Client.dll
+  Hexalith.Tenants.Server -> /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Server/bin/Release/net10.0/Hexalith.Tenants.Server.dll
+  Hexalith.Tenants.Testing -> /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Testing/bin/Release/net10.0/Hexalith.Tenants.Testing.dll
+  Hexalith.Parties.Contracts -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/bin/Release/net10.0/Hexalith.Parties.Contracts.dll
+  Hexalith.Parties.Client -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Client/bin/Release/net10.0/Hexalith.Parties.Client.dll
+  Hexalith.Parties.Sample -> /home/administrator/projects/hexalith/parties/samples/Hexalith.Parties.Sample/bin/Release/net10.0/Hexalith.Parties.Sample.dll
+  Hexalith.Parties.AdminPortal -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AdminPortal/bin/Release/net10.0/Hexalith.Parties.AdminPortal.dll
+  Hexalith.Parties.Authentication -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Authentication/bin/Release/net10.0/Hexalith.Parties.Authentication.dll
+  Hexalith.Parties.Projections -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Projections/bin/Release/net10.0/Hexalith.Parties.Projections.dll
+  Hexalith.Parties.Security -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Security/bin/Release/net10.0/Hexalith.Parties.Security.dll
+  Hexalith.Parties -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties/bin/Release/net10.0/Hexalith.Parties.dll
+  Hexalith.Parties.Mcp -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Mcp/bin/Release/net10.0/Hexalith.Parties.Mcp.dll
+  Hexalith.Parties.ConsumerPortal -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.ConsumerPortal/bin/Release/net10.0/Hexalith.Parties.ConsumerPortal.dll
+  Hexalith.Parties.Picker -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Picker/bin/Release/net10.0/Hexalith.Parties.Picker.dll
+  Hexalith.Parties.UI -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.UI/bin/Release/net10.0/Hexalith.Parties.UI.dll
+  Hexalith.Parties.AppHost -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll
+  Hexalith.Parties.Testing -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Testing/bin/Release/net10.0/Hexalith.Parties.Testing.dll
+  Hexalith.Parties.AdminPortal.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll
+  Hexalith.Parties.Authentication.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Authentication.Tests/bin/Release/net10.0/Hexalith.Parties.Authentication.Tests.dll
+  Hexalith.Parties.Ci.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll
+  Hexalith.Parties.Client.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/bin/Release/net10.0/Hexalith.Parties.Client.Tests.dll
+  Hexalith.Parties.ConsumerPortal.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Release/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll
+  Hexalith.Parties.Contracts.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll
+  Hexalith.Parties.EventStoreGateway.TestHost -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.EventStoreGateway.TestHost/bin/Release/net10.0/Hexalith.Parties.EventStoreGateway.TestHost.dll
+  Hexalith.Parties.IntegrationTests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll
+  Hexalith.Parties.Mcp.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Mcp.Tests/bin/Release/net10.0/Hexalith.Parties.Mcp.Tests.dll
+  Hexalith.Parties.Picker.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Picker.Tests/bin/Release/net10.0/Hexalith.Parties.Picker.Tests.dll
+  Hexalith.Parties.Projections.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.Tests.dll
+  Hexalith.Parties.Sample.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Sample.Tests/bin/Release/net10.0/Hexalith.Parties.Sample.Tests.dll
+  Hexalith.Parties.Security.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Security.Tests/bin/Release/net10.0/Hexalith.Parties.Security.Tests.dll
+  Hexalith.Parties.Server.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Server.Tests/bin/Release/net10.0/Hexalith.Parties.Server.Tests.dll
+  Hexalith.Parties.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll
+  Hexalith.Parties.UI.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:12.90

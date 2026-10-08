@@ -76,9 +76,33 @@ both hashes and the replacement count.
 
 Independent review produced six findings; all were patched and documented in
 the [implementation spec](../../spec-unblock-eventstore-api-publication.md).
-No commit, push, release dispatch, or package publication was performed for this
-local fix. A successful full push CI run for the exact resulting current-main
-SHA is still required before the normal upstream publication. The local checks
-do not replace that gate. Parties can upgrade its package pin only after the
-compatible package is actually published, then verify its package-mode Release
-build and CI lane.
+At the local-fix checkpoint, publication had not been authorized or performed.
+The user subsequently authorized commit/push, exact-source full CI, normal
+publication, and the Parties consumer upgrade.
+
+## Approved publication follow-through
+
+Concurrent workspace work committed and pushed the reviewed patch as
+`3600d196799b7bbc5398a6d126e918171f07a2d3`; no duplicate commit was created.
+Its exact-source full CI passed. An initial normal release stopped before NuGet
+publication when current main advanced. The new selected main
+`b830d9829af70536d2a3fd21c5e2a23b2ca2f256` then passed
+[full push CI 37749252540](https://github.com/Hexalith/Hexalith.EventStore/actions/runs/37749252540),
+including the six cases from the three required sidecar-security tests recorded
+in [next-sidecar-security-ci.json](next-sidecar-security-ci.json).
+
+[Normal Release 37750172086](https://github.com/Hexalith/Hexalith.EventStore/actions/runs/37750172086)
+succeeded with `bypass-validation=false` and published
+[v3.117.0](https://github.com/Hexalith/Hexalith.EventStore/releases/tag/v3.117.0).
+The current-main, exact-source full-CI, and publication identity gates passed.
+The release source-gate receipt, immutable OCI validation, and amd64/arm64 smoke
+results are preserved under [release-evidence](release-evidence/preflight/publication-identity.json).
+The run summary is [release-success.json](release-success.json).
+
+NuGet accepted all 14 uploads, then exposed the packages after asynchronous
+processing. All 14 were downloaded from its public feed and verified against the
+exact release source. Their hashes and the published generic sidecar API are in
+[the Parties upgrade receipt](../eventstore-package-upgrade-2026-10-08/README.md).
+The ordinary consumer Release build now passes with zero warnings and errors.
+This publication does not replace the separate exact-current-main Parties full
+CI gate or establish integrated-topology runtime acceptance.

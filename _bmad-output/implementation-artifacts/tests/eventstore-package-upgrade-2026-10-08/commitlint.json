@@ -1,0 +1,9 @@
+{
+  "observedAtUtc": "2026-10-08T09:16:55.407611+00:00",
+  "command": "node_modules/.bin/commitlint --config commitlint.config.mjs --verbose < /tmp/parties-eventstore-package-upgrade-2026-10-08/commit-message.txt",
+  "version": "21.2.2",
+  "message": "fix: consume published eventstore sidecar api\n\nSelect EventStore 3.117.0 after full CI and normal publication.\nVerify public package provenance, the endpoint-builder API, and\nthe ordinary package-mode Release solution build.\n\nRefresh current dependency receipts and align the AppHost SDK\nwith the selected Aspire catalog. Preserve sidecar security and\nthe exact-source full-CI release gate.\n",
+  "messageSha256": "fd72e319f67403d8da1711ebe9d8b9660eba539956eb395107bf9e0594fc412e",
+  "exitCode": 0,
+  "output": "\u29d7   --- input ---\nfix: consume published eventstore sidecar api\n\nSelect EventStore 3.117.0 after full CI and normal publication.\nVerify public package provenance, the endpoint-builder API, and\nthe ordinary package-mode Release solution build.\n\nRefresh current dependency receipts and align the AppHost SDK\nwith the selected Aspire catalog. Preserve sidecar security and\nthe exact-source full-CI release gate.\n\u2714   found 0 problems, 0 warnings\n"
+}

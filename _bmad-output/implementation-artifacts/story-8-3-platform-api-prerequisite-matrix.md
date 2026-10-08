@@ -50,34 +50,36 @@ not the G5 runtime engine.
 
 ### Current source observation — 2026-10-08
 
-Administrator / jpiquot authorized release of the Parties repository on 2026-10-07
-in `spec-fix-ci-and-publish-release.md`. EventStore package `3.115.0` remains
-selected before the shared catalog import because retained actor-history consumers
-require its APIs; the currently selected Builds catalog also defaults to `3.115.0`.
-The following committed root pointers are observed at Parties
-`c095134f6ec648560954d6f0fc76858fd1d7cd0e` and match clean selected checkouts.
-This refresh records the current source graph only; it grants no new owner approval
-and does not revalidate historical parity, release, consumer, or rollback receipts.
-Package values remain EventStore `3.115.0`, Commons `2.30.1`, Memories `2.27.1`,
-Tenants `5.7.0`, FrontComposer `4.5.0`, and Parties `1.1.1`.
+Administrator / jpiquot authorized the EventStore CI fix, normal full-CI release,
+and Parties package upgrade on 2026-10-08. EventStore package `3.117.0` is
+selected before the shared catalog import because sidecar-channel authorization
+requires its published API; the selected Builds catalog still defaults to `3.115.0`.
+The following root pointers describe the selected graph. The EventStore pointer
+is committed with this upgrade; the other pointers were already selected by the
+workspace. This refresh grants no new owner approval and does not revalidate
+historical parity, release, consumer, or rollback receipts. Package values are
+EventStore `3.117.0`, Commons `2.30.1`, Memories `2.27.1`, Tenants `5.7.0`,
+FrontComposer `4.5.0`, and Parties `1.1.1`.
 
-Reproduce each source receipt with `git ls-tree c095134f6ec648560954d6f0fc76858fd1d7cd0e references/Hexalith.<dependency>`,
+After committing the upgrade, reproduce each source receipt with
+`git ls-tree HEAD references/Hexalith.<dependency>`,
 `git -C references/Hexalith.<dependency> rev-parse HEAD`,
 `git -C references/Hexalith.<dependency> describe --tags --always --abbrev=8 HEAD`,
 and `git -C references/Hexalith.<dependency> status --porcelain`; the checkout must
 match the committed pointer and remain clean. Package catalog inspection is
-separate from this source proof.
+separate from this source proof. Published package provenance and current consumer
+checks are in [the package upgrade receipt](tests/eventstore-package-upgrade-2026-10-08/README.md).
 
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` | Instruction baseline; unchanged. |
-| Builds | `af20682ac8fc420068a731ecb87cff84727a3d53` (`v4.30.0-2-gaf20682a`) | Imported package catalog and build tooling. |
+| Builds | `ad52c5bdd4361c59eedf12a16620150006403584` (`v4.30.0-5-gad52c5bd`) | Imported package catalog and build tooling. |
 | Commons | `116d26815eb81e35b3c161e1799e5ee12805fc0a` | Existing HTTP/ServiceDefaults source fallbacks; unchanged. |
-| EventStore | `4cc77f9554395e84539e173e94b8f0b4df14d643` (`v3.115.0-18-g4cc77f95`) | Diagnostic/orchestration source; Parties runtime consumers restore package `3.115.0`. |
+| EventStore | `b830d9829af70536d2a3fd21c5e2a23b2ca2f256` (`v3.117.0`) | Diagnostic/orchestration source; Parties runtime consumers restore package `3.117.0`. |
 | FrontComposer | `c561b3210f15206a90c39c82c58f2e5b1005cd60` (`v4.6.0-5-gc561b321`) | Current diagnostic source selection; package `4.5.0` remains selected. |
-| Memories | `e1c72dabc7a2a2464e34a1b46422ec2ddfbb1cda` (`v2.28.1-32-ge1c72dab`) | Current diagnostic source selection; package `2.27.1` remains selected. |
+| Memories | `aac6d9054cb138881e6e49c8e48233553123ffce` (`v2.28.1-34-gaac6d905`) | Current diagnostic source selection; package `2.27.1` remains selected. |
 | PolymorphicSerializations | `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` | Existing solution source dependency; unchanged. |
-| Tenants | `bd87d68ed5fcf10eb5177286da6cc4bbe8907222` (`v5.7.0-166-gbd87d68e`) | Current diagnostic/orchestration source selection; package `5.7.0` remains selected. |
+| Tenants | `86aa888301b40cda12b000f68d9292d53cd93efe` (`v5.7.0-171-g86aa8883`) | Current diagnostic/orchestration source selection; package `5.7.0` remains selected. |
 
 Selection does not revalidate historical parity receipts or authorize deletion of
 migration rollback paths. The dated 2026-10-05 reconciliation and its approvals

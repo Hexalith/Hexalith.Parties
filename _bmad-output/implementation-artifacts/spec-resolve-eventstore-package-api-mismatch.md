@@ -123,3 +123,29 @@ full-CI proof for the exact current main commit before release.
 - F8 — low, patch: source-history command results were only described in prose.
   Re-ran the tag, introducing-symbol history, and ancestry checks; recorded exact
   argument arrays, UTC times, outputs, and successful exit codes in JSON.
+
+
+## Approved fix and publication follow-through — 2026-10-08
+
+After the initial documentation disposition, the user requested the fix and
+approved upstream commit/push, successful full CI, normal publication, and a
+Parties upgrade to the real published package. EventStore `3.117.0` was published
+from `b830d9829af70536d2a3fd21c5e2a23b2ca2f256` through full push CI
+`37749252540` and normal Release `37750172086` with validation bypass disabled.
+All 14 public packages match that source. The published DomainService binary
+contains the required generic sidecar-channel extension and aligned Client /
+ServiceDefaults dependencies.
+
+Parties selects `3.117.0` in the ordinary package graph. Normal solution restore
+and Release build pass with zero warnings and errors. All 1,918 unit tests,
+101 CI contract tests, 35 sidecar-security cases, and 10 documentation checks
+pass. The existing security calls, package defaults, warning/audit settings,
+and mandatory full-CI release gate remain intact. The AppHost SDK was aligned
+with the already-selected catalog's Aspire `13.6.1`, and current identity
+receipts were refreshed separately from historical migration parity.
+
+[The fix spec](spec-unblock-eventstore-api-publication.md) records upstream
+implementation/review and the approved follow-through. [The consumer receipt](tests/eventstore-package-upgrade-2026-10-08/README.md)
+records actual public-package hashes/API metadata, the selected dependency graph,
+and reproducible verification. Integrated-topology readiness remains under its
+existing separate owner and acceptance gates.
