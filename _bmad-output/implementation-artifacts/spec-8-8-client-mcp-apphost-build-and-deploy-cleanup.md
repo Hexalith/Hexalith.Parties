@@ -75,6 +75,16 @@ Preserve public Client/Contracts/RCL shapes, self-scope, domain behavior, freshn
 
 §4: (1) Prerequisites: sequence and each named row. (2) Touched repo: Parties only. (3) Rollback: retain seams; build/test switch-back at stamped identities, then forward restore. (4) Lanes: readiness report and packet. (5) Non-goals: forbidden migrations above. (6) Parity: I1/I1a/I3-I12/I16-I20, including I8 payload/export/record/certificate continuity. Hard-gate each row; require Release/package/runtime proof.
 
+### Block If — available-row identities
+
+Before consuming an available prerequisite row, verify its exact selected
+package version or source commit against the current prerequisite matrix.
+Source receipts require a clean checkout at that immutable identity. Keep
+the slice blocked if identity or build mode differs, evidence is missing or
+stale, or fresh Release/package and runtime parity has not passed at the
+selected identity. Availability alone does not authorize adoption; retain
+rollback until the required owner/reviewer acceptance is recorded.
+
 ## Verification
 
 - `dotnet build Hexalith.Parties.slnx -c Release -m:1` — package gate; current focused baseline fails CS1061 at Program.cs:64/66.

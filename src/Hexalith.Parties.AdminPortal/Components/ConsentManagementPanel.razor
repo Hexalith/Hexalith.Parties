@@ -1,11 +1,11 @@
 <section aria-labelledby="@($"consent-management-heading-{InstanceId}")">
     <h4 id="@($"consent-management-heading-{InstanceId}")">@Labels.ConsentRecords</h4>
     <div class="hx-parties-admin__gdpr-form">
-        <FluentTextInput Value="@ChannelId"
+        <FluentTextInput Immediate="true" ImmediateDelay="0" Value="@ChannelId"
                          ValueChanged="ChannelIdChanged"
                          Label="@Labels.GdprChannelId"
                          AriaLabel="@Labels.GdprChannelId" />
-        <FluentTextInput Value="@Purpose"
+        <FluentTextInput Immediate="true" ImmediateDelay="0" Value="@Purpose"
                          ValueChanged="PurposeChanged"
                          Label="@Labels.GdprPurpose"
                          AriaLabel="@Labels.GdprPurpose" />

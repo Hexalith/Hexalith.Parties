@@ -38,6 +38,9 @@ public sealed class CreateEditPartyPageTests : BunitContext
         Services.AddScoped<IAdminPortalAuthorizationService, AdminPortalAuthorizationService>();
         Services.AddOptions<PartiesAdminPortalOptions>();
         Services.AddScoped<AdminPortalPartyQueryService>();
+        Services.AddScoped<AdminPortalEventStoreAdminLinks>();
+        Services.AddScoped<AdminPortalGdprStateCoordinator>();
+        Services.AddScoped<PartiesAdminListCoordinator>();
     }
 
     [Fact]
@@ -351,6 +354,62 @@ public sealed class CreateEditPartyPageTests : BunitContext
         });
         Uri uri = new(navigation.Uri);
         uri.AbsolutePath.ShouldBe($"/admin/parties/{api.CreateRequests[0].PartyId}");
+        cut.Dispose();
+
+        IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>(parameters =>
+            parameters.Add(x => x.RoutePartyId, api.CreateRequests[0].PartyId));
+        portal.WaitForAssertion(() => portal.Find(".hx-parties-admin__accepted-command-status")
+            .TextContent.ShouldBe("Saved - updating..."));
+        portal.Dispose();
+        IRenderedComponent<PartiesAdminPortal> subsequent = Render<PartiesAdminPortal>(parameters =>
+            parameters.Add(x => x.RoutePartyId, api.CreateRequests[0].PartyId));
+        subsequent.WaitForAssertion(() => subsequent.FindAll(".hx-parties-admin__accepted-command-status").ShouldBeEmpty());
+    }
+
+    [Theory]
+    [InlineData("tenant")]
+    [InlineData("user")]
+    [InlineData("missing-tenant")]
+    [InlineData("sign-out")]
+    [InlineData("unrelated-route")]
+    public void AcceptedStatus_ClearsAcrossAuthorizationAndRouteBoundaries(string boundary)
+    {
+        ArgumentNullException.ThrowIfNull(boundary);
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-accepted");
+        IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>();
+        form.WaitForAssertion(() => form.Markup.ShouldContain("Create party"));
+        SetTextInput(form, "First name", "Katherine");
+        SetTextInput(form, "Last name", "Johnson");
+        form.Find("form").Submit();
+        form.WaitForAssertion(() => api.CreateRequests.Count.ShouldBe(1));
+        form.Dispose();
+        IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>(parameters =>
+            parameters.Add(x => x.RoutePartyId, api.CreateRequests[0].PartyId));
+        portal.WaitForAssertion(() => portal.Find(".hx-parties-admin__accepted-command-status")
+            .TextContent.ShouldBe("Saved - updating..."));
+
+        switch (boundary)
+        {
+            case "tenant":
+                RenderAuthorizedTenant("scope-other");
+                break;
+            case "user":
+                _authProvider.SetAuthenticated("another-user", "scope-accepted");
+                break;
+            case "missing-tenant":
+                _authProvider.SetAuthenticatedWithoutTenant(AdminUserId);
+                break;
+            case "sign-out":
+                _authProvider.SetUnauthenticated();
+                break;
+            case "unrelated-route":
+                Services.GetRequiredService<NavigationManager>().NavigateTo("/admin/parties");
+                break;
+        }
+
+        portal.WaitForAssertion(() => portal.FindAll(".hx-parties-admin__accepted-command-status").ShouldBeEmpty());
     }
 
     private void RenderAuthorizedTenant(string tenantId)
@@ -410,6 +469,12 @@ public sealed class CreateEditPartyPageTests : BunitContext
                 new Claim(PartiesClaimTypes.EventStoreTenant, tenantId),
             ];
             _state = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")));
+            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+        }
+
+        public void SetUnauthenticated()
+        {
+            _state = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
 

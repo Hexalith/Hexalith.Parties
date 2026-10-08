@@ -33,7 +33,7 @@ test.describe('Shared portal display formatters', () => {
     const detail = page.getByLabel('Party detail');
     await expectDefinition(sectionWithHeading(detail, 'Summary'), 'Created', '6/9/2026 10:00 AM');
     await expectDefinition(sectionWithHeading(detail, 'Summary'), 'Modified', '6/9/2026 11:00 AM');
-    await expectDefinition(sectionWithHeading(detail, 'Restrictions'), 'Restricted', 'No');
+    await expectDefinition(sectionWithHeading(detail, 'Restrictions'), 'restricted', 'No');
     await expectDefinition(sectionWithHeading(detail, 'Restrictions'), 'Erased', 'No');
     await expectDefinition(sectionWithHeading(detail, 'Operational summary'), 'Restricted party', 'No');
     await expectDefinition(sectionWithHeading(detail, 'Operational summary'), 'Pending erasure', 'No');
@@ -43,7 +43,7 @@ test.describe('Shared portal display formatters', () => {
     await detail.getByRole('group', { name: 'Confirm restriction' }).getByRole('button', { name: 'Confirm' }).click();
 
     await expect(detail.getByRole('status').filter({ hasText: 'Saved - updating...' })).toBeVisible();
-    await expectDefinition(sectionWithHeading(detail, 'Restrictions'), 'Restricted', 'Yes');
+    await expectDefinition(sectionWithHeading(detail, 'Restrictions'), 'restricted', 'Yes');
     await expectDefinition(sectionWithHeading(detail, 'Operational summary'), 'Restricted party', 'Yes');
   });
 
@@ -90,7 +90,7 @@ const enableConsumerFixture = async (context: BrowserContext): Promise<void> => 
 
 const sectionWithHeading = (scope: Locator, heading: string): Locator =>
   scope
-    .locator(`xpath=.//section[*[self::h2 or self::h3 or self::h4 or self::h5][normalize-space(.)=${xpathLiteral(heading)}]]`)
+    .locator(`xpath=.//section[dl][*[self::h2 or self::h3 or self::h4 or self::h5][normalize-space(.)=${xpathLiteral(heading)}]]`)
     .first();
 
 const expectDefinition = async (scope: Locator, term: string, value: string): Promise<void> => {

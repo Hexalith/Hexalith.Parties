@@ -4,7 +4,7 @@
 @inject AdminPortalGdprStateCoordinator GdprCoordinator
 @inject IJSRuntime JsRuntime
 
-<section aria-labelledby="@($"gdpr-operations-heading-{_instanceId}")">
+<section class="hx-parties-admin__gdpr" aria-labelledby="@($"gdpr-operations-heading-{_instanceId}")">
     <h3 id="@($"gdpr-operations-heading-{_instanceId}")"
         tabindex="-1"
         data-primary-destination="@(AutoFocusOperations ? "gdpr" : null)"
@@ -27,9 +27,9 @@
         <h4 id="@($"erasure-actions-heading-{_instanceId}")">@Labels.RequestErasure</h4>
         @if (_confirmErasure)
         {
-            <FluentDialog Modal="true"
-                          role="dialog"
-                          aria-modal="true"
+            <FluentDialog @ref="_erasureDialog" Modal="true" Class="hx-parties-admin__erasure-modal"
+                          type="modal"
+                          aria-label="@Labels.GdprEraseDialogTitle"
                           aria-labelledby="@ErasureDialogTitleId"
                           @onkeydown="HandleErasureDialogKeyDownAsync">
                 <FluentDialogBody>
@@ -39,7 +39,8 @@
                     <ChildContent>
                         <div class="hx-parties-admin__erasure-dialog">
                             <p id="@ErasureWarningId">@Labels.GdprErasureWarning</p>
-                            <FluentTextInput Id="@ErasureInputId"
+                            <FluentTextInput Immediate="true" ImmediateDelay="0" Id="@ErasureInputId"
+                                             @ref="_erasureInput"
                                              Value="@_erasureTypedName"
                                              ValueChanged="OnErasureTypedNameChanged"
                                              TextInputType="TextInputType.Text"
@@ -64,7 +65,7 @@
                         <FluentButton role="button" Appearance="ButtonAppearance.Primary"
                                       Class="hx-parties-admin__danger-action"
                                       Disabled="@(!CanConfirmErasure)"
-                                      aria-disabled="@(!CanConfirmErasure)"
+                                      aria-disabled="@(!CanConfirmErasure ? "true" : "false")"
                                       OnClick="ConfirmErasureAsync">
                             @Labels.GdprConfirmErasure
                         </FluentButton>
@@ -188,6 +189,9 @@
     private bool _isBusy;
     private string? _erasureEnablementAnnouncement;
     private string? _erasureTypedName;
+    private FluentDialog? _erasureDialog;
+    private FluentTextInput? _erasureInput;
+    private bool _pendingErasureDialogOpen;
     private CancellationTokenSource? _cts;
     private ElementReference _operationsHeading;
     private ElementReference _operationAnnouncement;
@@ -349,6 +353,22 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (_pendingErasureDialogOpen && _erasureDialog is not null)
+        {
+            _pendingErasureDialogOpen = false;
+            try
+            {
+                await _erasureDialog.ShowAsync().ConfigureAwait(false);
+                if (_erasureInput is not null)
+                {
+                    await _erasureInput.Element.FocusAsync().ConfigureAwait(false);
+                }
+            }
+            catch (JSException)
+            {
+            }
+        }
+
         if (AutoFocusOperations && !_focusedInitialOperations)
         {
             _focusedInitialOperations = true;
@@ -500,6 +520,7 @@
 
         ClearErasureDialogState();
         _confirmErasure = true;
+        _pendingErasureDialogOpen = true;
         _lastOutcome = null;
     }
 
@@ -535,6 +556,9 @@
     private void ClearErasureDialogState()
     {
         _confirmErasure = false;
+        _pendingErasureDialogOpen = false;
+        _erasureDialog = null;
+        _erasureInput = null;
         _erasureTypedName = null;
         _erasureEnablementAnnouncement = null;
         _erasureMatchAnnounced = false;

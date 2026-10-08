@@ -43,14 +43,14 @@
 
             <fieldset class="hx-party-form__group" disabled="@_submitting">
                 <legend>@EffectiveLabels.PartyType</legend>
-                <FluentRadioGroup Value="@_model.TypeValue"
+                <FluentRadioGroup role="radiogroup" Value="@_model.TypeValue"
                                   ValueChanged="@((string value) => OnTypeChanged(value))"
                                   TValue="string"
                                   Name="@($"party-type-{_instanceId}")"
-                                  aria-label="@EffectiveLabels.PartyType"
+                                  AriaLabel="@EffectiveLabels.PartyType"
                                   aria-describedby="@ErrorId(nameof(PartyFormModel.TypeValue))">
-                    <FluentRadio Value="@PersonTypeValue">@EffectiveLabels.PersonOption</FluentRadio>
-                    <FluentRadio Value="@OrganizationTypeValue">@EffectiveLabels.OrganizationOption</FluentRadio>
+                    <FluentRadio role="radio" aria-checked="@(_model.TypeValue == PersonTypeValue ? "true" : "false")" Value="@PersonTypeValue">@EffectiveLabels.PersonOption</FluentRadio>
+                    <FluentRadio role="radio" aria-checked="@(_model.TypeValue == OrganizationTypeValue ? "true" : "false")" Value="@OrganizationTypeValue">@EffectiveLabels.OrganizationOption</FluentRadio>
                 </FluentRadioGroup>
                 @FieldError(nameof(PartyFormModel.TypeValue))
             </fieldset>
@@ -88,12 +88,15 @@
                 <legend>@EffectiveLabels.ContactChannels</legend>
                 <div class="hx-party-form__grid">
                     <FluentSelect TOption="string" TValue="string"
-                                  Items="@_contactTypeOptions"
                                   Value="@_model.ContactTypeValue"
                                   ValueChanged="OnContactTypeChanged"
-                                  OptionText="ContactTypeOptionLabel"
                                   Label="@EffectiveLabels.ContactType"
-                                  aria-describedby="@ErrorId(nameof(PartyFormModel.ContactValue))" />
+                                  aria-describedby="@ErrorId(nameof(PartyFormModel.ContactValue))">
+                        @foreach (string option in _contactTypeOptions)
+                        {
+                            <FluentOption TValue="string" Value="@option" Text="@ContactTypeOptionLabel(option)" role="option" />
+                        }
+                    </FluentSelect>
                     @TextField(nameof(PartyFormModel.ContactValue), EffectiveLabels.ContactValue, _model.ContactValue, OnContactValueChanged)
                     <FluentCheckbox Value="@_model.ContactPreferred"
                                     ValueChanged="OnContactPreferredChanged"
@@ -105,12 +108,15 @@
                 <legend>@EffectiveLabels.Identifiers</legend>
                 <div class="hx-party-form__grid">
                     <FluentSelect TOption="string" TValue="string"
-                                  Items="@_identifierTypeOptions"
                                   Value="@_model.IdentifierTypeValue"
                                   ValueChanged="OnIdentifierTypeChanged"
-                                  OptionText="IdentifierTypeOptionLabel"
                                   Label="@EffectiveLabels.IdentifierTypeField"
-                                  aria-describedby="@ErrorId(nameof(PartyFormModel.IdentifierValue))" />
+                                  aria-describedby="@ErrorId(nameof(PartyFormModel.IdentifierValue))">
+                        @foreach (string option in _identifierTypeOptions)
+                        {
+                            <FluentOption TValue="string" Value="@option" Text="@IdentifierTypeOptionLabel(option)" role="option" />
+                        }
+                    </FluentSelect>
                     @TextField(nameof(PartyFormModel.IdentifierValue), EffectiveLabels.IdentifierValue, _model.IdentifierValue, OnIdentifierValueChanged)
                 </div>
             </fieldset>
@@ -157,6 +163,7 @@
     private DotNetObjectReference<CreateEditPartyPage>? _dotNetRef;
     private IJSObjectReference? _pickerModule;
     private bool _pickerAttached;
+    private int _disposed;
     private RelatedPartySelection? _relatedParty;
     private AdminPortalAuthorizationState _authorizationState = AdminPortalAuthorizationState.Unauthenticated;
     private PartyDetail? _loadedDetail;
@@ -213,6 +220,11 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            return;
+        }
+
         if (_canRenderForm && !_pickerAttached)
         {
             await AttachPickerAsync().ConfigureAwait(false);
@@ -238,18 +250,34 @@
 
     private async Task AttachPickerAsync()
     {
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            return;
+        }
+
         try
         {
             _dotNetRef ??= DotNetObjectReference.Create(this);
             _pickerModule ??= await JSRuntime
                 .InvokeAsync<IJSObjectReference>("import", "./_content/Hexalith.Parties.AdminPortal/party-form-picker.js")
                 .ConfigureAwait(false);
-            if (_pickerModule is not null)
+            if (Volatile.Read(ref _disposed) != 0)
             {
-                await _pickerModule
-                    .InvokeVoidAsync("attachPartyPicker", _pickerElement, _dotNetRef)
+                await DisposeInteropAsync().ConfigureAwait(false);
+                return;
+            }
+
+            IJSObjectReference? module = _pickerModule;
+            if (module is not null)
+            {
+                await module
+                    .InvokeVoidAsync("attachPartyPicker", _pickerElement, _dotNetRef, _instanceId)
                     .ConfigureAwait(false);
                 _pickerAttached = true;
+                if (Volatile.Read(ref _disposed) != 0)
+                {
+                    await DisposeInteropAsync().ConfigureAwait(false);
+                }
             }
         }
         catch (InvalidOperationException)
@@ -398,6 +426,7 @@
                 StringComparison.Ordinal);
             if (AdminPortalRouteIds.IsSafe(commandPartyId))
             {
+                QueryService.StageAcceptedCommand(commandPartyId, _authorizationState.ContextSignature);
                 NavigationManager.NavigateTo(target);
             }
         }
@@ -797,8 +826,48 @@
             && detail.ConsentRecords.Count == 0
             && detail.NameHistory.Count == 0;
 
+    private async Task DisposeInteropAsync()
+    {
+        IJSObjectReference? module = Interlocked.Exchange(ref _pickerModule, null);
+        if (module is not null)
+        {
+            try
+            {
+                await module.InvokeVoidAsync("disposePortalInterop", _instanceId).ConfigureAwait(false);
+            }
+            catch (JSException)
+            {
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
+            try
+            {
+                await module.DisposeAsync().ConfigureAwait(false);
+            }
+            catch (JSException)
+            {
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+    }
+
     public void Dispose()
     {
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return;
+        }
+
         if (_editContext is not null)
         {
             _editContext.OnFieldChanged -= OnFieldChanged;
@@ -806,6 +875,7 @@
 
         _lifetimeCts.Cancel();
         _lifetimeCts.Dispose();
+        _ = DisposeInteropAsync();
         _dotNetRef?.Dispose();
     }
 

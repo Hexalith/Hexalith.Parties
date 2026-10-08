@@ -1,0 +1,128 @@
+{
+  "scope": "Root independent audit: final local manifest and selected compiled sources only; complete live acceptance remains incomplete",
+  "normalLocalExitCode": 0,
+  "selectedPassingTests": 1095,
+  "lanes": [
+    {
+      "project": "Hexalith.EventStore.Contracts.Tests",
+      "passed": 23,
+      "xmlSha256": "e2fbc202908403ca7725d039b11ef9cb55ea50b4dce4d47f3e1059bbe45c2e6e",
+      "requiredClassCounts": {
+        "*StreamReadPageValidatorTests": 12,
+        "*RetainedIdentityHistoryValidatorTests": 11
+      }
+    },
+    {
+      "project": "Hexalith.EventStore.Client.Tests",
+      "passed": 107,
+      "xmlSha256": "2e0787956d439d8d394026253fc47f783bc11eded188e6f2847e8f7f5407ea73",
+      "requiredClassCounts": {
+        "*AuthoritativeEventStreamReaderTests": 8,
+        "*EventStoreGatewayClientTests": 76,
+        "*EventStoreGatewayClientStreamTests": 7,
+        "*RetainedIdentityHistoryReaderTests": 16
+      }
+    },
+    {
+      "project": "Hexalith.EventStore.Server.Tests",
+      "passed": 168,
+      "xmlSha256": "cae5a36b6caa3f42b4f401121386fad449ab8c3d8385592e1216006b20756216",
+      "requiredClassCounts": {
+        "*IdentityAdmissionTests": 6,
+        "*ActorRegistryTests": 6,
+        "*IdentityGatewayDenialTests": 3,
+        "*CommandsControllerTrustedExtensionTests": 7,
+        "*QueriesControllerTests": 72,
+        "*StreamsControllerTests": 26,
+        "*RetainedIdentityHistorySourceReaderTests": 48
+      }
+    },
+    {
+      "project": "Hexalith.Platform.Identity.Tests",
+      "passed": 2,
+      "xmlSha256": "c7fd537edace6d49dc2537685247afc847329cb3b4dc058db2f782713e9a0c7b",
+      "requiredClassCounts": {
+        "*PlatformIdentityAdmissionTests": 2
+      }
+    },
+    {
+      "project": "Hexalith.Platform.Custody.Tests",
+      "passed": 115,
+      "xmlSha256": "6c2b9ded758aece3af02669235909b2e6fc936337a1cc1629104bab75ce83a3c",
+      "requiredClassCounts": {
+        "*CustodyPrerequisiteTests": 68,
+        "*IdentityHistoryCleanupTests": 47
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Contracts.Tests",
+      "passed": 29,
+      "xmlSha256": "b6eb57380f1930a8c21bc3b2b756f3b2583216f16844895d644c0fc60ea08012",
+      "requiredClassCounts": {
+        "*PartyStateTests": 26,
+        "*PartyIdentityContractTests": 2,
+        "*ContractsPublicApiSnapshotTests": 1
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Server.Tests",
+      "passed": 94,
+      "xmlSha256": "1db63f04f88ffc303607eac65234e5e9ee6ad14d1960224bcc43e17b36f9ddfb",
+      "requiredClassCounts": {
+        "*AgentPartyProvisioningTests": 3,
+        "*HumanActorBindingTests": 7,
+        "*PartyAggregateCreateTests": 24,
+        "*PartyAggregateCompositeTests": 60
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Tests",
+      "passed": 357,
+      "xmlSha256": "0200437c1d15538e5fe20a1af4fe6c60aecb5374d07628a383db2bdfb7344cd2",
+      "requiredClassCounts": {
+        "*PartyIdentityAdmissionTests": 50,
+        "*PartyIdentityQueryHandlerTests": 155,
+        "*PartyIdentityRetentionConfigurationTests": 6,
+        "*PartyDomainProcessorValidationTests": 44,
+        "*PartySdkQueryHandlerTests": 54,
+        "*PartiesProcessEndpointTests": 13,
+        "*PartiesDomainServiceSecurityTests": 35
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Security.Tests",
+      "passed": 30,
+      "xmlSha256": "f799370ddaa228d30958b9907679092420ea3f6b067530fd7e7651c4c94afcab",
+      "requiredClassCounts": {
+        "*IdentityHistoryProtectionTests": 7,
+        "*PartyPayloadProtectionServiceTests": 23
+      }
+    },
+    {
+      "project": "Hexalith.Parties.Client.Tests",
+      "passed": 98,
+      "xmlSha256": "26b0fa5c4d913ca4473ca4a0be2ebc6a7b8f2c0b64fffac53f8a9f1c87b6b4e3",
+      "requiredClassCounts": {
+        "*HttpPartiesIdentityClientTests": 18,
+        "*HttpPartiesCommandClientTests": 37,
+        "*HttpPartiesQueryClientTests": 30,
+        "*DependencyInjectionTests": 13
+      }
+    },
+    {
+      "project": "Hexalith.Parties.UI.Tests",
+      "passed": 72,
+      "xmlSha256": "05af60c88ac01d73aa10e846e5468256727a5a99c6bfcc38262c6f1cd3d41af3",
+      "requiredClassCounts": {
+        "*IdentityBindingBoundaryTests": 5,
+        "*IdentityBindingProvisioningServiceTests": 14,
+        "*PartyIdClaimResolverTests": 11,
+        "*SelfScopedPartiesClientTests": 42
+      }
+    }
+  ],
+  "requiredClasses": 40,
+  "compiledDocumentsChecked": 48,
+  "frozenIntentPreserved": true,
+  "originalSpecBaselinePreserved": true
+}

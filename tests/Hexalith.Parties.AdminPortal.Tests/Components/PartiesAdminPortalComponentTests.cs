@@ -719,12 +719,14 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         api.SearchRequests.ShouldBeEmpty();
     }
 
-    [Fact]
-    public void PartiesAdminPortal_EmptySearch_UsesLocalizedTenantNeutralNoMatches()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PartiesAdminPortal_EmptySearch_UsesLocalizedTenantNeutralNoMatches(bool localOnly)
     {
         var api = new RecordingAdminPortalApiClient();
         api.EnqueueList(Page(IndexEntry("party-existing", "Existing Row", PartyType.Person, true)));
-        api.EnqueueSearch(Page<PartySearchResult>());
+        api.EnqueueSearch(Page<PartySearchResult>(), new AdminPortalQueryMetadata(SearchStatus: localOnly ? "LocalOnly" : null));
         Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
@@ -735,7 +737,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
 
         cut.WaitForAssertion(() =>
         {
-            cut.Find(".hx-parties-admin__status").TextContent.ShouldContain("Parties loaded");
+            cut.Find(".hx-parties-admin__status").TextContent.ShouldContain(localOnly ? "Display-name search only" : "Parties loaded");
             cut.Find(".hx-parties-admin__empty").TextContent.ShouldContain("No parties match.");
             FindFluentButton(cut, "Clear").TextContent.ShouldContain("Clear");
             cut.Markup.ShouldNotContain("Existing Row");
@@ -2591,11 +2593,13 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         ClickFluentButton(cut, "Request erasure");
         cut.WaitForAssertion(() =>
         {
-            IElement dialog = cut.Find("[role='dialog'][aria-modal='true']");
+            IElement dialog = cut.Find("fluent-dialog[type='modal']");
+            cut.FindComponent<FluentDialog>().Instance.Modal.ShouldBeTrue();
+            dialog.GetAttribute("aria-label").ShouldBe("Erase party");
             string labelledBy = dialog.GetAttribute("aria-labelledby")!;
             labelledBy.ShouldNotBeNullOrWhiteSpace();
             cut.Find($"#{labelledBy}").TextContent.Trim().ShouldBe("Erase party");
-            cut.FindAll("[role='dialog'][aria-modal='true']").Count.ShouldBe(1);
+            cut.FindComponents<FluentDialog>().Count.ShouldBe(1);
 
             FluentTextInput input = FindTextInput(cut, "Type the selected party display name").Instance;
             input.AdditionalAttributes.ShouldNotBeNull();

@@ -1,0 +1,31 @@
+{
+  "Parties": {
+    "root": "/home/administrator/projects/hexalith/parties",
+    "head": "28fff255a18a7de540631c792034a8df5a33c980",
+    "status": [
+      " M _bmad-output/implementation-artifacts/spec-unblock-eventstore-api-publication.md",
+      " M _bmad-output/implementation-artifacts/tests/eventstore-ci-unblock-2026-10-08/results.json",
+      " M eng/verify-ext-parties-1.ps1",
+      " M src/Hexalith.Parties.AdminPortal/Components/CreateEditPartyPage.razor",
+      " M src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor",
+      " M tests/e2e/specs/party-picker.spec.ts",
+      " M tests/e2e/specs/shared-portal-display-formatters.spec.ts",
+      "?? _bmad-output/implementation-artifacts/tests/eventstore-ci-unblock-2026-10-08/full-ci-success.json",
+      "?? _bmad-output/implementation-artifacts/tests/eventstore-ci-unblock-2026-10-08/sidecar-security-ci.json"
+    ]
+  },
+  "EventStore": {
+    "root": "/home/administrator/projects/hexalith/eventstore",
+    "head": "b830d9829af70536d2a3fd21c5e2a23b2ca2f256",
+    "status": []
+  },
+  "Platform": {
+    "root": "/home/administrator/projects/hexalith/platform",
+    "head": "f043a2f242762233091abdaa5bbe1ab777bd0f12",
+    "status": [
+      " M _bmad-output/implementation-artifacts/spec-1-1-validate-module-declarations.md",
+      " M _bmad-output/implementation-artifacts/sprint-status.yaml",
+      " m references/Hexalith.Builds"
+    ]
+  }
+}

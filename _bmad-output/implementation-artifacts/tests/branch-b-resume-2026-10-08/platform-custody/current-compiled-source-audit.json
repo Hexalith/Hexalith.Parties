@@ -1,0 +1,452 @@
+{
+  "scope": "All 40 required test-class documents and eight relevant production custody/domain/query documents; original EventStore test PDBs refreshed after external source drift",
+  "inspector": "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+  "inspectorSourceSha256": "bafcd49d2d1a3609ac7731e3323e77a125c94af9c4f46fbb84c99060863803cd",
+  "documents": 48,
+  "results": [
+    {
+      "project": "Hexalith.EventStore.Contracts.Tests",
+      "command": [
+        "dotnet",
+        "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+        "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Contracts.Tests.pdb",
+        "tests/Hexalith.EventStore.Contracts.Tests/Streams/StreamReadPageValidatorTests.cs",
+        "tests/Hexalith.EventStore.Contracts.Tests/Streams/RetainedIdentityHistoryValidatorTests.cs"
+      ],
+      "pdbSha256": "37700004fb3ea3e9bad5e5b7d3678ba690b640bd929c8b5c1ebb1ae24071c1de",
+      "sources": [
+        {
+          "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Contracts.Tests/Streams/RetainedIdentityHistoryValidatorTests.cs",
+          "sha256": "a5221e74f498abbb3b4db666a4089b9a239c63c5d326650f965fdd067a9e2031",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Contracts.Tests/Streams/StreamReadPageValidatorTests.cs",
+          "sha256": "e2b5aa480e3cf9d84f6173f17b1acc23854dbda0273007d18ae6d97c4c53229f",
+          "match": true
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "project": "Hexalith.EventStore.Client.Tests",
+      "command": [
+        "dotnet",
+        "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+        "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.Tests.pdb",
+        "tests/Hexalith.EventStore.Client.Tests/Streams/AuthoritativeEventStreamReaderTests.cs",
+        "tests/Hexalith.EventStore.Client.Tests/Gateway/EventStoreGatewayClientTests.cs",
+        "tests/Hexalith.EventStore.Client.Tests/Gateway/EventStoreGatewayClientStreamTests.cs",
+        "tests/Hexalith.EventStore.Client.Tests/Streams/RetainedIdentityHistoryReaderTests.cs"
+      ],
+      "pdbSha256": "6b90e95dc3517b1684e21115cdff07b6de1b9d789def648b88c5783acea86ab7",
+      "sources": [
+        {
+          "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Client.Tests/Gateway/EventStoreGatewayClientStreamTests.cs",
+          "sha256": "724b6071f4ec7e1791c808c727a16e8f73aaa384d587f787684e5d0876e0231f",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Client.Tests/Gateway/EventStoreGatewayClientTests.cs",
+          "sha256": "9edcc9def58ce2ff74b0fae390e0d96b304437573402c97c95f716fb20798ea6",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Client.Tests/Streams/AuthoritativeEventStreamReaderTests.cs",
+          "sha256": "d7211aca1c99b29dc1c0bd8640dcc768a77e85dd4370ae62f76549744b765de0",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Client.Tests/Streams/RetainedIdentityHistoryReaderTests.cs",
+          "sha256": "de9b34bc332d7a192bc8c9358db1d0daa19772e488431569207cca6c6e9ee9c4",
+          "match": true
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "project": "Hexalith.EventStore.Server.Tests",
+      "command": [
+        "dotnet",
+        "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+        "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Server.Tests.pdb",
+        "tests/Hexalith.EventStore.Server.Tests/Identity/IdentityAdmissionTests.cs",
+        "tests/Hexalith.EventStore.Server.Tests/Identity/ActorRegistryTests.cs",
+        "tests/Hexalith.EventStore.Server.Tests/Controllers/IdentityGatewayDenialTests.cs",
+        "tests/Hexalith.EventStore.Server.Tests/Controllers/CommandsControllerTrustedExtensionTests.cs",
+        "tests/Hexalith.EventStore.Server.Tests/Controllers/QueriesControllerTests.cs",
+        "tests/Hexalith.EventStore.Server.Tests/Controllers/StreamsControllerTests.cs",
+        "tests/Hexalith.EventStore.Server.Tests/Security/RetainedIdentityHistorySourceReaderTests.cs"
+      ],
+      "pdbSha256": "ecdf3819c96a9091d095c0d7d50bc92a032b53dc1c06427493743247fa8caaf9",
+      "sources": [
+        {
+          "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Controllers/CommandsControllerTrustedExtensionTests.cs",
+          "sha256": "00efcfbfd656dd6213e2128c387af19a90ef064f65cf79a5c7f35d3962dda06a",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Controllers/IdentityGatewayDenialTests.cs",
+          "sha256": "036c56330d47b2141df11f339e09b838bb2e06b1f019edd743637ad50951893b",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Controllers/QueriesControllerTests.cs",
+          "sha256": "a713ac1c6a3cc84dacb7367f72ecc81ca75f7cbc25dd049320350e5c7915365b",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Controllers/StreamsControllerTests.cs",
+          "sha256": "3234b068350727ac8835c50745f9624155123412ca59758547a2826e4eaab926",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Identity/ActorRegistryTests.cs",
+          "sha256": "9befba0e0eb46ccd246b6365bcb3a982d6396056f8265445a3bd78cab0633c4b",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Identity/IdentityAdmissionTests.cs",
+          "sha256": "abd3a26ff74b7d0aa350b9e9f1d93a491bb90ef788fbe0fa21a7a6dbcf5ff609",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Security/RetainedIdentityHistorySourceReaderTests.cs",
+          "sha256": "a7b0c403a6a9d68bc1c516866a277f901d6143bdb8a2e3460ba85e29e09c7a03",
+          "match": true
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "project": "Hexalith.Platform.Identity.Tests",
+      "command": [
+        "dotnet",
+        "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+        "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.Platform.Identity.Tests.pdb",
+        "tests/Hexalith.Platform.Identity.Tests/PlatformIdentityAdmissionTests.cs"
+      ],
+      "pdbSha256": "20147df7144bcce18904a00bc3255b8eaac7ca4b6976675fec8c4021a378822d",
+      "sources": [
+        {
+          "source": "/home/administrator/projects/hexalith/platform/tests/Hexalith.Platform.Identity.Tests/PlatformIdentityAdmissionTests.cs",
+          "sha256": "9387c67afbe8b8defc36ee3b27f43dc8e641e594b3c8dda7d647d593e6a75810",
+          "match": true
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "project": "Hexalith.Platform.Custody.Tests",
+      "command": [
+        "dotnet",
+        "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+        "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.Platform.Custody.Tests.pdb",
+        "tests/Hexalith.Platform.Custody.Tests/CustodyPrerequisiteTests.cs",
+        "tests/Hexalith.Platform.Custody.Tests/IdentityHistoryCleanupTests.cs"
+      ],
+      "pdbSha256": "5aaaf04b00710e3a8fcec35b7d7cbabd1583b047b1924325ec4941ed9955bacd",
+      "sources": [
+        {
+          "source": "/home/administrator/projects/hexalith/platform/tests/Hexalith.Platform.Custody.Tests/CustodyPrerequisiteTests.cs",
+          "sha256": "9c44e34e881a50592343a336f41ad2bed9777a5f90f985ddca807349cbc1bdca",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/platform/tests/Hexalith.Platform.Custody.Tests/IdentityHistoryCleanupTests.cs",
+          "sha256": "ae75d89cdde766da37820586233f24ec76a492a394e4e0e83f474f211372e36e",
+          "match": true
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "project": "Hexalith.Parties.Contracts.Tests",
+      "command": [
+        "dotnet",
+        "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+        "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.Contracts.Tests.pdb",
+        "tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs",
+        "tests/Hexalith.Parties.Contracts.Tests/Serialization/PartyIdentityContractTests.cs",
+        "tests/Hexalith.Parties.Contracts.Tests/Package/ContractsPublicApiSnapshotTests.cs"
+      ],
+      "pdbSha256": "8cc7625074aab940a1797c6063550a52a2c32003398be359ae834041dc87068f",
+      "sources": [
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/Package/ContractsPublicApiSnapshotTests.cs",
+          "sha256": "e24bc116414368e3108e2400fafb4d3fa9528633d12d4c4fefefd5160b2e2d16",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/Serialization/PartyIdentityContractTests.cs",
+          "sha256": "41bcb5caf902f2506893905f0eac1be86be449d817dba08bb88e02beeabd49d1",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/State/PartyStateTests.cs",
+          "sha256": "8c9678424da9406118c9f949ad0b0f8e3d1f11ce8724f04e473cf168b689b1ff",
+          "match": true
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "project": "Hexalith.Parties.Server.Tests",
+      "command": [
+        "dotnet",
+        "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+        "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.Parties.Server.Tests/debug/Hexalith.Parties.Server.Tests.pdb",
+        "tests/Hexalith.Parties.Server.Tests/Aggregates/AgentPartyProvisioningTests.cs",
+        "tests/Hexalith.Parties.Server.Tests/Aggregates/HumanActorBindingTests.cs",
+        "tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs",
+        "tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs"
+      ],
+      "pdbSha256": "f163cbba62b2a2fe5b3a169f0e1cacc88945cae9ea7a33cbe5e217ab72c41735",
+      "sources": [
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Server.Tests/Aggregates/AgentPartyProvisioningTests.cs",
+          "sha256": "104c3e9976f8777bde23ccf5b6503ace796785254efdcc5a7aa4c25d72a2eda3",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Server.Tests/Aggregates/HumanActorBindingTests.cs",
+          "sha256": "a01da5bfe17078ab497756ebb3ece734f76e3d5ddf0d3e7fa3655b062e620921",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs",
+          "sha256": "9112365ee6435b4b1a8297614bfdb17b678e6fa4bab3393863606d624e8d295e",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCreateTests.cs",
+          "sha256": "c210365a1fe78c75420fe08eda05d617a54e908f1a42d605310faea8ac78bae1",
+          "match": true
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "project": "Hexalith.Parties.Tests",
+      "command": [
+        "dotnet",
+        "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+        "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.pdb",
+        "tests/Hexalith.Parties.Tests/Domain/PartyIdentityAdmissionTests.cs",
+        "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs",
+        "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityRetentionConfigurationTests.cs",
+        "tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs",
+        "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs",
+        "tests/Hexalith.Parties.Tests/Gateway/PartiesProcessEndpointTests.cs",
+        "tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs"
+      ],
+      "pdbSha256": "77342cb2bb0940a836c489c7181eff86af1abf6d0c832b0049c030575c797bf5",
+      "sources": [
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs",
+          "sha256": "5fffe40eb69a921f7b6ff8d50a7afefaa8f5fe9ad08b0c186ebbcbee94cb2f14",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Domain/PartyIdentityAdmissionTests.cs",
+          "sha256": "781231ad9a8c50fab6802d77508532c41ed871e2a499df2bb447e0c8931df819",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs",
+          "sha256": "a2f4b200fc1d503ea53a0b874f8a5c3ec6fae10c7b40dcaac502e4d0c586dbdd",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartiesProcessEndpointTests.cs",
+          "sha256": "f9a578bc1d1560f9411a30e32ef5ee44ab823b6de1b3b41291375d7edda42e2f",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs",
+          "sha256": "193c1bb99223f4e6ee7385dba6d94a6d4dc5fc91b4e41a48ddbd27015918864a",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityRetentionConfigurationTests.cs",
+          "sha256": "45c265a699cd410df25a90ae44a6f11314f60ea7c9518a1f80c07fc45b3a1e2b",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs",
+          "sha256": "a7ca0bc9fd0ad1023c268d301206b8bf53c9f3b69e6a11dc5e36d967c6934ab9",
+          "match": true
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "project": "Hexalith.Parties.Security.Tests",
+      "command": [
+        "dotnet",
+        "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+        "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.Parties.Security.Tests/debug/Hexalith.Parties.Security.Tests.pdb",
+        "tests/Hexalith.Parties.Security.Tests/IdentityHistoryProtectionTests.cs",
+        "tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionServiceTests.cs"
+      ],
+      "pdbSha256": "84e28e96160d0b8a262461cc53fa3c17b06241f5f68306190bb772e87a372d05",
+      "sources": [
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Security.Tests/IdentityHistoryProtectionTests.cs",
+          "sha256": "7fccf8ddef803d4ae45c8431e21644f7a80c7440fb8781794eb7e0a2c4dc8f0c",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionServiceTests.cs",
+          "sha256": "75d31e57a90f9cf11cd2ef07d83d907d274a2c2ff8f0884fa298382578cd760b",
+          "match": true
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "project": "Hexalith.Parties.Client.Tests",
+      "command": [
+        "dotnet",
+        "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+        "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.Parties.Client.Tests/debug/Hexalith.Parties.Client.Tests.pdb",
+        "tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs",
+        "tests/Hexalith.Parties.Client.Tests/HttpPartiesCommandClientTests.cs",
+        "tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs",
+        "tests/Hexalith.Parties.Client.Tests/DependencyInjectionTests.cs"
+      ],
+      "pdbSha256": "d3063eb8f7f9ece4173ef719c8414a2c4b72562993133761203725ae63e0c4d8",
+      "sources": [
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/DependencyInjectionTests.cs",
+          "sha256": "d83e56990e69dfa2d0fe96d5b96afcb979f642d0f19c3bd76445b1728f0c71b3",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/HttpPartiesCommandClientTests.cs",
+          "sha256": "bb04dde6ddd6178eacac95a63f130d860361c3125483849ef925f27948085c58",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs",
+          "sha256": "429e6592e4c06fb39efbdf585dca4e26814cb8f08670a571f100b5363e68bd0b",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/HttpPartiesQueryClientTests.cs",
+          "sha256": "8d3ae99a3e91a58c08d01b7b35bf34c2d5b755cd85d65229d02e2c68191af4e4",
+          "match": true
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "project": "Hexalith.Parties.UI.Tests",
+      "command": [
+        "dotnet",
+        "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+        "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.Parties.UI.Tests/debug/Hexalith.Parties.UI.Tests.pdb",
+        "tests/Hexalith.Parties.UI.Tests/IdentityBindingBoundaryTests.cs",
+        "tests/Hexalith.Parties.UI.Tests/IdentityBindingProvisioningServiceTests.cs",
+        "tests/Hexalith.Parties.UI.Tests/PartyIdClaimResolverTests.cs",
+        "tests/Hexalith.Parties.UI.Tests/SelfScopedPartiesClientTests.cs"
+      ],
+      "pdbSha256": "8ab103255d829368accb1a04abd62551b464534cba3b05642378d8935eeaacc6",
+      "sources": [
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/IdentityBindingBoundaryTests.cs",
+          "sha256": "4a326f056c4173bdc8681a55c21fe87355f2245cf360cc54e84688c93a26e63a",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/IdentityBindingProvisioningServiceTests.cs",
+          "sha256": "4bafde8b4ce053fc6e5efcd284a288403fd8ba546e408caef254ea2ab08a2f48",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/PartyIdClaimResolverTests.cs",
+          "sha256": "5157f9f6725e3071886b6b97ca7bd4ace3cba577f522a9dd21c8b7b9e8e1c491",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/SelfScopedPartiesClientTests.cs",
+          "sha256": "175946704a46b10f0244e0c480672dbbb55277ff4c8df0cd053a12a0a2a03010",
+          "match": true
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "project": "Hexalith.Platform.Custody",
+      "command": [
+        "dotnet",
+        "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+        "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.Platform.Custody/debug/Hexalith.Platform.Custody.pdb",
+        "src/Hexalith.Platform.Custody/IdentityHistoryCleanup.cs",
+        "src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs",
+        "src/Hexalith.Platform.Custody/UnavailablePlatformHmacKeyProvider.cs",
+        "src/Hexalith.Platform.Custody/UnavailablePlatformSigningProfileProvider.cs"
+      ],
+      "pdbSha256": "8a66cf3b223cee5b2f5b334cf6128a39bc9c926d3e749834656fd67d0e25a12d",
+      "sources": [
+        {
+          "source": "/home/administrator/projects/hexalith/platform/src/Hexalith.Platform.Custody/IdentityHistoryCleanup.cs",
+          "sha256": "459bf37506ff2c5a3de43ced6e93b93f64abc14e2736e3f462044a7f6ff3c79a",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/platform/src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs",
+          "sha256": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/platform/src/Hexalith.Platform.Custody/UnavailablePlatformHmacKeyProvider.cs",
+          "sha256": "cf1d4a65e130eb63f18cd8a635892055dd52ce6c7c5b5d72dd3cf3f5d9f362b6",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/platform/src/Hexalith.Platform.Custody/UnavailablePlatformSigningProfileProvider.cs",
+          "sha256": "c1fd8b528ecc563a35e470a55e693824c385466854dd9ae35004e3ddbcf2a75e",
+          "match": true
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "project": "Hexalith.Parties",
+      "command": [
+        "dotnet",
+        "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+        "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.Parties/debug/Hexalith.Parties.pdb",
+        "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs",
+        "src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs",
+        "src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs",
+        "src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs"
+      ],
+      "pdbSha256": "93f2e2f32924583c81358197569a44b706316ab39f6c5220ac067ea499357728",
+      "sources": [
+        {
+          "source": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Domain/PartyDomainProcessor.cs",
+          "sha256": "f88a5c782a5055d2476acf76565424e95642dacc1cc5bb600cf17cfab9bb5ee5",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs",
+          "sha256": "73342fcff1a19186340549cc8740eb34b7f2f313e376065b8e370299ebbdec5f",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs",
+          "sha256": "dd73d29bf327506bf9bdf846d8e202ce3ef07fb149944799759c461c64608120",
+          "match": true
+        },
+        {
+          "source": "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs",
+          "sha256": "bfa7ff1402b3641ca91cbc31a2902ea5fa5f8fdf41eb4ad672f786a2256d205f",
+          "match": true
+        }
+      ],
+      "exitCode": 0
+    }
+  ]
+}

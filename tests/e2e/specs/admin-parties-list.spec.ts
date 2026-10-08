@@ -7,8 +7,6 @@ const RESET_ROUTE = '/__parties/specimens/admin-portal/reset';
 const BASE_URL = process.env.BASE_URL ?? 'http://127.0.0.1:5072';
 
 test.describe('Admin parties list', () => {
-  test.describe.configure({ mode: 'serial' });
-
   test.use({
     locale: 'en-US',
     timezoneId: 'UTC',
@@ -68,17 +66,16 @@ test.describe('Admin parties list', () => {
 
     await expect(page.getByRole('button', { name: 'Jose Alpha' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'José Zeta' })).toBeVisible();
-    const joseRows = await page.locator('.hx-parties-admin__list')
-      .getByRole('button')
-      .evaluateAll((buttons) => buttons
-        .map((button) => (button.textContent ?? '').trim())
-        .filter((text) => text.includes('Jose') || text.includes('José')));
-    expect(joseRows).toEqual(['Jose Alpha', 'José Zeta']);
-
     await expect.poll(async () => {
       const latest = await latestSearchRequest(request);
       return `${latest?.query}|${latest?.page}`;
     }).toBe('Jose|1');
+    await expect.poll(async () => page.locator('.hx-parties-admin__list')
+      .getByRole('button')
+      .evaluateAll((buttons) => buttons
+        .map((button) => (button.textContent ?? '').trim())
+        .filter((text) => text.includes('Jose') || text.includes('José'))))
+      .toEqual(['Jose Alpha', 'José Zeta']);
   });
 
   test('next page preserves the current search criteria', async ({ page, request }) => {
@@ -91,6 +88,11 @@ test.describe('Admin parties list', () => {
     await expect(page.getByRole('button', { name: 'Paging Party 01' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Paging Party 21' })).toHaveCount(0);
 
+    await expect(page.getByRole('button', { name: 'Paging Party 20' })).toBeVisible();
+    await expect.poll(async () => {
+      const latest = await latestSearchRequest(request);
+      return `${latest?.query}|${latest?.type}|${latest?.active}|${latest?.page}`;
+    }).toBe('Paging|Organization|true|1');
     await page.getByRole('button', { name: 'Next' }).click();
 
     await expect(page.getByRole('button', { name: 'Paging Party 21' })).toBeVisible();
@@ -116,7 +118,7 @@ test.describe('Admin parties list', () => {
     await page.getByRole('searchbox', { name: 'Search parties' }).fill('NoMatch');
 
     await expect(page.getByText('No parties match.')).toBeVisible();
-    await page.getByRole('button', { name: 'Clear', exact: true }).click();
+    await page.locator('.hx-parties-admin__empty').getByRole('button', { name: 'Clear', exact: true }).click();
 
     await expect(page.getByRole('searchbox', { name: 'Search parties' })).toHaveValue('');
     await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toBeVisible();
@@ -133,8 +135,7 @@ test.describe('Admin parties list', () => {
     await page.waitForURL('**/admin/parties/grace-hopper');
     await expect(page.getByRole('heading', { name: 'Grace Hopper' })).toBeVisible();
 
-    await page.goto(ADMIN_ROUTE);
-    await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toBeVisible();
+    await gotoAdmin(page);
     await gridRegion.focus();
     await page.keyboard.press('a');
 
@@ -152,7 +153,7 @@ test.describe('Admin parties list', () => {
     await expect(detail.locator('.party-state-badge', { hasText: 'Active' })).toBeVisible();
     await expect(detail.locator('.data-freshness-indicator [role="status"]')).toHaveText('Up to date');
     await expect(detail.getByRole('button', { name: 'Edit' })).toBeEnabled();
-    await expect(detail.getByText('GDPR operations')).toBeVisible();
+    await expect(detail.getByRole('heading', { name: 'GDPR operations', exact: true })).toBeVisible();
     await expect.poll(async () => (await latestDetailRequest(request))?.partyId).toBe('ada-lovelace');
 
     await page.goto(`${ADMIN_ROUTE}/grace-hopper`);
@@ -197,7 +198,7 @@ test.describe('Admin parties list', () => {
 
     await detail.getByRole('button', { name: 'Processing records' }).click();
     await expect(detail.getByRole('status').filter({ hasText: 'Operation completed' })).toBeVisible();
-    await expect(detail.getByText('GdprOperationRecorded')).toBeVisible();
+    await expect(detail.getByRole('definition').filter({ hasText: /^GdprOperationRecorded$/ })).toBeVisible();
 
     await page.evaluate(() => {
       document.documentElement.style.zoom = '2';
@@ -268,6 +269,8 @@ test.describe('Admin parties list', () => {
     await detail.getByRole('button', { name: 'Request erasure' }).click();
 
     const eraseDialog = page.getByRole('dialog', { name: 'Erase party' });
+    const eraseDialogContent = detail.locator('fluent-dialog').filter({ has: eraseDialog });
+    await expect(eraseDialogContent).toHaveCount(1);
     await expect(eraseDialog).toBeVisible();
     await expect(eraseDialog).toHaveAttribute('aria-modal', 'true');
     const labelledBy = await eraseDialog.getAttribute('aria-labelledby');
@@ -276,31 +279,34 @@ test.describe('Admin parties list', () => {
     }
     await expect(page.locator(`#${labelledBy}`)).toHaveText('Erase party');
     await expect(page.getByRole('dialog')).toHaveCount(1);
-    await expect(eraseDialog.getByText('irreversible verification')).toBeVisible();
-    const typedConfirmInput = eraseDialog.getByRole('textbox', { name: 'Type the selected party display name', exact: true });
+    await expect(eraseDialogContent.locator('p[id^="erasure-warning-"]')).toBeVisible();
+    await expect(eraseDialogContent.locator('p[id^="erasure-warning-"]')).toContainText('irreversible verification');
+    const typedConfirmInput = eraseDialogContent.getByRole('textbox', { name: 'Type the selected party display name', exact: true });
     await expect(typedConfirmInput).toBeFocused();
     const describedBy = await typedConfirmInput.getAttribute('aria-describedby');
     if (!describedBy) {
       throw new Error('Typed-confirm input must describe the irreversible warning.');
     }
     await expect(page.locator(`#${describedBy}`)).toContainText('irreversible verification');
-    await expect(eraseDialog.getByRole('button', { name: 'Erase' })).toBeDisabled();
+    await expect(typedConfirmInput).toHaveAccessibleDescription(/irreversible verification/);
+    await expect(eraseDialogContent.getByRole('button', { name: 'Erase' })).toBeDisabled();
     await typedConfirmInput.fill('Grace hopper');
-    await expect(eraseDialog.getByRole('button', { name: 'Erase' })).toBeDisabled();
+    await expect(eraseDialogContent.getByRole('button', { name: 'Erase' })).toBeDisabled();
     await expect.poll(async () => (await latestErasureRequest(request))?.partyId ?? null).toBe(null);
-    await eraseDialog.getByRole('button', { name: 'Cancel' }).click();
+    await eraseDialogContent.getByRole('button', { name: 'Cancel' }).click();
     await expect(eraseDialog).toHaveCount(0);
-    await expect(page.getByText('Grace hopper')).toHaveCount(0);
+    await expect(page.getByText(/^Grace hopper$/)).toHaveCount(0);
     await expect.poll(async () => (await latestErasureRequest(request))?.partyId ?? null).toBe(null);
 
     await detail.getByRole('button', { name: 'Request erasure' }).click();
     const reopenedEraseDialog = page.getByRole('dialog', { name: 'Erase party' });
-    await reopenedEraseDialog.getByRole('textbox', { name: 'Type the selected party display name', exact: true }).fill('Grace Hopper');
-    await expect(reopenedEraseDialog.getByRole('status').filter({ hasText: 'Erase action enabled.' })).toBeVisible();
-    await expect(reopenedEraseDialog.getByRole('button', { name: 'Erase' })).toBeEnabled();
+    await expect(reopenedEraseDialog).toBeVisible();
+    await eraseDialogContent.getByRole('textbox', { name: 'Type the selected party display name', exact: true }).fill('Grace Hopper');
+    await expect(eraseDialogContent.getByRole('status').filter({ hasText: 'Erase action enabled.' })).toBeVisible();
+    await expect(eraseDialogContent.getByRole('button', { name: 'Erase' })).toBeEnabled();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     expect(overflow).toBe(false);
-    await reopenedEraseDialog.getByRole('button', { name: 'Erase' }).click();
+    await eraseDialogContent.getByRole('button', { name: 'Erase' }).click();
     await expect(detail.getByRole('status').filter({ hasText: 'Saved - updating...' })).toBeVisible();
     await expect.poll(async () => (await latestErasureRequest(request))?.partyId).toBe('grace-hopper');
     const erasureRequest = await latestErasureRequest(request);
@@ -315,11 +321,11 @@ test.describe('Admin parties list', () => {
     await page.goto(`${ADMIN_ROUTE}/missing-party/gdpr`);
 
     const detail = page.getByLabel('Party detail');
-    await expect(detail.getByText('The selected party is unavailable')).toBeVisible();
-    await expect(detail.getByText('GDPR operations')).toHaveCount(0);
+    await expect(detail.getByRole('status').filter({ hasText: 'The selected party is unavailable' })).toBeVisible();
+    await expect(detail.getByRole('heading', { name: 'GDPR operations', exact: true })).toHaveCount(0);
     await expectNoGdprMutationControls(detail);
     await expect.poll(async () => (await latestDetailRequest(request))?.partyId).toBe('missing-party');
-    await expect(page.getByText('Ada Lovelace')).toHaveCount(0);
+    await expect(detail.getByText('Ada Lovelace')).toHaveCount(0);
   });
 
   test('direct GDPR route for an erased party keeps export and records available without PII', async ({ page, request, context }) => {
@@ -339,7 +345,7 @@ test.describe('Admin parties list', () => {
 
     const detail = page.getByLabel('Party detail');
     await expect(detail.getByRole('heading', { name: 'GDPR operations' })).toBeFocused();
-    await expect(detail.getByText('The selected party is unavailable')).toBeVisible();
+    await expect(detail.getByRole('status').filter({ hasText: 'The selected party is unavailable' })).toBeVisible();
     await expect(detail.getByText('Erased Route Secret')).toHaveCount(0);
     await expect(detail.getByText('erased-route@example.test')).toHaveCount(0);
     await expect(detail.getByText('ERASED-SECRET-ID')).toHaveCount(0);
@@ -361,21 +367,22 @@ test.describe('Admin parties list', () => {
     expect(page.url()).not.toContain('erased-route%40example.test');
 
     await detail.getByRole('button', { name: 'Processing records' }).click();
-    await expect(detail.getByText('Party id')).toBeVisible();
-    await expect(detail.getByText('Tenant id')).toBeVisible();
-    await expect(detail.getByText('Sequence number')).toBeVisible();
-    await expect(detail.getByText('Event type')).toBeVisible();
-    await expect(detail.getByText('Operation category')).toBeVisible();
-    await expect(detail.getByText('Timestamp')).toBeVisible();
-    await expect(detail.getByText('Actor id')).toBeVisible();
-    await expect(detail.getByText('Correlation id')).toBeVisible();
-    await expect(detail.getByText('Outcome')).toBeVisible();
-    await expect(detail.getByText('erased-route')).toBeVisible();
-    await expect(detail.getByText('test-tenant')).toBeVisible();
-    await expect(detail.getByText('admin-e2e')).toBeVisible();
-    await expect(detail.getByText('corr-gdpr-e2e')).toBeVisible();
-    await expect(detail.getByText('Completed')).toBeVisible();
-    await expect(detail.getByText('Bounded GDPR operation record')).toBeVisible();
+    const records = detail.getByRole('region', { name: 'Processing activity records', exact: true });
+    await expect(records.getByText('Party id')).toBeVisible();
+    await expect(records.getByText('Tenant id')).toBeVisible();
+    await expect(records.getByText('Sequence number')).toBeVisible();
+    await expect(records.getByText('Event type')).toBeVisible();
+    await expect(records.getByText('Operation category')).toBeVisible();
+    await expect(records.getByText('Timestamp')).toBeVisible();
+    await expect(records.getByText('Actor id')).toBeVisible();
+    await expect(records.getByText('Correlation id')).toBeVisible();
+    await expect(records.getByText('Outcome')).toBeVisible();
+    await expect(records.getByRole('definition').filter({ hasText: /^erased-route$/ })).toBeVisible();
+    await expect(records.getByText('test-tenant')).toBeVisible();
+    await expect(records.getByText('admin-e2e')).toBeVisible();
+    await expect(records.getByText('corr-gdpr-e2e')).toBeVisible();
+    await expect(records.getByText('Completed')).toBeVisible();
+    await expect(records.getByText('Bounded GDPR operation record')).toBeVisible();
     await expect.poll(async () => {
       const snapshot = await requestSnapshot(request);
       return snapshot.processingRecordRequests.at(-1)?.partyId ?? null;
@@ -394,7 +401,7 @@ test.describe('Admin parties list', () => {
     await page.goto(`${ADMIN_ROUTE}/tenant-a%3Aparty%3Asecret/gdpr`);
 
     const detail = page.getByLabel('Party detail');
-    await expect(detail.getByText('The selected party is unavailable')).toBeVisible();
+    await expect(detail.getByRole('status').filter({ hasText: 'The selected party is unavailable' })).toBeVisible();
     await expectNoGdprMutationControls(detail);
     await expect.poll(async () => (await latestDetailRequest(request))?.partyId ?? null).toBe(null);
     await expect(page.getByText('tenant-a:party:secret')).toHaveCount(0);
@@ -433,8 +440,8 @@ test.describe('Admin parties list', () => {
       return latest?.type ?? null;
     }).toBe('Person');
     const created = await latestCreateRequest(request);
-    expect(created?.partyId).toMatch(/^[0-9a-f-]{36}$/);
-    await page.waitForURL(/\/admin\/parties\/[0-9a-f-]{36}$/);
+    expect(created?.partyId).toMatch(/^[0-9A-HJKMNP-TV-Z]{26}$/);
+    await expect(page).toHaveURL(`${BASE_URL}${ADMIN_ROUTE}/${created?.partyId}`);
   });
 
   test('edit form uses detail edit action and submits route-authoritative update', async ({ page, request }) => {
@@ -577,11 +584,16 @@ const gotoAdmin = async (page: Page): Promise<void> => {
   await page.goto(ADMIN_ROUTE);
   await expect(page.getByRole('heading', { name: 'Parties' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Ada Lovelace' })).toBeVisible();
+  await expect(page.getByRole('listbox', { name: 'Party type', exact: true, includeHidden: true })).toHaveCount(1);
 };
 
 const chooseOption = async (page: Page, label: string, option: string): Promise<void> => {
-  await page.getByRole('combobox', { name: label, exact: true }).click();
-  await page.getByRole('option', { name: option, exact: true }).click();
+  const control = page.getByRole('combobox', { name: label, exact: true });
+  await control.click();
+  const popup = page.getByRole('listbox', { name: label, exact: true });
+  await expect(popup).toBeVisible();
+  await expect(popup).toHaveAttribute('id', await control.getAttribute('aria-controls') ?? '');
+  await popup.getByRole('option', { name: option, exact: true }).click();
 };
 
 const latestSearchRequest = async (request: APIRequestContext): Promise<AdminPortalRequestCapture | undefined> => {

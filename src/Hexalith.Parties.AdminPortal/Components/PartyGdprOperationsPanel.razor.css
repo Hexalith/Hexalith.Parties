@@ -1,3 +1,9 @@
+.hx-parties-admin__gdpr ::deep .hx-parties-admin__erasure-modal::part(dialog) {
+    max-inline-size: calc(100% - 1rem);
+    max-block-size: calc(100% - 1rem);
+    overflow: auto;
+}
+
 .hx-parties-admin__erasure-dialog {
     display: grid;
     gap: var(--spacingVerticalS, .5rem);

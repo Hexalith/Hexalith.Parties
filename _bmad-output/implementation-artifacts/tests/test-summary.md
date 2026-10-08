@@ -1602,3 +1602,293 @@ Final source: `9096ea357fd627782828d671a6860c9eabe99c89` (main, pushed).
 - Pending user input: repository credential update, plus whether this task may extend to fixing/releasing the upstream EventStore SDK (14 additional packages). An unanswered choice does not authorize that additional publication. No upstream repository was changed or published.
 
 Retry after credential update: `gh run rerun 37597780819 --failed`, then approve the existing production deployment under the standing user authorization and independently rerun `python3 /tmp/parties-verify-published-packages.py 1.2.0 9096ea357fd627782828d671a6860c9eabe99c89`. Recheck current-main identity and all package indexes first. If source changes for upstream alignment, dispatch a new Release for its newly verified exact source instead. Full CI and publication acceptance remain incomplete; do not mark this spec done or claim published packages.
+
+
+## Revalidate all tests and fix current failures — 2026-10-08
+
+**Acceptance remains incomplete:** every configured project and browser test ran,
+and root-owned failures were repaired. Both current .NET modes still fail the live
+gateway prerequisite. The spec remains `in-progress`; no unavailable gateway or
+unexpected dynamic skip is credited as a pass.
+
+### Source identity and preserved workspace state
+
+This run began on clean `main` at
+`c095134f6ec648560954d6f0fc76858fd1d7cd0e`. Concurrent authors supplied source,
+documentation, dependency selections and commits while validation continued.
+Earlier root observations include `28fff255a18a7de540631c792034a8df5a33c980`.
+The successful browser recorded-start/end snapshots and the final package/source
+restore, build and full-test snapshots select
+`f0004ffea4ee0fcc00fbbc99457f9ec1a9414f34` plus the recorded working-tree repairs.
+Both broad .NET lanes kept that HEAD throughout. The mTLS source topology rerun
+started there and ended at `904460303b2e32b40b35b3fe0d1970d73a52e62d`; its root
+file SHA256 comparison reports no changed tracked or untracked source files.
+The mTLS package rerun stayed at `904460303b2e32b40b35b3fe0d1970d73a52e62d`.
+The evidence snapshots include the complete working-tree status, root file hashes,
+and every root-declared checkout identity. They describe a working-tree run,
+not proof of a clean committed release.
+
+The current externally supplied package selection is EventStore `3.117.0`,
+Commons `2.30.1`, FrontComposer `4.6.0`, Memories `2.27.1`, Tenants `5.7.0`, and
+Parties `1.1.1`; the AppHost SDK is `13.6.1`. Those version/SDK and source-pointer
+changes belong to the concurrent author, not this repair pass. The current source
+checkouts used for these results are:
+
+| Root dependency | Checkout HEAD |
+| --- | --- |
+| AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` |
+| Builds | `ad52c5bdd4361c59eedf12a16620150006403584` |
+| Commons | `116d26815eb81e35b3c161e1799e5ee12805fc0a` |
+| EventStore | `b830d9829af70536d2a3fd21c5e2a23b2ca2f256` (`v3.117.0`, clean) |
+| FrontComposer | `c561b3210f15206a90c39c82c58f2e5b1005cd60` |
+| McpCli | `e159f82b7528797fc245045625ff387d65294ba9` |
+| Memories | `aac6d9054cb138881e6e49c8e48233553123ffce` |
+| Platform | `332a7d8104e3f6c9aaa57cbc7f07afb5fa0859de` |
+| PolymorphicSerializations | `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` |
+| Tenants | `86aa888301b40cda12b000f68d9292d53cd93efe` |
+
+No dependency/version/routing file, reference content, gitlink or nested submodule
+was changed by this repair pass. No staging, commit, push, branch, reset, clean,
+or submodule initialization/update was performed. The concurrently edited MCP,
+publication, architecture and prerequisite artifacts were preserved; only the
+specified current receipt correction below was applied to their current content.
+The parent separately inserted the Story 8.8 available-row execution gate outside
+its frozen block. No historical approval or parity receipt was promoted.
+
+### Commands and fresh lane results
+
+All .NET test execution uses the individual-project Microsoft.Testing.Platform
+runner, `scripts/test.ps1 -ContinueOnFailure`, inspectable TRXs and the existing
+`GITHUB_ACTIONS=true` fixture guard. `.slnx` was used only for restore/build.
+No legacy solution, project `--filter`, test exclusion or warning suppression was
+introduced. Local `-Lane coverage` remains explicitly unsupported by the runner;
+coverage was not simulated or claimed.
+
+```bash
+dotnet restore Hexalith.Parties.slnx -m:1
+dotnet build Hexalith.Parties.slnx -c Release --no-restore -m:1
+GITHUB_ACTIONS=true pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults/bmad-revalidation-20261008/package-latest -Properties UseHexalithProjectReferences=false,UseNuGetDeps=true,NuGetAudit=false,MinVerVersionOverride=1.0.0
+```
+
+Restore/build exited **0/0**, Release build **zero warnings/errors** (25.06 s).
+The first complete package run exited **1**: all 15 TRXs, **3,031 total, 3,025
+executed, 3,023 passed, two failed, six skipped**. One failure was the stale current
+FrontComposer catalog assertion; the other was gateway readiness. After the narrow
+receipt repair, the service project rebuilt with zero warnings/errors, its exact
+fitness method passed **1/1**, and the complete Release service project passed
+**907/907**, zero skips. Its separate receipt supersedes only that original
+service row; the failed original TRX remains intact.
+
+```bash
+dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release --no-restore -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
+dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -method '*FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph*'
+dotnet test tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Release --no-build --verbosity minimal --results-directory TestResults/bmad-revalidation-20261008/package-service-repaired --report-xunit-trx --report-xunit-trx-filename Hexalith.Parties.Tests.trx -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
+```
+
+The fresh Debug source baseline retains the previously approved Commons package
+routing flags and reads current versions from the unchanged catalog; it omits
+only the obsolete July Commons `2.28.0`/Tenants `2.4.2` overrides.
+
+```bash
+dotnet restore Hexalith.Parties.slnx -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithCommonsFromSource=false -p:HexalithCommonsHttpFromSource=false -p:HexalithCommonsServiceDefaultsFromSource=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -p:GeneratePackageOnBuild=false -p:BuildInParallel=false
+dotnet build Hexalith.Parties.slnx -c Debug --no-restore -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithCommonsFromSource=false -p:HexalithCommonsHttpFromSource=false -p:HexalithCommonsServiceDefaultsFromSource=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -p:GeneratePackageOnBuild=false -p:BuildInParallel=false
+GITHUB_ACTIONS=true pwsh -NoProfile -File scripts/test.ps1 -Lane all -Configuration Debug -ContinueOnFailure -ResultsDirectory TestResults/bmad-revalidation-20261008/source-latest -Properties UseHexalithProjectReferences=true,UseNuGetDeps=false,HexalithCommonsFromSource=false,HexalithCommonsHttpFromSource=false,HexalithCommonsServiceDefaultsFromSource=false,NuGetAudit=false,MinVerVersionOverride=1.0.0,GeneratePackageOnBuild=false,BuildInParallel=false
+```
+
+Source restore/build exited **0/0**, Debug build **zero warnings/errors**. Its
+complete all-project runner exited **1**, with **3,031 total, 3,025 executed,
+3,024 passed, one gateway failure and six declared skips**. All fourteen other
+projects pass. The latest reconciled package totals are identical; this does not
+change either failed full-run exit code.
+
+| Project (`Hexalith.Parties.*`) | Release package passed/executed | Debug source passed/executed | Failures per mode | Declared skips per mode |
+| --- | --- | --- | --- | --- |
+| AdminPortal.Tests | 190/190 | 190/190 | 0 | 0 |
+| Authentication.Tests | 12/12 | 12/12 | 0 | 0 |
+| Ci.Tests | 101/101 | 101/101 | 0 | 0 |
+| Client.Tests | 171/171 | 171/171 | 0 | 0 |
+| ConsumerPortal.Tests | 82/82 | 82/82 | 0 | 0 |
+| Contracts.Tests | 181/181 | 181/181 | 0 | 0 |
+| IntegrationTests | 35/36 | 35/36 | 1 | 6 |
+| Mcp.Tests | 94/94 | 94/94 | 0 | 0 |
+| Picker.Tests | 171/171 | 171/171 | 0 | 0 |
+| Projections.Tests | 236/236 | 236/236 | 0 | 0 |
+| Sample.Tests | 58/58 | 58/58 | 0 | 0 |
+| Security.Tests | 178/178 | 178/178 | 0 | 0 |
+| Server.Tests | 259/259 | 259/259 | 0 | 0 |
+| Tests | 907/907 | 907/907 | 0 | 0 |
+| UI.Tests | 349/349 | 349/349 | 0 | 0 |
+| **Total** | **3,024/3,025** | **3,024/3,025** | **1** | **6** |
+
+The parent verified its independent Story 8.8 gate repair with
+`dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method '*AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity*'`:
+**1 total, zero errors/failed/skipped/not-run**. The final full Debug service run
+also includes this case and all current immutable-source/available-row gates.
+
+The six predeclared `HealthEndpointE2ETests` skips remain unchanged:
+`QueryEndpoints_WithPubSubUnavailable_ReturnCachedDataWithDegradationHeaders`
+(the in-memory pub/sub component shares its sidecar process),
+`ReadyEndpoint_WithAllDaprComponentsRunning_Returns200Async`
+(the deferred Tenants DAPR `/ready` contract),
+`HealthEndpoint_WithAllDaprComponentsRunning_Returns200Async`,
+`AliveEndpoint_WithAllDaprComponentsRunning_Returns200Async`,
+`HealthEndpoint_WithAllDaprComponentsRunning_DoesNotIncludeDegradationHeadersAsync`
+(existing Tier 3 Tenants-readiness deferrals), and
+`HealthAndReadyEndpoints_WithDaprSidecarStopped_Return503ThenRecoverAsync`
+(the deferred stop/restart recovery proof). A seventh dynamic unavailable-fixture
+skip seen in an earlier local diagnostic is **unexpected and not accepted**;
+final CI-strict runs keep that gateway test failed.
+
+### Browser, behavior repairs and focused verification
+
+Locked browser dependencies and Chromium were available; `npm ci` and final
+`npm run typecheck` passed. The final **default** `DEBUG=pw:webserver npm test`
+exited **0**, **90/90 executed/passed, zero failed/skipped** (1.1 m), including the
+configured six specimen axe gates, all Consumer routes/interactions, anonymous
+challenges, role restrictions and missing/duplicate binding cases. The host still
+builds the source-mode UI before testing. `BuildInParallel=false` serializes that
+existing build graph. Exact DEBUG stdout retained one earlier startup contention:
+`NuGet.Build.Tasks.Pack.targets(226,5)` could not access the Commons.UniqueIds
+Release XML file because another process was using it. Later serialized startup
+and full inventory pass; no routing, pack or build gate was skipped. Earlier
+full deliberate-host suites and failed automatic-host attempts remain retained.
+
+Repairs made in this task, including early changes subsequently committed by
+another process, are:
+
+- Gateway claim security tests use the centralized subject claim type. Encryption
+  tests reject complete serialized plaintext fields rather than random ciphertext
+  substrings and retain explicit `$enc`/AES256GCM/key-version/ciphertext checks.
+- The guarded Test-only shell context uses existing fixture claims. Anonymous,
+  environment/configuration guard and Consumer/Admin role tests remain active;
+  the accessibility wrapper stays restricted to its exact specimen route.
+- UI composition registers the existing PartyPicker services and custom element,
+  preserving configured/test query clients. Actual Fluent inputs, buttons,
+  grid, radios, options and dropdown listboxes expose their required names, roles,
+  checked/disabled states and keyboard behavior using supported parameters plus
+  the scoped portal initializer where the installed API has no listbox seam.
+- Search input changes reach the existing debounce. Empty local-fallback searches
+  clear rows while actual degraded reads preserve them. Mobile detail attributes
+  use explicit string values matching CSS so background rows are absent. GDPR
+  destination and originating row focus work after route changes; row references
+  are pruned for removed IDs and retained for reused buttons.
+- Accepted create/edit status transfers once across the form-to-detail transition
+  through internal circuit state. Tests clear it on changed tenant/user/auth scope,
+  missing tenant, sign-out and unrelated routes. Public signatures stay intact.
+- The existing export invocation now downloads its base64 JSON through a Blob,
+  timestamped safe name and `finally` anchor/object-URL cleanup. Erasure uses the
+  supported native named modal, actual input focus, immediate exact typed-name
+  validation, visible warning plus a shadow-local accessible description, and
+  scoped native-dialog percentage bounds/scrolling at 320 px and 200% zoom.
+- Portal observers/listeners and JS modules clean up through existing `IDisposable`
+  and private async helpers, with detached-element and late-import guards;
+  no public `IAsyncDisposable`/`DisposeAsync` contract was added.
+- Documentation inventory validates every authoritative `.gitmodules` path.
+  Story 7.4/7.8 browser source checks follow the approved SDK migration while
+  retaining historical decisions and substantive replay/rebuild/GDPR anchors.
+  The current dependency receipt/test now matches catalog FrontComposer `4.6.0`;
+  historical `4.5.0` approvals and accessibility receipts remain unchanged.
+- Independent Admin browser cases reset their fixture and no longer use serial
+  fail-fast grouping; the existing single worker and all failing assertions remain.
+  Locators select actual input/control/record containers and safe opaque IDs;
+  command/request, privacy, focus and recovery assertions remain enforced.
+
+All affected complete component/UI projects pass in **both** final .NET modes:
+AdminPortal **190**, ConsumerPortal **82**, UI **349**, zero failures/skips.
+Additional awaited browser diagnostics confirm focus restoration after
+search/clear **and** a fresh same-list request; erased export `party:null` with
+no seeded PII, one URL created/revoked and zero leftover anchors; picker listener
+count **1→0** after disposal with its old element disconnected; Escape clears the
+typed confirmation without an erasure command; and no page errors.
+`browser-manual-final.json` records these checks. An expanded diagnostic axe scan
+outside the configured specimen gates found `document-title` (one node) and
+`target-size` (nine nodes); those separate findings are not a configured-suite
+failure or an acceptance change. The dropdown required-parent violation was fixed.
+
+### Preserved failures and remaining live gateway acceptance
+
+Earlier exact July-version source-command evidence is retained independently:
+Commons `2.28.0` conflicts with Gateway's required UniqueIds `>=2.30.1` (**NU1109**).
+It is historical diagnostic evidence, not the current-source verdict. Earlier
+published EventStore `3.115.0` lacked `RequireEventStoreSidecarChannel`; the
+externally supplied root `3.117.0`/SDK selection now builds cleanly. Earlier root
+service warning and dirty EventStore-proof failures are also cleared in the
+current full builds/service tests. The independently restored Tenants runtime
+child still selects `3.115.0` and fails its administrator contracts, as verified
+below; that current dependency-owned divergence remains a blocker.
+
+The fresh baseline failure in both modes is
+`EventStoreGatewayE2ETests.CreatePartyCommand_ThroughEventStoreGateway_CompletesWithPersistedEventCountAsync`:
+
+```text
+TimeoutException: Endpoint did not become ready within 00:03:00.
+Url: /health. Last status: ServiceUnavailable. Last error: n/a
+at EventStoreGatewayE2ETests.cs:40
+```
+
+Baseline runtime logs show mTLS disabled and Parties tenants readiness requests
+returning **403**, leaving `tenants-integration` unhealthy. This is distinct from
+obsolete file-watch or missing-package-API diagnostics.
+
+The parent then ran the existing approved bootstrap
+`bash scripts/aspire-start-mtls.sh --help` (exit **0**, no extra AppHost), which
+created the three scoped control-plane containers. After the full source fixture
+was disposed, full topology reruns executed sequentially with:
+
+```bash
+GITHUB_ACTIONS=true Dapr__Mtls__Enabled=true Dapr__Mtls__CertificateDirectory=/home/administrator/.local/state/hexalith-parties/dapr-certs pwsh -NoProfile -File scripts/test.ps1 -Lane topology -Configuration Debug -ContinueOnFailure -ResultsDirectory TestResults/bmad-revalidation-20261008/topology-mtls-source -Properties UseHexalithProjectReferences=true,UseNuGetDeps=false,HexalithCommonsFromSource=false,HexalithCommonsHttpFromSource=false,HexalithCommonsServiceDefaultsFromSource=false,NuGetAudit=false,MinVerVersionOverride=1.0.0,GeneratePackageOnBuild=false,BuildInParallel=false
+GITHUB_ACTIONS=true Dapr__Mtls__Enabled=true Dapr__Mtls__CertificateDirectory=/home/administrator/.local/state/hexalith-parties/dapr-certs pwsh -NoProfile -File scripts/test.ps1 -Lane topology -Configuration Release -ContinueOnFailure -ResultsDirectory TestResults/bmad-revalidation-20261008/topology-mtls-package -Properties UseHexalithProjectReferences=false,UseNuGetDeps=true,NuGetAudit=false,MinVerVersionOverride=1.0.0
+```
+
+**Both exited 1**, each **42 total, 36 executed, 35 passed, one failed, six declared
+skips**, with the same three-minute `/health` 503 guard. Relevant sidecars use the
+generated mTLS configuration and connect to ports **55005/55006**; application
+sidecar-channel authentication succeeds. In these fresh mTLS attempts the Parties
+Tenants-readiness HTTP requests repeatedly hit their configured **two-second
+TaskCanceledException timeout**. Both runtime logs independently show the Tenants
+child build failing before it can serve readiness. The exact commands are:
+
+```bash
+dotnet run --project /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj --configuration Debug --no-launch-profile
+dotnet run --project /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj --configuration Release --no-launch-profile
+```
+
+Both report **CS0246** in `Authorization/TenantsGlobalAdministratorVerifier.cs`:
+line **19,81**, `IDomainServiceAdministratorVerifier` cannot be found, and line
+**22,9**, `DomainServiceAdministratorClaim` cannot be found. Source log lines
+966/968/1030 and package log lines 959/961/965 retain the exact compiler errors and
+`The build failed`. Read-only inspection after the package attempt confirms
+`references/Hexalith.Tenants/src/Hexalith.Tenants/obj/project.assets.json` selects
+**`Hexalith.EventStore.DomainService/3.115.0`**. The child uses the Tenants-owned
+catalog import and its own `dotnet run` restore/build; it does not receive the
+root's pre-import EventStore `3.117.0` selection or broad source-routing overrides.
+Thus a green root solution build does not establish a runnable Tenants child.
+This verified dependency-owned runtime graph divergence remains the live gateway
+prerequisite blocker. A fix that edits Tenants/reference content or changes its
+versions/routing crosses the spec's **Ask First** boundary and was not applied.
+
+No ACL, authorization, dependency, timeout or skip gate was loosened. The parent
+stopped only the three newly bootstrapped scoped control-plane containers (exit
+0); original global `dapr_*` resources remain preserved. Browser hosts and both
+test fixtures were disposed.
+
+Raw receipts are under ignored `TestResults/bmad-revalidation-20261008/`:
+`package-latest-*`, `package-service-repaired-*`, `source-latest-*`,
+`topology-mtls-*`, `browser-final-junit.xml`, `browser-final.log`, retained browser
+traces/screenshots/videos and `browser-manual-final.json`. Command JSONs record
+exact argv/environment, exit, duration and full source identities; before/after
+JSONs preserve working-tree state and hashes. Earlier failure receipts are retained
+without overwriting them. The successful browser stdout and prior DEBUG build
+errors also remain in `/tmp/parties-revalidation-*` logs.
+
+Warnings-as-errors remain enforced. The warning-override guard and repository
+CRLF-aware `git -c core.whitespace=cr-at-eol diff --check` pass. Plain
+`git diff --check` reports CRLF line terminators in already-CRLF modified files;
+no Git whitespace/build configuration was changed. The spec's original
+`baseline_revision`/`baseline_commit` remain
+`8d28a1bc7fe5faebb09bf9cc495fa671346140f5`, and its frozen intent block remains
+byte-identical (SHA256
+`bcab44c7fa7bb0efac9a97f03ab961c6921ce845ee01695aaf728a295b9ae0d9`).
+This consolidated section is appended; all earlier evidence text is preserved.
+
+Post-evidence focused documentation/prerequisite validation: `dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -noColor` passed **43/43**, zero errors/failed/skipped/not-run (9.252 s). Log: `TestResults/bmad-revalidation-20261008/documentation-final-fitness.log`. This separate focused check does not add duplicate executions to the broad-lane counts.

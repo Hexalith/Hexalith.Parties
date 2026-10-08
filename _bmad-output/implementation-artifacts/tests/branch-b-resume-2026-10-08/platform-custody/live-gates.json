@@ -1,0 +1,50 @@
+[
+  {
+    "case": "missing-inputs",
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "Live",
+      "-EvidenceDirectory",
+      "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/missing-inputs"
+    ],
+    "exitCode": 1,
+    "stdout": "missing-inputs.log",
+    "environment": "EXT_PARTIES_* removed"
+  },
+  {
+    "case": "sentinel-capability-gate",
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "Live",
+      "-EvidenceDirectory",
+      "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/sentinel-capability-gate"
+    ],
+    "exitCode": 1,
+    "stdout": "sentinel-capability-gate.log",
+    "environment": "non-authoritative sentinels only; no installed inputs"
+  },
+  {
+    "case": "missing-readiness-inputs",
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "eng/verify-ext-parties-1.ps1",
+      "-Mode",
+      "LiveReadiness",
+      "-EvidenceDirectory",
+      "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/missing-readiness-inputs"
+    ],
+    "exitCode": 1,
+    "stdout": "missing-readiness-inputs.log",
+    "environment": "EXT_PARTIES_* removed"
+  }
+]

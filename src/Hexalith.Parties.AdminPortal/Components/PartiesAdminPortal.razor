@@ -12,16 +12,21 @@
 @inject AdminPortalGdprStateCoordinator GdprCoordinator
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 @implements IDisposable
 
-<section class="hx-parties-admin" aria-labelledby="@($"hx-parties-admin-title-{_instanceId}")">
+<section @ref="_portalElement" class="hx-parties-admin" aria-labelledby="@($"hx-parties-admin-title-{_instanceId}")">
     <header class="hx-parties-admin__header">
         <h1 id="@($"hx-parties-admin-title-{_instanceId}")">@EffectiveLabels.Title</h1>
         <p class="hx-parties-admin__status" role="status" aria-live="polite">@StatusText</p>
+        @if (_acceptedCommandPartyId is not null)
+        {
+            <p class="hx-parties-admin__accepted-command-status" role="status" aria-live="polite">@EffectiveLabels.SavedUpdating</p>
+        }
     </header>
 
     <div class="hx-parties-admin__toolbar" @onkeydown="OnToolbarKeyDownAsync">
-        <FluentTextInput Value="@_filters.Query"
+        <FluentTextInput Immediate="true" ImmediateDelay="0" Value="@_filters.Query"
                          ValueChanged="OnQueryChangedAsync"
                          TextInputType="TextInputType.Search"
                          Label="@EffectiveLabels.Search"
@@ -29,19 +34,25 @@
                          Placeholder="@EffectiveLabels.SearchPlaceholder"
                          @ref="_searchInputRef" />
         <FluentSelect TOption="string" TValue="string"
-                      Items="@_partyTypeOptions"
                       Value="@_filters.TypeValue"
                       ValueChanged="OnTypeChangedAsync"
-                      OptionText="PartyTypeOptionLabel"
                       Label="@EffectiveLabels.PartyType"
-                      AriaLabel="@EffectiveLabels.PartyType" />
+                      AriaLabel="@EffectiveLabels.PartyType">
+            @foreach (string option in _partyTypeOptions)
+            {
+                <FluentOption TValue="string" Value="@option" Text="@PartyTypeOptionLabel(option)" role="option" />
+            }
+        </FluentSelect>
         <FluentSelect TOption="string" TValue="string"
-                      Items="@_activeStateOptions"
                       Value="@_filters.ActiveValue"
                       ValueChanged="OnActiveChangedAsync"
-                      OptionText="ActiveStateOptionLabel"
                       Label="@EffectiveLabels.ActiveState"
-                      AriaLabel="@EffectiveLabels.ActiveState" />
+                      AriaLabel="@EffectiveLabels.ActiveState">
+            @foreach (string option in _activeStateOptions)
+            {
+                <FluentOption TValue="string" Value="@option" Text="@ActiveStateOptionLabel(option)" role="option" />
+            }
+        </FluentSelect>
         <FluentTextInput Value="@_filters.CreatedAfterValue"
                          ValueChanged="OnCreatedAfterChanged"
                          TextInputType="TextInputType.Text"
@@ -89,7 +100,7 @@
         <FluentButton aria-disabled="@((!IsRichSearchAvailable) ? "true" : "false")" role="button" Disabled="@(!IsRichSearchAvailable)">@EffectiveLabels.IdentifierMode</FluentButton>
     </div>
 
-    <div class="hx-parties-admin__layout" data-detail-open="@DetailSurfaceOpen">
+    <div class="hx-parties-admin__layout" data-detail-open="@(DetailSurfaceOpen ? "true" : "false")">
         <div class="hx-parties-admin__list"
              tabindex="0"
              data-focused-row-index="@_focusedRowIndex"
@@ -107,6 +118,7 @@
                     <FluentButton role="button" Appearance="ButtonAppearance.Subtle"
                                   Class="@RowButtonClass(row)"
                                   AutoFocus="@ShouldAutoFocusRow(row)"
+                                  @ref="_rowButtonRefs[row.Id]"
                                   aria-current="@RowAriaCurrent(row)"
                                   aria-describedby="@RowStatusId(row)"
                                   OnClick="() => SelectPartyAsync(row.Id)">
@@ -149,7 +161,7 @@
             </nav>
         </div>
 
-        <aside class="hx-parties-admin__detail" aria-label="@EffectiveLabels.DetailRegion" data-sheet-open="@DetailSurfaceOpen">
+        <aside class="hx-parties-admin__detail" aria-label="@EffectiveLabels.DetailRegion" data-sheet-open="@(DetailSurfaceOpen ? "true" : "false")">
             @if (_isDetailLoading)
             {
                 <p role="status" aria-live="polite">@EffectiveLabels.DetailLoading</p>
@@ -428,6 +440,9 @@
 </section>
 
 @code {
+    private ElementReference _portalElement;
+    private IJSObjectReference? _interopModule;
+    private bool _dropdownsInitialized;
     private readonly PortalFilters _filters = new();
     private readonly List<PartyIndexEntry> _rows = [];
     private readonly string[] _partyTypeOptions = ["", "Person", "Organization"];
@@ -463,6 +478,9 @@
     private ElementReference _detailHeadingRef;
     private string? _originatingPartyId;
     private string? _pendingRowFocusPartyId;
+    private string? _rowFocusAfterRenderId;
+    private string? _acceptedCommandPartyId;
+    private readonly Dictionary<string, FluentButton> _rowButtonRefs = new(StringComparer.Ordinal);
     private int _focusedRowIndex;
 
     [Parameter]
@@ -601,6 +619,7 @@
     protected override void OnInitialized()
     {
         AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        NavigationManager.LocationChanged += OnLocationChanged;
     }
 
     protected override Task OnParametersSetAsync() => ApplyAuthorizationContextAsync();
@@ -629,6 +648,7 @@
             return;
         }
 
+        bool acceptedCommand = QueryService.ConsumeAcceptedCommand(RoutePartyId, authorizationState.ContextSignature);
         string signature = string.Join('|',
             ContextKey ?? "<null>",
             authorizationState.ContextSignature,
@@ -685,6 +705,21 @@
 
         await LoadPageAsync().ConfigureAwait(false);
         await ApplyRoutePartySelectionAsync().ConfigureAwait(false);
+        if (acceptedCommand && claim == Volatile.Read(ref _authContextClaim))
+        {
+            _acceptedCommandPartyId = RoutePartyId;
+        }
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs args)
+    {
+        if (_acceptedCommandPartyId is not null
+            && !string.Equals(CurrentPath, BuildPartyRoute(PartiesAdminPortalManifest.DetailRoute, _acceptedCommandPartyId), StringComparison.Ordinal))
+        {
+            _acceptedCommandPartyId = null;
+        }
+
+        _ = SafeStateHasChangedAsync();
     }
 
     private void OnAuthenticationStateChanged(Task<AuthenticationState> task)
@@ -861,6 +896,7 @@
             {
                 _validationDetail = validationDetail;
                 _statusKind = StatusKind.Validation;
+                _rowButtonRefs.Clear();
                 _rows.Clear();
                 ListCoordinator.Transition(AdminPortalListState.TransientFailure);
                 return;
@@ -919,9 +955,17 @@
 
         bool preserveLastKnownRows = _rows.Count > 0
             && page.Items.Count == 0
-            && (metadata.IsDegraded || metadata.StaleDataAge is not null);
+            && (metadata.ServiceDegraded
+                || metadata.StaleDataAge is not null
+                || !string.IsNullOrWhiteSpace(metadata.SearchDegradedReason));
         if (!preserveLastKnownRows)
         {
+            HashSet<string> currentRowIds = page.Items.Select(static row => row.Id).ToHashSet(StringComparer.Ordinal);
+            foreach (string removedId in _rowButtonRefs.Keys.Where(id => !currentRowIds.Contains(id)).ToArray())
+            {
+                _rowButtonRefs.Remove(removedId);
+            }
+
             _rows.Clear();
             // Backend already filters erased parties from list/search; trust server counts.
             // No client-side IsErased filter — would otherwise leak an erased-count signal via
@@ -1178,6 +1222,7 @@
             && _rows.Any(row => string.Equals(row.Id, restorePartyId, StringComparison.Ordinal)))
         {
             _pendingRowFocusPartyId = restorePartyId;
+            _rowFocusAfterRenderId = restorePartyId;
         }
         else
         {
@@ -1263,6 +1308,54 @@
             return;
         }
 
+        if (!_dropdownsInitialized)
+        {
+            try
+            {
+                _interopModule ??= await JSRuntime.InvokeAsync<IJSObjectReference>(
+                    "import", "./_content/Hexalith.Parties.AdminPortal/party-form-picker.js").ConfigureAwait(false);
+                if (Volatile.Read(ref _disposed) != 0)
+                {
+                    await DisposeInteropAsync().ConfigureAwait(false);
+                    return;
+                }
+
+                IJSObjectReference? module = _interopModule;
+                if (module is not null)
+                {
+                    await module.InvokeVoidAsync("initializeFluentDropdowns", _instanceId, _portalElement).ConfigureAwait(false);
+                    _dropdownsInitialized = true;
+                    if (Volatile.Read(ref _disposed) != 0)
+                    {
+                        await DisposeInteropAsync().ConfigureAwait(false);
+                        return;
+                    }
+                }
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            catch (JSException)
+            {
+            }
+        }
+
+        if (_rowFocusAfterRenderId is { } rowId
+            && _rowButtonRefs.TryGetValue(rowId, out FluentButton? rowButton))
+        {
+            _rowFocusAfterRenderId = null;
+            try
+            {
+                await rowButton.Element.FocusAsync().ConfigureAwait(false);
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+            catch (JSException)
+            {
+            }
+        }
+
         FocusTarget pending = _pendingFocus;
         if (pending == FocusTarget.None)
         {
@@ -1327,6 +1420,8 @@
 
     private void ResetVisibleState()
     {
+        _rowFocusAfterRenderId = null;
+        _acceptedCommandPartyId = null;
         CancelInFlight();
         // Bump both versions so any in-flight list/detail tasks that resume after this reset
         // see a stale version and short-circuit, preventing cross-tenant data being painted
@@ -1339,6 +1434,7 @@
         QueryService.ResetForTenantSwitch();
         ListCoordinator.ResetForTenantSwitch();
         GdprCoordinator.ResetForTenantSwitch();
+        _rowButtonRefs.Clear();
         _rows.Clear();
         _detail = null;
         _detailMetadata = null;
@@ -1368,6 +1464,7 @@
 
     private void ApplyFailure(AdminPortalQueryException ex)
     {
+        _rowButtonRefs.Clear();
         _rows.Clear();
         _detail = null;
         _detailMetadata = null;
@@ -1670,6 +1767,41 @@
         _ => value,
     };
 
+    private async Task DisposeInteropAsync()
+    {
+        IJSObjectReference? module = Interlocked.Exchange(ref _interopModule, null);
+        if (module is not null)
+        {
+            try
+            {
+                await module.InvokeVoidAsync("disposePortalInterop", _instanceId).ConfigureAwait(false);
+            }
+            catch (JSException)
+            {
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
+            try
+            {
+                await module.DisposeAsync().ConfigureAwait(false);
+            }
+            catch (JSException)
+            {
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+    }
+
     public void Dispose()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
@@ -1678,6 +1810,7 @@
         }
 
         AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+        NavigationManager.LocationChanged -= OnLocationChanged;
         CancelInFlight();
         try
         {
@@ -1688,6 +1821,8 @@
         }
 
         _lifetimeCts.Dispose();
+        _rowButtonRefs.Clear();
+        _ = DisposeInteropAsync();
     }
 
     private enum StatusKind

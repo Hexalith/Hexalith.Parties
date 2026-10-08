@@ -1,0 +1,92 @@
+{
+  "observations": [
+    {
+      "root": "/home/administrator/projects/hexalith/platform",
+      "head": "f043a2f242762233091abdaa5bbe1ab777bd0f12",
+      "command": [
+        "rg",
+        "-n",
+        "IIdentityHistoryCustody|RetainedIdentityHistory|EXT_PARTIES_|party-actor-retention-v1|AddPlatformCustody",
+        "src",
+        "eng",
+        "docs",
+        "tests",
+        "-g",
+        "*.cs",
+        "-g",
+        "*.ps1",
+        "-g",
+        "*.json",
+        "-g",
+        "*.md",
+        "-g",
+        "!**/bin/**",
+        "-g",
+        "!**/obj/**"
+      ],
+      "exitCode": 0,
+      "output": "platform-current-search-0.txt",
+      "inspectedFileSha256": {
+        "src/Hexalith.Platform.EventStoreHost/Program.cs": "fd60679a622660955669bfba29ee55e98e8a8a57ef6d60f30015dc40cfa42764",
+        "src/Hexalith.Platform.Identity/PlatformIdentityServiceCollectionExtensions.cs": "0a2414ee733a0727bbc5122714354e0676f057520640d39beff7c2fa355d7d0d",
+        "src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8",
+        "src/Hexalith.Platform.Custody/IdentityHistoryCleanup.cs": "459bf37506ff2c5a3de43ced6e93b93f64abc14e2736e3f462044a7f6ff3c79a",
+        "src/Hexalith.Platform.Custody/UnavailablePlatformHmacKeyProvider.cs": "cf1d4a65e130eb63f18cd8a635892055dd52ce6c7c5b5d72dd3cf3f5d9f362b6",
+        "src/Hexalith.Platform.Custody/UnavailablePlatformSigningProfileProvider.cs": "c1fd8b528ecc563a35e470a55e693824c385466854dd9ae35004e3ddbcf2a75e",
+        "tests/Hexalith.Platform.Custody.Tests/IdentityHistoryCleanupFixture.cs": "10cd40f6c28ae5a6e317928cd1f17248dbbc3e86f5a5ce2ec67f2e15ddf62acc",
+        "tests/Hexalith.Platform.Custody.Tests/IdentityHistoryCleanupTests.cs": "ae75d89cdde766da37820586233f24ec76a492a394e4e0e83f474f211372e36e",
+        "docs/implementation/actor-history-lifecycle-2026-10-07.md": "78cf9ffe55eeea1eef02d861af2f6cac282f3c513207aa9064fe8dd4ad6bdd74",
+        "docs/implementation/ext-secrets-1-local-prerequisites-2026-10-06.md": "a10acdf86d84f714edc54bd9f93c56a5331345c403fbf57764aa7550146defe4",
+        "_bmad-output/implementation-artifacts/4-0-prove-off-node-backups-and-isolated-restores.md": "d7f34027e8b0fd8a7450f395185d9690782b1c770b24aa8e01dcdbc67bf334b2",
+        "_bmad-output/planning-artifacts/architecture/architecture-platform-2026-09-27/ARCHITECTURE-SPINE.md": "de4a2566048ac5ef59e474d5508b5836a2869cd995a577bf9afda637f8706ca5"
+      }
+    },
+    {
+      "root": "/home/administrator/projects/hexalith/parties/references/Hexalith.Platform",
+      "head": "332a7d8104e3f6c9aaa57cbc7f07afb5fa0859de",
+      "command": [
+        "rg",
+        "-n",
+        "IIdentityHistoryCustody|RetainedIdentityHistory|EXT_PARTIES_|party-actor-retention-v1|AddPlatformCustody",
+        "src",
+        "eng",
+        "docs",
+        "tests",
+        "-g",
+        "*.cs",
+        "-g",
+        "*.ps1",
+        "-g",
+        "*.json",
+        "-g",
+        "*.md",
+        "-g",
+        "!**/bin/**",
+        "-g",
+        "!**/obj/**"
+      ],
+      "exitCode": 0,
+      "output": "platform-current-search-1.txt",
+      "inspectedFileSha256": {
+        "src/Hexalith.Platform.EventStoreHost/Program.cs": "fd60679a622660955669bfba29ee55e98e8a8a57ef6d60f30015dc40cfa42764",
+        "src/Hexalith.Platform.Identity/PlatformIdentityServiceCollectionExtensions.cs": "0a2414ee733a0727bbc5122714354e0676f057520640d39beff7c2fa355d7d0d",
+        "src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8",
+        "src/Hexalith.Platform.Custody/IdentityHistoryCleanup.cs": "459bf37506ff2c5a3de43ced6e93b93f64abc14e2736e3f462044a7f6ff3c79a",
+        "src/Hexalith.Platform.Custody/UnavailablePlatformHmacKeyProvider.cs": "cf1d4a65e130eb63f18cd8a635892055dd52ce6c7c5b5d72dd3cf3f5d9f362b6",
+        "src/Hexalith.Platform.Custody/UnavailablePlatformSigningProfileProvider.cs": "c1fd8b528ecc563a35e470a55e693824c385466854dd9ae35004e3ddbcf2a75e",
+        "tests/Hexalith.Platform.Custody.Tests/IdentityHistoryCleanupFixture.cs": "10cd40f6c28ae5a6e317928cd1f17248dbbc3e86f5a5ce2ec67f2e15ddf62acc",
+        "tests/Hexalith.Platform.Custody.Tests/IdentityHistoryCleanupTests.cs": "ae75d89cdde766da37820586233f24ec76a492a394e4e0e83f474f211372e36e",
+        "docs/implementation/actor-history-lifecycle-2026-10-07.md": "78cf9ffe55eeea1eef02d861af2f6cac282f3c513207aa9064fe8dd4ad6bdd74",
+        "docs/implementation/ext-secrets-1-local-prerequisites-2026-10-06.md": "a10acdf86d84f714edc54bd9f93c56a5331345c403fbf57764aa7550146defe4",
+        "_bmad-output/implementation-artifacts/4-0-prove-off-node-backups-and-isolated-restores.md": "d7f34027e8b0fd8a7450f395185d9690782b1c770b24aa8e01dcdbc67bf334b2",
+        "_bmad-output/planning-artifacts/architecture/architecture-platform-2026-09-27/ARCHITECTURE-SPINE.md": "de4a2566048ac5ef59e474d5508b5836a2869cd995a577bf9afda637f8706ca5"
+      }
+    }
+  ],
+  "findings": {
+    "secretInfrastructure": "OpenBao and completed generic isolated-backup restoration are documented; historical backup gate expired on 2026-10-02",
+    "productionActorHistoryProvider": "No production IIdentityHistoryCustody implementation or registration found in either current checkout; only synthetic test fixture",
+    "purposeLifecycle": "No actor-history purpose inventory, irreversible all-copy receipts, nonrollback restore or successor continuation qualification found",
+    "installedTargets": "No complete installed P-01-P-10 target/probe configuration found; Live inputs absent"
+  }
+}

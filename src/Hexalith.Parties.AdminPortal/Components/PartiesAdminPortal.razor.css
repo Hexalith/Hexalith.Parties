@@ -115,11 +115,11 @@
 }
 
 @media (max-width: 1023.98px) {
-    .hx-parties-admin__layout[data-detail-open="True"] .hx-parties-admin__list {
+    .hx-parties-admin__layout[data-detail-open="true"] .hx-parties-admin__list {
         display: none;
     }
 
-    .hx-parties-admin__detail[data-sheet-open="True"] {
+    .hx-parties-admin__detail[data-sheet-open="true"] {
         min-block-size: 100dvh;
         background: var(--neutral-layer-1, Canvas);
     }

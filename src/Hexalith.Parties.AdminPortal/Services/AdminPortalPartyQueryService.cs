@@ -10,6 +10,7 @@ public sealed class AdminPortalPartyQueryService(IPartiesAdminPortalApiClient ap
 {
     private CancellationTokenSource _scopeCts = new();
     private bool _disposed;
+    private (string PartyId, string ContextSignature)? _acceptedCommand;
 
     public IPartiesAdminPortalApiClient ApiClient { get; } = apiClient;
 
@@ -29,6 +30,18 @@ public sealed class AdminPortalPartyQueryService(IPartiesAdminPortalApiClient ap
         }
     }
 
+    internal void StageAcceptedCommand(string partyId, string contextSignature)
+        => _acceptedCommand = (partyId, contextSignature);
+
+    internal bool ConsumeAcceptedCommand(string? partyId, string contextSignature)
+    {
+        (string PartyId, string ContextSignature)? accepted = _acceptedCommand;
+        _acceptedCommand = null;
+        return accepted is { } command
+            && string.Equals(command.PartyId, partyId, StringComparison.Ordinal)
+            && string.Equals(command.ContextSignature, contextSignature, StringComparison.Ordinal);
+    }
+
     public void ResetForTenantSwitch()
     {
         if (_disposed)
@@ -36,6 +49,7 @@ public sealed class AdminPortalPartyQueryService(IPartiesAdminPortalApiClient ap
             return;
         }
 
+        _acceptedCommand = null;
         CancellationTokenSource old = Interlocked.Exchange(ref _scopeCts, new CancellationTokenSource());
         try
         {
@@ -56,6 +70,7 @@ public sealed class AdminPortalPartyQueryService(IPartiesAdminPortalApiClient ap
         }
 
         _disposed = true;
+        _acceptedCommand = null;
         try
         {
             _scopeCts.Cancel();

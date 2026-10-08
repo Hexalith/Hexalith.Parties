@@ -1,0 +1,401 @@
+{
+  "executionDirectory": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz",
+  "files": [
+    {
+      "retainedPath": "final-verification-manifest.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/final-verification-manifest.json",
+      "sha256": "8ebd3ed19eedae79034da7ea8b0150240d855490182d14edd49cfcb4b58cfd9e",
+      "bytes": 24358
+    },
+    {
+      "retainedPath": "source-final-observation.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/source-final-observation.json",
+      "sha256": "c6b55afc0e40fb3b2ffe954e1c2dc5021f6c9fb710a2cf4519a7d6cf0af170f1",
+      "bytes": 1421
+    },
+    {
+      "retainedPath": "external-drift-compiled-current-audit.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/external-drift-compiled-current-audit.json",
+      "sha256": "87ca0f8fdf92a7eef429b411b00b1109de08f5c7cff9a543532a26e3bdb0237c",
+      "bytes": 3519
+    },
+    {
+      "retainedPath": "current-compiled-source-audit.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/current-compiled-source-audit.json",
+      "sha256": "d892116ba3134d17b0a931946584ef62d9d03f1d225eb13d9428d01c1ed5f996",
+      "bytes": 24039
+    },
+    {
+      "retainedPath": "root-local-audit.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/root-local-audit.json",
+      "sha256": "e86529025de86cc4b0bfbf14dec1eed8c4eff7ca32c91c35346f08faeaaa8b9d",
+      "bytes": 8248
+    },
+    {
+      "retainedPath": "external-drift-compiled-audit.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/external-drift-compiled-audit.json",
+      "sha256": "a3eb26a59c5aa4249bba3c29d5afae91888d4dc4d80b2ba818ac4dd81a245c34",
+      "bytes": 3703
+    },
+    {
+      "retainedPath": "verification-audit.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/verification-audit.json",
+      "sha256": "5846c456082d62f100ce4c83220aae06c07c2fd89aaaf94d764dcd4fa3372951",
+      "bytes": 6908
+    },
+    {
+      "retainedPath": "source-after.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/source-after.json",
+      "sha256": "8afdacd7855b91814fca8f4666a6da25e2e863f8c20e5a5b37168c760cc15e8b",
+      "bytes": 541610
+    },
+    {
+      "retainedPath": "platform-owner-discovery.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/platform-owner-discovery.json",
+      "sha256": "67615ff8acf134c92ea8becbc09d130947ad94903967affe9e3b6771d5499183",
+      "bytes": 5624
+    },
+    {
+      "retainedPath": "platform-current-search-1.txt",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/platform-current-search-1.txt",
+      "sha256": "074513d494a7cd15348cd7951f80e374a793fc54163b44498e33e487af6b8818",
+      "bytes": 2431
+    },
+    {
+      "retainedPath": "platform-current-search-0.txt",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/platform-current-search-0.txt",
+      "sha256": "6f67c3b0a14c02adb352490a4664e64f729f7b306d62c59ace3d82dc5950212e",
+      "bytes": 2431
+    },
+    {
+      "retainedPath": "live-gates.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/live-gates.json",
+      "sha256": "2e9e121af1647d25c0f71e32d811d64d51d33d59c758ac303777c2c02bdef964",
+      "bytes": 1244
+    },
+    {
+      "retainedPath": "missing-readiness-inputs.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/missing-readiness-inputs.log",
+      "sha256": "299d899bf5bce585d1a27fe51bf9dda5113ade24fff714fe15fb66b0aaf0fa29",
+      "bytes": 743
+    },
+    {
+      "retainedPath": "sentinel-capability-gate.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/sentinel-capability-gate.log",
+      "sha256": "e18e0c34120a1ada20ee7dd5c67e43b910fb8317c4043a6d4ceaea35325ed104",
+      "bytes": 294
+    },
+    {
+      "retainedPath": "missing-inputs.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/missing-inputs.log",
+      "sha256": "494a7f949c8dadf3383453f1a00e4a0de3f31274188ca5bf97fab7eb4391dafc",
+      "bytes": 377
+    },
+    {
+      "retainedPath": "local-command.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local-command.log",
+      "sha256": "28214642132e9977b402ac4c190f616ec96210da99e9337afbad35b746ea99b0",
+      "bytes": 1840
+    },
+    {
+      "retainedPath": "baseline-resources.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/baseline-resources.json",
+      "sha256": "a7a1972458620f2c1298f1933889fb34259371125db82ec1c09fbd5e9cf07847",
+      "bytes": 2501
+    },
+    {
+      "retainedPath": "source-before.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/source-before.json",
+      "sha256": "7da36d1db4ccf1c7403e363266625326192843420c19a2a933fbe8ceee371184",
+      "bytes": 541781
+    },
+    {
+      "retainedPath": "current-source-refresh/Hexalith.EventStore.Server.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/current-source-refresh/Hexalith.EventStore.Server.Tests-tests.xml",
+      "sha256": "cae5a36b6caa3f42b4f401121386fad449ab8c3d8385592e1216006b20756216",
+      "bytes": 114912
+    },
+    {
+      "retainedPath": "current-source-refresh/Hexalith.EventStore.Server.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/current-source-refresh/Hexalith.EventStore.Server.Tests-tests.log",
+      "sha256": "63a0ff11036e9bff2a64bc0e99c82492869e8ed8740632675cd018f7d58c1fa1",
+      "bytes": 476
+    },
+    {
+      "retainedPath": "current-source-refresh/Hexalith.EventStore.Server.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/current-source-refresh/Hexalith.EventStore.Server.Tests-build.log",
+      "sha256": "4fe71a9f72be95ea25f27f6aaa1e3b351ede38bf69a6bf5930fa2c3ee45d211d",
+      "bytes": 3357
+    },
+    {
+      "retainedPath": "current-source-refresh/Hexalith.EventStore.Client.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/current-source-refresh/Hexalith.EventStore.Client.Tests-tests.xml",
+      "sha256": "2e0787956d439d8d394026253fc47f783bc11eded188e6f2847e8f7f5407ea73",
+      "bytes": 74440
+    },
+    {
+      "retainedPath": "current-source-refresh/Hexalith.EventStore.Client.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/current-source-refresh/Hexalith.EventStore.Client.Tests-tests.log",
+      "sha256": "fa495e559a8f10d8427d4477e23c1b33bf075602e680dbeb34c3434b270a0cc7",
+      "bytes": 476
+    },
+    {
+      "retainedPath": "current-source-refresh/Hexalith.EventStore.Client.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/current-source-refresh/Hexalith.EventStore.Client.Tests-build.log",
+      "sha256": "9b5b7fb7c76c6c7f7c223995773d69462473673d2cd36258470a5fcfd555fa49",
+      "bytes": 2034
+    },
+    {
+      "retainedPath": "current-source-refresh/refresh-evidence.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/current-source-refresh/refresh-evidence.json",
+      "sha256": "5931d5577758ffc39d35201240c564a4c70cadc75657acee0dcf013f156e0fd2",
+      "bytes": 7018
+    },
+    {
+      "retainedPath": "current-source-refresh/Hexalith.EventStore.Contracts.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/current-source-refresh/Hexalith.EventStore.Contracts.Tests-tests.xml",
+      "sha256": "e2fbc202908403ca7725d039b11ef9cb55ea50b4dce4d47f3e1059bbe45c2e6e",
+      "bytes": 16021
+    },
+    {
+      "retainedPath": "current-source-refresh/Hexalith.EventStore.Contracts.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/current-source-refresh/Hexalith.EventStore.Contracts.Tests-tests.log",
+      "sha256": "e60fd6cc0c7434fa9e3bbd6642c8ae54343862bc71c87ac0ed223233adb350ba",
+      "bytes": 490
+    },
+    {
+      "retainedPath": "current-source-refresh/Hexalith.EventStore.Contracts.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/current-source-refresh/Hexalith.EventStore.Contracts.Tests-build.log",
+      "sha256": "e4ef3d8a45e17ef55fe73e73125c9cebbba75b36eadcd33021279beb99be9958",
+      "bytes": 1838
+    },
+    {
+      "retainedPath": "sentinel-capability-gate/live-gate.txt",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/sentinel-capability-gate/live-gate.txt",
+      "sha256": "98954a20c6675bf848cb35e575a5db2cc536e55c7c72d6b85cd39f6aecbaea33",
+      "bytes": 281
+    },
+    {
+      "retainedPath": "missing-inputs/live-gate.txt",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/missing-inputs/live-gate.txt",
+      "sha256": "b60753bd1e52b607eb2f91bdc4cb3bbd67b760c8a87814215fb91ceb2cd9bdfd",
+      "bytes": 364
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.UI.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.UI.Tests-tests.xml",
+      "sha256": "05af60c88ac01d73aa10e846e5468256727a5a99c6bfcc38262c6f1cd3d41af3",
+      "bytes": 47319
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.UI.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.UI.Tests-tests.log",
+      "sha256": "ba2c42148aa67367e13df925a94e1cf7dfa6c67a9944b604caa35ce76f9927da",
+      "bytes": 440
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.UI.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.UI.Tests-build.log",
+      "sha256": "07259f735348f269673a12e355dad242dcbe1d21049be00ce0a6d2bf1424f481",
+      "bytes": 6316
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Client.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Client.Tests-tests.xml",
+      "sha256": "26b0fa5c4d913ca4473ca4a0be2ebc6a7b8f2c0b64fffac53f8a9f1c87b6b4e3",
+      "bytes": 64762
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Client.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Client.Tests-tests.log",
+      "sha256": "b79c519ac39d3bf00e94f82244660b3d9d68a9b9e30329ea93227729c753d3d1",
+      "bytes": 460
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Client.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Client.Tests-build.log",
+      "sha256": "34ae6ec2c8e60acbdab93044ac04b83b6e4d65793d21ee2f82015540c9c20cd0",
+      "bytes": 3414
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Security.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Security.Tests-tests.xml",
+      "sha256": "f799370ddaa228d30958b9907679092420ea3f6b067530fd7e7651c4c94afcab",
+      "bytes": 20649
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Security.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Security.Tests-tests.log",
+      "sha256": "b714635029ca716301c6f1345c83f60836e60c6847e3c425a9b284a68f91f5ee",
+      "bytes": 470
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Security.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Security.Tests-build.log",
+      "sha256": "c607f399e2949e2993ef0d8a0d4fdfeb009408df8a8d58312b681183045311ef",
+      "bytes": 1739
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Tests-tests.xml",
+      "sha256": "0200437c1d15538e5fe20a1af4fe6c60aecb5374d07628a383db2bdfb7344cd2",
+      "bytes": 236162
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Tests-tests.log",
+      "sha256": "7b2df29298e3b1fe41077c8853148b80fa7f4d9fec4ecc594bd64d216730e60a",
+      "bytes": 352242
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Tests-build.log",
+      "sha256": "7ccff4aecbc0dfdc28216043c9f93f90bb9ccc36990c144249f10bb4f58f2b17",
+      "bytes": 7063
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Server.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Server.Tests-tests.xml",
+      "sha256": "1db63f04f88ffc303607eac65234e5e9ee6ad14d1960224bcc43e17b36f9ddfb",
+      "bytes": 63320
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Server.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Server.Tests-tests.log",
+      "sha256": "198a2ed7206bad2e48453580e1370266396aa6391b5da1a39050a25ae24fc9c6",
+      "bytes": 460
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Server.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Server.Tests-build.log",
+      "sha256": "0e4b60fc6699fff34d6c4556395fcb0be1cf3dc595b2bddd5fb349da7d8371a1",
+      "bytes": 4672
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Contracts.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Contracts.Tests-tests.xml",
+      "sha256": "b6eb57380f1930a8c21bc3b2b756f3b2583216f16844895d644c0fc60ea08012",
+      "bytes": 18705
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Contracts.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Contracts.Tests-tests.log",
+      "sha256": "7b4e8e90917aba207c15c2087385726fd101bad3f85b35cd2fb486b3ca981aa6",
+      "bytes": 475
+    },
+    {
+      "retainedPath": "local/Hexalith.Parties.Contracts.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Contracts.Tests-build.log",
+      "sha256": "93d1d89ff87c002aec5c27e6f4e9eb4659873cf50a9d7c394b77ceee6eb53b82",
+      "bytes": 5274
+    },
+    {
+      "retainedPath": "local/Hexalith.Platform.Custody.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Platform.Custody.Tests-tests.xml",
+      "sha256": "6c2b9ded758aece3af02669235909b2e6fc936337a1cc1629104bab75ce83a3c",
+      "bytes": 69800
+    },
+    {
+      "retainedPath": "local/Hexalith.Platform.Custody.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Platform.Custody.Tests-tests.log",
+      "sha256": "e7a3c25cf3838a7c7fce0b9e72d11d4e5c570bc3d30f1d09927d2c6d602c21e6",
+      "bytes": 472
+    },
+    {
+      "retainedPath": "local/Hexalith.Platform.Custody.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Platform.Custody.Tests-build.log",
+      "sha256": "34b37f1334666482012cd551f13b8d865b1e5a5610b7415a391b7dd9ef68b5cf",
+      "bytes": 1110
+    },
+    {
+      "retainedPath": "local/Hexalith.Platform.Identity.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Platform.Identity.Tests-tests.xml",
+      "sha256": "c7fd537edace6d49dc2537685247afc847329cb3b4dc058db2f782713e9a0c7b",
+      "bytes": 2529
+    },
+    {
+      "retainedPath": "local/Hexalith.Platform.Identity.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Platform.Identity.Tests-tests.log",
+      "sha256": "8532984ef845246b2bf8c3a4ce169d417d3333d0925635697aa4f2c2ddd15f17",
+      "bytes": 474
+    },
+    {
+      "retainedPath": "local/Hexalith.Platform.Identity.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Platform.Identity.Tests-build.log",
+      "sha256": "e3d0ee43e1fc7839c0a04c2dce9b67cca90324a32008464468229a61b1f0a085",
+      "bytes": 2479
+    },
+    {
+      "retainedPath": "local/Hexalith.EventStore.Server.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Server.Tests-tests.xml",
+      "sha256": "20f00414c639ac03f9f10c10e0038f5fa47414214c219474554fc0a12761607c",
+      "bytes": 114786
+    },
+    {
+      "retainedPath": "local/Hexalith.EventStore.Server.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Server.Tests-tests.log",
+      "sha256": "57fbad6d59b4c07d375720009ba4debe8b6c1e6d0dd320c211b9d5066d1cd43e",
+      "bytes": 476
+    },
+    {
+      "retainedPath": "local/Hexalith.EventStore.Server.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Server.Tests-build.log",
+      "sha256": "4720bbd66e57b2438f38286cef3cff3a6c8e5a52b1ec25dadbf58bba837246d0",
+      "bytes": 3813
+    },
+    {
+      "retainedPath": "local/Hexalith.EventStore.Client.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Client.Tests-tests.xml",
+      "sha256": "d39027b0043cc2d3bce190f3f5bb2a14d9b6da92f1d3f03e1e636284bd0058db",
+      "bytes": 74438
+    },
+    {
+      "retainedPath": "local/Hexalith.EventStore.Client.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Client.Tests-tests.log",
+      "sha256": "10e81479b32496e349c7f304a744eaabd1b4abfd2d5bb7cd1c6837897b44a792",
+      "bytes": 476
+    },
+    {
+      "retainedPath": "local/Hexalith.EventStore.Client.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Client.Tests-build.log",
+      "sha256": "b07b3eeb31a0d7612fdfbae0d8e452a3fd8032e0d5e53bdf785d91caaf884ea7",
+      "bytes": 2616
+    },
+    {
+      "retainedPath": "local/local-evidence.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/local-evidence.json",
+      "sha256": "778b422ccae929f69ca22dbcb631dcf8e6af9d38f815a70bdcad89405df256bf",
+      "bytes": 8173
+    },
+    {
+      "retainedPath": "local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+      "sha256": "d990b4e4f5110f7a65770873fce0620ea20fb753e052caeb900612f83a90291d",
+      "bytes": 16029
+    },
+    {
+      "retainedPath": "local/Hexalith.EventStore.Contracts.Tests-tests.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Contracts.Tests-tests.log",
+      "sha256": "3fddd8cfa3f2b4e19d74487b3aea4084501599baee464b155a5a5f88a758d2b5",
+      "bytes": 490
+    },
+    {
+      "retainedPath": "local/Hexalith.EventStore.Contracts.Tests-build.log",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Contracts.Tests-build.log",
+      "sha256": "f77341cd9a101255c1e760f331442c9de03ba1c262caae9f20719dacb4e4ce4c",
+      "bytes": 2994
+    },
+    {
+      "retainedPath": "compiled-source-audit.cs.txt",
+      "originalPath": "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/Program.cs",
+      "sha256": "bafcd49d2d1a3609ac7731e3323e77a125c94af9c4f46fbb84c99060863803cd",
+      "bytes": 1270
+    },
+    {
+      "retainedPath": "root-final-audit.json",
+      "originalPath": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/root-final-audit.json",
+      "sha256": "d2d13ed787eaca3ef46bc3e7a8313d8a05ad932c0ac0ff266051eb98c94628e5",
+      "bytes": 4472
+    }
+  ]
+}

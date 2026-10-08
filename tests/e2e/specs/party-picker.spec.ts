@@ -89,16 +89,14 @@ test.describe('Party picker combobox', () => {
 
     const picker = page.locator('hexalith-party-picker');
     await expect(picker).toBeVisible();
-    await picker.dispatchEvent('party-selected', {
-      detail: {
-        partyId: 'ada-lovelace',
-        partyType: 'Person',
-        status: 'active',
-        displayName: 'Ada Lovelace',
-        tenantId: 'tenant-a',
-      },
-      bubbles: true,
-      composed: true,
+    await picker.evaluate((element, detail) => {
+      element.dispatchEvent(new CustomEvent('party-selected', { detail, bubbles: true, composed: true }));
+    }, {
+      partyId: 'ada-lovelace',
+      partyType: 'Person',
+      status: 'active',
+      displayName: 'Ada Lovelace',
+      tenantId: 'tenant-a',
     });
 
     await expect(page.getByRole('status').filter({ hasText: 'Person active' })).toBeVisible();
@@ -128,6 +126,7 @@ const expectPopupRelationship = async (
 };
 
 const activeDescendantId = async (input: Locator): Promise<string> => {
+  await expect(input).toHaveAttribute('aria-activedescendant', /.+/);
   const activeId = await input.getAttribute('aria-activedescendant');
   if (!activeId) {
     throw new Error('Expected picker input to expose aria-activedescendant.');

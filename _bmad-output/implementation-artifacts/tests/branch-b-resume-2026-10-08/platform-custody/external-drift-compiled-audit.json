@@ -1,0 +1,54 @@
+[
+  {
+    "source": "tests/Hexalith.EventStore.ProviderVerification/ProviderVerificationHost.cs",
+    "scope": "not compiled by this verifier"
+  },
+  {
+    "source": "tests/Hexalith.EventStore.Contracts.Tests/Packaging/ContractsPackageDependencyTests.cs",
+    "command": [
+      "dotnet",
+      "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+      "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Contracts.Tests.pdb",
+      "tests/Hexalith.EventStore.Contracts.Tests/Packaging/ContractsPackageDependencyTests.cs"
+    ],
+    "exitCode": -6,
+    "output": "Unhandled exception. System.InvalidOperationException: Compiled source mismatch: /home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Contracts.Tests/Packaging/ContractsPackageDependencyTests.cs\n   at Program.<Main>$(String[] args) in /tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/Program.cs:line 20"
+  },
+  {
+    "source": "tests/Hexalith.EventStore.Server.Tests/Actors/EventPublicationIntegrationTests.cs",
+    "command": [
+      "dotnet",
+      "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+      "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Server.Tests.pdb",
+      "tests/Hexalith.EventStore.Server.Tests/Actors/EventPublicationIntegrationTests.cs"
+    ],
+    "exitCode": -6,
+    "output": "Unhandled exception. System.InvalidOperationException: Compiled source mismatch: /home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Actors/EventPublicationIntegrationTests.cs\n   at Program.<Main>$(String[] args) in /tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/Program.cs:line 20"
+  },
+  {
+    "source": "tests/Hexalith.EventStore.ProviderVerification.Tests/RealKestrelPactTests.cs",
+    "scope": "not compiled by this verifier"
+  },
+  {
+    "source": "tests/Hexalith.EventStore.Server.Tests/Security/SecretsProtectionTests.cs",
+    "command": [
+      "dotnet",
+      "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+      "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Server.Tests.pdb",
+      "tests/Hexalith.EventStore.Server.Tests/Security/SecretsProtectionTests.cs"
+    ],
+    "exitCode": -6,
+    "output": "Unhandled exception. System.InvalidOperationException: Compiled source mismatch: /home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Security/SecretsProtectionTests.cs\n   at Program.<Main>$(String[] args) in /tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/Program.cs:line 20"
+  },
+  {
+    "source": "tests/Hexalith.EventStore.Client.Tests/Events/EventEvolutionProofFramingTests.cs",
+    "command": [
+      "dotnet",
+      "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+      "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.Tests.pdb",
+      "tests/Hexalith.EventStore.Client.Tests/Events/EventEvolutionProofFramingTests.cs"
+    ],
+    "exitCode": -6,
+    "output": "Unhandled exception. System.InvalidOperationException: Compiled source mismatch: /home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Client.Tests/Events/EventEvolutionProofFramingTests.cs\n   at Program.<Main>$(String[] args) in /tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/Program.cs:line 20"
+  }
+]

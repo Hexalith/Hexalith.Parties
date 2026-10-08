@@ -1,0 +1,24 @@
+using System.Reflection.Metadata;
+using System.Security.Cryptography;
+using System.Text.Json;
+
+using var stream = File.OpenRead(args[0]);
+using var provider = MetadataReaderProvider.FromPortablePdbStream(stream);
+var reader = provider.GetMetadataReader();
+var results = new List<object>();
+int matched = 0;
+foreach (var handle in reader.Documents)
+{
+    var document = reader.GetDocument(handle);
+    string name = reader.GetString(document.Name);
+    if (!args.Skip(1).Any(path => name.EndsWith(path, StringComparison.Ordinal))) continue;
+    matched++;
+    byte[] expected = reader.GetBlobBytes(document.Hash);
+    var algorithm = reader.GetGuid(document.HashAlgorithm);
+    if (algorithm != new Guid("8829d00f-11b8-4213-878b-770e8597ac16")) throw new InvalidOperationException("Expected SHA-256 PDB document hash.");
+    byte[] actual = SHA256.HashData(File.ReadAllBytes(name));
+    if (!expected.SequenceEqual(actual)) throw new InvalidOperationException("Compiled source mismatch: " + name);
+    results.Add(new { source = name, sha256 = Convert.ToHexString(actual).ToLowerInvariant(), match = true });
+}
+if (matched != args.Length - 1) throw new InvalidOperationException("Missing compiled source document.");
+Console.WriteLine(JsonSerializer.Serialize(results));

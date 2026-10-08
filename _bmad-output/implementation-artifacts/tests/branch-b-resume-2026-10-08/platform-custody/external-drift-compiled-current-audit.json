@@ -1,0 +1,78 @@
+[
+  {
+    "source": "tests/Hexalith.EventStore.ProviderVerification/ProviderVerificationHost.cs",
+    "scope": "not compiled by this verifier"
+  },
+  {
+    "source": "tests/Hexalith.EventStore.Contracts.Tests/Packaging/ContractsPackageDependencyTests.cs",
+    "command": [
+      "dotnet",
+      "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+      "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Contracts.Tests.pdb",
+      "tests/Hexalith.EventStore.Contracts.Tests/Packaging/ContractsPackageDependencyTests.cs"
+    ],
+    "exitCode": 0,
+    "documents": [
+      {
+        "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Contracts.Tests/Packaging/ContractsPackageDependencyTests.cs",
+        "sha256": "afbef85dbe2c47fbf0b8a50d498c750169ef4b68b8c4008be0afa3ed4b121ea5",
+        "match": true
+      }
+    ]
+  },
+  {
+    "source": "tests/Hexalith.EventStore.Server.Tests/Actors/EventPublicationIntegrationTests.cs",
+    "command": [
+      "dotnet",
+      "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+      "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Server.Tests.pdb",
+      "tests/Hexalith.EventStore.Server.Tests/Actors/EventPublicationIntegrationTests.cs"
+    ],
+    "exitCode": 0,
+    "documents": [
+      {
+        "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Actors/EventPublicationIntegrationTests.cs",
+        "sha256": "c0341a792db1126c91683b76ec98b2896649929c1d77bc416c5ddd9b257ade72",
+        "match": true
+      }
+    ]
+  },
+  {
+    "source": "tests/Hexalith.EventStore.ProviderVerification.Tests/RealKestrelPactTests.cs",
+    "scope": "not compiled by this verifier"
+  },
+  {
+    "source": "tests/Hexalith.EventStore.Server.Tests/Security/SecretsProtectionTests.cs",
+    "command": [
+      "dotnet",
+      "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+      "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Server.Tests.pdb",
+      "tests/Hexalith.EventStore.Server.Tests/Security/SecretsProtectionTests.cs"
+    ],
+    "exitCode": 0,
+    "documents": [
+      {
+        "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Server.Tests/Security/SecretsProtectionTests.cs",
+        "sha256": "5b6e8666355b800515c286c04839cb244babdb351111b61992b04f2040428c65",
+        "match": true
+      }
+    ]
+  },
+  {
+    "source": "tests/Hexalith.EventStore.Client.Tests/Events/EventEvolutionProofFramingTests.cs",
+    "command": [
+      "dotnet",
+      "/tmp/ext-parties-1-root-audit-20261008-vy4werre/pdb-audit/bin/Debug/net10.0/PdbAudit.dll",
+      "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.Tests.pdb",
+      "tests/Hexalith.EventStore.Client.Tests/Events/EventEvolutionProofFramingTests.cs"
+    ],
+    "exitCode": 0,
+    "documents": [
+      {
+        "source": "/home/administrator/projects/hexalith/eventstore/tests/Hexalith.EventStore.Client.Tests/Events/EventEvolutionProofFramingTests.cs",
+        "sha256": "47b27e89a5ec72be03732f52f8afdf84824c4f5c83be11b06474c17d63302036",
+        "match": true
+      }
+    ]
+  }
+]

@@ -1,0 +1,98 @@
+{
+  "qualification": "Local health observation only",
+  "startExitCode": 0,
+  "partiesHealthyWaitExitCode": 0,
+  "stopExitCode": 0,
+  "resources": [
+    {
+      "name": "eventstore-admin-dapr-cli-fvhnffvy",
+      "displayName": "eventstore-admin-dapr-cli",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "eventstore-admin-knpqcgfn",
+      "displayName": "eventstore-admin",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "eventstore-admin-ui-dapr-cli-tdmttdsz",
+      "displayName": "eventstore-admin-ui-dapr-cli",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "eventstore-admin-ui-rpccqrsp",
+      "displayName": "eventstore-admin-ui",
+      "state": "NotStarted",
+      "healthStatus": null
+    },
+    {
+      "name": "eventstore-dapr-cli-wzzfdjce",
+      "displayName": "eventstore-dapr-cli",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "eventstore-fhburdgw",
+      "displayName": "eventstore",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "parties-dapr-cli-jftfcmhd",
+      "displayName": "parties-dapr-cli",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "parties-fpextzjn",
+      "displayName": "parties",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "parties-mcp-nnmejhfz",
+      "displayName": "parties-mcp",
+      "state": "NotStarted",
+      "healthStatus": null
+    },
+    {
+      "name": "parties-ui-khnavaud",
+      "displayName": "parties-ui",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "security-eventstore-client-password",
+      "displayName": "security-eventstore-client-password",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "security-eventstore-client-username",
+      "displayName": "security-eventstore-client-username",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "security-xuwrfhwy",
+      "displayName": "security",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "tenants-dapr-cli-zwgutaky",
+      "displayName": "tenants-dapr-cli",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "tenants-jeuxrtmf",
+      "displayName": "tenants",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+[
+  {
+    "XmlLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "BuildLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Contracts.Tests-build.log",
+    "TestLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "Matrix": "Shared source contract validation",
+    "Summary": "   Hexalith.EventStore.Contracts.Tests  Total: 23, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.185s",
+    "Classes": [
+      "*StreamReadPageValidatorTests",
+      "*RetainedIdentityHistoryValidatorTests"
+    ],
+    "Project": "Hexalith.EventStore.Contracts.Tests"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Client.Tests-tests.xml",
+    "BuildLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Client.Tests-build.log",
+    "TestLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Client.Tests-tests.log",
+    "Matrix": "Shared source/isolation",
+    "Summary": "   Hexalith.EventStore.Client.Tests  Total: 107, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.400s",
+    "Classes": [
+      "*AuthoritativeEventStreamReaderTests",
+      "*EventStoreGatewayClientTests",
+      "*EventStoreGatewayClientStreamTests",
+      "*RetainedIdentityHistoryReaderTests"
+    ],
+    "Project": "Hexalith.EventStore.Client.Tests"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Server.Tests-tests.xml",
+    "BuildLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Server.Tests-build.log",
+    "TestLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.EventStore.Server.Tests-tests.log",
+    "Matrix": "Isolation/actor authority",
+    "Summary": "   Hexalith.EventStore.Server.Tests  Total: 168, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.693s",
+    "Classes": [
+      "*IdentityAdmissionTests",
+      "*ActorRegistryTests",
+      "*IdentityGatewayDenialTests",
+      "*CommandsControllerTrustedExtensionTests",
+      "*QueriesControllerTests",
+      "*StreamsControllerTests",
+      "*RetainedIdentityHistorySourceReaderTests"
+    ],
+    "Project": "Hexalith.EventStore.Server.Tests"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Platform.Identity.Tests-tests.xml",
+    "BuildLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Platform.Identity.Tests-build.log",
+    "TestLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Platform.Identity.Tests-tests.log",
+    "Matrix": "Global registry/bootstrap",
+    "Summary": "   Hexalith.Platform.Identity.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.218s",
+    "Classes": [
+      "*PlatformIdentityAdmissionTests"
+    ],
+    "Project": "Hexalith.Platform.Identity.Tests"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Platform.Custody.Tests-tests.xml",
+    "BuildLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Platform.Custody.Tests-build.log",
+    "TestLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Platform.Custody.Tests-tests.log",
+    "Matrix": "Custody prerequisites/expiry/denial",
+    "Summary": "   Hexalith.Platform.Custody.Tests  Total: 115, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 20.217s",
+    "Classes": [
+      "*CustodyPrerequisiteTests",
+      "*IdentityHistoryCleanupTests"
+    ],
+    "Project": "Hexalith.Platform.Custody.Tests"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Contracts.Tests-tests.xml",
+    "BuildLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Contracts.Tests-build.log",
+    "TestLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Contracts.Tests-tests.log",
+    "Matrix": "History/compatibility",
+    "Summary": "   Hexalith.Parties.Contracts.Tests  Total: 29, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.185s",
+    "Classes": [
+      "*PartyStateTests",
+      "*PartyIdentityContractTests",
+      "*ContractsPublicApiSnapshotTests"
+    ],
+    "Project": "Hexalith.Parties.Contracts.Tests"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Server.Tests-tests.xml",
+    "BuildLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Server.Tests-build.log",
+    "TestLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Server.Tests-tests.log",
+    "Matrix": "Provision/history",
+    "Summary": "   Hexalith.Parties.Server.Tests  Total: 94, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.342s",
+    "Classes": [
+      "*AgentPartyProvisioningTests",
+      "*HumanActorBindingTests",
+      "*PartyAggregateCreateTests",
+      "*PartyAggregateCompositeTests"
+    ],
+    "Project": "Hexalith.Parties.Server.Tests"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Tests-tests.xml",
+    "BuildLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Tests-build.log",
+    "TestLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Tests-tests.log",
+    "Matrix": "Current identity/history/isolation",
+    "Summary": "   Hexalith.Parties.Tests  Total: 357, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 7.940s",
+    "Classes": [
+      "*PartyIdentityAdmissionTests",
+      "*PartyIdentityQueryHandlerTests",
+      "*PartyIdentityRetentionConfigurationTests",
+      "*PartyDomainProcessorValidationTests",
+      "*PartySdkQueryHandlerTests",
+      "*PartiesProcessEndpointTests",
+      "*PartiesDomainServiceSecurityTests"
+    ],
+    "Project": "Hexalith.Parties.Tests"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Security.Tests-tests.xml",
+    "BuildLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Security.Tests-build.log",
+    "TestLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Security.Tests-tests.log",
+    "Matrix": "Custody separation/denial",
+    "Summary": "   Hexalith.Parties.Security.Tests  Total: 30, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.402s",
+    "Classes": [
+      "*IdentityHistoryProtectionTests",
+      "*PartyPayloadProtectionServiceTests"
+    ],
+    "Project": "Hexalith.Parties.Security.Tests"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Client.Tests-tests.xml",
+    "BuildLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Client.Tests-build.log",
+    "TestLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.Client.Tests-tests.log",
+    "Matrix": "Isolation/compatibility",
+    "Summary": "   Hexalith.Parties.Client.Tests  Total: 98, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.420s",
+    "Classes": [
+      "*HttpPartiesIdentityClientTests",
+      "*HttpPartiesCommandClientTests",
+      "*HttpPartiesQueryClientTests",
+      "*DependencyInjectionTests"
+    ],
+    "Project": "Hexalith.Parties.Client.Tests"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.UI.Tests-tests.xml",
+    "BuildLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.UI.Tests-build.log",
+    "TestLog": "/tmp/ext-parties-1-platform-custody-20261008-OlHwiz/local/Hexalith.Parties.UI.Tests-tests.log",
+    "Matrix": "Consumer compatibility",
+    "Summary": "   Hexalith.Parties.UI.Tests  Total: 72, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.258s",
+    "Classes": [
+      "*IdentityBindingBoundaryTests",
+      "*IdentityBindingProvisioningServiceTests",
+      "*PartyIdClaimResolverTests",
+      "*SelfScopedPartiesClientTests"
+    ],
+    "Project": "Hexalith.Parties.UI.Tests"
+  }
+]
