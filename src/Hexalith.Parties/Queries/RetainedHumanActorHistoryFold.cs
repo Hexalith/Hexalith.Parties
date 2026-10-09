@@ -25,6 +25,7 @@ internal static class RetainedHumanActorHistoryFold
         var bindings = new List<RetainedHumanActorBinding>();
         var logicalIds = new HashSet<string>(StringComparer.Ordinal);
         long version = 0;
+        bool hasReadableTransition = false;
         var certifiedExpiredLiveVersions = new HashSet<long>();
         var transitions = stream.Events.Select(item => (Position: item.SequenceNumber, Event: (StreamReadEvent?)item,
                 Expired: (ExpiredIdentityHistoryCertificate?)null))
@@ -38,7 +39,7 @@ internal static class RetainedHumanActorHistoryFold
                 // Existing ciphertext contract/position and current terminal destruction proof
                 // authenticate version continuity without recovering any expired relationship.
                 // The accepted fixed effective-at lifetime permits only an expired prefix.
-                if (bindings.Count != 0 || expired.PolicyId != policyId) { throw InvalidHistory(); }
+                if (hasReadableTransition || expired.PolicyId != policyId) { throw InvalidHistory(); }
                 if (expired.EventTypeName == typeof(HumanActorBindingEstablished).FullName)
                 {
                     if (version != 0) { throw InvalidHistory(); }
@@ -51,6 +52,7 @@ internal static class RetainedHumanActorHistoryFold
                 continue;
             }
             StreamReadEvent item = transition.Event ?? throw InvalidHistory();
+            hasReadableTransition = true;
             string eventName = item.EventTypeName;
             if (eventName == typeof(HumanActorBindingEstablished).FullName)
             {

@@ -2436,3 +2436,17 @@ availability approval, and I2/I19a classification approval are absent.
 Production KMS remains a separate release gate. No production source,
 dependency, submodule pointer, local rollback path, or public security API was
 changed. Dual-provider, GDPR, and post-v2 tests were not run or credited.
+
+## Story 8.7 spec execution — G5 remains closed — 2026-10-09
+
+At Parties `bc076222132783cb9a95a5442b1dbe1582ab8842`, the G5 matrix row remains `needs-additive-api`; this execution therefore leaves Story 8.7 blocked. Source/package observations below do not grant adoption approval.
+
+| Command | Result |
+| --- | --- |
+| `git ls-tree HEAD references/Hexalith.EventStore references/Hexalith.Builds`; matching `git -C` `rev-parse HEAD` and `status --porcelain` checks | Exit 0. EventStore `75a08f0069d8c2495d9dff20a0deb84edb6cc638` and Builds `fef031806321793c9effb17235c2465118984432` match clean root-declared checkouts. |
+| The `python3 - <<'PY_AUDIT'` reproduction procedure under "Story 8.7 G5 retry at 9e74c2b6" above | Exit 0: 32/32 recorded G5 static checks; 24 retained MOVE/KEEP/adapter files, local harness and four local DI registrations; both EventStore package selectors `3.117.1`; matching clean EventStore/Builds pins. |
+| `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Exit 0; 0 warnings, 0 errors. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests` | Exit 1; 33 total, 32 passed, 1 failed, 0 skipped/not run. `FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph` expects Tenants gitlink `0d8cc8d854738d00a18c0cdfee0e7b82579eaafa`, while HEAD selects `cc17b0711b50ba4a5c3cb71a5bb5b4f060434ac0`. This is an unrelated current-identity receipt failure; no test expectation was changed. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_KeepsNoMigrationGateAndResidualBlockers` | Exit 0; 1 passed, 0 failed/skipped/not run. The focused matrix no-migration guard remains green. |
+
+EventStore 8.3 is `done` under a core closure packet that explicitly says G5 is closed. The v2 core is non-packable; Server still registers `NoOpEventPayloadProtectionService`. Owner 8.4-8.11 remain `backlog`; AzureKeyVault and Story 8.11 closure artifacts are absent. Named G5 security/owner approval, I2/I19a classification, a consumable runtime/backend, compatibility and lifecycle integration, Server persistence, release enrollment, producer and consumer parity, seven deletion proofs, and post-v2 rollback remain missing. Production KMS is a separate release gate. No production source, dependency, gitlink, local DI, public security API, or rollback file was changed. Dual-provider, GDPR, post-v2 rollback, unit/topology, and provider/KMS lanes were not run or credited.

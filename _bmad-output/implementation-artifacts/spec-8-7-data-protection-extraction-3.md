@@ -2,7 +2,7 @@
 title: '8.7 Data-protection extraction at the G5 gate'
 type: 'refactor'
 created: '2026-10-09'
-status: 'ready-for-dev'
+status: 'blocked'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: 'b0fca072d54082d94467fc316ec24a809daea84e'
@@ -63,7 +63,13 @@ context:
 
 ## Implementation Notes
 
+- 2026-10-09 closed-gate execution at Parties `bc076222132783cb9a95a5442b1dbe1582ab8842`: G5 remains `needs-additive-api`; Story 8.7 remains blocked. EventStore and Builds root gitlinks match clean checkouts `75a08f0069d8c2495d9dff20a0deb84edb6cc638` and `fef031806321793c9effb17235c2465118984432`; both selectors retain EventStore package `3.117.1`. This is observed identity, not adoption approval.
+- EventStore 8.3 is `done`, but its core remains non-packable and explicitly disclaims G5 authority. Owner 8.4-8.11 remain `backlog`; Server still selects the no-op. Missing receipts include named security/owner approval, I2/I19a classification, a consumable runtime and production backend, compatibility/lifecycle and persistence integration, release enrollment, producer and dual-provider consumer proof, seven deletion proofs, and exercised post-v2 switch-back. Production KMS remains a separate release gate.
+- The 32 recorded G5 static checks and retention checks passed. The focused prerequisites build passed with zero warnings/errors; its direct test class ran 33 tests and failed one unrelated Tenants identity assertion (`0d8cc8d8` expected, `cc17b071` selected). No dual-provider, GDPR, or post-v2 tests ran or received credit. Production, dependencies, gitlinks, public APIs, local DI, and rollback files remain untouched. Exact commands and results are in `tests/test-summary.md`.
+
 ## Spec Change Log
+
+- 2026-10-09: Recorded the closed G5 gate and focused verification without changing the frozen intent or adoption status.
 
 ## Review Triage Log
 
