@@ -420,6 +420,7 @@ public sealed class PartyIdentityQueryHandlerTests
             {
                 stream.Identity,
                 stream.Purpose,
+                PolicyId = fixture.Options.CurrentValue.PolicyId,
                 SourceSequence = stream.Head + 1,
                 EventTypeName = $"Hexalith.Parties.Contracts.Events.{eventName}",
                 SealedPayloadDigest = new string('a', 64),
@@ -1118,6 +1119,82 @@ public sealed class PartyIdentityQueryHandlerTests
         // No retained actor-free prefix can recreate the expired predecessor's relationship.
         (await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, Actor, 1)),
             TestContext.Current.CancellationToken)).Evidence.ShouldBeNull();
+    }
+
+    /// <summary>A retained revocation closes only the certified expired version; it never recreates actor bytes and a retained rebound stays queryable.</summary>
+    [Theory]
+    [InlineData("valid")][InlineData("unproved")][InlineData("gap")][InlineData("wrong-rebound")]
+    public async Task CertifiedExpiredEstablishmentRetainedRevocationAndReboundResolveThroughQuery(string vector)
+    {
+        const string successorActor = "01HX0000000000000000000002";
+        var revokedAt = Start.AddDays(180); var reboundAt = Start.AddDays(200); var now = Start.AddDays(366);
+        var policy = "party-actor-retention-v1";
+        var original = Binding() with { ValidUntil = Start.AddDays(365), Custody = Binding().Custody with { PolicyId = policy, ExpiresAt = Start.AddDays(365) } };
+        var revokedCustody = original.Custody with { ExpiresAt = revokedAt.AddDays(365), LifecycleRevision = 2 };
+        var successor = original with { ActorId = successorActor, BindingVersion = vector == "wrong-rebound" ? 4 : 3, ValidFrom = reboundAt,
+            ValidUntil = reboundAt.AddDays(365), Custody = original.Custody with { ExpiresAt = reboundAt.AddDays(365), LifecycleRevision = 3 } };
+        var fixture = Service(Events()[0], new HumanActorBindingEstablished(new(original, "first", "first-digest"), Start, 0),
+            new HumanActorBindingRevoked("revoked", "revoked-digest", vector == "gap" ? 2 : 1, revokedAt, revokedCustody),
+            new HumanActorBindingRebound(new(successor, "third", "third-digest"), reboundAt, 2));
+        fixture.Options.CurrentValue.Returns(new PartyIdentityOptions { PolicyId = policy, Retention = TimeSpan.FromDays(365), ExpiryTrigger = "binding-effective-at" });
+        var captured = (await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"), RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken)).Stream!;
+        var certificate = new ExpiredIdentityHistoryCertificate(captured.Identity, captured.Purpose, policy, 2,
+            typeof(HumanActorBindingEstablished).FullName!, new string('A', 64), "terminal-destruction", 4, "current-lifecycle", now, now.AddMinutes(1));
+        var retained = captured with { ObservedAt = now, ValidUntil = now.AddMinutes(1), Events = captured.Events.Skip(1).ToArray(),
+            ExcludedSequences = vector == "unproved" ? [1, 2] : [1], ExpiredEvents = vector == "unproved" ? [] : [certificate] };
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(retained, PartiesJsonOptions.Default); System.Text.Encoding.UTF8.GetString(bytes).ShouldNotContain(Actor);
+        fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(
+            new RetainedIdentityHistoryReadResult(JsonSerializer.Deserialize<RetainedIdentityHistoryStream>(bytes, PartiesJsonOptions.Default)!, null));
+        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(new PartyIdentityAdmissionResult(new(new("tenant-a", "party", "party-1", "Read", "c", "c", "d"), "reader", null,
+            successorActor, 1, true, Start, Start.AddDays(600), 1), null));
+        TimeProvider clock = Substitute.For<TimeProvider>(); ConfigureSystemTimer(clock); clock.GetUtcNow().Returns(now);
+        var service = new PartyIdentityQueryService(fixture.Authority, clock, custody: fixture.Custody, historyReader: fixture.HistoryReader, identityOptions: fixture.Options);
+        var result = await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", reboundAt, successorActor, 3)), TestContext.Current.CancellationToken);
+        result.Outcome.ShouldBe(vector == "valid" ? HumanActorBindingOutcome.Resolved : HumanActorBindingOutcome.Unavailable);
+        if (vector == "valid") { result.Evidence!.ActorId.ShouldBe(successorActor); result.Evidence.BindingVersion.ShouldBe(3); result.BindingSourcePosition.ShouldBe(4); }
+        else { result.Evidence.ShouldBeNull(); }
+        (await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, Actor, 1)), TestContext.Current.CancellationToken)).Evidence.ShouldBeNull();
+    }
+
+    /// <summary>Two actor-free independently certified expired transitions preserve exact version continuity and return only the retained version-three source original.</summary>
+    [Theory]
+    [InlineData("rebound")][InlineData("revocation")]
+    public async Task MultipleExpiredTransitionsResolveOnlyRetainedVersionThreeThroughSerializedQuery(string expiredTransition)
+    {
+        ArgumentNullException.ThrowIfNull(expiredTransition);
+        const string intermediateActor = "01HX0000000000000000000002"; const string retainedActor = "01HX0000000000000000000003";
+        const string policy = "party-actor-retention-v1";
+        var secondAt = Start.AddDays(10); var successorAt = Start.AddDays(200); var now = Start.AddDays(376);
+        var original = Binding() with { ValidUntil = Start.AddDays(365), Custody = Binding().Custody with { PolicyId = policy, ExpiresAt = Start.AddDays(365) } };
+        var secondCustody = original.Custody with { ExpiresAt = secondAt.AddDays(365), LifecycleRevision = 2 };
+        IEventPayload second = expiredTransition == "rebound" ? new HumanActorBindingRebound(new(original with { ActorId = intermediateActor, BindingVersion = 2,
+            ValidFrom = secondAt, ValidUntil = secondAt.AddDays(365), Custody = secondCustody }, "second", "second-digest"), secondAt, 1)
+            : new HumanActorBindingRevoked("revoked", "revoked-digest", 1, secondAt, secondCustody);
+        var successor = original with { ActorId = retainedActor, BindingVersion = 3, ValidFrom = successorAt, ValidUntil = successorAt.AddDays(365),
+            Custody = original.Custody with { ExpiresAt = successorAt.AddDays(365), LifecycleRevision = 3 } };
+        var fixture = Service(Events()[0], new HumanActorBindingEstablished(new(original, "first", "first-digest"), Start, 0), second,
+            new HumanActorBindingRebound(new(successor, "third", "third-digest"), successorAt, 2));
+        fixture.Options.CurrentValue.Returns(new PartyIdentityOptions { PolicyId = policy, Retention = TimeSpan.FromDays(365), ExpiryTrigger = "binding-effective-at" });
+        var captured = (await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"), RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken)).Stream!;
+        var firstProof = new ExpiredIdentityHistoryCertificate(captured.Identity, captured.Purpose, policy, 2, typeof(HumanActorBindingEstablished).FullName!,
+            new string('A', 64), "original-first-destruction", 4, "current-lifecycle", now, now.AddMinutes(1));
+        var secondProof = firstProof with { SourceSequence = 3, EventTypeName = second.GetType().FullName!, SealedPayloadDigest = new string('B', 64), DestructionReceiptId = "original-second-destruction" };
+        var retained = captured with { ObservedAt = now, ValidUntil = now.AddMinutes(1), Events = [captured.Events.Single(item => item.SequenceNumber == 4)],
+            ExcludedSequences = [1], ExpiredEvents = [firstProof, secondProof] };
+        byte[] transport = JsonSerializer.SerializeToUtf8Bytes(retained, PartiesJsonOptions.Default);
+        System.Text.Encoding.UTF8.GetString(transport).ShouldNotContain(Actor); System.Text.Encoding.UTF8.GetString(transport).ShouldNotContain(intermediateActor);
+        fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(
+            new RetainedIdentityHistoryReadResult(JsonSerializer.Deserialize<RetainedIdentityHistoryStream>(transport, PartiesJsonOptions.Default)!, null));
+        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(new PartyIdentityAdmissionResult(new(new("tenant-a", "party", "party-1", "Read", "c", "c", "d"), "reader", null,
+            retainedActor, 1, true, Start, Start.AddDays(600), 1), null));
+        TimeProvider clock = Substitute.For<TimeProvider>(); ConfigureSystemTimer(clock); clock.GetUtcNow().Returns(now);
+        var service = new PartyIdentityQueryService(fixture.Authority, clock, custody: fixture.Custody, historyReader: fixture.HistoryReader, identityOptions: fixture.Options);
+        var result = await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", successorAt, retainedActor, 3)), TestContext.Current.CancellationToken);
+        result.Outcome.ShouldBe(HumanActorBindingOutcome.Resolved); result.Evidence!.ShouldBe(successor); result.Evidence!.ActorId.ShouldBe(retainedActor);
+        result.Evidence.BindingVersion.ShouldBe(3); result.Evidence.ValidFrom.ShouldBe(successorAt); result.Evidence.ValidUntil.ShouldBe(successorAt.AddDays(365));
+        result.BindingSourcePosition.ShouldBe(4); result.SourcePosition.ShouldBe(4);
+        (await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start.AddDays(5), Actor, 1)), TestContext.Current.CancellationToken)).Evidence.ShouldBeNull();
+        (await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start.AddDays(20), intermediateActor, 2)), TestContext.Current.CancellationToken)).Evidence.ShouldBeNull();
     }
 
     /// <summary>One deadline cancels noncooperative source/custody and cannot admit a late success or fault.</summary>

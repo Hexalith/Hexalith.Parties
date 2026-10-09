@@ -25,6 +25,7 @@ internal static class RetainedHumanActorHistoryFold
         var bindings = new List<RetainedHumanActorBinding>();
         var logicalIds = new HashSet<string>(StringComparer.Ordinal);
         long version = 0;
+        var certifiedExpiredLiveVersions = new HashSet<long>();
         var transitions = stream.Events.Select(item => (Position: item.SequenceNumber, Event: (StreamReadEvent?)item,
                 Expired: (ExpiredIdentityHistoryCertificate?)null))
             .Concat(stream.ExpiredEvents.Select(certificate => (Position: certificate.SourceSequence,
@@ -46,6 +47,7 @@ internal static class RetainedHumanActorHistoryFold
                     && expired.EventTypeName != typeof(HumanActorBindingRevoked).FullName || version == 0)
                 { throw InvalidHistory(); }
                 version = checked(version + 1);
+                if (expired.EventTypeName != typeof(HumanActorBindingRevoked).FullName) { certifiedExpiredLiveVersions.Add(version); }
                 continue;
             }
             StreamReadEvent item = transition.Event ?? throw InvalidHistory();
@@ -77,14 +79,14 @@ internal static class RetainedHumanActorHistoryFold
             {
                 HumanActorBindingRevoked value = JsonSerializer.Deserialize<HumanActorBindingRevoked>(item.Payload, PartiesJsonOptions.Default)
                     ?? throw InvalidHistory();
-                if (value.ExpectedBindingVersion != version || !ValidCustody(value.Custody)
+                if (version == 0 || value.ExpectedBindingVersion != version || !ValidCustody(value.Custody)
                     || value.EffectiveAt > stream.ObservedAt || string.IsNullOrWhiteSpace(value.IntentDigest)
                     || string.IsNullOrWhiteSpace(value.LogicalId) || !logicalIds.Add(value.LogicalId))
                 {
                     throw InvalidHistory();
                 }
 
-                Close(value.ExpectedBindingVersion, value.EffectiveAt, requireLivePredecessor: true);
+                Close(value.ExpectedBindingVersion, value.EffectiveAt, requireLivePredecessor: !certifiedExpiredLiveVersions.Contains(version));
                 version = checked(version + 1);
             }
             else
