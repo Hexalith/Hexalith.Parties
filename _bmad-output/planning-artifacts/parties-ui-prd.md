@@ -3,8 +3,8 @@ project_name: parties
 document_type: prd
 status: canonical-requirements-source
 date: 2026-06-27
-last_updated: 2026-09-08
-version: 1.3.0
+last_updated: 2026-10-09
+version: 1.3.1
 requirements_basis: "Brownfield docs + final UX design set + architecture requirements inventory + epics FR map"
 ---
 
@@ -404,6 +404,16 @@ as MVP or product-feature functional coverage.
   post-MVP maintenance only, carries no new PRD functional requirement
   coverage, and must not be reported as product-feature delivery.
 
+**External consumer extension:** `EXT-PARTIES-1` Branch B is separate
+Agents-consumer contract work, governed by
+`spec-ext-parties-1-branch-b-authoritative-identity.md` and the
+`sprint-change-proposal-2026-10-09.md` decision. Its Parties Contracts API,
+identity history, and host policy are outside this UI PRD's requirement and
+traceability inventories and outside Parties sprint epic/story tracking. Its
+in-progress implementation is not Epic 7 or 8 maintenance, MVP coverage, or
+verified product-feature delivery. Owner acceptance and production availability
+require the spec's live qualification and dependency evidence.
+
 Known completed dependency evidence:
 
 - Story 1.4 completed fail-closed `party_id` claim resolution with synthetic-claim
@@ -481,3 +491,4 @@ Change log:
 | 1.1.1 | 2026-07-16 | Epics 7-8 maintenance-scope invariant (`sprint-change-proposal-2026-07-16-epics-7-8-maintenance-scope.md`). |
 | 1.2.0 | 2026-08-18 | Governed correction from `prds/prd-parties-2026-08-18/validation-report.md`: currency refresh, NFR traceability, UX-DR enumeration, deployment-gate section, clarified wording. No functional requirement added or removed. |
 | 1.3.0 | 2026-09-08 | Governed correction from the 2026-09-08 validation run (`prds/prd-parties-2026-08-18/validation-report.md`): real CI topology and named tests in every `Verified By` cell with explicit `unverified` tokens; FR verification column; UX-DR and GATE-KMS matrix tables; UX-DR MUST clauses restored from `epics.md`; party picker restored to FR-Admin-3; NFR1 product-wide; NFR2 SignalR clause; NFR7 range aligned; waived NFR categories stated; 8.9 `blocked` and `sprint-status.yaml` as living status pointer; Purpose aligned with identity/scope canonicity; readiness contract and freeze scope stated. No functional requirement added, removed, or reordered. |
+| 1.3.1 | 2026-10-09 | Classify EXT-PARTIES-1 Branch B as a separate spec-only external-consumer extension; preserve the PRD requirement inventory and Epics 7-8 maintenance scope. |

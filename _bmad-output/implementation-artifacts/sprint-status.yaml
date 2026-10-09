@@ -45,7 +45,7 @@
 #   against this file: it rejects `blocked` and re-slugs titles. Refresh in place.
 
 generated: 2026-06-21T18:55:59+02:00
-last_updated: 2026-10-09
+last_updated: 10-09-2026 13:45
 project: parties
 project_key: NOKEY
 tracking_system: file-system
@@ -140,7 +140,7 @@ development_status:
   8-11-validation-fallback-ladder-runner-and-guidance: done
   8-12-parties-only-zot-container-publish-ci: done
   8-13-retire-legacy-deployment-artifacts: done
-  epic-8-retrospective: optional
+  epic-8-retrospective: done
 
 action_items:
   - epic: 6
@@ -271,9 +271,9 @@ action_items:
     owner: "Sally (UX Designer) + Amelia (Developer)"
     status: done
   - epic: 7
-    action: "Keep PRD, epics, and readiness docs explicit that Epics 7 and 8 are maintenance scope with no new PRD functional coverage."
+    action: "Keep Epics 7 and 8 classified as maintenance with no new PRD functional coverage; identify EXT-PARTIES-1 Branch B separately as spec-only external-consumer work outside Parties sprint tracking."
     owner: "Paige (Technical Writer)"
-    status: open
+    status: done
   # ── Epic 8 platform-API prerequisite routing to owners ───────────────────
   # Added by Correct Course 2026-07-07
   # (sprint-change-proposal-2026-07-07-platform-prerequisite-routing.md).
@@ -325,7 +325,7 @@ action_items:
     # Revalidated 2026-08-01: owner closure and exact identity selection are
     # complete; matrix reconciliation, Parties parity, and rollback evidence
     # remain open.
-    status: in-progress
+    status: done
   - epic: 8
     # Routed and ownership-confirmed 2026-07-16 through:
     # _bmad-output/planning-artifacts/sprint-change-proposal-2026-07-16-g8-aspire-publish-helper-routing.md.
@@ -371,3 +371,21 @@ action_items:
     action: "Validate the four `available` 8.3 rows at consumption (no additive API needed): EventStore domain-service host (8.5-proven), EventStore DataProtection, Commons HTTP helpers, Builds shared props/targets each need release or submodule-pin availability recorded in the matrix row before 8.6/8.8/8.10 consume them."
     owner: "Murat (Test Architect) + respective owners"
     status: open
+  - id: "epic-8-retro-erasure-status-after-commit"
+    epic: 8
+    action: "Derive erasure status from committed events or reconcile it after event persistence; cover failed append and retry before reporting Verified or Erased."
+    owner: "Amelia (Developer) + Winston (Architect) + Murat (Test Architect)"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md"
+  - id: "epic-8-retro-erasure-search-fence"
+    epic: 8
+    action: "Fence live and rebuild search notifications against concurrent erasure; test both interleavings and reconcile deferred-work DW-80 with D11."
+    owner: "Amelia (Developer) + Murat (Test Architect)"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md"
+  - id: "epic-8-retro-destroyed-key-marker-fault"
+    epic: 8
+    action: "Preserve the typed destroyed-key outcome when the crypto-pending marker write fails; add focused fault-injection coverage."
+    owner: "Amelia (Developer) + Murat (Test Architect)"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md"

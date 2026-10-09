@@ -37,6 +37,17 @@ context:
 
 </frozen-after-approval>
 
+## Planning classification (2026-10-09)
+
+EXT-PARTIES-1 Branch B is a spec-only external-consumer extension for Agents,
+outside the Parties UI PRD and Parties sprint epic/story tracking. Its `feature`
+type and `in-progress` status describe owner execution, not Epic 7 or 8 scope,
+MVP coverage, or a completed consumer dependency. The
+[course correction](../planning-artifacts/sprint-change-proposal-2026-10-09.md)
+and [readiness addendum](../planning-artifacts/implementation-readiness-scope-addendum-2026-10-09.md)
+record this classification. The acceptance criteria and live qualification
+gates in this spec remain authoritative.
+
 ## Code Map
 
 - `src/Hexalith.Parties/Domain/PartyAggregate.cs` and `src/Hexalith.Parties.Contracts/State/PartyState.cs` — reuse pure folds; non-null rejection state is not creation; Apply's wall clock is not history.
@@ -80,6 +91,8 @@ The verifier execution item remains open. Local owning suites and each required 
 2026-10-07: Resumed source verification, fixed provider cancellation callbacks blocking query deadline/caller completion, and required the host retention/timeout configuration lane. Recorded the existing retained-history seam and approved 365-day policy, plus independent current-source verification. Both remaining execution tasks, frozen intent, original baseline and `in-progress` status remain unchanged.
 
 2026-10-08: Inspected current Platform host/source and operational recovery evidence, required the Platform custody Local lane, and recorded a complete normal Local pass plus refreshed external-source receipts. Both production tasks remain open.
+
+2026-10-09: Recorded the spec-only external-consumer planning classification without changing frozen intent, acceptance criteria, original baseline, open production tasks, or `in-progress` status.
 
 ## Review Triage Log
 
