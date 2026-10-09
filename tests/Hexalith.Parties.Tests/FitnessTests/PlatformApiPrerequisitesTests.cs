@@ -44,28 +44,28 @@ public sealed class PlatformApiPrerequisitesTests
     // Release selection is separate from the historical migration/parity receipt constants.
     private const string CurrentReleaseEventStoreVersion = "3.117.1";
     private const string CurrentCatalogEventStoreVersion = "3.117.1";
-    private const string CurrentReleaseEventStoreSha = "9542d3c9f48bf9ce1c57f2ef68904703eaba56cc";
-    private const string CurrentReleaseEventStoreDescribe = "v3.117.1-5-g9542d3c9";
+    private const string CurrentReleaseEventStoreSha = "75a08f0069d8c2495d9dff20a0deb84edb6cc638";
+    private const string CurrentReleaseEventStoreDescribe = "v3.117.1-18-g75a08f00";
     private const string CurrentReleaseEventStoreTag = "v3.117.1";
     private static readonly IReadOnlyDictionary<string, string> CurrentReleaseGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = AiToolsSha,
-        ["references/Hexalith.Builds"] = "f717a87c26a8266bdde95d18f998ef2ab366d43a",
-        ["references/Hexalith.Commons"] = CommonsSha,
+        ["references/Hexalith.Builds"] = "fef031806321793c9effb17235c2465118984432",
+        ["references/Hexalith.Commons"] = "b247ed116c6523f8c596ec0a933eff8973d11568",
         [EventStoreRelativePath] = CurrentReleaseEventStoreSha,
         ["references/Hexalith.FrontComposer"] = "0e114214007c22f5cdbac21a6853cff4208340ee",
-        ["references/Hexalith.Memories"] = "3e18d0dcdceb387eff89862c382637da89ad7e47",
+        ["references/Hexalith.Memories"] = "aa4684064a8aa62833dec910f5e988bf094b187e",
         ["references/Hexalith.PolymorphicSerializations"] = PolymorphicSerializationsSha,
-        ["references/Hexalith.Tenants"] = "fcdcb4205a3f6e46f736cdd3e6f2b20ca2f241df",
+        ["references/Hexalith.Tenants"] = "0d8cc8d854738d00a18c0cdfee0e7b82579eaafa",
     };
 
     private static readonly IReadOnlyDictionary<string, string> CurrentSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["references/Hexalith.Builds"] = "v4.30.1",
+        ["references/Hexalith.Builds"] = "v4.30.1-6-gfef03180",
         [EventStoreRelativePath] = CurrentReleaseEventStoreDescribe,
         ["references/Hexalith.FrontComposer"] = "v4.6.0-7-g0e114214",
-        ["references/Hexalith.Memories"] = "v2.28.1-36-g3e18d0dc",
-        ["references/Hexalith.Tenants"] = "v5.7.0-180-gfcdcb420",
+        ["references/Hexalith.Memories"] = "v2.28.1-44-gaa468406",
+        ["references/Hexalith.Tenants"] = "v5.8.0-9-g0d8cc8d8",
     };
 
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
@@ -107,7 +107,7 @@ public sealed class PlatformApiPrerequisitesTests
     [
         "8-1-shared-payload-protection-security-spec-and-adr: done",
         "8-2-payload-protection-contracts-and-golden-vectors: done",
-        "8-3-pdenc-v2-core-cryptographic-engine: in-progress",
+        "8-3-pdenc-v2-core-cryptographic-engine: done",
         "8-4-compatibility-readers-and-mixed-history-routing: backlog",
         "8-5-policy-and-key-lifecycle-mechanics: backlog",
         "8-6-azure-key-vault-production-adapter-conformance: backlog",
@@ -679,10 +679,10 @@ public sealed class PlatformApiPrerequisitesTests
         string root = RepositoryRoot.Locate();
         string matrix = ReadMatrix();
 
-        const string currentHeading = "### Current source observation — 2026-10-08";
+        const string currentHeading = "### Current source observation — 2026-10-09";
         int currentStart = matrix.IndexOf(currentHeading, StringComparison.Ordinal);
         currentStart.ShouldBeGreaterThanOrEqualTo(0, currentHeading);
-        int historicalStart = matrix.IndexOf("### Story 8.10 final retained-identity reconciliation", currentStart, StringComparison.Ordinal);
+        int historicalStart = matrix.IndexOf("### Historical source observation — 2026-10-08", currentStart, StringComparison.Ordinal);
         historicalStart.ShouldBeGreaterThan(currentStart);
         string currentSelection = matrix[currentStart..historicalStart];
         currentSelection.ShouldContain($"EventStore package `{CurrentReleaseEventStoreVersion}`");
@@ -1652,7 +1652,6 @@ public sealed class PlatformApiPrerequisitesTests
             @"\s+",
             " ",
             RegexOptions.CultureInvariant);
-        normalizedRetentionItem.ShouldContain("owner contracts/core are partial delivery (8.2 done, 8.3 in-progress)");
         normalizedRetentionItem.ShouldContain("G5 closure/parity/rollback remain absent");
         normalizedRetentionItem.ShouldContain("Story 8.11 alone may record G5 `available` and unblock Parties Story 8.7");
         normalizedRetentionItem.ShouldContain("Story 8.7 remains blocked");

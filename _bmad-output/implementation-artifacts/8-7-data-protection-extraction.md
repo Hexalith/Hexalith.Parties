@@ -3,13 +3,13 @@ story_key: 8-7-data-protection-extraction
 story_id: "8.7"
 epic: "8"
 created: 2026-07-16T00:23:38+02:00
-revalidated: 2026-10-08
+revalidated: 2026-10-09
 source_status: backlog
 target_status: blocked
 baseline_commit_at_story_start: a35b151
-baseline_commit_at_revalidation: 9e74c2b66ea0e201c6a4f9200e875627fed3b541
-eventstore_root_pin_at_revalidation: 8dd7dc2ecdb2c06ecb900676042aa42b66619ee0
-eventstore_checkout_at_revalidation: 8dd7dc2ecdb2c06ecb900676042aa42b66619ee0
+baseline_commit_at_revalidation: 91efcfd9ed31a0b4cb39dfe8263ddb48842190fb
+eventstore_root_pin_at_revalidation: 75a08f0069d8c2495d9dff20a0deb84edb6cc638
+eventstore_checkout_at_revalidation: 75a08f0069d8c2495d9dff20a0deb84edb6cc638
 ---
 
 # Story 8.7: Data-protection extraction
@@ -18,7 +18,28 @@ Status: blocked
 
 <!-- This story is complete enough for workflow intake, but production source migration is hard-gated by the Story 8.3 G5 row and the authoritative Epic 8 sequence. -->
 
-## Current Gate Revalidation — 2026-10-08 (retry at 9e74c2b6)
+## Current Gate Revalidation — 2026-10-09
+
+G5 remains `needs-additive-api`; Story 8.7 remains `blocked`. At Parties
+`91efcfd9ed31a0b4cb39dfe8263ddb48842190fb`, matching clean root checkouts
+are EventStore `75a08f0069d8c2495d9dff20a0deb84edb6cc638` and Builds
+`fef031806321793c9effb17235c2465118984432`. Both package selectors remain
+EventStore `3.117.1`. These are observations, not G5 identity approval.
+
+EventStore 8.3 is `done` under its 2026-10-09 core closure packet, which
+explicitly disclaims provider, package, successor, and G5 authority. The core
+is still non-packable. Owner 8.4–8.11 remain `backlog`; a consumable runtime
+provider, compatibility/lifecycle/persistence integration, AzureKeyVault
+backend, package/release enrollment, dual-provider GDPR parity, post-v2
+rollback, owner 8.11 closure, and I2/I19a classification approval remain
+missing. Server still defaults to the no-op. Parties 8.6 is `done`.
+
+The gate audit and focused fitness result are recorded in `tests/test-summary.md`.
+The local engine, adapter, public APIs, and all rollback files remain. No
+production, dependency, or submodule changes are authorized. Dual-provider,
+GDPR, and post-v2 suites remain unrun and uncredited.
+
+## Historical Gate Revalidation — 2026-10-08 (retry at 9e74c2b6)
 
 G5 remains `needs-additive-api`; Story 8.7 remains `blocked`. At Parties
 `9e74c2b66ea0e201c6a4f9200e875627fed3b541`, matching clean root checkouts are EventStore

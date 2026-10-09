@@ -2408,3 +2408,31 @@ trailing whitespace. `git -c core.whitespace=cr-at-eol diff --check` passes
 without changing repository configuration. Documentation preservation checks
 confirm the frozen spec block/original baseline and historical receipts are
 byte-identical; the matrix/approvals and sprint status are unchanged.
+
+## Story 8.7 G5 revalidation — owner 8.3 done — 2026-10-09
+
+G5 remains `needs-additive-api` and Parties 8.7 remains `blocked`. This receipt
+supersedes only the latest source observation; dated approvals and earlier test
+results retain their original identities. At Parties
+`91efcfd9ed31a0b4cb39dfe8263ddb48842190fb`, the EventStore root gitlink and
+clean checkout match `75a08f0069d8c2495d9dff20a0deb84edb6cc638`; Builds
+matches `fef031806321793c9effb17235c2465118984432`. Both package selectors
+remain EventStore `3.117.1`. This is inspection, not G5 identity approval.
+
+| Command | Result |
+| --- | --- |
+| `git ls-tree HEAD references/Hexalith.EventStore references/Hexalith.Builds`; `git -C references/Hexalith.EventStore rev-parse HEAD`; `git -C references/Hexalith.Builds rev-parse HEAD`; `git -C references/Hexalith.EventStore status --porcelain`; `git -C references/Hexalith.Builds status --porcelain` | Both checkouts match root gitlinks and are clean; identities above. |
+| The `python3 - <<'PY_AUDIT'` reproduction procedure in "Story 8.7 G5 retry at 9e74c2b6" above, rerun unchanged | Exit 0: 32/32 recorded G5 static checks; 24 retained MOVE/KEEP/adapter files, local harness, four local DI registrations, both package selectors `3.117.1`, and matching clean EventStore/Builds identities. |
+| `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Exit 0; 0 warnings, 0 errors. |
+| `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests` | Exit 0; 33 total, 33 passed, 0 failed/skipped/not run. The pre-edit run had 2 failures from stale source pins and the owner 8.3 `in-progress` assertion; both are reconciled. |
+
+EventStore 8.3 is `done` under its 2026-10-09 core closure packet, which
+expressly grants no G5, successor, package, or provider approval. The core is
+`IsPackable=false`; Server still registers `NoOpEventPayloadProtectionService`.
+Owner 8.4–8.11 remain `backlog`; the compatibility reader, key lifecycle,
+AzureKeyVault backend, Server persistence, package/release enrollment, real
+dual-provider GDPR parity, post-v2 rollback, owner 8.11 closure, named G5
+availability approval, and I2/I19a classification approval are absent.
+Production KMS remains a separate release gate. No production source,
+dependency, submodule pointer, local rollback path, or public security API was
+changed. Dual-provider, GDPR, and post-v2 tests were not run or credited.

@@ -1,5 +1,5 @@
 # generated: 2026-06-21T18:55:59+02:00
-# last_updated: 2026-10-05
+# last_updated: 2026-10-09
 # project: parties
 # project_key: NOKEY
 # tracking_system: file-system
@@ -254,6 +254,12 @@ action_items:
     # 8.4-8.11 backlog; G5 closure/parity/rollback remain absent; I2/I19a pending.
     # All 32 static checks and retained-file/DI checks passed; product suites
     # unrun. Story 8.7 stays blocked; retention action stays open.
+    # 2026-10-09: matching clean EventStore 75a08f00 and Builds fef03180
+    # checkouts select package 3.117.1. Owner 8.3 is done; 8.4-8.11
+    # remain backlog. G5 runtime/backend/release, owner 8.11 closure,
+    # I2/I19a approval, parity, and post-v2 rollback remain absent.
+    # 32 static checks and 33 focused fitness tests passed; provider
+    # and GDPR parity lanes were not run. Keep local rollback and action open.
     action: "Keep Parties crypto/key-management implementation until an approved shared provider proves payload compatibility, typed unreadable outcomes, no-leak diagnostics, exports, processing records, certificates, and rollback."
     owner: "Winston (Architect) + Amelia (Developer)"
     status: open

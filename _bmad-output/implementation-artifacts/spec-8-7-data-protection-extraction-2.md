@@ -2,7 +2,8 @@
 title: '8.7 Data-protection extraction at the G5 gate'
 type: 'refactor'
 created: '2026-10-09'
-status: 'ready-for-dev'
+status: 'blocked'
+baseline_commit: '91efcfd9ed31a0b4cb39dfe8263ddb48842190fb'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -46,8 +47,8 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md` -- check owner 8.3/8.11 proof, approvals, pins, parity, and rollback; halt if any G5 receipt is missing.
-- [ ] `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs`, `_bmad-output/implementation-artifacts/8-7-data-protection-extraction.md`, `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`, and `_bmad-output/implementation-artifacts/tests/test-summary.md` -- reconcile owner 8.3 `done`; record the gate without promoting G5 or crediting unrun tests.
+- [x] `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md` -- checked owner 8.3/8.11 proof, approvals, pins, parity, and rollback; halted at closed G5 on 2026-10-09.
+- [x] `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs`, `_bmad-output/implementation-artifacts/8-7-data-protection-extraction.md`, `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md`, and `_bmad-output/implementation-artifacts/tests/test-summary.md` -- reconciled owner 8.3 `done` and recorded the closed gate without promoting G5 or crediting unrun tests.
 - [ ] `tests/Hexalith.Parties.Security.Tests/CryptoKeyManagementCompatibilityHarnessTests.cs` -- after G5 opens, run identical v1/v2, AAD-transplant, legacy, key-failure, restart, and no-leak vectors through both providers.
 - [ ] `src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs`, `src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs`, and `src/Hexalith.Parties/Domain/PartyDomainProcessor.cs` -- add reversible selection and v2-safe mapping; retain local fallback and public APIs.
 - [ ] `tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs`, `tests/Hexalith.Parties.Security.Tests/ErasureVerificationServiceTests.cs`, and `tests/Hexalith.Parties.IntegrationTests/Security/EncryptionPipelineIntegrationTests.cs` -- prove real export, processing, erasure, persisted state, and post-v2 switch-back.
@@ -62,9 +63,13 @@ context:
 
 ## Spec Change Log
 
+- 2026-10-09: Rechecked G5 at Parties `91efcfd9ed31a0b4cb39dfe8263ddb48842190fb` with matching clean EventStore `75a08f0069d8c2495d9dff20a0deb84edb6cc638` and Builds `fef031806321793c9effb17235c2465118984432`; both catalogs select EventStore `3.117.1`. Owner 8.3 is `done`, but its non-packable core closure explicitly disclaims G5. Owner 8.4–8.11, provider/backend/release enrollment, I2/I19a approval, dual-provider parity, and post-v2 rollback remain open. The 32 G5 static checks and 33 focused fitness tests passed. Production, dependencies, and rollback paths were preserved; provider, GDPR, and post-v2 suites were not run or credited.
+
 ## Review Triage Log
 
 ## Verification
+
+**2026-10-09 closed-gate result:** Debug source-mode `Hexalith.Parties.Tests` build passed with 0 warnings and 0 errors; direct `PlatformApiPrerequisitesTests` execution passed 33/33 with no skips. The recorded 32-command G5 inspection passed 32/32, and the local rollback-file/DI and clean gitlink checks passed. Dual-provider, GDPR, and post-v2 rollback tests remain unrun because G5 is closed.
 
 **Commands:**
 - `git ls-tree HEAD references/Hexalith.EventStore references/Hexalith.Builds`; compare each checkout's `git rev-parse HEAD` and `git status --porcelain` -- matching, clean identities.
