@@ -4,7 +4,7 @@
 
 ## Goal
 
-Extract platform mechanics while preserving Parties domain behavior, policy, clients, UI, and samples. This maintenance adds no PRD requirements. Epic 8/Story 8.10 closed through deferrals on 2026-10-05; Stories 8.7–8.9 stay blocked with rollback retained. Live `sprint-status.yaml` remains authoritative.
+Move reusable platform mechanics out of Parties while preserving its domain behavior, public contracts, GDPR policy, and user experience. This is post-MVP maintenance with no new PRD functional requirements. It makes the module domain-focused without expanding MVP scope.
 
 ## Stories
 
@@ -24,40 +24,28 @@ Extract platform mechanics while preserving Parties domain behavior, policy, cli
 
 ## Requirements & Constraints
 
-Preserve command/query behavior, tenant isolation, `aggregateId == party_id` own-data checks, public Client/Contracts and UI RCL compatibility. Breaking contracts require approved versioning. Diagnostics remain PII-free and low-cardinality.
+Preserve command/query behavior, tenant isolation, consumer own-data checks (`aggregateId == party_id`), and the public Client, Contracts, and three UI RCL shapes. Breaking changes need an approved versioning plan. Keep diagnostics free of personal data, payloads, key material, and high-cardinality identifiers. Production protection requires KMS or secret-backed keys.
 
-Migration/deferral specs must name prerequisites, touched repositories, exercised rollback, validation lanes, non-goals, and parity checklist. Split or hard-gate broad migrations. Prove parity before deletion; retain baseline tests absent approved successors, canonical sprint keys, and `blocked` status.
+Each remaining migration or deferral activation needs a spec naming prerequisites, touched repositories, an exercised rollback, validation lanes, non-goals, and a parity checklist. Split or hard-gate broad cross-module work. Retain baseline test surfaces and local rollback code until replacement parity is executable; do not count unrun or skipped tests as proof. Pin evidence to the exact consumed release or root gitlink. Moving a dependency identity invalidates affected parity claims until revalidated. Required approvals belong in the prerequisite ledger with a decision, artifact, named human, and date; observed code or package availability is not adoption approval.
 
-Evidence names exact consumed packages/gitlinks. Identity movement invalidates affected claims and stops covered deletion until revalidation. Approval requires a prerequisite-ledger row naming decision, artifact, human, and date, written by that human/reviewer gate. Selection/compile never imply parity or adoption approval.
-
-The 2026-10-05 prerequisite-ledger selections are dated approvals. Later package/gitlink identities are observations, never successor approvals; revalidate against the actual consumed graph and approved identity stamps.
-
-Keep .NET 10, `.slnx`, CPM, warnings-as-errors, MinVer, root-only submodules, and established validation gates. Run xUnit v3 projects individually; focused runs invoke built assemblies. Regulated production data requires production KMS/secret-backed keys.
+Maintain .NET 10, `.slnx`, central package management, warnings as errors, root-only submodules, and MinVer. Run xUnit v3 projects individually and use built assemblies for focused filters. Epic 8 remains maintenance scope; the separately governed external consumer identity extension adds no Epic 8 story or PRD coverage.
 
 ## Technical Decisions
 
-Continue adapter-first extraction: EventStore owns hosting/projection/query/envelope mechanics; Commons owns utilities/paging; FrontComposer owns UI mechanics; Builds owns shared build logic. Parties retains semantic policy, compatibility mapping, and singly defined Contracts anchors.
+Extract through compatible adapters: EventStore owns domain-service hosting, projection/query mechanics, envelopes, and shared payload protection; Commons owns cross-cutting HTTP and paging helpers; FrontComposer owns UI mechanics; Builds owns common build logic. Parties keeps aggregate and GDPR policy, query meaning, typed domain clients, legal copy, and singly defined Contracts anchors. Retire local paths only after owner APIs, parity, and rollback are proven.
 
-The host has no public API. DAPR remains deny-default/EventStore-only; subscriptions stay separate. Approve route changes; external ACLs attest equivalent tuples. AppHost retirement requires topology, security, publish, rollback, and dependent-deferral proof. Runtime orchestration stays external; Parties publishes immutable images.
+The domain-service host has no public API. Gateway access and DAPR ACLs remain deny-default and EventStore-only; subscription delivery is a separate ingress. Route changes need recorded owner approval. Keep replay-from-zero, checkpoints, idempotency, duplicate/out-of-order tolerance, last-known degraded reads, versioned freshness, erased-party exclusion, permanent tombstones, and rebuild-versus-aggregate-replay proof. Classify touched stores as rebuildable read models or operational ledgers; ledgers survive rebuilds, have consistency tests, and still obey erasure.
 
-Preserve replay/checkpoints, idempotency, duplicate/out-of-order tolerance, rebuild-vs-replay proof, last-known fallback, versioned freshness, and permanent tombstones. Identifier acceptance never authorizes tombstoned allocation. Classify stores as rebuildable read models or operational ledgers; ledgers survive rebuilds with consistency tests and obey erasure.
+Generic key storage, wrapping, rotation, audit, retry, circuit breaking, and typed unreadable mechanics belong behind an approved shared provider. Parties alone decides erasure, restriction, personal-data classification, and lawful basis; shared policy hooks may only read aggregate/event-stream state. The payload engine prerequisite is still closed: key-ring and cursor DataProtection APIs, or an internal cryptographic core, do not establish a consumable provider. Until the approved runtime/backend, release identity, policy-hook classification, dual-provider parity, and an exercised switch-back after shared-provider writes exist, retain the local engine and DI. Preserve `json+pdenc-v1`, `json-redacted`, and legacy unprotected reads, key zeroing, typed failures, tenant isolation, no-leak diagnostics, exports, processing records, and one versioned erasure certificate/report shape. Decide predecessor key-ring, cursor-purpose, and payload readability across any AppHost cutover, or approve explicit invalidation with typed outcomes.
 
-G5 payload protection remains `needs-additive-api`; available key-ring/cursor DataProtection APIs do not authorize engine adoption. Parties alone decides erasure, restriction, personal-data classification, and lawful basis. Stateless policy/erasure hooks read aggregate/event-stream state; owner approval must classify them before G5 adoption. Preserve `json+pdenc-v1`, `json-redacted`, legacy reads, key zeroing, typed unreadability, no-leak diagnostics, exports, processing records, and one versioned certificate/report shape. Erasure has Admin and Consumer doors; MCP deletion is soft-deactivation.
-
-Consumer login issuer/subject-to-PartyId aliases remain private IdP/UI/BFF routing with one verified `party_id` claim and external provisioning audit; they never become Parties event-stream identity evidence. Opaque Human ActorId attribution is a separate, independently authorized Party-history contract. Parties owns bindings; Platform owns independent actor authority/custody; EventStore owns the protected source seam. Past attribution grants no present authority; current eligibility requires active Party and current actor authority. Organization Branch B has no human binding.
-
-The approved `party-actor-retention-v1` policy retains minimal opaque lifecycle/provenance for 365 fixed days from `binding-effective-at`, including bounded post-profile-erasure attribution. Protect it independently from profile data; exclude login mappings, profile payloads, credentials and role claims. Expiry is exclusive and never restarts on closure, rebind, erasure, restore or retry; successors use their own effective instant. Policy changes cannot extend existing records. Reads/writes require matching finite policy and fresh independent purpose custody; changed configuration fails closed.
-
-Production history remains disabled pending qualification of the selected custody/source, copy inventory, authenticated cleanup/restore proof and complete owner acceptance. Expiry denies reads immediately; cleanup must destroy decryption capability and identity-bearing derived copies across caches, replicas, backups and exports. Restore checks fresh durable lifecycle before decrypting; missing proof makes reads unavailable and cleanup pending. Shared seams, applied numeric policy and synthetic tests establish neither production qualification nor G5 adoption approval.
-
-Before crypto deletion, decide backend/readability window. One approval binds security and AppHost cutover: prove predecessor key-ring, cursor-purpose, and payload continuity or approve explicit invalidation with typed outcomes. McpCli replacement or approved withdrawal proves parity before module MCP retirement.
+Keep the two erasure doors, Admin and Consumer, on the same aggregate commands and verification semantics; MCP `delete_party` remains soft deactivation. Replace module MCP presentation through McpCli only with contract parity or approved withdrawal. Retain the Parties AppHost as a rollback surface until the approved integrated topology and dependent rollback obligations are proven. Runtime deployment stays with the external orchestrator; this repository owns source, local topology, CI, and Parties container publication.
 
 ## UX & Interaction Patterns
 
-Inherit FrontComposer and Fluent V5/Fluent 2; purge FAST/v4 tokens. Preserve WCAG 2.2 AA, keyboard/pointer parity, focus, skip links, forced colors, reduced motion, non-color cues, destructive confirmation, polite status/assertive errors, and no optimistic focus stealing. I13 remains deferred: DW-111 accepts missing runtime content-control proof without certifying parity.
+Use FrontComposer and Fluent UI V5/Fluent 2 and remove legacy FAST/v4 tokens. Preserve WCAG 2.2 AA keyboard and pointer access, visible focus, skip links, forced colors, reduced motion, non-color status cues, safe destructive confirmation, polite status versus assertive errors, and focus stability during optimistic updates. Runtime content-control focus and accessibility parity remain open under the UI deferral.
 
-Stale/degraded reads show last-known data; acceptance never promises read-your-write. Parties owns legal strings: consent versus lawful basis, restriction allowing consent edits except during erasure, cancellation versus permanence, and honest export timing.
+Stale or degraded reads show last-known data with honest freshness and never imply immediate read-your-write. Parties owns the legal wording: consent versus other lawful bases, consent edits during restriction but not erasure, cancellable requests versus permanent deletion, and realistic export timing.
 
 ## Cross-Story Dependencies
 
-Order: `8.1 -> 8.2 -> 8.3 -> 8.4 -> 8.5 -> 8.6 -> 8.7 -> 8.8 -> 8.9 -> 8.10`; 8.5–8.7 require platform readiness. Deferrals/children inherit `8.6 -> 8.7 -> 8.8 -> 8.9`, taking the later parent slot. Concurrency requires disjoint repositories/parity invariants beyond Parties. Deferral closure never authorizes migration/deletion.
+The migration order is `8.1 → 8.2 → 8.3 → 8.4 → 8.5 → 8.6 → 8.7 → 8.8 → 8.9 → 8.10`; 8.5–8.7 require platform API readiness. Accepted deferrals and child work inherit the `8.6 → 8.7 → 8.8 → 8.9` order. Deferral closure does not authorize migration or deletion.
