@@ -1123,11 +1123,12 @@ public sealed class PartyIdentityQueryHandlerTests
 
     /// <summary>A retained revocation closes only the certified expired version; it never recreates actor bytes and a retained rebound stays queryable.</summary>
     [Theory]
-    [InlineData("valid")][InlineData("unproved")][InlineData("gap")][InlineData("wrong-rebound")]
+    [InlineData("valid")][InlineData("unproved")][InlineData("gap")][InlineData("wrong-rebound")][InlineData("expired-after-readable")]
     public async Task CertifiedExpiredEstablishmentRetainedRevocationAndReboundResolveThroughQuery(string vector)
     {
         const string successorActor = "01HX0000000000000000000002";
-        var revokedAt = Start.AddDays(180); var reboundAt = Start.AddDays(200); var now = Start.AddDays(366);
+        var revokedAt = Start.AddDays(180); var reboundAt = Start.AddDays(200);
+        var now = Start.AddDays(vector == "expired-after-readable" ? 500 : 366);
         var policy = "party-actor-retention-v1";
         var original = Binding() with { ValidUntil = Start.AddDays(365), Custody = Binding().Custody with { PolicyId = policy, ExpiresAt = Start.AddDays(365) } };
         var revokedCustody = original.Custody with { ExpiresAt = revokedAt.AddDays(365), LifecycleRevision = 2 };
@@ -1140,8 +1141,12 @@ public sealed class PartyIdentityQueryHandlerTests
         var captured = (await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"), RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken)).Stream!;
         var certificate = new ExpiredIdentityHistoryCertificate(captured.Identity, captured.Purpose, policy, 2,
             typeof(HumanActorBindingEstablished).FullName!, new string('A', 64), "terminal-destruction", 4, "current-lifecycle", now, now.AddMinutes(1));
-        var retained = captured with { ObservedAt = now, ValidUntil = now.AddMinutes(1), Events = captured.Events.Skip(1).ToArray(),
-            ExcludedSequences = vector == "unproved" ? [1, 2] : [1], ExpiredEvents = vector == "unproved" ? [] : [certificate] };
+        var lateProof = certificate with { SourceSequence = 4, EventTypeName = typeof(HumanActorBindingRebound).FullName!,
+            SealedPayloadDigest = new string('B', 64), DestructionReceiptId = "late-original-destruction" };
+        var retained = captured with { ObservedAt = now, ValidUntil = now.AddMinutes(1),
+            Events = vector == "expired-after-readable" ? [captured.Events.Single(item => item.SequenceNumber == 3)] : captured.Events.Skip(1).ToArray(),
+            ExcludedSequences = vector == "unproved" ? [1, 2] : [1],
+            ExpiredEvents = vector == "unproved" ? [] : vector == "expired-after-readable" ? [certificate, lateProof] : [certificate] };
         var bytes = JsonSerializer.SerializeToUtf8Bytes(retained, PartiesJsonOptions.Default); System.Text.Encoding.UTF8.GetString(bytes).ShouldNotContain(Actor);
         fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(
             new RetainedIdentityHistoryReadResult(JsonSerializer.Deserialize<RetainedIdentityHistoryStream>(bytes, PartiesJsonOptions.Default)!, null));
