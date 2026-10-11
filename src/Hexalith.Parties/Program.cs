@@ -1,4 +1,6 @@
 using Hexalith.EventStore.DomainService;
+using Hexalith.EventStore.Client.Streams;
+using Hexalith.Parties.Authorization;
 using Hexalith.Parties.Compliance;
 using Hexalith.Parties.Domain;
 using Hexalith.Parties.Extensions;
@@ -32,6 +34,13 @@ builder.Services.AddDaprClient();
 builder.Services.AddHealthChecks().AddPartiesDaprHealthChecks();
 
 builder.Services.AddParties(builder.Configuration);
+string ownerDaprEndpoint = Environment.GetEnvironmentVariable("DAPR_HTTP_ENDPOINT")
+    ?? $"http://127.0.0.1:{Environment.GetEnvironmentVariable("DAPR_HTTP_PORT") ?? "3500"}";
+builder.Services.AddHttpClient<PartyChatBotSourceGateway>(client =>
+    client.BaseAddress = new Uri(ownerDaprEndpoint.Replace("localhost", "127.0.0.1", StringComparison.OrdinalIgnoreCase)));
+builder.Services.AddScoped<IAuthoritativeEventStreamReader>(provider =>
+    new AuthoritativeEventStreamReader(provider.GetRequiredService<PartyChatBotSourceGateway>(),
+        provider.GetRequiredService<TimeProvider>(), TimeSpan.FromSeconds(10)));
 builder.Services.Configure<HealthCheckServiceOptions>(RemoveEventStoreDefaultSelfCheck);
 
 WebApplication app = builder.Build();
