@@ -325,3 +325,30 @@ still fails on unavailable infrastructure, and the production ACL is unchanged.
 Release package-mode test-project builds, and the focused script tests (8/8)
 passed locally with zero build warnings/errors. A fresh PR run of this patch
 and a passing live gateway route are still required before release.
+
+### Secure control-plane network correction and local gateway proof
+
+[PR 55 CI 38144277858](https://github.com/Hexalith/Hexalith.Parties/actions/runs/38144277858)
+passed build-and-test on `03422852d435c74473c72c7a87784c5f0ebf964b` but failed the
+Aspire gateway before AppHost startup. The pinned Dapr image downloaded, then
+the placement container could not reach Sentry through the host's
+loopback-only `50001` published port; `hexalith-parties-dapr-placement did not
+become healthy within 30 seconds`. Its exact job log is
+`/tmp/parties-pr55-mtls-aspire.log`. This is a Linux container networking
+issue in the bootstrap, separate from the previous unsigned Dapr ACL denial.
+
+The bootstrap now creates a dedicated `hexalith-parties-dapr-mtls` Docker
+network, connects only its three scoped control-plane containers, and sends
+placement/scheduler to Sentry by container DNS. Host-facing gRPC and health
+ports remain bound to `127.0.0.1`. Existing scoped containers must match that
+network to be reused. After replacing only the three stopped scoped test
+containers, `bash scripts/aspire-start-mtls.sh --prepare-only` returned 0,
+and local TCP checks connected to loopback ports `50001`, `55005`, and `55006`.
+A focused required-mode gateway test then passed 1/1, zero skipped, with the
+secure control plane (`/tmp/parties-gateway-secure-network.log`). A second
+focused test with only `GITHUB_ACTIONS=true` exercised the fixture's automatic
+bootstrap and also passed 1/1, zero skipped
+(`/tmp/parties-gateway-autobootstrap.log`). `bash -n`, whitespace validation,
+the CI test-project Release build (zero warnings/errors), and all eight focused
+bootstrap tests passed. Fresh PR CI and an exact-source main push CI remain
+required before publication; this spec stays `in-review`.
