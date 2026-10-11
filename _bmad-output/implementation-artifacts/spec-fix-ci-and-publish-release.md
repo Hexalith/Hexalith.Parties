@@ -352,3 +352,30 @@ bootstrap and also passed 1/1, zero skipped
 the CI test-project Release build (zero warnings/errors), and all eight focused
 bootstrap tests passed. Fresh PR CI and an exact-source main push CI remain
 required before publication; this spec stays `in-review`.
+
+### Scoped bootstrap review and teardown hardening
+
+A narrow three-lens review of the secure CI bootstrap found that HTTP health
+alone could miss an unavailable host gRPC port, a reused network could contain
+unrelated containers or have the wrong driver, and test disposal could leave
+both scoped containers and an issuer private key behind. The verification-gap
+lens found no false-green path in the required gateway assertion. The bootstrap
+now checks the three published gRPC ports, requires a labeled user-defined
+bridge with only its three expected members, and refuses reuse of containers
+attached to another network. The CI fixture uses a unique temporary trust
+bundle and invokes scoped cleanup after AppHost disposal, even if startup or
+disposal fails; it restores process environment variables in a final block.
+The cleanup removes only containers whose pinned image and certificate mount
+match this test's bundle, removes the network only when this invocation created
+it and no containers remain, then deletes the temporary bundle.
+
+The final local required-mode gateway test with automatic bootstrap passed
+1/1, zero skipped, in 62.501 seconds
+(`/tmp/parties-gateway-hardened-autobootstrap.log`). After disposal,
+`docker ps -a --filter name=^hexalith-parties-dapr-` returned no scoped
+containers, the scoped network was absent, and no matching temporary trust
+bundle remained. The focused bootstrap tests passed 10/10, including rejection
+of a wrong network driver and an unrelated network member. Both affected
+Release package-mode test projects built with zero warnings/errors; `bash -n`
+and whitespace checks passed. Exact-source fresh CI and main push proof remain
+pending, so the spec remains `in-review`.

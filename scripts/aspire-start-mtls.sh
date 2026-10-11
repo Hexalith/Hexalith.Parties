@@ -18,12 +18,20 @@ scheduler_grpc_binding="127.0.0.1:55006"
 scheduler_health_binding="127.0.0.1:18082"
 control_plane_network="hexalith-parties-dapr-mtls"
 prepare_only=false
+cleanup_only=false
 
 if [[ "${1:-}" == "--prepare-only" ]]; then
     prepare_only=true
     shift
     if (( $# != 0 )); then
         echo "--prepare-only does not accept Aspire arguments." >&2
+        exit 2
+    fi
+elif [[ "${1:-}" == "--cleanup-only" ]]; then
+    cleanup_only=true
+    shift
+    if (( $# != 0 )); then
+        echo "--cleanup-only does not accept Aspire arguments." >&2
         exit 2
     fi
 fi
@@ -39,11 +47,66 @@ read_configured_port_binding() {
         "${container_name}"
 }
 
-uses_control_plane_network() {
+attached_control_plane_networks() {
     local container_name="$1"
     docker container inspect \
-        --format "{{if index .NetworkSettings.Networks \"${control_plane_network}\"}}true{{else}}false{{end}}" \
+        --format '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' \
         "${container_name}"
+}
+
+verify_control_plane_network() {
+    local driver
+    local label
+    local member
+    local members
+    driver="$(docker network inspect --format '{{.Driver}}' "${control_plane_network}")"
+    label="$(docker network inspect --format '{{index .Labels "hexalith.parties.dapr.role"}}' "${control_plane_network}")"
+    if [[ "${driver}" != "bridge" || "${label}" != "control-plane-v1" ]]; then
+        echo "Existing ${control_plane_network} is not the pinned control-plane bridge." >&2
+        exit 1
+    fi
+
+    members="$(docker network inspect --format '{{range .Containers}}{{println .Name}}{{end}}' "${control_plane_network}")"
+    while IFS= read -r member; do
+        case "${member}" in
+            ""|"${sentry_container}"|"${placement_container}"|"${scheduler_container}") ;;
+            *)
+                echo "Existing ${control_plane_network} contains unrelated container '${member}'." >&2
+                exit 1 ;;
+        esac
+    done <<< "${members}"
+}
+
+cleanup_owned_control_plane() {
+    local container_name
+    local credentials_destination
+    local configured_image
+    local configured_mount
+    for container_name in "${scheduler_container}" "${placement_container}" "${sentry_container}"; do
+        if ! docker container inspect "${container_name}" >/dev/null 2>&1; then
+            continue
+        fi
+
+        credentials_destination="/var/run/secrets/dapr.io/tls"
+        if [[ "${container_name}" == "${sentry_container}" ]]; then
+            credentials_destination="/var/run/dapr/credentials"
+        fi
+        configured_image="$(docker container inspect --format '{{.Config.Image}}' "${container_name}")"
+        configured_mount="$(docker container inspect \
+            --format "{{range .Mounts}}{{if eq .Destination \"${credentials_destination}\"}}{{.Source}}{{end}}{{end}}" \
+            "${container_name}")"
+        if [[ "${configured_image}" == "${sentry_image}" \
+            && "${configured_mount}" == "${certificate_directory}" ]]; then
+            docker rm -f "${container_name}" >/dev/null
+        fi
+    done
+
+    if [[ -f "${certificate_directory}/.owned-control-plane-network" ]] \
+        && docker network inspect "${control_plane_network}" >/dev/null 2>&1 \
+        && [[ "$(docker network inspect --format '{{index .Labels "hexalith.parties.dapr.role"}}' "${control_plane_network}")" == "control-plane-v1" ]] \
+        && [[ "$(docker network inspect --format '{{len .Containers}}' "${control_plane_network}")" == "0" ]]; then
+        docker network rm "${control_plane_network}" >/dev/null
+    fi
 }
 
 verify_control_plane_container() {
@@ -69,7 +132,7 @@ verify_control_plane_container() {
         || "${configured_credentials_mount}" != "${certificate_directory}" \
         || "${configured_grpc_binding}" != "${expected_grpc_binding}" \
         || "${configured_health_binding}" != "${expected_health_binding}" \
-        || "$(uses_control_plane_network "${container_name}")" != "true" ]]; then
+        || "$(attached_control_plane_networks "${container_name}")" != "${control_plane_network}" ]]; then
         echo "Existing ${container_name} does not match the pinned ${expected_role} topology." >&2
         exit 1
     fi
@@ -108,15 +171,39 @@ wait_for_control_plane_health() {
     fi
 }
 
+wait_for_control_plane_port() {
+    local container_name="$1"
+    local port="$2"
+    for _ in {1..30}; do
+        if timeout 1 bash -c 'exec 3<>/dev/tcp/127.0.0.1/$1' _ "${port}" >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep 0.5
+    done
+
+    docker container logs --tail 50 "${container_name}" >&2
+    echo "${container_name} did not expose loopback gRPC port ${port}." >&2
+    exit 1
+}
+
 if [[ -z "${certificate_directory}" || "${certificate_directory}" != /* || "${certificate_directory}" == "/" || "${certificate_directory}" == "${HOME}" ]]; then
     echo "DAPR_MTLS_CERTIFICATE_DIRECTORY must be an absolute, dedicated directory." >&2
     exit 1
 fi
 
+if [[ "${cleanup_only}" == "true" ]]; then
+    cleanup_owned_control_plane
+    exit 0
+fi
+
 install -d -m 0700 -- "${certificate_directory}"
 if ! docker network inspect "${control_plane_network}" >/dev/null 2>&1; then
-    docker network create --driver bridge "${control_plane_network}" >/dev/null
+    docker network create --driver bridge \
+        --label hexalith.parties.dapr.role=control-plane-v1 \
+        "${control_plane_network}" >/dev/null
+    touch "${certificate_directory}/.owned-control-plane-network"
 fi
+verify_control_plane_network
 if [[ ! -f "${sentry_configuration}" ]]; then
     echo "Dapr Sentry configuration '${sentry_configuration}' was not found." >&2
     exit 1
@@ -145,7 +232,7 @@ if docker container inspect "${sentry_container}" >/dev/null 2>&1; then
 
     if [[ "${configured_grpc_binding}" != "${sentry_grpc_binding}" \
         || "${configured_health_binding}" != "${sentry_health_binding}" \
-        || "$(uses_control_plane_network "${sentry_container}")" != "true" ]]; then
+        || "$(attached_control_plane_networks "${sentry_container}")" != "${control_plane_network}" ]]; then
         echo "Existing ${sentry_container} does not publish the required loopback-only Sentry ports." >&2
         exit 1
     fi
@@ -268,6 +355,9 @@ fi
 
 wait_for_control_plane_health "${placement_container}" 18081
 wait_for_control_plane_health "${scheduler_container}" 18082
+wait_for_control_plane_port "${sentry_container}" 50001
+wait_for_control_plane_port "${placement_container}" 55005
+wait_for_control_plane_port "${scheduler_container}" 55006
 
 export Dapr__Mtls__Enabled=true
 export Dapr__Mtls__CertificateDirectory="${certificate_directory}"
