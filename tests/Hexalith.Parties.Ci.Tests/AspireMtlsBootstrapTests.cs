@@ -30,6 +30,20 @@ public sealed class AspireMtlsBootstrapTests
         requests.Count(request => request.StartsWith("aspire start --apphost ", StringComparison.Ordinal)).ShouldBe(1);
     }
 
+    /// <summary>Verifies CI can prepare the secure control plane without launching a second AppHost.</summary>
+    [Fact]
+    public void PrepareOnlyStartsTheControlPlaneWithoutStartingAspire()
+    {
+        (int exitCode, string error, string[] requests) = RunBootstrap(prepareOnly: true);
+
+        exitCode.ShouldBe(0, error);
+        requests.ShouldNotContain(request => request.StartsWith("aspire ", StringComparison.Ordinal));
+        foreach (string role in new[] { "sentry", "placement", "scheduler" })
+        {
+            requests.ShouldContain($"docker container start hexalith-parties-dapr-{role}");
+        }
+    }
+
     /// <summary>
     /// Verifies unsafe addresses, incorrect mappings, and extra bindings fail before restart.
     /// </summary>
@@ -66,7 +80,8 @@ public sealed class AspireMtlsBootstrapTests
     private static (int ExitCode, string Error, string[] Requests) RunBootstrap(
         string incompatibleRole = "",
         string incompatiblePort = "",
-        string incompatibleBinding = "")
+        string incompatibleBinding = "",
+        bool prepareOnly = false)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -163,6 +178,10 @@ public sealed class AspireMtlsBootstrapTests
                 UseShellExecute = false,
             };
             start.ArgumentList.Add(CiTestPaths.RepoFile("scripts/aspire-start-mtls.sh"));
+            if (prepareOnly)
+            {
+                start.ArgumentList.Add("--prepare-only");
+            }
             start.Environment["PATH"] = $"{temporary}{Path.PathSeparator}{start.Environment["PATH"]}";
             start.Environment["DAPR_MTLS_CERTIFICATE_DIRECTORY"] = certificateDirectory;
             start.Environment["FAKE_REQUEST_LOG"] = requestLog;

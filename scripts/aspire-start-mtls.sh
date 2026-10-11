@@ -16,6 +16,16 @@ placement_health_binding="127.0.0.1:18081"
 scheduler_container="hexalith-parties-dapr-scheduler"
 scheduler_grpc_binding="127.0.0.1:55006"
 scheduler_health_binding="127.0.0.1:18082"
+prepare_only=false
+
+if [[ "${1:-}" == "--prepare-only" ]]; then
+    prepare_only=true
+    shift
+    if (( $# != 0 )); then
+        echo "--prepare-only does not accept Aspire arguments." >&2
+        exit 2
+    fi
+fi
 
 read_configured_port_binding() {
     local container_name="$1"
@@ -246,6 +256,10 @@ wait_for_control_plane_health "${scheduler_container}" 18082
 
 export Dapr__Mtls__Enabled=true
 export Dapr__Mtls__CertificateDirectory="${certificate_directory}"
+
+if [[ "${prepare_only}" == "true" ]]; then
+    exit 0
+fi
 
 cd -- "${repository_root}"
 exec aspire start \

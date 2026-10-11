@@ -295,3 +295,33 @@ container was removed and Aspire has no running AppHost. The ACL and
 production security policy were not relaxed. The current release stays
 `in-review` pending exact-source CI, a passing required gateway route, and
 the release workflow's own publication checks.
+
+### PR 55 Aspire failure and secure CI bootstrap
+
+[PR 55 CI 38143133151](https://github.com/Hexalith/Hexalith.Parties/actions/runs/38143133151)
+passed its Release build, isolated consumer checks, and Tier 1/2 tests at
+`9bee0c9582c38075b8e8298f9a3244a30c707424`. The required Aspire job
+failed with 35 passed, six existing health skips, and one gateway failure:
+`/health` stayed 503 for three minutes. Its log at
+`/tmp/parties-pr55-aspire.log` shows repeated HTTP 403 responses on the
+Parties-to-Tenants readiness invocation. The shared CI job installed ordinary
+self-hosted Dapr but did not start the repository's secure Sentry, placement,
+and scheduler control plane. Dependency review also failed because GitHub
+Dependency graph is disabled for this repository; CodeQL and commitlint passed.
+
+The local scoped secure-control-plane retry with Sentry, placement, and
+scheduler still failed after 193 seconds: this Docker Desktop host refused
+the scheduler's published `127.0.0.1:55006` gRPC endpoint despite its HTTP
+health endpoint returning 200. Only the three scoped test containers were
+stopped; normal Dapr containers were preserved. That trial is not live gateway
+proof.
+
+The CI topology fixture now uses `scripts/aspire-start-mtls.sh --prepare-only`
+on Linux GitHub Actions when no mTLS environment was already configured. It
+starts the existing pinned secure control plane and supplies its trust bundle
+to the AppHost before building the test topology. The required gateway test
+still fails on unavailable infrastructure, and the production ACL is unchanged.
+`bash -n scripts/aspire-start-mtls.sh`, the whitespace check, both affected
+Release package-mode test-project builds, and the focused script tests (8/8)
+passed locally with zero build warnings/errors. A fresh PR run of this patch
+and a passing live gateway route are still required before release.

@@ -1,5 +1,6 @@
 extern alias apphost;
 
+using System.Diagnostics;
 using System.Net;
 
 using Aspire.Hosting;
@@ -46,6 +47,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     private string? _previousEnableKeycloak;
     private string? _previousAspNetCoreEnvironment;
     private string? _previousDotNetEnvironment;
+    private string? _previousDaprMtlsEnabled;
+    private string? _previousDaprMtlsCertificateDirectory;
     private HttpClient? _partiesClient;
     private HttpClient? _eventStoreClient;
 
@@ -95,6 +98,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         // Force Development environment so Parties service loads appsettings.Development.json.
         _previousAspNetCoreEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
         _previousDotNetEnvironment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+        _previousDaprMtlsEnabled = Environment.GetEnvironmentVariable("Dapr__Mtls__Enabled");
+        _previousDaprMtlsCertificateDirectory = Environment.GetEnvironmentVariable("Dapr__Mtls__CertificateDirectory");
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Development");
 
@@ -103,6 +108,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             // 5-minute timeout for full Aspire topology startup including DAPR sidecar
             // initialization and health check stabilization.
             using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+
+            await PrepareCiDaprMtlsAsync(cts.Token).ConfigureAwait(false);
 
             _builder = await DistributedApplicationTestingBuilder
                 .CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>()
@@ -199,6 +206,68 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         Environment.SetEnvironmentVariable("EnableKeycloak", _previousEnableKeycloak);
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", _previousAspNetCoreEnvironment);
         Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", _previousDotNetEnvironment);
+        Environment.SetEnvironmentVariable("Dapr__Mtls__Enabled", _previousDaprMtlsEnabled);
+        Environment.SetEnvironmentVariable("Dapr__Mtls__CertificateDirectory", _previousDaprMtlsCertificateDirectory);
+    }
+
+    private static async Task PrepareCiDaprMtlsAsync(CancellationToken cancellationToken)
+    {
+        if (!OperatingSystem.IsLinux()
+            || !string.Equals(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(Environment.GetEnvironmentVariable("Dapr__Mtls__Enabled"), "true", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        DirectoryInfo? repository = new(AppContext.BaseDirectory);
+        while (repository is not null
+            && !File.Exists(Path.Combine(repository.FullName, "scripts", "aspire-start-mtls.sh")))
+        {
+            repository = repository.Parent;
+        }
+
+        string repositoryRoot = repository?.FullName
+            ?? throw new FileNotFoundException("The CI Dapr mTLS bootstrap script was not found above the test output directory.");
+        string script = Path.Combine(repositoryRoot, "scripts", "aspire-start-mtls.sh");
+
+        string certificateDirectory = Path.Combine(Path.GetTempPath(), "hexalith-parties-ci-dapr-certs");
+        ProcessStartInfo start = new("bash")
+        {
+            WorkingDirectory = repositoryRoot,
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+        };
+        start.ArgumentList.Add(script);
+        start.ArgumentList.Add("--prepare-only");
+        start.Environment["DAPR_MTLS_CERTIFICATE_DIRECTORY"] = certificateDirectory;
+
+        using Process process = Process.Start(start)
+            ?? throw new InvalidOperationException("The CI Dapr mTLS bootstrap could not start.");
+        Task<string> output = process.StandardOutput.ReadToEndAsync(cancellationToken);
+        Task<string> error = process.StandardError.ReadToEndAsync(cancellationToken);
+        try
+        {
+            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill(entireProcessTree: true);
+            }
+        }
+
+        string stdout = await output.ConfigureAwait(false);
+        string stderr = await error.ConfigureAwait(false);
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException(
+                $"The CI Dapr mTLS bootstrap exited {process.ExitCode}: {stderr}{stdout}");
+        }
+
+        Environment.SetEnvironmentVariable("Dapr__Mtls__Enabled", "true");
+        Environment.SetEnvironmentVariable("Dapr__Mtls__CertificateDirectory", certificateDirectory);
     }
 
     private static async Task WaitForEndpointAsync(
