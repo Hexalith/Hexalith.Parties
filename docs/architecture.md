@@ -53,7 +53,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.6.1` |
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.10` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.0-preview.1.261001-0243` |
-| Gateway/eventing | Hexalith.EventStore | package `3.117.1` by default (Parties pre-import CPM pin); current committed source gitlink and clean checkout `9542d3c9f48bf9ce1c57f2ef68904703eaba56cc` (`v3.117.1-5-g9542d3c9`); package API/consumer proof is recorded separately from historical migration parity |
+| Gateway/eventing | Hexalith.EventStore | package `3.120.0` from the shared build catalog; source and installed acceptance remain separately verified |
 | Tenancy | Hexalith.Tenants | package `5.7.0` by default; current committed source gitlink and clean checkout `fcdcb4205a3f6e46f736cdd3e6f2b20ca2f241df` (`v5.7.0-180-gfcdcb420`, recorded at Parties `ccaf77399d92be696e44ecb8ab17acf77d97646a` on 2026-10-08); historical owner approvals and parity remain bound to their original identities |
 | Validation | FluentValidation (+ DI ext.) | `12.1.1` |
 | Mediation | MediatR | `14.2.0` |
@@ -66,7 +66,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.19.1` core/hosting/exporter; `1.19.0` ASP.NET Core/HTTP/runtime instrumentation |
 | Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.10.0` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |
-| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.1` / `4.3.0` / `6.2.0` / `2.11.3` / `4.15.0`† / `18.1.0` |
+| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.2` / `4.3.0` / `6.2.0` / `2.11.3` / `4.16.0`† / `18.1.0` |
 
 † `Testcontainers` is declared in `Directory.Packages.props` but referenced by **zero** test projects — container lifecycle is managed entirely by `Aspire.Hosting.Testing`. Treat it as dead config.
 
@@ -86,10 +86,10 @@ counts as passing only when it was rerun at the stamped identity), and accept
 the missing I13 runtime focus, forced-colors, and reduced-motion proof as the
 named DW-111 deferral; I13 itself is not discharged.
 
-The current package pin is EventStore `3.117.1`, published from
-`0dad344d37343f589d859d6d8d6701283122b338`. The [3.117.1 consumer receipt](../_bmad-output/implementation-artifacts/tests/eventstore-3.117.1-consumer-2026-10-08/README.md)
-records downloaded package provenance, the sidecar-channel API and current
-consumer verification. The [3.117.0 receipt](../_bmad-output/implementation-artifacts/tests/eventstore-package-upgrade-2026-10-08/README.md)
+The shared build catalog now selects EventStore `3.120.0`; Parties no longer
+overrides it before import. The [3.117.1 consumer receipt](../_bmad-output/implementation-artifacts/tests/eventstore-3.117.1-consumer-2026-10-08/README.md)
+records historical downloaded package provenance and sidecar-channel API
+verification. The [3.117.0 receipt](../_bmad-output/implementation-artifacts/tests/eventstore-package-upgrade-2026-10-08/README.md)
 retains the earlier normal-release and consumer-build evidence. The October 5 source
 approvals and parity receipts retain their historical scope. Integrated topology
 acceptance and successful exact-source Parties full CI remain separate release

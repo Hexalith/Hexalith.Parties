@@ -1306,3 +1306,47 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
   summary: D11 — Fence rebuild search notifications against erasure after the canonical index snapshot is read.
   evidence: CompleteRebuildAsync snapshots once before awaited removals and later publishes retained entries; the search adapter has no canonical reread/version fence, so completed cleanup can be followed by republishing erased data; verified high, pre-existing.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Enforce the identity-query deadline during synchronous admission and source folding.
+  evidence: `authority.Admit` and `PartyIdentitySourceFold.Fold` execute between deadline checks, so a stalled provider or large source can exceed the configured budget; both paths predate the release patch.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Bound noncooperative identity-query provider work after a caller deadline.
+  evidence: `PartyIdentityQueryDeadline.ReadAsync` stops awaiting a stalled provider task but leaves it running; repeated calls can accumulate worker tasks. The deadline work was introduced separately from this release patch.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Make long retained human-actor history folds linear.
+  evidence: `RetainedHumanActorHistoryFold.Append` scans prior bindings and `Close` searches by version for each transition; the scans existed at this spec's baseline.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Show accepted-command acknowledgement before slow admin list loading finishes.
+  evidence: `PartiesAdminPortal` sets its updating notice only after awaiting `LoadPageAsync` and route selection; this ordering predates the release patch.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Clear the admin updating notice when the saved party reaches the projection.
+  evidence: `PartiesAdminPortal` clears `_acceptedCommandPartyId` on navigation and context reset but has no convergence clear, so the notice can remain after the row appears; this behavior predates the release patch.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Restore the erasure confirmation action after a dialog open failure.
+  evidence: `PartyGdprOperationsPanel` consumes `_pendingErasureDialogOpen` before `ShowAsync` and catches `JSException` while `_confirmErasure` keeps the action button replaced; this is later UI work.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Reproduce whether immediate blob URL revocation loses a supported-browser privacy export.
+  evidence: `admin-privacy-export.js` revokes the object URL immediately after `anchor.click()`; a supported-browser download trace would settle whether the scheduling can cancel the download. Unverified medium in later UI work.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Resolve the loop-sweep ledger fallback through layered BMAD configuration.
+  evidence: With `BMAD_LOOP_LEDGER` absent, the skill reads legacy YAML despite describing `config.toml` layering, so a custom artifact location can be missed; this is agent-context work outside the release patch.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Obtain owner signoff for all root gitlinks changed since Parties v1.2.1 before another release.
+  evidence: `bash scripts/gitlink-rc-gate.sh --diff v1.2.1` exits 1 for Builds, Commons, EventStore, FrontComposer, McpCli, Memories, Platform, and Tenants; current release workflow blocks publication at that gate. These later pointers need a new owner selection.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Test reason-only degraded admin search preserving last known rows.
+  evidence: The new `SearchDegradedReason` branch preserves rows for an empty response, but existing tests use a nonempty page or other degradation signals; removing the branch would clear rows without a test failure. This is later UI work.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Assert accessible checked state after switching the admin party-type radios.
+  evidence: The new `aria-checked` expressions are not asserted by component tests or the browser test, which only checks radiogroup visibility; an inverted expression could misannounce the type. This is later UI work.

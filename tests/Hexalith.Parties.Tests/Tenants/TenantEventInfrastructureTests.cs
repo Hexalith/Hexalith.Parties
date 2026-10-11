@@ -80,7 +80,7 @@ public class TenantEventInfrastructureTests {
     }
 
     [Fact]
-    public async Task TenantEventProcessorRemovesUsersAndFailsInvalidPayloadWithoutPoisoningMessageId() {
+    public async Task TenantEventProcessorRemovesUsersAndRetriesMalformedPayloadWithoutPoisoningMessageId() {
         ServiceCollection services = new();
         services.AddLogging();
         services.AddHexalithTenants();
@@ -101,12 +101,19 @@ public class TenantEventInfrastructureTests {
             "correlation-1",
             "json",
             "{ not-json"u8.ToArray())))
-            .ShouldBe(EventStoreDomainEventProcessingResult.FailedInvalidPayload);
+            .ShouldBe(EventStoreDomainEventProcessingResult.RetryableCapabilityMismatch);
+        EventStoreDomainEventEnvelope corrected = Envelope(InvalidPayloadMessageId,
+            new TenantDisabled("tenant-1", DateTimeOffset.UtcNow));
+        (await processor.ProcessAsync(corrected))
+            .ShouldBe(EventStoreDomainEventProcessingResult.Processed);
+        (await processor.ProcessAsync(corrected))
+            .ShouldBe(EventStoreDomainEventProcessingResult.Duplicate);
         (await processor.ProcessAsync(Envelope(UnknownEventMessageId, "Hexalith.Tenants.Contracts.Events.DoesNotExist", "{}"u8.ToArray())))
             .ShouldBe(EventStoreDomainEventProcessingResult.SkippedUnknownEventType);
 
         TenantLocalState state = (await provider.GetRequiredService<ITenantProjectionStore>().GetAsync("tenant-1"))!;
         state.Members.ContainsKey("user-1").ShouldBeFalse();
+        state.Status.ShouldBe(TenantStatus.Disabled);
     }
 
     [Fact]
