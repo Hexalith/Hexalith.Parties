@@ -16,6 +16,7 @@ placement_health_binding="127.0.0.1:18081"
 scheduler_container="hexalith-parties-dapr-scheduler"
 scheduler_grpc_binding="127.0.0.1:55006"
 scheduler_health_binding="127.0.0.1:18082"
+control_plane_network="hexalith-parties-dapr-mtls"
 prepare_only=false
 
 if [[ "${1:-}" == "--prepare-only" ]]; then
@@ -35,6 +36,13 @@ read_configured_port_binding() {
     # its persistent bindings before deciding whether the existing container is safe to start.
     docker container inspect \
         --format "{{range (index .HostConfig.PortBindings \"${container_port}/tcp\")}}{{.HostIp}}:{{.HostPort}}{{println}}{{end}}" \
+        "${container_name}"
+}
+
+uses_control_plane_network() {
+    local container_name="$1"
+    docker container inspect \
+        --format "{{if index .NetworkSettings.Networks \"${control_plane_network}\"}}true{{else}}false{{end}}" \
         "${container_name}"
 }
 
@@ -60,7 +68,8 @@ verify_control_plane_container() {
         || "${configured_image}" != "${sentry_image}" \
         || "${configured_credentials_mount}" != "${certificate_directory}" \
         || "${configured_grpc_binding}" != "${expected_grpc_binding}" \
-        || "${configured_health_binding}" != "${expected_health_binding}" ]]; then
+        || "${configured_health_binding}" != "${expected_health_binding}" \
+        || "$(uses_control_plane_network "${container_name}")" != "true" ]]; then
         echo "Existing ${container_name} does not match the pinned ${expected_role} topology." >&2
         exit 1
     fi
@@ -105,6 +114,9 @@ if [[ -z "${certificate_directory}" || "${certificate_directory}" != /* || "${ce
 fi
 
 install -d -m 0700 -- "${certificate_directory}"
+if ! docker network inspect "${control_plane_network}" >/dev/null 2>&1; then
+    docker network create --driver bridge "${control_plane_network}" >/dev/null
+fi
 if [[ ! -f "${sentry_configuration}" ]]; then
     echo "Dapr Sentry configuration '${sentry_configuration}' was not found." >&2
     exit 1
@@ -131,7 +143,9 @@ if docker container inspect "${sentry_container}" >/dev/null 2>&1; then
         exit 1
     fi
 
-    if [[ "${configured_grpc_binding}" != "${sentry_grpc_binding}" || "${configured_health_binding}" != "${sentry_health_binding}" ]]; then
+    if [[ "${configured_grpc_binding}" != "${sentry_grpc_binding}" \
+        || "${configured_health_binding}" != "${sentry_health_binding}" \
+        || "$(uses_control_plane_network "${sentry_container}")" != "true" ]]; then
         echo "Existing ${sentry_container} does not publish the required loopback-only Sentry ports." >&2
         exit 1
     fi
@@ -142,6 +156,7 @@ if docker container inspect "${sentry_container}" >/dev/null 2>&1; then
 else
     docker run --detach \
         --name "${sentry_container}" \
+        --network "${control_plane_network}" \
         --publish "${sentry_grpc_binding}:50001" \
         --publish "${sentry_health_binding}:18080" \
         --restart no \
@@ -197,18 +212,18 @@ if docker container inspect "${placement_container}" >/dev/null 2>&1; then
 else
     docker run --detach \
         --name "${placement_container}" \
+        --network "${control_plane_network}" \
         --label "hexalith.parties.dapr.role=placement-v1" \
         --publish "${placement_grpc_binding}:50005" \
         --publish "${placement_health_binding}:8080" \
         --restart no \
         --user "$(id -u):$(id -g)" \
-        --add-host host.docker.internal:host-gateway \
         --env DAPR_CONTROLPLANE_NAMESPACE=default \
         --mount "type=bind,source=${certificate_directory},target=/var/run/secrets/dapr.io/tls,readonly" \
         "${sentry_image}" \
         ./placement \
         --tls-enabled \
-        --sentry-address host.docker.internal:50001 \
+        --sentry-address "${sentry_container}:50001" \
         --trust-domain public \
         --listen-address 0.0.0.0 \
         --healthz-listen-address 0.0.0.0 \
@@ -227,18 +242,18 @@ if docker container inspect "${scheduler_container}" >/dev/null 2>&1; then
 else
     docker run --detach \
         --name "${scheduler_container}" \
+        --network "${control_plane_network}" \
         --label "hexalith.parties.dapr.role=scheduler-v2" \
         --publish "${scheduler_grpc_binding}:50006" \
         --publish "${scheduler_health_binding}:8080" \
         --restart no \
         --user "$(id -u):$(id -g)" \
-        --add-host host.docker.internal:host-gateway \
         --env DAPR_CONTROLPLANE_NAMESPACE=default \
         --mount "type=bind,source=${certificate_directory},target=/var/run/secrets/dapr.io/tls,readonly" \
         "${sentry_image}" \
         ./scheduler \
         --tls-enabled \
-        --sentry-address host.docker.internal:50001 \
+        --sentry-address "${sentry_container}:50001" \
         --trust-domain public \
         --trust-anchors-file /var/run/secrets/dapr.io/tls/ca.crt \
         --listen-address 0.0.0.0 \

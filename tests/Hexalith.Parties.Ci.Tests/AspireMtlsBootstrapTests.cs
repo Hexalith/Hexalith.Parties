@@ -104,6 +104,7 @@ public sealed class AspireMtlsBootstrapTests
                 #!/usr/bin/env bash
                 set -euo pipefail
                 printf 'docker %s\n' "$*" >> "$FAKE_REQUEST_LOG"
+                if [[ "$1 $2" == 'network inspect' ]]; then exit 0; fi
                 container="${!#}"
                 if [[ "$1" == port ]]; then
                   # Runtime listings are empty for these stopped containers. A regression
@@ -154,6 +155,7 @@ public sealed class AspireMtlsBootstrapTests
                       *-scheduler/8080/tcp) echo 127.0.0.1:18082 ;;
                       *) echo 'Unexpected fixture port binding.' >&2; exit 1 ;;
                     esac ;;
+                  *'.NetworkSettings.Networks'*) echo true ;;
                   *) echo 'Unexpected fixture Docker inspect format.' >&2; exit 1 ;;
                 esac
                 """);
