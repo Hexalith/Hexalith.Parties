@@ -1,0 +1,82 @@
+[
+  {
+    "Classes": [
+      "*StreamReadPageValidatorTests",
+      "*RetainedIdentityHistoryValidatorTests",
+      "*RecoverableAnchoredStateTests"
+    ],
+    "TestLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "Summary": "   Hexalith.EventStore.Contracts.Tests  Total: 37, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.842s",
+    "XmlLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "Project": "Hexalith.EventStore.Contracts.Tests",
+    "Matrix": "Shared source contract validation",
+    "BuildLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.EventStore.Contracts.Tests-build.log"
+  },
+  {
+    "Classes": [
+      "*AuthoritativeEventStreamReaderTests",
+      "*EventStoreGatewayClientTests",
+      "*EventStoreGatewayClientStreamTests",
+      "*RetainedIdentityHistoryReaderTests",
+      "*SourceNamespaceSnapshotReaderTests",
+      "*SourcePublicationNamespaceTests",
+      "*SourcePublicationFeedTests",
+      "*SourcePublicationDispatcherTests",
+      "*DaprSourcePublicationIndexStoreTests",
+      "*DirectoryAtomicAppendTests"
+    ],
+    "TestLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.EventStore.Client.Tests-tests.log",
+    "Summary": "   Hexalith.EventStore.Client.Tests  Total: 343, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 7.879s",
+    "XmlLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.EventStore.Client.Tests-tests.xml",
+    "Project": "Hexalith.EventStore.Client.Tests",
+    "Matrix": "Shared complete source/isolation/discovery",
+    "BuildLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.EventStore.Client.Tests-build.log"
+  },
+  {
+    "Classes": [
+      "*IdentityAdmissionTests",
+      "*ActorRegistryTests",
+      "*IdentityGatewayDenialTests",
+      "*CommandsControllerTrustedExtensionTests",
+      "*QueriesControllerTests",
+      "*StreamsControllerTests",
+      "*RetainedIdentityHistorySourceReaderTests",
+      "*ExpiredIdentityHistorySourceTests",
+      "*DirectoryMigrationBoundaryTests",
+      "*InteractionOccurrenceRegistryActorTests",
+      "*DeletionConsumptionActorTests",
+      "*GuardedStateTransactionTests",
+      "*GovernanceScopeGuardTests",
+      "*AggregateActorPublicationRegistrationTests"
+    ],
+    "TestLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.EventStore.Server.Tests-tests.log",
+    "Summary": "   Hexalith.EventStore.Server.Tests  Total: 403, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 10.760s",
+    "XmlLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.EventStore.Server.Tests-tests.xml",
+    "Project": "Hexalith.EventStore.Server.Tests",
+    "Matrix": "Isolation/actor/history/technical owner authority",
+    "BuildLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.EventStore.Server.Tests-build.log"
+  },
+  {
+    "Classes": [
+      "*InteractionOccurrenceKeyDerivationTests",
+      "*InteractionOccurrenceProtectorTests"
+    ],
+    "TestLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.EventStore.PayloadProtection.Tests-tests.log",
+    "Summary": "   Hexalith.EventStore.PayloadProtection.Tests  Total: 33, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.974s",
+    "XmlLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.EventStore.PayloadProtection.Tests-tests.xml",
+    "Project": "Hexalith.EventStore.PayloadProtection.Tests",
+    "Matrix": "Exact occurrence derivation/protection and post-decrypt withdrawal",
+    "BuildLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.EventStore.PayloadProtection.Tests-build.log"
+  },
+  {
+    "Classes": [
+      "*PlatformIdentityAdmissionTests"
+    ],
+    "TestLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.Platform.Identity.Tests-tests.log",
+    "Summary": "   Hexalith.Platform.Identity.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.314s",
+    "XmlLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.Platform.Identity.Tests-tests.xml",
+    "Project": "Hexalith.Platform.Identity.Tests",
+    "Matrix": "Global registry/bootstrap",
+    "BuildLog": "/tmp/ext-parties-1-agent-local-final-20261011/Hexalith.Platform.Identity.Tests-build.log"
+  }
+]

@@ -170,3 +170,17 @@ references/Hexalith.Tenants|811447342e8f44b644a2074565e83f45519528fd|validated-a
 #     or claiming a published upstream SDK or refreshed platform parity.
 references/Hexalith.EventStore|98da5a04e6df33ba026cbaae46d1777acdca7a21|validated-advance|v3.115.0-8-g98da5a04|jpiquot|2026-10-07
 references/Hexalith.Memories|14bb1c17b66ad0fa053ad0ed332c82fdd85f3887|validated-advance|v2.28.1-25-g14bb1c17|jpiquot|2026-10-07
+
+# --- 2026-10-11 current Parties release selection: the release owner approved
+#     these exact eight committed root pointers. The selection authorizes the
+#     RC gate only; it does not revalidate historical G5 parity, gateway
+#     runtime evidence, or publication readiness. Uncommitted Platform work
+#     is excluded.
+references/Hexalith.Builds|1bde4d92bb9a9ce48b19a6ca17236075ea28a78b|validated-advance|v4.30.1-32-g1bde4d9|jpiquot|2026-10-11
+references/Hexalith.Commons|b247ed116c6523f8c596ec0a933eff8973d11568|validated-advance|v2.30.1-17-gb247ed1|jpiquot|2026-10-11
+references/Hexalith.EventStore|b57310fb44ef2231815f3c3cfea09714d942334d|validated-advance|v3.120.0-35-gb57310fb|jpiquot|2026-10-11
+references/Hexalith.FrontComposer|19f4839231ae6ec7cc6318842eb329c2d04caaa9|validated-advance|v4.6.0-9-g19f48392|jpiquot|2026-10-11
+references/Hexalith.McpCli|7e99305a621e1bdf7119b6e924348857e2b5a5a4|validated-advance|7e99305a|jpiquot|2026-10-11
+references/Hexalith.Memories|499b7a838a36a4cd500ab517d86acf07b1d74ad4|validated-advance|v2.28.1-69-g499b7a83|jpiquot|2026-10-11
+references/Hexalith.Platform|6f703dd0227d8fac023ad97d909c5aaa42115578|validated-advance|6f703dd0|jpiquot|2026-10-11
+references/Hexalith.Tenants|711e100858e59cf8de2b626ea21790d59f969023|validated-advance|v5.8.0-39-g711e1008|jpiquot|2026-10-11

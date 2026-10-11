@@ -48,7 +48,35 @@ retention action, and does not change Story 8.7's `blocked` status: the
 release adds Story 8.6's shared-projection rebuild completion mechanics only,
 not the G5 runtime engine.
 
-### Current source observation — 2026-10-09
+### Current source observation — 2026-10-11
+
+The release owner selected the eight changed committed root pointers recorded
+in `.gitlink-signoff.tsv`. At Parties `c8832e9eb4dcfc96c168429cfae620a9592fe563`,
+the eight source dependencies verified below have matching clean checkouts.
+The imported Builds catalog selects EventStore package `3.120.0`, Commons
+`2.30.1`, FrontComposer `4.6.0`, Memories `2.27.1`, Tenants `5.8.0`,
+and Parties `1.2.1`. McpCli and Platform are root gitlinks in the selected
+release graph, but are not consumed by this G5 package/source proof. Platform
+has unrelated local uncommitted work; only its committed pointer was signed off.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` | Instruction baseline. |
+| Builds | `1bde4d92bb9a9ce48b19a6ca17236075ea28a78b` (`v4.30.1-32-g1bde4d92`) | Imported package catalog and build tooling. |
+| Commons | `b247ed116c6523f8c596ec0a933eff8973d11568` | Source fallback; selected package remains `2.30.1`. |
+| EventStore | `b57310fb44ef2231815f3c3cfea09714d942334d` (`v3.120.0-35-gb57310fb`) | Source inspection; runtime consumers restore package `3.120.0`. |
+| FrontComposer | `19f4839231ae6ec7cc6318842eb329c2d04caaa9` (`v4.6.0-9-g19f48392`) | Selected package remains `4.6.0`. |
+| McpCli | `7e99305a621e1bdf7119b6e924348857e2b5a5a4` | Signed root pointer; not used for G5 proof. |
+| Memories | `499b7a838a36a4cd500ab517d86acf07b1d74ad4` (`v2.28.1-69-g499b7a83`) | Selected package remains `2.27.1`. |
+| Platform | `6f703dd0227d8fac023ad97d909c5aaa42115578` | Signed committed pointer; local uncommitted work excluded from proof. |
+| PolymorphicSerializations | `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` | Existing source dependency. |
+| Tenants | `711e100858e59cf8de2b626ea21790d59f969023` (`v5.8.0-39-g711e1008`) | Selected package is `5.8.0`. |
+
+Selection does not revalidate historical parity receipts or authorize deletion
+of migration rollback paths. The dated approvals and prior test receipts below
+retain their original identities. G5 remains `needs-additive-api`.
+
+### Historical source observation — 2026-10-09
 
 At Parties `91efcfd9ed31a0b4cb39dfe8263ddb48842190fb`, root gitlinks and
 clean checkouts match the source identities below. The Parties pre-import pin
