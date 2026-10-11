@@ -1350,3 +1350,23 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
   summary: Assert accessible checked state after switching the admin party-type radios.
   evidence: The new `aria-checked` expressions are not asserted by component tests or the browser test, which only checks radiogroup visibility; an inverted expression could misannounce the type. This is later UI work.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Narrow the operator-created NuGet trusted-publishing policy to the Parties package IDs and publish-only operations.
+  evidence: The recorded active policy uses `packageGlobPattern: "*"` and grants unlist/relist in addition to push; the local nine-ID inventory does not limit the NuGet-issued key. The policy was created separately from the original release patch and must be changed by its owner.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Check whether BMAD visual-tool consumers require an array from the layered TOML setting.
+  evidence: `_bmad/config.toml` and legacy `_bmad/cis/config.yaml` both encode `visual_tools` as a JSON string. No repository consumer requiring an array was found; a runtime consumer trace would settle this unverified medium agent-config concern.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Test authenticated actor and tenant-delivery callbacks through the real service route.
+  evidence: `PartiesDomainServiceSecurityTests` checks denial and endpoint policy metadata, but no owned test sends a valid channel request to the actor or `/tenants/events` handler. A later HTTP security change could block legitimate delivery without a failing test.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Exercise the release registry-floor comparison with isolated published-version fixtures.
+  evidence: Current CI tests inspect `.github/workflows/release.yml` text and step ordering but do not run its `parts > floor` comparison; a mutation that admits a stale tag could reach the protected release job. This gate was added after the original Parties release patch.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Run the existing contact-selector browser test in required CI.
+  evidence: Component tests invoke `FluentSelect.ValueChanged` directly while the Playwright create-form test is outside the configured CI workflow. Removing the rendered `FluentOption` children could pass required tests but leave users unable to select a contact type. This is later UI work.
