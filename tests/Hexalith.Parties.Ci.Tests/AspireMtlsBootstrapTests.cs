@@ -27,6 +27,11 @@ public sealed class AspireMtlsBootstrapTests
         requests.ShouldContain("curl --fail --silent --show-error --max-time 1 http://127.0.0.1:18080/healthz");
         requests.ShouldContain("curl --fail --silent --show-error --max-time 1 http://127.0.0.1:18081/healthz");
         requests.ShouldContain("curl --fail --silent --show-error --max-time 1 http://127.0.0.1:18082/healthz");
+        foreach (int port in new[] { 50001, 55005, 55006 })
+        {
+            requests.ShouldContain(request => request.StartsWith($"timeout 1 bash -c ", StringComparison.Ordinal)
+                && request.EndsWith($"_ {port}", StringComparison.Ordinal));
+        }
         requests.Count(request => request.StartsWith("aspire start --apphost ", StringComparison.Ordinal)).ShouldBe(1);
     }
 
@@ -42,6 +47,22 @@ public sealed class AspireMtlsBootstrapTests
         {
             requests.ShouldContain($"docker container start hexalith-parties-dapr-{role}");
         }
+    }
+
+    /// <summary>Rejects a network that cannot provide the scoped control-plane boundary.</summary>
+    [Theory]
+    [InlineData("host", "")]
+    [InlineData("bridge", "unrelated-service")]
+    public void BootstrapRejectsAnUntrustedControlPlaneNetwork(string driver, string extraMember)
+    {
+        (int exitCode, string error, string[] requests) = RunBootstrap(
+            networkDriver: driver,
+            extraNetworkMember: extraMember);
+
+        exitCode.ShouldNotBe(0);
+        error.ShouldContain("hexalith-parties-dapr-mtls");
+        requests.ShouldNotContain(request => request.StartsWith("docker container start ", StringComparison.Ordinal));
+        requests.ShouldNotContain(request => request.StartsWith("aspire ", StringComparison.Ordinal));
     }
 
     /// <summary>
@@ -81,7 +102,9 @@ public sealed class AspireMtlsBootstrapTests
         string incompatibleRole = "",
         string incompatiblePort = "",
         string incompatibleBinding = "",
-        bool prepareOnly = false)
+        bool prepareOnly = false,
+        string networkDriver = "bridge",
+        string extraNetworkMember = "")
     {
         if (OperatingSystem.IsWindows())
         {
@@ -104,7 +127,18 @@ public sealed class AspireMtlsBootstrapTests
                 #!/usr/bin/env bash
                 set -euo pipefail
                 printf 'docker %s\n' "$*" >> "$FAKE_REQUEST_LOG"
-                if [[ "$1 $2" == 'network inspect' ]]; then exit 0; fi
+                if [[ "$1 $2" == 'network inspect' ]]; then
+                  if [[ "$#" == 3 ]]; then exit 0; fi
+                  case "$4" in
+                    '{{.Driver}}') echo "$FAKE_NETWORK_DRIVER" ;;
+                    '{{index .Labels "hexalith.parties.dapr.role"}}') echo control-plane-v1 ;;
+                    '{{range .Containers}}{{println .Name}}{{end}}')
+                      printf '%s\n' hexalith-parties-dapr-sentry hexalith-parties-dapr-placement hexalith-parties-dapr-scheduler
+                      if [[ -n "$FAKE_EXTRA_NETWORK_MEMBER" ]]; then echo "$FAKE_EXTRA_NETWORK_MEMBER"; fi ;;
+                    *) echo 'Unexpected fixture network inspect format.' >&2; exit 1 ;;
+                  esac
+                  exit 0
+                fi
                 container="${!#}"
                 if [[ "$1" == port ]]; then
                   # Runtime listings are empty for these stopped containers. A regression
@@ -155,7 +189,7 @@ public sealed class AspireMtlsBootstrapTests
                       *-scheduler/8080/tcp) echo 127.0.0.1:18082 ;;
                       *) echo 'Unexpected fixture port binding.' >&2; exit 1 ;;
                     esac ;;
-                  *'.NetworkSettings.Networks'*) echo true ;;
+                  *'.NetworkSettings.Networks'*) echo hexalith-parties-dapr-mtls ;;
                   *) echo 'Unexpected fixture Docker inspect format.' >&2; exit 1 ;;
                 esac
                 """);
@@ -170,6 +204,11 @@ public sealed class AspireMtlsBootstrapTests
                 [[ "$Dapr__Mtls__Enabled" == true ]]
                 [[ "$Dapr__Mtls__CertificateDirectory" == "$DAPR_MTLS_CERTIFICATE_DIRECTORY" ]]
                 printf 'aspire %s\n' "$*" >> "$FAKE_REQUEST_LOG"
+                """);
+            WriteCommandDouble(temporary, "timeout", """
+                #!/usr/bin/env bash
+                set -euo pipefail
+                printf 'timeout %s\n' "$*" >> "$FAKE_REQUEST_LOG"
                 """);
 
             ProcessStartInfo start = new("bash")
@@ -191,6 +230,8 @@ public sealed class AspireMtlsBootstrapTests
             start.Environment["FAKE_INCOMPATIBLE_ROLE"] = incompatibleRole;
             start.Environment["FAKE_INCOMPATIBLE_PORT"] = incompatiblePort;
             start.Environment["FAKE_INCOMPATIBLE_BINDING"] = incompatibleBinding;
+            start.Environment["FAKE_NETWORK_DRIVER"] = networkDriver;
+            start.Environment["FAKE_EXTRA_NETWORK_MEMBER"] = extraNetworkMember;
             start.Environment["FAKE_SENTRY_CONFIGURATION"] = CiTestPaths.RepoFile("src/Hexalith.Parties.AppHost/DaprComponents/sentry.yaml");
             start.Environment["FAKE_SENTRY_IMAGE"] = CiTestPaths.ReadRepoFile("scripts/aspire-start-mtls.sh")
                 .Split('\n').Single(line => line.StartsWith("sentry_image=", StringComparison.Ordinal)).Split('"')[1];
