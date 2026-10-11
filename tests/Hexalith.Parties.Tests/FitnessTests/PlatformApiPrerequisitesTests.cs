@@ -1023,7 +1023,8 @@ public sealed class PlatformApiPrerequisitesTests
         string root = RepositoryRoot.Locate();
         string spec = File.ReadAllText(Path.Combine(root, SpecRelativePath));
         string baseline = ReadFrontmatterValue(spec, "baseline_revision");
-        string final = ReadFrontmatterValue(spec, "final_revision");
+        // The path-filter fixture must work in a clean clone without the historical final object.
+        const string final = "0000000000000000000000000000000000000000";
 
         string ReadFixtureDiff(string[] arguments)
         {
@@ -1048,7 +1049,10 @@ public sealed class PlatformApiPrerequisitesTests
         {
             GitObjectExists(root, baselineRevision).ShouldBeTrue($"Story 8.3 baseline revision is missing: {baselineRevision}");
             finalRevision.ShouldNotBeNullOrWhiteSpace("Story 8.3 final revision is missing.");
-            GitObjectExists(root, finalRevision!).ShouldBeTrue($"Story 8.3 final revision is missing: {finalRevision}");
+            if (readCompletedDiff is null)
+            {
+                GitObjectExists(root, finalRevision!).ShouldBeTrue($"Story 8.3 final revision is missing: {finalRevision}");
+            }
 
             string[] arguments = ["diff", "--no-renames", "--name-only", "-z", $"{baselineRevision}..{finalRevision}", "--"];
             // The fixture reader exercises the same completed branch without creating commits
