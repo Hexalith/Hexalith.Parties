@@ -184,3 +184,13 @@ references/Hexalith.McpCli|7e99305a621e1bdf7119b6e924348857e2b5a5a4|validated-ad
 references/Hexalith.Memories|499b7a838a36a4cd500ab517d86acf07b1d74ad4|validated-advance|v2.28.1-69-g499b7a83|jpiquot|2026-10-11
 references/Hexalith.Platform|6f703dd0227d8fac023ad97d909c5aaa42115578|validated-advance|6f703dd0|jpiquot|2026-10-11
 references/Hexalith.Tenants|711e100858e59cf8de2b626ea21790d59f969023|validated-advance|v5.8.0-39-g711e1008|jpiquot|2026-10-11
+
+# --- 2026-10-11 post-sync release selection: the release owner separately
+#     approved these four newer pointers committed at Parties
+#     4bd3b1f08f4f1181b07a0c1e68e09e431a2a92ed. The earlier approved
+#     identities remain above as dated history. Selection does not certify
+#     G5 parity or a passing gateway topology.
+references/Hexalith.Builds|608c164c3637240fed2dd92dbfdaaf581ba9846d|validated-advance|v4.30.1-33-g608c164c|jpiquot|2026-10-11
+references/Hexalith.EventStore|ef6e688672e1b09a78e78237e4dbfb607d3635a5|validated-advance|v3.120.0-40-gef6e6886|jpiquot|2026-10-11
+references/Hexalith.Platform|124fc2007333ed5a394c73fdba9975835f4834c8|validated-advance|124fc200|jpiquot|2026-10-11
+references/Hexalith.Tenants|85a5a6cc18ef6a0f2da69e4fd2c2a1a408f32359|validated-advance|v5.8.0-40-g85a5a6cc|jpiquot|2026-10-11

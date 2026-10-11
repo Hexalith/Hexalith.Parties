@@ -256,3 +256,42 @@ zero warnings/errors; the focused receipt passed 1/1. The full local service
 project passed 924/924, zero skipped. CI and the gateway runtime proof still
 need a run against integrated, committed source; this spec remains
 `in-review` until those gates pass.
+
+## 2026-10-11 post-sync owner selection and gateway investigation
+
+Remote and local `main` then advanced to Parties
+`4bd3b1f08f4f1181b07a0c1e68e09e431a2a92ed`, changing four of the
+previously selected gitlinks: Builds `608c164c3637240fed2dd92dbfdaaf581ba9846d`,
+EventStore `ef6e688672e1b09a78e78237e4dbfb607d3635a5`, Platform
+`124fc2007333ed5a394c73fdba9975835f4834c8`, and Tenants
+`85a5a6cc18ef6a0f2da69e4fd2c2a1a408f32359`. The release owner
+separately approved these exact four pointers. Their `validated-advance`
+rows now follow the earlier selections in `.gitlink-signoff.tsv`; both
+`bash scripts/gitlink-rc-gate.sh --diff v1.2.1` and `--worktree` pass.
+The 8.3 matrix retains the earlier 2026-10-11 observation as dated history
+and records this post-sync graph without changing G5 or rollback approvals.
+The current receipt test now matches the four new source identities and
+passes 1/1; a Release package-mode build had zero warnings/errors and the
+full service assembly passed 924/924, zero skipped.
+
+[Main CI 38142520443](https://github.com/Hexalith/Hexalith.Parties/actions/runs/38142520443)
+ran before this reconciliation was committed and failed only the current
+source receipt in the service project (923 passed, one failed); its CI test
+project passed 108/108. The draft [PR 55](https://github.com/Hexalith/Hexalith.Parties/pull/55)
+also runs checks against an older branch identity. Its dependency-review
+check reports that GitHub Dependency graph is disabled for this repository,
+an environment setting rather than a code finding.
+
+A focused gateway test in default self-hosted Dapr mode failed after 193
+seconds with `/health` remaining 503: the Parties `tenants-integration`
+probe received HTTP 403 for `GET /v1.0/invoke/tenants/method/ready`.
+The Tenants ACL permits `parties` on `GET /ready`, but Dapr's self-hosted
+mTLS is disabled by default, so the configured peer identity could not be
+proved in this mode. A second focused trial enabled the existing AppHost
+mTLS option and started a temporary Sentry container with the local test
+trust bundle, yet the sidecars and readiness probe still timed out after
+195 seconds; it did not establish a passing route. The temporary Sentry
+container was removed and Aspire has no running AppHost. The ACL and
+production security policy were not relaxed. The current release stays
+`in-review` pending exact-source CI, a passing required gateway route, and
+the release workflow's own publication checks.
