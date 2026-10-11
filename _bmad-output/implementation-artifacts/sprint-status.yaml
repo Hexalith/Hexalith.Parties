@@ -134,6 +134,7 @@ development_status:
   8-5-eventstore-domain-service-sdk-host-cutover: done
   8-6-projection-and-query-sdk-migration: done
   8-7-data-protection-extraction: blocked
+  # 8.7 blocked by: EventStore 8.5–8.11 
   8-8-client-mcp-apphost-build-and-deploy-cleanup: blocked
   8-9-ui-frontcomposer-and-fluent-consolidation: blocked
   8-10-final-readiness-documentation-and-retirement-gate: done
