@@ -108,7 +108,7 @@ public sealed class PlatformApiPrerequisitesTests
         "8-1-shared-payload-protection-security-spec-and-adr: done",
         "8-2-payload-protection-contracts-and-golden-vectors: done",
         "8-3-pdenc-v2-core-cryptographic-engine: done",
-        "8-4-compatibility-readers-and-mixed-history-routing: backlog",
+        "8-4-compatibility-readers-and-mixed-history-routing: done",
         "8-5-policy-and-key-lifecycle-mechanics: backlog",
         "8-6-azure-key-vault-production-adapter-conformance: backlog",
         "8-7-server-persistence-and-snapshot-integration: backlog",

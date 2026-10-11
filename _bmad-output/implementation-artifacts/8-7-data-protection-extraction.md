@@ -3,13 +3,13 @@ story_key: 8-7-data-protection-extraction
 story_id: "8.7"
 epic: "8"
 created: 2026-07-16T00:23:38+02:00
-revalidated: 2026-10-09
+revalidated: 2026-10-10
 source_status: backlog
 target_status: blocked
 baseline_commit_at_story_start: a35b151
-baseline_commit_at_revalidation: 91efcfd9ed31a0b4cb39dfe8263ddb48842190fb
-eventstore_root_pin_at_revalidation: 75a08f0069d8c2495d9dff20a0deb84edb6cc638
-eventstore_checkout_at_revalidation: 75a08f0069d8c2495d9dff20a0deb84edb6cc638
+baseline_commit_at_revalidation: 56cb4401c4179d431385ad3d931fefa402e4fc5a
+eventstore_root_pin_at_revalidation: 785260fa233880e403bf80bd1bc2f1d53b1f4836
+eventstore_checkout_at_revalidation: 785260fa233880e403bf80bd1bc2f1d53b1f4836
 ---
 
 # Story 8.7: Data-protection extraction
@@ -18,7 +18,33 @@ Status: blocked
 
 <!-- This story is complete enough for workflow intake, but production source migration is hard-gated by the Story 8.3 G5 row and the authoritative Epic 8 sequence. -->
 
-## Current Gate Revalidation — 2026-10-09
+## Current Gate Revalidation — 2026-10-10
+
+G5 remains `needs-additive-api`; Story 8.7 remains `blocked`. At Parties
+`56cb4401c4179d431385ad3d931fefa402e4fc5a`, matching clean root
+checkouts are EventStore `785260fa233880e403bf80bd1bc2f1d53b1f4836`
+and Builds `6a002df5fa60f2f880f09ffd90b3bfaf819bcbf5`. Parties pins
+EventStore package `3.117.1`; Builds defaults to `3.119.0`. Neither observed
+identity is G5 approval.
+
+EventStore 8.4 is `done` with an internal compatibility router, but its owner
+scope explicitly excludes Server read-path integration, key lifecycle, Azure,
+package/release integration, Parties adoption, and v2 writes. The core is still
+non-packable and Server still registers the no-op. Owner 8.5–8.11 remain
+`backlog`; 8.11 closure and I2/I19a approval are absent. The current missing
+receipts are a consumable runtime provider, lifecycle/persistence integration,
+AzureKeyVault backend, release enrollment, named security/owner approval,
+producer-consumer GDPR parity, seven deletion proofs, and post-v2 switch-back.
+Production KMS remains a separate release gate.
+
+All 24 MOVE/KEEP/adapter files, the local harness, and local DI remain. The
+stale owner 8.4 status check was corrected in the G5 row and fitness test;
+older final-set gitlink assertions remain red pending separate identity
+approval. Commands and results are in `tests/test-summary.md`. No production,
+dependency, gitlink, or rollback change was made; dual-provider, GDPR, and
+post-v2 suites remain unrun and uncredited.
+
+## Historical Gate Revalidation — 2026-10-09
 
 G5 remains `needs-additive-api`; Story 8.7 remains `blocked`. At Parties
 `91efcfd9ed31a0b4cb39dfe8263ddb48842190fb`, matching clean root checkouts

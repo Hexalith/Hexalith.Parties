@@ -2450,3 +2450,89 @@ At Parties `bc076222132783cb9a95a5442b1dbe1582ab8842`, the G5 matrix row remains
 | `dotnet ./tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_KeepsNoMigrationGateAndResidualBlockers` | Exit 0; 1 passed, 0 failed/skipped/not run. The focused matrix no-migration guard remains green. |
 
 EventStore 8.3 is `done` under a core closure packet that explicitly says G5 is closed. The v2 core is non-packable; Server still registers `NoOpEventPayloadProtectionService`. Owner 8.4-8.11 remain `backlog`; AzureKeyVault and Story 8.11 closure artifacts are absent. Named G5 security/owner approval, I2/I19a classification, a consumable runtime/backend, compatibility and lifecycle integration, Server persistence, release enrollment, producer and consumer parity, seven deletion proofs, and post-v2 rollback remain missing. Production KMS is a separate release gate. No production source, dependency, gitlink, local DI, public security API, or rollback file was changed. Dual-provider, GDPR, post-v2 rollback, unit/topology, and provider/KMS lanes were not run or credited.
+
+## Story 8.7 G5 revalidation — owner 8.4 done — 2026-10-10
+
+At Parties `56cb4401c4179d431385ad3d931fefa402e4fc5a`, G5 is still
+`needs-additive-api` and Story 8.7 is `blocked`. The EventStore root gitlink
+and clean checkout match `785260fa233880e403bf80bd1bc2f1d53b1f4836`
+(`v3.119.0-9-g785260fa`); Builds matches
+`6a002df5fa60f2f880f09ffd90b3bfaf819bcbf5`
+(`v4.30.1-22-g6a002df`). Parties pins EventStore package `3.117.1`;
+Builds defaults to `3.119.0`. The source/package split is observed, not a G5
+approval or a provider parity receipt.
+
+| Command | Result |
+| --- | --- |
+| `git ls-tree HEAD references/Hexalith.EventStore references/Hexalith.Builds`; matching `git -C` `rev-parse HEAD`, `describe --tags --always`, and `status --porcelain` checks | Exit 0. Both root gitlinks match their clean checkouts; identities above. |
+| Current G5 static procedure below | Exit 0: 32/32 matrix commands; 24 retained MOVE/KEEP/adapter files, local harness, four local DI registrations; package selectors `3.117.1` and `3.119.0`; both clean matching source identities. |
+| Historical `python3 - <<'PY_AUDIT'` procedure under "Story 8.7 G5 retry at 9e74c2b6" | Exit 1 after 32/32 static checks and retention checks passed. Its final assertion still expects both package selectors `3.117.1`, which is no longer true. The historical command is retained as dated evidence. |
+| `dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --verbosity minimal` | Exit 0; 0 warnings, 0 errors. Rebuild after the owner-status fitness change with `--no-restore --verbosity quiet` also exited 0 with 0 warnings/errors. |
+| `dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -noColor` | Before correction: 31/33 passed, two failed: stale owner 8.4 status and selected Builds gitlink. After correction: 32/33 passed, one failed, zero skipped. `FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph` expects approved `fef031806321793c9effb17235c2465118984432` while HEAD selects `6a002df5fa60f2f880f09ffd90b3bfaf819bcbf5`. Approval identity was not silently updated. |
+| `dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible -noColor` | Exit 0; 1/1 passed, zero skipped. The G5 row now records the owner 8.4 `done` status. |
+| `pwsh scripts/test.ps1 -Lane unit` | Exit 1. Contracts 181/181, Authentication 12/12, and Client 171/171 passed; the next Server project failed to compile `Hexalith.Parties` with CS0246 at `RetainedHumanActorHistoryFold.cs:31,33` and CS1061 at `:32`. The selected Release package graph lacks `ExpiredIdentityHistoryCertificate` and `RetainedIdentityHistoryStream.ExpiredEvents`, which are present in current EventStore source. Remaining unit projects did not run. |
+| `pwsh scripts/test.ps1 -Lane topology` | Exit 1 before tests. IntegrationTests build hit the same CS0246/CS1061 errors at `RetainedHumanActorHistoryFold.cs:31-33`. |
+| `bash scripts/check-no-warning-override.sh` | Exit 0; no warning override or nested-submodule regression. |
+| `git diff --check`; `git -c core.whitespace=cr-at-eol diff --check` | First exits 2 because Git counts the required CRLF line endings as trailing whitespace on added lines. The CRLF-aware check exits 0; repository configuration was not changed. |
+
+The static procedure is reproducible from the repository root. It checks the
+current matrix row and selected package versions without changing the dated
+2026-10-08 procedure:
+
+```bash
+python3 - <<'PY_G5_CURRENT'
+from pathlib import Path
+import re
+import shlex
+import subprocess
+import xml.etree.ElementTree as ET
+
+matrix = Path('_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md').read_text()
+row = next(line for line in matrix.splitlines() if line.startswith('| Payload protection engine package |'))
+assert row.split('|')[3].strip() == 'needs-additive-api'
+commands = re.findall(r'`(rg -n -F [^`]+|test ! -f [^`]+)`(\s*\(expected no matches\))?', row)
+for command, absent in commands:
+    result = subprocess.run(shlex.split(command), capture_output=True, text=True)
+    assert result.returncode == (1 if absent else 0), (command, result.returncode, result.stderr)
+assert len(commands) == 32
+print('PASS: 32/32 current G5 matrix static checks')
+story = Path('_bmad-output/implementation-artifacts/8-7-data-protection-extraction.md').read_text()
+inventory = story.split('### File Ownership and Change Boundaries')[1].split('Likely UPDATE/rebind surfaces')[0]
+paths = re.findall(r'^- `(src/[^`]+\.cs)`', inventory, re.M)
+assert len(paths) == 24 and all(Path(path).is_file() for path in paths)
+assert Path('tests/Hexalith.Parties.Security.Tests/CryptoKeyManagementCompatibilityHarnessTests.cs').is_file()
+di = Path('src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs').read_text()
+for marker in [
+    'AddSingleton<IKeyStorageBackend, LocalDevKeyStorageBackend>()',
+    'AddSingleton<PartyPayloadProtectionService>()',
+    'AddSingleton<EventStorePartyPayloadProtectionAdapter>()',
+    'AddSingleton<IEventPayloadProtectionService>(sp => sp.GetRequiredService<EventStorePartyPayloadProtectionAdapter>())',
+]:
+    assert marker in di, marker
+print('PASS: 24 retained files, local harness and four local DI registrations')
+for path, expected in [
+    ('Directory.Packages.props', '3.117.1'),
+    ('references/Hexalith.Builds/Props/Directory.Packages.props', '3.119.0'),
+]:
+    assert ET.parse(path).find('.//HexalithEventStoreVersion').text == expected
+print('PASS: Parties package selector 3.117.1; Builds default 3.119.0')
+for dependency in ['Hexalith.EventStore', 'Hexalith.Builds']:
+    path = f'references/{dependency}'
+    root_pin = subprocess.check_output(['git', 'ls-tree', 'HEAD', path], text=True).split()[2]
+    checkout = subprocess.check_output(['git', '-C', path, 'rev-parse', 'HEAD'], text=True).strip()
+    status = subprocess.check_output(['git', '-C', path, 'status', '--porcelain'], text=True)
+    assert root_pin == checkout and not status, (path, root_pin, checkout, status)
+    print(f'PASS: matching clean {dependency} root pin/checkout {checkout}')
+PY_G5_CURRENT
+```
+
+EventStore 8.4 delivered an internal compatibility reader/router with no
+Server wiring, release package, Azure backend, or provider write mode. The core
+remains non-packable and Server still registers the no-op. Owner 8.5–8.11
+remain `backlog`; 8.11 closure is absent. Named G5/security approval,
+I2/I19a classification, a consumable runtime/backend, release enrollment,
+producer-consumer GDPR parity, seven deletion proofs, and post-v2 switch-back
+are missing. Production KMS is a separate release gate. No production source,
+dependency, gitlink, local DI, public API, or rollback file changed. Mixed-history
+provider parity, GDPR, post-v2 rollback, and KMS tests did not run and receive
+no credit.
