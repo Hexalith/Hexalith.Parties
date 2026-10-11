@@ -1,7 +1,10 @@
 extern alias apphost;
 
 using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Security.Claims;
+using System.Text;
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
@@ -9,6 +12,7 @@ using Aspire.Hosting.Testing;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 
@@ -53,6 +57,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     private string? _ciMtlsBootstrapScript;
     private HttpClient? _partiesClient;
     private HttpClient? _eventStoreClient;
+    private readonly ProjectionDeliveryWriterProtocolTestLease _writerProtocolLease = new();
 
     /// <summary>
     /// Gets a value indicating whether the Aspire topology started successfully.
@@ -154,6 +159,18 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             _eventStoreClient = _app.CreateHttpClient("eventstore");
             _eventStoreClient.Timeout = TimeSpan.FromSeconds(60);
 
+            // The disposable topology starts with no v2 writer cutover. Activate through
+            // EventStore's operator API and restore the previous Redis marker on disposal.
+            string sourceCommit = await ProjectionDeliveryWriterProtocolTestLease
+                .ReadExactSourceCommitAsync(cts.Token)
+                .ConfigureAwait(false);
+            await _writerProtocolLease.ActivateAsync(
+                _eventStoreClient,
+                CreateAdministratorToken(),
+                sourceCommit,
+                "disposable-parties-aspire-fixture-backup",
+                cts.Token).ConfigureAwait(false);
+
             // Wait for the /health endpoint to actually return 200 via HTTP.
             await WaitForEndpointAsync(
                 _partiesClient,
@@ -174,6 +191,14 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         {
             IsAvailable = false;
             UnavailableReason = $"{ex.GetType().Name}: {ex.Message}";
+            try
+            {
+                await _writerProtocolLease.RestoreAsync().ConfigureAwait(false);
+            }
+            catch (Exception restorationException)
+            {
+                UnavailableReason += $"; marker restoration failed: {restorationException}";
+            }
         }
     }
 
@@ -192,41 +217,66 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
     public async ValueTask DisposeAsync()
     {
-        _partiesClient?.Dispose();
-        _eventStoreClient?.Dispose();
-
         try
         {
-            if (_app is not null)
-            {
-                await _app.DisposeAsync().ConfigureAwait(false);
-            }
+            await _writerProtocolLease.RestoreAsync().ConfigureAwait(false);
         }
         finally
         {
+            _partiesClient?.Dispose();
+            _eventStoreClient?.Dispose();
             try
             {
-                if (_builder is not null)
+                if (_app is not null)
                 {
-                    await _builder.DisposeAsync().ConfigureAwait(false);
+                    await _app.DisposeAsync().ConfigureAwait(false);
                 }
             }
             finally
             {
                 try
                 {
-                    await CleanupCiDaprMtlsAsync().ConfigureAwait(false);
+                    if (_builder is not null)
+                    {
+                        await _builder.DisposeAsync().ConfigureAwait(false);
+                    }
                 }
                 finally
                 {
-                    Environment.SetEnvironmentVariable("EnableKeycloak", _previousEnableKeycloak);
-                    Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", _previousAspNetCoreEnvironment);
-                    Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", _previousDotNetEnvironment);
-                    Environment.SetEnvironmentVariable("Dapr__Mtls__Enabled", _previousDaprMtlsEnabled);
-                    Environment.SetEnvironmentVariable("Dapr__Mtls__CertificateDirectory", _previousDaprMtlsCertificateDirectory);
+                    try
+                    {
+                        await CleanupCiDaprMtlsAsync().ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        Environment.SetEnvironmentVariable("EnableKeycloak", _previousEnableKeycloak);
+                        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", _previousAspNetCoreEnvironment);
+                        Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", _previousDotNetEnvironment);
+                        Environment.SetEnvironmentVariable("Dapr__Mtls__Enabled", _previousDaprMtlsEnabled);
+                        Environment.SetEnvironmentVariable("Dapr__Mtls__CertificateDirectory", _previousDaprMtlsCertificateDirectory);
+                    }
                 }
             }
         }
+    }
+
+    private static string CreateAdministratorToken()
+    {
+        var descriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity([new(ClaimTypes.Role, "GlobalAdministrator")]),
+            NotBefore = DateTime.UtcNow.AddMinutes(-1),
+            Expires = DateTime.UtcNow.AddMinutes(30),
+            IssuedAt = DateTime.UtcNow,
+            Issuer = JwtIssuer,
+            Audience = "hexalith-eventstore",
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSigningKey)),
+                SecurityAlgorithms.HmacSha256Signature),
+        };
+
+        var handler = new JwtSecurityTokenHandler();
+        return handler.WriteToken(handler.CreateToken(descriptor));
     }
 
     private async Task PrepareCiDaprMtlsAsync(CancellationToken cancellationToken)

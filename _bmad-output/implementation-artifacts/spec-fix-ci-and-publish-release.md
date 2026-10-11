@@ -379,3 +379,32 @@ of a wrong network driver and an unrelated network member. Both affected
 Release package-mode test projects built with zero warnings/errors; `bash -n`
 and whitespace checks passed. Exact-source fresh CI and main push proof remain
 pending, so the spec remains `in-review`.
+
+### Fresh Redis writer-protocol prerequisite
+
+[PR 55 CI 38145259418](https://github.com/Hexalith/Hexalith.Parties/actions/runs/38145259418)
+passed build-and-test on `138ee8fc` and reached the secure Dapr topology, but its
+Aspire job failed after 35 passed, 6 skipped, and 1 failed. EventStore's
+`/health` returned 503 because the fresh Redis store lacked the required
+`projection-delivery-writer-protocol` v2 marker. The earlier local gateway
+passes had inherited a valid marker from prior local tests. The exact Aspire
+job log is `/tmp/parties-pr55-network-aspire.log`.
+
+The Parties Aspire fixture now follows the selected EventStore integration
+fixture's safe test cutover: it acquires a Redis isolation lease, snapshots and
+removes any pre-existing marker atomically, waits until that marker is the only
+unhealthy check, activates v2 through EventStore's authenticated production
+admin API using the exact source commit, verifies the persisted marker, and
+restores the prior Redis value on shutdown. The fixture's administrator token
+uses the topology's test-only symmetric key. The existing shared Dapr Redis
+service and production health gate remain unchanged.
+
+The source-mode integration project built with zero warnings/errors. The
+focused required-mode gateway test with only `GITHUB_ACTIONS=true` passed
+1/1, zero skipped, in 66.221 seconds; its log is
+`/tmp/parties-gateway-writer-protocol.log`. The log records HTTP 200 from the
+cutover endpoint, followed by an accepted command and completed command status.
+After the test, Redis again held the pre-test marker commit
+`f2b480b68a8bd5369b3cdf550340e0fadfb2332b`; no scoped Dapr containers,
+network, or temporary trust bundle remained. Fresh PR CI and exact-source main
+push CI are still pending, so this spec remains `in-review`.
