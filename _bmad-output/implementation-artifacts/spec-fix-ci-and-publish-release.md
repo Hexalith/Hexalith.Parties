@@ -408,3 +408,29 @@ After the test, Redis again held the pre-test marker commit
 `f2b480b68a8bd5369b3cdf550340e0fadfb2332b`; no scoped Dapr containers,
 network, or temporary trust bundle remained. Fresh PR CI and exact-source main
 push CI are still pending, so this spec remains `in-review`.
+
+### PR CI fitness scope correction and dependency review
+
+[PR 55 CI 38146371073](https://github.com/Hexalith/Hexalith.Parties/actions/runs/38146371073)
+on `c4d8a0e2` built successfully but stopped before Aspire because the service
+suite had 923 passed and one architectural fitness failure. The fixture's
+production EventStore route contains `/api/v1/admin`; a Story 12.4 rule that
+rejects retired Parties server admin assertions scanned that route as though
+it were a Parties assertion. The rule now exempts only the exact EventStore
+writer-protocol activation route in the one fixture helper; other retired
+Parties routes remain forbidden. The exact CI job log is
+`/tmp/parties-pr55-writer-build.log`.
+
+The Release package-mode service test project built with zero warnings/errors.
+The focused architectural test passed 1/1. The full 924-test run first had a
+transient 627 ms semantic-search benchmark result over its 500 ms limit; the
+isolated benchmark passed 2/2, and a full rerun passed 924/924 with zero
+skips (`/tmp/parties-service-fitness-cutover-rerun.log`). No benchmark limit
+or production search code was changed.
+
+The repository's Dependency Review job initially failed because GitHub's
+Dependency graph endpoint returned 404. An idempotent repository-admin
+`PUT /vulnerability-alerts` returned 204, after which the graph SBOM endpoint
+returned a document and the failed Dependency Review run passed on retry.
+Commitlint and CodeQL passed for the same PR head. A fresh PR CI run including
+Aspire and exact-source main push CI remain pending; status is `in-review`.
