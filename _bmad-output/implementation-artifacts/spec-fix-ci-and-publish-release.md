@@ -232,3 +232,27 @@ The local integration-project package-mode Release build passed with zero warnin
 At read-only check, remote `main` is `e746fa41f32567d350f9350808ec31217f5dc3e6`, while local `main` is `0db23a1c3d1e7e6ae58508ea8abcc38643d30992` (one commit ahead and one behind). [CI 38139897179](https://github.com/Hexalith/Hexalith.Parties/actions/runs/38139897179) failed build-and-test: Release build and package consumers passed, but the service project reported 913 passed / 11 failed and CI tests 107 passed / one failed; Aspire and performance jobs were skipped. Remote source has the 3.120.0 catalog selection but lacks local `0db23a1c`'s tenant retry expectation and updated documentation, explaining three failures. One fitness failure still pins an older Builds gitlink; eight historical Story 8.3 fixture cases fail because `final_revision` `edfe6762a7ff45976c19d09e0ae281d1bb94b4f8` is not reachable from current main or tags and is absent from a fresh checkout, though `git fetch --no-tags origin edfe6762a7ff45976c19d09e0ae281d1bb94b4f8` succeeds by exact SHA locally. The remaining current-pointer receipt requires an owner-reviewed observation. The current release remains blocked by CI, the gateway topology, and eight unsigned release pointers; retain `status: in-review`.
 
 The synthetic Story 8.3 completed-scope path tests no longer require the historical final Git object: `PlatformApiPrerequisitesTests.cs` checks that object only in the real gate, and the fixture supplies an intentionally absent final SHA to prove its own diff reader reaches the forbidden-path assertion. Its Release package-mode test-project build passed with zero warnings/errors, and the focused completed-scope tests passed 10/10. A full local service-project run then passed 923/924, zero skips; the sole failure is `FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph`, which still expects the older Builds pointer. These local results do not establish exact-source remote CI because the branch remains divergent and the owner receipt, historical Git evidence ref, and gateway runtime remain unresolved.
+
+## 2026-10-11 owner selection and CI evidence recovery
+
+The release owner approved the eight exact committed pointers in the table above.
+`.gitlink-signoff.tsv` now records their `validated-advance` dispositions
+under jpiquot, without moving a gitlink or including the unrelated uncommitted
+Platform work. `bash scripts/gitlink-rc-gate.sh --diff v1.2.1` and
+`bash scripts/gitlink-rc-gate.sh --worktree` both pass. The owner also approved
+publishing the nonrelease `evidence/story-8-3-final` tag at
+`edfe6762a7ff45976c19d09e0ae281d1bb94b4f8`; a remote
+`git ls-remote --tags origin refs/tags/evidence/story-8-3-final` confirms that
+exact target. The tag makes the real historical Story 8.3 scope gate reachable
+in a fresh fetch.
+
+The 8.3 matrix now has a dated current observation for the clean source
+checkouts and imported Builds package catalog, while retaining its 2026-10-09
+and earlier observations. The current receipt test checks the selected
+EventStore 3.120.0 package, eight consumed source identities, current catalog
+versions, and unchanged G5 status; it leaves historical parity approvals and
+rollback paths untouched. A Release package-mode test-project build passed with
+zero warnings/errors; the focused receipt passed 1/1. The full local service
+project passed 924/924, zero skipped. CI and the gateway runtime proof still
+need a run against integrated, committed source; this spec remains
+`in-review` until those gates pass.
