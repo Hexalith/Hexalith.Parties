@@ -1479,3 +1479,27 @@ location: CurrentReleaseGitlinks; McpCli and Platform source-selection documenta
 source_spec: `_bmad-output/implementation-artifacts/spec-gh-38399980224-fix-ci-and-publish-release.md`
 reason: Existing CurrentReleaseGitlinks excludes these non-consumed root selections even though the current documentation table records them; release gitlink signing protects changed pointers, while direct table identity coverage remains future hardening.
 status: open
+
+### DW-192: Derive erasure status from committed events or reconcile it after event persistence; cover failed append and retry before reporting Verified or Erased.
+origin: retro action item epic-8-retro-erasure-status-after-commit
+location: n/a
+source_spec: `_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md`
+severity: low
+reason: retrospective action item from sprint-status.yaml (epic 8; owner Amelia (Developer) + Winston (Architect) + Murat (Test Architect); sprint-status status open)
+status: open
+
+### DW-193: Fence live and rebuild search notifications against concurrent erasure; test both interleavings and reconcile deferred-work DW-80 with D11.
+origin: retro action item epic-8-retro-erasure-search-fence
+location: n/a
+source_spec: `_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md`
+severity: low
+reason: retrospective action item from sprint-status.yaml (epic 8; owner Amelia (Developer) + Murat (Test Architect); sprint-status status open)
+status: open
+
+### DW-194: Preserve the typed destroyed-key outcome when the crypto-pending marker write fails; add focused fault-injection coverage.
+origin: retro action item epic-8-retro-destroyed-key-marker-fault
+location: n/a
+source_spec: `_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md`
+severity: low
+reason: retrospective action item from sprint-status.yaml (epic 8; owner Amelia (Developer) + Murat (Test Architect); sprint-status status open)
+status: open
