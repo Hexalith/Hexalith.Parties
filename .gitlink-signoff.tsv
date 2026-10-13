@@ -194,3 +194,17 @@ references/Hexalith.Builds|608c164c3637240fed2dd92dbfdaaf581ba9846d|validated-ad
 references/Hexalith.EventStore|ef6e688672e1b09a78e78237e4dbfb607d3635a5|validated-advance|v3.120.0-40-gef6e6886|jpiquot|2026-10-11
 references/Hexalith.Platform|124fc2007333ed5a394c73fdba9975835f4834c8|validated-advance|124fc200|jpiquot|2026-10-11
 references/Hexalith.Tenants|85a5a6cc18ef6a0f2da69e4fd2c2a1a408f32359|validated-advance|v5.8.0-40-g85a5a6cc|jpiquot|2026-10-11
+
+# --- 2026-10-13 Parties release selection: jpiquot authorized fixing CI,
+#     publishing the current release, and bypassing human authorization in
+#     this session (spec-gh-38399980224-fix-ci-and-publish-release.md).
+#     These six exact pointers are already committed at Parties
+#     1e64c3e1bc37bb1cdfb0c4f1d7e2f174222984c9. Selection only: automated
+#     CI, package, and publication gates remain required. This does not
+#     certify G5 or accessibility parity or authorize rollback deletion.
+references/Hexalith.Builds|b2f59c59d16fc2234af6a0f850297958c6143e0d|validated-advance|v4.30.1-35-gb2f59c59|jpiquot|2026-10-13
+references/Hexalith.EventStore|2a7b80a4ec639bdba7ff8acc74cacb4f8880b24c|validated-advance|v3.120.0-75-g2a7b80a4|jpiquot|2026-10-13
+references/Hexalith.FrontComposer|c3174dc917b094f3736b098ac78a531f197dbe56|validated-advance|v4.6.0-25-gc3174dc9|jpiquot|2026-10-13
+references/Hexalith.Memories|24b1fa7408eabc1db24b7536fd35f575c7a572a7|validated-advance|v2.28.1-88-g24b1fa74|jpiquot|2026-10-13
+references/Hexalith.Platform|be294641fe06490b7f1d9788f383512088842e7d|validated-advance|be294641|jpiquot|2026-10-13
+references/Hexalith.Tenants|ed7cef6e327156628c0479071f3bf419fd64612c|validated-advance|v5.8.0-63-ged7cef6e|jpiquot|2026-10-13

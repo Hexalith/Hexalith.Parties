@@ -1370,3 +1370,11 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
   summary: Run the existing contact-selector browser test in required CI.
   evidence: Component tests invoke `FluentSelect.ValueChanged` directly while the Playwright create-form test is outside the configured CI workflow. Removing the rendered `FluentOption` children could pass required tests but leave users unable to select a contact type. This is later UI work.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-gh-38399980224-fix-ci-and-publish-release.md`
+  summary: Require the FrontComposer shared-status structural command and test its missing-command outcome.
+  evidence: Existing RequiredEvidenceTokensBySurface and RequiredDeliveredApiCommands do not mandate the FcSurfaceStatus command; removing an individual FrontComposer command leaves other searches satisfying the row's nonempty-command guard. This gap predates the current conditional-expression refresh.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-gh-38399980224-fix-ci-and-publish-release.md`
+  summary: Validate McpCli and Platform source-selection rows independently of the eight consumed dependency fitness checks.
+  evidence: Existing CurrentReleaseGitlinks excludes these non-consumed root selections even though the current documentation table records them; release gitlink signing protects changed pointers, while direct table identity coverage remains future hardening.
