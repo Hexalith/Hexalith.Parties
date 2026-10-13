@@ -973,9 +973,13 @@ location: src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs:58,79; src/H
 severity: medium
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  summary: Align server-produced Ineligible human/Unknown evidence with the public client validation contract.
-  evidence: Blind 1 and Verification 3 share this root cause: the resolver can return Ineligible with a live HumanBinding or Unknown classification, while the client turns those shapes into Unavailable/503. Both paths were already committed in 37d87f5a2869b076c651a58714d60f64647848bc and are unchanged by this repair. Exit proof: explicit fail-closed response semantics and producer/client round-trip tests for inactive, restricted, erasing, and unknown Parties.
+### DW-146: Align server-produced Ineligible human/Unknown evidence with the public client validation contract.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"; original review: Story 8.10 baseline review after three-pin approval (2026-10-04)), 2026-10-13
+location: src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs:58,79; src/Hexalith.Parties.Client/HttpPartiesIdentityClient.cs:58
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: Blind 1 and Verification 3 share this root cause: the resolver can return Ineligible with a live HumanBinding or Unknown classification, while the client turns those shapes into Unavailable/503. Both paths were already committed in 37d87f5a2869b076c651a58714d60f64647848bc and are unchanged by this repair. Exit proof: explicit fail-closed response semantics and producer/client round-trip tests for inactive, restricted, erasing, and unknown Parties.
+status: open
 
 ### DW-128: Validate binding command acknowledgments
 
@@ -984,9 +988,13 @@ location: src/Hexalith.Parties.Client/HttpPartiesIdentityClient.cs:121-150
 severity: medium
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  summary: Reject empty or unrelated successful HTTP objects as binding command acknowledgments.
-  evidence: Blind 2: SubmitAsync deserializes any object without explicit false/rejected flags; SubmitCommandResponse permits default constructor values, and binding methods discard it. An empty object can complete the call without matching correlation/message identity. Pre-existing 37d87f5a2869b076c651a58714d60f64647848bc code, unchanged here. Exit proof: malformed, missing-field, and mismatched acknowledgment rejection plus valid acknowledgment acceptance.
+### DW-147: Reject empty or unrelated successful HTTP objects as binding command acknowledgments.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"; original review: Story 8.10 baseline review after three-pin approval (2026-10-04)), 2026-10-13
+location: src/Hexalith.Parties.Client/HttpPartiesIdentityClient.cs:121-150
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: Blind 2: SubmitAsync deserializes any object without explicit false/rejected flags; SubmitCommandResponse permits default constructor values, and binding methods discard it. An empty object can complete the call without matching correlation/message identity. Pre-existing 37d87f5a2869b076c651a58714d60f64647848bc code, unchanged here. Exit proof: malformed, missing-field, and mismatched acknowledgment rejection plus valid acknowledgment acceptance.
+status: open
 
 ### DW-129: Reject ineffective identity-history snapshot protection
 
@@ -996,9 +1004,13 @@ severity: high
 status: open
 note: 2026-10-05 (Story 8.10 review loop 3, Blind 8) — DW-142 names this entry as the open carrier for classifying `PartyState.HumanActorBindings` and `PartyState.HumanActorTransitions`, which `tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs` currently records as `DeferredPrivacyDesign`. This entry's exit proof therefore also replaces those two `DeferredPrivacyDesign` rows with a decided classification in `PersonalDataInventoryTests`, with Contracts.Tests green.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  summary: Require identity-history snapshot protection evidence before reporting protected metadata.
-  evidence: Blind 3: the snapshot provider result is wrapped without effectiveness validation; the synthetic test provider returns its input. History evidence has no profile PersonalData annotation, while the adapter reports the wrapper as Protected. Existing identity-feature code from 37d87f5a2869b076c651a58714d60f64647848bc, unchanged here. Exit proof: reject no-op custody snapshots and show persisted snapshot representation does not expose actor history. The synthetic test is not live custody qualification.
+### DW-148: Require identity-history snapshot protection evidence before reporting protected metadata.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"; original review: Story 8.10 baseline review after three-pin approval (2026-10-04)), 2026-10-13
+location: src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs:294; src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs:90; tests/Hexalith.Parties.Security.Tests/IdentityHistoryProtectionTests.cs:39
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: Blind 3: the snapshot provider result is wrapped without effectiveness validation; the synthetic test provider returns its input. History evidence has no profile PersonalData annotation, while the adapter reports the wrapper as Protected. Existing identity-feature code from 37d87f5a2869b076c651a58714d60f64647848bc, unchanged here. Exit proof: reject no-op custody snapshots and show persisted snapshot representation does not expose actor history. The synthetic test is not live custody qualification.
+status: open
 
 ### DW-130: Qualify ordinary replay after retained-history expiry
 
@@ -1007,9 +1019,13 @@ location: src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs:143; sr
 severity: high (unverified)
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  summary: Determine whether finite history expiry prevents ordinary Party command replay and establish value-free lifecycle continuity if needed.
-  evidence: Blind 4: command replay unwraps every history event, but fallback catches only destroyed profile keys. A live qualified custody expiry outcome was not exercised, so harm remains unverified. Existing identity-feature paths, unchanged here. Settle by advancing an actual qualified provider beyond expiry and running profile, erasure, and replay/switch-back commands; demonstrate replayable lifecycle state without expired actor values or record the exact failure.
+### DW-149: Determine whether finite history expiry prevents ordinary Party command replay and establish value-free lifecycle continuity if needed.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"; original review: Story 8.10 baseline review after three-pin approval (2026-10-04)), 2026-10-13
+location: src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs:143; src/Hexalith.Parties/Domain/PartyDomainProcessor.cs:669-716
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: Blind 4: command replay unwraps every history event, but fallback catches only destroyed profile keys. A live qualified custody expiry outcome was not exercised, so harm remains unverified. Existing identity-feature paths, unchanged here. Settle by advancing an actual qualified provider beyond expiry and running profile, erasure, and replay/switch-back commands; demonstrate replayable lifecycle state without expired actor values or record the exact failure.
+status: open
 
 ### DW-131: Validate identity fold wire representations
 
@@ -1018,9 +1034,13 @@ location: src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs:39
 severity: medium
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  summary: Reject unsupported serialization formats and metadata versions before identity source folding.
-  evidence: Blind 5: the fold deserializes every payload as JSON without checking its StreamReadEvent format/version. The owner authoritative reader validates continuity; StreamReadPageValidator only requires nonblank format and metadata version >=1, not Party representation support. Existing 37d87f5a2869b076c651a58714d60f64647848bc code, unchanged here. Exit proof: supported representations pass and otherwise contiguous unsupported-format/version streams are rejected.
+### DW-150: Reject unsupported serialization formats and metadata versions before identity source folding.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"; original review: Story 8.10 baseline review after three-pin approval (2026-10-04)), 2026-10-13
+location: src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs:39
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: Blind 5: the fold deserializes every payload as JSON without checking its StreamReadEvent format/version. The owner authoritative reader validates continuity; StreamReadPageValidator only requires nonblank format and metadata version >=1, not Party representation support. Existing 37d87f5a2869b076c651a58714d60f64647848bc code, unchanged here. Exit proof: supported representations pass and otherwise contiguous unsupported-format/version streams are rejected.
+status: open
 
 ### DW-132: Require test evidence on release validation bypass
 
@@ -1029,9 +1049,13 @@ location: .github/workflows/release.yml:49,312
 severity: medium
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  summary: Ensure the Commitlint-only release bypass cannot substitute for required test evidence.
-  evidence: Blind 6: bypass-validation=true selects commitlint.yml exact-source proof while publication receives empty test-projects based on a CI-tested assumption. Protected operator approval supplies no test receipt. Existing workflow from 14d249fde316b0002aec84351d7a7cdf953d1d30, unchanged here. Exit proof: a release-policy decision and a test-backed path for the exact source; no release-policy change or publication is authorized by this entry.
+### DW-151: Ensure the Commitlint-only release bypass cannot substitute for required test evidence.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"; original review: Story 8.10 baseline review after three-pin approval (2026-10-04)), 2026-10-13
+location: .github/workflows/release.yml:49,312
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: Blind 6: bypass-validation=true selects commitlint.yml exact-source proof while publication receives empty test-projects based on a CI-tested assumption. Protected operator approval supplies no test receipt. Existing workflow from 14d249fde316b0002aec84351d7a7cdf953d1d30, unchanged here. Exit proof: a release-policy decision and a test-backed path for the exact source; no release-policy change or publication is authorized by this entry.
+status: open
 
 ### DW-133: Exercise real Parties admission proof construction
 
@@ -1040,9 +1064,13 @@ location: src/Hexalith.Parties/Authorization/PartyIdentityAuthority.cs:14-38; te
 severity: medium
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  summary: Test real Parties identity admission scope construction rather than replacing the whole authority.
-  evidence: Blind 8: repository C# searches find only substituted IPartyIdentityAuthority consumers; the real wrapper builds payload digest, logical ID, message ID, operation and tenant/target scope before invoking the owner verifier. Existing identity-feature code, unchanged here. Exit proof: real-wrapper signed evidence acceptance and changed payload/scope/operation/message/logical ID, expiry, and missing-proof rejection before protected state unwrap.
+### DW-152: Test real Parties identity admission scope construction rather than replacing the whole authority.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"; original review: Story 8.10 baseline review after three-pin approval (2026-10-04)), 2026-10-13
+location: src/Hexalith.Parties/Authorization/PartyIdentityAuthority.cs:14-38; tests/Hexalith.Parties.Tests/Domain/PartyIdentityAdmissionTests.cs:25
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: Blind 8: repository C# searches find only substituted IPartyIdentityAuthority consumers; the real wrapper builds payload digest, logical ID, message ID, operation and tenant/target scope before invoking the owner verifier. Existing identity-feature code, unchanged here. Exit proof: real-wrapper signed evidence acceptance and changed payload/scope/operation/message/logical ID, expiry, and missing-proof rejection before protected state unwrap.
+status: open
 
 ### DW-134: Make visual regression and baseline updates executable
 
@@ -1051,9 +1079,13 @@ location: tests/e2e/specs/parties-accessibility.spec.ts:105; tests/e2e/package.j
 severity: medium
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  summary: Provide an actual image regression baseline and an update command that updates the asserted artifact.
-  evidence: Blind 9: the browser test attaches a screenshot and checks byte length, then compares manually read JSON text/visibility fields. No image matcher or JSON updater consumes --update-snapshots. Existing f8fd74045d95d441ee5adb0809a254307d0a24a6 test, unchanged here. Exit proof: deterministic layout/style image regression is detected and test:visual:update regenerates its asserted baseline.
+### DW-153: Provide an actual image regression baseline and an update command that updates the asserted artifact.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"; original review: Story 8.10 baseline review after three-pin approval (2026-10-04)), 2026-10-13
+location: tests/e2e/specs/parties-accessibility.spec.ts:105; tests/e2e/package.json:11
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: Blind 9: the browser test attaches a screenshot and checks byte length, then compares manually read JSON text/visibility fields. No image matcher or JSON updater consumes --update-snapshots. Existing f8fd74045d95d441ee5adb0809a254307d0a24a6 test, unchanged here. Exit proof: deterministic layout/style image regression is detected and test:visual:update regenerates its asserted baseline.
+status: open
 
 ### DW-135: Observe content forced-colors and reduced-motion behavior
 
@@ -1062,9 +1094,13 @@ location: tests/e2e/specs/parties-accessibility.spec.ts:85
 severity: medium
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  summary: Measure visible app-content focus and reduced-motion styles in the browser.
-  evidence: Blind 10: media emulation is asserted, but the sole style value is a truthy outlineColor on a shell skip link; no content control outline style/width or animation/transition duration is checked. Existing browser test, unchanged here. Exit proof: focus a representative app-owned control and verify visible normal/forced-colors outline plus reduced-motion behavior. I13 remains open; this entry supplies no parity approval.
+### DW-154: Measure visible app-content focus and reduced-motion styles in the browser.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"; original review: Story 8.10 baseline review after three-pin approval (2026-10-04)), 2026-10-13
+location: tests/e2e/specs/parties-accessibility.spec.ts:85
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: Blind 10: media emulation is asserted, but the sole style value is a truthy outlineColor on a shell skip link; no content control outline style/width or animation/transition duration is checked. Existing browser test, unchanged here. Exit proof: focus a representative app-owned control and verify visible normal/forced-colors outline plus reduced-motion behavior. I13 remains open; this entry supplies no parity approval.
+status: open
 
 ### DW-136: Audit the complete shell with axe
 
@@ -1073,9 +1109,13 @@ location: tests/e2e/specs/parties-accessibility.spec.ts:25
 severity: medium
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  summary: Include navigation and skip links in the blocking accessibility scan.
-  evidence: Blind 11: axe includes only #fc-main-content, while requiredSelectors merely assert that navigation and skip links exist. Existing browser test, unchanged here. Exit proof: full-shell or dedicated omitted-region scans fail on navigation/skip-link accessibility regressions.
+### DW-155: Include navigation and skip links in the blocking accessibility scan.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"; original review: Story 8.10 baseline review after three-pin approval (2026-10-04)), 2026-10-13
+location: tests/e2e/specs/parties-accessibility.spec.ts:25
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: Blind 11: axe includes only #fc-main-content, while requiredSelectors merely assert that navigation and skip links exist. Existing browser test, unchanged here. Exit proof: full-shell or dedicated omitted-region scans fail on navigation/skip-link accessibility regressions.
+status: open
 
 ### DW-137: Verify provisioning through the registered domain processor
 
@@ -1084,9 +1124,13 @@ location: src/Hexalith.Parties/Domain/PartyDomainProcessor.cs:157-159; tests/Hex
 severity: medium
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  summary: Add successful provisioning-envelope verification through PartyDomainProcessor with emitted events and enriched result assertions.
-  evidence: Verification 1, pre-verified regression gap: aggregate tests supply hand-built Authorization and bypass the processor; processor tests cover only unsupported-policy rejection. Removing trusted Authorization injection can break registered command dispatch without those tests failing. Existing identity-feature paths from 37d87f5a2869b076c651a58714d60f64647848bc, unchanged here. Exit proof: accepted provisioning envelope yields creation/marker events and matching result identity at the processor boundary.
+### DW-156: Add successful provisioning-envelope verification through PartyDomainProcessor with emitted events and enriched result assertions.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"; original review: Story 8.10 baseline review after three-pin approval (2026-10-04)), 2026-10-13
+location: src/Hexalith.Parties/Domain/PartyDomainProcessor.cs:157-159; tests/Hexalith.Parties.Tests/Domain/PartyIdentityAdmissionTests.cs:22
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: Verification 1, pre-verified regression gap: aggregate tests supply hand-built Authorization and bypass the processor; processor tests cover only unsupported-policy rejection. Removing trusted Authorization injection can break registered command dispatch without those tests failing. Existing identity-feature paths from 37d87f5a2869b076c651a58714d60f64647848bc, unchanged here. Exit proof: accepted provisioning envelope yields creation/marker events and matching result identity at the processor boundary.
+status: open
 
 ### DW-138: Isolate wrong-purpose human custody rejection
 
@@ -1095,9 +1139,13 @@ location: tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs:
 severity: medium
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
-  summary: Separate expired-interval and wrong-purpose client rejection cases.
-  evidence: Verification 2, pre-verified broken-verification gap: the current case combines an expired interval with other-purpose, so removing the purpose check still rejects on expiry. Existing identity-feature test from 37d87f5a2869b076c651a58714d60f64647848bc, unchanged here. Exit proof: otherwise valid current human evidence with the wrong purpose is rejected independently, and expired evidence with the correct purpose is rejected independently.
+### DW-157: Separate expired-interval and wrong-purpose client rejection cases.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md"; original review: Story 8.10 baseline review after three-pin approval (2026-10-04)), 2026-10-13
+location: tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs:67
+source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
+reason: Verification 2, pre-verified broken-verification gap: the current case combines an expired interval with other-purpose, so removing the purpose check still rejects on expiry. Existing identity-feature test from 37d87f5a2869b076c651a58714d60f64647848bc, unchanged here. Exit proof: otherwise valid current human evidence with the wrong purpose is rejected independently, and expired evidence with the correct purpose is rejected independently.
+status: open
 
 ### DW-139: Wire FrontComposer reserved segments and module landing in package mode after a Shell release
 
@@ -1160,138 +1208,274 @@ severity: medium
 reason: `s_inspectedTypes` omits contracts that carry actor identities: `EstablishHumanActorBinding`, `RebindHumanActorBinding`, `RevokeHumanActorBinding`, `ResolveHumanActorBindingAt`, `HumanActorBindingEvidence`, and the nested `HumanActorBinding`, `HumanActorBindingTransition`, `AgentPartyProvisioningResult`, and `AgentPartyIdentity` records. Members of the `[PersonalData]`-marked `PartyState.AgentProvisioning` are neither marked nor classified. All of these were added by `37d87f5a2869b076c651a58714d60f64647848bc`, before this delta; DW-142 classified only the six properties that failed. This is an I8 decision for the Parties GDPR owners, related to DW-129. Exit proof: every identity-feature contract type is inspected, and each property is classified with its rationale. Rollback: revert the added inventory rows.
 status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Reconcile the upstream Tenants runtime project's administrator verifier contracts with a published EventStore SDK.
-  evidence: The retained Tenants source fails its dynamically launched package-mode build with CS0246 for IDomainServiceAdministratorVerifier and DomainServiceAdministratorClaim; neither type exists in published DomainService 3.115.0. Root solution package-mode compilation succeeds separately.
+### DW-158: Reconcile the upstream Tenants runtime project's administrator verifier contracts with a published EventStore SDK.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Include external dynamically launched runtime project graphs in orchestration dependency verification.
-  evidence: PlatformApiPrerequisitesTests inventories only owned src, samples, and tests projects, so it cannot detect the pre-existing upstream Tenants source/package mismatch before topology startup.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: upstream Tenants dynamically launched runtime project; published EventStore.DomainService SDK
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: The retained Tenants source fails its dynamically launched package-mode build with CS0246 for IDomainServiceAdministratorVerifier and DomainServiceAdministratorClaim; neither type exists in published DomainService 3.115.0. Root solution package-mode compilation succeeds separately.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Extend the existing gateway command test with a direct persisted-stream and aggregate identity read.
-  evidence: The pre-existing test observes Completed status and positive eventCount but does not read stored events; completion follows EventPersister in the SDK, but an independent persisted-stream assertion would strengthen that boundary.
+### DW-159: Include external dynamically launched runtime project graphs in orchestration dependency verification.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-nuget-trusted-publishing.md`
-  summary: Extend the persistent release verification job to validate all declared NuGet registry package bytes and repository commit metadata.
-  evidence: The pre-existing verify-publication job checks a GitHub Release tag only; this task performs independent nine-package download/metadata verification after Release rather than treating that tag as package publication evidence.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs (external runtime project inventory)
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: PlatformApiPrerequisitesTests inventories only owned src, samples, and tests projects, so it cannot detect the pre-existing upstream Tenants source/package mismatch before topology startup.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-unblock-eventstore-api-publication.md`
-  summary: Commit the existing Story 8.8 available-row identity gate correction through its owning work.
-  evidence: The committed isolated integration run fails AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity because spec-8-8 lacks the required heading; the main working tree already contains the 10-line correction as separate user work and this task preserves it unstaged.
+### DW-160: Extend the existing gateway command test with a direct persisted-stream and aggregate identity read.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
-  summary: D1 — Preserve coordinated Detail/Processing slots when recording an unresolved first projection delivery.
-  evidence: The detail handler creates only Processing on first unresolved delivery, then rejects all subsequent retries at the missing-slot guard (69–87, 245–265); verified medium, pre-existing at 890119f1.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: existing EventStore gateway command test; persisted event stream and aggregate identity
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: The pre-existing test observes Completed status and positive eventCount but does not read stored events; completion follows EventPersister in the SDK, but an independent persisted-stream assertion would strengthen that boundary.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
-  summary: D2 — Set an explicit SDK receiver identity for the optional sample resource matching its DAPR app ID.
-  evidence: AppHost sample at Program.cs:237 lacks the parties/tenants AppId binding; SDK fallback uses ApplicationName when DAPR_APP_ID is absent in the observed child path; verified medium, pre-existing.
+### DW-161: Extend the persistent release verification job to validate all declared NuGet registry package bytes and repository commit metadata.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
-  summary: D3 — Resolve the optional Memories resource endpoint for local Aspire runs.
-  evidence: Program.cs:217 supplies http://memories:8080/ in run mode although Memories is a host project with an Aspire-assigned endpoint; verified medium, pre-existing.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-nuget-trusted-publishing.md"), 2026-10-13
+location: release verify-publication job; NuGet registry package bytes and repository commit metadata
+source_spec: `_bmad-output/implementation-artifacts/spec-nuget-trusted-publishing.md`
+reason: The pre-existing verify-publication job checks a GitHub Release tag only; this task performs independent nine-package download/metadata verification after Release rather than treating that tag as package publication evidence.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
-  summary: D4 — Align Memories cleanup, compensation and health probing with the versioned server route without accepting a routing 404 as proof of erasure.
-  evidence: PartyMemoryCleanupService.cs:52 and indexing compensation use api/tenants, while the selected server maps /api/v1/tenants; success-on-404 can discard cleanup inventory; verified high, pre-existing.
+### DW-162: Commit the existing Story 8.8 available-row identity gate correction through its owning work.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
-  summary: D5 — Persist the canonical terminal Memories unit identity after duplicate ingestion.
-  evidence: Indexing stores accepted workflow ID, but the duplicate workflow branch can return a different ExistingMemoryUnitId after the preflight TTL expires or fails open; source mapping replacement then loses the deletable ID; verified high, pre-existing.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-unblock-eventstore-api-publication.md"), 2026-10-13
+location: Story 8.8 spec available-row identity heading; AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity
+source_spec: `_bmad-output/implementation-artifacts/spec-unblock-eventstore-api-publication.md`
+reason: The committed isolated integration run fails AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity because spec-8-8 lacks the required heading; the main working tree already contains the 10-line correction as separate user work and this task preserves it unstaged.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
-  summary: D6 — Retain Memories cleanup reconciliation until ingestion and deletion have reached their terminal states.
-  evidence: Cleanup discards mappings on HTTP success/404 although CaseService schedules deletion asynchronously and accepted ingestion may not yet have materialized a unit; verified high, pre-existing.
+### DW-163: D1 — Preserve coordinated Detail/Processing slots when recording an unresolved first projection delivery.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
-  summary: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
-  evidence: ReplaceMappingsAsync uses unconditional SaveStateAsync/DeleteStateAsync after a cleanup snapshot; a concurrent ETag-protected indexing addition can be overwritten; verified high, pre-existing.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md"), 2026-10-13
+location: src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs:69-87,245-265
+source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+reason: The detail handler creates only Processing on first unresolved delivery, then rejects all subsequent retries at the missing-slot guard (69–87, 245–265); verified medium, pre-existing at 890119f1.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
-  summary: D8 — Preserve durable reconciliation for cancellation after Memories accepts ingest but before the Parties mapping persists.
-  evidence: Indexing rethrows caller cancellation at the mapping-write boundary without compensation, while the server workflow can continue producing a unit; verified high, pre-existing.
+### DW-164: D2 — Set an explicit SDK receiver identity for the optional sample resource matching its DAPR app ID.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
-  summary: D9 — Bound last-known-cache generation bookkeeping while retaining in-flight read invalidation.
-  evidence: Missing-detail reads call EvictDetail; _keyGenerations never expires or participates in the cache capacity limit; distinct valid missing IDs grow the singleton indefinitely; verified medium, pre-existing.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md"), 2026-10-13
+location: src/Hexalith.Parties.AppHost/Program.cs:237 (optional sample resource)
+source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+reason: AppHost sample at Program.cs:237 lacks the parties/tenants AppId binding; SDK fallback uses ApplicationName when DAPR_APP_ID is absent in the observed child path; verified medium, pre-existing.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
-  summary: D10 — Prevent a second Parties instance from serving cached personal data after another instance completes erasure.
-  evidence: Erasure delegates evict only the local singleton; the other host can serve pre-erasure detail/index from degraded fallback without authoritative erasure revalidation; verified high, pre-existing.
+### DW-165: D3 — Resolve the optional Memories resource endpoint for local Aspire runs.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
-  summary: D11 — Fence rebuild search notifications against erasure after the canonical index snapshot is read.
-  evidence: CompleteRebuildAsync snapshots once before awaited removals and later publishes retained entries; the search adapter has no canonical reread/version fence, so completed cleanup can be followed by republishing erased data; verified high, pre-existing.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md"), 2026-10-13
+location: src/Hexalith.Parties.AppHost/Program.cs:217 (optional Memories run-mode endpoint)
+source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+reason: Program.cs:217 supplies http://memories:8080/ in run mode although Memories is a host project with an Aspire-assigned endpoint; verified medium, pre-existing.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Enforce the identity-query deadline during synchronous admission and source folding.
-  evidence: `authority.Admit` and `PartyIdentitySourceFold.Fold` execute between deadline checks, so a stalled provider or large source can exceed the configured budget; both paths predate the release patch.
+### DW-166: D4 — Align Memories cleanup, compensation and health probing with the versioned server route without accepting a routing 404 as proof of erasure.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Bound noncooperative identity-query provider work after a caller deadline.
-  evidence: `PartyIdentityQueryDeadline.ReadAsync` stops awaiting a stalled provider task but leaves it running; repeated calls can accumulate worker tasks. The deadline work was introduced separately from this release patch.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md"), 2026-10-13
+location: src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs:52; indexing compensation; Memories server routes
+source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+reason: PartyMemoryCleanupService.cs:52 and indexing compensation use api/tenants, while the selected server maps /api/v1/tenants; success-on-404 can discard cleanup inventory; verified high, pre-existing.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Make long retained human-actor history folds linear.
-  evidence: `RetainedHumanActorHistoryFold.Append` scans prior bindings and `Close` searches by version for each transition; the scans existed at this spec's baseline.
+### DW-167: D5 — Persist the canonical terminal Memories unit identity after duplicate ingestion.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Show accepted-command acknowledgement before slow admin list loading finishes.
-  evidence: `PartiesAdminPortal` sets its updating notice only after awaiting `LoadPageAsync` and route selection; this ordering predates the release patch.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md"), 2026-10-13
+location: Memories indexing workflow duplicate branch and party memory-unit source mappings
+source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+reason: Indexing stores accepted workflow ID, but the duplicate workflow branch can return a different ExistingMemoryUnitId after the preflight TTL expires or fails open; source mapping replacement then loses the deletable ID; verified high, pre-existing.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Clear the admin updating notice when the saved party reaches the projection.
-  evidence: `PartiesAdminPortal` clears `_acceptedCommandPartyId` on navigation and context reset but has no convergence clear, so the notice can remain after the row appears; this behavior predates the release patch.
+### DW-168: D6 — Retain Memories cleanup reconciliation until ingestion and deletion have reached their terminal states.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Restore the erasure confirmation action after a dialog open failure.
-  evidence: `PartyGdprOperationsPanel` consumes `_pendingErasureDialogOpen` before `ShowAsync` and catches `JSException` while `_confirmErasure` keeps the action button replaced; this is later UI work.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md"), 2026-10-13
+location: Memories cleanup mappings; CaseService asynchronous ingestion/deletion workflows
+source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+reason: Cleanup discards mappings on HTTP success/404 although CaseService schedules deletion asynchronously and accepted ingestion may not yet have materialized a unit; verified high, pre-existing.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Reproduce whether immediate blob URL revocation loses a supported-browser privacy export.
-  evidence: `admin-privacy-export.js` revokes the object URL immediately after `anchor.click()`; a supported-browser download trace would settle whether the scheduling can cancel the download. Unverified medium in later UI work.
+### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Resolve the loop-sweep ledger fallback through layered BMAD configuration.
-  evidence: With `BMAD_LOOP_LEDGER` absent, the skill reads legacy YAML despite describing `config.toml` layering, so a custom artifact location can be missed; this is agent-context work outside the release patch.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md"), 2026-10-13
+location: src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs (ReplaceMappingsAsync)
+source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+reason: ReplaceMappingsAsync uses unconditional SaveStateAsync/DeleteStateAsync after a cleanup snapshot; a concurrent ETag-protected indexing addition can be overwritten; verified high, pre-existing.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Obtain owner signoff for all root gitlinks changed since Parties v1.2.1 before another release.
-  evidence: `bash scripts/gitlink-rc-gate.sh --diff v1.2.1` exits 1 for Builds, Commons, EventStore, FrontComposer, McpCli, Memories, Platform, and Tenants; current release workflow blocks publication at that gate. These later pointers need a new owner selection.
+### DW-170: D8 — Preserve durable reconciliation for cancellation after Memories accepts ingest but before the Parties mapping persists.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Test reason-only degraded admin search preserving last known rows.
-  evidence: The new `SearchDegradedReason` branch preserves rows for an empty response, but existing tests use a nonempty page or other degradation signals; removing the branch would clear rows without a test failure. This is later UI work.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md"), 2026-10-13
+location: src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs (mapping-write cancellation boundary)
+source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+reason: Indexing rethrows caller cancellation at the mapping-write boundary without compensation, while the server workflow can continue producing a unit; verified high, pre-existing.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Assert accessible checked state after switching the admin party-type radios.
-  evidence: The new `aria-checked` expressions are not asserted by component tests or the browser test, which only checks radiogroup visibility; an inverted expression could misannounce the type. This is later UI work.
+### DW-171: D9 — Bound last-known-cache generation bookkeeping while retaining in-flight read invalidation.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Narrow the operator-created NuGet trusted-publishing policy to the Parties package IDs and publish-only operations.
-  evidence: The recorded active policy uses `packageGlobPattern: "*"` and grants unlist/relist in addition to push; the local nine-ID inventory does not limit the NuGet-issued key. The policy was created separately from the original release patch and must be changed by its owner.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md"), 2026-10-13
+location: last-known cache EvictDetail and _keyGenerations bookkeeping
+source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+reason: Missing-detail reads call EvictDetail; _keyGenerations never expires or participates in the cache capacity limit; distinct valid missing IDs grow the singleton indefinitely; verified medium, pre-existing.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Check whether BMAD visual-tool consumers require an array from the layered TOML setting.
-  evidence: `_bmad/config.toml` and legacy `_bmad/cis/config.yaml` both encode `visual_tools` as a JSON string. No repository consumer requiring an array was found; a runtime consumer trace would settle this unverified medium agent-config concern.
+### DW-172: D10 — Prevent a second Parties instance from serving cached personal data after another instance completes erasure.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Test authenticated actor and tenant-delivery callbacks through the real service route.
-  evidence: `PartiesDomainServiceSecurityTests` checks denial and endpoint policy metadata, but no owned test sends a valid channel request to the actor or `/tenants/events` handler. A later HTTP security change could block legitimate delivery without a failing test.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md"), 2026-10-13
+location: erasure delegates; multi-instance degraded detail/index fallback cache
+source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+reason: Erasure delegates evict only the local singleton; the other host can serve pre-erasure detail/index from degraded fallback without authoritative erasure revalidation; verified high, pre-existing.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Exercise the release registry-floor comparison with isolated published-version fixtures.
-  evidence: Current CI tests inspect `.github/workflows/release.yml` text and step ordering but do not run its `parts > floor` comparison; a mutation that admits a stale tag could reach the protected release job. This gate was added after the original Parties release patch.
+### DW-173: D11 — Fence rebuild search notifications against erasure after the canonical index snapshot is read.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
-  summary: Run the existing contact-selector browser test in required CI.
-  evidence: Component tests invoke `FluentSelect.ValueChanged` directly while the Playwright create-form test is outside the configured CI workflow. Removing the rendered `FluentOption` children could pass required tests but leave users unable to select a contact type. This is later UI work.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md"), 2026-10-13
+location: CompleteRebuildAsync and the search reconciliation adapter
+source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
+reason: CompleteRebuildAsync snapshots once before awaited removals and later publishes retained entries; the search adapter has no canonical reread/version fence, so completed cleanup can be followed by republishing erased data; verified high, pre-existing.
+status: open
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-gh-38399980224-fix-ci-and-publish-release.md`
-  summary: Require the FrontComposer shared-status structural command and test its missing-command outcome.
-  evidence: Existing RequiredEvidenceTokensBySurface and RequiredDeliveredApiCommands do not mandate the FcSurfaceStatus command; removing an individual FrontComposer command leaves other searches satisfying the row's nonempty-command guard. This gap predates the current conditional-expression refresh.
+### DW-174: Enforce the identity-query deadline during synchronous admission and source folding.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-gh-38399980224-fix-ci-and-publish-release.md`
-  summary: Validate McpCli and Platform source-selection rows independently of the eight consumed dependency fitness checks.
-  evidence: Existing CurrentReleaseGitlinks excludes these non-consumed root selections even though the current documentation table records them; release gitlink signing protects changed pointers, while direct table identity coverage remains future hardening.
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs; PartyIdentitySourceFold.Fold; authority.Admit
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: `authority.Admit` and `PartyIdentitySourceFold.Fold` execute between deadline checks, so a stalled provider or large source can exceed the configured budget; both paths predate the release patch.
+status: open
+
+### DW-175: Bound noncooperative identity-query provider work after a caller deadline.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs (ReadAsync)
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: `PartyIdentityQueryDeadline.ReadAsync` stops awaiting a stalled provider task but leaves it running; repeated calls can accumulate worker tasks. The deadline work was introduced separately from this release patch.
+status: open
+
+### DW-176: Make long retained human-actor history folds linear.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs (Append and Close)
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: `RetainedHumanActorHistoryFold.Append` scans prior bindings and `Close` searches by version for each transition; the scans existed at this spec's baseline.
+status: open
+
+### DW-177: Show accepted-command acknowledgement before slow admin list loading finishes.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor (LoadPageAsync and route selection)
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: `PartiesAdminPortal` sets its updating notice only after awaiting `LoadPageAsync` and route selection; this ordering predates the release patch.
+status: open
+
+### DW-178: Clear the admin updating notice when the saved party reaches the projection.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor (_acceptedCommandPartyId)
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: `PartiesAdminPortal` clears `_acceptedCommandPartyId` on navigation and context reset but has no convergence clear, so the notice can remain after the row appears; this behavior predates the release patch.
+status: open
+
+### DW-179: Restore the erasure confirmation action after a dialog open failure.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: src/Hexalith.Parties.AdminPortal/Components/PartyGdprOperationsPanel.razor (_pendingErasureDialogOpen, ShowAsync, _confirmErasure)
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: `PartyGdprOperationsPanel` consumes `_pendingErasureDialogOpen` before `ShowAsync` and catches `JSException` while `_confirmErasure` keeps the action button replaced; this is later UI work.
+status: open
+
+### DW-180: Reproduce whether immediate blob URL revocation loses a supported-browser privacy export.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: src/Hexalith.Parties.UI/wwwroot/admin-privacy-export.js
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: `admin-privacy-export.js` revokes the object URL immediately after `anchor.click()`; a supported-browser download trace would settle whether the scheduling can cancel the download. Unverified medium in later UI work.
+status: open
+
+### DW-181: Resolve the loop-sweep ledger fallback through layered BMAD configuration.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: .agents/skills/bmad-loop-sweep/SKILL.md (Step 1 ledger fallback); layered BMAD configuration
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: With `BMAD_LOOP_LEDGER` absent, the skill reads legacy YAML despite describing `config.toml` layering, so a custom artifact location can be missed; this is agent-context work outside the release patch.
+status: open
+
+### DW-182: Obtain owner signoff for all root gitlinks changed since Parties v1.2.1 before another release.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: scripts/gitlink-rc-gate.sh; root gitlinks changed since v1.2.1; release publication gate
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: `bash scripts/gitlink-rc-gate.sh --diff v1.2.1` exits 1 for Builds, Commons, EventStore, FrontComposer, McpCli, Memories, Platform, and Tenants; current release workflow blocks publication at that gate. These later pointers need a new owner selection.
+status: open
+
+### DW-183: Test reason-only degraded admin search preserving last known rows.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: admin search SearchDegradedReason branch and component tests
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: The new `SearchDegradedReason` branch preserves rows for an empty response, but existing tests use a nonempty page or other degradation signals; removing the branch would clear rows without a test failure. This is later UI work.
+status: open
+
+### DW-184: Assert accessible checked state after switching the admin party-type radios.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: admin party-type radio aria-checked expressions and component/browser tests
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: The new `aria-checked` expressions are not asserted by component tests or the browser test, which only checks radiogroup visibility; an inverted expression could misannounce the type. This is later UI work.
+status: open
+
+### DW-185: Narrow the operator-created NuGet trusted-publishing policy to the Parties package IDs and publish-only operations.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: operator-owned NuGet trusted-publishing policy (packageGlobPattern and key permissions)
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: The recorded active policy uses `packageGlobPattern: "*"` and grants unlist/relist in addition to push; the local nine-ID inventory does not limit the NuGet-issued key. The policy was created separately from the original release patch and must be changed by its owner.
+status: open
+
+### DW-186: Check whether BMAD visual-tool consumers require an array from the layered TOML setting.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: _bmad/config.toml; _bmad/cis/config.yaml (visual_tools)
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: `_bmad/config.toml` and legacy `_bmad/cis/config.yaml` both encode `visual_tools` as a JSON string. No repository consumer requiring an array was found; a runtime consumer trace would settle this unverified medium agent-config concern.
+status: open
+
+### DW-187: Test authenticated actor and tenant-delivery callbacks through the real service route.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs; actor and /tenants/events service callbacks
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: `PartiesDomainServiceSecurityTests` checks denial and endpoint policy metadata, but no owned test sends a valid channel request to the actor or `/tenants/events` handler. A later HTTP security change could block legitimate delivery without a failing test.
+status: open
+
+### DW-188: Exercise the release registry-floor comparison with isolated published-version fixtures.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: .github/workflows/release.yml (registry-floor parts > floor comparison); CI tests
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: Current CI tests inspect `.github/workflows/release.yml` text and step ordering but do not run its `parts > floor` comparison; a mutation that admits a stale tag could reach the protected release job. This gate was added after the original Parties release patch.
+status: open
+
+### DW-189: Run the existing contact-selector browser test in required CI.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md"), 2026-10-13
+location: contact-selector Playwright create-form test; component FluentSelect.ValueChanged tests; configured CI workflow
+source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+reason: Component tests invoke `FluentSelect.ValueChanged` directly while the Playwright create-form test is outside the configured CI workflow. Removing the rendered `FluentOption` children could pass required tests but leave users unable to select a contact type. This is later UI work.
+status: open
+
+### DW-190: Require the FrontComposer shared-status structural command and test its missing-command outcome.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-gh-38399980224-fix-ci-and-publish-release.md"), 2026-10-13
+location: RequiredEvidenceTokensBySurface and RequiredDeliveredApiCommands (FrontComposer FcSurfaceStatus command)
+source_spec: `_bmad-output/implementation-artifacts/spec-gh-38399980224-fix-ci-and-publish-release.md`
+reason: Existing RequiredEvidenceTokensBySurface and RequiredDeliveredApiCommands do not mandate the FcSurfaceStatus command; removing an individual FrontComposer command leaves other searches satisfying the row's nonempty-command guard. This gap predates the current conditional-expression refresh.
+status: open
+
+### DW-191: Validate McpCli and Platform source-selection rows independently of the eight consumed dependency fitness checks.
+
+origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-gh-38399980224-fix-ci-and-publish-release.md"), 2026-10-13
+location: CurrentReleaseGitlinks; McpCli and Platform source-selection documentation rows
+source_spec: `_bmad-output/implementation-artifacts/spec-gh-38399980224-fix-ci-and-publish-release.md`
+reason: Existing CurrentReleaseGitlinks excludes these non-consumed root selections even though the current documentation table records them; release gitlink signing protects changed pointers, while direct table identity coverage remains future hardening.
+status: open
