@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using FluentValidation;
 
@@ -6,6 +7,7 @@ using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Results;
 using Hexalith.EventStore.Contracts.Security;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Security;
@@ -125,10 +127,12 @@ public sealed class PartiesValidatorRegistrationTests
     /// Keeps valid consent commands usable with the production validators.
     /// </summary>
     /// <param name="revoke">Whether to test revocation rather than recording.</param>
+    /// <param name="numeric">Whether to send a legacy numeric lawful basis.</param>
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task ProcessAsync_ProductionConsentValidators_AllowValidPayloads(bool revoke)
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public async Task ProcessAsync_ProductionConsentValidators_AllowValidPayloads(bool revoke, bool numeric)
     {
         using ServiceProvider provider = CreateServices().BuildServiceProvider();
         PartyState state = ActiveState();
@@ -137,8 +141,20 @@ public sealed class PartiesValidatorRegistrationTests
             state.Apply(new ConsentRecorded { ConsentId = "email:marketing", PartyId = "party-1", TenantId = "tenant-a", ChannelId = "email", Purpose = "marketing", LawfulBasis = LawfulBasis.Consent, GrantedAt = DateTimeOffset.UnixEpoch, GrantedBy = "test" });
         }
 
+        CommandEnvelope command = Envelope(ConsentCommand(revoke));
+        if (!revoke)
+        {
+            JsonObject payload = JsonNode.Parse(command.Payload)!.AsObject();
+            payload["lawfulBasis"]!.GetValue<string>().ShouldBe(nameof(LawfulBasis.LegitimateInterest));
+            if (numeric)
+            {
+                payload["lawfulBasis"] = (int)LawfulBasis.LegitimateInterest;
+                command = command with { Payload = JsonSerializer.SerializeToUtf8Bytes(payload) };
+            }
+        }
+
         DomainResult result = await Processor(provider, Substitute.For<IEventPayloadProtectionService>())
-            .ProcessAsync(Envelope(ConsentCommand(revoke)), state, TestContext.Current.CancellationToken);
+            .ProcessAsync(command, state, TestContext.Current.CancellationToken);
 
         result.IsSuccess.ShouldBeTrue();
         if (revoke)
@@ -158,6 +174,133 @@ public sealed class PartiesValidatorRegistrationTests
             recorded.ChannelId.ShouldBe("email");
             recorded.Purpose.ShouldBe("marketing");
             recorded.LawfulBasis.ShouldBe(LawfulBasis.LegitimateInterest);
+        }
+    }
+
+    /// <summary>Rejects unknown lawful-basis names before accessing protected state.</summary>
+    [Fact]
+    public async Task ProcessAsync_UnknownLawfulBasisName_RejectsBeforeRehydration()
+    {
+        using ServiceProvider provider = CreateServices().BuildServiceProvider();
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        CommandEnvelope command = Envelope(ConsentCommand(false));
+        JsonObject payload = JsonNode.Parse(command.Payload)!.AsObject();
+        payload["lawfulBasis"] = "unsupported-lawful-basis";
+        command = command with { Payload = JsonSerializer.SerializeToUtf8Bytes(payload) };
+
+        DomainResult result = await Processor(provider, protection).ProcessAsync(command, ProtectedState(command), TestContext.Current.CancellationToken);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyCommandValidationRejected rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<PartyCommandValidationRejected>();
+        PartyValidationFailure failure = rejection.Failures.ShouldHaveSingleItem();
+        failure.PropertyName.ShouldBe("Payload");
+        failure.ErrorCode.ShouldBe("InvalidJson");
+        JsonSerializer.Serialize(rejection).ShouldNotContain("unsupported-lawful-basis");
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+    }
+
+    /// <summary>Historical numeric party and composite commands still emit the submitted values.</summary>
+    /// <param name="composite">Whether to include nested contact-channel and identifier commands.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ProcessAsync_HistoricalNumericCreation_EmitsExpectedEnums(bool composite)
+    {
+        using ServiceProvider provider = CreateServices().BuildServiceProvider();
+        object payload = composite ? CreationComposite() : new CreateParty
+        {
+            PartyId = "party-1", Type = PartyType.Organization, OrganizationDetails = new OrganizationDetails { LegalName = "Test Company" },
+        };
+        CommandEnvelope command = Envelope(payload);
+        JsonObject body = JsonNode.Parse(command.Payload)!.AsObject();
+        body["type"] = 2;
+        if (composite)
+        {
+            body["contactChannels"]![0]!["type"] = 1;
+            body["identifiers"]![0]!["type"] = 4;
+        }
+
+        command = command with { Payload = JsonSerializer.SerializeToUtf8Bytes(body) };
+
+        DomainResult result = await Processor(provider, Substitute.For<IEventPayloadProtectionService>())
+            .ProcessAsync(command, null, TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Events.OfType<PartyCreated>().ShouldHaveSingleItem().Type.ShouldBe(PartyType.Organization);
+        if (composite)
+        {
+            result.Events.OfType<ContactChannelAdded>().ShouldHaveSingleItem().Type.ShouldBe(ContactChannelType.Phone);
+            result.Events.OfType<IdentifierAdded>().ShouldHaveSingleItem().Type.ShouldBe(IdentifierType.TaxId);
+        }
+    }
+
+    /// <summary>Malformed composite child enum names reject before protected-state access.</summary>
+    /// <param name="childCollection">The nested command collection containing the malformed enum.</param>
+    [Theory]
+    [InlineData("contactChannels")]
+    [InlineData("identifiers")]
+    public async Task ProcessAsync_UnknownNestedEnumName_RejectsBeforeRehydration(string childCollection)
+    {
+        using ServiceProvider provider = CreateServices().BuildServiceProvider();
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        CommandEnvelope command = Envelope(CreationComposite());
+        JsonObject payload = JsonNode.Parse(command.Payload)!.AsObject();
+        payload[childCollection]![0]!["type"] = "unsupported-nested-enum";
+        command = command with { Payload = JsonSerializer.SerializeToUtf8Bytes(payload) };
+
+        DomainResult result = await Processor(provider, protection).ProcessAsync(command, ProtectedState(command), TestContext.Current.CancellationToken);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyCommandValidationRejected rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<PartyCommandValidationRejected>();
+        PartyValidationFailure failure = rejection.Failures.ShouldHaveSingleItem();
+        failure.PropertyName.ShouldBe("Payload");
+        failure.ErrorCode.ShouldBe("InvalidJson");
+        JsonSerializer.Serialize(rejection).ShouldNotContain("unsupported-nested-enum");
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+    }
+
+    /// <summary>Undefined numeric inputs retain the existing command validation rules.</summary>
+    /// <param name="commandName">The command whose enum membership behavior is characterized.</param>
+    [Theory]
+    [InlineData(nameof(CreateParty))]
+    [InlineData(nameof(CreatePartyComposite))]
+    [InlineData(nameof(AddContactChannel))]
+    [InlineData(nameof(UpdateContactChannel))]
+    [InlineData(nameof(AddIdentifier))]
+    [InlineData(nameof(RecordConsent))]
+    public async Task ProcessAsync_UndefinedNumericEnum_PreservesExistingValidation(string commandName)
+    {
+        using ServiceProvider provider = CreateServices().BuildServiceProvider();
+        object payload = commandName switch
+        {
+            nameof(CreateParty) => new CreateParty { PartyId = "party-1", Type = (PartyType)int.MaxValue },
+            nameof(CreatePartyComposite) => CreationComposite() with { Type = (PartyType)int.MaxValue },
+            nameof(AddContactChannel) => new AddContactChannel { PartyId = "party-1", ContactChannelId = "phone", Type = (ContactChannelType)int.MaxValue, Value = "555" },
+            nameof(UpdateContactChannel) => new UpdateContactChannel { PartyId = "party-1", ContactChannelId = "email", Type = (ContactChannelType)int.MaxValue },
+            nameof(AddIdentifier) => new AddIdentifier { PartyId = "party-1", IdentifierId = "tax", Type = (IdentifierType)int.MaxValue, Value = "123" },
+            nameof(RecordConsent) => new RecordConsent { PartyId = "party-1", TenantId = "tenant-a", ChannelId = "email", Purpose = "billing", LawfulBasis = (LawfulBasis)int.MaxValue },
+            _ => throw new ArgumentOutOfRangeException(nameof(commandName)),
+        };
+        CommandEnvelope command = Envelope(payload);
+        using JsonDocument body = JsonDocument.Parse(command.Payload);
+        body.RootElement.GetProperty(commandName == nameof(RecordConsent) ? "lawfulBasis" : "type").GetInt32().ShouldBe(int.MaxValue);
+
+        DomainResult result = await Processor(provider, Substitute.For<IEventPayloadProtectionService>())
+            .ProcessAsync(command, ActiveState(), TestContext.Current.CancellationToken);
+
+        if (commandName == nameof(UpdateContactChannel))
+        {
+            // This existing validator has no enum-membership rule; DW-195 preserves that behavior.
+            result.IsSuccess.ShouldBeTrue();
+            result.Events.OfType<ContactChannelUpdated>().ShouldHaveSingleItem().Type.ShouldBe((ContactChannelType)int.MaxValue);
+        }
+        else
+        {
+            result.IsRejection.ShouldBeTrue();
+            result.Events.ShouldHaveSingleItem().ShouldBeOfType<PartyCommandValidationRejected>()
+                .Failures.ShouldContain(failure => failure.ErrorCode == "EnumValidator");
         }
     }
 
@@ -292,10 +435,18 @@ public sealed class PartiesValidatorRegistrationTests
         return state;
     }
 
-    // Match the numeric enum payloads accepted by the existing EventStore aggregate reader.
+    private static CreatePartyComposite CreationComposite()
+        => new()
+        {
+            PartyId = "party-1", Type = PartyType.Organization, OrganizationDetails = new OrganizationDetails { LegalName = "Test Company" },
+            ContactChannels = [new AddContactChannel { PartyId = "party-1", ContactChannelId = "phone", Type = ContactChannelType.Phone, Value = "555" }],
+            Identifiers = [new AddIdentifier { PartyId = "party-1", IdentifierId = "tax", Type = IdentifierType.TaxId, Value = "123" }],
+        };
+
+    // Match the canonical enum names sent by the production Parties clients.
     private static CommandEnvelope Envelope(object payload)
         => new("01HX00000000000000000000M1", "tenant-a", "party", "party-1", payload.GetType().FullName!,
-            JsonSerializer.SerializeToUtf8Bytes(payload, payload.GetType()),
+            JsonSerializer.SerializeToUtf8Bytes(payload, payload.GetType(), PartiesJsonOptions.Default),
             "01HX00000000000000000000C1", null, "user-a", null);
 
     private static DomainServiceCurrentState ProtectedState(CommandEnvelope command)

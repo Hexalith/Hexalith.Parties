@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using Hexalith.Parties.Contracts.ValueObjects;
 
 namespace Hexalith.Parties.Contracts.Commands;
@@ -8,6 +10,7 @@ public sealed record AddIdentifier
 
     public required string IdentifierId { get; init; }
 
+    [JsonConverter(typeof(JsonStringEnumConverter<IdentifierType>))]
     public required IdentifierType Type { get; init; }
 
     [PersonalData]

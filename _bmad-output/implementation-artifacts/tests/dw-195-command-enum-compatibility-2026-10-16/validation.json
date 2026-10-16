@@ -1,0 +1,339 @@
+{
+  "scope": "DW-195 local Debug source-reference verification; not full-topology or published-package qualification",
+  "baseline_commit": "abb83f8e458e283cbd71a0d0c226fa4f70832fce",
+  "red": {
+    "baseline_commit": "abb83f8e458e283cbd71a0d0c226fa4f70832fce",
+    "red_sources": {
+      "tests/Hexalith.Parties.Contracts.Tests/Serialization/CommandEnumCompatibilityTests.cs": "f2c8a7e73e63ef21ae81959702093cd589baa4686fa9dab90008bdb741c0bbb2"
+    },
+    "normalization": "Apply the zero-context red-source-reconstruction.patch with git apply --unidiff-zero to an isolated LF-normalized final test file to reconstruct the exact red bytes; do not apply it to the active worktree.",
+    "final_test_normalized_to_lf_matches": false,
+    "reconstruction_verified": true,
+    "reconstruction_patch_sha256": "dbabaa1c36b085dd0edce7c32b1c11788cdc59e2ba554361cd0413c0a3ec6b97",
+    "apply_check_command": "git apply --unidiff-zero --check red-source-reconstruction.patch (isolated LF-normalized final-source copy)"
+  },
+  "root_dependencies": [
+    {
+      "path": "references/Hexalith.EventStore",
+      "committed": "7edc260d8c0bd904f1215f801bad02b99c6694cf",
+      "observed": "7edc260d8c0bd904f1215f801bad02b99c6694cf",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.Memories",
+      "committed": "99431f0fed102ea6ddbae33d28b9da4fc7f215a0",
+      "observed": "99431f0fed102ea6ddbae33d28b9da4fc7f215a0",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.FrontComposer",
+      "committed": "5fac9ab1df26da19ceadf626f9e557884a189e7c",
+      "observed": "5fac9ab1df26da19ceadf626f9e557884a189e7c",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.Tenants",
+      "committed": "6ad5e502fa5d6e453e24610ef418007e1bd53298",
+      "observed": "6ad5e502fa5d6e453e24610ef418007e1bd53298",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.AI.Tools",
+      "committed": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "observed": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.Commons",
+      "committed": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+      "observed": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.Builds",
+      "committed": "9f0121c77e3f085c58f5c926057606db8e6511a7",
+      "observed": "9f0121c77e3f085c58f5c926057606db8e6511a7",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.PolymorphicSerializations",
+      "committed": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+      "observed": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.McpCli",
+      "committed": "7e99305a621e1bdf7119b6e924348857e2b5a5a4",
+      "observed": "7e99305a621e1bdf7119b6e924348857e2b5a5a4",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.Platform",
+      "committed": "c3af1f2c9e7b0d1b003a1bd5978545f664e38167",
+      "observed": "c3af1f2c9e7b0d1b003a1bd5978545f664e38167",
+      "clean": true
+    }
+  ],
+  "tested_source_sha256": {
+    "src/Hexalith.Parties.Contracts/Commands/CreateParty.cs": "a3a621629c5ebb32f2bf87ccbfd7815a3cbe7c9e749a94eeced39c8ce6c3d7dc",
+    "src/Hexalith.Parties.Contracts/Commands/CreatePartyComposite.cs": "8d4a7ecdd0df70530be57cf4ecfab118afa13ce2a3a0230c202a184a765dc7c6",
+    "src/Hexalith.Parties.Contracts/Commands/AddContactChannel.cs": "f1ec5e13c362be48e86ddd668e274767ef815c3bf468273598bf7b8e5ab1aa16",
+    "src/Hexalith.Parties.Contracts/Commands/UpdateContactChannel.cs": "49d288b08f845127430bb3860b2395e25379b952d59f218efe01715874694d84",
+    "src/Hexalith.Parties.Contracts/Commands/AddIdentifier.cs": "920ab34132fbd9599117a445fd3c346523f29172ddf55c83cb62391ac37d1e41",
+    "src/Hexalith.Parties.Contracts/Commands/RecordConsent.cs": "cffdd3725a2343e8d80f731ee600503bbedd0390ff517804568664243a7f4aeb",
+    "tests/Hexalith.Parties.Contracts.Tests/Serialization/CommandEnumCompatibilityTests.cs": "a896e90490bad03ce5b8fc5da1e10bd562b911aeaec252c68a9f00ff46071284",
+    "tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalGdprOperationContractTests.cs": "7ee3f26fade8518bf0e227db5948cfa011ca5371347e6b9ea6e3ab6b8ac89b4a",
+    "tests/Hexalith.Parties.Client.Tests/HttpPartiesCommandClientTests.cs": "4792c0181fb8b3b94b77fd87c96097139d785d6ce9fd21b6e9e8c437e8df9923",
+    "tests/Hexalith.Parties.Tests/Validation/PartiesValidatorRegistrationTests.cs": "d5cccfb436b972b5f3b4c4517f18d8cf48a541660a1e5c0a9bb9c53a460cc11a"
+  },
+  "commands": [
+    {
+      "label": "red-build",
+      "command": "dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "log_sha256": "e0521d05a8d989c664ed297a378b1839c12b0a5eaa31590196fcefc9a6be4909",
+      "summary": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:18.45"
+    },
+    {
+      "label": "red-contracts",
+      "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Debug/net10.0/Hexalith.Parties.Contracts.Tests.dll -class Hexalith.Parties.Contracts.Tests.Serialization.CommandEnumCompatibilityTests",
+      "exit_code": 1,
+      "log_sha256": "3f1ec02ad15fa7b9b555d1da3704903b04fdb7f3ed0fee17fa7bed103cdcfaf2",
+      "summary": {
+        "total": 17,
+        "errors": 0,
+        "failed": 7,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "contracts-build",
+      "command": "dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "log_sha256": "a17cb763b7ae72e1c4038c3bd6a0a81b192bf10e90ec26ce66464dbe3ce3a2cd",
+      "summary": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:16.75"
+    },
+    {
+      "label": "contracts-focused",
+      "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Debug/net10.0/Hexalith.Parties.Contracts.Tests.dll -class Hexalith.Parties.Contracts.Tests.Serialization.CommandEnumCompatibilityTests",
+      "exit_code": 0,
+      "log_sha256": "8c0226a1ece14a9bd7753996c000ea3411a76e6063b01c3139d5f60a760f8441",
+      "summary": {
+        "total": 17,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "client-build",
+      "command": "dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "log_sha256": "3c45dfdfb4bd4e7a6dceb82bb11c1e4e5aeb1610ca8771fec8472928400c9eeb",
+      "summary": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:17.56"
+    },
+    {
+      "label": "client-focused",
+      "command": "dotnet tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll -class Hexalith.Parties.Client.Tests.AdminPortal.AdminPortalGdprOperationContractTests -class Hexalith.Parties.Client.Tests.HttpPartiesCommandClientTests",
+      "exit_code": 0,
+      "log_sha256": "33d8dcaadc2c8a0c68b7bd184fdf83aadaeb6152f40896fe28d4c7c387485ab9",
+      "summary": {
+        "total": 87,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "parties-build",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "log_sha256": "e7a41ce88f93f4b99931f3b442f0c77a28cb1976cfacf95a3d81aaaeed48659a",
+      "summary": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:01:07.41"
+    },
+    {
+      "label": "parties-focused",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests -class Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests -class Hexalith.Parties.Tests.Gateway.PartiesProcessEndpointTests",
+      "exit_code": 0,
+      "log_sha256": "6694cbaeb017cce0db1acc3ed9e44bc61d3d57595885f4f57e0e1180f65d2fd9",
+      "summary": {
+        "total": 83,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "client-full",
+      "command": "dotnet tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll",
+      "exit_code": 0,
+      "log_sha256": "3afccf96cdcd897c967b5617b81e3bb411297c9de6161baa4d36e21af62f0122",
+      "summary": {
+        "total": 174,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "parties-full",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "exit_code": 0,
+      "log_sha256": "924b1b697889a6d027cc5d83bcde56762e9e0304aba30a96cc825665cca312fd",
+      "summary": {
+        "total": 1000,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "contracts-final-build",
+      "command": "dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 1,
+      "log_sha256": "a335c23238a40369adb4a9cd9c241d7c058e6ac0d34f58cd1832b8e63582309c",
+      "summary": "Build FAILED. MSB3243 and CS1704: duplicate Hexalith.Commons.UniqueIds 3.120.0 and 2.30.1 references; one warning and one error. This overlapped package fixture builds; the serialized retry passed."
+    },
+    {
+      "label": "contracts-retry-build",
+      "command": "dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "log_sha256": "9e9131712afe0fc3509c0bd7fc645e1bdc566c31091affbc9d50a633df430c92",
+      "summary": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:29.21"
+    },
+    {
+      "label": "contracts-full",
+      "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Debug/net10.0/Hexalith.Parties.Contracts.Tests.dll",
+      "exit_code": 0,
+      "log_sha256": "ec1a96dbac52fe0c395bd81d22b3e8a023772f81e60712328ace917cebf7bbc0",
+      "summary": {
+        "total": 198,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "postreview-parties-build",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "log_sha256": "f719ef4777126fc1c37d8990547cc8281e01f80a41a22574e65f563c02941b23",
+      "summary": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:40.51"
+    },
+    {
+      "label": "postreview-parties-focused",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests -class Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests -class Hexalith.Parties.Tests.Gateway.PartiesProcessEndpointTests",
+      "exit_code": 0,
+      "log_sha256": "1d6a7ca726eef2eb6ad470c12363e21a0b2d94bc488677c165cbc434f5ed6706",
+      "summary": {
+        "total": 93,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "postreview-contracts-build",
+      "command": "dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "log_sha256": "62c0eb8e9a12524f3dcdb5007735a47e9e3e8173269cd053e26128bb2b88e5d3",
+      "summary": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:25.52"
+    },
+    {
+      "label": "postreview-contracts-full",
+      "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Debug/net10.0/Hexalith.Parties.Contracts.Tests.dll",
+      "exit_code": 0,
+      "log_sha256": "5a93c96783cc2875b5f861f308e1e1055a462c27b6439008f6cd6c12069e9bef",
+      "summary": {
+        "total": 198,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "postreview-parties-full",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "exit_code": 0,
+      "log_sha256": "3609aa3ad48364ca134aecc0b0ed7143699fc84c12c8e51210033bf0050f4a21",
+      "summary": {
+        "total": 1010,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    }
+  ],
+  "runtime": {
+    "start": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --no-build --non-interactive --format Json",
+    "wait": "aspire wait parties --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --timeout 30 --non-interactive",
+    "wait_exit_code": 0,
+    "parties": "Running / Healthy",
+    "limitations": "Existing binaries; EventStore/admin/Tenants exited 134 and UI exited 150; not a passing integrated topology.",
+    "stop": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "stop_exit_code": 0,
+    "unrelated_apphost_preserved": true
+  },
+  "commitlint": {
+    "command": "node node_modules/@commitlint/cli/cli.js --edit /tmp/dw-195-commit-message.txt --verbose",
+    "version": "21.2.2",
+    "exit_code": 0,
+    "problems": 0,
+    "warnings": 0,
+    "message_sha256": "4d3cf56904897faf1b98d2b532e7b039fa30826d7cd2b5ac4fa3a13bce1a3b9a",
+    "message": "fix: align command enum binding with EventStore\n",
+    "output": "\u29d7   --- input ---\nfix: align command enum binding with EventStore\n\u2714   found 0 problems, 0 warnings\n"
+  },
+  "review": {
+    "finding_floor": "min(floor(sqrt(21.185) + 1), 10) = 5",
+    "initial_findings": 5,
+    "followup_findings": 1,
+    "triage": "Five low-severity test/documentation gaps and one follow-up evidence-note inconsistency patched; reviewer confirmed all five original corrections and no defect in added tests or compatibility documentation. Final evidence note corrected to match verified reverse-patch reconstruction.",
+    "deferred_findings": 0,
+    "skipped_review_layers": []
+  },
+  "checks": [
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "result": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+    },
+    {
+      "command": "git -c core.whitespace=cr-at-eol diff --check",
+      "exit_code": 0
+    }
+  ],
+  "pre_review_tested_source_sha256": {
+    "src/Hexalith.Parties.Contracts/Commands/CreateParty.cs": "a3a621629c5ebb32f2bf87ccbfd7815a3cbe7c9e749a94eeced39c8ce6c3d7dc",
+    "src/Hexalith.Parties.Contracts/Commands/CreatePartyComposite.cs": "8d4a7ecdd0df70530be57cf4ecfab118afa13ce2a3a0230c202a184a765dc7c6",
+    "src/Hexalith.Parties.Contracts/Commands/AddContactChannel.cs": "f1ec5e13c362be48e86ddd668e274767ef815c3bf468273598bf7b8e5ab1aa16",
+    "src/Hexalith.Parties.Contracts/Commands/UpdateContactChannel.cs": "49d288b08f845127430bb3860b2395e25379b952d59f218efe01715874694d84",
+    "src/Hexalith.Parties.Contracts/Commands/AddIdentifier.cs": "920ab34132fbd9599117a445fd3c346523f29172ddf55c83cb62391ac37d1e41",
+    "src/Hexalith.Parties.Contracts/Commands/RecordConsent.cs": "cffdd3725a2343e8d80f731ee600503bbedd0390ff517804568664243a7f4aeb",
+    "tests/Hexalith.Parties.Contracts.Tests/Serialization/CommandEnumCompatibilityTests.cs": "f747acd9dc85fc3732533987949d55f6c34f4c2076ffa7ecdbd2d248963edea0",
+    "tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalGdprOperationContractTests.cs": "7ee3f26fade8518bf0e227db5948cfa011ca5371347e6b9ea6e3ab6b8ac89b4a",
+    "tests/Hexalith.Parties.Client.Tests/HttpPartiesCommandClientTests.cs": "4792c0181fb8b3b94b77fd87c96097139d785d6ce9fd21b6e9e8c437e8df9923",
+    "tests/Hexalith.Parties.Tests/Validation/PartiesValidatorRegistrationTests.cs": "d09ccfcef2e5b43d8b4a79da7474faa8f45fd6ee0b384ecb7bd829a7f8e9fdb6"
+  },
+  "final_full_project_totals": {
+    "Contracts.Tests": 198,
+    "Client.Tests": 174,
+    "Parties.Tests": 1010,
+    "total": 1382,
+    "errors": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "completed": "2026-10-16"
+}

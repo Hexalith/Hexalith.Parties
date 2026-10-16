@@ -1,0 +1,18 @@
+--- a/tests/Hexalith.Parties.Contracts.Tests/Serialization/CommandEnumCompatibilityTests.cs
++++ b/tests/Hexalith.Parties.Contracts.Tests/Serialization/CommandEnumCompatibilityTests.cs
+@@ -42 +42 @@
+-            foreach (JsonNode value in new JsonNode[] { JsonValue.Create(enumName), JsonValue.Create(enumName.ToLowerInvariant()), JsonValue.Create(enumValue), JsonValue.Create(int.MaxValue) })
++            foreach (JsonNode value in new JsonNode[] { JsonValue.Create(enumName), JsonValue.Create(enumName.ToLowerInvariant()), JsonValue.Create(enumValue) })
+@@ -51,2 +51 @@
+-                Convert.ToInt32(actual, System.Globalization.CultureInfo.InvariantCulture)
+-                    .ShouldBe(value.GetValueKind() == JsonValueKind.Number && value.GetValue<int>() == int.MaxValue ? int.MaxValue : enumValue);
++                Convert.ToInt32(actual, System.Globalization.CultureInfo.InvariantCulture).ShouldBe(enumValue);
+@@ -141,2 +139,0 @@
+-        state.Apply(new ContactChannelAdded { ContactChannelId = "phone", Type = ContactChannelType.Phone, Value = "555" });
+-        state.Apply(new IdentifierAdded { IdentifierId = "tax", Type = IdentifierType.TaxId, Value = "123" });
+@@ -147,2 +143,0 @@
+-        JsonSerializer.SerializeToElement(new ContactChannelUpdated { ContactChannelId = "phone", Type = ContactChannelType.Phone }).GetProperty("Type").GetInt32().ShouldBe(1);
+-        JsonSerializer.SerializeToElement(new ContactChannelUpdated { ContactChannelId = "phone", Type = null }).GetProperty("Type").ValueKind.ShouldBe(JsonValueKind.Null);
+@@ -153,2 +147,0 @@
+-        snapshot.GetProperty("contactChannels")[0].GetProperty("type").GetInt32().ShouldBe(1);
+-        snapshot.GetProperty("identifiers")[0].GetProperty("type").GetInt32().ShouldBe(4);

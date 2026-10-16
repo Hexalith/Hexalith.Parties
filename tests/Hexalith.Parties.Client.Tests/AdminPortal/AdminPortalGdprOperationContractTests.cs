@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 
 using Hexalith.Commons.UniqueIds;
+using Hexalith.EventStore.Contracts.Serialization;
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Contracts;
@@ -201,8 +202,14 @@ public sealed class AdminPortalGdprOperationContractTests
             "Export filenames/storage keys must not be derived from personal display names.");
     }
 
-    [Fact]
-    public async Task AddConsentAsync_SubmitsRecordConsentContractCommandTypeAsync()
+    /// <summary>Confirms the real client payload binds through the SDK reader.</summary>
+    /// <param name="lawfulBasis">The lawful basis submitted by the client.</param>
+    [Theory]
+    [InlineData(LawfulBasis.Consent)]
+    [InlineData(LawfulBasis.LegitimateInterest)]
+    [InlineData(LawfulBasis.ContractualNecessity)]
+    [InlineData(LawfulBasis.LegalObligation)]
+    public async Task AddConsentAsync_SubmitsRecordConsentContractCommandTypeAsync(LawfulBasis lawfulBasis)
     {
         var handler = new RecordingHandler(
             HttpStatusCode.Accepted,
@@ -211,7 +218,7 @@ public sealed class AdminPortalGdprOperationContractTests
         var client = CreateHttpClient(handler);
 
         DateTimeOffset before = DateTimeOffset.UtcNow.AddSeconds(-1);
-        await client.AddConsentAsync("party-1", "channel-1", "billing", LawfulBasis.Consent, CancellationToken.None);
+        await client.AddConsentAsync("party-1", "channel-1", "billing", lawfulBasis, TestContext.Current.CancellationToken);
         DateTimeOffset after = DateTimeOffset.UtcNow.AddSeconds(1);
 
         handler.LastRequest.ShouldNotBeNull().RequestUri!.PathAndQuery.ShouldBe("/api/v1/commands");
@@ -227,7 +234,15 @@ public sealed class AdminPortalGdprOperationContractTests
         timestamp.ShouldBeLessThanOrEqualTo(after);
         Guid.TryParse(messageId, out _).ShouldBeFalse();
         root.GetProperty("correlationId").GetString().ShouldBe(messageId);
-        root.GetProperty("payload").GetProperty("purpose").GetString().ShouldBe("billing");
+        JsonElement payload = root.GetProperty("payload");
+        payload.GetProperty("purpose").GetString().ShouldBe("billing");
+        payload.GetProperty("lawfulBasis").GetString().ShouldBe(lawfulBasis.ToString());
+        RecordConsent bound = payload.Deserialize<RecordConsent>(EventStorePayloadSerialization.Options).ShouldNotBeNull();
+        bound.PartyId.ShouldBe("party-1");
+        bound.TenantId.ShouldBe("tenant-a");
+        bound.ChannelId.ShouldBe("channel-1");
+        bound.Purpose.ShouldBe("billing");
+        bound.LawfulBasis.ShouldBe(lawfulBasis);
     }
 
     [Fact]

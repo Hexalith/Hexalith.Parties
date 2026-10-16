@@ -142,6 +142,19 @@ the canonical surface with `UseEventStoreDomainService`.
 3. **Handlers** (`src/Hexalith.Parties/Domain/PartyAggregate.cs`) enforce business rules in a guard cascade (null → id validity → idempotency no-op → type/required checks → emit events), then return a `DomainResult` of `IEventPayload`s (or rejection events). Success results may carry an enriched `PartyDetail` (`PartyCommandResult` / `CompositeCommandResult`).
 4. EventStore **persists** the events to the aggregate stream and **publishes** them as CloudEvents (persist-then-publish; drain/recovery guarantees at-least-once).
 
+**Command enum compatibility.** Parties clients keep their canonical camelCase,
+string-enum JSON. Enum-valued command properties declare the built-in
+`JsonStringEnumConverter<TEnum>` so the EventStore dispatcher accepts those names
+and legacy numeric values, including nested composite commands and nullable
+contact-channel updates. Unknown enum names remain invalid payloads; numeric
+values still pass through the existing domain validators. The annotations belong
+on command properties: shared enum definitions and event/state writers keep their
+existing serialization shape. Ordinary `JsonSerializer.Serialize(command)` now
+writes enum names for these command properties too. Property-level converters
+also take precedence over converters registered in serializer options; tests or
+clients requiring historical numeric payloads must construct those values
+explicitly.
+
 **Payload protection on the command path.** Step 1's "protected current state" is not plaintext.
 `IEventPayloadProtectionService` (implemented by `PartyPayloadProtectionService` in
 `Hexalith.Parties.Security`, adapted via `EventStorePartyPayloadProtectionAdapter`) decrypts the

@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 
 using Hexalith.Commons.UniqueIds;
+using Hexalith.EventStore.Contracts.Serialization;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
@@ -56,6 +57,10 @@ public sealed class HttpPartiesCommandClientTests
         payload.GetProperty("partyId").GetString().ShouldBe("p-1");
         payload.GetProperty("type").GetString().ShouldBe("Person");
         payload.GetProperty("personDetails").GetProperty("firstName").GetString().ShouldBe("Ada");
+        CreateParty bound = payload.Deserialize<CreateParty>(EventStorePayloadSerialization.Options).ShouldNotBeNull();
+        bound.PartyId.ShouldBe("p-1");
+        bound.Type.ShouldBe(PartyType.Person);
+        bound.PersonDetails.ShouldNotBeNull().FirstName.ShouldBe("Ada");
     }
 
     [Fact]
