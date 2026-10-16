@@ -138,6 +138,39 @@ These add a `TenantId`. **See the discrepancy note in §6** — these are implem
 
 **Idempotency:** handlers are state-driven and return `DomainResult.NoOp()` where appropriate — e.g. `CreateParty` when state already exists; `AddContactChannel`/`AddIdentifier` when the id is already present (safe for MCP retries); `RecordConsent` derives a deterministic `ConsentId = "{channelId}:{purpose}"` and no-ops on an existing active consent; deactivate/reactivate/restrict no-op when already in the target state.
 
+**Consent renewal and replay:** a consent ID identifies the channel/purpose, so
+renewal after withdrawal appends another ledger row with that same ID. Previous
+grant and revocation evidence remains unchanged. Withdrawal closes every active
+row for that ID when all historical rows have one ordinal channel owner; this
+also handles pre-fix states containing repeated active rows. Historical foreign
+owners, including revoked records for removed channels, still block both grant
+and withdrawal commands. An ambiguous historical withdrawal event has no channel
+discriminator and leaves the ledger unchanged.
+
+Aggregate state and detail projections share the same ordered event fold. Exact
+immutable grant evidence (ID, channel, purpose, basis, grant time, actor, source)
+is replay even when its row is revoked. Exact historical withdrawal evidence
+(ID, time, actor, reason, source) is also replay and cannot close a later renewal.
+An active same-owner grant retry preserves the original row, including when the
+retry payload differs; the event stream retains the complete audit evidence.
+Already-revoked rows are never rewritten. Event order is authoritative; wall
+clocks need not be monotonic. Byte-identical lifecycle events cannot be
+distinguished from replay with the existing contracts and are treated as replay.
+Timestamp evidence compares UTC instants, so equivalent offsets are replay;
+original stored offsets are preserved. The SDK sequence checkpoint handles
+duplicate transport delivery, including ignored active-grant and already-revoked retries. The row-level evidence checks
+only recognize retained grant and revocation evidence; ignored divergent payloads
+must not be reintroduced with new sequence numbers as if they were new events.
+
+Existing projections that already skipped a renewal need a full SDK projection
+rebuild from the original ordered history to restore missing ledger evidence;
+redelivery below an existing checkpoint cannot repair it. Rehydrating aggregate
+state from that history applies the same corrected semantics. Existing repeated
+rows remain intact during withdrawal; a full replay canonically folds retries
+rather than recreating accidental duplicate rows, while the original event
+stream retains all payloads. No automatic data migration or historical event
+rewrite is performed.
+
 **Composite guard:** `PartyAggregate.MaxSubOperations` (default 100) bounds composite commands; they validate-all-then-emit (all-or-nothing) and report `applied` / `skipped` / `rejected` lists.
 
 ---

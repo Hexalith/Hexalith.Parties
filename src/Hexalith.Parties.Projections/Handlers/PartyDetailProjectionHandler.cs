@@ -2,6 +2,7 @@ using Hexalith.EventStore.Contracts.Events;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
 
 namespace Hexalith.Parties.Projections.Handlers;
@@ -301,51 +302,18 @@ public sealed class PartyDetailProjectionHandler
 
     private static PartyDetail? HandleConsentRecorded(PartyDetail state, ConsentRecorded e)
     {
-        // Idempotent on replay (see HandleContactChannelAdded for full rationale).
-        if (state.ConsentRecords.Any(c => c.ConsentId == e.ConsentId))
-        {
-            return null;
-        }
-
-        ConsentRecord record = new()
-        {
-            ConsentId = e.ConsentId,
-            ChannelId = e.ChannelId,
-            Purpose = e.Purpose,
-            LawfulBasis = e.LawfulBasis,
-            GrantedAt = e.GrantedAt,
-            GrantedBy = e.GrantedBy,
-            Source = e.Source,
-        };
-        return state with
-        {
-            ConsentRecords = [.. state.ConsentRecords, record],
-            LastModifiedAt = DateTimeOffset.UtcNow,
-        };
+        List<ConsentRecord> records = state.ConsentRecords.ToList();
+        return ConsentHistory.Record(records, e)
+            ? state with { ConsentRecords = records, LastModifiedAt = DateTimeOffset.UtcNow }
+            : null;
     }
 
     private static PartyDetail? HandleConsentRevoked(PartyDetail state, ConsentRevoked e)
     {
         List<ConsentRecord> records = state.ConsentRecords.ToList();
-        int idx = records.FindIndex(c => c.ConsentId == e.ConsentId);
-        if (idx < 0)
-        {
-            return null;
-        }
-
-        records[idx] = records[idx] with
-        {
-            RevokedAt = e.RevokedAt,
-            RevokedBy = e.RevokedBy,
-            RevocationReason = e.Reason,
-            RevocationSource = e.Source,
-        };
-
-        return state with
-        {
-            ConsentRecords = records,
-            LastModifiedAt = DateTimeOffset.UtcNow,
-        };
+        return ConsentHistory.Revoke(records, e)
+            ? state with { ConsentRecords = records, LastModifiedAt = DateTimeOffset.UtcNow }
+            : null;
     }
 
     private static PartyDetail? HandlePartyDeactivated(PartyDetail state)

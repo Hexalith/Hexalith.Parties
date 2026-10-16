@@ -325,32 +325,13 @@ public sealed class PartyState
     public void Apply(ConsentRecorded e)
     {
         ArgumentNullException.ThrowIfNull(e);
-        _consentRecords.Add(new ConsentRecord
-        {
-            ConsentId = e.ConsentId,
-            ChannelId = e.ChannelId,
-            Purpose = e.Purpose,
-            LawfulBasis = e.LawfulBasis,
-            GrantedAt = e.GrantedAt,
-            GrantedBy = e.GrantedBy,
-            Source = e.Source,
-        });
+        ConsentHistory.Record(_consentRecords, e);
     }
 
     public void Apply(ConsentRevoked e)
     {
         ArgumentNullException.ThrowIfNull(e);
-        int idx = _consentRecords.FindIndex(c => c.ConsentId == e.ConsentId);
-        if (idx >= 0)
-        {
-            _consentRecords[idx] = _consentRecords[idx] with
-            {
-                RevokedAt = e.RevokedAt,
-                RevokedBy = e.RevokedBy,
-                RevocationReason = e.Reason,
-                RevocationSource = e.Source,
-            };
-        }
+        ConsentHistory.Revoke(_consentRecords, e);
     }
 
     public void Apply(ProcessingRestricted e)

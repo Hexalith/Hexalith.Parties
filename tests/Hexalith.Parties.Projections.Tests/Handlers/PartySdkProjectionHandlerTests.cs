@@ -8,6 +8,8 @@ using Hexalith.EventStore.DomainService;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Actors;
 using Hexalith.Parties.Projections.Configuration;
@@ -2396,6 +2398,130 @@ public sealed class PartySdkProjectionHandlerTests
             ?? throw new InvalidOperationException("ConcurrentDictionary<string, ResolveOutcome>.TryAdd not found.");
         bool added = (bool)tryAdd.Invoke(cache, [eventTypeName, ambiguousOutcome])!;
         added.ShouldBeTrue("the sentinel event-type name must be unique and unseeded before this call.");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ConsentRenewal_IncrementalPersistenceReplayAndRebuildConvergeAsync(bool revokeRenewal)
+    {
+        ConsentRecorded first = new()
+        {
+            PartyId = "party-1", TenantId = "tenant-a", ConsentId = "channel:marketing",
+            ChannelId = "channel", Purpose = "marketing", LawfulBasis = LawfulBasis.Consent,
+            GrantedAt = DateTimeOffset.UnixEpoch, GrantedBy = "first-user", Source = "first-source",
+        };
+        ConsentRevoked firstRevoke = new()
+        {
+            PartyId = "party-1", TenantId = "tenant-a", ConsentId = first.ConsentId,
+            RevokedAt = DateTimeOffset.UnixEpoch.AddSeconds(1), RevokedBy = "first-revoker",
+            Reason = "first-reason", Source = "first-revocation-source",
+        };
+        ConsentRecorded renewal = first with
+        {
+            GrantedAt = DateTimeOffset.UnixEpoch.AddSeconds(2), GrantedBy = "renewing-user", Source = "renewal-source",
+        };
+        List<IEventPayload> payloads =
+        [
+            new PartyCreated { Type = PartyType.Person }, first,
+            first with { GrantedAt = first.GrantedAt.AddMilliseconds(100), Source = "active-retry" },
+            firstRevoke,
+            firstRevoke with { RevokedAt = firstRevoke.RevokedAt.AddMilliseconds(100), Reason = "already-revoked-retry" },
+            first, // repeated old grant must not reopen a revoked lifecycle
+            renewal, firstRevoke, // repeated old withdrawal must not close the renewal
+            renewal, // exact duplicate grant
+        ];
+        if (revokeRenewal)
+        {
+            ConsentRevoked final = firstRevoke with
+            {
+                RevokedAt = DateTimeOffset.UnixEpoch.AddSeconds(3), RevokedBy = "final-revoker",
+                Reason = "final-reason", Source = "final-revocation-source",
+            };
+            payloads.Add(final);
+            payloads.Add(final with { RevokedAt = final.RevokedAt.AddSeconds(1), Reason = "retry" });
+        }
+
+        ProjectionRequest full = CreateRequest() with
+        {
+            Events = payloads.Select((payload, index) => Event(payload, index + 1,
+                DateTimeOffset.UnixEpoch.AddSeconds(index))).ToArray(),
+        };
+        var store = new InMemoryReadModelBatchStore();
+        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        string key = PartySdkReadModelAddresses.Detail(full.TenantId, full.AggregateId);
+        PartyState aggregateState = new();
+        for (int index = 0; index < full.Events.Length; index++)
+        {
+            switch (payloads[index])
+            {
+                case PartyCreated created: aggregateState.Apply(created); break;
+                case ConsentRecorded recorded: aggregateState.Apply(recorded); break;
+                case ConsentRevoked revoked: aggregateState.Apply(revoked); break;
+            }
+
+            DomainProjectionHandlerResult result = await handler.ProjectAsync(
+                full with { Events = [full.Events[index]] }, $"consent-dispatch-{index}",
+                TestContext.Current.CancellationToken);
+            result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
+            PartyDetailSdkReadModel persistedStep = store.Deserialize<PartyDetailSdkReadModel>(key);
+            persistedStep.Detail.ShouldNotBeNull().ConsentRecords.ShouldBe(aggregateState.ConsentRecords);
+            persistedStep.LastSequenceNumber.ShouldBe(index + 1);
+        }
+
+        PartyDetailSdkReadModel persisted = store.Deserialize<PartyDetailSdkReadModel>(key);
+        ConsentRecord[] records = persisted.Detail.ShouldNotBeNull().ConsentRecords.ToArray();
+        records.Length.ShouldBe(2);
+        records[0].GrantedBy.ShouldBe("first-user");
+        records[0].Source.ShouldBe("first-source");
+        records[0].RevokedAt.ShouldBe(firstRevoke.RevokedAt);
+        records[0].RevokedBy.ShouldBe(firstRevoke.RevokedBy);
+        records[0].RevocationReason.ShouldBe(firstRevoke.Reason);
+        records[0].RevocationSource.ShouldBe(firstRevoke.Source);
+        records[1].GrantedBy.ShouldBe("renewing-user");
+        records[1].Source.ShouldBe("renewal-source");
+        records[1].IsActive.ShouldBe(!revokeRenewal);
+        records[1].RevocationReason.ShouldBe(revokeRenewal ? "final-reason" : null);
+        records[1].RevokedBy.ShouldBe(revokeRenewal ? "final-revoker" : null);
+        records[1].RevocationSource.ShouldBe(revokeRenewal ? "final-revocation-source" : null);
+
+        string beforeDuplicateDelivery = JsonSerializer.Serialize(persisted, s_canonicalJsonOptions);
+        await handler.ProjectAsync(full, "consent-duplicate-delivery", TestContext.Current.CancellationToken);
+        JsonSerializer.Serialize(store.Deserialize<PartyDetailSdkReadModel>(key), s_canonicalJsonOptions)
+            .ShouldBe(beforeDuplicateDelivery);
+        // Pre-fix projection: the checkpoint advanced past renewal but its row was lost.
+        ConsentRecord legacyFirst = revokeRenewal
+            ? records[0] with
+            {
+                RevokedAt = records[1].RevokedAt, RevokedBy = records[1].RevokedBy,
+                RevocationReason = records[1].RevocationReason, RevocationSource = records[1].RevocationSource,
+            }
+            : records[0]; // old projection overwrote the first lifecycle on the final withdrawal
+        PartyDetailSdkReadModel legacy = persisted with
+        {
+            Detail = persisted.Detail! with { ConsentRecords = [legacyFirst] },
+        };
+        await store.SaveAsync("statestore", key, legacy, TestContext.Current.CancellationToken);
+        await handler.ProjectAsync(full, "legacy-redelivery", TestContext.Current.CancellationToken);
+        store.Deserialize<PartyDetailSdkReadModel>(key).Detail.ShouldNotBeNull()
+            .ConsentRecords.ShouldHaveSingleItem().ShouldBe(legacyFirst);
+        DomainProjectionRebuildPlan rebuild = await handler.PrepareRebuildAsync(
+            full, "consent-rebuild", TestContext.Current.CancellationToken);
+        PartyDetailSdkReadModel rebuilt = JsonSerializer.Deserialize<PartyDetailSdkReadModel>(
+            rebuild.Operations.Single(operation => operation.Key == key).CanonicalValue.Span, s_canonicalJsonOptions)!;
+        JsonSerializer.Serialize(rebuilt, s_canonicalJsonOptions).ShouldBe(beforeDuplicateDelivery);
+        await store.ExecuteAsync(new ReadModelBatch(
+            new ReadModelBatchScope(rebuild.StoreName, full.TenantId, "party", full.AggregateId,
+                PartyProjectionNames.Detail, "consent-rebuild"), rebuild.Operations),
+            TestContext.Current.CancellationToken);
+        JsonSerializer.Serialize(store.Deserialize<PartyDetailSdkReadModel>(key), s_canonicalJsonOptions)
+            .ShouldBe(beforeDuplicateDelivery);
+        PartyProcessingSdkReadModel processing = store.Deserialize<PartyProcessingSdkReadModel>(
+            PartySdkReadModelAddresses.Processing(full.TenantId, full.AggregateId));
+        processing.LastSequenceNumber.ShouldBe(full.Events.Length);
+        processing.Records.Count.ShouldBe(payloads.Count); // original events remain audit evidence
+        JsonSerializer.Serialize(PartyDetailSdkProjectionHandler.Fold(full, current: null), s_canonicalJsonOptions)
+            .ShouldBe(beforeDuplicateDelivery);
     }
 
     private static ProjectionRequest CreateRequest()

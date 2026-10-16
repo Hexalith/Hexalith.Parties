@@ -1,0 +1,12 @@
+Commitlint CLI/config-conventional: installed and lockfile-pinned 21.2.2
+Command: node_modules/.bin/commitlint --verbose (exact candidate via stdin)
+Validated at: 2026-10-16T16:57:02.775991+00:00
+Exit code: 0
+
+⧗   --- input ---
+fix: restore same-channel consent renewal
+
+Revoke renewed grants while preserving historical consent evidence.
+Keep aggregate and projected consent state aligned during replay.
+Retain ownership collision guards and verify the required test gates.
+✔   found 0 problems, 0 warnings

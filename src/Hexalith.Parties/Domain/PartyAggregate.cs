@@ -1476,8 +1476,8 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
             return DomainResult.Rejection([new CompositeOperationConflict { Message = ConsentIdCollisionMessage }]);
         }
 
-        // Idempotent: already revoked
-        if (!consent.IsActive) {
+        // Idempotent only when every historical row is already revoked.
+        if (!state.ConsentRecords.Any(c => c.ConsentId == command.ConsentId && c.IsActive)) {
             return DomainResult.NoOp();
         }
 
