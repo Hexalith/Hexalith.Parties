@@ -120,6 +120,11 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
             }
         }
 
+        if (HasCaseOnlyChannelCollision(command.ContactChannels.Select(c => c.ContactChannelId)))
+        {
+            return CompositeConflict(ChannelIdCollisionMessage);
+        }
+
         // Emit PartyCreated + PartyDisplayNameDerived
         List<IEventPayload> events = [];
         List<string> applied = [];
@@ -460,6 +465,17 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
                 applied: [],
                 skipped: [],
                 rejected: [$"Cannot update organization details on a {state.Type} party."]);
+        }
+
+        // Only new additions can introduce collisions; exact retries remain skips.
+        if (HasCaseOnlyChannelCollision(command.AddContactChannels
+                .Where(c => !existingChannelsById.ContainsKey(c.ContactChannelId))
+                .Select(c => c.ContactChannelId))
+            || command.AddContactChannels.Any(c => !existingChannelsById.ContainsKey(c.ContactChannelId)
+                && HasConflictingChannelId(state, c.ContactChannelId))
+            || command.UpdateContactChannels.Any(c => HasAmbiguousChannelId(state, c.ContactChannelId)))
+        {
+            return CompositeConflict(ChannelIdCollisionMessage);
         }
 
         // Phase 2 — Event emission (all validation passed)
@@ -1128,6 +1144,11 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
             return DomainResult.NoOp();
         }
 
+        if (HasConflictingChannelId(state, command.ContactChannelId))
+        {
+            return DomainResult.Rejection([new CompositeOperationConflict { Message = ChannelIdCollisionMessage }]);
+        }
+
         ContactChannelAdded added = new() {
             ContactChannelId = command.ContactChannelId,
             Type = command.Type,
@@ -1184,6 +1205,11 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
 
         if (channelIdx < 0) {
             return DomainResult.Rejection([new ContactChannelNotFound { Message = $"Contact channel '{command.ContactChannelId}' not found." }]);
+        }
+
+        if (HasAmbiguousChannelId(state, command.ContactChannelId))
+        {
+            return DomainResult.Rejection([new CompositeOperationConflict { Message = ChannelIdCollisionMessage }]);
         }
 
         ContactChannelUpdated updated = new() {
@@ -1348,6 +1374,11 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
             return DomainResult.Rejection([new ContactChannelNotFound { Message = "Contact channel not found." }]);
         }
 
+        if (HasAmbiguousChannelId(state, command.ChannelId))
+        {
+            return DomainResult.Rejection([new CompositeOperationConflict { Message = ChannelIdCollisionMessage }]);
+        }
+
         // Validate purpose format
         string purpose = command.Purpose?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(purpose)) {
@@ -1374,6 +1405,12 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
         // Deterministic ConsentId for idempotency
         string channelId = command.ChannelId.Trim();
         string consentId = $"{channelId}:{purpose}".ToLowerInvariant();
+
+        // Removed channels and revoked records still reserve their consent ownership.
+        if (HasConflictingConsentOwner(state, consentId, channelId))
+        {
+            return DomainResult.Rejection([new CompositeOperationConflict { Message = ConsentIdCollisionMessage }]);
+        }
 
         // Idempotent: if active consent for same channel+purpose exists, no-op
         if (state.ConsentRecords.Any(c => c.ConsentId == consentId && c.IsActive)) {
@@ -1432,6 +1469,11 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
                 ConsentId = command.ConsentId,
                 Message = "Consent not found.",
             }]);
+        }
+
+        if (HasConflictingConsentOwner(state, command.ConsentId, consent.ChannelId))
+        {
+            return DomainResult.Rejection([new CompositeOperationConflict { Message = ConsentIdCollisionMessage }]);
         }
 
         // Idempotent: already revoked

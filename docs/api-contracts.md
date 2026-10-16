@@ -50,6 +50,29 @@ Response carries a `correlationId` (and optionally a `resultPayload` echoing the
 
 **Command types accepted** (the `commandType` field): every command in [data-models.md §3](data-models.md) — `CreateParty`, `CreatePartyComposite`, `UpdatePartyComposite`, `UpdatePersonDetails`, `UpdateOrganizationDetails`, `SetIsNaturalPerson`, `AddContactChannel`, `UpdateContactChannel`, `RemoveContactChannel`, `AddIdentifier`, `RemoveIdentifier`, `DeactivateParty`, `ReactivateParty`, and the GDPR commands (`RecordConsent`, `RevokeConsent`, `RestrictProcessing`, `LiftRestriction`, `EraseParty`, `CancelPartyErasure`, `RetryErasureVerification`, …).
 
+Contact-channel IDs must be unique ignoring case (`OrdinalIgnoreCase`). A
+case-only duplicate addition rejects the standalone command or the entire
+composite create/update with `CompositeOperationConflict`; exact-ID addition
+retries retain their existing no-op/skip behavior. Channel updates, removals,
+and consent lookups still address stored IDs exactly, including letter case.
+
+Historical case-only channel pairs replay unchanged. Updates and consent grants
+for an ambiguous channel family reject with a fixed conflict message; unrelated
+channels remain usable. An exact channel removal can resolve that ambiguity.
+Consent IDs retain the existing lowercased `channel:purpose` generation. Before
+recording or treating a grant as an idempotent retry, the aggregate rejects a
+generated ID already owned by a different exact channel, including revoked
+records and removed channels. Removing a channel does not release its retained
+consent IDs for another case variant. The collision guard permits the existing
+exact-ID revocation behavior when ownership is unambiguous, even with ambiguous
+current channels, but rejects an exact consent ID shared by different channel
+owners. A pre-existing renewal limitation remains: grant → revoke → regrant can
+leave the first revoked record selected by a later revoke, producing a no-op
+while the later grant remains active. This requires separate lifecycle work.
+These conflicts do not rewrite historical
+events or consent records. Resolving cross-owner consent history requires a
+separately designed remediation; channel removal alone does not resolve it.
+
 Consent commands validate their payloads before protected state is rehydrated.
 `RecordConsent.LawfulBasis` must be a defined value: `Consent`,
 `LegitimateInterest`, `ContractualNecessity`, or `LegalObligation`.

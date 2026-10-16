@@ -1,0 +1,10 @@
+Pinned commitlint CLI: 21.2.2
+Command: node node_modules/@commitlint/cli/cli.js --verbose (stdin is the exact full message below)
+
+fix: prevent case-only contact channel collisions
+
+⧗   --- input ---
+fix: prevent case-only contact channel collisions
+✔   found 0 problems, 0 warnings
+
+Exit code: 0

@@ -919,7 +919,10 @@ location: src/Hexalith.Parties/Domain/PartyAggregate.cs:1362-1364
 source_spec: `spec-safe-consent-identifiers.md`
 severity: medium
 reason: PartyAggregate.Handle(RecordConsent) builds $"{channelId}:{purpose}".ToLowerInvariant() while state.ContactChannels.Any(c => c.Id == command.ChannelId) compares ordinally, so channels "Ch-Email-1" and "ch-email-1" collapse onto one consent id. Both lines are unchanged by this story and the intent's Always clause requires preserving that generation, so this is pre-existing behaviour, not a regression.
-status: open
+status: done 2026-10-16
+implementation: Standalone/composite additions reject new case-insensitive collisions while preserving exact retries and ordinal lookups. Historical ambiguous channels reject updates/grants; exact removal remains available. Retained foreign consent ownership rejects grants before idempotency, and multi-owner consent IDs reject revocation without rewriting history.
+validation_blocker: none; Debug source-reference builds pass with 0 warnings/errors, channel/consent focused tests pass 138/138 (32 new regression cases), DW-119 focused tests pass 86/86, the complete server assembly passes 291/291, and the full Hexalith.Parties.Tests assembly passes 978/978 without skips. Independent review and targeted follow-up completed.
+evidence: spec-dw-120-channel-id-collisions.md; tests/dw-120-channel-id-collisions-2026-10-16/validation.json. Contracts, dependency versions/gitlinks, and DW-119 fixes/evidence are unchanged. The pre-existing same-owner consent-renewal limitation is tracked separately. No push.
 decision: 2026-09-07 Reject case-only duplicates — Add case-insensitive channel uniqueness guards on creation and update while retaining existing consent IDs for nonconflicting states. Define safe handling for pre-existing ambiguous aggregates and add collision tests.
 
 ### DW-121: The consumer portal maps the client's new ArgumentException to a generic Failed outcome while the admin portal maps it to ValidationRejected.
@@ -1540,3 +1543,9 @@ status: open
   evidence: FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph expects the pre-sync EventStore, FrontComposer, and Tenants pointers while HEAD records the synced identities. It fails identically with the original consent validators. Update exact current observations without recertifying dated parity evidence or fabricating owner signoff; evidence is in tests/dw-119-consent-validation-2026-10-16/validation.json.
   status: done 2026-10-16
   resolution: Refreshed the three current-source identities/describes against committed gitlinks; preserved dated observations and owner approvals. Dependency fitness and full assembly pass. See tests/dw-119-consent-validation-2026-10-16/full-gate-validation.json.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-120-channel-id-collisions.md`
+  summary: Make renewed same-channel consent revocable after a grant, revoke, and regrant sequence.
+  severity: medium
+  evidence: PartyState.Apply(ConsentRecorded) appends a second row with the same deterministic ConsentId after regrant, while PartyAggregate.Handle(RevokeConsent) selects the first already-revoked row and returns NoOp. PartyDetailProjectionHandler also ignores regrants with an existing ConsentId. This predates DW-120 and affects one owner without case collisions; fix aggregate/state/projection renewal semantics together with replay and lifecycle tests.
+  status: open

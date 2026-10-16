@@ -1,0 +1,24 @@
+dotnet tests/Hexalith.Parties.Server.Tests/bin/Debug/net10.0/Hexalith.Parties.Server.Tests.dll -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateChannelIdCollisionTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateContactChannelTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateConsentTests
+
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.12)
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Server.Tests  Total: 138, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 0.297s
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.12)
+  Discovering: Hexalith.Parties.Server.Tests
+  Discovered:  Hexalith.Parties.Server.Tests
+  Starting:    Hexalith.Parties.Server.Tests
+    Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateChannelIdCollisionTests.UpdateComposite_ExactRetriesOfHistoricalVariants_RemainSkipped [FAIL]
+      Shouldly.ShouldAssertException : result.IsSuccess
+          should be
+      True
+          but was
+      False
+      Stack Trace:
+        tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateChannelIdCollisionTests.cs(60,0): at Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateChannelIdCollisionTests.UpdateComposite_ExactRetriesOfHistoricalVariants_RemainSkipped()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Finished:    Hexalith.Parties.Server.Tests (ID = '37e774e6c550334751736f117b30e9c9799a7fb9c408562b8f22ea4b3b115647')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Server.Tests  Total: 138, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 0.297s
+
+Exit code: 1

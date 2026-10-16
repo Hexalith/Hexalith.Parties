@@ -1,0 +1,267 @@
+{
+  "source_revision": "ba5a8486c16f0d3c89535c3206e3fe350389c127",
+  "results": {
+    "server_build": {
+      "command": "dotnet build tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "started_at": "2026-10-16T15:46:35.662674+00:00",
+      "finished_at": "2026-10-16T15:46:52.069822+00:00",
+      "exit_code": 0,
+      "summary_file": "server_build-summary.txt",
+      "summary_sha256": "18edaf690c4fb1194e9a0ea4fec9f836295729e815034b74472743c73a86d096",
+      "warnings": 0,
+      "errors": 0
+    },
+    "build": {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "started_at": "2026-10-16T15:46:14.770205+00:00",
+      "finished_at": "2026-10-16T15:46:31.706404+00:00",
+      "exit_code": 0,
+      "summary_file": "build-summary.txt",
+      "summary_sha256": "c8ee1f43402cb15a458757b4abdf563f002dd5f43cb72fee6194974eaadbca35",
+      "warnings": 0,
+      "errors": 0
+    },
+    "server_full": {
+      "command": "dotnet tests/Hexalith.Parties.Server.Tests/bin/Debug/net10.0/Hexalith.Parties.Server.Tests.dll",
+      "started_at": "2026-10-16T15:47:13.186863+00:00",
+      "finished_at": "2026-10-16T15:47:13.807950+00:00",
+      "exit_code": 0,
+      "summary_file": "server_full-summary.txt",
+      "summary_sha256": "9dbfe6dd4546025b55ae2da5e5ee8721272d33917157cf83f842967a24d3425b",
+      "total": 291,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "passed": 291
+    },
+    "focused_dw119": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Validation.RecordConsentValidatorTests -class Hexalith.Parties.Tests.Validation.RevokeConsentValidatorTests -class Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests",
+      "started_at": "2026-10-16T15:47:20.077195+00:00",
+      "finished_at": "2026-10-16T15:47:20.817231+00:00",
+      "exit_code": 0,
+      "summary_file": "focused_dw119-summary.txt",
+      "summary_sha256": "b4dd6d5ce3e8e94b9fb29f37a2e5d845199494df9568418520cf5a3aba336e3a",
+      "total": 86,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "passed": 86
+    },
+    "full": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "started_at": "2026-10-16T15:47:20.921136+00:00",
+      "finished_at": "2026-10-16T15:47:42.083522+00:00",
+      "exit_code": 0,
+      "summary_file": "full-summary.txt",
+      "summary_sha256": "03cd8baf0e970c1a0f1769bbc72d2c5125d80a847ba890ca89983fe252b412d5",
+      "total": 978,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "passed": 978
+    },
+    "new_regressions": {
+      "command": "dotnet tests/Hexalith.Parties.Server.Tests/bin/Debug/net10.0/Hexalith.Parties.Server.Tests.dll -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateChannelIdCollisionTests",
+      "started_at": "2026-10-16T15:47:43.339861+00:00",
+      "finished_at": "2026-10-16T15:47:43.783941+00:00",
+      "exit_code": 0,
+      "summary_file": "new_regressions-summary.txt",
+      "summary_sha256": "e938ea48472258ecb387085cf6a745f6e81ae5a68c22823788e60f0230e3d956",
+      "total": 32,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "passed": 32
+    },
+    "focused_channels": {
+      "command": "dotnet tests/Hexalith.Parties.Server.Tests/bin/Debug/net10.0/Hexalith.Parties.Server.Tests.dll -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateChannelIdCollisionTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateContactChannelTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateConsentTests",
+      "started_at": "2026-10-16T15:47:12.606747+00:00",
+      "finished_at": "2026-10-16T15:47:13.056531+00:00",
+      "exit_code": 0,
+      "summary_file": "focused_channels-summary.txt",
+      "summary_sha256": "dd6abc279824cd367bf0c35f247c2b74c0783a9fa968f4e02c6d66ff3a1005dc",
+      "total": 138,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "passed": 138
+    }
+  },
+  "initial_failure": {
+    "command": "dotnet build tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+    "result": "Build failed with CS1061 at two new test assertions using state.PersonDetails; corrected to the actual state.Person property without changing assertions."
+  },
+  "initial_focused_failure": {
+    "command": "dotnet tests/Hexalith.Parties.Server.Tests/bin/Debug/net10.0/Hexalith.Parties.Server.Tests.dll -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateChannelIdCollisionTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateContactChannelTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateConsentTests",
+    "started_at": "2026-10-16T15:39:54.418427+00:00",
+    "finished_at": "2026-10-16T15:39:54.954550+00:00",
+    "exit_code": 1,
+    "summary_file": "initial-focused-summary.txt",
+    "summary_sha256": "83ee165c88b5e01c23967ffc46ccf7947c28c6357085ba662a29570643b71fd1",
+    "total": 131,
+    "errors": 0,
+    "failed": 1,
+    "skipped": 0,
+    "not_run": 0,
+    "passed": 130,
+    "diagnosis": "New unrelated-channel update test requested IsPreferred=true. Existing behavior correctly emitted ContactChannelUpdated plus PreferredContactChannelChanged. Corrected the test to assert both event types and exact IDs, rather than its erroneous single-event expectation; production unchanged."
+  },
+  "revision_scope": "Tested uncommitted workspace based on source_revision; tested_file_sha256 identifies exercised files. No push.",
+  "root_worktree_clean_at_start": true,
+  "required_gates": "passed; independent review and targeted follow-up complete; DW-120 done",
+  "tested_file_sha256": {
+    "src/Hexalith.Parties/Domain/PartyAggregate.cs": "202c58eb71ce99eed5aa146455cb83dfcb25e474f14dc07b4c8fe3b58cbfa722",
+    "src/Hexalith.Parties/Domain/PartyAggregate.ContactChannels.cs": "ca168dc4b043ce52d8f89304056c99f8ec361aff9b84211ac7a72b4673e194fe",
+    "tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateChannelIdCollisionTests.cs": "67b40689d695890d1df90dc5ea85b70ce805c7c1daafaa9d13324ebb8d7a1328",
+    "docs/api-contracts.md": "a12577b7cdecf52dc56eaf72e9c268e1929697bb28aea5118f3f3225590461f9"
+  },
+  "preserved_paths_unchanged_from_baseline": [
+    "src/Hexalith.Parties.Contracts",
+    "src/Hexalith.Parties/Validation",
+    "tests/Hexalith.Parties.Tests",
+    "Directory.Build.props",
+    "Directory.Build.targets",
+    "Directory.Packages.props",
+    "global.json",
+    "package.json",
+    "package-lock.json",
+    "references",
+    "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md",
+    "_bmad-output/implementation-artifacts/tests/dw-119-consent-validation-2026-10-16"
+  ],
+  "root_declared_dependencies": [
+    {
+      "path": "references/Hexalith.AI.Tools",
+      "gitlink": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "checkout_revision": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.Builds",
+      "gitlink": "9f0121c77e3f085c58f5c926057606db8e6511a7",
+      "checkout_revision": "9f0121c77e3f085c58f5c926057606db8e6511a7",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.Commons",
+      "gitlink": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+      "checkout_revision": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.EventStore",
+      "gitlink": "7edc260d8c0bd904f1215f801bad02b99c6694cf",
+      "checkout_revision": "7edc260d8c0bd904f1215f801bad02b99c6694cf",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.FrontComposer",
+      "gitlink": "5fac9ab1df26da19ceadf626f9e557884a189e7c",
+      "checkout_revision": "5fac9ab1df26da19ceadf626f9e557884a189e7c",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.McpCli",
+      "gitlink": "7e99305a621e1bdf7119b6e924348857e2b5a5a4",
+      "checkout_revision": "7e99305a621e1bdf7119b6e924348857e2b5a5a4",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.Memories",
+      "gitlink": "99431f0fed102ea6ddbae33d28b9da4fc7f215a0",
+      "checkout_revision": "99431f0fed102ea6ddbae33d28b9da4fc7f215a0",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.Platform",
+      "gitlink": "c3af1f2c9e7b0d1b003a1bd5978545f664e38167",
+      "checkout_revision": "c3af1f2c9e7b0d1b003a1bd5978545f664e38167",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.PolymorphicSerializations",
+      "gitlink": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+      "checkout_revision": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.Tenants",
+      "gitlink": "6ad5e502fa5d6e453e24610ef418007e1bd53298",
+      "checkout_revision": "6ad5e502fa5d6e453e24610ef418007e1bd53298",
+      "worktree_clean": true
+    }
+  ],
+  "runtime_baseline": {
+    "commands": [
+      "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --no-build",
+      "aspire wait parties --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --timeout 30 --non-interactive",
+      "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive"
+    ],
+    "path_note": "Executed with the absolute path to the same AppHost.",
+    "initial_apphost_running": false,
+    "parties_readiness_passed": true,
+    "healthy_project_resources": [
+      "eventstore",
+      "parties"
+    ],
+    "finished_project_resources": [
+      "eventstore-admin",
+      "parties-ui",
+      "tenants"
+    ],
+    "not_started_project_resources": [
+      "eventstore-admin-ui",
+      "parties-mcp"
+    ],
+    "owned_apphost_stopped_before_edits": true,
+    "source_provenance": "Existing --no-build binaries unverified; operational context only. Subsequent builds and tests provide source-reference evidence.",
+    "full_topology_qualification": false
+  },
+  "format_validation": {
+    "command": "git -c core.whitespace=cr-at-eol diff --check",
+    "exit_code": 0
+  },
+  "review_retry_assertion_failure": {
+    "command": "dotnet tests/Hexalith.Parties.Server.Tests/bin/Debug/net10.0/Hexalith.Parties.Server.Tests.dll -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateChannelIdCollisionTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateContactChannelTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateConsentTests",
+    "started_at": "2026-10-16T15:46:14.133402+00:00",
+    "finished_at": "2026-10-16T15:46:14.631267+00:00",
+    "exit_code": 1,
+    "summary_file": "review-retry-assertion-summary.txt",
+    "summary_sha256": "8c4bcbb84bac747de891de00e87a8d925b04eb9c9c15327bd3a97b0e3edab91c",
+    "total": 138,
+    "errors": 0,
+    "failed": 1,
+    "skipped": 0,
+    "not_run": 0,
+    "passed": 137,
+    "diagnosis": "The added composite exact-retry case emits no events, so DomainResult classifies it as NoOp, not Success. Corrected the result-kind assertion to IsNoOp=true and IsRejection=false; retained exact event/applied/rejected/skip assertions. Production unchanged."
+  },
+  "review": {
+    "layers": [
+      "blind-hunter"
+    ],
+    "skipped_layers": [],
+    "findings": 7,
+    "patched_findings": 6,
+    "rejected_optional_performance_refactors": 1,
+    "deferred_preexisting_lifecycle_issues": 1,
+    "targeted_followup": "Both behavior corrections and regression coverage verified; revocation documentation and seven-finding triage verified; no remaining concrete issues. Read-only inspection, no reviewer builds or tests.",
+    "triage": "_bmad-output/implementation-artifacts/spec-dw-120-channel-id-collisions.md#review-triage-log"
+  },
+  "commit_message_validation": {
+    "command": "node node_modules/@commitlint/cli/cli.js --verbose (exact full message on stdin)",
+    "pinned_cli_version": "21.2.2",
+    "evidence": "commitlint.txt",
+    "exit_code": 0,
+    "problems": 0,
+    "warnings": 0,
+    "summary_sha256": "9a2d3f52cf4d3772cbfd0f4b536e1d9bdbb78d293e8e34cd08ada15d32c4bc44"
+  }
+}

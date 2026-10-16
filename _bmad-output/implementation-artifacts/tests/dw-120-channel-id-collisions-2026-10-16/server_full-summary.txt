@@ -1,0 +1,6 @@
+dotnet tests/Hexalith.Parties.Server.Tests/bin/Debug/net10.0/Hexalith.Parties.Server.Tests.dll
+
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.12)
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Server.Tests  Total: 291, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.438s
+Exit code: 0
