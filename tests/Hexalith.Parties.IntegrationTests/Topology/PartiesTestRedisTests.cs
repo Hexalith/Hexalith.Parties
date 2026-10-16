@@ -32,6 +32,12 @@ public sealed class PartiesTestRedisTests
             .CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>().ConfigureAwait(true);
         await using (builder.ConfigureAwait(true))
         {
+            DaprSidecarAnnotation[] sidecars = builder.Resources
+                .SelectMany(resource => resource.Annotations.OfType<DaprSidecarAnnotation>()).ToArray();
+            string[] statelessSidecars = sidecars
+                .Where(sidecar => !sidecar.Sidecar.Annotations.OfType<DaprComponentReferenceAnnotation>().Any())
+                .Select(sidecar => sidecar.Sidecar.Name).ToArray();
+            statelessSidecars.ShouldContain("eventstore-admin-ui-dapr");
             IResourceBuilder<ContainerResource> redis = PartiesTestRedis.Configure(builder);
             ResourceExtensions.TryGetContainerImageName(redis.Resource, out string? image).ShouldBeTrue();
             image.ShouldBe("docker.io/library/redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf");
@@ -43,8 +49,6 @@ public sealed class PartiesTestRedisTests
             DaprComponentResource[] components = builder.Resources.OfType<DaprComponentResource>()
                 .Where(component => component.Type is "state.redis" or "pubsub.redis" or "pubsub").ToArray();
             components.Length.ShouldBe(2);
-            DaprSidecarAnnotation[] sidecars = builder.Resources
-                .SelectMany(resource => resource.Annotations.OfType<DaprSidecarAnnotation>()).ToArray();
             sidecars.Length.ShouldBeGreaterThanOrEqualTo(5);
             foreach (DaprSidecarAnnotation sidecar in sidecars)
             {
@@ -104,18 +108,22 @@ public sealed class PartiesTestRedisTests
                 string[] paths = arguments.Select((argument, index) => (argument, index))
                     .Where(item => item.argument is "--resources-path")
                     .Select(item => (string)arguments[item.index + 1]).ToArray();
-                DaprComponentReferenceAnnotation[] references = sidecars
-                    .Single(sidecar => executable.Name == $"{sidecar.Sidecar.Name}-cli")
-                    .Sidecar.Annotations.OfType<DaprComponentReferenceAnnotation>().ToArray();
-                if (references.Length == 0)
+                paths.ShouldNotBeEmpty();
+                DaprSidecarAnnotation sidecar = sidecars
+                    .Single(sidecar => executable.Name == $"{sidecar.Sidecar.Name}-cli");
+                DaprComponentReferenceAnnotation[] references = sidecar.Sidecar.Annotations
+                    .OfType<DaprComponentReferenceAnnotation>().ToArray();
+                YamlMappingNode[] rendered = paths.SelectMany(path => Directory.GetFiles(path, "*.yaml"))
+                    .Select(ReadComponent).ToArray();
+                if (statelessSidecars.Contains(sidecar.Sidecar.Name, StringComparer.Ordinal))
                 {
-                    paths.ShouldBeEmpty();
+                    references.Length.ShouldBe(1);
+                    rendered.Length.ShouldBe(1);
+                    rendered.Single()["metadata"]["name"].ToString().ShouldBe("fixture-stateless-secretstore");
+                    rendered.Single()["spec"]["type"].ToString().ShouldBe("secretstores.local.env");
                     continue;
                 }
 
-                paths.ShouldNotBeEmpty();
-                YamlMappingNode[] rendered = paths.SelectMany(path => Directory.GetFiles(path, "*.yaml"))
-                    .Select(ReadComponent).ToArray();
                 YamlMappingNode secretStore = rendered.Single(document =>
                     document["metadata"]["name"].ToString() == "secretstore");
                 secretStore["spec"]["type"].ToString().ShouldBe("secretstores.local.env");

@@ -690,3 +690,37 @@ to green. Logs: `/tmp/parties-private-redis-build.log`,
 warning/submodule guard and working-tree gitlink gate pass. The exact commit
 message passed pinned commitlint; successful validation is preserved at
 `/tmp/parties-redis-secret-binding-commitlint.json`.
+
+### Stateless sidecar default-directory isolation
+
+Parent inspection of the rendered regression exposed a second private-boundary
+hole: eventstore-admin-ui has no component references, so its Dapr CLI received
+no resources path. CI 38899711978 explicitly watched
+`/home/runner/.dapr/components` and loaded shared Redis state/pubsub components
+(job log lines 1210–1237). Review triage: **high / patch**. An environment-only
+Redis override cannot make those literal default components private.
+
+The helper now references one harmless SDK-generated `secretstores.local.env`
+component from sidecars that originally had no component references. This
+forces an owned explicit resources directory while retaining their stateless
+role and avoiding new temporary-directory ownership. The regression captures
+the originally stateless set, requires a resources path for every sidecar,
+and proves stateless sidecars load only the harmless component, never Redis.
+It fails for the original missing path and passes after the correction.
+Targeted Release build: zero warnings/errors; all five routing tests pass with
+no skips. Logs: `/tmp/parties-stateless-{build,tests,red-tests}.log`.
+Production AppHost, ACL/mTLS and exact marker assertions remain intact.
+
+CI 38903625179 at `80c32fac26f72be10c2a3960e44f58e90410ed89` has passed
+all 3,065 Tier 1/2 tests and is retained as a live marker-fix diagnostic.
+The final stateless-sidecar correction still requires its own full exact-source
+CI before Release. Overall status remains in-review.
+
+The diagnostic CI 38903625179 completed successfully: 3,065 Tier 1/2 passes
+plus Aspire 50 passed / six existing health skips / zero failures. The required
+live gateway passed in its normal assertion path. Commitlint and CodeQL also
+passed for that exact source. The Aspire run took 1m 28s; its retained log is
+`/tmp/parties-ci-80c32fac-aspire.log`. This proves the secret-store correction;
+publication still waits for exact-source CI of the final stateless-directory
+patch. Its exact Conventional Commit passed pinned commitlint, with receipt
+`/tmp/parties-stateless-components-commitlint.json`.

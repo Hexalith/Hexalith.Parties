@@ -71,8 +71,17 @@ internal static class PartiesTestRedis
                 .WithMetadata("redisPassword", password.Resource);
         }
 
+        // A sidecar with no component references otherwise loads ~/.dapr/components.
+        // This harmless generated component supplies an SDK-owned directory without Redis.
+        IResourceBuilder<IDaprComponentResource> stateless = builder.AddDaprComponent(
+            "fixture-stateless-secretstore", "secretstores.local.env");
         foreach (DaprSidecarAnnotation sidecar in sidecars)
         {
+            if (!sidecar.Sidecar.Annotations.OfType<DaprComponentReferenceAnnotation>().Any())
+            {
+                _ = builder.CreateResourceBuilder(sidecar.Sidecar).WithReference(stateless);
+            }
+
             sidecar.Sidecar.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
             {
                 context.EnvironmentVariables["REDIS_HOST"] = address;
