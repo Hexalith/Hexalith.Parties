@@ -631,3 +631,24 @@ Local implementation and independent review are complete. Current-main CI,
 the required live gateway on a fresh runner, release approval/publication and
 independent package downloads remain pending. Keep the overall spec in-review
 until these acceptance gates pass; no validation bypass is available or used.
+
+### Exact-source CI and image-reference correction
+
+Push CI 38897102120 at `bd279d0163bb085f3c6849b425c706faa8e9c7d5`
+passed Release build, consumer validation and all Tier 1/2 projects, including
+924/924 service tests and 128/128 CI checks. Commitlint and CodeQL also passed.
+The required Aspire job failed 1/56: Docker rejected fixture-redis with
+`invalid reference format`; the other 49 passed and six historical health
+checks skipped. Exact job log: `/tmp/parties-ci-bd279d01-aspire.log`.
+
+The new fixture supplied `sha256:` to Aspire's WithImageSHA256, whose image
+resolver adds that prefix itself. A test of the public
+ResourceExtensions.TryGetContainerImageName API reproduced the duplicated
+prefix before the fix. The helper now supplies only the unchanged digest;
+its resolved reference is exactly
+`docker.io/library/redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf`.
+A registry manifest lookup for that exact reference succeeded. All five
+routing/image model tests passed, with an affected-project build at zero
+warnings/errors and a clean whitespace check. Red/green logs are
+`/tmp/parties-redis-image-{red,green}.log`. This is an automatic narrow patch;
+new exact-source full CI remains required before Release.

@@ -24,6 +24,8 @@ public sealed class PartiesTestRedisTests
         await using (builder.ConfigureAwait(true))
         {
             IResourceBuilder<ContainerResource> redis = PartiesTestRedis.Configure(builder);
+            ResourceExtensions.TryGetContainerImageName(redis.Resource, out string? image).ShouldBeTrue();
+            image.ShouldBe("docker.io/library/redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf");
             EndpointAnnotation endpoint = redis.Resource.Annotations.OfType<EndpointAnnotation>().Single();
             endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "127.0.0.1", 46379);
             redis.Resource.Annotations.OfType<ContainerMountAnnotation>().ShouldBeEmpty();

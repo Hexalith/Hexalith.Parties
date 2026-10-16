@@ -52,7 +52,8 @@ internal static class PartiesTestRedis
 
         IResourceBuilder<ContainerResource> redis = builder
             .AddContainer("fixture-redis", "docker.io/library/redis")
-            .WithImageSHA256("sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf")
+            // Aspire adds the sha256: prefix when resolving the complete image name.
+            .WithImageSHA256("ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf")
             .WithArgs("redis-server", "--save", string.Empty, "--appendonly", "no")
             .WithEndpoint(name: "tcp", targetPort: 6379, scheme: "tcp");
         EndpointReference endpoint = redis.GetEndpoint("tcp");
