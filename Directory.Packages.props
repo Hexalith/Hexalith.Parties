@@ -14,6 +14,7 @@
     <!-- GHSA-334f-vvp4-7g6p: pin the fixed transitive floor for owned consumers.
          The UI shared-runtime floor is selected separately in Directory.Build.props. -->
     <ItemGroup>
+        <PackageVersion Remove="Microsoft.AspNetCore.SignalR.Common" />
         <PackageVersion Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.13" />
         <PackageVersion Update="Microsoft.Extensions.Options" Version="10.0.13" />
         <PackageVersion Update="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
