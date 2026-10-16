@@ -904,9 +904,12 @@ location: src/Hexalith.Parties/Validation/RecordConsentValidator.cs and RevokeCo
 source_spec: `spec-safe-consent-identifiers.md`
 severity: medium
 reason: AddContactChannelValidator, AddIdentifierValidator and CreatePartyValidator all call IsInEnum on their enum property, and RestrictProcessingValidator bounds Reason to 256 characters. RecordConsent carries LawfulBasis straight into ConsentRecorded, so an out-of-range cast is persisted. Deferred rather than patched because the intent contract's Never clause forbids changing lawful-basis behaviour; adding the rule would reject commands that are accepted today.
-status: open
+status: done 2026-10-16
 implementation: 2026-10-16 Validators and focused processor rejection tests implemented and reviewed; see spec-dw-119-consent-validation.md.
-validation_blocker: 86 focused tests pass; the full project retains 53 baseline gateway-fixture/source-receipt failures. Original-validator comparison confirms no new failures; keep open until the repository completion gate is green.
+historical_validation_blocker: 86 focused tests pass; the full project retains 53 baseline gateway-fixture/source-receipt failures. Original-validator comparison confirms no new failures; keep open until the repository completion gate is green.
+historical_revalidation: 2026-10-16 Resumed review reproduced 86 focused passes and the same 53 full-project failures at 95f21bbcd09dfbfa8d1c71a4b382c12c8eef8a0f. Current dependency observations and matching representative failure diagnostics are preserved in tests/dw-119-consent-validation-2026-10-16/resume-validation.json; caller-facing validation limits are documented in docs/api-contracts.md.
+validation_blocker: none; the Debug source-reference build passed with 0 warnings/errors, focused tests passed 86/86, and the full assembly passed 978/978 without skips. Independent review completed; all required completion gates pass.
+revalidation: 2026-10-16 Both baseline blockers repaired together; current-source observations preserve dated receipts and owner approvals. See tests/dw-119-consent-validation-2026-10-16/full-gate-validation.json.
 decision: 2026-09-07 Tighten validation — Renegotiate the frozen contract, add IsInEnum for LawfulBasis, and cap revoke reasons at 256 characters. Propagate focused boundary tests without changing command or event wire shape.
 
 ### DW-120: The deterministic lowercased ConsentId can collide when two contact channels differ only by letter case, while the channel lookup itself is ordinal case-sensitive.
@@ -1529,7 +1532,11 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-119-consent-validation.md`
   summary: Reconcile the isolated gateway fixture with the synced EventStore folded-snapshot qualification hosted service.
   evidence: The final source-reference run fails 52 EventStoreGatewayRoutingTests cases at the explicit hosted-service snapshot before routing. The same failures occur with the original consent validators. Inspect FoldedSnapshotQualificationHostedService dependencies before deliberately revising KnownExcludedHostedServiceNames; evidence is in tests/dw-119-consent-validation-2026-10-16/validation.json.
+  status: done 2026-10-16
+  resolution: Retained the safe DI-check/log-only startup service; the exclusion snapshot and existing assertions are unchanged. Full assembly passes 978/978. See tests/dw-119-consent-validation-2026-10-16/full-gate-validation.json.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-119-consent-validation.md`
   summary: Refresh current-source dependency observations and fitness constants for the three root gitlinks advanced by the prior sync.
   evidence: FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph expects the pre-sync EventStore, FrontComposer, and Tenants pointers while HEAD records the synced identities. It fails identically with the original consent validators. Update exact current observations without recertifying dated parity evidence or fabricating owner signoff; evidence is in tests/dw-119-consent-validation-2026-10-16/validation.json.
+  status: done 2026-10-16
+  resolution: Refreshed the three current-source identities/describes against committed gitlinks; preserved dated observations and owner approvals. Dependency fitness and full assembly pass. See tests/dw-119-consent-validation-2026-10-16/full-gate-validation.json.

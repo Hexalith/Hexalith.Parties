@@ -50,6 +50,20 @@ Response carries a `correlationId` (and optionally a `resultPayload` echoing the
 
 **Command types accepted** (the `commandType` field): every command in [data-models.md §3](data-models.md) — `CreateParty`, `CreatePartyComposite`, `UpdatePartyComposite`, `UpdatePersonDetails`, `UpdateOrganizationDetails`, `SetIsNaturalPerson`, `AddContactChannel`, `UpdateContactChannel`, `RemoveContactChannel`, `AddIdentifier`, `RemoveIdentifier`, `DeactivateParty`, `ReactivateParty`, and the GDPR commands (`RecordConsent`, `RevokeConsent`, `RestrictProcessing`, `LiftRestriction`, `EraseParty`, `CancelPartyErasure`, `RetryErasureVerification`, …).
 
+Consent commands validate their payloads before protected state is rehydrated.
+`RecordConsent.LawfulBasis` must be a defined value: `Consent`,
+`LegitimateInterest`, `ContractualNecessity`, or `LegalObligation`.
+`RevokeConsent.Reason` is optional and limited to 256 UTF-16 code units
+(`string.Length`), including whitespace; validation does not trim the reason.
+Null, empty, and whitespace reasons within that limit remain valid. An undefined
+numeric lawful basis or an oversized reason produces the internal
+`PartyCommandValidationRejected` event with the property name and a fixed
+`EnumValidator` or `MaximumLengthValidator` code, respectively. An unknown enum
+name fails JSON deserialization and produces the internal `Payload`/`InvalidJson`
+diagnostic. These rejections emit no consent success event. The public gateway
+returns HTTP 422 Problem Details with `reasonCode="party-command-validation-rejected"`
+and `rejectionType`; it does not expose internal property names or validator codes.
+
 ### Queries — `POST /api/v1/queries`
 
 Envelope fields: `tenant`, `domain="party"`, `aggregateId`, `queryType`, `entityId`, optional `payload`. The gateway maps `queryType` to the advertised Parties SDK `IDomainQueryHandler`.

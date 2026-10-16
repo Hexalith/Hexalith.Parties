@@ -50,6 +50,55 @@ not the G5 runtime engine.
 
 ### Current source observation — 2026-10-16
 
+DW-119 baseline repair observes the committed root graph at Parties
+`95f21bbcd09dfbfa8d1c71a4b382c12c8eef8a0f`. The three source gitlinks advanced in
+`86d03a63d31b337cbcde8fc998dcde4396d48df4` are EventStore, FrontComposer, and
+Tenants. All ten root checkouts match their committed gitlinks and are clean.
+This records current source identity only; `.gitlink-signoff.tsv` and the dated
+owner approvals remain unchanged, including their earlier selected identities.
+No new owner signoff, folded-snapshot enrollment, or platform qualification is
+inferred from this observation or from the local Parties test-project gate.
+
+The imported Builds catalog still selects EventStore package `3.120.0`, Commons
+`2.30.1`, FrontComposer `4.6.0`, Memories `2.27.1`, Tenants `5.8.0`, and Parties
+`1.2.1`. The owned central SignalR.Common pin stays `10.0.13` with NuGet audit
+active. Dependency versions and gitlinks are unchanged by this repair. Builds
+catalog identity `9f0121c77e3f085c58f5c926057606db8e6511a7` remains separate from
+release tooling identity `397c94a4e246c90b21cf408790fa0d55bf32d795`.
+
+Reproduce the receipts for each root-declared dependency with:
+
+```bash
+git ls-tree 95f21bbcd09dfbfa8d1c71a4b382c12c8eef8a0f references/Hexalith.<dependency>
+git -C references/Hexalith.<dependency> rev-parse HEAD
+git -C references/Hexalith.<dependency> describe --tags --always --abbrev=8 HEAD
+git -C references/Hexalith.<dependency> status --porcelain
+```
+
+The checkout must match its gitlink and the status output must be empty. The
+eight source dependencies checked by package/source fitness remain distinct
+from McpCli and Platform.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` | Instruction baseline. |
+| Builds | `9f0121c77e3f085c58f5c926057606db8e6511a7` (`v4.31.2-1-g9f0121c7`) | Imported package catalog and build tooling. |
+| Commons | `9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798` | Source fallback; selected package remains `2.30.1`. |
+| EventStore | `7edc260d8c0bd904f1215f801bad02b99c6694cf` (`v3.122.0-13-g7edc260d`) | Source inspection; runtime consumers restore package `3.120.0`. |
+| FrontComposer | `5fac9ab1df26da19ceadf626f9e557884a189e7c` (`v4.6.0-40-g5fac9ab1`) | Selected package remains `4.6.0`. |
+| McpCli | `7e99305a621e1bdf7119b6e924348857e2b5a5a4` | Committed root pointer; not used for G5 proof. |
+| Memories | `99431f0fed102ea6ddbae33d28b9da4fc7f215a0` (`v2.28.1-99-g99431f0f`) | Selected package remains `2.27.1`. |
+| Platform | `c3af1f2c9e7b0d1b003a1bd5978545f664e38167` | Committed root pointer; not used for G5 proof. |
+| PolymorphicSerializations | `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` | Existing source dependency. |
+| Tenants | `6ad5e502fa5d6e453e24610ef418007e1bd53298` (`v5.8.0-89-g6ad5e502`) | Selected package is `5.8.0`. |
+
+Selection does not revalidate historical parity receipts or authorize deletion
+of migration rollback paths. The earlier 2026-10-16 source observation and all
+older receipts and owner approvals remain below at their recorded identities.
+G5 remains `needs-additive-api`.
+
+### Historical source observation — 2026-10-16 pre-sync
+
 At Parties `493730941329d1bca3b4f6b2f6a67ffe305c2443`, the user's explicit
 CI-fix and release instruction selects the seven newer committed Builds, Commons,
 EventStore, FrontComposer, Memories, Platform, and Tenants pointers recorded

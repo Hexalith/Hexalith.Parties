@@ -1103,7 +1103,10 @@ public sealed class EventStoreGatewayRoutingTests
             {
                 // Disable EventStore hosted services that require Dapr or mutate shared indexes in
                 // isolated gateway tests. Preserve EventStoreAuthorizationStartupValidator so
-                // auth-wiring regressions still fail fast at host build. Factory registrations do
+                // auth-wiring regressions still fail fast at host build. Also preserve
+                // FoldedSnapshotQualificationHostedService: it only checks IServiceProviderIsService
+                // for qualification enrollment and logs a warning, with no Dapr calls or state writes.
+                // Factory registrations do
                 // not expose their implementation type, so all such hosted services are removed —
                 // an allowlist by name is not possible for every registration style. The assertion
                 // below is the safety net: it fails loudly if the set of removed hosted services
@@ -1114,6 +1117,10 @@ public sealed class EventStoreGatewayRoutingTests
                         && !string.Equals(
                             d.ImplementationType?.Name,
                             "EventStoreAuthorizationStartupValidator",
+                            StringComparison.Ordinal)
+                        && !string.Equals(
+                            d.ImplementationType?.Name,
+                            "FoldedSnapshotQualificationHostedService",
                             StringComparison.Ordinal))];
                 string[] removedHostedServiceNames = [.. removedHostedServices
                     .Select(d => d.ImplementationType?.Name ?? "<factory-registered>")

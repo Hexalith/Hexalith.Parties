@@ -1,0 +1,263 @@
+{
+  "date": "2026-10-16",
+  "source_revision": "95f21bbcd09dfbfa8d1c71a4b382c12c8eef8a0f",
+  "revision_scope": "Tested workspace based on source_revision, before a local completion commit; tested_file_sha256 binds the exercised content. No push.",
+  "scope": "Restore both baseline blockers holding DW-119 open; consent implementation and assertions preserved",
+  "closure_status": "done: required Debug source-reference build, focused consent tests, full assembly, and independent review passed",
+  "root_worktree_clean_at_start": false,
+  "preexisting_worktree_changes": [
+    " M _bmad-output/implementation-artifacts/deferred-work.md",
+    " M _bmad-output/implementation-artifacts/spec-dw-119-consent-validation.md",
+    " M _bmad-output/implementation-artifacts/tests/dw-119-consent-validation-2026-10-16/README.md",
+    " M docs/api-contracts.md",
+    "?? _bmad-output/implementation-artifacts/tests/dw-119-consent-validation-2026-10-16/resume-validation.json"
+  ],
+  "root_declared_dependencies": [
+    {
+      "path": "references/Hexalith.EventStore",
+      "committed_gitlink": "7edc260d8c0bd904f1215f801bad02b99c6694cf",
+      "checkout_revision": "7edc260d8c0bd904f1215f801bad02b99c6694cf",
+      "describe": "v3.122.0-13-g7edc260d",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.Memories",
+      "committed_gitlink": "99431f0fed102ea6ddbae33d28b9da4fc7f215a0",
+      "checkout_revision": "99431f0fed102ea6ddbae33d28b9da4fc7f215a0",
+      "describe": "v2.28.1-99-g99431f0f",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.FrontComposer",
+      "committed_gitlink": "5fac9ab1df26da19ceadf626f9e557884a189e7c",
+      "checkout_revision": "5fac9ab1df26da19ceadf626f9e557884a189e7c",
+      "describe": "v4.6.0-40-g5fac9ab1",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.Tenants",
+      "committed_gitlink": "6ad5e502fa5d6e453e24610ef418007e1bd53298",
+      "checkout_revision": "6ad5e502fa5d6e453e24610ef418007e1bd53298",
+      "describe": "v5.8.0-89-g6ad5e502",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.AI.Tools",
+      "committed_gitlink": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "checkout_revision": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "describe": "3f194e17",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.Commons",
+      "committed_gitlink": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+      "checkout_revision": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+      "describe": "v2.30.1-19-g9e874b1a",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.Builds",
+      "committed_gitlink": "9f0121c77e3f085c58f5c926057606db8e6511a7",
+      "checkout_revision": "9f0121c77e3f085c58f5c926057606db8e6511a7",
+      "describe": "v4.31.2-1-g9f0121c7",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.PolymorphicSerializations",
+      "committed_gitlink": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+      "checkout_revision": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+      "describe": "v1.19.4",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.McpCli",
+      "committed_gitlink": "7e99305a621e1bdf7119b6e924348857e2b5a5a4",
+      "checkout_revision": "7e99305a621e1bdf7119b6e924348857e2b5a5a4",
+      "describe": "7e99305a",
+      "worktree_clean": true
+    },
+    {
+      "path": "references/Hexalith.Platform",
+      "committed_gitlink": "c3af1f2c9e7b0d1b003a1bd5978545f664e38167",
+      "checkout_revision": "c3af1f2c9e7b0d1b003a1bd5978545f664e38167",
+      "describe": "c3af1f2c",
+      "worktree_clean": true
+    }
+  ],
+  "commands": {
+    "build": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+    "focused": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Validation.RecordConsentValidatorTests -class Hexalith.Parties.Tests.Validation.RevokeConsentValidatorTests -class Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests",
+    "full": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll"
+  },
+  "results": {
+    "build": {
+      "started_at": "2026-10-16T15:16:18.997922+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-10-16T15:16:37.550083+00:00",
+      "warnings": 0,
+      "errors": 0,
+      "summary_file": "full-gate-build-summary.txt",
+      "summary_sha256": "5685455a9cba8a52035203ad10f70bb0fdc207c97b89cd1330a51a370b41fd18"
+    },
+    "focused": {
+      "started_at": "2026-10-16T15:16:37.551092+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-10-16T15:16:38.253346+00:00",
+      "total": 86,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "passed": 86,
+      "summary_file": "full-gate-focused-summary.txt",
+      "summary_sha256": "f27fbf001e30325c3999ec73aebffe17efbf59071da0aae6b96f77ab2a8e8e45"
+    },
+    "full": {
+      "started_at": "2026-10-16T15:16:38.254594+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-10-16T15:16:52.005134+00:00",
+      "total": 978,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "passed": 978,
+      "summary_file": "full-gate-full-summary.txt",
+      "summary_sha256": "31617a6f685f1842d5c1508a20668b8ef8e6d31a8ffef1b6e0005cc2389b4501"
+    }
+  },
+  "historical_evidence": {
+    "validation.json": {
+      "sha256": "6f084bd0b8f300aa1613ffb34bf796401b48535918a7bcb05501b57d69ba1059",
+      "preserved": true
+    },
+    "resume-validation.json": {
+      "sha256": "28ad4dfc5286b9ebf8ae3405b838204e3b9f68c3fc0ba634983cb355e69751c8",
+      "preserved": true
+    }
+  },
+  "historical_preservation": {
+    "previous_current_receipt_body_retained_under_historical_heading": true,
+    "older_matrix_suffix_sha256": "3850f4da96a98cc8af948aac86d8326170af126cdb9d425fce1be877c3f4e08b",
+    "older_matrix_suffix_byte_identical": true,
+    "owner_signoffs_sha256": "789335e54748e8c6687cbdc362ac115f351f11ade5e827df466627620dd14df1",
+    "owner_signoffs_byte_identical": true
+  },
+  "gateway_decision": {
+    "retained_service": "FoldedSnapshotQualificationHostedService",
+    "inspection_source": "references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Configuration/FoldedSnapshotQualificationHostedService.cs",
+    "inspection_revision": "7edc260d8c0bd904f1215f801bad02b99c6694cf",
+    "reason": "Only checks IServiceProviderIsService for qualification registry and emits a fixed warning; no Dapr calls or state writes",
+    "known_excluded_snapshot_unchanged": true,
+    "existing_gateway_assertions_unchanged": true,
+    "qualification_claimed": false,
+    "startup_warning_observations_in_first_passing_full_run": 52
+  },
+  "preserved_paths_unchanged_from_head": [
+    "src/",
+    "Directory.Build.props",
+    "Directory.Build.targets",
+    "Directory.Packages.props",
+    "global.json",
+    "references/",
+    "tests/Hexalith.Parties.Tests/Validation/RecordConsentValidatorTests.cs",
+    "tests/Hexalith.Parties.Tests/Validation/RevokeConsentValidatorTests.cs",
+    "tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs",
+    ".gitlink-signoff.tsv"
+  ],
+  "broader_qualification": "No new owner signoff, G5 parity, folded-snapshot enrollment, release, publication, or full-topology qualification",
+  "runtime_baseline": {
+    "start": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --no-build",
+    "wait": "aspire wait parties --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --timeout 30 --non-interactive",
+    "wait_passed": true,
+    "healthy_project_resources": [
+      "parties",
+      "eventstore",
+      "eventstore-admin",
+      "parties-ui",
+      "tenants"
+    ],
+    "not_started_resources": [
+      "eventstore-admin-ui",
+      "parties-mcp"
+    ],
+    "owned_apphost_stopped_before_build": true,
+    "full_topology_qualification": false,
+    "command_path_normalization": "AppHost arguments are rendered relative to the repository root; execution resolved the same project using its absolute path.",
+    "binary_provenance": "Unverified: --no-build used existing local binaries. This records operational health only; the subsequent Debug build and test results are the source-reference gate."
+  },
+  "verification_runs_before_review_corrections": {
+    "build": {
+      "started_at": "2026-10-16T15:09:46.377447+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-10-16T15:10:15.232357+00:00",
+      "warnings": 0,
+      "errors": 0
+    },
+    "focused": {
+      "started_at": "2026-10-16T15:10:21.004413+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-10-16T15:10:21.829816+00:00",
+      "total": 86,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "passed": 86
+    },
+    "full": {
+      "started_at": "2026-10-16T15:10:27.327897+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-10-16T15:10:42.285400+00:00",
+      "total": 978,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "passed": 978
+    }
+  },
+  "tested_file_sha256": {
+    "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": "038b30e69adff09173326ccac6b89be0e8533ee7c5c476ac2b98b4ebd23aa621",
+    "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs": "0dc7d97e5ee9aac12a9dbd6fc5cf4bb2846a038ad68d12b06dfa660f0d05d85a",
+    "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md": "ad67a103158dce611b3e1c035254ebb43c04179d3aeec5e3d94a27cef313b1e2",
+    "src/Hexalith.Parties/Validation/RecordConsentValidator.cs": "04d02450ee2604b277245ea06ce7d3314cd643541617b99a474331d511c4967b",
+    "src/Hexalith.Parties/Validation/RevokeConsentValidator.cs": "85a77870e1a6b21a6b5a6ba72a51a83fde53877753512ebc7030e031801fe1d4",
+    "tests/Hexalith.Parties.Tests/Validation/RecordConsentValidatorTests.cs": "34354e9d560c7c1c4a6b90595b26787f96251c4197687af2d6413b40b3c27ce7",
+    "tests/Hexalith.Parties.Tests/Validation/RevokeConsentValidatorTests.cs": "44552be2028baa663163da049b424ae2d8774072e6301d2acf1f0b859cf498e0",
+    "tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs": "39d6c8b843873c4e0383a3836580b23c8ead03ad4c5f37de469c7e7380ef14a9",
+    "src/Hexalith.Parties.Contracts/Commands/RecordConsent.cs": "2f145b91d4cc8ffbaee0e724fc78c1e6bd55ca99e88d077afcf39def5d37df55",
+    "src/Hexalith.Parties.Contracts/Commands/RevokeConsent.cs": "2de726d28c0fc960217633daafc1bb45b9a3861893ae7bf5fbd7d4c0400ccc4b",
+    "src/Hexalith.Parties.Contracts/Events/ConsentRecorded.cs": "fdd27e91d6ab8c7e38fbfcb4bb2ba7acb51729a2296c38a9454eb0afaba44e6b",
+    "src/Hexalith.Parties.Contracts/Events/ConsentRevoked.cs": "f9d3a175c5db9128b56b9e20a341152e1479b7efde9a0a406daa3312aeeaa16f",
+    "docs/api-contracts.md": "66aec6f241394655c4baebd0c5a1e1d5c23cc07f409df8af7ca1ee66adfc1829"
+  },
+  "review": {
+    "layers": [
+      "blind-hunter",
+      "edge-case-hunter",
+      "verification-gap"
+    ],
+    "skipped_layers": [],
+    "blind_hunter_findings": 9,
+    "patched_documentation_and_evidence_findings": 6,
+    "rejected_unsubstantiated_or_out_of_scope_findings": 3,
+    "edge_case_findings": 0,
+    "verification_gap_findings": 0,
+    "new_deferred_work": 0,
+    "triage": "_bmad-output/implementation-artifacts/spec-dw-119-consent-validation.md#gate-restoration-independent-review--2026-10-16"
+  },
+  "format_validation": {
+    "command": "git -c core.whitespace=cr-at-eol diff --check",
+    "exit_code": 0,
+    "line_endings": "Existing LF/CRLF conventions retained; CR at EOL is permitted by this check."
+  },
+  "commit_message_validation": {
+    "command": "node node_modules/@commitlint/cli/cli.js --verbose",
+    "pinned_cli_version": "21.2.2",
+    "evidence": "full-gate-commitlint.txt",
+    "exit_code": 0,
+    "problems": 0,
+    "warnings": 0
+  }
+}

@@ -1,0 +1,22 @@
+Pinned @commitlint/cli: 21.2.2 (matches package-lock.json)
+Command: node node_modules/@commitlint/cli/cli.js --verbose
+Exact stdin / local commit message:
+
+test: restore consent completion gate
+
+Retain safe snapshot startup diagnostics in isolated gateway tests.
+Refresh current source receipts without changing historical approvals.
+
+Verify the Debug build, 86 focused cases, and all 978 assembly tests.
+
+Result:
+⧗   --- input ---
+test: restore consent completion gate
+
+Retain safe snapshot startup diagnostics in isolated gateway tests.
+Refresh current source receipts without changing historical approvals.
+
+Verify the Debug build, 86 focused cases, and all 978 assembly tests.
+✔   found 0 problems, 0 warnings
+
+Exit code: 0
