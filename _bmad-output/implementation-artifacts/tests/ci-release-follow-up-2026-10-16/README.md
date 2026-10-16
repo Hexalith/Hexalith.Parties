@@ -79,3 +79,39 @@ passed, seven skipped, zero failed. CI checks passed 128/128; topology passed
 49 with seven explicit skips. The full Release build has zero errors and the
 same two upstream NU1903 warnings. All review patch groups have regression
 coverage. Fresh exact-source CI and release publication are still pending.
+
+
+## Verified remote completion — 2026-10-16
+
+Released source: `1ff55d5a79ac90de515de72e48371c2d6f95b72a`.
+The earlier local/pending observations above are historical; this section records
+final acceptance. [CI 38905161576](https://github.com/Hexalith/Hexalith.Parties/actions/runs/38905161576)
+passed 3,065 Tier 1/2 checks and 50 Aspire checks: 3,115 passed, six existing
+health skips, zero failures across all 15 configured projects. The required live
+gateway passed. Commitlint and CodeQL passed for the same source. The CI solution
+build reports one upstream diagnostic-source NU1903 warning; owned SignalR graphs
+and the published UI framework floors are patched.
+
+[Release 38906617412](https://github.com/Hexalith/Hexalith.Parties/actions/runs/38906617412)
+passed all three jobs and published [v1.4.0](https://github.com/Hexalith/Hexalith.Parties/releases/tag/v1.4.0)
+at 13:30:17 UTC. Production approval used the authorization in the invoked spec.
+Protection policy, exact-source requirements, package/container inventory and
+root gitlinks remain unchanged; no validation bypass was used.
+
+All nine manifest packages were independently downloaded from nuget.org and
+checked for exact ID, version 1.4.0, repository commit and archive SHA256. Early
+public requests returned 404 after accepted pushes; all nine are now available.
+The complete receipt, including every package URL/hash/dependency, is
+[publication.json](publication.json). Downloaded archives and the original receipt
+are retained at `/tmp/parties-publication-1.4.0-20261016`; verification exited 0.
+
+All three registry images carry the release version and exact source labels,
+validated OCI indexes for linux/amd64 and linux/arm64, and passing liveness plus
+cleanup checks on both architectures. Their digests and outcomes were verified
+from workflow artifact `release-evidence-38906617412-1` (ID 12049675191).
+Anonymous local registry reads returned 401; authenticated workflow evidence is
+preserved in `/tmp/parties-release-evidence-1.4.0-20261016`.
+
+Independent review is complete, with the documented separate follow-ups retained.
+The spec is done. Other sessions' local EventStore, FrontComposer and Tenants
+submodule edits are preserved and excluded from this completion documentation.

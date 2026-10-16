@@ -2,7 +2,7 @@
 title: 'Restore green CI and publish the Parties release'
 type: 'bugfix'
 created: '2026-10-07'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 baseline_commit: '45d653a7d7f14a75d5227fbd780db3fbf22f70fe'
 review_loop_iteration: 1
@@ -724,3 +724,45 @@ passed for that exact source. The Aspire run took 1m 28s; its retained log is
 publication still waits for exact-source CI of the final stateless-directory
 patch. Its exact Conventional Commit passed pinned commitlint, with receipt
 `/tmp/parties-stateless-components-commitlint.json`.
+
+### Verified release completion — 2026-10-16
+
+All acceptance gates are complete for released source
+`1ff55d5a79ac90de515de72e48371c2d6f95b72a`.
+[Exact-source push CI 38905161576](https://github.com/Hexalith/Hexalith.Parties/actions/runs/38905161576)
+passed all 15 configured projects: 3,065 Tier 1/2 passes, 50 Aspire passes,
+six existing health-check skips, zero failures. The required live gateway passed
+with its authenticated activation, private marker and persisted-event assertions
+intact. Commitlint and CodeQL passed. The earlier local runtime blockers do not
+replace this successful fresh-runner proof.
+
+[Release 38906617412](https://github.com/Hexalith/Hexalith.Parties/actions/runs/38906617412)
+passed the source/registry-floor preflight, protected release job and exact-source
+publication verification. The existing production review was approved under this
+spec's authorization; policy and automated gates were unchanged. Semantic Release
+published [v1.4.0](https://github.com/Hexalith/Hexalith.Parties/releases/tag/v1.4.0)
+on October 16 at 13:30:17 UTC, with nine package assets and three multiarch images.
+
+The parent independently downloaded all nine 1.4.0 packages from nuget.org and
+verified exact package IDs, versions and repository commit, and recorded each
+archive SHA256.
+The complete verifier exited 0. Early downloads returned 404 after accepted
+pushes; eventual availability and exact metadata are now proven for every
+manifest package. The final [publication receipt](tests/ci-release-follow-up-2026-10-16/publication.json)
+records every package and container digest, source identity, command-validation
+evidence and material limits.
+
+The authenticated workflow's OCI/source validation and liveness/cleanup checks
+passed for parties, parties-mcp and parties-ui on linux/amd64 and linux/arm64.
+Artifact 12049675191 retains their exact manifests, configs and smoke results;
+parent checked artifact hashes, source/version labels and matching smoke digests.
+Local anonymous registry reads require authentication (401).
+
+Independent review and all narrow post-review corrections are complete. The six
+historical health skips, separately built upstream SignalR diagnostic NU1903
+warning (one warning in the final CI build), and independent deferred follow-ups
+remain documented without suppressing validation or claiming broader platform
+parity. No root gitlink moved. Other sessions' local EventStore, FrontComposer
+and Tenants submodule edits were observed at closure and preserved. Completion
+evidence is recorded in a local documentation commit after publication, following
+the build workflow's completion step. Overall status is done.
