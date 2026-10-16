@@ -756,10 +756,13 @@ public sealed class PartyDomainProcessorValidationTests
         rejection.Failures[0].ErrorCode.ShouldBe("EmptyPayload");
     }
 
+    /// <summary>
+    /// Rejects an unvalidated command before reading otherwise admissible protected replay state.
+    /// </summary>
     [Fact]
-    public async Task ProcessAsync_CommandTypeWithNoRegisteredValidator_ProceedsToAggregate()
+    public async Task ProcessAsync_CommandTypeWithNoRegisteredValidator_RejectsBeforeRehydration()
     {
-        ServiceProvider provider = new ServiceCollection().BuildServiceProvider();
+        using ServiceProvider provider = new ServiceCollection().BuildServiceProvider();
         IServiceScopeFactory scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
         IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
         PartyDomainProcessor invoker = new(protection, scopeFactory, NullLogger<PartyDomainProcessor>.Instance);
@@ -771,12 +774,23 @@ public sealed class PartyDomainProcessorValidationTests
             PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
         });
 
-        DomainResult result = await invoker.ProcessAsync(command, currentState: null, CancellationToken.None);
+        DomainServiceCurrentState currentState = CreateCurrentStateWithProtectedSnapshot(command) with
+        {
+            LastSnapshotSequence = 1,
+            CurrentSequence = 2,
+            Events = [CreateEventEnvelope(command, 2, typeof(PartyCreated).FullName!, "{}"u8.ToArray(), "json+pdenc-v1")],
+        };
+        DomainResult result = await invoker.ProcessAsync(command, currentState, TestContext.Current.CancellationToken);
 
-        // Without a validator the missing-validator branch must allow the command through to the
-        // aggregate. The aggregate succeeds for a valid payload, producing PartyCreated.
-        result.IsSuccess.ShouldBeTrue();
-        result.Events.ShouldContain(e => e is PartyCreated);
+        result.IsRejection.ShouldBeTrue();
+        PartyCommandValidationRejected rejection = result.Events.ShouldHaveSingleItem()
+            .ShouldBeOfType<PartyCommandValidationRejected>();
+        rejection.CommandType.ShouldBe(typeof(CreateParty).FullName);
+        PartyValidationFailure failure = rejection.Failures.ShouldHaveSingleItem();
+        failure.PropertyName.ShouldBe("CommandType");
+        failure.ErrorCode.ShouldBe("ValidatorNotRegistered");
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
     }
 
     [Fact]

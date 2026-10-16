@@ -939,8 +939,11 @@ origin: spec-deferred f8aa7466374b
 location: src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs:376
 source_spec: `spec-safe-consent-identifiers.md`
 severity: medium
-reason: PartyDomainProcessorValidationTests.CreateInvoker builds its own AddValidatorsFromAssemblyContaining scan rather than calling PartiesServiceCollectionExtensions.AddHexalithParties, and PartyDomainProcessor.TryRejectInvalidPayloadAsync logs and returns null when no validator resolves. A regression in the production registration surface would leave every command unvalidated with the suite green. Pre-existing infrastructure design, not introduced here.
-status: open
+original_reason: PartyDomainProcessorValidationTests.CreateInvoker builds its own AddValidatorsFromAssemblyContaining scan rather than calling PartiesServiceCollectionExtensions.AddHexalithParties, and PartyDomainProcessor.TryRejectInvalidPayloadAsync logs and returns null when no validator resolves. A regression in the production registration surface would leave every command unvalidated with the suite green. Pre-existing infrastructure design, not introduced here.
+status: done 2026-10-16
+
+implementation_spec: `_bmad-output/implementation-artifacts/spec-dw-122-production-validation.md`
+resolution: Production AddParties registration is covered across the command inventory; absent validators reject before protected-state access, preserving exactly four existing aggregate-only commands and honoring supplied validators for all four. Debug source build passes with zero warnings/errors, focused tests pass 106/106, and full affected assembly passes 998/998 without skips. Independent review and targeted follow-up completed. Named-enum compatibility is separately tracked by DW-195. Evidence: `tests/dw-122-production-validation-2026-10-16/validation.json`.
 
 ### DW-123: ContactChannelNotFound and IdentifierNotFound still interpolate caller-supplied identifiers into their messages outside the two consent handlers.
 
@@ -1550,3 +1553,11 @@ status: open
   evidence: PartyState.Apply(ConsentRecorded) appends a second row with the same deterministic ConsentId after regrant, while PartyAggregate.Handle(RevokeConsent) selects the first already-revoked row and returns NoOp. PartyDetailProjectionHandler also ignores regrants with an existing ConsentId. This predates DW-120 and affects one owner without case collisions; fix aggregate/state/projection renewal semantics together with replay and lifecycle tests.
   status: done 2026-10-16
   resolution: Shared ordered consent folding retains renewal history and revokes all active same-owner rows; historical cross-owner collisions still reject. Exact retained-evidence replay and sequence-checkpoint transport retries are safe. Debug source-reference builds pass with zero warnings/errors; focused server consent/collision tests pass 71/71, DW-119 tests 86/86, contract/state/API tests 66/66, full Server.Tests 302/302, full Parties.Tests 978/978, and full Projections.Tests 238/238 without skips. Independent review and follow-up completed. Existing projections that omitted renewals require full SDK rebuild, documented and covered through persisted rebuild read-back. See spec-same-channel-consent-renewal.md and tests/consent-renewal-2026-10-16/validation.json. Wire contracts, dependency versions, and completed DW-119/DW-120 evidence remain unchanged. No push.
+
+### DW-195: Align named-enum command binding between Parties clients and EventStore
+
+origin: DW-122 baseline reproduction
+source_spec: `_bmad-output/implementation-artifacts/spec-dw-122-production-validation.md`
+severity: medium
+status: open
+reason: A production-registered RecordConsent with lawfulBasis serialized as "Consent" passes Parties validation and throws JsonException at EventStoreAggregate command deserialization; its shared EventStorePayloadSerialization.Options has no string-enum converter. HttpAdminPortalGdprClient writes commands with PartiesJsonOptions.Default, which emits enum names. Reproduced before the DW-122 processor change in PartiesValidatorRegistrationTests.ProcessAsync_ProductionConsentValidators_AllowValidPayloads(revoke:false). Existing numeric-enum processing succeeds. This pre-existing client/platform compatibility defect requires an independently scoped reader/writer fix and consumer proof; DW-122 preserves both serializers. See tests/dw-122-production-validation-2026-10-16/README.md.

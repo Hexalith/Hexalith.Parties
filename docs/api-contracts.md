@@ -87,6 +87,14 @@ diagnostic. These rejections emit no consent success event. The public gateway
 returns HTTP 422 Problem Details with `reasonCode="party-command-validation-rejected"`
 and `rejectionType`; it does not expose internal property names or validator codes.
 
+Production `AddParties` registration supplies the command validators. If a
+validator is missing, the processor rejects the command before protected-state
+access with the internal `CommandType`/`ValidatorNotRegistered` diagnostic and
+the same public validation-rejection response. The four legacy aggregate-only
+commands (`MarkPartyEncryptionKeyDeleted`, `MarkErasureVerified`,
+`CompletePartyErasure`, and `RotatePartyKey`) retain their existing behavior
+without validators; a validator registered for any of them still runs.
+
 ### Queries — `POST /api/v1/queries`
 
 Envelope fields: `tenant`, `domain="party"`, `aggregateId`, `queryType`, `entityId`, optional `payload`. The gateway maps `queryType` to the advertised Parties SDK `IDomainQueryHandler`.

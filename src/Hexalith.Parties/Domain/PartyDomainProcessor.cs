@@ -556,11 +556,18 @@ internal sealed partial class PartyDomainProcessor(
         Type validatorType = typeof(IValidator<>).MakeGenericType(commandType);
         if (scope.ServiceProvider.GetService(validatorType) is not IValidator validator)
         {
-            // No validator registered for a known contract type: surface as a warning so misconfig
-            // is observable, but allow the command through. Validation is opt-in per command type
-            // and registering all command types is the responsibility of the actor host startup.
+            // Preserve the four legacy aggregate-only commands. This exception applies only
+            // when no validator resolves, so a host-supplied validator still runs normally.
+            if (commandType == typeof(MarkPartyEncryptionKeyDeleted)
+                || commandType == typeof(MarkErasureVerified)
+                || commandType == typeof(CompletePartyErasure)
+                || commandType == typeof(RotatePartyKey))
+            {
+                return null;
+            }
+
             LogValidatorMissing(commandType.FullName ?? commandType.Name);
-            return null;
+            return RejectionFor(commandType.FullName ?? commandType.Name, "CommandType", "ValidatorNotRegistered");
         }
 
         if (command.Payload.Length == 0)
@@ -780,7 +787,7 @@ internal sealed partial class PartyDomainProcessor(
     [LoggerMessage(Level = LogLevel.Warning, Message = "Rejecting Parties command with unresolved CommandType {CommandType}")]
     private partial void LogUnresolvedCommandType(string commandType);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "No FluentValidation validator registered for Parties command type {CommandType}; payload validation is being skipped")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Rejecting Parties command type {CommandType}: no FluentValidation validator is registered")]
     private partial void LogValidatorMissing(string commandType);
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Rejecting Parties command {CommandType}: payload deserialization failed with {ExceptionType}")]

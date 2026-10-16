@@ -1,0 +1,14 @@
+{
+  "baseline_commit": "c0946ef17b3641fb23f6f17614913bfbab687373",
+  "note": "Reconstructed from the unchanged pre-review test fixture and the recorded serializer change. This supplies a reproducible red-source patch; original run-time hashes were not captured and are not retroactively certified.",
+  "sha256": {
+    "tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs": "cede6e0791883f2ba3597f390e39d65f9bd0a07c97d8afb4fa45c28da256f823",
+    "tests/Hexalith.Parties.Tests/Validation/PartiesValidatorRegistrationTests.cs": "c72c88766a39f304d82a8b7d2fda93ab46eb741cb38f0e86e294bff066b3c3a6"
+  },
+  "patch_sha256": "d80a2e09aaa7350aebacdca94b6f98821e0821e1bc2fa7c9f3a153ee4d86b155",
+  "baseline_index_apply_check": {
+    "exit_code": 0,
+    "scope": "Temporary index initialized from the recorded baseline commit; real index and worktree untouched.",
+    "argument_note": "Zero-context diff avoids trailing spaces on empty context lines; apply with git apply --unidiff-zero."
+  }
+}

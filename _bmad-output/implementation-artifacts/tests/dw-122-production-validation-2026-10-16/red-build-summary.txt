@@ -1,0 +1,5 @@
+Command: dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
+Exit code: 0
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)

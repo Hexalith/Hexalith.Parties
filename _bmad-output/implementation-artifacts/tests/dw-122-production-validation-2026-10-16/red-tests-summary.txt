@@ -1,0 +1,19 @@
+Command: dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests -class Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests
+Exit code: 1
+{"errors": 0, "failed": 8, "not-run": 0, "passed": 56, "skipped": 0, "total": 64}
+Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_MissingConsentValidator_RejectsBeforeRehydration(revoke: False, representation: \"full\")
+System.InvalidOperationException : Party replay protection did not preserve the required snapshot.
+Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_MissingConsentValidator_RejectsBeforeRehydration(revoke: False, representation: \"short\")
+System.InvalidOperationException : Party replay protection did not preserve the required snapshot.
+Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_MissingConsentValidator_RejectsBeforeRehydration(revoke: False, representation: \"qualified\")
+System.InvalidOperationException : Party replay protection did not preserve the required snapshot.
+Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_MissingConsentValidator_RejectsBeforeRehydration(revoke: True, representation: \"full\")
+System.InvalidOperationException : Party replay protection did not preserve the required snapshot.
+Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_MissingConsentValidator_RejectsBeforeRehydration(revoke: True, representation: \"short\")
+System.InvalidOperationException : Party replay protection did not preserve the required snapshot.
+Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_MissingConsentValidator_RejectsBeforeRehydration(revoke: True, representation: \"qualified\")
+System.InvalidOperationException : Party replay protection did not preserve the required snapshot.
+Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_ProductionConsentValidators_AllowValidPayloads(revoke: False)
+System.Text.Json.JsonException : The JSON value could not be converted to Hexalith.Parties.Contracts.Security.LawfulBasis. Path: $.lawfulBasis | LineNumber: 0 | BytePositionInLine: 108.
+Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_CommandTypeWithNoRegisteredValidator_RejectsBeforeRehydration
+System.InvalidOperationException : Party replay source metadata, scope or checkpoint is inconsistent.

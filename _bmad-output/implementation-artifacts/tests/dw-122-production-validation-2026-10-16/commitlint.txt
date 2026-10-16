@@ -1,0 +1,7 @@
+Command: node node_modules/@commitlint/cli/cli.js --edit <message-file> --verbose
+The temporary message-file path is omitted. Its exact full content is:
+fix: reject missing party command validators
+
+Exit code: 0
+CLI version: 21.2.2 (matches package-lock.json)
+Output: found 0 problems, 0 warnings

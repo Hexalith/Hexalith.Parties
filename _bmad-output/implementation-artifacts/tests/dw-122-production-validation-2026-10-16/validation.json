@@ -1,0 +1,254 @@
+{
+  "source_head": "c0946ef17b3641fb23f6f17614913bfbab687373",
+  "configuration": "Debug source references",
+  "reporting_note": "Commands omit temporary XML-report and log-redirection arguments; retained artifacts contain summaries only, with no application logs or local paths.",
+  "commands": {
+    "red-tests": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests -class Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests",
+      "exit_code": 1,
+      "run_date": "2026-10-16",
+      "run_time": "17:12:11",
+      "counts": {
+        "total": 64,
+        "passed": 56,
+        "failed": 8,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failed_tests": [
+        {
+          "name": "Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_MissingConsentValidator_RejectsBeforeRehydration(revoke: False, representation: \\\"full\\\")",
+          "exception_type": "System.InvalidOperationException",
+          "message": "System.InvalidOperationException : Party replay protection did not preserve the required snapshot."
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_MissingConsentValidator_RejectsBeforeRehydration(revoke: False, representation: \\\"short\\\")",
+          "exception_type": "System.InvalidOperationException",
+          "message": "System.InvalidOperationException : Party replay protection did not preserve the required snapshot."
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_MissingConsentValidator_RejectsBeforeRehydration(revoke: False, representation: \\\"qualified\\\")",
+          "exception_type": "System.InvalidOperationException",
+          "message": "System.InvalidOperationException : Party replay protection did not preserve the required snapshot."
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_MissingConsentValidator_RejectsBeforeRehydration(revoke: True, representation: \\\"full\\\")",
+          "exception_type": "System.InvalidOperationException",
+          "message": "System.InvalidOperationException : Party replay protection did not preserve the required snapshot."
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_MissingConsentValidator_RejectsBeforeRehydration(revoke: True, representation: \\\"short\\\")",
+          "exception_type": "System.InvalidOperationException",
+          "message": "System.InvalidOperationException : Party replay protection did not preserve the required snapshot."
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_MissingConsentValidator_RejectsBeforeRehydration(revoke: True, representation: \\\"qualified\\\")",
+          "exception_type": "System.InvalidOperationException",
+          "message": "System.InvalidOperationException : Party replay protection did not preserve the required snapshot."
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests.ProcessAsync_ProductionConsentValidators_AllowValidPayloads(revoke: False)",
+          "exception_type": "System.Text.Json.JsonException",
+          "message": "System.Text.Json.JsonException : The JSON value could not be converted to Hexalith.Parties.Contracts.Security.LawfulBasis. Path: $.lawfulBasis | LineNumber: 0 | BytePositionInLine: 108."
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_CommandTypeWithNoRegisteredValidator_RejectsBeforeRehydration",
+          "exception_type": "System.InvalidOperationException",
+          "message": "System.InvalidOperationException : Party replay source metadata, scope or checkpoint is inconsistent."
+        }
+      ]
+    },
+    "focused-tests": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests -class Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests -class Hexalith.Parties.Tests.Validation.RecordConsentValidatorTests -class Hexalith.Parties.Tests.Validation.RevokeConsentValidatorTests",
+      "exit_code": 0,
+      "run_date": "2026-10-16",
+      "run_time": "17:14:13",
+      "counts": {
+        "total": 102,
+        "passed": 102,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failed_tests": []
+    },
+    "full-tests": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "exit_code": 0,
+      "run_date": "2026-10-16",
+      "run_time": "17:14:22",
+      "counts": {
+        "total": 994,
+        "passed": 994,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failed_tests": []
+    },
+    "red-build": {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "green-build": {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "reviewed-focused-tests": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests -class Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests -class Hexalith.Parties.Tests.Validation.RecordConsentValidatorTests -class Hexalith.Parties.Tests.Validation.RevokeConsentValidatorTests",
+      "exit_code": 0,
+      "run_date": "2026-10-16",
+      "run_time": "17:22:35",
+      "counts": {
+        "total": 106,
+        "passed": 106,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failed_tests": []
+    },
+    "reviewed-full-tests": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "exit_code": 0,
+      "run_date": "2026-10-16",
+      "run_time": "17:22:41",
+      "counts": {
+        "total": 998,
+        "passed": 998,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failed_tests": []
+    },
+    "reviewed-build": {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "warning-policy": {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    "commitlint": {
+      "command": "node node_modules/@commitlint/cli/cli.js --edit <message-file> --verbose",
+      "message_file_exact_content": "fix: reject missing party command validators\n",
+      "exit_code": 0,
+      "version": "21.2.2",
+      "problems": 0,
+      "warnings": 0
+    }
+  },
+  "tested_source_sha256": {
+    "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs": "82ccb30aa3b66b5ded19b210af901686a4ae4056cb6997017b8bd1561e80683f",
+    "tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs": "fb4e8d52072ae38adce433aa69e79f51ac578ebb9dcc5195d7c99acb48aa291f",
+    "tests/Hexalith.Parties.Tests/Validation/PartiesValidatorRegistrationTests.cs": "c1cb4583f6f2f6761c30838d23c9e7b69c2351c44520ce29984c7197442776c6"
+  },
+  "dependencies": [
+    {
+      "path": "references/Hexalith.EventStore",
+      "gitlink": "7edc260d8c0bd904f1215f801bad02b99c6694cf",
+      "checkout": "7edc260d8c0bd904f1215f801bad02b99c6694cf",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.Memories",
+      "gitlink": "99431f0fed102ea6ddbae33d28b9da4fc7f215a0",
+      "checkout": "99431f0fed102ea6ddbae33d28b9da4fc7f215a0",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.FrontComposer",
+      "gitlink": "5fac9ab1df26da19ceadf626f9e557884a189e7c",
+      "checkout": "5fac9ab1df26da19ceadf626f9e557884a189e7c",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.Tenants",
+      "gitlink": "6ad5e502fa5d6e453e24610ef418007e1bd53298",
+      "checkout": "6ad5e502fa5d6e453e24610ef418007e1bd53298",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.AI.Tools",
+      "gitlink": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "checkout": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.Commons",
+      "gitlink": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+      "checkout": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.Builds",
+      "gitlink": "9f0121c77e3f085c58f5c926057606db8e6511a7",
+      "checkout": "9f0121c77e3f085c58f5c926057606db8e6511a7",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.PolymorphicSerializations",
+      "gitlink": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+      "checkout": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.McpCli",
+      "gitlink": "7e99305a621e1bdf7119b6e924348857e2b5a5a4",
+      "checkout": "7e99305a621e1bdf7119b6e924348857e2b5a5a4",
+      "clean": true
+    },
+    {
+      "path": "references/Hexalith.Platform",
+      "gitlink": "c3af1f2c9e7b0d1b003a1bd5978545f664e38167",
+      "checkout": "c3af1f2c9e7b0d1b003a1bd5978545f664e38167",
+      "clean": true
+    }
+  ],
+  "red_run_note": "Ran before the processor fix, with the new helper using PartiesJsonOptions.Default. Seven failures demonstrate validator bypass; one additional named-enum failure is pre-existing and deferred. The final helper uses numeric enum serialization, matching the existing dispatcher. Red tested-file hashes were not captured.",
+  "review": {
+    "blind_findings": 7,
+    "patched": 6,
+    "rejected": 1,
+    "correction_follow_up": "completed: six corrections verified; existing production composition coverage confirms rejection of finding 4; no remaining concrete defect",
+    "deferred": [
+      "DW-195 (pre-existing named-enum compatibility defect discovered during investigation)"
+    ]
+  },
+  "artifacts_sha256": {
+    "red-build-summary.txt": "9a240c974dc8076848389e71ab54bdea967d50703e47198f921e952f6098e5a1",
+    "reviewed-build-summary.txt": "9a240c974dc8076848389e71ab54bdea967d50703e47198f921e952f6098e5a1",
+    "warning-policy-summary.txt": "222099db340d4b5862ad50581becceb1fb718f64fca85890a0cd1af2991c42db",
+    "focused-tests-summary.txt": "6bc30032da854154c3ad0a6cf4b343fedbd8799d1b4bd25eca76874f5aa012f7",
+    "reviewed-full-tests-summary.txt": "2673c5b7aa779400ee64eed5c2696df5a2cc2145242d85df80d0844cb5aade77",
+    "commitlint.txt": "dabef94698733e5e5bf98a40fbc997d8fff42d1146f3d95bcfd498be21fc4a5f",
+    "red-source.json": "02eda0e4111b77806badd3e0b679a48ca66d2ff98f7ddb16d8d6f390338baead",
+    "reviewed-focused-tests-summary.txt": "35a04be95f7cc9686c036bccfabb1566ed2c47599c452885db6dcdfcf04de1e2",
+    "full-tests-summary.txt": "0ca8564c3404063b7283289bd6a743dd2811f0702c3d906d0c06d304d704ed7c",
+    "README.md": "a3c7a7fdc4567a271a038c832b7e0685a4f5fbb8ac1f7ade20cbcb3df84bc9a5",
+    "red-tests-summary.txt": "0316875ac4f6a0d47974ee01f761e93eae950f2790721c6770703a4a34d6b92a",
+    "green-build-summary.txt": "9a240c974dc8076848389e71ab54bdea967d50703e47198f921e952f6098e5a1",
+    "red-source.patch": "d80a2e09aaa7350aebacdca94b6f98821e0821e1bc2fa7c9f3a153ee4d86b155"
+  },
+  "pre_review_tested_source_sha256": {
+    "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs": "82ccb30aa3b66b5ded19b210af901686a4ae4056cb6997017b8bd1561e80683f",
+    "tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs": "cede6e0791883f2ba3597f390e39d65f9bd0a07c97d8afb4fa45c28da256f823",
+    "tests/Hexalith.Parties.Tests/Validation/PartiesValidatorRegistrationTests.cs": "8837a93c381420f525bc55b4fa3d2e4346694eda8530ff90092dfe1e01512ed2"
+  },
+  "tested_source_binding": "tested_source_sha256 binds reviewed-build, reviewed-focused-tests and reviewed-full-tests; earlier green commands bind pre_review_tested_source_sha256. The red run is separately reconstructed, not retroactively hash-certified.",
+  "completed_deferred_work": [
+    "DW-122"
+  ]
+}
