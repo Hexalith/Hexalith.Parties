@@ -55,6 +55,7 @@ public sealed class AspireMtlsBootstrapTests
     [InlineData("bridge", "unrelated-service")]
     public void BootstrapRejectsAnUntrustedControlPlaneNetwork(string driver, string extraMember)
     {
+        ArgumentNullException.ThrowIfNull(extraMember);
         (int exitCode, string error, string[] requests) = RunBootstrap(
             networkDriver: driver,
             extraNetworkMember: extraMember);
@@ -91,6 +92,33 @@ public sealed class AspireMtlsBootstrapTests
         requests.ShouldNotContain(request => request.StartsWith("aspire ", StringComparison.Ordinal));
     }
 
+    /// <summary>Exercises scoped cleanup and verifies owned removal with foreign-resource preservation.</summary>
+    [Theory]
+    [InlineData("", "", true, "")]
+    [InlineData("placement", "mount", true, "")]
+    [InlineData("sentry", "image", true, "")]
+    [InlineData("", "", false, "")]
+    [InlineData("", "", true, "unrelated-service")]
+    public void CleanupRemovesOnlyOwnedContainersAndAnOwnedEmptyNetwork(
+        string foreignRole, string foreignKind, bool ownsNetwork, string unrelatedMember)
+    {
+        ArgumentNullException.ThrowIfNull(foreignRole);
+        ArgumentNullException.ThrowIfNull(unrelatedMember);
+        (int exitCode, string error, string[] requests) = RunBootstrap(
+            cleanupOnly: true, foreignRole: foreignRole, foreignKind: foreignKind,
+            ownsNetwork: ownsNetwork, extraNetworkMember: unrelatedMember);
+
+        exitCode.ShouldBe(0, error);
+        foreach (string role in new[] { "sentry", "placement", "scheduler" })
+        {
+            requests.Contains($"docker rm -f hexalith-parties-dapr-{role}").ShouldBe(role != foreignRole);
+        }
+
+        requests.Contains("docker network rm hexalith-parties-dapr-mtls")
+            .ShouldBe(ownsNetwork && foreignRole.Length == 0 && unrelatedMember.Length == 0);
+        requests.ShouldNotContain(request => request.StartsWith("aspire ", StringComparison.Ordinal));
+    }
+
     /// <summary>
     /// Runs the tracked script without contacting Docker, HTTP endpoints, or Aspire.
     /// </summary>
@@ -104,7 +132,11 @@ public sealed class AspireMtlsBootstrapTests
         string incompatibleBinding = "",
         bool prepareOnly = false,
         string networkDriver = "bridge",
-        string extraNetworkMember = "")
+        string extraNetworkMember = "",
+        bool cleanupOnly = false,
+        string foreignRole = "",
+        string foreignKind = "",
+        bool ownsNetwork = true)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -122,14 +154,48 @@ public sealed class AspireMtlsBootstrapTests
                 File.WriteAllText(Path.Combine(certificateDirectory, file), "Isolated bootstrap test fixture.");
             }
 
+            if (cleanupOnly)
+            {
+                foreach (string role in new[] { "sentry", "placement", "scheduler" })
+                {
+                    File.WriteAllText(Path.Combine(temporary, $"hexalith-parties-dapr-{role}"), "true");
+                }
+
+                File.WriteAllText(Path.Combine(temporary, "network"), "bridge");
+                if (ownsNetwork)
+                {
+                    File.WriteAllText(Path.Combine(certificateDirectory, ".owned-control-plane-network"), string.Empty);
+                }
+            }
+
             string requestLog = Path.Combine(temporary, "requests");
             WriteCommandDouble(temporary, "docker", """
                 #!/usr/bin/env bash
                 set -euo pipefail
                 printf 'docker %s\n' "$*" >> "$FAKE_REQUEST_LOG"
+                if [[ "$1 $2" == 'container ls' ]]; then
+                  for role in sentry placement scheduler; do
+                    if [[ -f "$FAKE_STATE_DIRECTORY/hexalith-parties-dapr-$role" ]]; then
+                      echo "hexalith-parties-dapr-$role"
+                    fi
+                  done
+                  exit 0
+                fi
+                if [[ "$1 $2" == 'network ls' ]]; then
+                  if [[ -f "$FAKE_STATE_DIRECTORY/network" ]]; then echo hexalith-parties-dapr-mtls; fi
+                  exit 0
+                fi
                 if [[ "$1 $2" == 'network inspect' ]]; then
+                  if [[ "$FAKE_CLEANUP_ONLY" == True && ! -f "$FAKE_STATE_DIRECTORY/network" ]]; then exit 1; fi
                   if [[ "$#" == 3 ]]; then exit 0; fi
                   case "$4" in
+                    '{{len .Containers}}')
+                      count=0
+                      for role in sentry placement scheduler; do
+                        if [[ -f "$FAKE_STATE_DIRECTORY/hexalith-parties-dapr-$role" ]]; then count=$((count + 1)); fi
+                      done
+                      if [[ -n "$FAKE_EXTRA_NETWORK_MEMBER" ]]; then count=$((count + 1)); fi
+                      echo "$count" ;;
                     '{{.Driver}}') echo "$FAKE_NETWORK_DRIVER" ;;
                     '{{index .Labels "hexalith.parties.dapr.role"}}') echo control-plane-v1 ;;
                     '{{range .Containers}}{{println .Name}}{{end}}')
@@ -139,7 +205,16 @@ public sealed class AspireMtlsBootstrapTests
                   esac
                   exit 0
                 fi
+                if [[ "$1 $2" == 'network rm' ]]; then
+                  rm "$FAKE_STATE_DIRECTORY/network"
+                  exit 0
+                fi
                 container="${!#}"
+                if [[ "$1 $2" == 'rm -f' ]]; then
+                  rm "$FAKE_STATE_DIRECTORY/$container"
+                  exit 0
+                fi
+                if [[ "$FAKE_CLEANUP_ONLY" == True && ! -f "$FAKE_STATE_DIRECTORY/$container" ]]; then exit 1; fi
                 if [[ "$1" == port ]]; then
                   # Runtime listings are empty for these stopped containers. A regression
                   # to docker port therefore makes the compatible-container test fail.
@@ -163,7 +238,10 @@ public sealed class AspireMtlsBootstrapTests
                 case "$format" in
                   '{{.State.Running}}')
                     if [[ -f "$FAKE_STATE_DIRECTORY/$container" ]]; then echo true; else echo false; fi ;;
-                  '{{.Config.Image}}') printf '%s\n' "$FAKE_SENTRY_IMAGE" ;;
+                  '{{.Config.Image}}')
+                    if [[ "$container" == "hexalith-parties-dapr-$FAKE_FOREIGN_ROLE" && "$FAKE_FOREIGN_KIND" == image ]]; then
+                      echo foreign/image
+                    else printf '%s\n' "$FAKE_SENTRY_IMAGE"; fi ;;
                   '{{index .Config.Labels "hexalith.parties.dapr.role"}}')
                     case "$container" in
                       *-placement) echo placement-v1 ;;
@@ -172,7 +250,9 @@ public sealed class AspireMtlsBootstrapTests
                     esac ;;
                   *'.Mounts'*'/etc/dapr/sentry.yaml'*) printf '%s\n' "$FAKE_SENTRY_CONFIGURATION" ;;
                   *'.Mounts'*'/var/run/dapr/credentials'*|*'.Mounts'*'/var/run/secrets/dapr.io/tls'*)
-                    printf '%s\n' "$DAPR_MTLS_CERTIFICATE_DIRECTORY" ;;
+                    if [[ "$container" == "hexalith-parties-dapr-$FAKE_FOREIGN_ROLE" && "$FAKE_FOREIGN_KIND" == mount ]]; then
+                      echo /unrelated/certificates
+                    else printf '%s\n' "$DAPR_MTLS_CERTIFICATE_DIRECTORY"; fi ;;
                   *'.HostConfig.PortBindings'*)
                     port="${format#*\"}"
                     port="${port%%\"*}"
@@ -219,12 +299,19 @@ public sealed class AspireMtlsBootstrapTests
                 UseShellExecute = false,
             };
             start.ArgumentList.Add(CiTestPaths.RepoFile("scripts/aspire-start-mtls.sh"));
-            if (prepareOnly)
+            if (cleanupOnly)
+            {
+                start.ArgumentList.Add("--cleanup-only");
+            }
+            else if (prepareOnly)
             {
                 start.ArgumentList.Add("--prepare-only");
             }
             start.Environment["PATH"] = $"{temporary}{Path.PathSeparator}{start.Environment["PATH"]}";
             start.Environment["DAPR_MTLS_CERTIFICATE_DIRECTORY"] = certificateDirectory;
+            start.Environment["FAKE_CLEANUP_ONLY"] = cleanupOnly.ToString();
+            start.Environment["FAKE_FOREIGN_ROLE"] = foreignRole;
+            start.Environment["FAKE_FOREIGN_KIND"] = foreignKind;
             start.Environment["FAKE_REQUEST_LOG"] = requestLog;
             start.Environment["FAKE_STATE_DIRECTORY"] = temporary;
             start.Environment["FAKE_INCOMPATIBLE_ROLE"] = incompatibleRole;
@@ -250,6 +337,17 @@ public sealed class AspireMtlsBootstrapTests
             string stderr = error.GetAwaiter().GetResult();
             output.GetAwaiter().GetResult();
             exited.ShouldBeTrue($"mTLS bootstrap timed out: {stderr}");
+            if (cleanupOnly)
+            {
+                foreach (string role in new[] { "sentry", "placement", "scheduler" })
+                {
+                    File.Exists(Path.Combine(temporary, $"hexalith-parties-dapr-{role}")).ShouldBe(role == foreignRole);
+                }
+
+                File.Exists(Path.Combine(temporary, "network"))
+                    .ShouldBe(!ownsNetwork || foreignRole.Length > 0 || extraNetworkMember.Length > 0);
+            }
+
             return (process.ExitCode, stderr, File.Exists(requestLog) ? File.ReadAllLines(requestLog) : []);
         }
         finally

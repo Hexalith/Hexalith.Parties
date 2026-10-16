@@ -1503,3 +1503,23 @@ source_spec: `_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md`
 severity: low
 reason: retrospective action item from sprint-status.yaml (epic 8; owner Amelia (Developer) + Murat (Test Architect); sprint-status status open)
 status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Reject inconsistent consecutive revocations in certified expired actor-history prefixes.
+  evidence: RetainedHumanActorHistoryFold advances expired certificate versions without live/revoked state; readable transitions enforce a stronger lifecycle. Later domain work, separate from the CI/release patch.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Run the existing admin browser accessibility assertions in a blocking CI lane.
+  evidence: The shadow-root warning and dropdown semantics are tested by Playwright, but root CI executes only .NET suites with mocked JS interop; the later portal behavior can regress while those suites pass.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Give concurrent Parties integration topologies independent Dapr control planes, namespaces and app identities.
+  evidence: The existing fixed control-plane container names/ports reject incompatible ownership; explicit mTLS reuse still shares application identities. Private Redis fixes direct store isolation but does not add general parallel-topology support.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Propagate the topology startup token through its final HTTP health waits.
+  evidence: Both independent three-minute health waits lack the overall startup cancellation token at the original release baseline, so total startup can exceed the declared five-minute budget.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
+  summary: Verify bounded Aspire shutdown before adding explicit teardown deadlines.
+  evidence: Unverified medium: StopAsync and disposal lack caller-side bounds, but a nonterminating SDK shutdown path has not been reproduced; trace SDK host/DCP timeout behavior or demonstrate a hung owned process before changing cleanup semantics.

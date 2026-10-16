@@ -77,11 +77,22 @@ pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure -ResultsDire
 
 CI and default local commands run in package mode (`UseNuGetDeps=true`, `UseHexalithProjectReferences=false`). If unpublished Hexalith packages block restore, record the package-mode blocker and rerun source-mode triage with `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false` only as diagnostic evidence.
 
-The effective package graph selects EventStore 3.120.0 from the committed Builds catalog at `1bde4d92bb9a9ce48b19a6ca17236075ea28a78b` after removal of the Parties override in `Directory.Packages.props`. This published package family supplies the retained actor-history and sidecar-channel APIs, including expired-history certificates required by current Parties source. The earlier 3.117.1 selection and its [consumer receipt](../_bmad-output/implementation-artifacts/tests/eventstore-3.117.1-consumer-2026-10-08/README.md) remain historical evidence. MSBuild evaluation and a local package-mode Release solution build verify the 3.120.0 selection; exact-source push CI remains a separate gate.
+The effective package graph selects EventStore 3.120.0 from the committed Builds catalog at `9f0121c77e3f085c58f5c926057606db8e6511a7` after removal of the Parties override in `Directory.Packages.props`. This published package family supplies the retained actor-history and sidecar-channel APIs, including expired-history certificates required by current Parties source. The earlier 3.117.1 selection and its [consumer receipt](../_bmad-output/implementation-artifacts/tests/eventstore-3.117.1-consumer-2026-10-08/README.md) remain historical evidence. MSBuild evaluation and a local package-mode Release solution build verify the 3.120.0 selection; exact-source push CI remains a separate gate.
+
+The owned central catalog pins `Microsoft.AspNetCore.SignalR.Common` to `10.0.13`
+for GHSA-334f-vvp4-7g6p, with its required Options and
+DependencyInjection.Abstractions floors aligned to `10.0.13`. NuGet audit stays
+active. The Web SDK prunes this package from the UI in favor of the shared ASP.NET
+runtime, so the UI alone requires runtime `10.0.13` through
+`RuntimeFrameworkVersion`. Local UI starts require that runtime to be installed.
+The UI ships as a container outside the unchanged nine-package NuGet manifest;
+the existing container liveness gate remains required. The separately built
+EventStore diagnostic source project retains its own upstream catalog and can
+still report the older SignalR vulnerability; this is not the owned package graph.
 
 Package mode remains the authoritative CI and release path; source mode is diagnostic only. The solution also builds its orchestration projects and the documented Commons HTTP/ServiceDefaults source fallbacks; these do not switch Parties' EventStore package consumers to source mode.
 
-Normal package-mode `dotnet restore Hexalith.Parties.slnx` and `dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1` now succeed, with zero warnings and errors. The earlier two CS1061 errors against 3.115.0 and the August projection-rebuild CS0246 failure are historical. The host security calls and projection-rebuild implementation remain intact.
+Normal package-mode `dotnet restore Hexalith.Parties.slnx` and the serialized Release solution build complete without errors. The full restore/build reports two NU1903 warnings from the separately built EventStore SignalR diagnostic source project, which retains its upstream package catalog; owned consumers use the fixed package or UI runtime floor described above. The earlier two CS1061 errors against 3.115.0 and the August projection-rebuild CS0246 failure are historical. The host security calls and projection-rebuild implementation remain intact.
 
 ### Required EventStore publication
 

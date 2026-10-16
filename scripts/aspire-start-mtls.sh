@@ -79,11 +79,21 @@ verify_control_plane_network() {
 
 cleanup_owned_control_plane() {
     local container_name
+    local container_names
+    local network_names
     local credentials_destination
     local configured_image
     local configured_mount
+    local network_label
+    local network_members
+
+    # An unsuccessful inspect cannot distinguish absence from a daemon/transport
+    # failure. Enumerate first and let every enumeration or inspection error fail
+    # cleanup so the fixture retains its credentials and ownership evidence.
+    container_names="$(docker container ls --all --format '{{.Names}}')"
+    network_names="$(docker network ls --format '{{.Name}}')"
     for container_name in "${scheduler_container}" "${placement_container}" "${sentry_container}"; do
-        if ! docker container inspect "${container_name}" >/dev/null 2>&1; then
+        if [[ $'\n'"${container_names}"$'\n' != *$'\n'"${container_name}"$'\n'* ]]; then
             continue
         fi
 
@@ -101,11 +111,13 @@ cleanup_owned_control_plane() {
         fi
     done
 
-    if [[ -f "${certificate_directory}/.owned-control-plane-network" ]] \
-        && docker network inspect "${control_plane_network}" >/dev/null 2>&1 \
-        && [[ "$(docker network inspect --format '{{index .Labels "hexalith.parties.dapr.role"}}' "${control_plane_network}")" == "control-plane-v1" ]] \
-        && [[ "$(docker network inspect --format '{{len .Containers}}' "${control_plane_network}")" == "0" ]]; then
-        docker network rm "${control_plane_network}" >/dev/null
+    if [[ -f "${certificate_directory}/.owned-control-plane-network" \
+        && $'\n'"${network_names}"$'\n' == *$'\n'"${control_plane_network}"$'\n'* ]]; then
+        network_label="$(docker network inspect --format '{{index .Labels "hexalith.parties.dapr.role"}}' "${control_plane_network}")"
+        network_members="$(docker network inspect --format '{{len .Containers}}' "${control_plane_network}")"
+        if [[ "${network_label}" == "control-plane-v1" && "${network_members}" == "0" ]]; then
+            docker network rm "${control_plane_network}" >/dev/null
+        fi
     fi
 }
 

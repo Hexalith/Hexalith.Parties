@@ -9,25 +9,18 @@ using StackExchange.Redis;
 namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 
 /// <summary>
-/// Isolates, activates, and restores the store-global writer-protocol marker for a disposable topology.
+/// Activates and verifies the writer-protocol marker in the topology-owned disposable Redis store.
 /// </summary>
-internal sealed class ProjectionDeliveryWriterProtocolTestLease {
+internal static class ProjectionDeliveryWriterProtocolTestLease
+{
     private const string HealthCheckName = "projection-delivery-writer-protocol";
-    private const string IsolationLockKey = "projection-delivery-writer-protocol:test-isolation-lock";
     private const string MarkerKey = "projection-delivery-writer-protocol";
-    private const string RedisEndpoint = "localhost:6379";
     private const int SchemaVersion = 1;
     private const int WriterProtocolVersion = 2;
 
-    private static readonly TimeSpan s_lockLease = TimeSpan.FromHours(2);
     private static readonly TimeSpan s_retryDelay = TimeSpan.FromSeconds(1);
     private static readonly JsonSerializerOptions s_serializerOptions = new(JsonSerializerDefaults.Web);
 
-    private byte[]? _markerSnapshot;
-    private TimeSpan? _markerSnapshotExpiry;
-    private string? _sourceCommit;
-    private string? _lockToken;
-    private bool _isActive;
 
     /// <summary>Resolves the exact Git commit containing the running test code.</summary>
     internal static async Task<string> ReadExactSourceCommitAsync(CancellationToken cancellationToken) {
@@ -67,23 +60,24 @@ internal sealed class ProjectionDeliveryWriterProtocolTestLease {
             || ProjectionDeliveryWriterProtocolCutoverPolicy.IsTransientActivationStatus(statusCode);
 
     /// <summary>
-    /// Takes exclusive ownership of the global marker, activates it through the production API,
+    /// Activates the fresh private store through the production API,
     /// and verifies that the persisted marker identifies the exact test commit.
     /// </summary>
-    internal async Task ActivateAsync(
+    internal static async Task ActivateAsync(
+        string redisEndpoint,
         HttpClient eventStoreClient,
         string administratorToken,
         string sourceCommit,
         string backupReference,
         CancellationToken cancellationToken) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(redisEndpoint);
         ArgumentNullException.ThrowIfNull(eventStoreClient);
         ArgumentException.ThrowIfNullOrWhiteSpace(administratorToken);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceCommit);
         ArgumentException.ThrowIfNullOrWhiteSpace(backupReference);
 
-        using IConnectionMultiplexer redis = await ConnectRedisAsync().ConfigureAwait(false);
+        using IConnectionMultiplexer redis = await ConnectRedisAsync(redisEndpoint).ConfigureAwait(false);
         IDatabase database = redis.GetDatabase();
-        await IsolateMarkerAsync(database, sourceCommit, cancellationToken).ConfigureAwait(false);
         string lastDiagnostic = "No activation attempt completed.";
 
         try {
@@ -170,128 +164,15 @@ internal sealed class ProjectionDeliveryWriterProtocolTestLease {
         }
     }
 
-    /// <summary>Atomically restores the marker state captured before activation.</summary>
-    internal async Task RestoreAsync() {
-        if (!_isActive) {
-            return;
-        }
-
-        using IConnectionMultiplexer redis = await ConnectRedisAsync().ConfigureAwait(false);
-        IDatabase database = redis.GetDatabase();
-        string lockToken = _lockToken
-            ?? throw new InvalidOperationException("The writer-protocol marker isolation lease is missing.");
-        bool leaseExtended = await database.LockExtendAsync(IsolationLockKey, lockToken, s_lockLease)
-            .ConfigureAwait(false);
-        if (!leaseExtended) {
-            throw new InvalidOperationException(
-                "The writer-protocol marker isolation lease expired before restoration.");
-        }
-
-        try {
-            RedisValue currentPayload = await database.HashGetAsync(MarkerKey, "data").ConfigureAwait(false);
-            WriterProtocolMarker? current = DeserializeMarker(currentPayload);
-            if (current is not null
-                && !string.Equals(current.CutoverCommit, _sourceCommit, StringComparison.Ordinal)) {
-                throw new InvalidOperationException(
-                    "The store-global writer-protocol marker changed after fixture isolation; "
-                    + "refusing to overwrite state owned by another topology.");
-            }
-
-            ITransaction transaction = database.CreateTransaction();
-            _ = transaction.AddCondition(Condition.StringEqual(IsolationLockKey, lockToken));
-            _ = transaction.AddCondition(currentPayload.HasValue
-                ? Condition.HashEqual(MarkerKey, "data", currentPayload)
-                : Condition.KeyNotExists(MarkerKey));
-            Task<bool> markerDeleted = transaction.KeyDeleteAsync(MarkerKey);
-            Task? markerRestored = null;
-            if (_markerSnapshot is not null) {
-                markerRestored = transaction.KeyRestoreAsync(MarkerKey, _markerSnapshot, _markerSnapshotExpiry);
-            }
-
-            bool committed = await transaction.ExecuteAsync().ConfigureAwait(false);
-            if (!committed) {
-                throw new InvalidOperationException(
-                    "The writer-protocol marker or its isolation lease changed before atomic restoration.");
-            }
-
-            _ = await markerDeleted.ConfigureAwait(false);
-            if (markerRestored is not null) {
-                await markerRestored.ConfigureAwait(false);
-            }
-        }
-        finally {
-            _ = await database.LockReleaseAsync(IsolationLockKey, lockToken).ConfigureAwait(false);
-            await redis.CloseAsync(allowCommandsToComplete: true).ConfigureAwait(false);
-        }
-
-        _markerSnapshot = null;
-        _markerSnapshotExpiry = null;
-        _sourceCommit = null;
-        _lockToken = null;
-        _isActive = false;
-    }
-
-    private static async Task<IConnectionMultiplexer> ConnectRedisAsync()
-        => await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions {
-            EndPoints = { RedisEndpoint },
+    private static async Task<IConnectionMultiplexer> ConnectRedisAsync(string redisEndpoint)
+        => await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions
+        {
+            EndPoints = { redisEndpoint },
             ConnectTimeout = 5_000,
             SyncTimeout = 5_000,
             AbortOnConnectFail = false,
             AllowAdmin = false,
         }).ConfigureAwait(false);
-
-    private async Task IsolateMarkerAsync(
-        IDatabase database,
-        string sourceCommit,
-        CancellationToken cancellationToken) {
-        if (_isActive) {
-            throw new InvalidOperationException(
-                "The disposable topology attempted to isolate the writer-protocol marker more than once.");
-        }
-
-        string lockToken = Guid.NewGuid().ToString("N");
-        _lockToken = lockToken;
-        bool lockAcquired = false;
-
-        try {
-            // StackExchange.Redis mutation tasks are not cancellable. Await them to completion
-            // before honoring caller cancellation so a late lock/transaction cannot mutate the
-            // global marker after this method has reported cancellation.
-            lockAcquired = await database
-                .LockTakeAsync(IsolationLockKey, lockToken, s_lockLease)
-                .ConfigureAwait(false);
-            if (!lockAcquired) {
-                throw new InvalidOperationException(
-                    "Another topology owns the store-global writer-protocol marker isolation lease.");
-            }
-
-            cancellationToken.ThrowIfCancellationRequested();
-            ITransaction transaction = database.CreateTransaction();
-            _ = transaction.AddCondition(Condition.StringEqual(IsolationLockKey, lockToken));
-            Task<byte[]?> snapshot = transaction.KeyDumpAsync(MarkerKey);
-            Task<TimeSpan?> snapshotExpiry = transaction.KeyTimeToLiveAsync(MarkerKey);
-            Task<bool> markerDeleted = transaction.KeyDeleteAsync(MarkerKey);
-            bool committed = await transaction.ExecuteAsync().ConfigureAwait(false);
-            if (!committed) {
-                throw new InvalidOperationException(
-                    "The writer-protocol marker isolation lease changed before the atomic snapshot completed.");
-            }
-
-            _markerSnapshot = await snapshot.ConfigureAwait(false);
-            _markerSnapshotExpiry = await snapshotExpiry.ConfigureAwait(false);
-            _ = await markerDeleted.ConfigureAwait(false);
-            _sourceCommit = sourceCommit;
-            _isActive = true;
-        }
-        catch {
-            if (lockAcquired) {
-                _ = await database.LockReleaseAsync(IsolationLockKey, lockToken).ConfigureAwait(false);
-            }
-
-            _lockToken = null;
-            throw;
-        }
-    }
 
     private static async Task<WriterProtocolMarker?> ReadMarkerAsync(
         IDatabase database,
@@ -325,8 +206,4 @@ internal sealed class ProjectionDeliveryWriterProtocolTestLease {
         }
     }
 
-    private sealed record WriterProtocolMarker(
-        int SchemaVersion,
-        int WriterProtocolVersion,
-        string CutoverCommit);
 }

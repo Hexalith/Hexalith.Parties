@@ -5,7 +5,7 @@ created: '2026-10-07'
 status: 'in-review'
 route: 'dispatch'
 baseline_commit: '45d653a7d7f14a75d5227fbd780db3fbf22f70fe'
-review_loop_iteration: 0
+review_loop_iteration: 1
 context:
   - '{project-root}/AGENTS.md'
   - '{project-root}/references/Hexalith.AI.Tools/hexalith-llm-instructions.md'
@@ -53,6 +53,19 @@ context:
 - [x] Aspire topology fixture and gateway test -- restore the intended test-only symmetric JWT settings and replace the unavailable-fixture silent pass with a dynamic skip; record actual local runtime blockers separately.
 - [x] `Hexalith.Parties.slnx`, `scripts/test.ps1`, package validation scripts -- run the Release CI parity build, all runnable test projects, and applicable consumer/package validation; record results in implementation notes. The parent may complete lengthy final validation after handoff.
 
+
+**2026-10-16 review follow-up:**
+- [x] `Directory.Packages.props` -- select fixed SignalR.Common 10.0.13 centrally for owned consumers, keeping NuGet audit active and shared catalog source unchanged; prove the effective restored test graphs and the UI runtime dependency floor (the UI ships as a container, outside the nine-package NuGet manifest). Web SDK pruning means Common can come from Microsoft.AspNetCore.App; set a UI-only RuntimeFrameworkVersion floor of 10.0.13 through owning repository configuration, and verify published runtimeconfig. Record the local runtime prerequisite and retain the release container liveness gate.
+- [x] `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs` and `story-8-3-platform-api-prerequisite-matrix.md` -- add a dated October 16 current observation for the existing exact committed gitlinks and refresh only current expectations. Preserve all dated historical content and approvals.
+- [x] `.gitlink-signoff.tsv` -- append the seven existing committed pointers changed since v1.3.0, selected under the release authorization carried by this invoked spec. Do not move any gitlink.
+- [x] `tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs` and writer-protocol helper -- run the disposable topology against its own fresh Redis instance, route every state/pubsub sidecar component to it before startup, activate the marker through the existing authenticated API, and stop the topology before removing owned test infrastructure. Delete the shared-marker backup/restore protocol.
+- [x] Focused fixture/bootstrap tests -- prove private Redis/component routing, missing/failed startup behavior, owned cleanup end-state and preservation of unrelated resources, including the scoped mTLS cleanup branch. Use existing SDK/test seams and follow the single-type-per-C#-file rule for new/edited helpers.
+- [x] Full package-mode Release build, individual-project test inventory, package/consumer checks and both gitlink gates -- record exact outcomes and remaining blockers. Parent owns Git publication and fresh CI/Release after review; an unrelated concurrent gateway test edit must remain unstaged.
+
+Given a live unrelated local topology, when the required gateway fixture starts and stops,
+then it neither reads nor modifies that topology's writer marker or Redis data, and all
+owned private Redis/mTLS resources are removed after its own application stops.
+
 **Acceptance Criteria:**
 - Given the current retained-history implementation, when the effective external EventStore package graph is restored and built, then its consumed APIs resolve without removing functionality.
 - Given the configured test inventory, when each project runs, then all runnable checks pass and any environmental skip or blocker is reported separately.
@@ -82,6 +95,30 @@ Fresh topology repair and evidence: the clean rerun exposed missing JWT credenti
 Read-only Aspire observation confirmed Parties, EventStore, and EventStore Admin reached Running/Healthy after the JWT repair. Dapr sidecars independently exited while adding file-watch targets with `no space left on device`; the parent confirmed 38 GB free disk space and file-watch resource exhaustion. Tenants' dynamically launched package-mode project build also failed CS0246 for `IDomainServiceAdministratorVerifier` and `DomainServiceAdministratorClaim`. Both type names are absent from the published EventStore DomainService 3.115.0 package DLL and present only in the checked-out newer source. Forwarding the central version would not supply them. No source-reference workaround, submodule edit, gitlink update, or production-policy change was made. Live gateway proof remains unavailable locally; fresh-runner GitHub CI is the authoritative remaining topology gate. The parent separately reported the full service project passing **696/696**.
 
 ## Spec Change Log
+
+### 2026-10-16 review loop 1
+
+The topology bootstrap lacked an enforced private-store boundary. Review found
+shared-marker deletion, restoration before quiescence, TTL extension, and an
+uncertain-transaction backup loss window. Re-derive only the fixture/helper
+changes required to use a private disposable Redis instance, with every
+state/pubsub component pointed to that instance before any sidecar starts.
+Remove shared marker snapshot/deletion/restoration rather than extending that
+unsafe protocol. No changes authored by this run existed to revert; previously
+committed implementation and concurrent owner edits remain preserved.
+
+KEEP: authenticated production writer-protocol activation, fresh-store startup,
+required-mode gateway failure on unavailable topology, all gateway persistence
+assertions, deny-by-default ACL/mTLS policy, temporary scoped control-plane
+ownership, warnings-as-errors, root-only submodules, the package inventory,
+and exact-source CI/release protection. Add verification for private-store
+routing, owned cleanup end-state, and preservation of unrelated resources.
+
+Also repair the newly observed SignalR NU1903 restore failure centrally,
+refresh the current seven-pointer source observation and selection ledger,
+and run focused checks followed by the spec's full verification. These are
+prerequisites to a new exact-source CI run and release, with no upstream
+publication or dependency gitlink movement.
 
 ## Review Triage Log
 
@@ -142,6 +179,38 @@ Review execution: all three lenses completed. The runtime rejected additional co
 | 2026-10-11 edge 3: historical release bypass claim | false | Carried: the existing resumed edge 4 row records the bypass used in 2026-10-07 and the later exact-source workflow; reject the proposed historical spec edit. |
 | 2026-10-11 verification 1: registry floor execution gap | medium | Pre-verified: the release tests inspect floor-step text and ordering but do not execute its version comparison. Removing the `parts > floor` filter could admit a stale tag into the protected job; defer this later workflow test gap. |
 | 2026-10-11 verification 2: browser contact options outside CI | medium | Pre-verified: component tests invoke `ValueChanged` directly, and the Playwright form test is absent from required CI. Omitting rendered options could pass CI while blocking contact selection; defer this later UI verification gap. |
+
+| 2026-10-16 blind 1: installer overwrites operator preferences | false | `_bmad/scripts/config_utils.py:load_central_config` loads `_bmad/config.user.toml`, which preserves Administrator/expert; the base defaults do not override these effective answers. Reject. |
+| 2026-10-16 blind 2: visual-tools config type | maybe-false | Carried: 2026-10-11 blind 3 found the same JSON-encoded string in TOML and YAML and no consumer requiring an array. Existing unverified agent-context deferral remains recorded. |
+| 2026-10-16 blind 3: updating notice persists | medium | Carried: resumed blind 8 and 2026-10-11 blind 9 record the same missing convergence clear in the portal. Existing separate UI deferral remains recorded. |
+| 2026-10-16 blind 4: blocked provider work accumulates | medium | Carried: resumed blind 3 and 2026-10-11 blind 7 record the same uncancelled provider task after deadline. Existing domain-query deferral remains recorded. |
+| 2026-10-16 blind 5: consecutive expired revocations | medium | The expired-certificate branch advances version without maintaining live/revoked state. An authenticated but inconsistent expired prefix can therefore bypass the readable lifecycle checks. This later retained-history implementation is separate from this release repair; defer. |
+| 2026-10-16 blind 6: fixture changes shared Redis marker | high | The helper hardcodes localhost:6379 and deletes the global marker; its fixture-only lock cannot coordinate a running developer topology. Route to bad_spec: require a private disposable Redis store and route every test sidecar to it before startup. |
+| 2026-10-16 blind 7: marker restored while workers run | medium | DisposeAsync restores before disposing the distributed application, exposing active workers to the previous marker. Route to bad_spec: stop the test topology before removing its private Redis store; eliminate shared-state restoration. |
+| 2026-10-16 blind 8: restoration extends original TTL | medium | KeyTimeToLiveAsync captures a relative lifetime and KeyRestoreAsync reuses it after the full fixture duration. Route to bad_spec: private-store isolation removes the shared backup/restore path entirely. |
+| 2026-10-16 blind 9: lost snapshot response loses backup | high | KeyDeleteAsync commits before the client assigns the snapshot and `_isActive`; a lost transaction response leaves no recoverable local snapshot. Route to bad_spec: never delete or snapshot an existing shared marker; start a fresh private store. |
+| 2026-10-16 blind 10: checkout SHA is not binary provenance | low | The helper records checkout HEAD as an operator cutover reference; it is not binary attestation. Fresh exact-source CI rebuilds the topology, while local dirty execution is diagnostic. Adding cross-assembly attestation is more than a direct correction for this low-impact local metadata case; reject. |
+| 2026-10-16 edge 1: historical EventStore version | false | Carried: resumed edge 3 and 2026-10-11 edge 2 distinguish the original 3.115.0 selection from later dated 3.120.0 notes. Reject the historical spec edit. |
+| 2026-10-16 edge 2: historical validation bypass | false | Carried: resumed edge 4 and 2026-10-11 edge 3 record the old bypass as history and the replacement exact-source CI gate. Reject the historical spec edit. |
+| 2026-10-16 verification 1: browser semantics outside CI | medium | Pre-verified: .NET CI mocks JavaScript and does not execute the existing Playwright shadow-root/description assertions. This later portal accessibility change is separate from the release repair; defer a blocking browser lane. |
+| 2026-10-16 verification 2: cleanup end-state unverified | medium | Pre-verified: bootstrap tests do not execute cleanup or assert resulting Docker resources. Include owned-resource removal and preservation of foreign resources in the re-derived fixture verification. Route to bad_spec with explicit lifecycle acceptance. |
+| 2026-10-16 parent 1: current restore blocked by NU1903 | high | Current push CI 38761442959 and local package-mode restore fail on SignalR.Common 10.0.12 (GHSA-334f-vvp4-7g6p). Microsoft identifies 10.0.13 as fixed. Patch the owned central transitive selection without suppressing audit or changing shared catalog source. |
+| 2026-10-16 parent 2: current source receipt is stale | high | The current fitness constants select October 13 gitlinks, but HEAD contains seven later root pointers. Refresh the dated current observation and exact expectations while preserving all historical approvals. |
+| 2026-10-16 parent 3: release selections missing | high | `bash scripts/gitlink-rc-gate.sh --diff v1.3.0` fails for seven already committed pointers. Record their exact release selection under the invoked spec's release authorization; retain every automated gate and existing pointer. |
+
+| Final blind 1: file-backed component bypasses isolation | medium | SDK documentation for DaprComponentOptions.LocalPath states that its directory is added to associated sidecars after model configuration. The new guard checks sidecar paths but omits that component option. Patch by rejecting this supported file-backed path before creating infrastructure and add a focused regression case. |
+| Final blind 2: Docker outage masquerades as cleanup success | medium | The tracked cleanup script exits 0 when every Docker call fails; the fixture then deletes its trust directory and clears ownership fields. Patch the cleanup path to distinguish resource absence from enumeration/inspection failure, with unavailable-daemon coverage. |
+| Final blind 3: control-plane reuse is not parallel isolation | medium | Fixed control-plane names/ports and explicit reuse under Dapr__Mtls__Enabled predate private Redis. An incompatible existing control plane is deliberately rejected; independent Dapr namespaces and identities remain separate topology work. Defer this existing parallel-topology limitation without weakening CI. |
+| Final blind 4: final health waits exceed startup token | medium | `git show` at the original baseline confirms the same two independent three-minute waits without the overall token. This is existing timeout debt; defer. |
+| Final blind 5: shutdown could block cleanup indefinitely | maybe-false | StopAsync has no explicit caller token and disposal has no external wait bound, but the review did not establish how SDK host shutdown timeouts behave on a real hung DCP teardown. Defer as unverified medium; trace SDK shutdown internals or reproduce a nonterminating owned process first. |
+| Final blind 6: private-store live proof incomplete | false | The spec and current receipt explicitly report the required gateway failure and leave exact-source live CI/publication pending; no passing private-store runtime claim or successful release is made. Retain the existing required fresh-CI gate. The cited branch-b receipt belongs to unrelated concurrent owner work. |
+| Final blind 7: security floors lack regression checks | medium | No tracked check reads the generated/published UI runtime requirement, so removing the new minimum could pass package audit and liveness. Patch with repeatable effective dependency and UI artifact minimum checks. |
+| Final blind 8: blocked provider work accumulates | medium | Carried: resumed blind 3, 2026-10-11 blind 7 and 2026-10-16 blind 4 describe this unchanged query provider issue; existing deferral remains recorded. |
+| Final blind 9: consecutive expired revocations | medium | Carried: 2026-10-16 blind 5 describes the same expired-prefix lifecycle gap in later retained-history code. Record its pending separate domain deferral once. |
+| Final blind 10: updating notice persists | medium | Carried: resumed blind 8 and subsequent carried rows describe the same unchanged portal convergence issue; existing deferral remains recorded. |
+| Final edge 1: Docker outage loses cleanup ownership | medium | Same reproduced failure as final blind 2. Group with that patch; preserve the certificate directory and ownership fields on uncertain cleanup. |
+| Final verification 1: UI runtime artifact floor unasserted | medium | Pre-verified: workflow mapping and liveness checks cannot detect a lowered shared-framework minimum. Group with final blind 7 and add an artifact check to the existing verification path. |
+| Final verification 2: fixture cleanup integration unverified | medium | Pre-verified: synthetic cleanup delegates and direct script tests do not exercise fixture disposal with prepared scoped infrastructure. Patch the existing lifecycle tests to verify cleanup invocation, failed-cleanup ownership retention and successful retry through the fixture itself. |
 
 ## Verification
 
@@ -434,3 +503,131 @@ Dependency graph endpoint returned 404. An idempotent repository-admin
 returned a document and the failed Dependency Review run passed on retry.
 Commitlint and CodeQL passed for the same PR head. A fresh PR CI run including
 Aspire and exact-source main push CI remain pending; status is `in-review`.
+
+## 2026-10-16 continuation
+
+Resumed at clean main `493730941329d1bca3b4f6b2f6a67ffe305c2443`.
+The mandatory review diff is `/tmp/parties-bmad-review-20261016-7j3_njio.patch`
+(59,348,734 bytes). All three context-free review layers completed; the breadth
+of historical artifacts prevents exhaustive literal tracing, so reviewers
+indexed file sections and traced runtime/release paths. Every finding is
+individually triaged above.
+
+Current push CI 38761442959 and scheduled CI 38861610205 stop at restore with
+SignalR.Common 10.0.12 / NU1903. The same package-mode restore failed locally;
+`/tmp/parties-current-restore-baseline.log` and
+`/tmp/parties-current-ci-restore.log` contain exact evidence. The Microsoft
+advisory https://github.com/advisories/GHSA-334f-vvp4-7g6p lists 10.0.13 as fixed.
+
+An isolated Aspire baseline start and `aspire wait parties --timeout 30`
+passed; Parties, EventStore, Tenants, security and sidecars were healthy.
+The owned AppHost was stopped before edits, leaving the unrelated Works
+AppHost running. During review an external session modified
+`tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs`;
+all reviewers confirmed read-only operations. Preserve and exclude that file
+from this task's staging. No remote publication has occurred in this run.
+
+
+## 2026-10-16 implementation follow-up and local handoff
+
+The owned central selection now pins SignalR.Common `10.0.13` and its required
+Options / DependencyInjection.Abstractions `10.0.13` floors without suppressing
+NuGet audit or editing shared catalog source. Because the Web SDK prunes Common
+from the UI package graph, the UI alone selects `RuntimeFrameworkVersion=10.0.13`.
+A serialized UI publish verifies that both published shared-framework floors
+are `10.0.13`; local installed runtimes stop at `10.0.12`, so UI starts require
+that newer runtime. The existing container liveness gate remains intact.
+
+The October 16 matrix observation and current receipt expectations now match the
+existing committed source identities. Seven release-selection rows were appended
+under this invoked spec's authorization; no gitlink moved and dated historical
+observations/approvals remain intact. The `--worktree`, `--diff v1.3.0` and
+`--diff v1.1.1` gitlink gates pass.
+
+The fixture now owns a fresh nonpersistent Redis container. SDK value providers
+route every modelled state/pubsub component to its dynamic endpoint before
+startup; sidecars receive the same endpoint and unmodelled component paths fail
+closed. Authenticated writer-protocol activation and persisted-marker checks
+use that private endpoint. The shared lock/snapshot/delete/restore protocol is
+removed. Disposal stops the topology before removing Redis, then cleans owned
+mTLS resources. Failed cleanup retains ownership evidence for retry; if
+quiescence cannot be confirmed, the control plane is preserved.
+
+Focused checks pass: routing/startup/cleanup **10/10**, mTLS bootstrap/cleanup
+**15/15**, and source prerequisites **33/33**, all without skips. The full
+individual-project lane passes **15/15 projects**, **3,070 tests passed**, seven
+explicit skips, zero failures. Topology accounts for 45 passes, six historical
+health skips and one unavailable local gateway. The final package-mode Release
+solution build exits 0 with zero errors and **two NU1903 warning reports** from
+the separately built EventStore SignalR diagnostic source project, whose own
+upstream catalog retains Common `10.0.12`; owned consumers are fixed. The
+zero-warning broad gate therefore remains unmet without upstream remediation.
+All nine unchanged manifest packages pack and pass metadata validation at
+`0.0.0-ci-test`, and both isolated consumers build with zero warnings/errors.
+Initial parallel UI publish hit MSB4166; its serialized retry passes.
+
+The final required-mode gateway command (`GITHUB_ACTIONS=true` with the existing
+single-method executable filter) exits 1: one failure, zero skips. Sentry fails
+before AppHost startup with `failed to add target /var/run/dapr/credentials: no
+space left on device` (file watcher exhaustion), recorded at
+`/tmp/parties-oct16-private-gateway-final.log`. This is not live gateway proof.
+The all-project local gateway separately reports that Parties failed to start.
+No required assertion, ACL, mTLS policy, host limit or release gate was weakened.
+All pre-existing containers remain; no fixture Redis, scoped control-plane
+container or temporary trust bundle remains. Two unrelated security/tunnel
+containers appeared later from another session and were left untouched.
+
+Detailed commands, machine-readable graph/runtime/test receipts and limitations
+are in [the local verification receipt](tests/ci-release-follow-up-2026-10-16/README.md).
+The warning guard, shell syntax check and whitespace check pass. Concurrent
+owner query source/tests and branch-B spec/evidence changes remain preserved
+and excluded from this implementation's ownership. No staging, commit, push,
+workflow dispatch or publication was performed. Fresh exact-source CI, a
+passing required gateway route, independent review and Release remain pending.
+
+### Final review of the October 16 implementation
+
+Three fresh context-free layers reviewed the original-baseline diff at
+`/tmp/parties-bmad-review-final-20261016-8_8pr0ws.patch` (60,742,080 bytes),
+using `/tmp/parties-current-implementation-20261016-ph63infv.patch`
+(94,015 bytes) to orient current-code tracing. Static installed skills and
+embedded historical patches prevent an exhaustive canonical-diff claim.
+All thirteen findings have individual verdicts above. Four patch groups
+remain: file-backed Dapr routing, uncertain Docker cleanup, security-floor
+regression coverage, and the fixture disposal integration test. Existing
+independent topology/domain/browser follow-ups are deferred; required CI
+and publication remain pending.
+
+### Parent final verification — 2026-10-16
+
+All four final-review patch groups are implemented and covered. The reviewed
+LocalPath guard rejects valid file-backed model configurations before creating
+infrastructure. Cleanup now enumerates Docker resources and propagates all
+query failures. Linked command doubles exercise actual fixture preparation,
+failed cleanup with retained credentials/ownership, and successful retry.
+The configured CI lane checks effective restored package floors with audit
+active and generated plus published UI shared-framework minimums.
+
+Parent package-mode Release solution build exited 0 with no errors and the
+same two recorded upstream NU1903 warnings (13.61 s). The complete final
+individual-project lane passed all 15 projects: **3,114 passed, seven skipped,
+zero failed** (3,121 total), including CI 128/128 and topology 49 passed / seven
+skipped. The seven topology skips remain six historical health deferrals and
+the unavailable local gateway. This run includes concurrent owner query work;
+it does not replace exact committed-source CI. Logs and the TRX aggregate are
+`/tmp/parties-parent-final-{build,tests,summary}-20261016.*` and
+`/tmp/parties-parent-final-results-20261016`.
+
+The final metadata validator again accepted all nine packages. Both isolated
+consumer builds and the serialized UI publish passed for unchanged production
+package inputs. Shell syntax, warning/submodule guard, whitespace and both
+current gitlink gates pass. Parent compared the entire earlier matrix tail
+and the ledger prefix against HEAD; historical observations are preserved and
+no gitlink moved. The exact planned Conventional Commit passed the owning
+repository's pinned CLI with exit 0; its command/hash receipt is retained in
+`/tmp/parties-ci-release-commitlint.json` and the compact verification JSON.
+
+Local implementation and independent review are complete. Current-main CI,
+the required live gateway on a fresh runner, release approval/publication and
+independent package downloads remain pending. Keep the overall spec in-review
+until these acceptance gates pass; no validation bypass is available or used.

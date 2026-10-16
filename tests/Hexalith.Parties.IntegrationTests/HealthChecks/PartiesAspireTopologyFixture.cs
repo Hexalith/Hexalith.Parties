@@ -46,6 +46,9 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     /// <summary>The issuer used only by this test topology and its gateway token.</summary>
     internal const string JwtIssuer = "hexalith-dev";
 
+    private readonly Func<Task<IDistributedApplicationTestingBuilder>> _createBuilder;
+    private readonly Func<DistributedApplication, CancellationToken, Task> _startApplication;
+    private readonly bool _prepareCiBootstrap;
     private DistributedApplication? _app;
     private IDistributedApplicationTestingBuilder? _builder;
     private string? _previousEnableKeycloak;
@@ -57,7 +60,30 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     private string? _ciMtlsBootstrapScript;
     private HttpClient? _partiesClient;
     private HttpClient? _eventStoreClient;
-    private readonly ProjectionDeliveryWriterProtocolTestLease _writerProtocolLease = new();
+    private IResourceBuilder<ContainerResource>? _redis;
+
+    /// <summary>Initializes a fixture that owns its complete disposable topology.</summary>
+    public PartiesAspireTopologyFixture()
+        : this(
+            () => DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(),
+            (application, cancellationToken) => application.StartAsync(cancellationToken),
+            prepareCiBootstrap: true)
+    {
+    }
+
+    /// <summary>Uses controlled construction/startup seams for infrastructure failure tests.</summary>
+    /// <param name="createBuilder">Constructs the application model.</param>
+    /// <param name="startApplication">Starts the constructed application.</param>
+    /// <param name="prepareCiBootstrap">Whether this fixture must prepare a real secure control plane.</param>
+    internal PartiesAspireTopologyFixture(
+        Func<Task<IDistributedApplicationTestingBuilder>> createBuilder,
+        Func<DistributedApplication, CancellationToken, Task> startApplication,
+        bool prepareCiBootstrap = false)
+    {
+        _createBuilder = createBuilder;
+        _startApplication = startApplication;
+        _prepareCiBootstrap = prepareCiBootstrap;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the Aspire topology started successfully.
@@ -116,11 +142,14 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             // initialization and health check stabilization.
             using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 
-            await PrepareCiDaprMtlsAsync(cts.Token).ConfigureAwait(false);
+            if (_prepareCiBootstrap)
+            {
+                await PrepareCiDaprMtlsAsync(cts.Token).ConfigureAwait(false);
+            }
 
-            _builder = await DistributedApplicationTestingBuilder
-                .CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>()
-                .ConfigureAwait(false);
+            _builder = await _createBuilder().ConfigureAwait(false);
+
+            _redis = PartiesTestRedis.Configure(_builder);
 
             // The normal AppHost clears symmetric keys for its OIDC topology. Override
             // the test resources after model construction when Keycloak is disabled.
@@ -141,7 +170,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             });
 
             _app = await _builder.BuildAsync().ConfigureAwait(false);
-            await _app.StartAsync(cts.Token).ConfigureAwait(false);
+            await _startApplication(_app, cts.Token).ConfigureAwait(false);
 
             // Wait for parties to be healthy. This includes the DAPR health checks
             // (sidecar, state store, pub/sub) becoming healthy after sidecar initialization.
@@ -160,11 +189,12 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             _eventStoreClient.Timeout = TimeSpan.FromSeconds(60);
 
             // The disposable topology starts with no v2 writer cutover. Activate through
-            // EventStore's operator API and restore the previous Redis marker on disposal.
+            // EventStore's operator API; shared developer Redis is never contacted.
             string sourceCommit = await ProjectionDeliveryWriterProtocolTestLease
                 .ReadExactSourceCommitAsync(cts.Token)
                 .ConfigureAwait(false);
-            await _writerProtocolLease.ActivateAsync(
+            await ProjectionDeliveryWriterProtocolTestLease.ActivateAsync(
+                $"{_redis.GetEndpoint("tcp").Host}:{_redis.GetEndpoint("tcp").Port}",
                 _eventStoreClient,
                 CreateAdministratorToken(),
                 sourceCommit,
@@ -191,13 +221,14 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         {
             IsAvailable = false;
             UnavailableReason = $"{ex.GetType().Name}: {ex.Message}";
+            // Tear down partial startup immediately; no test can use an unavailable fixture.
             try
             {
-                await _writerProtocolLease.RestoreAsync().ConfigureAwait(false);
+                await DisposeApplicationAsync().ConfigureAwait(false);
             }
-            catch (Exception restorationException)
+            catch (Exception cleanupException)
             {
-                UnavailableReason += $"; marker restoration failed: {restorationException}";
+                UnavailableReason += $"; topology cleanup failed: {cleanupException}";
             }
         }
     }
@@ -219,45 +250,48 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     {
         try
         {
-            await _writerProtocolLease.RestoreAsync().ConfigureAwait(false);
+            await DisposeApplicationAsync().ConfigureAwait(false);
         }
         finally
         {
-            _partiesClient?.Dispose();
-            _eventStoreClient?.Dispose();
-            try
+            Environment.SetEnvironmentVariable("EnableKeycloak", _previousEnableKeycloak);
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", _previousAspNetCoreEnvironment);
+            Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", _previousDotNetEnvironment);
+            Environment.SetEnvironmentVariable("Dapr__Mtls__Enabled", _previousDaprMtlsEnabled);
+            Environment.SetEnvironmentVariable("Dapr__Mtls__CertificateDirectory", _previousDaprMtlsCertificateDirectory);
+        }
+    }
+
+    private async Task DisposeApplicationAsync()
+    {
+        _partiesClient?.Dispose();
+        _eventStoreClient?.Dispose();
+        await PartiesTopologyCleanup.RunAsync(
+            async () =>
+            {
+                if (_app is not null)
+                {
+                    // Stop all workers and sidecars before disposal removes the owned Redis container.
+                    await _app.StopAsync().ConfigureAwait(false);
+                }
+            },
+            async () =>
             {
                 if (_app is not null)
                 {
                     await _app.DisposeAsync().ConfigureAwait(false);
+                    _app = null;
                 }
-            }
-            finally
+            },
+            async () =>
             {
-                try
+                if (_builder is not null)
                 {
-                    if (_builder is not null)
-                    {
-                        await _builder.DisposeAsync().ConfigureAwait(false);
-                    }
+                    await _builder.DisposeAsync().ConfigureAwait(false);
+                    _builder = null;
                 }
-                finally
-                {
-                    try
-                    {
-                        await CleanupCiDaprMtlsAsync().ConfigureAwait(false);
-                    }
-                    finally
-                    {
-                        Environment.SetEnvironmentVariable("EnableKeycloak", _previousEnableKeycloak);
-                        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", _previousAspNetCoreEnvironment);
-                        Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", _previousDotNetEnvironment);
-                        Environment.SetEnvironmentVariable("Dapr__Mtls__Enabled", _previousDaprMtlsEnabled);
-                        Environment.SetEnvironmentVariable("Dapr__Mtls__CertificateDirectory", _previousDaprMtlsCertificateDirectory);
-                    }
-                }
-            }
-        }
+            },
+            CleanupCiDaprMtlsAsync).ConfigureAwait(false);
     }
 
     private static string CreateAdministratorToken()
@@ -319,19 +353,17 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             return;
         }
 
-        try
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        await RunCiDaprBootstrapScriptAsync(script, certificateDirectory, "--cleanup-only", timeout.Token)
+            .ConfigureAwait(false);
+        if (Directory.Exists(certificateDirectory))
         {
-            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            await RunCiDaprBootstrapScriptAsync(script, certificateDirectory, "--cleanup-only", timeout.Token)
-                .ConfigureAwait(false);
+            Directory.Delete(certificateDirectory, recursive: true);
         }
-        finally
-        {
-            if (Directory.Exists(certificateDirectory))
-            {
-                Directory.Delete(certificateDirectory, recursive: true);
-            }
-        }
+
+        // Retain ownership evidence when cleanup fails so disposal can retry safely.
+        _ciMtlsCertificateDirectory = null;
+        _ciMtlsBootstrapScript = null;
     }
 
     private static async Task RunCiDaprBootstrapScriptAsync(

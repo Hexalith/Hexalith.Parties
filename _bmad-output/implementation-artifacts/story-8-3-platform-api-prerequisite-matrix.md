@@ -48,7 +48,54 @@ retention action, and does not change Story 8.7's `blocked` status: the
 release adds Story 8.6's shared-projection rebuild completion mechanics only,
 not the G5 runtime engine.
 
-### Current source observation — 2026-10-13
+### Current source observation — 2026-10-16
+
+At Parties `493730941329d1bca3b4f6b2f6a67ffe305c2443`, the user's explicit
+CI-fix and release instruction selects the seven newer committed Builds, Commons,
+EventStore, FrontComposer, Memories, Platform, and Tenants pointers recorded
+under release owner jpiquot in `.gitlink-signoff.tsv`. All ten root checkouts
+match their committed gitlinks. The eight source dependencies
+used by the package/source fitness proof remain distinct from McpCli and
+Platform, which are selected root pointers but are not consumed by this G5
+proof. The imported Builds catalog still selects EventStore package `3.120.0`,
+Commons `2.30.1`, FrontComposer `4.6.0`, Memories `2.27.1`,
+Tenants `5.8.0`, and Parties `1.2.1`.
+
+The owned central catalog also pins SignalR.Common `10.0.13` with NuGet audit
+active; shared catalog source remains unchanged.
+
+The root Builds catalog selection at
+`9f0121c77e3f085c58f5c926057606db8e6511a7` is separate from the SHA-pinned
+release preparation and publication tooling in `.github/workflows/release.yml`,
+which executes at `397c94a4e246c90b21cf408790fa0d55bf32d795`.
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` | Instruction baseline. |
+| Builds | `9f0121c77e3f085c58f5c926057606db8e6511a7` (`v4.31.2-1-g9f0121c7`) | Imported package catalog and build tooling. |
+| Commons | `9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798` | Source fallback; selected package remains `2.30.1`. |
+| EventStore | `210b90da172cc7ca946fbb06cfd44390bffa707b` (`v3.122.0-1-g210b90da`) | Source inspection; runtime consumers restore package `3.120.0`. |
+| FrontComposer | `b06f86d554363ea5b8192cbc149a75c820dab2b8` (`v4.6.0-33-gb06f86d5`) | Selected package remains `4.6.0`. |
+| McpCli | `7e99305a621e1bdf7119b6e924348857e2b5a5a4` | Signed root pointer; not used for G5 proof. |
+| Memories | `99431f0fed102ea6ddbae33d28b9da4fc7f215a0` (`v2.28.1-99-g99431f0f`) | Selected package remains `2.27.1`. |
+| Platform | `c3af1f2c9e7b0d1b003a1bd5978545f664e38167` | Signed root pointer; not used for G5 proof. |
+| PolymorphicSerializations | `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` | Existing source dependency. |
+| Tenants | `51f404513f2657e98f949f58f0df43b99b68a7d0` (`v5.8.0-77-g51f40451`) | Selected package is `5.8.0`. |
+
+At the selected FrontComposer source, projection-connection and lifecycle
+components still delegate announcements to `FcSurfaceStatus`. Its shared
+status region now renders `aria-live="@(_suppressSpeech ? "off" : "polite")"`:
+suppressed speech selects `off`, and other announcements select `polite`.
+The marked matrix command checks this full conditional expression at the
+exact shared source file. This structural observation does not refresh
+accessibility or UI behavior parity; earlier runtime receipts retain their
+original identities.
+
+Selection does not revalidate historical parity receipts or authorize deletion
+of migration rollback paths. The dated approvals and prior test receipts below
+retain their original identities. G5 remains `needs-additive-api`.
+
+### Historical source observation — 2026-10-13
 
 At Parties `1e64c3e1bc37bb1cdfb0c4f1d7e2f174222984c9`, the user's explicit
 CI-fix and release instruction selects the six newer committed Builds,

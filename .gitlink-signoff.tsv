@@ -208,3 +208,15 @@ references/Hexalith.FrontComposer|c3174dc917b094f3736b098ac78a531f197dbe56|valid
 references/Hexalith.Memories|24b1fa7408eabc1db24b7536fd35f575c7a572a7|validated-advance|v2.28.1-88-g24b1fa74|jpiquot|2026-10-13
 references/Hexalith.Platform|be294641fe06490b7f1d9788f383512088842e7d|validated-advance|be294641|jpiquot|2026-10-13
 references/Hexalith.Tenants|ed7cef6e327156628c0479071f3bf419fd64612c|validated-advance|v5.8.0-63-ged7cef6e|jpiquot|2026-10-13
+
+# --- 2026-10-16 Parties release selection under the invoked
+#     spec-fix-ci-and-publish-release.md release authorization. These seven
+#     pointers are already committed at Parties 493730941329d1bca3b4f6b2f6a67ffe305c2443.
+#     Selection only; automated gates, historical parity and rollback remain.
+references/Hexalith.Builds|9f0121c77e3f085c58f5c926057606db8e6511a7|validated-advance|v4.31.2-1-g9f0121c7|jpiquot|2026-10-16
+references/Hexalith.Commons|9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798|validated-advance|v2.30.1-19-g9e874b1a|jpiquot|2026-10-16
+references/Hexalith.EventStore|210b90da172cc7ca946fbb06cfd44390bffa707b|validated-advance|v3.122.0-1-g210b90da|jpiquot|2026-10-16
+references/Hexalith.FrontComposer|b06f86d554363ea5b8192cbc149a75c820dab2b8|validated-advance|v4.6.0-33-gb06f86d5|jpiquot|2026-10-16
+references/Hexalith.Memories|99431f0fed102ea6ddbae33d28b9da4fc7f215a0|validated-advance|v2.28.1-99-g99431f0f|jpiquot|2026-10-16
+references/Hexalith.Platform|c3af1f2c9e7b0d1b003a1bd5978545f664e38167|validated-advance|c3af1f2c|jpiquot|2026-10-16
+references/Hexalith.Tenants|51f404513f2657e98f949f58f0df43b99b68a7d0|validated-advance|v5.8.0-77-g51f40451|jpiquot|2026-10-16

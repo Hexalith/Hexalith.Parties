@@ -1,0 +1,368 @@
+{
+  "date": "2026-10-16",
+  "partiesCommit": "493730941329d1bca3b4f6b2f6a67ffe305c2443",
+  "signalr": {
+    "ownedRestoredGraphs": [
+      {
+        "assets": "tests/Hexalith.Parties.Contracts.Tests/obj/project.assets.json",
+        "signalrCommon": "Microsoft.AspNetCore.SignalR.Common/10.0.13",
+        "nugetAudit": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "all"
+        }
+      },
+      {
+        "assets": "tests/Hexalith.Parties.UI.Tests/obj/project.assets.json",
+        "signalrCommon": "Microsoft.AspNetCore.SignalR.Common/10.0.13",
+        "nugetAudit": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "all"
+        }
+      },
+      {
+        "assets": "tests/Hexalith.Parties.ConsumerPortal.Tests/obj/project.assets.json",
+        "signalrCommon": "Microsoft.AspNetCore.SignalR.Common/10.0.13",
+        "nugetAudit": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "all"
+        }
+      },
+      {
+        "assets": "tests/Hexalith.Parties.Client.Tests/obj/project.assets.json",
+        "signalrCommon": "Microsoft.AspNetCore.SignalR.Common/10.0.13",
+        "nugetAudit": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "all"
+        }
+      },
+      {
+        "assets": "tests/Hexalith.Parties.AdminPortal.Tests/obj/project.assets.json",
+        "signalrCommon": "Microsoft.AspNetCore.SignalR.Common/10.0.13",
+        "nugetAudit": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "all"
+        }
+      }
+    ],
+    "uiCommonPackagePrunedByWebSdk": true,
+    "uiBuiltRuntimeFrameworks": [
+      {
+        "name": "Microsoft.NETCore.App",
+        "version": "10.0.13"
+      },
+      {
+        "name": "Microsoft.AspNetCore.App",
+        "version": "10.0.13"
+      }
+    ],
+    "uiPublishedRuntimeFrameworks": [
+      {
+        "name": "Microsoft.NETCore.App",
+        "version": "10.0.13"
+      },
+      {
+        "name": "Microsoft.AspNetCore.App",
+        "version": "10.0.13"
+      }
+    ],
+    "nugetAuditSuppressed": false
+  },
+  "tests": [
+    {
+      "project": "Hexalith.Parties.AdminPortal.Tests",
+      "total": 190,
+      "passed": 190,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "project": "Hexalith.Parties.Authentication.Tests",
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "project": "Hexalith.Parties.Ci.Tests",
+      "total": 116,
+      "passed": 116,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "project": "Hexalith.Parties.Client.Tests",
+      "total": 171,
+      "passed": 171,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "project": "Hexalith.Parties.ConsumerPortal.Tests",
+      "total": 82,
+      "passed": 82,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "project": "Hexalith.Parties.Contracts.Tests",
+      "total": 181,
+      "passed": 181,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "project": "Hexalith.Parties.IntegrationTests",
+      "total": 52,
+      "passed": 45,
+      "failed": 0,
+      "skipped": 7
+    },
+    {
+      "project": "Hexalith.Parties.Mcp.Tests",
+      "total": 94,
+      "passed": 94,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "project": "Hexalith.Parties.Picker.Tests",
+      "total": 171,
+      "passed": 171,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "project": "Hexalith.Parties.Projections.Tests",
+      "total": 236,
+      "passed": 236,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "project": "Hexalith.Parties.Sample.Tests",
+      "total": 58,
+      "passed": 58,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "project": "Hexalith.Parties.Security.Tests",
+      "total": 178,
+      "passed": 178,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "project": "Hexalith.Parties.Server.Tests",
+      "total": 259,
+      "passed": 259,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "project": "Hexalith.Parties.Tests",
+      "total": 928,
+      "passed": 928,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "project": "Hexalith.Parties.UI.Tests",
+      "total": 349,
+      "passed": 349,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "focused": {
+    "fixtureIsolationStartupAndCleanup": {
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mtlsBootstrapAndCleanup": {
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    "platformApiPrerequisites": {
+      "passed": 33,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "fullPackageModeBuild": {
+    "exitCode": 0,
+    "errors": 0,
+    "warnings": 2,
+    "warningOwner": "references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR",
+    "warning": "NU1903: upstream diagnostic source selects Microsoft.AspNetCore.SignalR.Common 10.0.12"
+  },
+  "packages": {
+    "version": "0.0.0-ci-test",
+    "packed": 9,
+    "metadataValid": 9,
+    "isolatedConsumersPassed": 2
+  },
+  "uiPublish": {
+    "serializedExitCode": 0,
+    "runtimeFrameworkVersion": "10.0.13",
+    "localRuntimeMaximum": "10.0.12",
+    "initialParallelAttempt": "MSB4166; recovered with -m:1"
+  },
+  "cleanup": {
+    "preexistingContainerCount": 4,
+    "preexistingContainersPreserved": true,
+    "fixtureRedisRemaining": false,
+    "scopedMtlsContainersRemaining": false,
+    "trustBundleDirectoriesRemaining": 0,
+    "additionalNonFixtureContainersObserved": 2,
+    "additionalContainersNote": "Two unrelated security/tunnel containers appeared from another session after the all-project cleanup snapshot; they were preserved."
+  },
+  "gitlinksChanged": false,
+  "liveGateway": {
+    "requiredMode": "GITHUB_ACTIONS=true",
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "blocker": "Sentry failed to add target /var/run/dapr/credentials: no space left on device (file watcher exhaustion)",
+    "log": "/tmp/parties-oct16-private-gateway-final.log"
+  },
+  "testTotals": {
+    "projects": 15,
+    "total": 3077,
+    "passed": 3070,
+    "failed": 0,
+    "skipped": 7
+  },
+  "parent_final_validation": {
+    "projects": 15,
+    "total": 3121,
+    "passed": 3114,
+    "failed": 0,
+    "skipped": 7,
+    "results": [
+      {
+        "project": "Hexalith.Parties.AdminPortal.Tests",
+        "total": 190,
+        "passed": 190,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "project": "Hexalith.Parties.Authentication.Tests",
+        "total": 12,
+        "passed": 12,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "project": "Hexalith.Parties.Ci.Tests",
+        "total": 128,
+        "passed": 128,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "project": "Hexalith.Parties.Client.Tests",
+        "total": 171,
+        "passed": 171,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "project": "Hexalith.Parties.ConsumerPortal.Tests",
+        "total": 82,
+        "passed": 82,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "project": "Hexalith.Parties.Contracts.Tests",
+        "total": 181,
+        "passed": 181,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "project": "Hexalith.Parties.IntegrationTests",
+        "total": 56,
+        "passed": 49,
+        "failed": 0,
+        "notExecuted": 7
+      },
+      {
+        "project": "Hexalith.Parties.Mcp.Tests",
+        "total": 94,
+        "passed": 94,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "project": "Hexalith.Parties.Picker.Tests",
+        "total": 171,
+        "passed": 171,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "project": "Hexalith.Parties.Projections.Tests",
+        "total": 236,
+        "passed": 236,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "project": "Hexalith.Parties.Sample.Tests",
+        "total": 58,
+        "passed": 58,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "project": "Hexalith.Parties.Security.Tests",
+        "total": 178,
+        "passed": 178,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "project": "Hexalith.Parties.Server.Tests",
+        "total": 259,
+        "passed": 259,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "project": "Hexalith.Parties.Tests",
+        "total": 956,
+        "passed": 956,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "project": "Hexalith.Parties.UI.Tests",
+        "total": 349,
+        "passed": 349,
+        "failed": 0,
+        "notExecuted": 0
+      }
+    ]
+  },
+  "commitlint": {
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/parties-ci-release-commit-message.txt"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "",
+    "candidate_sha256": "db1f565fd7076db71043a08b5cbb2e0388f5be85ec8a0479cb362ac9dd7b3e7e"
+  }
+}

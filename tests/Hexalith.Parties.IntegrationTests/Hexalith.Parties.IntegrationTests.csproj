@@ -43,4 +43,7 @@
              Link="DaprComponents\%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\TestInfrastructure.Shared\*.cs" Link="TestInfrastructure\%(Filename)%(Extension)" />
+  </ItemGroup>
 </Project>
