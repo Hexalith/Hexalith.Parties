@@ -59,11 +59,16 @@ internal static class PartiesTestRedis
         EndpointReference endpoint = redis.GetEndpoint("tcp");
         ReferenceExpression address = ReferenceExpression.Create(
             $"{endpoint.Property(EndpointProperty.Host)}:{endpoint.Property(EndpointProperty.Port)}");
+        // The Toolkit's value-provider overload emits secretKeyRef metadata but only its
+        // secret-parameter overload binds auth.secretStore. Keep the empty password in
+        // that supported path so redisHost resolves instead of falling back to localhost.
+        IResourceBuilder<ParameterResource> password = builder.AddParameter(
+            "fixture-redis-password", string.Empty, secret: true);
         foreach (DaprComponentResource component in components)
         {
             _ = builder.CreateResourceBuilder<IDaprComponentResource>(component.Name)
                 .WithMetadata("redisHost", address)
-                .WithMetadata("redisPassword", string.Empty);
+                .WithMetadata("redisPassword", password.Resource);
         }
 
         foreach (DaprSidecarAnnotation sidecar in sidecars)

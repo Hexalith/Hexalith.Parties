@@ -652,3 +652,41 @@ routing/image model tests passed, with an affected-project build at zero
 warnings/errors and a clean whitespace check. Red/green logs are
 `/tmp/parties-redis-image-{red,green}.log`. This is an automatic narrow patch;
 new exact-source full CI remains required before Release.
+
+### Private Redis secret-store binding correction
+
+Concurrent owner commit `50d731174981448d2cd96dad13bcbee65d8ce69f` retained
+both preceding CI fixes. Its exact-source push CI 38899711978 passed the
+Release build, all 3,065 Tier 1/2 tests across 14 projects, commitlint and
+CodeQL. Required Aspire still failed: 49 passed, six existing health skips,
+one gateway failure. Authenticated writer activation returned 200, but its
+marker was absent from the intended private Redis endpoint. Full job log:
+`/tmp/parties-ci-50d73117-aspire.log`.
+
+Review triage: **high / patch**. The Toolkit's IValueProvider metadata path
+emits a secretKeyRef without auth.secretStore. The Dapr runtime logged unloaded
+secret-store warnings and fell back to localhost Redis. An isolated causal
+reproduction with two owned Redis stores confirmed the missing binding writes
+to the fallback, while an explicit binding writes only to the intended private
+endpoint. No developer Redis was involved in that reproduction. The root
+marker key and hash field were correct. Reproduction evidence:
+`/tmp/parties-private-redis-routing-reproduction.log`.
+
+The narrow correction supplies the existing empty Redis password through the
+SDK's supported secret ParameterResource overload, causing both generated
+components to bind the environment secret store. Regression coverage now
+inspects rendered component YAML and every generated sidecar executable's
+resolved environment, including host/password references and keyPrefix:none.
+The authenticated activation and exact persisted-marker checks remain intact.
+Fresh exact-source full CI and Release are still required.
+
+The final targeted Release build passed with zero warnings/errors. All five
+PartiesTestRedisTests passed without skips. Restoring only the original
+empty-string-password overload made the exact new regression fail on missing
+YAML `auth`; restoring the correction and rebuilding returned all five tests
+to green. Logs: `/tmp/parties-private-redis-build.log`,
+`/tmp/parties-private-redis-tests.log` and
+`/tmp/parties-private-redis-regression-tests.log`. Parent inspection, whitespace,
+warning/submodule guard and working-tree gitlink gate pass. The exact commit
+message passed pinned commitlint; successful validation is preserved at
+`/tmp/parties-redis-secret-binding-commitlint.json`.

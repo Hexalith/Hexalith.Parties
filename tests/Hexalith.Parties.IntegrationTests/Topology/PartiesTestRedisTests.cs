@@ -2,13 +2,22 @@ extern alias apphost;
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Eventing;
+using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Testing;
 
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
 using Hexalith.Parties.IntegrationTests.HealthChecks;
 
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+using NSubstitute;
+
 using Shouldly;
+
+using YamlDotNet.RepresentationModel;
 
 namespace Hexalith.Parties.IntegrationTests.Topology;
 
@@ -34,17 +43,6 @@ public sealed class PartiesTestRedisTests
             DaprComponentResource[] components = builder.Resources.OfType<DaprComponentResource>()
                 .Where(component => component.Type is "state.redis" or "pubsub.redis" or "pubsub").ToArray();
             components.Length.ShouldBe(2);
-            foreach (DaprComponentResource component in components)
-            {
-                // These annotations are SDK-owned implementation types; use the public value-provider
-                // contract to verify the endpoint the SDK will resolve when generating component YAML.
-                object providerAnnotation = component.Annotations.Single(annotation =>
-                    annotation.GetType().Name == "DaprComponentValueProviderAnnotation");
-                var valueProvider = (IValueProvider)providerAnnotation.GetType().GetProperty("ValueProvider")!
-                    .GetValue(providerAnnotation)!;
-                (await valueProvider.GetValueAsync(TestContext.Current.CancellationToken)).ShouldBe("127.0.0.1:46379");
-            }
-
             DaprSidecarAnnotation[] sidecars = builder.Resources
                 .SelectMany(resource => resource.Annotations.OfType<DaprSidecarAnnotation>()).ToArray();
             sidecars.Length.ShouldBeGreaterThanOrEqualTo(5);
@@ -62,7 +60,96 @@ public sealed class PartiesTestRedisTests
                 (await address.GetValueAsync(TestContext.Current.CancellationToken)).ShouldBe("127.0.0.1:46379");
                 context.EnvironmentVariables["REDIS_PASSWORD"].ShouldBe(string.Empty);
             }
+
+            // Run the SDK's rendering hook without starting containers or sidecars. Inspect
+            // the actual files and environment passed to every generated Dapr executable.
+            IDistributedApplicationBuilder renderer = DistributedApplication.CreateBuilder(
+                new DistributedApplicationOptions { DisableDashboard = true });
+            renderer.Services.RemoveAll<IDistributedApplicationEventingSubscriber>();
+            renderer.AddDapr();
+            foreach (IResource resource in builder.Resources)
+            {
+                renderer.Resources.Add(resource);
+            }
+
+            DistributedApplication application = renderer.Build();
+            await using var applicationLifetime = application.ConfigureAwait(true);
+            DistributedApplicationModel model = application.Services.GetRequiredService<DistributedApplicationModel>();
+            IDistributedApplicationEventingSubscriber dapr = application.Services
+                .GetServices<IDistributedApplicationEventingSubscriber>()
+                .Single(subscriber => subscriber.GetType().Name == "DaprDistributedApplicationLifecycleHook");
+            var eventing = Substitute.For<IDistributedApplicationEventing>();
+            await dapr.SubscribeAsync(eventing, renderer.ExecutionContext, TestContext.Current.CancellationToken);
+            var render = (Func<BeforeStartEvent, CancellationToken, Task>)eventing.ReceivedCalls().Single().GetArguments()[0]!;
+            await render(new BeforeStartEvent(application.Services, model), TestContext.Current.CancellationToken);
+            ExecutableResource[] executables = model.Resources.OfType<ExecutableResource>()
+                .Where(resource => resource.Name.EndsWith("-dapr-cli", StringComparison.Ordinal)).ToArray();
+            executables.Length.ShouldBe(sidecars.Length);
+            foreach (ExecutableResource executable in executables)
+            {
+                var environment = new EnvironmentCallbackContext(
+                    builder.ExecutionContext, executable, new Dictionary<string, object>(), TestContext.Current.CancellationToken);
+                foreach (EnvironmentCallbackAnnotation callback in executable.Annotations.OfType<EnvironmentCallbackAnnotation>())
+                {
+                    await callback.Callback(environment);
+                }
+
+                var arguments = new List<object>();
+                var commandLine = new CommandLineArgsCallbackContext(arguments, executable, TestContext.Current.CancellationToken);
+                foreach (CommandLineArgsCallbackAnnotation callback in executable.Annotations.OfType<CommandLineArgsCallbackAnnotation>())
+                {
+                    await callback.Callback(commandLine);
+                }
+
+                string[] paths = arguments.Select((argument, index) => (argument, index))
+                    .Where(item => item.argument is "--resources-path")
+                    .Select(item => (string)arguments[item.index + 1]).ToArray();
+                DaprComponentReferenceAnnotation[] references = sidecars
+                    .Single(sidecar => executable.Name == $"{sidecar.Sidecar.Name}-cli")
+                    .Sidecar.Annotations.OfType<DaprComponentReferenceAnnotation>().ToArray();
+                if (references.Length == 0)
+                {
+                    paths.ShouldBeEmpty();
+                    continue;
+                }
+
+                paths.ShouldNotBeEmpty();
+                YamlMappingNode[] rendered = paths.SelectMany(path => Directory.GetFiles(path, "*.yaml"))
+                    .Select(ReadComponent).ToArray();
+                YamlMappingNode secretStore = rendered.Single(document =>
+                    document["metadata"]["name"].ToString() == "secretstore");
+                secretStore["spec"]["type"].ToString().ShouldBe("secretstores.local.env");
+                YamlMappingNode[] stores = rendered.Where(document =>
+                    document["spec"]["type"].ToString() is "state.redis" or "pubsub.redis").ToArray();
+                stores.Length.ShouldBe(references.Length);
+                foreach (YamlMappingNode store in stores)
+                {
+                    store["auth"]["secretStore"].ToString().ShouldBe("secretstore");
+                    var metadata = (YamlSequenceNode)store["spec"]["metadata"];
+                    YamlNode host = metadata.Children.Single(item => item["name"].ToString() == "redisHost");
+                    string hostVariable = host["secretKeyRef"]["name"].ToString();
+                    host["secretKeyRef"]["key"].ToString().ShouldBe(hostVariable);
+                    environment.EnvironmentVariables[hostVariable].ShouldBe("127.0.0.1:46379");
+                    YamlNode password = metadata.Children.Single(item => item["name"].ToString() == "redisPassword");
+                    string passwordVariable = password["secretKeyRef"]["name"].ToString();
+                    password["secretKeyRef"]["key"].ToString().ShouldBe(passwordVariable);
+                    environment.EnvironmentVariables[passwordVariable].ShouldBe(string.Empty);
+                    if (store["spec"]["type"].ToString() == "state.redis")
+                    {
+                        metadata.Children.Single(item => item["name"].ToString() == "keyPrefix")["value"]
+                            .ToString().ShouldBe("none");
+                    }
+                }
+            }
         }
+    }
+
+    private static YamlMappingNode ReadComponent(string path)
+    {
+        var yaml = new YamlStream();
+        using var reader = new StringReader(File.ReadAllText(path));
+        yaml.Load(reader);
+        return (YamlMappingNode)yaml.Documents.Single().RootNode;
     }
 
     [Fact]
