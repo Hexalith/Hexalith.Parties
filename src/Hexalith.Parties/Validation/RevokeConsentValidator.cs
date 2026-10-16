@@ -7,8 +7,14 @@ using SemanticId = Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier;
 
 namespace Hexalith.Parties.Validation;
 
+/// <summary>
+/// Validates consent revocation identifiers and optional reasons before command processing.
+/// </summary>
 public sealed class RevokeConsentValidator : AbstractValidator<RevokeConsent>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RevokeConsentValidator"/> class.
+    /// </summary>
     public RevokeConsentValidator()
     {
         RuleFor(x => x.PartyId)
@@ -28,5 +34,9 @@ public sealed class RevokeConsentValidator : AbstractValidator<RevokeConsent>
             .WithMessage("ConsentId is required.")
             .Must(ConsentIdentifier.IsValidConsentId)
             .WithMessage("ConsentId must be a support-safe identifier.");
+
+        RuleFor(x => x.Reason)
+            .MaximumLength(256)
+            .WithMessage("Reason must be no longer than 256 characters.");
     }
 }

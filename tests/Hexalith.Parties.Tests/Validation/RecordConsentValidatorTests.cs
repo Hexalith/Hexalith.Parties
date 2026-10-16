@@ -10,6 +10,42 @@ namespace Hexalith.Parties.Tests.Validation;
 
 public sealed class RecordConsentValidatorTests
 {
+    /// <summary>
+    /// Ensures every supported lawful basis remains valid.
+    /// </summary>
+    [Theory]
+    [InlineData(LawfulBasis.Consent)]
+    [InlineData(LawfulBasis.LegitimateInterest)]
+    [InlineData(LawfulBasis.ContractualNecessity)]
+    [InlineData(LawfulBasis.LegalObligation)]
+    public void Validate_DefinedLawfulBasis_Passes(LawfulBasis lawfulBasis)
+    {
+        RecordConsent command = CreateCommand("ch-email-1", "marketing") with { LawfulBasis = lawfulBasis };
+
+        ValidationResult result = new RecordConsentValidator().Validate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Ensures undefined lawful bases produce a fixed validation failure.
+    /// </summary>
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(4)]
+    [InlineData(int.MaxValue)]
+    public void Validate_UndefinedLawfulBasis_ReturnsBoundedFailure(int lawfulBasis)
+    {
+        RecordConsent command = CreateCommand("ch-email-1", "marketing") with { LawfulBasis = (LawfulBasis)lawfulBasis };
+
+        ValidationResult result = new RecordConsentValidator().Validate(command);
+
+        result.IsValid.ShouldBeFalse();
+        ValidationFailure failure = result.Errors.ShouldHaveSingleItem();
+        failure.PropertyName.ShouldBe(nameof(RecordConsent.LawfulBasis));
+        failure.ErrorMessage.ShouldBe("LawfulBasis must be a valid LawfulBasis.");
+    }
+
     [Theory]
     [InlineData("ch-email-1", "marketing")]
     [InlineData("a1b2c3d4-e5f6-7890-abcd-ef1234567890", " billing_1 ")]

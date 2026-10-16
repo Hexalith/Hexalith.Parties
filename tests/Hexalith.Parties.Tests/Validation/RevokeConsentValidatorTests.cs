@@ -9,6 +9,75 @@ namespace Hexalith.Parties.Tests.Validation;
 
 public sealed class RevokeConsentValidatorTests
 {
+    /// <summary>
+    /// Ensures revocation reasons remain optional and allow whitespace.
+    /// </summary>
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("\t\r\n")]
+    public void Validate_OptionalReason_Passes(string? reason)
+    {
+        RevokeConsent command = CreateCommand("consent-1") with { Reason = reason };
+
+        ValidationResult result = new RevokeConsentValidator().Validate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Ensures reasons at and below the length boundary remain accepted.
+    /// </summary>
+    [Theory]
+    [InlineData(1)]
+    [InlineData(255)]
+    [InlineData(256)]
+    public void Validate_ReasonWithinLimit_Passes(int length)
+    {
+        RevokeConsent command = CreateCommand("consent-1") with { Reason = new string('r', length) };
+
+        ValidationResult result = new RevokeConsentValidator().Validate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Ensures oversized reasons fail without including their contents in diagnostics.
+    /// </summary>
+    [Theory]
+    [InlineData(257)]
+    [InlineData(4096)]
+    public void Validate_ReasonExceedingLimit_ReturnsBoundedFailure(int length)
+    {
+        RevokeConsent command = CreateCommand("consent-1") with { Reason = new string('r', length) };
+
+        ValidationResult result = new RevokeConsentValidator().Validate(command);
+
+        result.IsValid.ShouldBeFalse();
+        ValidationFailure failure = result.Errors.ShouldHaveSingleItem();
+        failure.PropertyName.ShouldBe(nameof(RevokeConsent.Reason));
+        failure.ErrorMessage.ShouldBe("Reason must be no longer than 256 characters.");
+    }
+
+    /// <summary>
+    /// Ensures trailing whitespace is counted before reason normalization.
+    /// </summary>
+    [Theory]
+    [InlineData(' ')]
+    [InlineData('r')]
+    public void Validate_OversizedReasonWithTrailingSpace_ReturnsBoundedFailure(char character)
+    {
+        RevokeConsent command = CreateCommand("consent-1") with { Reason = new string(character, 256) + " " };
+
+        ValidationResult result = new RevokeConsentValidator().Validate(command);
+
+        result.IsValid.ShouldBeFalse();
+        ValidationFailure failure = result.Errors.ShouldHaveSingleItem();
+        failure.PropertyName.ShouldBe(nameof(RevokeConsent.Reason));
+        failure.ErrorMessage.ShouldBe("Reason must be no longer than 256 characters.");
+    }
+
     [Theory]
     [InlineData("consent-1")]
     [InlineData("ch-email-1:marketing")]

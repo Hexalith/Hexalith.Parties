@@ -231,6 +231,72 @@ public sealed class PartyDomainProcessorValidationTests
         await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
     }
 
+    /// <summary>
+    /// Ensures undefined lawful bases are rejected before protected state is read.
+    /// </summary>
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(4)]
+    [InlineData(int.MaxValue)]
+    public async Task ProcessAsync_UndefinedConsentLawfulBasis_ReturnsRejectionWithoutRehydration(int lawfulBasis)
+    {
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        PartyDomainProcessor invoker = CreateInvoker(protection);
+        CommandEnvelope command = CreateCommand(new RecordConsent
+        {
+            PartyId = "party-1",
+            TenantId = "tenant-a",
+            ChannelId = "ch-email-1",
+            Purpose = "marketing",
+            LawfulBasis = (LawfulBasis)lawfulBasis,
+        });
+        DomainServiceCurrentState currentState = CreateCurrentStateWithProtectedSnapshot(command);
+
+        DomainResult result = await invoker.ProcessAsync(command, currentState, TestContext.Current.CancellationToken);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyCommandValidationRejected rejection = result.Events
+            .ShouldHaveSingleItem()
+            .ShouldBeOfType<PartyCommandValidationRejected>();
+        rejection.CommandType.ShouldBe(typeof(RecordConsent).FullName);
+        rejection.Failures.ShouldHaveSingleItem().PropertyName.ShouldBe(nameof(RecordConsent.LawfulBasis));
+        rejection.Failures.ShouldHaveSingleItem().ErrorCode.ShouldBe("EnumValidator");
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+    }
+
+    /// <summary>
+    /// Ensures oversized reasons are rejected without reading protected state or echoing the reason.
+    /// </summary>
+    [Fact]
+    public async Task ProcessAsync_OversizedConsentRevocationReason_ReturnsBoundedRejectionWithoutRehydration()
+    {
+        string reason = new('r', 257);
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        PartyDomainProcessor invoker = CreateInvoker(protection);
+        CommandEnvelope command = CreateCommand(new RevokeConsent
+        {
+            PartyId = "party-1",
+            TenantId = "tenant-a",
+            ConsentId = "ch-email-1:marketing",
+            Reason = reason,
+        });
+        DomainServiceCurrentState currentState = CreateCurrentStateWithProtectedSnapshot(command);
+
+        DomainResult result = await invoker.ProcessAsync(command, currentState, TestContext.Current.CancellationToken);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyCommandValidationRejected rejection = result.Events
+            .ShouldHaveSingleItem()
+            .ShouldBeOfType<PartyCommandValidationRejected>();
+        rejection.CommandType.ShouldBe(typeof(RevokeConsent).FullName);
+        rejection.Failures.ShouldHaveSingleItem().PropertyName.ShouldBe(nameof(RevokeConsent.Reason));
+        JsonSerializer.Serialize(rejection).ShouldNotContain(reason, Case.Sensitive);
+        rejection.Failures.ShouldHaveSingleItem().ErrorCode.ShouldBe("MaximumLengthValidator");
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+    }
+
     [Fact]
     public async Task ProcessAsync_ValidCreatePartyPayload_ProducesDomainEvents()
     {

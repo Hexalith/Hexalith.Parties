@@ -905,6 +905,8 @@ source_spec: `spec-safe-consent-identifiers.md`
 severity: medium
 reason: AddContactChannelValidator, AddIdentifierValidator and CreatePartyValidator all call IsInEnum on their enum property, and RestrictProcessingValidator bounds Reason to 256 characters. RecordConsent carries LawfulBasis straight into ConsentRecorded, so an out-of-range cast is persisted. Deferred rather than patched because the intent contract's Never clause forbids changing lawful-basis behaviour; adding the rule would reject commands that are accepted today.
 status: open
+implementation: 2026-10-16 Validators and focused processor rejection tests implemented and reviewed; see spec-dw-119-consent-validation.md.
+validation_blocker: 86 focused tests pass; the full project retains 53 baseline gateway-fixture/source-receipt failures. Original-validator comparison confirms no new failures; keep open until the repository completion gate is green.
 decision: 2026-09-07 Tighten validation — Renegotiate the frozen contract, add IsInEnum for LawfulBasis, and cap revoke reasons at 256 characters. Propagate focused boundary tests without changing command or event wire shape.
 
 ### DW-120: The deterministic lowercased ConsentId can collide when two contact channels differ only by letter case, while the channel lookup itself is ordinal case-sensitive.
@@ -1523,3 +1525,11 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
   summary: Verify bounded Aspire shutdown before adding explicit teardown deadlines.
   evidence: Unverified medium: StopAsync and disposal lack caller-side bounds, but a nonterminating SDK shutdown path has not been reproduced; trace SDK host/DCP timeout behavior or demonstrate a hung owned process before changing cleanup semantics.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-119-consent-validation.md`
+  summary: Reconcile the isolated gateway fixture with the synced EventStore folded-snapshot qualification hosted service.
+  evidence: The final source-reference run fails 52 EventStoreGatewayRoutingTests cases at the explicit hosted-service snapshot before routing. The same failures occur with the original consent validators. Inspect FoldedSnapshotQualificationHostedService dependencies before deliberately revising KnownExcludedHostedServiceNames; evidence is in tests/dw-119-consent-validation-2026-10-16/validation.json.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-119-consent-validation.md`
+  summary: Refresh current-source dependency observations and fitness constants for the three root gitlinks advanced by the prior sync.
+  evidence: FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph expects the pre-sync EventStore, FrontComposer, and Tenants pointers while HEAD records the synced identities. It fails identically with the original consent validators. Update exact current observations without recertifying dated parity evidence or fabricating owner signoff; evidence is in tests/dw-119-consent-validation-2026-10-16/validation.json.
