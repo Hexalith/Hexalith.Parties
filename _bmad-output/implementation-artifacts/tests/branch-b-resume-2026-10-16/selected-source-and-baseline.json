@@ -1,0 +1,87 @@
+{
+  "Parties": {
+    "head": "493730941329d1bca3b4f6b2f6a67ffe305c2443"
+  },
+  "EventStore": {
+    "head": "0b38a562cd4fb6191a0c3c78a44b4c48d1f05390"
+  },
+  "Platform": {
+    "head": "9256c675186b020929d67230a22892bb13488bc2"
+  },
+  "src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs": {
+    "sha256": "88aca1d2fe18260b7ed4393c30e348fcd75c7c03fa699b37af656e6abacdaa38",
+    "crlf": 310,
+    "bareLf": 0
+  },
+  "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": {
+    "sha256": "b7010999b0e388afe6437dfb92cc1a33b7321a46ff38fb0261c290340b2b33a1",
+    "crlf": 1814,
+    "bareLf": 0
+  },
+  "baseline": {
+    "partiesWaitHealthyExitCode": 0,
+    "explicitAppHostStopped": true,
+    "resources": [
+      {
+        "name": "eventstore-admin-dapr-cli-hbdyrzbs",
+        "state": "Running"
+      },
+      {
+        "name": "eventstore-admin-qrrjvdpd",
+        "state": "Running"
+      },
+      {
+        "name": "eventstore-admin-ui-dapr-cli-dutwbqvj",
+        "state": "Running"
+      },
+      {
+        "name": "eventstore-admin-ui-swvzkgnv",
+        "state": "NotStarted"
+      },
+      {
+        "name": "eventstore-dapr-cli-ufarephg",
+        "state": "Running"
+      },
+      {
+        "name": "eventstore-nrxwvenp",
+        "state": "Running"
+      },
+      {
+        "name": "parties-bjwxwvrc",
+        "state": "Running"
+      },
+      {
+        "name": "parties-dapr-cli-chtsrrwy",
+        "state": "Running"
+      },
+      {
+        "name": "parties-mcp-xjuvyvxy",
+        "state": "NotStarted"
+      },
+      {
+        "name": "parties-ui-bhudxjyr",
+        "state": "Running"
+      },
+      {
+        "name": "security-eventstore-client-password",
+        "state": "Running"
+      },
+      {
+        "name": "security-eventstore-client-username",
+        "state": "Running"
+      },
+      {
+        "name": "security-tqrjwvaf",
+        "state": "Running"
+      },
+      {
+        "name": "tenants-dapr-cli-ncersznv",
+        "state": "Running"
+      },
+      {
+        "name": "tenants-htcgubdu",
+        "state": "Running"
+      }
+    ]
+  }
+}

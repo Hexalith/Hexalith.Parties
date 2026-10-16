@@ -1,0 +1,146 @@
+{
+  "scope": "Independent parent audit of the current-attribution continuation; no new complete Local pass or installed acceptance.",
+  "passed": 406,
+  "requiredClasses": {
+    "PartyIdentityRetentionConfigurationTests": 6,
+    "PartyIdentityQueryHandlerTests": 204,
+    "PartySdkQueryHandlerTests": 54,
+    "PartyDomainProcessorValidationTests": 44,
+    "PartiesProcessEndpointTests": 13,
+    "PartiesDomainServiceSecurityTests": 35,
+    "PartyIdentityAdmissionTests": 50
+  },
+  "regressionFailuresBefore": 26,
+  "regressionsPassingAfter": 26,
+  "validSuccessorControls": 2,
+  "hashChecks": {
+    "sourcesSha256": {
+      "checked": 8,
+      "allMatch": true
+    },
+    "artifactsSha256": {
+      "checked": 4,
+      "allMatch": true
+    },
+    "retainedFilesSha256": {
+      "checked": 12,
+      "allMatch": true
+    }
+  },
+  "matrixCoverage": {
+    "Provision": [
+      {
+        "name": "Hexalith.Parties.Server.Tests.Aggregates.AgentPartyProvisioningTests.RejectionOnlyStream_AllowsCreationWhileUnmarkedOrganizationConflicts",
+        "receipt": "Hexalith.Parties.Server.Tests-tests.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Server.Tests.Aggregates.AgentPartyProvisioningTests.ExactLostAckRetry_ReturnsOriginalWithoutAnotherCreationAndRejectsChangedIntent",
+        "receipt": "Hexalith.Parties.Server.Tests-tests.xml"
+      }
+    ],
+    "Current identity": [
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: null)",
+        "receipt": "current-attribution/final.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: \\\"01HX0000000000000000000002\\\")",
+        "receipt": "current-attribution/final.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: null)",
+        "receipt": "current-attribution/final.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: \\\"01HX0000000000000000000002\\\")",
+        "receipt": "current-attribution/final.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InactiveOrRestrictedHuman_ReturnsIneligibleWithoutUsableBinding(inactive: True)",
+        "receipt": "current-attribution/final.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InactiveOrRestrictedHuman_ReturnsIneligibleWithoutUsableBinding(inactive: False)",
+        "receipt": "current-attribution/final.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentHuman_RequiresCompleteSourceAndCurrentExactActor",
+        "receipt": "current-attribution/final.xml"
+      }
+    ],
+    "History": [
+      {
+        "name": "Hexalith.Parties.Server.Tests.Aggregates.HumanActorBindingTests.SharedBoundary_PreservesActorVersionAndClosesPredecessor",
+        "receipt": "Hexalith.Parties.Server.Tests-tests.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.HistoricalReplay_BeforeBoundaryReturnsOriginalAndAtBoundaryReturnsSuccessor",
+        "receipt": "current-attribution/final.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.SerializedRetainedSource_ReconstructsBothIntervalsWithoutProfileOrCurrentBinding",
+        "receipt": "current-attribution/final.xml"
+      }
+    ],
+    "Isolation": [
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: null)",
+        "receipt": "current-attribution/final.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: \\\"01HX0000000000000000000002\\\")",
+        "receipt": "current-attribution/final.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: null)",
+        "receipt": "current-attribution/final.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: \\\"01HX0000000000000000000002\\\")",
+        "receipt": "current-attribution/final.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.WrongAuthorizedActor_DeniesBeforeSourceRead",
+        "receipt": "current-attribution/final.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Client.Tests.HttpPartiesIdentityClientTests.ConcurrentTenantCalls_KeepEveryRequestAndEvidenceInItsExplicitScope",
+        "receipt": "Hexalith.Parties.Client.Tests-tests.xml"
+      }
+    ]
+  },
+  "matrixReceiptScope": "Current 406-case domain receipt plus prior complete Local provision/client receipts, retained separately; no combined new complete Local result.",
+  "frozenIntentUnchanged": true,
+  "originalBaselinePreserved": true,
+  "status": "in-progress",
+  "openProductionTasks": 2,
+  "utf8CrLf": true,
+  "whitespaceCheckExitCode": 0,
+  "baselineDiff": {
+    "path": "/tmp/ext-parties-1-baseline-bwvxub_2.diff",
+    "sha256": "bb75929044032c03cdfa2880b2b9c9265b15c3b93914d067e1ce290626bf8577",
+    "scope": "Full baseline diff retained; human-readable inspection focused on current source/test changes, not all unrelated historical changes."
+  },
+  "priorMatrixReceiptHashes": [
+    {
+      "file": "Hexalith.Parties.Server.Tests-tests.xml",
+      "sha256": "2dff0401c47c1054a9ce35a5c2cb4d8af58cc5b042a1403973bad9140ff0631b"
+    },
+    {
+      "file": "Hexalith.Parties.Client.Tests-tests.xml",
+      "sha256": "891f90360e73a139144a3ea9eaf23a2b7dc155ba66ddc23b0de59ddb35c20089"
+    }
+  ],
+  "productionBlockerInspection": {
+    "command": "rg -n IIdentityHistoryCustody /home/administrator/projects/hexalith/platform/src",
+    "exitCode": 0,
+    "result": [
+      "/home/administrator/projects/hexalith/platform/src/Hexalith.Platform.Custody/IdentityHistoryCleanup.cs:10:public sealed class IdentityHistoryCleanup(TimeProvider clock, IIdentityHistoryCustody? custody = null)",
+      "/home/administrator/projects/hexalith/platform/src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs:21:            provider.GetRequiredService<TimeProvider>(), provider.GetService<IIdentityHistoryCustody>()));"
+    ],
+    "registrationFile": "/home/administrator/projects/hexalith/platform/src/Hexalith.Platform.Custody/PlatformCustodyServiceCollectionExtensions.cs",
+    "registrationSha256": "564f7715fa04df908c1b49d0598a3eb9ca374c37338bd13d6c22d56cb0bf09f8",
+    "conclusion": "Inspected Platform source consumes an optional custody provider in cleanup and does not implement/register a production provider. Installed qualification was not run.",
+    "dependencyRegister": "EXT-PARTIES-1 is Committed, not Available; commitment does not establish installed qualification."
+  }
+}

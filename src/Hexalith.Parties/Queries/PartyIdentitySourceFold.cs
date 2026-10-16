@@ -61,6 +61,11 @@ public static class PartyIdentitySourceFold
                 throw new InvalidOperationException("Identity source attribution follows its observation.");
             }
 
+            if (value is HumanActorBindingRevoked revocation && !HasCompleteCustody(revocation.Custody))
+            {
+                throw new InvalidOperationException("Identity source revocation custody is unsupported.");
+            }
+
             if (value is AgentPartyProvisioned marker && (marker.Result.Identity.TenantId != stream.Identity.TenantId
                 || marker.Result.Identity.PartyId != stream.Identity.AggregateId || marker.Result.ProvisioningRevision != sequence))
             {
@@ -70,12 +75,31 @@ public static class PartyIdentitySourceFold
             _ = apply.Invoke(state, [value]);
         }
 
+        var logicalIds = new HashSet<string>(StringComparer.Ordinal);
         if (sequence != stream.Head || state.HumanActorBindings.Any(binding =>
-                binding.Evidence.TenantId != stream.Identity.TenantId || binding.Evidence.PartyId != stream.Identity.AggregateId))
+                binding.Evidence.TenantId != stream.Identity.TenantId || binding.Evidence.PartyId != stream.Identity.AggregateId
+                || !HasCompleteAttribution(binding))
+            || state.HumanActorTransitions.Any(transition => string.IsNullOrWhiteSpace(transition.LogicalId)
+                || string.IsNullOrWhiteSpace(transition.IntentDigest) || !logicalIds.Add(transition.LogicalId)))
         {
-            throw new InvalidOperationException("Identity source scope differs from history.");
+            throw new InvalidOperationException("Identity source scope or attribution history is unsupported.");
         }
 
         return state;
     }
+
+    private static bool HasCompleteAttribution(HumanActorBinding binding)
+        => binding.Evidence.ActorRevision > 0 && IsCanonicalActorId(binding.Evidence.ActorId)
+            && !string.IsNullOrWhiteSpace(binding.Evidence.SourceId)
+            && !string.IsNullOrWhiteSpace(binding.Evidence.ProvenanceId)
+            && HasCompleteCustody(binding.Evidence.Custody);
+
+    private static bool HasCompleteCustody(IdentityHistoryCustodyEvidence? evidence)
+        => evidence is { Purpose: RetainedIdentityHistoryReadRequest.AttributionPurpose, LifecycleRevision: > 0,
+                SourceExpiryEnforced: true, RestoreSafe: true, DerivedCopiesCovered: true }
+            && !string.IsNullOrWhiteSpace(evidence.PolicyId) && !string.IsNullOrWhiteSpace(evidence.EvidenceId);
+
+    private static bool IsCanonicalActorId(string? actorId)
+        => actorId is { Length: 26 } && actorId[0] <= '7'
+            && actorId.All(character => "0123456789ABCDEFGHJKMNPQRSTVWXYZ".Contains(character, StringComparison.Ordinal));
 }

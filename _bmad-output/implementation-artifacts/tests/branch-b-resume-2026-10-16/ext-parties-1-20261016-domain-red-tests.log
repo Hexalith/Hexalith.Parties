@@ -1,0 +1,43 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.12)
+  Discovering: Hexalith.Parties.Tests
+  Discovered:  Hexalith.Parties.Tests
+  Starting:    Hexalith.Parties.Tests
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: null) [FAIL]
+      System.IO.FileNotFoundException : Could not load file or assembly 'Hexalith.EventStore.Contracts, Version=3.122.0.0, Culture=neutral, PublicKeyToken=null'. The system cannot find the file specified.
+      
+      Stack Trace:
+           at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor)
+           at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+           at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor)
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: "01HX0000000000000000000002") [FAIL]
+      System.IO.FileNotFoundException : Could not load file or assembly 'Hexalith.EventStore.Contracts, Version=3.122.0.0, Culture=neutral, PublicKeyToken=null'. The system cannot find the file specified.
+      
+      Stack Trace:
+           at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor)
+           at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+           at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor)
+           at InvokeStub_PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: null) [FAIL]
+      System.IO.FileNotFoundException : Could not load file or assembly 'Hexalith.EventStore.Contracts, Version=3.122.0.0, Culture=neutral, PublicKeyToken=null'. The system cannot find the file specified.
+      
+      Stack Trace:
+           at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor)
+           at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+           at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor)
+           at InvokeStub_PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: "01HX0000000000000000000002") [FAIL]
+      System.IO.FileNotFoundException : Could not load file or assembly 'Hexalith.EventStore.Contracts, Version=3.122.0.0, Culture=neutral, PublicKeyToken=null'. The system cannot find the file specified.
+      
+      Stack Trace:
+           at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor)
+           at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+           at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor)
+           at InvokeStub_PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Finished:    Hexalith.Parties.Tests (ID = '4b8b23ea21c7659404adc43f2d3e72dcbfd03c65e47711ca0be100f5da2eaf1d')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 4, Errors: 0, Failed: 4, Skipped: 0, Not Run: 0, Time: 0.106s

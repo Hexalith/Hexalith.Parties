@@ -1,0 +1,210 @@
+<assemblies schema-version="3" id="2eed956a-f912-4b77-863d-9f7f59b62f0a" computer="DESKTOP-VIOG240" user="administrator" start-rtf="2026-10-16T11:35:51.2753455+00:00" finish-rtf="2026-10-16T11:35:51.5591143+00:00" timestamp="10/16/2026 13:35:51"><assembly environment="64-bit (x64) .NET 10.0.12 [collection-per-class, parallel (collections, 14 threads)]" id="65400e3a-ddda-4229-ad47-6cffdd7c9598" name="/tmp/ext-parties-1-20261016/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll" run-date="2026-10-16" run-time="11:35:51" start-rtf="2026-10-16T11:35:51.2753455+00:00" test-framework="xUnit.net v3 4.0.2+0c7aa4991f" target-framework=".NETCoreApp,Version=v10.0" errors="0" failed="19" finish-rtf="2026-10-16T11:35:51.5591143+00:00" not-run="0" passed="0" skipped="0" time="0.284" time-rtf="00:00:00.2839999" total="19"><collection name="Test collection for Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests (id: 888973c97a01ea9dc810b716c23f8fb67bf522b21d9ff81f71e9f48acab88488)" id="0ffb2cd8-ffff-45c0-9b27-3817af17c0d1" failed="19" not-run="0" passed="0" skipped="0" time="0.173" time-rtf="00:00:00.1729999" total="19"><test id="df12d7d2-ae86-4c59-a4de-dd806fd2ffe1" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;actor-revision\&quot;, hasSuccessor: False)" result="Fail" time="0.155" time-rtf="00:00:00.1550000" start-rtf="2026-10-16T11:35:51.3424055+00:00" finish-rtf="2026-10-16T11:35:51.5099470+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="e2b2ed55-1650-4292-af39-0ac7830679f3" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;custody-derived\&quot;, hasSuccessor: True)" result="Fail" time="0.005" time-rtf="00:00:00.0050000" start-rtf="2026-10-16T11:35:51.5122881+00:00" finish-rtf="2026-10-16T11:35:51.5183132+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="2b98a40b-33a7-4fe0-bb43-2b2a9f7f14e7" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;custody-restore\&quot;, hasSuccessor: True)" result="Fail" time="0.001" time-rtf="00:00:00.0010000" start-rtf="2026-10-16T11:35:51.5183722+00:00" finish-rtf="2026-10-16T11:35:51.5197541+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="3671e935-50c9-4815-b898-0562d6c5de66" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;custody-source-expiry\&quot;, hasSuccessor: True)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5198110+00:00" finish-rtf="2026-10-16T11:35:51.5208625+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="f85b4941-79bd-4073-8a9e-86a20ffd55c8" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;custody-policy\&quot;, hasSuccessor: True)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5209050+00:00" finish-rtf="2026-10-16T11:35:51.5219053+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="240f07d5-475c-4bb3-9732-37a1e94199f4" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;custody-purpose\&quot;, hasSuccessor: True)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5219467+00:00" finish-rtf="2026-10-16T11:35:51.5228738+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="3e32f422-531a-480b-b8e6-bfe0d606ac1f" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;custody-revision\&quot;, hasSuccessor: True)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5229146+00:00" finish-rtf="2026-10-16T11:35:51.5238551+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="22314dae-6680-4e5e-8c8d-8d8b8f8afe85" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;custody-evidence\&quot;, hasSuccessor: True)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5238957+00:00" finish-rtf="2026-10-16T11:35:51.5248748+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="9fa35447-b358-4855-acfe-0fba93771c29" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;actor-id\&quot;, hasSuccessor: True)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5249215+00:00" finish-rtf="2026-10-16T11:35:51.5259062+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="104b0a14-7898-45ce-babe-7a28072df90a" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;intent-digest\&quot;, hasSuccessor: True)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5259468+00:00" finish-rtf="2026-10-16T11:35:51.5269141+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="31007e04-99d7-4129-be6b-c4f2c965908a" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;logical-id\&quot;, hasSuccessor: True)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5269539+00:00" finish-rtf="2026-10-16T11:35:51.5278051+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="9ba4d568-cc27-4dff-9bc9-4d0209f24cba" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;logical-id\&quot;, hasSuccessor: False)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5278457+00:00" finish-rtf="2026-10-16T11:35:51.5288108+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="55ed02ac-5b85-47cf-8f27-be23708d2845" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;provenance\&quot;, hasSuccessor: True)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5288369+00:00" finish-rtf="2026-10-16T11:35:51.5297855+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="3c54a0cd-2bce-4ccb-9590-104004d70b53" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;provenance\&quot;, hasSuccessor: False)" result="Fail" time="0.011" time-rtf="00:00:00.0110000" start-rtf="2026-10-16T11:35:51.5298309+00:00" finish-rtf="2026-10-16T11:35:51.5414767+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="89aec787-0827-4ace-8eb3-9a3a43c788ef" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;source\&quot;, hasSuccessor: True)" result="Fail" time="0.001" time-rtf="00:00:00.0010000" start-rtf="2026-10-16T11:35:51.5415528+00:00" finish-rtf="2026-10-16T11:35:51.5432030+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="0d0f2cbd-506e-4bff-96fd-77f7417100ee" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;source\&quot;, hasSuccessor: False)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5432577+00:00" finish-rtf="2026-10-16T11:35:51.5442112+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="1f61ac6a-9e93-4dc4-96cb-d897c96bba44" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;actor-revision\&quot;, hasSuccessor: True)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5442625+00:00" finish-rtf="2026-10-16T11:35:51.5451140+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="4683c446-416d-48e2-b47e-3d4137fac09e" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;intent-digest\&quot;, hasSuccessor: False)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5451607+00:00" finish-rtf="2026-10-16T11:35:51.5459196+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="7a39797b-d742-42a6-a343-5e981b29e3ff" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(corruption: \&quot;duplicate-logical-id\&quot;, hasSuccessor: True)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:35:51.5459636+00:00" finish-rtf="2026-10-16T11:35:51.5467878+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="IncompleteCurrentAttributionHistory_DeniesBeforeCustody" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="125"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentAttributionHistory_DeniesBeforeCustody(String corruption, Boolean hasSuccessor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 178
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test></collection></assembly></assemblies>

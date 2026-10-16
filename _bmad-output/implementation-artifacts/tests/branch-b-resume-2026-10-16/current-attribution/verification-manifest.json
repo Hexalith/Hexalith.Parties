@@ -1,0 +1,111 @@
+{
+  "recordedAt": "2026-10-16T11:39:56.500230+00:00",
+  "scope": "Focused current-attribution continuation; not a new complete Local pass, compiled-document PDB audit, whole-graph assertion or installed acceptance.",
+  "commands": [
+    {
+      "phase": "initial-red-build",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-20261016/artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-20261016/optional-memories-package-mode -p:HexalithEventStoreVersion=3.122.0 -p:NuGetAudit=false -m:1 > /tmp/ext-parties-1-implement-20261016-red-build.log 2>&1",
+      "exit": 0
+    },
+    {
+      "phase": "initial-red",
+      "command": "dotnet /tmp/ext-parties-1-20261016/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll -method '*IncompleteCurrentAttributionHistory_DeniesBeforeCustody' -result-xml /tmp/ext-parties-1-implement-20261016-red.xml > /tmp/ext-parties-1-implement-20261016-red.log 2>&1",
+      "exit": 1
+    },
+    {
+      "phase": "revocation-red-build",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-20261016/artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-20261016/optional-memories-package-mode -p:HexalithEventStoreVersion=3.122.0 -p:NuGetAudit=false -m:1 > /tmp/ext-parties-1-implement-20261016-revocation-red-build.log 2>&1",
+      "exit": 0
+    },
+    {
+      "phase": "revocation-red",
+      "command": "dotnet /tmp/ext-parties-1-20261016/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll -method '*IncompleteCurrentRevocationHistory_DeniesBeforeCustody' -result-xml /tmp/ext-parties-1-implement-20261016-revocation-red.xml > /tmp/ext-parties-1-implement-20261016-revocation-red.log 2>&1",
+      "exit": 1
+    },
+    {
+      "phase": "final-build",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-20261016/artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-20261016/optional-memories-package-mode -p:HexalithEventStoreVersion=3.122.0 -p:NuGetAudit=false -m:1 > /tmp/ext-parties-1-implement-20261016-final-build.log 2>&1",
+      "exit": 0
+    },
+    {
+      "phase": "final",
+      "command": "dotnet /tmp/ext-parties-1-20261016/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll -class '*PartyIdentityAdmissionTests' -class '*PartyIdentityQueryHandlerTests' -class '*PartyIdentityRetentionConfigurationTests' -class '*PartyDomainProcessorValidationTests' -class '*PartySdkQueryHandlerTests' -class '*PartiesProcessEndpointTests' -class '*PartiesDomainServiceSecurityTests' -result-xml /tmp/ext-parties-1-implement-20261016-final.xml > /tmp/ext-parties-1-implement-20261016-final.log 2>&1",
+      "exit": 0
+    }
+  ],
+  "failingBefore": [
+    {
+      "xml": "red.xml",
+      "executed": 19,
+      "failed": 19,
+      "actualOutcome": "Resolved",
+      "expectedOutcome": "Unavailable"
+    },
+    {
+      "xml": "revocation-red.xml",
+      "executed": 7,
+      "failed": 7,
+      "actualOutcome": "Resolved",
+      "expectedOutcome": "Unavailable"
+    }
+  ],
+  "final": {
+    "xml": "final.xml",
+    "passed": 406,
+    "failed": 0,
+    "skipped": 0,
+    "notRun": 0,
+    "classes": {
+      "PartyIdentityAdmissionTests": 50,
+      "PartyIdentityQueryHandlerTests": 204,
+      "PartyIdentityRetentionConfigurationTests": 6,
+      "PartyDomainProcessorValidationTests": 44,
+      "PartySdkQueryHandlerTests": 54,
+      "PartiesProcessEndpointTests": 13,
+      "PartiesDomainServiceSecurityTests": 35
+    },
+    "queryNewDenials": 26,
+    "queryNewValidControls": 2
+  },
+  "sourcesSha256": {
+    "src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs": "c28ff35167ee411a41f178a78809e9e6dff216e1d015257cab2cf483ddb997b6",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs": "88aca1d2fe18260b7ed4393c30e348fcd75c7c03fa699b37af656e6abacdaa38",
+    "src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs": "9dbb51ce5afc84e8e14fea9e061602e5a0c6cedb9a2911f1246f16646e02423e",
+    "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs": "f88a5c782a5055d2476acf76565424e95642dacc1cc5bb600cf17cfab9bb5ee5",
+    "src/Hexalith.Parties.Contracts/State/PartyState.cs": "1bcc31a33f950317bc1078fed04e094071c9d09de6122b146c2eff6857c43961",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "7d118e96211a4762bdf89c1cf758f74f587f2bd8997439d1dbacf8412f93c06a",
+    "eng/verify-ext-parties-1.ps1": "63e8d7974b267f8baa8a8d14ae1e50503836de5aee21a589240dc55e36277bb1",
+    "_bmad-output/implementation-artifacts/spec-ext-parties-1-branch-b-authoritative-identity.md": "4e4445de9c4d2bdaba7e26e16b82410007b7c12fb39fd07bbeddf009de8d5cd7"
+  },
+  "artifactsSha256": {
+    "/tmp/ext-parties-1-20261016/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll": "485ce01d8688e6ba43f13c758220f0509d53eb1a3afd3975bff8a84d245781cb",
+    "/tmp/ext-parties-1-20261016/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.pdb": "a02676efff57b67c5584db6d6e448604f13e413ab81614cacd7c5311586f3647",
+    "/tmp/ext-parties-1-20261016/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.dll": "bb0d2e14550c8404fe1506bad3e5d997a144076898b34fc59ac5ad58e3c1a9ad",
+    "/tmp/ext-parties-1-20261016/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.pdb": "51e25d8f48f78b7ee5058228d17a3855779adc9d8e33a4a1e775dd4372be0ab6"
+  },
+  "retainedFilesSha256": {
+    "final-build.log": "5e2153da3d1c38bb127216f9a1c25c631e4f562fbbbcefeb7fae3c8f4ca17b56",
+    "revocation-red.xml": "db517cc3901aaa37a0f06ad4e570cd7546547f6ec68a842d19e4a8f8ef2d5111",
+    "revocation-red-build.log": "4f8c688722887634d80be96dad5a5f468c1bde025bcbd722f9c6d5e895897c22",
+    "final.log": "ba7af007139ef1a299954d18012658b883a55cac2a6324b318ce47f1c3364189",
+    "revocation-red.log": "92885721dbd351bf192eb7e136a8ab21d848f9882960a31673d441cc00731f2d",
+    "baseline-resources.json": "73215d17cebf7ac58d49e017b00939160babd489c1d698f44caa91d7b1c0280c",
+    "red.log": "e44d0fe9c870a6e84afe86334c99b74aafe0d392075c88ed57b202896b2ab1e5",
+    "baseline-stop.log": "bf49d5e492f84354743815419a7c6859da4af309f2f95d997ab8887f2503257d",
+    "red.xml": "8cafe6c3a8ea7cdb6bc35547c7cd7b95cf795b2126dee605622797859146a541",
+    "red-build.log": "fd5ad926c6d38ae3839a559d3d0771e9359b0a02fc4742d3db84aa5c4ac680c0",
+    "baseline-wait.log": "a5376e2e70d3f3f0d6492d99ba0a4053d9bffef442ffd1e67061b4ba3bcab977",
+    "final.xml": "8029e82b9cb89014f0cd912a2488242e25e3de5e2f05a38b16229848186a1647"
+  },
+  "frozenIntentSha256": "80b5cb8795f4bbf7f92cb6715564ad5e1c87b1d4159fd78e877f29c2cfd2d81f",
+  "baselineCommit": "5388884eec84b16545fdc008b2fc04547b0ed5b6",
+  "baseline": {
+    "startCommand": "env UseHexalithProjectReferences=true UseNuGetDeps=false aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --non-interactive --format Json",
+    "waitCommand": "aspire wait parties --status healthy --timeout 30 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "describeCommand": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --format Json",
+    "stopCommand": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "allExitCodes": 0,
+    "parties": "Healthy",
+    "stopped": true
+  }
+}

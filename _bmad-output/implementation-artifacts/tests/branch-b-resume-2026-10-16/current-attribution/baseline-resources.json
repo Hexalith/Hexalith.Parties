@@ -1,0 +1,110 @@
+{
+  "resources": [
+    {
+      "name": "eventstore-admin-dapr-cli-ryvzrbym",
+      "displayName": "eventstore-admin-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "eventstore-admin-tevbbsas",
+      "displayName": "eventstore-admin",
+      "resourceType": "Project",
+      "state": "Finished",
+      "healthStatus": null
+    },
+    {
+      "name": "eventstore-admin-ui-dapr-cli-hpdxjydd",
+      "displayName": "eventstore-admin-ui-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "eventstore-admin-ui-ptbzketb",
+      "displayName": "eventstore-admin-ui",
+      "resourceType": "Project",
+      "state": "NotStarted",
+      "healthStatus": null
+    },
+    {
+      "name": "eventstore-dapr-cli-pufmeqyp",
+      "displayName": "eventstore-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "eventstore-vkcnqxuk",
+      "displayName": "eventstore",
+      "resourceType": "Project",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "parties-dapr-cli-hpkspmsj",
+      "displayName": "parties-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "parties-kwcmuqpd",
+      "displayName": "parties",
+      "resourceType": "Project",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "parties-mcp-vcxtfezm",
+      "displayName": "parties-mcp",
+      "resourceType": "Project",
+      "state": "NotStarted",
+      "healthStatus": null
+    },
+    {
+      "name": "parties-ui-kqdvdfvz",
+      "displayName": "parties-ui",
+      "resourceType": "Project",
+      "state": "Finished",
+      "healthStatus": null
+    },
+    {
+      "name": "security-eudfckbc",
+      "displayName": "security",
+      "resourceType": "Container",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "security-eventstore-client-password",
+      "displayName": "security-eventstore-client-password",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "security-eventstore-client-username",
+      "displayName": "security-eventstore-client-username",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "tenants-cgvryrwp",
+      "displayName": "tenants",
+      "resourceType": "Project",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "tenants-dapr-cli-ghpayhch",
+      "displayName": "tenants-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    }
+  ],
+  "scope": "Local isolated topology state only; no identity endpoint or installed operation."
+}

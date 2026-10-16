@@ -1,0 +1,104 @@
+{
+  "passed": 1693,
+  "requiredClasses": 57,
+  "lanes": [
+    {
+      "project": "Hexalith.EventStore.Contracts.Tests",
+      "passed": 37,
+      "requiredClasses": 3
+    },
+    {
+      "project": "Hexalith.EventStore.Client.Tests",
+      "passed": 343,
+      "requiredClasses": 10
+    },
+    {
+      "project": "Hexalith.EventStore.Server.Tests",
+      "passed": 406,
+      "requiredClasses": 14
+    },
+    {
+      "project": "Hexalith.EventStore.PayloadProtection.Tests",
+      "passed": 33,
+      "requiredClasses": 2
+    },
+    {
+      "project": "Hexalith.Platform.Identity.Tests",
+      "passed": 2,
+      "requiredClasses": 1
+    },
+    {
+      "project": "Hexalith.Platform.Custody.Tests",
+      "passed": 171,
+      "requiredClasses": 3
+    },
+    {
+      "project": "Hexalith.Parties.Contracts.Tests",
+      "passed": 29,
+      "requiredClasses": 3
+    },
+    {
+      "project": "Hexalith.Parties.Server.Tests",
+      "passed": 94,
+      "requiredClasses": 4
+    },
+    {
+      "project": "Hexalith.Parties.Tests",
+      "passed": 378,
+      "requiredClasses": 7
+    },
+    {
+      "project": "Hexalith.Parties.Security.Tests",
+      "passed": 30,
+      "requiredClasses": 2
+    },
+    {
+      "project": "Hexalith.Parties.Client.Tests",
+      "passed": 98,
+      "requiredClasses": 4
+    },
+    {
+      "project": "Hexalith.Parties.UI.Tests",
+      "passed": 72,
+      "requiredClasses": 4
+    }
+  ],
+  "matrixCoverage": {
+    "Provision": [
+      "Hexalith.Parties.Server.Tests.Aggregates.AgentPartyProvisioningTests.RejectionOnlyStream_AllowsCreationWhileUnmarkedOrganizationConflicts",
+      "Hexalith.Parties.Server.Tests.Aggregates.AgentPartyProvisioningTests.ExactLostAckRetry_ReturnsOriginalWithoutAnotherCreationAndRejectsChangedIntent"
+    ],
+    "Current identity": [
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: null)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: \\\"01HX0000000000000000000002\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: null)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: \\\"01HX0000000000000000000002\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InactiveOrRestrictedHuman_ReturnsIneligibleWithoutUsableBinding(inactive: True)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InactiveOrRestrictedHuman_ReturnsIneligibleWithoutUsableBinding(inactive: False)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentHuman_RequiresCompleteSourceAndCurrentExactActor"
+    ],
+    "History": [
+      "Hexalith.Parties.Server.Tests.Aggregates.HumanActorBindingTests.SharedBoundary_PreservesActorVersionAndClosesPredecessor",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.HistoricalReplay_BeforeBoundaryReturnsOriginalAndAtBoundaryReturnsSuccessor",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.SerializedRetainedSource_ReconstructsBothIntervalsWithoutProfileOrCurrentBinding"
+    ],
+    "Isolation": [
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: null)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: \\\"01HX0000000000000000000002\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: null)",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: \\\"01HX0000000000000000000002\\\")",
+      "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.WrongAuthorizedActor_DeniesBeforeSourceRead",
+      "Hexalith.Parties.Client.Tests.HttpPartiesIdentityClientTests.ConcurrentTenantCalls_KeepEveryRequestAndEvidenceInItsExplicitScope"
+    ]
+  },
+  "behavioralRedFailures": 4,
+  "focusedGreenPassed": 176,
+  "regressionsPassed": 4,
+  "receiptHashesMatch": true,
+  "identitySourceHashesMatch": true,
+  "frozenIntentUnchangedFromRunStart": true,
+  "originalBaselinePreserved": true,
+  "openTasks": 2,
+  "ownedWhitespaceCheckExitCode": 0,
+  "scope": "Local receipts and two selected identity source files; no complete final-workspace or installed qualification claim."
+}

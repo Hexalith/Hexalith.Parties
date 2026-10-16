@@ -50,7 +50,8 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
             }
 
             IdentityAdmissionEvidence? admitted = authority.Admit(envelope).Evidence;
-            if (admitted is null || reader is null)
+            if (admitted is null || reader is null
+                || query.ExpectedActorId is not null && admitted.TargetActorId != query.ExpectedActorId)
             {
                 deadline.ThrowIfCancellationRequested();
                 return new(PartyIdentityOutcome.Unavailable, null);

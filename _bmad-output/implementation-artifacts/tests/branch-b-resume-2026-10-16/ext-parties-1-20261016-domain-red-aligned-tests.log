@@ -1,0 +1,67 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.12)
+  Discovering: Hexalith.Parties.Tests
+  Discovered:  Hexalith.Parties.Tests
+  Starting:    Hexalith.Parties.Tests
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: null) [FAIL]
+      Shouldly.ShouldAssertException : result.Outcome
+          should be
+      PartyIdentityOutcome.Unavailable
+          but was
+      PartyIdentityOutcome.Ineligible
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(520,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: "01HX0000000000000000000002") [FAIL]
+      Shouldly.ShouldAssertException : result.Outcome
+          should be
+      PartyIdentityOutcome.Unavailable
+          but was
+      PartyIdentityOutcome.Ineligible
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(520,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: null) [FAIL]
+      Shouldly.ShouldAssertException : result.Outcome
+          should be
+      PartyIdentityOutcome.Unavailable
+          but was
+      PartyIdentityOutcome.Resolved
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(520,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: "01HX0000000000000000000002") [FAIL]
+      Shouldly.ShouldAssertException : result.Outcome
+          should be
+      PartyIdentityOutcome.Unavailable
+          but was
+      PartyIdentityOutcome.Resolved
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(520,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+  Finished:    Hexalith.Parties.Tests (ID = '4b8b23ea21c7659404adc43f2d3e72dcbfd03c65e47711ca0be100f5da2eaf1d')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 4, Errors: 0, Failed: 4, Skipped: 0, Not Run: 0, Time: 0.266s

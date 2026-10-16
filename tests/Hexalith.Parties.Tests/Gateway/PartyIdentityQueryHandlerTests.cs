@@ -119,6 +119,129 @@ public sealed class PartyIdentityQueryHandlerTests
         await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
     }
 
+    /// <summary>Incomplete immutable attribution cannot authorize the current binding, including through a valid successor.</summary>
+    /// <param name="corruption">The missing or unsupported recorded attribution.</param>
+    /// <param name="hasSuccessor">Whether a complete later binding follows the malformed predecessor.</param>
+    [Theory]
+    [InlineData("actor-revision", false)]
+    [InlineData("actor-revision", true)]
+    [InlineData("source", false)]
+    [InlineData("source", true)]
+    [InlineData("provenance", false)]
+    [InlineData("provenance", true)]
+    [InlineData("logical-id", false)]
+    [InlineData("logical-id", true)]
+    [InlineData("intent-digest", false)]
+    [InlineData("intent-digest", true)]
+    [InlineData("custody-evidence", true)]
+    [InlineData("custody-revision", true)]
+    [InlineData("custody-purpose", true)]
+    [InlineData("custody-policy", true)]
+    [InlineData("custody-source-expiry", true)]
+    [InlineData("custody-restore", true)]
+    [InlineData("custody-derived", true)]
+    [InlineData("actor-id", true)]
+    [InlineData("duplicate-logical-id", true)]
+    public async Task IncompleteCurrentAttributionHistory_DeniesBeforeCustody(string corruption, bool hasSuccessor)
+    {
+        HumanActorBindingEvidence binding = corruption switch
+        {
+            "actor-revision" => Binding() with { ActorRevision = 0 },
+            "actor-id" => Binding() with { ActorId = "unsupported-actor" },
+            "source" => Binding() with { SourceId = " " },
+            "provenance" => Binding() with { ProvenanceId = " " },
+            "custody-evidence" => Binding() with { Custody = Binding().Custody with { EvidenceId = " " } },
+            "custody-revision" => Binding() with { Custody = Binding().Custody with { LifecycleRevision = 0 } },
+            "custody-purpose" => Binding() with { Custody = Binding().Custody with { Purpose = "profile" } },
+            "custody-policy" => Binding() with { Custody = Binding().Custody with { PolicyId = " " } },
+            "custody-source-expiry" => Binding() with { Custody = Binding().Custody with { SourceExpiryEnforced = false } },
+            "custody-restore" => Binding() with { Custody = Binding().Custody with { RestoreSafe = false } },
+            "custody-derived" => Binding() with { Custody = Binding().Custody with { DerivedCopiesCovered = false } },
+            _ => Binding(),
+        };
+        string logicalId = corruption == "logical-id" ? " " : "logical";
+        string digest = corruption == "intent-digest" ? " " : "digest";
+        IEventPayload[] events = [Events()[0], new HumanActorBindingEstablished(new(binding, logicalId, digest), Start, 0)];
+        if (hasSuccessor)
+        {
+            DateTimeOffset boundary = Start.AddHours(1);
+            HumanActorBindingEvidence successor = Binding() with { BindingVersion = 2, ValidFrom = boundary,
+                ValidUntil = boundary.AddDays(10), Custody = Binding().Custody with { ExpiresAt = boundary.AddDays(10) } };
+            events = [.. events, new HumanActorBindingRebound(new(successor,
+                corruption == "duplicate-logical-id" ? logicalId : "rebind", "rebind-digest"), boundary, 1)];
+        }
+
+        var fixture = Service(events);
+        PartyIdentityResult result = await fixture.Service.ResolveAsync(
+            Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)), TestContext.Current.CancellationToken);
+
+        result.Outcome.ShouldBe(PartyIdentityOutcome.Unavailable);
+        result.Evidence.ShouldBeNull();
+        await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+    }
+
+    /// <summary>A later complete rebind cannot hide unsupported custody recorded on a revocation.</summary>
+    /// <param name="corruption">The missing or unsupported revocation custody evidence.</param>
+    [Theory]
+    [InlineData("evidence")]
+    [InlineData("revision")]
+    [InlineData("purpose")]
+    [InlineData("policy")]
+    [InlineData("source-expiry")]
+    [InlineData("restore")]
+    [InlineData("derived")]
+    public async Task IncompleteCurrentRevocationHistory_DeniesBeforeCustody(string corruption)
+    {
+        DateTimeOffset revokedAt = Start.AddHours(1);
+        DateTimeOffset reboundAt = Start.AddHours(2);
+        IdentityHistoryCustodyEvidence custody = corruption switch
+        {
+            "evidence" => Binding().Custody with { EvidenceId = " " },
+            "revision" => Binding().Custody with { LifecycleRevision = 0 },
+            "purpose" => Binding().Custody with { Purpose = "profile" },
+            "policy" => Binding().Custody with { PolicyId = " " },
+            "source-expiry" => Binding().Custody with { SourceExpiryEnforced = false },
+            "restore" => Binding().Custody with { RestoreSafe = false },
+            _ => Binding().Custody with { DerivedCopiesCovered = false },
+        };
+        HumanActorBindingEvidence successor = Binding() with { BindingVersion = 3, ValidFrom = reboundAt,
+            ValidUntil = reboundAt.AddDays(10), Custody = Binding().Custody with { ExpiresAt = reboundAt.AddDays(10) } };
+        var fixture = Service([.. Events(), new HumanActorBindingRevoked("revoke", "revoke-digest", 1, revokedAt, custody),
+            new HumanActorBindingRebound(new(successor, "rebind", "rebind-digest"), reboundAt, 2)]);
+
+        PartyIdentityResult result = await fixture.Service.ResolveAsync(
+            Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)), TestContext.Current.CancellationToken);
+
+        result.Outcome.ShouldBe(PartyIdentityOutcome.Unavailable);
+        result.Evidence.ShouldBeNull();
+        await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+    }
+
+    /// <summary>Complete predecessor and revocation history preserve the recorded current successor.</summary>
+    /// <param name="revoked">Whether an explicit revocation precedes the rebind.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CompleteCurrentRebindHistory_PreservesSuccessor(bool revoked)
+    {
+        DateTimeOffset boundary = Start.AddHours(2);
+        long version = revoked ? 3 : 2;
+        HumanActorBindingEvidence successor = Binding() with { BindingVersion = version, ValidFrom = boundary,
+            ValidUntil = boundary.AddDays(10), Custody = Binding().Custody with { ExpiresAt = boundary.AddDays(10) } };
+        IEventPayload[] events = Events();
+        if (revoked)
+        {
+            events = [.. events, new HumanActorBindingRevoked("revoke", "revoke-digest", 1, Start.AddHours(1), Binding().Custody)];
+        }
+
+        var fixture = Service([.. events, new HumanActorBindingRebound(new(successor, "rebind", "rebind-digest"), boundary, version - 1)]);
+        PartyIdentityResult result = await fixture.Service.ResolveAsync(
+            Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)), TestContext.Current.CancellationToken);
+
+        result.Outcome.ShouldBe(PartyIdentityOutcome.Resolved);
+        result.Evidence!.HumanBinding.ShouldBe(successor);
+    }
+
     /// <summary>Readable JSON preserves eligibility with legacy, plaintext or successfully decrypted protection provenance.</summary>
     [Theory]
     [InlineData("legacy")]
@@ -498,7 +621,32 @@ public sealed class PartyIdentityQueryHandlerTests
         result.Evidence!.Classification.ShouldBe(PartyIdentityClassification.Human);
         result.Evidence.HumanBinding!.ActorId.ShouldBe(Actor);
         JsonSerializer.Serialize(result, PartiesJsonOptions.Default).ShouldNotContain("Private");
+        IdentityAdmissionEvidence original = fixture.Authority.Admit(Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor))).Evidence!;
+        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(new PartyIdentityAdmissionResult(original with { TargetActorId = "01HX0000000000000000000002" }, null));
         (await fixture.Service.ResolveAsync(Envelope(new ResolvePartyIdentity("tenant-a", "party-1", "01HX0000000000000000000002")), TestContext.Current.CancellationToken)).Outcome.ShouldBe(PartyIdentityOutcome.Ineligible);
+    }
+
+    /// <summary>Actor-target admission must match before any protected current source is read.</summary>
+    /// <param name="type">The classification of the otherwise available source.</param>
+    /// <param name="admittedActor">The missing or differently admitted actor.</param>
+    [Theory]
+    [InlineData(PartyType.Person, null)]
+    [InlineData(PartyType.Person, "01HX0000000000000000000002")]
+    [InlineData(PartyType.Organization, null)]
+    [InlineData(PartyType.Organization, "01HX0000000000000000000002")]
+    public async Task CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, string? admittedActor)
+    {
+        var fixture = Service(new PartyCreated { Type = type, CreatedAt = Start });
+        IdentityAdmissionEvidence original = fixture.Authority.Admit(Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor))).Evidence!;
+        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(new PartyIdentityAdmissionResult(original with { TargetActorId = admittedActor }, null));
+
+        PartyIdentityResult result = await fixture.Service.ResolveAsync(Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)), TestContext.Current.CancellationToken);
+
+        result.Outcome.ShouldBe(PartyIdentityOutcome.Unavailable);
+        result.Evidence.ShouldBeNull();
+        await fixture.Reader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default);
+        await fixture.HistoryReader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default!, default);
+        await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
     }
 
     [Fact]
@@ -578,6 +726,7 @@ public sealed class PartyIdentityQueryHandlerTests
         var query = new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, "01HX0000000000000000000002", 1);
         (await fixture.Service.ResolveAtAsync(Envelope(query), TestContext.Current.CancellationToken)).Outcome.ShouldBe(HumanActorBindingOutcome.Unavailable);
         await fixture.Reader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default);
+        await fixture.HistoryReader.DidNotReceiveWithAnyArgs().ReadAsync(default!, default!, default);
     }
 
     [Theory]

@@ -1,0 +1,45 @@
+<assemblies schema-version="3" id="4a874853-8ae0-4290-bff1-3de5f2436348" computer="DESKTOP-VIOG240" user="administrator" start-rtf="2026-10-16T11:16:00.8005881+00:00" finish-rtf="2026-10-16T11:16:01.0666482+00:00" timestamp="10/16/2026 13:16:01"><assembly environment="64-bit (x64) .NET 10.0.12 [collection-per-class, parallel (collections, 14 threads)]" id="51fa203b-398f-4930-b43b-75744a396f03" name="/tmp/ext-parties-1-20261016/artifacts/bin/Hexalith.Parties.Tests/debug/Hexalith.Parties.Tests.dll" run-date="2026-10-16" run-time="11:16:00" start-rtf="2026-10-16T11:16:00.8005881+00:00" test-framework="xUnit.net v3 4.0.2+0c7aa4991f" target-framework=".NETCoreApp,Version=v10.0" errors="0" failed="4" finish-rtf="2026-10-16T11:16:01.0666482+00:00" not-run="0" passed="0" skipped="0" time="0.266" time-rtf="00:00:00.2660000" total="4"><collection name="Test collection for Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests (id: 888973c97a01ea9dc810b716c23f8fb67bf522b21d9ff81f71e9f48acab88488)" id="a6aee988-c5d9-4c47-929f-a8c7a07e5e10" failed="4" not-run="0" passed="0" skipped="0" time="0.160" time-rtf="00:00:00.1600000" total="4"><test id="a023a96f-3ce4-4b6c-8acc-4aff08ffa8ff" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: null)" result="Fail" time="0.155" time-rtf="00:00:00.1550000" start-rtf="2026-10-16T11:16:00.8734180+00:00" finish-rtf="2026-10-16T11:16:01.0432045+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="CurrentWrongAuthorizedActor_DeniesBeforeSourceRead" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="507"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Ineligible</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 520
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="c4409b53-a985-4b44-b132-033dcba6850f" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Person, admittedActor: \&quot;01HX0000000000000000000002\&quot;)" result="Fail" time="0.004" time-rtf="00:00:00.0040000" start-rtf="2026-10-16T11:16:01.0464405+00:00" finish-rtf="2026-10-16T11:16:01.0511269+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="CurrentWrongAuthorizedActor_DeniesBeforeSourceRead" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="507"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Ineligible</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 520
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="c7983a0a-9042-4ab7-83fb-814fe862c3d4" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: null)" result="Fail" time="0.001" time-rtf="00:00:00.0010000" start-rtf="2026-10-16T11:16:01.0512038+00:00" finish-rtf="2026-10-16T11:16:01.0527333+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="CurrentWrongAuthorizedActor_DeniesBeforeSourceRead" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="507"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 520
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test><test id="a2d969c9-fa5c-446f-b3af-2d42d7c08673" name="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(type: Organization, admittedActor: \&quot;01HX0000000000000000000002\&quot;)" result="Fail" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-16T11:16:01.0527978+00:00" finish-rtf="2026-10-16T11:16:01.0538031+00:00" type="Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests" method="CurrentWrongAuthorizedActor_DeniesBeforeSourceRead" source-file="/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs" source-line="507"><failure exception-type="Shouldly.ShouldAssertException"><message>Shouldly.ShouldAssertException : result.Outcome
+    should be
+PartyIdentityOutcome.Unavailable
+    but was
+PartyIdentityOutcome.Resolved</message><stack-trace>   at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentWrongAuthorizedActor_DeniesBeforeSourceRead(PartyType type, String admittedActor) in /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs:line 520
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+--- End of stack trace from previous location ---
+   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)</stack-trace></failure></test></collection></assembly></assemblies>

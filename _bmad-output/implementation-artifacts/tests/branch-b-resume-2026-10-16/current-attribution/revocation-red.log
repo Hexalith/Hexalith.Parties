@@ -1,0 +1,112 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.12)
+  Discovering: Hexalith.Parties.Tests
+  Discovered:  Hexalith.Parties.Tests
+  Starting:    Hexalith.Parties.Tests
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(corruption: "evidence") [FAIL]
+      Shouldly.ShouldAssertException : result.Outcome
+          should be
+      PartyIdentityOutcome.Unavailable
+          but was
+      PartyIdentityOutcome.Resolved
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(215,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(String corruption)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(corruption: "revision") [FAIL]
+      Shouldly.ShouldAssertException : result.Outcome
+          should be
+      PartyIdentityOutcome.Unavailable
+          but was
+      PartyIdentityOutcome.Resolved
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(215,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(String corruption)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(corruption: "purpose") [FAIL]
+      Shouldly.ShouldAssertException : result.Outcome
+          should be
+      PartyIdentityOutcome.Unavailable
+          but was
+      PartyIdentityOutcome.Resolved
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(215,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(String corruption)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(corruption: "policy") [FAIL]
+      Shouldly.ShouldAssertException : result.Outcome
+          should be
+      PartyIdentityOutcome.Unavailable
+          but was
+      PartyIdentityOutcome.Resolved
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(215,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(String corruption)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(corruption: "source-expiry") [FAIL]
+      Shouldly.ShouldAssertException : result.Outcome
+          should be
+      PartyIdentityOutcome.Unavailable
+          but was
+      PartyIdentityOutcome.Resolved
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(215,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(String corruption)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(corruption: "restore") [FAIL]
+      Shouldly.ShouldAssertException : result.Outcome
+          should be
+      PartyIdentityOutcome.Unavailable
+          but was
+      PartyIdentityOutcome.Resolved
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(215,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(String corruption)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(corruption: "derived") [FAIL]
+      Shouldly.ShouldAssertException : result.Outcome
+          should be
+      PartyIdentityOutcome.Unavailable
+          but was
+      PartyIdentityOutcome.Resolved
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(215,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.IncompleteCurrentRevocationHistory_DeniesBeforeCustody(String corruption)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+  Finished:    Hexalith.Parties.Tests (ID = '4b8b23ea21c7659404adc43f2d3e72dcbfd03c65e47711ca0be100f5da2eaf1d')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 7, Errors: 0, Failed: 7, Skipped: 0, Not Run: 0, Time: 0.292s

@@ -1,0 +1,7 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.12)
+  Discovering: Hexalith.Platform.Identity.Tests
+  Discovered:  Hexalith.Platform.Identity.Tests
+  Starting:    Hexalith.Platform.Identity.Tests
+  Finished:    Hexalith.Platform.Identity.Tests (ID = '465b8065f91620ca04ee78879c1755ee051e90ed3f5df4e7d426dd72f605ae7c')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Platform.Identity.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.183s
