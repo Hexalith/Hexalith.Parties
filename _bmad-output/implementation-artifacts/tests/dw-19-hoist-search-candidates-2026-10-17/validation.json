@@ -1,0 +1,195 @@
+{
+  "work": "DW-19",
+  "date": "2026-10-17",
+  "baseline_commit": "c8ac91d668eb2fc3d7ec3b06e777f485c956cb3f",
+  "configuration": "Debug",
+  "UseHexalithProjectReferences": true,
+  "UseNuGetDeps": false,
+  "build": {
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "tests": {
+    "focus-baseline": {
+      "total": 9,
+      "passed": 7,
+      "failed": 2,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    },
+    "focus-array-mutation": {
+      "total": 4,
+      "passed": 2,
+      "failed": 2,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    },
+    "focus-final": {
+      "total": 80,
+      "passed": 80,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    },
+    "full-final": {
+      "total": 1098,
+      "passed": 1098,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    }
+  },
+  "expected_failures": {
+    "focus-baseline": "Original providers: both query-length allocation regressions fail; seven compatibility cases pass.",
+    "focus-array-mutation": "Full phrase hoisted but arrays allocated per entry: both candidate-array regressions fail; both query-length regressions pass."
+  },
+  "measurements": {
+    "focus-baseline": [
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(semantic: False)",
+        "result": "Fail",
+        "measurement": "10K entries: short query 4640856 bytes; long query 7041584 bytes; growth 2400728 bytes"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(semantic: True)",
+        "result": "Fail",
+        "measurement": "10K entries: short query 4641240 bytes; long query 7041968 bytes; growth 2400728 bytes"
+      }
+    ],
+    "focus-array-mutation": [
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(semantic: False)",
+        "result": "Fail",
+        "measurement": "10K entries: two tokens 1920896 bytes; 32 tokens 4322816 bytes; growth 2401920 bytes"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(semantic: True)",
+        "result": "Fail",
+        "measurement": "10K entries: two tokens 1921296 bytes; 32 tokens 4323216 bytes; growth 2401920 bytes"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(semantic: False)",
+        "result": "Pass",
+        "measurement": "10K entries: short query 3920896 bytes; long query 3921864 bytes; growth 968 bytes"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(semantic: True)",
+        "result": "Pass",
+        "measurement": "10K entries: short query 3921296 bytes; long query 3922264 bytes; growth 968 bytes"
+      }
+    ],
+    "focus-final": [
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(semantic: False)",
+        "result": "Pass",
+        "measurement": "10K entries: two tokens 1440944 bytes; 32 tokens 1443104 bytes; growth 2160 bytes"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(semantic: True)",
+        "result": "Pass",
+        "measurement": "10K entries: two tokens 1441344 bytes; 32 tokens 1443504 bytes; growth 2160 bytes"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(semantic: False)",
+        "result": "Pass",
+        "measurement": "10K entries: short query 3440944 bytes; long query 3441912 bytes; growth 968 bytes"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(semantic: True)",
+        "result": "Pass",
+        "measurement": "10K entries: short query 3441344 bytes; long query 3442312 bytes; growth 968 bytes"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.LocalFuzzySearchPerformanceBenchmarkTests.Search_10KEntries_FuzzyQuery_CompletesWithin500ms",
+        "result": "Pass",
+        "measurement": "10K entries \u2014 fuzzy search for 'Dupnt': 32ms, 800 results"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.LocalFuzzySearchPerformanceBenchmarkTests.Search_10KEntries_CompletesWithin500ms",
+        "result": "Pass",
+        "measurement": "10K entries \u2014 search for 'Jean Dupont': 43ms, 800 results"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SemanticSearchPerformanceBenchmarkTests.Search_10KEntries_CompletesWithin500ms",
+        "result": "Pass",
+        "measurement": "10K entries \u2014 search for 'Jean Dupont': 48ms, 800 results"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SemanticSearchPerformanceBenchmarkTests.Search_10KEntries_FuzzyQuery_CompletesWithin500ms",
+        "result": "Pass",
+        "measurement": "10K entries \u2014 fuzzy search for 'Dupnt': 30ms, 800 results"
+      }
+    ],
+    "full-final": [
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(semantic: False)",
+        "result": "Pass",
+        "measurement": "10K entries: two tokens 1440944 bytes; 32 tokens 1443104 bytes; growth 2160 bytes"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(semantic: True)",
+        "result": "Pass",
+        "measurement": "10K entries: two tokens 1441344 bytes; 32 tokens 1443504 bytes; growth 2160 bytes"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(semantic: False)",
+        "result": "Pass",
+        "measurement": "10K entries: short query 3440944 bytes; long query 3441912 bytes; growth 968 bytes"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(semantic: True)",
+        "result": "Pass",
+        "measurement": "10K entries: short query 3441344 bytes; long query 3442312 bytes; growth 968 bytes"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.LocalFuzzySearchPerformanceBenchmarkTests.Search_10KEntries_FuzzyQuery_CompletesWithin500ms",
+        "result": "Pass",
+        "measurement": "10K entries \u2014 fuzzy search for 'Dupnt': 55ms, 800 results"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.LocalFuzzySearchPerformanceBenchmarkTests.Search_10KEntries_CompletesWithin500ms",
+        "result": "Pass",
+        "measurement": "10K entries \u2014 search for 'Jean Dupont': 85ms, 800 results"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SemanticSearchPerformanceBenchmarkTests.Search_10KEntries_CompletesWithin500ms",
+        "result": "Pass",
+        "measurement": "10K entries \u2014 search for 'Jean Dupont': 94ms, 800 results"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.Search.SemanticSearchPerformanceBenchmarkTests.Search_10KEntries_FuzzyQuery_CompletesWithin500ms",
+        "result": "Pass",
+        "measurement": "10K entries \u2014 fuzzy search for 'Dupnt': 173ms, 800 results"
+      }
+    ]
+  },
+  "checks": {
+    "no_warning_override_guard": 0,
+    "commitlint": {
+      "version": "21.2.2",
+      "exit_code": 0,
+      "problems": 0,
+      "warnings": 0
+    },
+    "git_diff_check": {
+      "command": "git -c core.whitespace=cr-at-eol diff --cached --check",
+      "exit_code": 0
+    }
+  },
+  "review": {
+    "findings": 4,
+    "patched": 4,
+    "deferred": 0
+  },
+  "topology": {
+    "parties_healthy_wait_exit_code": 0,
+    "stop_exit_code": 0,
+    "full_topology_qualification": false,
+    "reason": "Baseline Parties and security healthy; EventStore, Tenants and UI reported Finished."
+  }
+}

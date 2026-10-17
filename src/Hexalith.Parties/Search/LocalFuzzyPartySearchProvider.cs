@@ -54,6 +54,10 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
         string[] tokens = normalizedQuery
             .Split([' ', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
+        // Prepare query-only candidates once, retaining the full phrase before individual tokens.
+        string fullQuery = string.Join(' ', tokens);
+        string[] candidates = tokens.Length > 1 ? [fullQuery, .. tokens] : tokens;
+
         // Materialize once: callers may pass a yield-iterator over Dapr actor state, and the
         // pipeline below enumerates `entries` multiple times via Where/Select/OrderBy.
         IReadOnlyList<PartyIndexEntry> materialized = entries as IReadOnlyList<PartyIndexEntry> ?? [.. entries];
@@ -67,7 +71,7 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
                 continue;
             }
 
-            PartySearchResult? evaluated = EvaluateEntry(entry, tokens);
+            PartySearchResult? evaluated = EvaluateEntry(entry, candidates, fullQuery, tokens.Length);
             if (evaluated is not null)
             {
                 results.Add(evaluated);
@@ -176,20 +180,20 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
         };
     }
 
-    private static PartySearchResult? EvaluateEntry(PartyIndexEntry entry, string[] tokens)
+    private static PartySearchResult? EvaluateEntry(
+        PartyIndexEntry entry,
+        string[] candidates,
+        string fullQuery,
+        int tokenCount)
     {
         Dictionary<string, (double FieldWeight, double BestMatchScore, string MatchType)> fieldMatches = [];
         HashSet<string> matchedTokens = [];
 
         string normalizedDisplayName = NormalizeDiacritics(entry.DisplayName);
 
-        // Include full query as a candidate when multi-token (same as v1.0)
-        string fullQuery = string.Join(' ', tokens);
-        IEnumerable<string> candidates = tokens.Length > 1 ? [fullQuery, .. tokens] : tokens;
-
         foreach (string token in candidates)
         {
-            bool allowFuzzyDisplayNameMatch = tokens.Length <= 1 || !string.Equals(token, fullQuery, StringComparison.Ordinal);
+            bool allowFuzzyDisplayNameMatch = tokenCount <= 1 || !string.Equals(token, fullQuery, StringComparison.Ordinal);
 
             if (TryMatch(normalizedDisplayName, token, allowFuzzyDisplayNameMatch, out double matchScore, out string matchType))
             {
@@ -207,7 +211,7 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
             .Select(kv => (kv.Key, kv.Value.FieldWeight, kv.Value.BestMatchScore))
             .ToList();
 
-        double relevance = ComputeRelevanceScore(scores, matchedTokens.Count, tokens.Length);
+        double relevance = ComputeRelevanceScore(scores, matchedTokens.Count, tokenCount);
 
         List<MatchMetadata> metadata = [.. fieldMatches
             .OrderByDescending(m => m.Value.FieldWeight * m.Value.BestMatchScore)

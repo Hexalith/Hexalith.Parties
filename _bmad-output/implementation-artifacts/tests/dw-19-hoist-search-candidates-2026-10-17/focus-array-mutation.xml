@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='utf-8'?>
+<assemblies schema-version="3" id="264f8673-a332-4c69-a9ae-abace88367e9" start-rtf="2026-10-17T15:54:46.6985578+00:00" finish-rtf="2026-10-17T15:54:46.9593397+00:00" timestamp="10/17/2026 17:54:46">
+  <assembly environment="64-bit (x64) .NET 10.0.12 [collection-per-class, parallel (collections, 14 threads)]" id="ca484aa4-8707-4962-a974-de1330ec912c" name="tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll" run-date="2026-10-17" run-time="15:54:46" start-rtf="2026-10-17T15:54:46.6985578+00:00" test-framework="xUnit.net v3 4.0.2+0c7aa4991f" target-framework=".NETCoreApp,Version=v10.0" errors="0" failed="2" finish-rtf="2026-10-17T15:54:46.9593397+00:00" not-run="0" passed="2" skipped="0" time="0.261" time-rtf="00:00:00.2610000" total="4">
+    <collection name="Local search performance" id="b5b52a53-b69d-48bf-9d73-e291e1503ea5" failed="2" not-run="0" passed="2" skipped="0" time="0.160" time-rtf="00:00:00.1600000" total="4">
+      <test id="e79beda2-8ec4-4692-a03e-973fd259dfec" name="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(semantic: False)" result="Fail" time="0.082" time-rtf="00:00:00.0820000" start-rtf="2026-10-17T15:54:46.7717545+00:00" finish-rtf="2026-10-17T15:54:46.8674897+00:00" type="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests" method="Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays" source-file="tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs" source-line="248">
+        <output>10K entries: two tokens 1920896 bytes; 32 tokens 4322816 bytes; growth 2401920 bytes
+</output>
+        <failure exception-type="Shouldly.ShouldAssertException">
+          <message>Shouldly.ShouldAssertException : manyTokenBytes - shortBytes
+    should be less than
+65536L
+    but was
+2401920L</message>
+          <stack-trace>   at Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(Boolean semantic) in tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs:line 278
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)</stack-trace>
+        </failure>
+      </test>
+      <test id="472961eb-0281-4924-a46b-64bff421e9c6" name="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(semantic: True)" result="Fail" time="0.045" time-rtf="00:00:00.0450000" start-rtf="2026-10-17T15:54:46.8697081+00:00" finish-rtf="2026-10-17T15:54:46.9157795+00:00" type="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests" method="Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays" source-file="tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs" source-line="248">
+        <output>10K entries: two tokens 1921296 bytes; 32 tokens 4323216 bytes; growth 2401920 bytes
+</output>
+        <failure exception-type="Shouldly.ShouldAssertException">
+          <message>Shouldly.ShouldAssertException : manyTokenBytes - shortBytes
+    should be less than
+65536L
+    but was
+2401920L</message>
+          <stack-trace>   at Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(Boolean semantic) in tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs:line 278
+   at InvokeStub_SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</stack-trace>
+        </failure>
+      </test>
+      <test id="d60e605f-20e5-4afb-81dd-76d3f5ff9d33" name="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(semantic: False)" result="Pass" time="0.017" time-rtf="00:00:00.0170000" start-rtf="2026-10-17T15:54:46.9186587+00:00" finish-rtf="2026-10-17T15:54:46.9362990+00:00" type="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests" method="Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies" source-file="tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs" source-line="211">
+        <output>10K entries: short query 3920896 bytes; long query 3921864 bytes; growth 968 bytes
+</output>
+      </test>
+      <test id="1668f721-c9fe-4cdd-a841-5f9fb21ee8de" name="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(semantic: True)" result="Pass" time="0.016" time-rtf="00:00:00.0160000" start-rtf="2026-10-17T15:54:46.9363895+00:00" finish-rtf="2026-10-17T15:54:46.9528528+00:00" type="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests" method="Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies" source-file="tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs" source-line="211">
+        <output>10K entries: short query 3921296 bytes; long query 3922264 bytes; growth 968 bytes
+</output>
+      </test>
+    </collection>
+  </assembly>
+</assemblies>

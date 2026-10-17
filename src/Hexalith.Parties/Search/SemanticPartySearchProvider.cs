@@ -53,9 +53,13 @@ internal sealed class SemanticPartySearchProvider : IPartySearchProvider
         string[] tokens = normalizedQuery
             .Split([' ', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
+        // Prepare query-only candidates once, retaining the full phrase before individual tokens.
+        string fullQuery = string.Join(' ', tokens);
+        string[] candidates = tokens.Length > 1 ? [fullQuery, .. tokens] : tokens;
+
         List<PartySearchResult> results = ApplyFilters(entries, typeFilter, activeFilter)
             .Where(e => !e.IsErased)
-            .Select(entry => EvaluateEntry(entry, tokens))
+            .Select(entry => EvaluateEntry(entry, candidates, fullQuery, tokens.Length))
             .Where(r => r is not null)
             .Select(r => r!)
             .OrderByDescending(r => r.RelevanceScore)
@@ -138,20 +142,20 @@ internal sealed class SemanticPartySearchProvider : IPartySearchProvider
         };
     }
 
-    private static PartySearchResult? EvaluateEntry(PartyIndexEntry entry, string[] tokens)
+    private static PartySearchResult? EvaluateEntry(
+        PartyIndexEntry entry,
+        string[] candidates,
+        string fullQuery,
+        int tokenCount)
     {
         Dictionary<string, (double FieldWeight, double BestMatchScore, string MatchType)> fieldMatches = [];
         HashSet<string> matchedTokens = [];
 
         string normalizedDisplayName = NormalizeDiacritics(entry.DisplayName);
 
-        // Include full query as a candidate when multi-token (same as v1.0)
-        string fullQuery = string.Join(' ', tokens);
-        IEnumerable<string> candidates = tokens.Length > 1 ? [fullQuery, .. tokens] : tokens;
-
         foreach (string token in candidates)
         {
-            bool allowFuzzyDisplayNameMatch = tokens.Length <= 1 || !string.Equals(token, fullQuery, StringComparison.Ordinal);
+            bool allowFuzzyDisplayNameMatch = tokenCount <= 1 || !string.Equals(token, fullQuery, StringComparison.Ordinal);
 
             // Match against DisplayName
             if (TryMatch(normalizedDisplayName, token, allowFuzzyDisplayNameMatch, out double matchScore, out string matchType))
@@ -202,7 +206,7 @@ internal sealed class SemanticPartySearchProvider : IPartySearchProvider
             .Select(kv => (kv.Key, kv.Value.FieldWeight, kv.Value.BestMatchScore))
             .ToList();
 
-        double relevance = ComputeRelevanceScore(scores, matchedTokens.Count, tokens.Length);
+        double relevance = ComputeRelevanceScore(scores, matchedTokens.Count, tokenCount);
 
         List<MatchMetadata> metadata = [.. fieldMatches
             .OrderByDescending(m => m.Value.FieldWeight * m.Value.BestMatchScore)

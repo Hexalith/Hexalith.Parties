@@ -1,0 +1,31 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.12)
+  Discovering: Hexalith.Parties.Tests
+  Discovered:  Hexalith.Parties.Tests
+  Starting:    Hexalith.Parties.Tests
+    Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(semantic: False) [FAIL]
+      Shouldly.ShouldAssertException : manyTokenBytes - shortBytes
+          should be less than
+      65536L
+          but was
+      2401920L
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs(278,0): at Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(Boolean semantic)
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+      Output:
+        10K entries: two tokens 1920896 bytes; 32 tokens 4322816 bytes; growth 2401920 bytes
+    Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(semantic: True) [FAIL]
+      Shouldly.ShouldAssertException : manyTokenBytes - shortBytes
+          should be less than
+      65536L
+          but was
+      2401920L
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs(278,0): at Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(Boolean semantic)
+           at InvokeStub_SearchQueryCandidateTests.Search_10KEntries_MoreTokensDoesNotAllocatePerEntryCandidateArrays(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+      Output:
+        10K entries: two tokens 1921296 bytes; 32 tokens 4323216 bytes; growth 2401920 bytes
+  Finished:    Hexalith.Parties.Tests (ID = '3203e2eac1e69d356617e4cae5fa3f440c852a12ac575ed4cb685ab408c9c2ba')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 4, Errors: 0, Failed: 2, Skipped: 0, Not Run: 0, Time: 0.261s

@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<assemblies schema-version="3" id="3e030e11-aaa4-4f27-9889-464adea51284" start-rtf="2026-10-17T15:37:35.2303431+00:00" finish-rtf="2026-10-17T15:37:35.4833458+00:00" timestamp="10/17/2026 17:37:35">
+  <assembly environment="64-bit (x64) .NET 10.0.12 [collection-per-class, parallel (collections, 14 threads)]" id="19690a52-2738-42f3-9f97-a8da3d3a03a5" name="tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll" run-date="2026-10-17" run-time="15:37:35" start-rtf="2026-10-17T15:37:35.2303431+00:00" test-framework="xUnit.net v3 4.0.2+0c7aa4991f" target-framework=".NETCoreApp,Version=v10.0" errors="0" failed="2" finish-rtf="2026-10-17T15:37:35.4833458+00:00" not-run="0" passed="7" skipped="0" time="0.253" time-rtf="00:00:00.2530000" total="9">
+    <collection name="Local search performance" id="101bd800-a35c-4834-985b-cda7c475ac8c" failed="2" not-run="0" passed="7" skipped="0" time="0.139" time-rtf="00:00:00.1390000" total="9">
+      <test id="3b5abc7c-dd6d-493d-88fc-41561ec368d3" name="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_MultiTokenQuery_PreservesPhraseScoresMetadataAndPaging(semantic: False)" result="Pass" time="0.033" time-rtf="00:00:00.0330000" start-rtf="2026-10-17T15:37:35.3105468+00:00" finish-rtf="2026-10-17T15:37:35.3538755+00:00" type="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests" method="Search_MultiTokenQuery_PreservesPhraseScoresMetadataAndPaging" source-file="tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs" source-line="16" />
+      <test id="2bf8fb47-c0e1-465a-9944-edd68ae1f384" name="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_MultiTokenQuery_PreservesPhraseScoresMetadataAndPaging(semantic: True)" result="Pass" time="0.005" time-rtf="00:00:00.0050000" start-rtf="2026-10-17T15:37:35.3562007+00:00" finish-rtf="2026-10-17T15:37:35.3615198+00:00" type="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests" method="Search_MultiTokenQuery_PreservesPhraseScoresMetadataAndPaging" source-file="tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs" source-line="16" />
+      <test id="296af8b5-ed39-4f04-b324-2957ef0beb77" name="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_NormalizationRemovesAllTokens_ReturnsEmpty(semantic: False)" result="Pass" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-17T15:37:35.3652165+00:00" finish-rtf="2026-10-17T15:37:35.3660474+00:00" type="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests" method="Search_NormalizationRemovesAllTokens_ReturnsEmpty" source-file="tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs" source-line="65" />
+      <test id="1250a46f-e010-465b-8112-9987c6391f61" name="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_NormalizationRemovesAllTokens_ReturnsEmpty(semantic: True)" result="Pass" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-17T15:37:35.3660958+00:00" finish-rtf="2026-10-17T15:37:35.3665460+00:00" type="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests" method="Search_NormalizationRemovesAllTokens_ReturnsEmpty" source-file="tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs" source-line="65" />
+      <test id="3e5a1486-2fef-4315-9205-f6d32ddd9fc5" name="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(semantic: False)" result="Fail" time="0.069" time-rtf="00:00:00.0690000" start-rtf="2026-10-17T15:37:35.3667940+00:00" finish-rtf="2026-10-17T15:37:35.4404909+00:00" type="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests" method="Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies" source-file="tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs" source-line="104">
+        <output>10K entries: short query 4640856 bytes; long query 7041584 bytes; growth 2400728 bytes
+</output>
+        <failure exception-type="Shouldly.ShouldAssertException">
+          <message>Shouldly.ShouldAssertException : longBytes - shortBytes
+    should be less than
+65536L
+    but was
+2400728L</message>
+          <stack-trace>   at Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(Boolean semantic) in tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs:line 134
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)</stack-trace>
+        </failure>
+      </test>
+      <test id="2af10e58-1698-4a09-be4f-724e939f510d" name="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(semantic: True)" result="Fail" time="0.032" time-rtf="00:00:00.0320000" start-rtf="2026-10-17T15:37:35.4409346+00:00" finish-rtf="2026-10-17T15:37:35.4739449+00:00" type="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests" method="Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies" source-file="tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs" source-line="104">
+        <output>10K entries: short query 4641240 bytes; long query 7041968 bytes; growth 2400728 bytes
+</output>
+        <failure exception-type="Shouldly.ShouldAssertException">
+          <message>Shouldly.ShouldAssertException : longBytes - shortBytes
+    should be less than
+65536L
+    but was
+2400728L</message>
+          <stack-trace>   at Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(Boolean semantic) in tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs:line 134
+   at InvokeStub_SearchQueryCandidateTests.Search_10KEntries_LongerQueryDoesNotAllocatePerEntryQueryCopies(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</stack-trace>
+        </failure>
+      </test>
+      <test id="db876a89-9948-4960-b8d4-33226c04a955" name="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_SemanticMultiTokenQuery_PreservesStructuredFieldPhraseMatching" result="Pass" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-17T15:37:35.4751254+00:00" finish-rtf="2026-10-17T15:37:35.4761612+00:00" type="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests" method="Search_SemanticMultiTokenQuery_PreservesStructuredFieldPhraseMatching" source-file="tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs" source-line="79" />
+      <test id="107a5423-101a-42fe-991a-011273adcbf0" name="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_RepeatedTokens_PreservesOriginalCoverage(semantic: False)" result="Pass" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-17T15:37:35.4765727+00:00" finish-rtf="2026-10-17T15:37:35.4771107+00:00" type="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests" method="Search_RepeatedTokens_PreservesOriginalCoverage" source-file="tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs" source-line="48" />
+      <test id="d56c10a9-2986-404c-b3f2-fd747d9775bc" name="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests.Search_RepeatedTokens_PreservesOriginalCoverage(semantic: True)" result="Pass" time="0" time-rtf="00:00:00.0000000" start-rtf="2026-10-17T15:37:35.4771528+00:00" finish-rtf="2026-10-17T15:37:35.4775215+00:00" type="Hexalith.Parties.Tests.Search.SearchQueryCandidateTests" method="Search_RepeatedTokens_PreservesOriginalCoverage" source-file="tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs" source-line="48" />
+    </collection>
+  </assembly>
+</assemblies>

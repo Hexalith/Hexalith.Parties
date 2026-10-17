@@ -141,7 +141,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: EvaluateEntry multi-token search hot path
 source_spec: `_bmad-output/implementation-artifacts/spec-gh-30708560778-fix-ci-failures.md`
 reason: `EvaluateEntry` rebuilds the query-only full phrase and candidate collection for every party, creating O(entries) allocations in the 10K hot path despite the current performance gate passing.
-status: open
+status: done 2026-10-17
+resolution: Both local fuzzy and semantic search prepare the normalized full phrase and candidate array once per query, preserving matching, original token-count scoring, metadata, ordering and paging. Independent regressions detect per-entry phrase and candidate-array copies. Longer-query allocation growth at 10K entries falls from 2,400,728 bytes to 968 bytes in both providers. Final Debug/source build has zero warnings/errors; focused search/performance tests pass 80/80 and full service assembly passes 1098/1098 without failures/errors/skips. Four review verification findings are patched; no new deferred work. DW-20 remains open. See spec-dw-19-hoist-search-candidates.md and tests/dw-19-hoist-search-candidates-2026-10-17/validation.json.
 
 ### DW-20: Normalize full-phrase multi-token relevance coverage
 
