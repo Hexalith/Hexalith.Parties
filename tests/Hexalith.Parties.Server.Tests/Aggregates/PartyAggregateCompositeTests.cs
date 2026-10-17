@@ -1,3 +1,6 @@
+using System.Text.Json;
+
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Results;
@@ -680,26 +683,36 @@ public class PartyAggregateCompositeTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void Handle_UpdatePartyComposite_UnsafeRemoveIdentifierId_ReturnsInvalidIdBeforeNotFound(bool oversized)
+    [InlineData("update-channel", false)]
+    [InlineData("update-channel", true)]
+    [InlineData("remove-channel", false)]
+    [InlineData("remove-channel", true)]
+    [InlineData("remove-identifier", false)]
+    [InlineData("remove-identifier", true)]
+    public void Handle_UpdatePartyComposite_UnsafeOperationId_ReturnsInvalidIdBeforeNotFound(string operation, bool oversized)
     {
         PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
         string submittedId = oversized ? new string('x', 4096) : "id/unsafe";
+        string expectedMessage = operation == "remove-identifier" ? "Identifier ID is invalid." : "Contact channel ID is invalid.";
         UpdatePartyComposite command = new()
         {
             PartyId = PartyTestData.DefaultPartyId,
-            RemoveIdentifierIds = [submittedId],
+            UpdateContactChannels = operation == "update-channel"
+                ? [new UpdateContactChannel { PartyId = PartyTestData.DefaultPartyId, ContactChannelId = submittedId, Value = "changed@example.com" }]
+                : [],
+            RemoveContactChannelIds = operation == "remove-channel" ? [submittedId] : [],
+            RemoveIdentifierIds = operation == "remove-identifier" ? [submittedId] : [],
         };
 
         CompositeCommandResult result = PartyAggregate.Handle(command, state);
 
         result.IsRejection.ShouldBeTrue();
-        CompositeOperationConflict rejection = result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
-        rejection.Message.ShouldBe("Identifier ID is invalid.");
-        result.Events.ShouldNotContain(e => e is IdentifierNotFound);
-        result.Rejected.ShouldContain("Identifier ID is invalid.");
-        result.Rejected.ShouldAllBe(message => !message.Contains(submittedId, StringComparison.Ordinal));
+        CompositeOperationConflict rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<CompositeOperationConflict>();
+        rejection.Message.ShouldBe(expectedMessage);
+        result.Rejected.ShouldBe([expectedMessage]);
+        result.Applied.ShouldBeEmpty();
+        result.Skipped.ShouldBeEmpty();
+        result.UpdatedPartyDetail.ShouldBeNull();
     }
 
     [Fact]
@@ -871,9 +884,11 @@ public class PartyAggregateCompositeTests
     public void Handle_UpdatePartyComposite_UpdateMissingChannel_ReturnsRejection(int identifierLength)
     {
         PartyState state = BuildExistingPersonState();
+        string originalState = JsonSerializer.Serialize(state, PartiesJsonOptions.Default);
         UpdatePartyComposite command = new()
         {
             PartyId = PartyTestData.DefaultPartyId,
+            PersonDetails = new PersonDetails { FirstName = "Sibling", LastName = "Update" },
             UpdateContactChannels =
             [
                 new UpdateContactChannel
@@ -895,6 +910,7 @@ public class PartyAggregateCompositeTests
         result.Applied.ShouldBeEmpty();
         result.Skipped.ShouldBeEmpty();
         result.UpdatedPartyDetail.ShouldBeNull();
+        JsonSerializer.Serialize(state, PartiesJsonOptions.Default).ShouldBe(originalState);
         string rawValue = command.UpdateContactChannels[0].Value!;
         rawValue.ShouldNotBeNullOrEmpty("Privacy absence assertion requires a non-empty sentinel — empty string makes Contains() trivially true.");
         result.Rejected.Any(x => x.Contains(rawValue)).ShouldBeFalse();
@@ -908,9 +924,11 @@ public class PartyAggregateCompositeTests
     public void Handle_UpdatePartyComposite_RemoveMissingChannel_ReturnsRejection(int identifierLength)
     {
         PartyState state = BuildExistingPersonState();
+        string originalState = JsonSerializer.Serialize(state, PartiesJsonOptions.Default);
         UpdatePartyComposite command = new()
         {
             PartyId = PartyTestData.DefaultPartyId,
+            PersonDetails = new PersonDetails { FirstName = "Sibling", LastName = "Update" },
             RemoveContactChannelIds = [new string('x', identifierLength)],
         };
 
@@ -924,6 +942,7 @@ public class PartyAggregateCompositeTests
         result.Applied.ShouldBeEmpty();
         result.Skipped.ShouldBeEmpty();
         result.UpdatedPartyDetail.ShouldBeNull();
+        JsonSerializer.Serialize(state, PartiesJsonOptions.Default).ShouldBe(originalState);
     }
 
     [Fact]
@@ -1219,9 +1238,11 @@ public class PartyAggregateCompositeTests
     public void Handle_UpdatePartyComposite_InvalidRemoveIdentifierId_ReturnsRejection(int identifierLength)
     {
         PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+        string originalState = JsonSerializer.Serialize(state, PartiesJsonOptions.Default);
         UpdatePartyComposite command = new()
         {
             PartyId = PartyTestData.DefaultPartyId,
+            PersonDetails = new PersonDetails { FirstName = "Sibling", LastName = "Update" },
             RemoveIdentifierIds = [new string('x', identifierLength)],
         };
 
@@ -1236,6 +1257,31 @@ public class PartyAggregateCompositeTests
         result.Applied.ShouldBeEmpty();
         result.Skipped.ShouldBeEmpty();
         result.UpdatedPartyDetail.ShouldBeNull();
+        JsonSerializer.Serialize(state, PartiesJsonOptions.Default).ShouldBe(originalState);
+    }
+
+    [Fact]
+    public void Handle_UpdatePartyComposite_CaseVariantIdentifier_ReturnsFixedNotFoundWithoutRemoval()
+    {
+        PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+        string originalState = JsonSerializer.Serialize(state, PartiesJsonOptions.Default);
+        UpdatePartyComposite command = new()
+        {
+            PartyId = PartyTestData.DefaultPartyId,
+            RemoveIdentifierIds = ["ID-VAT-1"],
+        };
+
+        CompositeCommandResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        IdentifierNotFound rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<IdentifierNotFound>();
+        rejection.Message.ShouldBe("Identifier not found.");
+        result.Rejected.ShouldBe(["Identifier not found."]);
+        result.Applied.ShouldBeEmpty();
+        result.Skipped.ShouldBeEmpty();
+        result.UpdatedPartyDetail.ShouldBeNull();
+        state.Identifiers.ShouldContain(identifier => identifier.Id == "id-vat-1");
+        JsonSerializer.Serialize(state, PartiesJsonOptions.Default).ShouldBe(originalState);
     }
 
     [Fact]

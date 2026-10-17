@@ -192,6 +192,22 @@ public class PartyAggregateIdentifierTests {
     }
 
     [Fact]
+    public void Handle_RemoveIdentifier_CaseVariant_ReturnsFixedNotFoundWithoutRemoval()
+    {
+        PartyState state = PartyTestData.CreatePersonStateWithIdentifier();
+        PartyIdentifier[] originalIdentifiers = state.Identifiers.ToArray();
+        RemoveIdentifier command = PartyTestData.ValidRemoveIdentifier() with { IdentifierId = "ID-VAT-1" };
+
+        DomainResult result = PartyAggregate.Handle(command, state);
+
+        result.IsRejection.ShouldBeTrue();
+        IdentifierNotFound rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<IdentifierNotFound>();
+        rejection.Message.ShouldBe("Identifier not found.");
+        state.Identifiers.ShouldBe(originalIdentifiers);
+        state.Identifiers.ShouldContain(identifier => identifier.Id == "id-vat-1");
+    }
+
+    [Fact]
     public void Handle_RemoveIdentifier_UnsafeIdentifierId_ReturnsSupportSafeRejectionBeforeNotFound() {
         PartyState state = PartyTestData.CreatePersonState();
         RemoveIdentifier command = PartyTestData.ValidRemoveIdentifier() with

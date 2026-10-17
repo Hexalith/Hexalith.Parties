@@ -1,0 +1,129 @@
+{
+  "date": "2026-10-17",
+  "scope": "DW-123 only",
+  "baseline_commit": "f5f2f2122847a603883b51acc95844ddb19a1565",
+  "concurrent_sync_commit_containing_implementation": "90af3047b50046cb4f6f91e01f182f562110aab3",
+  "builds": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    }
+  ],
+  "before_fix": {
+    "command": "dotnet tests/Hexalith.Parties.Server.Tests/bin/Debug/net10.0/Hexalith.Parties.Server.Tests.dll -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateContactChannelTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateIdentifierTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests -xml /tmp/dw-123-validation/red.xml",
+    "exit_code": 1,
+    "total": 100,
+    "passed": 88,
+    "failed": 12,
+    "errors": 0,
+    "skipped": 0,
+    "not-run": 0,
+    "xml_sha256": "0edb9b2da4e8dd39193c9db42947c305386bfef5466122fb4a2c1063f374558c",
+    "failing_cases": [
+      "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests.Handle_UpdatePartyComposite_UpdateMissingChannel_ReturnsRejection(identifierLength: 16)",
+      "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests.Handle_UpdatePartyComposite_UpdateMissingChannel_ReturnsRejection(identifierLength: 128)",
+      "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests.Handle_UpdatePartyComposite_RemoveMissingChannel_ReturnsRejection(identifierLength: 16)",
+      "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests.Handle_UpdatePartyComposite_RemoveMissingChannel_ReturnsRejection(identifierLength: 128)",
+      "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests.Handle_UpdatePartyComposite_InvalidRemoveIdentifierId_ReturnsRejection(identifierLength: 16)",
+      "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests.Handle_UpdatePartyComposite_InvalidRemoveIdentifierId_ReturnsRejection(identifierLength: 128)",
+      "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateIdentifierTests.Handle_RemoveIdentifier_NotFound_ReturnsIdentifierNotFound(identifierLength: 16)",
+      "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateIdentifierTests.Handle_RemoveIdentifier_NotFound_ReturnsIdentifierNotFound(identifierLength: 128)",
+      "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateContactChannelTests.Handle_UpdateContactChannel_NotFound_ReturnsContactChannelNotFound(identifierLength: 16)",
+      "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateContactChannelTests.Handle_UpdateContactChannel_NotFound_ReturnsContactChannelNotFound(identifierLength: 128)",
+      "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateContactChannelTests.Handle_RemoveContactChannel_NotFound_ReturnsContactChannelNotFound(identifierLength: 16)",
+      "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateContactChannelTests.Handle_RemoveContactChannel_NotFound_ReturnsContactChannelNotFound(identifierLength: 128)"
+    ]
+  },
+  "server": {
+    "total": 315,
+    "passed": 315,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "not-run": 0,
+    "command": "dotnet tests/Hexalith.Parties.Server.Tests/bin/Debug/net10.0/Hexalith.Parties.Server.Tests.dll -xml /tmp/dw-123-validation/server-final.xml",
+    "exit_code": 0,
+    "xml_sha256": "e14f8b74b2fe3a43021183b5589c7fd5206f1bc19b9997c98133a02cebdf8613",
+    "all_12_before_fix_failures_now_pass": true
+  },
+  "parties": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -xml /tmp/dw-123-validation/parties.xml",
+    "exit_code": 1,
+    "total": 1010,
+    "passed": 1008,
+    "failed": 2,
+    "errors": 0,
+    "skipped": 0,
+    "not-run": 0,
+    "xml_sha256": "56271d292297a54da82f0112901014718c07e921b8edd06b96deb0cefe50c71a",
+    "failures": [
+      {
+        "test": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+        "diagnostic": "Shouldly.ShouldAssertException : gitlink.Replace('\\\\t', ' ')\n    should be\n\\\"160000 commit 9f0121c77e3f085c58f5c926057606db8e6511a7 references/Hexalith.Builds\\\"\n    but was\n\\\"160000 commit 4f53d9f37c5b86cfd43fbcc8fa5dd4df19b84c77 references/Hexalith.Builds\\\"\n"
+      },
+      {
+        "test": "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog",
+        "diagnostic": "Shouldly.ShouldAssertException : architecture\n    should contain (case insensitive comparison)\n\\\"| | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.1-beta.935` |\\\"\n    but was actually\n\\\"# Architecture \u2014 Hexalith.Parties\n\n> Regenerated by BMAD *Document Project* (**full rescan**, deep, ...\\\""
+      }
+    ]
+  },
+  "selected_source_sha256": {
+    "src/Hexalith.Parties/Domain/PartyAggregate.cs": "6539733720396dd5380b1f87c043adaee94b24fe271918bb3369c136a64aadbf",
+    "tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs": "29b2bf19f913f9951e47a705d9dd460e6a430d4690e021e074ecd5afe0197339",
+    "tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateContactChannelTests.cs": "af94af81b776df994a735e6d373963231b8726d99e76b3ba36840d5d73f5d195",
+    "tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateIdentifierTests.cs": "d46b1785b1ab1f30f4c7821626be2ddc04a3c796569ea29363a1f80ef9f88e40"
+  },
+  "runtime": {
+    "start": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --no-build --isolated --non-interactive --format Json",
+    "start_exit_code": 0,
+    "wait": "aspire wait parties --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --timeout 30 --non-interactive",
+    "wait_exit_code": 0,
+    "parties": "Running / Healthy",
+    "limitations": "Existing binaries; EventStore exited 1, eventstore-admin and Tenants exited 134, UI exited 150. Not full-topology acceptance.",
+    "stop": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "stop_exit_code": 0
+  },
+  "completion_gate": "blocked: broader assembly has two dependency/catalog documentation fitness failures after concurrent source sync; diagnostic behavior is verified but DW-123 remains open",
+  "raw_local_receipts": "/tmp/dw-123-validation; raw XML/log files remain local, not all are included in this compact packet",
+  "server_before_review": {
+    "command": "dotnet tests/Hexalith.Parties.Server.Tests/bin/Debug/net10.0/Hexalith.Parties.Server.Tests.dll -xml /tmp/dw-123-validation/server.xml",
+    "exit_code": 0,
+    "total": 309,
+    "passed": 309,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "not-run": 0,
+    "xml_sha256": "8e04acf891f172312880b3f73b23c87b430aae428529b9cf67c083a2f0da06e9",
+    "all_12_before_fix_failures_now_pass": true
+  },
+  "review": {
+    "finding_floor": "min(floor(sqrt(17.547) + 1), 10) = 5",
+    "findings": 5,
+    "triage": "Five low-severity test/documentation gaps patched; follow-up reviewer confirmed all addressed, no concrete remaining defect.",
+    "deferred_findings": 0,
+    "skipped_review_layers": []
+  },
+  "checks": [
+    "Scoped git diff --check passed; frozen intent matches the initial committed spec exactly.",
+    "No production source changed after broader service assembly verification."
+  ],
+  "commitlint": {
+    "command": "node node_modules/@commitlint/cli/cli.js --edit /tmp/dw-123-commit-and-push-message.txt --verbose",
+    "locked_and_installed_cli_version": "21.2.2",
+    "exit_code": 0,
+    "problems": 0,
+    "warnings": 0,
+    "message": "test: strengthen not-found diagnostic coverage\n\nCover composite rejection atomicity, oversized identifiers, and exact\nidentifier matching. Record DW-123 review and validation evidence.\n\nKeep DW-123 open while two dependency-sync fitness checks fail.\n",
+    "message_sha256": "077623cb56404d47e1e3df2eaf94abe60c3c34a3611bff15fa759dc6bf5fbebc",
+    "output": "\u29d7   --- input ---\ntest: strengthen not-found diagnostic coverage\n\nCover composite rejection atomicity, oversized identifiers, and exact\nidentifier matching. Record DW-123 review and validation evidence.\n\nKeep DW-123 open while two dependency-sync fitness checks fail.\n\u2714   found 0 problems, 0 warnings\n"
+  }
+}
