@@ -1,0 +1,5 @@
+⧗   --- input ---
+fix(queries): distinguish invalid page failures
+
+Preserve legacy cursor responses and sanitize paging diagnostics.
+✔   found 0 problems, 0 warnings

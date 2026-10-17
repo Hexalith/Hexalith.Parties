@@ -1,0 +1,89 @@
+{
+  "recorded_after_final_focused_verification_utc": "2026-10-17T18:32:24.726278+00:00",
+  "repository": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+  "baseline_revision": "77d9af18a54d92506e310fe5a45021a395e66f60",
+  "scope": "Uncommitted EventStore production, test and documentation bytes present for the passing focused verification. Full qualification is not claimed.",
+  "hash_command": "sha256sum <each repository-relative file listed in files>",
+  "files": {
+    "docs/reference/query-api.md": {
+      "sha256": "1cea1a51baa27ac9a523d30aa68b194b66597c61cc892b620b74bdd551f56d55",
+      "bytes": 33638,
+      "baseline_sha256": "6d2c0873f4aea3d2087b0f273e23c146ded7f9e0977b964954adeb3c1e030c64"
+    },
+    "src/Hexalith.EventStore.Contracts/Queries/QueryAdapterFailureReason.cs": {
+      "sha256": "3e4efc47ee01b236d6f6732daddaa85bfb938faded06e63e0db28b41eda4fbbf",
+      "bytes": 4463,
+      "baseline_sha256": "c06b26c4dcac53a3d2497e6def522e336a8c5fbb55d17b91b9df26580c804eba"
+    },
+    "src/Hexalith.EventStore.Server/Pipeline/SubmitQueryHandler.cs": {
+      "sha256": "073c490edd7b6e9f833590936747b6f4b927bd52a0f662281ffbed63995ca214",
+      "bytes": 9521,
+      "baseline_sha256": "cc47b9ce60933e2f4dc32d34ebe8fcb7e12ccbb6acccf48b07f84cb14ad0c7ee"
+    },
+    "src/Hexalith.EventStore.Server/Queries/QueryExecutionFailedException.cs": {
+      "sha256": "12fcc9dd5c2546d05d94e11d226320ed18e5278652ff280c61fa25d5dde05072",
+      "bytes": 3235,
+      "baseline_sha256": "bc17a0bcccbfaafe5c2ba9f30d360e41fabd3376a1e39a3ddb441f45f6157592"
+    },
+    "src/Hexalith.EventStore.Server/Queries/QueryRouter.cs": {
+      "sha256": "ec8543fc2d25e7850f4b07232ddf33599470738f4edf3b419df8bdf67a7a66d3",
+      "bytes": 25966,
+      "baseline_sha256": "ab8fcf22d007e9ea04fc984e0faf06f3e7d951079be4ad9f1b728199071fe1fc"
+    },
+    "src/Hexalith.EventStore/ErrorHandling/QueryExecutionFailedExceptionHandler.cs": {
+      "sha256": "0822b57a388986370c5377dd57f45d94b85386056db96304793a8c76f72ec237",
+      "bytes": 5835,
+      "baseline_sha256": "fc7fe8790e0d3c98ac4a49244f2fd1f9ab4bd91b43e3860273e26f8dd59cf253"
+    },
+    "tests/Hexalith.EventStore.Contracts.Tests/Queries/ProjectionAdapterContractTests.cs": {
+      "sha256": "22357eb1a431f684a90c5636dfa1b1600756cb51b10ae3da5d894c2a0b708624",
+      "bytes": 42674,
+      "baseline_sha256": "a1c1515fa54533fe09fdf4d2c146103f06a068005a77f55f9dad0d48d6f09495"
+    },
+    "tests/Hexalith.EventStore.Server.Tests/ErrorHandling/QueryProblemDetailsTests.cs": {
+      "sha256": "f955eb132b9744ecc1889d623f22c14d81b79c4a47772f58ec8f6b66cbef1e45",
+      "bytes": 10475,
+      "baseline_sha256": "71954f5f6c3c6ce7db294fd65b18a4ffcb82f4837a8bef1d2760076b8bff5141"
+    },
+    "tests/Hexalith.EventStore.Server.Tests/Pipeline/Queries/SubmitQueryHandlerTests.cs": {
+      "sha256": "dc7017fa0714c3294a4520a25cf206a55b8d5e2872199a07ec445b31d233a1d0",
+      "bytes": 21441,
+      "baseline_sha256": "1146e1274f3d6720ef049c39a32c901dbd1e17b5c9f041d1405a5fd1f3f76ee2"
+    },
+    "tests/Hexalith.EventStore.Server.Tests/Queries/QueryRouterTests.cs": {
+      "sha256": "af276096eb7bee68e939abbb91dc64bbf95b4232ed7aa28761f2ea1398ad321d",
+      "bytes": 66224,
+      "baseline_sha256": "99857ecc9a8c22be83e5ac0c19b26cca096a0df9000c7f5692a1ea7b970c7f8c"
+    }
+  },
+  "verification_receipts": [
+    {
+      "command": "dotnet build tests/Hexalith.EventStore.Contracts.Tests/Hexalith.EventStore.Contracts.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "raw_path": "/tmp/dw-27-validation/raw/review-eventstore-contracts-build.txt",
+      "raw_sha256": "4fbcd87d5cefb5709225a437ef9ecf3f392f6bdc3f2ff1671840acd905bff479"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "raw_path": "/tmp/dw-27-validation/raw/review-eventstore-server-build.txt",
+      "raw_sha256": "1a8f60eb2ccf76542b209dc3202e30eeff6730d892372368ab86d338586260ec"
+    },
+    {
+      "command": "dotnet tests/Hexalith.EventStore.Contracts.Tests/bin/Debug/net10.0/Hexalith.EventStore.Contracts.Tests.dll -class Hexalith.EventStore.Contracts.Tests.Queries.ProjectionAdapterContractTests",
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "raw_path": "/tmp/dw-27-validation/raw/review-eventstore-contracts-focused.txt",
+      "raw_sha256": "6c8293ad2f809b7a4c56c99464e5eec35d012cc5acb566ffbb8d4bcb1293b8cd"
+    },
+    {
+      "command": "dotnet tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll -class Hexalith.EventStore.Server.Tests.Pipeline.Queries.SubmitQueryHandlerTests -class Hexalith.EventStore.Server.Tests.Queries.QueryRouterTests -class Hexalith.EventStore.Server.Tests.ErrorHandling.QueryProblemDetailsTests",
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "raw_path": "/tmp/dw-27-validation/raw/review-eventstore-server-focused.txt",
+      "raw_sha256": "14346e820ae4359c28510022664971a6b11f80cf49d2c1874deeda5a05311710"
+    }
+  ]
+}

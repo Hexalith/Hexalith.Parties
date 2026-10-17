@@ -1,0 +1,94 @@
+{
+  "raw_logs": {
+    "consumer-patch-apply-check.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/consumer-patch-apply-check.txt",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "eventstore-contracts-build.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/eventstore-contracts-build.txt",
+      "raw_bytes": 3218,
+      "raw_sha256": "9f1db4604c7164b394e2511b3c94591670398c26e318c40aef184e2b83ef132d"
+    },
+    "eventstore-contracts-focused.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/eventstore-contracts-focused.txt",
+      "raw_bytes": 491,
+      "raw_sha256": "2e16fdfe78509e826a1f5405d264dd900ed1dd0fbe330c8b5a5e2412f048eed0"
+    },
+    "eventstore-contracts-full.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/eventstore-contracts-full.txt",
+      "raw_bytes": 2127,
+      "raw_sha256": "e43472e27f03fc4b48167be7a7d346bac1b3b96ceb2a2e7e612b19d196e9527d"
+    },
+    "eventstore-server-build.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/eventstore-server-build.txt",
+      "raw_bytes": 4954,
+      "raw_sha256": "7669edc88959473f243a45783daca7f71ea7ba4c75cf1d01342a26b46908d294"
+    },
+    "eventstore-server-focused.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/eventstore-server-focused.txt",
+      "raw_bytes": 476,
+      "raw_sha256": "fb940c0b5d26880fe653570bda0e688850ea9c026850b77b5225c2fb145b6c7a"
+    },
+    "eventstore-server-full.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/eventstore-server-full.txt",
+      "raw_bytes": 660435,
+      "raw_sha256": "02eb4647bef437d8b749acd474358304254e8fe3007f8ea5c58e50122c919a98"
+    },
+    "eventstore-whitespace-check.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/eventstore-whitespace-check.txt",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "parties-candidate-build.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/parties-candidate-build.txt",
+      "raw_bytes": 9574,
+      "raw_sha256": "ee8bc5ad3d11b1a6e6d463fef32f62f2374d6996240f57553afcf33c00ba6fd4"
+    },
+    "parties-candidate-focused.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/parties-candidate-focused.txt",
+      "raw_bytes": 327384,
+      "raw_sha256": "cec20c47c388059b93a82bcdde67871deac7860b36968d89fa4e1ba1e0f2d555"
+    },
+    "parties-candidate-full.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/parties-candidate-full.txt",
+      "raw_bytes": 795800,
+      "raw_sha256": "06c99e3e21e4ae99ed0769bc20bd762cfbf22a9eae48e6a224710089b10e79cf"
+    },
+    "parties-pinned-package-build.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/parties-pinned-package-build.txt",
+      "raw_bytes": 3049,
+      "raw_sha256": "5d3a12a1efbd9d664428a830fec7b4b5716c7f4dd033c64eaf3c99e489b48281"
+    },
+    "parties-pinned-package-focused.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/parties-pinned-package-focused.txt",
+      "raw_bytes": 404378,
+      "raw_sha256": "e4c4f07748ad4b3a179c61d397a22ce8323793a1e0c7e1f663507eec99f395d9"
+    },
+    "parties-whitespace-check.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/parties-whitespace-check.txt",
+      "raw_bytes": 0,
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "warning-override-guard.txt": {
+      "raw_path": "/tmp/dw-27-validation/raw/warning-override-guard.txt",
+      "raw_bytes": 93,
+      "raw_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604"
+    }
+  },
+  "repository_log_bytes_before": 2211979,
+  "repository_log_bytes_after": 13511,
+  "scope": "Historical initial log cleanup before the required review patch refresh.",
+  "historical_preserved_bindings": {
+    "consumer-patch-manifest.json": "667d6455a85b139acda0ce136268bafdffc35d3d3e4cba0077f7f2a5270927d3",
+    "parties-consumer-adoption.patch": "6c7c5beabc7da1bf7386b16c6c70fec03359a7912a92bbef28da365d152d7581"
+  },
+  "historical_bound_artifacts": {
+    "consumer-patch-manifest.json": "/tmp/dw-27-validation/raw/pre-review-consumer-patch-manifest.json",
+    "parties-consumer-adoption.patch": "/tmp/dw-27-validation/raw/pre-review-parties-consumer-adoption.patch"
+  },
+  "review_refresh_bindings": {
+    "parties-consumer-adoption.patch": "4ddb36d577d5ad8865cb254d5b58681dff6743331bb4c019ff53aec862d84b91",
+    "consumer-patch-manifest.json": "e9559e04d07f84d5aa73b2a17deb7b42118ccbd8589e0dc532595c62f18cb796"
+  }
+}

@@ -1,0 +1,6 @@
+Command: dotnet build tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
+Working directory: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore
+Exit code: 0
+Result: build passed; warnings=0, errors=0
+Raw output: /tmp/dw-27-validation/raw/review-eventstore-server-build.txt
+Raw SHA-256: 1a8f60eb2ccf76542b209dc3202e30eeff6730d892372368ab86d338586260ec

@@ -1,0 +1,87 @@
+{
+  "command": "python3 _bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/check-verification-script.py",
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "passed": 4,
+  "cases": [
+    {
+      "case": "normal-success",
+      "command": [
+        "/usr/bin/python3",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/verify-compatibility-and-restoration.py",
+        "--manifest",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/consumer-patch-manifest.json",
+        "--receipt",
+        "/tmp/dw-27-proof-fixtures-2uupxk43/normal-success.json"
+      ],
+      "pythonoptimize": null,
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "stdout": "PASS: raw compatibility preserved; tracked consumers restored; reconstructed candidate hashes match\n",
+      "stderr": ""
+    },
+    {
+      "case": "normal-corrupt-candidate",
+      "command": [
+        "/usr/bin/python3",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/verify-compatibility-and-restoration.py",
+        "--manifest",
+        "/tmp/dw-27-proof-fixtures-2uupxk43/corrupt-candidate-manifest.json",
+        "--receipt",
+        "/tmp/dw-27-proof-fixtures-2uupxk43/normal-corrupt-candidate.json"
+      ],
+      "pythonoptimize": null,
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "stdout": "",
+      "stderr": "FAIL: Tested candidate hash mismatch: src/Hexalith.Parties/Queries/PartySdkQueryService.cs\n"
+    },
+    {
+      "case": "optimized-success",
+      "command": [
+        "/usr/bin/python3",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/verify-compatibility-and-restoration.py",
+        "--manifest",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/consumer-patch-manifest.json",
+        "--receipt",
+        "/tmp/dw-27-proof-fixtures-2uupxk43/optimized-success.json"
+      ],
+      "pythonoptimize": "1",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "stdout": "PASS: raw compatibility preserved; tracked consumers restored; reconstructed candidate hashes match\n",
+      "stderr": ""
+    },
+    {
+      "case": "optimized-corrupt-candidate",
+      "command": [
+        "/usr/bin/python3",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/verify-compatibility-and-restoration.py",
+        "--manifest",
+        "/tmp/dw-27-proof-fixtures-2uupxk43/corrupt-candidate-manifest.json",
+        "--receipt",
+        "/tmp/dw-27-proof-fixtures-2uupxk43/optimized-corrupt-candidate.json"
+      ],
+      "pythonoptimize": "1",
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "stdout": "",
+      "stderr": "FAIL: Tested candidate hash mismatch: src/Hexalith.Parties/Queries/PartySdkQueryService.cs\n"
+    }
+  ],
+  "consumer_patch_and_manifest_hashes_unchanged": true,
+  "before_sha256": {
+    "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "403db81a8af6a9f60a1e79a8f619bca73bf8d92831ffe4364aeb347807b48865",
+    "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "8135cedea9caf7657441536b0046fbddeb09ce25b54722bb31a4a6115d5d8888",
+    "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": "038b30e69adff09173326ccac6b89be0e8533ee7c5c476ac2b98b4ebd23aa621",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/consumer-patch-manifest.json": "e9559e04d07f84d5aa73b2a17deb7b42118ccbd8589e0dc532595c62f18cb796",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/parties-consumer-adoption.patch": "4ddb36d577d5ad8865cb254d5b58681dff6743331bb4c019ff53aec862d84b91"
+  },
+  "after_sha256": {
+    "/home/administrator/projects/hexalith/parties/src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "403db81a8af6a9f60a1e79a8f619bca73bf8d92831ffe4364aeb347807b48865",
+    "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "8135cedea9caf7657441536b0046fbddeb09ce25b54722bb31a4a6115d5d8888",
+    "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": "038b30e69adff09173326ccac6b89be0e8533ee7c5c476ac2b98b4ebd23aa621",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/consumer-patch-manifest.json": "e9559e04d07f84d5aa73b2a17deb7b42118ccbd8589e0dc532595c62f18cb796",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/parties-consumer-adoption.patch": "4ddb36d577d5ad8865cb254d5b58681dff6743331bb4c019ff53aec862d84b91"
+  }
+}

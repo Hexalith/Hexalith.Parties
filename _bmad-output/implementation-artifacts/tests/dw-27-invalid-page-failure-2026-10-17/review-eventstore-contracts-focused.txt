@@ -1,0 +1,9 @@
+Command: dotnet tests/Hexalith.EventStore.Contracts.Tests/bin/Debug/net10.0/Hexalith.EventStore.Contracts.Tests.dll -class Hexalith.EventStore.Contracts.Tests.Queries.ProjectionAdapterContractTests
+Working directory: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore
+Exit code: 0
+Result: total=112, passed=112, errors=0, failed=0, skipped=0, not_run=0
+Raw output: /tmp/dw-27-validation/raw/review-eventstore-contracts-focused.txt
+Raw SHA-256: 6c8293ad2f809b7a4c56c99464e5eec35d012cc5acb566ffbb8d4bcb1293b8cd
+
+Runner result:
+   Hexalith.EventStore.Contracts.Tests  Total: 112, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.358s

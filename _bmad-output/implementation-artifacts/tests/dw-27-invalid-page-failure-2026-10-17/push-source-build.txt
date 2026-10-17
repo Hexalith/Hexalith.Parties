@@ -1,0 +1,11 @@
+Command: dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
+Exit code: 0
+Raw log: /tmp/dw-27-push/parties-build.log
+Raw SHA-256: 059adf3d9af7158b610a33d92fa04a4b9d3984588655d5a6303d35b1540eb01c
+
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:16.98

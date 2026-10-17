@@ -1,0 +1,6 @@
+Command: dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true
+Working directory: /home/administrator/projects/hexalith/parties
+Exit code: 0
+Raw output: /tmp/dw-27-validation/raw/parties-pinned-package-build.txt
+Raw SHA-256: 5d3a12a1efbd9d664428a830fec7b4b5716c7f4dd033c64eaf3c99e489b48281
+Result: build passed; warnings=0, errors=0

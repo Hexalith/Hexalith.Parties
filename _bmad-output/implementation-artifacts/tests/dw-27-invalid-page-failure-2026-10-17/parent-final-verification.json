@@ -1,0 +1,192 @@
+{
+  "checks": [
+    {
+      "name": "consumer-patch-check",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "apply",
+        "--check",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/parties-consumer-adoption.patch"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "raw_log": "/tmp/dw-27-validation/parent-final/consumer-patch-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "summary": []
+    },
+    {
+      "name": "consumer-patch-apply",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "apply",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/parties-consumer-adoption.patch"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "raw_log": "/tmp/dw-27-validation/parent-final/consumer-patch-apply.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "summary": []
+    },
+    {
+      "name": "consumer-source-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "raw_log": "/tmp/dw-27-validation/parent-final/consumer-source-build.log",
+      "sha256": "2b43db0768820215fccd298259168fe1e2fbd376453b21a6b5f8e1fe490ea5a8",
+      "summary": [
+        "0 Warning(s)",
+        "0 Error(s)"
+      ]
+    },
+    {
+      "name": "consumer-focused",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+        "-class",
+        "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "raw_log": "/tmp/dw-27-validation/parent-final/consumer-focused.log",
+      "sha256": "b2f6d745416f2ed0366b328dd1e026bd343351b2a6d6d2db4bcc6e31df18d44e",
+      "summary": [
+        "Hexalith.Parties.Tests  Total: 214, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 7.497s"
+      ]
+    },
+    {
+      "name": "eventstore-contracts-focused",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.Contracts.Tests/bin/Debug/net10.0/Hexalith.EventStore.Contracts.Tests.dll",
+        "-class",
+        "Hexalith.EventStore.Contracts.Tests.Queries.ProjectionAdapterContractTests"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "raw_log": "/tmp/dw-27-validation/parent-final/eventstore-contracts-focused.log",
+      "sha256": "217bb8ad0cab5aeeb905947d7d79ea1d4302830df24861d17d94f3043c645640",
+      "summary": [
+        "Hexalith.EventStore.Contracts.Tests  Total: 112, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.281s"
+      ]
+    },
+    {
+      "name": "eventstore-server-focused",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll",
+        "-class",
+        "Hexalith.EventStore.Server.Tests.Pipeline.Queries.SubmitQueryHandlerTests",
+        "-class",
+        "Hexalith.EventStore.Server.Tests.Queries.QueryRouterTests",
+        "-class",
+        "Hexalith.EventStore.Server.Tests.ErrorHandling.QueryProblemDetailsTests"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "raw_log": "/tmp/dw-27-validation/parent-final/eventstore-server-focused.log",
+      "sha256": "d3f8dac23b2272b3a42a91ce99048fd22e667f88ffba1e4ca64442bd62ce7164",
+      "summary": [
+        "Hexalith.EventStore.Server.Tests  Total: 116, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.591s"
+      ]
+    },
+    {
+      "name": "verifier-regressions",
+      "command": [
+        "python3",
+        "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/check-verification-script.py"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "raw_log": "/tmp/dw-27-validation/parent-final/verifier-regressions.log",
+      "sha256": "ea5ba76605331414deab7443320ca3ee256ff76a5b4f88351ea7e14134dcbfbb",
+      "summary": [
+        "PASS: 4 proof-script cases; tracked files, patch and manifest untouched"
+      ]
+    },
+    {
+      "name": "consumer-pinned-package-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "raw_log": "/tmp/dw-27-validation/parent-final/consumer-pinned-package-build.log",
+      "sha256": "6e5dc9ef71c185b96ea2fb9fccc0b859a25fca99908f2acc649b128e995ab527",
+      "summary": [
+        "0 Warning(s)",
+        "0 Error(s)"
+      ]
+    },
+    {
+      "name": "parties-whitespace",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "raw_log": "/tmp/dw-27-validation/parent-final/parties-whitespace.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "summary": []
+    },
+    {
+      "name": "eventstore-whitespace",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "raw_log": "/tmp/dw-27-validation/parent-final/eventstore-whitespace.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "summary": []
+    },
+    {
+      "name": "warning-override",
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "raw_log": "/tmp/dw-27-validation/parent-final/warning-override.log",
+      "sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604",
+      "summary": []
+    }
+  ],
+  "consumer_files_restored": {
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": true,
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": true,
+    "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": true
+  },
+  "shared_source_manifest_matches": true,
+  "broad_checks": "Previously recorded failures remain unqualified; no repeated broad run."
+}

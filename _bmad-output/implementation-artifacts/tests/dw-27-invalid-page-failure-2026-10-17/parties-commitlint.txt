@@ -1,0 +1,6 @@
+⧗   --- input ---
+build: record invalid-page SDK prerequisite
+
+Record the shared source commit and deferred consumer patch.
+Keep package adoption gated on a published compatible SDK.
+✔   found 0 problems, 0 warnings

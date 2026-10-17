@@ -1,0 +1,65 @@
+{
+  "command": [
+    "/usr/bin/python3",
+    "_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/verify-compatibility-and-restoration.py",
+    "--manifest",
+    "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/consumer-patch-manifest.json"
+  ],
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "exit_code": 0,
+  "legacy_cursor_http_test": {
+    "repository": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "tests/Hexalith.EventStore.Server.Tests/ErrorHandling/QueryProblemDetailsTests.cs",
+    "baseline_revision": "77d9af18a54d92506e310fe5a45021a395e66f60",
+    "baseline_test_sha256": "3701acd481df7ed4a18a0f628b451abc4c1c2189b8756334a43bf36b3c64bdb7",
+    "current_test_sha256": "3701acd481df7ed4a18a0f628b451abc4c1c2189b8756334a43bf36b3c64bdb7",
+    "raw_bytes_equal": true,
+    "test_source_utf8": "    [Fact]\n    public async Task QueryExecutionFailedExceptionHandler_InvalidCursor_UsesBadRequestProblemTypeAndDoesNotEchoCursor() {\n        var handler = new QueryExecutionFailedExceptionHandler(NullLogger<QueryExecutionFailedExceptionHandler>.Instance);\n        DefaultHttpContext httpContext = CreateHttpContext();\n        const string RawCursor = \"protected.cursor.payload\";\n        var exception = new QueryExecutionFailedException(\n            \"corr-1\",\n            \"tenant-a\",\n            \"party\",\n            \"party-1\",\n            \"SearchParties\",\n            StatusCodes.Status400BadRequest,\n            \"invalid-cursor: \" + RawCursor,\n            QueryProblemReasonCodes.InvalidPage);\n\n        _ = await handler.TryHandleAsync(httpContext, exception, CancellationToken.None);\n\n        ProblemDetails problem = await ReadProblemDetailsAsync(httpContext);\n\n        problem.Type.ShouldBe(ProblemTypeUris.BadRequest);\n        problem.Status.ShouldBe(StatusCodes.Status400BadRequest);\n        problem.Detail.ShouldBe(\"The supplied cursor is invalid.\");\n        problem.Detail.ShouldNotContain(RawCursor);\n        GetExtensionString(problem, GatewayProblemDetailsExtensions.ReasonCode)\n            .ShouldBe(QueryProblemReasonCodes.InvalidPage);\n        GetExtensionString(problem, GatewayProblemDetailsExtensions.Reason)\n            .ShouldBe(QueryAdapterFailureReason.InvalidCursor);\n    }\n"
+  },
+  "exception_constructor_signature": {
+    "path": "src/Hexalith.EventStore.Server/Queries/QueryExecutionFailedException.cs",
+    "baseline_signature_sha256": "a02ce44ad042a35e4fdde8901ff8ce5951bb2ca210fc50e49dc72f68b69713bd",
+    "current_signature_sha256": "a02ce44ad042a35e4fdde8901ff8ce5951bb2ca210fc50e49dc72f68b69713bd",
+    "raw_bytes_equal": true
+  },
+  "tracked_consumer_files": {
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": {
+      "baseline_revision": "611fa39803d716b377c67801459a7dd4f3059829",
+      "baseline_sha256": "403db81a8af6a9f60a1e79a8f619bca73bf8d92831ffe4364aeb347807b48865",
+      "current_sha256": "403db81a8af6a9f60a1e79a8f619bca73bf8d92831ffe4364aeb347807b48865",
+      "raw_bytes_equal": true
+    },
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": {
+      "baseline_revision": "611fa39803d716b377c67801459a7dd4f3059829",
+      "baseline_sha256": "8135cedea9caf7657441536b0046fbddeb09ce25b54722bb31a4a6115d5d8888",
+      "current_sha256": "8135cedea9caf7657441536b0046fbddeb09ce25b54722bb31a4a6115d5d8888",
+      "raw_bytes_equal": true
+    },
+    "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": {
+      "baseline_revision": "611fa39803d716b377c67801459a7dd4f3059829",
+      "baseline_sha256": "038b30e69adff09173326ccac6b89be0e8533ee7c5c476ac2b98b4ebd23aa621",
+      "current_sha256": "038b30e69adff09173326ccac6b89be0e8533ee7c5c476ac2b98b4ebd23aa621",
+      "raw_bytes_equal": true
+    }
+  },
+  "reconstructed_tested_candidate_files": {
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": {
+      "expected_sha256": "798c8cdd11715224192dcef8525c27828bd6e6a7fe959c7aa9b063930cb16ce3",
+      "reconstructed_sha256": "798c8cdd11715224192dcef8525c27828bd6e6a7fe959c7aa9b063930cb16ce3",
+      "hash_matches": true
+    },
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": {
+      "expected_sha256": "131a6ccd32198463eab47c393a69457d24accfe60df7c4c477274b0d37b5ac19",
+      "reconstructed_sha256": "131a6ccd32198463eab47c393a69457d24accfe60df7c4c477274b0d37b5ac19",
+      "hash_matches": true
+    },
+    "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": {
+      "expected_sha256": "fd03c7937ccbf00f78c60de04e8aad1b497619363453fa2ab3987e3a9522f484",
+      "reconstructed_sha256": "fd03c7937ccbf00f78c60de04e8aad1b497619363453fa2ab3987e3a9522f484",
+      "hash_matches": true
+    }
+  },
+  "patch_sha256": "4ddb36d577d5ad8865cb254d5b58681dff6743331bb4c019ff53aec862d84b91",
+  "manifest_sha256": "e9559e04d07f84d5aa73b2a17deb7b42118ccbd8589e0dc532595c62f18cb796",
+  "reconstruction": "Saved patch applied only to baseline copies in a temporary directory"
+}

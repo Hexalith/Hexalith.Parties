@@ -1,0 +1,18 @@
+{
+  "patch_sha256": "4ddb36d577d5ad8865cb254d5b58681dff6743331bb4c019ff53aec862d84b91",
+  "consumer_activated": false,
+  "files": {
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": {
+      "baseline_sha256": "403db81a8af6a9f60a1e79a8f619bca73bf8d92831ffe4364aeb347807b48865",
+      "tested_candidate_sha256": "798c8cdd11715224192dcef8525c27828bd6e6a7fe959c7aa9b063930cb16ce3"
+    },
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": {
+      "baseline_sha256": "8135cedea9caf7657441536b0046fbddeb09ce25b54722bb31a4a6115d5d8888",
+      "tested_candidate_sha256": "131a6ccd32198463eab47c393a69457d24accfe60df7c4c477274b0d37b5ac19"
+    },
+    "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": {
+      "baseline_sha256": "038b30e69adff09173326ccac6b89be0e8533ee7c5c476ac2b98b4ebd23aa621",
+      "tested_candidate_sha256": "fd03c7937ccbf00f78c60de04e8aad1b497619363453fa2ab3987e3a9522f484"
+    }
+  }
+}

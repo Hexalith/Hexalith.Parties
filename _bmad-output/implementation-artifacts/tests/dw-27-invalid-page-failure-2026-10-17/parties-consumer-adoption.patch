@@ -1,0 +1,586 @@
+diff --git a/src/Hexalith.Parties/Queries/PartySdkQueryService.cs b/src/Hexalith.Parties/Queries/PartySdkQueryService.cs
+index d891d2a2..b65c6833 100644
+--- a/src/Hexalith.Parties/Queries/PartySdkQueryService.cs
++++ b/src/Hexalith.Parties/Queries/PartySdkQueryService.cs
+@@ -261,9 +261,9 @@ public sealed partial class PartySdkQueryService(
+         }
+ 
+         string cursorScope = CreateListCursorScope(query, payload, ScopePageSize(query, payload.PageSize));
+-        if (!TryResolvePaging(query, payload.Page, payload.PageSize, cursorScope, out int pageNumber, out int pageSize, out int offset))
++        if (!TryResolvePaging(query, payload.Page, payload.PageSize, cursorScope, out int pageNumber, out int pageSize, out int offset, out string failureReason))
+         {
+-            return QueryResult.Failure(QueryAdapterFailureReason.InvalidCursor);
++            return QueryResult.Failure(failureReason);
+         }
+ 
+         return await ReadIndexAsync(query, cancellationToken, (model, freshness) =>
+@@ -301,9 +301,9 @@ public sealed partial class PartySdkQueryService(
+         }
+ 
+         string cursorScope = CreateSearchCursorScope(query, payload, ScopePageSize(query, payload.PageSize));
+-        if (!TryResolvePaging(query, payload.Page, payload.PageSize, cursorScope, out int pageNumber, out int pageSize, out int offset))
++        if (!TryResolvePaging(query, payload.Page, payload.PageSize, cursorScope, out int pageNumber, out int pageSize, out int offset, out string failureReason))
+         {
+-            return QueryResult.Failure(QueryAdapterFailureReason.InvalidCursor);
++            return QueryResult.Failure(failureReason);
+         }
+ 
+         return await ReadIndexAsync(query, cancellationToken, (model, freshness) =>
+@@ -567,8 +567,10 @@ public sealed partial class PartySdkQueryService(
+         string cursorScope,
+         out int page,
+         out int pageSize,
+-        out int offset)
++        out int offset,
++        out string failureReason)
+     {
++        failureReason = QueryAdapterFailureReason.InvalidCursor;
+         page = payloadPage;
+         pageSize = Math.Clamp(payloadPageSize, 1, 100);
+         long payloadOffset = (long)(page - 1) * pageSize;
+@@ -579,20 +581,25 @@ public sealed partial class PartySdkQueryService(
+         }
+ 
+         pageSize = query.Paging.PageSize ?? pageSize;
+-        string? failureReason = null;
+-        if (pageSize is < 1 or > 100
+-            || query.Paging.Offset is < 0
++        if (pageSize is < 1 or > 100)
++        {
++            failureReason = QueryAdapterFailureReason.InvalidPage;
++            return false;
++        }
++
++        string? cursorFailureReason = null;
++        if (query.Paging.Offset is < 0
+             || (!string.IsNullOrWhiteSpace(query.Paging.Cursor) && query.Paging.Offset is not null)
+             || !cursorCodec.TryDecode(
+                 query.Paging.Cursor,
+                 query.QueryType,
+                 cursorScope,
+                 out string? position,
+-                out failureReason))
++                out cursorFailureReason))
+         {
+-            if (!string.IsNullOrWhiteSpace(failureReason))
++            if (!string.IsNullOrWhiteSpace(cursorFailureReason))
+             {
+-                LogCursorRejected(query.QueryType, failureReason);
++                LogCursorRejected(query.QueryType, cursorFailureReason);
+             }
+ 
+             return false;
+diff --git a/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs b/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs
+index 58d342a2..8b18cf0f 100644
+--- a/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs
++++ b/tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs
+@@ -14,6 +14,9 @@ using Hexalith.EventStore.Contracts.Commands;
+ using Hexalith.EventStore.Contracts.Events;
+ using Hexalith.EventStore.Contracts.Identity;
+ using Hexalith.EventStore.Contracts.Results;
++using Hexalith.EventStore.Contracts.Queries;
++using Hexalith.EventStore.Client.Projections;
++using Hexalith.EventStore.Client.Queries;
+ using Hexalith.EventStore.Configuration;
+ using Hexalith.EventStore.Indexes;
+ using Hexalith.EventStore.Models;
+@@ -27,11 +30,16 @@ using Hexalith.EventStore.Server.Queries;
+ using Hexalith.EventStore.Testing.Fakes;
+ using Hexalith.Parties.Contracts.Authorization;
+ using Hexalith.Parties.Contracts.Commands;
++using Hexalith.Parties.Contracts.Security;
++using Hexalith.Parties.Contracts.Search;
+ using Hexalith.Parties.Contracts.Events;
+ using Hexalith.Parties.Contracts.ValueObjects;
+ using Hexalith.Parties.Queries;
+ using Hexalith.Parties.Domain;
+ using Hexalith.Parties.Validation;
++using Hexalith.Parties.Projections.Configuration;
++using Hexalith.Parties.Projections.Models;
++using Hexalith.Parties.Search;
+ 
+ using Microsoft.AspNetCore.Hosting;
+ using Microsoft.AspNetCore.Mvc.Testing;
+@@ -41,6 +49,7 @@ using Microsoft.Extensions.DependencyInjection;
+ using Microsoft.Extensions.DependencyInjection.Extensions;
+ using Microsoft.Extensions.Hosting;
+ using Microsoft.Extensions.Logging.Abstractions;
++using Microsoft.Extensions.Options;
+ using Microsoft.IdentityModel.Tokens;
+ 
+ using NSubstitute;
+@@ -653,6 +662,107 @@ public sealed class EventStoreGatewayRoutingTests
+         query.ProjectionActorType.ShouldBe(PartyIndexProjectionQueryActor.ActorTypeName);
+     }
+ 
++    /// <summary>
++    /// Verifies actual Parties handler failures reach safe gateway ProblemDetails.
++    /// </summary>
++    /// <param name="queryType">The list or search query discriminator.</param>
++    /// <param name="pageSize">The public envelope page size.</param>
++    /// <param name="cursor">The optional protected cursor.</param>
++    /// <param name="expectedReason">The expected safe public reason.</param>
++    /// <returns>A task that represents the verification.</returns>
++    [Theory]
++    [InlineData(PartyIndexProjectionQueryActor.PartyIndexQueryType, 101, null, "invalid-page")]
++    [InlineData(PartyIndexProjectionQueryActor.PartyIndexQueryType, 200, null, "invalid-page")]
++    [InlineData(PartyIndexProjectionQueryActor.PartyIndexQueryType, 101, "protected.cursor.payload", "invalid-page")]
++    [InlineData(PartyIndexProjectionQueryActor.PartyIndexQueryType, 200, "protected.cursor.payload", "invalid-page")]
++    [InlineData(PartyIndexProjectionQueryActor.PartySearchQueryType, 101, null, "invalid-page")]
++    [InlineData(PartyIndexProjectionQueryActor.PartySearchQueryType, 200, null, "invalid-page")]
++    [InlineData(PartyIndexProjectionQueryActor.PartySearchQueryType, 101, "protected.cursor.payload", "invalid-page")]
++    [InlineData(PartyIndexProjectionQueryActor.PartySearchQueryType, 200, "protected.cursor.payload", "invalid-page")]
++    [InlineData(PartyIndexProjectionQueryActor.PartyIndexQueryType, 20, "protected.cursor.payload", "invalid-cursor")]
++    [InlineData(PartyIndexProjectionQueryActor.PartySearchQueryType, 20, "protected.cursor.payload", "invalid-cursor")]
++    public async Task PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync(string queryType, int pageSize, string? cursor, string expectedReason)
++    {
++        IReadModelStore store = Substitute.For<IReadModelStore>();
++        IQueryCursorCodec codec = Substitute.For<IQueryCursorCodec>();
++        IPartySearchProvider search = Substitute.For<IPartySearchProvider>();
++        using var factory = new EventStoreGatewayTestFactory();
++        factory.QueryRouter.DomainHandler = CreatePagingGatewayHandler(queryType, store, codec, search);
++        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["query:read"]);
++
++        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", CreatePagingGatewayRequest(queryType, pageSize, cursor));
++
++        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
++        response.Content.Headers.ContentType!.MediaType.ShouldBe("application/problem+json");
++        JsonElement problem = await response.Content.ReadFromJsonAsync<JsonElement>();
++        problem.GetProperty("status").GetInt32().ShouldBe(400);
++        problem.GetProperty("reasonCode").GetString().ShouldBe("query_invalid_page");
++        problem.GetProperty("reason").GetString().ShouldBe(expectedReason);
++        problem.GetProperty("detail").GetString().ShouldBe(expectedReason == "invalid-page"
++            ? "The supplied page is invalid." : "The supplied cursor is invalid.");
++        string body = problem.GetRawText();
++        body.ShouldNotContain("protected.cursor.payload");
++        body.ShouldNotContain("protected-search-text");
++        factory.QueryRouter.ReceivedQueries.ShouldHaveSingleItem().Paging!.PageSize.ShouldBe(pageSize);
++        store.ReceivedCalls().ShouldBeEmpty();
++        search.ReceivedCalls().ShouldBeEmpty();
++        if (expectedReason == "invalid-page")
++        {
++            codec.ReceivedCalls().ShouldBeEmpty();
++        }
++    }
++
++    /// <summary>
++    /// Verifies the public gateway retains its maximum page size.
++    /// </summary>
++    /// <param name="queryType">The list or search query discriminator.</param>
++    /// <returns>A task that represents the verification.</returns>
++    [Theory]
++    [InlineData(PartyIndexProjectionQueryActor.PartyIndexQueryType)]
++    [InlineData(PartyIndexProjectionQueryActor.PartySearchQueryType)]
++    public async Task PostQueries_PageSizeAbovePublicMaximum_RejectsBeforeHandlerAsync(string queryType)
++    {
++        using var factory = new EventStoreGatewayTestFactory();
++        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["query:read"]);
++
++        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", CreatePagingGatewayRequest(queryType, 201, null));
++
++        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
++        factory.QueryRouter.ReceivedQueries.ShouldBeEmpty();
++    }
++
++    private static PartySdkQueryHandler CreatePagingGatewayHandler(string queryType, IReadModelStore store, IQueryCursorCodec codec, IPartySearchProvider search)
++    {
++        var service = new PartySdkQueryService(
++            store, Options.Create(new PartySdkReadModelOptions()), TimeProvider.System, search,
++            Substitute.For<IPartyErasureRecordStore>(), codec, new PartySdkLastKnownReadModelCache(), NullLogger<PartySdkQueryService>.Instance);
++        return queryType == PartyIndexProjectionQueryActor.PartySearchQueryType
++            ? new PartySearchQueryHandler(service)
++            : new PartyIndexQueryHandler(service);
++    }
++
++    private static object CreatePagingGatewayRequest(string queryType, int pageSize, string? cursor)
++        => new
++        {
++            tenant = "tenant-a",
++            domain = PartyIndexProjectionQueryActor.PartyDomain,
++            aggregateId = PartyIndexProjectionQueryActor.ListAggregateId,
++            queryType,
++            payload = queryType == PartyIndexProjectionQueryActor.PartySearchQueryType
++                ? JsonSerializer.SerializeToElement(new
++                {
++                    query = "protected-search-text",
++                })
++                : JsonSerializer.SerializeToElement(new
++                {
++                }),
++            paging = new
++            {
++                pageSize,
++                cursor,
++            },
++        };
++
+     [Fact]
+     public async Task PostQueries_LegacyPascalCaseProjectionType_Returns400BeforeQueryRoutingAsync()
+     {
+@@ -1198,6 +1308,15 @@ public sealed class EventStoreGatewayRoutingTests
+             NotFound: false,
+             ProjectionType: "party");
+ 
++        /// <summary>
++        /// Gets or sets the actual domain handler used by paging regression tests.
++        /// </summary>
++        public PartySdkQueryHandler? DomainHandler
++        {
++            get;
++            set;
++        }
++
+         public JsonElement ResultPayload
+         {
+             get => Result.Payload ?? JsonSerializer.SerializeToElement(new { ok = true });
+@@ -1206,12 +1325,24 @@ public sealed class EventStoreGatewayRoutingTests
+ 
+         public IReadOnlyList<SubmitQuery> ReceivedQueries => _queries;
+ 
+-        public Task<QueryRouterResult> RouteQueryAsync(SubmitQuery query, CancellationToken cancellationToken = default)
++        public async Task<QueryRouterResult> RouteQueryAsync(SubmitQuery query, CancellationToken cancellationToken = default)
+         {
+             ArgumentNullException.ThrowIfNull(query);
+             cancellationToken.ThrowIfCancellationRequested();
+             _queries.Add(query);
+-            return Task.FromResult(Result with { ProjectionType = Result.ProjectionType ?? query.ProjectionType });
++            if (DomainHandler is { } handler)
++            {
++                var envelope = new QueryEnvelope(query.Tenant, query.Domain, query.AggregateId, query.QueryType,
++                    query.Payload, query.CorrelationId, query.UserId, query.EntityId, query.IsGlobalAdmin, query.Paging);
++                QueryResult result = await handler.ExecuteAsync(envelope, cancellationToken).ConfigureAwait(false);
++                return new QueryRouterResult(result.Success, result.Success ? result.GetPayload() : null, NotFound: false,
++                    ErrorMessage: result.ErrorMessage, ProjectionType: result.ProjectionType, Metadata: result.Metadata);
++            }
++
++            return Result with
++            {
++                ProjectionType = Result.ProjectionType ?? query.ProjectionType,
++            };
+         }
+     }
+ 
+diff --git a/tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs b/tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs
+index 115c7f6b..abad897f 100644
+--- a/tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs
++++ b/tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs
+@@ -12,6 +12,7 @@ using Hexalith.Parties.Projections.Configuration;
+ using Hexalith.Parties.Projections.Models;
+ using Hexalith.Parties.Projections.Services;
+ using Hexalith.Parties.Queries;
++using Hexalith.Parties.Search;
+ using Hexalith.Parties.Testing;
+ 
+ using Microsoft.Extensions.Logging;
+@@ -2122,6 +2123,311 @@ public sealed class PartySdkQueryHandlerTests
+             _ => service.GetPartyIndexAsync(CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType), cancellationToken),
+         };
+ 
++    /// <summary>
++    /// Gets invalid page sizes combined with cursor, negative offset and conflicting offset inputs.
++    /// </summary>
++    public static TheoryData<string, int, string?, int?> InvalidPageCases
++    {
++        get
++        {
++            var cases = new TheoryData<string, int, string?, int?>();
++            string[] queryTypes = [PartyIndexProjectionQueryActor.PartyIndexQueryType, PartyIndexProjectionQueryActor.PartySearchQueryType];
++            int[] invalidPageSizes = [int.MinValue, -1, 0, 101, 200, int.MaxValue];
++            foreach (string queryType in queryTypes)
++            {
++                foreach (int pageSize in invalidPageSizes)
++                {
++                    cases.Add(queryType, pageSize, null, null);
++                    cases.Add(queryType, pageSize, "protected.cursor.payload", null);
++                    cases.Add(queryType, pageSize, null, -1);
++                    cases.Add(queryType, pageSize, "protected.cursor.payload", 0);
++                }
++            }
++
++            return cases;
++        }
++    }
++
++    /// <summary>
++    /// Verifies invalid page sizes precede cursor and offset failures without dependency access.
++    /// </summary>
++    /// <param name="queryType">The list or search query discriminator.</param>
++    /// <param name="pageSize">The invalid envelope page size.</param>
++    /// <param name="cursor">The optional protected cursor.</param>
++    /// <param name="offset">The optional invalid or conflicting offset.</param>
++    /// <returns>A task that represents the verification.</returns>
++    [Theory]
++    [MemberData(nameof(InvalidPageCases))]
++    public async Task Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync(string queryType, int pageSize, string? cursor, int? offset)
++    {
++        IReadModelStore store = Substitute.For<IReadModelStore>();
++        IQueryCursorCodec codec = Substitute.For<IQueryCursorCodec>();
++        IPartySearchProvider search = Substitute.For<IPartySearchProvider>();
++        PartySdkQueryService service = CreateService(store, searchProvider: search, cursorCodec: codec);
++        QueryEnvelope envelope = CreatePagingEnvelope(queryType, new QueryPagingOptions(PageSize: pageSize, Cursor: cursor, Offset: offset));
++
++        QueryResult result = await ExecutePagingHandlerAsync(service, envelope);
++
++        result.Success.ShouldBeFalse();
++        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidPage);
++        result.PayloadBytes.ShouldBeNull();
++        store.ReceivedCalls().ShouldBeEmpty();
++        codec.ReceivedCalls().ShouldBeEmpty();
++        search.ReceivedCalls().ShouldBeEmpty();
++        JsonSerializer.Serialize(result).ShouldNotContain("protected.cursor.payload");
++    }
++
++    /// <summary>
++    /// Verifies existing cursor and offset errors retain the cursor category.
++    /// </summary>
++    /// <param name="queryType">The list or search query discriminator.</param>
++    /// <returns>A task that represents the verification.</returns>
++    [Theory]
++    [InlineData(PartyIndexProjectionQueryActor.PartyIndexQueryType)]
++    [InlineData(PartyIndexProjectionQueryActor.PartySearchQueryType)]
++    public async Task Paging_CursorAndOffsetErrors_PreserveCursorCategoryAsync(string queryType)
++    {
++        foreach ((string? position, string? cursor, int? offset, bool decode) in new (string?, string?, int?, bool)[]
++        {
++            (null, "protected.cursor.payload", null, false),
++            ("not-a-number", "protected.cursor.payload", null, true),
++            ("-1", "protected.cursor.payload", null, true),
++            ("2147483648", "protected.cursor.payload", null, true),
++            ("1", "protected.cursor.payload", null, true),
++            (null, null, -1, true),
++            (null, null, 1, true),
++            (null, "protected.cursor.payload", 0, true),
++        })
++        {
++            IReadModelStore store = Substitute.For<IReadModelStore>();
++            IPartySearchProvider search = Substitute.For<IPartySearchProvider>();
++            IQueryCursorCodec codec = Substitute.For<IQueryCursorCodec>();
++            codec.TryDecode(Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string>(), out Arg.Any<string?>(), out Arg.Any<string?>())
++                .Returns(call =>
++                {
++                    call[3] = position;
++                    call[4] = decode ? null : "malformed";
++                    return decode;
++                });
++            QueryEnvelope envelope = CreatePagingEnvelope(queryType, new QueryPagingOptions(PageSize: 2, Cursor: cursor, Offset: offset));
++
++            QueryResult result = await ExecutePagingHandlerAsync(CreateService(store, searchProvider: search, cursorCodec: codec), envelope);
++
++            result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidCursor);
++            store.ReceivedCalls().ShouldBeEmpty();
++            search.ReceivedCalls().ShouldBeEmpty();
++            JsonSerializer.Serialize(result).ShouldNotContain("protected.cursor.payload");
++        }
++    }
++
++    /// <summary>
++    /// Verifies strict envelope parsing and unsupported search mode precede paging checks.
++    /// </summary>
++    /// <param name="queryType">The list or search query discriminator.</param>
++    /// <returns>A task that represents the verification.</returns>
++    [Theory]
++    [InlineData(PartyIndexProjectionQueryActor.PartyIndexQueryType)]
++    [InlineData(PartyIndexProjectionQueryActor.PartySearchQueryType)]
++    public async Task Paging_EnvelopeAndSearchModePrecedence_RemainsUnchangedAsync(string queryType)
++    {
++        IReadModelStore store = Substitute.For<IReadModelStore>();
++        IQueryCursorCodec codec = Substitute.For<IQueryCursorCodec>();
++        IPartySearchProvider search = Substitute.For<IPartySearchProvider>();
++        PartySdkQueryService service = CreateService(store, searchProvider: search, cursorCodec: codec);
++        QueryEnvelope envelope = CreatePagingEnvelope(queryType, new QueryPagingOptions(PageSize: 0));
++        foreach (QueryEnvelope invalid in new[]
++        {
++            envelope with
++            {
++                TenantId = "tenant:escape",
++            },
++            envelope with
++            {
++                Payload = "{\"unknown\":true}"u8.ToArray(),
++            },
++            envelope with
++            {
++                Payload = "{\"pageSize\":\"wrong-type\"}"u8.ToArray(),
++            },
++            envelope with
++            {
++                Payload = "{\"pageSize\":0}"u8.ToArray(),
++            },
++            envelope with
++            {
++                Payload = "{\"pageSize\":-1}"u8.ToArray(),
++            },
++        })
++        {
++            (await ExecutePagingHandlerAsync(service, invalid)).ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
++        }
++
++        if (queryType == PartyIndexProjectionQueryActor.PartySearchQueryType)
++        {
++            QueryResult unsupported = await ExecutePagingHandlerAsync(service, envelope with
++            {
++                Payload = JsonSerializer.SerializeToUtf8Bytes(new
++                {
++                    query = "Ada",
++                    mode = "unsupported",
++                }),
++            });
++            unsupported.ErrorMessage.ShouldBe(QueryAdapterFailureReason.UnsupportedQueryType);
++        }
++
++        store.ReceivedCalls().ShouldBeEmpty();
++        codec.ReceivedCalls().ShouldBeEmpty();
++        search.ReceivedCalls().ShouldBeEmpty();
++    }
++
++    /// <summary>
++    /// Verifies accepted paging returns independently expected contents, counts and continuation metadata.
++    /// </summary>
++    /// <param name="queryType">The list or search query discriminator.</param>
++    /// <returns>A task that represents the verification.</returns>
++    [Theory]
++    [InlineData(PartyIndexProjectionQueryActor.PartyIndexQueryType)]
++    [InlineData(PartyIndexProjectionQueryActor.PartySearchQueryType)]
++    public async Task Paging_AcceptedBoundariesDefaultsAndLegacyClamping_PreserveMetadataAsync(string queryType)
++    {
++        foreach ((QueryPagingOptions? paging, int payloadSize, int expectedSize, int expectedOffset, int expectedPage, int expectedTotalPages, string[] expectedIds, bool? expectedHasMore) in new (QueryPagingOptions?, int, int, int, int, int, string[], bool?)[]
++        {
++            (new QueryPagingOptions(PageSize: 1), 20, 1, 0, 1, 4, ["party-1"], true),
++            (new QueryPagingOptions(PageSize: 100), 20, 100, 0, 1, 1, ["party-1", "party-2", "party-3", "party-4"], false),
++            (new QueryPagingOptions(), 20, 20, 0, 1, 1, ["party-1", "party-2", "party-3", "party-4"], false),
++            (new QueryPagingOptions(PageSize: 2, Offset: 2), 100, 2, 2, 2, 2, ["party-3", "party-4"], false),
++            (null, 101, 100, 0, 1, 1, ["party-1", "party-2", "party-3", "party-4"], null),
++            (null, int.MaxValue, 100, 0, 1, 1, ["party-1", "party-2", "party-3", "party-4"], null),
++        })
++        {
++            IReadModelStore store = Substitute.For<IReadModelStore>();
++            store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
++                .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel
++                {
++                    Entries = Enumerable.Range(1, 4).Select(index => IndexEntry($"party-{index}")).ToDictionary(entry => entry.Id, StringComparer.Ordinal),
++                    ProjectedAt = s_now,
++                }, "index-etag"));
++            PartySdkQueryService service = CreateService(store, searchProvider: new BasicPartySearchProvider());
++            QueryEnvelope envelope = CreatePagingEnvelope(queryType, paging, payloadSize);
++
++            QueryResult result = await ExecutePagingHandlerAsync(service, envelope);
++
++            result.Success.ShouldBeTrue();
++            JsonElement payload = result.GetPayload();
++            payload.GetProperty("pageSize").GetInt32().ShouldBe(expectedSize);
++            payload.GetProperty("page").GetInt32().ShouldBe(expectedPage);
++            payload.GetProperty("totalCount").GetInt32().ShouldBe(4);
++            payload.GetProperty("totalPages").GetInt32().ShouldBe(expectedTotalPages);
++            payload.GetProperty("items").GetArrayLength().ShouldBe(expectedIds.Length);
++            PagingIds(result, queryType).ShouldBe(expectedIds);
++            if (paging is null)
++            {
++                result.Metadata.ShouldNotBeNull().Paging.ShouldBeNull();
++            }
++            else
++            {
++                QueryPagingMetadata metadata = result.Metadata.ShouldNotBeNull().Paging.ShouldNotBeNull();
++                metadata.PageSize.ShouldBe(expectedSize);
++                metadata.Offset.ShouldBe(expectedOffset);
++                metadata.TotalCount.ShouldBe(4);
++                metadata.HasMore.ShouldBe(expectedHasMore);
++                if (expectedHasMore == true)
++                {
++                    metadata.NextCursor.ShouldNotBeNullOrWhiteSpace();
++                }
++                else
++                {
++                    metadata.NextCursor.ShouldBeNull();
++                }
++            }
++        }
++    }
++
++    /// <summary>
++    /// Verifies both continuation pages match independently expected contents and metadata.
++    /// </summary>
++    /// <param name="queryType">The list or search query discriminator.</param>
++    /// <returns>A task that represents the verification.</returns>
++    [Theory]
++    [InlineData(PartyIndexProjectionQueryActor.PartyIndexQueryType)]
++    [InlineData(PartyIndexProjectionQueryActor.PartySearchQueryType)]
++    public async Task Paging_ValidContinuation_ReturnsRemainingContentsAsync(string queryType)
++    {
++        IReadModelStore store = Substitute.For<IReadModelStore>();
++        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
++            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel
++            {
++                Entries = Enumerable.Range(1, 4).Select(index => IndexEntry($"party-{index}")).ToDictionary(entry => entry.Id, StringComparer.Ordinal),
++                ProjectedAt = s_now,
++            }, "etag"));
++        PartySdkQueryService service = CreateService(store, searchProvider: new BasicPartySearchProvider());
++        QueryEnvelope envelope = CreatePagingEnvelope(queryType, new QueryPagingOptions(PageSize: 2));
++        QueryResult first = await ExecutePagingHandlerAsync(service, envelope);
++        first.Success.ShouldBeTrue();
++        PagingIds(first, queryType).ShouldBe(["party-1", "party-2"]);
++        JsonElement firstPayload = first.GetPayload();
++        firstPayload.GetProperty("items").GetArrayLength().ShouldBe(2);
++        firstPayload.GetProperty("page").GetInt32().ShouldBe(1);
++        firstPayload.GetProperty("pageSize").GetInt32().ShouldBe(2);
++        firstPayload.GetProperty("totalCount").GetInt32().ShouldBe(4);
++        firstPayload.GetProperty("totalPages").GetInt32().ShouldBe(2);
++        QueryPagingMetadata firstPaging = first.Metadata.ShouldNotBeNull().Paging.ShouldNotBeNull();
++        firstPaging.PageSize.ShouldBe(2);
++        firstPaging.Offset.ShouldBe(0);
++        firstPaging.TotalCount.ShouldBe(4);
++        firstPaging.HasMore.ShouldBe(true);
++        string cursor = firstPaging.NextCursor.ShouldNotBeNull();
++        cursor.ShouldNotBeNullOrWhiteSpace();
++
++        QueryResult second = await ExecutePagingHandlerAsync(service, envelope with
++        {
++            Paging = new QueryPagingOptions(PageSize: 2, Cursor: cursor),
++        });
++
++        second.Success.ShouldBeTrue();
++        PagingIds(second, queryType).ShouldBe(["party-3", "party-4"]);
++        JsonElement secondPayload = second.GetPayload();
++        secondPayload.GetProperty("items").GetArrayLength().ShouldBe(2);
++        secondPayload.GetProperty("page").GetInt32().ShouldBe(2);
++        secondPayload.GetProperty("pageSize").GetInt32().ShouldBe(2);
++        secondPayload.GetProperty("totalCount").GetInt32().ShouldBe(4);
++        secondPayload.GetProperty("totalPages").GetInt32().ShouldBe(2);
++        QueryPagingMetadata secondPaging = second.Metadata.ShouldNotBeNull().Paging.ShouldNotBeNull();
++        secondPaging.PageSize.ShouldBe(2);
++        secondPaging.Offset.ShouldBe(2);
++        secondPaging.TotalCount.ShouldBe(4);
++        secondPaging.HasMore.ShouldBe(false);
++        secondPaging.NextCursor.ShouldBeNull();
++    }
++
++    private static string[] PagingIds(QueryResult result, string queryType)
++        => result.GetPayload().GetProperty("items").EnumerateArray()
++            .Select(item => (queryType == PartyIndexProjectionQueryActor.PartySearchQueryType
++                ? item.GetProperty("party") : item).GetProperty("id").GetString()!).ToArray();
++
++    private static QueryEnvelope CreatePagingEnvelope(string queryType, QueryPagingOptions? paging, int payloadPageSize = 20)
++        => CreateIndexEnvelope(queryType) with
++        {
++            Paging = paging,
++            Payload = queryType == PartyIndexProjectionQueryActor.PartySearchQueryType
++                ? JsonSerializer.SerializeToUtf8Bytes(new
++                {
++                    query = "Party",
++                    page = 1,
++                    pageSize = payloadPageSize,
++                })
++                : JsonSerializer.SerializeToUtf8Bytes(new
++                {
++                    page = 1,
++                    pageSize = payloadPageSize,
++                }),
++        };
++
++    private static Task<QueryResult> ExecutePagingHandlerAsync(PartySdkQueryService service, QueryEnvelope envelope)
++        => envelope.QueryType == PartyIndexProjectionQueryActor.PartySearchQueryType
++            ? new PartySearchQueryHandler(service).ExecuteAsync(envelope, TestContext.Current.CancellationToken)
++            : new PartyIndexQueryHandler(service).ExecuteAsync(envelope, TestContext.Current.CancellationToken);
++
+     private static PartySdkQueryService CreateService(
+         IReadModelStore store,
+         IPartySearchProvider? searchProvider = null,

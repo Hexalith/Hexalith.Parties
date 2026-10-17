@@ -1,0 +1,35 @@
+Command: dotnet tests/Hexalith.EventStore.Contracts.Tests/bin/Debug/net10.0/Hexalith.EventStore.Contracts.Tests.dll
+Working directory: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore
+Exit code: 143
+Raw output: /tmp/dw-27-validation/raw/eventstore-contracts-full.txt
+Raw SHA-256: e43472e27f03fc4b48167be7a7d346bac1b3b96ceb2a2e7e612b19d196e9527d
+Result: incomplete; stopped after more than five minutes; no final test summary
+
+Blocker: Stopped after >5 minutes after failures in other test classes; no final test summary was produced. These failures were not reproduced against the baseline, and their causes are not established.
+
+Observed diagnostics (baseline reproduction was not performed):
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.12)
+  Discovering: Hexalith.EventStore.Contracts.Tests
+  Discovered:  Hexalith.EventStore.Contracts.Tests
+  Starting:    Hexalith.EventStore.Contracts.Tests
+    Hexalith.EventStore.Contracts.Tests.Packaging.PackagedReminderApiTests.PackagedReminderApiRunsWithoutWorksTypes [SKIP]
+      EVENTSTORE_PACKAGE_CONTRACT_DIR is not set; no release package inventory was supplied.
+    Hexalith.EventStore.Contracts.Tests.Packaging.TrustedEffectPackageContractTests.NamedPackagesExposeTrustedEffectContracts [SKIP]
+      EVENTSTORE_PACKAGE_CONTRACT_DIR is not set; no release package inventory was supplied.
+    Hexalith.EventStore.Contracts.Tests.Packaging.CorrectiveOciProvenanceReleaseTests.ContainerPublicationRejectsMissingProvenanceInputs(missingProperty: "version") [FAIL]
+      Shouldly.ShouldAssertException : result.Output + result.Error
+          should contain (case insensitive comparison)
+      "ContainerProvenanceReleaseVersion must be SemVer"
+          but was actually
+      "  Determining projects to restore...
+        All projects are up-to-date for restore.
+        Hexalith.EventStor..."
+      Stack Trace:
+        tests/Hexalith.EventStore.Contracts.Tests/Packaging/CorrectiveOciProvenanceReleaseTests.cs(191,0): at Hexalith.EventStore.Contracts.Tests.Packaging.CorrectiveOciProvenanceReleaseTests.ContainerPublicationRejectsMissingProvenanceInputs(String missingProperty)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)

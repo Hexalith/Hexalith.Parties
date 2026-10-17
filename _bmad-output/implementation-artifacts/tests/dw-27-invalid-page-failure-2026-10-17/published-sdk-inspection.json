@@ -1,0 +1,257 @@
+{
+  "retrieved_at_utc": "2026-10-17T18:29:46.159707+00:00",
+  "scope": "Package inventory only; this does not establish a coherent restore or gateway qualification.",
+  "selection": {
+    "command": [
+      "dotnet",
+      "msbuild",
+      "src/Hexalith.Parties/Hexalith.Parties.csproj",
+      "-nologo",
+      "-getProperty:HexalithEventStoreVersion",
+      "-p:UseHexalithProjectReferences=false",
+      "-p:UseNuGetDeps=true"
+    ],
+    "cwd": "/home/administrator/projects/hexalith/parties",
+    "exit_code": 0,
+    "output": "3.124.0\n"
+  },
+  "selected_version": "3.124.0",
+  "packages": {
+    "hexalith.eventstore.contracts": {
+      "index_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.contracts/index.json",
+      "index_artifact": "hexalith.eventstore.contracts-versions.json",
+      "latest_stable": "3.124.0",
+      "selected": {
+        "version": "3.124.0",
+        "downloaded_package_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.contracts/3.124.0/hexalith.eventstore.contracts.3.124.0.nupkg",
+        "sha256": "3eba6febc7ee3bf06a25b46c5cd770ce869f1a631e4a93683f7f15ab97ecb635",
+        "documentation_observations": {
+          "xml_docs_present": true,
+          "documents_invalid_page_adapter": false,
+          "documents_adapter_failure_discriminator": false
+        },
+        "assembly_metadata_inventory": {
+          "command": [
+            "dnx",
+            "dotnet-inspect",
+            "-y",
+            "--",
+            "member",
+            "Hexalith.EventStore.Contracts.Queries.QueryAdapterFailureReason",
+            "--package",
+            "/tmp/dw-27-package-inventory-5n1efovw/hexalith.eventstore.contracts.3.124.0.nupkg",
+            "--json",
+            "--compact"
+          ],
+          "cwd": "/home/administrator/projects/hexalith/parties",
+          "exit_code": 0,
+          "output": "selected-contracts-dotnet-inspect.json",
+          "output_sha256": "744b1cb33d5eb32d46181d24953510593fe1cf849027f2fe4290dd153d1d2104",
+          "stderr": "",
+          "inspected_type": "Hexalith.EventStore.Contracts.Queries.QueryAdapterFailureReason",
+          "module_version_id": "f3e031ea-6dd2-4bd4-865d-d8c1f66af577",
+          "listed_members": [
+            "MissingPayload",
+            "InvalidEnvelope",
+            "InvalidCursor",
+            "ActorResponseMismatch",
+            "UnsupportedQueryType",
+            "SerializationFailure",
+            "ActorException",
+            "UnknownQueryType",
+            "ActorNotFoundInfrastructure",
+            "Forbidden",
+            "SafeDenialForbidden",
+            "SafeDenialMissingProjectionState",
+            "MissingProjectionState"
+          ]
+        }
+      },
+      "latest": {
+        "version": "3.124.0",
+        "downloaded_package_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.contracts/3.124.0/hexalith.eventstore.contracts.3.124.0.nupkg",
+        "sha256": "3eba6febc7ee3bf06a25b46c5cd770ce869f1a631e4a93683f7f15ab97ecb635",
+        "documentation_observations": {
+          "xml_docs_present": true,
+          "documents_invalid_page_adapter": false,
+          "documents_adapter_failure_discriminator": false
+        },
+        "assembly_metadata_inventory": {
+          "command": [
+            "dnx",
+            "dotnet-inspect",
+            "-y",
+            "--",
+            "member",
+            "Hexalith.EventStore.Contracts.Queries.QueryAdapterFailureReason",
+            "--package",
+            "/tmp/dw-27-package-inventory-5n1efovw/hexalith.eventstore.contracts.3.124.0.nupkg",
+            "--json",
+            "--compact"
+          ],
+          "cwd": "/home/administrator/projects/hexalith/parties",
+          "exit_code": 0,
+          "output": "selected-contracts-dotnet-inspect.json",
+          "output_sha256": "744b1cb33d5eb32d46181d24953510593fe1cf849027f2fe4290dd153d1d2104",
+          "stderr": "",
+          "inspected_type": "Hexalith.EventStore.Contracts.Queries.QueryAdapterFailureReason",
+          "module_version_id": "f3e031ea-6dd2-4bd4-865d-d8c1f66af577",
+          "listed_members": [
+            "MissingPayload",
+            "InvalidEnvelope",
+            "InvalidCursor",
+            "ActorResponseMismatch",
+            "UnsupportedQueryType",
+            "SerializationFailure",
+            "ActorException",
+            "UnknownQueryType",
+            "ActorNotFoundInfrastructure",
+            "Forbidden",
+            "SafeDenialForbidden",
+            "SafeDenialMissingProjectionState",
+            "MissingProjectionState"
+          ]
+        }
+      }
+    },
+    "hexalith.eventstore.server": {
+      "index_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.server/index.json",
+      "index_artifact": "hexalith.eventstore.server-versions.json",
+      "latest_stable": "3.124.0",
+      "selected": {
+        "version": "3.124.0",
+        "downloaded_package_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.server/3.124.0/hexalith.eventstore.server.3.124.0.nupkg",
+        "sha256": "66374a5d0d976d4dc62b12347ac309f0646a75fef5ae114eed55c73d70d5c250",
+        "documentation_observations": {
+          "xml_docs_present": true,
+          "documents_invalid_page_adapter": false,
+          "documents_adapter_failure_discriminator": false
+        },
+        "assembly_metadata_inventory": {
+          "command": [
+            "dnx",
+            "dotnet-inspect",
+            "-y",
+            "--",
+            "member",
+            "Hexalith.EventStore.Server.Queries.QueryExecutionFailedException",
+            "--package",
+            "/tmp/dw-27-package-inventory-5n1efovw/hexalith.eventstore.server.3.124.0.nupkg",
+            "--json",
+            "--compact"
+          ],
+          "cwd": "/home/administrator/projects/hexalith/parties",
+          "exit_code": 0,
+          "output": "selected-server-dotnet-inspect.json",
+          "output_sha256": "6b009aac13e4e95920d0a41440e2e4880b925b905ed21aab8813839127b5c38b",
+          "stderr": "",
+          "inspected_type": "Hexalith.EventStore.Server.Queries.QueryExecutionFailedException",
+          "module_version_id": "0f4bae11-56f3-4b87-be27-7584662c8635",
+          "listed_members": [
+            ".ctor",
+            "CorrelationId",
+            "Tenant",
+            "Domain",
+            "AggregateId",
+            "QueryType",
+            "StatusCode",
+            "Detail",
+            "ReasonCode"
+          ]
+        }
+      },
+      "latest": {
+        "version": "3.124.0",
+        "downloaded_package_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.server/3.124.0/hexalith.eventstore.server.3.124.0.nupkg",
+        "sha256": "66374a5d0d976d4dc62b12347ac309f0646a75fef5ae114eed55c73d70d5c250",
+        "documentation_observations": {
+          "xml_docs_present": true,
+          "documents_invalid_page_adapter": false,
+          "documents_adapter_failure_discriminator": false
+        },
+        "assembly_metadata_inventory": {
+          "command": [
+            "dnx",
+            "dotnet-inspect",
+            "-y",
+            "--",
+            "member",
+            "Hexalith.EventStore.Server.Queries.QueryExecutionFailedException",
+            "--package",
+            "/tmp/dw-27-package-inventory-5n1efovw/hexalith.eventstore.server.3.124.0.nupkg",
+            "--json",
+            "--compact"
+          ],
+          "cwd": "/home/administrator/projects/hexalith/parties",
+          "exit_code": 0,
+          "output": "selected-server-dotnet-inspect.json",
+          "output_sha256": "6b009aac13e4e95920d0a41440e2e4880b925b905ed21aab8813839127b5c38b",
+          "stderr": "",
+          "inspected_type": "Hexalith.EventStore.Server.Queries.QueryExecutionFailedException",
+          "module_version_id": "0f4bae11-56f3-4b87-be27-7584662c8635",
+          "listed_members": [
+            ".ctor",
+            "CorrelationId",
+            "Tenant",
+            "Domain",
+            "AggregateId",
+            "QueryType",
+            "StatusCode",
+            "Detail",
+            "ReasonCode"
+          ]
+        }
+      }
+    },
+    "hexalith.eventstore.domainservice": {
+      "index_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.domainservice/index.json",
+      "index_artifact": "hexalith.eventstore.domainservice-versions.json",
+      "latest_stable": "3.124.0",
+      "selected": {
+        "version": "3.124.0",
+        "downloaded_package_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.domainservice/3.124.0/hexalith.eventstore.domainservice.3.124.0.nupkg",
+        "sha256": "b189a3f54b62e583044450acbf53a62f65ab6e524e6ce13f968d0fe71b32c741",
+        "documentation_observations": {
+          "xml_docs_present": true,
+          "documents_invalid_page_adapter": false,
+          "documents_adapter_failure_discriminator": false
+        }
+      },
+      "latest": {
+        "version": "3.124.0",
+        "downloaded_package_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.domainservice/3.124.0/hexalith.eventstore.domainservice.3.124.0.nupkg",
+        "sha256": "b189a3f54b62e583044450acbf53a62f65ab6e524e6ce13f968d0fe71b32c741",
+        "documentation_observations": {
+          "xml_docs_present": true,
+          "documents_invalid_page_adapter": false,
+          "documents_adapter_failure_discriminator": false
+        }
+      }
+    },
+    "hexalith.eventstore.gateway": {
+      "index_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.gateway/index.json",
+      "index_artifact": "hexalith.eventstore.gateway-versions.json",
+      "latest_stable": "3.124.0",
+      "selected": {
+        "version": "3.124.0",
+        "downloaded_package_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.gateway/3.124.0/hexalith.eventstore.gateway.3.124.0.nupkg",
+        "sha256": "9b16dfa238a1ca65eb5de40622c8bca0260e890535d2dc1e14479bac4dbfc72f",
+        "documentation_observations": {
+          "xml_docs_present": true,
+          "documents_invalid_page_adapter": false,
+          "documents_adapter_failure_discriminator": false
+        }
+      },
+      "latest": {
+        "version": "3.124.0",
+        "downloaded_package_url": "https://api.nuget.org/v3-flatcontainer/hexalith.eventstore.gateway/3.124.0/hexalith.eventstore.gateway.3.124.0.nupkg",
+        "sha256": "9b16dfa238a1ca65eb5de40622c8bca0260e890535d2dc1e14479bac4dbfc72f",
+        "documentation_observations": {
+          "xml_docs_present": true,
+          "documents_invalid_page_adapter": false,
+          "documents_adapter_failure_discriminator": false
+        }
+      }
+    }
+  }
+}

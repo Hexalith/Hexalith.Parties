@@ -1,0 +1,19 @@
+{
+  "eventstore_commit": "9ed9b9742bd006e568f026cc1c588275cf9db097",
+  "eventstore_describe": "v3.124.0-10-g9ed9b974",
+  "rebased_onto": "bb986902d3c1b2f3b1c209fe8eb0ffa0292153d9",
+  "all_ten_tested_files_preserved": true,
+  "eventstore_message_validation": {
+    "cli_version": "21.1.0",
+    "proof": "eventstore-commitlint.txt",
+    "exit_code": 0
+  },
+  "parties_message_validation": {
+    "cli_version": "21.2.2",
+    "proof": "parties-commitlint.txt",
+    "exit_code": 0
+  },
+  "consumer_activated": false,
+  "source_identity_records_refreshed": true,
+  "scope": "User subsequently requested pushing all changes; dated qualification and package pins remain unchanged."
+}

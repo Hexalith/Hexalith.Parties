@@ -1,0 +1,31 @@
+Command: dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll
+Working directory: /home/administrator/projects/hexalith/parties
+Exit code: 1
+Raw output: /tmp/dw-27-validation/raw/parties-candidate-full.txt
+Raw SHA-256: 06c99e3e21e4ae99ed0769bc20bd762cfbf22a9eae48e6a224710089b10e79cf
+Result: total=1171, passed=1170, errors=0, failed=1, skipped=0, not_run=0
+
+Blocker: FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph requires a clean EventStore checkout; required uncommitted DW-27 prerequisite edits keep it dirty. All other 1170 tests passed.
+
+Observed diagnostic:
+    Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph [FAIL]
+      Shouldly.ShouldAssertException : RunGit(root, "-C", relativePath, "status", "--porcelain") (" M docs/reference/query-api.md
+       M src/Hexalith.EventStore.Contracts/Queries/QueryAdapterFailureReason.cs
+       M src/Hexalith.EventStore.Server/Pipeline/SubmitQueryHandler.cs
+       M src/Hexalith.EventStore.Server/Queries/QueryExecutionFailedException.cs
+       M src/Hexalith.EventStore.Server/Queries/QueryRouter.cs
+       M src/Hexalith.EventStore/ErrorHandling/QueryExecutionFailedExceptionHandler.cs
+       M tests/Hexalith.EventStore.Contracts.Tests/Queries/ProjectionAdapterContractTests.cs
+       M tests/Hexalith.EventStore.Server.Tests/ErrorHandling/QueryProblemDetailsTests.cs
+       M tests/Hexalith.EventStore.Server.Tests/Pipeline/Queries/SubmitQueryHandlerTests.cs
+       M tests/Hexalith.EventStore.Server.Tests/Queries/QueryRouterTests.cs
+      ")
+          should be null or white space
+
+      Additional Info:
+          references/Hexalith.EventStore must be clean for immutable consumption proof.
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs(1797,0): at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.AssertGitlinkAndCheckout(String root, String relativePath, String expectedIdentity)
+        tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs(696,0): at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)

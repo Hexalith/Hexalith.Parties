@@ -1,0 +1,24 @@
+Command: dotnet tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll
+Working directory: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore
+Exit code: 143
+Raw output: /tmp/dw-27-validation/raw/eventstore-server-full.txt
+Raw SHA-256: 02eb4647bef437d8b749acd474358304254e8fe3007f8ea5c58e50122c919a98
+Result: incomplete; stopped after more than five minutes; no final test summary
+
+Blocker: Stopped after >5 minutes after failures in other test classes; no final test summary was produced. These failures were not reproduced against the baseline, and their causes are not established.
+
+Observed diagnostics (baseline reproduction was not performed):
+    Hexalith.EventStore.Server.Tests.Integration.ActorBasedAuthIntegrationTests.ActorRbacValidation_CommandMessageCategoryPassedCorrectly [FAIL]
+      System.Threading.Tasks.TaskCanceledException : The operation was canceled.
+      ---- System.Net.Http.HttpRequestException : Error while copying content to a stream.
+      -------- System.IO.IOException :
+      ------------ System.IO.IOException : The client aborted the request.
+      Stack Trace:
+Hexalith.EventStore.Configuration.DaprRateLimitConfigSync: DAPR config store unavailable for rate limit sync. Falling back to appsettings.json values.
+Dapr.DaprException: GetConfiguration operation failed: the Dapr endpoint indicated a failure. See InnerException for details.
+Inner diagnostic: An HTTP/2 connection could not be established because the server did not complete the HTTP/2 handshake. (InvalidResponse)
+Hexalith.EventStore.Server.Commands.DaprCommandStatusStore: Failed to read command status for b8ce545a-2924-4ac5-bed1-372cc60c70d7. Returning null.
+Dapr.DaprException: State operation failed: the Dapr endpoint indicated a failure. See InnerException for details.
+Inner diagnostic: An HTTP/2 connection could not be established because the server did not complete the HTTP/2 handshake. (InvalidResponse)
+Microsoft.Extensions.Hosting.Internal.Host: Hosting failed to start
+Microsoft.Extensions.Options.OptionsValidationException: Authentication:WorkloadIssuer:ClientId and Authentication:WorkloadIssuer:ClientSecret must be configured when Authentication:JwtBearer:Authority is set; without them every outbound internal call is denied.

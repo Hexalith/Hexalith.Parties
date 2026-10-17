@@ -1,0 +1,21 @@
+{
+  "terminated_at_utc": "2026-10-17T18:15:52.847687+00:00",
+  "reason": "Broad runs reported failures outside the focused DW-27 classes and remained in packaging/Dapr work after five minutes. These failures were not reproduced against the baseline, and their causes are not established. Focused regression suites passed.",
+  "processes": [
+    {
+      "pid": 10657,
+      "elapsed_seconds": 322,
+      "command": "dotnet tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll"
+    },
+    {
+      "pid": 10658,
+      "elapsed_seconds": 322,
+      "command": "dotnet tests/Hexalith.EventStore.Contracts.Tests/bin/Debug/net10.0/Hexalith.EventStore.Contracts.Tests.dll"
+    },
+    {
+      "pid": 83869,
+      "elapsed_seconds": 3,
+      "command": "git clone --shared --quiet /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore /tmp/oq8-git-b040c272201e42bdbebe4db0628f86d7"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+Command: dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests -class Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests
+Working directory: /home/administrator/projects/hexalith/parties
+Exit code: 0
+Raw output: /tmp/dw-27-validation/raw/parties-pinned-package-focused.txt
+Raw SHA-256: e4c4f07748ad4b3a179c61d397a22ce8323793a1e0c7e1f663507eec99f395d9
+Result: total=146, passed=146, errors=0, failed=0, skipped=0, not_run=0
+
+Runner result:
+   Hexalith.Parties.Tests  Total: 146, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 17.246s

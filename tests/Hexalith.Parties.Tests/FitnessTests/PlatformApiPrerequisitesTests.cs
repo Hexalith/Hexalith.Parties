@@ -44,8 +44,8 @@ public sealed class PlatformApiPrerequisitesTests
     // Release selection is separate from the historical migration/parity receipt constants.
     private const string CurrentReleaseEventStoreVersion = "3.124.0";
     private const string CurrentCatalogEventStoreVersion = "3.124.0";
-    private const string CurrentReleaseEventStoreSha = "77d9af18a54d92506e310fe5a45021a395e66f60";
-    private const string CurrentReleaseEventStoreDescribe = "v3.124.0-3-g77d9af18";
+    private const string CurrentReleaseEventStoreSha = "9ed9b9742bd006e568f026cc1c588275cf9db097";
+    private const string CurrentReleaseEventStoreDescribe = "v3.124.0-10-g9ed9b974";
     private const string CurrentReleaseEventStoreTag = "v3.124.0";
     private static readonly IReadOnlyDictionary<string, string> CurrentReleaseGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {

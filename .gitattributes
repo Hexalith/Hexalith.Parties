@@ -1,0 +1,2 @@
+# Preserve tested patch bytes and required single-space context lines.
+_bmad-output/implementation-artifacts/tests/dw-27-invalid-page-failure-2026-10-17/parties-consumer-adoption.patch -text whitespace=-blank-at-eol,cr-at-eol

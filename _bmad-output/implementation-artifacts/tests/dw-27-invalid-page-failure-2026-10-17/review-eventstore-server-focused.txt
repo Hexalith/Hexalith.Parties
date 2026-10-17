@@ -1,0 +1,9 @@
+Command: dotnet tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll -class Hexalith.EventStore.Server.Tests.Pipeline.Queries.SubmitQueryHandlerTests -class Hexalith.EventStore.Server.Tests.Queries.QueryRouterTests -class Hexalith.EventStore.Server.Tests.ErrorHandling.QueryProblemDetailsTests
+Working directory: /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore
+Exit code: 0
+Result: total=116, passed=116, errors=0, failed=0, skipped=0, not_run=0
+Raw output: /tmp/dw-27-validation/raw/review-eventstore-server-focused.txt
+Raw SHA-256: 14346e820ae4359c28510022664971a6b11f80cf49d2c1874deeda5a05311710
+
+Runner result:
+   Hexalith.EventStore.Server.Tests  Total: 116, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.640s

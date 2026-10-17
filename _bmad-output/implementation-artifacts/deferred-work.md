@@ -202,6 +202,10 @@ location: Paging.PageSize validation
 reason: Out-of-range `PageSize` under `Paging` rejected as `InvalidCursor` even with no cursor — debugging misdirection only.
 status: open
 decision: 2026-09-06 Add invalid-page sentinel — Add and map an InvalidPage failure reason, distinguish cursor failures from paging validation, and cover EventStore and Parties compatibility.
+progress: 2026-10-17 Shared EventStore source prerequisite is prepared: additive InvalidPage sentinel, optional init-only exception discriminator, safe HTTP 400/query_invalid_page mapping, sanitized page logs and legacy cursor fallback. Contracts/Server Debug source builds have zero warnings/errors; focused suites pass 112/112 and 116/116.
+dependency: Publish a compatible EventStore Contracts/Server/gateway SDK before activating Parties. Fresh public NuGet inspection still selects 3.124.0 and confirms the new APIs are absent; no package version was changed. The tested Parties producer and handler/gateway regressions are retained as the unapplied patch tests/dw-27-invalid-page-failure-2026-10-17/parties-consumer-adoption.patch.
+verification: Candidate source build passes with zero warnings/errors and 214/214 focused tests. Its earlier pre-review full assembly has 1170/1171 passing, with immutable consumption proof blocked by the required dirty EventStore checkout. Restored tracked Parties pinned-package build passes with zero warnings/errors and 146/146 focused tests. Full EventStore attempts were stopped after packaging/Dapr failures outside the changed test classes (not reproduced against baseline); full topology and assembly qualification are not claimed. Exact commands, diagnostics and rollout gate are in tests/dw-27-invalid-page-failure-2026-10-17/validation.json. Keep DW-27 open until real package adoption and all required gates pass.
+
 
 ### DW-28: Harden query compatibility shim lifecycle and state handling
 
