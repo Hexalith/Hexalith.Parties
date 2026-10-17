@@ -1000,7 +1000,8 @@ status: open
 origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
 location: src/Hexalith.Parties.Client/HttpPartiesIdentityClient.cs:121-150
 severity: medium
-status: open
+status: done 2026-10-17
+resolution: Required per-attempt correlation/message identity, validated every case-insensitive ID occurrence and explicit outcome flags, and preserved compatible optional fields, provisioning, HTTP failures and cancellation. Independent review and follow-up completed. Final Debug/source Client.Tests passes 301/301 including 145 identity cases; Debug/source and Release/package builds pass with zero warnings/errors. See spec-dw-128-binding-command-acknowledgments.md and tests/dw-128-binding-acknowledgments-2026-10-17/validation.json. Resolves DW-128/DW-147 together; no new deferred work.
 
 ### DW-147: Reject empty or unrelated successful HTTP objects as binding command acknowledgments.
 
@@ -1008,7 +1009,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties.Client/HttpPartiesIdentityClient.cs:121-150
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: Blind 2: SubmitAsync deserializes any object without explicit false/rejected flags; SubmitCommandResponse permits default constructor values, and binding methods discard it. An empty object can complete the call without matching correlation/message identity. Pre-existing 37d87f5a2869b076c651a58714d60f64647848bc code, unchanged here. Exit proof: malformed, missing-field, and mismatched acknowledgment rejection plus valid acknowledgment acceptance.
-status: open
+status: done 2026-10-17
+resolution: Required per-attempt correlation/message identity, validated every case-insensitive ID occurrence and explicit outcome flags, and preserved compatible optional fields, provisioning, HTTP failures and cancellation. Independent review and follow-up completed. Final Debug/source Client.Tests passes 301/301 including 145 identity cases; Debug/source and Release/package builds pass with zero warnings/errors. See spec-dw-128-binding-command-acknowledgments.md and tests/dw-128-binding-acknowledgments-2026-10-17/validation.json. Resolves DW-128/DW-147 together; no new deferred work.
 
 ### DW-129: Reject ineffective identity-history snapshot protection
 

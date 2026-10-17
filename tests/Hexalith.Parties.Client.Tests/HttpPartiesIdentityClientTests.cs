@@ -1,6 +1,8 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Client;
 using Hexalith.Parties.Contracts;
@@ -14,6 +16,273 @@ namespace Hexalith.Parties.Client.Tests;
 
 public sealed class HttpPartiesIdentityClientTests
 {
+    /// <summary>Invalid successful HTTP bodies cannot acknowledge any binding operation.</summary>
+    public static TheoryData<string, string> InvalidCommandAcknowledgments
+    {
+        get
+        {
+            string[] replies =
+            [
+                "", "{bad", "null", "[]", "true", "17", "\"unrelated\"", "{}",
+                """{"unrelated":true}""",
+                """{"success":true}""",
+                """{"messageId":"$attempt"}""",
+                """{"correlationId":null}""",
+                """{"correlationId":""}""",
+                """{"correlationId":"   "}""",
+                """{"correlationId":"another-attempt"}""",
+                """{"correlationId":17}""",
+                """{"correlationId":true}""",
+                """{"correlationId":[]}""",
+                """{"correlationId":{}}""",
+                """{"correlationId":"$attempt","messageId":""}""",
+                """{"correlationId":"$attempt","messageId":"   "}""",
+                """{"correlationId":"$attempt","messageId":"another-attempt"}""",
+                """{"correlationId":"$attempt","messageId":17}""",
+                """{"correlationId":"$attempt","success":false}""",
+                """{"correlationId":"$attempt","rejected":true}""",
+                """{"correlationId":"$attempt","Success":false}""",
+                """{"correlationId":"$attempt","Rejected":true}""",
+                """{"correlationId":"$attempt","success":"true"}""",
+                """{"correlationId":"$attempt","success":null}""",
+                """{"correlationId":"$attempt","rejected":"false"}""",
+                """{"correlationId":"$attempt","rejected":null}""",
+                """{"correlationId":"$attempt","success":true,"rejected":true}""",
+                """{"correlationId":"another-attempt","correlationId":"$attempt"}""",
+                """{"correlationId":"another-attempt","CorrelationId":"$attempt"}""",
+                """{"correlationId":"$attempt","messageId":"another-attempt","MessageId":null}""",
+                """{"correlationId":"$attempt","messageId":"another-attempt","messageId":"$attempt"}""",
+            ];
+            var data = new TheoryData<string, string>();
+            foreach (string operation in new[] { "establish", "rebind", "revoke" })
+            {
+                foreach (string reply in replies)
+                {
+                    data.Add(operation, reply);
+                }
+            }
+
+            return data;
+        }
+    }
+
+    /// <summary>Successful transport alone does not prove the submitted binding attempt was accepted.</summary>
+    [Theory]
+    [MemberData(nameof(InvalidCommandAcknowledgments))]
+    public async Task BindingCommand_InvalidAcknowledgment_IsUnavailable(string operation, string reply)
+    {
+        int sent = 0;
+        using var http = new HttpClient(new Handler(async request =>
+        {
+            sent++;
+            SubmitCommandRequest command = (await request.Content!.ReadFromJsonAsync<SubmitCommandRequest>(
+                PartiesJsonOptions.Default, TestContext.Current.CancellationToken).ConfigureAwait(false))!;
+            return new HttpResponseMessage(HttpStatusCode.Accepted)
+            {
+                Content = new StringContent(reply.Replace("$attempt", command.CorrelationId, StringComparison.Ordinal), Encoding.UTF8, "application/json"),
+            };
+        })) { BaseAddress = new Uri("https://gateway.test/") };
+
+        PartiesClientException failure = await Should.ThrowAsync<PartiesClientException>(
+            () => SubmitBindingAsync(new HttpPartiesIdentityClient(http), operation));
+
+        failure.Status.ShouldBe(503);
+        failure.Detail.ShouldBe("Authoritative identity evidence is unavailable.");
+        sent.ShouldBe(1);
+    }
+
+    /// <summary>Binding acknowledgments preserve optional fields and the gateway's accepted status.</summary>
+    [Theory]
+    [InlineData("establish", false)]
+    [InlineData("rebind", false)]
+    [InlineData("revoke", false)]
+    [InlineData("establish", true)]
+    [InlineData("rebind", true)]
+    [InlineData("revoke", true)]
+    public async Task BindingCommand_ValidAcknowledgments_PreserveCompatibility(string operation, bool includeMessageId)
+    {
+        var seen = new List<SubmitCommandRequest>();
+        using var http = new HttpClient(new Handler(async request =>
+        {
+            request.Method.ShouldBe(HttpMethod.Post);
+            request.RequestUri!.AbsolutePath.ShouldBe("/api/v1/commands");
+            SubmitCommandRequest command = (await request.Content!.ReadFromJsonAsync<SubmitCommandRequest>(
+                PartiesJsonOptions.Default, TestContext.Current.CancellationToken).ConfigureAwait(false))!;
+            seen.Add(command);
+            command.MessageId.ShouldBe(command.CorrelationId);
+            command.MessageId.ShouldNotBeNullOrWhiteSpace();
+            command.Tenant.ShouldBe("tenant-a");
+            command.Domain.ShouldBe("party");
+            command.AggregateId.ShouldBe("party-1");
+            command.CommandType.ShouldBe(operation switch
+            {
+                "establish" => typeof(EstablishHumanActorBinding).FullName,
+                "rebind" => typeof(RebindHumanActorBinding).FullName,
+                _ => typeof(RevokeHumanActorBinding).FullName,
+            });
+            command.Payload.GetProperty("logicalId").GetString().ShouldBe("logical");
+            return new HttpResponseMessage(HttpStatusCode.Accepted)
+            {
+                Content = JsonContent.Create(new SubmitCommandResponse(command.CorrelationId!,
+                    ResultPayload: includeMessageId ? JsonSerializer.SerializeToElement(new { bindingVersion = 1 }, PartiesJsonOptions.Default) : null,
+                    MessageId: includeMessageId ? command.MessageId : null), options: PartiesJsonOptions.Default),
+            };
+        })) { BaseAddress = new Uri("https://gateway.test/") };
+        var client = new HttpPartiesIdentityClient(http);
+
+        await SubmitBindingAsync(client, operation);
+        await SubmitBindingAsync(client, operation);
+
+        seen.Count.ShouldBe(2);
+        seen[0].MessageId.ShouldNotBe(seen[1].MessageId);
+        seen[0].CorrelationId.ShouldNotBe(seen[1].CorrelationId);
+        seen[0].Payload.GetRawText().ShouldBe(seen[1].Payload.GetRawText());
+    }
+
+    /// <summary>Valid alternate envelope casing and explicit non-rejection flags remain supported.</summary>
+    [Theory]
+    [InlineData("""{"CorrelationId":"$attempt","MessageId":"$attempt","Success":true,"Rejected":false}""")]
+    [InlineData("""{"correlationId":"$attempt","messageId":null,"success":true,"rejected":false,"extension":"ignored"}""")]
+    public async Task BindingCommand_CompatibleEnvelope_IsAccepted(string reply)
+    {
+        using var http = new HttpClient(new Handler(async request =>
+        {
+            SubmitCommandRequest command = (await request.Content!.ReadFromJsonAsync<SubmitCommandRequest>(
+                PartiesJsonOptions.Default, TestContext.Current.CancellationToken).ConfigureAwait(false))!;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(reply.Replace("$attempt", command.CorrelationId, StringComparison.Ordinal), Encoding.UTF8, "application/json"),
+            };
+        })) { BaseAddress = new Uri("https://gateway.test/") };
+
+        await SubmitBindingAsync(new HttpPartiesIdentityClient(http), "establish");
+    }
+
+    /// <summary>The shared acknowledgment guard preserves validated provisioning results.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Provisioning_RequiresAcknowledgmentAndMatchingResult(bool matchingResult)
+    {
+        const string agentId = "01HX0000000000000000000001";
+        var identity = new AgentPartyIdentity("tenant-a", agentId, AgentPartyIdMapping.Create("tenant-a", agentId),
+            1, "logical", "fingerprint", DateTimeOffset.UnixEpoch);
+        var result = new AgentPartyProvisioningResult(
+            matchingResult ? identity : identity with { LogicalId = "other-logical" }, 1, "source");
+        using var http = new HttpClient(new Handler(async request =>
+        {
+            SubmitCommandRequest command = (await request.Content!.ReadFromJsonAsync<SubmitCommandRequest>(
+                PartiesJsonOptions.Default, TestContext.Current.CancellationToken).ConfigureAwait(false))!;
+            return new HttpResponseMessage(HttpStatusCode.Accepted)
+            {
+                Content = JsonContent.Create(new SubmitCommandResponse(command.CorrelationId!,
+                    JsonSerializer.SerializeToElement(result, PartiesJsonOptions.Default), command.MessageId), options: PartiesJsonOptions.Default),
+            };
+        })) { BaseAddress = new Uri("https://gateway.test/") };
+        var client = new HttpPartiesIdentityClient(http);
+
+        if (matchingResult)
+        {
+            (await client.ProvisionAgentPartyAsync("tenant-a", new(identity), TestContext.Current.CancellationToken)).ShouldBe(result);
+        }
+        else
+        {
+            PartiesClientException failure = await Should.ThrowAsync<PartiesClientException>(() => client.ProvisionAgentPartyAsync(
+                "tenant-a", new(identity), TestContext.Current.CancellationToken));
+            failure.Status.ShouldBe(503);
+        }
+    }
+
+    /// <summary>An earlier delivery acknowledgment cannot satisfy a fresh retry.</summary>
+    [Theory]
+    [InlineData("establish")]
+    [InlineData("rebind")]
+    [InlineData("revoke")]
+    public async Task BindingCommand_RetryWithPreviousAcknowledgment_IsUnavailable(string operation)
+    {
+        var seen = new List<SubmitCommandRequest>();
+        using var http = new HttpClient(new Handler(async request =>
+        {
+            SubmitCommandRequest command = (await request.Content!.ReadFromJsonAsync<SubmitCommandRequest>(
+                PartiesJsonOptions.Default, TestContext.Current.CancellationToken).ConfigureAwait(false))!;
+            seen.Add(command);
+            return new HttpResponseMessage(HttpStatusCode.Accepted)
+            {
+                Content = JsonContent.Create(new SubmitCommandResponse(seen[0].CorrelationId!, MessageId: seen[0].MessageId), options: PartiesJsonOptions.Default),
+            };
+        })) { BaseAddress = new Uri("https://gateway.test/") };
+        var client = new HttpPartiesIdentityClient(http);
+
+        await SubmitBindingAsync(client, operation);
+        PartiesClientException failure = await Should.ThrowAsync<PartiesClientException>(() => SubmitBindingAsync(client, operation));
+
+        failure.Status.ShouldBe(503);
+        seen.Count.ShouldBe(2);
+        seen[0].MessageId.ShouldNotBe(seen[1].MessageId);
+        seen[0].Payload.GetRawText().ShouldBe(seen[1].Payload.GetRawText());
+    }
+
+    /// <summary>A well-formed acknowledgment cannot override an HTTP rejection.</summary>
+    [Theory]
+    [InlineData("establish", HttpStatusCode.Unauthorized)]
+    [InlineData("rebind", HttpStatusCode.UnprocessableEntity)]
+    [InlineData("revoke", HttpStatusCode.ServiceUnavailable)]
+    public async Task BindingCommand_HttpFailure_PreservesStatus(string operation, HttpStatusCode status)
+    {
+        using var http = new HttpClient(new Handler(async request =>
+        {
+            SubmitCommandRequest command = (await request.Content!.ReadFromJsonAsync<SubmitCommandRequest>(
+                PartiesJsonOptions.Default, TestContext.Current.CancellationToken).ConfigureAwait(false))!;
+            return new HttpResponseMessage(status)
+            {
+                Content = JsonContent.Create(new SubmitCommandResponse(command.CorrelationId!, MessageId: command.MessageId), options: PartiesJsonOptions.Default),
+            };
+        })) { BaseAddress = new Uri("https://gateway.test/") };
+
+        PartiesClientException failure = await Should.ThrowAsync<PartiesClientException>(() => SubmitBindingAsync(new HttpPartiesIdentityClient(http), operation));
+
+        failure.Status.ShouldBe((int)status);
+    }
+
+    /// <summary>Cancellation while buffering the response propagates to the binding caller.</summary>
+    [Theory]
+    [InlineData("establish")]
+    [InlineData("rebind")]
+    [InlineData("revoke")]
+    public async Task BindingCommand_CancellationDuringResponseRead_Propagates(string operation)
+    {
+        var reading = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        using var http = new HttpClient(new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)
+        {
+            Content = new CancellationResponseContent(reading),
+        }))) { BaseAddress = new Uri("https://gateway.test/") };
+
+        Task pending = SubmitBindingAsync(new HttpPartiesIdentityClient(http), operation, cancellation.Token);
+        try
+        {
+            await reading.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+        }
+        finally
+        {
+            await cancellation.CancelAsync();
+        }
+
+        await Should.ThrowAsync<OperationCanceledException>(() => pending.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken));
+    }
+
+    private static Task SubmitBindingAsync(HttpPartiesIdentityClient client, string operation, CancellationToken? cancellationToken = null)
+        => operation switch
+        {
+            "establish" => client.EstablishHumanActorBindingAsync("tenant-a", new("tenant-a", "party-1", "01HX0000000000000000000001",
+                1, 1, 0, DateTimeOffset.UnixEpoch, "logical", "synthetic"), cancellationToken ?? TestContext.Current.CancellationToken),
+            "rebind" => client.RebindHumanActorBindingAsync("tenant-a", new("tenant-a", "party-1", "01HX0000000000000000000001",
+                1, 1, 0, DateTimeOffset.UnixEpoch, "logical", "synthetic"), cancellationToken ?? TestContext.Current.CancellationToken),
+            "revoke" => client.RevokeHumanActorBindingAsync("tenant-a", new("tenant-a", "party-1", "01HX0000000000000000000001",
+                1, 1, 0, DateTimeOffset.UnixEpoch, "logical", "synthetic"), cancellationToken ?? TestContext.Current.CancellationToken),
+            _ => throw new ArgumentOutOfRangeException(nameof(operation)),
+        };
+
     /// <summary>Delayed replies must remain usable at the client completion instant.</summary>
     [Theory]
     [InlineData("current-valid")]

@@ -152,14 +152,34 @@ public sealed class HttpPartiesIdentityClient(HttpClient httpClient, TimeProvide
         try
         {
             JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(PartiesJsonOptions.Default, cancellationToken).ConfigureAwait(false);
-            if (body.ValueKind != JsonValueKind.Object
-                || body.TryGetProperty("success", out JsonElement success) && success.ValueKind == JsonValueKind.False
-                || body.TryGetProperty("rejected", out JsonElement rejected) && rejected.ValueKind == JsonValueKind.True)
+            if (body.ValueKind != JsonValueKind.Object)
             {
                 throw Unavailable();
             }
 
-            return body.Deserialize<SubmitCommandResponse>(PartiesJsonOptions.Default) ?? throw Unavailable();
+            foreach (JsonProperty property in body.EnumerateObject())
+            {
+                if (string.Equals(property.Name, "success", StringComparison.OrdinalIgnoreCase) && property.Value.ValueKind != JsonValueKind.True
+                    || string.Equals(property.Name, "rejected", StringComparison.OrdinalIgnoreCase) && property.Value.ValueKind != JsonValueKind.False
+                    || string.Equals(property.Name, "correlationId", StringComparison.OrdinalIgnoreCase)
+                        && (property.Value.ValueKind != JsonValueKind.String || !string.Equals(property.Value.GetString(), attemptId, StringComparison.Ordinal))
+                    || string.Equals(property.Name, "messageId", StringComparison.OrdinalIgnoreCase) && property.Value.ValueKind != JsonValueKind.Null
+                        && (property.Value.ValueKind != JsonValueKind.String || !string.Equals(property.Value.GetString(), attemptId, StringComparison.Ordinal)))
+                {
+                    throw Unavailable();
+                }
+            }
+
+            SubmitCommandResponse? acknowledgment = body.Deserialize<SubmitCommandResponse>(PartiesJsonOptions.Default);
+            // This client uses fresh delivery IDs without an IdempotencyKey, so both IDs identify this attempt.
+            if (acknowledgment is null
+                || !string.Equals(acknowledgment.CorrelationId, attemptId, StringComparison.Ordinal)
+                || acknowledgment.MessageId is not null && !string.Equals(acknowledgment.MessageId, attemptId, StringComparison.Ordinal))
+            {
+                throw Unavailable();
+            }
+
+            return acknowledgment;
         }
         catch (JsonException)
         {

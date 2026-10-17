@@ -1,0 +1,122 @@
+{
+    "date": "2026-10-17",
+    "scope": [
+        "DW-128",
+        "DW-147"
+    ],
+    "base_revision": "d26b0cea57df19d18281a337e66bc8ca4712fb37",
+    "commands": [
+        {
+            "command": "dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+            "exit_code": 0,
+            "warnings": 0,
+            "errors": 0
+        },
+        {
+            "command": "dotnet tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll -class Hexalith.Parties.Client.Tests.HttpPartiesIdentityClientTests -xml /tmp/dw-128-validation/before.xml",
+            "exit_code": 1,
+            "phase": "before production fix"
+        },
+        {
+            "command": "dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true --no-restore -m:1",
+            "exit_code": 0,
+            "warnings": 0,
+            "errors": 0
+        },
+        {
+            "command": "dotnet tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll -class Hexalith.Parties.Client.Tests.HttpPartiesIdentityClientTests -xml /tmp/dw-128-validation/after.xml",
+            "exit_code": 0
+        },
+        {
+            "command": "dotnet tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll -xml /tmp/dw-128-validation/full-debug.xml",
+            "exit_code": 0
+        },
+        {
+            "command": "dotnet build src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj -c Release -p:UseHexalithProjectReferences=false -p:HexalithCommonsHttpFromSource=false -m:1",
+            "exit_code": 0,
+            "warnings": 0,
+            "errors": 0,
+            "eventstore_contracts": "3.124.0"
+        },
+        {
+            "command": "dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+            "exit_code": 0,
+            "phase": "final after review patches",
+            "warnings": 0,
+            "errors": 0
+        },
+        {
+            "command": "dotnet tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll -xml /tmp/dw-128-validation/full-debug-final.xml",
+            "exit_code": 0,
+            "phase": "final after review patches"
+        },
+        {
+            "command": "dotnet build src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj -c Release -p:UseHexalithProjectReferences=false -p:HexalithCommonsHttpFromSource=false -m:1",
+            "exit_code": 0,
+            "phase": "final after review patches",
+            "warnings": 0,
+            "errors": 0,
+            "eventstore_contracts": "3.124.0"
+        },
+        {
+            "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+            "exit_code": 0
+        },
+        {
+            "command": "bash scripts/check-no-warning-override.sh",
+            "exit_code": 0
+        }
+    ],
+    "results": {
+        "before": {
+            "total": 124,
+            "passed": 73,
+            "failed": 51,
+            "errors": 0,
+            "skipped": 0,
+            "not-run": 0
+        },
+        "after": {
+            "total": 124,
+            "passed": 124,
+            "failed": 0,
+            "errors": 0,
+            "skipped": 0,
+            "not-run": 0
+        },
+        "full-debug": {
+            "total": 280,
+            "passed": 280,
+            "failed": 0,
+            "errors": 0,
+            "skipped": 0,
+            "not-run": 0
+        },
+        "full-debug-final": {
+            "total": 301,
+            "passed": 301,
+            "failed": 0,
+            "errors": 0,
+            "skipped": 0,
+            "not-run": 0
+        },
+        "identity-final": {
+            "total": 145,
+            "passed": 145,
+            "failed": 0,
+            "skipped": 0
+        }
+    },
+    "source_sha256": {
+        "src/Hexalith.Parties.Client/HttpPartiesIdentityClient.cs": "35dcd007b3487a5fe3a02c4979916dca05aa2d18ac5cb09a947b5bb45e3ff3ae",
+        "tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs": "5be24b835f399fdfb625f0dfa811a8e8d635eacdfecd00cf0584629dfb8f4e0d",
+        "tests/Hexalith.Parties.Client.Tests/CancellationResponseContent.cs": "8a00e4117b2df43b878aea8c5dee9bf440107796c5a49c2432804bde2d838c40"
+    },
+    "review": "Independent Blind Hunter review: four verified findings patched; follow-up confirmed all resolved and no concrete regression. No new deferred work.",
+    "runtime_baseline": "Owned isolated no-build AppHost: EventStore and Parties healthy; eventstore-admin and Tenants exited 134, UI exited 150. Full topology not qualified. Exact-target ordinary stop succeeded.",
+    "selected_gitlinks": {
+        "references/Hexalith.Builds": "4f53d9f37c5b86cfd43fbcc8fa5dd4df19b84c77",
+        "references/Hexalith.EventStore": "7edc260d8c0bd904f1215f801bad02b99c6694cf"
+    },
+    "scope_limits": "Client transport and response validation only; no live gateway acceptance or full-topology qualification, dependency changes, commits, pushes, or external writes."
+}
