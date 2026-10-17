@@ -2,7 +2,7 @@
 title: 'DW-123 bounded not-found diagnostics'
 type: 'bugfix'
 created: '2026-10-17'
-status: 'in-progress'
+status: 'done'
 route: 'oneshot'
 review_loop_iteration: 0
 context: []
@@ -19,6 +19,8 @@ context: []
 </frozen-after-approval>
 
 ## Implementation Notes
+
+Resumed and completed on 2026-10-17 at Parties revision `4e4f271faa5eb141834a1e53eeebe8a2e1aef68c` to verify the remaining completion gate. The diagnostic implementation and regression tests are already committed; this continuation changes only the completion records and evidence. The implementation, review findings, and failed validation run described below are historical. Current validation and review results are recorded separately in `tests/dw-123-bounded-not-found-diagnostics-2026-10-17/completion-validation.json`, preserving the original `validation.json` receipt.
 
 Planning classification: no unresolved intent gaps; no migration, deployment, dependency update, or external mutation. Small change to one existing aggregate and focused existing aggregate tests, plus this spec and the DW-123 ledger entry. No new public API. Existing not-found tests in `PartyAggregateContactChannelTests.cs`, `PartyAggregateIdentifierTests.cs`, and `PartyAggregateCompositeTests.cs` are the regression anchors. Run the individual Debug/source-reference Server.Tests project; broaden to Parties.Tests because the aggregate is used by the processor. Inspect and stop the owned Aspire baseline before compiling, following repository guidance.
 
@@ -43,3 +45,18 @@ A separate concurrent `/pushall` committed the original implementation/tests and
 - Low, patch: The ledger's historical reason could be read as describing current implementation. Added the implementation spec/evidence and the separate completion blocker; its open status is intentional while the broader gate fails.
 
 Final review validation: Debug/source Server.Tests build succeeded with zero warnings/errors; the full final assembly passes **315/315**, zero failures/errors/skips/not-run. All 12 original failing-before cases now pass. Independent follow-up confirmed all five findings addressed and found no concrete remaining defect. Production source matches the concurrent committed implementation and frozen intent is unchanged. The compact evidence packet records exact commands, counts, source hashes and the two separate broader-gate failures.
+
+## Completion Revalidation — 2026-10-17
+
+At Parties revision `4e4f271faa5eb141834a1e53eeebe8a2e1aef68c`, both individual Debug/source builds succeed with zero warnings/errors. Full Server.Tests passes **315/315** and full Parties.Tests passes **1080/1080**, with zero failures, errors, skips or tests not run. The XML explicitly confirms that all 12 original failing-before diagnostic cases pass, together with `FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph` and `MaintainedTechnologyTablesMatchCentralPackageCatalog`. The original completion blocker is resolved. Independent review identified four completion-record improvements, all addressed below; no new work is deferred.
+
+The warning-override guard passes. The frozen intent matches the baseline commit byte-for-byte, and `tests/dw-123-bounded-not-found-diagnostics-2026-10-17/validation.json` is unchanged. Fresh commands, counts, hashes and named regression outcomes are recorded in the separate `completion-validation.json` beside that historical receipt. No production source, tests, dependencies, gitlinks or runtime configuration changed in this continuation, and no new runtime qualification is claimed. Changes remain uncommitted under the repository safeguards.
+
+Completion review triage:
+
+- Low, patch: Completion tracking still showed the prior blocker during review. Finalized this spec and DW-123 after the green gate, retaining the original failed run in its historical receipt.
+- Low, patch: The new receipt omitted the actual execution versions. Added SDK `10.0.401`, .NET runtime `10.0.12`, and xUnit `4.0.2+0c7aa4991f` from the CLI and both test XML files.
+- Low, patch: Source-reference dependencies lacked checkout evidence. Recorded all ten root gitlinks, matching canonical checkout revisions, and empty explicit porcelain statuses. This observation was made after the tests; its timing is recorded rather than represented as a pre-build capture.
+- Low, patch: The frozen-intent preservation claim lacked reproduction details. Executed and recorded the exact extraction/comparison command and matching SHA-256 hashes for the complete frozen block, including its opening and closing tags.
+
+Independent completion follow-up verified all four corrections directly and found no concrete remaining defect in scope. The final whitespace, evidence consistency, source-preservation and frozen-block checks pass. DW-123 is complete.

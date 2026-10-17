@@ -956,10 +956,11 @@ location: src/Hexalith.Parties/Domain/PartyAggregate.cs:412,415,423,426,1174,122
 source_spec: `spec-safe-consent-identifiers.md`
 severity: medium
 reason: PartyAggregate.cs lines 412, 415, 423, 426, 1174, 1229 and 1305 still emit $"Contact channel '{id}' not found." / $"Identifier '{id}' not found.", so the same event type now has two message dialects depending on which command produced it. Those call sites belong to commands outside this story's intent contract and were not touched by it.
-status: open
+status: done 2026-10-17
 
 implementation: 2026-10-17 All six remaining channel/identifier not-found branches now use fixed diagnostics; composite Rejected details agree with persisted rejection events. Rejection types and validation/lookup semantics are preserved. See spec-dw-123-bounded-not-found-diagnostics.md.
-validation_blocker: Final Debug/source Server.Tests passes 315/315 with zero build warnings/errors; independent review and follow-up are complete. Broader Hexalith.Parties.Tests passes 1008/1010; FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph and MaintainedTechnologyTablesMatchCentralPackageCatalog fail after concurrent dependency sync 90af3047b50046cb4f6f91e01f182f562110aab3 (Builds committed gitlink and Dapr toolkit table drift). These checks do not execute PartyAggregate. Status remains open until the completion gate passes; current diagnostic behavior is implemented, and the original reason above describes the prior defect. See tests/dw-123-bounded-not-found-diagnostics-2026-10-17/validation.json.
+previous_validation_blocker: The original service run passed 1008/1010 after concurrent dependency sync 90af3047b50046cb4f6f91e01f182f562110aab3; FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph and MaintainedTechnologyTablesMatchCentralPackageCatalog failed. That historical result is preserved in tests/dw-123-bounded-not-found-diagnostics-2026-10-17/validation.json.
+resolution: Completion revalidation at Parties 4e4f271faa5eb141834a1e53eeebe8a2e1aef68c passes Server.Tests 315/315 and Parties.Tests 1080/1080, with zero failures/errors/skips/not-run and zero warnings/errors in both Debug/source builds. All 12 original failing-before diagnostics and both former fitness blockers pass. Independent review identified four completion-record improvements, all addressed; no new deferred work. Production source, tests and dependencies were unchanged in this continuation. See spec-dw-123-bounded-not-found-diagnostics.md and tests/dw-123-bounded-not-found-diagnostics-2026-10-17/completion-validation.json.
 
 ### DW-124: Publish a FrontComposer Shell release carrying the module-landing route surface consumed by Parties.UI.
 

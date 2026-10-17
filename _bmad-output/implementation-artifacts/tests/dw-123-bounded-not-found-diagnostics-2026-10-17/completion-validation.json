@@ -1,0 +1,293 @@
+{
+  "date": "2026-10-17",
+  "scope": "DW-123 completion only; existing diagnostic implementation and tests unchanged",
+  "baseline_commit": "4e4f271faa5eb141834a1e53eeebe8a2e1aef68c",
+  "configuration": "Debug; source project references",
+  "historical_receipt": {
+    "path": "validation.json",
+    "sha256": "2b9494960a40af7bc7e96a088e3e3ce12f590e0fe7ea1b4af8675940315e791b",
+    "completion_gate_at_original_run": "blocked: broader assembly has two dependency/catalog documentation fitness failures after concurrent source sync; diagnostic behavior is verified but DW-123 remains open"
+  },
+  "suites": {
+    "server": {
+      "build": {
+        "command": "dotnet build tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+        "exit_code": 0,
+        "warnings": 0,
+        "errors": 0,
+        "log_sha256": "04963332a749285949d67a534751e616ae45881cd583db9622410a2980d12915"
+      },
+      "tests": {
+        "command": "dotnet tests/Hexalith.Parties.Server.Tests/bin/Debug/net10.0/Hexalith.Parties.Server.Tests.dll -xml /tmp/dw-123-completion-2026-10-17/server.xml",
+        "exit_code": 0,
+        "total": 315,
+        "passed": 315,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "6d37a70b4a9768833768e40453637c5fb7dfb9545cbc2caab1a14d92f067f42d",
+        "started_utc": "2026-10-17T14:58:34.2039292+00:00",
+        "finished_utc": "2026-10-17T14:58:34.6255761+00:00"
+      },
+      "verified_regressions": [
+        {
+          "test": "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests.Handle_UpdatePartyComposite_UpdateMissingChannel_ReturnsRejection(identifierLength: 16)",
+          "result": "Pass"
+        },
+        {
+          "test": "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests.Handle_UpdatePartyComposite_UpdateMissingChannel_ReturnsRejection(identifierLength: 128)",
+          "result": "Pass"
+        },
+        {
+          "test": "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests.Handle_UpdatePartyComposite_RemoveMissingChannel_ReturnsRejection(identifierLength: 16)",
+          "result": "Pass"
+        },
+        {
+          "test": "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests.Handle_UpdatePartyComposite_RemoveMissingChannel_ReturnsRejection(identifierLength: 128)",
+          "result": "Pass"
+        },
+        {
+          "test": "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests.Handle_UpdatePartyComposite_InvalidRemoveIdentifierId_ReturnsRejection(identifierLength: 16)",
+          "result": "Pass"
+        },
+        {
+          "test": "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests.Handle_UpdatePartyComposite_InvalidRemoveIdentifierId_ReturnsRejection(identifierLength: 128)",
+          "result": "Pass"
+        },
+        {
+          "test": "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateIdentifierTests.Handle_RemoveIdentifier_NotFound_ReturnsIdentifierNotFound(identifierLength: 16)",
+          "result": "Pass"
+        },
+        {
+          "test": "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateIdentifierTests.Handle_RemoveIdentifier_NotFound_ReturnsIdentifierNotFound(identifierLength: 128)",
+          "result": "Pass"
+        },
+        {
+          "test": "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateContactChannelTests.Handle_UpdateContactChannel_NotFound_ReturnsContactChannelNotFound(identifierLength: 16)",
+          "result": "Pass"
+        },
+        {
+          "test": "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateContactChannelTests.Handle_UpdateContactChannel_NotFound_ReturnsContactChannelNotFound(identifierLength: 128)",
+          "result": "Pass"
+        },
+        {
+          "test": "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateContactChannelTests.Handle_RemoveContactChannel_NotFound_ReturnsContactChannelNotFound(identifierLength: 16)",
+          "result": "Pass"
+        },
+        {
+          "test": "Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateContactChannelTests.Handle_RemoveContactChannel_NotFound_ReturnsContactChannelNotFound(identifierLength: 128)",
+          "result": "Pass"
+        }
+      ]
+    },
+    "parties": {
+      "build": {
+        "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+        "exit_code": 0,
+        "warnings": 0,
+        "errors": 0,
+        "log_sha256": "191e85544ab7800744ffc04a61b20b4d099afab5dbebcd0127279c845bf9bbf4"
+      },
+      "tests": {
+        "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -xml /tmp/dw-123-completion-2026-10-17/parties.xml",
+        "exit_code": 0,
+        "total": 1080,
+        "passed": 1080,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "c2d5fbc242a4a36d08a925ee7b544d6ea1f0af65f2f56543b5ff749efe9bcb14",
+        "started_utc": "2026-10-17T14:58:56.8538611+00:00",
+        "finished_utc": "2026-10-17T14:59:19.8837332+00:00"
+      },
+      "verified_regressions": [
+        {
+          "test": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+          "result": "Pass"
+        },
+        {
+          "test": "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog",
+          "result": "Pass"
+        }
+      ]
+    }
+  },
+  "selected_source_sha256": {
+    "src/Hexalith.Parties/Domain/PartyAggregate.cs": "6539733720396dd5380b1f87c043adaee94b24fe271918bb3369c136a64aadbf",
+    "tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateCompositeTests.cs": "29b2bf19f913f9951e47a705d9dd460e6a430d4690e021e074ecd5afe0197339",
+    "tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateContactChannelTests.cs": "af94af81b776df994a735e6d373963231b8726d99e76b3ba36840d5d73f5d195",
+    "tests/Hexalith.Parties.Server.Tests/Aggregates/PartyAggregateIdentifierTests.cs": "d46b1785b1ab1f30f4c7821626be2ddc04a3c796569ea29363a1f80ef9f88e40",
+    "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs": "8c6422e62e6d80233b2f053421d5e39fef99d39ddd89cad1c788c5eb755f6a05",
+    "tests/Hexalith.Parties.Tests/FitnessTests/DocumentationFitnessTests.cs": "1792b854c6fc831d4974f959c115411010932b070c42cfd8b25ebcd91a826874",
+    "docs/architecture.md": "fee5ab7896218e227d4b35e290f4a46949be5045fbf18b79c394a8df6bb9d320",
+    "global.json": "25b36d45123efa1d03786506dadad7546069f8563cddd4b509849b5c3631e9f5"
+  },
+  "checks": [
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "result": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+    },
+    {
+      "check": "entire frozen-after-approval block, including both tags, matches baseline byte-for-byte",
+      "command": "python3 - <<'INTENT_CHECK'\nimport hashlib, json, subprocess\nfrom pathlib import Path\nspec = \"_bmad-output/implementation-artifacts/spec-dw-123-bounded-not-found-diagnostics.md\"\nbaseline = \"4e4f271faa5eb141834a1e53eeebe8a2e1aef68c\"\ndef block(content):\n    start = content.index(b\"<frozen-after-approval\")\n    end = content.index(b\"</frozen-after-approval>\", start) + len(b\"</frozen-after-approval>\")\n    return content[start:end]\noriginal = block(subprocess.check_output([\"git\", \"show\", f\"{baseline}:{spec}\"]))\ncurrent = block(Path(spec).read_bytes())\nassert original == current\nprint(json.dumps({\"baseline_block_sha256\": hashlib.sha256(original).hexdigest(), \"current_block_sha256\": hashlib.sha256(current).hexdigest(), \"result\": \"pass\"}))\nINTENT_CHECK",
+      "exit_code": 0,
+      "baseline_block_sha256": "a23eefd36c4d68d270612292a8441acd0926994a66fe3255acaa1a3471042dc9",
+      "current_block_sha256": "a23eefd36c4d68d270612292a8441acd0926994a66fe3255acaa1a3471042dc9",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "result": "pass"
+    }
+  ],
+  "completion_gate": "passed: both affected assemblies and both formerly failing fitness checks are green",
+  "limitations": "No new live Aspire, topology, package-mode, release, or production qualification; this continuation only verifies the DW-123 completion gate.",
+  "raw_receipts": "Build logs and xUnit XML remain local in the temporary directory named by the test commands; only sanitized counts, test results, and hashes are retained here.",
+  "review": {
+    "status": "complete",
+    "active_layers": [
+      "blind-hunter"
+    ],
+    "skipped_layers": [],
+    "finding_floor": "min(floor(sqrt(10.703) + 1), 10) = 4",
+    "findings": [
+      {
+        "verdict": "low",
+        "route": "patch",
+        "finding": "Completion tracking must close after review.",
+        "resolution": "Finalize the existing spec and DW-123 entry; preserve the historical failure receipt separately."
+      },
+      {
+        "verdict": "low",
+        "route": "patch",
+        "finding": "Actual SDK, runtime, and test-framework versions were missing.",
+        "resolution": "Record dotnet --version and both xUnit XML environment/framework attributes."
+      },
+      {
+        "verdict": "low",
+        "route": "patch",
+        "finding": "Source dependency checkout revisions and cleanliness were missing.",
+        "resolution": "Record every root gitlink, exact checked-out revision and explicit porcelain status, with post-test observation timing."
+      },
+      {
+        "verdict": "low",
+        "route": "patch",
+        "finding": "Frozen-intent comparison was not reproducible.",
+        "resolution": "Execute and record the exact full-block extraction/comparison command and both matching hashes."
+      }
+    ],
+    "deferred_findings": 0,
+    "follow_up": "Independent reviewer verified all four corrections directly, confirmed git diff --check passes, and found no concrete remaining defect in the completion-only scope."
+  },
+  "environment": {
+    "sdk": {
+      "command": "dotnet --version",
+      "version": "10.0.401"
+    },
+    "test_environments": {
+      "server": {
+        "environment": "64-bit (x64) .NET 10.0.12 [collection-per-class, parallel (collections, 14 threads)]",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0"
+      },
+      "parties": {
+        "environment": "64-bit (x64) .NET 10.0.12 [collection-per-class, parallel (collections, 14 threads)]",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0"
+      }
+    }
+  },
+  "source_dependency_observation": {
+    "observed_utc": "2026-10-17T15:03:48.043425+00:00",
+    "timing": "Observed after test completion; initial superproject status was clean and this continuation made no dependency changes.",
+    "inventory_command": "git ls-tree -r HEAD references",
+    "checkout_command_template": "git -C <path> rev-parse HEAD",
+    "status_command_template": "git -C <path> status --porcelain=v1 --untracked-files=normal --ignore-submodules=none",
+    "dependencies": [
+      {
+        "path": "references/Hexalith.AI.Tools",
+        "committed_gitlink": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+        "checkout_revision": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+        "porcelain_status": "",
+        "matches_gitlink": true,
+        "clean": true
+      },
+      {
+        "path": "references/Hexalith.Builds",
+        "committed_gitlink": "4f53d9f37c5b86cfd43fbcc8fa5dd4df19b84c77",
+        "checkout_revision": "4f53d9f37c5b86cfd43fbcc8fa5dd4df19b84c77",
+        "porcelain_status": "",
+        "matches_gitlink": true,
+        "clean": true
+      },
+      {
+        "path": "references/Hexalith.Commons",
+        "committed_gitlink": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+        "checkout_revision": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+        "porcelain_status": "",
+        "matches_gitlink": true,
+        "clean": true
+      },
+      {
+        "path": "references/Hexalith.EventStore",
+        "committed_gitlink": "77d9af18a54d92506e310fe5a45021a395e66f60",
+        "checkout_revision": "77d9af18a54d92506e310fe5a45021a395e66f60",
+        "porcelain_status": "",
+        "matches_gitlink": true,
+        "clean": true
+      },
+      {
+        "path": "references/Hexalith.FrontComposer",
+        "committed_gitlink": "b102b85b148f21fb26d5742e120c344109df7084",
+        "checkout_revision": "b102b85b148f21fb26d5742e120c344109df7084",
+        "porcelain_status": "",
+        "matches_gitlink": true,
+        "clean": true
+      },
+      {
+        "path": "references/Hexalith.McpCli",
+        "committed_gitlink": "b35b0975a234f1f97e2e35e9dad381d0a988f4af",
+        "checkout_revision": "b35b0975a234f1f97e2e35e9dad381d0a988f4af",
+        "porcelain_status": "",
+        "matches_gitlink": true,
+        "clean": true
+      },
+      {
+        "path": "references/Hexalith.Memories",
+        "committed_gitlink": "f6b60d5a2e9b81d84fddad789c7d9bed40d3a533",
+        "checkout_revision": "f6b60d5a2e9b81d84fddad789c7d9bed40d3a533",
+        "porcelain_status": "",
+        "matches_gitlink": true,
+        "clean": true
+      },
+      {
+        "path": "references/Hexalith.Platform",
+        "committed_gitlink": "b4b6d4a1efcd2f13c6d03270f8e952f27ed8148b",
+        "checkout_revision": "b4b6d4a1efcd2f13c6d03270f8e952f27ed8148b",
+        "porcelain_status": "",
+        "matches_gitlink": true,
+        "clean": true
+      },
+      {
+        "path": "references/Hexalith.PolymorphicSerializations",
+        "committed_gitlink": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+        "checkout_revision": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+        "porcelain_status": "",
+        "matches_gitlink": true,
+        "clean": true
+      },
+      {
+        "path": "references/Hexalith.Tenants",
+        "committed_gitlink": "0e1fe111a5b4cce684455948b4fd12960589ef55",
+        "checkout_revision": "0e1fe111a5b4cce684455948b4fd12960589ef55",
+        "porcelain_status": "",
+        "matches_gitlink": true,
+        "clean": true
+      }
+    ]
+  }
+}
