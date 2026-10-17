@@ -150,7 +150,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: multi-token relevance scoring
 source_spec: `_bmad-output/implementation-artifacts/spec-gh-30708560778-fix-ci-failures.md`
 reason: A deterministic full-phrase match is added alongside real query tokens, so coverage can exceed one before the final score is clamped and can inflate ordering relative to token-only matches.
-status: open
+status: done 2026-10-17
+resolution: Both local search providers exclude the synthetic full phrase from real-token coverage while preserving field matching, weights, metadata, duplicate-token semantics and once-per-query preparation. Corrected relevance and page ordering are covered by 29 direct cases. Final Debug/source build has zero warnings/errors; focused search/performance tests pass 109/109 and full service assembly passes 1127/1127 without failures/errors/skips. All four independent review findings and follow-up are resolved; no new deferred work. See spec-dw-20-normalize-relevance-coverage.md and tests/dw-20-normalize-relevance-coverage-2026-10-17/validation.json. The separate Aspire baseline healthy wait timed out with security Unhealthy; full-topology qualification is not claimed.
 
 ### DW-21: Make Party SDK erasure writes atomic
 

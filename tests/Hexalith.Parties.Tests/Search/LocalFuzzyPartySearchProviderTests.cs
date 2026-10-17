@@ -125,14 +125,14 @@ public class LocalFuzzyPartySearchProviderTests
         prefixMatch.Matches.ShouldHaveSingleItem().ShouldSatisfyAllConditions(
             metadata => metadata.MatchType.ShouldBe("prefix"),
             metadata => metadata.Score.ShouldBe(0.8));
-        prefixMatch.RelevanceScore.ShouldBe(0.87, 0.000_001);
+        prefixMatch.RelevanceScore.ShouldBe(0.82, 0.000_001);
 
         PartySearchResult containsMatch = secondPage.Items.ShouldHaveSingleItem();
         containsMatch.Party.Id.ShouldBe("p6");
         containsMatch.Matches.ShouldHaveSingleItem().ShouldSatisfyAllConditions(
             metadata => metadata.MatchType.ShouldBe("contains"),
             metadata => metadata.Score.ShouldBe(0.6));
-        containsMatch.RelevanceScore.ShouldBe(0.69, 0.000_001);
+        containsMatch.RelevanceScore.ShouldBe(0.64, 0.000_001);
 
         firstPage.ShouldSatisfyAllConditions(
             page => page.Page.ShouldBe(1),

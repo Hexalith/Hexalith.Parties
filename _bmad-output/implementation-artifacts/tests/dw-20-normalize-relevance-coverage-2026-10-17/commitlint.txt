@@ -1,0 +1,7 @@
+Repository-pinned @commitlint/cli 21.2.2
+Command: node node_modules/@commitlint/cli/cli.js --edit /tmp/dw-20-validation/commit-message.txt --verbose
+Exit code: 0
+
+⧗   --- input ---
+fix: normalize multi-token search coverage
+✔   found 0 problems, 0 warnings

@@ -1,0 +1,168 @@
+Initial production baseline with 19 new regression cases (before review additions).
+Total: 19; Passed: 2; Failed: 17; Errors: 0; Skipped: 0; Not Run: 0.
+The two exact distinct-token controls pass; corrected scores and paging fail.
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_EqualFieldScoresAndTokenCoverage_PagesByName(semantic: False)
+Shouldly.ShouldAssertException : match.Party.Id
+    should be
+\"tokens\"
+    but was
+\"phrase\"
+    difference
+Difference     |  |    |    |    |    |    |
+               | \\|/  \\|/  \\|/  \\|/  \\|/  \\|/
+Index          | 0    1    2    3    4    5
+Expected Value | t    o    k    e    n    s
+Actual Value   | p    h    r    a    s    e
+Expected Code  | 116  111  107  101  110  115
+Actual Code    | 112  104  114  97   115  101
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_EqualFieldScoresAndTokenCoverage_PagesByName(semantic: True)
+Shouldly.ShouldAssertException : match.Party.Id
+    should be
+\"tokens\"
+    but was
+\"phrase\"
+    difference
+Difference     |  |    |    |    |    |    |
+               | \\|/  \\|/  \\|/  \\|/  \\|/  \\|/
+Index          | 0    1    2    3    4    5
+Expected Value | t    o    k    e    n    s
+Actual Value   | p    h    r    a    s    e
+Expected Code  | 116  111  107  101  110  115
+Actual Code    | 112  104  114  97   115  101
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_PhraseMatch_CountsOnlyRealTokens(semantic: False, query: \"123 456\", displayName: \"123 456 Name\", matchType: \"prefix\", fieldScore: 0.80000000000000004, relevance: 0.81999999999999995)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.82d
+    but was
+0.87d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_PhraseMatch_CountsOnlyRealTokens(semantic: True, query: \"123 456\", displayName: \"123 456 Name\", matchType: \"prefix\", fieldScore: 0.80000000000000004, relevance: 0.81999999999999995)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.82d
+    but was
+0.87d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_PhraseMatch_CountsOnlyRealTokens(semantic: False, query: \"123 456\", displayName: \"Name 123 456\", matchType: \"contains\", fieldScore: 0.59999999999999998, relevance: 0.64000000000000001)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.64d
+    but was
+0.6900000000000001d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_PhraseMatch_CountsOnlyRealTokens(semantic: True, query: \"123 456\", displayName: \"Name 123 456\", matchType: \"contains\", fieldScore: 0.59999999999999998, relevance: 0.64000000000000001)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.64d
+    but was
+0.6900000000000001d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_PhraseMatch_CountsOnlyRealTokens(semantic: False, query: \"123 456 789\", displayName: \"123 456 789 Name\", matchType: \"prefix\", fieldScore: 0.80000000000000004, relevance: 0.81999999999999995)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.82d
+    but was
+0.8533333333333333d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_PhraseMatch_CountsOnlyRealTokens(semantic: True, query: \"123 456 789\", displayName: \"123 456 789 Name\", matchType: \"prefix\", fieldScore: 0.80000000000000004, relevance: 0.81999999999999995)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.82d
+    but was
+0.8533333333333333d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_PhraseMatch_CountsOnlyRealTokens(semantic: False, query: \"123 456 789\", displayName: \"Name 123 456 789\", matchType: \"contains\", fieldScore: 0.59999999999999998, relevance: 0.64000000000000001)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.64d
+    but was
+0.6733333333333333d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_PhraseMatch_CountsOnlyRealTokens(semantic: True, query: \"123 456 789\", displayName: \"Name 123 456 789\", matchType: \"contains\", fieldScore: 0.59999999999999998, relevance: 0.64000000000000001)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.64d
+    but was
+0.6733333333333333d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_PhraseMatch_CountsOnlyRealTokens(semantic: False, query: \"123 123\", displayName: \"123 123\", matchType: \"exact\", fieldScore: 1, relevance: 0.94999999999999996)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.95d
+    but was
+0.9999999999999999d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_PhraseMatch_CountsOnlyRealTokens(semantic: True, query: \"123 123\", displayName: \"123 123\", matchType: \"exact\", fieldScore: 1, relevance: 0.94999999999999996)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.95d
+    but was
+0.9999999999999999d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_PhraseMatch_CountsOnlyRealTokens(semantic: False, query: \"123 123\", displayName: \"123 123 Name\", matchType: \"prefix\", fieldScore: 0.80000000000000004, relevance: 0.77000000000000002)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.77d
+    but was
+0.82d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_PhraseMatch_CountsOnlyRealTokens(semantic: True, query: \"123 123\", displayName: \"123 123 Name\", matchType: \"prefix\", fieldScore: 0.80000000000000004, relevance: 0.77000000000000002)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.77d
+    but was
+0.82d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_SemanticIdentifierPhrase_PreservesFieldWeight
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.82d
+    but was
+0.87d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_SemanticContactPhrase_PreservesFieldWeight(channelType: Email, field: \"email\", weight: 0.90000000000000002, relevance: 0.91000000000000003)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.91d
+    but was
+0.9600000000000001d
+
+Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests.Search_SemanticContactPhrase_PreservesFieldWeight(channelType: Phone, field: \"contactChannel\", weight: 0.69999999999999996, relevance: 0.72999999999999998)
+Shouldly.ShouldAssertException : match.RelevanceScore
+    should be within
+1E-06d
+    of
+0.73d
+    but was
+0.7799999999999999d

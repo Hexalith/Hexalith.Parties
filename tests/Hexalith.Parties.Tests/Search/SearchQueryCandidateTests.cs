@@ -38,7 +38,7 @@ public class SearchQueryCandidateTests(ITestOutputHelper output)
 
             PartySearchResult match = result.Items.ShouldHaveSingleItem();
             match.Party.Id.ShouldBe($"p{page - 1}");
-            match.RelevanceScore.ShouldBe(page == 3 ? 0.69 : 0.87, 0.000_001);
+            match.RelevanceScore.ShouldBe(page == 3 ? 0.64 : 0.82, 0.000_001);
             match.Matches.ShouldHaveSingleItem().ShouldSatisfyAllConditions(
                 metadata => metadata.MatchedField.ShouldBe("displayName"),
                 metadata => metadata.MatchType.ShouldBe(page == 3 ? "contains" : "prefix"),
@@ -166,7 +166,7 @@ public class SearchQueryCandidateTests(ITestOutputHelper output)
         PagedResult<PartySearchResult> result = provider.Search([entry], "1234\t5678", null, null, 1, 20);
 
         PartySearchResult match = result.Items.ShouldHaveSingleItem();
-        match.RelevanceScore.ShouldBe(0.96, 0.000_001);
+        match.RelevanceScore.ShouldBe(0.91, 0.000_001);
         match.Matches.ShouldHaveSingleItem().ShouldSatisfyAllConditions(
             metadata => metadata.MatchedField.ShouldBe("email"),
             metadata => metadata.MatchType.ShouldBe("exact"),

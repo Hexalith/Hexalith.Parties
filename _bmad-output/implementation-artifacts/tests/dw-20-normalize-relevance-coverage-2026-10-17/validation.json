@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-17",
+  "baseline_revision": "19744800488aa79d5c86c76dddc3d2942db24715",
+  "validation_state": "Working-tree changes over baseline revision; final code and tests hashed below.",
+  "configuration": "Debug; source references; warnings as errors preserved",
+  "commands": {
+    "build": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+    "baseline": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests -result-xml /tmp/dw-20-validation/baseline.xml",
+    "focus": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests -class Hexalith.Parties.Tests.Search.SearchQueryCandidateTests -class Hexalith.Parties.Tests.Search.LocalFuzzyPartySearchProviderTests -class Hexalith.Parties.Tests.Search.SemanticPartySearchProviderTests -class Hexalith.Parties.Tests.Search.LocalFuzzySearchPerformanceBenchmarkTests -class Hexalith.Parties.Tests.Search.SemanticSearchPerformanceBenchmarkTests -result-xml /tmp/dw-20-validation/focus-final.xml",
+    "full": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-20-validation/full-final.xml",
+    "warning_guard": "bash scripts/check-no-warning-override.sh",
+    "whitespace": "git -c core.whitespace=cr-at-eol diff --cached --check",
+    "commitlint": "node node_modules/@commitlint/cli/cli.js --edit /tmp/dw-20-validation/commit-message.txt --verbose",
+    "aspire_start": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+    "aspire_wait": "aspire wait parties --timeout 20 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "aspire_describe": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+    "aspire_stop": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive"
+  },
+  "baseline": {
+    "exit_code": 1,
+    "scope": "Initial 19 cases before review additions",
+    "results": {
+      "total": 19,
+      "passed": 2,
+      "failed": 17,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    }
+  },
+  "build": {
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "focus": {
+    "exit_code": 0,
+    "results": {
+      "total": 109,
+      "passed": 109,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    }
+  },
+  "full": {
+    "exit_code": 0,
+    "results": {
+      "total": 1127,
+      "passed": 1127,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    }
+  },
+  "warning_guard": {
+    "exit_code": 0
+  },
+  "commitlint": {
+    "exit_code": 0,
+    "version": "21.2.2"
+  },
+  "aspire": {
+    "start_exit_code": 0,
+    "wait_exit_code": 17,
+    "describe_exit_code": 0,
+    "stop_exit_code": 0,
+    "observation": "Security running but unhealthy (TLS readiness connection ended unexpectedly); Parties and dependencies Waiting. Full topology not qualified."
+  },
+  "review": {
+    "findings": 4,
+    "patched": 4,
+    "deferred": 0,
+    "independent_follow_up": "All four additions confirmed; final execution results are above."
+  },
+  "sha256": {
+    "src/Hexalith.Parties/Search/LocalFuzzyPartySearchProvider.cs": "bedb9be21e02bd34e6743d09c2e159c07139cc23ddcff090fb44da094066aa78",
+    "src/Hexalith.Parties/Search/SemanticPartySearchProvider.cs": "c5145773d3d60e6bc22e0206e1a876c93bd43bf1eeaa99e5f667d761f89b4462",
+    "tests/Hexalith.Parties.Tests/Search/SearchRelevanceCoverageTests.cs": "a4c11d3be2617eaf5f1bc1bf7450b49bfc07d3e072dc606d03ea93bca0728984",
+    "tests/Hexalith.Parties.Tests/Search/SearchQueryCandidateTests.cs": "c34b268bb84f7d8cc4bc5d9a59a98daca6e0b61fed846ba1a5f59c08e73a9ae0",
+    "tests/Hexalith.Parties.Tests/Search/LocalFuzzyPartySearchProviderTests.cs": "295ff7b9c6a94fa83f18f6ad57fb7b8a962752e09b9cb79647eefb42866e0757"
+  }
+}

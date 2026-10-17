@@ -207,6 +207,12 @@ internal sealed class LocalFuzzyPartySearchProvider : IPartySearchProvider
             return null;
         }
 
+        // The synthetic phrase can improve field matching, but is not an extra query token.
+        if (tokenCount > 1)
+        {
+            _ = matchedTokens.Remove(fullQuery);
+        }
+
         List<(string Field, double FieldWeight, double MatchScore)> scores = fieldMatches
             .Select(kv => (kv.Key, kv.Value.FieldWeight, kv.Value.BestMatchScore))
             .ToList();
