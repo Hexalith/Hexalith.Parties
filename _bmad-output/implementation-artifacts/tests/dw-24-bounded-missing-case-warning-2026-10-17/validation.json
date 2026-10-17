@@ -1,0 +1,102 @@
+{
+    "date": "2026-10-17",
+    "scope": [
+        "DW-24"
+    ],
+    "base_revision": "446881085cc5f4b4f279a3f725eb763aea6788a9",
+    "commands": {
+        "build_before": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false --no-restore",
+        "failing_before": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method '*NotifyIndexedAsync_WithoutCaseId_BoundsHistoryAndEvictsOldestPairAsync' -result-xml /tmp/dw-24-before.xml",
+        "build_after": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false --no-restore",
+        "focused": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Search.PartyMemoryIndexEntrySearchIndexerTests -result-xml /tmp/dw-24-focused-final.xml",
+        "full": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-24-full-final.xml",
+        "warning_gate": "bash scripts/check-no-warning-override.sh",
+        "whitespace": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+        "commitlint": "node node_modules/@commitlint/cli/cli.js --edit /tmp/dw-24-commit-message.txt --verbose"
+    },
+    "command_record_note": "Output redirection omitted. Raw build/test logs and XML remain local. Sanitized summaries retain XML hashes.",
+    "failing_before": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "1300529532589c8cd02f34ca01ad01eaaaf1e6addd4609aaa5fe25fa5d112817",
+        "expected_failure": "Original production dictionary retained 3072 entries after distinct-party churn instead of the required 1024. Test fixture proxy failure was corrected before this reproduction.",
+        "test_revision_note": "The final helper explicitly checks both tracking structures and matching identities, strengthening the original count-only regression. The preserved failing XML is from the original production dictionary with the earlier count-inspection helper."
+    },
+    "build_before": {
+        "exit_code": 0,
+        "warnings": 0,
+        "errors": 0,
+        "configuration": "Debug",
+        "dependencies": "source"
+    },
+    "build_after": {
+        "exit_code": 0,
+        "warnings": 0,
+        "errors": 0,
+        "configuration": "Debug",
+        "dependencies": "source"
+    },
+    "focused": {
+        "total": 21,
+        "passed": 21,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "567308e5ecc63c20d519cc05582e9bd473b386ba62b9c9d4adb98c2d89de22fa"
+    },
+    "full": {
+        "total": 1080,
+        "passed": 1080,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "746c643dc5bfd0aa3b7eda9071d5d17cff4e2dbab96ae7c63de078339bbb12e3"
+    },
+    "runtime_baseline": {
+        "start_command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+        "start_exit_code": 0,
+        "describe_command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+        "describe_exit_code": 0,
+        "initial_state": "Identity provider starting; Parties/EventStore/Tenants waiting.",
+        "wait_command": "aspire wait parties --status healthy --timeout 20 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+        "wait_exit_code": 17,
+        "wait_result": "Timed out waiting for Parties to become healthy after 20 seconds. No runtime diagnosis or full-topology qualification claimed.",
+        "stop_command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+        "stop_exit_code": 0
+    },
+    "review": {
+        "layer": "Blind Hunter",
+        "findings": 5,
+        "patched": 5,
+        "deferred": 0,
+        "follow_up": "All five verification improvements confirmed. No remaining concrete issues. A further focused check confirms the immutable-options reload fixture correction."
+    },
+    "commitlint": {
+        "version": "21.2.2",
+        "locked_version": "21.2.2",
+        "candidate": "fix: bound missing-case warning bookkeeping",
+        "candidate_sha256": "ee0cce59cf525e1849af2395a90304b73ed8291b8d187555630ff06c509fd5df",
+        "exit_code": 0,
+        "problems": 0,
+        "warnings": 0
+    },
+    "warning_gate_exit_code": 0,
+    "whitespace_exit_code": 0,
+    "source_sha256": {
+        "src/Hexalith.Parties/Search/PartyMemoryIndexEntrySearchIndexer.cs": "c50355136c6a3fc78b1df3903ad739ec11fcb4aa5e09f7f4c40155e2f4a0ab5d",
+        "tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexEntrySearchIndexerTests.cs": "5cc1c60473755d60efaa5e64eba17f63af9710dcdc0b25c500848d2802266e56",
+        "tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexEntryWarningLogger.cs": "d1c9d0dc62dbc5acbce8fbfeb38f31e58a5f2c13d1dc0cb5bf7c48ffda07233e"
+    },
+    "limits": "Warning tracking is capped by retained pair count, with FIFO eviction. Evicted pairs may warn again. No global warning-rate limit, persistent state, dependency, gitlink, public API or runtime configuration change.",
+    "nonfinal_corrections": [
+        "Replaced NSubstitute logger proxy with a concrete concurrent logger because its internal category type is inaccessible to Castle generated proxies.",
+        "Corrected CS8852 in the review-stage reload fixture by replacing immutable options through the existing test monitor. No production options or warning policy changed."
+    ],
+    "formatting": "Changed C# files and new artifacts use CRLF per .editorconfig; existing ledger LF formatting is preserved. CRLF-aware whitespace checking passes."
+}

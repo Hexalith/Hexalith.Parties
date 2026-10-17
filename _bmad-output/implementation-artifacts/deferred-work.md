@@ -174,7 +174,8 @@ archived: 2026-10-13
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 2)"), 2026-09-06
 location: s_caseIdMissingWarned
 reason: `s_caseIdMissingWarned` is an unbounded static ConcurrentDictionary (one entry per tenant/party for process lifetime) — mirrors retired orchestrator pattern.
-status: open
+status: done 2026-10-17
+resolution: Replaced process-lifetime warning identities with singleton-local FIFO tracking capped at 1024 exact tenant/party pairs. Atomic admission bounds both retained identities and eviction bookkeeping; repeated retained pairs suppress warnings, and evicted pairs may warn again. Convergence/no-ingest, configuration recovery, privacy and persisted-case cleanup are covered. Final Debug/source build has zero warnings/errors; focused indexer tests pass 21/21 and full service assembly passes 1080/1080 without failures/errors/skips. Five review verification improvements and independent follow-up are complete; no new deferred work. See spec-dw-24-bounded-missing-case-warning.md and tests/dw-24-bounded-missing-case-warning-2026-10-17/validation.json. The separate 20-second Aspire baseline healthy wait timed out; topology qualification is not claimed.
 
 ### DW-25: Document Party index ProjectionVersion semantics
 

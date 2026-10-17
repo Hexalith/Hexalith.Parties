@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Projections.Search;
 
@@ -21,9 +19,13 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
     IOptionsMonitor<PartyMemorySearchOptions> options,
     ILogger<PartyMemoryIndexEntrySearchIndexer> logger) : IPartyIndexSearchIndexer
 {
-    // One-shot warning per (tenant, party) so a misconfigured operator doesn't see a warning
-    // storm — mirrors the retired PartyProjectionUpdateOrchestrator's behavior.
-    private static readonly ConcurrentDictionary<string, byte> s_caseIdMissingWarned = new(StringComparer.Ordinal);
+    // Suppress retained pairs for this singleton's lifetime. Evicted pairs may warn again.
+    // Both collections are bounded, and duplicates never add eviction bookkeeping.
+    private const int MissingCaseWarningCapacity = 1024;
+
+    private readonly Lock _caseIdMissingWarningLock = new();
+    private readonly HashSet<(string TenantId, string PartyId)> _caseIdMissingWarned = [];
+    private readonly Queue<(string TenantId, string PartyId)> _caseIdMissingWarningOrder = new();
 
     public async Task<bool> NotifyIndexedAsync(
         string tenantId,
@@ -44,8 +46,7 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
 
             if (string.IsNullOrWhiteSpace(current.CaseId))
             {
-                string warningKey = $"{tenantId}:{entry.Id}";
-                if (s_caseIdMissingWarned.TryAdd(warningKey, 0))
+                if (TryRecordMissingCaseWarning(tenantId, entry.Id))
                 {
                     LogIndexingSkippedMissingCaseId();
                 }
@@ -128,6 +129,31 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
         {
             LogRemovalException(ex.GetType().Name);
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Atomically admits an exact tenant/party pair, evicting the oldest pair at capacity.
+    /// Duplicate notifications leave both the retained set and eviction order unchanged.
+    /// </summary>
+    private bool TryRecordMissingCaseWarning(string tenantId, string partyId)
+    {
+        (string TenantId, string PartyId) key = (tenantId, partyId);
+        lock (_caseIdMissingWarningLock)
+        {
+            if (_caseIdMissingWarned.Contains(key))
+            {
+                return false;
+            }
+
+            if (_caseIdMissingWarned.Count == MissingCaseWarningCapacity)
+            {
+                _ = _caseIdMissingWarned.Remove(_caseIdMissingWarningOrder.Dequeue());
+            }
+
+            _ = _caseIdMissingWarned.Add(key);
+            _caseIdMissingWarningOrder.Enqueue(key);
+            return true;
         }
     }
 
