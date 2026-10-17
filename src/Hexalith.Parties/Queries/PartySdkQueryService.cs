@@ -392,6 +392,10 @@ public sealed partial class PartySdkQueryService(
                 read = new ReadModelEntry<PartyIndexSdkReadModel>(cached, null);
                 degraded = true;
             }
+            finally
+            {
+                lastKnownCache.EndRead(cacheGeneration);
+            }
 
             if (read.Value is not { } model)
             {
@@ -444,6 +448,10 @@ public sealed partial class PartySdkQueryService(
         {
             return (new ReadModelEntry<PartyDetailSdkReadModel>(cached, null), true);
         }
+        finally
+        {
+            lastKnownCache.EndRead(cacheGeneration);
+        }
     }
 
     private async Task<(ReadModelEntry<PartyProcessingSdkReadModel> Read, bool Degraded)> ReadProcessingModelAsync(
@@ -485,6 +493,10 @@ public sealed partial class PartySdkQueryService(
             // and no last-known entry exists (retired actor degraded to an empty record list).
             LogProcessingUnavailable(exception.GetType().Name);
             return (new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel(), null), true);
+        }
+        finally
+        {
+            lastKnownCache.EndRead(cacheGeneration);
         }
     }
 

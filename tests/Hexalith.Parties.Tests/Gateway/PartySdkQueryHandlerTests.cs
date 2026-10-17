@@ -1058,6 +1058,25 @@ public sealed class PartySdkQueryHandlerTests
     }
 
     [Fact]
+    public void LastKnownReadModelCache_MissingKeyChurnDoesNotRetainHistoricalIdentifiers()
+    {
+        const int capacity = 4;
+        var cache = new PartySdkLastKnownReadModelCache(TimeProvider.System, capacity, TimeSpan.FromMinutes(1));
+
+        for (int index = 0; index < 512; index++)
+        {
+            cache.EvictDetail("tenant-a", $"missing-party-{index}");
+        }
+
+        int retainedEntries = typeof(PartySdkLastKnownReadModelCache)
+            .GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+            .Select(field => field.GetValue(cache))
+            .OfType<System.Collections.IDictionary>()
+            .Sum(dictionary => dictionary.Count);
+        retainedEntries.ShouldBe(0);
+    }
+
+    [Fact]
     public void LastKnownReadModelCache_ObservedAbsenceGenerationRejectsLateStoresForEverySlot()
     {
         var cache = new PartySdkLastKnownReadModelCache();
@@ -1072,6 +1091,394 @@ public sealed class PartySdkQueryHandlerTests
         cache.StoreDetailIfCurrent("tenant-a", "party-1", detailGeneration, new PartyDetailSdkReadModel()).ShouldBeFalse();
         cache.StoreProcessingIfCurrent("tenant-a", "party-1", processingGeneration, new PartyProcessingSdkReadModel()).ShouldBeFalse();
         cache.StoreIndexIfCurrent("tenant-a", indexGeneration, new PartyIndexSdkReadModel()).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("detail")]
+    [InlineData("processing")]
+    [InlineData("index")]
+    public void LastKnownReadModelCache_ActiveTokensAreBoundedAndReleasedCapacityIsReusable(string slot)
+    {
+        var cache = new PartySdkLastKnownReadModelCache(TimeProvider.System, 2, TimeSpan.FromMinutes(1));
+        string key = CacheKey(slot);
+        long first = cache.BeginRead(key);
+        long second = cache.BeginRead(key);
+        long untracked = cache.BeginRead(key);
+
+        first.ShouldBeGreaterThan(0);
+        second.ShouldBeGreaterThan(first);
+        untracked.ShouldBe(0);
+        ActiveReadCount(cache).ShouldBe(2);
+        StoreCacheSlotIfCurrent(cache, slot, untracked).ShouldBeFalse();
+
+        cache.EndRead(first);
+        long fresh = cache.BeginRead(key);
+        fresh.ShouldBeGreaterThan(second);
+        cache.EndRead(first);
+        StoreCacheSlotIfCurrent(cache, slot, first).ShouldBeFalse();
+        StoreCacheSlotIfCurrent(cache, slot, second).ShouldBeTrue();
+        StoreCacheSlotIfCurrent(cache, slot, fresh).ShouldBeTrue();
+        cache.EndRead(second);
+        cache.EndRead(fresh);
+        ActiveReadCount(cache).ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData("detail")]
+    [InlineData("processing")]
+    [InlineData("index")]
+    public void LastKnownReadModelCache_EvictionAndChurnPreserveUnrelatedTokensWithoutRevivingOldReads(string slot)
+    {
+        var cache = new PartySdkLastKnownReadModelCache(TimeProvider.System, 3, TimeSpan.FromMinutes(1));
+        long first = cache.BeginRead(CacheKey(slot));
+        long second = cache.BeginRead(CacheKey(slot));
+        long unrelated = cache.BeginRead(CacheKey(slot, "tenant-b"));
+
+        EvictCacheSlot(cache, slot);
+        for (int index = 0; index < 512; index++)
+        {
+            cache.EvictDetail("tenant-churn", $"missing-party-{index}");
+        }
+
+        ActiveReadCount(cache).ShouldBe(1);
+        long fresh = cache.BeginRead(CacheKey(slot));
+        fresh.ShouldBeGreaterThan(second);
+        cache.EndRead(first);
+        cache.EndRead(second);
+        StoreCacheSlotIfCurrent(cache, slot, first).ShouldBeFalse();
+        StoreCacheSlotIfCurrent(cache, slot, second).ShouldBeFalse();
+        StoreCacheSlotIfCurrent(cache, slot, unrelated, "tenant-b").ShouldBeTrue();
+        StoreCacheSlotIfCurrent(cache, slot, fresh).ShouldBeTrue();
+        cache.EndRead(unrelated);
+        cache.EndRead(fresh);
+        ActiveReadCount(cache).ShouldBe(0);
+    }
+
+    [Fact]
+    public void LastKnownReadModelCache_TokensAuthorizeOnlyTheirExactTenantPartyAndSlot()
+    {
+        var cache = new PartySdkLastKnownReadModelCache();
+        long generation = cache.BeginRead(CacheKey("detail"));
+
+        StoreCacheSlotIfCurrent(cache, "detail", generation, "tenant-b").ShouldBeFalse();
+        cache.StoreDetailIfCurrent("tenant-a", "party-2", generation, new PartyDetailSdkReadModel()).ShouldBeFalse();
+        StoreCacheSlotIfCurrent(cache, "processing", generation).ShouldBeFalse();
+        StoreCacheSlotIfCurrent(cache, "index", generation).ShouldBeFalse();
+        StoreCacheSlotIfCurrent(cache, "detail", generation).ShouldBeTrue();
+        cache.EndRead(generation);
+        StoreCacheSlotIfCurrent(cache, "detail", generation).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void LastKnownReadModelCache_ExhaustedTokenSpaceNeverWrapsOrReauthorizesAnOldRead()
+    {
+        var cache = new PartySdkLastKnownReadModelCache();
+        typeof(PartySdkLastKnownReadModelCache)
+            .GetField("_lastReadToken", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .SetValue(cache, long.MaxValue - 1);
+
+        long last = cache.BeginRead(CacheKey("detail"));
+        last.ShouldBe(long.MaxValue);
+        cache.BeginRead(CacheKey("detail")).ShouldBe(0);
+        StoreCacheSlotIfCurrent(cache, "detail", last).ShouldBeTrue();
+        cache.EndRead(last);
+        cache.BeginRead(CacheKey("detail")).ShouldBe(0);
+        StoreCacheSlotIfCurrent(cache, "detail", last).ShouldBeFalse();
+        StoreCacheSlotIfCurrent(cache, "detail", 0).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("detail")]
+    [InlineData("processing")]
+    [InlineData("index")]
+    public void LastKnownReadModelCache_ConvenienceStoresReleaseTheirReadTokens(string slot)
+    {
+        var cache = new PartySdkLastKnownReadModelCache(TimeProvider.System, 1, TimeSpan.FromMinutes(1));
+        for (int index = 0; index < 4; index++)
+        {
+            StoreCacheSlot(cache, slot);
+            ActiveReadCount(cache).ShouldBe(0);
+        }
+
+        long generation = cache.BeginRead(CacheKey(slot));
+        generation.ShouldBeGreaterThan(0);
+        cache.EndRead(generation);
+    }
+
+    [Fact]
+    public void LastKnownReadModelCache_FailedConvenienceStoresReleaseTheirReadTokens()
+    {
+        var cache = new PartySdkLastKnownReadModelCache(TimeProvider.System, 1, TimeSpan.FromMinutes(1));
+
+        Should.Throw<ArgumentNullException>(() => cache.StoreDetail("tenant-a", "party-1", null!));
+        Should.Throw<ArgumentNullException>(() => cache.StoreProcessing("tenant-a", "party-1", null!));
+        Should.Throw<ArgumentNullException>(() => cache.StoreIndex("tenant-a", null!));
+
+        ActiveReadCount(cache).ShouldBe(0);
+        long generation = cache.BeginRead(CacheKey("detail"));
+        generation.ShouldBeGreaterThan(0);
+        cache.EndRead(generation);
+    }
+
+    [Fact]
+    public void LastKnownReadModelCache_StoreFailureAfterTokenRegistrationReleasesCapacity()
+    {
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        clock.GetUtcNow().Returns(_ => throw new InvalidOperationException("clock unavailable"));
+        var cache = new PartySdkLastKnownReadModelCache(clock, 1, TimeSpan.FromMinutes(1));
+
+        Should.Throw<InvalidOperationException>(() => cache.StoreDetail("tenant-a", "party-1", new PartyDetailSdkReadModel()));
+
+        ActiveReadCount(cache).ShouldBe(0);
+        long generation = cache.BeginRead(CacheKey("detail"));
+        generation.ShouldBeGreaterThan(0);
+        cache.EndRead(generation);
+    }
+
+    [Theory]
+    [InlineData("detail", false)]
+    [InlineData("detail", true)]
+    [InlineData("processing", false)]
+    [InlineData("processing", true)]
+    [InlineData("index", false)]
+    [InlineData("index", true)]
+    public async Task SdkQueries_TrackingSaturationPreservesFallbackAndRecoversWhenCapacityIsReleasedAsync(string slot, bool seeded)
+    {
+        var cache = new PartySdkLastKnownReadModelCache(TimeProvider.System, 2, TimeSpan.FromMinutes(1));
+        if (slot == "processing")
+        {
+            StoreCacheSlot(cache, "detail", "cached");
+        }
+
+        if (seeded)
+        {
+            StoreCacheSlot(cache, slot, "cached");
+        }
+
+        long firstBlocking = cache.BeginRead("first-unrelated-in-flight-read");
+        long secondBlocking = cache.BeginRead("second-unrelated-in-flight-read");
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel
+            {
+                Detail = Detail("party-1"),
+                ProjectionVersion = "canonical",
+            }, "etag"));
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel { ProjectionVersion = "canonical" }, "etag"));
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel { ProjectionVersion = "canonical" }, "etag"));
+        PartySdkQueryService service = CreateService(store, lastKnownCache: cache);
+
+        QueryResult saturated = await ExecuteCacheQueryAsync(service, slot, TestContext.Current.CancellationToken);
+        saturated.Success.ShouldBe(seeded || slot == "processing");
+        if (saturated.Success)
+        {
+            saturated.Metadata!.IsDegraded.ShouldBe(true);
+            saturated.Metadata.ProjectionVersion.ShouldBe(seeded ? "cached" : null);
+        }
+        else
+        {
+            saturated.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        }
+
+        string? cachedVersion = slot switch
+        {
+            "detail" => cache.TryGetDetail("tenant-a", "party-1", out PartyDetailSdkReadModel? detail) ? detail!.ProjectionVersion : null,
+            "processing" => cache.TryGetProcessing("tenant-a", "party-1", out PartyProcessingSdkReadModel? processing) ? processing!.ProjectionVersion : null,
+            _ => cache.TryGetIndex("tenant-a", out PartyIndexSdkReadModel? index) ? index!.ProjectionVersion : null,
+        };
+        cachedVersion.ShouldBe(seeded ? "cached" : null);
+        ActiveReadCount(cache).ShouldBe(2);
+
+        cache.EndRead(firstBlocking);
+        cache.EndRead(secondBlocking);
+        QueryResult recovered = await ExecuteCacheQueryAsync(service, slot, TestContext.Current.CancellationToken);
+        recovered.Success.ShouldBeTrue();
+        recovered.Metadata!.ProjectionVersion.ShouldBe("canonical");
+        ActiveReadCount(cache).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task LastKnownReadModelCache_ConcurrentReadsRespectCapacityAndReleaseEveryRegistrationAsync()
+    {
+        const int capacity = 8;
+        const int attempts = 32;
+        var cache = new PartySdkLastKnownReadModelCache(TimeProvider.System, capacity, TimeSpan.FromMinutes(1));
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var registered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var tokens = new System.Collections.Concurrent.ConcurrentBag<long>();
+        int count = 0;
+        Task[] reads = Enumerable.Range(0, attempts).Select(index => Task.Run(async () =>
+        {
+            await start.Task.ConfigureAwait(true);
+            string tenantId = $"tenant-{index}";
+            long generation = cache.BeginRead(CacheKey("detail", tenantId));
+            try
+            {
+                tokens.Add(generation);
+                if (Interlocked.Increment(ref count) == attempts)
+                {
+                    registered.SetResult();
+                }
+
+                await release.Task.ConfigureAwait(true);
+                StoreCacheSlotIfCurrent(cache, "detail", generation, tenantId).ShouldBe(generation > 0);
+            }
+            finally
+            {
+                cache.EndRead(generation);
+            }
+        }, TestContext.Current.CancellationToken)).ToArray();
+
+        start.SetResult();
+        try
+        {
+            await registered.Task.WaitAsync(TestContext.Current.CancellationToken);
+            ActiveReadCount(cache).ShouldBe(capacity);
+            tokens.Count(generation => generation > 0).ShouldBe(capacity);
+            tokens.Where(generation => generation > 0).Distinct().Count().ShouldBe(capacity);
+            tokens.Count(generation => generation == 0).ShouldBe(attempts - capacity);
+        }
+        finally
+        {
+            release.TrySetResult();
+            await Task.WhenAll(reads).ConfigureAwait(true);
+        }
+
+        ActiveReadCount(cache).ShouldBe(0);
+        long fresh = cache.BeginRead(CacheKey("detail"));
+        fresh.ShouldBeGreaterThan(0);
+        cache.EndRead(fresh);
+    }
+
+    [Theory]
+    [InlineData("detail", "success")]
+    [InlineData("detail", "missing")]
+    [InlineData("detail", "failure")]
+    [InlineData("detail", "cancellation")]
+    [InlineData("detail", "degraded")]
+    [InlineData("processing", "success")]
+    [InlineData("processing", "missing")]
+    [InlineData("processing", "failure")]
+    [InlineData("processing", "cancellation")]
+    [InlineData("processing", "degraded")]
+    [InlineData("index", "success")]
+    [InlineData("index", "missing")]
+    [InlineData("index", "failure")]
+    [InlineData("index", "cancellation")]
+    [InlineData("index", "degraded")]
+    public async Task SdkQueries_ReleaseReadTrackingForEveryOutcomeAsync(string slot, string outcome)
+    {
+        int capacity = slot == "processing" && outcome == "degraded" ? 2 : 1;
+        var cache = new PartySdkLastKnownReadModelCache(TimeProvider.System, capacity, TimeSpan.FromMinutes(1));
+        if (outcome == "degraded")
+        {
+            StoreCacheSlot(cache, slot);
+        }
+
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(_ => ReadOutcome(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail"));
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(_ => ReadOutcome(new PartyProcessingSdkReadModel(), "processing"));
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(_ => ReadOutcome(new PartyIndexSdkReadModel(), "index"));
+        PartySdkQueryService service = CreateService(store, lastKnownCache: cache);
+
+        for (int index = 0; index < 4; index++)
+        {
+            if (outcome == "cancellation")
+            {
+                await Should.ThrowAsync<OperationCanceledException>(
+                    () => ExecuteCacheQueryAsync(service, slot, TestContext.Current.CancellationToken));
+            }
+            else
+            {
+                QueryResult result = await ExecuteCacheQueryAsync(service, slot, TestContext.Current.CancellationToken);
+                result.Success.ShouldBe(slot == "processing" || outcome is "success" or "degraded");
+                if (outcome == "degraded")
+                {
+                    result.Metadata!.IsDegraded.ShouldBe(true);
+                }
+            }
+
+            ActiveReadCount(cache).ShouldBe(0);
+            long probe = cache.BeginRead("probe-key");
+            probe.ShouldBeGreaterThan(0);
+            cache.EndRead(probe);
+        }
+
+        Task<ReadModelEntry<TValue>> ReadOutcome<TValue>(TValue value, string currentSlot)
+            where TValue : class
+            => currentSlot != slot || outcome == "success"
+                ? Task.FromResult(new ReadModelEntry<TValue>(value, "etag"))
+                : outcome switch
+                {
+                    "missing" => Task.FromResult(new ReadModelEntry<TValue>(null, null)),
+                    "cancellation" => Task.FromCanceled<ReadModelEntry<TValue>>(new CancellationToken(canceled: true)),
+                    _ => Task.FromException<ReadModelEntry<TValue>>(new InvalidOperationException("store unavailable")),
+                };
+    }
+
+    [Theory]
+    [InlineData("detail")]
+    [InlineData("processing")]
+    [InlineData("index")]
+    public async Task SdkQueries_EvictionDuringReadStillRejectsLateValuesAfterMissingKeyChurnAsync(string slot)
+    {
+        var cache = new PartySdkLastKnownReadModelCache(TimeProvider.System, 2, TimeSpan.FromMinutes(1));
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(_ => ReadDelayedAsync(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail"));
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(_ => ReadDelayedAsync(new PartyProcessingSdkReadModel(), "processing"));
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(_ => ReadDelayedAsync(new PartyIndexSdkReadModel(), "index"));
+        Task<QueryResult> pending = ExecuteCacheQueryAsync(CreateService(store, lastKnownCache: cache), slot, TestContext.Current.CancellationToken);
+        await started.Task.WaitAsync(TestContext.Current.CancellationToken);
+
+        EvictCacheSlot(cache, slot);
+        for (int index = 0; index < 512; index++)
+        {
+            cache.EvictDetail("tenant-churn", $"missing-party-{index}");
+        }
+
+        release.SetResult();
+        QueryResult result = await pending.ConfigureAwait(true);
+        if (slot == "processing")
+        {
+            result.Success.ShouldBeTrue();
+            result.Metadata!.IsDegraded.ShouldBe(true);
+        }
+        else
+        {
+            result.Success.ShouldBeFalse();
+        }
+
+        ActiveReadCount(cache).ShouldBe(0);
+        bool cached = slot switch
+        {
+            "detail" => cache.TryGetDetail("tenant-a", "party-1", out _),
+            "processing" => cache.TryGetProcessing("tenant-a", "party-1", out _),
+            _ => cache.TryGetIndex("tenant-a", out _),
+        };
+        cached.ShouldBeFalse();
+
+        async Task<ReadModelEntry<TValue>> ReadDelayedAsync<TValue>(TValue value, string currentSlot)
+            where TValue : class
+        {
+            if (currentSlot == slot)
+            {
+                started.SetResult();
+                await release.Task.ConfigureAwait(true);
+            }
+
+            return new ReadModelEntry<TValue>(value, "etag-before-erasure");
+        }
     }
 
     [Theory]
@@ -1653,6 +2060,67 @@ public sealed class PartySdkQueryHandlerTests
         result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
         await store.DidNotReceiveWithAnyArgs().GetAsync<PartyDetailSdkReadModel>(default!, default!, default);
     }
+
+    private static int ActiveReadCount(PartySdkLastKnownReadModelCache cache)
+        => ((System.Collections.IDictionary)typeof(PartySdkLastKnownReadModelCache)
+            .GetField("_activeReads", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .GetValue(cache)!).Count;
+
+    private static string CacheKey(string slot, string tenantId = "tenant-a")
+        => slot switch
+        {
+            "detail" => PartySdkReadModelAddresses.Detail(tenantId, "party-1"),
+            "processing" => PartySdkReadModelAddresses.Processing(tenantId, "party-1"),
+            _ => PartySdkReadModelAddresses.Index(tenantId),
+        };
+
+    private static bool StoreCacheSlotIfCurrent(PartySdkLastKnownReadModelCache cache, string slot, long generation, string tenantId = "tenant-a")
+        => slot switch
+        {
+            "detail" => cache.StoreDetailIfCurrent(tenantId, "party-1", generation, new PartyDetailSdkReadModel { Detail = Detail("party-1") }),
+            "processing" => cache.StoreProcessingIfCurrent(tenantId, "party-1", generation, new PartyProcessingSdkReadModel()),
+            _ => cache.StoreIndexIfCurrent(tenantId, generation, new PartyIndexSdkReadModel()),
+        };
+
+    private static void StoreCacheSlot(PartySdkLastKnownReadModelCache cache, string slot, string projectionVersion = "")
+    {
+        switch (slot)
+        {
+            case "detail":
+                cache.StoreDetail("tenant-a", "party-1", new PartyDetailSdkReadModel { Detail = Detail("party-1"), ProjectionVersion = projectionVersion });
+                break;
+            case "processing":
+                cache.StoreProcessing("tenant-a", "party-1", new PartyProcessingSdkReadModel { ProjectionVersion = projectionVersion });
+                break;
+            default:
+                cache.StoreIndex("tenant-a", new PartyIndexSdkReadModel { ProjectionVersion = projectionVersion });
+                break;
+        }
+    }
+
+    private static void EvictCacheSlot(PartySdkLastKnownReadModelCache cache, string slot)
+    {
+        switch (slot)
+        {
+            case "detail":
+                cache.EvictDetail("tenant-a", "party-1");
+                break;
+            case "processing":
+                cache.EvictProcessing("tenant-a", "party-1");
+                break;
+            default:
+                cache.EvictIndex("tenant-a");
+                break;
+        }
+    }
+
+    private static Task<QueryResult> ExecuteCacheQueryAsync(PartySdkQueryService service, string slot, CancellationToken cancellationToken)
+        => slot switch
+        {
+            "detail" => service.GetPartyAsync(CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType), cancellationToken),
+            "processing" => service.GetProcessingRecordsAsync(CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType), cancellationToken),
+            _ => service.GetPartyIndexAsync(CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType), cancellationToken),
+        };
 
     private static PartySdkQueryService CreateService(
         IReadModelStore store,

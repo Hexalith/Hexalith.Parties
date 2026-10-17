@@ -3,20 +3,21 @@ using Hexalith.Parties.Projections.Models;
 namespace Hexalith.Parties.Queries;
 
 /// <summary>
-/// Keeps tenant-scoped last-known SDK read models for bounded degraded reads. Eviction advances a
-/// per-key generation so a canonical read that started before erasure of that key cannot restore
-/// an evicted value, without aborting unrelated in-flight stores for other keys.
+/// Keeps tenant-scoped last-known SDK read models for bounded degraded reads. Active read tokens
+/// are bounded separately by the value capacity. Eviction invalidates only the affected key's
+/// tokens so an earlier canonical read cannot restore an evicted value.
 /// </summary>
 public sealed class PartySdkLastKnownReadModelCache
 {
     private const int DefaultMaximumEntries = 1024;
     private static readonly TimeSpan s_defaultRetention = TimeSpan.FromMinutes(5);
     private readonly Dictionary<string, PartySdkLastKnownReadModelCacheEntry> _entries = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, long> _keyGenerations = new(StringComparer.Ordinal);
+    private readonly Dictionary<long, string> _activeReads = new();
     private readonly object _gate = new();
     private readonly int _maximumEntries;
     private readonly TimeProvider _timeProvider;
     private readonly TimeSpan _retention;
+    private long _lastReadToken;
 
     /// <summary>Initializes a cache with bounded production defaults.</summary>
     public PartySdkLastKnownReadModelCache()
@@ -37,7 +38,7 @@ public sealed class PartySdkLastKnownReadModelCache
 
     /// <summary>Initializes a cache with explicit time, capacity, and retention controls.</summary>
     /// <param name="timeProvider">The clock used for retention checks.</param>
-    /// <param name="maximumEntries">The maximum number of cached values across all slots.</param>
+    /// <param name="maximumEntries">The separate limits for cached values and active read tokens across all slots.</param>
     /// <param name="retention">The maximum age of a cached value.</param>
     public PartySdkLastKnownReadModelCache(
         TimeProvider timeProvider,
@@ -57,29 +58,44 @@ public sealed class PartySdkLastKnownReadModelCache
     }
 
     /// <summary>
-    /// Captures the per-key generation that must still be current when an asynchronous read for
-    /// <paramref name="cacheKey"/> completes.
+    /// Registers a canonical read until <see cref="EndRead"/> or eviction. The returned token
+    /// must still be registered for <paramref name="cacheKey"/> when the read completes.
     /// </summary>
     /// <param name="cacheKey">The exact cache key that will later be stored or evicted.</param>
-    /// <returns>The current invalidation generation for <paramref name="cacheKey"/>.</returns>
+    /// <returns>A unique positive token, or zero when tracking capacity or token space is exhausted.
+    /// An untracked read can never store a value.</returns>
     public long BeginRead(string cacheKey)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(cacheKey);
         lock (_gate)
         {
-            return _keyGenerations.GetValueOrDefault(cacheKey);
+            if (_activeReads.Count >= _maximumEntries || _lastReadToken == long.MaxValue)
+            {
+                return 0;
+            }
+
+            long generation = ++_lastReadToken;
+            _activeReads.Add(generation, cacheKey);
+            return generation;
         }
     }
 
-    /// <summary>Stores a detail value using the current generation for that detail key.</summary>
-    public void StoreDetail(string tenantId, string partyId, PartyDetailSdkReadModel value)
-        => _ = StoreDetailIfCurrent(
-            tenantId,
-            partyId,
-            BeginRead(PartySdkReadModelAddresses.Detail(tenantId, partyId)),
-            value);
+    /// <summary>Ends a read without retaining its key. Repeated calls and untracked tokens are harmless.</summary>
+    /// <param name="generation">The token returned by <see cref="BeginRead"/>.</param>
+    public void EndRead(long generation)
+    {
+        lock (_gate)
+        {
+            _ = _activeReads.Remove(generation);
+        }
+    }
 
-    /// <summary>Stores a detail value only if no eviction occurred for that key since the read began.</summary>
+    /// <summary>Attempts to store a detail value within a temporary read registration.
+    /// Skips storage if tracking capacity or token space is exhausted.</summary>
+    public void StoreDetail(string tenantId, string partyId, PartyDetailSdkReadModel value)
+        => Store(PartySdkReadModelAddresses.Detail(tenantId, partyId), value);
+
+    /// <summary>Stores a detail value only while its read token is registered for that key.</summary>
     public bool StoreDetailIfCurrent(string tenantId, string partyId, long generation, PartyDetailSdkReadModel value)
         => StoreIfCurrent(PartySdkReadModelAddresses.Detail(tenantId, partyId), generation, value);
 
@@ -91,11 +107,12 @@ public sealed class PartySdkLastKnownReadModelCache
     public void EvictDetail(string tenantId, string partyId)
         => Evict(PartySdkReadModelAddresses.Detail(tenantId, partyId));
 
-    /// <summary>Stores an index value using the current generation for that index key.</summary>
+    /// <summary>Attempts to store an index value within a temporary read registration.
+    /// Skips storage if tracking capacity or token space is exhausted.</summary>
     public void StoreIndex(string tenantId, PartyIndexSdkReadModel value)
-        => _ = StoreIndexIfCurrent(tenantId, BeginRead(PartySdkReadModelAddresses.Index(tenantId)), value);
+        => Store(PartySdkReadModelAddresses.Index(tenantId), value);
 
-    /// <summary>Stores an index value only if no eviction occurred for that key since the read began.</summary>
+    /// <summary>Stores an index value only while its read token is registered for that key.</summary>
     public bool StoreIndexIfCurrent(string tenantId, long generation, PartyIndexSdkReadModel value)
         => StoreIfCurrent(PartySdkReadModelAddresses.Index(tenantId), generation, value);
 
@@ -107,15 +124,12 @@ public sealed class PartySdkLastKnownReadModelCache
     public void EvictIndex(string tenantId)
         => Evict(PartySdkReadModelAddresses.Index(tenantId));
 
-    /// <summary>Stores a processing value using the current generation for that processing key.</summary>
+    /// <summary>Attempts to store a processing value within a temporary read registration.
+    /// Skips storage if tracking capacity or token space is exhausted.</summary>
     public void StoreProcessing(string tenantId, string partyId, PartyProcessingSdkReadModel value)
-        => _ = StoreProcessingIfCurrent(
-            tenantId,
-            partyId,
-            BeginRead(PartySdkReadModelAddresses.Processing(tenantId, partyId)),
-            value);
+        => Store(PartySdkReadModelAddresses.Processing(tenantId, partyId), value);
 
-    /// <summary>Stores a processing value only if no eviction occurred for that key since the read began.</summary>
+    /// <summary>Stores a processing value only while its read token is registered for that key.</summary>
     public bool StoreProcessingIfCurrent(
         string tenantId,
         string partyId,
@@ -135,8 +149,30 @@ public sealed class PartySdkLastKnownReadModelCache
     {
         lock (_gate)
         {
-            _keyGenerations[key] = _keyGenerations.GetValueOrDefault(key) + 1;
+            long[] invalidated = _activeReads
+                .Where(pair => string.Equals(pair.Value, key, StringComparison.Ordinal))
+                .Select(static pair => pair.Key)
+                .ToArray();
+            foreach (long generation in invalidated)
+            {
+                _ = _activeReads.Remove(generation);
+            }
+
             _ = _entries.Remove(key);
+        }
+    }
+
+    private void Store<TValue>(string key, TValue value)
+        where TValue : class
+    {
+        long generation = BeginRead(key);
+        try
+        {
+            _ = StoreIfCurrent(key, generation, value);
+        }
+        finally
+        {
+            EndRead(generation);
         }
     }
 
@@ -146,7 +182,8 @@ public sealed class PartySdkLastKnownReadModelCache
         ArgumentNullException.ThrowIfNull(value);
         lock (_gate)
         {
-            if (generation != _keyGenerations.GetValueOrDefault(key))
+            if (!_activeReads.TryGetValue(generation, out string? readKey)
+                || !string.Equals(readKey, key, StringComparison.Ordinal))
             {
                 return false;
             }

@@ -1,0 +1,88 @@
+{
+    "date": "2026-10-17",
+    "scope": [
+        "DW-171"
+    ],
+    "base_revision": "1138c507e6c61f6a1f8fa0fd72f7c2aa28c89b52",
+    "commands": {
+        "initial_build": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+        "failing_before": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method *LastKnownReadModelCache_MissingKeyChurnDoesNotRetainHistoricalIdentifiers",
+        "final_build": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1 --no-restore",
+        "focused": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+        "full": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "warning_gate": "bash scripts/check-no-warning-override.sh",
+        "whitespace": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+        "commitlint": "node node_modules/@commitlint/cli/cli.js --edit <candidate-file> --verbose"
+    },
+    "command_record_note": "Output redirection and temporary result-XML paths are omitted from the reproducible commands. Raw build/test logs and XML remain local; their XML hashes bind these summaries.",
+    "failing_before": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "9c2e503ce3133e979238e630a7db105414ee975440df1befc6b64b96631da562",
+        "expected_failure": "Missing-key churn retained 512 identifiers with value capacity four against the original production implementation. The final regression assertion is stronger and requires zero identifiers."
+    },
+    "final_build": {
+        "exit_code": 0,
+        "warnings": 0,
+        "errors": 0,
+        "configuration": "Debug",
+        "dependencies": "source"
+    },
+    "focused": {
+        "total": 93,
+        "passed": 93,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "9a32f6c14787e59b63c6d3bc46b03ef6409de4010d345f9b2c2111cd6e675c25"
+    },
+    "full": {
+        "total": 1066,
+        "passed": 1066,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "2bbde630d697138cee5ed672cfd140c961bc6377b078e7b20cd6719de0a1d11b"
+    },
+    "runtime_baseline": {
+        "start_command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+        "start_exit_code": 0,
+        "describe_command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+        "initial_state": "Identity provider starting; Parties/EventStore/Tenants waiting.",
+        "wait_command": "aspire wait parties --status healthy --timeout 15 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+        "wait_result": "Resource parties healthy after 9.5 seconds; exit 0.",
+        "stop_command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+        "stop_exit_code": 0
+    },
+    "review": {
+        "layer": "Blind Hunter",
+        "findings": 6,
+        "patched": 5,
+        "rejected_low": 1,
+        "deferred": 0,
+        "follow_up": "No remaining concrete issues; all five corrections verified. Bounded scan retained after explicit triage."
+    },
+    "commitlint": {
+        "version": "21.2.2",
+        "locked_version": "21.2.2",
+        "candidate": "fix: bound last-known cache read bookkeeping",
+        "candidate_sha256": "a9b5170497c09e8dc4f57b07ad24f2b683fb153f386ff3d8e34fcd28bb422a61",
+        "exit_code": 0,
+        "problems": 0,
+        "warnings": 0
+    },
+    "formatting": "Changed C# files and new artifacts use CRLF per .editorconfig. CRLF-aware whitespace checking passes. Default Git whitespace checking treats CR characters as trailing whitespace; no repository Git configuration was changed.",
+    "nonfinal_build_correction": "CA2007 on an awaited pending task was corrected with ConfigureAwait(true); no analyzer or warning policy was weakened.",
+    "source_sha256": {
+        "src/Hexalith.Parties/Queries/PartySdkLastKnownReadModelCache.cs": "af09b9f0e9a93df669eb96d8d28c0a8c20bc056c56d549cee9e1d3101b62889b",
+        "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "403db81a8af6a9f60a1e79a8f619bca73bf8d92831ffe4364aeb347807b48865",
+        "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "8135cedea9caf7657441536b0046fbddeb09ce25b54722bb31a4a6115d5d8888"
+    },
+    "limits": "Local in-process cache and service behavior. No claim of cross-instance erasure invalidation (DW-172), production custody qualification or full production topology acceptance. No dependency, gitlink, runtime configuration or deployment changes."
+}

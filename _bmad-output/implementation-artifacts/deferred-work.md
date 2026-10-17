@@ -1342,7 +1342,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: last-known cache EvictDetail and _keyGenerations bookkeeping
 source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
 reason: Missing-detail reads call EvictDetail; _keyGenerations never expires or participates in the cache capacity limit; distinct valid missing IDs grow the singleton indefinitely; verified medium, pre-existing.
-status: open
+status: done 2026-10-17
+resolution: Replaced historical per-key generations with bounded active-read tokens and finally-based cleanup across detail, index and processing queries. Exact-key eviction rejects late reads without invalidating unrelated reads or reviving ended tokens; saturation fails closed and preserves degraded fallback. Missing-key churn retains zero identifiers. Final Debug/source build has zero warnings/errors; focused cache/query tests pass 93/93 and full Parties.Tests passes 1066/1066 with zero skips/errors/failures. Independent review and follow-up completed; no new deferred work. See spec-dw-171-bounded-cache-read-tracking.md and tests/dw-171-bounded-cache-read-tracking-2026-10-17/validation.json. Cross-instance cache invalidation remains the separate DW-172.
 
 ### DW-172: D10 — Prevent a second Parties instance from serving cached personal data after another instance completes erasure.
 
