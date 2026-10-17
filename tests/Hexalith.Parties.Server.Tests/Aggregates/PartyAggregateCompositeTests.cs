@@ -679,23 +679,27 @@ public class PartyAggregateCompositeTests
         result.UpdatedPartyDetail.ContactChannels.ShouldNotContain(c => c.Id == "ch-email-2");
     }
 
-    [Fact]
-    public void Handle_UpdatePartyComposite_UnsafeRemoveIdentifierId_ReturnsInvalidIdBeforeNotFound()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Handle_UpdatePartyComposite_UnsafeRemoveIdentifierId_ReturnsInvalidIdBeforeNotFound(bool oversized)
     {
         PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+        string submittedId = oversized ? new string('x', 4096) : "id/unsafe";
         UpdatePartyComposite command = new()
         {
             PartyId = PartyTestData.DefaultPartyId,
-            RemoveIdentifierIds = ["id/unsafe"],
+            RemoveIdentifierIds = [submittedId],
         };
 
         CompositeCommandResult result = PartyAggregate.Handle(command, state);
 
         result.IsRejection.ShouldBeTrue();
-        result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        CompositeOperationConflict rejection = result.Events[0].ShouldBeOfType<CompositeOperationConflict>();
+        rejection.Message.ShouldBe("Identifier ID is invalid.");
         result.Events.ShouldNotContain(e => e is IdentifierNotFound);
         result.Rejected.ShouldContain("Identifier ID is invalid.");
-        result.Rejected.ShouldAllBe(message => !message.Contains("id/unsafe", StringComparison.Ordinal));
+        result.Rejected.ShouldAllBe(message => !message.Contains(submittedId, StringComparison.Ordinal));
     }
 
     [Fact]
@@ -861,8 +865,10 @@ public class PartyAggregateCompositeTests
         result.Skipped.ShouldContain("Duplicate contact channel: email-1");
     }
 
-    [Fact]
-    public void Handle_UpdatePartyComposite_UpdateMissingChannel_ReturnsRejection()
+    [Theory]
+    [InlineData(16)]
+    [InlineData(PartyIdentifier.MaximumSemanticIdLength)]
+    public void Handle_UpdatePartyComposite_UpdateMissingChannel_ReturnsRejection(int identifierLength)
     {
         PartyState state = BuildExistingPersonState();
         UpdatePartyComposite command = new()
@@ -873,7 +879,7 @@ public class PartyAggregateCompositeTests
                 new UpdateContactChannel
                 {
                     PartyId = PartyTestData.DefaultPartyId,
-                    ContactChannelId = "missing-channel",
+                    ContactChannelId = new string('x', identifierLength),
                     Value = "missing@example.com",
                 },
             ],
@@ -884,7 +890,11 @@ public class PartyAggregateCompositeTests
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
         ContactChannelNotFound notFound = result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
-        result.Rejected.ShouldContain("Contact channel 'missing-channel' not found.");
+        notFound.Message.ShouldBe("Contact channel not found.");
+        result.Rejected.ShouldBe(["Contact channel not found."]);
+        result.Applied.ShouldBeEmpty();
+        result.Skipped.ShouldBeEmpty();
+        result.UpdatedPartyDetail.ShouldBeNull();
         string rawValue = command.UpdateContactChannels[0].Value!;
         rawValue.ShouldNotBeNullOrEmpty("Privacy absence assertion requires a non-empty sentinel — empty string makes Contains() trivially true.");
         result.Rejected.Any(x => x.Contains(rawValue)).ShouldBeFalse();
@@ -892,22 +902,28 @@ public class PartyAggregateCompositeTests
         result.Events.OfType<ContactChannelUpdated>().ShouldBeEmpty();
     }
 
-    [Fact]
-    public void Handle_UpdatePartyComposite_RemoveMissingChannel_ReturnsRejection()
+    [Theory]
+    [InlineData(16)]
+    [InlineData(PartyIdentifier.MaximumSemanticIdLength)]
+    public void Handle_UpdatePartyComposite_RemoveMissingChannel_ReturnsRejection(int identifierLength)
     {
         PartyState state = BuildExistingPersonState();
         UpdatePartyComposite command = new()
         {
             PartyId = PartyTestData.DefaultPartyId,
-            RemoveContactChannelIds = ["missing-channel"],
+            RemoveContactChannelIds = [new string('x', identifierLength)],
         };
 
         CompositeCommandResult result = PartyAggregate.Handle(command, state);
 
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
-        result.Rejected.ShouldContain("Contact channel 'missing-channel' not found.");
+        ContactChannelNotFound notFound = result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
+        notFound.Message.ShouldBe("Contact channel not found.");
+        result.Rejected.ShouldBe(["Contact channel not found."]);
+        result.Applied.ShouldBeEmpty();
+        result.Skipped.ShouldBeEmpty();
+        result.UpdatedPartyDetail.ShouldBeNull();
     }
 
     [Fact]
@@ -1197,24 +1213,29 @@ public class PartyAggregateCompositeTests
         result.UpdatedPartyDetail.Identifiers.ShouldContain(x => x.Id == "id-vat-1");
     }
 
-    [Fact]
-    public void Handle_UpdatePartyComposite_InvalidRemoveIdentifierId_ReturnsRejection()
+    [Theory]
+    [InlineData(16)]
+    [InlineData(PartyIdentifier.MaximumSemanticIdLength)]
+    public void Handle_UpdatePartyComposite_InvalidRemoveIdentifierId_ReturnsRejection(int identifierLength)
     {
         PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
         UpdatePartyComposite command = new()
         {
             PartyId = PartyTestData.DefaultPartyId,
-            RemoveIdentifierIds = ["id-missing-1"],
+            RemoveIdentifierIds = [new string('x', identifierLength)],
         };
 
         CompositeCommandResult result = PartyAggregate.Handle(command, state);
 
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<IdentifierNotFound>();
+        IdentifierNotFound notFound = result.Events[0].ShouldBeOfType<IdentifierNotFound>();
         result.Events.OfType<IdentifierRemoved>().ShouldBeEmpty();
+        notFound.Message.ShouldBe("Identifier not found.");
+        result.Rejected.ShouldBe(["Identifier not found."]);
+        result.Applied.ShouldBeEmpty();
+        result.Skipped.ShouldBeEmpty();
         result.UpdatedPartyDetail.ShouldBeNull();
-        result.Rejected.ShouldContain("Identifier 'id-missing-1' not found.");
     }
 
     [Fact]

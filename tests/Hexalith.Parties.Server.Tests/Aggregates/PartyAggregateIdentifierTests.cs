@@ -172,16 +172,22 @@ public class PartyAggregateIdentifierTests {
         rejectionMessage.ShouldNotContain(command.IdentifierId);
     }
 
-    [Fact]
-    public void Handle_RemoveIdentifier_NotFound_ReturnsIdentifierNotFound() {
+    [Theory]
+    [InlineData(16)]
+    [InlineData(PartyIdentifier.MaximumSemanticIdLength)]
+    public void Handle_RemoveIdentifier_NotFound_ReturnsIdentifierNotFound(int identifierLength) {
         PartyState state = PartyTestData.CreatePersonState();
-        RemoveIdentifier command = PartyTestData.ValidRemoveIdentifier();
+        RemoveIdentifier command = PartyTestData.ValidRemoveIdentifier() with
+        {
+            IdentifierId = new string('x', identifierLength),
+        };
 
         DomainResult result = PartyAggregate.Handle(command, state);
 
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        _ = result.Events[0].ShouldBeOfType<IdentifierNotFound>();
+        IdentifierNotFound notFound = result.Events[0].ShouldBeOfType<IdentifierNotFound>();
+        notFound.Message.ShouldBe("Identifier not found.");
         result.Events.OfType<IdentifierRemoved>().ShouldBeEmpty();
     }
 

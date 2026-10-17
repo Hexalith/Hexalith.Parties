@@ -142,14 +142,16 @@ public class PartyAggregateContactChannelTests
         result.Events[0].ShouldBeOfType<PartyNotFound>();
     }
 
-    [Fact]
-    public void Handle_UpdateContactChannel_NotFound_ReturnsContactChannelNotFound()
+    [Theory]
+    [InlineData(16)]
+    [InlineData(PartyIdentifier.MaximumSemanticIdLength)]
+    public void Handle_UpdateContactChannel_NotFound_ReturnsContactChannelNotFound(int identifierLength)
     {
         PartyState state = PartyTestData.CreatePersonState();
         UpdateContactChannel command = new()
         {
             PartyId = PartyTestData.DefaultPartyId,
-            ContactChannelId = "missing",
+            ContactChannelId = new string('x', identifierLength),
             Value = "new@example.com",
         };
 
@@ -157,7 +159,8 @@ public class PartyAggregateContactChannelTests
 
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
+        ContactChannelNotFound notFound = result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
+        notFound.Message.ShouldBe("Contact channel not found.");
     }
 
     [Fact]
@@ -268,21 +271,24 @@ public class PartyAggregateContactChannelTests
         result.Events[0].ShouldBeOfType<PartyNotFound>();
     }
 
-    [Fact]
-    public void Handle_RemoveContactChannel_NotFound_ReturnsContactChannelNotFound()
+    [Theory]
+    [InlineData(16)]
+    [InlineData(PartyIdentifier.MaximumSemanticIdLength)]
+    public void Handle_RemoveContactChannel_NotFound_ReturnsContactChannelNotFound(int identifierLength)
     {
         PartyState state = PartyTestData.CreatePersonState();
         RemoveContactChannel command = new()
         {
             PartyId = PartyTestData.DefaultPartyId,
-            ContactChannelId = "missing",
+            ContactChannelId = new string('x', identifierLength),
         };
 
         var result = PartyAggregate.Handle(command, state);
 
         result.IsRejection.ShouldBeTrue();
         result.Events.Count.ShouldBe(1);
-        result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
+        ContactChannelNotFound notFound = result.Events[0].ShouldBeOfType<ContactChannelNotFound>();
+        notFound.Message.ShouldBe("Contact channel not found.");
     }
 
     [Fact]

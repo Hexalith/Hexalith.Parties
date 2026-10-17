@@ -420,10 +420,10 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
         for (int i = 0; i < command.UpdateContactChannels.Count; i++) {
             if (!existingChannelsById.ContainsKey(command.UpdateContactChannels[i].ContactChannelId)) {
                 return new CompositeCommandResult(
-                    [new ContactChannelNotFound { Message = $"Contact channel '{command.UpdateContactChannels[i].ContactChannelId}' not found." }],
+                    [new ContactChannelNotFound { Message = "Contact channel not found." }],
                     applied: [],
                     skipped: [],
-                    rejected: [$"Contact channel '{command.UpdateContactChannels[i].ContactChannelId}' not found."]);
+                    rejected: ["Contact channel not found."]);
             }
         }
 
@@ -431,10 +431,10 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
         for (int i = 0; i < command.RemoveContactChannelIds.Count; i++) {
             if (!existingChannelsById.ContainsKey(command.RemoveContactChannelIds[i])) {
                 return new CompositeCommandResult(
-                    [new ContactChannelNotFound { Message = $"Contact channel '{command.RemoveContactChannelIds[i]}' not found." }],
+                    [new ContactChannelNotFound { Message = "Contact channel not found." }],
                     applied: [],
                     skipped: [],
-                    rejected: [$"Contact channel '{command.RemoveContactChannelIds[i]}' not found."]);
+                    rejected: ["Contact channel not found."]);
             }
         }
 
@@ -442,10 +442,10 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
         for (int i = 0; i < command.RemoveIdentifierIds.Count; i++) {
             if (!existingIdentifierIds.Contains(command.RemoveIdentifierIds[i])) {
                 return new CompositeCommandResult(
-                    [new IdentifierNotFound { Message = $"Identifier '{command.RemoveIdentifierIds[i]}' not found." }],
+                    [new IdentifierNotFound { Message = "Identifier not found." }],
                     applied: [],
                     skipped: [],
-                    rejected: [$"Identifier '{command.RemoveIdentifierIds[i]}' not found."]);
+                    rejected: ["Identifier not found."]);
             }
         }
 
@@ -1204,7 +1204,7 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
         }
 
         if (channelIdx < 0) {
-            return DomainResult.Rejection([new ContactChannelNotFound { Message = $"Contact channel '{command.ContactChannelId}' not found." }]);
+            return DomainResult.Rejection([new ContactChannelNotFound { Message = "Contact channel not found." }]);
         }
 
         if (HasAmbiguousChannelId(state, command.ContactChannelId))
@@ -1264,7 +1264,7 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
 
         // Channel not found check
         if (!state.ContactChannels.Any(c => c.Id == command.ContactChannelId)) {
-            return DomainResult.Rejection([new ContactChannelNotFound { Message = $"Contact channel '{command.ContactChannelId}' not found." }]);
+            return DomainResult.Rejection([new ContactChannelNotFound { Message = "Contact channel not found." }]);
         }
 
         return SuccessWithUpdatedPartyDetail(command.PartyId, state, [new ContactChannelRemoved { ContactChannelId = command.ContactChannelId }]);
@@ -1340,7 +1340,7 @@ public sealed partial class PartyAggregate : EventStoreAggregate<PartyState> {
 
         // Identifier not found check
         if (!state.Identifiers.Any(i => i.Id == command.IdentifierId)) {
-            return DomainResult.Rejection([new IdentifierNotFound { Message = $"Identifier '{command.IdentifierId}' not found." }]);
+            return DomainResult.Rejection([new IdentifierNotFound { Message = "Identifier not found." }]);
         }
 
         return SuccessWithUpdatedPartyDetail(command.PartyId, state, [new IdentifierRemoved { IdentifierId = command.IdentifierId }]);
