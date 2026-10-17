@@ -1,0 +1,133 @@
+{
+    "date": "2026-10-17",
+    "scope": [
+        "DW-121"
+    ],
+    "base_revision": "f1335fa897d5b693f9ec26802e2ced7e669b4252",
+    "commands": {
+        "build_before": "dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false --no-restore",
+        "restore_recovery": "dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+        "failing_before": "dotnet tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll -class Hexalith.Parties.UI.Tests.ConsumerConsentClientTests -result-xml /tmp/dw-121-before-final.xml",
+        "build_after": "dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false --no-restore",
+        "focused": "dotnet tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll -class Hexalith.Parties.UI.Tests.ConsumerConsentClientTests -result-xml /tmp/dw-121-focused-final.xml",
+        "ui": "dotnet tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll -result-xml /tmp/dw-121-ui-final.xml",
+        "consumer_build": "dotnet build tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+        "consumer": "dotnet tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll -result-xml /tmp/dw-121-consumer.xml",
+        "warning_gate": "bash scripts/check-no-warning-override.sh",
+        "whitespace": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+        "commitlint": "node node_modules/@commitlint/cli/cli.js --edit /tmp/dw-121-commit-message.txt --verbose"
+    },
+    "command_record_note": "Output redirection omitted. Raw logs/XML remain local; this sanitized packet retains results and hashes.",
+    "failing_before": {
+        "total": 27,
+        "passed": 17,
+        "failed": 10,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "06448aebdeeeed1987fbfcdf2041235e03163c363a4d4a8724235153f379a433"
+    },
+    "focused": {
+        "total": 44,
+        "passed": 44,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "2e15cc71e942ef27e2cd421a0944852fa1c394cd0438e26e2bc3f3a6cd07d140"
+    },
+    "ui": {
+        "total": 388,
+        "passed": 388,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "fa8826f2a44dabf9b54c7eb764c92f5a38b7c7f5a868f3b9997707aafd5f3365"
+    },
+    "consumer": {
+        "total": 82,
+        "passed": 82,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "d9d3f09afca1478a6a8ae277235cd558e476d7ff353fe2e34e765a9a4b698944"
+    },
+    "build_after": {
+        "exit_code": 0,
+        "warnings": 0,
+        "errors": 0,
+        "configuration": "Debug",
+        "dependencies": "source"
+    },
+    "consumer_build": {
+        "exit_code": 0,
+        "warnings": 0,
+        "errors": 0,
+        "configuration": "Debug",
+        "dependencies": "source"
+    },
+    "initial_restore_blocker": {
+        "exit_code": 1,
+        "command_key": "build_before",
+        "result": "CS1704 from duplicate Hexalith.Commons.UniqueIds package/source assemblies under stale restore assets. Explicit source-mode restore/build succeeds with zero warnings/errors; no dependency versions or build configuration changed."
+    },
+    "failing_before_note": "Corrected baseline: ten validation cases fail, all seventeen controls pass. Initial cancellation test overasserted exception-object identity; corrected to caller-token propagation before the preserved baseline. No production fix was present for either baseline run.",
+    "runtime_baseline": {
+        "start_command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+        "start_exit_code": 0,
+        "describe_command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+        "describe_exit_code": 0,
+        "state": "Identity provider Starting; Parties/EventStore/Tenants waiting.",
+        "wait_command": "aspire wait parties --status healthy --timeout 20 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+        "wait_exit_code": 17,
+        "wait_result": "Timed out after 20 seconds. No full-topology health qualification claimed.",
+        "stop_command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+        "stop_exit_code": 0
+    },
+    "review": {
+        "layer": "Blind Hunter",
+        "findings": 4,
+        "patched": 4,
+        "deferred": 0,
+        "follow_up": "All four verification corrections confirmed. No concrete remaining issue. Final Debug/source build has zero warnings/errors; focused 44/44, full UI 388/388 and ConsumerPortal 82/82 pass without failures/errors/skips."
+    },
+    "commitlint": {
+        "version": "21.2.2",
+        "locked_version": "21.2.2",
+        "candidate": "fix: classify consumer consent validation failures",
+        "candidate_sha256": "4da5c8ad8c99566e188b266de7ad6b7717b6f75042b96009b475a352246afa38",
+        "exit_code": 0,
+        "problems": 0,
+        "warnings": 0
+    },
+    "warning_gate_exit_code": 0,
+    "whitespace_exit_code": 0,
+    "source_sha256": {
+        "src/Hexalith.Parties.UI/Services/ConsumerConsentClient.cs": "ba90830c196d49916ec44331d3cba765ee8ed278727a4bfbf95f4301c25d84fa",
+        "tests/Hexalith.Parties.UI.Tests/ConsumerConsentClientTests.cs": "90127cd08cdc0d92461d0051fb5342acecc162f53bfff3cc017a2f1dbf1f9586",
+        "tests/Hexalith.Parties.UI.Tests/ConsumerConsentCommandHandler.cs": "53766bd82dc113b1010a309ed541dbcced61ae748b1388a1850a24a4dfc1a85a"
+    },
+    "limits": "Historical malformed identifiers are synthetic; no affected real tenant is claimed. No public API, authentication, component/styling, wire contract, dependency, gitlink, persistence or runtime configuration change.",
+    "initial_focused": {
+        "total": 27,
+        "passed": 27,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "3634895726a16d1767fbd813cd3804d099d3bce7270acf7a26de204da2067301"
+    },
+    "initial_ui": {
+        "total": 371,
+        "passed": 371,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "xml_sha256": "19d2a087eeec3e4d18e2704b0511c942a01b0ce55d8c670332dc11160c99df7b"
+    },
+    "full_affected_total": 470,
+    "formatting": "Existing C# and ledger LF endings preserved to avoid unrelated formatting; new files use CRLF. CRLF-aware whitespace gate passes."
+}

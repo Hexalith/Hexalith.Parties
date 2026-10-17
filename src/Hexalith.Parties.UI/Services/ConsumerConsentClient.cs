@@ -41,6 +41,10 @@ internal sealed class ConsumerConsentClient(ISelfScopedPartiesClient selfScopedP
         {
             throw;
         }
+        catch (ArgumentException)
+        {
+            return new ConsumerConsentOperationResult(ConsumerConsentOperationOutcome.ValidationRejected);
+        }
         catch
         {
             return new ConsumerConsentOperationResult(ConsumerConsentOperationOutcome.Failed);
@@ -64,6 +68,10 @@ internal sealed class ConsumerConsentClient(ISelfScopedPartiesClient selfScopedP
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
+        }
+        catch (ArgumentException)
+        {
+            return new ConsumerConsentOperationResult(ConsumerConsentOperationOutcome.ValidationRejected);
         }
         catch
         {

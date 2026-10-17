@@ -934,7 +934,8 @@ origin: spec-deferred 637e8540aa5c
 location: src/Hexalith.Parties.UI/Services/ConsumerConsentClient.cs:43-47,67-70
 source_spec: `spec-safe-consent-identifiers.md`
 reason: PartiesAdminPortalApiClient.ExecuteGdprCommandAsync catches ArgumentException and returns AdminPortalGdprOutcome.ValidationRejected, but SelfScopedPartiesClient calls HttpAdminPortalGdprClient directly and ConsumerConsentClient has a bare catch returning ConsumerConsentOperationOutcome.Failed. Unverified because MyConsentPage supplies purposes from a fixed catalogue and channel/consent ids from stored projections, all of which satisfy ConsentIdentifier today. What would settle it, if-true severity medium: evidence that a stored channel or consent id in a real tenant fails ConsentIdentifier, or a consumer path that feeds free-form channel/purpose input.
-status: open
+status: done 2026-10-17
+resolution: Consumer consent grant/withdraw now map delegated ArgumentException validation failures to the existing safe ValidationRejected outcome. Null requests, caller cancellation, other exceptions, returned mappings and fail-closed self-scoping remain covered. Ten validation regressions fail against the original adapter; final focused tests pass 44/44 and full UI/ConsumerPortal suites pass 388/388 and 82/82 (470 total), with zero failures/errors/skips. Debug/source builds have zero warnings/errors. Four independent review verification findings and follow-up are complete. Malformed historical identifiers are synthetic, with no live-tenant incident claimed. The separate 20-second Aspire baseline health timeout remains recorded; no runtime, dependency, gitlink, wire-contract or persistence changes. See spec-dw-121-consumer-consent-validation.md and tests/dw-121-consumer-consent-validation-2026-10-17/validation.json.
 
 ### DW-122: No test asserts that the production DI extension registers the consent validators, and the domain processor fails open when a validator is missing.
 
