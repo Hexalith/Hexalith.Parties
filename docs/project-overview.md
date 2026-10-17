@@ -41,11 +41,11 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 | Runtime | .NET | net10.0 (SDK 10.0.401) |
 | Orchestration | .NET Aspire | 13.6.1 |
 | Actors / pub-sub | DAPR | 1.18.10 |
-| Validation | FluentValidation | 12.1.1 |
+| Validation | FluentValidation | 12.2.0 |
 | Mediation | MediatR | 14.2.0 |
-| AuthN | JWT Bearer | 10.0.12 |
+| AuthN | JWT Bearer | 10.0.13 |
 | MCP | ModelContextProtocol | 2.2.0 |
-| UI | FluentUI Blazor + CustomElements | 5.0.0 / 10.0.12 |
+| UI | FluentUI Blazor + CustomElements | 5.0.1 / 10.0.13 |
 | Rich search (opt) | Hexalith.Memories.Client.Rest | 2.27.1 |
 | Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | 4.0.2 / 4.3.0 / 6.2.0 / 2.11.3 / 4.16.0 |
 

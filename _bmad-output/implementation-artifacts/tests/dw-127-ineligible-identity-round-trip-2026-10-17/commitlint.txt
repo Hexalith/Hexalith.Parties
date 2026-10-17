@@ -1,0 +1,9 @@
+⧗   --- input ---
+fix: preserve ineligible identity responses
+
+Accept explicit Unknown evidence for Ineligible results while rejecting
+missing classifications and bindings on denial responses.
+
+Add producer-to-client coverage and refresh current dependency records.
+Verify 1,556 tests across Client, Parties, and Contracts.
+✔   found 0 problems, 0 warnings

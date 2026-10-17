@@ -1,0 +1,452 @@
+{
+  "date": "2026-10-17",
+  "scope": [
+    "DW-127",
+    "DW-146"
+  ],
+  "base_revision": "8299e075f92219c135a4d075aa6ef9a0c574ad5a",
+  "final_result": "All 1556 tests passed; zero errors, failures, skips or not-run; final affected Debug/source builds have zero warnings/errors.",
+  "commands": [
+    {
+      "name": "client-full-final",
+      "command": "dotnet tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll -result-xml /tmp/dw-127-validation/client-full-final.xml",
+      "exit_code": 0,
+      "seconds": 25.233,
+      "results": [
+        {
+          "errors": "0",
+          "failed": "0",
+          "not-run": "0",
+          "passed": "330",
+          "skipped": "0",
+          "total": "330"
+        }
+      ],
+      "failures": []
+    },
+    {
+      "name": "build-producer-final",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+      "exit_code": 0,
+      "seconds": 26.403,
+      "build_summary": [
+        "",
+        "Build succeeded.",
+        "    0 Warning(s)",
+        "    0 Error(s)",
+        "",
+        "Time Elapsed 00:00:26.07"
+      ]
+    },
+    {
+      "name": "producer-full-final",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-127-validation/producer-full-final.xml",
+      "exit_code": 1,
+      "seconds": 19.511,
+      "results": [
+        {
+          "errors": "0",
+          "failed": "1",
+          "not-run": "0",
+          "passed": "1026",
+          "skipped": "0",
+          "total": "1027"
+        }
+      ],
+      "failures": [
+        "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog"
+      ]
+    },
+    {
+      "name": "build-contracts-final",
+      "command": "dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+      "exit_code": 0,
+      "seconds": 10.765,
+      "build_summary": [
+        "",
+        "Build succeeded.",
+        "    0 Warning(s)",
+        "    0 Error(s)",
+        "",
+        "Time Elapsed 00:00:10.38"
+      ]
+    },
+    {
+      "name": "contracts-full-final",
+      "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Debug/net10.0/Hexalith.Parties.Contracts.Tests.dll -result-xml /tmp/dw-127-validation/contracts-full-final.xml",
+      "exit_code": 0,
+      "seconds": 11.611,
+      "results": [
+        {
+          "errors": "0",
+          "failed": "0",
+          "not-run": "0",
+          "passed": "199",
+          "skipped": "0",
+          "total": "199"
+        }
+      ],
+      "failures": []
+    },
+    {
+      "name": "producer-full-reconciled",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-127-validation/producer-full-reconciled.xml",
+      "exit_code": 0
+    },
+    {
+      "name": "build-client-before",
+      "command": "dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+      "exit_code": 0,
+      "log_sha256": "61c0f1988bdef1090c84332522d6e3fe36f007f6f64b8a2b52fed0ef721187b1",
+      "build_summary": [
+        "  Hexalith.Parties.Client.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll",
+        "",
+        "Build succeeded.",
+        "    0 Warning(s)",
+        "    0 Error(s)",
+        "",
+        "Time Elapsed 00:00:08.08"
+      ]
+    },
+    {
+      "name": "build-producer-before",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+      "exit_code": 1,
+      "log_sha256": "506a3f14e05d493ed9de06296897136e15616e56ca7e002044f30fdc3469a28d",
+      "build_summary": [
+        "",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityRoundTripHandler.cs(22,34): error CA2007: Consider calling ConfigureAwait on the awaited task (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2007) [/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj]",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Gateway/PartyIdentityRoundTripHandler.cs(27,36): error CA2007: Consider calling ConfigureAwait on the awaited task (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2007) [/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj]",
+        "    0 Warning(s)",
+        "    2 Error(s)",
+        "",
+        "Time Elapsed 00:00:22.60"
+      ]
+    },
+    {
+      "name": "build-producer-before-fixed",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true --no-restore -m:1",
+      "exit_code": 0,
+      "log_sha256": "b59e4a73871c3af5e5bd2d18c9935cac05e33602a2b4fc231476f1141208b665",
+      "build_summary": [
+        "  Hexalith.Parties.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "",
+        "Build succeeded.",
+        "    0 Warning(s)",
+        "    0 Error(s)",
+        "",
+        "Time Elapsed 00:00:17.71"
+      ]
+    },
+    {
+      "name": "build-client-after",
+      "command": "dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true --no-restore -m:1",
+      "exit_code": 0,
+      "log_sha256": "f9f0c37d36bb99bc1442cdbfd69a968343c50db7101140f0c959e8338a7516fe",
+      "build_summary": [
+        "  Hexalith.Parties.Client.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll",
+        "",
+        "Build succeeded.",
+        "    0 Warning(s)",
+        "    0 Error(s)",
+        "",
+        "Time Elapsed 00:00:06.90"
+      ]
+    },
+    {
+      "name": "build-producer-after",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true --no-restore -m:1",
+      "exit_code": 1,
+      "log_sha256": "f3163252d461d797d946131178165764072d6dd7e357aadb6de8436a6fa36375",
+      "build_summary": [
+        "/home/administrator/.dotnet/sdk/10.0.401/Microsoft.Common.CurrentVersion.targets(2453,5): warning MSB3243: No way to resolve conflict between \"Hexalith.Commons.UniqueIds, Version=3.124.0.0, Culture=neutral, PublicKeyToken=null\" and \"Hexalith.Commons.UniqueIds, Version=2.30.1.0, Culture=neutral, PublicKeyToken=null\". Choosing \"Hexalith.Commons.UniqueIds, Version=3.124.0.0, Culture=neutral, PublicKeyToken=null\" arbitrarily. [/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj]",
+        "CSC : error CS1704: An assembly with the same simple name 'Hexalith.Commons.UniqueIds' has already been imported. Try removing one of the references (e.g. '/home/administrator/.nuget/packages/hexalith.commons.uniqueids/2.30.1/lib/net10.0/Hexalith.Commons.UniqueIds.dll') or sign them to enable side-by-side. [/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj]",
+        "CSC : error CS1704: An assembly with the same simple name 'Hexalith.Commons.UniqueIds' has already been imported. Try removing one of the references (e.g. '/home/administrator/.nuget/packages/hexalith.commons.uniqueids/2.30.1/lib/net10.0/Hexalith.Commons.UniqueIds.dll') or sign them to enable side-by-side. [/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj]",
+        "    2 Warning(s)",
+        "    2 Error(s)",
+        "",
+        "Time Elapsed 00:00:04.32"
+      ]
+    },
+    {
+      "name": "build-producer-after-restored",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+      "exit_code": 0,
+      "log_sha256": "e755849ce97682ff3937696c4f4283ae6fc647c7bf7b6d2bf2d85333afde8be1",
+      "build_summary": [
+        "  Hexalith.Parties.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "",
+        "Build succeeded.",
+        "    0 Warning(s)",
+        "    0 Error(s)",
+        "",
+        "Time Elapsed 00:00:20.21"
+      ]
+    },
+    {
+      "name": "build-wire-before",
+      "command": "dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+      "exit_code": 1,
+      "log_sha256": "539814d27a223fcfe585311de6ad979a16e6139674547e4674d6cb8917a2144b",
+      "build_summary": [
+        "Build FAILED.",
+        "",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs(470,20): error CA2007: Consider calling ConfigureAwait on the awaited task (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2007) [/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj]",
+        "    0 Warning(s)",
+        "    1 Error(s)",
+        "",
+        "Time Elapsed 00:00:08.18"
+      ]
+    },
+    {
+      "name": "build-wire-before-fixed",
+      "command": "dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true --no-restore -m:1",
+      "exit_code": 1,
+      "log_sha256": "61c44b59c119443689f21e1002097f1c9059ade27d6274efacd4c8fdca5ebed8",
+      "build_summary": [
+        "Build FAILED.",
+        "",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs(470,25): error xUnit1030: Test methods should not call ConfigureAwait(false), as it may bypass parallelization limits. Omit ConfigureAwait, or use ConfigureAwait(true) to avoid CA2007. (https://xunit.net/xunit.analyzers/rules/xUnit1030) [/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj]",
+        "    0 Warning(s)",
+        "    1 Error(s)",
+        "",
+        "Time Elapsed 00:00:07.14"
+      ]
+    },
+    {
+      "name": "build-wire-before-ready",
+      "command": "dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true --no-restore -m:1",
+      "exit_code": 0,
+      "log_sha256": "6311953875e1f1f2b54c1ed8652652ee1a4ed84c6f3644f58a09d53e6f38d455",
+      "build_summary": [
+        "  Hexalith.Parties.Client.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll",
+        "",
+        "Build succeeded.",
+        "    0 Warning(s)",
+        "    0 Error(s)",
+        "",
+        "Time Elapsed 00:00:06.98"
+      ]
+    },
+    {
+      "name": "build-client-final",
+      "command": "dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true --no-restore -m:1",
+      "exit_code": 0,
+      "log_sha256": "29e4fbb5f240e77b55c8853a6143054d688a8579be52ae9f0b1c50647a967d8b",
+      "build_summary": [
+        "  Hexalith.Parties.Client.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll",
+        "",
+        "Build succeeded.",
+        "    0 Warning(s)",
+        "    0 Error(s)",
+        "",
+        "Time Elapsed 00:00:10.88"
+      ]
+    },
+    {
+      "name": "client-before",
+      "command": "dotnet tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll -class Hexalith.Parties.Client.Tests.HttpPartiesIdentityClientTests -xml /tmp/dw-127-validation/client-before.xml",
+      "exit_code": 1
+    },
+    {
+      "name": "round-trip-before",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentIdentity_ProducerAndHttpClientAgreeOnEligibility -result-xml /tmp/dw-127-validation/round-trip-before.xml",
+      "exit_code": 1
+    },
+    {
+      "name": "wire-before",
+      "command": "dotnet tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll -method Hexalith.Parties.Client.Tests.HttpPartiesIdentityClientTests.IneligibleUnknownClassification_MustBeExplicitOnTheWire -result-xml /tmp/dw-127-validation/wire-before.xml",
+      "exit_code": 1
+    },
+    {
+      "name": "technology-docs-final",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog -result-xml /tmp/dw-127-validation/technology-docs-final.xml",
+      "exit_code": 0
+    },
+    {
+      "name": "client-full",
+      "command": "dotnet tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll -result-xml /tmp/dw-127-validation/client-full.xml",
+      "exit_code": 0
+    },
+    {
+      "name": "producer-full",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-127-validation/producer-full.xml",
+      "exit_code": 1
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "result": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+    }
+  ],
+  "results": {
+    "client-before": {
+      "total": 166,
+      "passed": 165,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "dc38886499c1a250b855980d382b35a8efb24c1d6e500a8e5dc89a73e92320a0",
+      "xml_path": "/tmp/dw-127-validation/client-before.xml",
+      "failures": [
+        "Hexalith.Parties.Client.Tests.HttpPartiesIdentityClientTests.IneligibleWithSupportedClassification_ReturnsTypedDenial(classification: Unknown)"
+      ]
+    },
+    "round-trip-before": {
+      "total": 16,
+      "passed": 11,
+      "failed": 5,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "feb30f6beb0a8ce7d500104d19074dc90114e22ab208cfb7c39b6449ca957b6f",
+      "xml_path": "/tmp/dw-127-validation/round-trip-before.xml",
+      "failures": [
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentIdentity_ProducerAndHttpClientAgreeOnEligibility(type: Unknown, lifecycle: \\\"active\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentIdentity_ProducerAndHttpClientAgreeOnEligibility(type: Unknown, lifecycle: \\\"inactive\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentIdentity_ProducerAndHttpClientAgreeOnEligibility(type: Unknown, lifecycle: \\\"restricted\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentIdentity_ProducerAndHttpClientAgreeOnEligibility(type: Unknown, lifecycle: \\\"erasing\\\")",
+        "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.CurrentIdentity_ProducerAndHttpClientAgreeOnEligibility(type: Unknown, lifecycle: \\\"erased\\\")"
+      ]
+    },
+    "wire-before": {
+      "total": 5,
+      "passed": 4,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "f05e34af3229101ad28a3d09462e72fffd17a4239e1c6f210ce03af557e4bd19",
+      "xml_path": "/tmp/dw-127-validation/wire-before.xml",
+      "failures": [
+        "Hexalith.Parties.Client.Tests.HttpPartiesIdentityClientTests.IneligibleUnknownClassification_MustBeExplicitOnTheWire(representation: \\\"omitted\\\")"
+      ]
+    },
+    "client-full": {
+      "total": 322,
+      "passed": 322,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "e55d583ccae8146dbd39a3b7f5b1ce2b4c232da2c60f39d6efa4dc13ff99ac20",
+      "xml_path": "/tmp/dw-127-validation/client-full.xml",
+      "failures": []
+    },
+    "producer-full": {
+      "total": 1027,
+      "passed": 1025,
+      "failed": 2,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "cc49f9176ad8cd3f56f9fbf9770da960b4be0e07c0c32be9427c1d1fe13f03a3",
+      "xml_path": "/tmp/dw-127-validation/producer-full.xml",
+      "failures": [
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+        "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog"
+      ]
+    },
+    "producer-full-final": {
+      "total": 1027,
+      "passed": 1026,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "c2a7572697c19e985fab0bd2d33aba42d8eaaba4a9e1717e88b5ca4106b3b9c4",
+      "xml_path": "/tmp/dw-127-validation/producer-full-final.xml",
+      "failures": [
+        "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog"
+      ]
+    },
+    "technology-docs-final": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "5b90ccb41e559f725ac37e0050c29b1abb5b9b0afc3cbcf8868c24326813ba4a",
+      "xml_path": "/tmp/dw-127-validation/technology-docs-final.xml",
+      "failures": []
+    },
+    "client-full-final": {
+      "total": 330,
+      "passed": 330,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "e8c12c02fac132939a9c54c292c199fddc9a5138e8e0c2b0bc39e05b243c11e7",
+      "xml_path": "/tmp/dw-127-validation/client-full-final.xml",
+      "failures": []
+    },
+    "producer-full-reconciled": {
+      "total": 1027,
+      "passed": 1027,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "85b6e60b6a0373b1fef1dfd725097eade201dc86f756f41e65e78e1c8479b47c",
+      "xml_path": "/tmp/dw-127-validation/producer-full-reconciled.xml",
+      "failures": []
+    },
+    "contracts-full-final": {
+      "total": 199,
+      "passed": 199,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "a739a4a92db3510b76114c0563f45e868f6b98d08a3bb05fbb85dbbfdb553c26",
+      "xml_path": "/tmp/dw-127-validation/contracts-full-final.xml",
+      "failures": []
+    }
+  },
+  "baseline_repairs": "Refreshed current dependency/catalog observations and maintained version tables; retained dated source/owner/parity evidence. No dependency, gitlink or signoff change. These were the two preexisting full-suite failures also recorded under DW-123.",
+  "nonfinal_build_failures": "New helper/test ConfigureAwait analyzers (CA2007 then xUnit1030) were corrected; a no-restore build after package tests encountered mixed Commons.UniqueIds assets (CS1704) and recovered through explicit source restore/build. All final builds are clean.",
+  "runtime_baseline": {
+    "start_command": "aspire start --no-build --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+    "start_exit_code": 0,
+    "wait_command": "aspire wait parties --status healthy --timeout 15 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "wait_result": "Timed out; security Running/Unhealthy, Parties/EventStore/Tenants/UI Waiting.",
+    "stop_command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "stop_exit_code": 0
+  },
+  "review": "Independent Blind Hunter review: four verified findings patched; follow-up documentation consistency finding patched. Follow-ups verified all root identities/describes, preserved history, catalog rows and no remaining concerns. No new deferred work.",
+  "source_sha256": {
+    "src/Hexalith.Parties.Client/HttpPartiesIdentityClient.cs": "22b0461bd1373c451575a950ed91e50b35c64ed84e3b033da1b81a8442697e27",
+    "src/Hexalith.Parties.Contracts/Models/PartyIdentityEvidence.cs": "92071f78a51f4d121a20e35f37248f1ca9bc64cde5eec59e9e5156b1bd11777d",
+    "src/Hexalith.Parties.Contracts/Models/PartyIdentityResult.cs": "e7c54c4b01edaff4fffde4f11e05c1067359d01b063403169c2be9b155ba5142",
+    "tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs": "cecd1a8841878e507926797d50ac062a2bbb5c3aca25b99815cf014f3f3e0f10",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "5fbc575fce0f6a28f09b176067460d5662e903dec16af5a47f40de876efbeb1a",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityRoundTripHandler.cs": "e1ed2050a8ecbd0bd7971c5e9776e48db54e79b1ed2ca36b712ec75ad821239c",
+    "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj": "0a6946141c9e7f601e428695cf44ed16b1b20c055a28e853a34f36d6b33b74a1",
+    "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs": "5ca09082770f268d129f30974548bebcfff8f63760818222105ed942211ac979",
+    "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md": "bdede7d9a7630aa9c962c54b7ece735709dff8b9c860a1898b0a4b8e155f1e2b",
+    "docs/architecture.md": "fee5ab7896218e227d4b35e290f4a46949be5045fbf18b79c394a8df6bb9d320",
+    "docs/ci.md": "9ad9aa42dd057305499dad229bec0e7e1d42bb5611d6a06f8d4e7de8a6a22dbe",
+    "docs/project-overview.md": "f8d3a1228338a8c3c4d72beb6ca4f3e9dbeab2570c461028de95b2140c07a90a"
+  },
+  "selected_gitlinks": {
+    "references/Hexalith.AI.Tools": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+    "references/Hexalith.Builds": "4f53d9f37c5b86cfd43fbcc8fa5dd4df19b84c77",
+    "references/Hexalith.Commons": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+    "references/Hexalith.EventStore": "7edc260d8c0bd904f1215f801bad02b99c6694cf",
+    "references/Hexalith.FrontComposer": "b102b85b148f21fb26d5742e120c344109df7084",
+    "references/Hexalith.McpCli": "b35b0975a234f1f97e2e35e9dad381d0a988f4af",
+    "references/Hexalith.Memories": "f6b60d5a2e9b81d84fddad789c7d9bed40d3a533",
+    "references/Hexalith.Platform": "b4b6d4a1efcd2f13c6d03270f8e952f27ed8148b",
+    "references/Hexalith.PolymorphicSerializations": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+    "references/Hexalith.Tenants": "0e1fe111a5b4cce684455948b4fd12960589ef55"
+  },
+  "scope_limits": "In-memory query-handler/gateway JSON/client interoperability and local tests. No full topology, installed identity authority or production custody qualification; no dependency updates, Git writes, deployment or production mutation.",
+  "final_integrity_checks": "All retained source hashes match final bytes; all 174 identity-client cases and 16 producer/client round trips pass; changed C# files preserve CRLF. Git status has only unstaged task changes, no altered root gitlinks."
+}

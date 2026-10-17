@@ -72,7 +72,8 @@ public sealed class HttpPartiesIdentityClient(HttpClient httpClient, TimeProvide
             || result.Evidence is { } evidence && (evidence.ContractVersion != 1 || evidence.TenantId != tenantId
             || evidence.PartyId != query.PartyId || evidence.SourcePosition <= 0 || string.IsNullOrWhiteSpace(evidence.ObservationId)
             || evidence.ObservedAt == default || evidence.ObservedAt > completedAt || evidence.Classification is not (PartyIdentityClassification.Human
-                or PartyIdentityClassification.Organization)
+                or PartyIdentityClassification.Organization or PartyIdentityClassification.Unknown)
+            || evidence.Classification == PartyIdentityClassification.Unknown && result.Outcome != PartyIdentityOutcome.Ineligible
             || evidence.HumanBinding is { } binding && (evidence.Classification != PartyIdentityClassification.Human
                 || binding.ActorId != query.ExpectedActorId || !Matches(binding, tenantId, query.PartyId)
                 || evidence.ObservedAt < binding.ValidFrom || evidence.ObservedAt >= binding.ValidUntil

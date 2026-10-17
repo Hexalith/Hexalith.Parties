@@ -77,7 +77,7 @@ pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure -ResultsDire
 
 CI and default local commands run in package mode (`UseNuGetDeps=true`, `UseHexalithProjectReferences=false`). If unpublished Hexalith packages block restore, record the package-mode blocker and rerun source-mode triage with `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false` only as diagnostic evidence.
 
-The effective package graph selects EventStore 3.120.0 from the committed Builds catalog at `9f0121c77e3f085c58f5c926057606db8e6511a7` after removal of the Parties override in `Directory.Packages.props`. This published package family supplies the retained actor-history and sidecar-channel APIs, including expired-history certificates required by current Parties source. The earlier 3.117.1 selection and its [consumer receipt](../_bmad-output/implementation-artifacts/tests/eventstore-3.117.1-consumer-2026-10-08/README.md) remain historical evidence. MSBuild evaluation and a local package-mode Release solution build verify the 3.120.0 selection; exact-source push CI remains a separate gate.
+The effective package graph selects EventStore 3.124.0 from the committed Builds catalog at `4f53d9f37c5b86cfd43fbcc8fa5dd4df19b84c77`, with no Parties override in `Directory.Packages.props`. This is a dependency selection, not renewed package or runtime qualification. The earlier 3.120.0 MSBuild/build evidence and 3.117.1 [consumer receipt](../_bmad-output/implementation-artifacts/tests/eventstore-3.117.1-consumer-2026-10-08/README.md) remain historical. Exact-source push CI and release gates must validate the selected graph.
 
 The owned central catalog pins `Microsoft.AspNetCore.SignalR.Common` to `10.0.13`
 for GHSA-334f-vvp4-7g6p, with its required Options and

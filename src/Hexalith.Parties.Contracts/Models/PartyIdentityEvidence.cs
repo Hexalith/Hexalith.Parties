@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using Hexalith.Parties.Contracts.ValueObjects;
 namespace Hexalith.Parties.Contracts.Models;
 
@@ -5,7 +7,7 @@ namespace Hexalith.Parties.Contracts.Models;
 /// <param name="ContractVersion">The identity contract version.</param>
 /// <param name="TenantId">The exact tenant.</param>
 /// <param name="PartyId">The exact Party.</param>
-/// <param name="Classification">The positive classification.</param>
+/// <param name="Classification">The explicit classification; Unknown is supported only for an Ineligible outcome.</param>
 /// <param name="IsActive">The recorded current active state.</param>
 /// <param name="IsRestricted">The recorded processing restriction.</param>
 /// <param name="IsErasingOrErased">The recorded erasure ineligibility.</param>
@@ -17,7 +19,7 @@ public sealed record PartyIdentityEvidence(
     int ContractVersion,
     string TenantId,
     string PartyId,
-    PartyIdentityClassification Classification,
+    [property: JsonRequired] PartyIdentityClassification Classification,
     bool IsActive,
     bool IsRestricted,
     bool IsErasingOrErased,

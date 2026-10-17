@@ -985,7 +985,8 @@ status: open
 origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
 location: src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs:58,79; src/Hexalith.Parties.Client/HttpPartiesIdentityClient.cs:58
 severity: medium
-status: open
+status: done 2026-10-17
+resolution: Preserved typed Ineligible replies for explicit Unknown classification while rejecting incomplete wire evidence, unsupported/foreign observations and every nonresolved human binding. Actual query-handler/gateway JSON/client round trips cover inactive, restricted, erasing, erased, unbound and resolved controls. Final Debug/source Client.Tests 330/330, Parties.Tests 1027/1027 and Contracts.Tests 199/199 pass with zero skips/errors/failures; builds have zero warnings/errors. Independent review and follow-ups complete; no new deferred work. Current dependency/doc baseline observations refreshed without changing versions, gitlinks or approvals. See spec-dw-127-ineligible-identity-round-trip.md and tests/dw-127-ineligible-identity-round-trip-2026-10-17/validation.json. Resolves DW-127/DW-146 together; no installed identity or full-topology qualification claimed.
 
 ### DW-146: Align server-produced Ineligible human/Unknown evidence with the public client validation contract.
 
@@ -993,7 +994,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs:58,79; src/Hexalith.Parties.Client/HttpPartiesIdentityClient.cs:58
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: Blind 1 and Verification 3 share this root cause: the resolver can return Ineligible with a live HumanBinding or Unknown classification, while the client turns those shapes into Unavailable/503. Both paths were already committed in 37d87f5a2869b076c651a58714d60f64647848bc and are unchanged by this repair. Exit proof: explicit fail-closed response semantics and producer/client round-trip tests for inactive, restricted, erasing, and unknown Parties.
-status: open
+status: done 2026-10-17
+resolution: Preserved typed Ineligible replies for explicit Unknown classification while rejecting incomplete wire evidence, unsupported/foreign observations and every nonresolved human binding. Actual query-handler/gateway JSON/client round trips cover inactive, restricted, erasing, erased, unbound and resolved controls. Final Debug/source Client.Tests 330/330, Parties.Tests 1027/1027 and Contracts.Tests 199/199 pass with zero skips/errors/failures; builds have zero warnings/errors. Independent review and follow-ups complete; no new deferred work. Current dependency/doc baseline observations refreshed without changing versions, gitlinks or approvals. See spec-dw-127-ineligible-identity-round-trip.md and tests/dw-127-ineligible-identity-round-trip-2026-10-17/validation.json. Resolves DW-127/DW-146 together; no installed identity or full-topology qualification claimed.
 
 ### DW-128: Validate binding command acknowledgments
 

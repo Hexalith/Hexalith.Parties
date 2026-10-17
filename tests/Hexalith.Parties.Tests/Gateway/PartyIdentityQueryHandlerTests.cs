@@ -6,6 +6,7 @@ using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.EventStore.Contracts.Streams;
 using Hexalith.Parties.Authorization;
+using Hexalith.Parties.Client;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
@@ -610,6 +611,78 @@ public sealed class PartyIdentityQueryHandlerTests
         result.Outcome.ShouldBe(PartyIdentityOutcome.Ineligible);
         result.Evidence!.HumanBinding.ShouldBeNull();
         await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+    }
+
+    [Theory]
+    [InlineData(PartyType.Person, "active")]
+    [InlineData(PartyType.Person, "unbound")]
+    [InlineData(PartyType.Person, "inactive")]
+    [InlineData(PartyType.Person, "restricted")]
+    [InlineData(PartyType.Person, "erasing")]
+    [InlineData(PartyType.Person, "erased")]
+    [InlineData(PartyType.Organization, "active")]
+    [InlineData(PartyType.Organization, "inactive")]
+    [InlineData(PartyType.Organization, "restricted")]
+    [InlineData(PartyType.Organization, "erasing")]
+    [InlineData(PartyType.Organization, "erased")]
+    [InlineData(PartyType.Unknown, "active")]
+    [InlineData(PartyType.Unknown, "inactive")]
+    [InlineData(PartyType.Unknown, "restricted")]
+    [InlineData(PartyType.Unknown, "erasing")]
+    [InlineData(PartyType.Unknown, "erased")]
+    public async Task CurrentIdentity_ProducerAndHttpClientAgreeOnEligibility(PartyType type, string lifecycle)
+    {
+        IEventPayload[] events = type == PartyType.Person && lifecycle != "unbound"
+            ? Events() : [new PartyCreated { Type = type, CreatedAt = Start }];
+        IEventPayload? transition = lifecycle switch
+        {
+            "inactive" => new PartyDeactivated(),
+            "restricted" => new ProcessingRestricted { TenantId = "tenant-a", PartyId = "party-1", RestrictedAt = Start },
+            "erasing" => new ErasePartyRequested { TenantId = "tenant-a", PartyId = "party-1", RequestedAt = Start, RequestedBy = "operator" },
+            "erased" => new PartyErased { TenantId = "tenant-a", PartyId = "party-1", ErasedAt = Start },
+            _ => null,
+        };
+        if (transition is not null)
+        {
+            events = [.. events, transition];
+        }
+
+        var fixture = Service(events);
+        using var http = new HttpClient(new PartyIdentityRoundTripHandler(new(fixture.Service)))
+        {
+            BaseAddress = new Uri("https://gateway.test/"),
+        };
+        var client = new HttpPartiesIdentityClient(http);
+        PartyIdentityResult result = await client.ResolvePartyIdentityAsync("tenant-a", new("tenant-a", "party-1", Actor), TestContext.Current.CancellationToken);
+
+        bool resolved = type != PartyType.Unknown && lifecycle == "active";
+        result.Outcome.ShouldBe(resolved ? PartyIdentityOutcome.Resolved : PartyIdentityOutcome.Ineligible);
+        PartyIdentityEvidence evidence = result.Evidence.ShouldNotBeNull();
+        evidence.ContractVersion.ShouldBe(1);
+        evidence.TenantId.ShouldBe("tenant-a");
+        evidence.PartyId.ShouldBe("party-1");
+        evidence.Classification.ShouldBe(type switch
+        {
+            PartyType.Person => PartyIdentityClassification.Human,
+            PartyType.Organization => PartyIdentityClassification.Organization,
+            _ => PartyIdentityClassification.Unknown,
+        });
+        evidence.SourcePosition.ShouldBe(events.Length);
+        evidence.ObservationId.ShouldBe("observation");
+        AuthoritativeStreamReadResult source = await fixture.Reader.ReadAsync(new("tenant-a", "party", "party-1"), TestContext.Current.CancellationToken);
+        evidence.ObservedAt.ShouldBe(source.Stream!.ObservedAt);
+        evidence.IsActive.ShouldBe(lifecycle != "inactive");
+        evidence.IsRestricted.ShouldBe(lifecycle == "restricted");
+        evidence.IsErasingOrErased.ShouldBe(lifecycle is "erasing" or "erased");
+        if (resolved && type == PartyType.Person)
+        {
+            evidence.HumanBinding.ShouldBe(Binding());
+        }
+        else
+        {
+            evidence.HumanBinding.ShouldBeNull();
+            await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+        }
     }
 
     [Fact]

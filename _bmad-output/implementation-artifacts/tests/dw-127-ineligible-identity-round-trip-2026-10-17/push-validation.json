@@ -1,0 +1,32 @@
+{
+  "base_revision": "8299e075f92219c135a4d075aa6ef9a0c574ad5a",
+  "commit_message": "fix: preserve ineligible identity responses\n\nAccept explicit Unknown evidence for Ineligible results while rejecting\nmissing classifications and bindings on denial responses.\n\nAdd producer-to-client coverage and refresh current dependency records.\nVerify 1,556 tests across Client, Parties, and Contracts.\n",
+  "commit_message_sha256": "fbb21f4b413952350dc134f684e262c04953b45284be66b34757d688aba60720",
+  "commitlint": {
+    "command": "node_modules/.bin/commitlint --edit /tmp/dw-127-commit-message.txt --verbose",
+    "version": "21.2.2",
+    "lockfile_version": "21.2.2",
+    "exit_code": 0,
+    "problems": 0,
+    "warnings": 0
+  },
+  "pre_push_checks": [
+    {
+      "command": "dotnet restore Hexalith.Parties.slnx",
+      "exit_code": 0,
+      "log_sha256": "280ffc7b9cf567ba0f8b9612de74a4c953a305cf0d456a0c6108f7cd4e12f113"
+    },
+    {
+      "command": "dotnet build Hexalith.Parties.slnx --configuration Release --no-restore",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "log_sha256": "fefd47646f1db0c3843fa5df4f8b3fdd6d4db52f6e57f32efda28750d746c3fb"
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    }
+  ],
+  "integrity": "All twelve source/test/document hashes match the completed validation packet. The prior 1556 passing tests were not rerun for this Git-only request."
+}

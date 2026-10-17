@@ -48,7 +48,47 @@ retention action, and does not change Story 8.7's `blocked` status: the
 release adds Story 8.6's shared-projection rebuild completion mechanics only,
 not the G5 runtime engine.
 
-### Current source observation — 2026-10-16
+### Current source observation — 2026-10-17
+
+DW-127 completion-gate reconciliation observes the committed root graph at
+Parties `8299e075f92219c135a4d075aa6ef9a0c574ad5a`. The root checkouts match
+their committed gitlinks. This updates observations and fitness expectations
+only; dependency versions, gitlinks, dated receipts and owner approvals remain
+unchanged. No new owner signoff or platform/custody qualification is inferred.
+
+The imported Builds catalog selects EventStore package `3.124.0`, Commons
+`2.30.1`, FrontComposer `4.6.0`, Memories `2.27.1`, Tenants `5.8.0`, and Parties
+`1.2.1`. Its CommunityToolkit.Aspire.Hosting.Dapr value is `13.6.1-beta.935`.
+Catalog selection remains separate from release-workflow identities and their
+approval receipts.
+
+Reproduce the current observations with:
+
+```bash
+git ls-tree 8299e075f92219c135a4d075aa6ef9a0c574ad5a references/Hexalith.<dependency>
+git -C references/Hexalith.<dependency> rev-parse HEAD
+git -C references/Hexalith.<dependency> describe --tags --always --abbrev=8 HEAD
+git -C references/Hexalith.<dependency> status --porcelain
+```
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` | Instruction baseline. |
+| Builds | `4f53d9f37c5b86cfd43fbcc8fa5dd4df19b84c77` (`v4.32.0-6-g4f53d9f3`) | Imported package catalog and build tooling. |
+| Commons | `9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798` | Source fallback; selected package remains `2.30.1`. |
+| EventStore | `7edc260d8c0bd904f1215f801bad02b99c6694cf` (`v3.123.0-1-g7edc260d`) | Source inspection; runtime consumers restore package `3.124.0`. |
+| FrontComposer | `b102b85b148f21fb26d5742e120c344109df7084` (`v4.6.0-44-gb102b85b`) | Selected package remains `4.6.0`. |
+| McpCli | `b35b0975a234f1f97e2e35e9dad381d0a988f4af` | Committed root pointer; not used for G5 proof. |
+| Memories | `f6b60d5a2e9b81d84fddad789c7d9bed40d3a533` (`v2.28.1-109-gf6b60d5a`) | Selected package remains `2.27.1`. |
+| Platform | `b4b6d4a1efcd2f13c6d03270f8e952f27ed8148b` | Committed root pointer; not used for G5 proof. |
+| PolymorphicSerializations | `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` | Existing source dependency. |
+| Tenants | `0e1fe111a5b4cce684455948b4fd12960589ef55` (`v5.8.0-98-g0e1fe111`) | Selected package is `5.8.0`. |
+
+Selection does not revalidate historical parity receipts or authorize deletion
+of migration rollback paths. Earlier observations and owner approvals remain
+below at their recorded identities; G5 remains `needs-additive-api`.
+
+### Historical source observation — 2026-10-16 post-sync
 
 DW-119 baseline repair observes the committed root graph at Parties
 `95f21bbcd09dfbfa8d1c71a4b382c12c8eef8a0f`. The three source gitlinks advanced in

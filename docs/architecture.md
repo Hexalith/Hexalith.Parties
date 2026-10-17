@@ -52,21 +52,26 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Runtime | .NET | `net10.0` (SDK `10.0.401`, rollForward latestPatch) |
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.6.1` |
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.10` |
-| | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.0-preview.1.261001-0243` |
-| Gateway/eventing | Hexalith.EventStore | package `3.120.0` from the shared build catalog; source and installed acceptance remain separately verified |
-| Tenancy | Hexalith.Tenants | package `5.7.0` by default; current committed source gitlink and clean checkout `fcdcb4205a3f6e46f736cdd3e6f2b20ca2f241df` (`v5.7.0-180-gfcdcb420`, recorded at Parties `ccaf77399d92be696e44ecb8ab17acf77d97646a` on 2026-10-08); historical owner approvals and parity remain bound to their original identities |
-| Validation | FluentValidation (+ DI ext.) | `12.1.1` |
+| | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.1-beta.935` |
+| Gateway/eventing | Hexalith.EventStore | package `3.124.0` from the shared build catalog; source and installed acceptance remain separately verified |
+| Tenancy | Hexalith.Tenants | package `5.8.0` by default; current committed source gitlink `0e1fe111a5b4cce684455948b4fd12960589ef55` (`v5.8.0-98-g0e1fe111`), observed at Parties `8299e075f92219c135a4d075aa6ef9a0c574ad5a` on 2026-10-17; historical owner approvals and parity remain bound to their original identities |
+| Validation | FluentValidation (+ DI ext.) | `12.2.0` |
 | Mediation | MediatR | `14.2.0` |
-| AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.12` |
-| API docs | Microsoft.AspNetCore.OpenApi / Swashbuckle.SwaggerUI | `10.0.12` / `10.2.3` |
+| AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.13` |
+| API docs | Microsoft.AspNetCore.OpenApi / Swashbuckle.SwaggerUI | `10.0.13` / `10.3.0` |
 | MCP | ModelContextProtocol / .AspNetCore | `2.2.0` / `2.2.0` |
-| UI | Microsoft.FluentUI.AspNetCore.Components | `5.0.0` |
-| | Microsoft.AspNetCore.Components.CustomElements | `10.0.12` |
+| UI | Microsoft.FluentUI.AspNetCore.Components | `5.0.1` |
+| | Microsoft.AspNetCore.Components.CustomElements | `10.0.13` |
 | Rich search (opt) | Hexalith.Memories.Client.Rest | package `2.27.1` by default |
-| Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.19.1` core/hosting/exporter; `1.19.0` ASP.NET Core/HTTP/runtime instrumentation |
-| Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.10.0` |
+| Observability | OpenTelemetry (exporter/hosting/instrumentation) | `1.20.0` core/hosting/exporter and ASP.NET Core/HTTP/runtime instrumentation |
+| Resilience/discovery | Microsoft.Extensions.Http.Resilience / ServiceDiscovery | `10.11.0` |
 | Versioning | MinVer (git-tag SemVer, prefix `v`) | `8.0.0` |
 | Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers / YamlDotNet | `4.0.2` / `4.3.0` / `6.2.0` / `2.11.3` / `4.16.0`† / `18.1.0` |
+
+The earlier Tenants source identity `fcdcb4205a3f6e46f736cdd3e6f2b20ca2f241df`
+(`v5.7.0-180-gfcdcb420`), recorded at Parties
+`ccaf77399d92be696e44ecb8ab17acf77d97646a` on 2026-10-08, is historical.
+Current selection does not recertify that identity's owner approvals or parity.
 
 † `Testcontainers` is declared in `Directory.Packages.props` but referenced by **zero** test projects — container lifecycle is managed entirely by `Aspire.Hosting.Testing`. Treat it as dead config.
 
@@ -86,7 +91,7 @@ counts as passing only when it was rerun at the stamped identity), and accept
 the missing I13 runtime focus, forced-colors, and reduced-motion proof as the
 named DW-111 deferral; I13 itself is not discharged.
 
-The shared build catalog now selects EventStore `3.120.0`; Parties no longer
+The shared build catalog now selects EventStore `3.124.0`; Parties no longer
 overrides it before import. The [3.117.1 consumer receipt](../_bmad-output/implementation-artifacts/tests/eventstore-3.117.1-consumer-2026-10-08/README.md)
 records historical downloaded package provenance and sidecar-channel API
 verification. The [3.117.0 receipt](../_bmad-output/implementation-artifacts/tests/eventstore-package-upgrade-2026-10-08/README.md)

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Client;
@@ -401,6 +402,9 @@ public sealed class HttpPartiesIdentityClientTests
 
     [Theory]
     [InlineData(999, 1, "tenant-a", false)]
+    [InlineData(0, 0, "tenant-a", false)]
+    [InlineData(1, 0, "tenant-a", false)]
+    [InlineData(3, 0, "tenant-a", false)]
     [InlineData(1, 999, "tenant-a", false)]
     [InlineData(1, 3, "tenant-a", false)]
     [InlineData(1, 2, "tenant-b", false)]
@@ -413,6 +417,130 @@ public sealed class HttpPartiesIdentityClientTests
         using var http = new HttpClient(new Handler(_ => Task.FromResult(Json(reply)))) { BaseAddress = new Uri("https://gateway.test/") };
         var client = new HttpPartiesIdentityClient(http);
         await Should.ThrowAsync<PartiesClientException>(() => client.ResolvePartyIdentityAsync("tenant-a", new("tenant-a", "party-1"), TestContext.Current.CancellationToken));
+    }
+
+    [Theory]
+    [InlineData(PartyIdentityClassification.Unknown)]
+    [InlineData(PartyIdentityClassification.Human)]
+    [InlineData(PartyIdentityClassification.Organization)]
+    public async Task IneligibleWithSupportedClassification_ReturnsTypedDenial(PartyIdentityClassification classification)
+    {
+        var result = new PartyIdentityResult(PartyIdentityOutcome.Ineligible, new(1, "tenant-a", "party-1", classification,
+            true, false, false, 1, DateTimeOffset.UtcNow, "observation", null));
+        using var http = new HttpClient(new Handler(_ => Task.FromResult(Json(new SubmitQueryResponse("c", JsonSerializer.SerializeToElement(result, PartiesJsonOptions.Default))))))
+        {
+            BaseAddress = new Uri("https://gateway.test/"),
+        };
+
+        PartyIdentityResult received = await new HttpPartiesIdentityClient(http).ResolvePartyIdentityAsync("tenant-a", new("tenant-a", "party-1"), TestContext.Current.CancellationToken);
+        received.ShouldBe(result);
+    }
+
+    [Theory]
+    [InlineData("omitted")]
+    [InlineData("null")]
+    [InlineData("camel-case")]
+    [InlineData("pascal-case")]
+    [InlineData("numeric")]
+    public async Task IneligibleUnknownClassification_MustBeExplicitOnTheWire(string representation)
+    {
+        var result = new PartyIdentityResult(PartyIdentityOutcome.Ineligible, new(1, "tenant-a", "party-1", PartyIdentityClassification.Unknown,
+            true, false, false, 1, DateTimeOffset.UtcNow, "observation", null));
+        JsonNode reply = JsonSerializer.SerializeToNode(new SubmitQueryResponse("c", JsonSerializer.SerializeToElement(result, PartiesJsonOptions.Default)), PartiesJsonOptions.Default)!;
+        JsonObject evidence = reply["payload"]!["evidence"]!.AsObject();
+        evidence.Remove("classification");
+        if (representation != "omitted")
+        {
+            evidence[representation == "pascal-case" ? "Classification" : "classification"] = representation switch
+            {
+                "null" => null,
+                "numeric" => JsonValue.Create(0),
+                _ => JsonValue.Create("Unknown"),
+            };
+        }
+
+        using var http = new HttpClient(new Handler(_ => Task.FromResult(Json(reply)))) { BaseAddress = new Uri("https://gateway.test/") };
+        Task<PartyIdentityResult> call = new HttpPartiesIdentityClient(http).ResolvePartyIdentityAsync("tenant-a", new("tenant-a", "party-1"), TestContext.Current.CancellationToken);
+        if (representation is "omitted" or "null")
+        {
+            (await Should.ThrowAsync<PartiesClientException>(() => call)).Status.ShouldBe(503);
+        }
+        else
+        {
+            (await call.ConfigureAwait(true)).ShouldBe(result);
+        }
+    }
+
+    [Theory]
+    [InlineData(PartyIdentityOutcome.Unavailable)]
+    [InlineData(PartyIdentityOutcome.Ineligible)]
+    [InlineData(PartyIdentityOutcome.Conflict)]
+    public async Task NonresolvedOutcome_CannotCarryAnOtherwiseValidHumanBinding(PartyIdentityOutcome outcome)
+    {
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        const string actor = "01HX0000000000000000000001";
+        var binding = new HumanActorBindingEvidence("tenant-a", "party-1", actor, 1, 1, now.AddDays(-1), now.AddDays(1), "writer", "operator",
+            new("synthetic", "party-actor-history-v1", now.AddDays(1), 1, "custody", true, true, true));
+        var result = new PartyIdentityResult(outcome, new(1, "tenant-a", "party-1", PartyIdentityClassification.Human,
+            true, false, false, 1, now, "observation", binding));
+        using var http = new HttpClient(new Handler(_ => Task.FromResult(Json(new SubmitQueryResponse("c", JsonSerializer.SerializeToElement(result, PartiesJsonOptions.Default))))))
+        {
+            BaseAddress = new Uri("https://gateway.test/"),
+        };
+        (await Should.ThrowAsync<PartiesClientException>(() => new HttpPartiesIdentityClient(http)
+            .ResolvePartyIdentityAsync("tenant-a", new("tenant-a", "party-1", actor), TestContext.Current.CancellationToken))).Status.ShouldBe(503);
+    }
+
+    [Theory]
+    [InlineData("version")]
+    [InlineData("tenant")]
+    [InlineData("party")]
+    [InlineData("position")]
+    [InlineData("observation-id")]
+    [InlineData("observation-time")]
+    [InlineData("future-observation")]
+    [InlineData("undefined-classification")]
+    [InlineData("agent-classification")]
+    [InlineData("human-binding")]
+    [InlineData("unknown-binding")]
+    [InlineData("organization-binding")]
+    [InlineData("failed-query")]
+    [InlineData("degraded")]
+    [InlineData("stale")]
+    public async Task MalformedIneligibleEvidence_StillFailsClosed(string corruption)
+    {
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        const string actor = "01HX0000000000000000000001";
+        var evidence = new PartyIdentityEvidence(1, "tenant-a", "party-1", PartyIdentityClassification.Unknown,
+            true, false, false, 1, now, "observation", null);
+        evidence = corruption switch
+        {
+            "version" => evidence with { ContractVersion = 2 },
+            "tenant" => evidence with { TenantId = "tenant-b" },
+            "party" => evidence with { PartyId = "party-2" },
+            "position" => evidence with { SourcePosition = 0 },
+            "observation-id" => evidence with { ObservationId = " " },
+            "observation-time" => evidence with { ObservedAt = default },
+            "future-observation" => evidence with { ObservedAt = now.AddDays(1) },
+            "undefined-classification" => evidence with { Classification = (PartyIdentityClassification)999 },
+            "agent-classification" => evidence with { Classification = PartyIdentityClassification.Agent },
+            "human-binding" => evidence with { Classification = PartyIdentityClassification.Human },
+            "organization-binding" => evidence with { Classification = PartyIdentityClassification.Organization },
+            _ => evidence,
+        };
+        if (corruption.EndsWith("-binding", StringComparison.Ordinal))
+        {
+            evidence = evidence with { HumanBinding = new("tenant-a", "party-1", actor, 1, 1,
+                now.AddDays(-1), now.AddDays(1), "writer", "operator",
+                new("synthetic", "party-actor-history-v1", now.AddDays(1), 1, "custody", true, true, true)) };
+        }
+
+        var reply = new SubmitQueryResponse("c", JsonSerializer.SerializeToElement(new PartyIdentityResult(PartyIdentityOutcome.Ineligible, evidence), PartiesJsonOptions.Default),
+            Success: corruption != "failed-query", Metadata: new QueryResponseMetadata { IsDegraded = corruption == "degraded", IsStale = corruption == "stale" });
+        using var http = new HttpClient(new Handler(_ => Task.FromResult(Json(reply)))) { BaseAddress = new Uri("https://gateway.test/") };
+        PartiesClientException failure = await Should.ThrowAsync<PartiesClientException>(() => new HttpPartiesIdentityClient(http)
+            .ResolvePartyIdentityAsync("tenant-a", new("tenant-a", "party-1", actor), TestContext.Current.CancellationToken));
+        failure.Status.ShouldBe(503);
     }
 
     [Fact]

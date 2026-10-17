@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Hexalith.Parties\Hexalith.Parties.csproj" />
+    <ProjectReference Include="..\..\src\Hexalith.Parties.Client\Hexalith.Parties.Client.csproj" />
     <ProjectReference Include="..\..\src\Hexalith.Parties.Testing\Hexalith.Parties.Testing.csproj" />
     <ProjectReference Include="$(HexalithEventStoreRoot)\src\Hexalith.EventStore\Hexalith.EventStore.csproj" Condition="'$(HexalithEventStoreFromSource)' == 'true'">
       <Aliases>eventstore</Aliases>
