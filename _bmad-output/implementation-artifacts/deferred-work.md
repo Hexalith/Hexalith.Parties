@@ -189,8 +189,9 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 2)"), 2026-09-06
 location: GetOperationCategory
 reason: `GetOperationCategory` default arm returns a short event-type name rather than a stable category vocabulary — Art.30 taxonomy design choice.
-status: open
+status: done 2026-10-17
 decision: 2026-09-06 Use stable Other — Map unknown events to a stable Other category and retain EventType separately for bounded diagnostics.
+resolution: Uncategorized processing records now use Other while retaining EventType and existing outcome/checkpoint behavior. Established categories, decodable redacted payloads and legacy persisted categories are preserved; serialized SDK rebuild output normalizes legacy categories. Debug source-reference builds pass with zero warnings/errors; focused tests pass 13/13 and full Projections.Tests passes 259/259 without failures/errors/skips. All four independent review findings are addressed; no new deferred work. See spec-dw-26-stable-processing-categories.md and tests/dw-26-stable-processing-categories-2026-10-17/validation.json. Baseline topology reported security Unhealthy and services Waiting; healthy topology acceptance is not claimed.
 
 ### DW-27: Report invalid PageSize separately from InvalidCursor
 

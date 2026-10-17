@@ -1,0 +1,74 @@
+{
+  "baseline_commit": "3bd856ecaa3dc68bcf9608773a0b1959e683cf2a",
+  "configuration": "Debug",
+  "properties": {
+    "UseHexalithProjectReferences": true,
+    "UseNuGetDeps": false
+  },
+  "build": {
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "focus_before_fix": {
+    "total": 10,
+    "passed": 4,
+    "failed": 6,
+    "skipped": 0,
+    "errors": 0
+  },
+  "focus_after_fix": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "full_projection_project": {
+    "total": 259,
+    "passed": 259,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "topology": {
+    "start_exit_code": 0,
+    "describe_exit_code": 0,
+    "stop_exit_code": 0,
+    "observation": "security Unhealthy; application services Waiting",
+    "healthy_acceptance": false
+  },
+  "review_focus": {
+    "total": 13,
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "review_build": {
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "review": {
+    "findings": 4,
+    "addressed": 4,
+    "deferred": 0
+  },
+  "raw_evidence": [
+    "focus-baseline.xml",
+    "focus-review.xml",
+    "full-review.xml",
+    "build-review.txt",
+    "full-review.txt",
+    "topology-describe.txt",
+    "topology-stop.txt"
+  ],
+  "commitlint": {
+    "version": "21.2.2",
+    "exit_code": 0,
+    "problems": 0,
+    "warnings": 0,
+    "evidence": "commitlint.txt"
+  }
+}

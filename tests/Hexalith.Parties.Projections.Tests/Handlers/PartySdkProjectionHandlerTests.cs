@@ -126,6 +126,44 @@ public sealed class PartySdkProjectionHandlerTests
     }
 
     [Fact]
+    public async Task DetailRebuildPlan_NormalizesLegacyProcessingCategoryAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
+        PartyProcessingSdkReadModel legacy = CreateLegacyProcessingReadModel();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(legacy, "legacy-etag"));
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                Event(new PartyNotFound(), 1, DateTimeOffset.UnixEpoch) with
+                {
+                    UserId = "actor-1",
+                },
+            ],
+        };
+        var handler = new PartyDetailSdkProjectionHandler(store, batchStore, s_options);
+
+        DomainProjectionRebuildPlan plan = await handler.PrepareRebuildAsync(
+            request,
+            "rebuild-legacy-category",
+            TestContext.Current.CancellationToken);
+
+        ReadModelBatchOperation operation = plan.Operations.Single(static value =>
+            value.Key.EndsWith(":processing-records", StringComparison.Ordinal));
+        PartyProcessingSdkReadModel candidate = JsonSerializer.Deserialize<PartyProcessingSdkReadModel>(
+            operation.CanonicalValue.Span,
+            s_canonicalJsonOptions)!;
+        candidate.Records.ShouldHaveSingleItem().ShouldBe(legacy.Records[0] with { OperationCategory = "Other" });
+        candidate.LastSequenceNumber.ShouldBe(1);
+        operation.Concurrency.ShouldBe(ReadModelBatchConcurrency.Match("legacy-etag"));
+        legacy.Records[0].OperationCategory.ShouldBe(nameof(PartyNotFound));
+    }
+
+    [Fact]
     public async Task DetailRebuildPlan_ExistingSlotsRequireSnapshotEtagsAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
@@ -1107,8 +1145,13 @@ public sealed class PartySdkProjectionHandlerTests
         result.ErasureSequenceNumbers["party-1"].ShouldBe(2);
     }
 
-    [Fact]
-    public void ProcessingActivityFold_UnresolvedEventIsRecordedAsFailedWithoutAdvancing()
+    [Theory]
+    [InlineData("TotallyUnknownEventType", "TotallyUnknownEventType")]
+    [InlineData("Future.Events.NewProcessingEvent", "NewProcessingEvent")]
+    [InlineData("AnotherUnknownEvent", "AnotherUnknownEvent")]
+    public void ProcessingActivityFold_UnresolvedEventIsRecordedAsFailedWithoutAdvancing(
+        string eventTypeName,
+        string expectedEventType)
     {
         ProjectionRequest request = new(
             "tenant-a",
@@ -1116,7 +1159,7 @@ public sealed class PartySdkProjectionHandlerTests
             "party-1",
             [
                 new ProjectionEventDto(
-                    "TotallyUnknownEventType",
+                    eventTypeName,
                     "{}"u8.ToArray(),
                     "json",
                     1,
@@ -1127,8 +1170,115 @@ public sealed class PartySdkProjectionHandlerTests
         PartyProcessingSdkReadModel result = PartyProcessingActivityFold.Fold(request, current: null);
 
         ProcessingActivityRecord record = result.Records.ShouldHaveSingleItem();
+        record.OperationCategory.ShouldBe("Other");
+        record.EventType.ShouldBe(expectedEventType);
         record.Outcome.ShouldBe("Failed");
         result.LastSequenceNumber.ShouldBe(long.MinValue);
+    }
+
+    [Fact]
+    public void ProcessingActivityFold_UncategorizedResolvedEventRetainsEventTypeAndOutcome()
+    {
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events = [Event(new PartyNotFound(), 1, DateTimeOffset.UnixEpoch)],
+        };
+
+        PartyProcessingSdkReadModel result = PartyProcessingActivityFold.Fold(request, current: null);
+
+        ProcessingActivityRecord record = result.Records.ShouldHaveSingleItem();
+        record.OperationCategory.ShouldBe("Other");
+        record.EventType.ShouldBe(nameof(PartyNotFound));
+        record.Outcome.ShouldBe("Succeeded");
+        record.Summary.ShouldBe("PartyNotFound recorded.");
+        result.LastSequenceNumber.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ProcessingActivityFold_PreservesEstablishedOperationCategories()
+    {
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                Event(new PartyCreated { Type = PartyType.Person }, 1, DateTimeOffset.UnixEpoch),
+                Event(new ConsentRecorded
+                {
+                    PartyId = "party-1",
+                    TenantId = "tenant-a",
+                    ConsentId = "consent-1",
+                    ChannelId = "email-1",
+                    Purpose = "Updates",
+                    LawfulBasis = LawfulBasis.Consent,
+                    GrantedAt = DateTimeOffset.UnixEpoch,
+                    GrantedBy = "actor-1",
+                }, 2, DateTimeOffset.UnixEpoch.AddSeconds(1)),
+                Event(new ProcessingRestricted
+                {
+                    PartyId = "party-1",
+                    TenantId = "tenant-a",
+                    RestrictedAt = DateTimeOffset.UnixEpoch,
+                }, 3, DateTimeOffset.UnixEpoch.AddSeconds(2)),
+                Event(new ErasePartyRequested
+                {
+                    PartyId = "party-1",
+                    TenantId = "tenant-a",
+                    RequestedAt = DateTimeOffset.UnixEpoch,
+                    RequestedBy = "actor-1",
+                }, 4, DateTimeOffset.UnixEpoch.AddSeconds(3)),
+            ],
+        };
+
+        PartyProcessingSdkReadModel result = PartyProcessingActivityFold.Fold(request, current: null);
+
+        result.Records.Select(static record => record.OperationCategory)
+            .ShouldBe(["PartyCommand", "Consent", "Restriction", "Erasure"]);
+        result.Records.Select(static record => record.EventType)
+            .ShouldBe([nameof(PartyCreated), nameof(ConsentRecorded), nameof(ProcessingRestricted), nameof(ErasePartyRequested)]);
+        result.Records.ShouldAllBe(static record => record.Outcome == "Succeeded");
+        result.LastSequenceNumber.ShouldBe(4);
+    }
+
+    [Fact]
+    public void ProcessingActivityFold_DecodableRedactedEventKeepsMappedCategory()
+    {
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                Event(new PartyDeactivated(), 1, DateTimeOffset.UnixEpoch) with
+                {
+                    SerializationFormat = "json-redacted",
+                },
+            ],
+        };
+
+        PartyProcessingSdkReadModel result = PartyProcessingActivityFold.Fold(request, current: null);
+
+        ProcessingActivityRecord record = result.Records.ShouldHaveSingleItem();
+        record.OperationCategory.ShouldBe("PartyCommand");
+        record.EventType.ShouldBe(nameof(PartyDeactivated));
+        record.Outcome.ShouldBe("Succeeded");
+        result.LastSequenceNumber.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ProcessingActivityFold_AppendPreservesLegacyCategory()
+    {
+        PartyProcessingSdkReadModel legacy = CreateLegacyProcessingReadModel();
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events = [Event(new PartyNotFound(), 2, DateTimeOffset.UnixEpoch.AddSeconds(1))],
+        };
+
+        PartyProcessingSdkReadModel result = PartyProcessingActivityFold.Fold(request, legacy);
+
+        result.Records.Count.ShouldBe(2);
+        result.Records[0].ShouldBe(legacy.Records[0]);
+        result.Records[1].OperationCategory.ShouldBe("Other");
+        result.Records[1].EventType.ShouldBe(nameof(PartyNotFound));
+        result.LastSequenceNumber.ShouldBe(2);
+        legacy.Records.ShouldHaveSingleItem();
     }
 
     [Fact]
@@ -2015,6 +2165,8 @@ public sealed class PartySdkProjectionHandlerTests
         PartyProcessingSdkReadModel result = PartyProcessingActivityFold.Fold(request, current: null);
 
         ProcessingActivityRecord record = result.Records.ShouldHaveSingleItem();
+        record.OperationCategory.ShouldBe("Other");
+        record.EventType.ShouldBe(nameof(PartyCreated));
         record.Outcome.ShouldBe("Failed");
         result.LastSequenceNumber.ShouldBe(1);
     }
@@ -2037,6 +2189,8 @@ public sealed class PartySdkProjectionHandlerTests
         PartyProcessingSdkReadModel result = PartyProcessingActivityFold.Fold(request, current: null);
 
         ProcessingActivityRecord record = result.Records.ShouldHaveSingleItem();
+        record.OperationCategory.ShouldBe("Other");
+        record.EventType.ShouldBe(nameof(PartyCreated));
         record.Outcome.ShouldBe("Redacted");
         result.LastSequenceNumber.ShouldBe(1);
     }
@@ -2556,6 +2710,30 @@ public sealed class PartySdkProjectionHandlerTests
         processing.Records.Select(static record => record.Outcome)
             .ShouldBe(includeValidTail ? ["Failed", "Succeeded"] : ["Failed"]);
     }
+
+    private static PartyProcessingSdkReadModel CreateLegacyProcessingReadModel()
+        => new()
+        {
+            Records =
+            [
+                new ProcessingActivityRecord
+                {
+                    SequenceNumber = 1,
+                    PartyId = "party-1",
+                    TenantId = "tenant-a",
+                    ActorId = "actor-1",
+                    CorrelationId = "correlation-1",
+                    OperationCategory = nameof(PartyNotFound),
+                    Outcome = "Succeeded",
+                    EventType = nameof(PartyNotFound),
+                    Timestamp = DateTimeOffset.UnixEpoch,
+                    Summary = "PartyNotFound recorded.",
+                },
+            ],
+            LastSequenceNumber = 1,
+            ProjectedAt = DateTimeOffset.UnixEpoch,
+            ProjectionVersion = "1",
+        };
 
     private static ProjectionRequest CreateRequest()
         => new(

@@ -1,0 +1,23 @@
+┌───────────────────────────────────────────────────────────────────────────────────────────────┬────────────┬────────────┬───────────┬────────────────────────┐
+│ Name                                                                                          │ Type       │ State      │ Health    │ URLs                   │
+├───────────────────────────────────────────────────────────────────────────────────────────────┼────────────┼────────────┼───────────┼────────────────────────┤
+│ eventstore (http://localhost:15100/?resource=eventstore-bcvceecy)                             │ Project    │ Waiting    │ -         │ -                      │
+│ eventstore-admin (http://localhost:15100/?resource=eventstore-admin-qgvfwmxv)                 │ Project    │ Waiting    │ -         │ -                      │
+│ eventstore-admin-dapr-cli                                                                     │ Executable │ Waiting    │ -         │ -                      │
+│ (http://localhost:15100/?resource=eventstore-admin-dapr-cli-szufqyqe)                         │            │            │           │                        │
+│ eventstore-admin-ui (http://localhost:15100/?resource=eventstore-admin-ui-zxvmkyat)           │ Project    │ NotStarted │ -         │ -                      │
+│ eventstore-admin-ui-dapr-cli                                                                  │ Executable │ Waiting    │ -         │ -                      │
+│ (http://localhost:15100/?resource=eventstore-admin-ui-dapr-cli-nrretqqa)                      │            │            │           │                        │
+│ eventstore-dapr-cli (http://localhost:15100/?resource=eventstore-dapr-cli-mfwanhjd)           │ Executable │ Waiting    │ -         │ -                      │
+│ parties (http://localhost:15100/?resource=parties-aabmksap)                                   │ Project    │ Waiting    │ -         │ -                      │
+│ parties-dapr-cli (http://localhost:15100/?resource=parties-dapr-cli-dgnshenx)                 │ Executable │ Waiting    │ -         │ -                      │
+│ parties-mcp (http://localhost:15100/?resource=parties-mcp-suwtsrbe)                           │ Project    │ NotStarted │ -         │ -                      │
+│ parties-ui (http://localhost:15100/?resource=parties-ui-ejrvtsrr)                             │ Project    │ Waiting    │ -         │ -                      │
+│ security (http://localhost:15100/?resource=security-tdxttehe)                                 │ Container  │ Running    │ Unhealthy │ https://localhost:8182 │
+│ security-eventstore-client-password                                                           │ Parameter  │ Running    │ Healthy   │ -                      │
+│ (http://localhost:15100/?resource=security-eventstore-client-password)                        │            │            │           │                        │
+│ security-eventstore-client-username                                                           │ Parameter  │ Running    │ Healthy   │ -                      │
+│ (http://localhost:15100/?resource=security-eventstore-client-username)                        │            │            │           │                        │
+│ tenants (http://localhost:15100/?resource=tenants-gppmckxb)                                   │ Project    │ Waiting    │ -         │ -                      │
+│ tenants-dapr-cli (http://localhost:15100/?resource=tenants-dapr-cli-chaqeegh)                 │ Executable │ Waiting    │ -         │ -                      │
+└───────────────────────────────────────────────────────────────────────────────────────────────┴────────────┴────────────┴───────────┴────────────────────────┘

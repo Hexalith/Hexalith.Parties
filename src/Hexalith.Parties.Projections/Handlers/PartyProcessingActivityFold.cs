@@ -117,7 +117,7 @@ internal static class PartyProcessingActivityFold
             TenantId = request.TenantId,
             ActorId = NormalizeMetadata(@event.UserId, "system"),
             CorrelationId = NormalizeMetadata(@event.CorrelationId, "unspecified"),
-            OperationCategory = GetOperationCategory(@event.EventTypeName, payload),
+            OperationCategory = GetOperationCategory(payload),
             Outcome = outcome,
             EventType = GetShortEventTypeName(@event.EventTypeName),
             Timestamp = @event.Timestamp.ToUniversalTime(),
@@ -150,7 +150,7 @@ internal static class PartyProcessingActivityFold
             _ => $"{GetShortEventTypeName(eventTypeName)} recorded.",
         };
 
-    private static string GetOperationCategory(string eventTypeName, IEventPayload? payload)
+    private static string GetOperationCategory(IEventPayload? payload)
         => payload switch
         {
             ConsentRecorded or ConsentRevoked => "Consent",
@@ -160,7 +160,7 @@ internal static class PartyProcessingActivityFold
                 or ContactChannelAdded or ContactChannelUpdated or ContactChannelRemoved
                 or PreferredContactChannelChanged or IdentifierAdded or IdentifierRemoved
                 or PartyDeactivated or PartyReactivated => "PartyCommand",
-            _ => GetShortEventTypeName(eventTypeName),
+            _ => "Other",
         };
 
     private static string GetShortEventTypeName(string? eventTypeName)
