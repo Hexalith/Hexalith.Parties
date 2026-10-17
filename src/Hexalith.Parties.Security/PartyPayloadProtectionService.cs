@@ -1,3 +1,4 @@
+using System.Buffers.Text;
 using System.Collections;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -270,10 +271,14 @@ public sealed partial class PartyPayloadProtectionService(
     }
 
     /// <summary>Protects retained attribution independently of the existing profile lifecycle.</summary>
+    /// <remarks>Snapshot custody must return a current purpose-protected <see cref="SnapshotProtectionResult"/>
+    /// containing self-contained opaque ciphertext bytes. External key aliases and compatibility flags
+    /// are unsupported because the custody restore seam receives only ciphertext.</remarks>
     public async Task<object> ProtectSnapshotStateAsync(AggregateIdentity identity, object state, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(state);
-        if (state is not PartyState && ContainsSerializedHistory(state))
+        cancellationToken.ThrowIfCancellationRequested();
+        if (state is IdentityHistorySnapshot || state is not PartyState && ContainsSerializedHistory(state))
         {
             // The SDK can hand snapshots to protection as object/JSON. Without a typed
             // personal-data graph we cannot independently protect every profile field.
@@ -291,8 +296,75 @@ public sealed partial class PartyPayloadProtectionService(
             throw new InvalidOperationException("Independent identity history snapshot protection is unavailable.");
         }
 
-        object protectedHistory = await identityHistoryCustody.ProtectSnapshotAsync(identity, profile, cancellationToken).ConfigureAwait(false);
-        return new IdentityHistorySnapshot("identity-history-snapshot-v1", protectedHistory);
+        byte[] original = JsonSerializer.SerializeToUtf8Bytes(profile, s_jsonOptions);
+        try
+        {
+            object protectedHistory = await identityHistoryCustody.ProtectSnapshotAsync(identity, profile, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (protectedHistory is not SnapshotProtectionResult
+                {
+                    State: byte[] { Length: > 0 } ciphertext,
+                    Metadata:
+                    {
+                        State: PayloadProtectionState.Protected,
+                        MetadataVersion: EventStorePayloadProtectionMetadata.CurrentMetadataVersion,
+                        Scheme: "party-actor-history-v1",
+                        KeyAlias: null,
+                        CompatibilityFlags: null or { Count: 0 },
+                    },
+                })
+            {
+                throw new InvalidOperationException("Independent identity history snapshot protection did not produce protected purpose evidence.");
+            }
+
+            // Validate and persist the same detached buffer, never provider-owned mutable memory.
+            byte[] detached = ciphertext.ToArray();
+            if (ContainsUnprotectedSnapshot(detached, original))
+            {
+                CryptographicOperations.ZeroMemory(detached);
+                throw new InvalidOperationException("Independent identity history snapshot protection did not produce protected purpose evidence.");
+            }
+
+            return new IdentityHistorySnapshot("identity-history-snapshot-v1", detached);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(original);
+        }
+    }
+
+    private static bool ContainsUnprotectedSnapshot(byte[] payload, byte[] original)
+    {
+        if (IsJsonSnapshot(payload) || payload.AsSpan().IndexOf(original) >= 0)
+        {
+            return true;
+        }
+
+        // Reject common encoding-only substitutes too; this is structural validation,
+        // not a substitute for qualification of the trusted custody provider's cryptography.
+        byte[] encoded = new byte[Base64.GetMaxEncodedToUtf8Length(original.Length)];
+        try
+        {
+            Base64.EncodeToUtf8(original, encoded, out _, out int written);
+            return payload.AsSpan().IndexOf(encoded.AsSpan(0, written)) >= 0;
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(encoded);
+        }
+    }
+
+    private static bool IsJsonSnapshot(byte[] payload)
+    {
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(payload);
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     /// <summary>Checks retained purpose lifecycle before unprotecting history and profile state.</summary>
@@ -325,8 +397,18 @@ public sealed partial class PartyPayloadProtectionService(
                 throw new InvalidOperationException("Independent identity history snapshot protection is unavailable.");
             }
 
-            state = await identityHistoryCustody.UnprotectSnapshotAsync(identity, history.Payload, cancellationToken).ConfigureAwait(false)
+            // System.Text.Json persists byte[] as base64, then restores object payloads as JsonElement.
+            object ciphertext = history.Payload is JsonElement { ValueKind: JsonValueKind.String } encoded
+                && encoded.TryGetBytesFromBase64(out byte[]? bytes) ? bytes : history.Payload;
+            if (ciphertext is not byte[] { Length: > 0 } protectedBytes || IsJsonSnapshot(protectedBytes))
+            {
+                throw new InvalidOperationException("Invalid identity history snapshot ciphertext.");
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            state = await identityHistoryCustody.UnprotectSnapshotAsync(identity, protectedBytes, cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidOperationException("Retained identity history is unavailable.");
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         return await UnprotectProfileSnapshotStateAsync(identity, state, history is not null, cancellationToken).ConfigureAwait(false);
@@ -459,6 +541,13 @@ public sealed partial class PartyPayloadProtectionService(
 
         foreach (JsonProperty property in element.EnumerateObject())
         {
+            if (property.Name.Equals("Marker", StringComparison.OrdinalIgnoreCase)
+                && property.Value.ValueKind == JsonValueKind.String
+                && property.Value.GetString() == "identity-history-snapshot-v1")
+            {
+                return true;
+            }
+
             if (property.Name.Equals("HumanBindingVersion", StringComparison.OrdinalIgnoreCase)
                 && (property.Value.ValueKind != JsonValueKind.Number || !property.Value.TryGetInt64(out long version) || version != 0))
             {

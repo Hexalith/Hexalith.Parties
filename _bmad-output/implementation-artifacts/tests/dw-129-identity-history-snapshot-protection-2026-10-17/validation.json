@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-17",
+  "scope": [
+    "DW-129",
+    "DW-148"
+  ],
+  "baseline_revision": "777e0e7d0c33dad7230e6477d1c3987a4b843b5f",
+  "route": "bmad-build oneshot",
+  "verification": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj --configuration Debug -p:UseHexalithProjectReferences=true -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll",
+      "exit_code": 0,
+      "total": 218,
+      "passed": 218,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0,
+      "identity_history_cases": 47
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj --configuration Debug -p:UseHexalithProjectReferences=true -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Debug/net10.0/Hexalith.Parties.Contracts.Tests.dll",
+      "exit_code": 0,
+      "total": 199,
+      "passed": 199,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0
+    },
+    {
+      "command": "dotnet build src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj --configuration Debug -p:UseHexalithProjectReferences=false -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "selected_packaged_eventstore_contracts": "3.124.0"
+    },
+    {
+      "command": "git -c core.whitespace=cr-at-eol diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    }
+  ],
+  "pre_fix_reproduction": {
+    "command": "dotnet tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll -class Hexalith.Parties.Security.Tests.IdentityHistoryProtectionTests",
+    "exit_code": 1,
+    "total": 27,
+    "passed": 6,
+    "failed": 21,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0,
+    "note": "Coverage was expanded after this initial reproduction."
+  },
+  "baseline_contracts_snapshot": {
+    "observed_passed": 198,
+    "observed_failed": 1,
+    "test": "ContractsPublicApiSnapshotTests.PublicContractSurface_MatchesCheckedInSnapshot",
+    "cause": "Expected snapshot omitted the two existing ChatBot authority records; no production API source changed.",
+    "existing_additive_api_revision": "d26b0cea57df19d18281a337e66bc8ca4712fb37",
+    "expected_snapshot_lines_added": 23,
+    "expected_snapshot_lines_removed": 0
+  },
+  "runtime_baseline": {
+    "start_command": "aspire start --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+    "start_exit_code": 0,
+    "wait_command": "aspire wait parties --status healthy --timeout 10 --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+    "wait_exit_code": 0,
+    "describe_command": "aspire describe --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json",
+    "observations": "Initial security TLS EOF resolved. Final Parties Running and security Healthy; EventStore, Tenants, UI and Dapr executables Finished. This is not full-topology acceptance.",
+    "stop_command": "aspire stop --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+    "stop_exit_code": 0
+  },
+  "review": {
+    "findings": 7,
+    "patched": 6,
+    "deferred": 1,
+    "independent_follow_up": "Six fixes confirmed resolved; SDK capture limitation documented and separately deferred; no additional concrete issues."
+  },
+  "limitations": [
+    "Structural validation and provider-supplied evidence do not prove cryptography against a dishonest provider.",
+    "Current SDK capture supplies folded JsonElement, rejected by the pre-existing typed-history guard; separate owner integration and persisted SDK capture proof remain open.",
+    "No production identity-history custody provider, deployment, expiry/destruction or nonrollback restore qualification was supplied or performed.",
+    "Old unproven object snapshot payloads fail closed; no persisted data was migrated."
+  ],
+  "source_sha256": {
+    "src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs": "8b4647ca58486ab468793c84317481ccd3cb21a94154bc52ec5485695f23d3fc",
+    "src/Hexalith.Parties.Security/IdentityHistorySnapshot.cs": "047254c4a4ac1c2595db5468544b7828a50f6e3bc70eca4113656ce28b3ecd7d",
+    "tests/Hexalith.Parties.Security.Tests/IdentityHistoryProtectionTests.cs": "cea027a7b91c8cd380f782799d9447153532f8175f400706e59b129f339ea96d",
+    "tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs": "60cf51ceed77bc685ebb3e2f7e17d22de2623e3c8dabbee75a49ae4a4132bf88",
+    "tests/Hexalith.Parties.Contracts.Tests/Package/ContractsPublicApiSnapshot.txt": "f1d706abf0c3d1de8379355b0177bf79fb8185a36333bd7e378e5d3335ef21f9",
+    "docs/architecture.md": "17f9dd6810a0b9fb03178e3746b60de597aa293aa3f5f6bb8e7c0c8af3cd0e38"
+  },
+  "executed_assembly_sha256": {
+    "tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll": "67d90080a1865811a64adfcc7494b74b0f1d078a5993989935b0735175ddc562",
+    "tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.dll": "a5ebecb76ca0567e9f0105567ad21fc0ae4845695f4e221a826babd9c9681423",
+    "tests/Hexalith.Parties.Contracts.Tests/bin/Debug/net10.0/Hexalith.Parties.Contracts.Tests.dll": "e1bb6094e2b37c4e0c50462d811919c931939e1e74e556cfd2efcfa811b0c819"
+  },
+  "git_actions": {
+    "commit": false,
+    "push": false,
+    "dependency_or_gitlink_update": false
+  }
+}

@@ -1017,8 +1017,9 @@ resolution: Required per-attempt correlation/message identity, validated every c
 origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
 location: src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs:294; src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs:90; tests/Hexalith.Parties.Security.Tests/IdentityHistoryProtectionTests.cs:39
 severity: high
-status: open
+status: done 2026-10-17
 note: 2026-10-05 (Story 8.10 review loop 3, Blind 8) — DW-142 names this entry as the open carrier for classifying `PartyState.HumanActorBindings` and `PartyState.HumanActorTransitions`, which `tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs` currently records as `DeferredPrivacyDesign`. This entry's exit proof therefore also replaces those two `DeferredPrivacyDesign` rows with a decided classification in `PersonalDataInventoryTests`, with Contracts.Tests green.
+resolution: Required current purpose-protected SDK snapshot evidence, self-contained detached ciphertext, and rejection of no-op/plaintext/encoding-only copies before reporting protected metadata. Replaced the two deferred history inventory classifications with independent purpose-protected personal data. Full Security.Tests 218/218 and Contracts.Tests 199/199 pass. Independent review and follow-up complete; see spec-dw-129-identity-history-snapshot-protection.md and tests/dw-129-identity-history-snapshot-protection-2026-10-17/validation.json. Existing SDK serialized-history capture and production custody qualification remain separate open work. No commit or push.
 
 ### DW-148: Require identity-history snapshot protection evidence before reporting protected metadata.
 
@@ -1026,7 +1027,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs:294; src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs:90; tests/Hexalith.Parties.Security.Tests/IdentityHistoryProtectionTests.cs:39
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: Blind 3: the snapshot provider result is wrapped without effectiveness validation; the synthetic test provider returns its input. History evidence has no profile PersonalData annotation, while the adapter reports the wrapper as Protected. Existing identity-feature code from 37d87f5a2869b076c651a58714d60f64647848bc, unchanged here. Exit proof: reject no-op custody snapshots and show persisted snapshot representation does not expose actor history. The synthetic test is not live custody qualification.
-status: open
+status: done 2026-10-17
+resolution: Resolved together with DW-129: typed provider evidence and self-contained ciphertext are mandatory; encrypted direct/serialized round trips cover live and destroyed profile keys, metadata-aware reads and denied provider outcomes. Six review corrections are verified; the pre-existing SDK folded-input integration limitation is documented and separately deferred. See spec-dw-129-identity-history-snapshot-protection.md and its validation packet. No production custody qualification is claimed.
 
 ### DW-130: Qualify ordinary replay after retained-history expiry
 
@@ -1567,3 +1569,8 @@ severity: medium
 status: done 2026-10-16
 reason: A production-registered RecordConsent with lawfulBasis serialized as "Consent" passes Parties validation and throws JsonException at EventStoreAggregate command deserialization; its shared EventStorePayloadSerialization.Options has no string-enum converter. HttpAdminPortalGdprClient writes commands with PartiesJsonOptions.Default, which emits enum names. Reproduced before the DW-122 processor change in PartiesValidatorRegistrationTests.ProcessAsync_ProductionConsentValidators_AllowValidPayloads(revoke:false). Existing numeric-enum processing succeeds. This pre-existing client/platform compatibility defect requires an independently scoped reader/writer fix and consumer proof; DW-122 preserves both serializers. See tests/dw-122-production-validation-2026-10-16/README.md.
 resolution: Declared the existing named-enum wire policy on all six Parties command properties using BCL converters. EventStore binding accepts names and historical numbers, including nested/nullable cases; canonical client output and event/snapshot serialization remain compatible. No shared serializer, platform source, dependency or gitlink changes. Final full Contracts.Tests 198/198, Client.Tests 174/174, Parties.Tests 1010/1010 (1382 total) pass without skips/errors/failures; expanded production/HTTP focus 93/93. Debug source builds have zero warnings/errors. Five independent review findings and the follow-up evidence note are resolved. See spec-dw-195-command-enum-compatibility.md and tests/dw-195-command-enum-compatibility-2026-10-16/validation.json. Existing full-topology startup failures remain separately recorded.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-129-identity-history-snapshot-protection.md`
+  summary: Qualify retained-history snapshot capture through the EventStore SDK's folded-state input.
+  severity: medium
+  evidence: SnapshotManager serializes state to JsonElement before calling protection, while the pre-existing Parties guard requires typed PartyState for independent profile/history protection. Retain that fail-closed guard; a safe owner-supported typed integration and persisted SDK capture/read-back test are needed. The DW-129 encrypted unit round trip proves local validation and serialized restore only; no production custody qualification or SDK capture availability is claimed.

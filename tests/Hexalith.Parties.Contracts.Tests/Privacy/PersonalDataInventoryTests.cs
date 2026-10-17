@@ -121,10 +121,10 @@ public sealed class PersonalDataInventoryTests
             [Key(typeof(PartyState), nameof(PartyState.HumanBindingVersion))] = Classification.NonPersonalMetadata,
             [Key(typeof(PartyState), nameof(PartyState.AgentProvisioning))] = Classification.PersonalData,
 
-            // DW-129: the actor-binding history carries ActorId / OperatorActorId; its classification
-            // and snapshot-protection evidence stay open under DW-129.
-            [Key(typeof(PartyState), nameof(PartyState.HumanActorBindings))] = Classification.DeferredPrivacyDesign,
-            [Key(typeof(PartyState), nameof(PartyState.HumanActorTransitions))] = Classification.DeferredPrivacyDesign,
+            // Actor and provenance history is personal data under independent finite custody.
+            // Profile-key annotations would incorrectly couple this history to profile erasure.
+            [Key(typeof(PartyState), nameof(PartyState.HumanActorBindings))] = Classification.IdentityHistoryPersonalData,
+            [Key(typeof(PartyState), nameof(PartyState.HumanActorTransitions))] = Classification.IdentityHistoryPersonalData,
 
             [Key(typeof(PartyDetail), nameof(PartyDetail.Id))] = Classification.NonPersonalMetadata,
             [Key(typeof(PartyDetail), nameof(PartyDetail.Type))] = Classification.NonPersonalMetadata,
@@ -216,6 +216,24 @@ public sealed class PersonalDataInventoryTests
     }
 
     [Fact]
+    public void IdentityHistoryPersonalData_RemainsIndependentOfProfileKeyAnnotations()
+    {
+        PropertyInfo[] history = s_expectedClassifications
+            .Where(kvp => kvp.Value is Classification.IdentityHistoryPersonalData)
+            .Select(kvp => ResolveProperty(kvp.Key))
+            .ToArray();
+
+        history.Select(property => property.Name).Order(StringComparer.Ordinal).ShouldBe(
+            new[] { nameof(PartyState.HumanActorBindings), nameof(PartyState.HumanActorTransitions) });
+        foreach (PropertyInfo property in history)
+        {
+            property.IsDefined(typeof(PersonalDataAttribute), inherit: true).ShouldBeFalse();
+            PropertyTypeContainsPersonalData(property.PropertyType).ShouldBeFalse(
+                "Identity history must remain under purpose custody, separate from profile-key encryption.");
+        }
+    }
+
+    [Fact]
     public void OrganizationEntityFields_RemainUnmarkedByDefault()
     {
         string[] unexpectedlyMarked = s_expectedClassifications
@@ -288,6 +306,7 @@ public sealed class PersonalDataInventoryTests
     {
         PersonalData,
         PersonalDataContainer,
+        IdentityHistoryPersonalData,
         TypeDependentContainer,
         NonPersonalMetadata,
         NonPersonalByDefault,

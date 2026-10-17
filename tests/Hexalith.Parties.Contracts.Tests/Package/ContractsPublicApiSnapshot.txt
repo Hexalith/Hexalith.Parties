@@ -607,6 +607,29 @@ type class Hexalith.Parties.Contracts.PartyExportFileName interfaces:
 type class Hexalith.Parties.Contracts.PartyProjectionNames interfaces:
 type class Hexalith.Parties.Contracts.PersonalDataAttribute base:System.Attribute interfaces:
   ctor ()
+type class Hexalith.Parties.Contracts.Queries.ChatBotPartyAuthorityResult interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.ChatBotPartyAuthorityResult>
+  ctor (System.String TenantId, System.String PrincipalId, System.String PartyId, System.String Operation, System.String ActorClass, System.String Origin, System.Boolean Allowed, System.Int64 SourceVersion, System.String ObservationId, System.DateTimeOffset ObservedAt)
+  property System.String ActorClass getset
+  property System.Boolean Allowed getset
+  property System.String ObservationId getset
+  property System.DateTimeOffset ObservedAt getset
+  property System.String Operation getset
+  property System.String Origin getset
+  property System.String PartyId getset
+  property System.String PrincipalId getset
+  property System.Int64 SourceVersion getset
+  property System.String TenantId getset
+  method System.Void Deconstruct(System.String& TenantId, System.String& PrincipalId, System.String& PartyId, System.String& Operation, System.String& ActorClass, System.String& Origin, System.Boolean& Allowed, System.Int64& SourceVersion, System.String& ObservationId, System.DateTimeOffset& ObservedAt)
+type class Hexalith.Parties.Contracts.Queries.ResolveChatBotPartyAuthority interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.ResolveChatBotPartyAuthority>
+  ctor (System.String TenantId, System.String PrincipalId, System.String PartyId, System.String Operation, System.String ActorClass, System.String Origin)
+  property System.String ActorClass getset
+  property System.String Operation getset
+  property System.String Origin getset
+  property System.String PartyId getset
+  property System.String PrincipalId getset
+  property System.String QueryType get
+  property System.String TenantId getset
+  method System.Void Deconstruct(System.String& TenantId, System.String& PrincipalId, System.String& PartyId, System.String& Operation, System.String& ActorClass, System.String& Origin)
 type class Hexalith.Parties.Contracts.Queries.ResolveHumanActorBindingAt interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.ResolveHumanActorBindingAt>
   ctor (System.String TenantId, System.String PartyId, System.DateTimeOffset ActionAt, System.String ExpectedActorId, System.Int64 ExpectedBindingVersion)
   property System.DateTimeOffset ActionAt getset

@@ -166,6 +166,35 @@ protection service is registered **before** `AddEventStoreServer`, so it overrid
 `NoOpEventPayloadProtectionService`. Retiring this local implementation is gated by the
 `8.7-data-protection-extraction` deferral; see §8 for key storage and the production-KMS gate.
 
+**Independent identity-history snapshots.** `PartyState.HumanActorBindings` and
+`HumanActorTransitions` contain personal actor and provenance history. Their finite
+purpose custody is separate from profile-key encryption and erasure, so they do
+not carry the profile `[PersonalData]` annotation. Snapshot custody implementations
+must return the existing EventStore `SnapshotProtectionResult` from
+`IIdentityHistoryCustody.ProtectSnapshotAsync`: current-version `Protected`
+metadata with scheme `party-actor-history-v1`, and nonempty opaque ciphertext as
+`byte[]` state. Ciphertext must be self-contained: nonnull `KeyAlias` or nonempty
+compatibility flags are rejected because the restore seam receives only bytes.
+Plain objects, copies of the profile snapshot, JSON bytes, and literal/base64
+copies of the input are rejected before the adapter reports protected metadata.
+These are structural checks using provider-supplied evidence, not proof of
+encryption against a provider that falsely declares arbitrary bytes protected.
+JSON serialization
+stores these bytes as base64 inside the existing `identity-history-snapshot-v1`
+marker/payload wrapper; restore decodes them before invoking custody. Old
+unproven object payloads fail closed and require an owner-controlled rebuild
+from qualified source evidence. This change does not rewrite stored snapshots.
+The trusted custody provider remains responsible for real encryption, independent
+keys, finite expiry and restore-safe lifecycle enforcement; metadata and unit
+tests do not establish production custody qualification. The approved retention
+policy and the outstanding production qualification remain unchanged.
+
+This write guard accepts typed `PartyState` only. The current EventStore
+`SnapshotManager` supplies folded `JsonElement` state, which the existing history
+guard rejects. Full SDK retained-history snapshot capture therefore remains
+unavailable until the owner supplies a safe typed integration; the encrypted
+round-trip unit tests establish local validation and serialized restoration.
+
 Business-rule highlights: state-driven idempotency (`DomainResult.NoOp`), the erasure state machine (`ErasurePending → KeyDestroyed → Verified → Erased`), Art.18 restriction guards (with an Art.18(3) carve-out for consent ops), deterministic `ConsentId`, and the composite two-phase (validate-all-then-emit) with a `MaxSubOperations` cap.
 
 ---
