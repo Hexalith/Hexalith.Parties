@@ -362,7 +362,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: PartySdkProjectionFold.DeserializeNew
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: 2026-08-05 review-layer finding, pre-existing (not caused by this session's patch): the catch filter only covers `JsonException`/`ArgumentNullException`/`NotSupportedException`/`InvalidOperationException`; a `FormatException` or `OverflowException` thrown by a custom converter propagates unhandled and crashes the whole dispatch instead of being skip-logged.
-status: open
+status: done 2026-10-17
+
+resolution: `PartySdkProjectionFold.DeserializeNew` now treats converter FormatException and OverflowException as existing corrupt-payload skip-and-advance outcomes. Actual serializer, privacy, live/redacted audit, checkpoint and persisted handler cases pass; final Projections.Tests 252/252 and Parties.Tests 1027/1027, zero failures/errors/skips. See `spec-dw-49-converter-failures.md`.
 
 ### DW-50: Bound and page the per-party Article 30 processing-activity read model
 
@@ -1276,6 +1278,8 @@ source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-i
 reason: The detail handler creates only Processing on first unresolved delivery, then rejects all subsequent retries at the missing-slot guard (69–87, 245–265); verified medium, pre-existing at 890119f1.
 status: open
 
+implementation_blocker: 2026-10-17 Candidate two-slot audit initialization was withdrawn after SDK fault injection: a BeforeReceipt failure after newer erasure tombstones persist causes unguarded batch reconciliation to overwrite them. Prepared/committed manifest resumption also needs stable initialization identity. EventStore must supply safe recovery before this domain change; see `spec-dw-163-coordinated-unresolved-projection.md`. DW-163 remains open.
+
 ### DW-164: D2 — Set an explicit SDK receiver identity for the optional sample resource matching its DAPR app ID.
 
 origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md"), 2026-10-13
@@ -1576,3 +1580,7 @@ resolution: Declared the existing named-enum wire policy on all six Parties comm
   summary: Qualify retained-history snapshot capture through the EventStore SDK's folded-state input.
   severity: medium
   evidence: SnapshotManager serializes state to JsonElement before calling protection, while the pre-existing Parties guard requires typed PartyState for independent profile/history protection. Retain that fail-closed guard; a safe owner-supported typed integration and persisted SDK capture/read-back test are needed. The DW-129 encrypted unit round trip proves local validation and serialized restore only; no production custody qualification or SDK capture availability is claimed.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-163-coordinated-unresolved-projection.md`
+  summary: Make EventStore unguarded batch reconciliation preserve newer canonical writes, including erasure tombstones.
+  evidence: A real SDK InMemoryReadModelStore fault at BeforeReceipt after newer sequence-5 Detail/Processing erasure tombstones persist makes CompactAndCompleteAsync restore the older initialization candidate. The six-case candidate reproduction passed five cases and failed this interleaving; candidate source/logs/XML are retained in /tmp/dw-163-validation. EventStore owns this persistence guarantee; the Parties candidate was withdrawn and DW-163 stays open.

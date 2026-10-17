@@ -1,0 +1,235 @@
+--- a/src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs
++++ b/src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs
+@@ -84,8 +84,30 @@
+             {
+                 try
+                 {
+-                    await RecordUnresolvedProcessingAsync(request, storeName, processingKey, cancellationToken)
+-                        .ConfigureAwait(false);
++                    if (current.Value is null)
++                    {
++                        // A first failed delivery must not leave Processing without its coordinated
++                        // Detail slot. Keep Detail unadvanced until the delivery can be fully folded.
++                        // Use a separate, bounded identity so a later resolved delivery can use its
++                        // original dispatch identity without colliding with this audit manifest.
++                        var scope = new ReadModelBatchScope(
++                            storeName, request.TenantId, Domain, request.AggregateId, ProjectionType, dispatchId);
++                        var auditBatch = new ReadModelBatch(
++                            scope with { BatchId = $"unresolved-audit:{scope.ComputeScopeHash()}" },
++                            [
++                                ReadModelBatchOperation.Write(key, new PartyDetailSdkReadModel(), ReadModelBatchConcurrency.CreateOnly),
++                                ReadModelBatchOperation.Write(
++                                    processingKey,
++                                    PartyProcessingActivityFold.Fold(request, current: null, logger),
++                                    ReadModelBatchConcurrency.CreateOnly),
++                            ]);
++                        _ = await batchStore.ExecuteAsync(auditBatch, cancellationToken).ConfigureAwait(false);
++                    }
++                    else
++                    {
++                        await RecordUnresolvedProcessingAsync(request, storeName, processingKey, cancellationToken)
++                            .ConfigureAwait(false);
++                    }
+                 }
+                 catch (InvalidOperationException)
+                 {
+--- /dev/null
++++ b/tests/Hexalith.Parties.Tests/Projections/PartyDetailSdkProjectionRecoveryTests.cs
+@@ -0,0 +1,197 @@
++using System.Text.Json;
++
++using Hexalith.EventStore.Client.Projections;
++using Hexalith.EventStore.Contracts.Projections;
++using Hexalith.EventStore.DomainService;
++using Hexalith.EventStore.Testing.Fakes;
++using Hexalith.Parties.Contracts;
++using Hexalith.Parties.Contracts.Events;
++using Hexalith.Parties.Contracts.ValueObjects;
++using Hexalith.Parties.Projections.Configuration;
++using Hexalith.Parties.Projections.Handlers;
++using Hexalith.Parties.Projections.Models;
++
++using Microsoft.Extensions.Options;
++
++using Shouldly;
++
++namespace Hexalith.Parties.Tests.Projections;
++
++public sealed class PartyDetailSdkProjectionRecoveryTests
++{
++    private const string StoreName = "statestore";
++    private static readonly string s_detailKey = PartySdkReadModelAddresses.Detail("tenant-a", "party-1");
++    private static readonly string s_processingKey = PartySdkReadModelAddresses.Processing("tenant-a", "party-1");
++    private static readonly IOptions<PartySdkReadModelOptions> s_options =
++        Options.Create(new PartySdkReadModelOptions { ReadModelStateStoreName = StoreName });
++
++    [Theory]
++    [InlineData("unknown-only", long.MinValue)]
++    [InlineData("known-prefix", 1L)]
++    [InlineData("known-suffix", long.MinValue)]
++    public async Task FirstUnresolvedDeliveryRemainsRetryableAndLaterResolvesAsync(string scenario, long auditCheckpoint)
++    {
++        var store = new InMemoryReadModelStore();
++        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
++        ProjectionRequest resolved = CreateRequest(scenario);
++        int unknownIndex = scenario == "known-prefix" ? 1 : 0;
++        ProjectionEventDto[] events = resolved.Events.ToArray();
++        events[unknownIndex] = events[unknownIndex] with { EventTypeName = "SyntheticUnknownPartyEvent" };
++        ProjectionRequest unresolved = resolved with { Events = events };
++        // The normal batch also accepts a maximum-length dispatch ID. Audit initialization must
++        // preserve that input boundary and keep a distinct identity when this delivery resolves.
++        string dispatchId = new('d', ReadModelBatchScope.MaxComponentByteLength);
++
++        for (int attempt = 0; attempt < 2; attempt++)
++        {
++            DomainProjectionHandlerResult failed = await handler.ProjectAsync(
++                unresolved, dispatchId, TestContext.Current.CancellationToken);
++
++            failed.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
++            failed.ReasonCode.ShouldBe("unresolved-or-unsupported-event");
++            PartyDetailSdkReadModel? detail = (await store.GetAsync<PartyDetailSdkReadModel>(
++                StoreName, s_detailKey, TestContext.Current.CancellationToken)).Value;
++            PartyProcessingSdkReadModel? processing = (await store.GetAsync<PartyProcessingSdkReadModel>(
++                StoreName, s_processingKey, TestContext.Current.CancellationToken)).Value;
++            detail.ShouldNotBeNull();
++            detail.Detail.ShouldBeNull();
++            detail.LastSequenceNumber.ShouldBe(long.MinValue);
++            processing.ShouldNotBeNull();
++            processing.LastSequenceNumber.ShouldBe(auditCheckpoint);
++            processing.Records.Count.ShouldBe(events.Length);
++            processing.Records.Single(record => record.SequenceNumber == events[unknownIndex].SequenceNumber)
++                .Outcome.ShouldBe("Failed");
++        }
++
++        DomainProjectionHandlerResult recovered = await handler.ProjectAsync(
++            resolved, dispatchId, TestContext.Current.CancellationToken);
++
++        recovered.Status.ShouldBe(ProjectionDispatchStatus.Completed);
++        PartyDetailSdkReadModel? finalDetail = (await store.GetAsync<PartyDetailSdkReadModel>(
++            StoreName, s_detailKey, TestContext.Current.CancellationToken)).Value;
++        PartyProcessingSdkReadModel? finalProcessing = (await store.GetAsync<PartyProcessingSdkReadModel>(
++            StoreName, s_processingKey, TestContext.Current.CancellationToken)).Value;
++        finalDetail.ShouldNotBeNull();
++        finalDetail.Detail.ShouldNotBeNull();
++        finalDetail.Detail.Id.ShouldBe("party-1");
++        finalDetail.Detail.IsActive.ShouldBe(scenario == "unknown-only");
++        finalDetail.LastSequenceNumber.ShouldBe(events.Length);
++        finalProcessing.ShouldNotBeNull();
++        finalProcessing.LastSequenceNumber.ShouldBe(events.Length);
++        finalProcessing.Records.Select(static record => record.Outcome)
++            .ShouldBe(Enumerable.Repeat("Succeeded", events.Length));
++    }
++
++    [Fact]
++    public async Task InterruptedInitialAuditExposesNeitherSlotAndResumesAsync()
++    {
++        var store = new InMemoryReadModelStore();
++        store.BatchFaultHook = (phase, ordinal, _) =>
++            phase == ReadModelBatchPhase.AfterInstallOperation && ordinal == 0
++                ? throw new IOException("Synthetic interrupted audit initialization.")
++                : Task.CompletedTask;
++        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
++        ProjectionRequest resolved = CreateRequest("unknown-only");
++        ProjectionRequest unresolved = resolved with
++        {
++            Events = [resolved.Events[0] with { EventTypeName = "SyntheticUnknownPartyEvent" }],
++        };
++
++        DomainProjectionHandlerResult interrupted = await handler.ProjectAsync(
++            unresolved, "interrupted-audit", TestContext.Current.CancellationToken);
++
++        interrupted.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
++        (await store.GetAsync<PartyDetailSdkReadModel>(
++            StoreName, s_detailKey, TestContext.Current.CancellationToken)).Value.ShouldBeNull();
++        (await store.GetAsync<PartyProcessingSdkReadModel>(
++            StoreName, s_processingKey, TestContext.Current.CancellationToken)).Value.ShouldBeNull();
++
++        store.BatchFaultHook = null;
++        DomainProjectionHandlerResult resumed = await handler.ProjectAsync(
++            unresolved, "interrupted-audit", TestContext.Current.CancellationToken);
++        resumed.ReasonCode.ShouldBe("unresolved-or-unsupported-event");
++        (await store.GetAsync<PartyDetailSdkReadModel>(
++            StoreName, s_detailKey, TestContext.Current.CancellationToken)).Value.ShouldNotBeNull();
++        (await store.GetAsync<PartyProcessingSdkReadModel>(
++            StoreName, s_processingKey, TestContext.Current.CancellationToken)).Value
++            .ShouldNotBeNull().Records.ShouldHaveSingleItem().Outcome.ShouldBe("Failed");
++
++        (await handler.ProjectAsync(resolved, "interrupted-audit", TestContext.Current.CancellationToken))
++            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
++        (await store.GetAsync<PartyDetailSdkReadModel>(
++            StoreName, s_detailKey, TestContext.Current.CancellationToken)).Value
++            .ShouldNotBeNull().Detail.ShouldNotBeNull();
++    }
++
++    [Theory]
++    [InlineData(ReadModelBatchPhase.MarkerPrepared)]
++    [InlineData(ReadModelBatchPhase.BeforeReceipt)]
++    public async Task InitialAuditDoesNotOverwriteConcurrentErasureAsync(ReadModelBatchPhase competingPhase)
++    {
++        var store = new InMemoryReadModelStore();
++        var tombstone = new PartyDetailSdkReadModel
++        {
++            LastSequenceNumber = 5,
++            ErasureSequenceNumber = 5,
++            ErasedAt = DateTimeOffset.UnixEpoch.AddSeconds(5),
++        };
++        var processingTombstone = new PartyProcessingSdkReadModel
++        {
++            LastSequenceNumber = 5,
++            ErasureSequenceNumber = 5,
++            ErasedAt = DateTimeOffset.UnixEpoch.AddSeconds(5),
++        };
++        bool competed = false;
++        store.BatchFaultHook = (phase, _, _) =>
++        {
++            if (phase == competingPhase && !competed)
++            {
++                competed = true;
++                store.SeedRaw(StoreName, s_detailKey, tombstone);
++                store.SeedRaw(StoreName, s_processingKey, processingTombstone);
++                if (phase == ReadModelBatchPhase.BeforeReceipt)
++                {
++                    throw new IOException("Synthetic failure after newer tombstones persist.");
++                }
++            }
++
++            return Task.CompletedTask;
++        };
++        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
++        ProjectionRequest resolved = CreateRequest("unknown-only");
++        ProjectionRequest unresolved = resolved with
++        {
++            Events = [resolved.Events[0] with { EventTypeName = "SyntheticUnknownPartyEvent" }],
++        };
++
++        DomainProjectionHandlerResult result = await handler.ProjectAsync(
++            unresolved, "concurrent-erasure", TestContext.Current.CancellationToken);
++
++        competed.ShouldBeTrue();
++        result.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
++        (await store.GetAsync<PartyDetailSdkReadModel>(
++            StoreName, s_detailKey, TestContext.Current.CancellationToken)).Value.ShouldBe(tombstone);
++        PartyProcessingSdkReadModel? processing = (await store.GetAsync<PartyProcessingSdkReadModel>(
++            StoreName, s_processingKey, TestContext.Current.CancellationToken)).Value;
++        processing.ShouldNotBeNull();
++        processing.LastSequenceNumber.ShouldBe(5);
++        processing.ErasureSequenceNumber.ShouldBe(5);
++        processing.ErasedAt.ShouldBe(processingTombstone.ErasedAt);
++        processing.Records.ShouldBeEmpty();
++    }
++
++    private static ProjectionRequest CreateRequest(string scenario)
++    {
++        ProjectionEventDto created = Event(new PartyCreated { Type = PartyType.Person }, 1);
++        ProjectionEventDto deactivated = Event(new PartyDeactivated(), 2);
++        return new ProjectionRequest(
++            "tenant-a", "party", "party-1",
++            scenario == "unknown-only" ? [created] : [created, deactivated]);
++    }
++
++    private static ProjectionEventDto Event(object payload, long sequence)
++        => new(
++            payload.GetType().FullName!,
++            JsonSerializer.SerializeToUtf8Bytes(payload, payload.GetType(), PartiesJsonOptions.Default),
++            "json", sequence, DateTimeOffset.UnixEpoch.AddSeconds(sequence), "correlation-1");
++}

@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-17",
+  "base_revision": "3e9651ede9ac9b8d955d756dad21d0b31ab85302",
+  "eventstore_source_revision": "7edc260d8c0bd904f1215f801bad02b99c6694cf",
+  "completed": [
+    "DW-49"
+  ],
+  "remaining_open": [
+    "DW-163"
+  ],
+  "builds": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj --configuration Debug --no-restore -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug --no-restore -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    }
+  ],
+  "conversion_before_fix": {
+    "total": 8,
+    "passed": 2,
+    "failed": 6,
+    "skipped": 0,
+    "errors": 0
+  },
+  "projections": {
+    "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -result-xml <local-results.xml>",
+    "exit_code": 0,
+    "total": 252,
+    "passed": 252,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "service": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml <local-results.xml>",
+    "exit_code": 0,
+    "total": 1027,
+    "passed": 1027,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "review": {
+    "configured_layer": "blind-hunter",
+    "findings": 5,
+    "addressed": 5,
+    "follow_up": "all findings addressed; no concrete remaining defect in scope",
+    "focused_cases_passed": 14
+  },
+  "guards": [
+    "bash scripts/check-no-warning-override.sh",
+    "git -c core.whitespace=cr-at-eol diff --check"
+  ],
+  "dw163_reproduction": {
+    "command": "git apply --check _bmad-output/implementation-artifacts/tests/dw-163-sdk-recovery-investigation-2026-10-17/reproduce.patch",
+    "applicability_exit_code": 0,
+    "candidate_withdrawn": true,
+    "reproduction_tests": {
+      "total": 6,
+      "passed": 5,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0
+    },
+    "failing_interleaving": "BeforeReceipt fault after newer erasure tombstones persist"
+  },
+  "baseline": {
+    "isolated_aspire_start_exit_code": 0,
+    "parties_wait_30_seconds": "timed out",
+    "subsequent_describe": "Parties, EventStore and Tenants Running/Healthy",
+    "exact_target_stop": "succeeded",
+    "qualification": "baseline observation only, not full topology acceptance"
+  },
+  "sha256": {
+    "src/Hexalith.Parties.Projections/Handlers/PartySdkProjectionFold.cs": "c13c72be909b311223bd45f794308efb6229036b476d2cf7852623f818bcac89",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs": "d57c58fecc5db0b9e3adcebd6919ce6f122aad4c9cfdcf4aaa0578c06d8c0b28",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionConverterFailureTests.cs": "bfd2852e17ddabff9c2f79d75c8d40057145b9c4c3977e19cb3eaee8a98f2178",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/ProjectionConverterFailureEvent.cs": "6d6a5a92547be38ef03df524169e0abd61a1d8d1466adf984af77fd07a9f1b2c",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/ProjectionConverterFailureEventConverter.cs": "1356bc0c2fe582ccc6f2d7885713f72afc7d1a8ab1f0d17ffe647c7836f055a3"
+  },
+  "git_mutations": {
+    "commit": false,
+    "push": false,
+    "dependency_changes": false
+  }
+}

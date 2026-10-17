@@ -2524,6 +2524,39 @@ public sealed class PartySdkProjectionHandlerTests
             .ShouldBe(beforeDuplicateDelivery);
     }
 
+    [Theory]
+    [InlineData(nameof(FormatException), false)]
+    [InlineData(nameof(OverflowException), false)]
+    [InlineData(nameof(FormatException), true)]
+    [InlineData(nameof(OverflowException), true)]
+    public async Task DetailHandler_ConverterFailurePersistsBothCheckpointsAndContinuesAsync(string exceptionType, bool includeValidTail)
+    {
+        using var failures = new PartySdkProjectionConverterFailureTests();
+        ProjectionEventDto bad = failures.FailingEvent(exceptionType, "json");
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events = includeValidTail
+                ? [bad, Event(new PartyCreated { Type = PartyType.Person }, 2, DateTimeOffset.UnixEpoch.AddSeconds(1))]
+                : [bad],
+        };
+        var store = new InMemoryReadModelBatchStore();
+        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+
+        DomainProjectionHandlerResult result = await handler.ProjectAsync(
+            request, "converter-failure-dispatch", TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        PartyDetailSdkReadModel detail = store.Deserialize<PartyDetailSdkReadModel>(
+            PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId));
+        PartyProcessingSdkReadModel processing = store.Deserialize<PartyProcessingSdkReadModel>(
+            PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId));
+        detail.LastSequenceNumber.ShouldBe(request.Events.Length);
+        (detail.Detail is not null).ShouldBe(includeValidTail);
+        processing.LastSequenceNumber.ShouldBe(request.Events.Length);
+        processing.Records.Select(static record => record.Outcome)
+            .ShouldBe(includeValidTail ? ["Failed", "Succeeded"] : ["Failed"]);
+    }
+
     private static ProjectionRequest CreateRequest()
         => new(
             "tenant-a",

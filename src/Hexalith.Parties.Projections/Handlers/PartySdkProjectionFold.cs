@@ -90,6 +90,8 @@ internal static class PartySdkProjectionFold
             }
             catch (Exception ex) when (
                 ex is JsonException
+                    or FormatException
+                    or OverflowException
                     or ArgumentNullException
                     or NotSupportedException
                     or InvalidOperationException)

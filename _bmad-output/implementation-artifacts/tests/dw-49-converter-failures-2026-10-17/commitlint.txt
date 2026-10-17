@@ -1,0 +1,13 @@
+Pinned @commitlint/cli: 21.2.2 (installed version matches package-lock.json)
+Command: node node_modules/@commitlint/cli/cli.js --edit <message-file> --verbose
+Exit code: 0
+Message SHA-256: 63220e154da3bfb9bf8c87c5e2513b9dd233247e2db8d3e462ed5aec295b438a
+
+⧗   --- input ---
+fix: handle projection converter failures
+
+Handle format and overflow failures during projection dispatch.
+Cover audit outcomes, persisted checkpoints, and private diagnostics.
+
+Record the SDK recovery blocker and reproducer for DW-163.
+✔   found 0 problems, 0 warnings
