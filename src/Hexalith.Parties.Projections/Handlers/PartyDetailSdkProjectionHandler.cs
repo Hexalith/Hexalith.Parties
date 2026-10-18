@@ -56,25 +56,21 @@ public sealed class PartyDetailSdkProjectionHandler(
         string storeName = StoreName;
         var scope = new ReadModelBatchScope(storeName, request.TenantId, Domain, request.AggregateId, ProjectionType, dispatchId);
         scope.Validate();
-        // Initialization has one bounded identity per aggregate, independent of delivery identity
-        // and event support. Validate the incoming identity before replacing it for hashing.
-        ReadModelBatchScope initializationScope = scope with { BatchId = "initialize-empty-slots-v1" };
+        // Only empty initialization is recoverable across deliveries. Never retain a normal
+        // dispatch manifest: it can contain personal data outside the canonical erasure keys.
+        ReadModelBatchScope initializationScope = scope with
+        {
+            ProjectionType = $"{ProjectionType}.initialization",
+            BatchId = "empty-v1",
+        };
         initializationScope = initializationScope with { BatchId = $"initialize-{initializationScope.ComputeScopeHash()}" };
         string key = PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId);
         string processingKey = PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId);
-        if (batchStore is IReadModelPendingBatchRecoveryStore recoveryStore)
+        if (!await RecoverInitializationAsync(initializationScope, scope, key, processingKey, cancellationToken).ConfigureAwait(false))
         {
-            // Either key may be the last recovery anchor after interrupted compaction. Recover
-            // both before deciding that a historical slot is absent, then load fresh ETags below.
-            ReadModelPendingBatchRecoveryResult detailRecovery = await recoveryStore
-                .RecoverPendingAsync(scope, key, cancellationToken).ConfigureAwait(false);
-            ReadModelPendingBatchRecoveryResult processingRecovery = await recoveryStore
-                .RecoverPendingAsync(scope, processingKey, cancellationToken).ConfigureAwait(false);
-            if (!detailRecovery.IsResolved || !processingRecovery.IsResolved)
-            {
-                return DeliveryFailure("projection-recovery-incomplete");
-            }
+            return DeliveryFailure("projection-recovery-incomplete");
         }
+
         ReadModelEntry<PartyDetailSdkReadModel> current = await readModelStore
             .GetAsync<PartyDetailSdkReadModel>(storeName, key, cancellationToken)
             .ConfigureAwait(false);
@@ -95,11 +91,8 @@ public sealed class PartyDetailSdkProjectionHandler(
             currentProcessing.Value?.LastSequenceNumber ?? long.MinValue);
         string? deliveryFailure = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, oldestCheckpoint);
         if (current.Value is null && currentProcessing.Value is null
-            && (deliveryFailure is null || string.Equals(deliveryFailure,
-                PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason, StringComparison.Ordinal)))
+            && string.Equals(deliveryFailure, PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason, StringComparison.Ordinal))
         {
-            // Empty values keep the original manifest stable if support changes before retry.
-            // Create-only concurrency cannot replace another writer's history or erasure tombstone.
             var initialization = new ReadModelBatch(initializationScope,
             [
                 ReadModelBatchOperation.Write(key, new PartyDetailSdkReadModel(), ReadModelBatchConcurrency.CreateOnly),
@@ -111,15 +104,16 @@ public sealed class PartyDetailSdkProjectionHandler(
                 return ReadModelBatchProjectionResultMapper.Map(initialized);
             }
 
+            // A competing writer may have advanced or erased either slot during reconciliation.
+            // Reload both before auditing; the initialization manifest never carries event data.
             current = await readModelStore.GetAsync<PartyDetailSdkReadModel>(storeName, key, cancellationToken).ConfigureAwait(false);
             currentProcessing = await readModelStore.GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken).ConfigureAwait(false);
-            if ((current.Value is null) != (currentProcessing.Value is null))
+            if (current.Value is null || currentProcessing.Value is null)
             {
                 return DeliveryFailure(ProjectionRebuildRequiredReason);
             }
 
-            oldestCheckpoint = Math.Min(current.Value?.LastSequenceNumber ?? long.MinValue,
-                currentProcessing.Value?.LastSequenceNumber ?? long.MinValue);
+            oldestCheckpoint = Math.Min(current.Value.LastSequenceNumber, currentProcessing.Value.LastSequenceNumber);
             deliveryFailure = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, oldestCheckpoint);
         }
 
@@ -312,6 +306,41 @@ public sealed class PartyDetailSdkProjectionHandler(
                 return next;
             },
             cancellationToken: cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<bool> RecoverInitializationAsync(
+        ReadModelBatchScope initializationScope,
+        ReadModelBatchScope deliveryScope,
+        string detailKey,
+        string processingKey,
+        CancellationToken cancellationToken)
+    {
+        if (batchStore is not IReadModelPendingBatchRecoveryStore recoveryStore)
+        {
+            return true;
+        }
+
+        bool resolved = true;
+        foreach (string key in new[] { detailKey, processingKey })
+        {
+            ReadModelPendingBatchRecoveryResult recovery = await recoveryStore
+                .RecoverPendingAsync(initializationScope, key, cancellationToken).ConfigureAwait(false);
+            if (!recovery.IsResolved
+                && recovery.Reason is "recovery-scope-mismatch" or "invalid-recovery-evidence" or "recovery-manifest-unavailable")
+            {
+                // Terminal anchors validate the projection namespace before returning a scope
+                // mismatch. Check the normal namespace too; legacy non-retained deliveries must
+                // still reach ExecuteAsync with their original manifest and dispatch identity.
+                recovery = await recoveryStore.RecoverPendingAsync(deliveryScope, key, cancellationToken).ConfigureAwait(false);
+                resolved &= recovery.IsResolved || recovery.Reason == "recovery-manifest-unavailable";
+            }
+            else
+            {
+                resolved &= recovery.IsResolved;
+            }
+        }
+
+        return resolved;
     }
 
     private static DomainProjectionHandlerResult DeliveryFailure(string reason)

@@ -50,24 +50,25 @@ not the G5 runtime engine.
 
 ### Current source observation — 2026-10-18
 
-Dependency-receipt reconciliation observes the committed root graph at Parties
-`d279b43548628c7e3d06113ab5c264a72bf5b69f`, including the root selections from the prior
-sync `d2ec85c9e2b85e2b0c7a50d92ffaf197590ea053`. All ten root checkouts match
-their committed gitlinks and are clean. This refreshes current observations and
-fitness expectations only; dependency versions, gitlinks, dated receipts and
-owner approvals remain unchanged. No new owner signoff or platform/custody
-qualification is inferred.
+DW-163 began at Parties `6b0641829b68d22656fb173eec6578c65e8e91f0`.
+During implementation, a separate `/pushall` advanced the committed root graph
+to `7e73709992512d944f4950e6efb28c6132f9473c` and recorded the authorized
+EventStore 3.125.1 catalog selection. The actual selected source identities below
+are reconciled to that revision; all ten checkouts match their committed gitlinks
+and are clean. This records the concurrent revision change without extending
+historical owner approvals or runtime/custody qualification. The original DW-163
+spec baseline and historical parity receipts retain their original identities.
 
-The imported Builds catalog selects EventStore package `3.124.0`, Commons
+The imported Builds catalog selects EventStore package `3.125.1`, Commons
 `2.30.1`, FrontComposer `4.6.0`, Memories `2.27.1`, Tenants `5.8.0`, and Parties
 `1.2.1`. Its CommunityToolkit.Aspire.Hosting.Dapr value remains `13.6.1-beta.935`.
 Catalog selection remains separate from release-workflow identities and their
 approval receipts.
 
-Reproduce the observations at this immutable Parties revision with:
+Reproduce the committed source selection with:
 
 ```bash
-git ls-tree d279b43548628c7e3d06113ab5c264a72bf5b69f references/Hexalith.<dependency>
+git ls-tree 7e73709992512d944f4950e6efb28c6132f9473c references/Hexalith.<dependency>
 git -C references/Hexalith.<dependency> rev-parse HEAD
 git -C references/Hexalith.<dependency> describe --tags --always --abbrev=8 HEAD
 git -C references/Hexalith.<dependency> status --porcelain
@@ -76,15 +77,15 @@ git -C references/Hexalith.<dependency> status --porcelain
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` (`3f194e17`) | Instruction baseline. |
-| Builds | `544fd2e907d62ccdc4b8f24168b8ab5dfcc13eb9` (`v4.33.0`) | Imported package catalog and build tooling. |
-| Commons | `9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798` (`v2.30.1-19-g9e874b1a`) | Source fallback; selected package remains `2.30.1`. |
-| EventStore | `ab8fa115c486875be3a22860a273d5d68a26c749` (`v3.124.0-14-gab8fa115`) | Source inspection; runtime consumers restore package `3.124.0`. |
-| FrontComposer | `acfc74c7e90acf7f55d0a9af7137859c77a4a09f` (`v4.6.0-52-gacfc74c7`) | Selected package remains `4.6.0`. |
-| McpCli | `4a84c16415c39b22e0c0855b25a1c6b018de6a19` (`v1.0.0-3-g4a84c164`) | Committed root pointer; not used for G5 proof. |
-| Memories | `ef842c9abca9b9a0f77699ba1232e97c23405693` (`v2.28.1-118-gef842c9a`) | Selected package remains `2.27.1`. |
-| Platform | `2ac8e73c09fe631c5620723b54784d2e28e8941f` (`2ac8e73c`) | Committed root pointer; not used for G5 proof. |
-| PolymorphicSerializations | `98de6e013840ece9f0fa7c68ab7dcdf2bba3b375` (`v1.19.4`) | Existing source dependency. |
-| Tenants | `664a379a95d5555bcd5e674060375412c038c9f3` (`v5.8.0-113-g664a379a`) | Selected package is `5.8.0`. |
+| Builds | `332b2c144defba546fe0a09626a4a72f2340e22f` (`v4.33.0-8-g332b2c14`) | Imported package catalog and build tooling; EventStore 3.125.1 selected. |
+| Commons | `b7e6e7d5e28568b30c523130339cc4c52e12c674` (`v2.30.1-20-gb7e6e7d5`) | Source fallback; selected package remains `2.30.1`. |
+| EventStore | `d55c6f7c11e9bce6f17d490a84c83f1561979d63` (`v3.125.1-3-gd55c6f7c`) | Source inspection; runtime consumers restore package `3.125.1`. |
+| FrontComposer | `1513fe3ed21a554eeee7a9d807f9b9e25fdb4cd2` (`v4.6.0-61-g1513fe3e`) | Selected package remains `4.6.0`. |
+| McpCli | `c25e2140e14a76b696a76aed30c8302107714fd6` (`v1.0.0-13-gc25e2140`) | Committed root pointer; not used for G5 proof. |
+| Memories | `d0c5d8ca96b06e02acdda88f255b33288642a7f7` (`v2.28.1-125-gd0c5d8ca`) | Selected package remains `2.27.1`. |
+| Platform | `5f18593639832d1245577dd93ec07687517d3acb` (`5f185936`) | Committed root pointer; not used for G5 proof. |
+| PolymorphicSerializations | `80ce5afd99216ce5f591d66c833feafaf371f171` (`v1.19.4-1-g80ce5afd`) | Existing source dependency. |
+| Tenants | `c9feedb6656d70c7271e851c844ee29bdfb28c3e` (`v5.8.0-131-gc9feedb6`) | Selected package is `5.8.0`. |
 
 Selection does not revalidate historical parity receipts or authorize deletion
 of migration rollback paths. Earlier observations and owner approvals remain

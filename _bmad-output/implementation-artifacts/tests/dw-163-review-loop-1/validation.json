@@ -1,0 +1,308 @@
+{
+  "date": "2026-10-18",
+  "review_loop": 1,
+  "source_sha256": {
+    "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs": "f067bba3bc81295df7832f9f53ef4e150968a18bd1a524f011bd91c6000efd12",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs": "119f7bddc060dfd5adddd2351a199003e7ae5386bb937e1e42e719dfa61995cd",
+    "tests/Hexalith.Parties.Tests/Projections/PartyDetailSdkProjectionRecoveryTests.cs": "c8f8ca5ddd10b7f506632872eaf84f9c3f0c6716c90b91d32149db9d3039d963",
+    "references/Hexalith.Builds/Props/Directory.Packages.props": "cdb3f0a7c3c5b4a8c35f335d41df67ce4b9d643f7158e12f766cd93568ebe25b"
+  },
+  "package_graph": {
+    "Hexalith.EventStore.Client/3.125.1": {
+      "type": "package",
+      "sha512": "WNTME86u/UfXN9Xf7GfSEwOAJ/XNtJM1Gitr6R+cfAjU4MblAYzG8f8J0eQmiCQP2u4zUe9BWmEt3r+haAM7ag=="
+    },
+    "Hexalith.EventStore.Contracts/3.125.1": {
+      "type": "package",
+      "sha512": "FZrJQfCdE2dFpOBM1HGvowm5Z9RRyk+b3Gr3ps0TKNkd+WU0xQp0UUQ4WiJoEiZPnzlyhgk+DFxDmUMEDkbP7A=="
+    },
+    "Hexalith.EventStore.DomainService/3.125.1": {
+      "type": "package",
+      "sha512": "FTMD2BwNZABi4JD95nV2Y4ObvUTyo2KIEKS93SV6nviA0hqW9Lz1Zdpk49+/Idc2yCRNnrMXlLoi7nlVG+i9jw=="
+    },
+    "Hexalith.EventStore.Server/3.125.1": {
+      "type": "package",
+      "sha512": "bKtWAtQrKTKj67XMXVrj6tLOUs/XOnhi9McJCKUeDe5Kl1isREnxA9Cph2UGhAfVi0dxrqP4krRet7pgmEojuw=="
+    },
+    "Hexalith.EventStore.ServiceDefaults/3.125.1": {
+      "type": "package",
+      "sha512": "9TuqwCcEZPbUxumAV4EaBOh6muMVtquX4WNsNAQv1tvg3hfw0CE0UbEWl4wcv8bjp2xWgAgwt9p5MigFDiYzBg=="
+    },
+    "Hexalith.EventStore.Testing/3.125.1": {
+      "type": "package",
+      "sha512": "TbNRgHkaQ+U0jyf3KmZcc+UZQpC/szC8qg0O0BGJk0hKRh8XfEoBzB3+HkC4S7IwSLiX+hdsEnVXzpNxugZ+iA=="
+    }
+  },
+  "results": {
+    "projections_build": {
+      "warnings": 0,
+      "errors": 0
+    },
+    "service_build": {
+      "warnings": 0,
+      "errors": 0
+    },
+    "package_build": {
+      "warnings": 0,
+      "errors": 0
+    },
+    "handler_tests": 145,
+    "source_recovery_tests": 37,
+    "package_recovery_tests": 37,
+    "full_projections_tests": 335,
+    "full_service_tests": 1232,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "warning_gate": "passed",
+    "whitespace_gate": "passed",
+    "not_run": 0
+  },
+  "limits": [
+    "Aspire baseline is a startup observation, not topology acceptance",
+    "Historical candidate verification is preserved separately",
+    "No Git recording, package publication or deployment"
+  ],
+  "parent_portable_consumer_recheck": {
+    "build_exit_code": 0,
+    "build_warnings": 0,
+    "build_errors": 0,
+    "package_recovery_total": 37,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "not_run": 0,
+    "workspace_property": "PartiesWorkspaceRoot explicitly supplied"
+  },
+  "tested_source_revisions": {
+    "captured_utc": "2026-10-18T15:34:23Z",
+    "canonical_baseline_commit": "6b0641829b68d22656fb173eec6578c65e8e91f0",
+    "parties_head_commit": "7e73709992512d944f4950e6efb28c6132f9473c",
+    "identity_source": "Direct Git rev-parse, root .gitmodules enumeration and ls-tree; no identity inferred from documentation",
+    "root_declared_dependencies": {
+      "references/Hexalith.EventStore": {
+        "baseline_gitlink_commit": "ab8fa115c486875be3a22860a273d5d68a26c749",
+        "head_gitlink_commit": "d55c6f7c11e9bce6f17d490a84c83f1561979d63",
+        "checked_out_head_commit": "d55c6f7c11e9bce6f17d490a84c83f1561979d63"
+      },
+      "references/Hexalith.Memories": {
+        "baseline_gitlink_commit": "ef842c9abca9b9a0f77699ba1232e97c23405693",
+        "head_gitlink_commit": "d0c5d8ca96b06e02acdda88f255b33288642a7f7",
+        "checked_out_head_commit": "d0c5d8ca96b06e02acdda88f255b33288642a7f7"
+      },
+      "references/Hexalith.FrontComposer": {
+        "baseline_gitlink_commit": "acfc74c7e90acf7f55d0a9af7137859c77a4a09f",
+        "head_gitlink_commit": "1513fe3ed21a554eeee7a9d807f9b9e25fdb4cd2",
+        "checked_out_head_commit": "1513fe3ed21a554eeee7a9d807f9b9e25fdb4cd2"
+      },
+      "references/Hexalith.Tenants": {
+        "baseline_gitlink_commit": "664a379a95d5555bcd5e674060375412c038c9f3",
+        "head_gitlink_commit": "c9feedb6656d70c7271e851c844ee29bdfb28c3e",
+        "checked_out_head_commit": "c9feedb6656d70c7271e851c844ee29bdfb28c3e"
+      },
+      "references/Hexalith.AI.Tools": {
+        "baseline_gitlink_commit": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+        "head_gitlink_commit": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+        "checked_out_head_commit": "3f194e17174994d308ec84af9ee2b5aa68674d0d"
+      },
+      "references/Hexalith.Commons": {
+        "baseline_gitlink_commit": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+        "head_gitlink_commit": "b7e6e7d5e28568b30c523130339cc4c52e12c674",
+        "checked_out_head_commit": "b7e6e7d5e28568b30c523130339cc4c52e12c674"
+      },
+      "references/Hexalith.Builds": {
+        "baseline_gitlink_commit": "544fd2e907d62ccdc4b8f24168b8ab5dfcc13eb9",
+        "head_gitlink_commit": "332b2c144defba546fe0a09626a4a72f2340e22f",
+        "checked_out_head_commit": "332b2c144defba546fe0a09626a4a72f2340e22f"
+      },
+      "references/Hexalith.PolymorphicSerializations": {
+        "baseline_gitlink_commit": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+        "head_gitlink_commit": "80ce5afd99216ce5f591d66c833feafaf371f171",
+        "checked_out_head_commit": "80ce5afd99216ce5f591d66c833feafaf371f171"
+      },
+      "references/Hexalith.McpCli": {
+        "baseline_gitlink_commit": "4a84c16415c39b22e0c0855b25a1c6b018de6a19",
+        "head_gitlink_commit": "c25e2140e14a76b696a76aed30c8302107714fd6",
+        "checked_out_head_commit": "c25e2140e14a76b696a76aed30c8302107714fd6"
+      },
+      "references/Hexalith.Platform": {
+        "baseline_gitlink_commit": "2ac8e73c09fe631c5620723b54784d2e28e8941f",
+        "head_gitlink_commit": "5f18593639832d1245577dd93ec07687517d3acb",
+        "checked_out_head_commit": "5f18593639832d1245577dd93ec07687517d3acb"
+      }
+    }
+  },
+  "source_sha256_scope": "Historical initial review-loop-1 tested working source, before review fixes; current working hashes are recorded in review_fixes_verification. These hashes are not committed identities.",
+  "review_fixes_verification": {
+    "working_source_sha256": {
+      "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs": "f067bba3bc81295df7832f9f53ef4e150968a18bd1a524f011bd91c6000efd12",
+      "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs": "119f7bddc060dfd5adddd2351a199003e7ae5386bb937e1e42e719dfa61995cd",
+      "tests/Hexalith.Parties.Tests/Projections/PartyDetailSdkProjectionRecoveryTests.cs": "33e895454ad478a2e5d24e380a68703701d9c2c7649f08b821b4169af665a3e2",
+      "references/Hexalith.Builds/Props/Directory.Packages.props": "cdb3f0a7c3c5b4a8c35f335d41df67ce4b9d643f7158e12f766cd93568ebe25b"
+    },
+    "committed_identities": "Recorded separately in tested_source_revisions; uncommitted implementation and test edits are identified by working_source_sha256, not Parties HEAD.",
+    "build_exit_code": 0,
+    "build_warnings": 0,
+    "build_errors": 0,
+    "package_recovery_total": 37,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "not_run": 0,
+    "build_log": "review-fixes-build.txt",
+    "test_log": "review-fixes-recovery.txt",
+    "verification_scope": "Only PartyDetailSdkProjectionRecoveryTests was run after these review fixes. Historical wider-suite results above remain unchanged; parent owns full final verification."
+  },
+  "final_parent_verification": {
+    "service_build": {
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "checks": [
+      {
+        "name": "projections-build",
+        "command": [
+          "dotnet",
+          "build",
+          "tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",
+          "--configuration",
+          "Debug",
+          "-m:1",
+          "-p:UseHexalithProjectReferences=true",
+          "-p:UseNuGetDeps=false"
+        ],
+        "exit_code": 0,
+        "warnings": 0,
+        "errors": 0
+      },
+      {
+        "name": "handler-focused",
+        "command": [
+          "dotnet",
+          "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+          "-class",
+          "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests"
+        ],
+        "exit_code": 0,
+        "tests": {
+          "total": 145,
+          "errors": 0,
+          "failed": 0,
+          "skipped": 0,
+          "not_run": 0
+        }
+      },
+      {
+        "name": "recovery-focused",
+        "command": [
+          "dotnet",
+          "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+          "-class",
+          "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests"
+        ],
+        "exit_code": 0,
+        "tests": {
+          "total": 37,
+          "errors": 0,
+          "failed": 0,
+          "skipped": 0,
+          "not_run": 0
+        }
+      },
+      {
+        "name": "projections-full",
+        "command": [
+          "dotnet",
+          "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll"
+        ],
+        "exit_code": 0,
+        "tests": {
+          "total": 335,
+          "errors": 0,
+          "failed": 0,
+          "skipped": 0,
+          "not_run": 0
+        }
+      },
+      {
+        "name": "service-full",
+        "command": [
+          "dotnet",
+          "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll"
+        ],
+        "exit_code": 0,
+        "tests": {
+          "total": 1232,
+          "errors": 0,
+          "failed": 0,
+          "skipped": 0,
+          "not_run": 0
+        }
+      },
+      {
+        "name": "package-build",
+        "command": [
+          "dotnet",
+          "build",
+          "/tmp/dw163-review-loop-1-package/PackageRecovery.csproj",
+          "--configuration",
+          "Debug",
+          "-m:1",
+          "-p:UseHexalithProjectReferences=false",
+          "-p:UseNuGetDeps=true",
+          "-p:PartiesWorkspaceRoot={project-root}",
+          "--artifacts-path",
+          "/tmp/dw163-review-loop-1-package-artifacts"
+        ],
+        "exit_code": 0,
+        "warnings": 0,
+        "errors": 0
+      },
+      {
+        "name": "package-recovery",
+        "command": [
+          "dotnet",
+          "/tmp/dw163-review-loop-1-package-artifacts/bin/PackageRecovery/debug/PackageRecovery.dll",
+          "-class",
+          "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests"
+        ],
+        "exit_code": 0,
+        "tests": {
+          "total": 37,
+          "errors": 0,
+          "failed": 0,
+          "skipped": 0,
+          "not_run": 0
+        }
+      },
+      {
+        "name": "warning-gate",
+        "command": [
+          "bash",
+          "scripts/check-no-warning-override.sh"
+        ],
+        "exit_code": 0
+      },
+      {
+        "name": "whitespace-gate",
+        "command": [
+          "git",
+          "-c",
+          "core.whitespace=cr-at-eol",
+          "diff",
+          "--check"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "review_passes": 2,
+    "review_patches_applied": [
+      "same-store collision proof",
+      "empty-v1 canonical payload fixture",
+      "unresolved-first persisted recovery",
+      "canonical source provenance"
+    ],
+    "deferred": "Pre-existing legacy normal postcommit compaction behavior"
+  }
+}

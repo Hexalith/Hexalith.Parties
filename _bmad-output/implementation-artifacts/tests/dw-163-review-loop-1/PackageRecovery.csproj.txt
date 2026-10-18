@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <UseHexalithProjectReferences>false</UseHexalithProjectReferences>
+    <UseNuGetDeps>true</UseNuGetDeps>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(PartiesWorkspaceRoot)/src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj" />
+    <PackageReference Include="Hexalith.EventStore.Testing" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="NSubstitute" />
+    <Using Include="Xunit" />
+    <Compile Include="$(PartiesWorkspaceRoot)/tests/Hexalith.Parties.Tests/Projections/PartyDetailSdkProjectionRecoveryTests.cs" Link="PartyDetailSdkProjectionRecoveryTests.cs" />
+  </ItemGroup>
+</Project>

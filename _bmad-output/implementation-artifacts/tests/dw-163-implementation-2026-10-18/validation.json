@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-18",
+  "spec_baseline_commit": "6b0641829b68d22656fb173eec6578c65e8e91f0",
+  "selected_root_commit": "7e73709992512d944f4950e6efb28c6132f9473c",
+  "source_sha256": {
+    "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs": "ba1319f0663faa0ab643d4c17650dacd3be9687c9fb2dc268d39cbf128db5985",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs": "6a5f17a75b65d6f2d1d92a9e66e44fb0977fe0628f2e719860e44aa0345e8e65",
+    "tests/Hexalith.Parties.Tests/Projections/PartyDetailSdkProjectionRecoveryTests.cs": "a57f36e5f13bcddd59108babd79fddb2380660d6e4141e797578739ebc433e82",
+    "references/Hexalith.Builds/Props/Directory.Packages.props": "cdb3f0a7c3c5b4a8c35f335d41df67ce4b9d643f7158e12f766cd93568ebe25b"
+  },
+  "package_libraries": {
+    "Hexalith.EventStore.Client/3.125.1": {
+      "type": "package",
+      "sha512": "WNTME86u/UfXN9Xf7GfSEwOAJ/XNtJM1Gitr6R+cfAjU4MblAYzG8f8J0eQmiCQP2u4zUe9BWmEt3r+haAM7ag=="
+    },
+    "Hexalith.EventStore.Contracts/3.125.1": {
+      "type": "package",
+      "sha512": "FZrJQfCdE2dFpOBM1HGvowm5Z9RRyk+b3Gr3ps0TKNkd+WU0xQp0UUQ4WiJoEiZPnzlyhgk+DFxDmUMEDkbP7A=="
+    },
+    "Hexalith.EventStore.DomainService/3.125.1": {
+      "type": "package",
+      "sha512": "FTMD2BwNZABi4JD95nV2Y4ObvUTyo2KIEKS93SV6nviA0hqW9Lz1Zdpk49+/Idc2yCRNnrMXlLoi7nlVG+i9jw=="
+    },
+    "Hexalith.EventStore.Server/3.125.1": {
+      "type": "package",
+      "sha512": "bKtWAtQrKTKj67XMXVrj6tLOUs/XOnhi9McJCKUeDe5Kl1isREnxA9Cph2UGhAfVi0dxrqP4krRet7pgmEojuw=="
+    },
+    "Hexalith.EventStore.ServiceDefaults/3.125.1": {
+      "type": "package",
+      "sha512": "9TuqwCcEZPbUxumAV4EaBOh6muMVtquX4WNsNAQv1tvg3hfw0CE0UbEWl4wcv8bjp2xWgAgwt9p5MigFDiYzBg=="
+    },
+    "Hexalith.EventStore.Testing/3.125.1": {
+      "type": "package",
+      "sha512": "TbNRgHkaQ+U0jyf3KmZcc+UZQpC/szC8qg0O0BGJk0hKRh8XfEoBzB3+HkC4S7IwSLiX+hdsEnVXzpNxugZ+iA=="
+    }
+  },
+  "builds": {
+    "projections": {
+      "warnings": 0,
+      "errors": 0
+    },
+    "service": {
+      "warnings": 0,
+      "errors": 0
+    },
+    "package_consumer": {
+      "warnings": 0,
+      "errors": 0
+    }
+  },
+  "test_runs": {
+    "projections_focused": {
+      "total": 145,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    "service_focused": {
+      "total": 24,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    "projections_full": {
+      "total": 335,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    "service_full": {
+      "total": 1219,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    "package_recovery": {
+      "total": 24,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    }
+  },
+  "gates": {
+    "check-no-warning-override": "passed",
+    "crlf-aware-diff-check": "passed"
+  }
+}

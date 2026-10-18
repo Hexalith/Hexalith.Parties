@@ -53,8 +53,8 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 | Orchestration | .NET Aspire (`Aspire.Hosting` + hosting integrations) | `13.6.1` |
 | Actors & pub/sub | DAPR client/actors/AspNetCore | `1.18.10` |
 | | `CommunityToolkit.Aspire.Hosting.Dapr` | `13.6.1-beta.935` |
-| Gateway/eventing | Hexalith.EventStore | package `3.124.0` from the shared build catalog; source and installed acceptance remain separately verified |
-| Tenancy | Hexalith.Tenants | package `5.8.0` by default; current committed source gitlink `0e1fe111a5b4cce684455948b4fd12960589ef55` (`v5.8.0-98-g0e1fe111`), observed at Parties `8299e075f92219c135a4d075aa6ef9a0c574ad5a` on 2026-10-17; historical owner approvals and parity remain bound to their original identities |
+| Gateway/eventing | Hexalith.EventStore | package `3.125.1` from the shared build catalog; source and installed acceptance remain separately verified |
+| Tenancy | Hexalith.Tenants | package `5.8.0` by default; current committed source gitlink `c9feedb6656d70c7271e851c844ee29bdfb28c3e` (`v5.8.0-131-gc9feedb6`), observed at Parties `7e73709992512d944f4950e6efb28c6132f9473c` on 2026-10-18; historical owner approvals and parity remain bound to their original identities |
 | Validation | FluentValidation (+ DI ext.) | `12.2.0` |
 | Mediation | MediatR | `14.2.0` |
 | AuthN | Microsoft.AspNetCore.Authentication.JwtBearer | `10.0.13` |
@@ -91,7 +91,10 @@ counts as passing only when it was rerun at the stamped identity), and accept
 the missing I13 runtime focus, forced-colors, and reduced-motion proof as the
 named DW-111 deferral; I13 itself is not discharged.
 
-The shared build catalog now selects EventStore `3.124.0`; Parties no longer
+The shared build catalog now selects EventStore `3.125.1` at Builds
+`332b2c144defba546fe0a09626a4a72f2340e22f`, selected by Parties
+`7e73709992512d944f4950e6efb28c6132f9473c` during the concurrent `/pushall`;
+Parties no longer
 overrides it before import. The [3.117.1 consumer receipt](../_bmad-output/implementation-artifacts/tests/eventstore-3.117.1-consumer-2026-10-08/README.md)
 records historical downloaded package provenance and sidecar-channel API
 verification. The [3.117.0 receipt](../_bmad-output/implementation-artifacts/tests/eventstore-package-upgrade-2026-10-08/README.md)
@@ -179,9 +182,14 @@ empty object from becoming a default-valued lifecycle event. Nonempty objects
 with field-level redaction retain their existing deserialization and application
 behavior; ordinary `json` payloads retain their existing handling. Correcting
 previously applied empty redacted events requires a full SDK projection rebuild;
-incremental redelivery skips sequences already checkpointed. A projection left
-with only a Processing slot by an earlier unresolved first delivery also requires
-a rebuild: live delivery retains the coordinated-slot consistency guard.
+incremental redelivery skips sequences already checkpointed. New unresolved first
+deliveries initialize empty Detail and Processing slots through a create-only SDK
+batch with a retained recovery manifest, then write the failed processing audit
+optimistically. The fixed initialization identity permits retries after interrupted
+installation or compaction even when event support or dispatch identity changes.
+Detail stays unadvanced until a supported delivery folds the events. A projection
+left with only a Processing slot by an earlier unresolved first delivery still
+requires a rebuild: live delivery retains the coordinated-slot consistency guard.
 
 **Independent identity-history snapshots.** `PartyState.HumanActorBindings` and
 `HumanActorTransitions` contain personal actor and provenance history. Their finite

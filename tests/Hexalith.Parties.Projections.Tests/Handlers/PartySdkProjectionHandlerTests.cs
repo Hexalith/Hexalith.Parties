@@ -422,6 +422,7 @@ public sealed class PartySdkProjectionHandlerTests
         captured.ShouldNotBeNull();
         captured.Scope.ShouldBe(new ReadModelBatchScope(
             "statestore", "tenant-a", "party", "party-1", PartyProjectionNames.Detail, "dispatch-1"));
+        captured.RetainManifestForRecovery.ShouldBeFalse();
         captured.Operations.Count.ShouldBe(2);
         ReadModelBatchOperation detailOperation = captured.Operations.Single(static operation =>
             operation.Key.EndsWith(":detail", StringComparison.Ordinal));
@@ -1783,24 +1784,8 @@ public sealed class PartySdkProjectionHandlerTests
     [Fact]
     public async Task DetailHandler_MixedKnownAndUnresolvedDeliveryIsRetryableAndRecordsAuditAsync()
     {
-        IReadModelStore store = Substitute.For<IReadModelStore>();
-        IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
-        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
-        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
-        ReadModelBatch? initialization = null;
-        batchStore.ExecuteAsync(Arg.Do<ReadModelBatch>(value => initialization = value), Arg.Any<CancellationToken>())
-            .Returns(ReadModelBatchResult.Completed("initialized"));
-        PartyProcessingSdkReadModel? persistedAudit = null;
-        store.TrySaveAsync(
-                "statestore",
-                Arg.Any<string>(),
-                Arg.Do<PartyProcessingSdkReadModel>(value => persistedAudit = value),
-                Arg.Any<string>(),
-                Arg.Any<CancellationToken>())
-            .Returns(true);
-        var handler = new PartyDetailSdkProjectionHandler(store, batchStore, s_options);
+        var store = new InMemoryReadModelBatchStore();
+        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
         ProjectionRequest request = CreateRequest() with
         {
             Events =
@@ -1823,44 +1808,19 @@ public sealed class PartySdkProjectionHandlerTests
 
         result.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
         result.ReasonCode.ShouldBe("unresolved-or-unsupported-event");
-        persistedAudit.ShouldNotBeNull();
+        PartyDetailSdkReadModel detail = store.Deserialize<PartyDetailSdkReadModel>(PartySdkReadModelAddresses.Detail("tenant-a", "party-1"));
+        detail.Detail.ShouldBeNull();
+        detail.LastSequenceNumber.ShouldBe(long.MinValue);
+        PartyProcessingSdkReadModel persistedAudit = store.Deserialize<PartyProcessingSdkReadModel>(PartySdkReadModelAddresses.Processing("tenant-a", "party-1"));
         persistedAudit.Records.Select(static record => record.Outcome).ShouldBe(["Succeeded", "Failed"]);
         persistedAudit.LastSequenceNumber.ShouldBe(1);
-        initialization.ShouldNotBeNull();
-        initialization.RetainManifestForRecovery.ShouldBeTrue();
-        initialization.Scope.BatchId.ShouldNotBe(request.AggregateId);
-        initialization.Operations.Count.ShouldBe(2);
-        initialization.Operations.ShouldAllBe(operation => operation.Concurrency.Mode == ReadModelBatchConcurrencyMode.ExpectedETag
-            && operation.Concurrency.ExpectedETag == string.Empty);
-        PartyDetailSdkReadModel placeholder = DeserializeOperation<PartyDetailSdkReadModel>(initialization,
-            PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId));
-        placeholder.Detail.ShouldBeNull();
-        placeholder.LastSequenceNumber.ShouldBe(long.MinValue);
-        DeserializeOperation<PartyProcessingSdkReadModel>(initialization,
-            PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId)).Records.ShouldBeEmpty();
     }
 
     [Fact]
     public async Task DetailHandler_UnresolvedThenResolvableInSameBatchDoesNotAdvancePastUnresolvedAsync()
     {
-        IReadModelStore store = Substitute.For<IReadModelStore>();
-        IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
-        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
-        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
-        ReadModelBatch? initialization = null;
-        batchStore.ExecuteAsync(Arg.Do<ReadModelBatch>(value => initialization = value), Arg.Any<CancellationToken>())
-            .Returns(ReadModelBatchResult.Completed("initialized"));
-        PartyProcessingSdkReadModel? persistedAudit = null;
-        store.TrySaveAsync(
-                "statestore",
-                Arg.Any<string>(),
-                Arg.Do<PartyProcessingSdkReadModel>(value => persistedAudit = value),
-                Arg.Any<string>(),
-                Arg.Any<CancellationToken>())
-            .Returns(true);
-        var handler = new PartyDetailSdkProjectionHandler(store, batchStore, s_options);
+        var store = new InMemoryReadModelBatchStore();
+        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
         ProjectionRequest request = CreateRequest() with
         {
             Events =
@@ -1883,24 +1843,15 @@ public sealed class PartySdkProjectionHandlerTests
 
         result.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
         result.ReasonCode.ShouldBe("unresolved-or-unsupported-event");
-        persistedAudit.ShouldNotBeNull();
+        PartyDetailSdkReadModel detail = store.Deserialize<PartyDetailSdkReadModel>(PartySdkReadModelAddresses.Detail("tenant-a", "party-1"));
+        detail.Detail.ShouldBeNull();
+        detail.LastSequenceNumber.ShouldBe(long.MinValue);
+        PartyProcessingSdkReadModel persistedAudit = store.Deserialize<PartyProcessingSdkReadModel>(PartySdkReadModelAddresses.Processing("tenant-a", "party-1"));
         persistedAudit.Records.Select(static record => record.Outcome).ShouldBe(["Failed", "Succeeded"]);
         // The checkpoint must stay behind the still-unresolved sequence 1 event even though
         // sequence 2 resolved successfully in the same batch — otherwise a later redelivery
         // (e.g. after a consumer upgrade) would never revisit sequence 1 again.
         persistedAudit.LastSequenceNumber.ShouldBe(long.MinValue);
-        initialization.ShouldNotBeNull();
-        initialization.RetainManifestForRecovery.ShouldBeTrue();
-        initialization.Scope.BatchId.ShouldNotBe(request.AggregateId);
-        initialization.Operations.Count.ShouldBe(2);
-        initialization.Operations.ShouldAllBe(operation => operation.Concurrency.Mode == ReadModelBatchConcurrencyMode.ExpectedETag
-            && operation.Concurrency.ExpectedETag == string.Empty);
-        PartyDetailSdkReadModel placeholder = DeserializeOperation<PartyDetailSdkReadModel>(initialization,
-            PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId));
-        placeholder.Detail.ShouldBeNull();
-        placeholder.LastSequenceNumber.ShouldBe(long.MinValue);
-        DeserializeOperation<PartyProcessingSdkReadModel>(initialization,
-            PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId)).Records.ShouldBeEmpty();
     }
 
     [Fact]

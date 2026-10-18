@@ -1,0 +1,82 @@
+{
+  "resources": [
+    {
+      "name": "eventstore-admin-dapr-cli-pgvsaeze",
+      "displayName": "eventstore-admin-dapr-cli",
+      "state": "Waiting"
+    },
+    {
+      "name": "eventstore-admin-ensbpuzn",
+      "displayName": "eventstore-admin",
+      "state": "Waiting"
+    },
+    {
+      "name": "eventstore-admin-ui-dapr-cli-qucfxfxq",
+      "displayName": "eventstore-admin-ui-dapr-cli",
+      "state": "Waiting"
+    },
+    {
+      "name": "eventstore-admin-ui-kpgqpjqa",
+      "displayName": "eventstore-admin-ui",
+      "state": "NotStarted"
+    },
+    {
+      "name": "eventstore-dapr-cli-qxmavvay",
+      "displayName": "eventstore-dapr-cli",
+      "state": "Waiting"
+    },
+    {
+      "name": "eventstore-sazesaty",
+      "displayName": "eventstore",
+      "state": "Waiting"
+    },
+    {
+      "name": "parties-dapr-cli-yyqmgush",
+      "displayName": "parties-dapr-cli",
+      "state": "Waiting"
+    },
+    {
+      "name": "parties-gckaamed",
+      "displayName": "parties",
+      "state": "Waiting"
+    },
+    {
+      "name": "parties-mcp-gbwutexq",
+      "displayName": "parties-mcp",
+      "state": "NotStarted"
+    },
+    {
+      "name": "parties-ui-xktdktrx",
+      "displayName": "parties-ui",
+      "state": "Waiting"
+    },
+    {
+      "name": "security-dzejpsjs",
+      "displayName": "security",
+      "state": "Starting"
+    },
+    {
+      "name": "security-eventstore-client-password",
+      "displayName": "security-eventstore-client-password",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "security-eventstore-client-username",
+      "displayName": "security-eventstore-client-username",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "tenants-dapr-cli-qeqcuyma",
+      "displayName": "tenants-dapr-cli",
+      "state": "Waiting"
+    },
+    {
+      "name": "tenants-uethsszh",
+      "displayName": "tenants",
+      "state": "Waiting"
+    }
+  ],
+  "scope": "startup observation only; endpoints and sensitive runtime configuration omitted"
+}

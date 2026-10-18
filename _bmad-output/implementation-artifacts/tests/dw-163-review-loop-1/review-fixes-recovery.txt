@@ -1,0 +1,7 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: PackageRecovery
+  Discovered:  PackageRecovery
+  Starting:    PackageRecovery
+  Finished:    PackageRecovery (ID = '3a4a3e977645132296818424203231ba382de0c6e80c1ca0d7b4cc482af4819c')
+=== TEST EXECUTION SUMMARY ===
+   PackageRecovery  Total: 37, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.649s
