@@ -1,0 +1,19 @@
+  Determining projects to restore...
+  Restored /home/administrator/projects/hexalith/platform/src/Hexalith.Platform.Custody/Hexalith.Platform.Custody.csproj (in 147 ms).
+  Restored /home/administrator/projects/hexalith/platform/tests/Hexalith.Platform.Custody.Tests/Hexalith.Platform.Custody.Tests.csproj (in 156 ms).
+  7 of 9 projects are up-to-date for restore.
+  Hexalith.Commons.UniqueIds -> /tmp/ext-parties-1-agent-20261018/artifacts-after-platform-fix/bin/Hexalith.Commons.UniqueIds/debug/Hexalith.Commons.UniqueIds.dll
+  Hexalith.EventStore.Contracts -> /tmp/ext-parties-1-agent-20261018/artifacts-after-platform-fix/bin/Hexalith.EventStore.Contracts/debug/Hexalith.EventStore.Contracts.dll
+  Hexalith.Platform.Custody -> /tmp/ext-parties-1-agent-20261018/artifacts-after-platform-fix/bin/Hexalith.Platform.Custody/debug/Hexalith.Platform.Custody.dll
+  Hexalith.EventStore.Client -> /tmp/ext-parties-1-agent-20261018/artifacts-after-platform-fix/bin/Hexalith.EventStore.Client/debug/Hexalith.EventStore.Client.dll
+  Hexalith.EventStore.ServiceDefaults -> /tmp/ext-parties-1-agent-20261018/artifacts-after-platform-fix/bin/Hexalith.EventStore.ServiceDefaults/debug/Hexalith.EventStore.ServiceDefaults.dll
+  Hexalith.EventStore.DomainService -> /tmp/ext-parties-1-agent-20261018/artifacts-after-platform-fix/bin/Hexalith.EventStore.DomainService/debug/Hexalith.EventStore.DomainService.dll
+  Hexalith.EventStore.Server -> /tmp/ext-parties-1-agent-20261018/artifacts-after-platform-fix/bin/Hexalith.EventStore.Server/debug/Hexalith.EventStore.Server.dll
+  Hexalith.EventStore.Testing -> /tmp/ext-parties-1-agent-20261018/artifacts-after-platform-fix/bin/Hexalith.EventStore.Testing/debug/Hexalith.EventStore.Testing.dll
+  Hexalith.Platform.Custody.Tests -> /tmp/ext-parties-1-agent-20261018/artifacts-after-platform-fix/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.Platform.Custody.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.27

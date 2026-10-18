@@ -1,0 +1,7 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.12)
+  Discovering: Hexalith.Platform.Custody.Tests
+  Discovered:  Hexalith.Platform.Custody.Tests
+  Starting:    Hexalith.Platform.Custody.Tests
+  Finished:    Hexalith.Platform.Custody.Tests (ID = '398d2b2570ff8a8fc3b995ea792a1d46e3720745c4427addced5dd2c5f0779b2')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Platform.Custody.Tests  Total: 171, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 20.213s

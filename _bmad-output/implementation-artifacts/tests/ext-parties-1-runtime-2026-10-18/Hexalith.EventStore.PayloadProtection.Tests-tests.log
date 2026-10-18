@@ -1,0 +1,7 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.12)
+  Discovering: Hexalith.EventStore.PayloadProtection.Tests
+  Discovered:  Hexalith.EventStore.PayloadProtection.Tests
+  Starting:    Hexalith.EventStore.PayloadProtection.Tests
+  Finished:    Hexalith.EventStore.PayloadProtection.Tests (ID = 'f4dfbd405afcf86ebdac1df03d1c3d0ebf08e542179e3f58f3bf1469b426890d')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.EventStore.PayloadProtection.Tests  Total: 33, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.299s

@@ -1,0 +1,10 @@
+{
+  "record": "EXT-PARTIES-1",
+  "mode": "accepted-owner-command",
+  "acceptedTarget": "56cb4401c4179d431385ad3d931fefa402e4fc5a",
+  "observedPartiesHead": "ee4a4b8736131c0e7ce480b6dc419dcc0c266c3b",
+  "exitCode": 1,
+  "failedOperand": "exact-target-check",
+  "liveVerifierInvoked": false,
+  "availabilityEstablished": false
+}
