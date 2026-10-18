@@ -1,0 +1,125 @@
+{
+  "work_item": "DW-59",
+  "date": "2026-10-18",
+  "baseline_revision": "679b5b2aa04ac8cea4b29edcf17a9f8ae3fe792a",
+  "dependency_revisions": {
+    "references/Hexalith.AI.Tools": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+    "references/Hexalith.Builds": "332b2c144defba546fe0a09626a4a72f2340e22f",
+    "references/Hexalith.Commons": "b7e6e7d5e28568b30c523130339cc4c52e12c674",
+    "references/Hexalith.EventStore": "d55c6f7c11e9bce6f17d490a84c83f1561979d63",
+    "references/Hexalith.FrontComposer": "1513fe3ed21a554eeee7a9d807f9b9e25fdb4cd2",
+    "references/Hexalith.McpCli": "c25e2140e14a76b696a76aed30c8302107714fd6",
+    "references/Hexalith.Memories": "d0c5d8ca96b06e02acdda88f255b33288642a7f7",
+    "references/Hexalith.Platform": "5f18593639832d1245577dd93ec07687517d3acb",
+    "references/Hexalith.PolymorphicSerializations": "80ce5afd99216ce5f591d66c833feafaf371f171",
+    "references/Hexalith.Tenants": "c9feedb6656d70c7271e851c844ee29bdfb28c3e"
+  },
+  "source_sha256": {
+    "src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs": "b66b8bc6d6af3d4b454a6f256c081abd370f6eb40331a359032ebaf3c971d070",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitMappingStoreTests.cs": "1afca1d617976924bcd68efc536eaf5c78a9da12a09e32ee2a110e809bdca694",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryCleanupServiceTests.cs": "6e5e29c791df5d7f387b1b02850d4932c316dd191cbb915798a6879747ed04fb",
+    "docs/memories-backed-party-search.md": "58f84a8e33849df354d5fd50d332d43004d9d567b777c96ad4d025c33b771917"
+  },
+  "build": {
+    "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "regression_proof": {
+    "production_source": "original baseline algorithm",
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Search.PartyMemoryUnitMappingStoreTests -class Hexalith.Parties.Tests.Search.PartyMemoryCleanupServiceTests",
+    "exit_code": 1,
+    "expected_failures": 11,
+    "summary": {
+      "total": 69,
+      "passed": 58,
+      "failed": 11,
+      "skipped": 0,
+      "not-run": 0,
+      "errors": 0
+    }
+  },
+  "focused": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class 'Hexalith.Parties.Tests.Search.PartyMemory*' -class Hexalith.Parties.Tests.Search.MemoriesPartySearchServiceTests -class Hexalith.Parties.Tests.HealthChecks.MemoriesSearchHealthCheckTests",
+    "exit_code": 0,
+    "summary": {
+      "total": 180,
+      "passed": 180,
+      "failed": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "errors": 0
+    }
+  },
+  "full_service": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+    "exit_code": 0,
+    "summary": {
+      "total": 1251,
+      "passed": 1251,
+      "failed": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "errors": 0
+    }
+  },
+  "report_note": "Test invocations additionally used -xml with temporary local report destinations. Summaries above preserve report counts; raw local logs and reports are not published.",
+  "guards": [
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0
+    }
+  ],
+  "aspire": {
+    "apphost": "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+    "start_exit_code": 0,
+    "wait_command": "aspire wait parties --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --timeout 15 --non-interactive",
+    "wait_exit_code": 0,
+    "parties_health": "Healthy",
+    "healthy_resources": [
+      "eventstore-admin",
+      "eventstore",
+      "parties",
+      "parties-ui",
+      "security",
+      "tenants"
+    ],
+    "not_started_optional_resources": [
+      "eventstore-admin-ui",
+      "parties-mcp"
+    ],
+    "stop_exit_code": 0,
+    "confirmed_stopped": true,
+    "full_topology_qualification": false
+  },
+  "review": {
+    "layer": "blind-hunter",
+    "independent": true,
+    "findings": 4,
+    "patched": 4,
+    "deferred": 0,
+    "follow_up": "All four corrections confirmed; no new concrete regression found. Reviewer inspected read-only and did not rerun tests."
+  },
+  "commitlint": {
+    "locked_version": "21.2.2",
+    "installed_version": "21.2.2",
+    "cli": "./node_modules/.bin/commitlint",
+    "arguments": "--edit <temporary-message-file> --verbose",
+    "message": "fix: preserve colliding memories mapping rows\n",
+    "exit_code": 0,
+    "problems": 0,
+    "warnings": 0,
+    "evidence": "commitlint.txt"
+  },
+  "rollback": "Reverse the task patch; storage schema and hashed keys are unchanged. No data migration or real-data cleanup was performed.",
+  "limits": [
+    "Previously discarded mappings are not reconstructed.",
+    "Source-only replacement when no eligible unit match exists remains the existing compatibility policy.",
+    "Terminal Memories deletion, authoritative remote inventories, distributed fencing, cancellation recovery and DW-81 persistence migration remain separate work."
+  ]
+}

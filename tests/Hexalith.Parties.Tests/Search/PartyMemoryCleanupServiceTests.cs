@@ -15,6 +15,80 @@ namespace Hexalith.Parties.Tests.Search;
 public class PartyMemoryCleanupServiceTests
 {
     [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task CleanupDeletesBothUnitsAfterCrossRowMappingCollision(bool sourceFirst, bool legacySource)
+    {
+        var unitMatch = new PartyMemoryUnitMappingEntry("unit-existing", "urn:original", "case-captured");
+        var sourceMatch = new PartyMemoryUnitMappingEntry("unit-retained", "urn:updated", legacySource ? null : "case-captured");
+        var state = new PartyMemoryMappingState(sourceFirst ? [sourceMatch, unitMatch] : [unitMatch, sourceMatch]);
+        var options = Options.Create(new PartyMemoryUnitMappingStoreOptions { StateStoreName = "statestore" });
+        var store = new PartyMemoryUnitMappingStore(state.Client, options, new RecordingLogger<PartyMemoryUnitMappingStore>());
+        CancellationToken token = TestContext.Current.CancellationToken;
+        await store.RecordMappingAsync("tenant", "party", "unit-existing", "urn:updated", "case-captured", token);
+        state.Entries.ShouldContain(sourceMatch);
+        var handler = new RecordingHandler(() => new HttpResponseMessage(HttpStatusCode.NoContent));
+        using var client = new HttpClient(handler) { BaseAddress = new Uri("https://memories.example/") };
+        var cleanupStore = new PartyMemoryUnitMappingStore(state.Client, options, new RecordingLogger<PartyMemoryUnitMappingStore>());
+        var service = new PartyMemoryCleanupService(client, cleanupStore, new RecordingLogger<PartyMemoryCleanupService>());
+
+        PartyMemoryCleanupResult result = await service.DeleteByPartyAsync("tenant", "case-fallback", "party", token);
+
+        result.Cleaned.ShouldBeTrue();
+        result.BlockedReason.ShouldBe("Memories cleanup deleted 2 of 2 units.");
+        handler.RequestMethods.ShouldBe([HttpMethod.Delete, HttpMethod.Delete]);
+        string sourceCase = legacySource ? "case-fallback" : "case-captured";
+        handler.RequestUris.Select(uri => uri.AbsolutePath).Order(StringComparer.Ordinal).ShouldBe([
+            "/api/v1/tenants/tenant/cases/case-captured/memory-units/unit-existing",
+            $"/api/v1/tenants/tenant/cases/{sourceCase}/memory-units/unit-retained",
+        ]);
+        state.KeyExists.ShouldBeTrue();
+        state.Entries.ShouldBeEmpty();
+        state.DeleteAttempts.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CleanupRetainsOnlyFailedUnitAfterCrossRowMappingCollision(bool sourceFirst)
+    {
+        var unitMatch = new PartyMemoryUnitMappingEntry("unit-existing", "urn:original", "case-captured");
+        var sourceMatch = new PartyMemoryUnitMappingEntry("unit-retained", "urn:updated", "case-captured");
+        var state = new PartyMemoryMappingState(sourceFirst ? [sourceMatch, unitMatch] : [unitMatch, sourceMatch]);
+        var options = Options.Create(new PartyMemoryUnitMappingStoreOptions { StateStoreName = "statestore" });
+        var store = new PartyMemoryUnitMappingStore(state.Client, options, new RecordingLogger<PartyMemoryUnitMappingStore>());
+        CancellationToken token = TestContext.Current.CancellationToken;
+        await store.RecordMappingAsync("tenant", "party", "unit-existing", "urn:updated", "case-captured", token);
+        var responses = new Queue<HttpStatusCode>(sourceFirst
+            ? [HttpStatusCode.ServiceUnavailable, HttpStatusCode.NoContent]
+            : [HttpStatusCode.NoContent, HttpStatusCode.ServiceUnavailable]);
+        var handler = new RecordingHandler(() => new HttpResponseMessage(
+            responses.TryDequeue(out HttpStatusCode status) ? status : HttpStatusCode.NoContent));
+        using var client = new HttpClient(handler) { BaseAddress = new Uri("https://memories.example/") };
+        var service = new PartyMemoryCleanupService(client, store, new RecordingLogger<PartyMemoryCleanupService>());
+
+        PartyMemoryCleanupResult result = await service.DeleteByPartyAsync("tenant", "case-fallback", "party", token);
+
+        result.Cleaned.ShouldBeFalse();
+        result.BlockedReason.ShouldNotBeNull().ShouldContain("1 of 2 units deleted");
+        state.Entries.ShouldBe([sourceMatch]);
+        handler.RequestUris.Count.ShouldBe(2);
+        var retryStore = new PartyMemoryUnitMappingStore(state.Client, options, new RecordingLogger<PartyMemoryUnitMappingStore>());
+        var retryService = new PartyMemoryCleanupService(client, retryStore, new RecordingLogger<PartyMemoryCleanupService>());
+
+        PartyMemoryCleanupResult retry = await retryService.DeleteByPartyAsync("tenant", "case-fallback", "party", token);
+
+        retry.Cleaned.ShouldBeTrue();
+        handler.RequestMethods.ShouldBe([HttpMethod.Delete, HttpMethod.Delete, HttpMethod.Delete]);
+        handler.RequestUris[^1].AbsolutePath.ShouldBe("/api/v1/tenants/tenant/cases/case-captured/memory-units/unit-retained");
+        state.KeyExists.ShouldBeTrue();
+        state.Entries.ShouldBeEmpty();
+        state.DeleteAttempts.ShouldBe(0);
+    }
+
+    [Theory]
     [InlineData(null, "")]
     [InlineData(null, " \t")]
     [InlineData("", "")]

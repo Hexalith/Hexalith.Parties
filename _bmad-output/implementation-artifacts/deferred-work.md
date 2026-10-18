@@ -453,7 +453,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: PartyMemoryUnitMappingStore
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: Edge-case review found a second live mapping row can be dropped when two entries match the new unit id and source uri separately.
-status: open
+status: done 2026-10-18
+resolution: Prioritize eligible unit-ID mappings over source-only matches, preserving distinct cleanup units across row order, legacy-case adoption and ETag retries. Keep source-only replacement compatibility when no eligible unit exists. Debug/source build has zero warnings/errors; 180/180 focused and 1251/1251 service tests pass with no skips. Four independent review findings were patched and follow-up verified; no new deferred work. See spec-dw-59-preserve-colliding-memory-mappings.md and tests/dw-59-mapping-collisions-2026-10-18/validation.json.
 
 ### DW-60: Restore bounded allowlisted party IDs on SDK detail queries
 

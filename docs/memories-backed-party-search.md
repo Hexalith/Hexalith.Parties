@@ -71,6 +71,13 @@ exhaustion or a missing ETag blocks progress rather than overwriting inventory.
 This protects the mapping update; cross-instance indexing/erasure fencing and
 terminal workflow reconciliation remain separate requirements.
 
+When recording a mapping, a unit-ID match within the captured case (or a legacy
+row without a case) takes precedence over source-only matches. If the unit ID
+and source URI match different rows, the other unit remains in the cleanup
+inventory. Source-only replacement still applies when no eligible unit-ID match
+exists. This forward fix cannot reconstruct mappings discarded by older writers;
+drain those writers before relying on collision preservation.
+
 Drain older Parties instances before relying on this concurrency guarantee: older
 cleanup code can still physically delete or overwrite mapping keys. Empty domain
 ledger keys must not be expired or deleted while mapping operations may be in flight.

@@ -67,11 +67,18 @@ internal sealed partial class PartyMemoryUnitMappingStore(
             (IReadOnlyList<PartyMemoryUnitMappingEntry> current, string etag) =
                 await ReadWithETagAsync(key, cancellationToken).ConfigureAwait(false);
 
-            // Dedup by MemoryUnitId or SourceUri only inside the same case. A source may be
+            // Prefer MemoryUnitId matches over SourceUri-only matches inside the same case.
+            // If different rows match each identity, the source-only row still represents a
+            // distinct unit that cleanup must retain. Use historical source replacement only
+            // when no eligible unit match exists. A source may be
             // reindexed into a new case after configuration changes; retaining the prior-case
             // entry is essential because cleanup must still discover and erase that old unit.
-            // Legacy entries without CaseId predate case-aware persistence and are adopted into
-            // the current case when their identity matches.
+            // Legacy entries without CaseId are eligible for replacement and case adoption;
+            // a retained source-only legacy row keeps its original fallback-case behavior.
+            bool hasMatchingUnit = current.Any(existing =>
+                string.Equals(existing.MemoryUnitId, memoryUnitId, StringComparison.Ordinal)
+                && (string.IsNullOrWhiteSpace(existing.CaseId)
+                    || string.Equals(existing.CaseId, caseId, StringComparison.Ordinal)));
             List<PartyMemoryUnitMappingEntry> updated = [];
             bool replaced = false;
             foreach (PartyMemoryUnitMappingEntry existing in current)
@@ -80,7 +87,7 @@ internal sealed partial class PartyMemoryUnitMappingStore(
                 bool sameSource = string.Equals(existing.SourceUri, sourceUri, StringComparison.Ordinal);
                 bool sameCase = string.IsNullOrWhiteSpace(existing.CaseId)
                     || string.Equals(existing.CaseId, caseId, StringComparison.Ordinal);
-                if (sameCase && (sameMemoryUnit || sameSource))
+                if (sameCase && (sameMemoryUnit || (!hasMatchingUnit && sameSource)))
                 {
                     if (!replaced)
                     {

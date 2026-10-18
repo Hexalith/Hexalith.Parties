@@ -23,6 +23,148 @@ public sealed class PartyMemoryUnitMappingStoreTests
 
     private static readonly string[] _sensitiveValues = [TenantId, PartyId, MemoryUnitId, SourceUri, CaseId];
 
+    [Theory]
+    [InlineData(false, "case-secret")]
+    [InlineData(true, "case-secret")]
+    [InlineData(false, null)]
+    [InlineData(true, null)]
+    [InlineData(false, "")]
+    [InlineData(true, " \t")]
+    public async Task RecordMappingAsync_PreservesDistinctUnitWithMatchingSource(bool sourceFirst, string? existingCase)
+    {
+        var unitMatch = new PartyMemoryUnitMappingEntry(MemoryUnitId, "urn:original", existingCase);
+        var sourceMatch = new PartyMemoryUnitMappingEntry("unit-retained", SourceUri, CaseId);
+        var incoming = new PartyMemoryUnitMappingEntry(MemoryUnitId, SourceUri, CaseId);
+        var state = new PartyMemoryMappingState(sourceFirst ? [sourceMatch, unitMatch] : [unitMatch, sourceMatch]);
+        var store = CreateStore(state.Client, new RecordingLogger<PartyMemoryUnitMappingStore>());
+        CancellationToken token = TestContext.Current.CancellationToken;
+
+        await store.RecordMappingAsync(TenantId, PartyId, MemoryUnitId, SourceUri, CaseId, token);
+
+        state.Entries.ShouldBe(sourceFirst ? [sourceMatch, incoming] : [incoming, sourceMatch]);
+        state.SaveAttempts.ShouldBe(1);
+        IReadOnlyList<PartyMemoryUnitMappingEntry> readBack = await CreateStore(
+            state.Client, new RecordingLogger<PartyMemoryUnitMappingStore>()).GetMappingsAsync(TenantId, PartyId, token);
+        readBack.ShouldBe(state.Entries);
+
+        // An exact redelivery must preserve both units without another write.
+        await store.RecordMappingAsync(TenantId, PartyId, MemoryUnitId, SourceUri, CaseId, token);
+
+        state.Entries.ShouldBe(readBack);
+        state.SaveAttempts.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("case-secret")]
+    public async Task RecordMappingAsync_ReevaluatesUnitMatchAfterConcurrentSourceMatchArrives(string? existingCase)
+    {
+        var original = new PartyMemoryUnitMappingEntry(MemoryUnitId, "urn:original", existingCase);
+        var sourceMatch = new PartyMemoryUnitMappingEntry("unit-retained", SourceUri, CaseId);
+        var state = new PartyMemoryMappingState(original);
+        var store = CreateStore(state.Client, new RecordingLogger<PartyMemoryUnitMappingStore>());
+        var concurrentStore = CreateStore(state.Client, new RecordingLogger<PartyMemoryUnitMappingStore>());
+        CancellationToken token = TestContext.Current.CancellationToken;
+        state.BeforeSave = () => concurrentStore.RecordMappingAsync(
+            TenantId, PartyId, sourceMatch.MemoryUnitId, sourceMatch.SourceUri, CaseId, token);
+
+        await store.RecordMappingAsync(TenantId, PartyId, MemoryUnitId, SourceUri, CaseId, token);
+
+        state.Entries.ShouldBe([new PartyMemoryUnitMappingEntry(MemoryUnitId, SourceUri, CaseId), sourceMatch]);
+        state.SaveAttempts.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task RecordMappingAsync_UnitMatchAddedDuringRetryPreventsSourceReplacement()
+    {
+        var sourceMatch = new PartyMemoryUnitMappingEntry("unit-retained", SourceUri, CaseId);
+        var state = new PartyMemoryMappingState(sourceMatch);
+        var store = CreateStore(state.Client, new RecordingLogger<PartyMemoryUnitMappingStore>());
+        var concurrentStore = CreateStore(state.Client, new RecordingLogger<PartyMemoryUnitMappingStore>());
+        CancellationToken token = TestContext.Current.CancellationToken;
+        state.BeforeSave = () => concurrentStore.RecordMappingAsync(
+            TenantId, PartyId, MemoryUnitId, "urn:original", CaseId, token);
+
+        await store.RecordMappingAsync(TenantId, PartyId, MemoryUnitId, SourceUri, CaseId, token);
+
+        state.Entries.ShouldBe([sourceMatch, new PartyMemoryUnitMappingEntry(MemoryUnitId, SourceUri, CaseId)]);
+        state.SaveAttempts.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task RecordMappingAsync_UnitMatchRemovedDuringRetryAllowsSourceReplacement()
+    {
+        var unitMatch = new PartyMemoryUnitMappingEntry(MemoryUnitId, "urn:original", CaseId);
+        var sourceMatch = new PartyMemoryUnitMappingEntry("unit-retained", SourceUri, CaseId);
+        var state = new PartyMemoryMappingState(unitMatch, sourceMatch);
+        var store = CreateStore(state.Client, new RecordingLogger<PartyMemoryUnitMappingStore>());
+        var cleanupStore = CreateStore(state.Client, new RecordingLogger<PartyMemoryUnitMappingStore>());
+        CancellationToken token = TestContext.Current.CancellationToken;
+        state.BeforeSave = async () =>
+        {
+            _ = await cleanupStore.RemoveMappingsAsync(TenantId, PartyId, [unitMatch], token).ConfigureAwait(false);
+        };
+
+        await store.RecordMappingAsync(TenantId, PartyId, MemoryUnitId, SourceUri, CaseId, token);
+
+        state.Entries.ShouldBe([new PartyMemoryUnitMappingEntry(MemoryUnitId, SourceUri, CaseId)]);
+        state.SaveAttempts.ShouldBe(3);
+        state.DeleteAttempts.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task RecordMappingAsync_PreservesSourceReplacementForNewUnitAfterCollision()
+    {
+        var unitMatch = new PartyMemoryUnitMappingEntry(MemoryUnitId, "urn:original", CaseId);
+        var sourceMatch = new PartyMemoryUnitMappingEntry("unit-retained", SourceUri, CaseId);
+        var state = new PartyMemoryMappingState(unitMatch, sourceMatch);
+        var store = CreateStore(state.Client, new RecordingLogger<PartyMemoryUnitMappingStore>());
+        CancellationToken token = TestContext.Current.CancellationToken;
+        await store.RecordMappingAsync(TenantId, PartyId, MemoryUnitId, SourceUri, CaseId, token);
+        state.Entries.Count.ShouldBe(2);
+        var freshStore = CreateStore(state.Client, new RecordingLogger<PartyMemoryUnitMappingStore>());
+
+        await freshStore.RecordMappingAsync(TenantId, PartyId, "unit-new", SourceUri, CaseId, token);
+
+        IReadOnlyList<PartyMemoryUnitMappingEntry> readBack = await CreateStore(
+            state.Client, new RecordingLogger<PartyMemoryUnitMappingStore>()).GetMappingsAsync(TenantId, PartyId, token);
+        readBack.ShouldBe([new PartyMemoryUnitMappingEntry("unit-new", SourceUri, CaseId)]);
+        state.Entries.ShouldBe(readBack);
+    }
+
+    [Fact]
+    public async Task RecordMappingAsync_DeduplicatesMatchingUnitWhileRetainingOtherUnitsAndCases()
+    {
+        var legacy = new PartyMemoryUnitMappingEntry(MemoryUnitId, "urn:legacy");
+        var duplicate = new PartyMemoryUnitMappingEntry(MemoryUnitId, "urn:original", CaseId);
+        var sourceMatch = new PartyMemoryUnitMappingEntry("unit-retained", SourceUri, CaseId);
+        var otherCase = new PartyMemoryUnitMappingEntry(MemoryUnitId, SourceUri, "case-other");
+        var unrelated = new PartyMemoryUnitMappingEntry("unit-other", "urn:other", CaseId);
+        var state = new PartyMemoryMappingState(legacy, sourceMatch, duplicate, otherCase, unrelated);
+        var store = CreateStore(state.Client, new RecordingLogger<PartyMemoryUnitMappingStore>());
+
+        await store.RecordMappingAsync(
+            TenantId, PartyId, MemoryUnitId, SourceUri, CaseId, TestContext.Current.CancellationToken);
+
+        state.Entries.ShouldBe([
+            new PartyMemoryUnitMappingEntry(MemoryUnitId, SourceUri, CaseId), sourceMatch, otherCase, unrelated,
+        ]);
+    }
+
+    [Fact]
+    public async Task RecordMappingAsync_UnitMatchInAnotherCaseDoesNotPreventSourceReplacement()
+    {
+        var otherCase = new PartyMemoryUnitMappingEntry(MemoryUnitId, SourceUri, "case-other");
+        var stale = new PartyMemoryUnitMappingEntry("unit-stale", SourceUri, CaseId);
+        var state = new PartyMemoryMappingState(otherCase, stale);
+        var store = CreateStore(state.Client, new RecordingLogger<PartyMemoryUnitMappingStore>());
+
+        await store.RecordMappingAsync(
+            TenantId, PartyId, MemoryUnitId, SourceUri, CaseId, TestContext.Current.CancellationToken);
+
+        state.Entries.ShouldBe([otherCase, new PartyMemoryUnitMappingEntry(MemoryUnitId, SourceUri, CaseId)]);
+    }
+
     [Fact]
     public async Task RecordMappingAsync_PersistsSuppliedCaseIdInActualStatePayload()
     {
