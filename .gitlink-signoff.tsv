@@ -220,3 +220,19 @@ references/Hexalith.FrontComposer|b06f86d554363ea5b8192cbc149a75c820dab2b8|valid
 references/Hexalith.Memories|99431f0fed102ea6ddbae33d28b9da4fc7f215a0|validated-advance|v2.28.1-99-g99431f0f|jpiquot|2026-10-16
 references/Hexalith.Platform|c3af1f2c9e7b0d1b003a1bd5978545f664e38167|validated-advance|c3af1f2c|jpiquot|2026-10-16
 references/Hexalith.Tenants|51f404513f2657e98f949f58f0df43b99b68a7d0|validated-advance|v5.8.0-77-g51f40451|jpiquot|2026-10-16
+
+# --- 2026-10-18 Parties release selection. The operator authorized this
+#     release and bypass of the production reviewer wait in this session.
+#     These nine pointers are already committed at Parties
+#     5efaae7f0120439bc8d942bbc227dabdeefa56d8. Selection only; automated
+#     CI, package, and publication gates remain required. This does not
+#     certify platform parity or authorize rollback deletion.
+references/Hexalith.Builds|332b2c144defba546fe0a09626a4a72f2340e22f|validated-advance|v4.33.0-8-g332b2c14|jpiquot|2026-10-18
+references/Hexalith.Commons|b7e6e7d5e28568b30c523130339cc4c52e12c674|validated-advance|v2.30.1-20-gb7e6e7d5|jpiquot|2026-10-18
+references/Hexalith.EventStore|d55c6f7c11e9bce6f17d490a84c83f1561979d63|validated-advance|v3.125.1-3-gd55c6f7c|jpiquot|2026-10-18
+references/Hexalith.FrontComposer|1513fe3ed21a554eeee7a9d807f9b9e25fdb4cd2|validated-advance|v4.6.0-61-g1513fe3e|jpiquot|2026-10-18
+references/Hexalith.McpCli|c25e2140e14a76b696a76aed30c8302107714fd6|validated-advance|v1.0.0-13-gc25e2140|jpiquot|2026-10-18
+references/Hexalith.Memories|d0c5d8ca96b06e02acdda88f255b33288642a7f7|validated-advance|v2.28.1-125-gd0c5d8ca|jpiquot|2026-10-18
+references/Hexalith.Platform|5f18593639832d1245577dd93ec07687517d3acb|validated-advance|5f185936|jpiquot|2026-10-18
+references/Hexalith.PolymorphicSerializations|80ce5afd99216ce5f591d66c833feafaf371f171|validated-advance|v1.19.4-1-g80ce5afd|jpiquot|2026-10-18
+references/Hexalith.Tenants|c9feedb6656d70c7271e851c844ee29bdfb28c3e|validated-advance|v5.8.0-131-gc9feedb6|jpiquot|2026-10-18
