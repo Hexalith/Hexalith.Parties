@@ -20,9 +20,10 @@ internal static class PartySdkProjectionFold
     /// <summary>
     /// Yields events newer than <paramref name="lastSequenceNumber"/> in sequence order.
     /// <list type="bullet">
-    /// <item>Non-JSON / unresolved types: <c>(null, advance: false)</c> — checkpoint must not move.</item>
+    /// <item>Whole-payload redacted (empty object or JSON null): <c>(null, advance: true)</c>, without resolving a CLR type.</item>
+    /// <item>Other non-JSON / unresolved types: <c>(null, advance: false)</c> — checkpoint must not move.</item>
     /// <item>Corrupt JSON (<see cref="JsonException"/> and related): <c>(null, advance: true)</c> — skip permanently.</item>
-    /// <item>Successful payload or whole-payload redacted: <c>(payload?, advance: true)</c>.</item>
+    /// <item>Successful payload, including nonempty field-redacted JSON: <c>(payload, advance: true)</c>.</item>
     /// </list>
     /// When <paramref name="logger"/> is supplied, every drop/skip emits a distinct operator-facing
     /// diagnostic. The message templates never embed event payloads, aggregate ids, tenant ids, or
@@ -60,6 +61,18 @@ internal static class PartySdkProjectionFold
                 }
 
                 yield return (@event, null, false);
+                continue;
+            }
+
+            if (isRedacted && IsWholePayloadRedacted(@event.Payload))
+            {
+                checkpoint = @event.SequenceNumber;
+                if (logger is not null)
+                {
+                    Log.WholePayloadRedactedEventDropped(logger, @event.EventTypeName, @event.SequenceNumber);
+                }
+
+                yield return (@event, null, true);
                 continue;
             }
 
@@ -131,9 +144,8 @@ internal static class PartySdkProjectionFold
             {
                 if (advance)
                 {
-                    // Whole-payload redaction (root-level $enc collapsed to {}) can yield a
-                    // default-valued instance that does not implement IEventPayload. No exception
-                    // was thrown, so this is not the same signal as RedactedEventDropped above.
+                    // A remaining redacted payload can deserialize to null without an exception
+                    // (for example through a converter). Preserve its skip-and-advance diagnostic.
                     Log.WholePayloadRedactedEventDropped(logger, @event.EventTypeName, @event.SequenceNumber);
                 }
                 else
@@ -148,6 +160,23 @@ internal static class PartySdkProjectionFold
             }
 
             yield return (@event, payload, advance);
+        }
+    }
+
+    private static bool IsWholePayloadRedacted(byte[] payload)
+    {
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(payload);
+            JsonElement root = document.RootElement;
+            return root.ValueKind == JsonValueKind.Null
+                || (root.ValueKind == JsonValueKind.Object && !root.EnumerateObject().MoveNext());
+        }
+        catch (JsonException)
+        {
+            // Keep malformed redacted data on the existing type-resolution/deserialization path
+            // so its retry policy and privacy-safe diagnostic do not change.
+            return false;
         }
     }
 

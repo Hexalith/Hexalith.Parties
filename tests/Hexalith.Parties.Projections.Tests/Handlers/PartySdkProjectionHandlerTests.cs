@@ -1246,10 +1246,8 @@ public sealed class PartySdkProjectionHandlerTests
         {
             Events =
             [
-                Event(new PartyDeactivated(), 1, DateTimeOffset.UnixEpoch) with
-                {
-                    SerializationFormat = "json-redacted",
-                },
+                new ProjectionEventDto(nameof(PersonDetailsUpdated), "{\"personDetails\":null}"u8.ToArray(), "json-redacted",
+                    1, DateTimeOffset.UnixEpoch, "correlation-1"),
             ],
         };
 
@@ -1257,7 +1255,7 @@ public sealed class PartySdkProjectionHandlerTests
 
         ProcessingActivityRecord record = result.Records.ShouldHaveSingleItem();
         record.OperationCategory.ShouldBe("PartyCommand");
-        record.EventType.ShouldBe(nameof(PartyDeactivated));
+        record.EventType.ShouldBe(nameof(PersonDetailsUpdated));
         record.Outcome.ShouldBe("Succeeded");
         result.LastSequenceNumber.ShouldBe(1);
     }
@@ -2709,6 +2707,391 @@ public sealed class PartySdkProjectionHandlerTests
         processing.LastSequenceNumber.ShouldBe(request.Events.Length);
         processing.Records.Select(static record => record.Outcome)
             .ShouldBe(includeValidTail ? ["Failed", "Succeeded"] : ["Failed"]);
+    }
+
+    /// <summary>Proves redacted root payloads advance persisted checkpoints without creating domain state.</summary>
+    [Theory]
+    [InlineData(nameof(PartyDeactivated), "{}")]
+    [InlineData(nameof(PartyCreated), "{}")]
+    [InlineData("Future.Events.UnknownEvent", " \r\n{ \t }\n")]
+    [InlineData("Future.Events.UnknownEvent", "null")]
+    public async Task WholePayloadRedactionOnly_PersistsEmptyDetailAndIndexWithRedactedProcessingAsync(
+        string eventTypeName, string payload)
+    {
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                new ProjectionEventDto(eventTypeName, System.Text.Encoding.UTF8.GetBytes(payload), "JSON-REDACTED",
+                    1, DateTimeOffset.UnixEpoch.AddSeconds(1), "correlation-1"),
+            ],
+        };
+        var store = new InMemoryReadModelBatchStore();
+        var detailHandler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        var indexHandler = new PartyIndexSdkProjectionHandler(store, s_options);
+
+        (await detailHandler.ProjectAsync(request, "redacted-only-detail", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        (await indexHandler.ProjectAsync(request, "redacted-only-index", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+
+        PartyDetailSdkReadModel detail = store.Deserialize<PartyDetailSdkReadModel>(
+            PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId));
+        PartyProcessingSdkReadModel processing = store.Deserialize<PartyProcessingSdkReadModel>(
+            PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId));
+        PartyIndexSdkReadModel index = store.Deserialize<PartyIndexSdkReadModel>(
+            PartySdkReadModelAddresses.Index(request.TenantId));
+        detail.Detail.ShouldBeNull();
+        detail.LastSequenceNumber.ShouldBe(1);
+        detail.ProjectedAt.ShouldBe(request.Events[0].Timestamp);
+        processing.Records.ShouldHaveSingleItem().Outcome.ShouldBe("Redacted");
+        processing.LastSequenceNumber.ShouldBe(1);
+        index.Entries.ShouldBeEmpty();
+        index.LastSequenceNumbers[request.AggregateId].ShouldBe(1);
+        index.ProjectedAt.ShouldBe(request.Events[0].Timestamp);
+    }
+
+    /// <summary>Checks persisted incremental projection state against both rebuild protocols after a redacted tail.</summary>
+    [Theory]
+    [InlineData(nameof(PartyDeactivated), "{}")]
+    [InlineData("Future.Events.UnknownEvent", " \r\n{ \t }\n")]
+    [InlineData("Future.Events.UnknownEvent", "null")]
+    public async Task WholePayloadRedaction_IncrementalPersistenceAndRebuildsAgreeAsync(string eventTypeName, string payload)
+    {
+        ProjectionRequest history = CreateRequest() with
+        {
+            Events =
+            [
+                Event(new PartyCreated
+                {
+                    Type = PartyType.Person,
+                    PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+                }, 1, DateTimeOffset.UnixEpoch),
+                new ProjectionEventDto(eventTypeName, System.Text.Encoding.UTF8.GetBytes(payload), "json-redacted",
+                    2, DateTimeOffset.UnixEpoch.AddSeconds(1), "correlation-1"),
+                Event(new PartyDisplayNameDerived
+                {
+                    DisplayName = "Augusta Ada Lovelace",
+                    SortName = "Lovelace, Augusta Ada",
+                }, 3, DateTimeOffset.UnixEpoch.AddSeconds(2)),
+            ],
+        };
+        ProjectionRequest unrelated = CreateRequest() with
+        {
+            AggregateId = "party-unrelated",
+            Events = [Event(new PartyCreated { Type = PartyType.Organization }, 1, DateTimeOffset.UnixEpoch)],
+        };
+        var store = new InMemoryReadModelBatchStore();
+        var detailHandler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        var indexHandler = new PartyIndexSdkProjectionHandler(store, s_options);
+        (await indexHandler.ProjectAsync(unrelated, "unrelated-index", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        for (int position = 0; position < history.Events.Length; position++)
+        {
+            ProjectionRequest delivery = history with { Events = [history.Events[position]] };
+            (await detailHandler.ProjectAsync(delivery, $"redacted-detail-{position}", TestContext.Current.CancellationToken))
+                .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+            (await indexHandler.ProjectAsync(delivery, $"redacted-index-{position}", TestContext.Current.CancellationToken))
+                .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        }
+
+        string detailKey = PartySdkReadModelAddresses.Detail(history.TenantId, history.AggregateId);
+        string processingKey = PartySdkReadModelAddresses.Processing(history.TenantId, history.AggregateId);
+        string indexKey = PartySdkReadModelAddresses.Index(history.TenantId);
+        PartyDetailSdkReadModel detail = store.Deserialize<PartyDetailSdkReadModel>(detailKey);
+        PartyProcessingSdkReadModel processing = store.Deserialize<PartyProcessingSdkReadModel>(processingKey);
+        PartyIndexSdkReadModel index = store.Deserialize<PartyIndexSdkReadModel>(indexKey);
+        detail.Detail.ShouldNotBeNull().IsActive.ShouldBeTrue();
+        detail.Detail.PersonDetails.ShouldNotBeNull().FirstName.ShouldBe("Ada");
+        detail.Detail.DisplayName.ShouldBe("Augusta Ada Lovelace");
+        detail.Detail.SortName.ShouldBe("Lovelace, Augusta Ada");
+        detail.Detail.LastModifiedAt.ShouldBe(history.Events[2].Timestamp);
+        detail.Detail.NameHistory.Count.ShouldBe(2);
+        detail.Detail.NameHistory[1].TriggeredBy.ShouldBe(nameof(PartyDisplayNameDerived));
+        detail.Detail.NameHistory[1].ChangedAt.ShouldBe(history.Events[2].Timestamp);
+        detail.LastSequenceNumber.ShouldBe(3);
+        detail.ProjectedAt.ShouldBe(history.Events[2].Timestamp);
+        processing.Records.Select(static record => record.Outcome).ShouldBe(["Succeeded", "Redacted", "Succeeded"]);
+        processing.Records[1].OperationCategory.ShouldBe("Other");
+        processing.LastSequenceNumber.ShouldBe(3);
+        index.Entries[history.AggregateId].IsActive.ShouldBeTrue();
+        index.Entries[history.AggregateId].DisplayName.ShouldBe("Augusta Ada Lovelace");
+        index.Entries[history.AggregateId].SortName.ShouldBe("Lovelace, Augusta Ada");
+        index.Entries[history.AggregateId].LastModifiedAt.ShouldBe(history.Events[2].Timestamp);
+        index.Entries.ContainsKey(unrelated.AggregateId).ShouldBeTrue();
+        index.LastSequenceNumbers[history.AggregateId].ShouldBe(3);
+        index.ProjectedAt.ShouldBe(history.Events[2].Timestamp);
+
+        (await detailHandler.ProjectAsync(history, "redacted-detail-duplicate", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        (await indexHandler.ProjectAsync(history, "redacted-index-duplicate", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        JsonSerializer.Serialize(store.Deserialize<PartyProcessingSdkReadModel>(processingKey), s_canonicalJsonOptions)
+            .ShouldBe(JsonSerializer.Serialize(processing, s_canonicalJsonOptions));
+
+        DomainProjectionRebuildPlan detailPlan = await detailHandler.PrepareRebuildAsync(
+            history, "redacted-detail-rebuild", TestContext.Current.CancellationToken);
+        PartyDetailSdkReadModel rebuiltDetail = JsonSerializer.Deserialize<PartyDetailSdkReadModel>(
+            detailPlan.Operations.Single(operation => operation.Key == detailKey).CanonicalValue.Span, s_canonicalJsonOptions)!;
+        JsonSerializer.Serialize(rebuiltDetail, s_canonicalJsonOptions)
+            .ShouldBe(JsonSerializer.Serialize(detail, s_canonicalJsonOptions));
+        PartyProcessingSdkReadModel rebuiltProcessing = JsonSerializer.Deserialize<PartyProcessingSdkReadModel>(
+            detailPlan.Operations.Single(operation => operation.Key == processingKey).CanonicalValue.Span, s_canonicalJsonOptions)!;
+        JsonSerializer.Serialize(rebuiltProcessing, s_canonicalJsonOptions)
+            .ShouldBe(JsonSerializer.Serialize(processing, s_canonicalJsonOptions));
+        DomainSharedProjectionRebuildIdentity identity = CreateSharedRebuildIdentity();
+        DomainSharedProjectionRebuildCandidate candidate = await indexHandler.CreateEmptyCandidateAsync(
+            identity, TestContext.Current.CancellationToken);
+        candidate = await indexHandler.AccumulateAsync(identity, candidate, unrelated, TestContext.Current.CancellationToken);
+        candidate = await indexHandler.AccumulateAsync(identity, candidate, history, TestContext.Current.CancellationToken);
+        DomainProjectionRebuildPlan indexPlan = await indexHandler.FinalizeAsync(identity, candidate, TestContext.Current.CancellationToken);
+        PartyIndexSdkReadModel rebuiltIndex = JsonSerializer.Deserialize<PartyIndexSdkReadModel>(
+            indexPlan.Operations.Single(operation => operation.Key == indexKey).CanonicalValue.Span, s_canonicalJsonOptions)!;
+        rebuiltIndex.Entries.Keys.Order(StringComparer.Ordinal).ShouldBe(index.Entries.Keys.Order(StringComparer.Ordinal));
+        foreach (string partyId in index.Entries.Keys)
+        {
+            JsonSerializer.Serialize(rebuiltIndex.Entries[partyId], s_canonicalJsonOptions)
+                .ShouldBe(JsonSerializer.Serialize(index.Entries[partyId], s_canonicalJsonOptions));
+        }
+
+        rebuiltIndex.LastSequenceNumbers.OrderBy(static pair => pair.Key, StringComparer.Ordinal)
+            .ShouldBe(index.LastSequenceNumbers.OrderBy(static pair => pair.Key, StringComparer.Ordinal));
+        rebuiltIndex.ErasureSequenceNumbers.OrderBy(static pair => pair.Key, StringComparer.Ordinal)
+            .ShouldBe(index.ErasureSequenceNumbers.OrderBy(static pair => pair.Key, StringComparer.Ordinal));
+        rebuiltIndex.ProjectedAt.ShouldBe(index.ProjectedAt);
+        rebuiltIndex.ProjectionVersion.ShouldBe(index.ProjectionVersion);
+    }
+
+    /// <summary>Replaces an uncheckpointed failed audit record when a later delivery supplies whole-payload redaction.</summary>
+    [Fact]
+    public async Task WholePayloadRedaction_ReplacesPersistedFailedProcessingRecordAsync()
+    {
+        ProjectionRequest creation = CreateRequest() with { Events = [CreateRequest().Events[0]] };
+        ProjectionRequest unresolved = creation with
+        {
+            Events =
+            [
+                new ProjectionEventDto("Future.Events.UnknownEvent", "{ not valid json"u8.ToArray(), "json-redacted",
+                    2, DateTimeOffset.UnixEpoch.AddSeconds(1), "correlation-1"),
+            ],
+        };
+        var store = new InMemoryReadModelBatchStore();
+        var detailHandler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        var indexHandler = new PartyIndexSdkProjectionHandler(store, s_options);
+        (await detailHandler.ProjectAsync(creation, "audit-create-detail", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        (await indexHandler.ProjectAsync(creation, "audit-create-index", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+
+        DomainProjectionHandlerResult detailFailure = await detailHandler.ProjectAsync(
+            unresolved, "audit-failed-detail", TestContext.Current.CancellationToken);
+        DomainProjectionHandlerResult indexFailure = await indexHandler.ProjectAsync(
+            unresolved, "audit-failed-index", TestContext.Current.CancellationToken);
+
+        detailFailure.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        detailFailure.ReasonCode.ShouldBe(PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason);
+        indexFailure.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        indexFailure.ReasonCode.ShouldBe(PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason);
+        string detailKey = PartySdkReadModelAddresses.Detail(creation.TenantId, creation.AggregateId);
+        string processingKey = PartySdkReadModelAddresses.Processing(creation.TenantId, creation.AggregateId);
+        string indexKey = PartySdkReadModelAddresses.Index(creation.TenantId);
+        PartyProcessingSdkReadModel failed = store.Deserialize<PartyProcessingSdkReadModel>(processingKey);
+        failed.Records.Select(static record => record.Outcome).ShouldBe(["Succeeded", "Failed"]);
+        failed.LastSequenceNumber.ShouldBe(1);
+        store.Deserialize<PartyDetailSdkReadModel>(detailKey).LastSequenceNumber.ShouldBe(1);
+        store.Deserialize<PartyIndexSdkReadModel>(indexKey).LastSequenceNumbers[creation.AggregateId].ShouldBe(1);
+
+        ProjectionRequest redelivered = unresolved with
+        {
+            Events = [unresolved.Events[0] with { Payload = "{}"u8.ToArray() }],
+        };
+        (await detailHandler.ProjectAsync(redelivered, "audit-redacted-detail", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        (await indexHandler.ProjectAsync(redelivered, "audit-redacted-index", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+
+        PartyProcessingSdkReadModel repaired = store.Deserialize<PartyProcessingSdkReadModel>(processingKey);
+        repaired.Records.Select(static record => record.SequenceNumber).ShouldBe([1L, 2L]);
+        repaired.Records.Select(static record => record.Outcome).ShouldBe(["Succeeded", "Redacted"]);
+        repaired.Records[0].ShouldBe(failed.Records[0]);
+        repaired.Records[1].OperationCategory.ShouldBe("Other");
+        repaired.LastSequenceNumber.ShouldBe(2);
+        repaired.ProjectedAt.ShouldBe(redelivered.Events[0].Timestamp);
+        store.Deserialize<PartyDetailSdkReadModel>(detailKey).LastSequenceNumber.ShouldBe(2);
+        PartyIndexSdkReadModel index = store.Deserialize<PartyIndexSdkReadModel>(indexKey);
+        index.LastSequenceNumbers[creation.AggregateId].ShouldBe(2);
+        index.Entries[creation.AggregateId].IsActive.ShouldBeTrue();
+    }
+
+    /// <summary>Retains persisted erasure tombstones and audit history when a later root-redacted event advances checkpoints.</summary>
+    [Theory]
+    [InlineData(nameof(PartyReactivated))]
+    [InlineData("Future.Events.UnknownEvent")]
+    public async Task WholePayloadRedaction_AfterErasurePreservesPersistedTombstonesAsync(string eventTypeName)
+    {
+        DateTimeOffset erasedAt = DateTimeOffset.UnixEpoch.AddMinutes(5);
+        ProjectionRequest erasedHistory = CreateRequest() with
+        {
+            Events =
+            [
+                Event(new PartyCreated
+                {
+                    Type = PartyType.Person,
+                    PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+                }, 1, DateTimeOffset.UnixEpoch),
+                Event(new PartyErased { PartyId = "party-1", TenantId = "tenant-a", ErasedAt = erasedAt }, 2, erasedAt),
+            ],
+        };
+        var store = new InMemoryReadModelBatchStore();
+        var detailHandler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        var indexHandler = new PartyIndexSdkProjectionHandler(store, s_options);
+        (await detailHandler.ProjectAsync(erasedHistory, "erased-detail", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        (await indexHandler.ProjectAsync(erasedHistory, "erased-index", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        string detailKey = PartySdkReadModelAddresses.Detail(erasedHistory.TenantId, erasedHistory.AggregateId);
+        string processingKey = PartySdkReadModelAddresses.Processing(erasedHistory.TenantId, erasedHistory.AggregateId);
+        string indexKey = PartySdkReadModelAddresses.Index(erasedHistory.TenantId);
+        PartyProcessingSdkReadModel priorProcessing = store.Deserialize<PartyProcessingSdkReadModel>(processingKey);
+        ProjectionRequest redactedTail = erasedHistory with
+        {
+            Events = [new ProjectionEventDto(eventTypeName, "{}"u8.ToArray(), "json-redacted",
+                3, erasedAt.AddSeconds(1), "correlation-1")],
+        };
+
+        (await detailHandler.ProjectAsync(redactedTail, "erased-redacted-detail", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        (await indexHandler.ProjectAsync(redactedTail, "erased-redacted-index", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+
+        PartyDetailSdkReadModel detail = store.Deserialize<PartyDetailSdkReadModel>(detailKey);
+        detail.Detail.ShouldNotBeNull().IsErased.ShouldBeTrue();
+        detail.Detail.DisplayName.ShouldBeEmpty();
+        detail.Detail.PersonDetails.ShouldBeNull();
+        detail.Detail.LastModifiedAt.ShouldBe(erasedAt);
+        detail.ErasureSequenceNumber.ShouldBe(2);
+        detail.ErasedAt.ShouldBe(erasedAt);
+        detail.LastSequenceNumber.ShouldBe(3);
+        detail.ProjectedAt.ShouldBe(redactedTail.Events[0].Timestamp);
+        PartyProcessingSdkReadModel processing = store.Deserialize<PartyProcessingSdkReadModel>(processingKey);
+        processing.Records.ShouldBe(priorProcessing.Records);
+        processing.Records.Select(static record => record.SequenceNumber).ShouldBe([1L, 2L]);
+        processing.Records[1].EventType.ShouldBe(nameof(PartyErased));
+        processing.Records[1].OperationCategory.ShouldBe("Erasure");
+        processing.Records[1].Outcome.ShouldBe("Succeeded");
+        processing.ErasureSequenceNumber.ShouldBe(2);
+        processing.ErasedAt.ShouldBe(erasedAt);
+        processing.LastSequenceNumber.ShouldBe(3);
+        processing.ProjectedAt.ShouldBe(redactedTail.Events[0].Timestamp);
+        PartyIndexSdkReadModel index = store.Deserialize<PartyIndexSdkReadModel>(indexKey);
+        index.Entries.ContainsKey(erasedHistory.AggregateId).ShouldBeFalse();
+        index.ErasureSequenceNumbers[erasedHistory.AggregateId].ShouldBe(2);
+        index.LastSequenceNumbers[erasedHistory.AggregateId].ShouldBe(3);
+        index.ProjectedAt.ShouldBe(redactedTail.Events[0].Timestamp);
+    }
+
+    /// <summary>Persists surviving nonpersonal fields from a partly redacted event in both canonical domain views.</summary>
+    [Fact]
+    public async Task FieldRedaction_PersistsUsefulSurvivingFieldsInDetailAndIndexAsync()
+    {
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events = [new ProjectionEventDto(nameof(PartyCreated),
+                "{\"type\":\"Organization\",\"organizationDetails\":null}"u8.ToArray(), "JsOn-ReDaCtEd",
+                1, DateTimeOffset.UnixEpoch.AddMinutes(1), "correlation-1")],
+        };
+        var store = new InMemoryReadModelBatchStore();
+        var detailHandler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        var indexHandler = new PartyIndexSdkProjectionHandler(store, s_options);
+
+        (await detailHandler.ProjectAsync(request, "field-redacted-detail", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        (await indexHandler.ProjectAsync(request, "field-redacted-index", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+
+        PartyDetailSdkReadModel detail = store.Deserialize<PartyDetailSdkReadModel>(
+            PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId));
+        detail.Detail.ShouldNotBeNull().Type.ShouldBe(PartyType.Organization);
+        detail.Detail.IsActive.ShouldBeTrue();
+        detail.Detail.OrganizationDetails.ShouldBeNull();
+        detail.Detail.CreatedAt.ShouldBe(request.Events[0].Timestamp);
+        detail.LastSequenceNumber.ShouldBe(1);
+        PartyIndexSdkReadModel index = store.Deserialize<PartyIndexSdkReadModel>(
+            PartySdkReadModelAddresses.Index(request.TenantId));
+        index.Entries[request.AggregateId].Type.ShouldBe(PartyType.Organization);
+        index.Entries[request.AggregateId].IsActive.ShouldBeTrue();
+        index.Entries[request.AggregateId].CreatedAt.ShouldBe(request.Events[0].Timestamp);
+        index.LastSequenceNumbers[request.AggregateId].ShouldBe(1);
+        PartyProcessingSdkReadModel processing = store.Deserialize<PartyProcessingSdkReadModel>(
+            PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId));
+        processing.Records.ShouldHaveSingleItem().Outcome.ShouldBe("Succeeded");
+        processing.Records[0].OperationCategory.ShouldBe("PartyCommand");
+        processing.LastSequenceNumber.ShouldBe(1);
+    }
+
+    /// <summary>Repairs historical default-event effects by committing full rebuild plans and reading the corrected state back.</summary>
+    [Fact]
+    public async Task WholePayloadRedaction_RebuildRepairsHistoricalInactiveReadModelsAsync()
+    {
+        ProjectionRequest history = CreateRequest() with
+        {
+            Events =
+            [
+                CreateRequest().Events[0],
+                CreateRequest().Events[1] with { SerializationFormat = "json-redacted" },
+            ],
+        };
+        // Before DW-35 the redacted empty object was applied exactly like ordinary JSON.
+        // Seed that historical persisted outcome through real handlers; the authoritative
+        // rebuild history retains the redaction marker and must undo its mistaken effects.
+        ProjectionRequest historicalEquivalent = history with
+        {
+            Events = [history.Events[0], history.Events[1] with { SerializationFormat = "json" }],
+        };
+        var store = new InMemoryReadModelBatchStore();
+        var detailHandler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        var indexHandler = new PartyIndexSdkProjectionHandler(store, s_options);
+        (await detailHandler.ProjectAsync(historicalEquivalent, "legacy-inactive-detail", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        (await indexHandler.ProjectAsync(historicalEquivalent, "legacy-inactive-index", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        string detailKey = PartySdkReadModelAddresses.Detail(history.TenantId, history.AggregateId);
+        string processingKey = PartySdkReadModelAddresses.Processing(history.TenantId, history.AggregateId);
+        string indexKey = PartySdkReadModelAddresses.Index(history.TenantId);
+        store.Deserialize<PartyDetailSdkReadModel>(detailKey).Detail.ShouldNotBeNull().IsActive.ShouldBeFalse();
+        store.Deserialize<PartyIndexSdkReadModel>(indexKey).Entries[history.AggregateId].IsActive.ShouldBeFalse();
+        store.Deserialize<PartyProcessingSdkReadModel>(processingKey).Records[1].Outcome.ShouldBe("Succeeded");
+        (await detailHandler.ProjectAsync(history, "legacy-redelivery-detail", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        (await indexHandler.ProjectAsync(history, "legacy-redelivery-index", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+
+        DomainProjectionRebuildPlan detailPlan = await detailHandler.PrepareRebuildAsync(
+            history, "repair-inactive-detail", TestContext.Current.CancellationToken);
+        DomainSharedProjectionRebuildIdentity identity = CreateSharedRebuildIdentity();
+        DomainSharedProjectionRebuildCandidate candidate = await indexHandler.CreateEmptyCandidateAsync(
+            identity, TestContext.Current.CancellationToken);
+        candidate = await indexHandler.AccumulateAsync(identity, candidate, history, TestContext.Current.CancellationToken);
+        DomainProjectionRebuildPlan indexPlan = await indexHandler.FinalizeAsync(identity, candidate, TestContext.Current.CancellationToken);
+
+        (await store.ExecuteAsync(new ReadModelBatch(new ReadModelBatchScope(detailPlan.StoreName, history.TenantId,
+            "party", history.AggregateId, PartyProjectionNames.Detail, "repair-detail-commit"), detailPlan.Operations),
+            TestContext.Current.CancellationToken)).IsSuccess.ShouldBeTrue();
+        (await store.ExecuteAsync(new ReadModelBatch(new ReadModelBatchScope(indexPlan.StoreName, history.TenantId,
+            "party", PartySdkReadModelAddresses.SharedIndexAggregateId, PartyProjectionNames.Index, "repair-index-commit"), indexPlan.Operations),
+            TestContext.Current.CancellationToken)).IsSuccess.ShouldBeTrue();
+
+        PartyDetailSdkReadModel repairedDetail = store.Deserialize<PartyDetailSdkReadModel>(detailKey);
+        repairedDetail.Detail.ShouldNotBeNull().IsActive.ShouldBeTrue();
+        repairedDetail.Detail.LastModifiedAt.ShouldBe(history.Events[0].Timestamp);
+        repairedDetail.LastSequenceNumber.ShouldBe(2);
+        PartyProcessingSdkReadModel repairedProcessing = store.Deserialize<PartyProcessingSdkReadModel>(processingKey);
+        repairedProcessing.Records.Select(static record => record.Outcome).ShouldBe(["Succeeded", "Redacted"]);
+        repairedProcessing.LastSequenceNumber.ShouldBe(2);
+        PartyIndexSdkReadModel repairedIndex = store.Deserialize<PartyIndexSdkReadModel>(indexKey);
+        repairedIndex.Entries[history.AggregateId].IsActive.ShouldBeTrue();
+        repairedIndex.Entries[history.AggregateId].LastModifiedAt.ShouldBe(history.Events[0].Timestamp);
+        repairedIndex.LastSequenceNumbers[history.AggregateId].ShouldBe(2);
     }
 
     private static PartyProcessingSdkReadModel CreateLegacyProcessingReadModel()

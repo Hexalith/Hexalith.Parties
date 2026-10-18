@@ -263,8 +263,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: whole-payload json-redacted event handling
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: Whole-payload `json-redacted` events still depend on a resolvable CLR type and can apply a default-valued event produced from `{}`. The same behavior existed in the retired actor path, and the current field-level protection service does not normally produce a root encrypted marker; correcting it belongs to the broader payload-redaction contract rather than this migration patch chunk. Also recorded in "Deferred from: bmad-build Story 8.6 review (2026-08-16)": A parameterless event can deserialize from an empty redacted payload into a valid `IEventPayload` and be applied as a real domain fact, while whole-payload redaction is otherwise intended to skip application and advance only the checkpoint.
-status: open
+status: done 2026-10-18
 decision: 2026-09-06 Always checkpoint only — Treat every root json-redacted payload as checkpoint-only regardless of CLR shape and add compatibility tests.
+resolution: Whole-payload json-redacted empty objects and historical null now advance projection checkpoints before CLR resolution without applying default domain facts. Nonempty field-redacted objects and ordinary JSON retain existing behavior. Persisted active/erased state, audit retry repair, useful field-redaction effects and executed rebuild repair are covered. Final Debug/source builds have zero warnings/errors; focused cases pass 131/131, full projection suite 291/291 and unchanged-source service suite 1157/1157 without failures/errors/skips. All six independent review findings and follow-up are resolved; no new deferred work. Existing affected or unresolved-only projections need a full SDK rebuild. See spec-dw-35-redacted-checkpoints.md and tests/dw-35-redacted-checkpoints-2026-10-18/validation.json.
 
 ### DW-36: Align reconciliation LastIndexedEvent with the canonical fold
 

@@ -1,0 +1,244 @@
+{
+  "work_item": "DW-35",
+  "date": "2026-10-18",
+  "baseline_commit": "dd02d836e9543613b96bb53469ae1fb25d4a005a",
+  "scope": "Whole-payload empty-object/null redaction in SDK projections; nonempty field-level redaction is preserved.",
+  "aspire_baseline": {
+    "start_command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --no-build --format Json --non-interactive",
+    "start_exit_code": 0,
+    "describe_command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+    "describe_exit_code": 0,
+    "resources": [
+      {
+        "name": "eventstore-admin-dapr-cli",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "eventstore-admin-ui-dapr-cli",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "eventstore-admin-ui",
+        "state": "NotStarted",
+        "health": null
+      },
+      {
+        "name": "eventstore-admin",
+        "state": "Finished",
+        "health": null
+      },
+      {
+        "name": "eventstore-dapr-cli",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "eventstore",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "parties-dapr-cli",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "parties-mcp",
+        "state": "NotStarted",
+        "health": null
+      },
+      {
+        "name": "parties",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "parties-ui",
+        "state": "Finished",
+        "health": null
+      },
+      {
+        "name": "security-eventstore-client-password",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "security-eventstore-client-username",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "security",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "tenants-dapr-cli",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "tenants",
+        "state": "Finished",
+        "health": null
+      }
+    ],
+    "readiness_command": "aspire wait parties --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --timeout 20 --non-interactive",
+    "readiness_exit_code": 0,
+    "stop_command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "stop_exit_code": 0,
+    "limits": "Previously built local topology only. Tenants, parties-ui and eventstore-admin were Finished; full topology qualification is not claimed. The separate running Timesheets AppHost was preserved."
+  },
+  "validation_status": "complete",
+  "baseline_reproduction": {
+    "source": {
+      "baseline_source_sha256": "c13c72be909b311223bd45f794308efb6229036b476d2cf7852623f818bcac89",
+      "candidate_source_sha256": "54a2735d893271e0b29677703c8a78d93264387887d8a8c3edad21d81a0b5430",
+      "candidate_restored": true
+    },
+    "build": {
+      "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --nologo",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "focused": {
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -class Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionRedactedCheckpointTests -noLogo -result-xml /tmp/dw-35-validation/baseline-corrected-focus.xml",
+      "exit_code": 1,
+      "total": 19,
+      "passed": 8,
+      "failed": 11,
+      "skipped": 0,
+      "errors": 0,
+      "local_xml": "/tmp/dw-35-validation/baseline-corrected-focus.xml",
+      "xml_sha256": "33a5297f84ac637f77a4497cee1fab42dfd7896f4239f64dfe1370674c9163a7"
+    },
+    "persistence": {
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -method '*WholePayloadRedactionOnly_*' -method '*WholePayloadRedaction_IncrementalPersistenceAndRebuildsAgreeAsync' -noLogo -result-xml /tmp/dw-35-validation/baseline-corrected-persistence.xml",
+      "exit_code": 1,
+      "total": 7,
+      "passed": 1,
+      "failed": 6,
+      "skipped": 0,
+      "errors": 0,
+      "local_xml": "/tmp/dw-35-validation/baseline-corrected-persistence.xml",
+      "xml_sha256": "8f39cd6f4aa8d0e19a6529b5fab5b6086519547f61bb3bae796fe5c7a2ddbcb0"
+    },
+    "note": "Initial corrected assertions before six review verification cases were added. Earlier experimental runs included test assertion errors and are not qualification evidence. A combined class/method filter selected zero tests and was discarded; separate nonempty baseline runs above establish the regression."
+  },
+  "build": {
+    "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false > /tmp/dw-35-validation/review-build.log 2>&1",
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0,
+    "log_sha256": "89ed9d25f2e61f9c36d9639c362daa92fbc6e12fa437fefd6b18f72f01f9323b"
+  },
+  "focused": {
+    "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -class Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionRedactedCheckpointTests -class Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests -class Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionConverterFailureTests -result-xml /tmp/dw-35-validation/review-focused.xml > /tmp/dw-35-validation/review-focused.log 2>&1",
+    "exit_code": 0,
+    "total": 131,
+    "passed": 131,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "local_xml": "/tmp/dw-35-validation/review-focused.xml",
+    "xml_sha256": "e1691639159a43776951ec7f12b6ec93d5f7cf60be2f3bf04f0691a0f8c681f8"
+  },
+  "projections": {
+    "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -result-xml /tmp/dw-35-validation/review-full.xml > /tmp/dw-35-validation/review-full.log 2>&1",
+    "exit_code": 0,
+    "total": 291,
+    "passed": 291,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "local_xml": "/tmp/dw-35-validation/review-full.xml",
+    "xml_sha256": "71c2676bf6279c7ca1c611629d1aacdc1d17471a1ab830595deac3baea5de446"
+  },
+  "service_build": {
+    "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --nologo",
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0,
+    "log_sha256": "dbd3e0693df63a0b19597f661a2fee6289388fefc490904940793ef881521944"
+  },
+  "service": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -noLogo -result-xml /tmp/dw-35-validation/service-final.xml",
+    "exit_code": 0,
+    "total": 1157,
+    "passed": 1157,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "local_xml": "/tmp/dw-35-validation/service-final.xml",
+    "xml_sha256": "c35a9b1e2532994e9ce9b44f7eb08cff79a483cc7b03d325ead981eefb811c1e",
+    "source_equivalence": "The production fold is byte-identical to the passing service build. Review corrections changed only projection tests and documentation; the service suite was not repeated."
+  },
+  "repository_gate": {
+    "command": "bash scripts/check-no-warning-override.sh",
+    "exit_code": 0,
+    "result": "No warning-override or nested-submodule regressions."
+  },
+  "whitespace": {
+    "command": "git diff --check",
+    "exit_code": 0
+  },
+  "limits": "No full solution or current-source full-topology qualification is claimed. No dependency versions, gitlinks, producer serialization or command replay behavior changed. All changes remain uncommitted.",
+  "review": {
+    "method": "Independent context-free blind review and targeted follow-up verification.",
+    "findings": [
+      {
+        "id": "R1",
+        "verdict": "low",
+        "resolution": "patch",
+        "finding": "Persisted valid continuation did not demonstrate a state change.",
+        "evidence": "The tail now changes display/sort names, modification timestamps and name history while root-redacted deactivation leaves IsActive true."
+      },
+      {
+        "id": "R2",
+        "verdict": "low",
+        "resolution": "patch",
+        "finding": "Malformed unknown redacted JSON lacked retry coverage.",
+        "evidence": "Direct unresolved control and handler delivery both preserve Retryable and unadvanced checkpoints for malformed unknown data."
+      },
+      {
+        "id": "R3",
+        "verdict": "low",
+        "resolution": "patch",
+        "finding": "Failed-to-Redacted audit replacement lacked persisted coverage.",
+        "evidence": "Seeded live creation plus unresolved delivery, then root-redacted redelivery replaces the same-sequence record and advances all three stored checkpoints."
+      },
+      {
+        "id": "R4",
+        "verdict": "low",
+        "resolution": "patch",
+        "finding": "Post-erasure redacted delivery lacked persisted coverage.",
+        "evidence": "Known reactivation and unknown redacted events retain erasure watermarks, absent personal detail/index entry and existing audit records; no new tail record appears, preserving the existing retention contract."
+      },
+      {
+        "id": "R5",
+        "verdict": "low",
+        "resolution": "patch",
+        "finding": "Nonempty field-redaction compatibility lacked persisted state effects.",
+        "evidence": "Surviving organization type persists in Detail/Index with Succeeded processing outcome."
+      },
+      {
+        "id": "R6",
+        "verdict": "low",
+        "resolution": "patch",
+        "finding": "Rebuild recovery guidance lacked a historically incorrect-state repair test.",
+        "evidence": "Historical inactive Detail/Index state remains unchanged on duplicate redelivery; executed full rebuild plans repair active state and Redacted audit records, verified through stored read-back."
+      }
+    ],
+    "follow_up": "All six findings verified resolved; no concrete new defect found.",
+    "new_deferred_work": []
+  },
+  "reviewed_content_sha256": {
+    "src/Hexalith.Parties.Projections/Handlers/PartySdkProjectionFold.cs": "54a2735d893271e0b29677703c8a78d93264387887d8a8c3edad21d81a0b5430",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionRedactedCheckpointTests.cs": "3f371fb5cac8e4eb27dd5790ae6d6ec72111cbd1635bf7b0a40da0a5e9df3078",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs": "3b18c49ec66d55a787f0a977dab93a45f470b40df0976c1349f9cf8e5569d535",
+    "docs/architecture.md": "f2c7f4986b74e021bb9dc2a5672f5398312e4bd09f96f90c2a63a0a066554b6a"
+  }
+}

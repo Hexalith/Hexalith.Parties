@@ -171,6 +171,18 @@ protection service is registered **before** `AddEventStoreServer`, so it overrid
 `NoOpEventPayloadProtectionService`. Retiring this local implementation is gated by the
 `8.7-data-protection-extraction` deferral; see §8 for key storage and the production-KMS gate.
 
+**Whole-payload redaction in SDK projections.** A `json-redacted` payload whose
+root is an empty object (`{}`) or historical JSON `null` advances the projection
+checkpoint without applying a domain event, regardless of whether its CLR type
+can be resolved. Its processing-activity outcome is `Redacted`. This prevents an
+empty object from becoming a default-valued lifecycle event. Nonempty objects
+with field-level redaction retain their existing deserialization and application
+behavior; ordinary `json` payloads retain their existing handling. Correcting
+previously applied empty redacted events requires a full SDK projection rebuild;
+incremental redelivery skips sequences already checkpointed. A projection left
+with only a Processing slot by an earlier unresolved first delivery also requires
+a rebuild: live delivery retains the coordinated-slot consistency guard.
+
 **Independent identity-history snapshots.** `PartyState.HumanActorBindings` and
 `HumanActorTransitions` contain personal actor and provenance history. Their finite
 purpose custody is separate from profile-key encryption and erasure, so they do
