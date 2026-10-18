@@ -184,7 +184,8 @@ resolution: Replaced process-lifetime warning identities with singleton-local FI
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 2)"), 2026-09-06
 location: Party index projection fold and ProjectionVersion
 reason: Index `ProjectionVersion` scheme (`global:N` / `{id}:{seq}` / keep-current) lacks Fold/class remarks for freshness/query consumers.
-status: open
+status: done 2026-10-18
+resolution: Documented the existing version selection and validation rules at the SDK handler/fold, read-model property and data-model guide. Consumer guidance covers duplicate persistence, rebuilds, cleanup, strict parsing, the legacy global-identifier ambiguity and the limits of source-position and timestamp freshness signals. Executable C# is unchanged. Final Debug/source build has zero warnings/errors; focused existing SDK projection tests pass 89/89 without failures/errors/skips. All four independent review findings are corrected and follow-up verified; no new deferred work. See spec-dw-25-index-projection-version.md and tests/dw-25-index-projection-version-2026-10-18/validation.json.
 
 ### DW-26: Define stable Article 30 operation categories
 

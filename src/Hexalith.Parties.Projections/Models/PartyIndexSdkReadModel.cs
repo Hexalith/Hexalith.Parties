@@ -25,6 +25,20 @@ public sealed record PartyIndexSdkReadModel : IReadModelFreshness
     /// <summary>Gets the newest source or cleanup time incorporated by this projection.</summary>
     public DateTimeOffset? ProjectedAt { get; init; }
 
-    /// <summary>Gets the source projection version, when one is known.</summary>
+    /// <summary>Gets the diagnostic source-position hint, when one is known.</summary>
+    /// <remarks>
+    /// After delivery validation succeeds, the index fold prefers <c>global:N</c> for the greatest
+    /// positive supplied or retained global position. Otherwise it uses
+    /// <c>{aggregateId}:{sequence}</c> for the folded aggregate's
+    /// checkpoint, or retains the prior value (possibly null) when no checkpoint is known.
+    /// This value does not certify a complete tenant event prefix or every content change;
+    /// aggregate fallback values cannot order different aggregates, and rebuilds start afresh.
+    /// The accepted aggregate identifier <c>global</c> produces the same text as a global token,
+    /// so the prefix alone does not establish that an event supplied that global position.
+    /// Cleanup can retain the version while changing entries. Queries forward it as diagnostic
+    /// metadata and classify freshness from <see cref="ProjectedAt"/> and degradation signals.
+    /// Timestamp freshness also does not establish tenant-wide convergence.
+    /// Use the read-model store's ETag for optimistic concurrency.
+    /// </remarks>
     public string? ProjectionVersion { get; init; }
 }

@@ -17,6 +17,15 @@ using Microsoft.Extensions.Options;
 namespace Hexalith.Parties.Projections.Handlers;
 
 /// <summary>Persists the canonical shared Party tenant index with optimistic merge-on-write.</summary>
+/// <remarks>
+/// Live delivery and shared rebuild accumulation use the same source-version rules documented on
+/// <see cref="Fold"/>. The index version is a diagnostic position hint; it does not certify a
+/// complete tenant event prefix or identify every content change. Per-aggregate sequence and
+/// erasure checkpoints govern replay, while <see cref="PartyIndexSdkReadModel.ProjectedAt"/>
+/// supplies timestamp-based query freshness without proving tenant-wide convergence.
+/// A rebuild starts with an empty candidate, so its version need not continue the previous
+/// live index's version.
+/// </remarks>
 public sealed class PartyIndexSdkProjectionHandler(
     IReadModelStore readModelStore,
     IOptions<PartySdkReadModelOptions> options,
@@ -327,6 +336,27 @@ public sealed class PartyIndexSdkProjectionHandler(
         return DomainProjectionHandlerResult.Completed();
     }
 
+    /// <summary>Folds one aggregate's delivery into the shared tenant index.</summary>
+    /// <param name="request">The aggregate delivery, including source sequence and global positions.</param>
+    /// <param name="current">The current index, or null to start an empty fold.</param>
+    /// <returns>The folded index; delivery failures retain the current model or an empty model.</returns>
+    /// <remarks>
+    /// After delivery validation succeeds, the version is <c>global:N</c> when the maximum of all
+    /// supplied global positions and the current parseable global version is positive. Otherwise it is
+    /// <c>{aggregateId}:{sequence}</c> for this request's retained or advanced aggregate checkpoint;
+    /// if no checkpoint is known, the prior version (possibly null) is retained. Both numbers use
+    /// invariant decimal formatting. Parsing requires an exact lowercase <c>global:</c> prefix
+    /// and unsigned decimal digits fitting <see cref="long"/>, without signs or whitespace.
+    /// The accepted aggregate identifier <c>global</c> produces a fallback indistinguishable from
+    /// a global token to a later fold; the prefix alone does not prove a supplied global position.
+    /// A global maximum includes supplied events that do not change an entry and does not prove
+    /// gap-free tenant coverage. Aggregate fallback versions cannot
+    /// order different aggregates. Empty live deliveries return before folding; duplicate-only
+    /// live deliveries can skip persistence even if folding computes a different version.
+    /// Cleanup can remove an entry without changing its version, and rebuilds use a fresh candidate.
+    /// Consumers should use query freshness/degradation metadata for freshness and the store ETag
+    /// for optimistic concurrency. Timestamp freshness also does not prove tenant-wide convergence.
+    /// </remarks>
     internal static PartyIndexSdkReadModel Fold(ProjectionRequest request, PartyIndexSdkReadModel? current)
         => FoldCore(request, current).Model;
 

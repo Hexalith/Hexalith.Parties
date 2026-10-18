@@ -1,0 +1,74 @@
+{
+  "work_item": "DW-25",
+  "date": "2026-10-18",
+  "baseline_commit": "35530bfb5774ccbda3dddfcd41764764ad86f3ea",
+  "scope": "Documentation and XML comments only; executable C# is unchanged.",
+  "build": {
+    "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --nologo",
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0,
+    "result": "Build succeeded; final reviewed comments compiled with local source references."
+  },
+  "tests": {
+    "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -class Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests -noLogo -result-xml /tmp/dw-25-projection-tests-final.xml",
+    "exit_code": 0,
+    "total": 89,
+    "passed": 89,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "result": "Existing focused SDK projection handler tests pass after all review corrections."
+  },
+  "documentation_check": {
+    "command": "python3 - <<'PY'\nBASE = '35530bfb5774ccbda3dddfcd41764764ad86f3ea'\nfrom pathlib import Path\nimport re\nimport subprocess\nfrom xml.etree import ElementTree as ET\npaths = [\n    'src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs',\n    'src/Hexalith.Parties.Projections/Models/PartyIndexSdkReadModel.cs',\n]\ncount = 0\nfor name in paths:\n    current = Path(name).read_text()\n    original = subprocess.check_output(['git', 'show', BASE + ':' + name], text=True)\n    def without_docs(text):\n        return '\\n'.join(line for line in text.splitlines() if not line.lstrip().startswith('///'))\n    assert without_docs(original) == without_docs(current), name\n    for block in re.findall(r'(?:^\\s*///[^\\n]*\\n)+', current, re.M):\n        xml = '\\n'.join(re.sub(r'^\\s*/// ?', '', line) for line in block.splitlines())\n        ET.fromstring('<doc>' + xml + '</doc>')\n        count += 1\npage = Path('docs/data-models.md')\nsection = page.read_text().split('### Party index projection version\\n', 1)[1].split('### Supporting model types', 1)[0]\nfor target in re.findall(r'\\]\\(([^)]+)\\)', section):\n    assert (page.parent / target.split('#')[0]).exists(), target\nassert all(line.rstrip() == line for line in section.splitlines())\nprint(f'PASS: {count} XML blocks parse; Markdown link resolves; C# changes are documentation only; no new trailing whitespace')\nPY",
+    "exit_code": 0,
+    "output": "PASS: 8 XML blocks parse; Markdown link resolves; C# changes are documentation only; no new trailing whitespace"
+  },
+  "repository_gate": {
+    "command": "bash scripts/check-no-warning-override.sh",
+    "exit_code": 0,
+    "output": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+  },
+  "whitespace": {
+    "command": "git diff --check",
+    "exit_code": 0,
+    "output": ""
+  },
+  "review": {
+    "method": "Independent context-free blind reviewer; separate follow-up verification.",
+    "findings": [
+      {
+        "verdict": "low",
+        "resolution": "patch",
+        "finding": "Qualify version calculation with successful delivery validation."
+      },
+      {
+        "verdict": "low",
+        "resolution": "patch",
+        "finding": "Explain that tenant-wide timestamp freshness does not prove every party has converged."
+      },
+      {
+        "verdict": "low",
+        "resolution": "patch",
+        "finding": "Document the existing global aggregate identifier ambiguity."
+      },
+      {
+        "verdict": "low",
+        "resolution": "patch",
+        "finding": "Define strict global token parsing and zero precedence."
+      }
+    ],
+    "follow_up": "All four fixes verified against executable source; no remaining factual discrepancies.",
+    "new_deferred_work": []
+  },
+  "commitlint": {
+    "command": "./node_modules/.bin/commitlint --edit /tmp/dw-25-commit-message.txt --verbose",
+    "cli_version": "21.2.2",
+    "lockfile_version": "21.2.2",
+    "exit_code": 0,
+    "candidate": "docs: document party index version semantics\n",
+    "output": "\u29d7   --- input ---\ndocs: document party index version semantics\n\u2714   found 0 problems, 0 warnings\n"
+  },
+  "limits": "Focused documentation validation only. No new tests, full-solution gate or runtime/topology qualification is claimed."
+}

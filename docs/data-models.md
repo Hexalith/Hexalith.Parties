@@ -228,6 +228,60 @@ per-tenant `Dictionary<partyId, PartyIndexEntry>` by
 `SearchableContactChannels` / `SearchableIdentifiers`. **Erased parties are
 removed from the index** entirely (never appear in search).
 
+### Party index projection version
+
+The internal `PartyIndexSdkReadModel` wraps the tenant's entries, per-aggregate
+sequence checkpoints, permanent erasure checkpoints, `ProjectedAt`, and nullable
+`ProjectionVersion`. Live projection and shared rebuild accumulation use the
+same version selection rules in
+[`PartyIndexSdkProjectionHandler.Fold`](../src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs).
+The rules below apply after delivery validation succeeds. Sequence gaps,
+conflicting duplicates, and unresolved events reject the delivery before
+version calculation, retaining the current model (or an empty model if absent).
+
+
+| Selection, in precedence order | Meaning |
+| --- | --- |
+| `global:N` | The greatest global position among all supplied events and the current parseable `global:` version, when that maximum is positive. The value never decreases while folding into that same index. |
+| `{aggregateId}:{sequence}` | Without a positive global position, this request aggregate's retained or advanced sequence checkpoint, such as `party-1:7`. It describes one aggregate, and a later delivery for another aggregate can replace it. |
+| Keep the prior value, including `null` | Without a positive global position or a known checkpoint for this aggregate, the fold retains the prior version. A new empty rebuild candidate has no known version. |
+
+Both numeric components use invariant decimal formatting. A retained global
+version parses only with the exact lowercase `global:` prefix and unsigned
+decimal digits fitting `Int64`; signs, surrounding whitespace, and overflow
+fail parsing. Zero parses but does not establish positive global precedence.
+The accepted aggregate identifier `global` makes its sequence fallback, such as
+`global:7`, indistinguishable from a global token to a later fold. A `global:`
+prefix alone therefore does not prove an event supplied that global position.
+
+Global positions include supplied events even when those events do not change
+an index entry.
+The maximum does not certify that every preceding tenant event has been
+projected. Per-aggregate checkpoints and erasure tombstones enforce replay
+idempotency and prevent resurrection independently of this diagnostic value.
+
+Empty live deliveries leave the stored index unchanged. Duplicate-only live
+deliveries can also skip persistence, even if different global-position metadata
+would produce a newer version in memory. Conversely, a lower-position update or
+erasure cleanup can change entries without changing the version. Rebuild starts
+with an empty candidate; its resulting version can differ from or be lower than
+the prior live value. With no global positions, the final aggregate fallback
+depends on history accumulation order.
+
+Index-backed query responses forward the stored value in
+`QueryResponseMetadata.ProjectionVersion`. Consumers should treat it as a
+diagnostic source-position hint. Use timestamp-based freshness and the returned
+freshness, lifecycle, warning, and degradation signals to assess a read;
+degraded cache reads report stale even when their version is present.
+`ProjectedAt` tracks the maximum incorporated source or cleanup timestamp across
+the shared tenant index. Recent activity or cleanup for one party can make the
+index classify as current while another party remains behind, so timestamp
+freshness also does not certify tenant-wide convergence. Use the
+store ETag for optimistic concurrency. Version equality does not establish
+identical content or freshness, and versions cannot order different tenants,
+aggregate fallbacks, or rebuild generations. Paging cursors carry scoped offsets
+and do not pin an index snapshot through this version.
+
 ### Supporting model types
 
 | Type | Purpose |
