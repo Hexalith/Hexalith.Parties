@@ -228,6 +228,41 @@ per-tenant `Dictionary<partyId, PartyIndexEntry>` by
 `SearchableContactChannels` / `SearchableIdentifiers`. **Erased parties are
 removed from the index** entirely (never appear in search).
 
+### Party index search notification provenance
+
+`PartyIndexSdkReadModel.LastIndexedEvents` retains at most one
+`PartyIndexEventMetadata` descriptor per present aggregate: its sequence number,
+source event type name, and source timestamp, with no event payload. The SDK write
+policy commits this dictionary atomically with the canonical entries and
+checkpoints. Selection follows the canonical fold's last nonnull `Apply` result,
+including an application that returns the existing entry reference. Rejections
+and semantic no-ops returning null can advance the checkpoint without replacing
+the descriptor. Equal timestamps do not affect selection.
+
+Search reconciliation publishes the entry and retained descriptor from the
+canonical snapshot read by the delivery or committed by its successful write,
+including when an older delivery retries after a newer update. A concurrent
+change after that snapshot can overtake the notification; the canonical store
+and external search index do not share a linearizable transaction. Reconciliation
+does not select events from the retry request or infer
+provenance from the entry's timestamps. A duplicate delivery that only retries a
+failed search notification does not rewrite the canonical index. Historical rows
+without the dictionary default to empty; reconciliation uses the explicitly
+synthetic `PartyProjectionReconciled` event type and the entry's `LastModifiedAt`,
+without inventing an original source event or requiring a rebuild or rewrite.
+During a mixed-version rollout, an older index or cleanup writer that rewrites
+the shared model without this additive dictionary can discard retained
+descriptors. Such rows use the same synthetic fallback until a later nonnull
+application or rebuild supplies provenance. All writers must preserve the
+dictionary to retain original attribution across their writes.
+
+Event erasure and SDK cleanup remove the target descriptor along with its entry,
+preserve other aggregates' descriptors, and retain the permanent erasure fence.
+Shared rebuild candidates serialize the same descriptors and produce the same
+canonical selection as live folding. Rebuild search notifications retain their
+existing synthetic `PartyProjectionRebuilt` attribution. External search erasure
+fencing remains a separate concern.
+
 ### Party index projection version
 
 The internal `PartyIndexSdkReadModel` wraps the tenant's entries, per-aggregate

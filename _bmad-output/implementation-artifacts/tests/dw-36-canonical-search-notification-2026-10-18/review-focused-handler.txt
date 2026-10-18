@@ -1,0 +1,45 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.12)
+  Discovering: Hexalith.Parties.Projections.Tests
+  Discovered:  Hexalith.Parties.Projections.Tests
+  Starting:    Hexalith.Parties.Projections.Tests
+    Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_ConfiguredDaprSerializerPreservesDescriptorsAndHistoricalRowsAsync(daprWrites: False, daprReads: True, historical: False) [FAIL]
+      System.Text.Json.JsonException : The JSON value could not be converted to Hexalith.Parties.Contracts.ValueObjects.PartyType. Path: $.entries.party-1.type | LineNumber: 0 | BytePositionInLine: 53.
+      Stack Trace:
+           at System.Text.Json.ThrowHelper.ThrowJsonException(String message)
+           at System.Text.Json.Serialization.Converters.EnumConverter`1.Read(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options)
+           at System.Text.Json.Serialization.Metadata.JsonPropertyInfo`1.ReadJsonAndSetMember(Object obj, ReadStack& state, Utf8JsonReader& reader)
+           at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+           at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value, Boolean& isPopulatedValue)
+           at System.Text.Json.Serialization.JsonDictionaryConverter`3.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, TDictionary& value)
+           at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value, Boolean& isPopulatedValue)
+           at System.Text.Json.Serialization.Metadata.JsonPropertyInfo`1.ReadJsonAndSetMember(Object obj, ReadStack& state, Utf8JsonReader& reader)
+           at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+           at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value, Boolean& isPopulatedValue)
+           at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)
+           at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.Deserialize(Utf8JsonReader& reader, ReadStack& state)
+           at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 utf8Json, JsonTypeInfo`1 jsonTypeInfo, Nullable`1 actualByteCount)
+        tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(3792,0): at Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.InMemoryReadModelBatchStore.GetAsync[TValue](String storeName, String key, CancellationToken cancellationToken)
+        tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(759,0): at Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_ConfiguredDaprSerializerPreservesDescriptorsAndHistoricalRowsAsync(Boolean daprWrites, Boolean daprReads, Boolean historical)
+        --- End of stack trace from previous location ---
+    Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_ConfiguredDaprSerializerPreservesDescriptorsAndHistoricalRowsAsync(daprWrites: False, daprReads: True, historical: True) [FAIL]
+      System.Text.Json.JsonException : The JSON value could not be converted to Hexalith.Parties.Contracts.ValueObjects.PartyType. Path: $.entries.party-1.type | LineNumber: 0 | BytePositionInLine: 53.
+      Stack Trace:
+           at System.Text.Json.ThrowHelper.ThrowJsonException(String message)
+           at System.Text.Json.Serialization.Converters.EnumConverter`1.Read(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options)
+           at System.Text.Json.Serialization.Metadata.JsonPropertyInfo`1.ReadJsonAndSetMember(Object obj, ReadStack& state, Utf8JsonReader& reader)
+           at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+           at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value, Boolean& isPopulatedValue)
+           at System.Text.Json.Serialization.JsonDictionaryConverter`3.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, TDictionary& value)
+           at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value, Boolean& isPopulatedValue)
+           at System.Text.Json.Serialization.Metadata.JsonPropertyInfo`1.ReadJsonAndSetMember(Object obj, ReadStack& state, Utf8JsonReader& reader)
+           at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+           at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value, Boolean& isPopulatedValue)
+           at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)
+           at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.Deserialize(Utf8JsonReader& reader, ReadStack& state)
+           at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 utf8Json, JsonTypeInfo`1 jsonTypeInfo, Nullable`1 actualByteCount)
+        tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(3792,0): at Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.InMemoryReadModelBatchStore.GetAsync[TValue](String storeName, String key, CancellationToken cancellationToken)
+        tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(759,0): at Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_ConfiguredDaprSerializerPreservesDescriptorsAndHistoricalRowsAsync(Boolean daprWrites, Boolean daprReads, Boolean historical)
+        --- End of stack trace from previous location ---
+  Finished:    Hexalith.Parties.Projections.Tests (ID = '32ccbe81df0b8fb30a1cbb4f3fe7d397e416567be0c1d8e5322390ff12449635')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Projections.Tests  Total: 130, Errors: 0, Failed: 2, Skipped: 0, Not Run: 0, Time: 0.581s

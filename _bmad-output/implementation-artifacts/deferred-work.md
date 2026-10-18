@@ -272,7 +272,8 @@ resolution: Whole-payload json-redacted empty objects and historical null now ad
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
 location: PartyIndexSdkProjectionHandler.BuildReconciliationFold
 reason: `PartyIndexSdkProjectionHandler.BuildReconciliationFold` recomputes `LastIndexedEvent` via a separate code path from the canonical `FoldCore`, used only on the already-confirmed idempotent-no-op/reconciliation branch — could pick a different "last event" for search-reconciliation notification metadata on a multi-event no-op batch, but doesn't affect canonical read-model correctness. Needs a dedicated multi-event test to pin the intended behavior.
-status: open
+status: done 2026-10-18
+resolution: Canonical index writes retain one payload-free source-event descriptor per active aggregate; recreated-handler retries use persisted provenance, including older deliveries. Historical rows use explicit synthetic attribution. Erasure removes target metadata, and serialized rebuilds preserve canonical selection. Baseline regression reproduced; final Debug/source builds have zero warnings/errors, full projection tests pass 316/316 and service tests 1158/1158 without failures/errors/skips. All eight accepted independent review findings were addressed through verification and documentation; no new deferred work. See spec-dw-36-canonical-search-notification.md and tests/dw-36-canonical-search-notification-2026-10-18/validation.json. External-search concurrency fencing remains separate.
 
 ### DW-37: Test blocked Memories cleanup without a CaseId
 

@@ -151,6 +151,10 @@ public sealed class PartySdkReadModelEraser(
             current?.Entries ?? new Dictionary<string, Hexalith.Parties.Contracts.Models.PartyIndexEntry>(StringComparer.Ordinal),
             StringComparer.Ordinal);
         _ = entries.Remove(partyId);
+        var lastIndexedEvents = new Dictionary<string, PartyIndexEventMetadata>(
+            current?.LastIndexedEvents ?? new Dictionary<string, PartyIndexEventMetadata>(StringComparer.Ordinal),
+            StringComparer.Ordinal);
+        _ = lastIndexedEvents.Remove(partyId);
         var sequences = new Dictionary<string, long>(
             current?.LastSequenceNumbers ?? new Dictionary<string, long>(StringComparer.Ordinal),
             StringComparer.Ordinal);
@@ -165,6 +169,7 @@ public sealed class PartySdkReadModelEraser(
         return new PartyIndexSdkReadModel
         {
             Entries = entries,
+            LastIndexedEvents = lastIndexedEvents,
             LastSequenceNumbers = sequences,
             ErasureSequenceNumbers = erasureSequences,
             ProjectedAt = alreadyErased ? current?.ProjectedAt : Max(current?.ProjectedAt, requestedAt),

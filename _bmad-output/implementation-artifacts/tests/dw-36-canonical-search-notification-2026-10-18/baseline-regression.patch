@@ -1,0 +1,34 @@
+--- a/tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs
++++ b/tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs
+@@ -425 +425 @@
+-        IReadModelStore store = Substitute.For<IReadModelStore>();
++        var store = new InMemoryReadModelBatchStore();
+@@ -427,10 +426,0 @@
+-        store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, Arg.Any<CancellationToken>())
+-            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
+-        PartyIndexSdkReadModel? persisted = null;
+-        store.TrySaveAsync(
+-                "statestore",
+-                indexKey,
+-                Arg.Do<PartyIndexSdkReadModel>(value => persisted = value),
+-                Arg.Any<string>(),
+-                Arg.Any<CancellationToken>())
+-            .Returns(true);
+@@ -442 +432,4 @@
+-        ProjectionRequest request = CreateRequest();
++        ProjectionRequest request = CreateRequest() with
++        {
++            Events = [.. CreateRequest().Events, Event(new PartyNotFound(), 3, DateTimeOffset.UnixEpoch.AddSeconds(2))],
++        };
+@@ -449,3 +442,5 @@
+-        persisted.ShouldNotBeNull();
+-        store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, Arg.Any<CancellationToken>())
+-            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(persisted, "etag-2"));
++        ReadModelEntry<PartyIndexSdkReadModel> persisted = await store.GetAsync<PartyIndexSdkReadModel>(
++            "statestore", indexKey, TestContext.Current.CancellationToken);
++        persisted.Value.ShouldNotBeNull();
++        persisted.Value.LastSequenceNumbers[request.AggregateId].ShouldBe(3);
++        handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
+@@ -458,0 +454,2 @@
++        (await store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, TestContext.Current.CancellationToken))
++            .ETag.ShouldBe(persisted.ETag);

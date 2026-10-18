@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Text.Json;
 
+using Dapr.Client;
+
 using Hexalith.EventStore.Client.Projections;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Projections;
@@ -19,6 +21,7 @@ using Hexalith.Parties.Projections.Search;
 using Hexalith.Parties.Projections.Services;
 using Hexalith.Parties.Testing;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -422,33 +425,28 @@ public sealed class PartySdkProjectionHandlerTests
     [Fact]
     public async Task IndexHandler_RetryAfterSearchFailureReconcilesIdempotentCanonicalWriteAsync()
     {
-        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var store = new InMemoryReadModelBatchStore();
         string indexKey = PartySdkReadModelAddresses.Index("tenant-a");
-        store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, Arg.Any<CancellationToken>())
-            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
-        PartyIndexSdkReadModel? persisted = null;
-        store.TrySaveAsync(
-                "statestore",
-                indexKey,
-                Arg.Do<PartyIndexSdkReadModel>(value => persisted = value),
-                Arg.Any<string>(),
-                Arg.Any<CancellationToken>())
-            .Returns(true);
         IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
         searchIndexer.NotifyIndexedAsync(
                 Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
             .Returns(false, true);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
-        ProjectionRequest request = CreateRequest();
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events = [.. CreateRequest().Events, Event(new PartyNotFound(), 3, DateTimeOffset.UnixEpoch.AddSeconds(2))],
+        };
 
         DomainProjectionHandlerResult first = await handler.ProjectAsync(
             request,
             "dispatch-search-retry",
             TestContext.Current.CancellationToken);
         first.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
-        persisted.ShouldNotBeNull();
-        store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, Arg.Any<CancellationToken>())
-            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(persisted, "etag-2"));
+        ReadModelEntry<PartyIndexSdkReadModel> persisted = await store.GetAsync<PartyIndexSdkReadModel>(
+            "statestore", indexKey, TestContext.Current.CancellationToken);
+        persisted.Value.ShouldNotBeNull();
+        persisted.Value.LastSequenceNumbers[request.AggregateId].ShouldBe(3);
+        handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
 
         DomainProjectionHandlerResult retry = await handler.ProjectAsync(
             request,
@@ -456,6 +454,8 @@ public sealed class PartySdkProjectionHandlerTests
             TestContext.Current.CancellationToken);
 
         retry.Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        (await store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, TestContext.Current.CancellationToken))
+            .ETag.ShouldBe(persisted.ETag);
         await searchIndexer.Received(2).NotifyIndexedAsync(
             "tenant-a",
             Arg.Is<PartyIndexEntry>(entry => entry != null && entry.Id == "party-1"),
@@ -478,6 +478,348 @@ public sealed class PartySdkProjectionHandlerTests
         result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
         await store.DidNotReceive().GetAsync<PartyIndexSdkReadModel>(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("rejection", false)]
+    [InlineData("rejection", true)]
+    [InlineData("deactivation", false)]
+    [InlineData("deactivation", true)]
+    [InlineData("missing-channel", false)]
+    [InlineData("missing-channel", true)]
+    [InlineData("missing-identifier", false)]
+    [InlineData("missing-identifier", true)]
+    [InlineData("display-name", false)]
+    [InlineData("display-name", true)]
+    [InlineData("same-reference", false)]
+    [InlineData("same-reference", true)]
+    public async Task IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync(string scenario, bool incremental)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        ProjectionRequest history = CreateRequest();
+        if (incremental)
+        {
+            var seedHandler = new PartyIndexSdkProjectionHandler(store, s_options);
+            (await seedHandler.ProjectAsync(history with { Events = [history.Events[0]] },
+                "seed", TestContext.Current.CancellationToken)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        }
+
+        object tail = scenario switch
+        {
+            "rejection" => new PartyNotFound(),
+            "deactivation" => new PartyDeactivated(),
+            "missing-channel" => new ContactChannelUpdated { ContactChannelId = "absent" },
+            "missing-identifier" => new IdentifierRemoved { IdentifierId = "absent" },
+            "display-name" => new PartyDisplayNameDerived { DisplayName = string.Empty },
+            "same-reference" => new PartyCreated { Type = PartyType.Organization },
+            _ => throw new ArgumentException("Unknown test scenario.", nameof(scenario)),
+        };
+        // No-op events share the mutation's timestamp; the same-reference application uses a
+        // later timestamp while retaining the entry's LastModifiedAt.
+        ProjectionEventDto mutation = Event(new PartyDeactivated(), 2, DateTimeOffset.UnixEpoch);
+        ProjectionEventDto finalEvent = Event(tail, 3,
+            scenario == "same-reference" ? DateTimeOffset.UnixEpoch.AddMinutes(1) : DateTimeOffset.UnixEpoch);
+        ProjectionRequest request = history with
+        {
+            Events = incremental ? [mutation, finalEvent] : [history.Events[0], mutation, finalEvent],
+        };
+        IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
+            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(false, true);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+
+        (await handler.ProjectAsync(request, "first", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        string indexKey = PartySdkReadModelAddresses.Index(request.TenantId);
+        ReadModelEntry<PartyIndexSdkReadModel> persisted = await store.GetAsync<PartyIndexSdkReadModel>(
+            "statestore", indexKey, TestContext.Current.CancellationToken);
+        persisted.Value.ShouldNotBeNull();
+        bool sameReference = scenario == "same-reference";
+        string expectedType = sameReference ? nameof(PartyCreated) : nameof(PartyDeactivated);
+        DateTimeOffset expectedTimestamp = sameReference ? finalEvent.Timestamp : mutation.Timestamp;
+        persisted.Value.LastIndexedEvents.ShouldHaveSingleItem().Value.ShouldBe(new PartyIndexEventMetadata(
+            sameReference ? 3 : 2, expectedType, expectedTimestamp));
+        persisted.Value.LastSequenceNumbers[request.AggregateId].ShouldBe(3);
+        persisted.Value.Entries[request.AggregateId].IsActive.ShouldBeFalse();
+        persisted.Value.Entries[request.AggregateId].Type.ShouldBe(PartyType.Person);
+        persisted.Value.Entries[request.AggregateId].LastModifiedAt.ShouldBe(DateTimeOffset.UnixEpoch);
+
+        var recreatedHandler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+        (await recreatedHandler.ProjectAsync(request, "retry", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+
+        (await store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, TestContext.Current.CancellationToken))
+            .ETag.ShouldBe(persisted.ETag);
+        await search.Received(2).NotifyIndexedAsync("tenant-a",
+            Arg.Is<PartyIndexEntry>(entry => entry.Id == request.AggregateId && !entry.IsActive),
+            expectedType, expectedTimestamp, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task IndexHandler_CheckpointOnlyBatchAndOlderRetryPublishCurrentProvenanceAsync()
+    {
+        var store = new InMemoryReadModelBatchStore();
+        ProjectionRequest original = CreateRequest();
+        var seedHandler = new PartyIndexSdkProjectionHandler(store, s_options);
+        (await seedHandler.ProjectAsync(original, "seed", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        ProjectionEventDto reactivation = Event(new PartyReactivated(), 3,
+            DateTimeOffset.UnixEpoch.AddSeconds(5).ToOffset(TimeSpan.FromHours(2)));
+        (await seedHandler.ProjectAsync(original with { Events = [reactivation] }, "newer",
+            TestContext.Current.CancellationToken)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+
+        IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
+            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(false, true);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+        ProjectionRequest checkpointOnly = original with
+        {
+            Events =
+            [
+                Event(new PartyNotFound(), 4, DateTimeOffset.UnixEpoch.AddSeconds(6)),
+                Event(new PartyReactivated(), 5, DateTimeOffset.UnixEpoch.AddSeconds(7)),
+            ],
+        };
+        (await handler.ProjectAsync(checkpointOnly, "checkpoint", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        string indexKey = PartySdkReadModelAddresses.Index(original.TenantId);
+        ReadModelEntry<PartyIndexSdkReadModel> persisted = await store.GetAsync<PartyIndexSdkReadModel>(
+            "statestore", indexKey, TestContext.Current.CancellationToken);
+        persisted.Value.ShouldNotBeNull();
+        persisted.Value.LastIndexedEvents[original.AggregateId].ShouldBe(
+            new PartyIndexEventMetadata(3, nameof(PartyReactivated), reactivation.Timestamp));
+        persisted.Value.LastIndexedEvents[original.AggregateId].Timestamp.Offset.ShouldBe(TimeSpan.FromHours(2));
+        persisted.Value.LastSequenceNumbers[original.AggregateId].ShouldBe(5);
+
+        handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+        (await handler.ProjectAsync(original, "older", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        (await store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, TestContext.Current.CancellationToken))
+            .ETag.ShouldBe(persisted.ETag);
+        await search.Received(2).NotifyIndexedAsync("tenant-a",
+            Arg.Is<PartyIndexEntry>(entry => entry.IsActive), nameof(PartyReactivated), reactivation.Timestamp,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task IndexHandler_HistoricalSerializedRowUsesSyntheticProvenanceWithoutRewriteAsync()
+    {
+        var store = new InMemoryReadModelBatchStore();
+        ProjectionRequest request = CreateRequest();
+        string indexKey = PartySdkReadModelAddresses.Index(request.TenantId);
+        PartyIndexSdkReadModel legacy = PartyIndexSdkProjectionHandler.Fold(request, null);
+        // Write the historical JSON shape, with no descriptor property at all.
+        await store.SaveAsync("statestore", indexKey, new
+        {
+            legacy.Entries,
+            legacy.LastSequenceNumbers,
+            legacy.ErasureSequenceNumbers,
+            legacy.ProjectedAt,
+            legacy.ProjectionVersion,
+        }, TestContext.Current.CancellationToken);
+        ReadModelEntry<PartyIndexSdkReadModel> before = await store.GetAsync<PartyIndexSdkReadModel>(
+            "statestore", indexKey, TestContext.Current.CancellationToken);
+        before.Value.ShouldNotBeNull();
+        before.Value.LastIndexedEvents.ShouldBeEmpty();
+        IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
+            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(false, true);
+
+        for (int attempt = 0; attempt < 2; attempt++)
+        {
+            var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+            (await handler.ProjectAsync(request, "historical", TestContext.Current.CancellationToken)).Status
+                .ShouldBe(attempt == 0 ? ProjectionDispatchStatus.Retryable : ProjectionDispatchStatus.AlreadyCompleted);
+        }
+
+        ReadModelEntry<PartyIndexSdkReadModel> after = await store.GetAsync<PartyIndexSdkReadModel>(
+            "statestore", indexKey, TestContext.Current.CancellationToken);
+        after.ETag.ShouldBe(before.ETag);
+        after.Value!.LastIndexedEvents.ShouldBeEmpty();
+        await search.Received(2).NotifyIndexedAsync("tenant-a", Arg.Any<PartyIndexEntry>(),
+            "PartyProjectionReconciled", legacy.Entries[request.AggregateId].LastModifiedAt, Arg.Any<CancellationToken>());
+
+        var checkpointHandler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+        ProjectionRequest checkpointOnly = request with
+        {
+            Events = [Event(new PartyNotFound(), 3, DateTimeOffset.UnixEpoch.AddSeconds(2))],
+        };
+        (await checkpointHandler.ProjectAsync(checkpointOnly, "historical-checkpoint", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        PartyIndexSdkReadModel checkpointed = store.Deserialize<PartyIndexSdkReadModel>(indexKey);
+        checkpointed.LastSequenceNumbers[request.AggregateId].ShouldBe(3);
+        checkpointed.LastIndexedEvents.ShouldBeEmpty();
+        await search.Received(3).NotifyIndexedAsync("tenant-a", Arg.Any<PartyIndexEntry>(),
+            "PartyProjectionReconciled", legacy.Entries[request.AggregateId].LastModifiedAt, Arg.Any<CancellationToken>());
+
+        ProjectionEventDto canonicalEvent = Event(new PartyReactivated(), 4, DateTimeOffset.UnixEpoch.AddSeconds(3));
+        var mutationHandler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+        (await mutationHandler.ProjectAsync(request with { Events = [canonicalEvent] }, "historical-mutation",
+            TestContext.Current.CancellationToken)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        ReadModelEntry<PartyIndexSdkReadModel> installed = await store.GetAsync<PartyIndexSdkReadModel>(
+            "statestore", indexKey, TestContext.Current.CancellationToken);
+        installed.Value!.LastIndexedEvents[request.AggregateId].ShouldBe(
+            new PartyIndexEventMetadata(4, nameof(PartyReactivated), canonicalEvent.Timestamp));
+
+        var olderRetry = new PartyIndexSdkProjectionHandler(store, s_options, search);
+        (await olderRetry.ProjectAsync(checkpointOnly, "historical-older", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        (await store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, TestContext.Current.CancellationToken))
+            .ETag.ShouldBe(installed.ETag);
+        await search.Received(2).NotifyIndexedAsync("tenant-a",
+            Arg.Is<PartyIndexEntry>(entry => entry.IsActive), nameof(PartyReactivated), canonicalEvent.Timestamp,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("json-redacted", "{}")]
+    [InlineData("json-redacted", "null")]
+    [InlineData("json", "{ not valid json")]
+    public async Task IndexHandler_DecoderCheckpointOnlyRetainsSerializedProvenanceOnRetryAsync(string format, string payload)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        ProjectionRequest request = CreateRequest();
+        var seedHandler = new PartyIndexSdkProjectionHandler(store, s_options);
+        _ = await seedHandler.ProjectAsync(request, "seed", TestContext.Current.CancellationToken);
+        IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
+            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(false, true);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+        ProjectionRequest checkpointOnly = request with
+        {
+            Events = [new ProjectionEventDto(nameof(PartyReactivated), System.Text.Encoding.UTF8.GetBytes(payload),
+                format, 3, DateTimeOffset.UnixEpoch.AddMinutes(1), "correlation-1")],
+        };
+
+        (await handler.ProjectAsync(checkpointOnly, "checkpoint", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        string indexKey = PartySdkReadModelAddresses.Index(request.TenantId);
+        ReadModelEntry<PartyIndexSdkReadModel> persisted = await store.GetAsync<PartyIndexSdkReadModel>(
+            "statestore", indexKey, TestContext.Current.CancellationToken);
+        persisted.Value!.LastIndexedEvents[request.AggregateId].ShouldBe(
+            new PartyIndexEventMetadata(2, nameof(PartyDeactivated), request.Events[1].Timestamp));
+        persisted.Value.LastSequenceNumbers[request.AggregateId].ShouldBe(3);
+        persisted.Value.Entries[request.AggregateId].IsActive.ShouldBeFalse();
+        handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+        (await handler.ProjectAsync(checkpointOnly, "checkpoint-retry", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        (await store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, TestContext.Current.CancellationToken))
+            .ETag.ShouldBe(persisted.ETag);
+        await search.Received(2).NotifyIndexedAsync("tenant-a", Arg.Any<PartyIndexEntry>(),
+            nameof(PartyDeactivated), request.Events[1].Timestamp, Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task IndexHandler_ConfiguredDaprSerializerPreservesDescriptorsAndHistoricalRowsAsync(bool historical)
+    {
+        // Match the host's AddDaprClient registration and inspect its configured options without
+        // making any sidecar request. Complete rows use the live store's serializer in both directions.
+        var services = new ServiceCollection();
+        services.AddDaprClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        JsonSerializerOptions daprOptions = provider.GetRequiredService<DaprClient>().JsonSerializerOptions;
+        var store = new InMemoryReadModelBatchStore(daprOptions, daprOptions);
+        DateTimeOffset timestamp = new DateTimeOffset(2026, 8, 4, 12, 34, 56, TimeSpan.FromMinutes(330)).AddTicks(1234567);
+        ProjectionRequest request = CreateRequest() with
+        {
+            Events =
+            [
+                CreateRequest().Events[0],
+                Event(new PartyDeactivated(), 2, timestamp) with { EventTypeName = typeof(PartyDeactivated).FullName! },
+            ],
+        };
+        string indexKey = PartySdkReadModelAddresses.Index(request.TenantId);
+        if (historical)
+        {
+            PartyIndexSdkReadModel legacy = PartyIndexSdkProjectionHandler.Fold(request, null);
+            await store.SaveAsync("statestore", indexKey, new
+            {
+                legacy.Entries,
+                legacy.LastSequenceNumbers,
+                legacy.ErasureSequenceNumbers,
+                legacy.ProjectedAt,
+                legacy.ProjectionVersion,
+            }, TestContext.Current.CancellationToken);
+        }
+        else
+        {
+            var seedHandler = new PartyIndexSdkProjectionHandler(store, s_options);
+            _ = await seedHandler.ProjectAsync(request, "seed", TestContext.Current.CancellationToken);
+        }
+
+        ReadModelEntry<PartyIndexSdkReadModel> before = await store.GetAsync<PartyIndexSdkReadModel>(
+            "statestore", indexKey, TestContext.Current.CancellationToken);
+        before.Value.ShouldNotBeNull();
+        if (historical)
+        {
+            before.Value.LastIndexedEvents.ShouldBeEmpty();
+        }
+        else
+        {
+            PartyIndexEventMetadata metadata = before.Value.LastIndexedEvents.ShouldHaveSingleItem().Value;
+            metadata.SequenceNumber.ShouldBe(2);
+            metadata.EventTypeName.ShouldBe(typeof(PartyDeactivated).FullName);
+            metadata.Timestamp.ToString("O").ShouldBe("2026-08-04T12:34:56.1234567+05:30");
+            // Descriptor dictionaries also cross the candidate/fixture serializer and the
+            // configured Dapr serializer in both directions, independently of entry enum policy.
+            foreach ((JsonSerializerOptions writer, JsonSerializerOptions reader) in new[]
+            {
+                (s_canonicalJsonOptions, daprOptions),
+                (daprOptions, s_canonicalJsonOptions),
+            })
+            {
+                byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(before.Value.LastIndexedEvents, writer);
+                PartyIndexEventMetadata roundTripped = JsonSerializer
+                    .Deserialize<Dictionary<string, PartyIndexEventMetadata>>(bytes, reader)![request.AggregateId];
+                roundTripped.SequenceNumber.ShouldBe(metadata.SequenceNumber);
+                roundTripped.EventTypeName.ShouldBe(metadata.EventTypeName);
+                roundTripped.Timestamp.ToString("O").ShouldBe("2026-08-04T12:34:56.1234567+05:30");
+            }
+        }
+
+        IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
+            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(true);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+        (await handler.ProjectAsync(request, "retry", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        (await store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, TestContext.Current.CancellationToken))
+            .ETag.ShouldBe(before.ETag);
+        string expectedTimestamp = historical ? timestamp.ToUniversalTime().ToString("O") : timestamp.ToString("O");
+        await search.Received(1).NotifyIndexedAsync("tenant-a", Arg.Any<PartyIndexEntry>(),
+            historical ? "PartyProjectionReconciled" : typeof(PartyDeactivated).FullName!,
+            Arg.Is<DateTimeOffset>(value => value.ToString("O") == expectedTimestamp), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task IndexHandler_SearchCancellationPropagatesForWriteAndReconciliationAsync(bool reconciliation)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        ProjectionRequest request = CreateRequest();
+        if (reconciliation)
+        {
+            var seedHandler = new PartyIndexSdkProjectionHandler(store, s_options);
+            _ = await seedHandler.ProjectAsync(request, "seed", TestContext.Current.CancellationToken);
+        }
+
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
+            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(_ =>
+            {
+                cancellation.Cancel();
+                return Task.FromCanceled<bool>(cancellation.Token);
+            });
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+
+        await Should.ThrowAsync<OperationCanceledException>(() => handler.ProjectAsync(
+            request, "cancel", cancellation.Token));
+        store.Deserialize<PartyIndexSdkReadModel>(PartySdkReadModelAddresses.Index(request.TenantId))
+            .LastIndexedEvents[request.AggregateId].EventTypeName.ShouldBe(nameof(PartyDeactivated));
     }
 
     [Fact]
@@ -564,6 +906,116 @@ public sealed class PartySdkProjectionHandlerTests
         attempts[0].Entries.Keys.ShouldBe(["party-1"]);
         attempts[1].Entries.Keys.Order(StringComparer.Ordinal).ShouldBe(["party-1", "party-2"]);
         attempts[1].LastSequenceNumbers["party-2"].ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task IndexHandler_OptimisticRetryPublishesSuccessfulCanonicalProvenanceAsync()
+    {
+        var durable = new InMemoryReadModelBatchStore();
+        string indexKey = PartySdkReadModelAddresses.Index("tenant-a");
+        ProjectionRequest request = CreateRequest();
+        var seedHandler = new PartyIndexSdkProjectionHandler(durable, s_options);
+        _ = await seedHandler.ProjectAsync(request with { Events = [request.Events[0]] },
+            "seed", TestContext.Current.CancellationToken);
+        ProjectionRequest newer = request with
+        {
+            Events = [.. request.Events, Event(new PartyReactivated(), 3, DateTimeOffset.UnixEpoch.AddSeconds(2))],
+        };
+        ProjectionRequest unrelated = request with { AggregateId = "party-2", Events = [request.Events[0]] };
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, Arg.Any<CancellationToken>())
+            .Returns(_ => durable.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, TestContext.Current.CancellationToken));
+        var attempts = new List<PartyIndexSdkReadModel>();
+        store.TrySaveAsync("statestore", indexKey, Arg.Any<PartyIndexSdkReadModel>(), Arg.Any<string>(),
+            Arg.Any<CancellationToken>()).Returns(async call =>
+            {
+                attempts.Add(call.Arg<PartyIndexSdkReadModel>());
+                if (attempts.Count == 1)
+                {
+                    // Another writer commits a newer entry for this aggregate and an unrelated
+                    // aggregate before this handler's first ETag write can succeed.
+                    _ = await seedHandler.ProjectAsync(newer, "concurrent-target", TestContext.Current.CancellationToken).ConfigureAwait(false);
+                    _ = await seedHandler.ProjectAsync(unrelated, "concurrent-other", TestContext.Current.CancellationToken).ConfigureAwait(false);
+                }
+
+                return await durable.TrySaveAsync("statestore", indexKey, call.Arg<PartyIndexSdkReadModel>(),
+                    call.ArgAt<string>(3), TestContext.Current.CancellationToken).ConfigureAwait(false);
+            });
+        IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
+            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(true);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+
+        (await handler.ProjectAsync(request, "contended", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+
+        attempts.Count.ShouldBe(2);
+        attempts[0].LastIndexedEvents[request.AggregateId].SequenceNumber.ShouldBe(2);
+        PartyIndexSdkReadModel persisted = durable.Deserialize<PartyIndexSdkReadModel>(indexKey);
+        persisted.LastIndexedEvents.ShouldBe(attempts[1].LastIndexedEvents);
+        persisted.LastIndexedEvents[request.AggregateId].ShouldBe(
+            new PartyIndexEventMetadata(3, nameof(PartyReactivated), newer.Events[2].Timestamp));
+        persisted.LastIndexedEvents[unrelated.AggregateId].ShouldBe(
+            new PartyIndexEventMetadata(1, nameof(PartyCreated), unrelated.Events[0].Timestamp));
+        persisted.Entries[request.AggregateId].IsActive.ShouldBeTrue();
+        await search.Received(1).NotifyIndexedAsync("tenant-a",
+            Arg.Is<PartyIndexEntry>(entry => entry.Id == request.AggregateId && entry.IsActive),
+            nameof(PartyReactivated), newer.Events[2].Timestamp, Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task IndexHandler_ErasureRemovesOnlyTargetProvenanceAndRetainsFenceAsync(bool sdkCleanup)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        var seedHandler = new PartyIndexSdkProjectionHandler(store, s_options);
+        ProjectionRequest request = CreateRequest();
+        ProjectionRequest unrelated = request with { AggregateId = "party-2", Events = [request.Events[0]] };
+        _ = await seedHandler.ProjectAsync(request, "seed-target", TestContext.Current.CancellationToken);
+        _ = await seedHandler.ProjectAsync(unrelated, "seed-other", TestContext.Current.CancellationToken);
+        IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
+        search.NotifyRemovedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+        if (sdkCleanup)
+        {
+            var eraser = new PartySdkReadModelEraser(store, store, s_options, search);
+            await eraser.EraseAsync(request.TenantId, request.AggregateId, TestContext.Current.CancellationToken);
+        }
+        else
+        {
+            ProjectionRequest erasure = CreateErasureRequest() with
+            {
+                Events = [CreateErasureRequest().Events[0] with { SequenceNumber = 3 }],
+            };
+            (await handler.ProjectAsync(erasure, "erase", TestContext.Current.CancellationToken))
+                .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        }
+
+        string indexKey = PartySdkReadModelAddresses.Index(request.TenantId);
+        PartyIndexSdkReadModel erased = store.Deserialize<PartyIndexSdkReadModel>(indexKey);
+        erased.Entries.Keys.ShouldBe([unrelated.AggregateId]);
+        erased.LastIndexedEvents.ShouldHaveSingleItem().ShouldBe(
+            new KeyValuePair<string, PartyIndexEventMetadata>(unrelated.AggregateId,
+                new PartyIndexEventMetadata(1, nameof(PartyCreated), unrelated.Events[0].Timestamp)));
+        erased.ErasureSequenceNumbers.ContainsKey(request.AggregateId).ShouldBeTrue();
+
+        handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+        ProjectionRequest recreate = request with
+        {
+            Events = [Event(new PartyCreated { Type = PartyType.Person },
+                erased.LastSequenceNumbers[request.AggregateId] + 1, DateTimeOffset.UnixEpoch.AddHours(1))],
+        };
+        (await handler.ProjectAsync(recreate, "blocked-recreate", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        (await handler.ProjectAsync(request, "old-retry", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        PartyIndexSdkReadModel after = store.Deserialize<PartyIndexSdkReadModel>(indexKey);
+        after.Entries.Keys.ShouldBe([unrelated.AggregateId]);
+        after.LastIndexedEvents.ShouldBe(erased.LastIndexedEvents);
+        after.ErasureSequenceNumbers.ShouldBe(erased.ErasureSequenceNumbers);
+        await search.Received(3).NotifyRemovedAsync(request.TenantId, request.AggregateId, Arg.Any<CancellationToken>());
+        await search.DidNotReceiveWithAnyArgs().NotifyIndexedAsync(default!, default!, default!, default, default);
     }
 
     [Fact]
@@ -1429,6 +1881,84 @@ public sealed class PartySdkProjectionHandlerTests
     }
 
     [Fact]
+    public async Task SharedIndexRebuild_SerializedCandidatePreservesLiveCanonicalProvenanceAsync()
+    {
+        ProjectionRequest first = CreateRequest() with
+        {
+            Events =
+            [
+                .. CreateRequest().Events,
+                Event(new PartyNotFound(), 3, DateTimeOffset.UnixEpoch.AddSeconds(2)),
+                Event(new PartyDeactivated(), 4, DateTimeOffset.UnixEpoch.AddSeconds(3)),
+                Event(new PartyCreated { Type = PartyType.Organization }, 5, DateTimeOffset.UnixEpoch.AddSeconds(4)),
+            ],
+        };
+        ProjectionRequest second = CreateRequest() with { AggregateId = "party-2", Events = [first.Events[0]] };
+        ProjectionRequest erased = CreateRequest() with
+        {
+            AggregateId = "party-3",
+            Events = [first.Events[0], CreateErasureRequest().Events[0]],
+        };
+        var liveStore = new InMemoryReadModelBatchStore();
+        var liveHandler = new PartyIndexSdkProjectionHandler(liveStore, s_options);
+        foreach (ProjectionEventDto[] delivery in new[] { first.Events[..1], first.Events[1..3], first.Events[3..] })
+        {
+            (await liveHandler.ProjectAsync(first with { Events = delivery }, "live", TestContext.Current.CancellationToken))
+                .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        }
+
+        _ = await liveHandler.ProjectAsync(second, "other", TestContext.Current.CancellationToken);
+        _ = await liveHandler.ProjectAsync(erased, "erased", TestContext.Current.CancellationToken);
+        var rebuiltStore = new InMemoryReadModelBatchStore();
+        IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
+            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(true);
+        var rebuildHandler = new PartyIndexSdkProjectionHandler(rebuiltStore, s_options, search);
+        DomainSharedProjectionRebuildIdentity identity = CreateSharedRebuildIdentity();
+        DomainSharedProjectionRebuildCandidate candidate = await rebuildHandler.CreateEmptyCandidateAsync(
+            identity, TestContext.Current.CancellationToken);
+        foreach (ProjectionRequest history in new[] { first, second, erased })
+        {
+            // Each call reads a serialized candidate and a new handler has no in-memory history.
+            rebuildHandler = new PartyIndexSdkProjectionHandler(rebuiltStore, s_options, search);
+            candidate = await rebuildHandler.AccumulateAsync(identity, candidate, history, TestContext.Current.CancellationToken);
+        }
+
+        DomainProjectionRebuildPlan plan = await rebuildHandler.FinalizeAsync(identity, candidate, TestContext.Current.CancellationToken);
+        var batch = new ReadModelBatch(new ReadModelBatchScope(plan.StoreName, identity.TenantId, "party",
+            PartySdkReadModelAddresses.SharedIndexAggregateId, PartyProjectionNames.Index, "rebuilt"), plan.Operations);
+        (await rebuiltStore.ExecuteAsync(batch, TestContext.Current.CancellationToken)).Status.ShouldBe(ReadModelBatchStatus.Completed);
+        string indexKey = PartySdkReadModelAddresses.Index(identity.TenantId);
+        PartyIndexSdkReadModel live = liveStore.Deserialize<PartyIndexSdkReadModel>(indexKey);
+        PartyIndexSdkReadModel rebuilt = rebuiltStore.Deserialize<PartyIndexSdkReadModel>(indexKey);
+        JsonSerializer.Serialize(rebuilt, s_canonicalJsonOptions).ShouldBe(JsonSerializer.Serialize(live, s_canonicalJsonOptions));
+        rebuilt.LastIndexedEvents.Keys.Order(StringComparer.Ordinal).ShouldBe(["party-1", "party-2"]);
+        rebuilt.LastIndexedEvents[first.AggregateId].ShouldBe(new PartyIndexEventMetadata(5, nameof(PartyCreated), first.Events[4].Timestamp));
+        rebuilt.Entries[first.AggregateId].LastModifiedAt.ShouldBe(first.Events[1].Timestamp);
+        rebuilt.ErasureSequenceNumbers.ContainsKey(erased.AggregateId).ShouldBeTrue();
+
+        (await rebuildHandler.CompleteRebuildAsync(identity, candidate, plan.CompletionState, TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        await search.Received(1).NotifyIndexedAsync(identity.TenantId,
+            Arg.Is<PartyIndexEntry>(entry => entry.Id == first.AggregateId), "PartyProjectionRebuilt",
+            first.Events[1].Timestamp, Arg.Any<CancellationToken>());
+        await search.Received(1).NotifyIndexedAsync(identity.TenantId,
+            Arg.Is<PartyIndexEntry>(entry => entry.Id == second.AggregateId), "PartyProjectionRebuilt",
+            second.Events[0].Timestamp, Arg.Any<CancellationToken>());
+
+        var retryHandler = new PartyIndexSdkProjectionHandler(rebuiltStore, s_options, search);
+        ReadModelEntry<PartyIndexSdkReadModel> before = await rebuiltStore.GetAsync<PartyIndexSdkReadModel>(
+            "statestore", indexKey, TestContext.Current.CancellationToken);
+        (await retryHandler.ProjectAsync(first, "post-rebuild-retry", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        (await rebuiltStore.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, TestContext.Current.CancellationToken))
+            .ETag.ShouldBe(before.ETag);
+        await search.Received(1).NotifyIndexedAsync(identity.TenantId,
+            Arg.Is<PartyIndexEntry>(entry => entry.Id == first.AggregateId), nameof(PartyCreated),
+            first.Events[4].Timestamp, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task SharedIndexRebuild_ExistingIndexRequiresSnapshotEtagAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
@@ -1941,6 +2471,21 @@ public sealed class PartySdkProjectionHandlerTests
         IReadModelStore store = Substitute.For<IReadModelStore>();
         IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
         ConfigureEmptyErasureReads(store, "etag-1", "etag-2");
+        PartyIndexSdkReadModel initial = PartyIndexSdkProjectionHandler.Fold(CreateRequest(), CreateIndex("party-2"));
+        initial = PartyIndexSdkProjectionHandler.Fold(CreateRequest() with
+        {
+            AggregateId = "party-2",
+            Events = [Event(new PartyDeactivated(), 2, DateTimeOffset.UnixEpoch.AddSeconds(2))],
+        }, initial);
+        PartyIndexSdkReadModel concurrent = PartyIndexSdkProjectionHandler.Fold(CreateRequest() with
+        {
+            AggregateId = "party-2",
+            Events = [Event(new PartyReactivated(), 3, DateTimeOffset.UnixEpoch.AddSeconds(3))],
+        }, initial);
+        string indexKey = PartySdkReadModelAddresses.Index("tenant-a");
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(initial, "etag-1"),
+                new ReadModelEntry<PartyIndexSdkReadModel>(concurrent, "etag-2"));
         var batches = new List<ReadModelBatch>();
         batchStore.ExecuteAsync(
                 Arg.Do<ReadModelBatch>(batches.Add),
@@ -1960,6 +2505,18 @@ public sealed class PartySdkProjectionHandlerTests
             batches[1], PartySdkReadModelAddresses.Detail("tenant-a", "party-1"));
         second.ErasedAt.ShouldBe(first.ErasedAt);
         second.ProjectedAt.ShouldBe(first.ProjectedAt);
+        PartyIndexSdkReadModel firstIndex = DeserializeOperation<PartyIndexSdkReadModel>(batches[0], indexKey);
+        PartyIndexSdkReadModel secondIndex = DeserializeOperation<PartyIndexSdkReadModel>(batches[1], indexKey);
+        firstIndex.LastIndexedEvents.Keys.ShouldBe(["party-2"]);
+        firstIndex.LastIndexedEvents["party-2"].ShouldBe(initial.LastIndexedEvents["party-2"]);
+        secondIndex.Entries.Keys.ShouldBe(["party-2"]);
+        secondIndex.Entries["party-2"].IsActive.ShouldBeTrue();
+        secondIndex.LastIndexedEvents.Keys.ShouldBe(["party-2"]);
+        secondIndex.LastIndexedEvents["party-2"].ShouldBe(concurrent.LastIndexedEvents["party-2"]);
+        secondIndex.LastIndexedEvents["party-2"].SequenceNumber.ShouldBe(3);
+        secondIndex.ErasureSequenceNumbers["party-1"].ShouldBe(2);
+        batches[1].Operations.Single(operation => operation.Key == indexKey).Concurrency
+            .ShouldBe(ReadModelBatchConcurrency.Match("etag-2"));
     }
 
     [Fact]
@@ -3226,9 +3783,13 @@ public sealed class PartySdkProjectionHandlerTests
     /// Used to prove genuine convergence between incremental multi-dispatch persistence and a
     /// single-shot rebuild, which two calls to the same static Fold function cannot distinguish.
     /// </summary>
-    private sealed class InMemoryReadModelBatchStore : IReadModelStore, IReadModelBatchStore
+    private sealed class InMemoryReadModelBatchStore(
+        JsonSerializerOptions? writeOptions = null,
+        JsonSerializerOptions? readOptions = null) : IReadModelStore, IReadModelBatchStore
     {
         private readonly Dictionary<string, (ReadOnlyMemory<byte> Bytes, string ETag)> _entries = new(StringComparer.Ordinal);
+        private readonly JsonSerializerOptions _writeOptions = writeOptions ?? s_canonicalJsonOptions;
+        private readonly JsonSerializerOptions _readOptions = readOptions ?? s_canonicalJsonOptions;
         private int _etagSequence;
 
         public Task<ReadModelEntry<TValue>> GetAsync<TValue>(
@@ -3238,7 +3799,7 @@ public sealed class PartySdkProjectionHandlerTests
             where TValue : class
             => Task.FromResult(_entries.TryGetValue(key, out (ReadOnlyMemory<byte> Bytes, string ETag) entry)
                 ? new ReadModelEntry<TValue>(
-                    JsonSerializer.Deserialize<TValue>(entry.Bytes.Span, s_canonicalJsonOptions),
+                    JsonSerializer.Deserialize<TValue>(entry.Bytes.Span, _readOptions),
                     entry.ETag)
                 : new ReadModelEntry<TValue>(null, null));
 
@@ -3249,7 +3810,7 @@ public sealed class PartySdkProjectionHandlerTests
             CancellationToken cancellationToken = default)
             where TValue : class
         {
-            _entries[key] = (JsonSerializer.SerializeToUtf8Bytes(value, s_canonicalJsonOptions), NextETag());
+            _entries[key] = (JsonSerializer.SerializeToUtf8Bytes(value, _writeOptions), NextETag());
             return Task.CompletedTask;
         }
 
@@ -3268,7 +3829,7 @@ public sealed class PartySdkProjectionHandlerTests
                 return Task.FromResult(false);
             }
 
-            _entries[key] = (JsonSerializer.SerializeToUtf8Bytes(value, s_canonicalJsonOptions), NextETag());
+            _entries[key] = (JsonSerializer.SerializeToUtf8Bytes(value, _writeOptions), NextETag());
             return Task.FromResult(true);
         }
 
@@ -3290,7 +3851,7 @@ public sealed class PartySdkProjectionHandlerTests
 
         public TValue Deserialize<TValue>(string key)
             where TValue : class
-            => JsonSerializer.Deserialize<TValue>(_entries[key].Bytes.Span, s_canonicalJsonOptions)!;
+            => JsonSerializer.Deserialize<TValue>(_entries[key].Bytes.Span, _readOptions)!;
 
         private string NextETag() => $"etag-{++_etagSequence}";
     }

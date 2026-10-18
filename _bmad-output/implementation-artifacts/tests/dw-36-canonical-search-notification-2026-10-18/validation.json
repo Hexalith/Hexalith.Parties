@@ -1,0 +1,483 @@
+{
+  "task": "DW-36 canonical search notification metadata",
+  "date": "2026-10-18",
+  "status": "complete; final verification and independent review passed",
+  "baseline_commit": "3358e3c71c44af877aa1b775db32b5c4f66c313a",
+  "dotnet_sdk": "10.0.401",
+  "configuration": "Debug with source references; no warning overrides",
+  "working_tree": "Evidence captured before the local completion commit required by the approved bmad-build workflow; no remote operations or dependency/submodule changes.",
+  "context_loaded": [
+    "AGENTS.md"
+  ],
+  "source_sha256": {
+    "src/Hexalith.Parties.Projections/Models/PartyIndexEventMetadata.cs": "d4b02cb4a430d623c15dff3a318e9274f4e4fac6391636254eeaf11e04878be7",
+    "src/Hexalith.Parties.Projections/Models/PartyIndexSdkReadModel.cs": "8e13674c86f06cf7cca9e6a5b3895aa5defb8121c9fcff8f52579d1d844a056a",
+    "src/Hexalith.Parties.Projections/Handlers/PartyIndexFoldResult.cs": "4b2379dd45d8fc40759027bc1ed98126077925c54f5e92915d2c0b5ab7b65d2e",
+    "src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs": "94a5bc977216c3dbbaf6087abe53ade5dbe077823404b335eb3a41554e542bfc",
+    "src/Hexalith.Parties.Projections/Services/PartySdkReadModelEraser.cs": "1458bf973e2627c155834ea7ec1783a6b407c5046808ae7a1a96de1d7f5c1e87",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs": "908c376a020c564918fb4009dcd0a6946eee73fb91dea11535570f903640d133",
+    "docs/data-models.md": "46ee69d76f3a5513820b948010c6a36776ea56020a7914e61569d17aba97208e",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexEntrySearchIndexerTests.cs": "c9364244d665c0b2d2058333ee630743388ca99f84a56c594a668647c6f4bf16"
+  },
+  "assembly_sha256": {
+    "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll": "7dcc146e2181f120f271809a348034cc3e77651b649d6663a1cf4ff1f5055a80",
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll": "cdcebaa29e5ac6a0c6b2d1a47804f8ce6b8ef7e823aca0788021ca8bab52faae"
+  },
+  "submodule_identity_evidence": "root-submodule-identities.txt",
+  "baseline_reproduction": {
+    "patch": "baseline-regression.patch",
+    "patch_sha256": "77d13c47211cd18a14ee7373eb3704ddcc36f375fe1cee97f0f602d62d64330a",
+    "instructions": "Apply only this zero-context patch to the baseline commit using git apply --unidiff-zero in a disposable copy, then run the baseline build and regression commands below.",
+    "observed_failure": "First notification is PartyDeactivated at 1970-01-01T00:00:01Z; recreated-handler retry after serialized read-back incorrectly selects PartyNotFound at 1970-01-01T00:00:02Z."
+  },
+  "executions": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "evidence": "baseline-build.txt",
+      "phase": "baseline plus regression only"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -method '*IndexHandler_RetryAfterSearchFailureReconcilesIdempotentCanonicalWriteAsync'",
+      "exit_code": 1,
+      "total": 1,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "evidence": "baseline-regression.txt",
+      "phase": "baseline plus regression only"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 1,
+      "warnings": 0,
+      "errors": 3,
+      "evidence": "intermediate-analyzer-build.txt",
+      "phase": "intermediate test lambda CA2007 errors; resolved with ConfigureAwait(false)"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "evidence": "projections-build.txt",
+      "phase": "pre-review implementation"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -class 'Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests'",
+      "exit_code": 0,
+      "total": 121,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "evidence": "focused-handler.txt",
+      "phase": "pre-review implementation"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+      "exit_code": 0,
+      "total": 311,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "evidence": "projections-tests.txt",
+      "phase": "pre-review implementation"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "evidence": "parties-build.txt",
+      "phase": "pre-review implementation"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "exit_code": 0,
+      "total": 1157,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "evidence": "parties-tests.txt",
+      "phase": "pre-review implementation"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "evidence": "service-build.txt",
+      "phase": "additional build before service-lane clarification; Server.Tests suite not run"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "elapsed_seconds": 2.462,
+      "phase": "final after review",
+      "evidence": "final-projections-build.txt",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -result-xml /tmp/dw-36-validation/final-projections.xml",
+      "exit_code": 0,
+      "elapsed_seconds": 0.748,
+      "phase": "final after review",
+      "evidence": "final-projections-tests.txt",
+      "total": 316,
+      "passed": 316,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "raw_xml_sha256": "a8585227af512e77971d29ee0870b35ac71375745f0b6df1f50e63ed7b3ee237",
+      "xml_note": "Raw XML remains local; named test outcomes below are extracted from it."
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "elapsed_seconds": 14.482,
+      "phase": "final after review",
+      "evidence": "final-parties-build.txt",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-36-validation/final-parties.xml",
+      "exit_code": 0,
+      "elapsed_seconds": 14.791,
+      "phase": "final after review",
+      "evidence": "final-parties-tests.txt",
+      "total": 1158,
+      "passed": 1158,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "raw_xml_sha256": "cc9310e5505910e59c2d4f2e73cac3d4fafd782c02774e8757d32c881993379a",
+      "xml_note": "Raw XML remains local; named test outcomes below are extracted from it."
+    }
+  ],
+  "checks": [
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "evidence": "warning-gate.txt",
+      "phase": "pre-review implementation"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "evidence": "diff-check.txt",
+      "phase": "pre-review implementation"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 2,
+      "phase": "final after review",
+      "result": "Only added CRLF lines in the existing CRLF service test file are flagged; the CRLF-aware check below is authoritative for the repository EditorConfig.",
+      "raw_output_sha256": "272a9981e1c83466619ccb5fc8cadb281e241d0b3324f16082df54339e818e39"
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0,
+      "phase": "final after review",
+      "evidence": "final-whitespace-check.txt"
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "phase": "final after review",
+      "evidence": "final-warning-gate.txt"
+    }
+  ],
+  "captures": {
+    "baseline-build.log": {
+      "retained_as": "baseline-build.txt",
+      "retention": "complete output; project-root paths normalized",
+      "raw_sha256": "0d9177c292aa0579edf89e81ffd6e5120b99b9a3a578ba91506dddbd903a11f1",
+      "retained_sha256": "2676d2620d5a3b88dc7d35b6c51b712527718c1e484ed908f59fb9ff60d6fd6f"
+    },
+    "baseline-regression.log": {
+      "retained_as": "baseline-regression.txt",
+      "retention": "complete output; indentation tabs expanded and trailing whitespace removed",
+      "raw_sha256": "b1d0e6e787e5715861416e14f5db45eb456446518aa6680279eda05eb664b504",
+      "retained_sha256": "8e95470a084280fd79befe94078a34cec45acbaf9cb4e81577317da5f43debe4"
+    },
+    "focused-handler.log": {
+      "retained_as": "focused-handler.txt",
+      "retention": "complete output; project-root paths normalized",
+      "raw_sha256": "568e5adbc4a0c85ebef41e661640474c0d5628e386e30e98955b152df2ccd164",
+      "retained_sha256": "568e5adbc4a0c85ebef41e661640474c0d5628e386e30e98955b152df2ccd164"
+    },
+    "intermediate-analyzer-build.log": {
+      "retained_as": "intermediate-analyzer-build.txt",
+      "retention": "complete output; project-root paths normalized",
+      "raw_sha256": "5e8b783158014658f9ef41cbbe054350e3eec8a32e05c2b179c8fa03583891cb",
+      "retained_sha256": "2bde86c1318e377e49d46e3eddc9ad2b1067f51c40720048cdc4694cbecf5936"
+    },
+    "parties-build.log": {
+      "retained_as": "parties-build.txt",
+      "retention": "complete output; project-root paths normalized",
+      "raw_sha256": "10c02374584fde5c439afa82c680f68534211d753e4f89a9e5c8830ccc14b49a",
+      "retained_sha256": "6eba2e1fe575b49cc92d3e40db4624477e1387ba04e6fd088a470c9191258708"
+    },
+    "parties-tests.log": {
+      "retained_as": "parties-tests.txt",
+      "retention": "runner discovery and final summary; application logs omitted",
+      "raw_sha256": "70a9f7b2c89654df09877b1fdc29d622fa50d7e7d818e570aec8b452aff3eb48",
+      "retained_sha256": "76af0d0fe6d871e35f03ada253a4f38f0b0c06348f72edc5ffc388763c811a69"
+    },
+    "projections-build.log": {
+      "retained_as": "projections-build.txt",
+      "retention": "complete output; project-root paths normalized",
+      "raw_sha256": "bfa52a6157de776b5019991813e27b89dbe8fb0b5fcdd94638425df3695a78e0",
+      "retained_sha256": "5cd55098daa0047c78be5c8bf4d1bf42038e15c4c561932e170013f3d83e07fe"
+    },
+    "projections-tests.log": {
+      "retained_as": "projections-tests.txt",
+      "retention": "complete output; project-root paths normalized",
+      "raw_sha256": "e77bb5a5479251e055d4032611a51e9c395ec770976771d82a54186e42c02400",
+      "retained_sha256": "e77bb5a5479251e055d4032611a51e9c395ec770976771d82a54186e42c02400"
+    },
+    "service-build.log": {
+      "retained_as": "service-build.txt",
+      "retention": "complete output; project-root paths normalized",
+      "raw_sha256": "cf8cbe4f4cc783ec513ffe964dfc7e387cb24939613c77af189013daf2d41792",
+      "retained_sha256": "88d90c38d51d14ba64b5e73b040b38c5c6f39d0d6128bf9ed3a7359cc6a66bfc"
+    },
+    "final-projections-build.log": {
+      "retained_as": "final-projections-build.txt",
+      "raw_sha256": "dbcffe24b0c8c1d584eb4749599222a0b2a7afe6b07ef6a4b5dde300ff24a1b8",
+      "retained_sha256": "7578257a232b28e3d5df3abc5a63f0ecbc34b20218da6bbbd12f1dea2a6e53db",
+      "retention": "Project paths normalized; tabs expanded and trailing whitespace trimmed."
+    },
+    "final-projections-tests.log": {
+      "retained_as": "final-projections-tests.txt",
+      "raw_sha256": "c5b0398e5a18442802f17bc84e41d2b0091ab63020555b5e9c66feebc180829d",
+      "retained_sha256": "c5b0398e5a18442802f17bc84e41d2b0091ab63020555b5e9c66feebc180829d",
+      "retention": "Project paths normalized; tabs expanded and trailing whitespace trimmed."
+    },
+    "final-parties-build.log": {
+      "retained_as": "final-parties-build.txt",
+      "raw_sha256": "a0a8b024405017b0ce0a483466dd005f7367edf1224960abd18fa785e0c07fdc",
+      "retained_sha256": "6d36e5f355dc239f56e1f6c125588df68a5c2242fa79f405e6522dca8402cfc1",
+      "retention": "Project paths normalized; tabs expanded and trailing whitespace trimmed."
+    },
+    "final-parties-tests.log": {
+      "retained_as": "final-parties-tests.txt",
+      "raw_sha256": "9f7b7dfe6861a2e775da21212496df4a9441f99dc6995c6ec0fa7a90c7bb66c1",
+      "retained_sha256": "087552e132ba8bf41dce29f17f69bd03e48aca3ed89649fcff88bb8daa4b4df7",
+      "retention": "Project paths normalized; tabs expanded and trailing whitespace trimmed. Application output omitted; runner summary retained."
+    }
+  },
+  "coverage": [
+    "Recreated handlers read serialized metadata after failed search notification without a second canonical index write.",
+    "Full and incremental batches cover rejections, repeated deactivation, missing contact/identifier operations, unchanged display name and same-reference PartyCreated applications.",
+    "Equal timestamps cannot determine provenance; same-reference applications retain entry LastModifiedAt while selecting later event metadata.",
+    "Checkpoint-only batches retain descriptors; older deliveries reconcile the current newer entry and descriptor, including the source timestamp offset.",
+    "Optimistic ETag contention rejects the first candidate, commits the successful candidate with newer target metadata and unrelated aggregate metadata, and notifies only that candidate.",
+    "Historical JSON with no dictionary defaults empty, retries synthetic PartyProjectionReconciled at entry LastModifiedAt, and never rewrites the row.",
+    "Write and reconciliation cancellation propagates after persisted metadata is verified.",
+    "Event erasure and coordinated SDK cleanup remove only target metadata, retain unrelated descriptors and permanent erasure fence, and notify removal on retries and blocked recreation.",
+    "Serialized rebuild candidates produce persisted live-fold equivalence, retain descriptors and erasure tombstones, preserve synthetic rebuild notifications, and support later live retry attribution."
+  ],
+  "limitations": [
+    "No production migration or deployment. Historical rows use synthetic provenance until a later nonnull application or rebuild supplies canonical descriptors.",
+    "External search erasure fencing remains separate and is not changed by this work.",
+    "No new full topology qualification; retain the spec\u2019s recorded isolated no-build Aspire observation and its existing full-topology limitation.",
+    "Raw .log captures are ignored by repository policy; reviewable .txt copies normalize project-root paths and omit service application logs. Raw and retained hashes are recorded.",
+    "Final whitespace checks permit CR at EOL to follow repository EditorConfig and preserve the edited service test file format; blank-at-eol, blank-at-eof and space-before-tab checks remain enabled. No tracked Git configuration changed."
+  ],
+  "pre_review_source_sha256": {
+    "src/Hexalith.Parties.Projections/Models/PartyIndexEventMetadata.cs": "ce7c58cf2757a45106d4a22c8d16503bd5284a4272fb46e06998e50db39b48ef",
+    "src/Hexalith.Parties.Projections/Models/PartyIndexSdkReadModel.cs": "8e13674c86f06cf7cca9e6a5b3895aa5defb8121c9fcff8f52579d1d844a056a",
+    "src/Hexalith.Parties.Projections/Handlers/PartyIndexFoldResult.cs": "4b2379dd45d8fc40759027bc1ed98126077925c54f5e92915d2c0b5ab7b65d2e",
+    "src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs": "94a5bc977216c3dbbaf6087abe53ade5dbe077823404b335eb3a41554e542bfc",
+    "src/Hexalith.Parties.Projections/Services/PartySdkReadModelEraser.cs": "1458bf973e2627c155834ea7ec1783a6b407c5046808ae7a1a96de1d7f5c1e87",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs": "c82d9c3909d277b0cfd5d63f0f62afa8e099e62b564add947df31b687b7a1554",
+    "docs/data-models.md": "8f400735d3127cbceff065aff765db546f1bfe47c2ee7cf200b55eb34503ce03"
+  },
+  "pre_review_assembly_sha256": {
+    "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll": "6226866fe3511c1a93c7c998fb9a04ab14a9a014adce32bbe9c6868c94c79f7d",
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll": "6c2214c799212620df4a00d896e3a1d4ab67b909342571336ae56637e88164ad"
+  },
+  "review_diagnostic_captures": {
+    "review-focused-handler-final.log": {
+      "retained_as": "review-focused-handler-final.txt",
+      "raw_sha256": "a1dc08690015bd29ead5a22d27721a7336e24b0d132defb71de29e234300591e",
+      "retained_sha256": "a1dc08690015bd29ead5a22d27721a7336e24b0d132defb71de29e234300591e",
+      "retention": "Project paths normalized; tabs expanded and trailing whitespace trimmed."
+    },
+    "review-focused-handler.log": {
+      "retained_as": "review-focused-handler.txt",
+      "raw_sha256": "ef1bc4af198f46ab33c8ec6288766a0c788bda92f390e1407270d8f675514132",
+      "retained_sha256": "ef1bc4af198f46ab33c8ec6288766a0c788bda92f390e1407270d8f675514132",
+      "retention": "Project paths normalized; tabs expanded and trailing whitespace trimmed."
+    },
+    "review-memory-indexer.log": {
+      "retained_as": "review-memory-indexer.txt",
+      "raw_sha256": "c54c1d5de9be683a05acad8401d878b9431604b8888898ea1f14fd2564a55cb0",
+      "retained_sha256": "c54c1d5de9be683a05acad8401d878b9431604b8888898ea1f14fd2564a55cb0",
+      "retention": "Project paths normalized; tabs expanded and trailing whitespace trimmed."
+    },
+    "review-parties-build.log": {
+      "retained_as": "review-parties-build.txt",
+      "raw_sha256": "f673be4ffbef239c495e2d602ac24bb114bb3677e3a747b143f525fb480a4221",
+      "retained_sha256": "50acc1aa4dd9357619abd46583ffa76f7fb5fc24599394ff869cd22f3aa5d3f0",
+      "retention": "Project paths normalized; tabs expanded and trailing whitespace trimmed."
+    },
+    "review-projections-build-final.log": {
+      "retained_as": "review-projections-build-final.txt",
+      "raw_sha256": "991b9e7508c760003a107be1ce5d8ac40fc0d01de93ecf71eeef06a0f7e80691",
+      "retained_sha256": "9e62defe72020d5937ed0f55ae6ced39cad5027c1bc7ee59fc2c9adea5213e7f",
+      "retention": "Project paths normalized; tabs expanded and trailing whitespace trimmed."
+    },
+    "review-projections-build.log": {
+      "retained_as": "review-projections-build.txt",
+      "raw_sha256": "6069f702dcf91ed6cc18522f95c8dfa31536ce7a2ab785a1dd8b5cf22e7dc926",
+      "retained_sha256": "3b7d9888bd3b7a85c34e8ffe3962898201106f0c6b24181fec466fad52ddb621",
+      "retention": "Project paths normalized; tabs expanded and trailing whitespace trimmed."
+    }
+  },
+  "matrix_test_audit": [
+    {
+      "scenario": "search retry",
+      "executed_tests": [
+        {
+          "method": "IndexHandler_RetryAfterSearchFailureReconcilesIdempotentCanonicalWriteAsync",
+          "passed_cases": 1,
+          "result": "Pass"
+        },
+        {
+          "method": "IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync",
+          "passed_cases": 12,
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "scenario": "equal timestamps and incremental batch",
+      "executed_tests": [
+        {
+          "method": "IndexHandler_SerializedRetryRetainsCanonicalSelectionAcrossNoOpsAsync",
+          "passed_cases": 12,
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "scenario": "older retry and checkpoint-only batch",
+      "executed_tests": [
+        {
+          "method": "IndexHandler_CheckpointOnlyBatchAndOlderRetryPublishCurrentProvenanceAsync",
+          "passed_cases": 1,
+          "result": "Pass"
+        },
+        {
+          "method": "IndexHandler_DecoderCheckpointOnlyRetainsSerializedProvenanceOnRetryAsync",
+          "passed_cases": 3,
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "scenario": "historical row",
+      "executed_tests": [
+        {
+          "method": "IndexHandler_HistoricalSerializedRowUsesSyntheticProvenanceWithoutRewriteAsync",
+          "passed_cases": 1,
+          "result": "Pass"
+        },
+        {
+          "method": "IndexHandler_ConfiguredDaprSerializerPreservesDescriptorsAndHistoricalRowsAsync",
+          "passed_cases": 2,
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "scenario": "erasure",
+      "executed_tests": [
+        {
+          "method": "IndexHandler_ErasureRemovesOnlyTargetProvenanceAndRetainsFenceAsync",
+          "passed_cases": 2,
+          "result": "Pass"
+        },
+        {
+          "method": "Eraser_OptimisticConflictReloadsAllRowsWithFrozenTimestampAsync",
+          "passed_cases": 1,
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "scenario": "rebuild",
+      "executed_tests": [
+        {
+          "method": "SharedIndexRebuild_SerializedCandidatePreservesLiveCanonicalProvenanceAsync",
+          "passed_cases": 1,
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "scenario": "optimistic candidate",
+      "executed_tests": [
+        {
+          "method": "IndexHandler_OptimisticRetryPublishesSuccessfulCanonicalProvenanceAsync",
+          "passed_cases": 1,
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "scenario": "real search ingestion",
+      "executed_tests": [
+        {
+          "method": "ProjectionRetry_AfterSerializedReadBackPreservesExactIngestedProvenanceAsync",
+          "passed_cases": 1,
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "scenario": "cancellation",
+      "executed_tests": [
+        {
+          "method": "IndexHandler_SearchCancellationPropagatesForWriteAndReconciliationAsync",
+          "passed_cases": 2,
+          "result": "Pass"
+        }
+      ]
+    }
+  ],
+  "independent_review": {
+    "layers": [
+      "blind-hunter",
+      "edge-case-hunter",
+      "verification-gap"
+    ],
+    "findings": 11,
+    "patched": 8,
+    "false": 1,
+    "rejected_low": 2,
+    "new_deferred_work": 0,
+    "triage": "spec-dw-36-canonical-search-notification.md, Review Triage Log",
+    "followup": "Original verification reviewer confirmed exact offset/full event-type ingestion assertions resolve the gap; no introduced defect found."
+  },
+  "commitlint": {
+    "command": "node node_modules/@commitlint/cli/cli.js --config commitlint.config.mjs --verbose < /tmp/dw-36-validation/commit-message.txt",
+    "version": "21.2.2 (matches package-lock.json)",
+    "exit_code": 0,
+    "candidate": "fix: retain canonical search retry attribution\n",
+    "evidence": "commitlint.txt",
+    "evidence_sha256": "8e388e0050bd27382c1b36ae9c0dac519dca4a4fb6840eb24fb6dcfeefeef27f"
+  }
+}

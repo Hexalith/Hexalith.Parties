@@ -1,0 +1,23 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Hexalith.Commons.UniqueIds -> {project-root}/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/net10.0/Hexalith.Commons.UniqueIds.dll
+  Hexalith.EventStore.Contracts -> {project-root}/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll
+  Hexalith.Parties.Contracts -> {project-root}/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll
+  Hexalith.EventStore.Client -> {project-root}/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/bin/Debug/net10.0/Hexalith.EventStore.Client.dll
+  Hexalith.EventStore.ServiceDefaults -> {project-root}/references/Hexalith.EventStore/src/Hexalith.EventStore.ServiceDefaults/bin/Debug/net10.0/Hexalith.EventStore.ServiceDefaults.dll
+  Hexalith.EventStore.DomainService -> {project-root}/references/Hexalith.EventStore/src/Hexalith.EventStore.DomainService/bin/Debug/net10.0/Hexalith.EventStore.DomainService.dll
+  Hexalith.Parties.Projections -> {project-root}/src/Hexalith.Parties.Projections/bin/Debug/net10.0/Hexalith.Parties.Projections.dll
+  Hexalith.Parties.Testing -> {project-root}/src/Hexalith.Parties.Testing/bin/Debug/net10.0/Hexalith.Parties.Testing.dll
+{project-root}/tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(781,31): error CA2007: Consider calling ConfigureAwait on the awaited task (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2007) [{project-root}/tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj]
+{project-root}/tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(782,31): error CA2007: Consider calling ConfigureAwait on the awaited task (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2007) [{project-root}/tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj]
+{project-root}/tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(785,30): error CA2007: Consider calling ConfigureAwait on the awaited task (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2007) [{project-root}/tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj]
+
+Build FAILED.
+
+{project-root}/tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(781,31): error CA2007: Consider calling ConfigureAwait on the awaited task (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2007) [{project-root}/tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj]
+{project-root}/tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(782,31): error CA2007: Consider calling ConfigureAwait on the awaited task (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2007) [{project-root}/tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj]
+{project-root}/tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(785,30): error CA2007: Consider calling ConfigureAwait on the awaited task (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2007) [{project-root}/tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj]
+    0 Warning(s)
+    3 Error(s)
+
+Time Elapsed 00:00:02.70

@@ -11,6 +11,13 @@ public sealed record PartyIndexSdkReadModel : IReadModelFreshness
     public IReadOnlyDictionary<string, PartyIndexEntry> Entries { get; init; }
         = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal);
 
+    /// <summary>
+    /// Gets at most one payload-free descriptor per entry, selected by the last nonnull canonical
+    /// application. Historical rows without this property retain an empty dictionary.
+    /// </summary>
+    public IReadOnlyDictionary<string, PartyIndexEventMetadata> LastIndexedEvents { get; init; }
+        = new Dictionary<string, PartyIndexEventMetadata>(StringComparer.Ordinal);
+
     /// <summary>Gets the highest incorporated aggregate sequence for each active identifier.</summary>
     public IReadOnlyDictionary<string, long> LastSequenceNumbers { get; init; }
         = new Dictionary<string, long>(StringComparer.Ordinal);

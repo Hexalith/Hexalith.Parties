@@ -1,15 +1,29 @@
 using System.Reflection;
+using System.Text.Json;
 
+using Dapr.Client;
+
+using Hexalith.EventStore.Client.Projections;
+using Hexalith.EventStore.Contracts.Projections;
+using Hexalith.EventStore.DomainService;
 using Hexalith.Memories.Client.Rest;
 using Hexalith.Memories.Contracts.V1;
+using Hexalith.Parties.Contracts;
+using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.Projections.Configuration;
+using Hexalith.Parties.Projections.Handlers;
+using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Search;
 using Hexalith.Parties.Testing;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+
+using NSubstitute;
 
 using Shouldly;
 
@@ -95,6 +109,83 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         client.LastMetadata.ShouldNotBeNull();
         client.LastMetadata["eventType"].Value.ShouldBe("PartyCreated");
         client.LastMetadata["timestamp"].Value.ShouldBe(eventTimestamp.ToString("O"));
+    }
+
+    [Fact]
+    public async Task ProjectionRetry_AfterSerializedReadBackPreservesExactIngestedProvenanceAsync()
+    {
+        var services = new ServiceCollection();
+        services.AddDaprClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        JsonSerializerOptions serializerOptions = provider.GetRequiredService<DaprClient>().JsonSerializerOptions;
+        var client = new RecordingMemoriesClient { FailNextIngest = true };
+        var mappingStore = new RecordingMappingStore();
+        var searchOptions = new PartyMemorySearchOptions
+        {
+            Enabled = true,
+            Endpoint = new Uri("https://memories.example/"),
+            CaseId = "case-a",
+            RequireApiToken = false,
+        };
+        IOptions<PartySdkReadModelOptions> projectionOptions = Options.Create(
+            new PartySdkReadModelOptions { ReadModelStateStoreName = "statestore" });
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        string indexKey = PartySdkReadModelAddresses.Index("tenant-a");
+        byte[]? persisted = null;
+        int writes = 0;
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, Arg.Any<CancellationToken>())
+            .Returns(_ => new ReadModelEntry<PartyIndexSdkReadModel>(
+                persisted is null ? null : JsonSerializer.Deserialize<PartyIndexSdkReadModel>(persisted, serializerOptions),
+                persisted is null ? null : "etag-1"));
+        store.TrySaveAsync("statestore", indexKey, Arg.Any<PartyIndexSdkReadModel>(), Arg.Any<string>(),
+            Arg.Any<CancellationToken>()).Returns(call =>
+            {
+                writes++;
+                persisted = JsonSerializer.SerializeToUtf8Bytes(call.Arg<PartyIndexSdkReadModel>(), serializerOptions);
+                return true;
+            });
+        DateTimeOffset timestamp = new DateTimeOffset(2026, 8, 4, 12, 34, 56, TimeSpan.FromMinutes(330)).AddTicks(1234567);
+        ProjectionRequest request = new("tenant-a", "party", "party-1",
+        [
+            Delivery(new PartyCreated
+            {
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails { FirstName = "Canonical", LastName = "Party" },
+            }, 1, DateTimeOffset.UnixEpoch),
+            Delivery(new PartyDeactivated(), 2, timestamp),
+            Delivery(new PartyNotFound(), 3, timestamp.AddMinutes(1)),
+        ]);
+        var handler = new PartyIndexSdkProjectionHandler(store, projectionOptions,
+            CreateIndexer(client, mappingStore, searchOptions));
+
+        DomainProjectionHandlerResult first = await handler.ProjectAsync(request, "first", TestContext.Current.CancellationToken);
+
+        first.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        persisted.ShouldNotBeNull();
+        JsonSerializer.Deserialize<PartyIndexSdkReadModel>(persisted, serializerOptions)!
+            .LastIndexedEvents[request.AggregateId].Timestamp.ToString("O")
+            .ShouldBe("2026-08-04T12:34:56.1234567+05:30");
+        client.LastMetadata.ShouldNotBeNull();
+        client.LastMetadata["eventType"].Value.ShouldBe(typeof(PartyDeactivated).FullName);
+        client.LastMetadata["timestamp"].Value.ShouldBe("2026-08-04T12:34:56.1234567+05:30");
+        byte[] committed = persisted.ToArray();
+
+        handler = new PartyIndexSdkProjectionHandler(store, projectionOptions,
+            CreateIndexer(client, mappingStore, searchOptions));
+        DomainProjectionHandlerResult retry = await handler.ProjectAsync(request, "retry", TestContext.Current.CancellationToken);
+
+        retry.Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        writes.ShouldBe(1);
+        persisted.ShouldBe(committed);
+        client.IngestCount.ShouldBe(2);
+        client.LastMetadata.ShouldNotBeNull();
+        client.LastMetadata["eventType"].Value.ShouldBe(typeof(PartyDeactivated).FullName);
+        client.LastMetadata["timestamp"].Value.ShouldBe("2026-08-04T12:34:56.1234567+05:30");
+
+        static ProjectionEventDto Delivery(object payload, long sequence, DateTimeOffset eventTimestamp)
+            => new(payload.GetType().FullName!,
+                JsonSerializer.SerializeToUtf8Bytes(payload, payload.GetType(), PartiesJsonOptions.Default),
+                "json", sequence, eventTimestamp, "correlation-1");
     }
 
     [Fact]
@@ -646,6 +737,8 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
 
         public IReadOnlyDictionary<string, MetadataField>? LastMetadata { get; private set; }
 
+        public bool FailNextIngest { get; set; }
+
 #pragma warning disable HXL001
         public override Task<string> IngestAsync(
             string tenantId,
@@ -661,6 +754,12 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             LastTenantId = tenantId;
             LastCaseId = caseId;
             LastMetadata = metadata;
+            if (FailNextIngest)
+            {
+                FailNextIngest = false;
+                return Task.FromException<string>(new HttpRequestException("Simulated ingestion failure."));
+            }
+
             return Task.FromResult("workflow-1");
         }
 #pragma warning restore HXL001

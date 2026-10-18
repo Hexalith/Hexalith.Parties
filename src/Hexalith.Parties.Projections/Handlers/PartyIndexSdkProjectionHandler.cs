@@ -36,6 +36,7 @@ public sealed class PartyIndexSdkProjectionHandler(
 {
     private const string SearchReconciliationReason = "search-reconciliation-required";
     private const string RebuildEventType = "PartyProjectionRebuilt";
+    private const string ReconciledEventType = "PartyProjectionReconciled";
     private readonly IPartyIndexSearchIndexer _searchIndexer = searchIndexer ?? new NoOpPartyIndexSearchIndexer();
 
     private static readonly JsonSerializerOptions s_candidateJsonOptions = PartiesJsonOptions.Default;
@@ -163,8 +164,7 @@ public sealed class PartyIndexSdkProjectionHandler(
             }
 
             if (!foldResult.Model.Entries.TryGetValue(request.AggregateId, out PartyIndexEntry? entry)
-                || entry is null
-                || foldResult.LastIndexedEvent is null)
+                || entry is null)
             {
                 return true;
             }
@@ -173,8 +173,8 @@ public sealed class PartyIndexSdkProjectionHandler(
                 .NotifyIndexedAsync(
                     request.TenantId,
                     entry,
-                    foldResult.LastIndexedEvent.EventTypeName,
-                    foldResult.LastIndexedEvent.Timestamp,
+                    foldResult.LastIndexedEvent?.EventTypeName ?? ReconciledEventType,
+                    foldResult.LastIndexedEvent?.Timestamp ?? entry.LastModifiedAt,
                     cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -368,6 +368,9 @@ public sealed class PartyIndexSdkProjectionHandler(
         var entries = new Dictionary<string, PartyIndexEntry>(
             current?.Entries ?? new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal),
             StringComparer.Ordinal);
+        var lastIndexedEvents = new Dictionary<string, PartyIndexEventMetadata>(
+            current?.LastIndexedEvents ?? new Dictionary<string, PartyIndexEventMetadata>(StringComparer.Ordinal),
+            StringComparer.Ordinal);
         var sequences = new Dictionary<string, long>(
             current?.LastSequenceNumbers ?? new Dictionary<string, long>(StringComparer.Ordinal),
             StringComparer.Ordinal);
@@ -399,8 +402,8 @@ public sealed class PartyIndexSdkProjectionHandler(
         bool isErased = erasureSequences.ContainsKey(request.AggregateId);
         DateTimeOffset projectedAt = current?.ProjectedAt ?? DateTimeOffset.UnixEpoch;
         entries.TryGetValue(request.AggregateId, out PartyIndexEntry? entry);
-        bool removalObserved = false;
-        ProjectionEventDto? lastIndexedEvent = null;
+        bool removalObserved = isErased;
+        PartyIndexEventMetadata? lastIndexedEvent = lastIndexedEvents.GetValueOrDefault(request.AggregateId);
 
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
             PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence, logger))
@@ -410,6 +413,7 @@ public sealed class PartyIndexSdkProjectionHandler(
                 if (payload is PartyErased)
                 {
                     _ = entries.Remove(request.AggregateId);
+                    _ = lastIndexedEvents.Remove(request.AggregateId);
                     entry = null;
                     isErased = true;
                     erasureSequences[request.AggregateId] = Math.Max(
@@ -435,7 +439,9 @@ public sealed class PartyIndexSdkProjectionHandler(
 
                         entry = applied;
                         entries[request.AggregateId] = applied;
-                        lastIndexedEvent = @event;
+                        lastIndexedEvent = new PartyIndexEventMetadata(
+                            @event.SequenceNumber, @event.EventTypeName, @event.Timestamp);
+                        lastIndexedEvents[request.AggregateId] = lastIndexedEvent;
                     }
                 }
             }
@@ -467,6 +473,7 @@ public sealed class PartyIndexSdkProjectionHandler(
         var model = new PartyIndexSdkReadModel
         {
             Entries = entries,
+            LastIndexedEvents = lastIndexedEvents,
             LastSequenceNumbers = sequences,
             ErasureSequenceNumbers = erasureSequences,
             ProjectedAt = projectedAt,
@@ -492,19 +499,13 @@ public sealed class PartyIndexSdkProjectionHandler(
         ProjectionRequest request,
         PartyIndexSdkReadModel current)
     {
-        if (current.ErasureSequenceNumbers.ContainsKey(request.AggregateId))
-        {
-            return new PartyIndexFoldResult(current, null, true, null);
-        }
-
-        ProjectionEventDto? lastIndexedEvent = request.Events.Length == 0
-            ? null
-            : PartySdkProjectionFold
-                .DeserializeNew(request.Events, request.Events.Min(static item => item.SequenceNumber) - 1)
-                .Where(static item => item.Payload is not null and not PartyErased)
-                .Select(static item => item.Event)
-                .LastOrDefault();
-        return new PartyIndexFoldResult(current, lastIndexedEvent, false, null);
+        // A retry can carry older events than the current entry. Its retained descriptor, rather
+        // than any independently selected request event, identifies the canonical application.
+        return new PartyIndexFoldResult(
+            current,
+            current.LastIndexedEvents.GetValueOrDefault(request.AggregateId),
+            current.ErasureSequenceNumbers.ContainsKey(request.AggregateId),
+            null);
     }
 
     private static bool IsIdempotentNoOp(

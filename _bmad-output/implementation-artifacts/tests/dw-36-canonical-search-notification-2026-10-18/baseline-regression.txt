@@ -1,0 +1,27 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.12)
+  Discovering: Hexalith.Parties.Projections.Tests
+  Discovered:  Hexalith.Parties.Projections.Tests
+  Starting:    Hexalith.Parties.Projections.Tests
+    Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_RetryAfterSearchFailureReconcilesIdempotentCanonicalWriteAsync [FAIL]
+      NSubstitute.Exceptions.ReceivedCallsException : Expected to receive exactly 2 calls matching:
+        NotifyIndexedAsync("tenant-a", entry => ((entry != null) AndAlso (entry.Id == "party-1")), "PartyDeactivated", 01/01/1970 00:00:01 +00:00, any CancellationToken)
+      Actually received 1 matching call:
+        NotifyIndexedAsync("tenant-a", PartyIndexEntry { Id = party-1, Type = Person, IsActive = False, DisplayName = , SortName = , SearchableContactChannels = Hexalith.Parties.Contracts.ValueObjects.ContactChannel[], SearchableIdentifiers = Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier[], CreatedAt = 01/01/1970 00:00:00 +00:00, LastModifiedAt = 01/01/1970 00:00:01 +00:00, IsErased = False }, "PartyDeactivated", 01/01/1970 00:00:01 +00:00, System.Threading.CancellationToken)
+      Received 1 non-matching call (non-matching arguments indicated with '*' characters):
+        NotifyIndexedAsync("tenant-a", PartyIndexEntry { Id = party-1, Type = Person, IsActive = False, DisplayName = , SortName = , SearchableContactChannels = Hexalith.Parties.Contracts.ValueObjects.ContactChannel[], SearchableIdentifiers = Hexalith.Parties.Contracts.ValueObjects.PartyIdentifier[], CreatedAt = 01/01/1970 00:00:00 +00:00, LastModifiedAt = 01/01/1970 00:00:01 +00:00, IsErased = False }, *"PartyNotFound"*, *01/01/1970 00:00:02 +00:00*, System.Threading.CancellationToken)
+
+      Stack Trace:
+           at NSubstitute.Core.ReceivedCallsExceptionThrower.Throw(ICallSpecification callSpecification, IEnumerable`1 matchingCalls, IEnumerable`1 nonMatchingCalls, Quantity requiredQuantity)
+           at NSubstitute.Routing.Handlers.CheckReceivedCallsHandler.Handle(ICall call)
+           at NSubstitute.Routing.Route.Handle(ICall call)
+           at NSubstitute.Core.CallRouter.Route(ICall call)
+           at NSubstitute.Proxies.CastleDynamicProxy.CastleForwardingInterceptor.Intercept(IInvocation invocation)
+           at Castle.DynamicProxy.AbstractInvocation.Proceed()
+           at NSubstitute.Proxies.CastleDynamicProxy.ProxyIdInterceptor.Intercept(IInvocation invocation)
+           at Castle.DynamicProxy.AbstractInvocation.Proceed()
+           at Castle.Proxies.ObjectProxy.NotifyIndexedAsync(String tenantId, PartyIndexEntry entry, String eventType, DateTimeOffset timestamp, CancellationToken cancellationToken)
+        tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(456,0): at Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IndexHandler_RetryAfterSearchFailureReconcilesIdempotentCanonicalWriteAsync()
+        --- End of stack trace from previous location ---
+  Finished:    Hexalith.Parties.Projections.Tests (ID = '32ccbe81df0b8fb30a1cbb4f3fe7d397e416567be0c1d8e5322390ff12449635')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Projections.Tests  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 0.326s
