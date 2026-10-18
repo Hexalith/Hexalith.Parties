@@ -1384,7 +1384,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: erasure delegates; multi-instance degraded detail/index fallback cache
 source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
 reason: Erasure delegates evict only the local singleton; the other host can serve pre-erasure detail/index from degraded fallback without authoritative erasure revalidation; verified high, pre-existing.
-status: open
+status: done 2026-10-18
+
+resolution: Canonical-read failures reject and evict personal detail and nonempty index caches across independent hosts; safe redacted/empty fallback and retained Article 30 records remain available. Real shared-erasure regressions pass 28/28, query/cache tests 98/98 and full host tests 1284/1284 without skips; Debug source build has zero warnings/errors. Independent review and corrections completed with no new deferred work. See spec-dw-172-cross-instance-cache-erasure.md and tests/dw-172-cross-instance-cache-erasure-2026-10-18/validation.json.
 
 ### DW-173: D11 — Fence rebuild search notifications against erasure after the canonical index snapshot is read.
 

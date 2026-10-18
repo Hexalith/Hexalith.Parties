@@ -255,3 +255,15 @@ The tenant-access projection **fails closed** (missing tenant/user, unknown/disa
 ## 6. Eventual consistency & freshness
 
 Queries read **projection state**, not the write path. A query immediately after a command may miss the new party or return freshness metadata (`Rebuilding`/`Stale`/`Degraded`). Retry with bounded backoff, prefer `PartyDetail` by id for first-round-trip checks, and use the EventStore Admin UI for stream evidence. Responses may carry `X-Service-Degraded` / `X-Stale-Data-Age` (degraded reads) and `X-Parties-Search-Status` / `X-Parties-Search-Degraded-Reason` (Memories search). See [getting-started.md](getting-started.md#freshness-and-eventual-consistency).
+
+Canonical read outages withhold cached active party detail and all nonempty or
+unknown cached indexes, including list/search results. The Parties query result
+is a bounded `ActorException` failure without payload or degraded metadata; this
+also applies during an ordinary outage without known erasure. Unsafe candidates
+are evicted. A cached erased detail can still return defensively redacted data
+with its original timestamps and stale/degraded metadata. Cached absent detail
+retains not-found semantics; only an established empty cached index can return an
+empty stale/degraded page. Export and processing queries use the same detail
+admission first. If only the processing slot is unavailable, retained cached
+Article 30 records remain available, or an empty degraded record list is returned
+when that cache is absent.

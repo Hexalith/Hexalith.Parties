@@ -233,7 +233,18 @@ Events are projected by EventStore into Parties SDK handlers (`PartyDetailSdkPro
 - **Detail** — per party (`readmodel:{tenant}:party:…:detail`), materialises `PartyDetail` (plus processing-activity slot).
 - **Index** — per tenant shared index (`…:index`), a `Dictionary<partyId, PartyIndexEntry>` for list/search. Erased parties are removed from the index.
 
-**Query path:** EventStore gateway routes handler-advertised query types to Parties `POST /query` (`IDomainQueryHandler` implementations such as `PartyDetailQueryHandler` / `PartyIndexQueryHandler` / GDPR variants). Wire query-type names remain the historical `PartyDetailProjectionQueryActor.*` / `PartyIndexProjectionQueryActor.*` constants. Every read carries `ProjectionFreshnessMetadata` using SDK-native `Current`/`Stale`/`Unavailable` (store-outage last-known reads report `Stale` + `Metadata.IsDegraded`). Search defaults to `LocalFuzzyPartySearchProvider`; when `Parties:MemoriesSearch:Enabled=true` it swaps to `MemoriesPartySearchService` — see [memories-backed-party-search.md](memories-backed-party-search.md).
+**Query path:** EventStore gateway routes handler-advertised query types to Parties `POST /query` (`IDomainQueryHandler` implementations such as `PartyDetailQueryHandler` / `PartyIndexQueryHandler` / GDPR variants). Wire query-type names remain the historical `PartyDetailProjectionQueryActor.*` / `PartyIndexProjectionQueryActor.*` constants. Successful projection reads carry `ProjectionFreshnessMetadata` using SDK-native `Current`/`Stale`/`Unavailable`. Safe last-known responses during store outages report `Stale` + `Metadata.IsDegraded`. Search defaults to `LocalFuzzyPartySearchProvider`; when `Parties:MemoriesSearch:Enabled=true` it swaps to `MemoriesPartySearchService` — see [memories-backed-party-search.md](memories-backed-party-search.md).
+
+When a canonical read fails, cached active detail and every nonempty or unknown
+index are rejected and evicted with bounded `ActorException` failure, no payload,
+and no degraded metadata. This reduced outage availability applies even without
+known erasure because another instance may have completed shared cleanup. Cached
+erased detail remains available after defensive redaction with its stored
+timestamps preserved; cached absent detail retains not-found semantics. Only a
+positively established empty cached index can return an empty degraded page.
+Export and processing queries must first admit detail through the same policy.
+When only the processing slot is unavailable, they retain cached Article 30
+records or return an empty degraded record list when no processing cache exists.
 
 ### Actor inventory
 

@@ -503,7 +503,7 @@ public sealed class PartySdkQueryHandlerTests
     }
 
     [Fact]
-    public async Task DetailHandler_StateStoreFailureReturnsTenantScopedLastKnownDataAsStaleAsync()
+    public async Task DetailHandler_StateStoreFailureRejectsAndEvictsPersonalLastKnownDataAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
         var read = new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel
@@ -522,7 +522,8 @@ public sealed class PartySdkQueryHandlerTests
                 ? Task.FromResult(read)
                 : Task.FromException<ReadModelEntry<PartyDetailSdkReadModel>>(
                     new InvalidOperationException("state store unavailable for Ada Lovelace")));
-        var handler = new GetPartyQueryHandler(CreateService(store));
+        var cache = new PartySdkLastKnownReadModelCache();
+        var handler = new GetPartyQueryHandler(CreateService(store, lastKnownCache: cache));
 
         QueryResult current = await handler.ExecuteAsync(
             CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
@@ -532,19 +533,14 @@ public sealed class PartySdkQueryHandlerTests
             TestContext.Current.CancellationToken);
 
         current.Success.ShouldBeTrue();
-        degraded.Success.ShouldBeTrue();
-        degraded.Metadata!.IsDegraded.ShouldBe(true);
-        degraded.Metadata.IsStale.ShouldBe(true);
-        degraded.Metadata.WarningCodes!.ShouldContain(ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
-        PartyDetail payload = degraded.GetPayload().Deserialize<PartyDetail>(PartiesJsonOptions.Default)!;
-        payload.Id.ShouldBe("party-1");
-        payload.Freshness!.Status.ShouldBe(ProjectionFreshnessStatus.Stale);
-        payload.Freshness.WarningCodes.ShouldContain(ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
-        degraded.ErrorMessage.ShouldBeNull();
+        degraded.Success.ShouldBeFalse();
+        degraded.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        degraded.Metadata.ShouldBeNull();
+        cache.TryGetDetail("tenant-a", "party-1", out _).ShouldBeFalse();
     }
 
     [Fact]
-    public async Task IndexHandler_StateStoreFailureReturnsTenantScopedLastKnownDataAsStaleAsync()
+    public async Task IndexHandler_StateStoreFailureRejectsAndEvictsNonemptyLastKnownIndexAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
         var read = new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel
@@ -565,7 +561,8 @@ public sealed class PartySdkQueryHandlerTests
                 ? Task.FromResult(read)
                 : Task.FromException<ReadModelEntry<PartyIndexSdkReadModel>>(
                     new InvalidOperationException("state store unavailable for Ada Lovelace")));
-        var handler = new PartyIndexQueryHandler(CreateService(store));
+        var cache = new PartySdkLastKnownReadModelCache();
+        var handler = new PartyIndexQueryHandler(CreateService(store, lastKnownCache: cache));
 
         QueryResult current = await handler.ExecuteAsync(
             CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType),
@@ -575,16 +572,10 @@ public sealed class PartySdkQueryHandlerTests
             TestContext.Current.CancellationToken);
 
         current.Success.ShouldBeTrue();
-        degraded.Success.ShouldBeTrue();
-        degraded.Metadata!.IsDegraded.ShouldBe(true);
-        degraded.Metadata.IsStale.ShouldBe(true);
-        degraded.Metadata.WarningCodes!.ShouldContain(ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
-        PagedResult<PartyIndexEntry> payload = degraded.GetPayload()
-            .Deserialize<PagedResult<PartyIndexEntry>>(PartiesJsonOptions.Default)!;
-        payload.Items.ShouldHaveSingleItem().Id.ShouldBe("party-1");
-        payload.Freshness!.Status.ShouldBe(ProjectionFreshnessStatus.Stale);
-        payload.Freshness.WarningCodes.ShouldContain(ProjectionFreshnessMetadata.WarningProjectionStateStoreUnavailable);
-        degraded.ErrorMessage.ShouldBeNull();
+        degraded.Success.ShouldBeFalse();
+        degraded.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        degraded.Metadata.ShouldBeNull();
+        cache.TryGetIndex("tenant-a", out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -1247,12 +1238,27 @@ public sealed class PartySdkQueryHandlerTests
         var cache = new PartySdkLastKnownReadModelCache(TimeProvider.System, 2, TimeSpan.FromMinutes(1));
         if (slot == "processing")
         {
-            StoreCacheSlot(cache, "detail", "cached");
+            cache.StoreDetail("tenant-a", "party-1", new PartyDetailSdkReadModel
+            {
+                Detail = Detail("party-1") with { IsErased = true, ErasedAt = s_now },
+                ProjectionVersion = "cached",
+            });
         }
 
         if (seeded)
         {
-            StoreCacheSlot(cache, slot, "cached");
+            if (slot == "detail")
+            {
+                cache.StoreDetail("tenant-a", "party-1", new PartyDetailSdkReadModel
+                {
+                    Detail = Detail("party-1") with { IsErased = true, ErasedAt = s_now },
+                    ProjectionVersion = "cached",
+                });
+            }
+            else
+            {
+                StoreCacheSlot(cache, slot, "cached");
+            }
         }
 
         long firstBlocking = cache.BeginRead("first-unrelated-in-flight-read");
@@ -1358,24 +1364,46 @@ public sealed class PartySdkQueryHandlerTests
     [InlineData("detail", "missing")]
     [InlineData("detail", "failure")]
     [InlineData("detail", "cancellation")]
+    [InlineData("detail", "cached-cancellation")]
     [InlineData("detail", "degraded")]
+    [InlineData("detail", "unsafe")]
     [InlineData("processing", "success")]
     [InlineData("processing", "missing")]
     [InlineData("processing", "failure")]
     [InlineData("processing", "cancellation")]
+    [InlineData("processing", "cached-cancellation")]
     [InlineData("processing", "degraded")]
     [InlineData("index", "success")]
     [InlineData("index", "missing")]
     [InlineData("index", "failure")]
     [InlineData("index", "cancellation")]
+    [InlineData("index", "cached-cancellation")]
     [InlineData("index", "degraded")]
+    [InlineData("index", "unsafe")]
     public async Task SdkQueries_ReleaseReadTrackingForEveryOutcomeAsync(string slot, string outcome)
     {
         int capacity = slot == "processing" && outcome == "degraded" ? 2 : 1;
         var cache = new PartySdkLastKnownReadModelCache(TimeProvider.System, capacity, TimeSpan.FromMinutes(1));
-        if (outcome == "degraded")
+        if (outcome is "degraded" or "unsafe" or "cached-cancellation")
         {
-            StoreCacheSlot(cache, slot);
+            if (outcome == "degraded" && slot == "detail")
+            {
+                cache.StoreDetail("tenant-a", "party-1", new PartyDetailSdkReadModel
+                {
+                    Detail = Detail("party-1") with { IsErased = true, ErasedAt = s_now },
+                });
+            }
+            else if (outcome is "unsafe" or "cached-cancellation" && slot == "index")
+            {
+                cache.StoreIndex("tenant-a", new PartyIndexSdkReadModel
+                {
+                    Entries = new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal) { ["party-1"] = IndexEntry("party-1") },
+                });
+            }
+            else
+            {
+                StoreCacheSlot(cache, slot);
+            }
         }
 
         IReadModelStore store = Substitute.For<IReadModelStore>();
@@ -1389,7 +1417,7 @@ public sealed class PartySdkQueryHandlerTests
 
         for (int index = 0; index < 4; index++)
         {
-            if (outcome == "cancellation")
+            if (outcome is "cancellation" or "cached-cancellation")
             {
                 await Should.ThrowAsync<OperationCanceledException>(
                     () => ExecuteCacheQueryAsync(service, slot, TestContext.Current.CancellationToken));
@@ -1417,7 +1445,7 @@ public sealed class PartySdkQueryHandlerTests
                 : outcome switch
                 {
                     "missing" => Task.FromResult(new ReadModelEntry<TValue>(null, null)),
-                    "cancellation" => Task.FromCanceled<ReadModelEntry<TValue>>(new CancellationToken(canceled: true)),
+                    "cancellation" or "cached-cancellation" => Task.FromCanceled<ReadModelEntry<TValue>>(new CancellationToken(canceled: true)),
                     _ => Task.FromException<ReadModelEntry<TValue>>(new InvalidOperationException("store unavailable")),
                 };
     }

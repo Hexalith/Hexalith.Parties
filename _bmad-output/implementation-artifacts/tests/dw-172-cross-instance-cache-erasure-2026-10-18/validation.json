@@ -1,0 +1,214 @@
+{
+  "work_item": "DW-172",
+  "date": "2026-10-18",
+  "baseline_commit": "749b26d303e448bddafb1e56402bfe676bc92d7f",
+  "context_files": [],
+  "baseline_service_sha256": "403db81a8af6a9f60a1e79a8f619bca73bf8d92831ffe4364aeb347807b48865",
+  "aspire_baseline": [
+    {
+      "command": "aspire --version",
+      "exit_code": 0,
+      "result": "13.6.1+3751e615ad660621f2a7aa4c390ef48e08a0eed8"
+    },
+    {
+      "command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 0,
+      "result": "No AppHost running before start."
+    },
+    {
+      "command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --format Json",
+      "exit_code": 0,
+      "result": "AppHost started. Dashboard login token omitted."
+    },
+    {
+      "command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --format Json",
+      "exit_code": 0,
+      "result": "security Running/Unhealthy; parties and peers Waiting for security. Secret values and dashboard tokens omitted."
+    },
+    {
+      "command": "aspire wait security --timeout 5 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "result": "Bounded wait did not reach Healthy."
+    },
+    {
+      "command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "result": "Owned topology stopped."
+    },
+    {
+      "command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 0,
+      "result": "No AppHost running after stop."
+    }
+  ],
+  "red": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "note": "Original production service plus initial regression matrix."
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartySdkCrossInstanceErasureTests",
+      "exit_code": 1,
+      "total": 20,
+      "failed": 16,
+      "skipped": 0,
+      "note": "Remote-erasure and ordinary-outage personal caches returned success; malformed erased detail retained personal fields; delayed candidates remained available."
+    }
+  ],
+  "source_sha256": {
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "63b727768f5a19bdadc00f6722463086a95bd1f7b1dccc13add5c00bd89d5207",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "fb424d74ed2d5cd070b8071eb91755751285dbd39d029dcdf4204d97af1e974a",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkCrossInstanceErasureTests.cs": "165cd63184a57dc28fdeecb7aceddb429819ddc4dadda003df52c71ddec3fb41",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkFaultingReadModelStore.cs": "8342381c9cfe991b380c445cfadeade710482b02590c8021fbd7688212b07b97",
+    "docs/architecture.md": "2921dd2491c0ca4ec5ac7c53916b7995a9b622c68d9f751d0eaf12fee1242723",
+    "docs/api-contracts.md": "5a995146964be568f4aed913eaad13acffb8eb00b1c60133a94b9a3c02b9665a",
+    "_bmad-output/implementation-artifacts/tests/dw-172-cross-instance-cache-erasure-2026-10-18/check-whitespace.py": "febfe5f4dd65ba28925a86c14d76ef0bef1200c53fdd4de40aa605f275dba45a"
+  },
+  "test_assembly_sha256": "fb0279c397ee88cc0a9849a6426054a7ca4a3a610e6b25b6d2011992f9c6dc3e",
+  "routine_logs": "/tmp/parties-dw172-validation-ff_is1pq",
+  "limits": [
+    "Aspire topology health was blocked by the baseline security resource; SDK regression and full host suite ran independently.",
+    "Canonical-read consistency and other erasure races remain outside DW-172."
+  ],
+  "independent_review": "All three configured review layers completed. Six small correction groups applied and verified; one causal claim refuted and one rare conservative-eviction availability race rejected as low impact. No deferred work added. Parent confirmed source hashes and recorded the assembly hash after its rebuild/final verification.",
+  "initial_green": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartySdkCrossInstanceErasureTests",
+      "exit_code": 0,
+      "total": 26,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+      "exit_code": 0,
+      "total": 98,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "exit_code": 0,
+      "total": 1282,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "result": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+    },
+    {
+      "command": "git -c core.whitespace=cr-at-eol diff --check",
+      "exit_code": 0
+    }
+  ],
+  "initial_source_sha256": {
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "63b0db2dd1fb98fc7d1f69ed9ffe5d7a6d52f6300e30e81f67f13111a6f67fbe",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "fb424d74ed2d5cd070b8071eb91755751285dbd39d029dcdf4204d97af1e974a",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkCrossInstanceErasureTests.cs": "7a7262f882cb6515cb22705e0fe96733a29e0fd7187a7e8147581b663661f4f2",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkFaultingReadModelStore.cs": "8342381c9cfe991b380c445cfadeade710482b02590c8021fbd7688212b07b97"
+  },
+  "initial_test_assembly_sha256": "c07c73b5d9c153f9f7a8b7971ff7282b387e07518f92aefddd7187791402bded",
+  "green": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartySdkCrossInstanceErasureTests",
+      "exit_code": 0,
+      "total": 28,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+      "exit_code": 0,
+      "total": 98,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "python3 _bmad-output/implementation-artifacts/tests/dw-172-cross-instance-cache-erasure-2026-10-18/check-whitespace.py",
+      "exit_code": 0,
+      "result": "PASS: CRLF, final newline, and trailing whitespace in four changed C# files"
+    },
+    {
+      "command": "git -c core.whitespace=cr-at-eol diff --check",
+      "exit_code": 0
+    }
+  ],
+  "verification_scope": "Final verification covers the patched source: zero-warning Debug source build, 28 cross-instance tests, 98 query/cache tests and 1284 full-host tests, with no errors/failures/skips/not-run tests; warning and whitespace checks pass. Initial evidence and the assembly hash before the parent rebuild are retained separately.",
+  "final_verification": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1 --no-restore",
+      "exit_code": 0,
+      "log": "/tmp/dw172-parent-final-pbvq6hvf/1.log",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartySdkCrossInstanceErasureTests",
+      "exit_code": 0,
+      "log": "/tmp/dw172-parent-final-pbvq6hvf/2.log",
+      "total": 28,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests",
+      "exit_code": 0,
+      "log": "/tmp/dw172-parent-final-pbvq6hvf/3.log",
+      "total": 98,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "exit_code": 0,
+      "log": "/tmp/dw172-parent-final-pbvq6hvf/4.log",
+      "total": 1284,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "log": "/tmp/dw172-parent-final-pbvq6hvf/5.log"
+    },
+    {
+      "command": "python3 _bmad-output/implementation-artifacts/tests/dw-172-cross-instance-cache-erasure-2026-10-18/check-whitespace.py",
+      "exit_code": 0,
+      "log": "/tmp/dw172-parent-final-pbvq6hvf/6.log"
+    },
+    {
+      "command": "git -c core.whitespace=cr-at-eol diff --check",
+      "exit_code": 0,
+      "log": "/tmp/dw172-parent-final-pbvq6hvf/7.log"
+    }
+  ],
+  "review_fixes_test_assembly_sha256": "0bc97092325d89303be7743123237c9b9b2db6bb100fe7edebf92c4389fc10b9",
+  "commitlint": {
+    "command": "node node_modules/@commitlint/cli/cli.js --edit /tmp/dw172-commit-mday4rmu.txt --verbose",
+    "version": "21.2.2",
+    "message": "fix: prevent cached personal data after erasure\n",
+    "exit_code": 0,
+    "output": "\u29d7   --- input ---\nfix: prevent cached personal data after erasure\n\u2714   found 0 problems, 0 warnings\n"
+  }
+}

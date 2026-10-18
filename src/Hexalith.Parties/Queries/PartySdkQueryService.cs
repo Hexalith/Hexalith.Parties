@@ -11,6 +11,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Projections.Configuration;
+using Hexalith.Parties.Projections.Handlers;
 using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Search;
 
@@ -387,8 +388,21 @@ public sealed partial class PartySdkQueryService(
             {
                 throw;
             }
-            catch (Exception) when (lastKnownCache.TryGetIndex(query.TenantId, out PartyIndexSdkReadModel? cached))
+            catch (Exception)
             {
+                if (!lastKnownCache.TryGetIndex(query.TenantId, out PartyIndexSdkReadModel? cached))
+                {
+                    throw;
+                }
+
+                // Another instance may have erased any indexed party while this host was offline.
+                // Only an already-empty index is safe without a successful canonical read.
+                if (cached!.Entries is not { Count: 0 })
+                {
+                    lastKnownCache.EvictIndex(query.TenantId);
+                    throw;
+                }
+
                 read = new ReadModelEntry<PartyIndexSdkReadModel>(cached, null);
                 degraded = true;
             }
@@ -444,8 +458,33 @@ public sealed partial class PartySdkQueryService(
         {
             throw;
         }
-        catch (Exception) when (lastKnownCache.TryGetDetail(tenantId, partyId, out PartyDetailSdkReadModel? cached))
+        catch (Exception)
         {
+            if (!lastKnownCache.TryGetDetail(tenantId, partyId, out PartyDetailSdkReadModel? cached))
+            {
+                throw;
+            }
+
+            // A host-local cache cannot know whether another instance has erased this party.
+            // An outage must not authorize personal data or manufacture an erased response.
+            if (cached!.Detail is { IsErased: false })
+            {
+                lastKnownCache.EvictDetail(tenantId, partyId);
+                throw;
+            }
+
+            if (cached.Detail is { } erased)
+            {
+                cached = cached with
+                {
+                    Detail = PartyDetailProjectionHandler.ApplyErasure(partyId, erased)! with
+                    {
+                        ErasedAt = erased.ErasedAt,
+                        LastModifiedAt = erased.LastModifiedAt,
+                    },
+                };
+            }
+
             return (new ReadModelEntry<PartyDetailSdkReadModel>(cached, null), true);
         }
         finally
