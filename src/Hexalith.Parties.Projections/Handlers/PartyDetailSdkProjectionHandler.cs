@@ -54,11 +54,30 @@ public sealed class PartyDetailSdkProjectionHandler(
         }
 
         string storeName = StoreName;
+        var scope = new ReadModelBatchScope(storeName, request.TenantId, Domain, request.AggregateId, ProjectionType, dispatchId);
+        scope.Validate();
+        // Initialization has one bounded identity per aggregate, independent of delivery identity
+        // and event support. Validate the incoming identity before replacing it for hashing.
+        ReadModelBatchScope initializationScope = scope with { BatchId = "initialize-empty-slots-v1" };
+        initializationScope = initializationScope with { BatchId = $"initialize-{initializationScope.ComputeScopeHash()}" };
         string key = PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId);
+        string processingKey = PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId);
+        if (batchStore is IReadModelPendingBatchRecoveryStore recoveryStore)
+        {
+            // Either key may be the last recovery anchor after interrupted compaction. Recover
+            // both before deciding that a historical slot is absent, then load fresh ETags below.
+            ReadModelPendingBatchRecoveryResult detailRecovery = await recoveryStore
+                .RecoverPendingAsync(scope, key, cancellationToken).ConfigureAwait(false);
+            ReadModelPendingBatchRecoveryResult processingRecovery = await recoveryStore
+                .RecoverPendingAsync(scope, processingKey, cancellationToken).ConfigureAwait(false);
+            if (!detailRecovery.IsResolved || !processingRecovery.IsResolved)
+            {
+                return DeliveryFailure("projection-recovery-incomplete");
+            }
+        }
         ReadModelEntry<PartyDetailSdkReadModel> current = await readModelStore
             .GetAsync<PartyDetailSdkReadModel>(storeName, key, cancellationToken)
             .ConfigureAwait(false);
-        string processingKey = PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId);
         ReadModelEntry<PartyProcessingSdkReadModel> currentProcessing = await readModelStore
             .GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken)
             .ConfigureAwait(false);
@@ -75,6 +94,35 @@ public sealed class PartyDetailSdkProjectionHandler(
             current.Value?.LastSequenceNumber ?? long.MinValue,
             currentProcessing.Value?.LastSequenceNumber ?? long.MinValue);
         string? deliveryFailure = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, oldestCheckpoint);
+        if (current.Value is null && currentProcessing.Value is null
+            && (deliveryFailure is null || string.Equals(deliveryFailure,
+                PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason, StringComparison.Ordinal)))
+        {
+            // Empty values keep the original manifest stable if support changes before retry.
+            // Create-only concurrency cannot replace another writer's history or erasure tombstone.
+            var initialization = new ReadModelBatch(initializationScope,
+            [
+                ReadModelBatchOperation.Write(key, new PartyDetailSdkReadModel(), ReadModelBatchConcurrency.CreateOnly),
+                ReadModelBatchOperation.Write(processingKey, new PartyProcessingSdkReadModel(), ReadModelBatchConcurrency.CreateOnly),
+            ]) { RetainManifestForRecovery = true };
+            ReadModelBatchResult initialized = await batchStore.ExecuteAsync(initialization, cancellationToken).ConfigureAwait(false);
+            if (!initialized.IsSuccess)
+            {
+                return ReadModelBatchProjectionResultMapper.Map(initialized);
+            }
+
+            current = await readModelStore.GetAsync<PartyDetailSdkReadModel>(storeName, key, cancellationToken).ConfigureAwait(false);
+            currentProcessing = await readModelStore.GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken).ConfigureAwait(false);
+            if ((current.Value is null) != (currentProcessing.Value is null))
+            {
+                return DeliveryFailure(ProjectionRebuildRequiredReason);
+            }
+
+            oldestCheckpoint = Math.Min(current.Value?.LastSequenceNumber ?? long.MinValue,
+                currentProcessing.Value?.LastSequenceNumber ?? long.MinValue);
+            deliveryFailure = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, oldestCheckpoint);
+        }
+
         if (deliveryFailure is not null)
         {
             if (string.Equals(
@@ -117,7 +165,7 @@ public sealed class PartyDetailSdkProjectionHandler(
             ? ReadModelBatchConcurrency.Match(processingEtag)
             : ReadModelBatchConcurrency.CreateOnly;
         var batch = new ReadModelBatch(
-            new ReadModelBatchScope(storeName, request.TenantId, Domain, request.AggregateId, ProjectionType, dispatchId),
+            scope,
             [
                 ReadModelBatchOperation.Write(key, next, concurrency),
                 ReadModelBatchOperation.Write(processingKey, nextProcessing, processingConcurrency),

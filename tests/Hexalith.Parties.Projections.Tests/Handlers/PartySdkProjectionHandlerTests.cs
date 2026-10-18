@@ -1789,6 +1789,9 @@ public sealed class PartySdkProjectionHandlerTests
             .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
         store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
+        ReadModelBatch? initialization = null;
+        batchStore.ExecuteAsync(Arg.Do<ReadModelBatch>(value => initialization = value), Arg.Any<CancellationToken>())
+            .Returns(ReadModelBatchResult.Completed("initialized"));
         PartyProcessingSdkReadModel? persistedAudit = null;
         store.TrySaveAsync(
                 "statestore",
@@ -1823,7 +1826,18 @@ public sealed class PartySdkProjectionHandlerTests
         persistedAudit.ShouldNotBeNull();
         persistedAudit.Records.Select(static record => record.Outcome).ShouldBe(["Succeeded", "Failed"]);
         persistedAudit.LastSequenceNumber.ShouldBe(1);
-        await batchStore.DidNotReceive().ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>());
+        initialization.ShouldNotBeNull();
+        initialization.RetainManifestForRecovery.ShouldBeTrue();
+        initialization.Scope.BatchId.ShouldNotBe(request.AggregateId);
+        initialization.Operations.Count.ShouldBe(2);
+        initialization.Operations.ShouldAllBe(operation => operation.Concurrency.Mode == ReadModelBatchConcurrencyMode.ExpectedETag
+            && operation.Concurrency.ExpectedETag == string.Empty);
+        PartyDetailSdkReadModel placeholder = DeserializeOperation<PartyDetailSdkReadModel>(initialization,
+            PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId));
+        placeholder.Detail.ShouldBeNull();
+        placeholder.LastSequenceNumber.ShouldBe(long.MinValue);
+        DeserializeOperation<PartyProcessingSdkReadModel>(initialization,
+            PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId)).Records.ShouldBeEmpty();
     }
 
     [Fact]
@@ -1835,6 +1849,9 @@ public sealed class PartySdkProjectionHandlerTests
             .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
         store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
+        ReadModelBatch? initialization = null;
+        batchStore.ExecuteAsync(Arg.Do<ReadModelBatch>(value => initialization = value), Arg.Any<CancellationToken>())
+            .Returns(ReadModelBatchResult.Completed("initialized"));
         PartyProcessingSdkReadModel? persistedAudit = null;
         store.TrySaveAsync(
                 "statestore",
@@ -1872,7 +1889,18 @@ public sealed class PartySdkProjectionHandlerTests
         // sequence 2 resolved successfully in the same batch — otherwise a later redelivery
         // (e.g. after a consumer upgrade) would never revisit sequence 1 again.
         persistedAudit.LastSequenceNumber.ShouldBe(long.MinValue);
-        await batchStore.DidNotReceive().ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>());
+        initialization.ShouldNotBeNull();
+        initialization.RetainManifestForRecovery.ShouldBeTrue();
+        initialization.Scope.BatchId.ShouldNotBe(request.AggregateId);
+        initialization.Operations.Count.ShouldBe(2);
+        initialization.Operations.ShouldAllBe(operation => operation.Concurrency.Mode == ReadModelBatchConcurrencyMode.ExpectedETag
+            && operation.Concurrency.ExpectedETag == string.Empty);
+        PartyDetailSdkReadModel placeholder = DeserializeOperation<PartyDetailSdkReadModel>(initialization,
+            PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId));
+        placeholder.Detail.ShouldBeNull();
+        placeholder.LastSequenceNumber.ShouldBe(long.MinValue);
+        DeserializeOperation<PartyProcessingSdkReadModel>(initialization,
+            PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId)).Records.ShouldBeEmpty();
     }
 
     [Fact]

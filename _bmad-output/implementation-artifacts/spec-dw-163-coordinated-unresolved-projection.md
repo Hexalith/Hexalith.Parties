@@ -2,13 +2,16 @@
 title: 'DW-163 coordinated unresolved projection recovery'
 type: 'bugfix'
 created: '2026-10-17'
-status: 'draft'
-route: 'oneshot'
+status: 'in-progress'
+route: 'dispatch'
+baseline_commit: '6b0641829b68d22656fb173eec6578c65e8e91f0'
 review_loop_iteration: 0
-context: []
+context:
+  - '{project-root}/AGENTS.md'
+  - '{project-root}/references/Hexalith.AI.Tools/hexalith-llm-instructions.md'
+  - '{project-root}/references/Hexalith.AI.Tools/hexalith-state-instructions.md'
+  - '{project-root}/docs/development-guide.md'
 ---
-
-**Current outcome: withdrawn candidate; DW-163 remains open.** The implementation notes below are historical investigation, not a retained implementation. The initial event-dependent manifest was rejected; immutable initialization and safe SDK recovery remain requirements. A portable reproduction is retained in `tests/dw-163-sdk-recovery-investigation-2026-10-17/README.md`.
 
 <frozen-after-approval reason="human-owned intent — do not modify unless human renegotiates">
 
@@ -18,23 +21,36 @@ context: []
 
 **Approach:** Initialize both absent slots through the existing EventStore batch store: an empty, unadvanced detail placeholder and the existing failed processing audit. Keep audit initialization separate from the normal dispatch batch identity, with bounded deterministic scope hashing and create-only concurrency. Retain the existing optimistic audit updates when both slots already exist, the genuine missing-slot rebuild guard, and normal projection/rebuild behavior. Prove persisted slot visibility, repeated unresolved delivery, later successful recovery, interrupted initialization and competing writes. Complete only DW-163.
 
+**Decision (2026-10-18):** Adopt EventStore 3.125.1 through the shared Builds catalog and reconcile Parties dependency receipts. The user selected this dependency-adoption scope. Git recording, package publication and deployment remain outside this authorization.
+
 </frozen-after-approval>
+
+## Code Map
+
+- `src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs`: `ProjectAsync` checks coordinated presence before the unresolved audit; `RecordUnresolvedProcessingAsync` currently creates Processing alone. Retain the missing-slot guard and minimum checkpoint admission.
+- `tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs`: adjust the two absent-slot audit cases; retain seeded-slot, concurrency-exhaustion, and genuine missing-slot cases. Its private fake cannot validate SDK recovery.
+- `tests/Hexalith.Parties.Tests/Projections/PartyDetailSdkProjectionRecoveryTests.cs`: new persisted-state regressions using the existing EventStore.Testing dependency and real batch protocol.
+- EventStore `ReadModelBatch.RetainManifestForRecovery` and `IReadModelPendingBatchRecoveryStore.RecoverPendingAsync` supply recovery; use both participating keys before reading state. The pinned 3.124.0 lacks these APIs; cached 3.125.1 exposes them.
+
+## Tasks & Acceptance
+
+**Execution:**
+- [ ] Update the owning Builds `Props/Directory.Packages.props` to select EventStore 3.125.1, then align Parties `docs/architecture.md`, `docs/ci.md`, `_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md` current observations and `tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs` expectations with actual selections. Preserve historical approvals, exact identity checks, and the no-override gate. Leave Git recording/publication to an explicitly authorized action.
+- [ ] In the handler, validate the incoming SDK scope before hashing; recover both pending keys and reload before interpreting absence. Use a bounded aggregate-specific, event/dispatch-independent initialization identity and two empty create-only slots with retained manifests; this also permits retry after a prepared marker with no installed envelope. Record the event-dependent failed audit afterward through the existing optimistic policy. Recovery failure remains retryable; never synthesize missing historical rows or implement SDK plumbing locally.
+- [ ] Update the projection test file and add the service recovery class above: repeated unresolved delivery, supported recovery with same/changed dispatch IDs, marker preparation before installation, installation/compaction interruption, second-operation contention/compensation, empty-ETag recovery, maximum/oversized dispatch identities, and newer erasure at BeforeReceipt. Assert serialized persisted contents/checkpoints and fresh ETags.
+- [ ] Update only DW-163 in `deferred-work.md` after verification; preserve the earlier reproduction as legacy-mode evidence.
+
+**Acceptance Criteria:**
+- Given absent slots, when an unresolved delivery retries, then both slots exist, failed processing is audited, and Detail remains unadvanced.
+- Given interrupted initialization, when support or dispatch identity changes, then recovery preserves the original manifest and a supported delivery folds both slots successfully.
+- Given a competing sequence-5 erasure, when initialization reconciles, then both newer tombstones survive.
+- Given a genuinely missing historical slot, when a live tail arrives, then rebuild remains required.
 
 ## Implementation Notes
 
-Planning classification: no unresolved intent gaps, irreversible operations, migrations, external mutations, dependency updates or new public API. Small footprint: `PartyDetailSdkProjectionHandler.cs`, two existing projection unit tests, a recovery test class in the existing service test project, this spec and the DW-163 ledger record. Use the oneshot route.
+Replanned 2026-10-18. Intent gaps: none; the user authorized shared-catalog adoption of EventStore 3.125.1. Irreversibles: none in local planning/implementation; package publication, deployment and Git recording are excluded. Footprint includes the dependency prerequisite, handler, tests and accurate dependency documentation, so dispatch replaces oneshot. No production candidate is retained yet. The user approved and continued at the implementation checkpoint on 2026-10-18.
 
-Reuse `IReadModelBatchStore`, `ReadModelBatchScope.ComputeScopeHash`, and create-only operations. Keep detail unadvanced until a fully supported delivery can fold it; the existing minimum-of-both-checkpoints admission preserves earlier events when the processing audit has incorporated a known prefix. Separate the initial audit batch identity from the normal dispatch identity because the SDK fingerprint includes ETags and payloads. Both absent slots give stable initial manifests on interrupted retry.
-
-Regression coverage will use `Hexalith.EventStore.Testing.Fakes.InMemoryReadModelStore` from the service test project's existing dependency. It executes the real batch protocol, including ETags, marker visibility and fingerprints; the private projection-test double does not. Run the affected individual Debug/source project builds and complete test assemblies, plus the warning override guard. Preserve existing file line endings. Leave changes uncommitted under the user's repository safeguards.
-
-Owned isolated Aspire baseline started. The 30-second `aspire wait parties` timed out, but the subsequent resource snapshot reported Parties, EventStore and Tenants Running/Healthy. Exact-target shutdown succeeded before editing source; this is a baseline observation, not full topology acceptance. Raw resource/startup evidence stays outside the repository to avoid retaining credentials and local paths.
-
-Implementation: the first unresolved audit now creates both slots in one create-only SDK batch. Its ID is the fixed `unresolved-audit:` prefix plus the original scope hash, so maximum-length dispatch IDs remain accepted. Later unresolved attempts retain the existing optimistic processing update; later supported redelivery uses the untouched normal dispatch identity. The missing-slot guard remains unchanged.
-
-Initial regression reproduction: all five new recovery cases failed before the production fix. They pass after it, using the actual SDK marker/envelope protocol and serialized persisted reads. Service Debug/source builds have zero warnings/errors. Two existing projection unit tests now assert the two-operation create-only audit manifest and unadvanced detail placeholder. Full affected suites and independent review are pending.
-
-The candidate was withdrawn after independent review and a concrete SDK race reproduction. With a fault at `BeforeReceipt`, a competing erasure writes checkpoint/tombstone sequence 5; SDK reconciliation then restores the older empty Detail candidate (checkpoint `long.MinValue`, no erasure tombstone). The six-case reproduction reports five passes and this one failure. Raw reproduction, candidate source, build logs and XML are retained locally under `/tmp/dw-163-validation`; no candidate production/test change remains in the working tree. DW-163 stays open. A platform-owned recovery guarantee must precede a safe domain fix. The successful 1,032-test service run established only the earlier candidate's ordinary paths, not erasure safety.
+Current-source SDK Debug build: zero warnings/errors; 31 focused recovery tests passed. A standalone 3.125.1 package probe reproduced the legacy erasure overwrite, preserved both newer tombstones with retained manifests, and recovered an original pending batch under a changed dispatch ID. These establish SDK prerequisites, not Parties acceptance. Evidence: `tests/dw-163-resume-2026-10-18/README.md`. Previous draft and historical implementation notes are preserved verbatim beside it in `previous-draft.md`.
 
 ## Review Triage Log
 
@@ -45,3 +61,7 @@ The candidate was withdrawn after independent review and a concrete SDK race rep
 - Low, verified verification gap in withdrawn candidate: the test did not contend on the second operation after the first installed. Compensation/interrupted compaction and direct supported recovery need coverage when the platform guarantee permits implementation.
 
 Independent follow-up: the earlier statement that initially absent slots imply stable manifests was incomplete. Resolution changes, changed dispatch IDs, and interrupted compaction invalidate that design. The portable reproducer preserves the rejected candidate solely to reproduce the separately verified SDK tombstone overwrite.
+
+## Verification
+
+Build each affected test project with `--configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false`; invoke its built DLL with `-class` first, then run both full affected assemblies. Require nonzero discovery and zero failures. Run `bash scripts/check-no-warning-override.sh`. Before production edits, capture the Aspire baseline and stop the owned instance before builds. Validate the adopted package graph separately; source evidence cannot close package adoption.

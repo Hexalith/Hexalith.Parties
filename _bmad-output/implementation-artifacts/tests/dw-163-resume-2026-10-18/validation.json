@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-18",
+  "parties_base": "6b0641829b68d22656fb173eec6578c65e8e91f0",
+  "eventstore_source": "ab8fa115c486875be3a22860a273d5d68a26c749",
+  "selected_package": "3.124.0",
+  "probed_package": "3.125.1",
+  "scope": "SDK prerequisites only; no Parties implementation or dependency adoption",
+  "sdk_build": {
+    "cwd": "references/Hexalith.EventStore",
+    "command": "dotnet build tests/Hexalith.EventStore.Client.Tests/Hexalith.EventStore.Client.Tests.csproj --configuration Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "sdk_tests": {
+    "cwd": "references/Hexalith.EventStore",
+    "command": "dotnet tests/Hexalith.EventStore.Client.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.Tests.dll -method 'Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.TerminalRecoveryAnchorSurvivesEveryCleanupBoundary' -method 'Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.CommittedRecoveryFinishesOwnEnvelopeWithoutRollingBackNewerSharedIndex' -method 'Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.PendingConditionalManifestIsRecoveredAcrossAdapterRestartThenFreshConflictRetry' -method 'Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.RecoveryValidatesNonDiscoveryEnvelopeBeforeAnyMutation' -method 'Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.PendingRecoveryRefusesMismatchedScopeAndCorruptEvidenceWithoutWrites' -xml /tmp/dw-163-resume-validation/sdk-recovery-focused.xml > /tmp/dw-163-resume-validation/sdk-recovery-focused.log 2>&1",
+    "exit_code": 0,
+    "total": 31,
+    "passed": 31,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "not-run": 0
+  },
+  "package_probe": {
+    "command": "dotnet run --project /tmp/dw-163-resume-validation/package-probe/Probe.csproj --configuration Debug",
+    "exit_code": 0,
+    "output": [
+      "PASS retained=False: newer erasure preserved=False; status=Completed",
+      "PASS retained=True: newer erasure preserved=True; status=Completed",
+      "PASS changed-delivery: original manifest recovered; both slots persisted with ETags"
+    ],
+    "source_sha256": "b2d13645f195af5be6ab877de40a0c55143547b2c6e53772934f42602dc300e3"
+  },
+  "package_api_inspection": [
+    {
+      "command": "dnx dotnet-inspect -y -- member ReadModelBatch --library /home/administrator/.nuget/packages/hexalith.eventstore.client/3.125.1/lib/net10.0/Hexalith.EventStore.Client.dll -m RetainManifestForRecovery",
+      "exit_code": 0,
+      "result": "property exists"
+    },
+    {
+      "command": "dnx dotnet-inspect -y -- member IReadModelPendingBatchRecoveryStore --library /home/administrator/.nuget/packages/hexalith.eventstore.client/3.125.1/lib/net10.0/Hexalith.EventStore.Client.dll -m RecoverPendingAsync",
+      "exit_code": 0,
+      "result": "method exists"
+    }
+  ]
+}

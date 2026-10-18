@@ -1,0 +1,63 @@
+using Hexalith.EventStore.Client.Projections;
+using Hexalith.EventStore.Testing.Fakes;
+
+internal static class Program
+{
+    private const string Store = "statestore";
+
+    private static async Task Main()
+    {
+        foreach (bool retained in new[] { false, true })
+        {
+            var store = new InMemoryReadModelStore();
+            bool injected = false;
+            store.BatchFaultHook = (phase, _, _) =>
+            {
+                if (phase == ReadModelBatchPhase.BeforeReceipt && !injected)
+                {
+                    injected = true;
+                    store.SeedRaw(Store, "detail", Model(5, 1));
+                    store.SeedRaw(Store, "processing", Model(5, 1));
+                    throw new IOException("synthetic receipt failure");
+                }
+                return Task.CompletedTask;
+            };
+            var scope = new ReadModelBatchScope(Store, "tenant", "party", "aggregate", "detail", "initialize");
+            var batch = new ReadModelBatch(scope,
+            [
+                ReadModelBatchOperation.Write("detail", Model(long.MinValue, 0), ReadModelBatchConcurrency.CreateOnly),
+                ReadModelBatchOperation.Write("processing", Model(long.MinValue, 0), ReadModelBatchConcurrency.CreateOnly),
+            ]) { RetainManifestForRecovery = retained };
+            ReadModelBatchResult result = await store.ExecuteAsync(batch);
+            var detail = await store.GetAsync<Dictionary<string, long>>(Store, "detail");
+            var processing = await store.GetAsync<Dictionary<string, long>>(Store, "processing");
+            bool preserved = detail.Value!["sequence"] == 5 && detail.Value["erased"] == 1
+                && processing.Value!["sequence"] == 5 && processing.Value["erased"] == 1;
+            if (!injected || preserved != retained) throw new InvalidOperationException("unexpected erasure outcome");
+            Console.WriteLine($"PASS retained={retained}: newer erasure preserved={preserved}; status={result.Status}");
+        }
+        {
+            var store = new InMemoryReadModelStore();
+            var scope = new ReadModelBatchScope(Store, "tenant", "party", "aggregate", "detail", "original");
+            var batch = new ReadModelBatch(scope,
+            [
+                ReadModelBatchOperation.Write("detail", Model(long.MinValue, 0), ReadModelBatchConcurrency.CreateOnly),
+                ReadModelBatchOperation.Write("processing", Model(long.MinValue, 0), ReadModelBatchConcurrency.CreateOnly),
+            ]) { RetainManifestForRecovery = true };
+            await store.StageAsync(batch);
+            ReadModelPendingBatchRecoveryResult result = await store.RecoverPendingAsync(scope with { BatchId = "changed-delivery" }, "detail");
+            var detail = await store.GetAsync<Dictionary<string, long>>(Store, "detail");
+            var processing = await store.GetAsync<Dictionary<string, long>>(Store, "processing");
+            if (!result.IsResolved || !result.WasRecovered || detail.Value is null || processing.Value is null
+                || string.IsNullOrEmpty(detail.ETag) || string.IsNullOrEmpty(processing.ETag)
+                || store.HasPendingEnvelope(Store, "detail") || store.HasPendingEnvelope(Store, "processing"))
+                throw new InvalidOperationException("pending recovery did not produce ordinary coordinated rows");
+            Console.WriteLine("PASS changed-delivery: original manifest recovered; both slots persisted with ETags");
+        }
+    }
+
+    private static Dictionary<string, long> Model(long sequence, long erased) => new()
+    {
+        ["sequence"] = sequence, ["erased"] = erased,
+    };
+}
