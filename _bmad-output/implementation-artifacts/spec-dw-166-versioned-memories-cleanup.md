@@ -2,7 +2,7 @@
 title: 'DW-166 align Memories cleanup routes and qualify missing-unit responses'
 type: 'bugfix'
 created: '2026-10-18'
-status: 'in-review'
+status: 'done'
 route: 'oneshot'
 review_loop_iteration: 0
 context: []
@@ -31,6 +31,9 @@ context: []
 - Implemented the shared versioned route builder in cleanup, compensation and probing; the probe now uses a legal hyphenated synthetic ID. Shared response decoding accepts only success or a structured exact scoped-unit-missing response. Malformed JSON and invalid charset metadata block without exposing provider body text. Existing result records were moved intact into their own focused files.
 - Initial regression run reproduced 27/52 failures before the call-path fix. After independent-review patches, focused tests pass 58/58 and the final Debug/source build has zero warnings/errors. Full assembly passes 1156/1157; the only failure is the unchanged, pre-existing Builds gitlink receipt assertion. Exact commands and baseline proof are retained in tests/dw-166-versioned-memories-cleanup-2026-10-18/validation.json.
 - Qualification blocker: FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph expects Builds 4f53d9f37c5b86cfd43fbcc8fa5dd4df19b84c77, while the starting commit already selects 544fd2e907d62ccdc4b8f24168b8ab5dfcc13eb9. The implementation does not change that test, source selection or historical receipts. Required Hexalith baseline prohibits story completion before all tests pass, so status remains in-review and DW-166 remains open despite the one-shot workflow's default finalization instruction. The code and verified evidence are committed for review; no push.
+
+- Follow-up authorized by the user: reconciled current dependency receipts against the committed graph at Parties d279b43548628c7e3d06113ab5c264a72bf5b69f. Added the 2026-10-18 observation for all ten root dependencies and retained the 2026-10-17 observation as historical, preserving its body and all following receipts. Updated only current fitness identities/describes and observation-date delimiters; package versions, gitlinks, owner signoffs, historical constants and guard assertions are unchanged.
+- Completion gate cleared: Debug/source build has zero warnings/errors; all 33 platform-prerequisite fitness tests and all 1157 service tests pass without failures, errors, skips or unrun tests. All 58 DW-166 regressions pass within that full run. The previously reviewed production/test source hashes are unchanged. See tests/dependency-receipts-2026-10-18/validation.json for exact commands, observations and preservation proof. DW-166 is now complete; the earlier blocked packet remains historical evidence.
 
 ## Review Triage Log
 

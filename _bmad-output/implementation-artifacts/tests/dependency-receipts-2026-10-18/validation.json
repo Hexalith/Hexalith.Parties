@@ -1,0 +1,166 @@
+{
+  "date": "2026-10-18",
+  "baseline_revision": "d279b43548628c7e3d06113ab5c264a72bf5b69f",
+  "validation_state": "Receipt metadata changes over the baseline; no dependency pointers, package versions, signoffs, historical parity receipts or production code changed.",
+  "configuration": "Debug; source references; warnings-as-errors preserved",
+  "commands": {
+    "build": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+    "fitness": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -result-xml /tmp/dependency-receipts-2026-10-18/fitness.xml",
+    "full": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dependency-receipts-2026-10-18/full.xml",
+    "package_selection": "dotnet msbuild src/Hexalith.Parties/Hexalith.Parties.csproj -getProperty:HexalithEventStoreVersion,HexalithCommonsVersion,HexalithFrontComposerVersion,HexalithMemoriesVersion,HexalithTenantsVersion,HexalithPartiesVersion,UseHexalithProjectReferences,UseNuGetDeps -p:Configuration=Debug",
+    "warning_guard": "bash scripts/check-no-warning-override.sh",
+    "whitespace": "git -c core.whitespace=cr-at-eol diff --cached --check",
+    "commitlint": "node node_modules/@commitlint/cli/cli.js --edit /tmp/dependency-receipts-2026-10-18/commit-message.txt --verbose"
+  },
+  "build": {
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "fitness": {
+    "exit_code": 0,
+    "results": {
+      "total": 33,
+      "passed": 33,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    }
+  },
+  "full": {
+    "exit_code": 0,
+    "results": {
+      "total": 1157,
+      "passed": 1157,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    }
+  },
+  "dw_166_regressions_in_full_assembly": {
+    "total": 58,
+    "passed": 58,
+    "failed": 0,
+    "selection": "Three previously qualified cleanup/indexing/health test classes; extracted from full.xml, no duplicate run."
+  },
+  "package_selection": {
+    "Properties": {
+      "HexalithEventStoreVersion": "3.124.0",
+      "HexalithCommonsVersion": "2.30.1",
+      "HexalithFrontComposerVersion": "4.6.0",
+      "HexalithMemoriesVersion": "2.27.1",
+      "HexalithTenantsVersion": "5.8.0",
+      "HexalithPartiesVersion": "1.2.1",
+      "UseHexalithProjectReferences": "false",
+      "UseNuGetDeps": "true"
+    }
+  },
+  "root_observations": {
+    "observed_at_parties_commit": "d279b43548628c7e3d06113ab5c264a72bf5b69f",
+    "root_dependencies": {
+      "references/Hexalith.EventStore": {
+        "committed_sha": "ab8fa115c486875be3a22860a273d5d68a26c749",
+        "checkout_sha": "ab8fa115c486875be3a22860a273d5d68a26c749",
+        "describe": "v3.124.0-14-gab8fa115",
+        "status_porcelain": "",
+        "gitlink_entry": "160000 commit ab8fa115c486875be3a22860a273d5d68a26c749\treferences/Hexalith.EventStore"
+      },
+      "references/Hexalith.Memories": {
+        "committed_sha": "ef842c9abca9b9a0f77699ba1232e97c23405693",
+        "checkout_sha": "ef842c9abca9b9a0f77699ba1232e97c23405693",
+        "describe": "v2.28.1-118-gef842c9a",
+        "status_porcelain": "",
+        "gitlink_entry": "160000 commit ef842c9abca9b9a0f77699ba1232e97c23405693\treferences/Hexalith.Memories"
+      },
+      "references/Hexalith.FrontComposer": {
+        "committed_sha": "acfc74c7e90acf7f55d0a9af7137859c77a4a09f",
+        "checkout_sha": "acfc74c7e90acf7f55d0a9af7137859c77a4a09f",
+        "describe": "v4.6.0-52-gacfc74c7",
+        "status_porcelain": "",
+        "gitlink_entry": "160000 commit acfc74c7e90acf7f55d0a9af7137859c77a4a09f\treferences/Hexalith.FrontComposer"
+      },
+      "references/Hexalith.Tenants": {
+        "committed_sha": "664a379a95d5555bcd5e674060375412c038c9f3",
+        "checkout_sha": "664a379a95d5555bcd5e674060375412c038c9f3",
+        "describe": "v5.8.0-113-g664a379a",
+        "status_porcelain": "",
+        "gitlink_entry": "160000 commit 664a379a95d5555bcd5e674060375412c038c9f3\treferences/Hexalith.Tenants"
+      },
+      "references/Hexalith.AI.Tools": {
+        "committed_sha": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+        "checkout_sha": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+        "describe": "3f194e17",
+        "status_porcelain": "",
+        "gitlink_entry": "160000 commit 3f194e17174994d308ec84af9ee2b5aa68674d0d\treferences/Hexalith.AI.Tools"
+      },
+      "references/Hexalith.Commons": {
+        "committed_sha": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+        "checkout_sha": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+        "describe": "v2.30.1-19-g9e874b1a",
+        "status_porcelain": "",
+        "gitlink_entry": "160000 commit 9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798\treferences/Hexalith.Commons"
+      },
+      "references/Hexalith.Builds": {
+        "committed_sha": "544fd2e907d62ccdc4b8f24168b8ab5dfcc13eb9",
+        "checkout_sha": "544fd2e907d62ccdc4b8f24168b8ab5dfcc13eb9",
+        "describe": "v4.33.0",
+        "status_porcelain": "",
+        "gitlink_entry": "160000 commit 544fd2e907d62ccdc4b8f24168b8ab5dfcc13eb9\treferences/Hexalith.Builds"
+      },
+      "references/Hexalith.PolymorphicSerializations": {
+        "committed_sha": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+        "checkout_sha": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+        "describe": "v1.19.4",
+        "status_porcelain": "",
+        "gitlink_entry": "160000 commit 98de6e013840ece9f0fa7c68ab7dcdf2bba3b375\treferences/Hexalith.PolymorphicSerializations"
+      },
+      "references/Hexalith.McpCli": {
+        "committed_sha": "4a84c16415c39b22e0c0855b25a1c6b018de6a19",
+        "checkout_sha": "4a84c16415c39b22e0c0855b25a1c6b018de6a19",
+        "describe": "v1.0.0-3-g4a84c164",
+        "status_porcelain": "",
+        "gitlink_entry": "160000 commit 4a84c16415c39b22e0c0855b25a1c6b018de6a19\treferences/Hexalith.McpCli"
+      },
+      "references/Hexalith.Platform": {
+        "committed_sha": "2ac8e73c09fe631c5620723b54784d2e28e8941f",
+        "checkout_sha": "2ac8e73c09fe631c5620723b54784d2e28e8941f",
+        "describe": "2ac8e73c",
+        "status_porcelain": "",
+        "gitlink_entry": "160000 commit 2ac8e73c09fe631c5620723b54784d2e28e8941f\treferences/Hexalith.Platform"
+      }
+    }
+  },
+  "preservation": {
+    "prior_observation_and_all_following_history_preserved": true,
+    "prior_matrix_prefix_preserved": true,
+    "unchanged_policy_and_configuration_sha256": {
+      ".gitmodules": "86d41a35fe64cf6e12e68e7ec7ee9d97081a97464c66222d342cab084550f1b6",
+      ".gitlink-signoff.tsv": "789335e54748e8c6687cbdc362ac115f351f11ade5e827df466627620dd14df1",
+      "Directory.Build.props": "55bd1d76e69092d7cba70352b1900e7999cb1e3b9336d8887324e29f06d0c36e",
+      "Directory.Build.targets": "a9dd7be2cd742bdfcdf50e1dffec892c56909c0393620ff3cae9635da78e94df",
+      "Directory.Packages.props": "eb6986e6a7e6d889ee0ebbffd802e0fdde651f957f6a97690317621fae806fe4",
+      "references/Hexalith.Builds/Props/Directory.Packages.props": "25c7569e1863610783cba13378c245b9108f97a67703e39bf89e5594f9d6468a"
+    },
+    "historical_test_constants_preserved": true,
+    "all_fitness_assertions_preserved_except_observation_date_delimiters": true,
+    "current_matrix_rows_match_all_ten_immutable_root_observations": true
+  },
+  "dw_166_production_and_regression_source_hashes_match_prior_validation": true,
+  "prior_validation_sha256": "e525a2b1f89548ae53a3fe24d65a19935159eba1e07cd4ea4406f51fefc4319a",
+  "sha256": {
+    "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md": "a866e053cee54746dec0d6e8a99da800a3455193e4bd7f4ae4efb051076604bb",
+    "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs": "4572b0bfe615cbe073c42eff9c635892c057ea6757d101c98bc4dac0c0d33dcd"
+  },
+  "warning_guard": {
+    "exit_code": 0
+  },
+  "whitespace": {
+    "exit_code": 0
+  },
+  "commitlint": {
+    "exit_code": 0,
+    "version": "21.2.2"
+  }
+}

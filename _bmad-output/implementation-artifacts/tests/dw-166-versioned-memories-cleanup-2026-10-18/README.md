@@ -34,3 +34,9 @@ cleanup, health probe and compensation. The fifth finding requested the final
 evidence and ledger updates, which are retained here. No production data or
 external requests were used: the compensation HTTP tests use an ephemeral local
 Kestrel server, and cleanup/probe tests use in-memory handlers and mappings.
+
+Follow-up — 2026-10-18: the user-authorized dependency receipt reconciliation now
+passes the full 1157/1157 service gate, including all 58 DW-166 regressions, and
+DW-166 is complete. See [the follow-up packet](../dependency-receipts-2026-10-18/README.md).
+The blocked results and source hashes above are retained as the original run's
+historical evidence; its validation.json has not been rewritten.
