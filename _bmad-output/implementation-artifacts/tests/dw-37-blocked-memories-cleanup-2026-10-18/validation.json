@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-18",
+  "scope": [
+    "DW-37"
+  ],
+  "status": "passed",
+  "baseline_revision": "2ffc4b4f45b577aff9c742f7fe0287433c82b7fc",
+  "configuration": "Debug; Hexalith source project references; warnings-as-errors preserved",
+  "production_source_unchanged": true,
+  "baseline_cleanup_class": {
+    "total": 33,
+    "passed": 33,
+    "errors": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not-run": 0
+  },
+  "commands": {
+    "build": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+    "focus": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Search.PartyMemoryCleanupServiceTests -result-xml /tmp/dw-37-validation/focus-final.xml",
+    "full": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-37-validation/full-final.xml",
+    "warning_guard": "bash scripts/check-no-warning-override.sh",
+    "whitespace": "git -c core.whitespace=cr-at-eol diff --cached --check",
+    "commitlint": "node node_modules/@commitlint/cli/cli.js --edit /tmp/dw-37-validation/commit-message.txt --verbose"
+  },
+  "build": {
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "focus": {
+    "exit_code": 0,
+    "total": 41,
+    "passed": 41,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "not-run": 0,
+    "xml_sha256": "74c2b2395cbff2b79007f6d00613e2992b01b08639da4f95f0eb5ab436056234"
+  },
+  "full": {
+    "exit_code": 0,
+    "total": 1195,
+    "passed": 1195,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "not-run": 0,
+    "xml_sha256": "e8b1da718a8b5c22496d025855f055b66ac9fab63c249d7aafcf96bac0b3a575"
+  },
+  "review": {
+    "layers": [
+      "Blind Hunter"
+    ],
+    "findings": 3,
+    "patched": 3,
+    "new_deferred_work": 0
+  },
+  "checks": {
+    "warning_guard_exit_code": 0,
+    "whitespace_exit_code": 0,
+    "commitlint_exit_code": 0,
+    "commitlint_cli_version": "21.2.2",
+    "commit_message": "test: cover blocked memories cleanup recovery"
+  },
+  "runtime": {
+    "start_command": "aspire start --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json",
+    "start_exit_code": 2,
+    "diagnostic": "AppHost failed to build: MSB4166 child-node exits, canceled NuGet restore requests and Restore canceled. Build summary: 0 warnings, 7 errors.",
+    "describe_command": "aspire describe --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json",
+    "describe_exit_code": 0,
+    "observation": "No AppHost is currently running.",
+    "full_topology_qualified": false
+  },
+  "source_sha256": {
+    "src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs": "5750df334057d8ed3d50c2378f26f5eff44a4efc0729b68949b41aefd8522921",
+    "src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs": "7e268af236311b5a5eaae5968896d2c79cfa527562380fdc18cbc3728ffc4308",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryCleanupServiceTests.cs": "b6797f89188d73de1d35d8bc4d666e099d06fcf2a559b56b7ba7a25181dea346"
+  }
+}

@@ -1,0 +1,3 @@
+⧗   --- input ---
+test: cover blocked memories cleanup recovery
+✔   found 0 problems, 0 warnings

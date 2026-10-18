@@ -14,6 +14,124 @@ namespace Hexalith.Parties.Tests.Search;
 
 public class PartyMemoryCleanupServiceTests
 {
+    [Theory]
+    [InlineData(null, "")]
+    [InlineData(null, " \t")]
+    [InlineData("", "")]
+    [InlineData("", " \t")]
+    [InlineData(" \t", "")]
+    [InlineData(" \t", " \t")]
+    public async Task MissingCaseBlocksCleanupAndRetainsInventoryUntilFallbackIsConfigured(
+        string? persistedCaseId,
+        string fallbackCaseId)
+    {
+        var original = new PartyMemoryUnitMappingEntry("unit-private", "urn:source-private", persistedCaseId);
+        var state = new PartyMemoryMappingState(original);
+        var handler = new RecordingHandler(() => new HttpResponseMessage(HttpStatusCode.NoContent));
+        using var client = new HttpClient(handler) { BaseAddress = new Uri("https://memories.example/") };
+        var storeLogger = new RecordingLogger<PartyMemoryUnitMappingStore>();
+        var cleanupLogger = new RecordingLogger<PartyMemoryCleanupService>();
+        var options = Options.Create(new PartyMemoryUnitMappingStoreOptions { StateStoreName = "statestore" });
+        var store = new PartyMemoryUnitMappingStore(state.Client, options, storeLogger);
+        var service = new PartyMemoryCleanupService(client, store, cleanupLogger);
+
+        PartyMemoryCleanupResult result = await service.DeleteByPartyAsync(
+            "tenant-private", fallbackCaseId, "party-private", TestContext.Current.CancellationToken);
+
+        result.Cleaned.ShouldBeFalse();
+        result.PartyId.ShouldBe("party-private");
+        result.MemoryUnitId.ShouldBe("unit-private");
+        result.SourceUri.ShouldBe("urn:hexalith:parties:tenant-private:party:party-private");
+        result.BlockedReason.ShouldBe(
+            "Memories cleanup partially failed (0 of 1 units deleted): Memories cleanup blocked: the indexed unit has no persisted CaseId and no fallback CaseId is configured.");
+        handler.RequestUris.ShouldBeEmpty();
+        handler.RequestMethods.ShouldBeEmpty();
+        state.KeyExists.ShouldBeTrue();
+        state.Entries.ShouldBe([original]);
+        (state.SaveAttempts + state.DeleteAttempts).ShouldBe(0);
+        storeLogger.Records.ShouldBeEmpty();
+        cleanupLogger.Records.ShouldBeEmpty();
+
+        // A fresh reader must discover the retained mapping after configuration recovers.
+        var retryStore = new PartyMemoryUnitMappingStore(state.Client, options, storeLogger);
+        var retryService = new PartyMemoryCleanupService(client, retryStore, cleanupLogger);
+        PartyMemoryCleanupResult retry = await retryService.DeleteByPartyAsync(
+            "tenant-private", "case-restored", "party-private", TestContext.Current.CancellationToken);
+
+        retry.Cleaned.ShouldBeTrue();
+        retry.BlockedReason.ShouldBeNull();
+        handler.RequestMethods.ShouldHaveSingleItem().ShouldBe(HttpMethod.Delete);
+        handler.RequestUris.ShouldHaveSingleItem().AbsolutePath.ShouldBe(
+            "/api/v1/tenants/tenant-private/cases/case-restored/memory-units/unit-private");
+        state.KeyExists.ShouldBeTrue();
+        state.Entries.ShouldBeEmpty();
+        state.DeleteAttempts.ShouldBe(0);
+        storeLogger.Records.ShouldBeEmpty();
+        cleanupLogger.Records.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MissingCaseRetainsOnlyBlockedMappingsAndAllowsCapturedCaseRepair(bool blockedFirst)
+    {
+        var legacy = new PartyMemoryUnitMappingEntry("legacy-private", "urn:legacy-private");
+        var blank = new PartyMemoryUnitMappingEntry("blank-private", "urn:blank-private", " \t");
+        var captured = new PartyMemoryUnitMappingEntry("captured-private", "urn:captured-private", "case-captured");
+        var state = new PartyMemoryMappingState(blockedFirst ? [legacy, captured, blank] : [captured, legacy, blank]);
+        var handler = new RecordingHandler(() => new HttpResponseMessage(HttpStatusCode.NoContent));
+        using var client = new HttpClient(handler) { BaseAddress = new Uri("https://memories.example/") };
+        var storeLogger = new RecordingLogger<PartyMemoryUnitMappingStore>();
+        var cleanupLogger = new RecordingLogger<PartyMemoryCleanupService>();
+        var options = Options.Create(new PartyMemoryUnitMappingStoreOptions { StateStoreName = "statestore" });
+        var store = new PartyMemoryUnitMappingStore(state.Client, options, storeLogger);
+        var service = new PartyMemoryCleanupService(client, store, cleanupLogger);
+
+        PartyMemoryCleanupResult result = await service.DeleteByPartyAsync(
+            "tenant-private", " \t", "party-private", TestContext.Current.CancellationToken);
+
+        result.Cleaned.ShouldBeFalse();
+        result.MemoryUnitId.ShouldBe("legacy-private");
+        result.BlockedReason.ShouldBe(
+            "Memories cleanup partially failed (1 of 3 units deleted): Memories cleanup blocked: the indexed unit has no persisted CaseId and no fallback CaseId is configured.");
+        handler.RequestMethods.ShouldHaveSingleItem().ShouldBe(HttpMethod.Delete);
+        handler.RequestUris.ShouldHaveSingleItem().AbsolutePath.ShouldBe(
+            "/api/v1/tenants/tenant-private/cases/case-captured/memory-units/captured-private");
+        state.KeyExists.ShouldBeTrue();
+        state.Entries.ShouldBe([legacy, blank]);
+        state.DeleteAttempts.ShouldBe(0);
+        storeLogger.Records.ShouldBeEmpty();
+        cleanupLogger.Records.ShouldBeEmpty();
+
+        // Repair captured cases through the production store, leaving the fallback absent.
+        foreach (PartyMemoryUnitMappingEntry entry in new[] { legacy, blank })
+        {
+            await store.RecordMappingAsync(
+                "tenant-private", "party-private", entry.MemoryUnitId, entry.SourceUri,
+                "case-repaired", TestContext.Current.CancellationToken);
+        }
+
+        state.Entries.ShouldBe([legacy with { CaseId = "case-repaired" }, blank with { CaseId = "case-repaired" }]);
+        var retryStore = new PartyMemoryUnitMappingStore(state.Client, options, storeLogger);
+        var retryService = new PartyMemoryCleanupService(client, retryStore, cleanupLogger);
+        PartyMemoryCleanupResult retry = await retryService.DeleteByPartyAsync(
+            "tenant-private", "", "party-private", TestContext.Current.CancellationToken);
+
+        retry.Cleaned.ShouldBeTrue();
+        retry.BlockedReason.ShouldBe("Memories cleanup deleted 2 of 2 units.");
+        handler.RequestMethods.ShouldBe([HttpMethod.Delete, HttpMethod.Delete, HttpMethod.Delete]);
+        handler.RequestUris.Select(uri => uri.AbsolutePath).ShouldBe([
+            "/api/v1/tenants/tenant-private/cases/case-captured/memory-units/captured-private",
+            "/api/v1/tenants/tenant-private/cases/case-repaired/memory-units/legacy-private",
+            "/api/v1/tenants/tenant-private/cases/case-repaired/memory-units/blank-private",
+        ]);
+        state.KeyExists.ShouldBeTrue();
+        state.Entries.ShouldBeEmpty();
+        state.DeleteAttempts.ShouldBe(0);
+        storeLogger.Records.ShouldBeEmpty();
+        cleanupLogger.Records.ShouldBeEmpty();
+    }
+
     [Fact]
     public async Task CleanupRetainsConcurrentMappingAndRequiresAnotherPass()
     {
@@ -669,8 +787,11 @@ public class PartyMemoryCleanupServiceTests
     {
         public List<Uri> RequestUris { get; } = [];
 
+        public List<HttpMethod> RequestMethods { get; } = [];
+
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            RequestMethods.Add(request.Method);
             if (request.RequestUri is not null)
             {
                 RequestUris.Add(request.RequestUri);

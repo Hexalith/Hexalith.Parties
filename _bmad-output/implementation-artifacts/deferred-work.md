@@ -280,7 +280,8 @@ resolution: Canonical index writes retain one payload-free source-event descript
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
 location: PartyMemoryCleanupService
 reason: `PartyMemoryCleanupService`'s new "no persisted CaseId and no fallback configured" blocked branch has zero test coverage.
-status: open
+status: done 2026-10-18
+resolution: Added eight cases covering null/empty/whitespace persisted CaseIds, empty/whitespace fallbacks, blocked mappings before/after eligible units, retained serialized inventory, scoped DELETE requests, sanitized diagnostics and recovery through restored configuration or captured-case repair. Executable production source is unchanged. Final Debug/source build has zero warnings/errors; cleanup tests pass 41/41 and the full service assembly passes 1195/1195 without failures/errors/skips. All three independent review findings are patched; no new deferred work. See spec-dw-37-blocked-memories-cleanup.md and tests/dw-37-blocked-memories-cleanup-2026-10-18/validation.json. The separate Aspire baseline failed to build with MSB4166 and canceled NuGet restores; no full-topology qualification is claimed.
 
 ### DW-38: Harden rebuild completion against null manifest collections
 
