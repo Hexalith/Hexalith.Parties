@@ -26,7 +26,7 @@ namespace Hexalith.Parties.Projections.Handlers;
 /// A rebuild starts with an empty candidate, so its version need not continue the previous
 /// live index's version.
 /// </remarks>
-public sealed class PartyIndexSdkProjectionHandler(
+public sealed partial class PartyIndexSdkProjectionHandler(
     IReadModelStore readModelStore,
     IOptions<PartySdkReadModelOptions> options,
     IPartyIndexSearchIndexer? searchIndexer = null,
@@ -194,7 +194,8 @@ public sealed class PartyIndexSdkProjectionHandler(
     {
         Validate(identity);
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(ToCandidate(new PartyIndexSdkReadModel()));
+        return Task.FromResult(ToCandidate(new PartyIndexRebuildCandidate(
+            new PartyIndexSdkReadModel(), new PartyProjectionRebuildDiagnostics())));
     }
 
     public Task<DomainSharedProjectionRebuildCandidate> AccumulateAsync(
@@ -212,19 +213,22 @@ public sealed class PartyIndexSdkProjectionHandler(
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        PartyIndexSdkReadModel current = FromCandidate(candidate);
+        PartyIndexRebuildCandidate current = FromCandidate(candidate);
         if (aggregateHistory.Events.Length == 0)
         {
             return Task.FromResult(ToCandidate(current));
         }
 
-        PartyIndexFoldResult foldResult = FoldCore(aggregateHistory, current, logger);
+        // Validation probes stay silent. Only the actual fold (or its terminal failure walk)
+        // records drops, and the serialized candidate owns the counts across handler instances.
+        PartyIndexFoldResult foldResult = FoldCore(aggregateHistory, current.Model, diagnostics: current.Diagnostics);
         if (foldResult.FailureReason is not null)
         {
+            WriteRebuildDiagnostics(current.Diagnostics, completed: false);
             throw new InvalidOperationException(foldResult.FailureReason);
         }
 
-        return Task.FromResult(ToCandidate(foldResult.Model));
+        return Task.FromResult(ToCandidate(current with { Model = foldResult.Model }));
     }
 
     public async Task<DomainProjectionRebuildPlan> FinalizeAsync(
@@ -235,7 +239,8 @@ public sealed class PartyIndexSdkProjectionHandler(
         Validate(identity);
         ArgumentNullException.ThrowIfNull(candidate);
         cancellationToken.ThrowIfCancellationRequested();
-        PartyIndexSdkReadModel rebuiltIndex = FromCandidate(candidate);
+        PartyIndexRebuildCandidate rebuildState = FromCandidate(candidate);
+        PartyIndexSdkReadModel rebuiltIndex = rebuildState.Model;
         ReadModelEntry<PartyIndexSdkReadModel> current = await readModelStore
             .GetAsync<PartyIndexSdkReadModel>(
                 RebuildStoreName,
@@ -252,7 +257,7 @@ public sealed class PartyIndexSdkProjectionHandler(
                 RebuildEventType,
                 entry.LastModifiedAt))];
         byte[] completionState = JsonSerializer.SerializeToUtf8Bytes(
-            new PartyIndexSearchRebuildManifest(rebuiltEntries, removedPartyIds),
+            new PartyIndexSearchRebuildManifest(rebuiltEntries, removedPartyIds, rebuildState.Diagnostics),
             s_candidateJsonOptions);
         ReadModelBatchConcurrency concurrency = current?.ETag is { Length: > 0 } etag
             ? ReadModelBatchConcurrency.Match(etag)
@@ -333,6 +338,13 @@ public sealed class PartyIndexSdkProjectionHandler(
             }
         }
 
+        // Completion is at-least-once: each successful invocation emits at most one summary.
+        // Retryable or canceled search reconciliation must not announce a completed rebuild.
+        cancellationToken.ThrowIfCancellationRequested();
+        if (manifest.Diagnostics is not null)
+        {
+            WriteRebuildDiagnostics(manifest.Diagnostics, completed: true);
+        }
         return DomainProjectionHandlerResult.Completed();
     }
 
@@ -363,7 +375,8 @@ public sealed class PartyIndexSdkProjectionHandler(
     private static PartyIndexFoldResult FoldCore(
         ProjectionRequest request,
         PartyIndexSdkReadModel? current,
-        ILogger? logger = null)
+        ILogger? logger = null,
+        PartyProjectionRebuildDiagnostics? diagnostics = null)
     {
         var entries = new Dictionary<string, PartyIndexEntry>(
             current?.Entries ?? new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal),
@@ -381,7 +394,7 @@ public sealed class PartyIndexSdkProjectionHandler(
         string? failureReason = PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, lastSequence);
         if (failureReason is not null)
         {
-            if (logger is not null
+            if ((logger is not null || diagnostics is not null)
                 && string.Equals(failureReason, PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason, StringComparison.Ordinal))
             {
                 // GetDeliveryFailureReason's own detection pass above ran silently (it is shared
@@ -393,7 +406,7 @@ public sealed class PartyIndexSdkProjectionHandler(
                 // now stuck Retryable. Re-walk once with the logger to emit that diagnostic before
                 // returning; FoldCore returns immediately afterward, so the main fold loop below
                 // never re-walks the same events and cannot double-log.
-                _ = PartySdkProjectionFold.HasUnresolvedNewEvent(request.Events, lastSequence, logger);
+                _ = PartySdkProjectionFold.HasUnresolvedNewEvent(request.Events, lastSequence, logger, diagnostics);
             }
 
             return new PartyIndexFoldResult(current ?? new PartyIndexSdkReadModel(), null, false, failureReason);
@@ -406,7 +419,7 @@ public sealed class PartyIndexSdkProjectionHandler(
         PartyIndexEventMetadata? lastIndexedEvent = lastIndexedEvents.GetValueOrDefault(request.AggregateId);
 
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
-            PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence, logger))
+            PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence, logger, diagnostics))
         {
             if (payload is not null)
             {
@@ -550,9 +563,84 @@ public sealed class PartyIndexSdkProjectionHandler(
             StringComparison.Ordinal);
     }
 
-    private static PartyIndexSdkReadModel FromCandidate(DomainSharedProjectionRebuildCandidate candidate)
-        => JsonSerializer.Deserialize<PartyIndexSdkReadModel>(candidate.State.Span, s_candidateJsonOptions)
+    private static PartyIndexRebuildCandidate FromCandidate(DomainSharedProjectionRebuildCandidate candidate)
+    {
+        if (IsWrappedCandidate(candidate.State.Span))
+        {
+            PartyIndexRebuildCandidate? state = JsonSerializer
+                .Deserialize<PartyIndexRebuildCandidate>(candidate.State.Span, s_candidateJsonOptions);
+            return state is { Model: not null, Diagnostics: not null }
+                ? state
+                : throw new InvalidOperationException("The shared Party index rebuild candidate is empty or malformed.");
+        }
+
+        // Older staged rebuilds stored only the raw index. Their previously observed drop counts
+        // cannot be recovered, but subsequent accumulation can start counting without a migration.
+        PartyIndexSdkReadModel model = JsonSerializer.Deserialize<PartyIndexSdkReadModel>(candidate.State.Span, s_candidateJsonOptions)
             ?? throw new InvalidOperationException("The shared Party index rebuild candidate is empty or malformed.");
+        return new PartyIndexRebuildCandidate(model, new PartyProjectionRebuildDiagnostics());
+    }
+
+    private static bool IsWrappedCandidate(ReadOnlySpan<byte> state)
+    {
+        // Inspect root property presence without materializing the index. Null envelope members
+        // are malformed envelopes, not legacy indexes with unknown properties to ignore.
+        var reader = new Utf8JsonReader(state);
+        if (!reader.Read() || reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new InvalidOperationException("The shared Party index rebuild candidate is empty or malformed.");
+        }
+
+        while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
+        {
+            string? name = reader.GetString();
+            if (string.Equals(name, "model", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(name, "diagnostics", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            _ = reader.Read();
+            reader.Skip();
+        }
+
+        return false;
+    }
+
+    private void WriteRebuildDiagnostics(PartyProjectionRebuildDiagnostics diagnostics, bool completed)
+    {
+        if (logger is null || (completed && !diagnostics.HasDrops))
+        {
+            return;
+        }
+
+        LogRebuildDropSummary(
+            logger,
+            !completed || diagnostics.HasUnexpectedDrops ? LogLevel.Warning : LogLevel.Information,
+            completed,
+            diagnostics.NonJson,
+            diagnostics.UnknownType,
+            diagnostics.AmbiguousType,
+            diagnostics.CorruptPayload,
+            diagnostics.RedactedPayload,
+            diagnostics.WholePayloadRedacted,
+            diagnostics.NullPayload);
+    }
+
+    [LoggerMessage(
+        EventId = 4801,
+        Message = "Party index rebuild drop summary: Completed={Completed}, NonJson={NonJson}, UnknownType={UnknownType}, AmbiguousType={AmbiguousType}, CorruptPayload={CorruptPayload}, RedactedPayload={RedactedPayload}, WholePayloadRedacted={WholePayloadRedacted}, NullPayload={NullPayload}.")]
+    private static partial void LogRebuildDropSummary(
+        ILogger logger,
+        LogLevel level,
+        bool completed,
+        long nonJson,
+        long unknownType,
+        long ambiguousType,
+        long corruptPayload,
+        long redactedPayload,
+        long wholePayloadRedacted,
+        long nullPayload);
 
     private static long ParseGlobalPosition(string? projectionVersion)
         => projectionVersion is not null
@@ -565,7 +653,7 @@ public sealed class PartyIndexSdkProjectionHandler(
             ? position
             : 0;
 
-    private static DomainSharedProjectionRebuildCandidate ToCandidate(PartyIndexSdkReadModel value)
+    private static DomainSharedProjectionRebuildCandidate ToCandidate(PartyIndexRebuildCandidate value)
         => new(JsonSerializer.SerializeToUtf8Bytes(value, s_candidateJsonOptions));
 
     private sealed record PartyIndexSearchRebuildEntry(
@@ -575,7 +663,8 @@ public sealed class PartyIndexSdkProjectionHandler(
 
     private sealed record PartyIndexSearchRebuildManifest(
         IReadOnlyList<PartyIndexSearchRebuildEntry> Entries,
-        IReadOnlyList<string> RemovedPartyIds);
+        IReadOnlyList<string> RemovedPartyIds,
+        PartyProjectionRebuildDiagnostics? Diagnostics = null);
 
     private static void Validate(DomainSharedProjectionRebuildIdentity identity)
     {

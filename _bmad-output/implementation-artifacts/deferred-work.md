@@ -365,8 +365,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: PartyIndexSdkProjectionHandler.AccumulateAsync
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: 2026-08-05 review-layer finding — `PartyIndexSdkProjectionHandler.AccumulateAsync` (the full-rebuild path) now re-emits a log line for every historically-known-bad event on every rebuild run, with no batching, sampling, or dedup — a real log-flooding risk on a large event store. Needs a product/ops decision on acceptable rebuild-time log volume, not a same-pass patch.
-status: open
+status: done 2026-10-18
 decision: 2026-09-06 Summarize diagnostics — Accumulate bounded counts by failure reason and emit one no-PII summary at rebuild completion.
+resolution: Rebuild accumulation now carries seven fixed saturating drop counters in serialized operation-owned candidates and emits one value-free structured summary per successful completion invocation; failed accumulation emits a bounded warning. Counts survive resumed handlers, repeated histories and empty accumulation without entering the canonical index. Legacy raw candidates remain readable; malformed envelopes reject. Live diagnostics, canonical state and search reconciliation are preserved. All eight independent review findings and follow-ups are resolved. Final Debug/source builds have zero warnings/errors; focused projection tests pass 145/145, full Projections.Tests 335/335 and full Parties.Tests 1195/1195 without failures/errors/skips. No new deferred work. See spec-dw-48-bounded-rebuild-diagnostics.md and tests/dw-48-bounded-rebuild-diagnostics-2026-10-18/validation.json. The separate 20-second Aspire healthy wait timed out (exit 17); no healthy topology qualification is claimed.
 
 ### DW-49: Handle converter format and overflow failures during event deserialization
 

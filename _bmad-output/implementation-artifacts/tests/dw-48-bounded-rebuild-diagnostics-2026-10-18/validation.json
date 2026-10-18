@@ -1,0 +1,97 @@
+{
+  "work_item": "DW-48",
+  "date": "2026-10-18",
+  "baseline_commit": "ad097dea4f98b4709d1f9e1e98e7d2993f2687f0",
+  "scope": "Bound shared Party index rebuild diagnostic volume with operation-owned fixed counters; canonical read-model schema and live logging are preserved.",
+  "builds": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --nologo",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "output": "build.txt"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --nologo",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "output": "service-build.txt"
+    }
+  ],
+  "tests": [
+    {
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -class Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests -noLogo -result-xml /tmp/dw-48-focused.xml",
+      "exit_code": 0,
+      "total": 145,
+      "passed": 145,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "output": "focused-tests.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -noLogo -result-xml /tmp/dw-48-full.xml",
+      "exit_code": 0,
+      "total": 335,
+      "passed": 335,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "output": "full-tests.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -noLogo -result-xml /tmp/dw-48-service.xml",
+      "exit_code": 0,
+      "total": 1195,
+      "passed": 1195,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "output": "service-tests.txt"
+    }
+  ],
+  "aspire_baseline": {
+    "start_command": "aspire start --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json",
+    "start_exit_code": 0,
+    "describe_command": "aspire describe --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json",
+    "describe_exit_code": 0,
+    "wait_command": "aspire wait parties --status healthy --timeout 20 --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+    "wait_exit_code": 17,
+    "result": "Timed out after 20 seconds; resource snapshot is retained without configuration/endpoints.",
+    "stop_command": "aspire stop --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+    "stop_exit_code": 0,
+    "full_topology_qualification": false
+  },
+  "repository_gate": {
+    "command": "bash scripts/check-no-warning-override.sh",
+    "exit_code": 0,
+    "output": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+  },
+  "whitespace": {
+    "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --cached --check",
+    "exit_code": 0,
+    "output": "",
+    "line_endings": "Recognizes CRLF line terminators required by .editorconfig while retaining the default whitespace error classes. The unconfigured staged check flags those CR terminators as trailing whitespace."
+  },
+  "review": {
+    "method": "Independent context-free Blind Hunter review followed by two correction-verification passes.",
+    "findings": 8,
+    "resolved": 8,
+    "unresolved": 0,
+    "final_follow_up": "Verified the final correction; no unresolved defect found.",
+    "new_deferred_work": []
+  },
+  "commitlint": {
+    "command": "./node_modules/.bin/commitlint --edit /tmp/dw-48-commit-message.txt --verbose",
+    "cli_version": "21.2.2",
+    "lockfile_version": "21.2.2",
+    "exit_code": 0,
+    "candidate": "fix: bound party rebuild drop diagnostics\n",
+    "output": "commitlint.txt"
+  },
+  "limits": "Final Debug/source-reference builds and owning projection/service assembly tests only. Release/CI and a healthy integrated topology are not claimed. Legacy candidates/manifests cannot reconstruct historical counts; repeated successful completion invocations may repeat the one bounded summary."
+}

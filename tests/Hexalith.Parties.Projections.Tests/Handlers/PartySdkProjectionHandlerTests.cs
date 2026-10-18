@@ -41,6 +41,364 @@ public sealed class PartySdkProjectionHandlerTests
         Options.Create(new PartySdkReadModelOptions { ReadModelStateStoreName = "statestore" });
 
     [Fact]
+    public async Task LargeRebuildCountsOnceAcrossSerializedHandlersAndMatchesPersistedLiveIndexAsync()
+    {
+        var store = new InMemoryReadModelBatchStore();
+        var liveStore = new InMemoryReadModelBatchStore();
+        ILogger<PartyIndexSdkProjectionHandler> logger = CreateLogger();
+        DomainSharedProjectionRebuildIdentity identity = Identity();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, logger: logger);
+        DomainSharedProjectionRebuildCandidate candidate = await handler.CreateEmptyCandidateAsync(identity, TestContext.Current.CancellationToken);
+        foreach (string party in new[] { "private-party-one", "private-party-two" })
+        {
+            ProjectionRequest history = History(party, corrupt: 1000, redacted: 200, whole: 300);
+            handler = new PartyIndexSdkProjectionHandler(store, s_options, logger: logger);
+            candidate = await handler.AccumulateAsync(identity, candidate, history, TestContext.Current.CancellationToken);
+            // Retrying checkpointed history, including repeated sequence numbers, adds no counts.
+            candidate = await handler.AccumulateAsync(identity, candidate, history, TestContext.Current.CancellationToken);
+            var live = new PartyIndexSdkProjectionHandler(liveStore, s_options);
+            (await live.ProjectAsync(history, "live", TestContext.Current.CancellationToken)).Status
+                .ShouldBe(ProjectionDispatchStatus.Completed);
+        }
+
+        candidate = await handler.AccumulateAsync(identity, candidate, History("empty") with { Events = [] }, TestContext.Current.CancellationToken);
+        logger.ReceivedCalls().ShouldBeEmpty();
+        DomainProjectionRebuildPlan plan = await CommitAsync(store, handler, identity, candidate);
+        logger.ReceivedCalls().ShouldBeEmpty();
+        string key = PartySdkReadModelAddresses.Index(identity.TenantId);
+        JsonSerializer.Serialize(store.Deserialize<PartyIndexSdkReadModel>(key), PartiesJsonOptions.Default)
+            .ShouldBe(JsonSerializer.Serialize(liveStore.Deserialize<PartyIndexSdkReadModel>(key), PartiesJsonOptions.Default));
+        string canonical = System.Text.Encoding.UTF8.GetString(plan.Operations.Single().CanonicalValue.Span);
+        canonical.ShouldNotContain("diagnostics");
+        canonical.ShouldNotContain("corruptPayload");
+
+        handler = new PartyIndexSdkProjectionHandler(store, s_options, logger: logger);
+        (await handler.CompleteRebuildAsync(identity, candidate, plan.CompletionState, TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        Dictionary<string, object?> summary = Summary(logger, LogLevel.Warning, completed: true);
+        summary["CorruptPayload"].ShouldBe(2000L);
+        summary["RedactedPayload"].ShouldBe(400L);
+        summary["WholePayloadRedacted"].ShouldBe(600L);
+        summary["NonJson"].ShouldBe(0L);
+        summary["UnknownType"].ShouldBe(0L);
+        summary["AmbiguousType"].ShouldBe(0L);
+        summary["NullPayload"].ShouldBe(0L);
+    }
+
+    [Theory]
+    [InlineData("non-json", "NonJson")]
+    [InlineData("unknown", "UnknownType")]
+    [InlineData("null", "NullPayload")]
+    [InlineData("ambiguous", "AmbiguousType")]
+    public async Task FailedAccumulationEmitsOneValueFreeSummaryAndPreservesCandidateAsync(string failure, string counter)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        ILogger<PartyIndexSdkProjectionHandler> logger = CreateLogger();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, logger: logger);
+        DomainSharedProjectionRebuildIdentity identity = Identity();
+        DomainSharedProjectionRebuildCandidate candidate = await handler.CreateEmptyCandidateAsync(identity, TestContext.Current.CancellationToken);
+        candidate = await handler.AccumulateAsync(identity, candidate, History("earlier", corrupt: 1), TestContext.Current.CancellationToken);
+        byte[] before = candidate.State.ToArray();
+        ProjectionRequest failed = History("private-failed-party", corrupt: 100);
+        string eventTypeName = failure switch
+        {
+            "unknown" => "private-unknown-type",
+            "ambiguous" => "private-ambiguous-" + Guid.NewGuid().ToString("N"),
+            _ => nameof(PartyCreated),
+        };
+        if (failure == "ambiguous")
+        {
+            SeedEventTypeResolverCacheAsAmbiguous(eventTypeName);
+        }
+
+        ProjectionEventDto last = failed.Events[^1] with
+        {
+            SequenceNumber = 102,
+            EventTypeName = eventTypeName,
+            SerializationFormat = failure == "non-json" ? "private-format" : "json",
+            Payload = failure == "null" ? "null"u8.ToArray() : "{}"u8.ToArray(),
+        };
+        failed = failed with { Events = [.. failed.Events, last] };
+
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(() =>
+            handler.AccumulateAsync(identity, candidate, failed, TestContext.Current.CancellationToken));
+
+        exception.Message.ShouldBe(PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason);
+        candidate.State.ToArray().ShouldBe(before);
+        (await store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index(identity.TenantId), TestContext.Current.CancellationToken)).Value.ShouldBeNull();
+        Dictionary<string, object?> summary = Summary(logger, LogLevel.Warning, completed: false);
+        summary[counter].ShouldBe(1L);
+        summary["CorruptPayload"].ShouldBe(101L);
+    }
+
+    [Theory]
+    [InlineData("retry")]
+    [InlineData("throw")]
+    [InlineData("ignore-cancel")]
+    public async Task SearchRetryOrCancellationDefersSummaryUntilSuccessfulCompletionAsync(string outcome)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        ILogger<PartyIndexSdkProjectionHandler> logger = CreateLogger();
+        IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, search, logger);
+        DomainSharedProjectionRebuildIdentity identity = Identity();
+        DomainSharedProjectionRebuildCandidate candidate = await handler.CreateEmptyCandidateAsync(identity, TestContext.Current.CancellationToken);
+        candidate = await handler.AccumulateAsync(identity, candidate, History("party", whole: 2), TestContext.Current.CancellationToken);
+        DomainProjectionRebuildPlan plan = await CommitAsync(store, handler, identity, candidate);
+        using CancellationTokenSource cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                if (outcome != "retry")
+                {
+                    cancellation.Cancel();
+                    return outcome == "throw"
+                        ? Task.FromCanceled<bool>(cancellation.Token)
+                        : Task.FromResult(true);
+                }
+
+                return Task.FromResult(false);
+            });
+        if (outcome != "retry")
+        {
+            _ = await Should.ThrowAsync<OperationCanceledException>(() =>
+                handler.CompleteRebuildAsync(identity, candidate, plan.CompletionState, cancellation.Token));
+        }
+        else
+        {
+            (await handler.CompleteRebuildAsync(identity, candidate, plan.CompletionState, cancellation.Token))
+                .Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        }
+
+        logger.ReceivedCalls().ShouldBeEmpty();
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+        handler = new PartyIndexSdkProjectionHandler(store, s_options, search, logger);
+        (await handler.CompleteRebuildAsync(identity, candidate, plan.CompletionState, TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        Summary(logger, LogLevel.Information, completed: true)["WholePayloadRedacted"].ShouldBe(2L);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CleanAndEmptyRebuildsHaveNoDropSummaryAsync(bool empty)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        ILogger<PartyIndexSdkProjectionHandler> logger = CreateLogger();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, logger: logger);
+        DomainSharedProjectionRebuildIdentity identity = Identity();
+        DomainSharedProjectionRebuildCandidate candidate = await handler.CreateEmptyCandidateAsync(identity, TestContext.Current.CancellationToken);
+        if (!empty)
+        {
+            candidate = await handler.AccumulateAsync(identity, candidate, History("party"), TestContext.Current.CancellationToken);
+        }
+
+        DomainProjectionRebuildPlan plan = await CommitAsync(store, handler, identity, candidate);
+        (await handler.CompleteRebuildAsync(identity, candidate, plan.CompletionState, TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        logger.ReceivedCalls().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task LegacyRawCandidateResumesAndOperationsKeepIndependentCountsAsync()
+    {
+        var store = new InMemoryReadModelBatchStore();
+        ILogger<PartyIndexSdkProjectionHandler> firstLogger = CreateLogger();
+        ILogger<PartyIndexSdkProjectionHandler> secondLogger = firstLogger;
+        var first = new PartyIndexSdkProjectionHandler(store, s_options, logger: firstLogger);
+        PartyIndexSdkProjectionHandler second = first;
+        DomainSharedProjectionRebuildIdentity firstIdentity = Identity();
+        DomainSharedProjectionRebuildIdentity secondIdentity = Identity("second-operation");
+        PartyIndexSdkReadModel oldModel = PartyIndexSdkProjectionHandler.Fold(History("legacy", corrupt: 5), null);
+        var legacy = new DomainSharedProjectionRebuildCandidate(JsonSerializer.SerializeToUtf8Bytes(oldModel, PartiesJsonOptions.Default));
+        DomainSharedProjectionRebuildCandidate other = await second.CreateEmptyCandidateAsync(secondIdentity, TestContext.Current.CancellationToken);
+        legacy = await first.AccumulateAsync(firstIdentity, legacy, History("new", whole: 3), TestContext.Current.CancellationToken);
+        other = await second.AccumulateAsync(secondIdentity, other, History("other", corrupt: 2), TestContext.Current.CancellationToken);
+
+        DomainProjectionRebuildPlan plan = await CommitAsync(store, first, firstIdentity, legacy);
+        (await first.CompleteRebuildAsync(firstIdentity, legacy, plan.CompletionState, TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        Dictionary<string, object?> firstSummary = Summary(firstLogger, LogLevel.Information, completed: true);
+        firstSummary["WholePayloadRedacted"].ShouldBe(3L);
+        firstSummary["CorruptPayload"].ShouldBe(0L);
+        firstLogger.ClearReceivedCalls();
+        plan = await CommitAsync(store, second, secondIdentity, other);
+        (await second.CompleteRebuildAsync(secondIdentity, other, plan.CompletionState, TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        Dictionary<string, object?> secondSummary = Summary(secondLogger, LogLevel.Warning, completed: true);
+        secondSummary["CorruptPayload"].ShouldBe(2L);
+        secondSummary["WholePayloadRedacted"].ShouldBe(0L);
+        store.Deserialize<PartyIndexSdkReadModel>(PartySdkReadModelAddresses.Index(firstIdentity.TenantId))
+            .Entries.Keys.ShouldBe(["other"]);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SequenceValidationFailureStillProducesOneBoundedWarningAsync(bool conflict)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        ILogger<PartyIndexSdkProjectionHandler> logger = CreateLogger();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, logger: logger);
+        DomainSharedProjectionRebuildIdentity identity = Identity();
+        DomainSharedProjectionRebuildCandidate candidate = await handler.CreateEmptyCandidateAsync(identity, TestContext.Current.CancellationToken);
+        ProjectionRequest failed = History("private-failure");
+        failed = failed with
+        {
+            Events = conflict
+                ? [failed.Events[0], failed.Events[0] with { Payload = "private-conflict"u8.ToArray() }]
+                : [failed.Events[0] with { SequenceNumber = 2 }],
+        };
+        byte[] before = candidate.State.ToArray();
+
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(() =>
+            handler.AccumulateAsync(identity, candidate, failed, TestContext.Current.CancellationToken));
+
+        exception.Message.ShouldBe(conflict ? PartySdkProjectionFold.ConflictingDuplicateEventReason : PartySdkProjectionFold.DeliverySequenceGapReason);
+        candidate.State.ToArray().ShouldBe(before);
+        Dictionary<string, object?> summary = Summary(logger, LogLevel.Warning, completed: false);
+        summary.Values.OfType<long>().ShouldAllBe(static value => value == 0);
+        (await store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index(identity.TenantId), TestContext.Current.CancellationToken))
+            .Value.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SerializedEnvelopeCasingAndSaturatedCountsPreserveIndexAsync(bool pascalCase)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        ILogger<PartyIndexSdkProjectionHandler> logger = CreateLogger();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, logger: logger);
+        DomainSharedProjectionRebuildIdentity identity = Identity();
+        var state = new PartyIndexRebuildCandidate(
+            PartyIndexSdkProjectionHandler.Fold(History("original"), null),
+            new PartyProjectionRebuildDiagnostics { CorruptPayload = long.MaxValue });
+        JsonSerializerOptions serialization = new(PartiesJsonOptions.Default)
+        {
+            PropertyNamingPolicy = pascalCase ? null : JsonNamingPolicy.CamelCase,
+        };
+        var candidate = new DomainSharedProjectionRebuildCandidate(JsonSerializer.SerializeToUtf8Bytes(state, serialization));
+
+        candidate = await handler.AccumulateAsync(identity, candidate, History("new", corrupt: 1), TestContext.Current.CancellationToken);
+
+        PartyIndexRebuildCandidate resumed = JsonSerializer.Deserialize<PartyIndexRebuildCandidate>(candidate.State.Span, PartiesJsonOptions.Default)!;
+        resumed.Diagnostics.CorruptPayload.ShouldBe(long.MaxValue);
+        DomainProjectionRebuildPlan plan = await CommitAsync(store, handler, identity, candidate);
+        (await handler.CompleteRebuildAsync(identity, candidate, plan.CompletionState, TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        Summary(logger, LogLevel.Warning, completed: true)["CorruptPayload"].ShouldBe(long.MaxValue);
+        store.Deserialize<PartyIndexSdkReadModel>(PartySdkReadModelAddresses.Index(identity.TenantId))
+            .Entries.Keys.Order(StringComparer.Ordinal).ShouldBe(["new", "original"]);
+    }
+
+    [Theory]
+    [InlineData("{\"model\":null}")]
+    [InlineData("{\"model\":null,\"diagnostics\":null}")]
+    [InlineData("{\"Model\":null,\"Diagnostics\":null}")]
+    [InlineData("{\"model\":{},\"diagnostics\":null}")]
+    public async Task MalformedEnvelopeCannotBecomeAnEmptyReplacementAsync(string json)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options);
+        DomainSharedProjectionRebuildIdentity identity = Identity();
+        var candidate = new DomainSharedProjectionRebuildCandidate(System.Text.Encoding.UTF8.GetBytes(json));
+
+        InvalidOperationException accumulation = await Should.ThrowAsync<InvalidOperationException>(() =>
+            handler.AccumulateAsync(identity, candidate, History("party"), TestContext.Current.CancellationToken));
+        InvalidOperationException finalization = await Should.ThrowAsync<InvalidOperationException>(() =>
+            handler.FinalizeAsync(identity, candidate, TestContext.Current.CancellationToken));
+
+        accumulation.Message.ShouldBe("The shared Party index rebuild candidate is empty or malformed.");
+        finalization.Message.ShouldBe(accumulation.Message);
+        System.Text.Encoding.UTF8.GetString(candidate.State.Span).ShouldBe(json);
+        (await store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index(identity.TenantId), TestContext.Current.CancellationToken))
+            .Value.ShouldBeNull();
+    }
+
+    private static ILogger<PartyIndexSdkProjectionHandler> CreateLogger()
+    {
+        ILogger<PartyIndexSdkProjectionHandler> logger = Substitute.For<ILogger<PartyIndexSdkProjectionHandler>>();
+        logger.IsEnabled(Arg.Any<LogLevel>()).Returns(true);
+        logger.ClearReceivedCalls();
+        return logger;
+    }
+
+    private static Dictionary<string, object?> Summary(ILogger<PartyIndexSdkProjectionHandler> logger, LogLevel level, bool completed)
+    {
+        object?[] args = logger.ReceivedCalls().Where(static call => call.GetMethodInfo().Name == "Log")
+            .ShouldHaveSingleItem().GetArguments();
+        args[0].ShouldBe(level);
+        ((EventId)args[1]!).Id.ShouldBe(4801);
+        args[3].ShouldBeNull();
+        Dictionary<string, object?> state = ((IReadOnlyList<KeyValuePair<string, object?>>)args[2]!)
+            .ToDictionary(static item => item.Key, static item => item.Value, StringComparer.Ordinal);
+        state.Keys.Order(StringComparer.Ordinal).ShouldBe(new[]
+        {
+            "Completed", "NonJson", "UnknownType", "AmbiguousType", "CorruptPayload", "RedactedPayload",
+            "WholePayloadRedacted", "NullPayload", "{OriginalFormat}",
+        }.Order(StringComparer.Ordinal));
+        state["Completed"].ShouldBe(completed);
+        foreach (object? value in state.Values)
+        {
+            if (value is string text)
+            {
+                text.ShouldNotContain("private-");
+                text.ShouldNotContain("tenant-secret");
+            }
+            else
+            {
+                (value is bool or long).ShouldBeTrue();
+            }
+        }
+
+        return state;
+    }
+
+    private static DomainSharedProjectionRebuildIdentity Identity(string operation = "private-operation")
+        => new("tenant-secret", "party", PartyProjectionNames.Index, operation, "private-catalog");
+
+    private static ProjectionRequest History(string party, int corrupt = 0, int redacted = 0, int whole = 0)
+    {
+        var events = new List<ProjectionEventDto>
+        {
+            new(nameof(PartyCreated), JsonSerializer.SerializeToUtf8Bytes(new PartyCreated { Type = PartyType.Person }, PartiesJsonOptions.Default),
+                "json", 1, DateTimeOffset.UnixEpoch, "private-correlation"),
+        };
+        foreach ((int count, string format, string type, byte[] payload) in new[]
+        {
+            (corrupt, "json", nameof(PartyCreated), "{private-payload"u8.ToArray()),
+            (redacted, "json-redacted", nameof(PartyCreated), "{private-payload"u8.ToArray()),
+            (whole, "json-redacted", "private-whole-event-type", "{}"u8.ToArray()),
+        })
+        {
+            for (int index = 0; index < count; index++)
+            {
+                events.Add(new ProjectionEventDto(type, payload, format, events.Count + 1,
+                    DateTimeOffset.UnixEpoch.AddSeconds(events.Count), "private-correlation"));
+            }
+        }
+
+        // Equivalent duplicates within a history must also be counted only once.
+        return new ProjectionRequest("tenant-secret", "party", party, [.. events, events[^1]]);
+    }
+
+    private static async Task<DomainProjectionRebuildPlan> CommitAsync(
+        InMemoryReadModelBatchStore store,
+        PartyIndexSdkProjectionHandler handler,
+        DomainSharedProjectionRebuildIdentity identity,
+        DomainSharedProjectionRebuildCandidate candidate)
+    {
+        DomainProjectionRebuildPlan plan = await handler.FinalizeAsync(identity, candidate, TestContext.Current.CancellationToken).ConfigureAwait(false);
+        var scope = new ReadModelBatchScope(plan.StoreName, identity.TenantId, "party", PartySdkReadModelAddresses.SharedIndexAggregateId,
+            PartyProjectionNames.Index, identity.OperationId);
+        (await store.ExecuteAsync(new ReadModelBatch(scope, plan.Operations), TestContext.Current.CancellationToken).ConfigureAwait(false))
+            .Status.ShouldBe(ReadModelBatchStatus.Completed);
+        return plan;
+    }
+
+    [Fact]
     public async Task DetailHandler_WritesCanonicalBatchAndMatchesRetainedFoldAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
@@ -2269,7 +2627,10 @@ public sealed class PartySdkProjectionHandlerTests
 
         (LogLevel Level, string Message, Exception? Exception) record = logger.Records.ShouldHaveSingleItem();
         record.Level.ShouldBe(LogLevel.Warning);
-        record.Message.ShouldContain("could not resolve event type");
+        record.Message.ShouldContain("Completed=False");
+        record.Message.ShouldContain("UnknownType=1");
+        record.Message.ShouldNotContain("TotallyUnknownEventType");
+        record.Exception.ShouldBeNull();
     }
 
     [Fact]

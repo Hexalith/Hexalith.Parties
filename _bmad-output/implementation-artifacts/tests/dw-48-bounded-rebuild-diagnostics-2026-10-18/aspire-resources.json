@@ -1,0 +1,22 @@
+[
+  {
+    "displayName": "eventstore",
+    "state": "Waiting",
+    "healthStatus": null
+  },
+  {
+    "displayName": "parties",
+    "state": "Waiting",
+    "healthStatus": null
+  },
+  {
+    "displayName": "security",
+    "state": "Starting",
+    "healthStatus": null
+  },
+  {
+    "displayName": "tenants",
+    "state": "Waiting",
+    "healthStatus": null
+  }
+]

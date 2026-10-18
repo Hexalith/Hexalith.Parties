@@ -31,11 +31,14 @@ internal static class PartySdkProjectionFold
     /// A genuinely corrupt live event (<see cref="RedactedFormat"/> not set) and an expected
     /// post-erasure redacted-tail decode failure use distinct log signals so operators do not have
     /// to guess which case produced a given drop.
+    /// Optional rebuild diagnostics retain only fixed counts. Supply them on one walk per
+    /// accumulation, keeping validation probes silent to avoid counting the same drop twice.
     /// </summary>
     public static IEnumerable<(ProjectionEventDto Event, IEventPayload? Payload, bool AdvanceCheckpoint)> DeserializeNew(
         IReadOnlyCollection<ProjectionEventDto> events,
         long lastSequenceNumber,
-        ILogger? logger = null)
+        ILogger? logger = null,
+        PartyProjectionRebuildDiagnostics? diagnostics = null)
     {
         long checkpoint = lastSequenceNumber;
         var seenDeliverySequences = new HashSet<long>();
@@ -55,6 +58,7 @@ internal static class PartySdkProjectionFold
             bool isJson = string.Equals(@event.SerializationFormat, "json", StringComparison.OrdinalIgnoreCase) || isRedacted;
             if (!isJson)
             {
+                diagnostics?.RecordNonJson();
                 if (logger is not null)
                 {
                     Log.NonJsonEventDropped(logger, @event.EventTypeName, @event.SerializationFormat);
@@ -66,6 +70,7 @@ internal static class PartySdkProjectionFold
 
             if (isRedacted && IsWholePayloadRedacted(@event.Payload))
             {
+                diagnostics?.RecordWholePayloadRedacted();
                 checkpoint = @event.SequenceNumber;
                 if (logger is not null)
                 {
@@ -79,9 +84,19 @@ internal static class PartySdkProjectionFold
             Type? eventType = PartyEventTypeResolver.Resolve(@event.EventTypeName);
             if (eventType is null)
             {
+                bool ambiguous = PartyEventTypeResolver.IsAmbiguousShortName(@event.EventTypeName);
+                if (ambiguous)
+                {
+                    diagnostics?.RecordAmbiguousType();
+                }
+                else
+                {
+                    diagnostics?.RecordUnknownType();
+                }
+
                 if (logger is not null)
                 {
-                    if (PartyEventTypeResolver.IsAmbiguousShortName(@event.EventTypeName))
+                    if (ambiguous)
                     {
                         Log.AmbiguousEventTypeDropped(logger, @event.EventTypeName);
                     }
@@ -110,6 +125,15 @@ internal static class PartySdkProjectionFold
                     or InvalidOperationException)
             {
                 deserializationFailed = true;
+                if (isRedacted)
+                {
+                    diagnostics?.RecordRedactedPayload();
+                }
+                else
+                {
+                    diagnostics?.RecordCorruptPayload();
+                }
+
                 if (logger is not null)
                 {
                     // Distinct log signal for a genuinely corrupt live event versus an expected
@@ -140,22 +164,30 @@ internal static class PartySdkProjectionFold
             }
 
             IEventPayload? payload = deserialized as IEventPayload;
-            if (payload is null && logger is not null)
+            if (payload is null)
             {
                 if (advance)
                 {
+                    diagnostics?.RecordWholePayloadRedacted();
                     // A remaining redacted payload can deserialize to null without an exception
                     // (for example through a converter). Preserve its skip-and-advance diagnostic.
-                    Log.WholePayloadRedactedEventDropped(logger, @event.EventTypeName, @event.SequenceNumber);
+                    if (logger is not null)
+                    {
+                        Log.WholePayloadRedactedEventDropped(logger, @event.EventTypeName, @event.SequenceNumber);
+                    }
                 }
                 else
                 {
+                    diagnostics?.RecordNullPayload();
                     // A resolved, non-redacted event type deserialized without throwing but
                     // produced no payload (e.g. a literal JSON "null" body). The checkpoint does
                     // not advance — the same non-advancing category as an unresolved/non-JSON
                     // drop — so this needs its own distinct operator-facing signal too, not
                     // silence.
-                    Log.NullPayloadEventDropped(logger, @event.EventTypeName, @event.SequenceNumber);
+                    if (logger is not null)
+                    {
+                        Log.NullPayloadEventDropped(logger, @event.EventTypeName, @event.SequenceNumber);
+                    }
                 }
             }
 
@@ -194,11 +226,13 @@ internal static class PartySdkProjectionFold
     /// <see cref="PartyIndexSdkProjectionHandler"/>'s guarded use in its failure branch, which
     /// returns immediately afterward so no later walk can double-log).
     /// </param>
+    /// <param name="diagnostics">Optional rebuild counts for the inspected prefix through the first unresolved event.</param>
     public static bool HasUnresolvedNewEvent(
         IReadOnlyCollection<ProjectionEventDto> events,
         long lastSequenceNumber,
-        ILogger? logger = null)
-        => DeserializeNew(events, lastSequenceNumber, logger).Any(static item => !item.AdvanceCheckpoint);
+        ILogger? logger = null,
+        PartyProjectionRebuildDiagnostics? diagnostics = null)
+        => DeserializeNew(events, lastSequenceNumber, logger, diagnostics).Any(static item => !item.AdvanceCheckpoint);
 
     /// <summary>
     /// Returns a bounded retry reason when a delivery cannot safely be folded from the supplied

@@ -1,0 +1,5 @@
+Waiting for resource 'parties' to be healthy...
+❌ Timed out waiting for resource 'parties' to be healthy after 20s.
+
+📄 See logs at /home/administrator/.aspire/logs/cli_20261018T120357_11ff5d1c.log
+🔍 See AppHost logs at /home/administrator/.aspire/logs/cli_20261018T120331845_detach-child_9433f5aabff047e99417bc95812fc6d5.log
