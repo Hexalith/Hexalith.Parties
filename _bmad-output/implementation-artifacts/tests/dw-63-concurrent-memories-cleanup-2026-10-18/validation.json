@@ -1,0 +1,159 @@
+{
+    "date": "2026-10-18",
+    "scope": [
+        "DW-63",
+        "DW-169"
+    ],
+    "status": "passed",
+    "baseline_revision": "bb4d39f017b4075b50741932c834b2465c57bd92",
+    "configuration": "Debug; available Hexalith source project references; warnings-as-errors preserved",
+    "dependencies": {
+        "references/Hexalith.AI.Tools": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+        "references/Hexalith.Builds": "544fd2e907d62ccdc4b8f24168b8ab5dfcc13eb9",
+        "references/Hexalith.Commons": "9e874b1a3c6e7b6ff07b6f40b81d36e4e1403798",
+        "references/Hexalith.EventStore": "ab8fa115c486875be3a22860a273d5d68a26c749",
+        "references/Hexalith.FrontComposer": "acfc74c7e90acf7f55d0a9af7137859c77a4a09f",
+        "references/Hexalith.McpCli": "4a84c16415c39b22e0c0855b25a1c6b018de6a19",
+        "references/Hexalith.Memories": "ef842c9abca9b9a0f77699ba1232e97c23405693",
+        "references/Hexalith.Platform": "2ac8e73c09fe631c5620723b54784d2e28e8941f",
+        "references/Hexalith.PolymorphicSerializations": "98de6e013840ece9f0fa7c68ab7dcdf2bba3b375",
+        "references/Hexalith.Tenants": "664a379a95d5555bcd5e674060375412c038c9f3"
+    },
+    "commands": {
+        "build": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+        "focus": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Search.PartyMemoryMappingConcurrencyTests -class Hexalith.Parties.Tests.Search.PartyMemoryUnitMappingStoreTests -class Hexalith.Parties.Tests.Search.PartyMemoryCleanupServiceTests -class Hexalith.Parties.Tests.Search.PartyMemoryUnitMapperTests -class Hexalith.Parties.Tests.Search.PartyMemoryIndexEntrySearchIndexerTests -class Hexalith.Parties.Tests.HealthChecks.MemoriesSearchHealthCheckTests -class Hexalith.Parties.Tests.Projections.ProjectionPlatformAdapterTests -result-xml /tmp/dw-63-validation/focus-final.xml",
+        "full": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-63-validation/full-final.xml",
+        "baseline": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-63-validation/baseline.xml",
+        "rollback_build": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+        "rollback_test": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-63-validation/rollback.xml",
+        "mutation_build": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+        "mutation_test": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method '*OverlappingCleanupAndIndexingPreserveTheNewLedgerGeneration' -result-xml /tmp/dw-63-validation/unsafe-mutation.xml",
+        "warning_guard": "bash scripts/check-no-warning-override.sh",
+        "whitespace": "git -c core.whitespace=cr-at-eol diff --cached --check",
+        "commitlint": "node node_modules/@commitlint/cli/cli.js --edit /tmp/dw-63-validation/commit-message.txt --verbose",
+        "aspire_start": "aspire start --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json",
+        "aspire_wait": "aspire wait parties --timeout 20 --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "aspire_describe": "aspire describe --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json",
+        "aspire_stop": "aspire stop --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj"
+    },
+    "baseline": {
+        "build_exit_code": 0,
+        "warnings": 0,
+        "errors": 0,
+        "test_exit_code": 0,
+        "tests": {
+            "total": 1158,
+            "passed": 1158,
+            "failed": 0,
+            "errors": 0,
+            "skipped": 0,
+            "not-run": 0
+        }
+    },
+    "final": {
+        "build_exit_code": 0,
+        "warnings": 0,
+        "errors": 0,
+        "focus_exit_code": 0,
+        "focus": {
+            "total": 133,
+            "passed": 133,
+            "failed": 0,
+            "errors": 0,
+            "skipped": 0,
+            "not-run": 0
+        },
+        "full_exit_code": 0,
+        "full": {
+            "total": 1187,
+            "passed": 1187,
+            "failed": 0,
+            "errors": 0,
+            "skipped": 0,
+            "not-run": 0
+        }
+    },
+    "exercises": {
+        "baseline_revision": "bb4d39f017b4075b50741932c834b2465c57bd92",
+        "rollback_build_exit": 0,
+        "rollback_test_exit": 0,
+        "rollback_tests": {
+            "total": 1158,
+            "passed": 1158,
+            "failed": 0,
+            "errors": 0,
+            "skipped": 0,
+            "not-run": 0
+        },
+        "rollback_sources_restored": true,
+        "mutation_build_exit": 0,
+        "mutation_test_exit": 1,
+        "mutation_tests": {
+            "total": 1,
+            "passed": 0,
+            "failed": 1,
+            "errors": 0,
+            "skipped": 0,
+            "not-run": 0
+        },
+        "all_sources_restored": true
+    },
+    "mutation_failure": "Expected negative-test failure: retained should be 1, but was 0. Reinstating physical empty-domain-key deletion loses a distinct concurrently indexed mapping on a Redis-style recreated key. Corrected source was restored.",
+    "review": {
+        "layers": [
+            "Blind Hunter"
+        ],
+        "findings": 8,
+        "patched": 8,
+        "new_deferred_work": 0,
+        "followup": "All eight findings verified by inspection; no concrete remaining regression."
+    },
+    "checks": {
+        "warning_guard_exit_code": 0,
+        "crlf_aware_whitespace_exit_code": 0,
+        "commitlint_exit_code": 0,
+        "commitlint_cli_version": "21.2.2",
+        "commit_message": "fix: preserve concurrent memories cleanup mappings"
+    },
+    "runtime": {
+        "start_exit_code": 0,
+        "observed": {
+            "security": "Starting",
+            "parties": "Waiting",
+            "eventstore": "Waiting",
+            "tenants": "Waiting"
+        },
+        "wait_exit_code": 1,
+        "wait_diagnostic": "The JSON-RPC connection with the remote party was lost before the request could complete.",
+        "limitation": "Pending healthy wait was interrupted by successful AppHost shutdown; healthy or full-topology qualification is not claimed.",
+        "stop_exit_code": 0,
+        "final_observation": "No AppHost is currently running."
+    },
+    "rollout": "Drain older cleanup writers before relying on this guarantee. Do not expire or physically delete domain ledger keys while mapping operations may be in flight.",
+    "separate_work": [
+        "DW-64",
+        "DW-65",
+        "DW-81",
+        "DW-167",
+        "DW-168",
+        "DW-170",
+        "cross-instance erasure/indexing fencing",
+        "identical-identity recreation fencing"
+    ],
+    "primary_source": "https://raw.githubusercontent.com/dapr/components-contrib/v1.18.0/state/redis/redis.go",
+    "source_sha256": {
+        "src/Hexalith.Parties/Search/IPartyMemoryUnitMappingStore.cs": "7b99d5fb8fb12a00f45e2f703c139d423d69217119e002d7c49c97f0273497da",
+        "src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs": "5750df334057d8ed3d50c2378f26f5eff44a4efc0729b68949b41aefd8522921",
+        "src/Hexalith.Parties/Search/PartyMemoryUnitMappingEntry.cs": "f44f2a85ae68f0bbf9b2401b1eb6756869ef7ba44f9e9faec0cf45e519f7683a",
+        "src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs": "7e268af236311b5a5eaae5968896d2c79cfa527562380fdc18cbc3728ffc4308",
+        "src/Hexalith.Parties/Search/PartyMemoryUnitMappingStoreOptions.cs": "d5758c51ec5bd53968edfa23d19d93f8bd2ff44e5cb06149a4d6d78ff2addaab",
+        "tests/Hexalith.Parties.Tests/HealthChecks/MemoriesSearchHealthCheckTests.cs": "77b02769fa2bea510ee43eeb05520434066da3bc9400924e1e1abed0e189368b",
+        "tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs": "1c48a03c53d11ec60800a678eca3f18fd28425afbf6b6d7b86645d83a127331a",
+        "tests/Hexalith.Parties.Tests/Search/PartyMemoryCleanupServiceTests.cs": "d336be48cec5400c9dfab817bf9a123956db288dba978e78541f2ef52f90f426",
+        "tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexEntrySearchIndexerTests.cs": "c1ae3f94f90413ab39de6356943cd2771e807632364a82f2c3b1a18493b26f50",
+        "tests/Hexalith.Parties.Tests/Search/PartyMemoryMappingConcurrencyTests.cs": "c533d998c4e6595e41fcceb7a989385dabd5a0a2590df34ea93d47cacdd40e8d",
+        "tests/Hexalith.Parties.Tests/Search/PartyMemoryMappingState.cs": "fde0f9031e79cd1713a31d150e2737fa8647f15517256d1fca9b563cb4ad6422",
+        "tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitMapperTests.cs": "4505e90b507437191647251ffcc8f4ac6e62876f6134c6dfe5f06036b1966268",
+        "tests/Hexalith.Parties.Tests/Search/PartyMemoryUnitMappingStoreTests.cs": "e67ca7a4accddf3f0c70ff0842bac7379e38fab1a8974dea67a9dd93afca63c9"
+    }
+}

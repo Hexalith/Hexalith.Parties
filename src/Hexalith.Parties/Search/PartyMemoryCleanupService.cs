@@ -88,11 +88,10 @@ internal sealed class PartyMemoryCleanupService(
     /// endpoint. The CaseId stored with each mapping is authoritative; <paramref name="caseId"/>
     /// is used only for legacy mappings written before CaseId persistence was introduced.
     /// <para>
-    /// <b>Atomicity (P17 / P25).</b> After each successful per-unit DELETE the mapping is
-    /// rewritten with only the still-failed entries so a cancellation or partial failure
-    /// leaves a consistent audit trail: a re-run will retry exactly the units that still
-    /// need cleanup, and the aggregate <c>n of N deleted</c> ratio reflects truth across
-    /// re-runs rather than collapsing to "{remaining} of {remaining}".
+    /// <b>Inventory progress (P17 / P25).</b> Successfully cleaned exact snapshot entries
+    /// are removed in the final mapping update using optimistic concurrency. Failed entries,
+    /// concurrent additions and changed case/source identities remain available for a retry.
+    /// Deletion counts describe this call's snapshot, not terminal physical-erasure proof.
     /// </para>
     /// <para>
     /// <b>Reporting (P36).</b> The aggregate <c>BlockedReason</c> includes the deleted-count
@@ -166,7 +165,8 @@ internal sealed class PartyMemoryCleanupService(
         }
 
         int initialCount = mappings.Count;
-        List<PartyMemoryUnitMappingEntry> remaining = [.. mappings];
+        List<PartyMemoryUnitMappingEntry> cleanedEntries = [];
+        int retainedCount = initialCount;
         string? firstBlockedReason = null;
         string? firstBlockedUnitId = null;
         int deleted = 0;
@@ -193,8 +193,7 @@ internal sealed class PartyMemoryCleanupService(
                 if (perUnit.Cleaned)
                 {
                     deleted++;
-                    _ = remaining.RemoveAll(e =>
-                        string.Equals(e.MemoryUnitId, mapping.MemoryUnitId, StringComparison.Ordinal));
+                    cleanedEntries.Add(mapping);
                 }
                 else if (firstBlockedReason is null)
                 {
@@ -205,13 +204,12 @@ internal sealed class PartyMemoryCleanupService(
         }
         finally
         {
-            // Persist whatever we have done so far so a re-run after cancellation /
-            // exception sees the same audit trail. ReplaceMappingsAsync handles the
-            // empty-list case as a Clear.
-            if (remaining.Count != initialCount)
+            // Remove only completed targets; never replace the inventory from our old
+            // snapshot. Caller-cancellation recovery is tracked separately in DW-64.
+            if (cleanedEntries.Count > 0)
             {
-                await mappingStore
-                    .ReplaceMappingsAsync(tenantId, partyId, remaining, cancellationToken)
+                retainedCount = await mappingStore
+                    .RemoveMappingsAsync(tenantId, partyId, cleanedEntries, cancellationToken)
                     .ConfigureAwait(false);
             }
         }
@@ -224,6 +222,16 @@ internal sealed class PartyMemoryCleanupService(
                 sourceUri,
                 Cleaned: false,
                 BlockedReason: $"Memories cleanup partially failed ({deleted} of {initialCount} units deleted): {firstBlockedReason}");
+        }
+
+        if (retainedCount > 0)
+        {
+            return new PartyMemoryCleanupResult(
+                partyId,
+                MemoryUnitId: string.Empty,
+                sourceUri,
+                Cleaned: false,
+                BlockedReason: "Memories cleanup retained additional mappings; another cleanup pass is required.");
         }
 
         return new PartyMemoryCleanupResult(

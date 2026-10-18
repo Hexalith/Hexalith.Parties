@@ -695,7 +695,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             string partyId,
             CancellationToken cancellationToken)
             => Task.FromResult<IReadOnlyList<PartyMemoryUnitMappingEntry>>(
-                _mappings.TryGetValue($"{tenantId}:{partyId}", out List<PartyMemoryUnitMappingEntry>? list) ? list : []);
+                _mappings.TryGetValue($"{tenantId}:{partyId}", out List<PartyMemoryUnitMappingEntry>? list) ? [.. list] : []);
 
         public Task ClearMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
         {
@@ -703,23 +703,25 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             return Task.CompletedTask;
         }
 
-        public Task ReplaceMappingsAsync(
+        public Task<int> RemoveMappingsAsync(
             string tenantId,
             string partyId,
             IReadOnlyList<PartyMemoryUnitMappingEntry> entries,
             CancellationToken cancellationToken)
         {
             string key = $"{tenantId}:{partyId}";
-            if (entries.Count == 0)
+            if (!_mappings.TryGetValue(key, out List<PartyMemoryUnitMappingEntry>? current))
+            {
+                return Task.FromResult(0);
+            }
+
+            _ = current.RemoveAll(entries.Contains);
+            if (current.Count == 0)
             {
                 _mappings.Remove(key);
             }
-            else
-            {
-                _mappings[key] = [.. entries];
-            }
 
-            return Task.CompletedTask;
+            return Task.FromResult(current.Count);
         }
     }
 

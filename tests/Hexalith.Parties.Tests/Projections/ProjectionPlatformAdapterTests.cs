@@ -300,11 +300,11 @@ public sealed class ProjectionPlatformAdapterTests
         public Task ClearMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
             => Task.CompletedTask;
 
-        public Task ReplaceMappingsAsync(
+        public Task<int> RemoveMappingsAsync(
             string tenantId,
             string partyId,
             IReadOnlyList<PartyMemoryUnitMappingEntry> entries,
             CancellationToken cancellationToken)
-            => Task.CompletedTask;
+            => Task.FromResult(0);
     }
 }

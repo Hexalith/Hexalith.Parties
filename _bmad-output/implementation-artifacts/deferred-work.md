@@ -481,7 +481,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: PartyMemoryUnitMappingStore.ClearMappingsAsync and ReplaceMappingsAsync
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `PartyMemoryUnitMappingStore.ReplaceMappingsAsync` and the empty-list delete can overwrite a concurrent indexing write after cleanup reads the prior mapping set. Also recorded in "Deferred from: bmad-build Story 8.6 review (2026-08-16)": `ClearMappingsAsync` and `ReplaceMappingsAsync` use unconditional delete/save operations, so concurrent indexing can lose a newly committed mapping and leave an undiscoverable Memories unit.
-status: open
+status: done 2026-10-18
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-dw-63-concurrent-memories-cleanup.md`
+resolution: Exact cleaned-entry subtraction now retries against fresh ETags, preserves concurrent additions and changed unit/source/case identities, and retains empty domain inventories to prevent Redis ETag reuse. Physical clearing is restricted to one-use health probes. Cleanup requires another pass when mappings remain. Final Debug/source build has zero warnings/errors; focused tests pass 133/133 and full service assembly passes 1187/1187. Rollback passes 1158/1158 baseline tests, and the unsafe-delete mutation is detected. All eight review findings are patched and independently verified; no new deferred work. See spec-dw-63-concurrent-memories-cleanup.md and tests/dw-63-concurrent-memories-cleanup-2026-10-18/validation.json. Drain older writers before rollout; separate cancellation, workflow-reconciliation and persistence-migration work remains open.
 
 ### DW-64: Persist partial Memories cleanup progress after caller cancellation
 
@@ -1341,7 +1343,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties/Search/PartyMemoryUnitMappingStore.cs (ReplaceMappingsAsync)
 source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
 reason: ReplaceMappingsAsync uses unconditional SaveStateAsync/DeleteStateAsync after a cleanup snapshot; a concurrent ETag-protected indexing addition can be overwritten; verified high, pre-existing.
-status: open
+status: done 2026-10-18
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-dw-63-concurrent-memories-cleanup.md`
+resolution: Exact cleaned-entry subtraction now retries against fresh ETags, preserves concurrent additions and changed unit/source/case identities, and retains empty domain inventories to prevent Redis ETag reuse. Physical clearing is restricted to one-use health probes. Cleanup requires another pass when mappings remain. Final Debug/source build has zero warnings/errors; focused tests pass 133/133 and full service assembly passes 1187/1187. Rollback passes 1158/1158 baseline tests, and the unsafe-delete mutation is detected. All eight review findings are patched and independently verified; no new deferred work. See spec-dw-63-concurrent-memories-cleanup.md and tests/dw-63-concurrent-memories-cleanup-2026-10-18/validation.json. Drain older writers before rollout; separate cancellation, workflow-reconciliation and persistence-migration work remains open.
 
 ### DW-170: D8 — Preserve durable reconciliation for cancellation after Memories accepts ingest but before the Parties mapping persists.
 

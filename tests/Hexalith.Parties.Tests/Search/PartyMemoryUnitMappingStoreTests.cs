@@ -229,19 +229,20 @@ public sealed class PartyMemoryUnitMappingStoreTests
     [Fact]
     public async Task ClearMappingsAsync_StateDeleteFailureDoesNotExposeProviderException()
     {
-        DaprClient client = Substitute.For<DaprClient>();
-        _ = client.DeleteStateAsync(
+        DaprClient client = CreateRemovalClient(includeRetained: false);
+        _ = client.TryDeleteStateAsync(
                 "statestore",
+                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<StateOptions?>(),
                 Arg.Any<IReadOnlyDictionary<string, string>?>(),
                 Arg.Any<CancellationToken>())
-            .Returns(Task.FromException(new InvalidOperationException(ProviderFailure)));
+            .Returns(Task.FromException<bool>(new InvalidOperationException(ProviderFailure)));
         var logger = new RecordingLogger<PartyMemoryUnitMappingStore>();
         var store = CreateStore(client, logger);
 
         InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(() =>
-            store.ClearMappingsAsync(TenantId, PartyId, CancellationToken.None));
+            store.ClearMappingsAsync("_health-probe", "_health-probe-00000000000000000000000000000001", CancellationToken.None));
 
         AssertSanitizedFailure(exception, "memory-unit-mapping-clear-failed");
         AssertSingleWarning(logger, nameof(InvalidOperationException));
@@ -250,24 +251,26 @@ public sealed class PartyMemoryUnitMappingStoreTests
     [Fact]
     public async Task ClearMappingsAsync_NonCallerCancellationIsBoundedAndSanitized()
     {
-        DaprClient client = Substitute.For<DaprClient>();
-        _ = client.DeleteStateAsync(
+        DaprClient client = CreateRemovalClient(includeRetained: false);
+        _ = client.TryDeleteStateAsync(
                 "statestore",
+                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<StateOptions?>(),
                 Arg.Any<IReadOnlyDictionary<string, string>?>(),
                 Arg.Any<CancellationToken>())
-            .Returns(Task.FromException(new OperationCanceledException(ProviderFailure)));
+            .Returns(Task.FromException<bool>(new OperationCanceledException(ProviderFailure)));
         var logger = new RecordingLogger<PartyMemoryUnitMappingStore>();
         var store = CreateStore(client, logger);
 
         InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(() =>
-            store.ClearMappingsAsync(TenantId, PartyId, CancellationToken.None));
+            store.ClearMappingsAsync("_health-probe", "_health-probe-00000000000000000000000000000001", CancellationToken.None));
 
         AssertSanitizedFailure(exception, "memory-unit-mapping-clear-failed");
         AssertSingleWarning(logger, nameof(OperationCanceledException));
-        _ = client.Received(1).DeleteStateAsync(
+        _ = client.Received(1).TryDeleteStateAsync(
             "statestore",
+            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<StateOptions?>(),
             Arg.Any<IReadOnlyDictionary<string, string>?>(),
@@ -279,19 +282,20 @@ public sealed class PartyMemoryUnitMappingStoreTests
     {
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
-        DaprClient client = Substitute.For<DaprClient>();
-        _ = client.DeleteStateAsync(
+        DaprClient client = CreateRemovalClient(includeRetained: false);
+        _ = client.TryDeleteStateAsync(
                 "statestore",
+                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<StateOptions?>(),
                 Arg.Any<IReadOnlyDictionary<string, string>?>(),
                 Arg.Any<CancellationToken>())
-            .Returns(Task.FromCanceled(cancellation.Token));
+            .Returns(Task.FromCanceled<bool>(cancellation.Token));
         var logger = new RecordingLogger<PartyMemoryUnitMappingStore>();
         var store = CreateStore(client, logger);
 
         await Should.ThrowAsync<OperationCanceledException>(() =>
-            store.ClearMappingsAsync(TenantId, PartyId, cancellation.Token));
+            store.ClearMappingsAsync("_health-probe", "_health-probe-00000000000000000000000000000001", cancellation.Token));
 
         logger.Records.ShouldBeEmpty();
     }
@@ -361,75 +365,79 @@ public sealed class PartyMemoryUnitMappingStoreTests
     }
 
     [Fact]
-    public async Task ReplaceMappingsAsync_StateSaveFailureDoesNotExposeProviderException()
+    public async Task RemoveMappingsAsync_StateSaveFailureDoesNotExposeProviderException()
     {
-        DaprClient client = Substitute.For<DaprClient>();
-        _ = client.SaveStateAsync(
+        DaprClient client = CreateRemovalClient(includeRetained: true);
+        _ = client.TrySaveStateAsync(
                 "statestore",
                 Arg.Any<string>(),
-                Arg.Any<IReadOnlyList<PartyMemoryUnitMappingEntry>>(),
+                Arg.Any<List<PartyMemoryUnitMappingEntry>>(),
+                Arg.Any<string>(),
                 Arg.Any<StateOptions?>(),
                 Arg.Any<IReadOnlyDictionary<string, string>?>(),
                 Arg.Any<CancellationToken>())
-            .Returns(Task.FromException(new InvalidOperationException(ProviderFailure)));
+            .Returns(Task.FromException<bool>(new InvalidOperationException(ProviderFailure)));
         var logger = new RecordingLogger<PartyMemoryUnitMappingStore>();
         var store = CreateStore(client, logger);
 
         InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(() =>
-            store.ReplaceMappingsAsync(TenantId, PartyId, SensitiveEntries(), CancellationToken.None));
+            store.RemoveMappingsAsync(TenantId, PartyId, SensitiveEntries(), CancellationToken.None));
 
-        AssertSanitizedFailure(exception, "memory-unit-mapping-replace-failed");
+        AssertSanitizedFailure(exception, "memory-unit-mapping-remove-failed");
         AssertSingleWarning(logger, nameof(InvalidOperationException));
     }
 
     [Fact]
-    public async Task ReplaceMappingsAsync_NonCallerCancellationIsBoundedAndSanitized()
+    public async Task RemoveMappingsAsync_NonCallerCancellationIsBoundedAndSanitized()
     {
-        DaprClient client = Substitute.For<DaprClient>();
-        _ = client.SaveStateAsync(
+        DaprClient client = CreateRemovalClient(includeRetained: true);
+        _ = client.TrySaveStateAsync(
                 "statestore",
                 Arg.Any<string>(),
-                Arg.Any<IReadOnlyList<PartyMemoryUnitMappingEntry>>(),
+                Arg.Any<List<PartyMemoryUnitMappingEntry>>(),
+                Arg.Any<string>(),
                 Arg.Any<StateOptions?>(),
                 Arg.Any<IReadOnlyDictionary<string, string>?>(),
                 Arg.Any<CancellationToken>())
-            .Returns(Task.FromException(new OperationCanceledException(ProviderFailure)));
+            .Returns(Task.FromException<bool>(new OperationCanceledException(ProviderFailure)));
         var logger = new RecordingLogger<PartyMemoryUnitMappingStore>();
         var store = CreateStore(client, logger);
 
         InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(() =>
-            store.ReplaceMappingsAsync(TenantId, PartyId, SensitiveEntries(), CancellationToken.None));
+            store.RemoveMappingsAsync(TenantId, PartyId, SensitiveEntries(), CancellationToken.None));
 
-        AssertSanitizedFailure(exception, "memory-unit-mapping-replace-failed");
+        AssertSanitizedFailure(exception, "memory-unit-mapping-remove-failed");
         AssertSingleWarning(logger, nameof(OperationCanceledException));
-        _ = client.Received(1).SaveStateAsync(
+        _ = client.Received(1).TrySaveStateAsync(
             "statestore",
             Arg.Any<string>(),
-            Arg.Any<IReadOnlyList<PartyMemoryUnitMappingEntry>>(),
+            Arg.Any<List<PartyMemoryUnitMappingEntry>>(),
+                Arg.Any<string>(),
             Arg.Any<StateOptions?>(),
             Arg.Any<IReadOnlyDictionary<string, string>?>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task ReplaceMappingsAsync_CallerCancellationPropagatesWithoutLogging()
+    public async Task RemoveMappingsAsync_CallerCancellationPropagatesWithoutLogging()
     {
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
-        DaprClient client = Substitute.For<DaprClient>();
-        _ = client.SaveStateAsync(
+        DaprClient client = CreateRemovalClient(includeRetained: true);
+        _ = client.TrySaveStateAsync(
                 "statestore",
                 Arg.Any<string>(),
-                Arg.Any<IReadOnlyList<PartyMemoryUnitMappingEntry>>(),
+                Arg.Any<List<PartyMemoryUnitMappingEntry>>(),
+                Arg.Any<string>(),
                 Arg.Any<StateOptions?>(),
                 Arg.Any<IReadOnlyDictionary<string, string>?>(),
                 Arg.Any<CancellationToken>())
-            .Returns(Task.FromCanceled(cancellation.Token));
+            .Returns(Task.FromCanceled<bool>(cancellation.Token));
         var logger = new RecordingLogger<PartyMemoryUnitMappingStore>();
         var store = CreateStore(client, logger);
 
         await Should.ThrowAsync<OperationCanceledException>(() =>
-            store.ReplaceMappingsAsync(TenantId, PartyId, SensitiveEntries(), cancellation.Token));
+            store.RemoveMappingsAsync(TenantId, PartyId, SensitiveEntries(), cancellation.Token));
 
         logger.Records.ShouldBeEmpty();
     }
@@ -466,6 +474,21 @@ public sealed class PartyMemoryUnitMappingStoreTests
         {
             text.ShouldNotContain(sensitiveValue);
         }
+    }
+
+    private static DaprClient CreateRemovalClient(bool includeRetained)
+    {
+        DaprClient client = Substitute.For<DaprClient>();
+        List<PartyMemoryUnitMappingEntry> entries = [.. SensitiveEntries()];
+        if (includeRetained)
+        {
+            entries.Add(new PartyMemoryUnitMappingEntry("retained-unit", "urn:retained", "retained-case"));
+        }
+
+        client.GetStateAndETagAsync<List<PartyMemoryUnitMappingEntry>>(
+                "statestore", Arg.Any<string>(), cancellationToken: Arg.Any<CancellationToken>())
+            .Returns((entries, "etag-1"));
+        return client;
     }
 
     private static DaprClient CreateReadableClient()

@@ -10,49 +10,6 @@ using Microsoft.Extensions.Options;
 namespace Hexalith.Parties.Search;
 
 /// <summary>
-/// Per-party → memory-unit-id mapping. Recorded by the indexing service after successful
-/// <c>IngestAsync</c> calls; consumed by the cleanup service so erasure can iterate per-unit
-/// DELETEs against the existing per-unit Memories endpoint. Each entry retains the CaseId
-/// used for ingestion so cleanup survives later configuration changes. Implements the AC5 cleanup
-/// re-architecture described in resolved decision #2 of the story spec — without this
-/// mapping the erasure flow has no way to know which memory unit ids belong to a party.
-/// </summary>
-internal sealed record PartyMemoryUnitMappingEntry(string MemoryUnitId, string SourceUri, string? CaseId = null);
-
-internal interface IPartyMemoryUnitMappingStore
-{
-    Task RecordMappingAsync(
-        string tenantId,
-        string partyId,
-        string memoryUnitId,
-        string sourceUri,
-        string caseId,
-        CancellationToken cancellationToken);
-
-    Task<IReadOnlyList<PartyMemoryUnitMappingEntry>> GetMappingsAsync(
-        string tenantId,
-        string partyId,
-        CancellationToken cancellationToken);
-
-    Task ClearMappingsAsync(
-        string tenantId,
-        string partyId,
-        CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Replace the full mapping list for a party. Used by cleanup to atomically remove
-    /// successfully-deleted units (P17 / P25) — pass the remaining unfailed entries so a
-    /// re-run picks up exactly where this run left off. An empty list deletes the state key
-    /// entirely (equivalent to <see cref="ClearMappingsAsync"/>).
-    /// </summary>
-    Task ReplaceMappingsAsync(
-        string tenantId,
-        string partyId,
-        IReadOnlyList<PartyMemoryUnitMappingEntry> entries,
-        CancellationToken cancellationToken);
-}
-
-/// <summary>
 /// Dapr-state-store backed mapping. Storage shape: a single state key per (tenant, party)
 /// holding a list of <see cref="PartyMemoryUnitMappingEntry"/>.
 /// <para>
@@ -68,7 +25,9 @@ internal interface IPartyMemoryUnitMappingStore
 /// </para>
 /// <para>
 /// <b>Concurrency (P3).</b> Updates use ETag-based optimistic concurrency with bounded retry
-/// so two concurrent indexings of the same party cannot lose a mapping under last-writer-wins.
+/// so indexing and cleanup preserve concurrent mappings. Cleanup subtracts exact snapshot
+/// entries from fresh state on every attempt. Empty domain inventories retain their ETag
+/// generation; physical deletion is restricted to unique, reserved health-probe keys.
 /// </para>
 /// <para>
 /// <b>Failure surface (P2 / P24).</b> State-store failures propagate to the caller. A failed
@@ -76,7 +35,7 @@ internal interface IPartyMemoryUnitMappingStore
 /// certify cleanup while Memories still contains indexed data.
 /// </para>
 /// </summary>
-internal sealed class PartyMemoryUnitMappingStore(
+internal sealed partial class PartyMemoryUnitMappingStore(
     DaprClient daprClient,
     IOptions<PartyMemoryUnitMappingStoreOptions> options,
     ILogger<PartyMemoryUnitMappingStore> logger) : IPartyMemoryUnitMappingStore
@@ -209,63 +168,109 @@ internal sealed class PartyMemoryUnitMappingStore(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        try
+        const string probePrefix = "_health-probe-";
+        if (!string.Equals(tenantId, "_health-probe", StringComparison.Ordinal)
+            || !partyId.StartsWith(probePrefix, StringComparison.Ordinal)
+            || !Guid.TryParseExact(partyId.AsSpan(probePrefix.Length), "N", out _))
         {
-            await daprClient
-                .DeleteStateAsync(_stateStoreName, BuildKey(tenantId, partyId), cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
+            throw new ArgumentException("Physical mapping deletion is restricted to unique reserved health probes.", nameof(partyId));
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            // Propagate so the cleanup orchestrator can record the failure in the aggregate
-            // BlockedReason rather than reporting "Cleaned: true" with stale mapping state.
-            // The previous swallow left ghost mapping entries that misled subsequent re-runs.
-            logger.LogWarning(
-                "Failed to clear a memory-unit mapping with {ExceptionType}; surfacing as cleanup failure.",
-                ex.GetType().Name);
-            throw new InvalidOperationException("memory-unit-mapping-clear-failed");
-        }
+
+        IReadOnlyList<PartyMemoryUnitMappingEntry> snapshot =
+            await GetMappingsAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
+        _ = await RemoveMappingsCoreAsync(tenantId, partyId, snapshot, "clear", cancellationToken, deleteEmptyProbeKey: true).ConfigureAwait(false);
     }
 
-    public async Task ReplaceMappingsAsync(
+    /// <inheritdoc/>
+    public Task<int> RemoveMappingsAsync(
         string tenantId,
         string partyId,
-        IReadOnlyList<PartyMemoryUnitMappingEntry> entries,
+        IReadOnlyList<PartyMemoryUnitMappingEntry> cleanedEntries,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-        ArgumentNullException.ThrowIfNull(entries);
-
-        if (entries.Count == 0)
-        {
-            await ClearMappingsAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
-            return;
-        }
-
-        string key = BuildKey(tenantId, partyId);
-        try
-        {
-            await daprClient
-                .SaveStateAsync(_stateStoreName, key, entries, cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(
-                "Failed to replace a memory-unit mapping with {ExceptionType}; cleanup re-run will retry the same unit set.",
-                ex.GetType().Name);
-            throw new InvalidOperationException("memory-unit-mapping-replace-failed");
-        }
+        ArgumentNullException.ThrowIfNull(cleanedEntries);
+        return RemoveMappingsCoreAsync(tenantId, partyId, cleanedEntries, "remove", cancellationToken);
     }
+
+    private async Task<int> RemoveMappingsCoreAsync(
+        string tenantId,
+        string partyId,
+        IReadOnlyList<PartyMemoryUnitMappingEntry> cleanedEntries,
+        string operation,
+        CancellationToken cancellationToken,
+        bool deleteEmptyProbeKey = false)
+    {
+        // Capture the targets once. A conflict must never expand removal to new arrivals.
+        HashSet<PartyMemoryUnitMappingEntry> targets = [.. cleanedEntries];
+        string key = BuildKey(tenantId, partyId);
+        for (int attempt = 0; attempt < MaxConcurrencyRetries; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            (IReadOnlyList<PartyMemoryUnitMappingEntry> current, string etag) =
+                await ReadWithETagAsync(key, cancellationToken).ConfigureAwait(false);
+            List<PartyMemoryUnitMappingEntry> updated = [.. current.Where(entry => !targets.Contains(entry))];
+            if (updated.Count == current.Count)
+            {
+                return current.Count;
+            }
+
+            if (string.IsNullOrWhiteSpace(etag))
+            {
+                LogRemovalMissingETag(logger, operation);
+                throw new InvalidOperationException($"memory-unit-mapping-{operation}-missing-etag");
+            }
+
+            bool success;
+            try
+            {
+                var stateOptions = new StateOptions { Concurrency = ConcurrencyMode.FirstWrite };
+                // Redis restarts a physically deleted key's ETag sequence. Keeping [] for
+                // domain ledgers prevents a delayed cleanup from matching a recreated key.
+                // Probe keys are unique per invocation and are never domain inventories.
+                success = deleteEmptyProbeKey && updated.Count == 0
+                    ? await daprClient.TryDeleteStateAsync(
+                        _stateStoreName, key, etag, stateOptions, cancellationToken: cancellationToken).ConfigureAwait(false)
+                    : await daprClient.TrySaveStateAsync(
+                        _stateStoreName, key, updated, etag, stateOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                LogRemovalFailure(logger, operation, ex.GetType().Name);
+                throw new InvalidOperationException($"memory-unit-mapping-{operation}-failed");
+            }
+
+            if (success)
+            {
+                return updated.Count;
+            }
+
+            if (attempt + 1 < MaxConcurrencyRetries)
+            {
+                LogRemovalRetry(logger, operation, attempt + 1, MaxConcurrencyRetries);
+            }
+        }
+
+        LogRemovalExhausted(logger, operation, MaxConcurrencyRetries);
+        throw new InvalidOperationException($"memory-unit-mapping-{operation}-conflict");
+    }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Memory-unit mapping {Operation} requires an ETag; inventory was retained.")]
+    private static partial void LogRemovalMissingETag(ILogger logger, string operation);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Memory-unit mapping {Operation} failed with {ExceptionType}; inventory must be retried.")]
+    private static partial void LogRemovalFailure(ILogger logger, string operation, string exceptionType);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "ETag conflict during memory-unit mapping {Operation} (attempt {Attempt}/{Max}); retrying.")]
+    private static partial void LogRemovalRetry(ILogger logger, string operation, int attempt, int max);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "ETag conflicts exhausted during memory-unit mapping {Operation} after {AttemptCount} attempts; inventory must be retried.")]
+    private static partial void LogRemovalExhausted(ILogger logger, string operation, int attemptCount);
 
     private async Task<(IReadOnlyList<PartyMemoryUnitMappingEntry> Mappings, string ETag)> ReadWithETagAsync(
         string key,
@@ -340,16 +345,4 @@ internal sealed class PartyMemoryUnitMappingStore(
         _ = input;
         return $"parties:memory-mapping:{Encoding.ASCII.GetString(trimmed)}";
     }
-}
-
-/// <summary>
-/// Configuration for the Dapr state store backing the per-party → memory-unit-id mapping.
-/// The Dapr state-store component name is operator-configurable (default: <c>statestore</c>)
-/// because Aspire / Dapr deployments commonly use named state stores per concern.
-/// </summary>
-internal sealed class PartyMemoryUnitMappingStoreOptions
-{
-    public const string SectionName = "Parties:MemoriesSearch:MappingStore";
-
-    public string StateStoreName { get; init; } = "statestore";
 }

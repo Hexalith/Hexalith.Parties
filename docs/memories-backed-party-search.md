@@ -60,3 +60,17 @@ The persisted mapping's case takes precedence over the currently configured case
 This establishes absence in that recorded case; accepted deletion requests do not
 prove terminal physical erasure while the separate workflow-reconciliation work
 (DW-168) remains open.
+
+Cleanup removes only exact successfully cleaned mapping entries (unit ID, source URI
+and captured case) from the current inventory. Conditional saves retry conflicts against fresh state, preserving concurrent
+additions and changed mappings. An empty domain inventory remains as `[]` at its
+existing hashed key so Redis cannot restart its ETag generation; it contains no
+unit/source/case entries. Physical clearing is limited to uniquely named reserved
+health probes. Remaining mappings require another cleanup pass; conflict
+exhaustion or a missing ETag blocks progress rather than overwriting inventory.
+This protects the mapping update; cross-instance indexing/erasure fencing and
+terminal workflow reconciliation remain separate requirements.
+
+Drain older Parties instances before relying on this concurrency guarantee: older
+cleanup code can still physically delete or overwrite mapping keys. Empty domain
+ledger keys must not be expired or deleted while mapping operations may be in flight.
