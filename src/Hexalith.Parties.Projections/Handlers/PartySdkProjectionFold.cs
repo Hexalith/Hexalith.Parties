@@ -61,7 +61,7 @@ internal static class PartySdkProjectionFold
                 diagnostics?.RecordNonJson();
                 if (logger is not null)
                 {
-                    Log.NonJsonEventDropped(logger, @event.EventTypeName, @event.SerializationFormat);
+                    PartySdkProjectionFoldLog.NonJsonEventDropped(logger, @event.EventTypeName, @event.SerializationFormat);
                 }
 
                 yield return (@event, null, false);
@@ -74,7 +74,7 @@ internal static class PartySdkProjectionFold
                 checkpoint = @event.SequenceNumber;
                 if (logger is not null)
                 {
-                    Log.WholePayloadRedactedEventDropped(logger, @event.EventTypeName, @event.SequenceNumber);
+                    PartySdkProjectionFoldLog.WholePayloadRedactedEventDropped(logger, @event.EventTypeName, @event.SequenceNumber);
                 }
 
                 yield return (@event, null, true);
@@ -98,11 +98,11 @@ internal static class PartySdkProjectionFold
                 {
                     if (ambiguous)
                     {
-                        Log.AmbiguousEventTypeDropped(logger, @event.EventTypeName);
+                        PartySdkProjectionFoldLog.AmbiguousEventTypeDropped(logger, @event.EventTypeName);
                     }
                     else
                     {
-                        Log.UnknownEventTypeDropped(logger, @event.EventTypeName);
+                        PartySdkProjectionFoldLog.UnknownEventTypeDropped(logger, @event.EventTypeName);
                     }
                 }
 
@@ -139,13 +139,14 @@ internal static class PartySdkProjectionFold
                     // Distinct log signal for a genuinely corrupt live event versus an expected
                     // post-erasure redacted-tail decode failure — both skip-and-advance the
                     // checkpoint identically, but operators need to tell them apart.
+                    string exceptionType = ex.GetType().Name;
                     if (isRedacted)
                     {
-                        Log.RedactedEventDropped(logger, ex, @event.EventTypeName, @event.SequenceNumber);
+                        PartySdkProjectionFoldLog.RedactedEventDropped(logger, @event.EventTypeName, @event.SequenceNumber, exceptionType);
                     }
                     else
                     {
-                        Log.PayloadDeserializationFailed(logger, ex, @event.EventTypeName, @event.SequenceNumber);
+                        PartySdkProjectionFoldLog.PayloadDeserializationFailed(logger, @event.EventTypeName, @event.SequenceNumber, exceptionType);
                     }
                 }
             }
@@ -173,7 +174,7 @@ internal static class PartySdkProjectionFold
                     // (for example through a converter). Preserve its skip-and-advance diagnostic.
                     if (logger is not null)
                     {
-                        Log.WholePayloadRedactedEventDropped(logger, @event.EventTypeName, @event.SequenceNumber);
+                        PartySdkProjectionFoldLog.WholePayloadRedactedEventDropped(logger, @event.EventTypeName, @event.SequenceNumber);
                     }
                 }
                 else
@@ -186,7 +187,7 @@ internal static class PartySdkProjectionFold
                     // silence.
                     if (logger is not null)
                     {
-                        Log.NullPayloadEventDropped(logger, @event.EventTypeName, @event.SequenceNumber);
+                        PartySdkProjectionFoldLog.NullPayloadEventDropped(logger, @event.EventTypeName, @event.SequenceNumber);
                     }
                 }
             }
@@ -296,75 +297,4 @@ internal static class PartySdkProjectionFold
             && string.Equals(left.MessageId, right.MessageId, StringComparison.Ordinal)
             && string.Equals(left.UserId, right.UserId, StringComparison.Ordinal)
             && left.GlobalPosition == right.GlobalPosition;
-
-    // AC7 — structured logging contract: message templates never embed aggregate/party ids,
-    // tenant ids, correlation ids, state-store keys, or exception content — only the event type
-    // name, sequence number, and (where relevant) the exception's type name, none of which is
-    // personal data. Exceptions are NOT passed to ILogger here: most sinks render
-    // exception.ToString() (including .Message) into the emitted log text, and a syntax-level
-    // JsonException from a corrupt/adversarial payload can embed a fragment of the raw offending
-    // bytes in .Message (confirmed by direct testing) — a type-conversion JsonException does not,
-    // but the two are not reliably distinguishable at the catch site, so both are treated as
-    // unsafe to log verbatim.
-    //
-    // These use the plain ILogger extension methods rather than [LoggerMessage]-generated
-    // partials: this project has no direct package reference to
-    // Microsoft.Extensions.Logging.Abstractions (only a transitive one through the EventStore
-    // SDK project references), and the [LoggerMessage] source generator does not activate for a
-    // project across a ProjectReference boundary without one — the same class of .NET SDK
-    // analyzer-propagation gap documented in Hexalith.Parties.csproj for a different (package
-    // pruning) root cause. Plain extension-method logging avoids depending on the generator here.
-    private static class Log
-    {
-        public static void NonJsonEventDropped(ILogger logger, string eventTypeName, string serializationFormat)
-            => logger.LogWarning(
-                "Party projection received event {EventTypeName} with non-JSON serialization format '{SerializationFormat}'. Event dropped without advancing the checkpoint.",
-                eventTypeName,
-                serializationFormat);
-
-        public static void UnknownEventTypeDropped(ILogger logger, string eventTypeName)
-            => logger.LogWarning(
-                "Party projection could not resolve event type '{EventTypeName}'. Event dropped without advancing the checkpoint.",
-                eventTypeName);
-
-        public static void AmbiguousEventTypeDropped(ILogger logger, string eventTypeName)
-            => logger.LogWarning(
-                "Party projection found an ambiguous short event-type name '{EventTypeName}' (multiple types share this short name). Event dropped without advancing the checkpoint.",
-                eventTypeName);
-
-        // Deliberately does NOT pass the raw Exception object to ILogger: a System.Text.Json
-        // syntax-level JsonException (as opposed to a type-conversion JsonException) can embed a
-        // fragment of the offending raw JSON bytes/token in Exception.Message (confirmed by direct
-        // testing — e.g. "'n' is an invalid start of a property name..." echoes a byte from the
-        // input), and most logging sinks render exception.ToString() — including .Message — into
-        // the emitted log text. A corrupt or adversarial event payload must never be able to leak
-        // any of its raw bytes into an operator-visible log line. Only the exception's type name is
-        // logged as a structured field, matching the same audited pattern already used by
-        // PartySdkQueryService.LogQueryFailed.
-        public static void PayloadDeserializationFailed(ILogger logger, Exception exception, string eventTypeName, long sequenceNumber)
-            => logger.LogWarning(
-                "Party projection failed to deserialize live event {EventTypeName} at sequence {SequenceNumber} with {ExceptionType}. Event dropped and checkpoint advanced past it.",
-                eventTypeName,
-                sequenceNumber,
-                exception.GetType().Name);
-
-        public static void RedactedEventDropped(ILogger logger, Exception exception, string eventTypeName, long sequenceNumber)
-            => logger.LogInformation(
-                "Party projection dropped redacted event {EventTypeName} at sequence {SequenceNumber} with {ExceptionType} (expected post-erasure deserialization failure). Checkpoint advanced.",
-                eventTypeName,
-                sequenceNumber,
-                exception.GetType().Name);
-
-        public static void WholePayloadRedactedEventDropped(ILogger logger, string eventTypeName, long sequenceNumber)
-            => logger.LogInformation(
-                "Party projection dropped whole-payload-redacted event {EventTypeName} at sequence {SequenceNumber} (no deserialization error). Checkpoint advanced.",
-                eventTypeName,
-                sequenceNumber);
-
-        public static void NullPayloadEventDropped(ILogger logger, string eventTypeName, long sequenceNumber)
-            => logger.LogWarning(
-                "Party projection resolved and deserialized event {EventTypeName} at sequence {SequenceNumber} without error, but it produced no payload. Event dropped without advancing the checkpoint.",
-                eventTypeName,
-                sequenceNumber);
-    }
 }

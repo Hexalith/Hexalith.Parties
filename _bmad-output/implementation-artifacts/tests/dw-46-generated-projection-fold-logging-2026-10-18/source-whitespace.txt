@@ -1,0 +1,1 @@
+PASS: all three changed C# files use CRLF, have final newlines, and contain no trailing whitespace.

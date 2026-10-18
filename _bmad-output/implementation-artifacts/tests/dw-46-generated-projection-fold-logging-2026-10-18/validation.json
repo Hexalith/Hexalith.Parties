@@ -1,0 +1,94 @@
+{
+    "baseline_commit": "4cd914030bb595f8149bbdf50721cec845f1f3c5",
+    "commands": [
+        {
+            "name": "final-build",
+            "command": [
+                "dotnet",
+                "build",
+                "tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",
+                "--configuration",
+                "Debug",
+                "-m:1",
+                "-p:UseHexalithProjectReferences=true",
+                "-p:UseNuGetDeps=false",
+                "-p:NuGetAudit=false",
+                "-p:MinVerVersionOverride=1.0.0"
+            ],
+            "exit_code": 0,
+            "output": "final-build.txt"
+        },
+        {
+            "name": "final-focused",
+            "command": [
+                "dotnet",
+                "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+                "-class",
+                "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionLoggingTests",
+                "-result-xml",
+                "_bmad-output/implementation-artifacts/tests/dw-46-generated-projection-fold-logging-2026-10-18/final-focused.xml"
+            ],
+            "exit_code": 0,
+            "output": "final-focused.txt",
+            "test_results": [
+                {
+                    "total": "13",
+                    "passed": "13",
+                    "errors": "0",
+                    "failed": "0",
+                    "skipped": "0",
+                    "not-run": "0"
+                }
+            ]
+        },
+        {
+            "name": "final-projections",
+            "command": [
+                "dotnet",
+                "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+                "-result-xml",
+                "_bmad-output/implementation-artifacts/tests/dw-46-generated-projection-fold-logging-2026-10-18/final-projections.xml"
+            ],
+            "exit_code": 0,
+            "output": "final-projections.txt",
+            "test_results": [
+                {
+                    "total": "348",
+                    "passed": "348",
+                    "errors": "0",
+                    "failed": "0",
+                    "skipped": "0",
+                    "not-run": "0"
+                }
+            ]
+        },
+        {
+            "name": "final-build-gate",
+            "command": [
+                "bash",
+                "scripts/check-no-warning-override.sh"
+            ],
+            "exit_code": 0,
+            "output": "final-build-gate.txt"
+        },
+        {
+            "name": "final-whitespace",
+            "command": [
+                "git",
+                "-c",
+                "core.whitespace=cr-at-eol",
+                "diff",
+                "--check",
+                "HEAD"
+            ],
+            "exit_code": 0,
+            "output": "final-whitespace.txt"
+        }
+    ],
+    "source_sha256": {
+        "src/Hexalith.Parties.Projections/Handlers/PartySdkProjectionFold.cs": "f2908f391dcbe24f2d6322a1c65890f7660af67be091d038362d5b1507416a4b",
+        "src/Hexalith.Parties.Projections/Handlers/PartySdkProjectionFoldLog.cs": "5104c2e29c53bddd89a2db146ff733678fa8696d96369df651f0390249e4ffb8",
+        "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionLoggingTests.cs": "b1b25102066216cd37125bd524f525b969705593a2cd25fce5b4900720d9903b"
+    },
+    "source_whitespace": "CRLF/final newline/no trailing whitespace passed"
+}

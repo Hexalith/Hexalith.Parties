@@ -181,3 +181,23 @@ Read by the `parties-ui` host:
 | Add an MCP tool | `Mcp/Tools/PartiesMcpTools.cs` + `PartiesMcpToolNames.cs` |
 | Change local DAPR/topology | `src/Hexalith.Parties.AppHost/` (`Program.cs` + `DaprComponents/`) |
 | Publish Parties containers | GitHub Actions `Publish Parties Containers` ([ci.md](ci.md)) |
+
+### Projection diagnostics
+
+The seven `PartySdkProjectionFold` drop diagnostics formerly used event ID `0`.
+DW-46 assigns distinct IDs and uses each generated method name as its event name:
+
+| Generated event name (method) | Event ID |
+|---|---|
+| `NonJsonEventDropped` | 4802 |
+| `UnknownEventTypeDropped` | 4803 |
+| `AmbiguousEventTypeDropped` | 4804 |
+| `PayloadDeserializationFailed` | 4805 |
+| `RedactedEventDropped` | 4806 |
+| `WholePayloadRedactedEventDropped` | 4807 |
+| `NullPayloadEventDropped` | 4808 |
+
+Update alerts and saved log filters that select these diagnostics by event ID
+`0` to select the IDs or event names above. Existing message templates, fields,
+and severity levels remain unchanged. Caller handler logger categories also
+remain unchanged; the generated logging type does not introduce a new category.

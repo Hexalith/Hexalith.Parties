@@ -348,7 +348,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: PartySdkProjectionFold.Log and Hexalith.Parties.Projections.csproj
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: 2026-08-05 review-layer finding — the `Log` class's comment claims `[LoggerMessage]` can't be used because `Hexalith.Parties.Projections.csproj` lacks a direct `Microsoft.Extensions.Logging.Abstractions` package reference, but `Hexalith.Parties.Security.csproj` is in the identical situation and successfully uses `[LoggerMessage]` throughout (`PartyKeyLifecycleService.cs`, `DecryptionCircuitBreaker.cs`, `PartyErasureOrchestrator.cs`) via a package reference with `ExcludeAssets="all"`. Adopting the same fix (or correcting the comment if a real difference is found) needs a deliberate, verified change to build configuration, not a same-pass patch.
-status: open
+status: done 2026-10-18
+resolution: Converted the seven fold diagnostics to source-generated LoggerMessage methods using existing project configuration. User-approved stable IDs 4802–4808 and generated event names replace generic ID zero; templates, fields, severities, caller categories, checkpoint behavior and exception privacy are preserved. Operator filter migration is documented. All three independent review layers completed; eight small review corrections are verified and two low-value test-refactoring/coverage suggestions are rejected with evidence. Final Debug/source build has zero warnings/errors; focused tests pass 13/13 and full Projections.Tests passes 348/348 with no failures/errors/skips/not-run. Warning and whitespace gates pass; no new deferred work. DW-47 remains unchanged. See spec-dw-46-generated-projection-fold-logging.md and tests/dw-46-generated-projection-fold-logging-2026-10-18/validation.json.
 
 ### DW-47: Give projection-fold drop diagnostics stable logger categories
 
