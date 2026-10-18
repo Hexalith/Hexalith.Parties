@@ -1,0 +1,92 @@
+[
+  {
+    "displayName": "eventstore-admin-dapr-cli",
+    "state": "Running",
+    "healthStatus": "Healthy",
+    "waitingFor": null
+  },
+  {
+    "displayName": "eventstore-admin-ui-dapr-cli",
+    "state": "Running",
+    "healthStatus": "Healthy",
+    "waitingFor": null
+  },
+  {
+    "displayName": "eventstore-admin-ui",
+    "state": "NotStarted",
+    "healthStatus": null,
+    "waitingFor": null
+  },
+  {
+    "displayName": "eventstore-admin",
+    "state": "Finished",
+    "healthStatus": null,
+    "waitingFor": null
+  },
+  {
+    "displayName": "eventstore-dapr-cli",
+    "state": "Running",
+    "healthStatus": "Healthy",
+    "waitingFor": null
+  },
+  {
+    "displayName": "eventstore",
+    "state": "Running",
+    "healthStatus": "Healthy",
+    "waitingFor": null
+  },
+  {
+    "displayName": "parties-dapr-cli",
+    "state": "Running",
+    "healthStatus": "Healthy",
+    "waitingFor": null
+  },
+  {
+    "displayName": "parties-mcp",
+    "state": "NotStarted",
+    "healthStatus": null,
+    "waitingFor": null
+  },
+  {
+    "displayName": "parties-ui",
+    "state": "Running",
+    "healthStatus": "Healthy",
+    "waitingFor": null
+  },
+  {
+    "displayName": "parties",
+    "state": "Running",
+    "healthStatus": "Healthy",
+    "waitingFor": null
+  },
+  {
+    "displayName": "security-eventstore-client-password",
+    "state": "Running",
+    "healthStatus": "Healthy",
+    "waitingFor": null
+  },
+  {
+    "displayName": "security-eventstore-client-username",
+    "state": "Running",
+    "healthStatus": "Healthy",
+    "waitingFor": null
+  },
+  {
+    "displayName": "security",
+    "state": "Running",
+    "healthStatus": "Healthy",
+    "waitingFor": null
+  },
+  {
+    "displayName": "tenants-dapr-cli",
+    "state": "Running",
+    "healthStatus": "Healthy",
+    "waitingFor": null
+  },
+  {
+    "displayName": "tenants",
+    "state": "Finished",
+    "healthStatus": null,
+    "waitingFor": null
+  }
+]

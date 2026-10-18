@@ -1,0 +1,181 @@
+using System.Text.Json;
+
+using Hexalith.EventStore.Contracts.Identity;
+using Hexalith.Parties.Contracts;
+using Hexalith.Parties.Contracts.Events;
+using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.Security;
+
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+
+using Shouldly;
+
+namespace Hexalith.Parties.Security.Tests;
+
+/// <summary>Verifies current-key failure typing through public payload protection operations.</summary>
+public sealed class PartyPayloadProtectionMarkerFailureTests
+{
+    private const string MarkerFailureMessage = "private-marker-provider-detail";
+    private const string PersonalValue = "private-contact@example.invalid";
+    private static readonly AggregateIdentity s_identity = new("acme", "party", "p1");
+    private readonly IPartyKeyManagementService _keys = Substitute.For<IPartyKeyManagementService>();
+    private readonly IKeyStorageBackend _backend = Substitute.For<IKeyStorageBackend>();
+    private readonly IPartyKeyRetryScheduler _scheduler = Substitute.For<IPartyKeyRetryScheduler>();
+    private readonly CapturingLogger<PartyPayloadProtectionService> _logger = new();
+
+    /// <summary>Missing keys retain their typed outcome with healthy or persistently faulted marker storage.</summary>
+    /// <param name="operation">The public protection operation to invoke.</param>
+    /// <param name="markerFails">Whether marker persistence fails on every attempt.</param>
+    [Theory]
+    [InlineData("event", false)]
+    [InlineData("event", true)]
+    [InlineData("snapshot", false)]
+    [InlineData("snapshot", true)]
+    [InlineData("creation", false)]
+    [InlineData("creation", true)]
+    public async Task MissingKey_PreservesDestroyedKeyOutcome(string operation, bool markerFails)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        _backend.ListKeyVersionsAsync(s_identity.TenantId, s_identity.AggregateId, token).Returns(Array.Empty<int>());
+        // A completed creation attempt can still leave no visible key version.
+        _keys.CreateKeyAsync(s_identity.TenantId, s_identity.AggregateId, token).Returns(new PartyKeyInfo
+        {
+            TenantId = s_identity.TenantId,
+            PartyId = s_identity.AggregateId,
+            KeyId = "test-key",
+            Version = 1,
+            Algorithm = EncryptionAlgorithm.AES256GCM,
+            CreatedAt = DateTimeOffset.UnixEpoch,
+        });
+        if (markerFails)
+        {
+            _scheduler.MarkPendingAsync(s_identity.TenantId, s_identity.AggregateId, Arg.Any<string>(), token)
+                .ThrowsAsync(new InvalidOperationException(MarkerFailureMessage));
+        }
+
+        PartyEncryptionKeyDestroyedException error = await Should.ThrowAsync<PartyEncryptionKeyDestroyedException>(
+            () => ProtectAsync(operation, token));
+
+        error.GetType().ShouldBe(typeof(PartyEncryptionKeyDestroyedException));
+        PartyEncryptionKeyDestroyedException.IsMatch(error).ShouldBeTrue();
+        error.TenantId.ShouldBe(s_identity.TenantId);
+        error.PartyId.ShouldBe(s_identity.AggregateId);
+        await _scheduler.Received(1).MarkPendingAsync(s_identity.TenantId, s_identity.AggregateId,
+            "No encryption key is available for this party.", token);
+        await _scheduler.ReceivedWithAnyArgs(1).MarkPendingAsync(default!, default!, default!, default);
+        string messages = string.Join('\n', _logger.Messages);
+        messages.ShouldNotContain(MarkerFailureMessage);
+        messages.ShouldNotContain(PersonalValue);
+        if (markerFails)
+        {
+            messages.ShouldContain("Crypto-pending marker write failed: InvalidOperationException");
+        }
+    }
+
+    /// <summary>A destroyed-key failure from version retrieval also survives unavailable marker storage.</summary>
+    /// <param name="operation">The public protection operation to invoke.</param>
+    [Theory]
+    [InlineData("event")]
+    [InlineData("snapshot")]
+    public async Task DestroyedVersion_PreservesOriginalException(string operation)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        _backend.ListKeyVersionsAsync(s_identity.TenantId, s_identity.AggregateId, token).Returns([1]);
+        PartyEncryptionKeyDestroyedException original = new(s_identity.TenantId, s_identity.AggregateId);
+        _keys.GetKeyVersionAsync(s_identity.TenantId, s_identity.AggregateId, 1, token).ThrowsAsync(original);
+        _scheduler.MarkPendingAsync(s_identity.TenantId, s_identity.AggregateId, Arg.Any<string>(), token)
+            .ThrowsAsync(new InvalidOperationException(MarkerFailureMessage));
+
+        PartyEncryptionKeyDestroyedException error = await Should.ThrowAsync<PartyEncryptionKeyDestroyedException>(
+            () => ProtectAsync(operation, token));
+
+        error.ShouldBeSameAs(original);
+        await _scheduler.DidNotReceiveWithAnyArgs().MarkPendingAsync(default!, default!, default!, default);
+    }
+
+    /// <summary>Ordinary key-provider failures retain their own type and existing pending-marker behavior.</summary>
+    /// <param name="operation">The public protection operation to invoke.</param>
+    /// <param name="failure">The non-destroyed-key provider failure to inject.</param>
+    [Theory]
+    [InlineData("event", "timeout")]
+    [InlineData("snapshot", "timeout")]
+    [InlineData("event", "permission")]
+    [InlineData("snapshot", "permission")]
+    [InlineData("event", "missing")]
+    [InlineData("snapshot", "missing")]
+    public async Task OtherKeyFailure_IsNotConvertedToDestroyedKey(string operation, string failure)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        _backend.ListKeyVersionsAsync(s_identity.TenantId, s_identity.AggregateId, token).Returns([1]);
+        Exception original = failure switch
+        {
+            "timeout" => new TimeoutException("private-key-provider-detail"),
+            "permission" => new UnauthorizedAccessException("private-key-provider-detail"),
+            _ => new KeyNotFoundException("private-key-provider-detail"),
+        };
+        _keys.GetKeyVersionAsync(s_identity.TenantId, s_identity.AggregateId, 1, token).ThrowsAsync(original);
+
+        Exception error = await Should.ThrowAsync<Exception>(() => ProtectAsync(operation, token));
+
+        error.ShouldBeSameAs(original);
+        PartyEncryptionKeyDestroyedException.IsMatch(error).ShouldBeFalse();
+        await _scheduler.Received(1).MarkPendingAsync(s_identity.TenantId, s_identity.AggregateId,
+            "Protected payload key operation failed.", token);
+        string.Join('\n', _logger.Messages).ShouldNotContain("private-key-provider-detail");
+    }
+
+    /// <summary>Cancellation during key retrieval retains its cancellation signal and caller token.</summary>
+    /// <param name="operation">The public protection operation to invoke.</param>
+    [Theory]
+    [InlineData("event")]
+    [InlineData("snapshot")]
+    public async Task CancelledKeyRead_PreservesCancellation(string operation)
+    {
+        using CancellationTokenSource cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        CancellationToken token = cancellation.Token;
+        _backend.ListKeyVersionsAsync(s_identity.TenantId, s_identity.AggregateId, token).Returns([1]);
+        OperationCanceledException original = new(token);
+        _keys.GetKeyVersionAsync(s_identity.TenantId, s_identity.AggregateId, 1, token).Returns<byte[]>(_ =>
+        {
+            cancellation.Cancel();
+            throw original;
+        });
+
+        OperationCanceledException error = await Should.ThrowAsync<OperationCanceledException>(
+            () => ProtectAsync(operation, token));
+
+        error.CancellationToken.ShouldBe(token);
+        token.IsCancellationRequested.ShouldBeTrue();
+        PartyEncryptionKeyDestroyedException.IsMatch(error).ShouldBeFalse();
+    }
+
+    private async Task ProtectAsync(string operation, CancellationToken token)
+    {
+        IOptionsMonitor<CryptoShreddingOptions> options = Substitute.For<IOptionsMonitor<CryptoShreddingOptions>>();
+        options.CurrentValue.Returns(new CryptoShreddingOptions());
+        PartyPayloadProtectionService service = new(_keys, _backend,
+            new PartyKeyLifecycleService(_keys, _scheduler, NullLogger<PartyKeyLifecycleService>.Instance),
+            new DecryptionCircuitBreaker(NullLogger<DecryptionCircuitBreaker>.Instance), options, _logger);
+        ContactChannelAdded payload = new() { ContactChannelId = "contact-1", Type = ContactChannelType.Email, Value = PersonalValue };
+        if (operation == "snapshot")
+        {
+            await service.ProtectSnapshotStateAsync(s_identity, payload, token).ConfigureAwait(false);
+        }
+        else if (operation == "creation")
+        {
+            PartyCreated created = new() { Type = PartyType.Person };
+            await service.ProtectEventPayloadAsync(s_identity, created, typeof(PartyCreated).FullName!,
+                JsonSerializer.SerializeToUtf8Bytes(created, PartiesJsonOptions.Default), "json", token).ConfigureAwait(false);
+        }
+        else
+        {
+            await service.ProtectEventPayloadAsync(s_identity, payload, typeof(ContactChannelAdded).FullName!,
+                JsonSerializer.SerializeToUtf8Bytes(payload, PartiesJsonOptions.Default), "json", token).ConfigureAwait(false);
+        }
+    }
+}

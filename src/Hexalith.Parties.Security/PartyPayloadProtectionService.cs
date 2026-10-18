@@ -630,7 +630,7 @@ public sealed partial class PartyPayloadProtectionService(
                             .MarkCryptoPendingAsync(identity.TenantId, identity.AggregateId, "No encryption key is available for this party.", cancellationToken)
                             .ConfigureAwait(false);
                     }
-                    catch (Exception markerEx)
+                    catch (Exception markerEx) when (markerEx is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
                     {
                         LogProtectionFailure(identity.TenantId, identity.AggregateId, $"Crypto-pending marker write failed: {markerEx.GetType().Name}");
                     }
@@ -644,9 +644,13 @@ public sealed partial class PartyPayloadProtectionService(
             await cryptoLifecycleService.ClearCryptoPendingAsync(identity.TenantId, identity.AggregateId, cancellationToken).ConfigureAwait(false);
             return (key, version);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
-            await cryptoLifecycleService.MarkCryptoPendingAsync(identity.TenantId, identity.AggregateId, "Protected payload key operation failed.", cancellationToken).ConfigureAwait(false);
+            if (!PartyEncryptionKeyDestroyedException.IsMatch(ex))
+            {
+                await cryptoLifecycleService.MarkCryptoPendingAsync(identity.TenantId, identity.AggregateId, "Protected payload key operation failed.", cancellationToken).ConfigureAwait(false);
+            }
+
             LogProtectionFailure(identity.TenantId, identity.AggregateId, ex.GetType().Name);
             throw;
         }

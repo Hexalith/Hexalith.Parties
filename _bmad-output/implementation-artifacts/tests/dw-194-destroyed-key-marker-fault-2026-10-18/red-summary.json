@@ -1,0 +1,108 @@
+{
+  "phase": "red",
+  "build": {
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "test_exit_code": 1,
+  "assemblies": [
+    {
+      "errors": "0",
+      "failed": "8",
+      "not-run": "0",
+      "passed": "8",
+      "skipped": "0",
+      "time": "0.398",
+      "total": "16"
+    }
+  ],
+  "tests": [
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.OtherKeyFailure_IsNotConvertedToDestroyedKey(operation: \\\"event\\\", failure: \\\"timeout\\\")",
+      "result": "Pass"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.OtherKeyFailure_IsNotConvertedToDestroyedKey(operation: \\\"snapshot\\\", failure: \\\"timeout\\\")",
+      "result": "Pass"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.OtherKeyFailure_IsNotConvertedToDestroyedKey(operation: \\\"event\\\", failure: \\\"permission\\\")",
+      "result": "Pass"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.OtherKeyFailure_IsNotConvertedToDestroyedKey(operation: \\\"snapshot\\\", failure: \\\"permission\\\")",
+      "result": "Pass"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.OtherKeyFailure_IsNotConvertedToDestroyedKey(operation: \\\"event\\\", failure: \\\"missing\\\")",
+      "result": "Pass"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.OtherKeyFailure_IsNotConvertedToDestroyedKey(operation: \\\"snapshot\\\", failure: \\\"missing\\\")",
+      "result": "Pass"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.MissingKey_PreservesDestroyedKeyOutcome(operation: \\\"event\\\", markerFails: False)",
+      "result": "Fail",
+      "failure_type": "NSubstitute.Exceptions.ReceivedCallsException",
+      "failure_message": "NSubstitute.Exceptions.ReceivedCallsException : Expected to receive exactly 1 call matching:\n\\tMarkPendingAsync(any String, any String, any String, any CancellationToken)\nActually received 2 matching calls:\n\\tMarkPendingAsync(\\\"acme\\\", \\\"p1\\\", \\\"No encryption key is available for this party.\\\", System.Threading.CancellationToken)\n\\tMarkPendingAsync(\\\"acme\\\", \\\"p1\\\", \\\"Protected payload key operation failed.\\\", System.Threading.CancellationToken)\n"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.MissingKey_PreservesDestroyedKeyOutcome(operation: \\\"event\\\", markerFails: True)",
+      "result": "Fail",
+      "failure_type": "Shouldly.ShouldAssertException",
+      "failure_message": "Shouldly.ShouldAssertException : Task `) => ProtectAsync(operation, token`\n    should throw\nHexalith.Parties.Security.PartyEncryptionKeyDestroyedException\n    but threw\nSystem.InvalidOperationException"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.MissingKey_PreservesDestroyedKeyOutcome(operation: \\\"snapshot\\\", markerFails: False)",
+      "result": "Fail",
+      "failure_type": "NSubstitute.Exceptions.ReceivedCallsException",
+      "failure_message": "NSubstitute.Exceptions.ReceivedCallsException : Expected to receive exactly 1 call matching:\n\\tMarkPendingAsync(any String, any String, any String, any CancellationToken)\nActually received 2 matching calls:\n\\tMarkPendingAsync(\\\"acme\\\", \\\"p1\\\", \\\"No encryption key is available for this party.\\\", System.Threading.CancellationToken)\n\\tMarkPendingAsync(\\\"acme\\\", \\\"p1\\\", \\\"Protected payload key operation failed.\\\", System.Threading.CancellationToken)\n"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.MissingKey_PreservesDestroyedKeyOutcome(operation: \\\"snapshot\\\", markerFails: True)",
+      "result": "Fail",
+      "failure_type": "Shouldly.ShouldAssertException",
+      "failure_message": "Shouldly.ShouldAssertException : Task `) => ProtectAsync(operation, token`\n    should throw\nHexalith.Parties.Security.PartyEncryptionKeyDestroyedException\n    but threw\nSystem.InvalidOperationException"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.MissingKey_PreservesDestroyedKeyOutcome(operation: \\\"creation\\\", markerFails: False)",
+      "result": "Fail",
+      "failure_type": "NSubstitute.Exceptions.ReceivedCallsException",
+      "failure_message": "NSubstitute.Exceptions.ReceivedCallsException : Expected to receive exactly 1 call matching:\n\\tMarkPendingAsync(any String, any String, any String, any CancellationToken)\nActually received 2 matching calls:\n\\tMarkPendingAsync(\\\"acme\\\", \\\"p1\\\", \\\"No encryption key is available for this party.\\\", System.Threading.CancellationToken)\n\\tMarkPendingAsync(\\\"acme\\\", \\\"p1\\\", \\\"Protected payload key operation failed.\\\", System.Threading.CancellationToken)\n"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.MissingKey_PreservesDestroyedKeyOutcome(operation: \\\"creation\\\", markerFails: True)",
+      "result": "Fail",
+      "failure_type": "Shouldly.ShouldAssertException",
+      "failure_message": "Shouldly.ShouldAssertException : Task `) => ProtectAsync(operation, token`\n    should throw\nHexalith.Parties.Security.PartyEncryptionKeyDestroyedException\n    but threw\nSystem.InvalidOperationException"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.CancelledKeyRead_PreservesCancellation(operation: \\\"event\\\")",
+      "result": "Pass"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.CancelledKeyRead_PreservesCancellation(operation: \\\"snapshot\\\")",
+      "result": "Pass"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.DestroyedVersion_PreservesOriginalException(operation: \\\"event\\\")",
+      "result": "Fail",
+      "failure_type": "Shouldly.ShouldAssertException",
+      "failure_message": "Shouldly.ShouldAssertException : Task `) => ProtectAsync(operation, token`\n    should throw\nHexalith.Parties.Security.PartyEncryptionKeyDestroyedException\n    but threw\nSystem.InvalidOperationException"
+    },
+    {
+      "name": "Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests.DestroyedVersion_PreservesOriginalException(operation: \\\"snapshot\\\")",
+      "result": "Fail",
+      "failure_type": "Shouldly.ShouldAssertException",
+      "failure_message": "Shouldly.ShouldAssertException : Task `) => ProtectAsync(operation, token`\n    should throw\nHexalith.Parties.Security.PartyEncryptionKeyDestroyedException\n    but threw\nSystem.InvalidOperationException"
+    }
+  ],
+  "source_sha256": {
+    "src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs": "8b4647ca58486ab468793c84317481ccd3cb21a94154bc52ec5485695f23d3fc",
+    "tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionMarkerFailureTests.cs": "01ad3b8cc05303466718916c25c4fe4637ff514ad1358b76507a139e58fad77e"
+  },
+  "test_source_artifact": "pre-review-red-tests.cs.txt",
+  "note": "Red and pre-review green use identical tests. Final reviewed tests expand this matrix; final source hashes are recorded separately."
+}

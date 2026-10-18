@@ -1,0 +1,171 @@
+{
+  "baseline_commit": "8bf7516142aff5d8f63730a4cac1d02e6a06c363",
+  "configuration": "Debug with Hexalith project references",
+  "commands": [
+    {
+      "command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 0
+    },
+    {
+      "command": "aspire wait security --timeout 5 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 17,
+      "note": "Initial short wait timed out; subsequent resource snapshot shows security Healthy."
+    },
+    {
+      "command": "aspire wait parties --timeout 5 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 0
+    },
+    {
+      "command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --format Json",
+      "exit_code": 0,
+      "evidence": "baseline-resources.json contains only sanitized resource states."
+    },
+    {
+      "command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+      "phase": "red",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll -class Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests -xml /tmp/dw194-red-tests.xml",
+      "exit_code": 1,
+      "summary": [
+        {
+          "total": "16",
+          "passed": "8",
+          "failed": "8",
+          "skipped": "0",
+          "errors": "0",
+          "not-run": "0"
+        }
+      ]
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+      "phase": "green",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll -class Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests -xml /tmp/dw194-green-tests.xml",
+      "exit_code": 0,
+      "summary": [
+        {
+          "total": "16",
+          "passed": "16",
+          "failed": "0",
+          "skipped": "0",
+          "errors": "0",
+          "not-run": "0"
+        }
+      ]
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll -xml /tmp/dw194-full-tests.xml",
+      "exit_code": 0,
+      "summary": [
+        {
+          "total": "234",
+          "passed": "234",
+          "failed": "0",
+          "skipped": "0",
+          "errors": "0",
+          "not-run": "0"
+        }
+      ]
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "node_modules/.bin/commitlint --edit /tmp/dw194-commit-message.txt --verbose",
+      "exit_code": 0,
+      "version": "21.2.2",
+      "problems": 0,
+      "warnings": 0,
+      "candidate": "fix: preserve destroyed-key errors on marker failure\n"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+      "phase": "post-review",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll -class Hexalith.Parties.Security.Tests.PartyPayloadProtectionMarkerFailureTests -xml /tmp/dw194-final-focus.xml",
+      "phase": "post-review",
+      "exit_code": 0,
+      "summary": [
+        {
+          "total": "20",
+          "passed": "20",
+          "failed": "0",
+          "skipped": "0",
+          "errors": "0",
+          "not-run": "0"
+        }
+      ]
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll -xml /tmp/dw194-final-full.xml",
+      "phase": "post-review",
+      "exit_code": 0,
+      "summary": [
+        {
+          "total": "238",
+          "passed": "238",
+          "failed": "0",
+          "skipped": "0",
+          "errors": "0",
+          "not-run": "0"
+        }
+      ]
+    },
+    {
+      "command": "python3 _bmad-output/implementation-artifacts/tests/dw-194-destroyed-key-marker-fault-2026-10-18/verify-evidence.py",
+      "exit_code": 0
+    }
+  ],
+  "initial_test_corrections": [
+    "Initial helper build reported three CA2007 errors; added ConfigureAwait(false) to helper awaits and rebuilt with zero warnings/errors.",
+    "Initial test run included two cancellation identity assertion failures: async cancellation may wrap the exception. Corrected the control to require cancellation and the supplied token, then reran against unchanged production source.",
+    "Review expansion first used an invalid PartyState initializer (three compile errors); switched to the existing Apply(PartyCreated) state-folding API and rebuilt successfully."
+  ],
+  "source_sha256": {
+    "src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs": "6f578212463b52aed076c689eaf244d2e664160082ff7004a2ce74a703b0f474",
+    "tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionMarkerFailureTests.cs": "4dad8a1d82eff2a53deacbd9c1ce14ebde7f0d1b87ca3f2b395a25af2a8a0edc"
+  },
+  "limits": "Runtime baseline health is observed, not an end-to-end acceptance test. Unprotection does not call the changed helper. No release, deployment, dependency update or push performed.",
+  "pre_review_source_sha256": {
+    "src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs": "1622f6fc08d6f139a3fd637f561d1a2a22c8040201ead69310b06c4e776509ad",
+    "tests/Hexalith.Parties.Security.Tests/PartyPayloadProtectionMarkerFailureTests.cs": "01ad3b8cc05303466718916c25c4fe4637ff514ad1358b76507a139e58fad77e"
+  },
+  "pre_review_assembly_sha256": "de33c8a41b88971ad3287d923909aea8abcc3c9985052c6e7fb507b1dc479e7f",
+  "pre_review_red_reconstruction_matches_recorded_source": true,
+  "baseline_git_blob_matches_red_source": true,
+  "final_assembly_sha256": "885d96c5649dbae2fe7fa1dd3e212eade36cb09fc394e14da38e77c7ef4aec50",
+  "review_corrections": [
+    "Propagate caller-requested cancellation through both current-key marker catches; skip marker retries for typed destroyed-key errors while retaining their type-only diagnostic.",
+    "Add pending-key retry and marker cancellation regressions, and fold a real PartyState snapshot fixture.",
+    "Retain original red assertion details and exact red-test source; normalize all new text artifacts to CRLF."
+  ],
+  "review": {
+    "layer": "Blind Hunter",
+    "initial_findings": 6,
+    "patched": 6,
+    "deferred": 0,
+    "targeted_followup": "All six resolved; no new concrete defect; evidence verifier passes."
+  }
+}

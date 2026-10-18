@@ -1562,7 +1562,8 @@ location: n/a
 source_spec: `_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md`
 severity: low
 reason: retrospective action item from sprint-status.yaml (epic 8; owner Amelia (Developer) + Murat (Test Architect); sprint-status status open)
-status: open
+status: done 2026-10-18
+resolution: Current-key protection preserves exact destroyed-key failures without retrying the crypto-pending marker, retains type-only diagnostics and propagates caller cancellation. Final Debug/source build has zero warnings/errors; focused faults pass 20/20 and full Security.Tests passes 238/238 without failures/errors/skips/not-run. All six independent review findings are corrected and follow-up verified; no new deferred work. See spec-dw-194-destroyed-key-marker-fault.md and tests/dw-194-destroyed-key-marker-fault-2026-10-18/validation.json.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
   summary: Reject inconsistent consecutive revocations in certified expired actor-history prefixes.

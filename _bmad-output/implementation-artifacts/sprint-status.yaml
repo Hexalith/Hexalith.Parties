@@ -388,5 +388,6 @@ action_items:
     epic: 8
     action: "Preserve the typed destroyed-key outcome when the crypto-pending marker write fails; add focused fault-injection coverage."
     owner: "Amelia (Developer) + Murat (Test Architect)"
-    status: open
+    # Resolved 2026-10-18: spec-dw-194-destroyed-key-marker-fault.md.
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md"
