@@ -1,19 +1,13 @@
 using System.Text;
 
 using Hexalith.Memories.Client.Rest;
+using Hexalith.Memories.Contracts.V1;
 using Hexalith.Parties.Contracts.Models;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.Search;
-
-internal sealed record PartyMemoryIndexingResult(
-    string PartyId,
-    string SourceUri,
-    string? WorkflowInstanceId,
-    bool Indexed,
-    string? FailureReason);
 
 /// <remarks>
 /// <b>Memory-unit-id contract (P40 / resolved decision D1).</b>
@@ -174,9 +168,9 @@ internal sealed class PartyMemoryIndexingService(
             // diagnostics deliberately retain no raw exceptions, so let the helper ignore a
             // malformed token and report only the bounded HTTP/exception outcome below.
             PartyMemoryCleanupService.ConfigureAuthorization(httpClient, current.ApiToken);
-            string path = $"api/tenants/{Uri.EscapeDataString(unit.TenantId)}/cases/{Uri.EscapeDataString(unit.CaseId)}/memory-units/{Uri.EscapeDataString(workflowInstanceId)}";
+            string path = MemoriesRoutes.CaseMemoryUnitPath(unit.TenantId, unit.CaseId, workflowInstanceId);
             using HttpResponseMessage response = await httpClient.DeleteAsync(path, cancellationToken).ConfigureAwait(false);
-            if (response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            if (await PartyMemoryCleanupResponse.IsAcceptedAsync(response, cancellationToken).ConfigureAwait(false))
             {
                 logger.LogWarning(
                     "Compensating delete succeeded after mapping write failed with {OriginalFailureType}.",

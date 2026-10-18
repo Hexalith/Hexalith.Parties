@@ -49,3 +49,14 @@ urn:hexalith:parties:{tenantId}:party:{partyId}
 ```
 
 Erasure workflows must delete or tombstone mapped Memories memory units. If Memories cleanup fails, Parties records blocked cleanup evidence and must not report erasure as complete until cleanup succeeds or the block is explicitly resolved.
+
+Cleanup, indexing compensation and the cleanup health probe use the shared Memories
+`api/v1/tenants/{tenantId}/cases/{caseId}/memory-units/{memoryUnitId}` DELETE route.
+A missing unit is accepted only when HTTP 404 carries the JSON error code
+`MEMORY_UNIT_NOT_FOUND`. Bare/routing 404s, malformed responses, `CASE_NOT_FOUND`
+and `TENANT_NOT_FOUND` remain blocked: cleanup retains the affected mappings,
+compensation reports operator reconciliation, and the cleanup health probe degrades.
+The persisted mapping's case takes precedence over the currently configured case.
+This establishes absence in that recorded case; accepted deletion requests do not
+prove terminal physical erasure while the separate workflow-reconciliation work
+(DW-168) remains open.

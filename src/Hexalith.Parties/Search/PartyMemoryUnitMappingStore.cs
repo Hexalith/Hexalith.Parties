@@ -60,7 +60,7 @@ internal interface IPartyMemoryUnitMappingStore
 /// DAPR workflow instance id returned by <c>POST /api/ingest</c> as the canonical
 /// <c>memoryUnitId</c> for the resulting memory unit (verified against
 /// <c>Hexalith.Memories.Server.Workflows.IngestionWorkflow.ResolveMemoryUnitId</c>). The
-/// per-unit cleanup endpoint <c>DELETE /api/tenants/{t}/cases/{c}/memory-units/{memoryUnitId}</c>
+/// per-unit cleanup endpoint <c>DELETE /api/v1/tenants/{t}/cases/{c}/memory-units/{memoryUnitId}</c>
 /// is keyed by that same id, so recording the workflow instance id as <c>memoryUnitId</c>
 /// here is correct by design. The only divergence path is <c>SourceType.Event</c> with the
 /// dedup-instance prefix, but the Memories SDK's <c>IngestAsync</c> hard-codes

@@ -1,4 +1,6 @@
+using System.IO.Pipelines;
 using System.Net;
+using System.Text;
 
 using Hexalith.Parties.Search;
 
@@ -29,7 +31,7 @@ public class PartyMemoryCleanupServiceTests
         result.Cleaned.ShouldBeFalse();
         result.BlockedReason.ShouldNotBeNull();
         result.BlockedReason.ShouldContain("503");
-        handler.LastRequestUri!.ToString().ShouldBe("https://memories.example/api/tenants/tenant-a/cases/case-a/memory-units/memory-1");
+        handler.LastRequestUri!.ToString().ShouldBe("https://memories.example/api/v1/tenants/tenant-a/cases/case-a/memory-units/memory-1");
     }
 
     [Fact]
@@ -80,6 +82,7 @@ public class PartyMemoryCleanupServiceTests
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NotFound)
         {
             ReasonPhrase = "Not Found",
+            Content = new StringContent("{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}", Encoding.UTF8, "application/json"),
         });
         var mappingStore = new StubMappingStore();
         await mappingStore.RecordMappingAsync("tenant-a", "party-1", "memory-1", "urn:hexalith:parties:tenant-a:party:party-1", "case-a", CancellationToken.None);
@@ -94,6 +97,172 @@ public class PartyMemoryCleanupServiceTests
 
         result.Cleaned.ShouldBeTrue();
         result.BlockedReason.ShouldBeNull();
+        IReadOnlyList<PartyMemoryUnitMappingEntry> remaining = await mappingStore.GetMappingsAsync("tenant-a", "party-1", TestContext.Current.CancellationToken);
+        remaining.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(404, "")]
+    [InlineData(404, "<html>Route not found</html>")]
+    [InlineData(404, "{")]
+    [InlineData(404, "null")]
+    [InlineData(404, "{}")]
+    [InlineData(404, "{\"code\":17}")]
+    [InlineData(404, "{\"code\":\"CASE_NOT_FOUND\"}")]
+    [InlineData(404, "{\"code\":\"TENANT_NOT_FOUND\"}")]
+    [InlineData(404, "{\"code\":\"memory_unit_not_found\"}")]
+    [InlineData(403, "{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}")]
+    [InlineData(503, "{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}")]
+    public async Task DeleteByPartyRetainsMappingWhenResponseDoesNotProveUnitAbsence(int status, string body)
+    {
+        using var response = new HttpResponseMessage((HttpStatusCode)status)
+        {
+            Content = new StringContent(body, Encoding.UTF8, "application/json"),
+        };
+        var handler = new TestHandler(response);
+        var mappingStore = new StubMappingStore();
+        CancellationToken token = TestContext.Current.CancellationToken;
+        await mappingStore.RecordMappingAsync("tenant-a", "party-1", "memory-1", "urn:source-1", "case-at-ingestion", token);
+        using var client = new HttpClient(handler) { BaseAddress = new Uri("https://memories.example/") };
+        var service = new PartyMemoryCleanupService(client, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance);
+
+        PartyMemoryCleanupResult result = await service.DeleteByPartyAsync("tenant-a", "case-current", "party-1", token);
+
+        result.Cleaned.ShouldBeFalse();
+        result.BlockedReason.ShouldNotBeNull().ShouldContain($"HTTP {status}");
+        result.MemoryUnitId.ShouldBe("memory-1");
+        IReadOnlyList<PartyMemoryUnitMappingEntry> remaining = await mappingStore.GetMappingsAsync("tenant-a", "party-1", token);
+        remaining.ShouldHaveSingleItem().ShouldBe(new PartyMemoryUnitMappingEntry("memory-1", "urn:source-1", "case-at-ingestion"));
+        handler.LastRequestUri!.AbsolutePath.ShouldBe("/api/v1/tenants/tenant-a/cases/case-at-ingestion/memory-units/memory-1");
+    }
+
+    [Fact]
+    public async Task DeleteMemoryUnitUsesEscapedVersionedPathAndEndpointPrefix()
+    {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NoContent));
+        using var client = new HttpClient(handler) { BaseAddress = new Uri("https://memories.example/gateway/") };
+        var service = new PartyMemoryCleanupService(client, new StubMappingStore(), NullLogger<PartyMemoryCleanupService>.Instance);
+
+        PartyMemoryCleanupResult result = await service.DeleteMemoryUnitAsync(
+            "tenant/a", "case a", "party-1", "memory?1", TestContext.Current.CancellationToken);
+
+        result.Cleaned.ShouldBeTrue();
+        handler.LastRequestUri!.AbsoluteUri.ShouldBe("https://memories.example/gateway/api/v1/tenants/tenant%2Fa/cases/case%20a/memory-units/memory%3F1");
+    }
+
+    [Fact]
+    public async Task InvalidErrorCharsetRetainsMappingsAndFailsCleanupProbe()
+    {
+        var handler = new RecordingHandler(() =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.NotFound)
+            {
+                Content = new StringContent("{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}", Encoding.UTF8, "application/json"),
+            };
+            response.Content.Headers.ContentType!.CharSet = "invalid-charset";
+            return response;
+        });
+        using var client = new HttpClient(handler) { BaseAddress = new Uri("https://memories.example/") };
+        var mappingStore = new StubMappingStore();
+        CancellationToken token = TestContext.Current.CancellationToken;
+        await mappingStore.RecordMappingAsync("tenant-a", "party-1", "memory-1", "urn:source-1", "case-a", token);
+        var service = new PartyMemoryCleanupService(client, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance);
+
+        PartyMemoryCleanupResult cleanup = await service.DeleteByPartyAsync("tenant-a", "case-a", "party-1", token);
+        PartyMemoryCleanupProbeResult probe = await service.ProbeCleanupRouteAsync("tenant-a", "case-a", token);
+
+        cleanup.Cleaned.ShouldBeFalse();
+        IReadOnlyList<PartyMemoryUnitMappingEntry> remaining = await mappingStore.GetMappingsAsync("tenant-a", "party-1", token);
+        remaining.ShouldHaveSingleItem().MemoryUnitId.ShouldBe("memory-1");
+        probe.Reachable.ShouldBeFalse();
+        probe.StatusCode.ShouldBe(404);
+        probe.Reason.ShouldNotBeNull().ShouldContain("unqualified HTTP 404");
+    }
+
+    [Fact]
+    public async Task MixedCleanupRetainsOnlyUnqualifiedMissingUnitAndReportsPartialFailure()
+    {
+        var responses = new Queue<HttpResponseMessage>([
+            new(HttpStatusCode.NoContent),
+            new(HttpStatusCode.NotFound)
+            {
+                Content = new StringContent("{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}", Encoding.UTF8, "application/json"),
+            },
+            new(HttpStatusCode.NotFound),
+        ]);
+        using var client = new HttpClient(new RecordingHandler(responses.Dequeue)) { BaseAddress = new Uri("https://memories.example/") };
+        var mappingStore = new StubMappingStore();
+        CancellationToken token = TestContext.Current.CancellationToken;
+        foreach (string id in new[] { "deleted", "absent", "blocked" })
+        {
+            await mappingStore.RecordMappingAsync("tenant-a", "party-1", id, $"urn:{id}", "case-a", token);
+        }
+        var service = new PartyMemoryCleanupService(client, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance);
+
+        PartyMemoryCleanupResult result = await service.DeleteByPartyAsync("tenant-a", "case-a", "party-1", token);
+
+        result.Cleaned.ShouldBeFalse();
+        result.MemoryUnitId.ShouldBe("blocked");
+        result.BlockedReason.ShouldNotBeNull().ShouldContain("2 of 3 units deleted");
+        IReadOnlyList<PartyMemoryUnitMappingEntry> remaining = await mappingStore.GetMappingsAsync("tenant-a", "party-1", token);
+        remaining.ShouldHaveSingleItem().ShouldBe(new PartyMemoryUnitMappingEntry("blocked", "urn:blocked", "case-a"));
+        responses.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task MissingUnitEnvelopeReadPropagatesCancellation()
+    {
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var pipe = new Pipe();
+        using var response = new HttpResponseMessage(HttpStatusCode.NotFound)
+        {
+            Content = new StreamContent(pipe.Reader.AsStream()),
+        };
+        try
+        {
+            Task<bool> reading = PartyMemoryCleanupResponse.IsAcceptedAsync(response, cancellation.Token);
+            reading.IsCompleted.ShouldBeFalse();
+            cancellation.Cancel();
+
+            await Should.ThrowAsync<OperationCanceledException>(() => reading);
+        }
+        finally
+        {
+            await pipe.Writer.CompleteAsync();
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CleanupAndProbePropagateBodyReadCancellationWithoutDroppingMappings(bool probe)
+    {
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var pipe = new Pipe();
+        using var response = new HttpResponseMessage(HttpStatusCode.NotFound)
+        {
+            Content = new StreamContent(pipe.Reader.AsStream()),
+        };
+        using var client = new HttpClient(new TestHandler(response)) { BaseAddress = new Uri("https://memories.example/") };
+        var mappingStore = new StubMappingStore();
+        await mappingStore.RecordMappingAsync("tenant-a", "party-1", "memory-1", "urn:source-1", "case-a", cancellation.Token);
+        var service = new PartyMemoryCleanupService(client, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance);
+        try
+        {
+            Task reading = probe
+                ? service.ProbeCleanupRouteAsync("tenant-a", "case-a", cancellation.Token)
+                : service.DeleteByPartyAsync("tenant-a", "case-a", "party-1", cancellation.Token);
+            reading.IsCompleted.ShouldBeFalse();
+            cancellation.Cancel();
+
+            await Should.ThrowAsync<OperationCanceledException>(() => reading);
+            IReadOnlyList<PartyMemoryUnitMappingEntry> remaining = await mappingStore.GetMappingsAsync("tenant-a", "party-1", TestContext.Current.CancellationToken);
+            remaining.ShouldHaveSingleItem().MemoryUnitId.ShouldBe("memory-1");
+        }
+        finally
+        {
+            await pipe.Writer.CompleteAsync();
+        }
     }
 
     [Fact]
@@ -175,11 +344,11 @@ public class PartyMemoryCleanupServiceTests
         result.Cleaned.ShouldBeTrue();
         handler.RequestUris.Count.ShouldBe(2);
         // P22: Assert URI set + path shape includes /cases/ so a regression that drops the
-        // case segment (e.g., dispatching to /api/tenants/tenant-a/memory-units/memory-1)
+        // case segment (e.g., dispatching to /api/v1/tenants/tenant-a/memory-units/memory-1)
         // fails the test instead of slipping past a permissive EndsWith match.
         HashSet<string> requestedAbsolutePaths = [.. handler.RequestUris.Select(u => u.AbsolutePath)];
-        requestedAbsolutePaths.ShouldContain("/api/tenants/tenant-a/cases/case-a/memory-units/memory-1");
-        requestedAbsolutePaths.ShouldContain("/api/tenants/tenant-a/cases/case-a/memory-units/memory-2");
+        requestedAbsolutePaths.ShouldContain("/api/v1/tenants/tenant-a/cases/case-a/memory-units/memory-1");
+        requestedAbsolutePaths.ShouldContain("/api/v1/tenants/tenant-a/cases/case-a/memory-units/memory-2");
         // Mappings are cleared on full success so a recreated party with the same id starts fresh.
         IReadOnlyList<PartyMemoryUnitMappingEntry> remaining = await mappingStore.GetMappingsAsync("tenant-a", "party-1", CancellationToken.None);
         remaining.ShouldBeEmpty();

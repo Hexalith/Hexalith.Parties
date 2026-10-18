@@ -5,6 +5,8 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Testing;
 
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -225,6 +227,113 @@ public class PartyMemoryUnitMapperTests
         message.ShouldContain(nameof(InvalidOperationException));
         message.ShouldNotContain("skipped");
         loggedException.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(204, "", true)]
+    [InlineData(404, "{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}", true)]
+    [InlineData(404, "", false)]
+    [InlineData(404, "<html>Not Found</html>", false)]
+    [InlineData(404, "{\"code\":\"CASE_NOT_FOUND\"}", false)]
+    [InlineData(404, "{\"code\":\"TENANT_NOT_FOUND\"}", false)]
+    [InlineData(503, "{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}", false)]
+    public async Task CompensationUsesVersionedRouteAndQualifiesMissingUnitResponse(int status, string body, bool accepted)
+    {
+        WebApplicationBuilder builder = WebApplication.CreateSlimBuilder();
+        builder.Logging.ClearProviders();
+        await using WebApplication app = builder.Build();
+        app.Urls.Add("http://127.0.0.1:0");
+        string? requestPath = null;
+        string? requestMethod = null;
+        string? authorization = null;
+        app.Run(async context =>
+        {
+            requestPath = context.Request.Path.Value;
+            requestMethod = context.Request.Method;
+            authorization = context.Request.Headers.Authorization;
+            context.Response.StatusCode = status;
+            context.Response.ContentType = "application/json";
+            if (body.Length > 0)
+            {
+                await context.Response.WriteAsync(body, context.RequestAborted).ConfigureAwait(false);
+            }
+        });
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(15));
+        await app.StartAsync(timeout.Token);
+        var logger = new RecordingLogger<PartyMemoryIndexingService>();
+        var service = new PartyMemoryIndexingService(
+            new RecordingMemoriesClient { WorkflowInstanceId = "memory-unit-secret" },
+            new ThrowingMappingStore(new InvalidOperationException("provider sensitive details")),
+            CreateMonitor(new PartyMemorySearchOptions
+            {
+                Endpoint = new Uri(app.Urls.Single() + "/gateway/"),
+                CaseId = "case-current",
+                ApiToken = "test-token",
+            }),
+            logger);
+
+        PartyMemoryIndexingResult? result = await service.IndexAsync(
+            CreateEntry() with { Id = "party-secret" },
+            new PartyMemoryUnitMappingContext("tenant-secret", "case-at-ingestion", "PartyCreated", AggregateId: "party-secret"),
+            timeout.Token);
+
+        result.ShouldNotBeNull().Indexed.ShouldBeFalse();
+        requestMethod.ShouldBe("DELETE");
+        requestPath.ShouldBe("/gateway/api/v1/tenants/tenant-secret/cases/case-at-ingestion/memory-units/memory-unit-secret");
+        authorization.ShouldBe("Bearer test-token");
+        AssertSanitizedDiagnostics(logger, "provider sensitive details", "tenant-secret", "party-secret", "case-at-ingestion", "memory-unit-secret");
+        var record = logger.Records.ShouldHaveSingleItem();
+        record.Level.ShouldBe(accepted ? LogLevel.Warning : LogLevel.Error);
+        record.Message.ShouldContain(accepted ? "Compensating delete succeeded" : "Operator reconciliation is required");
+        await app.StopAsync(timeout.Token);
+    }
+
+    [Fact]
+    public async Task CompensationPropagatesCancellationDuringResponseBodyRead()
+    {
+        WebApplicationBuilder builder = WebApplication.CreateSlimBuilder();
+        builder.Logging.ClearProviders();
+        await using WebApplication app = builder.Build();
+        app.Urls.Add("http://127.0.0.1:0");
+        var responseStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseBody = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        app.Run(async context =>
+        {
+            context.Response.StatusCode = 404;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync("{", context.RequestAborted).ConfigureAwait(false);
+            await context.Response.Body.FlushAsync(context.RequestAborted).ConfigureAwait(false);
+            responseStarted.TrySetResult();
+            await releaseBody.Task.ConfigureAwait(false);
+        });
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(15));
+        using var caller = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token);
+        await app.StartAsync(timeout.Token);
+        var logger = new RecordingLogger<PartyMemoryIndexingService>();
+        var service = new PartyMemoryIndexingService(
+            new RecordingMemoriesClient(),
+            new ThrowingMappingStore(new InvalidOperationException("mapping failure")),
+            CreateMonitor(new PartyMemorySearchOptions { Endpoint = new Uri(app.Urls.Single() + "/") }),
+            logger);
+        try
+        {
+            Task<PartyMemoryIndexingResult?> indexing = service.IndexAsync(
+                CreateEntry(),
+                new PartyMemoryUnitMappingContext("tenant-a", "case-a", "PartyCreated"),
+                caller.Token);
+            await responseStarted.Task.WaitAsync(timeout.Token);
+            caller.Cancel();
+
+            await Should.ThrowAsync<OperationCanceledException>(() => indexing);
+            logger.Records.ShouldBeEmpty();
+        }
+        finally
+        {
+            releaseBody.TrySetResult();
+            await app.StopAsync(timeout.Token);
+        }
     }
 
     [Fact]

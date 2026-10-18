@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 
 using Hexalith.Memories.Client.Rest;
 using Hexalith.Memories.Contracts.V1;
@@ -20,7 +21,7 @@ public class MemoriesSearchHealthCheckTests
     public async Task OperationalValidationReportsMemoriesEndpointAuthHealthProvisioningAndCleanup()
     {
         // Arrange a fully-configured Memories search options + a probing client that returns a
-        // healthy hybrid result + a cleanup-route handler that returns 404 (route reachable,
+        // healthy hybrid result + a cleanup-route handler that returns a qualified unit-missing 404 (route reachable,
         // unit doesn't exist) + a mapping-store stub that round-trips synthetic entries. The
         // check should report Healthy and surface endpoint, tenant, case, search-health,
         // cleanup-route, and mapping-store metadata so operators can confirm provisioning,
@@ -88,10 +89,11 @@ public class MemoriesSearchHealthCheckTests
         memoriesClient.ProbeCalls.ShouldBe(1);
         cleanupHandler.RequestCount.ShouldBe(1);
         cleanupHandler.LastMethod.ShouldBe(HttpMethod.Delete);
-        // The synthetic id reserves the _health-probe- namespace so probe traffic cannot
+        // The synthetic id reserves the health-probe- namespace so probe traffic cannot
         // collide with a real memory unit id.
         cleanupHandler.LastUri.ShouldNotBeNull();
-        cleanupHandler.LastUri!.AbsolutePath.ShouldStartWith("/api/tenants/tenant-a/cases/case-a/memory-units/_health-probe-");
+        cleanupHandler.LastUri!.AbsolutePath.ShouldStartWith("/api/v1/tenants/tenant-a/cases/case-a/memory-units/health-probe-");
+        cleanupHandler.LastUri.Segments[^1].ShouldMatch("^[a-zA-Z0-9-]+$");
         // The mapping store stub records a sentinel tenant for the round-trip; verify the
         // probe cleared its sentinel so /health does not pollute production state.
         mappingStore.AllPartyKeys.ShouldBeEmpty();
@@ -312,6 +314,42 @@ public class MemoriesSearchHealthCheckTests
         reason.ShouldContain("AC5 regression");
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("<html>Not Found</html>")]
+    [InlineData("{")]
+    [InlineData("{\"code\":\"CASE_NOT_FOUND\"}")]
+    [InlineData("{\"code\":\"TENANT_NOT_FOUND\"}")]
+    public async Task UnqualifiedCleanup404DegradesHealthEvenWhenSearchSucceeds(string? body)
+    {
+        var options = new PartyMemorySearchOptions
+        {
+            Enabled = true,
+            Endpoint = new Uri("https://memories.example/"),
+            TenantId = "tenant-a",
+            CaseId = "case-a",
+            RequireApiToken = false,
+        };
+        using var client = new HttpClient(new RecordingCleanupHandler(HttpStatusCode.NotFound, body)) { BaseAddress = options.Endpoint };
+        var mappingStore = new RecordingMappingStore();
+        using var services = new ServiceCollection()
+            .AddSingleton<MemoriesClient>(new ProbingMemoriesClient())
+            .AddSingleton(new PartyMemoryCleanupService(client, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance))
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
+            .BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
+
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Data["searchReachable"].ShouldBe(true);
+        result.Data["cleanupRouteReachable"].ShouldBe(false);
+        result.Data["cleanupRouteStatus"].ShouldBe(404);
+        result.Data["cleanupRouteReason"].ToString().ShouldNotBeNull().ShouldContain("404");
+        result.Data["mappingStoreReachable"].ShouldBe(true);
+        mappingStore.AllPartyKeys.ShouldBeEmpty();
+    }
+
     [Fact]
     public async Task MissingTenantOrCaseReportsUnhealthy()
     {
@@ -376,7 +414,9 @@ public class MemoriesSearchHealthCheckTests
             => Task.FromException<HybridSearchResult>(ex);
     }
 
-    private sealed class RecordingCleanupHandler(HttpStatusCode status) : HttpMessageHandler
+    private sealed class RecordingCleanupHandler(
+        HttpStatusCode status,
+        string? body = "{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}") : HttpMessageHandler
     {
         public int RequestCount { get; private set; }
 
@@ -389,7 +429,10 @@ public class MemoriesSearchHealthCheckTests
             RequestCount++;
             LastUri = request.RequestUri;
             LastMethod = request.Method;
-            return Task.FromResult(new HttpResponseMessage(status));
+            return Task.FromResult(new HttpResponseMessage(status)
+            {
+                Content = new StringContent(body ?? string.Empty, Encoding.UTF8, "application/json"),
+            });
         }
     }
 

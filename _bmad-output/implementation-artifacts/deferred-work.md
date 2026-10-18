@@ -1313,6 +1313,7 @@ location: src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs:52; indexing 
 source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
 reason: PartyMemoryCleanupService.cs:52 and indexing compensation use api/tenants, while the selected server maps /api/v1/tenants; success-on-404 can discard cleanup inventory; verified high, pre-existing.
 status: open
+progress: 2026-10-18 Implemented versioned cleanup, compensation and health probing with the shared Memories route builder. Only a structured MEMORY_UNIT_NOT_FOUND 404 counts as scoped absence; unqualified/malformed/case/tenant 404s retain mappings, fail compensation qualification and degrade the cleanup probe. Corrected the probe's invalid synthetic ID. Final Debug/source build has zero warnings/errors; focused tests pass 58/58. Independent review and follow-up are complete. Full assembly passes 1156/1157; closure remains open because the unchanged baseline dependency-receipt test expects a prior Builds gitlink. See spec-dw-166-versioned-memories-cleanup.md and tests/dw-166-versioned-memories-cleanup-2026-10-18/validation.json. DW-167/DW-168/DW-169 and terminal physical-erasure qualification remain separate.
 
 ### DW-167: D5 — Persist the canonical terminal Memories unit identity after duplicate ingestion.
 
@@ -1595,3 +1596,7 @@ resolution: Declared the existing named-enum wire policy on all six Parties comm
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-163-coordinated-unresolved-projection.md`
   summary: Make EventStore unguarded batch reconciliation preserve newer canonical writes, including erasure tombstones.
   evidence: A real SDK InMemoryReadModelStore fault at BeforeReceipt after newer sequence-5 Detail/Processing erasure tombstones persist makes CompactAndCompleteAsync restore the older initialization candidate. The six-case candidate reproduction passed five cases and failed this interleaving; candidate source/logs/XML are retained in /tmp/dw-163-validation. EventStore owns this persistence guarantee; the Parties candidate was withdrawn and DW-163 stays open.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-166-versioned-memories-cleanup.md`
+  summary: Reconcile current dependency source observations and the unchanged release gitlink fitness constants with the already-committed Builds selection.
+  evidence: FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph fails in the final full service suite and its focused invocation: expected Builds 4f53d9f37c5b86cfd43fbcc8fa5dd4df19b84c77, actual 544fd2e907d62ccdc4b8f24168b8ab5dfcc13eb9. The starting Parties commit d2ec85c9e2b85e2b0c7a50d92ffaf197590ea053 already selects the latter, and the fitness test's baseline/current Git blob identities are identical. Restore accurate current-source observations through owning work without weakening the gate, fabricating owner signoff or recertifying historical parity receipts. Exact failing command, exits and proof are recorded in tests/dw-166-versioned-memories-cleanup-2026-10-18/validation.json.

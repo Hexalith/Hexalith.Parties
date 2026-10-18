@@ -1,21 +1,14 @@
 using System.Net.Http.Headers;
 
+using Hexalith.Memories.Contracts.V1;
+
 using Microsoft.Extensions.Logging;
 
 namespace Hexalith.Parties.Search;
 
-internal sealed record PartyMemoryCleanupResult(
-    string PartyId,
-    string MemoryUnitId,
-    string SourceUri,
-    bool Cleaned,
-    string? BlockedReason);
-
-internal sealed record PartyMemoryCleanupProbeResult(
-    bool Reachable,
-    int? StatusCode,
-    string? Reason);
-
+/// <summary>
+/// Deletes mapped Memories units and probes the versioned per-unit cleanup route.
+/// </summary>
 internal sealed class PartyMemoryCleanupService(
     HttpClient httpClient,
     IPartyMemoryUnitMappingStore mappingStore,
@@ -45,16 +38,14 @@ internal sealed class PartyMemoryCleanupService(
                 BlockedReason: "Memories cleanup blocked: HttpClient has no BaseAddress (Parties:MemoriesSearch:Endpoint missing).");
         }
 
-        // Relative path (no leading slash) so it resolves against BaseAddress's path
-        // component. Combined with the `Endpoint must end with /` validator, this gives a
-        // predictable URL shape: BaseAddress="https://memories.example.com/v1/" + path =
-        // "https://memories.example.com/v1/api/...".
-        string path = $"api/tenants/{Uri.EscapeDataString(tenantId)}/cases/{Uri.EscapeDataString(caseId)}/memory-units/{Uri.EscapeDataString(memoryUnitId)}";
+        // The shared route builder returns an escaped relative V1 path, preserving
+        // any configured endpoint prefix as well as the captured tenant/case scope.
+        string path = MemoriesRoutes.CaseMemoryUnitPath(tenantId, caseId, memoryUnitId);
 
         try
         {
             using HttpResponseMessage response = await httpClient.DeleteAsync(path, cancellationToken).ConfigureAwait(false);
-            return response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound
+            return await PartyMemoryCleanupResponse.IsAcceptedAsync(response, cancellationToken).ConfigureAwait(false)
                 ? new PartyMemoryCleanupResult(partyId, memoryUnitId, sourceUri, Cleaned: true, BlockedReason: null)
                 : new PartyMemoryCleanupResult(
                     partyId,
@@ -93,7 +84,7 @@ internal sealed class PartyMemoryCleanupService(
     /// Erase every memory unit indexed for a party. AC5 (resolved decision #2): Memories does
     /// not expose a batch <c>?sourceUri=</c> DELETE, so we read the per-party →
     /// memory-unit-id mapping that the indexing service records, then iterate per-unit
-    /// DELETEs against the existing <c>DELETE /api/tenants/{t}/cases/{c}/memory-units/{id}</c>
+    /// DELETEs against the existing <c>DELETE /api/v1/tenants/{t}/cases/{c}/memory-units/{id}</c>
     /// endpoint. The CaseId stored with each mapping is authoritative; <paramref name="caseId"/>
     /// is used only for legacy mappings written before CaseId persistence was introduced.
     /// <para>
@@ -245,11 +236,11 @@ internal sealed class PartyMemoryCleanupService(
 
     /// <summary>
     /// Lightweight health probe of the per-unit cleanup route. Issues a <c>DELETE</c> against a
-    /// synthetic memory-unit id; 404 means the route is reachable and the unit (correctly) does
-    /// not exist. Any other outcome surfaces an AC6 deployment-validation gap:
+    /// synthetic memory-unit id. Only a structured MEMORY_UNIT_NOT_FOUND response proves
+    /// that the route handled a miss in the requested case. Other 404s surface a deployment gap:
     /// <list type="bullet">
     ///   <item><description>200/204 — route reachable and the synthetic id improbably matched (still healthy).</description></item>
-    ///   <item><description>404 — route reachable, no unit exists (expected healthy outcome).</description></item>
+    ///   <item><description>404 with MEMORY_UNIT_NOT_FOUND — route reachable, unit absent in the requested case.</description></item>
     ///   <item><description>401/403 — auth misconfigured (the token in <see cref="PartyMemorySearchOptions.ApiToken"/> is rejected).</description></item>
     ///   <item><description>405 — DELETE not allowed at this shape (the AC5 gap that resolved decision #2 fixed; signals a Memories-server regression).</description></item>
     ///   <item><description>5xx / network error — endpoint unreachable.</description></item>
@@ -268,21 +259,22 @@ internal sealed class PartyMemoryCleanupService(
             return new PartyMemoryCleanupProbeResult(false, null, "HttpClient has no BaseAddress.");
         }
 
-        string syntheticUnitId = $"_health-probe-{Guid.NewGuid():N}";
-        string path = $"api/tenants/{Uri.EscapeDataString(tenantId)}/cases/{Uri.EscapeDataString(caseId)}/memory-units/{Uri.EscapeDataString(syntheticUnitId)}";
+        string syntheticUnitId = $"health-probe-{Guid.NewGuid():N}";
+        string path = MemoriesRoutes.CaseMemoryUnitPath(tenantId, caseId, syntheticUnitId);
 
         try
         {
             using HttpResponseMessage response = await httpClient.DeleteAsync(path, cancellationToken).ConfigureAwait(false);
             int code = (int)response.StatusCode;
-            // 404 = route reachable, no unit (expected); 200/204 = route reachable + unit deleted
-            // (improbable but acceptable). Any other status is a deployment-validation gap.
-            bool reachable = response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound;
+            // An unqualified 404 can be a routing or provisioning failure. Reuse the same
+            // response contract as erasure cleanup and indexing compensation.
+            bool reachable = await PartyMemoryCleanupResponse.IsAcceptedAsync(response, cancellationToken).ConfigureAwait(false);
             string? reason = reachable
                 ? null
                 : code switch
                 {
                     401 or 403 => $"Memories cleanup auth misconfigured (HTTP {code}).",
+                    404 => "Memories cleanup probe returned an unqualified HTTP 404; route or tenant/case provisioning could not be verified.",
                     405 => "Memories cleanup route does not accept DELETE (AC5 regression — server may have removed the per-unit DELETE endpoint).",
                     _ => $"Memories cleanup probe returned unexpected HTTP {code} {response.ReasonPhrase}.",
                 };
