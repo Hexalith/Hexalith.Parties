@@ -21,11 +21,13 @@ public sealed class PartyDetailSdkProjectionHandler(
     IReadModelStore readModelStore,
     IReadModelBatchStore batchStore,
     IOptions<PartySdkReadModelOptions> options,
-    ILogger<PartyDetailSdkProjectionHandler>? logger = null) :
+    ILoggerFactory? loggerFactory = null) :
     IAsyncDomainProjectionRebuildHandler,
     IDeclaresProjectionReadModelSlots
 {
     private const string ProjectionRebuildRequiredReason = "projection-rebuild-required";
+    private readonly ILogger? _processingFoldLogger = loggerFactory?.CreateLogger(
+        "Hexalith.Parties.Projections.Handlers.PartyProcessingActivityFold");
 
     public static IReadOnlyList<ProjectionReadModelSlotDeclaration> ProjectionReadModelSlots { get; } =
     [
@@ -143,7 +145,7 @@ public sealed class PartyDetailSdkProjectionHandler(
         // Fold (Detail slot) stays silent by design — see its own XML doc for why the Processing
         // fold below is the sole logger carrier for this handler.
         PartyDetailSdkReadModel next = Fold(request, current.Value);
-        PartyProcessingSdkReadModel nextProcessing = PartyProcessingActivityFold.Fold(request, currentProcessing.Value, logger);
+        PartyProcessingSdkReadModel nextProcessing = PartyProcessingActivityFold.Fold(request, currentProcessing.Value, _processingFoldLogger);
         if (current.Value is not null
             && next.LastSequenceNumber == current.Value.LastSequenceNumber
             && currentProcessing.Value is not null
@@ -184,7 +186,7 @@ public sealed class PartyDetailSdkProjectionHandler(
 
         // Fold (Detail slot) stays silent by design here too — same invariant as ProjectAsync.
         PartyDetailSdkReadModel candidate = Fold(request, current: null);
-        PartyProcessingSdkReadModel processingCandidate = PartyProcessingActivityFold.Fold(request, current: null, logger);
+        PartyProcessingSdkReadModel processingCandidate = PartyProcessingActivityFold.Fold(request, current: null, _processingFoldLogger);
         string storeName = StoreName;
         string key = PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId);
         ReadModelEntry<PartyDetailSdkReadModel> current = await readModelStore
@@ -301,7 +303,7 @@ public sealed class PartyDetailSdkProjectionHandler(
             processingKey,
             current =>
             {
-                PartyProcessingSdkReadModel next = PartyProcessingActivityFold.Fold(request, current, loggedThisDelivery ? null : logger);
+                PartyProcessingSdkReadModel next = PartyProcessingActivityFold.Fold(request, current, loggedThisDelivery ? null : _processingFoldLogger);
                 loggedThisDelivery = true;
                 return next;
             },

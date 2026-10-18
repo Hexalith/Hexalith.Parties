@@ -357,8 +357,10 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: PartySdkProjectionFold and PartyProcessingActivityFold diagnostics
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: 2026-08-05 review-layer finding — drops detected inside the shared static helpers `PartySdkProjectionFold`/`PartyProcessingActivityFold` are logged under `PartyDetailSdkProjectionHandler`'s or `PartyIndexSdkProjectionHandler`'s log category depending purely on which handler called in. An operator filtering by the actual source class gets nothing, and the same drop reason can appear under two different categories. Fixing this cleanly needs a design decision (e.g., a dedicated logger category or `ILoggerFactory` seam), not a quick patch.
-status: open
+status: done 2026-10-18
 decision: 2026-09-06 Dedicated fold categories — Give each fold a dedicated typed or named logger category, inject it through handlers, and lock category stability with tests.
+
+resolution: Both handlers now inject named fold loggers through ILoggerFactory, preserving event IDs 4802–4808, structured metadata, exception privacy and diagnostic frequency. Index summary 4801 retains its handler category. Operator filters and manual constructor migration are documented. Final Debug/source build has zero warnings/errors; category tests pass 31/31 and full projection assembly passes 379/379 without failures/errors/skips/not-run. All three independent review layers completed; four small test/evidence findings are corrected and four low-value suggestions are rejected with evidence. No new deferred work. See spec-dw-47-stable-fold-logger-categories.md and tests/dw-47-stable-fold-logger-categories-2026-10-18/final-validation.json.
 
 ### DW-48: Bound dropped-event diagnostic volume during full rebuilds
 

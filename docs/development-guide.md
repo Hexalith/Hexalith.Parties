@@ -199,5 +199,38 @@ DW-46 assigns distinct IDs and uses each generated method name as its event name
 
 Update alerts and saved log filters that select these diagnostics by event ID
 `0` to select the IDs or event names above. Existing message templates, fields,
-and severity levels remain unchanged. Caller handler logger categories also
-remain unchanged; the generated logging type does not introduce a new category.
+and severity levels remain unchanged.
+
+DW-47 assigns dedicated categories to per-event fold diagnostics (4802–4808):
+
+| Handler path | Logger category |
+|---|---|
+| Detail live delivery, rebuild, and unresolved processing audit | `Hexalith.Parties.Projections.Handlers.PartyProcessingActivityFold` |
+| Index live delivery and unresolved delivery failure | `Hexalith.Parties.Projections.Handlers.PartySdkProjectionFold` |
+| Index shared rebuild summary (4801) | `Hexalith.Parties.Projections.Handlers.PartyIndexSdkProjectionHandler` |
+
+Migrate category filters, saved queries, and alerts for per-event diagnostics
+from the Detail or Index handler category to the assigned fold category above.
+Keep filters for summary 4801 on the Index handler category. Shared Index
+rebuilds retain bounded summaries; they do not emit per-event fold diagnostics.
+Detail's second event walk stays silent, and optimistic retries do not duplicate
+fold diagnostics within a delivery. Fully applied redeliveries stay silent.
+
+The SDK host supplies `ILoggerFactory` through DI. When constructing the
+host-private handlers manually, Detail's optional fourth argument is now
+`ILoggerFactory`; existing three-argument construction remains valid. Index
+retains its optional typed handler logger for summary 4801 and appends an
+optional factory for fold diagnostics:
+
+```csharp
+var detail = new PartyDetailSdkProjectionHandler(store, batchStore, options, loggerFactory);
+var index = new PartyIndexSdkProjectionHandler(store, options,
+    logger: loggerFactory.CreateLogger<PartyIndexSdkProjectionHandler>(),
+    loggerFactory: loggerFactory);
+```
+
+Omitting the factory disables optional fold logging without changing projection
+results; Index never falls back to its typed handler logger for fold diagnostics.
+Disabling a fold category likewise suppresses its diagnostics without changing
+persisted output. Direct fold APIs continue to accept an optional `ILogger` and
+retain that logger's category.

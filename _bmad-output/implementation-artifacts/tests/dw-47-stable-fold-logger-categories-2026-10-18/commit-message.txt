@@ -1,0 +1,5 @@
+fix: stabilize projection-fold logger categories
+
+Route handler fold diagnostics through dedicated named loggers while
+retaining the bounded index rebuild summary category. Cover SDK
+activation, filtering, retries, and rebuild persistence.

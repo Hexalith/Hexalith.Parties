@@ -12,7 +12,9 @@ namespace Hexalith.Parties.Projections.Handlers;
 /// <see cref="System.Text.Json.JsonException"/> can include offending payload bytes in its
 /// message, and sinks commonly render the exception text. Callers convert exceptions to type
 /// names before invoking these methods, which accept scalar metadata instead of raw exceptions.
-/// The supplied logger retains its caller's category.
+/// Handlers supply named fold loggers: Detail uses the processing-activity fold category and
+/// Index uses the SDK fold category. Direct fold callers retain their supplied logger's category;
+/// this generated logging type does not create or change categories.
 /// </remarks>
 internal static partial class PartySdkProjectionFoldLog
 {

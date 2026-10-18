@@ -30,7 +30,8 @@ public sealed partial class PartyIndexSdkProjectionHandler(
     IReadModelStore readModelStore,
     IOptions<PartySdkReadModelOptions> options,
     IPartyIndexSearchIndexer? searchIndexer = null,
-    ILogger<PartyIndexSdkProjectionHandler>? logger = null) :
+    ILogger<PartyIndexSdkProjectionHandler>? logger = null,
+    ILoggerFactory? loggerFactory = null) :
     IAsyncDomainSharedProjectionRebuildCompletionHandler,
     IDeclaresProjectionReadModelSlots
 {
@@ -38,6 +39,8 @@ public sealed partial class PartyIndexSdkProjectionHandler(
     private const string RebuildEventType = "PartyProjectionRebuilt";
     private const string ReconciledEventType = "PartyProjectionReconciled";
     private readonly IPartyIndexSearchIndexer _searchIndexer = searchIndexer ?? new NoOpPartyIndexSearchIndexer();
+    private readonly ILogger? _foldLogger = loggerFactory?.CreateLogger(
+        "Hexalith.Parties.Projections.Handlers.PartySdkProjectionFold");
 
     private static readonly JsonSerializerOptions s_candidateJsonOptions = PartiesJsonOptions.Default;
 
@@ -76,13 +79,13 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         PartyIndexFoldResult foldResult = FoldCore(request, currentEntry.Value);
         if (foldResult.FailureReason is not null)
         {
-            if (logger is not null
+            if (_foldLogger is not null
                 && string.Equals(
                     foldResult.FailureReason,
                     PartySdkProjectionFold.UnresolvedOrUnsupportedEventReason,
                     StringComparison.Ordinal))
             {
-                _ = FoldCore(request, currentEntry.Value, logger);
+                _ = FoldCore(request, currentEntry.Value, _foldLogger);
             }
 
             return DeliveryFailure(foldResult.FailureReason);
@@ -127,7 +130,7 @@ public sealed partial class PartyIndexSdkProjectionHandler(
                     // attempt would re-emit the same diagnostic once per retry under writer
                     // contention. Log at most once per delivery by only passing the real logger on
                     // the first attempt.
-                    persistedFold = FoldCore(request, current, loggedThisDelivery ? null : logger);
+                    persistedFold = FoldCore(request, current, loggedThisDelivery ? null : _foldLogger);
                     loggedThisDelivery = true;
                     if (persistedFold.FailureReason is not null)
                     {

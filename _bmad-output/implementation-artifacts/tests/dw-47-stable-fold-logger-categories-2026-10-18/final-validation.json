@@ -1,0 +1,131 @@
+{
+    "spec_baseline_commit": "e55e9aaff1bdd67f13486193e651c8283f04ef73",
+    "implementation_base_commit": "5efaae7f0120439bc8d942bbc227dabdeefa56d8",
+    "commands": [
+        {
+            "name": "final-build",
+            "command": [
+                "dotnet",
+                "build",
+                "tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",
+                "--configuration",
+                "Debug",
+                "-m:1",
+                "-p:UseHexalithProjectReferences=true",
+                "-p:UseNuGetDeps=false",
+                "-p:NuGetAudit=false",
+                "-p:MinVerVersionOverride=1.0.0"
+            ],
+            "exit_code": 0,
+            "output": "final-build.txt",
+            "warnings": 0,
+            "errors": 0
+        },
+        {
+            "name": "final-category",
+            "command": [
+                "dotnet",
+                "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+                "-class",
+                "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionCategoryTests",
+                "-result-xml",
+                "_bmad-output/implementation-artifacts/tests/dw-47-stable-fold-logger-categories-2026-10-18/final-category.xml"
+            ],
+            "exit_code": 0,
+            "output": "final-category.txt",
+            "test_results": [
+                {
+                    "total": "31",
+                    "passed": "31",
+                    "errors": "0",
+                    "failed": "0",
+                    "skipped": "0",
+                    "not-run": "0"
+                }
+            ]
+        },
+        {
+            "name": "final-projections",
+            "command": [
+                "dotnet",
+                "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+                "-result-xml",
+                "_bmad-output/implementation-artifacts/tests/dw-47-stable-fold-logger-categories-2026-10-18/final-projections.xml"
+            ],
+            "exit_code": 0,
+            "output": "final-projections.txt",
+            "test_results": [
+                {
+                    "total": "379",
+                    "passed": "379",
+                    "errors": "0",
+                    "failed": "0",
+                    "skipped": "0",
+                    "not-run": "0"
+                }
+            ]
+        },
+        {
+            "name": "final-warning-gate",
+            "command": [
+                "bash",
+                "scripts/check-no-warning-override.sh"
+            ],
+            "exit_code": 0,
+            "output": "final-warning-gate.txt"
+        },
+        {
+            "name": "final-source-whitespace",
+            "command": [
+                "python3",
+                "_bmad-output/implementation-artifacts/tests/dw-47-stable-fold-logger-categories-2026-10-18/verify-source-whitespace.py"
+            ],
+            "exit_code": 0,
+            "output": "final-source-whitespace.txt"
+        },
+        {
+            "name": "commitlint",
+            "command": [
+                "node_modules/.bin/commitlint",
+                "--edit",
+                "/tmp/dw-47-commit-message.txt",
+                "--verbose"
+            ],
+            "exit_code": 0,
+            "output": "commitlint.txt",
+            "installed_and_lockfile_version": "21.2.2",
+            "validated_message": "commit-message.txt"
+        },
+        {
+            "name": "final-whitespace",
+            "command": [
+                "git",
+                "-c",
+                "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+                "diff",
+                "--check",
+                "5efaae7f0120439bc8d942bbc227dabdeefa56d8"
+            ],
+            "exit_code": 0,
+            "output": "final-whitespace.txt",
+            "scope": "All DW-47 staged changes, including spec and retained evidence"
+        }
+    ],
+    "source_sha256": {
+        "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs": "5435cd078223f6e40bc4981e8a60e2408fc795f7664bb0dd5d245fca61a36d44",
+        "src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs": "7597776e49134293e6c0beb605ae2574fdbaa46ef60ffb390cb6931c6db8b91b",
+        "src/Hexalith.Parties.Projections/Handlers/PartyProcessingActivityFold.cs": "b90c947c26e80f60cdbdedffc1d9aa90ca571cbb37da0a8575cd7d7b4bf59521",
+        "src/Hexalith.Parties.Projections/Handlers/PartySdkProjectionFoldLog.cs": "5bb4c542c081c90bdb5b9248a62de4ad584257f062f176782fbb2cd6ce6dee8c",
+        "src/Hexalith.Parties.Projections/Handlers/PartySdkProjectionFold.cs": "f2908f391dcbe24f2d6322a1c65890f7660af67be091d038362d5b1507416a4b",
+        "src/Hexalith.Parties/Program.cs": "ca4b4b2e3e4f892e8676bb49f162ff1a847fb9fde593ea2bc990b48bae111b98",
+        "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionCategoryTests.cs": "35493e43a72a52d44f96627224b5476f4001edb76f6be2eff211ce169875234c",
+        "tests/Hexalith.Parties.Projections.Tests/Handlers/ProjectionCategoryLogRecord.cs": "d417e14e3c7c7e32d57edee0677ef59487e123a87c050b9935dc339678816b62",
+        "tests/Hexalith.Parties.Projections.Tests/Handlers/ProjectionCategoryLogger.cs": "eab9b852d369c5dc32223b037c4e27c1e050902450ab8a7e3b602248d40b53f8",
+        "tests/Hexalith.Parties.Projections.Tests/Handlers/ProjectionCategoryLoggerProvider.cs": "a1e566cc87663c34ce22bc00c0bb3672828aa9bd2ad1705a7e032f4ff7717ba1",
+        "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs": "1292995f71aa5e9d1c24debf4f72256167711bcbc33208b5ed2a4eb3c4824254",
+        "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionLoggingTests.cs": "b1b25102066216cd37125bd524f525b969705593a2cd25fce5b4900720d9903b",
+        "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionConverterFailureTests.cs": "bfd2852e17ddabff9c2f79d75c8d40057145b9c4c3977e19cb3eaee8a98f2178",
+        "docs/development-guide.md": "c3c79d672b8d3ebc4e4c429551dc61cd7d529a51f6089d662bdf1d3a662de48f"
+    },
+    "review": "All three layers completed; four small test/evidence findings patched; four low-value findings rejected with evidence. No deferred work added."
+}

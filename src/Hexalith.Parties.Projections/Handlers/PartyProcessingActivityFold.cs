@@ -17,6 +17,8 @@ internal static class PartyProcessingActivityFold
     /// observes the raw event delivery (successful project, rebuild, and the unresolved-only audit
     /// write), so passing the logger here — and leaving <c>PartyDetailSdkProjectionHandler.Fold</c>
     /// itself silent — reports every drop/skip exactly once per delivery instead of twice.
+    /// The handler supplies the named <c>Hexalith.Parties.Projections.Handlers.PartyProcessingActivityFold</c>
+    /// category through its optional logger factory. Direct callers may supply any optional logger.
     /// </summary>
     public static PartyProcessingSdkReadModel Fold(
         ProjectionRequest request,

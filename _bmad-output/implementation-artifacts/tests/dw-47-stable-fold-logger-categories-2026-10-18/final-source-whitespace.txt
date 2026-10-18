@@ -1,0 +1,1 @@
+PASS: 10 implementation files use UTF-8, CRLF, final newlines, and no trailing whitespace

@@ -1502,7 +1502,9 @@ public sealed class PartySdkProjectionHandlerTests
                 Arg.Any<CancellationToken>())
             .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
         var logger = new RecordingLogger<PartyIndexSdkProjectionHandler>();
-        var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer: null, logger: logger);
+        ILoggerFactory loggerFactory = Substitute.For<ILoggerFactory>();
+        loggerFactory.CreateLogger("Hexalith.Parties.Projections.Handlers.PartySdkProjectionFold").Returns(logger);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer: null, loggerFactory: loggerFactory);
         ProjectionRequest request = CreateRequest() with
         {
             Events =
@@ -1547,7 +1549,9 @@ public sealed class PartySdkProjectionHandlerTests
                 Arg.Any<CancellationToken>())
             .Returns(true);
         var logger = new RecordingLogger<PartyIndexSdkProjectionHandler>();
-        var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer: null, logger: logger);
+        ILoggerFactory loggerFactory = Substitute.For<ILoggerFactory>();
+        loggerFactory.CreateLogger("Hexalith.Parties.Projections.Handlers.PartySdkProjectionFold").Returns(logger);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer: null, loggerFactory: loggerFactory);
         ProjectionRequest request = CreateRequest() with
         {
             Events =
