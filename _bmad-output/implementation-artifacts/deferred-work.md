@@ -465,7 +465,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: Party SDK query detail-envelope validation
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: TryValidateDetailEnvelope only rejects reserved chars after TenantSafeProjectionReadGuardrailsTests were deleted; oversized/malformed party ids are weakly gated.
-status: open
+status: done 2026-10-19
+resolution: SDK detail/privacy queries now reuse PartyIdentifier.IsValid before any read-model or erasure-record access, preserving ordinal envelope agreement, optional EntityId fallback, ULIDs and supported legacy GUID forms. All six handlers have boundary, malformed-input, fallback and route regressions. Final Debug/source build has zero warnings/errors; focused handlers pass 685/685 and full affected service assembly passes 1898/1898 without failures/errors/skips/not-run. Four independent review findings are patched and follow-up verified; no new deferred work. See spec-dw-60-bounded-detail-query-identifiers.md and tests/dw-60-bounded-detail-query-identifiers-2026-10-19/validation.json.
 
 ### DW-61: Update the Story 7.4 projection compatibility E2E spec
 

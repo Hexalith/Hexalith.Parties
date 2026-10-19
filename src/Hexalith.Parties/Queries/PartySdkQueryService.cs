@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -10,6 +9,7 @@ using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Handlers;
 using Hexalith.Parties.Projections.Models;
@@ -33,7 +33,6 @@ public sealed partial class PartySdkQueryService(
 {
     private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
     private static readonly PartyDetailSdkReadModel s_unknownFreshness = new();
-    private static readonly SearchValues<char> s_reservedPartyIdChars = SearchValues.Create(":\0|\r\n");
 
     [GeneratedRegex(@"^[A-Za-z0-9_\-\.]{1,128}$", RegexOptions.CultureInvariant)]
     private static partial Regex ValidTenantIdRegex();
@@ -716,9 +715,8 @@ public sealed partial class PartySdkQueryService(
     {
         partyId = string.IsNullOrWhiteSpace(query.EntityId) ? query.AggregateId : query.EntityId;
         return ValidTenantIdRegex().IsMatch(query.TenantId ?? string.Empty)
-            && !string.IsNullOrWhiteSpace(query.AggregateId)
-            && string.Equals(partyId, query.AggregateId, StringComparison.Ordinal)
-            && partyId.AsSpan().IndexOfAny(s_reservedPartyIdChars) < 0;
+            && PartyIdentifier.IsValid(partyId)
+            && string.Equals(partyId, query.AggregateId, StringComparison.Ordinal);
     }
 
     private static bool TryValidateIndexEnvelope(QueryEnvelope query)

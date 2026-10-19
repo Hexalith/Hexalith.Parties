@@ -1954,23 +1954,37 @@ public sealed class PartySdkQueryHandlerTests
         JsonSerializer.Serialize(tenantB, PartiesJsonOptions.Default).ShouldNotContain("Tenant A Secret");
     }
 
-    [Fact]
-    public async Task DetailHandler_AggregateAndEntityMismatchFailsClosedBeforeStoreReadAsync()
+    [Theory]
+    [InlineData(PartyDetailProjectionQueryActor.GetPartyQueryType, "party-2")]
+    [InlineData(PartyDetailProjectionQueryActor.PartyDetailQueryType, "party-2")]
+    [InlineData(PartyDetailProjectionQueryActor.ExportPartyDataQueryType, "party-2")]
+    [InlineData(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType, "party-2")]
+    [InlineData(PartyDetailProjectionQueryActor.GetErasureStatusQueryType, "party-2")]
+    [InlineData(PartyDetailProjectionQueryActor.GetErasureCertificateQueryType, "party-2")]
+    [InlineData(PartyDetailProjectionQueryActor.GetPartyQueryType, "Party-1")]
+    [InlineData(PartyDetailProjectionQueryActor.PartyDetailQueryType, "Party-1")]
+    [InlineData(PartyDetailProjectionQueryActor.ExportPartyDataQueryType, "Party-1")]
+    [InlineData(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType, "Party-1")]
+    [InlineData(PartyDetailProjectionQueryActor.GetErasureStatusQueryType, "Party-1")]
+    [InlineData(PartyDetailProjectionQueryActor.GetErasureCertificateQueryType, "Party-1")]
+    public async Task DetailHandler_AggregateAndEntityMismatchFailsClosedBeforeStoreReadAsync(string queryType, string entityId)
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
-        var handler = new GetPartyQueryHandler(CreateService(store));
+        IPartyErasureRecordStore erasure = Substitute.For<IPartyErasureRecordStore>();
+        PartySdkQueryHandler handler = CreateDetailHandler(queryType, CreateService(store, recordStore: erasure));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType) with
+            CreateDetailEnvelope(queryType) with
             {
                 AggregateId = "party-1",
-                EntityId = "party-2",
+                EntityId = entityId,
             },
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeFalse();
         result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
-        await store.DidNotReceiveWithAnyArgs().GetAsync<PartyDetailSdkReadModel>(default!, default!, default);
+        store.ReceivedCalls().ShouldBeEmpty();
+        erasure.ReceivedCalls().ShouldBeEmpty();
     }
 
     [Fact]
@@ -2088,6 +2102,176 @@ public sealed class PartySdkQueryHandlerTests
         result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
         await store.DidNotReceiveWithAnyArgs().GetAsync<PartyDetailSdkReadModel>(default!, default!, default);
     }
+
+    public static TheoryData<string, string, bool> InvalidDetailQueryIdentifiers
+    {
+        get
+        {
+            TheoryData<string, string, bool> cases = [];
+            string[] identifiers =
+            [
+                string.Empty, " ", "party/1", "party\\1", "party:1", "party|1", "party\0x",
+                "party\r1", "party\n1", "party\t1", "party\u00011", "party 1", " party-1", "party-1 ",
+                "parté1", "party%2F1", "party?1", "party#1", "party\n", ".party", "party-", "_party",
+                "{party-1}", new string('a', 129), new string('a', 4096),
+                "{g23e4567-e89b-12d3-a456-426614174000}", "(123e4567_e89b-12d3-a456-426614174000)",
+                "{123e4567-e89b-12d3-a456-426614174000)",
+                "{0x123e4567,0xe89b,0x12d3,{0xa4,0x56,0x42,0x66,0x14,0x17,0x40,0x0g}}",
+                "{0x123e4567;0xe89b,0x12d3,{0xa4,0x56,0x42,0x66,0x14,0x17,0x40,0x00}}",
+            ];
+            foreach (string queryType in DetailQueryTypes)
+            {
+                foreach (string partyId in identifiers)
+                {
+                    cases.Add(queryType, partyId, false);
+                    cases.Add(queryType, partyId, true);
+                }
+            }
+
+            return cases;
+        }
+    }
+
+    public static TheoryData<string, string, string?> ValidDetailQueryIdentifiers
+    {
+        get
+        {
+            TheoryData<string, string, string?> cases = [];
+            string[] identifiers =
+            [
+                "a", "Party-1.a_b", "01ARZ3NDEKTSV4RRFFQ69G5FAV", new string('a', 128),
+                "123e4567-e89b-12d3-a456-426614174000", "123e4567e89b12d3a456426614174000",
+                "{123e4567-e89b-12d3-a456-426614174000}", "(123e4567-e89b-12d3-a456-426614174000)",
+                "{0x123e4567,0xe89b,0x12d3,{0xa4,0x56,0x42,0x66,0x14,0x17,0x40,0x00}}",
+            ];
+            foreach (string queryType in DetailQueryTypes)
+            {
+                foreach (string partyId in identifiers)
+                {
+                    cases.Add(queryType, partyId, partyId);
+                    cases.Add(queryType, partyId, null);
+                    cases.Add(queryType, partyId, string.Empty);
+                    cases.Add(queryType, partyId, " \t");
+                }
+            }
+
+            return cases;
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(InvalidDetailQueryIdentifiers))]
+    public async Task DetailHandlers_RejectUnsafeIdentifiersBeforeAnyStoreAccessAsync(string queryType, string partyId, bool omitEntityId)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        IPartyErasureRecordStore erasure = Substitute.For<IPartyErasureRecordStore>();
+        PartySdkQueryHandler handler = CreateDetailHandler(queryType, CreateService(store, recordStore: erasure));
+
+        QueryResult result = await handler.ExecuteAsync(
+            CreateDetailEnvelope(queryType) with { AggregateId = partyId, EntityId = omitEntityId ? null : partyId },
+            TestContext.Current.CancellationToken);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
+        store.ReceivedCalls().ShouldBeEmpty();
+        erasure.ReceivedCalls().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [MemberData(nameof(ValidDetailQueryIdentifiers))]
+    public async Task DetailHandlers_PreserveSupportedIdentifiersAndOptionalEntityFallbackAsync(
+        string queryType,
+        string partyId,
+        string? entityId)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>(
+                "statestore", PartySdkReadModelAddresses.Detail("tenant-a", partyId), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel
+            {
+                Detail = Detail(partyId),
+                ProjectedAt = s_now,
+            }, "etag"));
+        var activity = new ProcessingActivityRecord
+        {
+            SequenceNumber = 1,
+            PartyId = partyId,
+            TenantId = "tenant-a",
+            ActorId = "user-1",
+            CorrelationId = "correlation-1",
+            OperationCategory = "Consent",
+            Outcome = "Succeeded",
+            EventType = "ConsentRecorded",
+            Timestamp = s_now,
+            Summary = "Consent preference changed.",
+        };
+        store.GetAsync<PartyProcessingSdkReadModel>(
+                "statestore", PartySdkReadModelAddresses.Processing("tenant-a", partyId), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel
+            {
+                Records = [activity],
+            }, "processing-etag"));
+        IPartyErasureRecordStore erasure = Substitute.For<IPartyErasureRecordStore>();
+        erasure.GetStatusAsync("tenant-a", partyId, Arg.Any<CancellationToken>()).Returns(new PartyErasureStatusRecord
+        {
+            TenantId = "tenant-a",
+            PartyId = partyId,
+            Status = ErasureStatus.ErasurePending.ToString(),
+            UpdatedAt = s_now,
+        });
+        PartySdkQueryHandler handler = CreateDetailHandler(queryType, CreateService(store, recordStore: erasure));
+
+        QueryResult result = await handler.ExecuteAsync(
+            CreateDetailEnvelope(queryType) with { AggregateId = partyId, EntityId = entityId },
+            TestContext.Current.CancellationToken);
+
+        result.Success.ShouldBeTrue();
+        if (queryType == PartyDetailProjectionQueryActor.GetErasureStatusQueryType)
+        {
+            await erasure.Received(1).GetStatusAsync("tenant-a", partyId, Arg.Any<CancellationToken>());
+        }
+        else if (queryType == PartyDetailProjectionQueryActor.GetErasureCertificateQueryType)
+        {
+            await erasure.Received(1).GetCertificateAsync("tenant-a", partyId, Arg.Any<CancellationToken>());
+        }
+        else
+        {
+            await store.Received(1).GetAsync<PartyDetailSdkReadModel>(
+                "statestore", PartySdkReadModelAddresses.Detail("tenant-a", partyId), Arg.Any<CancellationToken>());
+        }
+
+        if (queryType is PartyDetailProjectionQueryActor.ExportPartyDataQueryType or PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType)
+        {
+            await store.Received(1).GetAsync<PartyProcessingSdkReadModel>(
+                "statestore", PartySdkReadModelAddresses.Processing("tenant-a", partyId), Arg.Any<CancellationToken>());
+            IReadOnlyList<ProcessingActivityRecord> records = queryType == PartyDetailProjectionQueryActor.ExportPartyDataQueryType
+                ? result.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!.ProcessingRecords
+                : result.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!;
+            records.ShouldHaveSingleItem().ShouldBe(activity);
+        }
+    }
+
+    private static string[] DetailQueryTypes =>
+    [
+        PartyDetailProjectionQueryActor.GetPartyQueryType,
+        PartyDetailProjectionQueryActor.PartyDetailQueryType,
+        PartyDetailProjectionQueryActor.ExportPartyDataQueryType,
+        PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType,
+        PartyDetailProjectionQueryActor.GetErasureStatusQueryType,
+        PartyDetailProjectionQueryActor.GetErasureCertificateQueryType,
+    ];
+
+    private static PartySdkQueryHandler CreateDetailHandler(string queryType, PartySdkQueryService service)
+        => queryType switch
+        {
+            PartyDetailProjectionQueryActor.GetPartyQueryType => new GetPartyQueryHandler(service),
+            PartyDetailProjectionQueryActor.PartyDetailQueryType => new PartyDetailQueryHandler(service),
+            PartyDetailProjectionQueryActor.ExportPartyDataQueryType => new ExportPartyDataQueryHandler(service),
+            PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType => new GetProcessingRecordsQueryHandler(service),
+            PartyDetailProjectionQueryActor.GetErasureStatusQueryType => new GetErasureStatusQueryHandler(service),
+            PartyDetailProjectionQueryActor.GetErasureCertificateQueryType => new GetErasureCertificateQueryHandler(service),
+            _ => throw new ArgumentOutOfRangeException(nameof(queryType)),
+        };
 
     private static int ActiveReadCount(PartySdkLastKnownReadModelCache cache)
         => ((System.Collections.IDictionary)typeof(PartySdkLastKnownReadModelCache)

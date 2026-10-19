@@ -1,0 +1,148 @@
+{
+  "date": "2026-10-19",
+  "scope": [
+    "DW-60"
+  ],
+  "baseline_commit": "b9380d74d82f1363692d15c2e6698bb22dd58adf",
+  "build": {
+    "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0,
+    "log_sha256": "ec72da979b583caa67d3fcd7532a2c82ef99ffd2e5d8db6569496b230b9ddf89"
+  },
+  "tests": {
+    "baseline_reproduction": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.DetailHandlers_RejectUnsafeIdentifiersBeforeAnyStoreAccessAsync -result-xml /tmp/dw-60-baseline-rejections.xml",
+      "exit_code": 1,
+      "outcomes": {
+        "total": 150,
+        "passed": 48,
+        "failed": 102,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "723e8ecc0c80bb096c6592da740ce04c03ea1982a82dc6287554b9f74156cf49"
+    },
+    "focused": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests -result-xml /tmp/dw-60-reviewed-focused.xml",
+      "exit_code": 0,
+      "outcomes": {
+        "total": 685,
+        "passed": 685,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "062f6b63298861742778e030f1dfcd681e48d153e692c08e69eabe48f4b41139"
+    },
+    "full_affected_assembly": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-60-reviewed-full.xml",
+      "exit_code": 0,
+      "outcomes": {
+        "total": 1898,
+        "passed": 1898,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "ee9014598a60fcbc7ef131702966f6d6794d49b065d6a5e121cc901f84a42c29"
+    },
+    "before_review_focused": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests -result-xml /tmp/dw-60-focused.xml",
+      "exit_code": 0,
+      "outcomes": {
+        "total": 511,
+        "passed": 511,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "3408463e1793eb6f58d3393986045167fbd2829553e394ab080e0d780cfcccf8"
+    },
+    "before_review_full_affected_assembly": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-60-full.xml",
+      "exit_code": 0,
+      "outcomes": {
+        "total": 1724,
+        "passed": 1724,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "280f9fddf9caab586bf70d44fb21275d8c4df81fc9a42624a4242f75ba096d9b"
+    }
+  },
+  "baseline_note": "The first 150 invalid-ID rows were run before the production fix (102 failures). Final coverage also includes omitted EntityId, supported IDs, all six mismatched routes and the existing handler suite.",
+  "source_sha256": {
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "f6a219afc87402ec331620fa3f2b32f06b80865484261d10e70300b436ef7cdf",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "f1b7185e5608e9de55fcf92bac605299b3c7a6553a35a521bdc92772ece15963"
+  },
+  "assembly_sha256": {
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll": "bde5db5cb1fd3ab3282dbc01a662ae2ebe7460f0e83e716c5feda5229f4c2372",
+    "src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll": "9a13731e4f07f6458337d5c5592a871b1a994f581f64199d9bb2d72a6cc6df02"
+  },
+  "runtime_baseline": {
+    "commands": [
+      "aspire ps --format Json --non-interactive",
+      "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --no-build --format Json --non-interactive",
+      "aspire wait parties --timeout 20 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+      "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive"
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "observed": {
+      "parties": "Running/Healthy",
+      "security": "Running/Healthy",
+      "eventstore": "Finished",
+      "tenants": "Finished"
+    },
+    "qualification": "Existing-build Parties readiness baseline only; full integrated topology not qualified. AppHost stopped before code edits.",
+    "cleanup_verification": {
+      "command": "aspire ps --format Json --non-interactive",
+      "exit_code": 0,
+      "output": []
+    }
+  },
+  "static_checks": [
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0
+    },
+    {
+      "check": "Changed C# and new artifacts use CRLF, final newline and no trailing whitespace; source/assembly hashes match tested files; installed commitlint 21.2.2 matches package-lock.json",
+      "result": "passed"
+    }
+  ],
+  "commitlint": {
+    "command": "node_modules/.bin/commitlint --edit /tmp/dw-60-commit-message.txt --verbose",
+    "exit_code": 0,
+    "cli_version": "21.2.2",
+    "evidence": "commitlint.txt"
+  },
+  "review": {
+    "layers": [
+      "blind-hunter"
+    ],
+    "skipped_layers": [],
+    "findings": 4,
+    "patched": 4,
+    "new_deferrals": 0,
+    "followup": "Independent reviewer verified all four corrections; no newly introduced defect found."
+  }
+}
