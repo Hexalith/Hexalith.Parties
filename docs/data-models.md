@@ -239,12 +239,19 @@ including an application that returns the existing entry reference. Rejections
 and semantic no-ops returning null can advance the checkpoint without replacing
 the descriptor. Equal timestamps do not affect selection.
 
-Search reconciliation publishes the entry and retained descriptor from the
-canonical snapshot read by the delivery or committed by its successful write,
-including when an older delivery retries after a newer update. A concurrent
-change after that snapshot can overtake the notification; the canonical store
-and external search index do not share a linearizable transaction. Reconciliation
-does not select events from the retry request or infer
+Live and rebuild search reconciliation reread the canonical index separately
+for each target before external notification and again after the awaited call.
+A live notification uses the current entry and its retained descriptor, including
+when an older delivery retries after a newer update. If erasure wins during
+indexing, reconciliation requests removal of the late mapped result before it
+can report convergence. An absent rebuild entry is reconciled as removal rather
+than silently skipped. If a live re-add races removal or the target changes
+during indexing, delivery remains retryable; a fresh dispatch reconciles current
+state. Unrelated parties and tenants do not force a retry. Reconciliation
+preserves freshly folded contact/identifier search collections (excluded from
+index JSON) only while the candidate's checkpoint, provenance and persisted
+entry fields match canonical state. A changed target uses its current canonical
+value. Reconciliation does not select events from the retry request or infer
 provenance from the entry's timestamps. A duplicate delivery that only retries a
 failed search notification does not rewrite the canonical index. Historical rows
 without the dictionary default to empty; reconciliation uses the explicitly
@@ -260,8 +267,18 @@ Event erasure and SDK cleanup remove the target descriptor along with its entry,
 preserve other aggregates' descriptors, and retain the permanent erasure fence.
 Shared rebuild candidates serialize the same descriptors and produce the same
 canonical selection as live folding. Rebuild search notifications retain their
-existing synthetic `PartyProjectionRebuilt` attribution. External search erasure
-fencing remains a separate concern.
+existing synthetic `PartyProjectionRebuilt` attribution.
+
+Canonical reads that fail, disappear, or contain invalid dictionaries cannot
+authorize indexing or successful convergence. Failed removal also keeps the
+dispatch retryable, and caller cancellation propagates. The handler performs
+bounded work without a process-local lock or a new persisted marker. The
+canonical store and external search index do not share a linearizable
+transaction: these checks reconcile the awaited indexing/mapping/cleanup
+contract, not terminal completion of Memories ingestion and deletion workflows.
+Terminal workflow reconciliation and cancellation before mapping persistence
+remain tracked separately in DW-168 and DW-170. The default no-op search indexer
+requires no additional reads.
 
 ### Party index projection version
 

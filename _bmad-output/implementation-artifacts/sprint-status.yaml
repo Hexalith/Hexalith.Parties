@@ -382,7 +382,9 @@ action_items:
     epic: 8
     action: "Fence live and rebuild search notifications against concurrent erasure; test both interleavings and reconcile deferred-work DW-80 with D11."
     owner: "Amelia (Developer) + Murat (Test Architect)"
-    status: open
+    # Resolved 2026-10-19: spec-dw-173-erasure-search-notification-fence.md.
+    # Awaited notification reconciliation; terminal Memories workflows remain separate.
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md"
   - id: "epic-8-retro-destroyed-key-marker-fault"
     epic: 8

@@ -1,0 +1,156 @@
+{
+  "date": "2026-10-19",
+  "baseline_commit": "750cf80f2f6f8380057cea9d834cd1a90bccc6be",
+  "scope": [
+    "DW-173",
+    "DW-193",
+    "DW-80 historical correction"
+  ],
+  "builds": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "log_sha256": "fc3f611b8bc5309cf08f9cfe1f60b0455136ff174c3b108d41b979fa710404ef"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "log_sha256": "7289dc35f1a5ea7ac16902e7a7b7f4be927858bc3c996496ab5f1ff10993eb4b"
+    }
+  ],
+  "tests": {
+    "baseline_regressions": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests -xml <result.xml>",
+      "exit_code": 1,
+      "outcomes": {
+        "total": "7",
+        "passed": "0",
+        "failed": "7",
+        "skipped": "0",
+        "not-run": "0",
+        "errors": "0"
+      },
+      "original_xml_sha256": "8e5ad175607e738fa9f89d0d170294caf4c58ac30bf9dde8798c521f301335ac"
+    },
+    "contact_field_regression": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.LiveNotificationRetainsTransientSearchFieldsForMatchingCanonicalTargetAsync -result-xml <result.xml>",
+      "exit_code": 1,
+      "outcomes": {
+        "total": "1",
+        "passed": "0",
+        "failed": "1",
+        "skipped": "0",
+        "not-run": "0",
+        "errors": "0"
+      },
+      "original_xml_sha256": "8bb5b997b21cad9b0657fdcbf9e595ebd731ce2a04b8fd53cce9391f0a2bcb80"
+    },
+    "focused_final": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests -result-xml <result.xml>",
+      "exit_code": 0,
+      "outcomes": {
+        "total": "27",
+        "passed": "27",
+        "failed": "0",
+        "skipped": "0",
+        "not-run": "0",
+        "errors": "0"
+      },
+      "original_xml_sha256": "257515514bd6f8ba384ed4c4b69c01e87e46cea45ff6f8cc9ee8f918f165b554"
+    },
+    "host_final": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml <result.xml>",
+      "exit_code": 0,
+      "outcomes": {
+        "total": "1311",
+        "passed": "1311",
+        "failed": "0",
+        "skipped": "0",
+        "not-run": "0",
+        "errors": "0"
+      },
+      "original_xml_sha256": "d3375248de658075f7e80606ff9eb0bb670b447b7700984c1675a99a3c9e2994"
+    },
+    "projection_final": {
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -result-xml <result.xml>",
+      "exit_code": 0,
+      "outcomes": {
+        "total": "379",
+        "passed": "379",
+        "failed": "0",
+        "skipped": "0",
+        "not-run": "0",
+        "errors": "0"
+      },
+      "original_xml_sha256": "33b4549ade53d0f0fede1e60dd9f8752385ccffe9be04cb46196a1c3db85159e"
+    }
+  },
+  "build_mode": "Debug with source project references; no dependency changes",
+  "source_sha256": {
+    "src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs": "fad7ff547800fb6fb5c9fc74d67526fe7a9b506f481e0338c4b4c8ceccfc6305",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs": "64e2552faf5fe83d9862ea073fb62d9282e3fc1992f466d9ebf530157e10eac3",
+    "tests/Hexalith.Parties.Tests/Search/PartySearchErasureHttpHandler.cs": "c1cb1025a52f7699490e136afd4debfbdb868879d59d52d8b403e63d1e186883",
+    "tests/Hexalith.Parties.Tests/Search/PartySearchErasureFenceTests.cs": "3df328aec69b7d0c1fccdeab40c79620815fd90ac82e1f209a295d17caad3ebc",
+    "tests/Hexalith.Parties.Tests/Search/PartySearchErasureMappingStore.cs": "76a7c72de82e726eac2b1e595e4fd5184a4a007ed1826e69797fc2d3cd059569"
+  },
+  "assembly_sha256": {
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll": "9baba19054d0f5f48387f9a598fe78c855d018fcdf150f2fb7a45ed3f8f94a8f",
+    "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll": "95023e6128a27719360a0b7019c1be5d50570f85ce6a43703d7a72dab12e6397",
+    "src/Hexalith.Parties.Projections/bin/Debug/net10.0/Hexalith.Parties.Projections.dll": "2df04d958a396adf22a8fb006ffbdf1a54f3ed2b8dfbc1e56e4c02e48148bdcd"
+  },
+  "runtime_baseline": {
+    "commands": [
+      "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --no-build --format Json --non-interactive",
+      "aspire wait parties --timeout 20 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+      "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive"
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "observed": {
+      "parties": "healthy",
+      "security": "Healthy",
+      "eventstore": "Finished",
+      "tenants": "Finished"
+    },
+    "qualification": "Parties readiness only; full integrated topology not qualified"
+  },
+  "static_checks": [
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0
+    },
+    {
+      "check": "new C# and retained artifact CRLF, final newline and trailing whitespace; named test outcomes; source/assembly hashes; sprint YAML parsing and target action status",
+      "result": "passed"
+    }
+  ],
+  "review": {
+    "layers": [
+      "blind-hunter"
+    ],
+    "findings": 8,
+    "patched": 8,
+    "new_deferrals": 0,
+    "followup": "Independent reviewer confirmed all eight original findings resolved and all recorded source/assembly hashes match current files; parent final checks agree."
+  },
+  "limits": [
+    "No linearizable transaction with the external index",
+    "Terminal Memories workflow completion remains DW-168",
+    "Cancellation before mapping persistence remains DW-170",
+    "No production deployment or data migration",
+    "Changes remain unstaged and uncommitted under user repository instructions"
+  ]
+}

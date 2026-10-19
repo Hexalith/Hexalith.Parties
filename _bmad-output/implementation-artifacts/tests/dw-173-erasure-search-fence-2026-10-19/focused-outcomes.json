@@ -1,0 +1,110 @@
+[
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.PostIndexCanonicalOutageReturnsRetryableWithoutDeletingLivePartyAsync",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.ErasureDuringIndexingCleansLateResultAndRetriesFailureAsync(rebuild: False, cleanupFails: False)",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.ErasureDuringIndexingCleansLateResultAndRetriesFailureAsync(rebuild: True, cleanupFails: False)",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.ErasureDuringIndexingCleansLateResultAndRetriesFailureAsync(rebuild: False, cleanupFails: True)",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.ErasureDuringIndexingCleansLateResultAndRetriesFailureAsync(rebuild: True, cleanupFails: True)",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.RealAdapterCleansMappingPersistedAfterIndependentErasureAsync(rebuild: False)",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.RealAdapterCleansMappingPersistedAfterIndependentErasureAsync(rebuild: True)",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.ChangedTargetRetriesAndPreservesOtherPartiesAndTenantsAsync",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.ErasureBeforeHandoffDoesNotRepublishSnapshotAsync(rebuild: False)",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.ErasureBeforeHandoffDoesNotRepublishSnapshotAsync(rebuild: True)",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.LiveNotificationRetainsTransientSearchFieldsForMatchingCanonicalTargetAsync",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.RemovalCancellationPropagatesAndFreshDispatchRecoversAsync(rebuild: False, compensating: False)",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.RemovalCancellationPropagatesAndFreshDispatchRecoversAsync(rebuild: True, compensating: False)",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.RemovalCancellationPropagatesAndFreshDispatchRecoversAsync(rebuild: False, compensating: True)",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.RemovalCancellationPropagatesAndFreshDispatchRecoversAsync(rebuild: True, compensating: True)",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.UnrelatedCanonicalWriteDuringIndexingStillConvergesAsync",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.CancellationAfterIndexingPropagatesAsync",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.RebuildRemovalRacingLiveReAddRestoresCurrentEntryOnRetryAsync",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.InvalidCanonicalTargetReturnsRetryableWithoutExternalWorkAsync(corruption: \\\"entries\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.InvalidCanonicalTargetReturnsRetryableWithoutExternalWorkAsync(corruption: \\\"provenance\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.InvalidCanonicalTargetReturnsRetryableWithoutExternalWorkAsync(corruption: \\\"sequences\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.InvalidCanonicalTargetReturnsRetryableWithoutExternalWorkAsync(corruption: \\\"erasure\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.InvalidCanonicalTargetReturnsRetryableWithoutExternalWorkAsync(corruption: \\\"null-target\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.InvalidCanonicalTargetReturnsRetryableWithoutExternalWorkAsync(corruption: \\\"wrong-id\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.InvalidCanonicalTargetReturnsRetryableWithoutExternalWorkAsync(corruption: \\\"missing\\\")",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.PostRemovalCanonicalOutageRequiresFreshDispatchAsync",
+    "result": "Pass"
+  },
+  {
+    "name": "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests.PreNotificationCanonicalOutageReturnsRetryableWithoutExternalWorkAsync",
+    "result": "Pass"
+  }
+]

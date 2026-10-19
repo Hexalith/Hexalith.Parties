@@ -245,7 +245,8 @@ source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk
 reason: `PartyIndexSdkProjectionHandler.CompleteRebuildAsync` reads canonical index state once before external notifications, so a later live erase or re-add can race a stale `NotifyIndexedAsync` or `NotifyRemovedAsync` call.
 status: done 2026-09-06
 archived: 2026-10-13
-resolution: already resolved: Commit 8e3953e0; src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs:278-325 re-reads canonical state before each rebuild-completion notification, and tests/Hexalith.Parties.Projections.Tests/PartySdkProjectionHandlerTests.cs:1371-1480 covers concurrent erase and re-add.
+resolution: 2026-10-19 Superseded by DW-173/DW-193 and spec-dw-173-erasure-search-notification-fence.md. Independent-instance regressions reproduce the residual stale-snapshot and in-flight-indexing races; the new bounded canonical checks and cleanup retries close them at the awaited operation boundary. The historical atomic claim does not establish terminal Memories workflow erasure, which remains separate in DW-168/DW-170.
+historical-resolution: already resolved: Commit 8e3953e0; src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs:278-325 re-reads canonical state before each rebuild-completion notification, and tests/Hexalith.Parties.Projections.Tests/PartySdkProjectionHandlerTests.cs:1371-1480 covers concurrent erase and re-add.
 
 ### DW-89: Verify EventStore-only deny ACL across all Dapr sidecars
 

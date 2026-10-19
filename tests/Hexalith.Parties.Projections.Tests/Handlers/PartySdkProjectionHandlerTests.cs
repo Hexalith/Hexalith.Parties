@@ -649,16 +649,7 @@ public sealed class PartySdkProjectionHandlerTests
     [Fact]
     public async Task IndexHandler_NotifiesSearchIndexerWithLatestEntryAndEventAfterSuccessfulWriteAsync()
     {
-        IReadModelStore store = Substitute.For<IReadModelStore>();
-        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
-            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
-        store.TrySaveAsync(
-                "statestore",
-                PartySdkReadModelAddresses.Index("tenant-a"),
-                Arg.Any<PartyIndexSdkReadModel>(),
-                Arg.Any<string>(),
-                Arg.Any<CancellationToken>())
-            .Returns(true);
+        var store = new InMemoryReadModelBatchStore();
         IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
         searchIndexer.NotifyIndexedAsync(
                 Arg.Any<string>(),
@@ -686,17 +677,8 @@ public sealed class PartySdkProjectionHandlerTests
     [Fact]
     public async Task IndexHandler_ErasureNotifiesSearchIndexerRemovedAsync()
     {
-        IReadModelStore store = Substitute.For<IReadModelStore>();
-        PartyIndexSdkReadModel existing = CreateIndex("party-1");
-        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
-            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(existing, "etag-1"));
-        store.TrySaveAsync(
-                "statestore",
-                PartySdkReadModelAddresses.Index("tenant-a"),
-                Arg.Any<PartyIndexSdkReadModel>(),
-                "etag-1",
-                Arg.Any<CancellationToken>())
-            .Returns(true);
+        var store = new InMemoryReadModelBatchStore();
+        await store.SaveAsync("statestore", PartySdkReadModelAddresses.Index("tenant-a"), CreateIndex("party-1"), TestContext.Current.CancellationToken);
         IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
         searchIndexer.NotifyRemovedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(true);
@@ -719,20 +701,11 @@ public sealed class PartySdkProjectionHandlerTests
     [Fact]
     public async Task IndexHandler_ErasureNotifiesRemovalWhenCanonicalEntryWasAlreadyAbsentAsync()
     {
-        IReadModelStore store = Substitute.For<IReadModelStore>();
-        var existing = new PartyIndexSdkReadModel
+        var store = new InMemoryReadModelBatchStore();
+        await store.SaveAsync("statestore", PartySdkReadModelAddresses.Index("tenant-a"), new PartyIndexSdkReadModel
         {
             LastSequenceNumbers = new Dictionary<string, long>(StringComparer.Ordinal) { ["party-1"] = 1 },
-        };
-        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
-            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(existing, "etag-1"));
-        store.TrySaveAsync(
-                "statestore",
-                PartySdkReadModelAddresses.Index("tenant-a"),
-                Arg.Any<PartyIndexSdkReadModel>(),
-                "etag-1",
-                Arg.Any<CancellationToken>())
-            .Returns(true);
+        }, TestContext.Current.CancellationToken);
         IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
         searchIndexer.NotifyRemovedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(true);
@@ -751,16 +724,7 @@ public sealed class PartySdkProjectionHandlerTests
     [Fact]
     public async Task IndexHandler_SearchIndexerThrowReturnsRetryableAfterCanonicalWriteAsync()
     {
-        IReadModelStore store = Substitute.For<IReadModelStore>();
-        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
-            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
-        store.TrySaveAsync(
-                "statestore",
-                PartySdkReadModelAddresses.Index("tenant-a"),
-                Arg.Any<PartyIndexSdkReadModel>(),
-                Arg.Any<string>(),
-                Arg.Any<CancellationToken>())
-            .Returns(true);
+        var store = new InMemoryReadModelBatchStore();
         IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
         searchIndexer
             .NotifyIndexedAsync(
@@ -2422,7 +2386,9 @@ public sealed class PartySdkProjectionHandlerTests
             TestContext.Current.CancellationToken);
 
         result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
-        await searchIndexer.DidNotReceiveWithAnyArgs().NotifyRemovedAsync(default!, default!, default);
+        await searchIndexer.DidNotReceive().NotifyRemovedAsync("tenant-a", "stale-party", Arg.Any<CancellationToken>());
+        await searchIndexer.Received(1).NotifyIndexedAsync("tenant-a", Arg.Is<PartyIndexEntry>(entry => entry.Id == "stale-party"),
+            "PartyProjectionRebuilt", Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -2483,6 +2449,7 @@ public sealed class PartySdkProjectionHandlerTests
                 new ReadModelEntry<PartyIndexSdkReadModel>(null, null),
                 new ReadModelEntry<PartyIndexSdkReadModel>(CreateIndex(), "etag-erased"));
         IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
+        searchIndexer.NotifyRemovedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
         DomainSharedProjectionRebuildIdentity identity = CreateSharedRebuildIdentity();
         DomainSharedProjectionRebuildCandidate candidate = await handler.CreateEmptyCandidateAsync(

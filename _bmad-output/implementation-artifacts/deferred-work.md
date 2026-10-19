@@ -625,6 +625,7 @@ status: done 2026-09-06
 origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review (2026-08-16)"), 2026-09-06
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 archived: 2026-10-13
+reconciliation: 2026-10-19 The historical completion is superseded by the verified per-notification and post-operation reconciliation in DW-173/DW-193. The old once-per-completion read did not close the after-snapshot erasure race. See the archive correction and spec-dw-173-erasure-search-notification-fence.md; atomic remote workflow erasure is not claimed.
 
 ### DW-81: Move the Memories mapping ledger behind EventStore persistence
 
@@ -1397,7 +1398,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: CompleteRebuildAsync and the search reconciliation adapter
 source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
 reason: CompleteRebuildAsync snapshots once before awaited removals and later publishes retained entries; the search adapter has no canonical reread/version fence, so completed cleanup can be followed by republishing erased data; verified high, pre-existing.
-status: open
+status: done 2026-10-19
+resolution: Canonical search reconciliation now rereads each target before and after awaited indexing/removal, compensates late indexing after erasure, and retries changed targets, live re-adds, malformed/unavailable state and failed compensation. Fresh live JsonIgnore contact/identifier collections survive only while checkpoint, provenance and persisted fields match. Debug/source builds have zero warnings/errors; 27 focused regressions and both complete affected assemblies pass (1311 host + 379 projection, no failures/errors/skips/not-run). Eight independent review findings are patched. The awaited indexing/mapping/cleanup guarantee does not certify terminal Memories workflow completion; DW-168/DW-170 remain open. See spec-dw-173-erasure-search-notification-fence.md and tests/dw-173-erasure-search-fence-2026-10-19/validation.json.
 
 ### DW-174: Enforce the identity-query deadline during synchronous admission and source folding.
 
@@ -1557,7 +1559,8 @@ location: n/a
 source_spec: `_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md`
 severity: low
 reason: retrospective action item from sprint-status.yaml (epic 8; owner Amelia (Developer) + Murat (Test Architect); sprint-status status open)
-status: open
+status: done 2026-10-19
+resolution: Canonical search reconciliation now rereads each target before and after awaited indexing/removal, compensates late indexing after erasure, and retries changed targets, live re-adds, malformed/unavailable state and failed compensation. Fresh live JsonIgnore contact/identifier collections survive only while checkpoint, provenance and persisted fields match. Debug/source builds have zero warnings/errors; 27 focused regressions and both complete affected assemblies pass (1311 host + 379 projection, no failures/errors/skips/not-run). Eight independent review findings are patched. The awaited indexing/mapping/cleanup guarantee does not certify terminal Memories workflow completion; DW-168/DW-170 remain open. See spec-dw-173-erasure-search-notification-fence.md and tests/dw-173-erasure-search-fence-2026-10-19/validation.json.
 
 ### DW-194: Preserve the typed destroyed-key outcome when the crypto-pending marker write fails; add focused fault-injection coverage.
 origin: retro action item epic-8-retro-destroyed-key-marker-fault

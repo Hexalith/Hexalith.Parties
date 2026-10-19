@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 using Hexalith.EventStore.Client.Projections;
@@ -152,34 +153,78 @@ public sealed partial class PartyIndexSdkProjectionHandler(
             : DomainProjectionHandlerResult.Retryable(SearchReconciliationReason);
     }
 
-    private async Task<bool> NotifySearchIndexerAsync(
+    private Task<bool> NotifySearchIndexerAsync(
         ProjectionRequest request,
         PartyIndexFoldResult foldResult,
         CancellationToken cancellationToken)
+        => ReconcileSearchAsync(
+            request.TenantId,
+            request.AggregateId,
+            removeIfAbsent: foldResult.Removed || foldResult.Model.Entries.ContainsKey(request.AggregateId),
+            rebuilding: false,
+            cancellationToken,
+            deliverySnapshot: foldResult.Model);
+
+    /// <summary>Reconciles one work item against canonical state before and after external work.</summary>
+    /// <remarks>
+    /// A notification snapshot cannot authorize indexing after erasure. The second read catches
+    /// erasure during awaited ingestion and mapping persistence; cleanup must converge before
+    /// this delivery may complete. This is retryable reconciliation, not a distributed transaction
+    /// or proof that an asynchronous external ingestion/deletion workflow has reached its end.
+    /// </remarks>
+    private async Task<bool> ReconcileSearchAsync(
+        string tenantId,
+        string partyId,
+        bool removeIfAbsent,
+        bool rebuilding,
+        CancellationToken cancellationToken,
+        PartyIndexSdkReadModel? deliverySnapshot = null)
     {
         try
         {
-            if (foldResult.Removed)
-            {
-                return await _searchIndexer
-                    .NotifyRemovedAsync(request.TenantId, request.AggregateId, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-
-            if (!foldResult.Model.Entries.TryGetValue(request.AggregateId, out PartyIndexEntry? entry)
-                || entry is null)
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_searchIndexer is NoOpPartyIndexSearchIndexer)
             {
                 return true;
             }
 
-            return await _searchIndexer
+            PartyIndexSdkReadModel current = await ReadSearchIndexAsync(tenantId, cancellationToken).ConfigureAwait(false);
+            if (!TryGetSearchEntry(current, partyId, out PartyIndexEntry? entry))
+            {
+                if (!removeIfAbsent && !current.ErasureSequenceNumbers.ContainsKey(partyId))
+                {
+                    return true;
+                }
+
+                return await RemoveSearchEntryAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
+            }
+
+            PartyIndexEventMetadata? source = current.LastIndexedEvents.GetValueOrDefault(partyId);
+            if (deliverySnapshot is not null && MatchesSearchTarget(deliverySnapshot, current, partyId))
+            {
+                // Contact/identifier collections are intentionally JsonIgnore. Preserve a
+                // freshly folded value only while its exact canonical target still matches.
+                entry = deliverySnapshot.Entries[partyId];
+            }
+
+            bool indexed = await _searchIndexer
                 .NotifyIndexedAsync(
-                    request.TenantId,
+                    tenantId,
                     entry,
-                    foldResult.LastIndexedEvent?.EventTypeName ?? ReconciledEventType,
-                    foldResult.LastIndexedEvent?.Timestamp ?? entry.LastModifiedAt,
+                    rebuilding ? RebuildEventType : source?.EventTypeName ?? ReconciledEventType,
+                    rebuilding ? entry.LastModifiedAt : source?.Timestamp ?? entry.LastModifiedAt,
                     cancellationToken)
                 .ConfigureAwait(false);
+
+            PartyIndexSdkReadModel latest = await ReadSearchIndexAsync(tenantId, cancellationToken).ConfigureAwait(false);
+            if (!TryGetSearchEntry(latest, partyId, out _))
+            {
+                return await RemoveSearchEntryAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
+            }
+
+            // An unrelated aggregate's write must not force a retry. A changed target needs
+            // another bounded dispatch so a late older notification cannot claim convergence.
+            return indexed && MatchesSearchTarget(current, latest, partyId);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -189,6 +234,52 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         {
             return false;
         }
+    }
+
+    /// <summary>Requires a readable canonical index rather than treating an outage as erasure.</summary>
+    private async Task<PartyIndexSdkReadModel> ReadSearchIndexAsync(string tenantId, CancellationToken cancellationToken)
+    {
+        ReadModelEntry<PartyIndexSdkReadModel> read = await readModelStore
+            .GetAsync<PartyIndexSdkReadModel>(StoreName, PartySdkReadModelAddresses.Index(tenantId), cancellationToken)
+            .ConfigureAwait(false);
+        return read.Value is { Entries: not null, LastIndexedEvents: not null, LastSequenceNumbers: not null, ErasureSequenceNumbers: not null } model
+            ? model
+            : throw new InvalidOperationException("The canonical Party search index is unavailable.");
+    }
+
+    /// <summary>Never selects an entry whose permanent erasure checkpoint is present.</summary>
+    private static bool TryGetSearchEntry(PartyIndexSdkReadModel model, string partyId, [NotNullWhen(true)] out PartyIndexEntry? entry)
+    {
+        entry = null;
+        if (model.ErasureSequenceNumbers.ContainsKey(partyId) || !model.Entries.TryGetValue(partyId, out entry))
+        {
+            return false;
+        }
+
+        if (entry is null || !string.Equals(entry.Id, partyId, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("The canonical Party search target is malformed.");
+        }
+
+        return !entry.IsErased;
+    }
+
+    /// <summary>Compares only this aggregate, including the checkpoint for transient search fields.</summary>
+    private static bool MatchesSearchTarget(PartyIndexSdkReadModel left, PartyIndexSdkReadModel right, string partyId)
+        => TryGetSearchEntry(left, partyId, out PartyIndexEntry? leftEntry)
+            && TryGetSearchEntry(right, partyId, out PartyIndexEntry? rightEntry)
+            && left.LastSequenceNumbers.GetValueOrDefault(partyId, long.MinValue)
+                == right.LastSequenceNumbers.GetValueOrDefault(partyId, long.MinValue)
+            && Equals(left.LastIndexedEvents.GetValueOrDefault(partyId), right.LastIndexedEvents.GetValueOrDefault(partyId))
+            && string.Equals(JsonSerializer.Serialize(leftEntry, s_candidateJsonOptions),
+                JsonSerializer.Serialize(rightEntry, s_candidateJsonOptions), StringComparison.Ordinal);
+
+    /// <summary>Detects a live re-add that races an awaited external removal.</summary>
+    private async Task<bool> RemoveSearchEntryAsync(string tenantId, string partyId, CancellationToken cancellationToken)
+    {
+        bool removed = await _searchIndexer.NotifyRemovedAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
+        PartyIndexSdkReadModel latest = await ReadSearchIndexAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        return removed && !TryGetSearchEntry(latest, partyId, out _);
     }
 
     public Task<DomainSharedProjectionRebuildCandidate> CreateEmptyCandidateAsync(
@@ -292,27 +383,12 @@ public sealed partial class PartyIndexSdkProjectionHandler(
             .Deserialize<PartyIndexSearchRebuildManifest>(completionState.Span, s_candidateJsonOptions)
             ?? throw new InvalidOperationException("The Party index search rebuild manifest is empty or malformed.");
 
-        // The manifest's removal list was computed from a FinalizeAsync-time snapshot, which can
-        // predate a live write that (re)added one of those parties during the rebuild-accumulation
-        // window. Re-check against the index as it stands now so a still-live party is never
-        // reported as removed to the search indexer.
-        ReadModelEntry<PartyIndexSdkReadModel> currentEntry = await readModelStore
-            .GetAsync<PartyIndexSdkReadModel>(
-                RebuildStoreName,
-                PartySdkReadModelAddresses.Index(identity.TenantId),
-                cancellationToken)
-            .ConfigureAwait(false);
-        IReadOnlyDictionary<string, PartyIndexEntry> currentEntries = currentEntry.Value?.Entries
-            ?? new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal);
-
+        // The manifest supplies only the work inventory. Every target is reread around its
+        // external operation; no canonical snapshot is held across another party's awaits.
         foreach (string partyId in manifest.RemovedPartyIds ?? Array.Empty<string>())
         {
-            if (currentEntries.ContainsKey(partyId))
-            {
-                continue;
-            }
-
-            if (!await _searchIndexer.NotifyRemovedAsync(identity.TenantId, partyId, cancellationToken).ConfigureAwait(false))
+            if (!await ReconcileSearchAsync(identity.TenantId, partyId, removeIfAbsent: true, rebuilding: true, cancellationToken)
+                .ConfigureAwait(false))
             {
                 return DomainProjectionHandlerResult.Retryable(SearchReconciliationReason);
             }
@@ -320,21 +396,7 @@ public sealed partial class PartyIndexSdkProjectionHandler(
 
         foreach (PartyIndexSearchRebuildEntry item in manifest.Entries ?? Array.Empty<PartyIndexSearchRebuildEntry>())
         {
-            // A live write can update or erase an entry after the rebuild batch commits but
-            // before completion runs. The manifest is only a bounded work inventory; canonical
-            // state supplies the value to publish and absence means there is nothing to reindex.
-            if (!currentEntries.TryGetValue(item.Entry.Id, out PartyIndexEntry? canonicalEntry))
-            {
-                continue;
-            }
-
-            if (!await _searchIndexer
-                .NotifyIndexedAsync(
-                    identity.TenantId,
-                    canonicalEntry,
-                    item.EventType,
-                    canonicalEntry.LastModifiedAt,
-                    cancellationToken)
+            if (!await ReconcileSearchAsync(identity.TenantId, item.Entry.Id, removeIfAbsent: true, rebuilding: true, cancellationToken)
                 .ConfigureAwait(false))
             {
                 return DomainProjectionHandlerResult.Retryable(SearchReconciliationReason);
