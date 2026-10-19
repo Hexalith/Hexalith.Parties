@@ -480,7 +480,8 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
 location: erasure cleanup TimeProvider usage
 reason: Erasure cleanup timestamps still use `DateTimeOffset.UtcNow` instead of the newly registered `TimeProvider` — deferred, pre-existing certificate timestamp pattern across erasure store results.
-status: open
+status: done 2026-10-19
+resolution: All seven registered cleanup-result timestamps and both verification-service timestamps use the shared TimeProvider at completion. The original public constructor retains system-clock behavior; returned store timestamps survive sanitization. Clock-controlled asynchronous cleanup, multi-delegate completion and processor certificate read-back are covered. Debug/source builds have zero warnings/errors; focused verification/delegate/certificate checks pass 23/23, 10/10 and 1/1; full affected assemblies pass 244/244 and 1901/1901 without failures, errors, skips or not-run tests. Six independent review findings are patched and follow-up verified; no new deferrals. See spec-dw-62-erasure-cleanup-clock.md and tests/dw-62-erasure-cleanup-clock-2026-10-19/validation.json.
 
 ### DW-63: Protect Memories mapping replacement and clearing with concurrency-safe retries
 

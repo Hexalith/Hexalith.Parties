@@ -807,42 +807,52 @@ public sealed class PartyDomainProcessorValidationTests
             KeyVersionsDestroyed = [1],
             VerificationStatus = ErasureVerificationStatus.Failed,
         };
+        ErasureCertificate persistedCertificate = certificate;
         recordStore.GetCertificateAsync("tenant-a", partyId, Arg.Any<CancellationToken>())
-            .Returns(certificate);
-        IErasureVerificationService verificationService = Substitute.For<IErasureVerificationService>();
-        verificationService.VerifyErasureAsync("tenant-a", partyId, certificate, Arg.Any<CancellationToken>())
-            .Returns(new ErasureVerificationReport
+            .Returns(_ => Task.FromResult<ErasureCertificate?>(persistedCertificate));
+        recordStore.SaveCertificateAsync(Arg.Any<ErasureCertificate>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
             {
-                PartyId = partyId,
-                TenantId = "tenant-a",
-                Timestamp = DateTimeOffset.Parse("2026-05-21T20:50:00Z"),
-                OverallStatus = ErasureVerificationOverallStatus.Complete,
-                StoreResults =
-                [
-                    new ErasureVerificationStoreResult
+                persistedCertificate = call.ArgAt<ErasureCertificate>(0);
+                return Task.CompletedTask;
+            });
+        DateTimeOffset verificationAt = certificate.Timestamp.AddMinutes(5);
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        clock.GetUtcNow().Returns(verificationAt);
+        IErasureVerificationService verificationService = new ErasureVerificationService(
+            [
+                (_, _, _) => Task.FromResult(new ErasureVerificationStoreResult
                     {
                         StoreName = "detail-projection",
                         Status = ErasureStoreCleanupStatus.Cleaned,
-                        Timestamp = DateTimeOffset.Parse("2026-05-21T20:50:00Z"),
-                    },
-                ],
-            });
+                        Timestamp = certificate.Timestamp,
+                    }),
+            ],
+            NullLogger<ErasureVerificationService>.Instance,
+            clock);
         PartyDomainProcessor invoker = CreateInvoker(protection, recordStore, CreateOrchestrator(verificationService));
         PartyState state = PartyTestState(partyId, ErasureStatus.KeyDestroyed);
         CommandEnvelope command = CreateCommand(new RetryErasureVerification { PartyId = partyId, TenantId = "tenant-a" });
 
-        DomainResult result = await invoker.ProcessAsync(command, state, CancellationToken.None);
+        DomainResult result = await invoker.ProcessAsync(command, state, TestContext.Current.CancellationToken);
 
         result.IsSuccess.ShouldBeTrue();
         result.Events.OfType<ErasureVerified>().ShouldHaveSingleItem();
         result.Events.OfType<PartyErased>().ShouldHaveSingleItem();
-        await verificationService.Received(1).VerifyErasureAsync("tenant-a", partyId, certificate, Arg.Any<CancellationToken>());
         await recordStore.Received(1).SaveVerificationReportAsync(
-            Arg.Is<ErasureVerificationReport>(report => report != null && report.OverallStatus == ErasureVerificationOverallStatus.Complete),
+            Arg.Is<ErasureVerificationReport>(report => report != null
+                && report.OverallStatus == ErasureVerificationOverallStatus.Complete
+                && report.Timestamp == verificationAt),
             Arg.Any<CancellationToken>());
         await recordStore.Received(1).SaveCertificateAsync(
-            Arg.Is<ErasureCertificate>(saved => saved != null && saved.VerificationStatus == ErasureVerificationStatus.Verified),
+            Arg.Is<ErasureCertificate>(saved => saved != null
+                && saved.VerificationStatus == ErasureVerificationStatus.Verified
+                && saved.Timestamp == verificationAt),
             Arg.Any<CancellationToken>());
+        ErasureCertificate savedCertificate = (await recordStore.GetCertificateAsync(
+            "tenant-a", partyId, TestContext.Current.CancellationToken)).ShouldNotBeNull();
+        savedCertificate.Timestamp.ShouldBe(verificationAt);
+        savedCertificate.VerificationStatus.ShouldBe(ErasureVerificationStatus.Verified);
         await recordStore.Received(1).SaveStatusAsync(
             Arg.Is<PartyErasureStatusRecord>(saved => saved != null && saved.Status == ErasureStatus.Verified.ToString() && saved.ErrorMessage == null),
             Arg.Any<CancellationToken>());

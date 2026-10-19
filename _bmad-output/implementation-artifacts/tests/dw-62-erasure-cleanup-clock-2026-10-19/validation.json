@@ -1,0 +1,255 @@
+{
+  "date": "2026-10-19",
+  "scope": [
+    "DW-62"
+  ],
+  "baseline_commit": "87a24aa9104da87e53c97afa630c3efec9588a8c",
+  "builds": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "log_sha256": "f3824e4260af329d63f17a4e12cbd47a5555d349f1cb9dba3c24676232d63f64"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "log_sha256": "0f44ada11c0f863d1e0be391fe80db499be593b734d863489099b012a25ed640"
+    }
+  ],
+  "tests": {
+    "security_focused": {
+      "command": "dotnet tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll -class Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests -result-xml /tmp/dw-62-reviewed-security-focused.xml",
+      "exit_code": 0,
+      "outcomes": {
+        "total": 23,
+        "passed": 23,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "58be23cd5e21de736f0cf1622acf900dff9765c56d76ef87646a9c2e2cf3693f"
+    },
+    "security_full": {
+      "command": "dotnet tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll -result-xml /tmp/dw-62-reviewed-security-full.xml",
+      "exit_code": 0,
+      "outcomes": {
+        "total": 244,
+        "passed": 244,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "12e6e4c57424471f115559392037d9c03b322cb95043c843b0468ab6e4568d1e"
+    },
+    "service_focused": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Projections.ProjectionPlatformAdapterTests -result-xml /tmp/dw-62-reviewed-service-focused.xml",
+      "exit_code": 0,
+      "outcomes": {
+        "total": 10,
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "a4549206222ba26690b590c2842a276e3a384d3fd35d996d841fdb17b664a39a"
+    },
+    "certificate": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.ProcessAsync_RetryErasureVerification_KeyDestroyedRunsExistingOrchestratorAndPersistsBoundedRecords -result-xml /tmp/dw-62-reviewed-certificate.xml",
+      "exit_code": 0,
+      "outcomes": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "a17d41c84902e00915e4e0360d0a52d2c5e0506cdaef4ea88f276ecfaa179857"
+    },
+    "service_full": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-62-reviewed-service-full.xml",
+      "exit_code": 0,
+      "outcomes": {
+        "total": 1901,
+        "passed": 1901,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "ccf52c821b02f92be7271f7443b02ee7b6d776bcdcf37677cb9f7c6806a218c1"
+    }
+  },
+  "baseline": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Projections.ProjectionPlatformAdapterTests -result-xml /tmp/dw-62-baseline-tests.xml",
+    "exit_code": 1,
+    "total": 9,
+    "passed": 5,
+    "failed": 4,
+    "note": "Two tests reproduced original wall-clock timestamps. Two new Memories rows failed because the internal mapping interface cannot be dynamically proxied; the handwritten mapping fake was reused and extracted before final validation. No four-case functional baseline claim.",
+    "xml_sha256": "cd33905819280e089df8c0d71d5f75e32eb55ae643468a0c69ede52fcb9b796f"
+  },
+  "initial_build_corrections": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+      "exit_code": 1,
+      "error": "CA2007 on the newly awaited task variable; ConfigureAwait(false) then exposed xUnit1030 on the retry. Tests now use ConfigureAwait(true), satisfying both rules."
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true --no-restore -p:BuildProjectReferences=false -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "purpose": "Compile baseline regression tests against already-built unchanged dependencies."
+    }
+  ],
+  "runtime_baseline": {
+    "commands": [
+      "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+      "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --no-build --format Json --non-interactive",
+      "aspire wait parties --timeout 20 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+      "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "aspire ps --format Json --non-interactive"
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "observed": {
+      "parties": "Running/Healthy",
+      "security": "Running/Healthy",
+      "eventstore": "Running/Healthy",
+      "tenants": "Running/Healthy",
+      "parties-ui": "Finished",
+      "parties-mcp": "NotStarted",
+      "eventstore-admin-ui": "NotStarted"
+    },
+    "qualification": "Existing-build local readiness only; complete topology not qualified. Owned AppHost stopped before code builds; final running-AppHost list empty."
+  },
+  "static_checks": [
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0
+    }
+  ],
+  "commitlint": {
+    "command": "node_modules/.bin/commitlint --edit /tmp/dw-62-commit-message.txt --verbose",
+    "exit_code": 0,
+    "cli_version": "21.2.2 (matches package-lock.json)",
+    "evidence": "commitlint.txt"
+  },
+  "source_sha256": {
+    "src/Hexalith.Parties.Security/ErasureVerificationService.cs": "9db00d397084f26555c5e0e2d6172694924f518ee9c2c8efda4526c21b9cf457",
+    "src/Hexalith.Parties.Security/ErasureStoreCleanupDelegate.cs": "1d365da861884057ff3ed43e6151152d716b6c20f5f8f7157b6129d73da6ea97",
+    "src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs": "a09b01a2bf36e7c3a99a2ccb70dfb1d19aef7c00aebfb496bf8ae48e461a09eb",
+    "tests/Hexalith.Parties.Security.Tests/ErasureVerificationServiceTests.cs": "02db88c45fa5ab2d08fe4c70b3754e576f7efa0794458ffce63d68583e5960d0",
+    "tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs": "ae1bb47dcd8040ce41000ac44ed1d2c7eb6f74f35ff6c87bd5e8b2d2360155ea",
+    "tests/Hexalith.Parties.Tests/Projections/ErasureCleanupMappingStore.cs": "331f6a3a6d762fbcbdfd1bacd8c601310b94d5ca0dc995dbe3714ab0c856c34e",
+    "tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs": "a41c0d4b82991ba81288613c8810186484c9c112d7e256b3af4dac5a33ab0d3e"
+  },
+  "assembly_sha256": {
+    "tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll": "79607f46f1841a992a7161bb18e031a9c57fcf36bdf869d29aaa2a7d768a7e8c",
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll": "538721dc6a00ecc3f3c0592deeed5956e5fa8ba892761b161b2d8affcee702f6",
+    "src/Hexalith.Parties.Security/bin/Debug/net10.0/Hexalith.Parties.Security.dll": "293979b7b116734e1d14b36c2f4beeb21a99e9226e28b45ca542c7b758727f3a",
+    "src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll": "084dbba903a80e6f5a085a6ff976081bf1a2490287d53c1c16867330b04b37d8",
+    "tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.dll": "293979b7b116734e1d14b36c2f4beeb21a99e9226e28b45ca542c7b758727f3a",
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.dll": "293979b7b116734e1d14b36c2f4beeb21a99e9226e28b45ca542c7b758727f3a",
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.dll": "084dbba903a80e6f5a085a6ff976081bf1a2490287d53c1c16867330b04b37d8"
+  },
+  "review": {
+    "layers": [
+      "blind-hunter"
+    ],
+    "skipped_layers": [],
+    "findings": 6,
+    "patched": 6,
+    "new_deferrals": 0,
+    "followup": "Independent read-only inspection verified all six corrections; no new defects found."
+  },
+  "before_review_builds": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "log_sha256": "8dd12b1400eebb328a3c1d5a747a7f556b547e8348a8c469aea1c3ee4612d343"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "log_sha256": "ea3104f5e057d346b964daf2571a7bc16b0e51026efc2407e7a77856755eb2aa"
+    }
+  ],
+  "before_review_tests": {
+    "security_focused": {
+      "command": "dotnet tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll -class Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests -result-xml /tmp/dw-62-security-focused.xml",
+      "exit_code": 0,
+      "outcomes": {
+        "total": 20,
+        "passed": 20,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "cd249c10ed0b4c7b737b07cfbdc834c6096961ab51deb6daae9a9ccaf5dd301f"
+    },
+    "security_full": {
+      "command": "dotnet tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll -result-xml /tmp/dw-62-security-full.xml",
+      "exit_code": 0,
+      "outcomes": {
+        "total": 241,
+        "passed": 241,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "e6a097a57bf9fd39486792268c4b7861d57b3b3a7f029237af335c9e18ca592d"
+    },
+    "service_focused": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Projections.ProjectionPlatformAdapterTests -result-xml /tmp/dw-62-service-focused.xml",
+      "exit_code": 0,
+      "outcomes": {
+        "total": 9,
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "8ed930ccf261f85d3de008a8abe53a072279e0e19dd56336608f8c22d4f4a2b2"
+    },
+    "service_full": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-62-service-full.xml",
+      "exit_code": 0,
+      "outcomes": {
+        "total": 1900,
+        "passed": 1900,
+        "failed": 0,
+        "skipped": 0,
+        "not-run": 0,
+        "errors": 0
+      },
+      "xml_sha256": "0d8d2d33ee3bb7186727e4cd2c805a50a20bb884076dfbccd774d2d6e08d308b"
+    }
+  }
+}

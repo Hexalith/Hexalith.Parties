@@ -9,10 +9,32 @@ namespace Hexalith.Parties.Security;
 /// The cleanup delegates are wired in DI to call the actual actor EraseAsync methods,
 /// keeping this service decoupled from the Projections project.
 /// </summary>
+/// <param name="storeCleanups">The cleanup operations for each store.</param>
+/// <param name="logger">The verification logger.</param>
+/// <param name="timeProvider">The clock for verification evidence timestamps.</param>
 public sealed partial class ErasureVerificationService(
     IReadOnlyList<ErasureStoreCleanupDelegate> storeCleanups,
-    ILogger<ErasureVerificationService> logger) : IErasureVerificationService
+    ILogger<ErasureVerificationService> logger,
+    TimeProvider timeProvider) : IErasureVerificationService
 {
+    private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+
+    /// <summary>Initializes verification using the system clock.</summary>
+    /// <param name="storeCleanups">The cleanup operations for each store.</param>
+    /// <param name="logger">The verification logger.</param>
+    public ErasureVerificationService(
+        IReadOnlyList<ErasureStoreCleanupDelegate> storeCleanups,
+        ILogger<ErasureVerificationService> logger)
+        : this(storeCleanups, logger, TimeProvider.System)
+    {
+    }
+
+    /// <summary>Runs store cleanup and reports its verification outcome.</summary>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="partyId">The party identifier.</param>
+    /// <param name="erasureCertificate">The key-destruction certificate.</param>
+    /// <param name="cancellationToken">A token that cancels verification.</param>
+    /// <returns>The verification report with per-store results.</returns>
     public async Task<ErasureVerificationReport> VerifyErasureAsync(
         string tenantId,
         string partyId,
@@ -45,7 +67,7 @@ public sealed partial class ErasureVerificationService(
                 {
                     StoreName = $"store-{i}",
                     Status = ErasureStoreCleanupStatus.Failed,
-                    Timestamp = DateTimeOffset.UtcNow,
+                    Timestamp = _timeProvider.GetUtcNow(),
                     ErrorMessage = "Store cleanup did not complete.",
                 };
             }
@@ -59,7 +81,7 @@ public sealed partial class ErasureVerificationService(
         {
             PartyId = partyId,
             TenantId = tenantId,
-            Timestamp = DateTimeOffset.UtcNow,
+            Timestamp = _timeProvider.GetUtcNow(),
             StoreResults = storeResults,
             OverallStatus = overallStatus,
         };
@@ -68,6 +90,9 @@ public sealed partial class ErasureVerificationService(
         return report;
     }
 
+    /// <summary>Combines the store cleanup statuses into an overall outcome.</summary>
+    /// <param name="results">The individual store cleanup results.</param>
+    /// <returns>The combined verification status.</returns>
     public static ErasureVerificationOverallStatus DetermineOverallStatus(
         List<ErasureVerificationStoreResult> results)
     {
@@ -135,10 +160,3 @@ public sealed partial class ErasureVerificationService(
     [LoggerMessage(Level = LogLevel.Information, Message = "Erasure verification completed: {OverallStatus} ({StoreCount} stores checked).")]
     private partial void LogVerificationCompleted(string overallStatus, int storeCount);
 }
-
-/// <summary>
-/// Delegate for cleaning a specific data store during erasure verification.
-/// Returns the result of the cleanup operation for the store.
-/// </summary>
-public delegate Task<ErasureVerificationStoreResult> ErasureStoreCleanupDelegate(
-    string tenantId, string partyId, CancellationToken cancellationToken);

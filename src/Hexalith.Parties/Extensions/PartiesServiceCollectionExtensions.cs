@@ -192,6 +192,7 @@ public static class PartiesServiceCollectionExtensions {
             .GetSection(PartyMemorySearchOptions.SectionName)
             .Get<PartyMemorySearchOptions>() ?? new PartyMemorySearchOptions();
         _ = services.AddSingleton<IReadOnlyList<ErasureStoreCleanupDelegate>>(sp => {
+            TimeProvider timeProvider = sp.GetRequiredService<TimeProvider>();
             List<ErasureStoreCleanupDelegate> cleanups =
             [
                 async (tenantId, partyId, cancellationToken) =>
@@ -205,7 +206,7 @@ public static class PartiesServiceCollectionExtensions {
                         {
                             StoreName = "sdk-read-models",
                             Status = ErasureStoreCleanupStatus.Cleaned,
-                            Timestamp = DateTimeOffset.UtcNow,
+                            Timestamp = timeProvider.GetUtcNow(),
                         };
                     }
                     catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -226,7 +227,7 @@ public static class PartiesServiceCollectionExtensions {
                         {
                             StoreName = "sdk-read-models",
                             Status = ErasureStoreCleanupStatus.Failed,
-                            Timestamp = DateTimeOffset.UtcNow,
+                            Timestamp = timeProvider.GetUtcNow(),
                             ErrorMessage = "SDK read-model cleanup did not complete.",
                         };
                     }
@@ -247,7 +248,7 @@ public static class PartiesServiceCollectionExtensions {
                     {
                         StoreName = "projection-cache",
                         Status = ErasureStoreCleanupStatus.Cleaned,
-                        Timestamp = DateTimeOffset.UtcNow,
+                        Timestamp = timeProvider.GetUtcNow(),
                     });
                 },
                 // AggregateActor / EventStore.Server snapshot ownership left this host in Story 8.6.
@@ -256,13 +257,13 @@ public static class PartiesServiceCollectionExtensions {
                 {
                     StoreName = "aggregate-readable-state",
                     Status = ErasureStoreCleanupStatus.NotApplicable,
-                    Timestamp = DateTimeOffset.UtcNow,
+                    Timestamp = timeProvider.GetUtcNow(),
                 }),
                 (tenantId, partyId, cancellationToken) => Task.FromResult(new ErasureVerificationStoreResult
                 {
                     StoreName = "snapshots",
                     Status = ErasureStoreCleanupStatus.NotApplicable,
-                    Timestamp = DateTimeOffset.UtcNow,
+                    Timestamp = timeProvider.GetUtcNow(),
                 }),
             ];
 
@@ -286,7 +287,7 @@ public static class PartiesServiceCollectionExtensions {
                     {
                         StoreName = "memories-search",
                         Status = result.Cleaned ? ErasureStoreCleanupStatus.Cleaned : ErasureStoreCleanupStatus.Failed,
-                        Timestamp = DateTimeOffset.UtcNow,
+                        Timestamp = timeProvider.GetUtcNow(),
                         ErrorMessage = result.BlockedReason,
                     };
                 }
@@ -305,7 +306,7 @@ public static class PartiesServiceCollectionExtensions {
                     {
                         StoreName = "memories-search",
                         Status = ErasureStoreCleanupStatus.Failed,
-                        Timestamp = DateTimeOffset.UtcNow,
+                        Timestamp = timeProvider.GetUtcNow(),
                         ErrorMessage = "Memories search cleanup did not complete.",
                     };
                 }

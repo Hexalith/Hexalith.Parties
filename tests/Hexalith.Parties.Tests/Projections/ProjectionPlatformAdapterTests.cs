@@ -106,6 +106,9 @@ public sealed class ProjectionPlatformAdapterTests
     {
         const string tenantId = "tenant-a";
         const string partyId = "party-1";
+        DateTimeOffset now = DateTimeOffset.UnixEpoch.AddYears(60);
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        clock.GetUtcNow().Returns(_ => now);
         IReadModelStore readModelStore = Substitute.For<IReadModelStore>();
         IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
         readModelStore.GetAsync<PartyDetailSdkReadModel>("statestore", PartySdkReadModelAddresses.Detail(tenantId, partyId), Arg.Any<CancellationToken>())
@@ -115,10 +118,14 @@ public sealed class ProjectionPlatformAdapterTests
         readModelStore.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index(tenantId), Arg.Any<CancellationToken>())
             .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
         batchStore.ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>())
-            .Returns(ReadModelBatchResult.Completed("fingerprint"));
+            .Returns(_ =>
+            {
+                now = now.AddMinutes(1);
+                return ReadModelBatchResult.Completed("fingerprint");
+            });
 
-        IServiceCollection services = CreatePartiesServices();
-        IPartyMemoryUnitMappingStore mappingStore = new EmptyMappingStore();
+        IServiceCollection services = CreatePartiesServices(clock);
+        IPartyMemoryUnitMappingStore mappingStore = new ErasureCleanupMappingStore();
         services.RemoveAll<IReadModelStore>();
         services.RemoveAll<IReadModelBatchStore>();
         services.RemoveAll<IPartyMemoryUnitMappingStore>();
@@ -164,8 +171,10 @@ public sealed class ProjectionPlatformAdapterTests
         Dictionary<string, ErasureStoreCleanupStatus> statuses = new(StringComparer.Ordinal);
         foreach (ErasureStoreCleanupDelegate cleanup in cleanups)
         {
+            now = now.AddMinutes(1);
             ErasureVerificationStoreResult result = await cleanup(tenantId, partyId, TestContext.Current.CancellationToken);
             statuses[result.StoreName] = result.Status;
+            result.Timestamp.ShouldBe(now);
         }
 
         statuses["sdk-read-models"].ShouldBe(ErasureStoreCleanupStatus.Cleaned);
@@ -192,6 +201,9 @@ public sealed class ProjectionPlatformAdapterTests
     {
         const string tenantId = "tenant-a";
         const string partyId = "party-1";
+        DateTimeOffset now = DateTimeOffset.UnixEpoch.AddYears(60);
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        clock.GetUtcNow().Returns(_ => now);
         IReadModelStore readModelStore = Substitute.For<IReadModelStore>();
         IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
         readModelStore.GetAsync<PartyDetailSdkReadModel>(
@@ -204,12 +216,18 @@ public sealed class ProjectionPlatformAdapterTests
                 "statestore", PartySdkReadModelAddresses.Index(tenantId), Arg.Any<CancellationToken>())
             .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(null, null));
         batchStore.ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>())
-            .Returns(ReadModelBatchResult.Indeterminate("fingerprint", "transaction-dispatch"));
-        IServiceCollection services = CreatePartiesServices();
+            .Returns(_ =>
+            {
+                now = now.AddMinutes(1);
+                return ReadModelBatchResult.Indeterminate("fingerprint", "transaction-dispatch");
+            });
+        IServiceCollection services = CreatePartiesServices(clock);
         services.RemoveAll<IReadModelStore>();
         services.RemoveAll<IReadModelBatchStore>();
+        services.RemoveAll<IPartyMemoryUnitMappingStore>();
         services.AddSingleton(readModelStore);
         services.AddSingleton(batchStore);
+        services.AddSingleton<IPartyMemoryUnitMappingStore>(new ErasureCleanupMappingStore());
         using ServiceProvider provider = services.BuildServiceProvider();
         IErasureVerificationService verification = provider.GetRequiredService<IErasureVerificationService>();
 
@@ -227,6 +245,8 @@ public sealed class ProjectionPlatformAdapterTests
             TestContext.Current.CancellationToken);
 
         report.OverallStatus.ShouldNotBe(ErasureVerificationOverallStatus.Complete);
+        report.Timestamp.ShouldBe(now);
+        report.StoreResults.ShouldAllBe(result => result.Timestamp == now);
         ErasureVerificationStoreResult sdk = report.StoreResults.Single(static result => result.StoreName == "sdk-read-models");
         sdk.Status.ShouldBe(ErasureStoreCleanupStatus.Failed);
         (sdk.ErrorMessage ?? string.Empty).ShouldNotContain("transaction-dispatch");
@@ -261,7 +281,50 @@ public sealed class ProjectionPlatformAdapterTests
         thrown.ShouldNotBeNull();
     }
 
-    private static IServiceCollection CreatePartiesServices()
+    [Theory]
+    [InlineData("cleaned")]
+    [InlineData("inventory-failed")]
+    [InlineData("noncaller-cancellation")]
+    public async Task AddParties_MemoriesCleanupUsesClockAfterInventoryReadAsync(string outcome)
+    {
+        const string tenantId = "tenant-a";
+        const string partyId = "party-1";
+        DateTimeOffset now = DateTimeOffset.UnixEpoch.AddYears(60);
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        clock.GetUtcNow().Returns(_ => now);
+        var inventory = new TaskCompletionSource<IReadOnlyList<PartyMemoryUnitMappingEntry>>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        IPartyMemoryUnitMappingStore mappingStore = new ErasureCleanupMappingStore(inventory.Task);
+        IServiceCollection services = CreatePartiesServices(clock);
+        services.RemoveAll<IPartyMemoryUnitMappingStore>();
+        services.AddSingleton(mappingStore);
+        using ServiceProvider provider = services.BuildServiceProvider();
+        IReadOnlyList<ErasureStoreCleanupDelegate> cleanups =
+            provider.GetRequiredService<IReadOnlyList<ErasureStoreCleanupDelegate>>();
+
+        Task<ErasureVerificationStoreResult> cleanup = cleanups[^1](
+            tenantId, partyId, TestContext.Current.CancellationToken);
+        cleanup.IsCompleted.ShouldBeFalse();
+        now = now.AddMinutes(1);
+        if (outcome == "cleaned")
+        {
+            inventory.SetResult([]);
+        }
+        else
+        {
+            inventory.SetException(outcome == "noncaller-cancellation"
+                ? new OperationCanceledException("Inventory read timed out.")
+                : new InvalidOperationException("Inventory is unavailable."));
+        }
+
+        ErasureVerificationStoreResult result = await cleanup.ConfigureAwait(true);
+
+        result.StoreName.ShouldBe("memories-search");
+        result.Status.ShouldBe(outcome == "cleaned" ? ErasureStoreCleanupStatus.Cleaned : ErasureStoreCleanupStatus.Failed);
+        result.Timestamp.ShouldBe(now);
+    }
+
+    private static IServiceCollection CreatePartiesServices(TimeProvider? clock = null)
     {
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -276,35 +339,13 @@ public sealed class ProjectionPlatformAdapterTests
             .Build();
         var services = new ServiceCollection();
         services.AddLogging();
+        if (clock is not null)
+        {
+            services.AddSingleton(clock);
+        }
+
         services.AddParties(configuration);
         return services;
     }
 
-    private sealed class EmptyMappingStore : IPartyMemoryUnitMappingStore
-    {
-        public Task RecordMappingAsync(
-            string tenantId,
-            string partyId,
-            string memoryUnitId,
-            string sourceUri,
-            string caseId,
-            CancellationToken cancellationToken)
-            => Task.CompletedTask;
-
-        public Task<IReadOnlyList<PartyMemoryUnitMappingEntry>> GetMappingsAsync(
-            string tenantId,
-            string partyId,
-            CancellationToken cancellationToken)
-            => Task.FromResult<IReadOnlyList<PartyMemoryUnitMappingEntry>>([]);
-
-        public Task ClearMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
-            => Task.CompletedTask;
-
-        public Task<int> RemoveMappingsAsync(
-            string tenantId,
-            string partyId,
-            IReadOnlyList<PartyMemoryUnitMappingEntry> entries,
-            CancellationToken cancellationToken)
-            => Task.FromResult(0);
-    }
 }

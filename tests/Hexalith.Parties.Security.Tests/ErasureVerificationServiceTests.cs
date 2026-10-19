@@ -2,6 +2,8 @@ using Hexalith.Parties.Contracts.Security;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
+using NSubstitute;
+
 using Shouldly;
 
 namespace Hexalith.Parties.Security.Tests;
@@ -10,6 +12,137 @@ public class ErasureVerificationServiceTests
 {
     private const string TenantId = "test-tenant";
     private const string PartyId = "party-1";
+
+    [Fact]
+    public async Task VerifyErasureAsync_UsesClockAfterCleanupAndPreservesStoreTimestamp()
+    {
+        DateTimeOffset now = DateTimeOffset.UnixEpoch.AddYears(60);
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        clock.GetUtcNow().Returns(_ => now);
+        ErasureVerificationStoreResult storeResult = new()
+        {
+            StoreName = "detail-projection",
+            Status = ErasureStoreCleanupStatus.Cleaned,
+            Timestamp = now.AddMinutes(-1),
+        };
+        var cleanup = new TaskCompletionSource<ErasureVerificationStoreResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var lastCleanup = new TaskCompletionSource<ErasureVerificationStoreResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var lastCleanupStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var service = new ErasureVerificationService(
+            [
+                (_, _, _) => cleanup.Task,
+                (_, _, _) =>
+                {
+                    lastCleanupStarted.SetResult();
+                    return lastCleanup.Task;
+                },
+            ],
+            NullLogger<ErasureVerificationService>.Instance,
+            clock);
+
+        Task<ErasureVerificationReport> verification = service.VerifyErasureAsync(
+            TenantId, PartyId, CreateCertificate(), TestContext.Current.CancellationToken);
+        verification.IsCompleted.ShouldBeFalse();
+        now = now.AddMinutes(1);
+        cleanup.SetResult(storeResult);
+        await lastCleanupStarted.Task.ConfigureAwait(true);
+        verification.IsCompleted.ShouldBeFalse();
+        now = now.AddMinutes(1);
+        ErasureVerificationStoreResult lastResult = storeResult with
+        {
+            StoreName = "index-projection",
+            Timestamp = now,
+        };
+        lastCleanup.SetResult(lastResult);
+
+        ErasureVerificationReport report = await verification.ConfigureAwait(true);
+
+        report.Timestamp.ShouldBe(now);
+        report.OverallStatus.ShouldBe(ErasureVerificationOverallStatus.Complete);
+        report.StoreResults.Count.ShouldBe(2);
+        report.StoreResults[0].ShouldBeSameAs(storeResult);
+        report.StoreResults[1].ShouldBeSameAs(lastResult);
+    }
+
+    [Theory]
+    [InlineData(ErasureStoreCleanupStatus.Failed)]
+    [InlineData(ErasureStoreCleanupStatus.Pending)]
+    public async Task VerifyErasureAsync_PreservesTimestampWhenSanitizingStoreError(ErasureStoreCleanupStatus status)
+    {
+        DateTimeOffset now = DateTimeOffset.UnixEpoch.AddYears(60);
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        clock.GetUtcNow().Returns(now);
+        ErasureVerificationStoreResult storeResult = new()
+        {
+            StoreName = "detail-projection",
+            Status = status,
+            Timestamp = now.AddMinutes(-1),
+            ErrorMessage = "Private cleanup details.",
+        };
+        var service = new ErasureVerificationService(
+            [(_, _, _) => Task.FromResult(storeResult)],
+            NullLogger<ErasureVerificationService>.Instance,
+            clock);
+
+        ErasureVerificationReport report = await service.VerifyErasureAsync(
+            TenantId, PartyId, CreateCertificate(), TestContext.Current.CancellationToken);
+
+        report.Timestamp.ShouldBe(now);
+        ErasureVerificationStoreResult sanitized = report.StoreResults.ShouldHaveSingleItem();
+        sanitized.Timestamp.ShouldBe(storeResult.Timestamp);
+        sanitized.Status.ShouldBe(status);
+        sanitized.ErrorMessage.ShouldBe($"Verification did not complete for store 'detail-projection' (status {status}).");
+    }
+
+    [Fact]
+    public async Task VerifyErasureAsync_LegacyConstructorUsesSystemClock()
+    {
+        typeof(ErasureVerificationService).GetConstructor(
+            [typeof(IReadOnlyList<ErasureStoreCleanupDelegate>), typeof(Microsoft.Extensions.Logging.ILogger<ErasureVerificationService>)])
+            .ShouldNotBeNull();
+        var service = new ErasureVerificationService([], NullLogger<ErasureVerificationService>.Instance);
+        DateTimeOffset before = TimeProvider.System.GetUtcNow();
+
+        ErasureVerificationReport report = await service.VerifyErasureAsync(
+            TenantId, PartyId, CreateCertificate(), TestContext.Current.CancellationToken);
+
+        report.Timestamp.ShouldBeInRange(before, TimeProvider.System.GetUtcNow());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task VerifyErasureAsync_UnexpectedFailureUsesClockAfterCleanup(bool nonCallerCancellation)
+    {
+        DateTimeOffset now = DateTimeOffset.UnixEpoch.AddYears(60);
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        clock.GetUtcNow().Returns(_ => now);
+        var cleanup = new TaskCompletionSource<ErasureVerificationStoreResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var service = new ErasureVerificationService(
+            [(_, _, _) => cleanup.Task],
+            NullLogger<ErasureVerificationService>.Instance,
+            clock);
+
+        Task<ErasureVerificationReport> verification = service.VerifyErasureAsync(
+            TenantId, PartyId, CreateCertificate(), TestContext.Current.CancellationToken);
+        verification.IsCompleted.ShouldBeFalse();
+        now = now.AddMinutes(1);
+        cleanup.SetException(nonCallerCancellation
+            ? new OperationCanceledException("Cleanup timed out.")
+            : new InvalidOperationException("Cleanup is unavailable."));
+
+        ErasureVerificationReport report = await verification.ConfigureAwait(true);
+
+        report.Timestamp.ShouldBe(now);
+        report.OverallStatus.ShouldBe(ErasureVerificationOverallStatus.Failed);
+        ErasureVerificationStoreResult result = report.StoreResults.ShouldHaveSingleItem();
+        result.Status.ShouldBe(ErasureStoreCleanupStatus.Failed);
+        result.Timestamp.ShouldBe(now);
+        result.ErrorMessage.ShouldBe("Store cleanup did not complete.");
+    }
 
     [Fact]
     public async Task VerifyErasureAsync_AllStoresClean_ReturnsComplete()
