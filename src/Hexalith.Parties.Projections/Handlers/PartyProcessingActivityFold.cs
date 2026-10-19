@@ -19,6 +19,8 @@ internal static class PartyProcessingActivityFold
     /// itself silent — reports every drop/skip exactly once per delivery instead of twice.
     /// The handler supplies the named <c>Hexalith.Parties.Projections.Handlers.PartyProcessingActivityFold</c>
     /// category through its optional logger factory. Direct callers may supply any optional logger.
+    /// Event-derived erasure tombstones use <see cref="PartyErased.ErasedAt"/>; audit record
+    /// timestamps and projection freshness continue to use source envelope timestamps.
     /// </summary>
     public static PartyProcessingSdkReadModel Fold(
         ProjectionRequest request,
@@ -53,7 +55,6 @@ internal static class PartyProcessingActivityFold
                         ? "Redacted"
                         : "Failed";
 
-            bool isErasure = payload is PartyErased;
             int existingRecordIndex = records.FindIndex(record => record.SequenceNumber == @event.SequenceNumber);
             ProcessingActivityRecord derivedRecord = CreateRecord(request, @event, payload, outcome);
             if (existingRecordIndex >= 0)
@@ -73,10 +74,10 @@ internal static class PartyProcessingActivityFold
                 records.Add(derivedRecord);
             }
 
-            if (isErasure)
+            if (payload is PartyErased erased)
             {
                 erasureSequence = Math.Max(erasureSequence ?? long.MinValue, @event.SequenceNumber);
-                erasedAt = @event.Timestamp.ToUniversalTime();
+                erasedAt = erased.ErasedAt;
             }
 
             if (!advance)

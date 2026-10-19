@@ -1,0 +1,99 @@
+The '-xml' switch has been deprecated in favor of '-result-xml' and will be removed in the next major version
+
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Projections.Tests
+  Discovered:  Hexalith.Parties.Projections.Tests
+  Starting:    Hexalith.Parties.Projections.Tests
+    Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(rebuild: False, offsetHours: 0, envelopeDelayMinutes: 15) [FAIL]
+      Shouldly.ShouldAssertException : processing.ErasedAt
+          should be
+      01/02/1970 00:00:00 +00:00
+          but was
+      01/02/1970 00:15:00 +00:00
+      Stack Trace:
+        tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(2971,0): at Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(Boolean rebuild, Int32 offsetHours, Int32 envelopeDelayMinutes)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(rebuild: False, offsetHours: 2, envelopeDelayMinutes: -15) [FAIL]
+      Shouldly.ShouldAssertException : processing.ErasedAt
+          should be
+      01/02/1970 02:00:00 +02:00
+          but was
+      01/01/1970 23:45:00 +00:00
+      Stack Trace:
+        tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(2971,0): at Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(Boolean rebuild, Int32 offsetHours, Int32 envelopeDelayMinutes)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(rebuild: False, offsetHours: -7, envelopeDelayMinutes: 15) [FAIL]
+      Shouldly.ShouldAssertException : processing.ErasedAt
+          should be
+      01/01/1970 17:00:00 -07:00
+          but was
+      01/02/1970 00:15:00 +00:00
+      Stack Trace:
+        tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(2971,0): at Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(Boolean rebuild, Int32 offsetHours, Int32 envelopeDelayMinutes)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(rebuild: True, offsetHours: 0, envelopeDelayMinutes: 15) [FAIL]
+      Shouldly.ShouldAssertException : processing.ErasedAt
+          should be
+      01/02/1970 00:00:00 +00:00
+          but was
+      01/02/1970 00:15:00 +00:00
+      Stack Trace:
+        tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(2971,0): at Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(Boolean rebuild, Int32 offsetHours, Int32 envelopeDelayMinutes)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(rebuild: True, offsetHours: 2, envelopeDelayMinutes: -15) [FAIL]
+      Shouldly.ShouldAssertException : processing.ErasedAt
+          should be
+      01/02/1970 02:00:00 +02:00
+          but was
+      01/01/1970 23:45:00 +00:00
+      Stack Trace:
+        tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(2971,0): at Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(Boolean rebuild, Int32 offsetHours, Int32 envelopeDelayMinutes)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(rebuild: True, offsetHours: -7, envelopeDelayMinutes: 15) [FAIL]
+      Shouldly.ShouldAssertException : processing.ErasedAt
+          should be
+      01/01/1970 17:00:00 -07:00
+          but was
+      01/02/1970 00:15:00 +00:00
+      Stack Trace:
+        tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs(2971,0): at Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(Boolean rebuild, Int32 offsetHours, Int32 envelopeDelayMinutes)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+  Finished:    Hexalith.Parties.Projections.Tests (ID = '32ccbe81df0b8fb30a1cbb4f3fe7d397e416567be0c1d8e5322390ff12449635')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Projections.Tests  Total: 6, Errors: 0, Failed: 6, Skipped: 0, Not Run: 0, Time: 0.251s

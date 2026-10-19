@@ -2911,6 +2911,135 @@ public sealed class PartySdkProjectionHandlerTests
         index.ErasureSequenceNumbers.ContainsKey("party-1").ShouldBeTrue();
     }
 
+    /// <summary>Persists payload erasure instants independently of audit and freshness envelope timestamps.</summary>
+    /// <param name="rebuild">Whether to rebuild existing mismatched tombstones instead of delivering incrementally.</param>
+    /// <param name="offsetHours">The payload timestamp's UTC offset.</param>
+    /// <param name="envelopeDelayMinutes">The envelope instant's difference from the payload instant.</param>
+    [Theory]
+    [InlineData(false, 0, 15)]
+    [InlineData(false, 2, -15)]
+    [InlineData(false, -7, 15)]
+    [InlineData(true, 0, 15)]
+    [InlineData(true, 2, -15)]
+    [InlineData(true, -7, 15)]
+    public async Task DetailAndProcessingTombstonesUsePayloadErasureInstantAsync(
+        bool rebuild,
+        int offsetHours,
+        int envelopeDelayMinutes)
+    {
+        DateTimeOffset erasedAt = DateTimeOffset.UnixEpoch.AddDays(1).ToOffset(TimeSpan.FromHours(offsetHours));
+        DateTimeOffset envelopeAt = erasedAt.AddMinutes(envelopeDelayMinutes).ToOffset(TimeSpan.FromHours(3));
+        ProjectionRequest creation = CreateRequest();
+        ProjectionEventDto erased = Event(new PartyErased
+        {
+            PartyId = creation.AggregateId,
+            TenantId = creation.TenantId,
+            ErasedAt = erasedAt,
+        }, 3, envelopeAt);
+        ProjectionRequest history = creation with { Events = [.. creation.Events, erased] };
+        string detailKey = PartySdkReadModelAddresses.Detail(creation.TenantId, creation.AggregateId);
+        string processingKey = PartySdkReadModelAddresses.Processing(creation.TenantId, creation.AggregateId);
+        var store = new InMemoryReadModelBatchStore();
+        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        (await handler.ProjectAsync(creation, "create-before-erasure", cancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        if (rebuild)
+        {
+            // Previously checkpointed processing tombstones used the envelope time.
+            await store.SaveAsync("statestore", processingKey,
+                PartyProcessingActivityFold.Fold(history, current: null) with { ErasedAt = envelopeAt.ToUniversalTime() },
+                cancellationToken);
+            await store.SaveAsync("statestore", detailKey,
+                PartyDetailSdkProjectionHandler.Fold(history, current: null), cancellationToken);
+            string legacyDetail = JsonSerializer.Serialize(store.Deserialize<PartyDetailSdkReadModel>(detailKey), s_canonicalJsonOptions);
+            string legacyProcessing = JsonSerializer.Serialize(store.Deserialize<PartyProcessingSdkReadModel>(processingKey), s_canonicalJsonOptions);
+            (await handler.ProjectAsync(history, "legacy-erasure-redelivery", cancellationToken))
+                .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+            JsonSerializer.Serialize(store.Deserialize<PartyDetailSdkReadModel>(detailKey), s_canonicalJsonOptions).ShouldBe(legacyDetail);
+            JsonSerializer.Serialize(store.Deserialize<PartyProcessingSdkReadModel>(processingKey), s_canonicalJsonOptions).ShouldBe(legacyProcessing);
+
+            DomainProjectionRebuildPlan plan = await handler.PrepareRebuildAsync(history, "rebuild-erasure", cancellationToken);
+            var scope = new ReadModelBatchScope(plan.StoreName, history.TenantId, history.Domain,
+                history.AggregateId, PartyProjectionNames.Detail, "rebuild-erasure");
+            (await store.ExecuteAsync(new ReadModelBatch(scope, plan.Operations), cancellationToken))
+                .Status.ShouldBe(ReadModelBatchStatus.Completed);
+        }
+        else
+        {
+            (await handler.ProjectAsync(history with { Events = [erased] }, "erase-incrementally", cancellationToken))
+                .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        }
+
+        PartyDetailSdkReadModel detail = store.Deserialize<PartyDetailSdkReadModel>(detailKey);
+        PartyProcessingSdkReadModel processing = store.Deserialize<PartyProcessingSdkReadModel>(processingKey);
+        detail.ErasedAt.ShouldBe(erasedAt);
+        processing.ErasedAt.ShouldBe(erasedAt);
+        // Preserve the authoritative payload representation, including a non-UTC offset.
+        detail.ErasedAt.GetValueOrDefault().Offset.ShouldBe(erasedAt.Offset);
+        processing.ErasedAt.GetValueOrDefault().Offset.ShouldBe(erasedAt.Offset);
+        detail.ErasureSequenceNumber.ShouldBe(3);
+        processing.ErasureSequenceNumber.ShouldBe(3);
+        detail.LastSequenceNumber.ShouldBe(3);
+        processing.LastSequenceNumber.ShouldBe(3);
+        detail.ProjectedAt.ShouldBe(envelopeAt.ToUniversalTime());
+        processing.ProjectedAt.ShouldBe(envelopeAt.ToUniversalTime());
+        detail.Detail.ShouldNotBeNull().IsErased.ShouldBeTrue();
+        detail.Detail.DisplayName.ShouldBeEmpty();
+        detail.Detail.PersonDetails.ShouldBeNull();
+        detail.Detail.ErasedAt.GetValueOrDefault().EqualsExact(erasedAt).ShouldBeTrue();
+        detail.Detail.LastModifiedAt.EqualsExact(erasedAt).ShouldBeTrue();
+        processing.Records.Select(static record => record.SequenceNumber).ShouldBe([1L, 2L, 3L]);
+        ProcessingActivityRecord erasureRecord = processing.Records.Single(static record => record.SequenceNumber == 3);
+        erasureRecord.Timestamp.ShouldBe(envelopeAt.ToUniversalTime());
+        erasureRecord.Timestamp.Offset.ShouldBe(TimeSpan.Zero);
+        erasureRecord.OperationCategory.ShouldBe("Erasure");
+        erasureRecord.Outcome.ShouldBe("Succeeded");
+
+        string beforeDetail = JsonSerializer.Serialize(detail, s_canonicalJsonOptions);
+        string beforeProcessing = JsonSerializer.Serialize(processing, s_canonicalJsonOptions);
+        (await handler.ProjectAsync(history, "erasure-redelivery", cancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        JsonSerializer.Serialize(store.Deserialize<PartyDetailSdkReadModel>(detailKey), s_canonicalJsonOptions).ShouldBe(beforeDetail);
+        JsonSerializer.Serialize(store.Deserialize<PartyProcessingSdkReadModel>(processingKey), s_canonicalJsonOptions).ShouldBe(beforeProcessing);
+
+        ProjectionEventDto tail = Event(new PartyReactivated(), 4, envelopeAt.AddHours(1));
+        (await handler.ProjectAsync(history with { Events = [tail] }, "after-erasure", cancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        PartyDetailSdkReadModel advancedDetail = store.Deserialize<PartyDetailSdkReadModel>(detailKey);
+        PartyProcessingSdkReadModel advancedProcessing = store.Deserialize<PartyProcessingSdkReadModel>(processingKey);
+        advancedDetail.ErasedAt.GetValueOrDefault().EqualsExact(erasedAt).ShouldBeTrue();
+        advancedProcessing.ErasedAt.GetValueOrDefault().EqualsExact(erasedAt).ShouldBeTrue();
+        advancedDetail.ErasureSequenceNumber.ShouldBe(3);
+        advancedProcessing.ErasureSequenceNumber.ShouldBe(3);
+        advancedDetail.LastSequenceNumber.ShouldBe(4);
+        advancedProcessing.LastSequenceNumber.ShouldBe(4);
+        advancedDetail.ProjectedAt.ShouldBe(tail.Timestamp.ToUniversalTime());
+        advancedProcessing.ProjectedAt.ShouldBe(tail.Timestamp.ToUniversalTime());
+        advancedDetail.Detail.ShouldNotBeNull().IsErased.ShouldBeTrue();
+        advancedDetail.Detail.ErasedAt.GetValueOrDefault().EqualsExact(erasedAt).ShouldBeTrue();
+        advancedDetail.Detail.LastModifiedAt.EqualsExact(erasedAt).ShouldBeTrue();
+        advancedProcessing.Records.ShouldBe(processing.Records);
+
+        var eraser = new PartySdkReadModelEraser(store, store, s_options);
+        await eraser.EraseAsync(history.TenantId, history.AggregateId, cancellationToken);
+        PartyDetailSdkReadModel cleanedDetail = store.Deserialize<PartyDetailSdkReadModel>(detailKey);
+        PartyProcessingSdkReadModel cleanedProcessing = store.Deserialize<PartyProcessingSdkReadModel>(processingKey);
+        cleanedDetail.ErasedAt.GetValueOrDefault().EqualsExact(erasedAt).ShouldBeTrue();
+        cleanedProcessing.ErasedAt.GetValueOrDefault().EqualsExact(erasedAt).ShouldBeTrue();
+        cleanedDetail.Detail.ShouldNotBeNull().IsErased.ShouldBeTrue();
+        cleanedDetail.Detail.ErasedAt.GetValueOrDefault().EqualsExact(erasedAt).ShouldBeTrue();
+        cleanedDetail.Detail.LastModifiedAt.EqualsExact(erasedAt).ShouldBeTrue();
+        cleanedDetail.ErasureSequenceNumber.ShouldBe(4);
+        cleanedProcessing.ErasureSequenceNumber.ShouldBe(4);
+        cleanedDetail.LastSequenceNumber.ShouldBe(4);
+        cleanedProcessing.LastSequenceNumber.ShouldBe(4);
+        cleanedDetail.ProjectedAt.ShouldBe(advancedDetail.ProjectedAt);
+        cleanedProcessing.ProjectedAt.ShouldBe(advancedProcessing.ProjectedAt);
+        cleanedProcessing.Records.ShouldBe(processing.Records);
+    }
+
     [Fact]
     public async Task DetailHandler_PartyErasedRedactsPersonalDataUsingEventTimestampAsync()
     {

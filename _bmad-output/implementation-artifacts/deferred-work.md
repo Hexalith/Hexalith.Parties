@@ -610,8 +610,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of spec-8-6-pro
 location: PartyProcessingActivityFold.Fold and PartyDetailProjectionHandler.ApplyErasure
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `PartyDetailProjectionHandler.ApplyErasure` assigns `ErasedAt = erased.ErasedAt` while `PartyProcessingActivityFold.Fold` assigns `@event.Timestamp.ToUniversalTime()`.
-status: open
+status: done 2026-10-19
 decision: 2026-09-06 Payload erasure instant — Use PartyErased.ErasedAt consistently across detail and processing folds and document the semantic choice.
+resolution: Detail and Processing event-derived tombstones now use PartyErased.ErasedAt, preserving its offset independently of envelope audit/freshness timestamps. Six persisted live/rebuild regressions cover distinct times, duplicate delivery, legacy redelivery before repair, later checkpoints and cleanup. Debug/source build has zero warnings/errors; full Projections.Tests passes 385/385 without failures/errors/skips/not-run. All four independent review findings are patched and follow-up verified; no new deferred work. Existing checkpointed values require a full party-detail rebuild from retained readable history. See spec-dw-78-erasure-timestamp.md and tests/dw-78-erasure-timestamp-2026-10-19/validation.json.
 
 ### DW-79: Parallelize state-store reads in PartyDetailSdkProjectionHandler.PrepareRebuildAsync
 
