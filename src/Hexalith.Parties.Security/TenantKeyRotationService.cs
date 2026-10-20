@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Options;
+
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -13,9 +15,10 @@ public sealed class TenantKeyRotationService(
     DaprClient daprClient,
     IKeyOperationAuditService auditService,
     IEnumerable<ITenantKeyRotationCacheInvalidator> cacheInvalidators,
-    ICorrelationContextAccessor correlationContextAccessor) : ITenantKeyRotationService
+    ICorrelationContextAccessor correlationContextAccessor,
+    IOptions<PartiesSecurityStoreOptions>? options = null) : ITenantKeyRotationService
 {
-    private const string StoreName = "statestore";
+    private readonly string _storeName = (options?.Value ?? new PartiesSecurityStoreOptions()).StateStoreName;
     private const int MaxRetries = 5;
 
     internal static readonly Meter s_meter = PartyKeyManagementService.s_meter;
@@ -236,7 +239,7 @@ public sealed class TenantKeyRotationService(
     private async Task<TenantKeyRotationProgress?> GetProgressAsync(string tenantId, string operationId, CancellationToken cancellationToken)
     {
         (TenantKeyRotationProgress? progress, _) = await daprClient
-            .GetStateAndETagAsync<TenantKeyRotationProgress>(StoreName, BuildProgressKey(tenantId, operationId), cancellationToken: cancellationToken)
+            .GetStateAndETagAsync<TenantKeyRotationProgress>(_storeName, BuildProgressKey(tenantId, operationId), cancellationToken: cancellationToken)
             .ConfigureAwait(false);
         return progress;
     }
@@ -248,11 +251,11 @@ public sealed class TenantKeyRotationService(
         for (int attempt = 0; attempt < MaxRetries; attempt++)
         {
             (_, string etag) = await daprClient
-                .GetStateAndETagAsync<TenantKeyRotationProgress>(StoreName, stateKey, cancellationToken: cancellationToken)
+                .GetStateAndETagAsync<TenantKeyRotationProgress>(_storeName, stateKey, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 
             bool saved = await daprClient.TrySaveStateAsync(
-                StoreName,
+                _storeName,
                 stateKey,
                 progress,
                 etag,

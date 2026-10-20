@@ -1,6 +1,6 @@
 # Getting Started with Hexalith.Parties
 
-This guide starts the local EventStore-fronted topology, sends a Parties command through EventStore, queries it back through EventStore, and shows the typed .NET client and separate MCP host integration paths. The default path is Aspire-based local development.
+This guide starts the local EventStore-fronted topology, sends a Parties command through EventStore, queries it back through EventStore, and shows the typed .NET client and separate MCP host integration paths. The default development path is the pinned Platform module tool. The command/query examples below also describe the retained legacy UI and MCP surfaces.
 
 **Time estimate:** Under 30 minutes from clone to first command/query round-trip.
 
@@ -17,7 +17,7 @@ This guide starts the local EventStore-fronted topology, sends a Parties command
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
 
-Aspire is used through the .NET SDK command `dotnet aspire run`; no separate local orchestration script is required for the default path. DAPR components and sidecars are composed by the AppHost for Aspire mode, so the DAPR CLI is not required.
+Install the Platform-accepted Aspire CLI 13.6.1. The local tool manifest pins module tool **4.34.0**; `dotnet tool restore` restores that exact version. The tool owns Dapr setup, run-scoped infrastructure, readiness and diagnostics.
 
 Verify your setup:
 
@@ -35,24 +35,24 @@ Docker Desktop must be running before you start the Aspire host.
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
-git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants
-dotnet aspire run --project src/Hexalith.Parties.AppHost
+git submodule update --init references/Hexalith.Platform references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants references/Hexalith.Memories references/Hexalith.McpCli
+dotnet tool restore
+dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
 ```
 
-Default commands run in package mode. If restore fails because an unpublished Hexalith package such as `Hexalith.Tenants.Client` is unavailable, record that as a package-mode release blocker and use the source-mode properties in [development-guide.md](development-guide.md) only for diagnostic triage.
+The command waits for seven servers: `parties`, `eventstore`, `tenants`,
+`tenants-api`, `memories`, `memories-clock`, and `memories-access-telemetry`.
+It uses only mapped direct projects and Debug assets. Missing selected source fails
+with a diagnostic; sibling checkouts and packages are not fallback sources.
+Do not initialize references inside those direct references.
+Memories is a required reference service; optional rich Parties search remains disabled.
+Stop only this run with `dotnet tool run hexalith-module -- down --run-id <run-id>`.
 
-Open the Aspire dashboard URL printed by the command and verify these resources are running:
-
-- `security` - local Keycloak-backed security service for run-mode OIDC/JWT testing
-- `eventstore` - public command/query gateway
-- `eventstore-admin` - admin server used by the EventStore Admin UI
-- `parties` - Parties domain-service host behind EventStore (EventStore SDK projection/query handlers; the Dapr projection and query actors were retired in Story 8.6)
-- `tenants` - tenant lifecycle, membership, role, and configuration authority
-- `redis` - local DAPR state/pubsub backing service
-- `statestore` and `pubsub` - DAPR components backed by Redis
-- DAPR sidecars for `eventstore`, `eventstore-admin`, `parties`, and `tenants`
-
-The `eventstore-admin-ui` and `parties-mcp` resources are explicit-start auxiliaries in the dashboard. Start `eventstore-admin-ui` when you need stream browsing, and start `parties-mcp` when an AI assistant needs the MCP tool host. The MCP host is separate from the internal `parties` domain-service host.
+**Legacy hosting scope:** the retained `Hexalith.Parties.AppHost` command
+`dotnet aspire run --project src/Hexalith.Parties.AppHost` remains available for
+existing owner tests and UI/MCP continuity. The legacy Keycloak/admin/UI/MCP/sample
+hosts are outside Platform's reference composition and have not been extended or retired.
+The remaining browser and MCP walkthroughs describe those legacy surfaces.
 
 EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties owns domain execution and SDK projection/query handlers behind the domain-service host. Do not call Parties internals to manage tenant lifecycle, RBAC, authorization, read models, or domain invocation.
 

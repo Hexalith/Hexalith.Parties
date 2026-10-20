@@ -1,10 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <HexalithEventStoreRoot Condition="'$(HexalithEventStoreRoot)' == '' and Exists('..\..\..\references\Hexalith.EventStore\src\Hexalith.EventStore.Contracts')">..\..\..\references\Hexalith.EventStore</HexalithEventStoreRoot>
-    <HexalithEventStoreRoot Condition="'$(HexalithEventStoreRoot)' == '' and Exists('..\..\references\Hexalith.EventStore\src\Hexalith.EventStore.Contracts')">..\..\references\Hexalith.EventStore</HexalithEventStoreRoot>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.Http\Hexalith.Commons.Http.csproj" Condition="'$(HexalithCommonsHttpFromSource)' == 'true'" />
     <PackageReference Include="Hexalith.Commons.Http" Condition="'$(HexalithCommonsHttpFromSource)' != 'true'" />

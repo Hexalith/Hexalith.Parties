@@ -23,22 +23,34 @@ Hexalith.Parties is a ready-to-deploy party management domain service for people
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
-git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants
-dotnet aspire run --project src/Hexalith.Parties.AppHost
+git submodule update --init references/Hexalith.Platform references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants references/Hexalith.Memories references/Hexalith.McpCli
+dotnet tool restore
+dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
 ```
 
-Default commands run in package mode. If restore fails because an unpublished Hexalith package such as `Hexalith.Tenants.Client` is unavailable, record that as a package-mode release blocker and use the source-mode properties in [docs/development-guide.md](docs/development-guide.md) only for diagnostic triage.
+The repository pins accepted module tool **4.34.0** alongside aspirate. From this
+independent checkout, `debug` resolves direct references once, builds the selected
+source projects in Debug, and waits for exactly `parties`, `eventstore`, `tenants`,
+`tenants-api`, `memories`, `memories-clock`, and `memories-access-telemetry`.
+The tool reports its run ID and source mapping; attach the debugger to the Parties
+service child process. Stop that exact environment with
+`dotnet tool run hexalith-module -- down --run-id <run-id>`.
+Initialize only this checkout's direct references; leave their nested references
+uninitialized. Ordinary package CI keeps package references and Release builds.
 
-`Hexalith.Parties.slnx` remains the canonical development and runtime-topology
-solution. Dependency governance builds `Hexalith.Parties.Standalone.slnx` in
-Release package mode (`-p:UseNuGetDeps=true`); it contains all 30 owned projects,
-including the package-built EventStore gateway test host, and no project or file
-entries under `references/`. The AppHost resolves external topology projects by
-path only when the app model runs, so the standalone compile graph stays owned.
+The owner ACL remains `src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml`.
+After an owner-approved ACL change, run `python3 scripts/render-platform-declaration.py`;
+CI requires `python3 scripts/render-platform-declaration.py --check`.
+Platform binds security storage through `Parties:Security:StateStoreName` and the
+existing projection/mapping component keys. The declarative tenant subscription
+uses `system.tenants.events` at `/tenants/events`; rich Memories search stays disabled.
 
-Open the Aspire dashboard (URL shown in terminal output) and verify these resources are running: `security`, `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub`. The AppHost also declares `eventstore-admin-ui` and `parties-mcp` as explicit-start auxiliary resources; start them from the dashboard when you need stream browsing or MCP access. AI assistants connect to `parties-mcp` rather than the internal `parties` domain-service host.
-
-The default local run path uses repository-level submodules under `references/` only. Do not initialize nested submodules unless a separate story or maintainer asks for that explicitly. Rich Memories-backed search is optional for local development; enable it separately with `EnableMemoriesSearch=true` after initializing the `references/Hexalith.Memories` submodule.
+**Legacy hosting scope:** `Hexalith.Parties.AppHost`, Aspire helpers, UI, proprietary
+MCP and sample hosts remain for existing owner tests and continuity. They are frozen
+and are outside this Platform qualification. The legacy local command is
+`dotnet aspire run --project src/Hexalith.Parties.AppHost`; its Keycloak, admin and
+UI topology is separate from the seven-server minimum above. Retirement requires
+owner-approved parity and consumer-removal gates.
 
 > **Prerequisite - tenant access state.** Provision or use an active Hexalith.Tenants tenant membership before the first Parties call. EventStore owns public authentication, tenant validation, RBAC, command/query routing, and generic response mapping. Parties consumes the authorized command/query behind the domain-service host and does not manage tenant lifecycle or roles itself.
 

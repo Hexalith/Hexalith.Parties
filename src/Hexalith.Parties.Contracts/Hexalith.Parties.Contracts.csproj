@@ -5,8 +5,6 @@
     <PackageTags>parties;contracts;eventsourcing;privacy;dotnet</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <HexalithEventStoreRoot Condition="'$(HexalithEventStoreRoot)' == '' and Exists('..\..\..\references\Hexalith.EventStore\src\Hexalith.EventStore.Contracts')">..\..\..\references\Hexalith.EventStore</HexalithEventStoreRoot>
-    <HexalithEventStoreRoot Condition="'$(HexalithEventStoreRoot)' == '' and Exists('..\..\references\Hexalith.EventStore\src\Hexalith.EventStore.Contracts')">..\..\references\Hexalith.EventStore</HexalithEventStoreRoot>
   </PropertyGroup>
 
   <ItemGroup>

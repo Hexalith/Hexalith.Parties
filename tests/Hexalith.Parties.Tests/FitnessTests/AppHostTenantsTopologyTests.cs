@@ -280,18 +280,17 @@ public sealed class AppHostTenantsTopologyTests
     }
 
     [Fact]
-    public void LocalRunDocumentationUsesSingleAspireCommandAndRootLevelSubmodulesOnly()
+    public void LocalRunDocumentationUsesPinnedPlatformToolAndDirectReferencesOnly()
     {
         string root = RepositoryRoot.Locate();
-        string readme = File.ReadAllText(Path.Combine(root, "README.md"));
-        string gettingStarted = File.ReadAllText(Path.Combine(root, "docs", "getting-started.md"));
-
-        foreach (string document in new[] { readme, gettingStarted })
+        foreach (string relative in new[] { "README.md", "docs/getting-started.md" })
         {
-            document.ShouldContain("dotnet aspire run --project src/Hexalith.Parties.AppHost");
-            document.ShouldContain("git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants");
+            string document = File.ReadAllText(Path.Combine(root, relative));
+            document.ShouldContain("dotnet tool restore");
+            document.ShouldContain("dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json");
+            document.ShouldContain("4.34.0");
+            document.ShouldContain("Legacy");
             document.ShouldNotContain("git submodule update --init --recursive");
-            document.ShouldNotContain("git submodule update --recursive");
             document.ShouldNotContain("git -C Hexalith.Memories submodule update");
         }
     }

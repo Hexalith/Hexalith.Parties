@@ -28,7 +28,7 @@ git submodule update --init references/Hexalith.Builds references/Hexalith.Commo
 
 Optional rich search adds the `references/Hexalith.Memories` submodule (run with `EnableMemoriesSearch=true`).
 
-The default build remains package mode (`UseNuGetDeps=true`, `UseHexalithProjectReferences=false`). If restore fails because a Hexalith package such as `Hexalith.Tenants.Client` is not available, record that as a package-mode release blocker. For source-mode triage with the checked-out submodules, rerun restore/build with `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false`; do not publish packages from source-mode output.
+Plain builds retain package references. For local source development use the pinned module tool; it injects the selected direct roots, source flags and Debug configuration. Directory.Build.props does not probe siblings or choose a mode. Directory.Packages.props imports the direct Builds catalog default while respecting the tool-injected catalog authority.
 
 ## 2. Build
 
@@ -54,7 +54,8 @@ See [build-gate.md](build-gate.md) for the policy and escape valves (narrow `<No
 ## 3. Run locally (one command)
 
 ```bash
-dotnet aspire run --project src/Hexalith.Parties.AppHost
+dotnet tool restore
+dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
 ```
 
 Open the Aspire dashboard URL and confirm `security`, `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub` are healthy. `eventstore-admin-ui` and `parties-mcp` are **explicit-start** — start them from the dashboard when needed. AppHost http profile: `http://localhost:15100` (OTLP `21100`).
@@ -97,7 +98,7 @@ When the full solution build or `dotnet test` is environment-blocked, do not rec
 1. **Focused lane / per-project run** — `scripts/test.ps1 -Lane <lane>` (or `dotnet test <projectPath>`). Never solution-level `dotnet test`.
 2. **Direct xUnit v3 assembly filter** — build the target project, then run its built `.dll` directly with single-dash `-class`/`-method` (project-level `dotnet test --filter` silently runs zero tests under Microsoft.Testing.Platform; see below).
 3. **Serialized `-m:1` build for release-blocker triage** — makes the first failing project visible (`dotnet build … -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0`).
-4. **Property pins for known environment blockers** — `-p:MinVerVersionOverride=1.0.0` (no git tags → version skew), `-p:NuGetAudit=false` (offline audit noise), and source-mode *diagnostic only* `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false` when unpublished Hexalith packages block a package-mode restore.
+4. **Property pins for known environment blockers** — `-p:MinVerVersionOverride=1.0.0` (no git tags → version skew), `-p:NuGetAudit=false` (offline audit noise), and the pinned tool source mapping for diagnostic source builds; do not use handwritten source selectors to bypass missing mapped roots.
 5. **Record the exact broad-gate blocker** — package NuGet-network (`api.nuget.org:443`), submodule gitlink drift, UI accessibility, or CI publish-contract validation — with the command, observed result, and required owner/environment. Never weaken a gate to hide a blocker.
 
 The lane runner supports climbing rungs 1, 4, and 5 in one pass so a single run reports every failing project instead of stopping at the first:
@@ -234,3 +235,23 @@ results; Index never falls back to its typed handler logger for fold diagnostics
 Disabling a fold category likewise suppresses its diagnostics without changing
 persisted output. Direct fold APIs continue to accept an optional `ILogger` and
 retain that logger's category.
+
+## Platform reference qualification
+
+Use accepted tool 4.34.0 from an independent Parties checkout. Initialize only its
+direct references, including Platform, Memories and McpCli. The tool selects the
+seven-server dependency closure and emits a run ID, mapping and diagnostics.
+Break in `MvpComplianceWarningMiddleware.InvokeAsync` on `/ready`; a disposable
+edit to `MvpComplianceWarning.Message` must change the existing warning header.
+Restore the edit, stop the exact run (`down --run-id <run-id>`), and rerun clean.
+Record full revisions, environment, active source/PDB paths, results and cleanup.
+Owner review and upstream integration are required before qualification is complete.
+
+Legacy AppHost, Aspire helpers, UI/MCP and sample hosts remain frozen for continuity
+and owner tests. They do not supply Platform qualification evidence. The owner ACL
+is authoritative: regenerate with `python3 scripts/render-platform-declaration.py`
+and verify with `--check`. Security record keys and formats remain unchanged when
+`Parties:Security:StateStoreName` binds a different Dapr component. Readiness still
+gates on sidecar, state and enabled Tenants integration; pub/sub stays a degraded
+health signal. Tenant subscriptions are declarative at `/tenants/events` on
+`system.tenants.events` and rich Memories search remains disabled.

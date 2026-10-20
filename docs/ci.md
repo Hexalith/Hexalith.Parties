@@ -161,3 +161,15 @@ Pact.js scripts are not currently exposed at the repository root. To make Pact c
 - `publish:pact`
 - `test:pact:provider:remote:contract`
 - `can:i:deploy:provider`
+
+## Platform declaration gate
+
+The `platform-declaration` CI job requires no submodules. It checks that
+`module/hexalith.module-manifest.v2.json` exactly matches the strict rendering of
+the owner ACL and runs the malformed/unsafe/stale-input test matrix. Regenerate
+with `python3 scripts/render-platform-declaration.py` after an owner-approved ACL
+change. Missing, duplicate, unsafe or stale input fails without rewriting in
+`--check` mode. The accepted local module tool is pinned to 4.34.0 alongside
+aspirate; package CI continues to restore packages and build Release. Source mode
+is selected only by the tool's persisted mapping, with no file-existence fallback.
+Legacy hosting projects and package publication gates remain in their existing scope.

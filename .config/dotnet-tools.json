@@ -8,6 +8,13 @@
         "aspirate"
       ],
       "rollForward": false
+    },
+    "hexalith.builds.module.cli": {
+      "version": "4.34.0",
+      "commands": [
+        "hexalith-module"
+      ],
+      "rollForward": false
     }
   }
 }

@@ -15,19 +15,17 @@ public sealed class CommonsHttpRestoreRoutingTests
     private const string SourceProperty = "HexalithCommonsHttpFromSource";
 
     [Fact]
-    public void DirectoryBuildPropsDeclaresNarrowCommonsHttpSourceFallback()
+    public void DirectoryBuildPropsLeavesSourceAndPackageSelectionToThePinnedTool()
     {
         XDocument props = XDocument.Load(CiTestPaths.RepoFile("Directory.Build.props"));
-        XElement property = props.Descendants(SourceProperty).SingleOrDefault()
-            ?? throw new InvalidOperationException($"{SourceProperty} was not found in Directory.Build.props.");
-
-        property.Value.ShouldBe("true");
+        props.Descendants(SourceProperty).ShouldBeEmpty();
+        props.Descendants("UseHexalithProjectReferences").ShouldBeEmpty();
+        props.Descendants("UseNuGetDeps").ShouldBeEmpty();
+        props.Descendants("HexalithCommonsRoot").ShouldBeEmpty();
         props.Descendants("HexalithCommonsHttpPackageVersion").ShouldBeEmpty();
-        string condition = property.Attribute("Condition")?.Value ?? string.Empty;
-
-        condition.ShouldBe($"'$({SourceProperty})' == '' and Exists('{CommonsHttpProjectReference}')");
-        condition.ShouldNotContain("UseHexalithProjectReferences");
-        condition.ShouldNotContain("HexalithCommonsFromSource");
+        string packages = CiTestPaths.ReadRepoFile("Directory.Packages.props");
+        packages.ShouldNotContain("Exists(");
+        packages.ShouldContain("$(HexalithBuildsRoot)/Props/Directory.Packages.props");
     }
 
     [Fact]

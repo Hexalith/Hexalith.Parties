@@ -31,7 +31,9 @@ builder.Services.AddDaprClient();
 // DAPR health checks:
 // - readiness is gated by sidecar + state store (command-processing dependencies)
 // - /health also reports pub/sub degradation and SDK read-model store reachability
-builder.Services.AddHealthChecks().AddPartiesDaprHealthChecks();
+builder.Services.AddHealthChecks().AddPartiesDaprHealthChecks(
+    builder.Configuration["Parties:Security:StateStoreName"] ?? "statestore",
+    builder.Configuration["Tenants:PubSubName"] ?? "pubsub");
 
 builder.Services.AddParties(builder.Configuration);
 string ownerDaprEndpoint = Environment.GetEnvironmentVariable("DAPR_HTTP_ENDPOINT")

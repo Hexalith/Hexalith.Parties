@@ -1,12 +1,14 @@
+using Microsoft.Extensions.Options;
+
 using Dapr.Client;
 
 using Hexalith.Parties.Contracts.Security;
 
 namespace Hexalith.Parties.Security;
 
-public sealed class KeyOperationAuditService(DaprClient daprClient) : IKeyOperationAuditService
+public sealed class KeyOperationAuditService(DaprClient daprClient, IOptions<PartiesSecurityStoreOptions>? options = null) : IKeyOperationAuditService
 {
-    private const string StoreName = "statestore";
+    private readonly string _storeName = (options?.Value ?? new PartiesSecurityStoreOptions()).StateStoreName;
     private const int MaxRetries = 5;
 
     public async Task RecordOperationAsync(KeyOperationAuditEntry entry, CancellationToken cancellationToken = default)
@@ -19,14 +21,14 @@ public sealed class KeyOperationAuditService(DaprClient daprClient) : IKeyOperat
         for (int attempt = 0; attempt < MaxRetries; attempt++)
         {
             (List<KeyOperationAuditEntry>? existing, string etag) = await daprClient
-                .GetStateAndETagAsync<List<KeyOperationAuditEntry>>(StoreName, stateKey, cancellationToken: cancellationToken)
+                .GetStateAndETagAsync<List<KeyOperationAuditEntry>>(_storeName, stateKey, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 
             List<KeyOperationAuditEntry> updated = existing is null ? [] : [.. existing];
             updated.Add(entry);
 
             bool saved = await daprClient.TrySaveStateAsync(
-                StoreName,
+                _storeName,
                 stateKey,
                 updated,
                 etag,
@@ -49,7 +51,7 @@ public sealed class KeyOperationAuditService(DaprClient daprClient) : IKeyOperat
         string stateKey = BuildStateKey(tenantId, partyId);
 
         List<KeyOperationAuditEntry>? entries = await daprClient.GetStateAsync<List<KeyOperationAuditEntry>>(
-            StoreName, stateKey, cancellationToken: cancellationToken).ConfigureAwait(false);
+            _storeName, stateKey, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         return entries ?? [];
     }

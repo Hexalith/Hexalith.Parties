@@ -133,6 +133,12 @@ public static class PartiesServiceCollectionExtensions {
         // out of Program.cs and the domain processor (AC4).
         _ = services.AddSingleton<IDataSubjectAccessService, DataSubjectAccessService>();
 
+        _ = services.AddOptions<PartiesSecurityStoreOptions>()
+            .Bind(configuration.GetSection(PartiesSecurityStoreOptions.SectionName))
+            .Validate(options => !string.IsNullOrWhiteSpace(options.StateStoreName),
+                "Parties:Security:StateStoreName must not be empty.")
+            .ValidateOnStart();
+
         // GDPR / crypto-shredding infrastructure
         _ = services.AddOptions<CryptoShreddingOptions>()
             .Bind(configuration.GetSection(CryptoShreddingOptions.ConfigurationSection))
