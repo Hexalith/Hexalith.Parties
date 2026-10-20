@@ -18,6 +18,8 @@
     <HexalithFrontComposerRoot Condition="'$(HexalithFrontComposerRoot)' == '' and Exists('$(MSBuildThisFileDirectory)..\..\src\Hexalith.FrontComposer.Contracts')">$(MSBuildThisFileDirectory)..\..</HexalithFrontComposerRoot>
     <HexalithFrontComposerRoot Condition="'$(HexalithFrontComposerRoot)' == '' and Exists('$(MSBuildThisFileDirectory)..\references\Hexalith.FrontComposer\src\Hexalith.FrontComposer.Contracts')">$(MSBuildThisFileDirectory)..\references\Hexalith.FrontComposer</HexalithFrontComposerRoot>
     <HexalithMcpCliRoot Condition="'$(HexalithMcpCliRoot)' == '' and Exists('$(MSBuildThisFileDirectory)references\Hexalith.McpCli\src\Hexalith.McpCli.Abstractions')">$(MSBuildThisFileDirectory)references\Hexalith.McpCli</HexalithMcpCliRoot>
+    <HexalithMcpCliRoot Condition="'$(HexalithMcpCliRoot)' == '' and Exists('$(MSBuildThisFileDirectory)..\Hexalith.McpCli\src\Hexalith.McpCli.Abstractions')">$(MSBuildThisFileDirectory)..\Hexalith.McpCli</HexalithMcpCliRoot>
+    <HexalithMcpCliRoot Condition="'$(HexalithMcpCliRoot)' == '' and Exists('$(MSBuildThisFileDirectory)..\references\Hexalith.McpCli\src\Hexalith.McpCli.Abstractions')">$(MSBuildThisFileDirectory)..\references\Hexalith.McpCli</HexalithMcpCliRoot>
     <UseHexalithProjectReferences Condition="'$(UseHexalithProjectReferences)' == '' and '$(UseNuGetDeps)' == 'true'">false</UseHexalithProjectReferences>
     <UseHexalithProjectReferences Condition="'$(UseHexalithProjectReferences)' == '' and '$(UseNuGetDeps)' == 'false'">true</UseHexalithProjectReferences>
     <UseHexalithProjectReferences Condition="'$(UseHexalithProjectReferences)' == '' and '$(Configuration)' == ''">false</UseHexalithProjectReferences>

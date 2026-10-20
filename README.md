@@ -144,6 +144,11 @@ McpCli payloads use exact CLR property casing and typed nested values. For examp
 
 Supply IDs explicitly; every child `PartyId` must equal the root. No alias mapping,
 ID generation, person/organization inference or read/merge patch is performed.
+McpCli PartyId values use ASCII letters or digits plus `.`, `_` or `-`, start
+and end with an ASCII letter or digit, and contain at most 128 characters.
+McpCli refuses legacy braced, parenthesized and X-format GUID PartyId values
+before Gateway submission, although Parties accepts them. Preserving those
+legacy IDs or approving a conversion remains a C07 retirement gate.
 An update supplies complete `PersonDetails` or `OrganizationDetails` replacements
 and/or typed add, update or removal lists. A `PartyId`-only update is rejected;
 every `UpdateContactChannels` item must supply at least one of `Type`, `Value` or

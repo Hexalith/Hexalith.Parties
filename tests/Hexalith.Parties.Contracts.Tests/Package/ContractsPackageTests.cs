@@ -84,7 +84,8 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
         dependencies.ShouldBe(["ByteAether.Ulid", "Hexalith.Commons.UniqueIds", "Hexalith.EventStore.Contracts", "Hexalith.McpCli.Abstractions"]);
         ReadDependencyVersion(package.PartiesPackagePath, "Hexalith.EventStore.Contracts")
             .ShouldBe(package.EventStoreVersion);
-        ReadDependencyVersion(package.PartiesPackagePath, "Hexalith.McpCli.Abstractions").ShouldBe("1.0.0");
+        ReadDependencyVersion(package.PartiesPackagePath, "Hexalith.McpCli.Abstractions")
+            .ShouldBe(package.McpCliVersion);
         AssertNoForbiddenDependencyIds(dependencies, package.PartiesPackagePath);
     }
 
@@ -324,7 +325,8 @@ internal sealed record ContractsPackageArtifacts(
     string PartiesPackagePath,
     string EventStoreContractsPackagePath,
     string PartiesVersion,
-    string EventStoreVersion);
+    string EventStoreVersion,
+    string McpCliVersion);
 
 public sealed class ContractsPackageFixture : IDisposable
 {
@@ -365,6 +367,10 @@ public sealed class ContractsPackageFixture : IDisposable
             repoRoot,
             "src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj",
             "HexalithEventStoreVersion");
+        string mcpCliVersion = PackageTestProcess.ResolveMsbuildProperty(
+            repoRoot,
+            "src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj",
+            "HexalithMcpCliVersion");
         string eventStorePackVersionProperties =
             $"-p:MinVerVersionOverride={eventStoreVersion} -p:PackageVersion={eventStoreVersion}";
         string uniqueIdsProject = Path.Combine(
@@ -406,7 +412,8 @@ public sealed class ContractsPackageFixture : IDisposable
             partiesPackage,
             eventStorePackage,
             version,
-            eventStoreVersion);
+            eventStoreVersion,
+            mcpCliVersion);
     }
 
     private static string FindRepoRoot()
