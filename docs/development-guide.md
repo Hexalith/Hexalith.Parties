@@ -131,8 +131,25 @@ The UI accessibility workspace lives under `tests/e2e`:
 cd tests/e2e
 npm ci
 npm run typecheck
+npm run install:browsers
 npm run test:a11y
 ```
+
+The local Playwright server builds Debug/source assets and uses the explicit
+`Test` environment with the accessibility fixture enabled. For CI parity, build
+the UI in Release/package mode first, then run the browser lane with `CI=true`
+from `tests/e2e` (Bash):
+
+```bash
+dotnet build ../../src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true
+CI=true BASE_URL=http://127.0.0.1:5072 PLAYWRIGHT_SKIP_WEBSERVER= npm run test:a11y
+```
+
+CI runs the prebuilt UI without restoring or rebuilding in Playwright. This
+fixture does not require Docker, Dapr or Keycloak. The blocking `ui-a11y` job
+uploads browser reports and failure diagnostics as `ui-a11y-results`; see
+[CI documentation](ci.md#ci). The `all` PowerShell lane remains the .NET suite;
+run the npm lane separately for browser checks.
 
 **Frameworks:** xUnit v3 + Shouldly (assertions) + NSubstitute (mocking); bunit for Blazor components; Playwright + axe for the browser accessibility gate; `Aspire.Hosting.Testing` for the topology lane (it manages the real DAPR/Redis containers); YamlDotNet for manifest validation. Note: `Testcontainers` is in the package manifest but **not referenced by any test project** — don't reach for it. See [component-inventory.md](component-inventory.md) for per-project coverage.
 

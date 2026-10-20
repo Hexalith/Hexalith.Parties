@@ -37,6 +37,25 @@ The shared CI workflow restores and builds `Hexalith.Parties.slnx`, initializes 
 - Tier 2: integration and CI contract tests.
 - Tier 3: Aspire topology tests through `tests/Hexalith.Parties.IntegrationTests`.
 
+The blocking `ui-a11y` job runs on every CI trigger without path filters or
+failure suppression. It installs Node 24, the SDK from `global.json`, locked
+browser-test dependencies, and Chromium with its system dependencies. It
+typechecks the tests, builds the UI in Release/package mode, then runs the six
+existing `npm run test:a11y` cases against Playwright's isolated Test-environment
+host. Only the root Builds and Commons submodules are needed for this UI build;
+Docker, Dapr and Keycloak are not required. The host's Test-only fixture opt-ins
+and loopback address are explicit, and CI does not reuse an existing server.
+
+The lane covers blocking axe violations, shell skip links, keyboard traversal,
+media settings, button styling and the semantic visual baseline. It attaches a
+screenshot; pixel-diff baselines and broader accessibility coverage remain
+separate deferred work. HTML/JUnit reports, axe summaries and available failure
+traces, screenshots and videos are uploaded as `ui-a11y-results` for 14 days,
+including after a failed run. A failed accessibility job fails `ci.yml`, so it
+also prevents successful exact-source CI proof for release. Repository branch
+protection is managed separately. See the local reproduction commands in
+[the development guide](development-guide.md#4-test).
+
 The separate `bmad-config` job in the same CI workflow runs the offline BMAD
 configuration suite on Ubuntu 24.04 using Python 3.11 or later. It checks
 duplicate identifiers, layer precedence, resolver errors, and renderer
