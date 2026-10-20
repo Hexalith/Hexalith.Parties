@@ -99,3 +99,8 @@ remote units are absent. Retain cleanup configuration after disabling indexing
 until outstanding cleanup obligations have been reconciled. Probe success establishes
 capability in the configured tenant/case, not a complete remote inventory or terminal
 erasure. This check contributes to `/health` and does not gate `/ready`.
+
+The cleanup HTTP client captures its endpoint and API token when Parties starts.
+Restart Parties after changing either value, including when repairing retained
+cleanup configuration. The health check reads current options, but an existing
+client continues to use its startup endpoint and credentials until restart.

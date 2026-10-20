@@ -260,9 +260,9 @@ internal sealed class MemoriesSearchHealthCheck(
                 cancellationToken).ConfigureAwait(false);
             sentinelCreated = true;
             IReadOnlyList<PartyMemoryUnitMappingEntry> read = await store.GetMappingsAsync(probeTenant, probeParty, cancellationToken).ConfigureAwait(false);
-            outcome = read.Count == 1
+            outcome = read is [{ MemoryUnitId: "_probe-unit", SourceUri: "urn:_probe", CaseId: "_probe-case" }]
                 ? new MappingStoreProbeOutcome(true, null)
-                : new MappingStoreProbeOutcome(false, $"Mapping store round-trip returned {read.Count} entries (expected 1).");
+                : new MappingStoreProbeOutcome(false, "Mapping store round-trip did not return the expected sentinel.");
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -278,11 +278,10 @@ internal sealed class MemoriesSearchHealthCheck(
             {
                 try
                 {
-                    await store.ClearMappingsAsync(probeTenant, probeParty, cancellationToken).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                {
-                    throw;
+                    // Health-request cancellation must not prevent disposal of a recorded
+                    // sentinel. Keep cleanup bounded independently, then propagate cancellation.
+                    using var cleanupBudget = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    await store.ClearMappingsAsync(probeTenant, probeParty, cleanupBudget.Token).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -299,6 +298,7 @@ internal sealed class MemoriesSearchHealthCheck(
             }
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         return outcome ?? new MappingStoreProbeOutcome(false, "Mapping store probe did not produce a result.");
     }
 

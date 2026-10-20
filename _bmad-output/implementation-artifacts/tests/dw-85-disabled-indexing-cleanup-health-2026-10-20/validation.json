@@ -1,0 +1,99 @@
+{
+  "spec": "spec-dw-85-disabled-indexing-cleanup-health.md",
+  "date": "2026-10-20",
+  "baseline_commit": "e55da59006f55410b9390403c67253b4f8423e18",
+  "concurrent_workspace_sync_commit": "ea926163fb51033b226541f069ebf6a5941922af",
+  "scope": "DW-85: preserve cleanup capability observation when indexing is disabled",
+  "build": {
+    "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:HexalithBuildsRoot=/tmp/parties-dw85-pinned-builds",
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0,
+    "builds_catalog_revision": "5d03f1db9c38db34ecac7fe6048937478ffb82cc",
+    "mode": "Debug with existing package dependencies; pinned catalog archive avoids modifying concurrent submodule changes"
+  },
+  "regressions": [
+    {
+      "implementation": "Original disabled-mode implementation",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.HealthChecks.MemoriesSearchHealthCheckTests -class Hexalith.Parties.Tests.HealthChecks.HealthEndpointIntegrationTests -result-xml /tmp/parties-dw85-red.xml",
+      "exit_code": 1,
+      "total": 41,
+      "passed": 21,
+      "failed": 20,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    },
+    {
+      "implementation": "Before review corrections",
+      "exit_code": 1,
+      "total": 53,
+      "passed": 48,
+      "failed": 5,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "detected": "Cancellation sentinel leak, each of three wrong sentinel fields, and upstream reason text"
+    }
+  ],
+  "final_tests": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/parties-dw85-final-full.xml",
+    "exit_code": 1,
+    "total": 2102,
+    "passed": 2101,
+    "failed": 1,
+    "errors": 0,
+    "skipped": 0,
+    "not-run": 0,
+    "health_cases": 53,
+    "health_passed": 53,
+    "only_failure": "PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+    "blocker": "Existing dependency receipt selects Builds 5d03f1db9c38db34ecac7fe6048937478ffb82cc; concurrent workspace sync committed gitlink fff4a212180d8cd1c5c0759655a9bc4fb6963c45. Gate is unchanged; this task does not claim dependency signoff."
+  },
+  "checks": [
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "node_modules/.bin/commitlint --edit /tmp/parties-dw85-commit.txt --verbose",
+      "version": "21.2.2",
+      "exit_code": 0,
+      "evidence": "commitlint.txt"
+    }
+  ],
+  "baseline_runtime": {
+    "start": "aspire start --no-build --isolated --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --format Json",
+    "start_exit": 0,
+    "wait": "aspire wait parties --timeout 15 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "wait_exit": 17,
+    "description": "Later describe showed parties healthy, eventstore and tenants finished. Existing assets only; not full-topology qualification.",
+    "stop": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "stop_exit": 0
+  },
+  "source_mode_observation": {
+    "command": "dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json --output json",
+    "exit_code": 2,
+    "rule": "HXW004",
+    "description": "At observation time externally advanced EventStore checkout differed from staged gitlink. Subsequent external workspace sync committed those pointers; source launcher was not requalified afterwards."
+  },
+  "review": {
+    "layer": "blind-hunter",
+    "findings": 5,
+    "patched": 5,
+    "deferred": 0,
+    "followup": "Independent reviewer confirms all five corrections and no remaining introduced issues; reviewer did not rerun tests."
+  },
+  "limitations": "Full service gate remains red on dependency receipt drift. No source-mode, Release, deployment, global remote inventory or terminal erasure qualification.",
+  "sha256": {
+    "src/Hexalith.Parties/HealthChecks/MemoriesSearchHealthCheck.cs": "075d464ec3ebc7851abd473faaf8b0b134e5fae55f785ca10f1b3564445abbef",
+    "src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs": "f9ae698db85d56e5910de28c4d58608e79bc4e13c5d22e592900d2010252e7df",
+    "tests/Hexalith.Parties.Tests/HealthChecks/MemoriesSearchHealthCheckTests.cs": "1b105c942bd1be1189bd32203757ca32b3ce9a0d593bf491fef29afa1ede51f9",
+    "tests/Hexalith.Parties.Tests/HealthChecks/HealthEndpointIntegrationTests.cs": "ed827ceb5ebee0ce840636809514250c89c44a79a82b837b7a2335978fd92ec7",
+    "tests/Hexalith.Parties.Tests/HealthChecks/MemoriesCleanupProbeHandler.cs": "9b8fe4ba7b270f4fc5522f961c2a58c101a374b077ac87652270cabe4aa29a7e"
+  }
+}

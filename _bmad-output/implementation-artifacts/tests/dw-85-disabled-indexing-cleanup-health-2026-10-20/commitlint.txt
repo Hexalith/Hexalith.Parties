@@ -1,0 +1,9 @@
+⧗   --- input ---
+fix(health): verify cleanup with indexing disabled
+
+Complete DW-85 with independent cleanup probes, exact sentinels and
+bounded cancellation cleanup. Keep provider text out of health results.
+
+Cover retained credentials through production DI and document restart
+requirements. Preserve the separate dependency-identity gate failure.
+✔   found 0 problems, 0 warnings

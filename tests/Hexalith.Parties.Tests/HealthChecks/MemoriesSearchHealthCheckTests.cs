@@ -376,8 +376,11 @@ public class MemoriesSearchHealthCheckTests
     public async Task DisabledIndexingPropagatesMappingCancellation()
     {
         using var cancellation = new CancellationTokenSource();
-        cancellation.Cancel();
-        var mappingStore = new RecordingMappingStore { ReadFailure = new OperationCanceledException(cancellation.Token) };
+        var mappingStore = new RecordingMappingStore
+        {
+            AfterRecord = cancellation.Cancel,
+            ReadFailure = new OperationCanceledException(cancellation.Token),
+        };
         using var services = new ServiceCollection()
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
@@ -436,6 +439,56 @@ public class MemoriesSearchHealthCheckTests
         state.Entries.ShouldBe(persisted);
         state.KeyExists.ShouldBeTrue();
         state.DeleteAttempts.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData("wrong-unit", "urn:_probe", "_probe-case")]
+    [InlineData("_probe-unit", "urn:wrong", "_probe-case")]
+    [InlineData("_probe-unit", "urn:_probe", "wrong-case")]
+    public async Task DisabledHealthRejectsWrongSentinelContents(string unit, string source, string caseId)
+    {
+        var mappingStore = new RecordingMappingStore { ReadOverride = [new PartyMemoryUnitMappingEntry(unit, source, caseId)] };
+        using var services = new ServiceCollection()
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
+            .BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(new PartyMemorySearchOptions()), services);
+
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Data["mappingStoreReachable"].ShouldBe(false);
+        result.Data["mappingStoreReason"].ToString().ShouldNotBeNull().ShouldContain("sentinel");
+        mappingStore.ClearCalls.ShouldBe(1);
+        mappingStore.AllPartyKeys.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task DisabledCleanupHealthDoesNotPublishUpstreamReasonText()
+    {
+        var options = new PartyMemorySearchOptions
+        {
+            Endpoint = new Uri("https://memories.example/"),
+            TenantId = "tenant-a",
+            CaseId = "case-a",
+            RequireApiToken = false,
+        };
+        using var httpClient = new HttpClient(new MemoriesCleanupProbeHandler(HttpStatusCode.BadGateway, "private provider details"))
+        {
+            BaseAddress = options.Endpoint,
+        };
+        var mappingStore = new RecordingMappingStore();
+        using var services = new ServiceCollection()
+            .AddSingleton(new PartyMemoryCleanupService(httpClient, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance))
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
+            .BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
+
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Description.ShouldNotBeNull().ShouldNotContain("private provider details");
+        result.Data["cleanupRouteReason"].ToString().ShouldNotBeNull().ShouldNotContain("private provider details");
+        result.Data["cleanupRouteStatus"].ShouldBe(502);
     }
 
     [Fact]
@@ -660,6 +713,10 @@ public class MemoriesSearchHealthCheckTests
 
         public Exception? ReadFailure { get; init; }
 
+        public Action? AfterRecord { get; init; }
+
+        public IReadOnlyList<PartyMemoryUnitMappingEntry>? ReadOverride { get; init; }
+
         public Exception? ClearFailure { get; init; }
 
         public Task RecordMappingAsync(
@@ -678,18 +735,20 @@ public class MemoriesSearchHealthCheckTests
             }
 
             list.Add(new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri, caseId));
+            AfterRecord?.Invoke();
             return Task.CompletedTask;
         }
 
         public Task<IReadOnlyList<PartyMemoryUnitMappingEntry>> GetMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
             => ReadFailure is null
                 ? Task.FromResult<IReadOnlyList<PartyMemoryUnitMappingEntry>>(
-                    _mappings.TryGetValue($"{tenantId}:{partyId}", out List<PartyMemoryUnitMappingEntry>? list) ? [.. list] : [])
+                    ReadOverride ?? (_mappings.TryGetValue($"{tenantId}:{partyId}", out List<PartyMemoryUnitMappingEntry>? list) ? [.. list] : []))
                 : Task.FromException<IReadOnlyList<PartyMemoryUnitMappingEntry>>(ReadFailure);
 
         public Task ClearMappingsAsync(string tenantId, string partyId, CancellationToken cancellationToken)
         {
             ClearCalls++;
+            cancellationToken.ThrowIfCancellationRequested();
             if (ClearFailure is not null)
             {
                 return Task.FromException(ClearFailure);

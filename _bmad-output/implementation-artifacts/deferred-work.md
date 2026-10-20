@@ -687,7 +687,8 @@ origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review
 location: MemoriesSearchHealthCheck
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `MemoriesSearchHealthCheck` returns Healthy immediately when indexing is disabled although previously persisted mappings can still require remote deletion and mapping-store access.
-status: open
+status: done 2026-10-20
+resolution: Disabled indexing now retains mapping-store health observation and probes retained cleanup configuration without a rich-search client. Incomplete retained configuration or failed probes degrades health; unconfigured local-only mode explicitly reports remote cleanup unverified. Sentinel contents, independently bounded cancellation cleanup, provider-text privacy and production DI credentials are covered. Debug build has zero warnings/errors and all 53 health cases pass. Complete service run passes 2101/2102; the sole unchanged dependency-receipt gate fails after external workspace sync advanced the Builds gitlink without updating its selected receipt. No dependency/full-topology signoff is claimed. All five review findings are corrected and independently confirmed; no new deferred work. See spec-dw-85-disabled-indexing-cleanup-health.md and tests/dw-85-disabled-indexing-cleanup-health-2026-10-20/validation.json.
 
 ### DW-86: Validate erasure certificates before certifying store cleanup
 

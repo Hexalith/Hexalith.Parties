@@ -299,7 +299,7 @@ internal sealed partial class PartyMemoryCleanupService(
                     401 or 403 => $"Memories cleanup auth misconfigured (HTTP {code}).",
                     404 => "Memories cleanup probe returned an unqualified HTTP 404; route or tenant/case provisioning could not be verified.",
                     405 => "Memories cleanup route does not accept DELETE (AC5 regression — server may have removed the per-unit DELETE endpoint).",
-                    _ => $"Memories cleanup probe returned unexpected HTTP {code} {response.ReasonPhrase}.",
+                    _ => $"Memories cleanup probe returned unexpected HTTP {code}.",
                 };
             return new PartyMemoryCleanupProbeResult(reachable, code, reason);
         }

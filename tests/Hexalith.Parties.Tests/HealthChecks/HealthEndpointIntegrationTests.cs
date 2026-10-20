@@ -8,6 +8,7 @@ using System.Text.Json;
 
 using Dapr.Client;
 
+using Hexalith.Memories.Client.Rest;
 using Hexalith.EventStore.Server.Actors;
 using Hexalith.EventStore.Server.Commands;
 using Hexalith.EventStore.Server.Pipeline.Commands;
@@ -105,6 +106,38 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
         memories.GetProperty("data").GetProperty("enabled").GetBoolean().ShouldBeFalse();
         memories.GetProperty("data").GetProperty("mappingStoreReachable").GetBoolean().ShouldBeFalse();
         payload.RootElement.ToString().ShouldNotContain("private mapping backend details");
+    }
+
+    [Fact]
+    public async Task DisabledCleanupUsesProductionRegistrationAndRetainedCredentialsAsync()
+    {
+        using var handler = new MemoriesCleanupProbeHandler();
+        using HealthTestFactory factory = new(new Dictionary<string, string>
+        {
+            ["Parties:MemoriesSearch:Enabled"] = "false",
+            ["Parties:MemoriesSearch:Endpoint"] = "https://memories.example/retained/",
+            ["Parties:MemoriesSearch:TenantId"] = "retained-tenant",
+            ["Parties:MemoriesSearch:CaseId"] = "retained-case",
+            ["Parties:MemoriesSearch:ApiToken"] = "synthetic-cleanup-token",
+            ["Parties:MemoriesSearch:RequireApiToken"] = "true",
+        }) { CleanupHandler = handler };
+        using HttpClient client = factory.CreateClient();
+        var check = ActivatorUtilities.CreateInstance<MemoriesSearchHealthCheck>(factory.Services);
+
+        Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult result = await check.CheckHealthAsync(
+            new Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext(), TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Healthy);
+        result.Data["enabled"].ShouldBe(false);
+        result.Data["cleanupRouteReachable"].ShouldBe(true);
+        result.Data["mappingStoreReachable"].ShouldBe(true);
+        factory.Services.GetService<MemoriesClient>().ShouldBeNull();
+        handler.RequestCount.ShouldBe(1);
+        handler.LastMethod.ShouldBe(HttpMethod.Delete);
+        handler.LastUri.ShouldNotBeNull().ToString().ShouldStartWith(
+            "https://memories.example/retained/api/v1/tenants/retained-tenant/cases/retained-case/memory-units/health-probe-");
+        handler.LastAuthorization.ShouldBe("Bearer synthetic-cleanup-token");
+        factory.MappingState.KeyExists.ShouldBeFalse();
     }
 
     [Fact]
@@ -301,6 +334,7 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
         internal ICommandRouter CommandRouter { get; } = Substitute.For<ICommandRouter>();
         internal SwitchableTenantsReadinessProbe TenantsReadinessProbe { get; } = new();
         internal PartyMemoryMappingState MappingState { get; } = new();
+        internal HttpMessageHandler? CleanupHandler { get; init; }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -331,6 +365,11 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
             {
                 services.RemoveAll<DaprClient>();
                 services.AddSingleton(DaprClient);
+                if (CleanupHandler is not null)
+                {
+                    services.AddHttpClient<PartyMemoryCleanupService>().ConfigurePrimaryHttpMessageHandler(() => CleanupHandler);
+                }
+
                 services.RemoveAll<IPartyMemoryUnitMappingStore>();
                 services.AddSingleton<IPartyMemoryUnitMappingStore>(new PartyMemoryUnitMappingStore(
                     MappingState.Client,

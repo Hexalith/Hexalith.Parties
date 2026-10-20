@@ -2,7 +2,7 @@
 title: 'DW-85: Observe Memories cleanup health with indexing disabled'
 type: 'bugfix'
 created: '2026-10-20'
-status: 'in-progress'
+status: 'done'
 route: 'oneshot'
 review_loop_iteration: 0
 baseline_commit: 'e55da59006f55410b9390403c67253b4f8423e18'
@@ -31,3 +31,15 @@ context: []
 - Validation: Debug affected test-project build, direct xUnit v3 health classes then complete service assembly, repository warning and whitespace guards, pinned commitlint. Preserve bounded command/results under tests/dw-85-disabled-indexing-cleanup-health-2026-10-20/.
 - External work subsequently advanced seven submodule checkouts. Those changes are preserved and excluded from this commit. Debug validation uses a temporary archive of the recorded Builds gitlink 5d03f1db9c38db34ecac7fe6048937478ffb82cc via HexalithBuildsRoot; no dependency versions or tracked pointers are changed.
 - First regression run against the original implementation: 41 health cases, 20 failed and 21 passed. Initial fixed run: all 41 passed. Expanded full service run: 2095 of 2096 passed, with the sole failure the unrelated FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph checkout/gitlink mismatch (expected Builds 5d03f1db9c38db34ecac7fe6048937478ffb82cc, actual fff4a212180d8cd1c5c0759655a9bc4fb6963c45). Source-mode launcher exits 2/HXW004 on externally advanced EventStore checkout vs staged gitlink. These checks remain intact; full source-mode qualification is not claimed.
+- Review corrections stay within probe correctness: independently bounded sentinel cleanup on cancellation, exact sentinel-content validation, sanitized upstream HTTP reason text, a retained-credential production-DI case with no rich-search client, and explicit operator restart guidance.
+
+## Review Triage Log
+
+- Medium, patch: the cancellation fake ignored cancellation and concealed a sentinel leak after successful recording. Use a cancellation-aware fake that cancels immediately after recording, and give sentinel cleanup an independent bounded token before propagating caller cancellation.
+- Medium, patch: the existing cleanup probe included provider-controlled ReasonPhrase for unexpected HTTP status; disabled mode newly exposes that text. Keep only the numeric status in health diagnostics and verify sensitive custom text is absent.
+- Medium, patch: manually constructed clients did not exercise retained credentials through production DI. Add a disabled-mode production-registration case checking exact endpoint prefix, tenant/case, DELETE, bearer token, absent rich-search client and persisted sentinel cleanup.
+- Low, patch: document endpoint/token startup capture and the restart required after configuration repair. This prevents stale endpoint or credential use from confusing operators.
+- Medium, patch: a one-item round-trip could contain the wrong mapping. Verify exact sentinel unit/source/case and reject each independently altered field while still cleaning the probe.
+
+- Final validation: Debug build has zero warnings/errors. All 53 health cases pass in the complete service run; overall 2101/2102 pass with no skips/errors/not-run. The sole failure is the unchanged dependency-receipt fitness gate: the selected Builds identity remains 5d03f1db9c38db34ecac7fe6048937478ffb82cc while external workspace sync ea926163fb51033b226541f069ebf6a5941922af committed gitlink fff4a212180d8cd1c5c0759655a9bc4fb6963c45. That sync also captured the initial DW-85 implementation; this task preserves its history and commits the reviewed corrections and closure separately. No dependency signoff or full-suite green claim is made.
+- All five review fixes have independent follow-up confirmation; no new deferred work. Warning/submodule guard, whitespace check and exact pinned commitlint candidate pass. Bounded evidence and source hashes are in tests/dw-85-disabled-indexing-cleanup-health-2026-10-20/validation.json.
