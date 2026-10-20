@@ -11,6 +11,12 @@ Hexalith.Parties uses a .NET 10, xUnit v3, Shouldly, NSubstitute, bUnit, Testcon
 | Tier 3 topology integration | `Hexalith.Parties.IntegrationTests` | Aspire/Dapr topology, sidecar health, gateway E2E behavior, and tests that depend on Docker, Dapr, or full orchestration. |
 | CI publication validation | `Hexalith.Parties.Ci.Tests` | Static checks for the GitHub Actions Zot container publication contract. |
 
+The model-only `PartiesPublishEnvironmentTests` inspect the complete publish
+graph without starting Docker or Dapr. In addition to the standard root
+dependencies, initialize the optional Memories reference before running the
+whole class: `git submodule update --init references/Hexalith.Memories`.
+Its default run-model cases also cover the topology with optional services disabled.
+
 ## Running Tests
 
 Run the focused lane first, then broaden only when the changed surface justifies it.

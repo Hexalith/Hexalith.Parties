@@ -1,0 +1,19 @@
+{
+  "command": [
+    "aspire",
+    "start",
+    "--apphost",
+    "/tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+    "--no-build",
+    "--isolated",
+    "--format",
+    "Json",
+    "--non-interactive"
+  ],
+  "cwd": "/tmp/parties-dw72-verify-chc22nih",
+  "exit_code": 0,
+  "environment": {
+    "UseHexalithProjectReferences": "true",
+    "UseNuGetDeps": "false"
+  }
+}

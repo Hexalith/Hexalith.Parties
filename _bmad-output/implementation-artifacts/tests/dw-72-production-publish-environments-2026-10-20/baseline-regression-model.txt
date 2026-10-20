@@ -1,0 +1,107 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.IntegrationTests
+  Discovered:  Hexalith.Parties.IntegrationTests
+  Starting:    Hexalith.Parties.IntegrationTests
+    Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_AllWorkloadsUseProduction(target: null) [FAIL]
+      Shouldly.ShouldAssertException : environment["ASPNETCORE_ENVIRONMENT"]
+          should be
+      "Production"
+          but was
+      "Development"
+
+      Additional Info:
+          eventstore
+      Stack Trace:
+        tests/Hexalith.Parties.IntegrationTests/Topology/PartiesPublishEnvironmentTests.cs(49,0): at Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_AllWorkloadsUseProduction(String target)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.IntegrationTests/Topology/PartiesPublishEnvironmentTests.cs(53,0): at Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_AllWorkloadsUseProduction(String target)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_AllWorkloadsUseProduction(target: "docker") [FAIL]
+      Shouldly.ShouldAssertException : environment["ASPNETCORE_ENVIRONMENT"]
+          should be
+      "Production"
+          but was
+      "Development"
+
+      Additional Info:
+          eventstore
+      Stack Trace:
+        tests/Hexalith.Parties.IntegrationTests/Topology/PartiesPublishEnvironmentTests.cs(49,0): at Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_AllWorkloadsUseProduction(String target)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.IntegrationTests/Topology/PartiesPublishEnvironmentTests.cs(53,0): at Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_AllWorkloadsUseProduction(String target)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+    Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_AllWorkloadsUseProduction(target: "k8s") [FAIL]
+      Shouldly.ShouldAssertException : environment["ASPNETCORE_ENVIRONMENT"]
+          should be
+      "Production"
+          but was
+      "Development"
+
+      Additional Info:
+          eventstore
+      Stack Trace:
+        tests/Hexalith.Parties.IntegrationTests/Topology/PartiesPublishEnvironmentTests.cs(49,0): at Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_AllWorkloadsUseProduction(String target)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.IntegrationTests/Topology/PartiesPublishEnvironmentTests.cs(53,0): at Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_AllWorkloadsUseProduction(String target)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+    Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_AllWorkloadsUseProduction(target: "aca") [FAIL]
+      Shouldly.ShouldAssertException : environment["ASPNETCORE_ENVIRONMENT"]
+          should be
+      "Production"
+          but was
+      "Development"
+
+      Additional Info:
+          eventstore
+      Stack Trace:
+        tests/Hexalith.Parties.IntegrationTests/Topology/PartiesPublishEnvironmentTests.cs(49,0): at Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_AllWorkloadsUseProduction(String target)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.IntegrationTests/Topology/PartiesPublishEnvironmentTests.cs(53,0): at Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.PublishModel_AllWorkloadsUseProduction(String target)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+  Finished:    Hexalith.Parties.IntegrationTests (ID = '210ec8bcdaa5bb5f04b5582b473337ef88c909d1e2a30d33ec584199040bda5d')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.IntegrationTests  Total: 5, Errors: 0, Failed: 4, Skipped: 0, Not Run: 0, Time: 0.336s

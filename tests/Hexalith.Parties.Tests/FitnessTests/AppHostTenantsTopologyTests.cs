@@ -105,8 +105,6 @@ public sealed class AppHostTenantsTopologyTests
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Authority"", publishModeAuthority ?? publishModeIssuer)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__Issuer"", publishModeIssuer)");
         program.ShouldContain(@"WithEnvironment(""Authentication__JwtBearer__RequireHttpsMetadata"", requireHttpsMetadata)");
-        program.ShouldContain(@"WithEnvironment(""ASPNETCORE_ENVIRONMENT"", ""Development"")");
-        program.ShouldContain(@"WithEnvironment(""DOTNET_ENVIRONMENT"", ""Development"")");
         program.ShouldContain("WithJwtAuthentication(eventStore, realmUrl, publishModeAuthority, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
         program.ShouldContain("WithJwtAuthentication(adminServer, realmUrl, publishModeAuthority, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");
         program.ShouldContain("WithJwtAuthentication(parties, realmUrl, publishModeAuthority, builder.ExecutionContext.IsPublishMode ? PublishModeJwtIssuer : null)");

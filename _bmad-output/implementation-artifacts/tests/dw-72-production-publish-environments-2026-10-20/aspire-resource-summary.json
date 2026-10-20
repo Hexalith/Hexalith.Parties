@@ -1,0 +1,68 @@
+[
+  {
+    "resource": "eventstore-admin-ui",
+    "type": "Project",
+    "state": "NotStarted",
+    "health": null,
+    "workload_environment": {}
+  },
+  {
+    "resource": "eventstore-admin",
+    "type": "Project",
+    "state": "Finished",
+    "health": null,
+    "workload_environment": {
+      "ASPNETCORE_ENVIRONMENT": "Development"
+    }
+  },
+  {
+    "resource": "eventstore",
+    "type": "Project",
+    "state": "Finished",
+    "health": null,
+    "workload_environment": {
+      "ASPNETCORE_ENVIRONMENT": "Development"
+    }
+  },
+  {
+    "resource": "parties",
+    "type": "Project",
+    "state": "Running",
+    "health": "Healthy",
+    "workload_environment": {
+      "ASPNETCORE_ENVIRONMENT": "Development"
+    }
+  },
+  {
+    "resource": "parties-mcp",
+    "type": "Project",
+    "state": "NotStarted",
+    "health": null,
+    "workload_environment": {}
+  },
+  {
+    "resource": "parties-ui",
+    "type": "Project",
+    "state": "Running",
+    "health": "Healthy",
+    "workload_environment": {
+      "ASPNETCORE_ENVIRONMENT": "Development"
+    }
+  },
+  {
+    "resource": "security",
+    "type": "Container",
+    "state": "Running",
+    "health": "Healthy",
+    "workload_environment": {}
+  },
+  {
+    "resource": "tenants",
+    "type": "Project",
+    "state": "Finished",
+    "health": null,
+    "workload_environment": {
+      "ASPNETCORE_ENVIRONMENT": "Development"
+    }
+  }
+]

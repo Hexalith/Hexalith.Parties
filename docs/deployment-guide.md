@@ -22,6 +22,11 @@ is already complete. Its owner must explicitly preserve or replace
 `parties-mcp`, standalone `parties-ui`, and the Parties Docker/Kubernetes/ACA
 publish-target behavior before the current AppHost can be retired.
 
+The retained AppHost sets both `ASPNETCORE_ENVIRONMENT` and `DOTNET_ENVIRONMENT`
+to `Production` on every project resource in publish mode, including the optional
+Memories and sample services. Local runs retain their launch-profile settings
+and environment overrides.
+
 Runtime deployment orchestration is externally owned. The orchestrator must consume immutable image tags from:
 
 - `registry.hexalith.com/parties`

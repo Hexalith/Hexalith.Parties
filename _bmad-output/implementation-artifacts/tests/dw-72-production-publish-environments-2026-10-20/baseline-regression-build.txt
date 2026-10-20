@@ -1,0 +1,56 @@
+  Determining projects to restore...
+  Restored /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons/Hexalith.Commons.csproj (in 272 ms).
+  Restored /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties/Hexalith.Parties.csproj (in 233 ms).
+  Restored /tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj (in 297 ms).
+  32 of 35 projects are up-to-date for restore.
+  Hexalith.Commons.UniqueIds -> /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/net10.0/Hexalith.Commons.UniqueIds.dll
+  Successfully created package '/home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/Hexalith.Commons.UniqueIds.1.0.0.nupkg'.
+  Successfully created package '/home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/Hexalith.Commons.UniqueIds.1.0.0.snupkg'.
+  Hexalith.EventStore.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll
+  Hexalith.Parties.Contracts -> /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll
+  Hexalith.Parties.Authentication -> /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.Authentication/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll
+  Hexalith.EventStore.Client -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/bin/Debug/net10.0/Hexalith.EventStore.Client.dll
+  Hexalith.EventStore.ServiceDefaults -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.ServiceDefaults/bin/Debug/net10.0/Hexalith.EventStore.ServiceDefaults.dll
+  Hexalith.EventStore.DomainService -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.DomainService/bin/Debug/net10.0/Hexalith.EventStore.DomainService.dll
+  Hexalith.Parties.Projections -> /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.Projections/bin/Debug/net10.0/Hexalith.Parties.Projections.dll
+  Hexalith.Commons.Http -> /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/bin/Debug/net10.0/Hexalith.Commons.Http.dll
+  Hexalith.Parties.Security -> /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.Security/bin/Debug/net10.0/Hexalith.Parties.Security.dll
+  Hexalith.Commons -> /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons/bin/Debug/net10.0/Hexalith.Commons.dll
+  Hexalith.Commons.UniqueIds -> /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/net10.0/Hexalith.Commons.UniqueIds.dll
+  Successfully created package '/home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/Hexalith.Commons.UniqueIds.3.125.1.nupkg'.
+  Successfully created package '/home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/Hexalith.Commons.UniqueIds.3.125.1.snupkg'.
+  Hexalith.EventStore.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll
+  Hexalith.Tenants.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/bin/Debug/net10.0/Hexalith.Tenants.Contracts.dll
+  Hexalith.EventStore.Client -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/bin/Debug/net10.0/Hexalith.EventStore.Client.dll
+  Hexalith.Tenants.Client -> /home/administrator/projects/hexalith/parties/references/Hexalith.Tenants/src/Hexalith.Tenants.Client/bin/Debug/net10.0/Hexalith.Tenants.Client.dll
+  Hexalith.Memories.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.Memories/src/Hexalith.Memories.Contracts/bin/Debug/net10.0/Hexalith.Memories.Contracts.dll
+  Hexalith.Memories.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.Memories/src/Hexalith.Memories.Contracts/bin/Debug/net10.0/Hexalith.Memories.Contracts.dll
+  Hexalith.Memories.Client.Rest -> /home/administrator/projects/hexalith/parties/references/Hexalith.Memories/src/Hexalith.Memories.Client.Rest/bin/Debug/net10.0/Hexalith.Memories.Client.Rest.dll
+  Hexalith.Parties -> /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll
+  Hexalith.Parties.Testing -> /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.Testing/bin/Debug/net10.0/Hexalith.Parties.Testing.dll
+  Hexalith.EventStore.Server -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Server/bin/Debug/net10.0/Hexalith.EventStore.Server.dll
+  Hexalith.Commons.ServiceDefaults -> /home/administrator/projects/hexalith/parties/references/Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/bin/Debug/net10.0/Hexalith.Commons.ServiceDefaults.dll
+  Hexalith.Parties.Client -> /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll
+  Hexalith.Parties.Mcp -> /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.Mcp/bin/Debug/net10.0/Hexalith.Parties.Mcp.dll
+  Hexalith.FrontComposer.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/bin/Debug/netstandard2.0/Hexalith.FrontComposer.Contracts.dll
+  Hexalith.FrontComposer.SourceTools -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.SourceTools/bin/Debug/netstandard2.0/Hexalith.FrontComposer.SourceTools.dll
+  Hexalith.FrontComposer.Contracts -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/bin/Debug/net10.0/Hexalith.FrontComposer.Contracts.dll
+  Hexalith.FrontComposer.Contracts.UI -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts.UI/bin/Debug/net10.0/Hexalith.FrontComposer.Contracts.UI.dll
+  Hexalith.FrontComposer.Shell -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.dll
+  Hexalith.Parties.AdminPortal -> /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.AdminPortal/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.dll
+  Hexalith.Parties.ConsumerPortal -> /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.ConsumerPortal/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal.dll
+  Hexalith.Parties.Picker -> /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.Picker/bin/Debug/net10.0/Hexalith.Parties.Picker.dll
+  Hexalith.EventStore.SignalR -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/bin/Debug/net10.0/Hexalith.EventStore.SignalR.dll
+  Hexalith.FrontComposer.Schema -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/bin/Debug/net10.0/Hexalith.FrontComposer.Schema.dll
+  Hexalith.FrontComposer.Mcp -> /home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Mcp/bin/Debug/net10.0/Hexalith.FrontComposer.Mcp.dll
+  Hexalith.Parties.UI -> /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.Parties.UI.dll
+  Hexalith.EventStore.Aspire -> /home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/bin/Debug/net10.0/Hexalith.EventStore.Aspire.dll
+  Hexalith.Parties.AppHost -> /tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.AppHost/bin/Debug/net10.0/Hexalith.Parties.AppHost.dll
+  Hexalith.Memories.Client.Rest -> /home/administrator/projects/hexalith/parties/references/Hexalith.Memories/src/Hexalith.Memories.Client.Rest/bin/Debug/net10.0/Hexalith.Memories.Client.Rest.dll
+  Hexalith.Parties.IntegrationTests -> /tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:15.19

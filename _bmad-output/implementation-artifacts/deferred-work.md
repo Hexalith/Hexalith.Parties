@@ -569,7 +569,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: src/Hexalith.Parties.AppHost/Program.cs
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `src/Hexalith.Parties.AppHost/Program.cs` emits `ASPNETCORE_ENVIRONMENT` and `DOTNET_ENVIRONMENT` as `Development` for publish output.
-status: open
+status: done 2026-10-20
+
+resolution: A publish-only policy sets both .NET environment variables to Production on every project resource, including optional services, while local profiles and explicit Staging values remain intact. Debug/source builds have zero warnings/errors, with 8 publish/run cases, 3 existing UI cases and 16 fitness checks passing. The original baseline full assembly passed 1933/1933; after rebasing onto concurrent sync bec09f01aa00bd9ef83554fd099ed36fb59ab2c6, the full assembly passes 2001/2003 with two documentation/receipt failures reproduced unchanged on that parent checkout. Four review gaps are corrected and independently verified. Healthy local Parties and UI stop cleanly; full topology and Release qualification remain separate. Existing Memories production authentication and parent metadata drift are deferred below. DW-72 changes no dependency versions or gitlinks. See spec-dw-72-production-publish-environments.md and tests/dw-72-production-publish-environments-2026-10-20/validation.json.
 
 ### DW-73: Fail publish preflight when the OIDC client secret is missing
 
@@ -1668,3 +1670,11 @@ resolution: Declared the existing named-enum wire policy on all six Parties comm
   summary: Prevent inherited disabledPackageSources from suppressing explicitly selected consumer feeds.
   severity: medium
   evidence: An inherited disabledPackageSources entry for additional-source-1 suppresses an explicitly selected generated feed and makes a synthetic package restore fail with NU1101. Generated keys and inheritance predate DW-69. The documentation exposes the limitation; isolate/reset disabled-source settings and cover effective restored sources separately.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-72-production-publish-environments.md`
+  summary: Qualify production authentication configuration for optional Memories in retained AppHost publish output.
+  evidence: The unchanged Memories publish branch supplies Redis/FalkorDB connection strings but no JWT authority/signing key, issuer or audience. Memories appsettings.Production.json supplies none, and ValidateServerAuthenticationOptions rejects their absence at startup. Pinned Aspire 13.6.1 adds launch-profile environment variables only in run mode, so baseline publish already defaults this optional service to Production; DW-72 makes that default explicit without changing its authentication configuration. Provide owner-supported configuration and production startup proof separately.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-72-production-publish-environments.md`
+  summary: Reconcile current dependency package documentation and source-selection receipts after the concurrent root-gitlink sync.
+  evidence: After rebasing onto bec09f01aa00bd9ef83554fd099ed36fb59ab2c6, the complete service suite passes 2001/2003. MaintainedTechnologyTablesMatchCentralPackageCatalog expects docs/ci.md to describe EventStore 3.126.0 selected by the new Builds catalog, and FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph still expects Builds 332b2c144defba546fe0a09626a4a72f2340e22f while the parent selects 5d03f1db9c38db34ecac7fe6048937478ffb82cc. Both unchanged methods fail identically on the exact parent checkout; commands, results and matching test-source blob identities are retained in the DW-72 evidence. Refresh current observations without weakening gates, fabricating owner approval or recertifying historical parity evidence.

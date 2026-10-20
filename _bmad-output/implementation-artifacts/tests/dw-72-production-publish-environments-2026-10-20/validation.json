@@ -1,0 +1,796 @@
+{
+  "work_item": "DW-72",
+  "baseline": "836b2ba4aa41cdf8a7812b97a5da7c08896c0c7c",
+  "verification_checkout": "/tmp/parties-dw72-verify-chc22nih",
+  "selected_dependencies": [
+    {
+      "path": "references/Hexalith.AI.Tools",
+      "selected_sha": "3f194e17174994d308ec84af9ee2b5aa68674d0d"
+    },
+    {
+      "path": "references/Hexalith.Builds",
+      "selected_sha": "332b2c144defba546fe0a09626a4a72f2340e22f"
+    },
+    {
+      "path": "references/Hexalith.Commons",
+      "selected_sha": "b7e6e7d5e28568b30c523130339cc4c52e12c674"
+    },
+    {
+      "path": "references/Hexalith.EventStore",
+      "selected_sha": "d55c6f7c11e9bce6f17d490a84c83f1561979d63"
+    },
+    {
+      "path": "references/Hexalith.FrontComposer",
+      "selected_sha": "1513fe3ed21a554eeee7a9d807f9b9e25fdb4cd2"
+    },
+    {
+      "path": "references/Hexalith.McpCli",
+      "selected_sha": "c25e2140e14a76b696a76aed30c8302107714fd6"
+    },
+    {
+      "path": "references/Hexalith.Memories",
+      "selected_sha": "d0c5d8ca96b06e02acdda88f255b33288642a7f7"
+    },
+    {
+      "path": "references/Hexalith.Platform",
+      "selected_sha": "5f18593639832d1245577dd93ec07687517d3acb"
+    },
+    {
+      "path": "references/Hexalith.PolymorphicSerializations",
+      "selected_sha": "80ce5afd99216ce5f591d66c833feafaf371f171"
+    },
+    {
+      "path": "references/Hexalith.Tenants",
+      "selected_sha": "c9feedb6656d70c7271e851c844ee29bdfb28c3e"
+    }
+  ],
+  "baseline_regression": [
+    {
+      "label": "baseline-regression-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithFrontComposerRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer",
+        "-p:HexalithMemoriesRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+        "-p:HexalithTenantsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Tenants",
+        "-p:HexalithMcpCliRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.McpCli",
+        "-m:1",
+        "-nr:false"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "retained_log": "baseline-regression-build.txt"
+    },
+    {
+      "label": "baseline-regression-model",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests",
+        "-result-xml",
+        "/tmp/parties-dw72-validation/baseline-regression-model.xml"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 1,
+      "retained_log": "baseline-regression-model.txt",
+      "assemblies": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "93bb9df3-59db-41e6-a6d1-28ca31321233",
+          "name": "/tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+          "run-date": "2026-10-20",
+          "run-time": "07:52:04",
+          "start-rtf": "2026-10-20T07:52:04.6783174+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "4",
+          "finish-rtf": "2026-10-20T07:52:05.0146161+00:00",
+          "not-run": "0",
+          "passed": "1",
+          "skipped": "0",
+          "time": "0.336",
+          "time-rtf": "00:00:00.3360000",
+          "total": "5"
+        }
+      ]
+    },
+    {
+      "label": "final-integration-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithFrontComposerRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer",
+        "-p:HexalithMemoriesRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+        "-p:HexalithTenantsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Tenants",
+        "-p:HexalithMcpCliRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.McpCli",
+        "-m:1",
+        "-nr:false"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "retained_log": "final-integration-build.txt"
+    },
+    {
+      "label": "final-publish-model",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests",
+        "-result-xml",
+        "/tmp/parties-dw72-validation/final-publish-model.xml"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "retained_log": "final-publish-model.txt",
+      "assemblies": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "abde2d80-d5b0-4689-bc78-77ecff00a4d1",
+          "name": "/tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+          "run-date": "2026-10-20",
+          "run-time": "07:52:20",
+          "start-rtf": "2026-10-20T07:52:20.9879754+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-10-20T07:52:21.5234091+00:00",
+          "not-run": "0",
+          "passed": "5",
+          "skipped": "0",
+          "time": "0.536",
+          "time-rtf": "00:00:00.5360000",
+          "total": "5"
+        }
+      ]
+    }
+  ],
+  "review": {
+    "findings_patched": 4,
+    "follow_up": "No remaining introduced issue found",
+    "deferred_existing_issues": [
+      "Optional Memories production authentication configuration requires separate qualification",
+      "Current package documentation and source-selection receipts drifted in the concurrent parent sync; both failures reproduced on the parent checkout."
+    ]
+  },
+  "limits": [
+    "Model tests inspect actual run/publish construction and configured environment callbacks; they do not certify generated deployment artifacts or runtime production authentication.",
+    "Runtime smoke reaches healthy Parties and Parties UI in Development and stops successfully; three external projects finished and two explicit-start projects remained NotStarted, so full topology qualification is not claimed.",
+    "Concurrent changes in the original workspace and its submodule checkouts were excluded. No dependency versions or gitlinks are changed.",
+    "Release publication remains a separate CI gate.",
+    "After rebasing onto bec09f01aa00bd9ef83554fd099ed36fb59ab2c6, all 27 focused checks and both builds pass. The full suite passes 2001/2003; documentation catalog and dependency receipt checks fail identically on the exact parent checkout. The relevant test source blobs are unchanged. These inherited gate failures remain visible and are deferred without weakening checks."
+  ],
+  "source_sha256": {
+    "src/Hexalith.Parties.AppHost/Program.cs": "25ee3fc57a49f9de95e19bb99a4ef03fdfef366075485a5a5f68bf88ae8dca6c",
+    "tests/Hexalith.Parties.Tests/FitnessTests/AppHostTenantsTopologyTests.cs": "13e84ffa22acfe25a52582cdfcd5ac10fae06177a8293818c69aaebff15cf92a",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesPublishEnvironmentTests.cs": "9fa0b2a5bb91198026ba21dfa52ac862b52a0a3e2040607c7f48baacefddbec5",
+    "docs/deployment-guide.md": "81fc69937fe82657065fb7601c576f4f617d31cf3c62688183eb25bfd2d5f752",
+    "tests/README.md": "084b02db9053d7797cb2ba4a72250f6ffa39f63699a3bc5c1fb41de0060d858c"
+  },
+  "superseded_environment_failures": [
+    {
+      "label": "symlink-path-aliasing",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-m:1",
+        "-nr:false"
+      ],
+      "exit_code": 1,
+      "retained_excerpt": "symlink-path-aliasing.txt",
+      "resolution": "Final builds use independent checkouts at the original committed gitlinks, with zero warnings/errors."
+    },
+    {
+      "label": "concurrent-dependency-advance",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+        "-p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons",
+        "-p:HexalithFrontComposerRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.FrontComposer",
+        "-p:HexalithMemoriesRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+        "-p:HexalithTenantsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Tenants",
+        "-p:HexalithMcpCliRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.McpCli",
+        "-m:1",
+        "-nr:false"
+      ],
+      "exit_code": 1,
+      "retained_excerpt": "concurrent-dependency-advance.txt",
+      "resolution": "Final builds use independent checkouts at the original committed gitlinks, with zero warnings/errors."
+    }
+  ],
+  "commitlint": {
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/parties-dw72-validation/commit-message.txt",
+      "--verbose"
+    ],
+    "exit_code": 0,
+    "pinned_version": "21.2.2",
+    "installed_version": "21.2.2",
+    "message": "fix: use production defaults for published services\n"
+  },
+  "baseline_checks": [
+    {
+      "label": "pinned-integration-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-m:1",
+        "-nr:false"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "retained_log": "pinned-integration-build.txt"
+    },
+    {
+      "label": "pinned-publish-model",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests",
+        "-result-xml",
+        "/tmp/parties-dw72-validation/pinned-publish-model.xml"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "retained_log": "pinned-publish-model.txt",
+      "assemblies": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "2a5fbc7b-f175-444d-8467-1ffa550d7aa6",
+          "name": "/tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+          "run-date": "2026-10-20",
+          "run-time": "07:58:11",
+          "start-rtf": "2026-10-20T07:58:11.0773994+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-10-20T07:58:11.4319093+00:00",
+          "not-run": "0",
+          "passed": "8",
+          "skipped": "0",
+          "time": "0.355",
+          "time-rtf": "00:00:00.3550000",
+          "total": "8"
+        }
+      ]
+    },
+    {
+      "label": "pinned-existing-ui-model",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesUiTopologyTests",
+        "-result-xml",
+        "/tmp/parties-dw72-validation/pinned-existing-ui-model.xml"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "retained_log": "pinned-existing-ui-model.txt",
+      "assemblies": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "282ef286-4465-4a31-b366-57e9d74ae65c",
+          "name": "/tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+          "run-date": "2026-10-20",
+          "run-time": "07:58:11",
+          "start-rtf": "2026-10-20T07:58:11.6383461+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-10-20T07:58:11.8916202+00:00",
+          "not-run": "0",
+          "passed": "3",
+          "skipped": "0",
+          "time": "0.253",
+          "time-rtf": "00:00:00.2530000",
+          "total": "3"
+        }
+      ]
+    },
+    {
+      "label": "ambient-target-model",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests",
+        "-result-xml",
+        "/tmp/parties-dw72-validation/ambient-target-model.xml"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "environment": {
+        "PUBLISH_TARGET": "invalid-ambient-target"
+      },
+      "retained_log": "ambient-target-model.txt",
+      "assemblies": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "def651f6-9452-4beb-87e3-1421df7e57a6",
+          "name": "/tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+          "run-date": "2026-10-20",
+          "run-time": "07:58:12",
+          "start-rtf": "2026-10-20T07:58:12.0956712+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-10-20T07:58:12.4265825+00:00",
+          "not-run": "0",
+          "passed": "8",
+          "skipped": "0",
+          "time": "0.330",
+          "time-rtf": "00:00:00.3300000",
+          "total": "8"
+        }
+      ]
+    },
+    {
+      "label": "pinned-service-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-m:1",
+        "-nr:false"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "retained_log": "pinned-service-build.txt"
+    },
+    {
+      "label": "pinned-apphost-fitness",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.FitnessTests.AppHostTenantsTopologyTests",
+        "-result-xml",
+        "/tmp/parties-dw72-validation/pinned-apphost-fitness.xml"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "retained_log": "pinned-apphost-fitness.txt",
+      "assemblies": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "c02caa3f-58d7-4815-83ac-5513dd5e1346",
+          "name": "/tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+          "run-date": "2026-10-20",
+          "run-time": "07:58:27",
+          "start-rtf": "2026-10-20T07:58:27.7993703+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-10-20T07:58:27.9143830+00:00",
+          "not-run": "0",
+          "passed": "16",
+          "skipped": "0",
+          "time": "0.115",
+          "time-rtf": "00:00:00.1150000",
+          "total": "16"
+        }
+      ]
+    },
+    {
+      "label": "pinned-full-service",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-dw72-validation/pinned-full-service.xml"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "retained_log": "full-service-summary.txt",
+      "assemblies": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "8fb21c64-edb3-467a-b7ee-505c1f287a99",
+          "name": "/tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+          "run-date": "2026-10-20",
+          "run-time": "07:58:28",
+          "start-rtf": "2026-10-20T07:58:28.1464971+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-10-20T07:58:43.4632064+00:00",
+          "not-run": "0",
+          "passed": "1933",
+          "skipped": "0",
+          "time": "15.318",
+          "time-rtf": "00:00:15.3180000",
+          "total": "1933"
+        }
+      ]
+    },
+    {
+      "label": "warning-guard",
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0,
+      "retained_log": "warning-guard.txt"
+    },
+    {
+      "label": "whitespace",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "retained_log": "whitespace.txt"
+    }
+  ],
+  "checks": [
+    {
+      "label": "rebased-integration-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-m:1",
+        "-nr:false"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "retained_log": "rebased-integration-build.txt"
+    },
+    {
+      "label": "rebased-publish-model",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests",
+        "-result-xml",
+        "/tmp/parties-dw72-validation/rebased-publish-model.xml"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "assemblies": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "7392876c-99fd-4854-b346-d0bc36b91f51",
+          "name": "/tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+          "run-date": "2026-10-20",
+          "run-time": "08:03:43",
+          "start-rtf": "2026-10-20T08:03:43.1073158+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-10-20T08:03:43.4583351+00:00",
+          "not-run": "0",
+          "passed": "8",
+          "skipped": "0",
+          "time": "0.351",
+          "time-rtf": "00:00:00.3510000",
+          "total": "8"
+        }
+      ],
+      "retained_log": "rebased-publish-model.txt"
+    },
+    {
+      "label": "rebased-existing-ui-model",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesUiTopologyTests",
+        "-result-xml",
+        "/tmp/parties-dw72-validation/rebased-existing-ui-model.xml"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "assemblies": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "26124952-6026-41d3-9a2f-5f7d06cce2ca",
+          "name": "/tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+          "run-date": "2026-10-20",
+          "run-time": "08:03:43",
+          "start-rtf": "2026-10-20T08:03:43.7093226+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-10-20T08:03:43.9863506+00:00",
+          "not-run": "0",
+          "passed": "3",
+          "skipped": "0",
+          "time": "0.277",
+          "time-rtf": "00:00:00.2770000",
+          "total": "3"
+        }
+      ],
+      "retained_log": "rebased-existing-ui-model.txt"
+    },
+    {
+      "label": "rebased-service-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-m:1",
+        "-nr:false"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "retained_log": "rebased-service-build.txt"
+    },
+    {
+      "label": "rebased-apphost-fitness",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.FitnessTests.AppHostTenantsTopologyTests",
+        "-result-xml",
+        "/tmp/parties-dw72-validation/rebased-apphost-fitness.xml"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 0,
+      "assemblies": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "b5cf4738-82b5-419d-874c-14dc253450e2",
+          "name": "/tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+          "run-date": "2026-10-20",
+          "run-time": "08:04:21",
+          "start-rtf": "2026-10-20T08:04:21.4163616+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "0",
+          "finish-rtf": "2026-10-20T08:04:21.5273498+00:00",
+          "not-run": "0",
+          "passed": "16",
+          "skipped": "0",
+          "time": "0.111",
+          "time-rtf": "00:00:00.1110000",
+          "total": "16"
+        }
+      ],
+      "retained_log": "rebased-apphost-fitness.txt"
+    },
+    {
+      "label": "rebased-full-service",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-dw72-validation/rebased-full-service.xml"
+      ],
+      "cwd": "/tmp/parties-dw72-verify-chc22nih",
+      "exit_code": 1,
+      "assemblies": [
+        {
+          "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+          "id": "027eead8-4cf5-4cdb-a560-19039404ea49",
+          "name": "/tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+          "run-date": "2026-10-20",
+          "run-time": "08:04:21",
+          "start-rtf": "2026-10-20T08:04:21.7527625+00:00",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0",
+          "errors": "0",
+          "failed": "2",
+          "finish-rtf": "2026-10-20T08:04:36.7099879+00:00",
+          "not-run": "0",
+          "passed": "2001",
+          "skipped": "0",
+          "time": "14.957",
+          "time-rtf": "00:00:14.9570000",
+          "total": "2003"
+        }
+      ],
+      "retained_log": "rebased-full-service-summary.txt"
+    },
+    {
+      "label": "warning-guard",
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0,
+      "retained_log": "warning-guard.txt"
+    },
+    {
+      "label": "whitespace",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--cached",
+        "HEAD^",
+        "--check"
+      ],
+      "exit_code": 0,
+      "retained_log": "whitespace.txt"
+    }
+  ],
+  "rebased_parent_baseline": {
+    "parent_sha": "bec09f01aa00bd9ef83554fd099ed36fb59ab2c6",
+    "checked_test_source_blobs": {
+      "tests/Hexalith.Parties.Tests/FitnessTests/DocumentationFitnessTests.cs": "c8ca7500a5ab1a7d43a583e9c71bf118c0f4498e",
+      "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs": "dec05f76d69d68d8c360984f1b82019dd151cc67"
+    },
+    "checks": [
+      {
+        "label": "parent-documentation",
+        "command": [
+          "dotnet",
+          "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+          "-method",
+          "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests.MaintainedTechnologyTablesMatchCentralPackageCatalog",
+          "-result-xml",
+          "/tmp/parties-dw72-validation/parent-documentation.xml"
+        ],
+        "cwd": "/tmp/parties-dw72-verify-chc22nih",
+        "exit_code": 1,
+        "assemblies": [
+          {
+            "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+            "id": "aaddb049-4ed0-4a8a-9bdc-9ead0ec88285",
+            "name": "/tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+            "run-date": "2026-10-20",
+            "run-time": "08:05:33",
+            "start-rtf": "2026-10-20T08:05:33.1150652+00:00",
+            "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+            "target-framework": ".NETCoreApp,Version=v10.0",
+            "errors": "0",
+            "failed": "1",
+            "finish-rtf": "2026-10-20T08:05:33.2841891+00:00",
+            "not-run": "0",
+            "passed": "0",
+            "skipped": "0",
+            "time": "0.170",
+            "time-rtf": "00:00:00.1700000",
+            "total": "1"
+          }
+        ],
+        "retained_log": "parent-documentation.txt"
+      },
+      {
+        "label": "parent-dependency-receipts",
+        "command": [
+          "dotnet",
+          "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+          "-method",
+          "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+          "-result-xml",
+          "/tmp/parties-dw72-validation/parent-dependency-receipts.xml"
+        ],
+        "cwd": "/tmp/parties-dw72-verify-chc22nih",
+        "exit_code": 1,
+        "assemblies": [
+          {
+            "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+            "id": "17efcc2a-53a1-4725-ad46-a19566da00a6",
+            "name": "/tmp/parties-dw72-verify-chc22nih/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+            "run-date": "2026-10-20",
+            "run-time": "08:05:33",
+            "start-rtf": "2026-10-20T08:05:33.5250794+00:00",
+            "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+            "target-framework": ".NETCoreApp,Version=v10.0",
+            "errors": "0",
+            "failed": "1",
+            "finish-rtf": "2026-10-20T08:05:33.7180781+00:00",
+            "not-run": "0",
+            "passed": "0",
+            "skipped": "0",
+            "time": "0.193",
+            "time-rtf": "00:00:00.1930000",
+            "total": "1"
+          }
+        ],
+        "retained_log": "parent-dependency-receipts.txt"
+      }
+    ],
+    "note": "Executed unchanged test methods from the already built assembly against the exact parent repository checkout; no build or test-source substitution."
+  },
+  "final_dependency_selection": {
+    "parent": "bec09f01aa00bd9ef83554fd099ed36fb59ab2c6",
+    "dependencies": [
+      {
+        "path": "references/Hexalith.AI.Tools",
+        "selected_sha": "3f194e17174994d308ec84af9ee2b5aa68674d0d"
+      },
+      {
+        "path": "references/Hexalith.Builds",
+        "selected_sha": "5d03f1db9c38db34ecac7fe6048937478ffb82cc"
+      },
+      {
+        "path": "references/Hexalith.Commons",
+        "selected_sha": "5c23c818f639c5bb3175f964c5549440bd5b876d"
+      },
+      {
+        "path": "references/Hexalith.EventStore",
+        "selected_sha": "c9f47dd5ba72918445dfd24a674a5b2c310589bd"
+      },
+      {
+        "path": "references/Hexalith.FrontComposer",
+        "selected_sha": "d52526a4bd1272760543e6a65840dc2b0ed93cee"
+      },
+      {
+        "path": "references/Hexalith.McpCli",
+        "selected_sha": "b616db3092a9b1c5af196538a3de37a5c7f2d7ca"
+      },
+      {
+        "path": "references/Hexalith.Memories",
+        "selected_sha": "c082f8151328b1ac91939cda8733ab78ae68e1c4"
+      },
+      {
+        "path": "references/Hexalith.Platform",
+        "selected_sha": "bb81fc9e98533246cfeed43ffcce08866a2a57f6"
+      },
+      {
+        "path": "references/Hexalith.PolymorphicSerializations",
+        "selected_sha": "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0"
+      },
+      {
+        "path": "references/Hexalith.Tenants",
+        "selected_sha": "ce88a70b6af777c059b5fb4335d429b9272911bd"
+      }
+    ]
+  }
+}

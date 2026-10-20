@@ -344,8 +344,6 @@ if (realmUrl is not null)
 else if (builder.ExecutionContext.IsPublishMode)
 {
     _ = adminUI
-        .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
-        .WithEnvironment("DOTNET_ENVIRONMENT", "Development")
         .WithEnvironment("EventStore__Authentication__Authority", PublishModeJwtAuthority)
         .WithEnvironment("EventStore__Authentication__Issuer", PublishModeJwtIssuer)
         .WithEnvironment("EventStore__Authentication__Audience", "hexalith-eventstore")
@@ -382,7 +380,6 @@ else if (builder.ExecutionContext.IsPublishMode)
     // Publish: tache realm. The client secret MUST come from configuration / a secret store, never
     // a committed literal — source it from builder.Configuration (env / user-secrets).
     _ = partiesUi
-        .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
         .WithEnvironment("Authentication__OpenIdConnect__Authority", PublishModeJwtAuthority)
         .WithEnvironment("Authentication__OpenIdConnect__ClientId", "hexalith-parties-ui")
         .WithEnvironment("Authentication__OpenIdConnect__ClientSecret", builder.Configuration["PartiesUi:OidcClientSecret"] ?? "")
@@ -413,6 +410,18 @@ else
 {
     throw new InvalidOperationException(
         $"Unknown PUBLISH_TARGET '{publishTarget}'. Supported values: docker, k8s, aca, or unset for dev mode.");
+}
+
+// Publish every workload with production configuration, including optional projects.
+// Local runs continue to use their launch profiles and environment overrides.
+if (builder.ExecutionContext.IsPublishMode)
+{
+    foreach (ProjectResource project in builder.Resources.OfType<ProjectResource>())
+    {
+        _ = builder.CreateResourceBuilder(project)
+            .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Production")
+            .WithEnvironment("DOTNET_ENVIRONMENT", "Production");
+    }
 }
 
 builder.Build().Run();
@@ -489,8 +498,6 @@ static IResourceBuilder<ProjectResource> WithJwtAuthentication(
     if (publishModeIssuer is not null)
     {
         return service
-            .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
-            .WithEnvironment("DOTNET_ENVIRONMENT", "Development")
             .WithEnvironment("Authentication__JwtBearer__Authority", publishModeAuthority ?? publishModeIssuer)
             .WithEnvironment("Authentication__JwtBearer__Issuer", publishModeIssuer);
     }

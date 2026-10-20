@@ -1,0 +1,37 @@
+[
+  {
+    "command": [
+      "aspire",
+      "wait",
+      "parties",
+      "--timeout",
+      "20",
+      "--apphost",
+      "/tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--non-interactive"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "aspire",
+      "describe",
+      "--apphost",
+      "/tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--format",
+      "Json",
+      "--non-interactive"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "aspire",
+      "stop",
+      "--apphost",
+      "/tmp/parties-dw72-verify-chc22nih/src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--non-interactive"
+    ],
+    "exit_code": 0
+  }
+]
