@@ -5,6 +5,7 @@ using Hexalith.Memories.Client.Rest;
 using Hexalith.Memories.Contracts.V1;
 using Hexalith.Parties.HealthChecks;
 using Hexalith.Parties.Search;
+using Hexalith.Parties.Tests.Search;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -226,15 +227,228 @@ public class MemoriesSearchHealthCheckTests
     public async Task DisabledMemoriesSearchReportsHealthyAndLocalOnlyMode()
     {
         PartyMemorySearchOptions options = new() { Enabled = false };
-        var services = new ServiceCollection().BuildServiceProvider();
+        var mappingStore = new RecordingMappingStore();
+        using var services = new ServiceCollection()
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
+            .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
 
-        HealthCheckResult result = await check
-            .CheckHealthAsync(new HealthCheckContext { Registration = new HealthCheckRegistration("test", check, null, null) }, CancellationToken.None)
-            .ConfigureAwait(true);
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
 
         result.Status.ShouldBe(HealthStatus.Healthy);
+        result.Data["enabled"].ShouldBe(false);
         result.Data["mode"].ShouldBe("local-only");
+        result.Data["cleanupConfigured"].ShouldBe(false);
+        result.Data["cleanupRouteReachable"].ShouldBe(false);
+        result.Data["cleanupRouteReason"].ToString().ShouldNotBeNull().ShouldContain("not configured");
+        result.Data["mappingStoreReachable"].ShouldBe(true);
+        mappingStore.ClearCalls.ShouldBe(1);
+        mappingStore.AllPartyKeys.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(204, "", true)]
+    [InlineData(404, "{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}", true)]
+    [InlineData(401, "", false)]
+    [InlineData(403, "", false)]
+    [InlineData(405, "", false)]
+    [InlineData(500, "", false)]
+    [InlineData(404, "{\"code\":\"CASE_NOT_FOUND\"}", false)]
+    [InlineData(404, "", false)]
+    public async Task DisabledIndexingStillProbesConfiguredCleanup(int status, string body, bool reachable)
+    {
+        var options = new PartyMemorySearchOptions
+        {
+            Enabled = false,
+            Endpoint = new Uri("https://memories.example/"),
+            TenantId = "tenant-a",
+            CaseId = "case-a",
+            RequireApiToken = false,
+        };
+        using var handler = new RecordingCleanupHandler((HttpStatusCode)status, body);
+        using var httpClient = new HttpClient(handler) { BaseAddress = options.Endpoint };
+        var mappingStore = new RecordingMappingStore();
+        var searchClient = new ProbingMemoriesClient();
+        using var services = new ServiceCollection()
+            .AddSingleton<MemoriesClient>(searchClient)
+            .AddSingleton(new PartyMemoryCleanupService(httpClient, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance))
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
+            .BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
+
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(reachable ? HealthStatus.Healthy : HealthStatus.Degraded);
+        result.Data["enabled"].ShouldBe(false);
+        result.Data["mode"].ShouldBe("local-only");
+        result.Data["cleanupConfigured"].ShouldBe(true);
+        result.Data["cleanupRouteReachable"].ShouldBe(reachable);
+        result.Data["cleanupRouteStatus"].ShouldBe(status);
+        result.Data["mappingStoreReachable"].ShouldBe(true);
+        result.Data.ShouldNotContainKey("searchReachable");
+        searchClient.ProbeCalls.ShouldBe(0);
+        handler.RequestCount.ShouldBe(1);
+        handler.LastMethod.ShouldBe(HttpMethod.Delete);
+        handler.LastUri.ShouldNotBeNull().AbsolutePath.ShouldStartWith("/api/v1/tenants/tenant-a/cases/case-a/memory-units/health-probe-");
+        mappingStore.ClearCalls.ShouldBe(1);
+        mappingStore.AllPartyKeys.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("https://memories.example/", null, null, null, false)]
+    [InlineData(null, "tenant-a", "case-a", null, false)]
+    [InlineData("relative/", "tenant-a", "case-a", null, false)]
+    [InlineData("ftp://memories.example/", "tenant-a", "case-a", null, false)]
+    [InlineData("https://memories.example/prefix", "tenant-a", "case-a", null, false)]
+    [InlineData("https://memories.example/?query=value", "tenant-a", "case-a", null, false)]
+    [InlineData("https://memories.example/#fragment", "tenant-a", "case-a", null, false)]
+    [InlineData("https://memories.example/", "tenant-a", "case-a", "invalid\r\ntoken", true)]
+    [InlineData(null, null, null, "retained-token", true)]
+    [InlineData("https://memories.example/", "tenant-a", "case-a", null, true)]
+    public async Task DisabledIndexingWithIncompleteCleanupConfigurationDegradesButStillProbesMappings(
+        string? endpoint, string? tenant, string? caseId, string? token, bool requireToken)
+    {
+        var options = new PartyMemorySearchOptions
+        {
+            Enabled = false,
+            Endpoint = endpoint is null ? null : new Uri(endpoint, UriKind.RelativeOrAbsolute),
+            TenantId = tenant,
+            CaseId = caseId,
+            ApiToken = token,
+            RequireApiToken = requireToken,
+        };
+        var mappingStore = new RecordingMappingStore();
+        using var services = new ServiceCollection()
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
+            .BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
+
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Data["cleanupConfigured"].ShouldBe(false);
+        result.Data["cleanupRouteReachable"].ShouldBe(false);
+        result.Data["mappingStoreReachable"].ShouldBe(true);
+        result.Data.ShouldNotContainKey("cleanupRouteStatus");
+        result.Data["cleanupRouteReason"].ToString().ShouldNotBeNull().ShouldContain("incomplete");
+        string.Join(" ", result.Data.Values).ShouldNotContain("retained-token");
+        mappingStore.ClearCalls.ShouldBe(1);
+        mappingStore.AllPartyKeys.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DisabledIndexingStillReportsMappingProbeFailures(bool failCleanup)
+    {
+        var mappingStore = new RecordingMappingStore
+        {
+            ReadFailure = failCleanup ? null : new InvalidOperationException("sensitive mapping read"),
+            ClearFailure = failCleanup ? new InvalidOperationException("sensitive mapping clear") : null,
+        };
+        var options = new PartyMemorySearchOptions
+        {
+            Endpoint = new Uri("https://memories.example/"),
+            TenantId = "tenant-a",
+            CaseId = "case-a",
+            RequireApiToken = false,
+        };
+        using var httpClient = new HttpClient(new RecordingCleanupHandler(HttpStatusCode.NoContent)) { BaseAddress = options.Endpoint };
+        using var services = new ServiceCollection()
+            .AddSingleton(new PartyMemoryCleanupService(httpClient, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance))
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
+            .BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
+
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Data["cleanupRouteReachable"].ShouldBe(true);
+        result.Data["mappingStoreReachable"].ShouldBe(false);
+        string reason = result.Data["mappingStoreReason"].ToString().ShouldNotBeNull();
+        reason.ShouldContain(nameof(InvalidOperationException));
+        reason.ShouldNotContain("sensitive mapping");
+        result.Exception.ShouldBeNull();
+        mappingStore.ClearCalls.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task DisabledIndexingPropagatesMappingCancellation()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        var mappingStore = new RecordingMappingStore { ReadFailure = new OperationCanceledException(cancellation.Token) };
+        using var services = new ServiceCollection()
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
+            .BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(new PartyMemorySearchOptions()), services);
+
+        await Should.ThrowAsync<OperationCanceledException>(() => check.CheckHealthAsync(new HealthCheckContext(), cancellation.Token));
+
+        mappingStore.ClearCalls.ShouldBe(1);
+        mappingStore.AllPartyKeys.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task DisabledConfiguredCleanupSucceedsWithoutRichSearchClient()
+    {
+        var options = new PartyMemorySearchOptions
+        {
+            Endpoint = new Uri("https://memories.example/"),
+            TenantId = "tenant-a",
+            CaseId = "case-a",
+            RequireApiToken = false,
+        };
+        var mappingStore = new RecordingMappingStore();
+        using var httpClient = new HttpClient(new RecordingCleanupHandler(HttpStatusCode.NoContent)) { BaseAddress = options.Endpoint };
+        using var services = new ServiceCollection()
+            .AddSingleton(new PartyMemoryCleanupService(httpClient, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance))
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
+            .BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
+
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(HealthStatus.Healthy);
+        result.Data["cleanupRouteReachable"].ShouldBe(true);
+        result.Data["mappingStoreReachable"].ShouldBe(true);
+        mappingStore.AllPartyKeys.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task DisabledHealthProbePreservesExistingDomainMappings()
+    {
+        var state = new PartyMemoryMappingState();
+        var store = new PartyMemoryUnitMappingStore(state.Client,
+            Options.Create(new PartyMemoryUnitMappingStoreOptions()), NullLogger<PartyMemoryUnitMappingStore>.Instance);
+        CancellationToken token = TestContext.Current.CancellationToken;
+        await store.RecordMappingAsync("tenant-a", "party-a", "existing-unit", "urn:existing", "old-case", token);
+        using var services = new ServiceCollection()
+            .AddSingleton<IPartyMemoryUnitMappingStore>(store)
+            .BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(new PartyMemorySearchOptions()), services);
+
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), token);
+        IReadOnlyList<PartyMemoryUnitMappingEntry> persisted = await store.GetMappingsAsync("tenant-a", "party-a", token);
+
+        result.Status.ShouldBe(HealthStatus.Healthy);
+        persisted.ShouldBe([new PartyMemoryUnitMappingEntry("existing-unit", "urn:existing", "old-case")]);
+        state.Entries.ShouldBe(persisted);
+        state.KeyExists.ShouldBeTrue();
+        state.DeleteAttempts.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task DisabledIndexingReportsMissingMappingRegistration()
+    {
+        using var services = new ServiceCollection().BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(new PartyMemorySearchOptions()), services);
+
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Data["mappingStoreReachable"].ShouldBe(false);
+        result.Data["mappingStoreReason"].ToString().ShouldNotBeNull().ShouldContain("not registered");
     }
 
     [Fact]

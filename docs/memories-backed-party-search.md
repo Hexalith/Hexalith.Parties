@@ -81,3 +81,21 @@ drain those writers before relying on collision preservation.
 Drain older Parties instances before relying on this concurrency guarantee: older
 cleanup code can still physically delete or overwrite mapping keys. Empty domain
 ledger keys must not be expired or deleted while mapping operations may be in flight.
+
+## Health when indexing is disabled
+
+`Parties:MemoriesSearch:Enabled=false` stops rich-search indexing, but existing
+Memories units can still require erasure. The `memories-search` health check always
+runs a unique mapping-store sentinel through record, read and cleanup. With retained
+endpoint, tenant, case and required credentials, it also probes the cleanup DELETE
+route without requiring a rich-search client. Failed probes or incomplete retained
+configuration report `Degraded`; local display-name search remains available.
+
+For a wholly unconfigured local-only installation, a successful mapping probe
+retains `Healthy`. Its data explicitly reports `cleanupConfigured=false`,
+`cleanupProbeSkipped=true`, and `cleanupRouteReachable=false`, with a reason that
+remote cleanup was not verified. This is not evidence that historical mappings or
+remote units are absent. Retain cleanup configuration after disabling indexing
+until outstanding cleanup obligations have been reconciled. Probe success establishes
+capability in the configured tenant/case, not a complete remote inventory or terminal
+erasure. This check contributes to `/health` and does not gate `/ready`.

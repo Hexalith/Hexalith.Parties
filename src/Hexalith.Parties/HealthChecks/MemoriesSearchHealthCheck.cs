@@ -35,13 +35,7 @@ internal sealed class MemoriesSearchHealthCheck(
         PartyMemorySearchOptions current = options.CurrentValue;
         if (!current.Enabled)
         {
-            return HealthCheckResult.Healthy(
-                "Hexalith.Memories rich search is disabled. Local display-name search is the only configured search path.",
-                new Dictionary<string, object>
-                {
-                    ["enabled"] = false,
-                    ["mode"] = "local-only",
-                });
+            return await CheckDisabledHealthAsync(current, cancellationToken).ConfigureAwait(false);
         }
 
         if (current.Endpoint is null || string.IsNullOrWhiteSpace(current.TenantId) || string.IsNullOrWhiteSpace(current.CaseId))
@@ -135,6 +129,68 @@ internal sealed class MemoriesSearchHealthCheck(
         // indexings from recording mappings. Any of the three failing surfaces here as Degraded.
         string description = BuildDegradedDescription(searchOutcome, cleanupOutcome, mappingStoreOutcome);
         return HealthCheckResult.Degraded(description, searchOutcome.Exception, data);
+    }
+
+    private async Task<HealthCheckResult> CheckDisabledHealthAsync(
+        PartyMemorySearchOptions current,
+        CancellationToken cancellationToken)
+    {
+        // Disabling ingestion does not remove previously indexed units or their ledger.
+        // A sentinel probes storage capability; it cannot inventory historical obligations.
+        MappingStoreProbeOutcome mapping = await ProbeMappingStoreAsync(cancellationToken).ConfigureAwait(false);
+        bool configurationPresent = current.Endpoint is not null
+            || !string.IsNullOrWhiteSpace(current.TenantId)
+            || !string.IsNullOrWhiteSpace(current.CaseId)
+            || !string.IsNullOrWhiteSpace(current.ApiToken);
+        bool configured = current.Endpoint is { IsAbsoluteUri: true } endpoint
+            && (endpoint.Scheme == Uri.UriSchemeHttp || endpoint.Scheme == Uri.UriSchemeHttps)
+            && endpoint.AbsolutePath.EndsWith('/')
+            && string.IsNullOrEmpty(endpoint.Query)
+            && string.IsNullOrEmpty(endpoint.Fragment)
+            && !string.IsNullOrWhiteSpace(current.TenantId)
+            && !string.IsNullOrWhiteSpace(current.CaseId)
+            && (!current.RequireApiToken
+                || (!string.IsNullOrWhiteSpace(current.ApiToken) && !current.ApiToken.Any(char.IsControl)));
+        CleanupProbeOutcome cleanup = configured
+            ? await ProbeCleanupAsync(current, cancellationToken).ConfigureAwait(false)
+            : new CleanupProbeOutcome(false, null, configurationPresent
+                ? "Memories cleanup configuration is incomplete or invalid; remote cleanup was not verified."
+                : "Memories cleanup is not configured; remote cleanup was not verified.");
+        Dictionary<string, object> data = new()
+        {
+            ["enabled"] = false,
+            ["mode"] = "local-only",
+            ["cleanupConfigured"] = configured,
+            ["cleanupProbeSkipped"] = !configured,
+            ["cleanupRouteReachable"] = cleanup.Reachable,
+            ["mappingStoreReachable"] = mapping.Reachable,
+        };
+        if (cleanup.StatusCode is { } statusCode)
+        {
+            data["cleanupRouteStatus"] = statusCode;
+        }
+
+        if (cleanup.Reason is not null)
+        {
+            data["cleanupRouteReason"] = cleanup.Reason;
+        }
+
+        if (mapping.Reason is not null)
+        {
+            data["mappingStoreReason"] = mapping.Reason;
+        }
+
+        if (!mapping.Reachable || (configurationPresent && !cleanup.Reachable))
+        {
+            return HealthCheckResult.Degraded(
+                BuildDegradedDescription(new SearchProbeOutcome(true, false, null, null), cleanup, mapping),
+                data: data);
+        }
+
+        return HealthCheckResult.Healthy(configured
+            ? "Memories indexing is disabled; cleanup route and mapping store are reachable."
+            : "Memories indexing is disabled; local search and mapping storage are available. Remote cleanup is not configured or verified.",
+            data);
     }
 
     private static async Task<SearchProbeOutcome> ProbeSearchAsync(

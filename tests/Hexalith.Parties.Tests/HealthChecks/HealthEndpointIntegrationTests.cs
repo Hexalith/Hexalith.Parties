@@ -15,12 +15,16 @@ using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.HealthChecks;
+using Hexalith.Parties.Search;
+using Hexalith.Parties.Tests.Search;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 using NSubstitute;
@@ -55,6 +59,11 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
             .ShouldBe("Healthy");
         payload.RootElement.GetProperty("results").GetProperty("party-read-models").GetProperty("status").GetString()
             .ShouldBe("Healthy");
+        payload.RootElement.GetProperty("results").GetProperty("memories-search").GetProperty("status").GetString()
+            .ShouldBe("Healthy");
+        _factory.MappingState.KeyExists.ShouldBeFalse();
+        _factory.MappingState.SaveAttempts.ShouldBe(1);
+        _factory.MappingState.DeleteAttempts.ShouldBe(1);
     }
 
     [Fact]
@@ -75,6 +84,27 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
         JsonDocument payload = await JsonDocument.ParseAsync(await healthResponse.Content.ReadAsStreamAsync());
         payload.RootElement.GetProperty("results").GetProperty("party-read-models").GetProperty("status").GetString()
             .ShouldBe("Degraded");
+    }
+
+    [Fact]
+    public async Task DisabledMemoriesMappingOutageDegradesHealthWithoutBlockingReadinessAsync()
+    {
+        ConfigureHealthyDaprClient();
+        _factory.MappingState.ReadFailure = new InvalidOperationException("private mapping backend details");
+        using HttpClient client = _factory.CreateClient();
+
+        using HttpResponseMessage health = await client.GetAsync("/health", TestContext.Current.CancellationToken);
+        using HttpResponseMessage ready = await client.GetAsync("/ready", TestContext.Current.CancellationToken);
+
+        health.StatusCode.ShouldBe(HttpStatusCode.OK);
+        ready.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await JsonDocument.ParseAsync(
+            await health.Content.ReadAsStreamAsync(TestContext.Current.CancellationToken), cancellationToken: TestContext.Current.CancellationToken);
+        JsonElement memories = payload.RootElement.GetProperty("results").GetProperty("memories-search");
+        memories.GetProperty("status").GetString().ShouldBe("Degraded");
+        memories.GetProperty("data").GetProperty("enabled").GetBoolean().ShouldBeFalse();
+        memories.GetProperty("data").GetProperty("mappingStoreReachable").GetBoolean().ShouldBeFalse();
+        payload.RootElement.ToString().ShouldNotContain("private mapping backend details");
     }
 
     [Fact]
@@ -270,12 +300,19 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
         internal DaprClient DaprClient { get; } = Substitute.For<DaprClient>();
         internal ICommandRouter CommandRouter { get; } = Substitute.For<ICommandRouter>();
         internal SwitchableTenantsReadinessProbe TenantsReadinessProbe { get; } = new();
+        internal PartyMemoryMappingState MappingState { get; } = new();
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             ArgumentNullException.ThrowIfNull(builder);
 
             builder.UseEnvironment("Development");
+            // These tests isolate local-only health from the Development Memories endpoint.
+            builder.UseSetting("Parties:MemoriesSearch:Enabled", "false");
+            builder.UseSetting("Parties:MemoriesSearch:Endpoint", string.Empty);
+            builder.UseSetting("Parties:MemoriesSearch:TenantId", string.Empty);
+            builder.UseSetting("Parties:MemoriesSearch:CaseId", string.Empty);
+            builder.UseSetting("Parties:MemoriesSearch:ApiToken", string.Empty);
             foreach (KeyValuePair<string, string> setting in settings ?? new Dictionary<string, string>())
             {
                 builder.UseSetting(setting.Key, setting.Value);
@@ -294,6 +331,11 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
             {
                 services.RemoveAll<DaprClient>();
                 services.AddSingleton(DaprClient);
+                services.RemoveAll<IPartyMemoryUnitMappingStore>();
+                services.AddSingleton<IPartyMemoryUnitMappingStore>(new PartyMemoryUnitMappingStore(
+                    MappingState.Client,
+                    Options.Create(new PartyMemoryUnitMappingStoreOptions()),
+                    NullLogger<PartyMemoryUnitMappingStore>.Instance));
                 services.RemoveAll<ICommandRouter>();
                 services.AddSingleton(CommandRouter);
                 services.RemoveAll<ITenantsReadinessProbe>();
