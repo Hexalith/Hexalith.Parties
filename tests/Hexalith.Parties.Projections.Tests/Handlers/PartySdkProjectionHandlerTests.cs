@@ -317,6 +317,176 @@ public sealed class PartySdkProjectionHandlerTests
             .Value.ShouldBeNull();
     }
 
+    [Theory]
+    [InlineData("Entries")]
+    [InlineData("LastIndexedEvents")]
+    [InlineData("LastSequenceNumbers")]
+    [InlineData("ErasureSequenceNumbers")]
+    public async Task NullIndexDictionaryRequiresRebuildWithoutChangingPersistedStateAsync(string dictionary)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        string key = PartySdkReadModelAddresses.Index("tenant-a");
+        PartyIndexSdkReadModel corrupt = NullIndexDictionary(CreateIndex("private-unrelated"), dictionary);
+        await store.SaveAsync("statestore", key, corrupt, TestContext.Current.CancellationToken);
+        ReadModelEntry<PartyIndexSdkReadModel> before = await store.GetAsync<PartyIndexSdkReadModel>("statestore", key, TestContext.Current.CancellationToken);
+        IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+
+        DomainProjectionHandlerResult result = await handler.ProjectAsync(CreateRequest(), "dispatch", TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        result.ReasonCode.ShouldBe("projection-rebuild-required");
+        ReadModelEntry<PartyIndexSdkReadModel> after = await store.GetAsync<PartyIndexSdkReadModel>("statestore", key, TestContext.Current.CancellationToken);
+        after.ETag.ShouldBe(before.ETag);
+        JsonSerializer.Serialize(after.Value, PartiesJsonOptions.Default).ShouldBe(JsonSerializer.Serialize(corrupt, PartiesJsonOptions.Default));
+        search.ReceivedCalls().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("Entries")]
+    [InlineData("LastIndexedEvents")]
+    [InlineData("LastSequenceNumbers")]
+    [InlineData("ErasureSequenceNumbers")]
+    public async Task NullIndexDictionaryOnOptimisticRetryCannotProduceAnotherWriteAsync(string dictionary)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        PartyIndexSdkReadModel valid = CreateIndex("private-unrelated");
+        string key = PartySdkReadModelAddresses.Index("tenant-a");
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", key, Arg.Any<CancellationToken>()).Returns(
+            new ReadModelEntry<PartyIndexSdkReadModel>(valid, "before"),
+            new ReadModelEntry<PartyIndexSdkReadModel>(valid, "before"),
+            new ReadModelEntry<PartyIndexSdkReadModel>(NullIndexDictionary(valid, dictionary), "corrupt"));
+        store.TrySaveAsync("statestore", key, Arg.Any<PartyIndexSdkReadModel>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
+
+        DomainProjectionHandlerResult result = await new PartyIndexSdkProjectionHandler(store, s_options, search)
+            .ProjectAsync(CreateRequest(), "dispatch", TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        result.ReasonCode.ShouldBe("projection-rebuild-required");
+        await store.Received(1).TrySaveAsync("statestore", key, Arg.Any<PartyIndexSdkReadModel>(), "before", Arg.Any<CancellationToken>());
+        search.ReceivedCalls().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("Entries")]
+    [InlineData("LastIndexedEvents")]
+    [InlineData("LastSequenceNumbers")]
+    [InlineData("ErasureSequenceNumbers")]
+    public async Task NullIndexDictionaryCannotBeAcceptedAsAStagedCandidateAsync(string dictionary)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options);
+        DomainSharedProjectionRebuildIdentity identity = CreateSharedRebuildIdentity();
+        PartyIndexSdkReadModel corrupt = NullIndexDictionary(CreateIndex("private-unrelated"), dictionary);
+        foreach (bool wrapped in new[] { false, true })
+        {
+            byte[] bytes = wrapped
+                ? JsonSerializer.SerializeToUtf8Bytes(new PartyIndexRebuildCandidate(corrupt, new PartyProjectionRebuildDiagnostics()), PartiesJsonOptions.Default)
+                : JsonSerializer.SerializeToUtf8Bytes(corrupt, PartiesJsonOptions.Default);
+            var candidate = new DomainSharedProjectionRebuildCandidate(bytes);
+            foreach (bool empty in new[] { false, true })
+            {
+                InvalidOperationException failure = await Should.ThrowAsync<InvalidOperationException>(() => handler.AccumulateAsync(
+                    identity, candidate, empty ? CreateRequest() with { Events = [] } : CreateRequest(), TestContext.Current.CancellationToken));
+                failure.Message.ShouldBe("The shared Party index rebuild candidate is empty or malformed.");
+            }
+
+            InvalidOperationException finalize = await Should.ThrowAsync<InvalidOperationException>(() =>
+                handler.FinalizeAsync(identity, candidate, TestContext.Current.CancellationToken));
+            finalize.Message.ShouldBe("The shared Party index rebuild candidate is empty or malformed.");
+            candidate.State.ToArray().ShouldBe(bytes);
+        }
+
+        (await store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), TestContext.Current.CancellationToken)).Value.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("Entries")]
+    [InlineData("LastIndexedEvents")]
+    [InlineData("LastSequenceNumbers")]
+    [InlineData("ErasureSequenceNumbers")]
+    public async Task ValidFullRebuildReplacesCorruptIndexAndRetainsErasureFencesAsync(string dictionary)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        string key = PartySdkReadModelAddresses.Index("tenant-a");
+        await store.SaveAsync("statestore", key, NullIndexDictionary(CreateIndex("private-obsolete"), dictionary), TestContext.Current.CancellationToken);
+        string? etag = (await store.GetAsync<PartyIndexSdkReadModel>("statestore", key, TestContext.Current.CancellationToken)).ETag;
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options);
+        DomainSharedProjectionRebuildIdentity identity = CreateSharedRebuildIdentity();
+        DomainSharedProjectionRebuildCandidate candidate = await handler.CreateEmptyCandidateAsync(identity, TestContext.Current.CancellationToken);
+        ProjectionRequest history = CreateRequest();
+        history = history with { Events = [history.Events[0], CreateErasureRequest().Events[0]] };
+        candidate = await handler.AccumulateAsync(identity, candidate, history, TestContext.Current.CancellationToken);
+        candidate = await handler.AccumulateAsync(identity, candidate, CreateRequest() with { AggregateId = "party-2" }, TestContext.Current.CancellationToken);
+
+        DomainProjectionRebuildPlan plan = await CommitAsync(store, handler, identity, candidate);
+
+        plan.Operations.Single().Concurrency.ShouldBe(ReadModelBatchConcurrency.Match(etag!));
+        PartyIndexSdkReadModel persisted = store.Deserialize<PartyIndexSdkReadModel>(key);
+        persisted.Entries.Keys.ShouldBe(["party-2"]);
+        persisted.LastIndexedEvents.Keys.ShouldBe(["party-2"]);
+        persisted.LastSequenceNumbers["party-1"].ShouldBe(2);
+        persisted.ErasureSequenceNumbers["party-1"].ShouldBe(2);
+        (await handler.ProjectAsync(CreateRequest(), "delayed", TestContext.Current.CancellationToken)).Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        store.Deserialize<PartyIndexSdkReadModel>(key).Entries.Keys.ShouldBe(["party-2"]);
+    }
+
+    [Theory]
+    [InlineData("Entries")]
+    [InlineData("LastIndexedEvents")]
+    [InlineData("LastSequenceNumbers")]
+    [InlineData("ErasureSequenceNumbers")]
+    public async Task EraserRejectsNullIndexDictionaryBeforeAnyCoordinatedWriteAsync(string dictionary)
+    {
+        var store = new InMemoryReadModelBatchStore();
+        string detailKey = PartySdkReadModelAddresses.Detail("tenant-a", "party-1");
+        string indexKey = PartySdkReadModelAddresses.Index("tenant-a");
+        PartyDetailSdkReadModel detail = PartyDetailSdkProjectionHandler.Fold(CreateRequest(), null);
+        await store.SaveAsync("statestore", detailKey, detail, TestContext.Current.CancellationToken);
+        PartyIndexSdkReadModel corrupt = NullIndexDictionary(CreateIndex("party-1", "private-unrelated"), dictionary);
+        await store.SaveAsync("statestore", indexKey, corrupt, TestContext.Current.CancellationToken);
+        IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
+
+        InvalidOperationException failure = await Should.ThrowAsync<InvalidOperationException>(() =>
+            new PartySdkReadModelEraser(store, store, s_options, search).EraseAsync("tenant-a", "party-1", TestContext.Current.CancellationToken));
+
+        failure.Message.ShouldBe("projection-rebuild-required");
+        JsonSerializer.Serialize(store.Deserialize<PartyDetailSdkReadModel>(detailKey), PartiesJsonOptions.Default)
+            .ShouldBe(JsonSerializer.Serialize(detail, PartiesJsonOptions.Default));
+        JsonSerializer.Serialize(store.Deserialize<PartyIndexSdkReadModel>(indexKey), PartiesJsonOptions.Default)
+            .ShouldBe(JsonSerializer.Serialize(corrupt, PartiesJsonOptions.Default));
+        (await store.GetAsync<PartyProcessingSdkReadModel>("statestore", PartySdkReadModelAddresses.Processing("tenant-a", "party-1"), TestContext.Current.CancellationToken)).Value.ShouldBeNull();
+        search.ReceivedCalls().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task OmittedLegacyIndexDictionariesRetainDefaultsAndAcceptLiveDeliveryAsync()
+    {
+        var store = new InMemoryReadModelBatchStore();
+        PartyIndexSdkReadModel legacy = JsonSerializer.Deserialize<PartyIndexSdkReadModel>("{}", PartiesJsonOptions.Default)!;
+        await store.SaveAsync("statestore", PartySdkReadModelAddresses.Index("tenant-a"), legacy, TestContext.Current.CancellationToken);
+
+        (await new PartyIndexSdkProjectionHandler(store, s_options).ProjectAsync(CreateRequest(), "legacy", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+
+        PartyIndexSdkReadModel persisted = store.Deserialize<PartyIndexSdkReadModel>(PartySdkReadModelAddresses.Index("tenant-a"));
+        persisted.Entries.Keys.ShouldBe(["party-1"]);
+        persisted.LastIndexedEvents["party-1"].SequenceNumber.ShouldBe(2);
+        persisted.LastSequenceNumbers["party-1"].ShouldBe(2);
+        persisted.ErasureSequenceNumbers.ShouldBeEmpty();
+    }
+
+    private static PartyIndexSdkReadModel NullIndexDictionary(PartyIndexSdkReadModel model, string dictionary)
+        => dictionary switch
+        {
+            "Entries" => model with { Entries = null! },
+            "LastIndexedEvents" => model with { LastIndexedEvents = null! },
+            "LastSequenceNumbers" => model with { LastSequenceNumbers = null! },
+            "ErasureSequenceNumbers" => model with { ErasureSequenceNumbers = null! },
+            _ => throw new ArgumentOutOfRangeException(nameof(dictionary)),
+        };
+
     private static ILogger<PartyIndexSdkProjectionHandler> CreateLogger()
     {
         ILogger<PartyIndexSdkProjectionHandler> logger = Substitute.For<ILogger<PartyIndexSdkProjectionHandler>>();

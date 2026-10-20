@@ -209,25 +209,59 @@ public sealed class PartySdkCrossInstanceErasureTests
         result.GetPayload().GetProperty("totalCount").GetInt32().ShouldBe(0);
     }
 
-    /// <summary>Does not interpret a malformed null entries collection as an established empty index.</summary>
+    /// <summary>Rejects malformed canonical rows without falling back to a formerly empty cache.</summary>
     /// <param name="queryType">The list or search discriminator.</param>
+    /// <param name="dictionary">The explicitly null dictionary.</param>
     [Theory]
-    [InlineData("PartyIndex")]
-    [InlineData("PartySearch")]
-    public async Task NullIndexEntriesCacheFailsBoundedAndIsEvictedAsync(string queryType)
+    [InlineData("PartyIndex", "Entries")]
+    [InlineData("PartySearch", "Entries")]
+    [InlineData("PartyIndex", "LastIndexedEvents")]
+    [InlineData("PartySearch", "LastIndexedEvents")]
+    [InlineData("PartyIndex", "LastSequenceNumbers")]
+    [InlineData("PartySearch", "LastSequenceNumbers")]
+    [InlineData("PartyIndex", "ErasureSequenceNumbers")]
+    [InlineData("PartySearch", "ErasureSequenceNumbers")]
+    public async Task NullIndexDictionariesFailBoundedAndEvictCacheAsync(string queryType, string dictionary)
     {
         var store = new InMemoryReadModelStore();
         string key = PartySdkReadModelAddresses.Index("tenant-a");
-        await store.SaveAsync(StoreName, key, new PartyIndexSdkReadModel { Entries = null! }, TestContext.Current.CancellationToken);
         var reads = new PartySdkFaultingReadModelStore(store);
         var cache = new PartySdkLastKnownReadModelCache();
         PartySdkQueryService service = Service(reads, cache);
+        await store.SaveAsync(StoreName, key, new PartyIndexSdkReadModel(), TestContext.Current.CancellationToken);
         (await ExecuteAsync(service, queryType)).Success.ShouldBeTrue();
+        PartyIndexSdkReadModel corrupt = NullIndexDictionary(dictionary);
+        await store.SaveAsync(StoreName, key, corrupt, TestContext.Current.CancellationToken);
+
+        AssertBoundedFailure(await ExecuteAsync(service, queryType));
+        cache.TryGetIndex("tenant-a", out _).ShouldBeFalse();
+        JsonSerializer.Serialize((await store.GetAsync<PartyIndexSdkReadModel>(StoreName, key, TestContext.Current.CancellationToken)).Value, PartiesJsonOptions.Default)
+            .ShouldBe(JsonSerializer.Serialize(corrupt, PartiesJsonOptions.Default));
         reads.UnavailableKeys.Add(key);
 
         AssertBoundedFailure(await ExecuteAsync(service, queryType));
         cache.TryGetIndex("tenant-a", out _).ShouldBeFalse();
+        // An old host/cache API may still have retained an empty-looking malformed row.
+        cache.StoreIndex("tenant-a", corrupt);
+        AssertBoundedFailure(await ExecuteAsync(service, queryType));
+        cache.TryGetIndex("tenant-a", out _).ShouldBeFalse();
+
+        reads.UnavailableKeys.Clear();
+        await store.SaveAsync(StoreName, key, new PartyIndexSdkReadModel(), TestContext.Current.CancellationToken);
+        QueryResult recovered = await ExecuteAsync(service, queryType);
+        recovered.Success.ShouldBeTrue();
+        recovered.Metadata!.IsDegraded.ShouldBeFalse();
     }
+
+    private static PartyIndexSdkReadModel NullIndexDictionary(string dictionary)
+        => dictionary switch
+        {
+            "Entries" => new PartyIndexSdkReadModel { Entries = null! },
+            "LastIndexedEvents" => new PartyIndexSdkReadModel { LastIndexedEvents = null! },
+            "LastSequenceNumbers" => new PartyIndexSdkReadModel { LastSequenceNumbers = null! },
+            "ErasureSequenceNumbers" => new PartyIndexSdkReadModel { ErasureSequenceNumbers = null! },
+            _ => throw new ArgumentOutOfRangeException(nameof(dictionary)),
+        };
 
     /// <summary>Preserves an established absent-detail cache as not found.</summary>
     [Fact]
