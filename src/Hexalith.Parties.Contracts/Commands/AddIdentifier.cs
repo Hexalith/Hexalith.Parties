@@ -24,8 +24,8 @@ public sealed record AddIdentifier
     [Description("The business identifier kind: VAT, SIRET, NationalId, CompanyRegistration, TaxId or Other.")]
     public required IdentifierType Type { get; init; }
 
-    /// <summary>The nonempty business identifier Value, at most 512 UTF-16 units, stored without trimming; the 128-character IdentifierId limit does not apply to this value.</summary>
+    /// <summary>The business identifier Value, with at least one non-whitespace character and at most 512 UTF-16 units, stored without trimming; the 128-character IdentifierId limit does not apply to this value.</summary>
     [PersonalData]
-    [Description("The nonempty business identifier Value, at most 512 UTF-16 units, stored without trimming; the 128-character IdentifierId limit does not apply to this value.")]
+    [Description("The business identifier Value, with at least one non-whitespace character and at most 512 UTF-16 units, stored without trimming; the 128-character IdentifierId limit does not apply to this value.")]
     public required string Value { get; init; }
 }

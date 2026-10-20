@@ -24,9 +24,9 @@ public sealed record AddContactChannel
     [Description("The contact-channel kind: Email, Phone, PostalAddress or SocialMedia.")]
     public required ContactChannelType Type { get; init; }
 
-    /// <summary>A nonempty raw string for every kind, including PostalAddress and SocialMedia; no structured address or social object format is defined. Stored without trimming.</summary>
+    /// <summary>A raw string with at least one non-whitespace character for every kind, including PostalAddress and SocialMedia; no structured address or social object format is defined. Stored without trimming.</summary>
     [PersonalData]
-    [Description("A nonempty raw string for every kind, including PostalAddress and SocialMedia; no structured address or social object format is defined. Stored without trimming.")]
+    [Description("A raw string with at least one non-whitespace character for every kind, including PostalAddress and SocialMedia; no structured address or social object format is defined. Stored without trimming.")]
     public required string Value { get; init; }
 
     /// <summary>Defaults to false. True makes this channel preferred and clears preference on other channels of the same type; the last true addition for that type wins.</summary>
