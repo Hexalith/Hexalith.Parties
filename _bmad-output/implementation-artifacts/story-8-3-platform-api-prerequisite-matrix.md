@@ -50,8 +50,8 @@ not the G5 runtime engine.
 
 ### Current source observation — 2026-10-20
 
-Story 4.9 verification housekeeping reconciles the independently committed
-source graph at Parties `14ad39f85eae152c7a7e22ff261cc534ff5dab1e`. Every root checkout below
+Story 4.10 release-prerequisite verification reconciles the independently committed
+source graph at Parties `ea926163fb51033b226541f069ebf6a5941922af`. Every root checkout below
 matches its committed gitlink and has an empty `git status --porcelain` result.
 This records present-tense selection facts only; it does not extend dated owner
 approvals, parity/runtime/custody qualification or migration authority. The
@@ -60,14 +60,17 @@ approvals, parity/runtime/custody qualification or migration authority. The
 The imported Builds catalog and evaluated default Release graph select EventStore package `3.126.0`, Commons `2.30.3`, FrontComposer `4.7.0`,
 Memories `2.27.1`, Tenants `5.9.0`, and Parties `1.5.0`.
 CommunityToolkit.Aspire.Hosting.Dapr remains `13.6.1-beta.935`. Default package
-mode and the explicit source graph remain distinct; Commons HTTP continues to
-use its configured source fallback. Catalog selection is separate from the
+mode and the explicit source graph remain distinct; ordinary Release builds
+consume Commons HTTP from its package. The pinned `hexalith-module` tool is the
+sole source-root/mode authority. Repository-local autodetection is absent;
+`UseHexalithProjectReferences=true` alone does not supply roots or select source.
+Catalog selection is separate from the
 immutable validation/release workflow pins and their approval receipts.
 
 Reproduce the committed source selection with:
 
 ```bash
-git ls-tree 14ad39f85eae152c7a7e22ff261cc534ff5dab1e references/Hexalith.<dependency>
+git ls-tree ea926163fb51033b226541f069ebf6a5941922af references/Hexalith.<dependency>
 git -C references/Hexalith.<dependency> rev-parse HEAD
 git -C references/Hexalith.<dependency> describe --tags --always --abbrev=8 HEAD
 git -C references/Hexalith.<dependency> status --porcelain
@@ -77,15 +80,35 @@ dotnet msbuild src/Hexalith.Parties/Hexalith.Parties.csproj -p:Configuration=Rel
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` (`3f194e17`) | Instruction baseline. |
-| Builds | `5d03f1db9c38db34ecac7fe6048937478ffb82cc` (`v4.33.1-49-g5d03f1db`) | Imported package catalog and build tooling; EventStore 3.126.0 selected. |
-| Commons | `5c23c818f639c5bb3175f964c5549440bd5b876d` (`v2.30.3`) | Source fallback; catalog package is `2.30.3`. |
-| EventStore | `c9f47dd5ba72918445dfd24a674a5b2c310589bd` (`v3.126.0-17-gc9f47dd5`) | Source inspection; runtime consumers restore package `3.126.0`. |
-| FrontComposer | `d52526a4bd1272760543e6a65840dc2b0ed93cee` (`v4.7.0-9-gd52526a4`) | Selected package is `4.7.0`. |
-| McpCli | `b616db3092a9b1c5af196538a3de37a5c7f2d7ca` (`v1.0.0-23-gb616db30`) | Committed root pointer; not used for G5 proof. |
-| Memories | `c082f8151328b1ac91939cda8733ab78ae68e1c4` (`v2.29.3-1-gc082f815`) | Selected package remains `2.27.1`. |
-| Platform | `bb81fc9e98533246cfeed43ffcce08866a2a57f6` (`bb81fc9e`) | Committed root pointer; not used for G5 proof. |
+| Builds | `fff4a212180d8cd1c5c0759655a9bc4fb6963c45` (`v4.35.0`) | Imported package catalog and build tooling; EventStore 3.126.0 selected. |
+| Commons | `5c23c818f639c5bb3175f964c5549440bd5b876d` (`v2.30.3`) | Default Release package is `2.30.3`; source requires explicit tool mapping. |
+| EventStore | `54261aeccb1d8d8c5c99beb2437e2e8a5ad69eaa` (`v3.126.0-20-g54261aec`) | Source inspection; runtime consumers restore package `3.126.0`. |
+| FrontComposer | `913c4132c71cd7f77fcdf6befa9e396d284dd4bc` (`v4.7.0-16-g913c4132`) | Selected package is `4.7.0`. |
+| McpCli | `9354dc08176744c75c2ddb61d924c0948b373b98` (`v1.0.0-32-g9354dc08`) | Committed root pointer; not used for G5 proof. |
+| Memories | `35df7e2080c369003cacac12f5b44117d7f3ed35` (`v2.29.5`) | Selected package remains `2.27.1`. |
+| Platform | `4f036ced45aa40700948c19949bb874881c960b5` (`4f036ced`) | Committed root pointer; not used for G5 proof. |
 | PolymorphicSerializations | `221ac4592ba908ae7661ba1fa9e2d1fcc23baee0` (`v1.19.5`) | Existing source dependency. |
-| Tenants | `ce88a70b6af777c059b5fb4335d429b9272911bd` (`v5.9.0-13-gce88a70b`) | Selected package is `5.9.0`. |
+| Tenants | `3ae9db014dfe52bdee4f6731465cc2a7b65701b7` (`v5.9.0-26-g3ae9db01`) | Selected package is `5.9.0`. |
+
+Source-mode consumer property fixtures use Debug and explicit inputs, for
+example:
+
+```bash
+dotnet msbuild src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj -p:Configuration=Debug -p:UseHexalithProjectReferences=true -p:HexalithEventStoreRoot="$PWD/references/Hexalith.EventStore" -p:HexalithEventStoreFromSource=true -p:HexalithCommonsRoot="$PWD/references/Hexalith.Commons" -p:HexalithCommonsHttpFromSource=true -getItem:PackageReference,ProjectReference
+```
+
+The fitness gate evaluates default Release, explicit package mode, Debug with
+only the bare source switch, and explicit source property fixtures. Consumer
+discovery uses package/project identities independently of selector conditions.
+Effective versions include VersionOverride and centrally evaluated PackageVersion
+metadata; selected project paths must exist. It retains negative sibling-layout coverage without mapping and positive
+coverage with explicit `HexalithMcpCliRoot`/`HexalithMcpCliFromSource=true` property fixtures
+for both supported McpCli layouts; only Abstractions may be a source reference.
+These consumer property fixtures do not run generated imports, mapping-hash
+checks, or tool validation targets and therefore do not verify actual module-tool
+mapping. They prove consumer branch selection only, not tool composition, source
+compilation, package release or historical parity. Current describe values identify these exact checkouts; they do not change
+the selected package versions or extend historical qualification.
 
 Selection does not revalidate historical parity receipts or authorize deletion
 of migration rollback paths. Historical owner approvals remain attached to their

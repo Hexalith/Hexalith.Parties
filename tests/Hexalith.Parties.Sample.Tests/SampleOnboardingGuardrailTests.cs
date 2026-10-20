@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 using Shouldly;
@@ -135,9 +136,36 @@ public sealed class SampleOnboardingGuardrailTests
     {
         string gettingStarted = File.ReadAllText(GetRepositoryFilePath("docs/getting-started.md"));
 
+        gettingStarted.ShouldContain("dotnet tool restore");
+        gettingStarted.ShouldContain("dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json");
+        gettingStarted.ShouldContain("dotnet tool run hexalith-module -- down --manifest module/hexalith.module-manifest.v2.json --run-id <run-id>");
         gettingStarted.ShouldContain("dotnet aspire run --project src/Hexalith.Parties.AppHost");
-        gettingStarted.ShouldContain("git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants");
-        gettingStarted.ShouldContain("Do not use --recursive");
+        gettingStarted.ShouldContain("Legacy hosting scope");
+
+        string[] directReferences = ReadSubmoduleUpdateReferences(gettingStarted).ShouldHaveSingleItem();
+        string[] requiredReferences =
+        [
+            "references/Hexalith.Platform",
+            "references/Hexalith.Builds",
+            "references/Hexalith.Commons",
+            "references/Hexalith.EventStore",
+            "references/Hexalith.FrontComposer",
+            "references/Hexalith.PolymorphicSerializations",
+            "references/Hexalith.Tenants",
+            "references/Hexalith.Memories",
+            "references/Hexalith.McpCli",
+        ];
+        directReferences.Order(StringComparer.Ordinal).ShouldBe(requiredReferences.Order(StringComparer.Ordinal));
+        HashSet<string> declaredReferences = Regex.Matches(
+                File.ReadAllText(GetRepositoryFilePath(".gitmodules")),
+                @"(?m)^\s*path\s*=\s*(?<path>\S+)\s*$",
+                RegexOptions.CultureInvariant)
+            .Select(static match => match.Groups["path"].Value)
+            .ToHashSet(StringComparer.Ordinal);
+        directReferences.ShouldAllBe(path => declaredReferences.Contains(path),
+            "Only root-declared direct references may be initialized.");
+        gettingStarted.ShouldMatch(@"(?i)\b(?:do\s+not|never|avoid)\b[^\r\n.!]*--recursive\b");
+        gettingStarted.ShouldMatch(@"(?i)\b(?:do\s+not|never|avoid)\s+(?:initialize|update)\b[^.]*\b(?:nested|inside)\b");
         gettingStarted.ShouldContain("Aspire");
         gettingStarted.ShouldContain("DAPR");
         gettingStarted.ShouldContain("/ready");
@@ -204,6 +232,45 @@ public sealed class SampleOnboardingGuardrailTests
         subscription.ShouldContain("/events/parties");
         subscription.ShouldContain("sample");
     }
+
+    [Theory]
+    [InlineData("git -c submodule.recurse=true submodule update --recursive --init --remote references/Hexalith.Builds")]
+    [InlineData("git --no-pager -C . submodule update references/Hexalith.Builds --init --remote")]
+    [InlineData("git --git-dir=.git submodule update --recursive references/Hexalith.Builds --init")]
+    [InlineData("echo ready && git -c color.ui=never submodule update --init references/Hexalith.Builds --remote")]
+    [InlineData("git -c submodule.recurse=true submodule update --init references/Hexalith.Builds")]
+    [InlineData("git -C . submodule --quiet update references/Hexalith.Builds --remote --init")]
+    public void OnboardingSubmoduleCommandsRejectRecursiveOrRemoteUpdatesWithGlobalOptions(string command)
+    {
+        Should.Throw<ShouldAssertException>(() => ReadSubmoduleUpdateReferences(command))
+            .Message.ShouldContain("recursive/remote");
+    }
+
+    [Theory]
+    [InlineData("git -C . -c color.ui=never submodule update references/Hexalith.Builds --init")]
+    [InlineData("git --no-pager submodule update --init references/Hexalith.Builds")]
+    public void OnboardingSubmoduleCommandsAcceptDirectInitializationWithGlobalOptions(string command)
+    {
+        ReadSubmoduleUpdateReferences(command).ShouldHaveSingleItem().ShouldBe(["references/Hexalith.Builds"]);
+    }
+
+    private static string[][] ReadSubmoduleUpdateReferences(string text)
+        => Regex.Matches(
+                text,
+                @"(?m)(?:^|[;&|])\s*(?:\$\s*)?git\s+[^;|&\r\n`]*?\bsubmodule\s+(?:--?[^\s;|&`]+\s+)*update\b(?<arguments>[^;|&\r\n`#]*)",
+                RegexOptions.CultureInvariant)
+            .Select(match =>
+            {
+                string command = match.Value.Trim();
+                Regex.IsMatch(command, @"(?:^|\s)--(?:recursive|remote|recurse-submodules)(?:[=\s]|$)", RegexOptions.CultureInvariant)
+                    .ShouldBeFalse($"Unsafe recursive/remote submodule update: {command}");
+                Regex.IsMatch(command, @"\bsubmodule\.recurse\s*=\s*(?:true|1|yes|on)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+                    .ShouldBeFalse($"Unsafe recursive/remote Git configuration: {command}");
+                string[] arguments = match.Groups["arguments"].Value.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                arguments.ShouldContain("--init", "Onboarding initializes explicitly listed direct references.");
+                return arguments.Where(static argument => argument != "--init").ToArray();
+            })
+            .ToArray();
 
     private static bool IsBuildArtifact(string path)
         => path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)

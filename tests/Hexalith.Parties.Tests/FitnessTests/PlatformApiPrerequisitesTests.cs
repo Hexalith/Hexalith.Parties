@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 using Hexalith.Parties.Contracts.Authorization;
 
@@ -44,28 +45,35 @@ public sealed class PlatformApiPrerequisitesTests
     // Release selection is separate from the historical migration/parity receipt constants.
     private const string CurrentReleaseEventStoreVersion = "3.126.0";
     private const string CurrentCatalogEventStoreVersion = "3.126.0";
-    private const string CurrentReleaseEventStoreSha = "c9f47dd5ba72918445dfd24a674a5b2c310589bd";
-    private const string CurrentReleaseEventStoreDescribe = "v3.126.0-17-gc9f47dd5";
+    private const string CurrentReleaseEventStoreSha = "54261aeccb1d8d8c5c99beb2437e2e8a5ad69eaa";
+    private const string CurrentReleaseEventStoreDescribe = "v3.126.0-20-g54261aec";
     private const string CurrentReleaseEventStoreTag = "v3.126.0";
     private static readonly IReadOnlyDictionary<string, string> CurrentReleaseGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = AiToolsSha,
-        ["references/Hexalith.Builds"] = "5d03f1db9c38db34ecac7fe6048937478ffb82cc",
+        ["references/Hexalith.Builds"] = "fff4a212180d8cd1c5c0759655a9bc4fb6963c45",
         ["references/Hexalith.Commons"] = "5c23c818f639c5bb3175f964c5549440bd5b876d",
         [EventStoreRelativePath] = CurrentReleaseEventStoreSha,
-        ["references/Hexalith.FrontComposer"] = "d52526a4bd1272760543e6a65840dc2b0ed93cee",
-        ["references/Hexalith.Memories"] = "c082f8151328b1ac91939cda8733ab78ae68e1c4",
+        ["references/Hexalith.FrontComposer"] = "913c4132c71cd7f77fcdf6befa9e396d284dd4bc",
+        ["references/Hexalith.Memories"] = "35df7e2080c369003cacac12f5b44117d7f3ed35",
         ["references/Hexalith.PolymorphicSerializations"] = "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
-        ["references/Hexalith.Tenants"] = "ce88a70b6af777c059b5fb4335d429b9272911bd",
+        ["references/Hexalith.Tenants"] = "3ae9db014dfe52bdee4f6731465cc2a7b65701b7",
+        ["references/Hexalith.McpCli"] = "9354dc08176744c75c2ddb61d924c0948b373b98",
+        ["references/Hexalith.Platform"] = "4f036ced45aa40700948c19949bb874881c960b5",
     };
 
     private static readonly IReadOnlyDictionary<string, string> CurrentSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["references/Hexalith.Builds"] = "v4.33.1-49-g5d03f1db",
+        ["references/Hexalith.Builds"] = "v4.35.0",
         [EventStoreRelativePath] = CurrentReleaseEventStoreDescribe,
-        ["references/Hexalith.FrontComposer"] = "v4.7.0-9-gd52526a4",
-        ["references/Hexalith.Memories"] = "v2.29.3-1-gc082f815",
-        ["references/Hexalith.Tenants"] = "v5.9.0-13-gce88a70b",
+        ["references/Hexalith.FrontComposer"] = "v4.7.0-16-g913c4132",
+        ["references/Hexalith.Memories"] = "v2.29.5",
+        ["references/Hexalith.Tenants"] = "v5.9.0-26-g3ae9db01",
+        ["references/Hexalith.AI.Tools"] = "3f194e17",
+        ["references/Hexalith.Commons"] = "v2.30.3",
+        ["references/Hexalith.McpCli"] = "v1.0.0-32-g9354dc08",
+        ["references/Hexalith.Platform"] = "4f036ced",
+        ["references/Hexalith.PolymorphicSerializations"] = "v1.19.5",
     };
 
     private static readonly string[] RequiredAbsentPayloadProtectionPaths =
@@ -727,12 +735,12 @@ public sealed class PlatformApiPrerequisitesTests
         }
 
         string rootBuildProps = File.ReadAllText(Path.Combine(root, "Directory.Build.props"));
-        rootBuildProps.ShouldContain("<UseHexalithProjectReferences Condition=\"'$(UseHexalithProjectReferences)' == ''\">false</UseHexalithProjectReferences>");
-        rootBuildProps.ShouldContain("<HexalithEventStoreFromSource Condition=\"'$(UseHexalithProjectReferences)' == 'true'");
-        rootBuildProps.ShouldContain("<HexalithCommonsHttpFromSource Condition=\"'$(HexalithCommonsHttpFromSource)' == '' and Exists('$(HexalithCommonsRoot)\\src\\libraries\\Hexalith.Commons.Http\\Hexalith.Commons.Http.csproj')\">true</HexalithCommonsHttpFromSource>");
+        rootBuildProps.ShouldNotContain("<UseHexalithProjectReferences");
+        rootBuildProps.ShouldNotContain("<HexalithEventStoreFromSource");
+        rootBuildProps.ShouldNotContain("<HexalithCommonsHttpFromSource");
 
         string rootPackages = File.ReadAllText(Path.Combine(root, "Directory.Packages.props"));
-        rootPackages.ShouldContain("references/Hexalith.Builds/Props/Directory.Packages.props");
+        rootPackages.ShouldContain("$(HexalithBuildsRoot)/Props/Directory.Packages.props");
         string rootBuildTargets = string.Join(
             '\n',
             File.ReadAllText(Path.Combine(root, "Directory.Build.props")),
@@ -768,57 +776,105 @@ public sealed class PlatformApiPrerequisitesTests
             .. Directory.GetFiles(Path.Combine(root, "samples"), "*.csproj", SearchOption.AllDirectories).Where(path => IsNotBuildOutput(root, path)),
             .. Directory.GetFiles(Path.Combine(root, "tests"), "*.csproj", SearchOption.AllDirectories).Where(path => IsNotBuildOutput(root, path)),
         ];
-        string[] eventStoreConsumers = projectFiles
-            .Where(path => File.ReadAllText(path).Contains("HexalithEventStoreFromSource", StringComparison.Ordinal))
+        foreach ((string dependency, string version, string property, string relativeRoot, string selector) in new[]
+                 {
+                     ("Hexalith.EventStore", CurrentReleaseEventStoreVersion, "HexalithEventStoreVersion", EventStoreRelativePath, "HexalithEventStoreFromSource"),
+                     ("Hexalith.Commons.Http", "2.30.3", "HexalithCommonsVersion", "references/Hexalith.Commons", "HexalithCommonsHttpFromSource"),
+                     ("Hexalith.Memories", "2.27.1", "HexalithMemoriesVersion", "references/Hexalith.Memories", "HexalithMemoriesFromSource"),
+                 })
+        {
+            string[] consumers = projectFiles
+                .Where(path => DeclaredDependencyReferences(path, dependency, null).Length > 0)
+                .Order(StringComparer.Ordinal)
+                .ToArray();
+            consumers.ShouldNotBeEmpty(dependency);
+            foreach (string projectFile in consumers)
+            {
+                // No mode override means ordinary Release defaults; true alone is bare Debug.
+                foreach (bool? mode in new bool?[] { null, false, true })
+                {
+                    EvaluatedProjectGraph packageGraph = EvaluateProjectGraph(root, projectFile, useSource: mode);
+                    packageGraph.Properties[property].ShouldBe(version, projectFile);
+                    packageGraph.Properties[selector].ShouldNotBe("true", projectFile);
+                    AssertPackageConsumer(packageGraph, projectFile, dependency, version);
+                }
+
+                string rootProperty = dependency == "Hexalith.Commons.Http" ? "HexalithCommonsRoot"
+                    : dependency == "Hexalith.EventStore" ? "HexalithEventStoreRoot" : "HexalithMemoriesRoot";
+                EvaluatedProjectGraph sourceGraph = EvaluateProjectGraph(
+                    root,
+                    projectFile,
+                    useSource: true,
+                    $"-p:{rootProperty}={Path.Combine(root, relativeRoot)}",
+                    $"-p:{selector}=true");
+                sourceGraph.Properties[selector].ShouldBe("true", projectFile);
+                AssertSourceConsumer(sourceGraph, projectFile, dependency, version, Path.Combine(root, relativeRoot));
+            }
+        }
+    }
+
+    private static bool IsDependencyIdentity(string identity, string dependency)
+        => string.Equals(identity, dependency, StringComparison.Ordinal)
+            || identity.StartsWith(dependency + ".", StringComparison.Ordinal);
+
+    private static string[] DeclaredDependencyReferences(string projectFile, string dependency, string? itemType)
+        => XDocument.Load(projectFile).Descendants()
+            .Where(item => (item.Name.LocalName is "PackageReference" or "ProjectReference")
+                && (itemType is null || string.Equals(item.Name.LocalName, itemType, StringComparison.Ordinal)))
+            .Select(item => item.Attribute("Include")?.Value ?? item.Attribute("Update")?.Value ?? string.Empty)
+            .Select(static identity => identity.EndsWith(".csproj", StringComparison.Ordinal)
+                ? Path.GetFileNameWithoutExtension(identity.Replace('\\', '/'))
+                : identity)
+            .Where(identity => IsDependencyIdentity(identity, dependency))
+            .Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal)
             .ToArray();
-        eventStoreConsumers.ShouldNotBeEmpty();
-        foreach (string projectFile in eventStoreConsumers)
-        {
-            EvaluatedProjectGraph packageGraph = EvaluateProjectGraph(root, projectFile, useSource: false);
-            packageGraph.Properties["HexalithEventStoreVersion"].ShouldBe(CurrentReleaseEventStoreVersion, projectFile);
-            packageGraph.PackageReferences.Any(static reference => reference.StartsWith("Hexalith.EventStore.", StringComparison.Ordinal))
-                .ShouldBeTrue($"{projectFile} package graph");
-            packageGraph.ProjectReferences.Any(static reference => reference.Contains("/references/Hexalith.EventStore/", StringComparison.Ordinal))
-                .ShouldBeFalse($"{projectFile} package graph");
 
-            EvaluatedProjectGraph sourceGraph = EvaluateProjectGraph(root, projectFile, useSource: true);
-            sourceGraph.ProjectReferences.Any(static reference => reference.Contains("/references/Hexalith.EventStore/", StringComparison.Ordinal))
-                .ShouldBeTrue($"{projectFile} source graph");
-            sourceGraph.PackageReferences.Any(static reference => reference.StartsWith("Hexalith.EventStore.", StringComparison.Ordinal))
-                .ShouldBeFalse($"{projectFile} source graph");
+    private static void AssertPackageConsumer(
+        EvaluatedProjectGraph graph,
+        string projectFile,
+        string dependency,
+        string expectedVersion)
+    {
+        string[] expectedPackages = DeclaredDependencyReferences(projectFile, dependency, "PackageReference");
+        expectedPackages.ShouldNotBeEmpty(projectFile);
+        graph.PackageReferences.Where(identity => IsDependencyIdentity(identity, dependency))
+            .Order(StringComparer.Ordinal).ShouldBe(expectedPackages, Case.Sensitive, projectFile);
+        foreach (string identity in expectedPackages)
+        {
+            graph.PackageMetadata[identity]["EffectiveVersion"].ShouldBe(expectedVersion,
+                $"{projectFile}: {identity} effective version (VersionOverride, Version, then central PackageVersion)");
         }
 
-        string[] commonsConsumers = projectFiles
-            .Where(path => File.ReadAllText(path).Contains("HexalithCommonsHttpFromSource", StringComparison.Ordinal))
-            .Order(StringComparer.Ordinal)
+        graph.ProjectReferences.Any(path => IsDependencyIdentity(Path.GetFileNameWithoutExtension(path), dependency))
+            .ShouldBeFalse($"{projectFile} package graph");
+    }
+
+    private static void AssertSourceConsumer(
+        EvaluatedProjectGraph graph,
+        string projectFile,
+        string dependency,
+        string expectedVersion,
+        string expectedRoot)
+    {
+        string[] expectedProjects = DeclaredDependencyReferences(projectFile, dependency, "ProjectReference");
+        if (expectedProjects.Length == 0)
+        {
+            // The package-only Gateway test host deliberately has no source branch.
+            AssertPackageConsumer(graph, projectFile, dependency, expectedVersion);
+            return;
+        }
+
+        string[] selectedProjects = graph.ProjectReferences
+            .Where(path => IsDependencyIdentity(Path.GetFileNameWithoutExtension(path), dependency))
             .ToArray();
-        commonsConsumers.ShouldNotBeEmpty();
-        foreach (string projectFile in commonsConsumers)
-        {
-            EvaluatedProjectGraph selectedGraph = EvaluateProjectGraph(root, projectFile, useSource: false);
-            selectedGraph.Properties["HexalithCommonsVersion"].ShouldBe("2.30.3", projectFile);
-            selectedGraph.Properties["HexalithCommonsHttpFromSource"].ShouldBe("true", projectFile);
-            selectedGraph.ProjectReferences.Any(static reference => reference.EndsWith("/Hexalith.Commons.Http.csproj", StringComparison.Ordinal))
-                .ShouldBeTrue($"{projectFile} selected Commons HTTP graph");
-            selectedGraph.PackageReferences.Contains("Hexalith.Commons.Http", StringComparer.Ordinal)
-                .ShouldBeFalse($"{projectFile} selected Commons HTTP graph");
-        }
-
-        string[] memoriesConsumers = projectFiles
-            .Where(path => File.ReadAllText(path).Contains("HexalithMemoriesFromSource", StringComparison.Ordinal))
-            .Order(StringComparer.Ordinal)
-            .ToArray();
-        memoriesConsumers.ShouldNotBeEmpty();
-        foreach (string projectFile in memoriesConsumers)
-        {
-            EvaluatedProjectGraph packageGraph = EvaluateProjectGraph(root, projectFile, useSource: false);
-            packageGraph.Properties["HexalithMemoriesVersion"].ShouldBe("2.27.1", projectFile);
-            packageGraph.PackageReferences.Any(static reference => reference.StartsWith("Hexalith.Memories.", StringComparison.Ordinal))
-                .ShouldBeTrue($"{projectFile} package graph");
-            packageGraph.ProjectReferences.Any(static reference => reference.Contains("/references/Hexalith.Memories/", StringComparison.Ordinal))
-                .ShouldBeFalse($"{projectFile} package graph");
-        }
+        selectedProjects.Select(static path => Path.GetFileNameWithoutExtension(path))
+            .Order(StringComparer.Ordinal).ShouldBe(expectedProjects, Case.Sensitive, projectFile);
+        selectedProjects.ShouldAllBe(path => path.StartsWith(
+            Path.GetFullPath(expectedRoot).Replace('\\', '/') + "/", StringComparison.Ordinal),
+            $"{projectFile}: selected projects must use the supplied consumer root.");
+        graph.PackageReferences.Any(identity => IsDependencyIdentity(identity, dependency))
+            .ShouldBeFalse($"{projectFile} source graph");
     }
 
     [Theory]
@@ -847,6 +903,50 @@ public sealed class PlatformApiPrerequisitesTests
             graph.Properties["HexalithMcpCliFromSource"].ShouldNotBe("true");
             graph.ProjectReferences.ShouldNotContain(Path.GetFullPath(abstractionsProject).Replace('\\', '/'));
             graph.PackageReferences.ShouldContain("Hexalith.McpCli.Abstractions");
+        }
+        finally
+        {
+            if (Directory.Exists(temporaryRoot))
+            {
+                Directory.Delete(temporaryRoot, recursive: true);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("Hexalith.McpCli")]
+    [InlineData("references/Hexalith.McpCli")]
+    public void ExplicitlyMappedMcpCliSiblingLayoutsSelectOnlyAbstractionsProject(string relativeMcpCliRoot)
+    {
+        string root = RepositoryRoot.Locate();
+        string temporaryRoot = Path.Combine(Path.GetTempPath(), $"parties-mcpcli-mapped-layout-{Guid.NewGuid():N}");
+        string partiesRoot = Path.Combine(temporaryRoot, "Hexalith.Parties");
+        string contractsRelativePath = "src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj";
+        string contractsProject = Path.Combine(partiesRoot, contractsRelativePath);
+        string mcpCliRoot = Path.Combine(temporaryRoot, relativeMcpCliRoot);
+        string abstractionsProject = Path.Combine(mcpCliRoot,
+            "src/Hexalith.McpCli.Abstractions/Hexalith.McpCli.Abstractions.csproj");
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(contractsProject)!);
+            Directory.CreateDirectory(Path.GetDirectoryName(abstractionsProject)!);
+            File.Copy(Path.Combine(root, "Directory.Build.props"), Path.Combine(partiesRoot, "Directory.Build.props"));
+            File.Copy(Path.Combine(root, contractsRelativePath), contractsProject);
+            File.WriteAllText(abstractionsProject, "<Project />");
+            Directory.Exists(Path.Combine(partiesRoot, "references/Hexalith.McpCli")).ShouldBeFalse();
+
+            EvaluatedProjectGraph graph = EvaluateProjectGraph(
+                partiesRoot,
+                contractsProject,
+                useSource: true,
+                $"-p:HexalithMcpCliRoot={mcpCliRoot}",
+                "-p:HexalithMcpCliFromSource=true");
+
+            graph.Properties["HexalithMcpCliRoot"].ShouldBe(mcpCliRoot);
+            graph.Properties["HexalithMcpCliFromSource"].ShouldBe("true");
+            graph.ProjectReferences.ShouldBe([Path.GetFullPath(abstractionsProject).Replace('\\', '/')]);
+            graph.PackageReferences.ShouldNotContain("Hexalith.McpCli.Abstractions");
+            graph.PackageReferences.ShouldContain("Hexalith.EventStore.Contracts");
         }
         finally
         {
@@ -1171,20 +1271,85 @@ public sealed class PlatformApiPrerequisitesTests
             .Select(static token => $"missing:{token}")
             .ToArray();
 
-    private static EvaluatedProjectGraph EvaluateProjectGraph(string root, string projectFile, bool useSource)
+    [Theory]
+    [InlineData("")]
+    [InlineData("'$(HexalithEventStoreFromSorce)' == 'true'")]
+    public void ConsumerDiscoveryRetainsIdentitiesWithRemovedOrMisspelledSelectors(string condition)
+    {
+        string temporaryRoot = Path.Combine(Path.GetTempPath(), $"parties-consumer-discovery-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temporaryRoot);
+        try
+        {
+            string projectFile = Path.Combine(temporaryRoot, "Consumer.csproj");
+            new XDocument(new XElement("Project", new XElement("ItemGroup",
+                new XElement("PackageReference", new XAttribute("Include", "Hexalith.EventStore.Contracts"), new XAttribute("Condition", condition)),
+                new XElement("ProjectReference", new XAttribute("Include", "source/Hexalith.EventStore.Contracts.csproj"), new XAttribute("Condition", condition)))))
+                .Save(projectFile);
+            DeclaredDependencyReferences(projectFile, "Hexalith.EventStore", null)
+                .ShouldBe(["Hexalith.EventStore.Contracts"]);
+        }
+        finally
+        {
+            Directory.Delete(temporaryRoot, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData("3.125.0", "", false)]
+    [InlineData("", "3.125.0", false)]
+    [InlineData("", "", true)]
+    public void ConsumerPropertyFixturesRejectEffectiveVersionDriftAndMissingProjects(string version, string versionOverride, bool missingProject)
+    {
+        string temporaryRoot = Path.Combine(Path.GetTempPath(), $"parties-consumer-property-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temporaryRoot);
+        try
+        {
+            string projectFile = Path.Combine(temporaryRoot, "Consumer.csproj");
+            XElement items = new("ItemGroup",
+                new XElement("PackageReference", new XAttribute("Include", "Hexalith.EventStore.Contracts"),
+                    new XAttribute("Version", version), new XAttribute("VersionOverride", versionOverride)),
+                new XElement("PackageVersion", new XAttribute("Include", "Hexalith.EventStore.Contracts"), new XAttribute("Version", CurrentReleaseEventStoreVersion)));
+            if (missingProject)
+            {
+                items.Add(new XElement("ProjectReference", new XAttribute("Include", "missing.csproj")));
+            }
+
+            new XDocument(new XElement("Project", items)).Save(projectFile);
+            Should.Throw<ShouldAssertException>(() =>
+                {
+                    EvaluatedProjectGraph graph = EvaluateProjectGraph(temporaryRoot, projectFile, useSource: null);
+                    AssertPackageConsumer(graph, projectFile, "Hexalith.EventStore", CurrentReleaseEventStoreVersion);
+                })
+                .Message.ShouldContain(missingProject ? "selected source project does not exist" : "effective version");
+        }
+        finally
+        {
+            Directory.Delete(temporaryRoot, recursive: true);
+        }
+    }
+
+    private static EvaluatedProjectGraph EvaluateProjectGraph(
+        string root,
+        string projectFile,
+        bool? useSource,
+        params string[] mappedSourceProperties)
     {
         string relativeProject = Path.GetRelativePath(root, projectFile);
         string output = RunProcess(
             root,
             "dotnet",
-            "msbuild",
-            relativeProject,
-            "-nologo",
-            "-getProperty:HexalithEventStoreVersion,HexalithCommonsVersion,HexalithMemoriesVersion,UseHexalithProjectReferences,HexalithEventStoreFromSource,HexalithCommonsHttpFromSource,HexalithMemoriesFromSource,HexalithMcpCliRoot,HexalithMcpCliFromSource",
-            "-getItem:PackageReference,ProjectReference",
-            $"-p:UseHexalithProjectReferences={useSource.ToString().ToLowerInvariant()}",
-            "-p:NuGetAudit=false",
-            "-p:MinVerVersionOverride=1.0.0");
+            [
+                "msbuild",
+                relativeProject,
+                "-nologo",
+                "-getProperty:HexalithEventStoreVersion,HexalithCommonsVersion,HexalithMemoriesVersion,UseHexalithProjectReferences,HexalithEventStoreFromSource,HexalithCommonsHttpFromSource,HexalithMemoriesFromSource,HexalithMcpCliRoot,HexalithMcpCliFromSource",
+                "-getItem:PackageReference,PackageVersion,ProjectReference",
+                .. (useSource.HasValue ? new[] { $"-p:UseHexalithProjectReferences={useSource.Value.ToString().ToLowerInvariant()}" } : []),
+                $"-p:Configuration={(useSource == true ? "Debug" : "Release")}",
+                "-p:NuGetAudit=false",
+                "-p:MinVerVersionOverride=1.0.0",
+                .. mappedSourceProperties
+            ]);
         // MSBuild can emit restore or NuGet preamble on stdout ahead of the JSON payload; parsing
         // the raw stream throws JsonException instead of reporting a graph difference.
         int jsonStart = output.IndexOf('{', StringComparison.Ordinal);
@@ -1199,7 +1364,60 @@ public sealed class PlatformApiPrerequisitesTests
         string[] projects = ReadEvaluatedItems(items, "ProjectReference", "FullPath")
             .Select(static path => path.Replace('\\', '/'))
             .ToArray();
-        return new EvaluatedProjectGraph(properties, packages, projects);
+        foreach (string project in projects)
+        {
+            File.Exists(project).ShouldBeTrue($"{relativeProject}: selected source project does not exist: {project}");
+        }
+
+        return new EvaluatedProjectGraph(properties, packages, projects, ReadPackageMetadata(items));
+    }
+
+    private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> ReadPackageMetadata(JsonElement items)
+    {
+        Dictionary<string, string> centralVersions = items.TryGetProperty("PackageVersion", out JsonElement versions)
+            ? versions.EnumerateArray().ToDictionary(
+                static item => item.GetProperty("Identity").GetString()!,
+                static item => ReadItemMetadata(item, "Version"),
+                StringComparer.Ordinal)
+            : new(StringComparer.Ordinal);
+        return items.GetProperty("PackageReference").EnumerateArray().ToDictionary(
+            static item => item.GetProperty("Identity").GetString()!,
+            item =>
+            {
+                string identity = item.GetProperty("Identity").GetString()!;
+                string version = ReadItemMetadata(item, "Version");
+                string versionOverride = ReadItemMetadata(item, "VersionOverride");
+                string centralVersion = centralVersions.GetValueOrDefault(identity, string.Empty);
+                return (IReadOnlyDictionary<string, string>)new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["Version"] = version,
+                    ["VersionOverride"] = versionOverride,
+                    ["CentralVersion"] = centralVersion,
+                    ["EffectiveVersion"] = !string.IsNullOrWhiteSpace(versionOverride) ? versionOverride
+                        : !string.IsNullOrWhiteSpace(version) ? version : centralVersion,
+                };
+            },
+            StringComparer.Ordinal);
+    }
+
+    private static string ReadItemMetadata(JsonElement item, string name)
+        => item.TryGetProperty(name, out JsonElement value) ? value.GetString() ?? string.Empty : string.Empty;
+
+    [Theory]
+    [InlineData("", "", "3.126.0")]
+    [InlineData("3.125.0", "", "3.125.0")]
+    [InlineData("3.125.0", "3.124.0", "3.124.0")]
+    public void EvaluatedPackageMetadataRetainsVersionAndOverridePrecedence(string version, string versionOverride, string expected)
+    {
+        using JsonDocument document = JsonDocument.Parse(JsonSerializer.Serialize(new
+        {
+            PackageReference = new[] { new { Identity = "Hexalith.EventStore.Contracts", Version = version, VersionOverride = versionOverride } },
+            PackageVersion = new[] { new { Identity = "Hexalith.EventStore.Contracts", Version = "3.126.0" } },
+        }));
+        IReadOnlyDictionary<string, string> metadata = ReadPackageMetadata(document.RootElement)["Hexalith.EventStore.Contracts"];
+        metadata["Version"].ShouldBe(version);
+        metadata["VersionOverride"].ShouldBe(versionOverride);
+        metadata["EffectiveVersion"].ShouldBe(expected);
     }
 
     private static string[] ReadEvaluatedItems(JsonElement items, string itemName, string metadataName)
@@ -1932,5 +2150,6 @@ public sealed class PlatformApiPrerequisitesTests
     private sealed record EvaluatedProjectGraph(
         IReadOnlyDictionary<string, string> Properties,
         string[] PackageReferences,
-        string[] ProjectReferences);
+        string[] ProjectReferences,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> PackageMetadata);
 }
