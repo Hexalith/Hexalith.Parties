@@ -37,6 +37,7 @@ public sealed partial class PartyIndexSdkProjectionHandler(
     IDeclaresProjectionReadModelSlots
 {
     private const string SearchReconciliationReason = "search-reconciliation-required";
+    private const string ProjectionRebuildRequiredReason = "projection-rebuild-required";
     private const string RebuildEventType = "PartyProjectionRebuilt";
     private const string ReconciledEventType = "PartyProjectionReconciled";
     private readonly IPartyIndexSearchIndexer _searchIndexer = searchIndexer ?? new NoOpPartyIndexSearchIndexer();
@@ -242,7 +243,7 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         ReadModelEntry<PartyIndexSdkReadModel> read = await readModelStore
             .GetAsync<PartyIndexSdkReadModel>(StoreName, PartySdkReadModelAddresses.Index(tenantId), cancellationToken)
             .ConfigureAwait(false);
-        return read.Value is { Entries: not null, LastIndexedEvents: not null, LastSequenceNumbers: not null, ErasureSequenceNumbers: not null } model
+        return read.Value is { } model && HasValidDictionaries(model)
             ? model
             : throw new InvalidOperationException("The canonical Party search index is unavailable.");
     }
@@ -341,8 +342,11 @@ public sealed partial class PartyIndexSdkProjectionHandler(
                 PartySdkReadModelAddresses.Index(identity.TenantId),
                 cancellationToken)
             .ConfigureAwait(false);
-        string[] removedPartyIds = [.. (current?.Value?.Entries.Keys ?? [])
+        rebuiltIndex = PreserveErasureFences(rebuiltIndex, current?.Value);
+        string[] removedPartyIds = [.. (current?.Value?.Entries?.Keys ?? [])
+            .Concat(current?.Value?.ErasureSequenceNumbers?.Keys ?? [])
             .Except(rebuiltIndex.Entries.Keys, StringComparer.Ordinal)
+            .Distinct(StringComparer.Ordinal)
             .OrderBy(static partyId => partyId, StringComparer.Ordinal)];
         PartyIndexSearchRebuildEntry[] rebuiltEntries = [.. rebuiltIndex.Entries.Values
             .OrderBy(static entry => entry.Id, StringComparer.Ordinal)
@@ -443,6 +447,13 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         ILogger? logger = null,
         PartyProjectionRebuildDiagnostics? diagnostics = null)
     {
+        // A missing model can start from zero; a malformed existing model cannot. In
+        // particular, replacing missing erasure or sequence evidence would permit resurrection.
+        if (current is not null && !HasValidDictionaries(current))
+        {
+            return new PartyIndexFoldResult(current, null, false, ProjectionRebuildRequiredReason);
+        }
+
         var entries = new Dictionary<string, PartyIndexEntry>(
             current?.Entries ?? new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal),
             StringComparer.Ordinal);
@@ -634,7 +645,7 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         {
             PartyIndexRebuildCandidate? state = JsonSerializer
                 .Deserialize<PartyIndexRebuildCandidate>(candidate.State.Span, s_candidateJsonOptions);
-            return state is { Model: not null, Diagnostics: not null }
+            return state is { Model: not null, Diagnostics: not null } && HasValidDictionaries(state.Model)
                 ? state
                 : throw new InvalidOperationException("The shared Party index rebuild candidate is empty or malformed.");
         }
@@ -643,8 +654,59 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         // cannot be recovered, but subsequent accumulation can start counting without a migration.
         PartyIndexSdkReadModel model = JsonSerializer.Deserialize<PartyIndexSdkReadModel>(candidate.State.Span, s_candidateJsonOptions)
             ?? throw new InvalidOperationException("The shared Party index rebuild candidate is empty or malformed.");
+        if (!HasValidDictionaries(model))
+        {
+            throw new InvalidOperationException("The shared Party index rebuild candidate is empty or malformed.");
+        }
+
         return new PartyIndexRebuildCandidate(model, new PartyProjectionRebuildDiagnostics());
     }
+
+    private static PartyIndexSdkReadModel PreserveErasureFences(PartyIndexSdkReadModel rebuilt, PartyIndexSdkReadModel? current)
+    {
+        if (current is null)
+        {
+            return rebuilt;
+        }
+
+        // Cleanup can commit before PartyErased is persisted. Event replay cannot prove
+        // the absence of those fences if their dictionary was explicitly lost.
+        if (current.ErasureSequenceNumbers is null)
+        {
+            throw new InvalidOperationException(ProjectionRebuildRequiredReason);
+        }
+
+        if (current.ErasureSequenceNumbers.Count == 0)
+        {
+            return rebuilt;
+        }
+
+        var entries = new Dictionary<string, PartyIndexEntry>(rebuilt.Entries, StringComparer.Ordinal);
+        var descriptors = new Dictionary<string, PartyIndexEventMetadata>(rebuilt.LastIndexedEvents, StringComparer.Ordinal);
+        var sequences = new Dictionary<string, long>(rebuilt.LastSequenceNumbers, StringComparer.Ordinal);
+        var fences = new Dictionary<string, long>(rebuilt.ErasureSequenceNumbers, StringComparer.Ordinal);
+        foreach ((string partyId, long fence) in current.ErasureSequenceNumbers)
+        {
+            _ = entries.Remove(partyId);
+            _ = descriptors.Remove(partyId);
+            fences[partyId] = Math.Max(fences.GetValueOrDefault(partyId, long.MinValue), fence);
+            sequences[partyId] = Math.Max(sequences.GetValueOrDefault(partyId, long.MinValue),
+                Math.Max(fences[partyId], current.LastSequenceNumbers?.GetValueOrDefault(partyId, long.MinValue) ?? long.MinValue));
+        }
+
+        return rebuilt with
+        {
+            Entries = entries,
+            LastIndexedEvents = descriptors,
+            LastSequenceNumbers = sequences,
+            ErasureSequenceNumbers = fences,
+            ProjectedAt = current.ProjectedAt is { } cleanupAt && (rebuilt.ProjectedAt is null || cleanupAt > rebuilt.ProjectedAt)
+                ? cleanupAt : rebuilt.ProjectedAt,
+        };
+    }
+
+    private static bool HasValidDictionaries(PartyIndexSdkReadModel model)
+        => model is { Entries: not null, LastIndexedEvents: not null, LastSequenceNumbers: not null, ErasureSequenceNumbers: not null };
 
     private static bool IsWrappedCandidate(ReadOnlySpan<byte> state)
     {

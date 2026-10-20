@@ -146,6 +146,13 @@ public sealed class PartySdkReadModelEraser(
         string partyId,
         DateTimeOffset? cleanupAt = null)
     {
+        if (current is not null
+            && current is not { Entries: not null, LastIndexedEvents: not null, LastSequenceNumbers: not null, ErasureSequenceNumbers: not null })
+        {
+            // Do not certify cleanup by silently dropping unrelated entries or erasure fences.
+            throw new InvalidOperationException("projection-rebuild-required");
+        }
+
         DateTimeOffset requestedAt = cleanupAt ?? DateTimeOffset.UtcNow;
         var entries = new Dictionary<string, Hexalith.Parties.Contracts.Models.PartyIndexEntry>(
             current?.Entries ?? new Dictionary<string, Hexalith.Parties.Contracts.Models.PartyIndexEntry>(StringComparer.Ordinal),

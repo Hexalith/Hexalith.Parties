@@ -2,14 +2,18 @@ using System.Text;
 using System.Text.Json;
 
 using Hexalith.EventStore.Client.Projections;
+using Hexalith.EventStore.Contracts.Projections;
 using Hexalith.EventStore.Client.Queries;
 using Hexalith.EventStore.Contracts.Queries;
+using Hexalith.EventStore.DomainService;
 using Hexalith.EventStore.Testing.Fakes;
 using Hexalith.Parties.Contracts;
+using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Configuration;
+using Hexalith.Parties.Projections.Handlers;
 using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Projections.Services;
 using Hexalith.Parties.Queries;
@@ -250,7 +254,77 @@ public sealed class PartySdkCrossInstanceErasureTests
         await store.SaveAsync(StoreName, key, new PartyIndexSdkReadModel(), TestContext.Current.CancellationToken);
         QueryResult recovered = await ExecuteAsync(service, queryType);
         recovered.Success.ShouldBeTrue();
-        recovered.Metadata!.IsDegraded.ShouldBeFalse();
+        recovered.Metadata!.IsDegraded.ShouldBe(false);
+    }
+
+    /// <summary>Invalidates older read tokens when a query discovers canonical corruption.</summary>
+    /// <param name="queryType">The list or search discriminator.</param>
+    [Theory]
+    [InlineData("PartyIndex")]
+    [InlineData("PartySearch")]
+    public async Task CorruptCanonicalReadInvalidatesEarlierEmptyCacheCandidateAsync(string queryType)
+    {
+        var store = new InMemoryReadModelStore();
+        string key = PartySdkReadModelAddresses.Index("tenant-a");
+        await store.SaveAsync(StoreName, key, new PartyIndexSdkReadModel(), TestContext.Current.CancellationToken);
+        var captured = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var reads = new PartySdkFaultingReadModelStore(store)
+        {
+            AfterReadAsync = async (_, token) =>
+            {
+                captured.TrySetResult();
+                await release.Task.WaitAsync(token).ConfigureAwait(false);
+            },
+        };
+        var cache = new PartySdkLastKnownReadModelCache();
+        PartySdkQueryService service = Service(reads, cache);
+        Task<QueryResult> pending = ExecuteAsync(service, queryType);
+        try
+        {
+            await captured.Task.WaitAsync(TestContext.Current.CancellationToken);
+            reads.AfterReadAsync = null;
+            await store.SaveAsync(StoreName, key, NullIndexDictionary("Entries"), TestContext.Current.CancellationToken);
+            AssertBoundedFailure(await ExecuteAsync(service, queryType));
+        }
+        finally
+        {
+            release.TrySetResult();
+            _ = await pending.ConfigureAwait(true);
+        }
+
+        AssertBoundedFailure(await pending.ConfigureAwait(true));
+        cache.TryGetIndex("tenant-a", out _).ShouldBeFalse();
+        reads.UnavailableKeys.Add(key);
+        AssertBoundedFailure(await ExecuteAsync(service, queryType));
+    }
+
+    /// <summary>Enforces the recovery plan's ETag through the SDK batch protocol.</summary>
+    [Fact]
+    public async Task StaleIndexRecoveryPlanCannotOverwriteConcurrentCanonicalDataAsync()
+    {
+        var store = new InMemoryReadModelStore();
+        string key = PartySdkReadModelAddresses.Index("tenant-a");
+        await store.SaveAsync(StoreName, key, NullIndexDictionary("Entries"), TestContext.Current.CancellationToken);
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options);
+        var identity = new DomainSharedProjectionRebuildIdentity("tenant-a", "party", PartyProjectionNames.Index, "recovery", "inventory");
+        DomainSharedProjectionRebuildCandidate candidate = await handler.CreateEmptyCandidateAsync(identity, TestContext.Current.CancellationToken);
+        var history = new ProjectionRequest("tenant-a", "party", "party-1",
+            [new ProjectionEventDto(nameof(PartyCreated), JsonSerializer.SerializeToUtf8Bytes(new PartyCreated { Type = PartyType.Person }, PartiesJsonOptions.Default), "json", 1, s_now, "correlation")]);
+        candidate = await handler.AccumulateAsync(identity, candidate, history, TestContext.Current.CancellationToken);
+        DomainProjectionRebuildPlan plan = await handler.FinalizeAsync(identity, candidate, TestContext.Current.CancellationToken);
+        await SeedAsync(store, "tenant-a", "concurrent-party", "concurrent");
+        ReadModelEntry<PartyIndexSdkReadModel> before = await store.GetAsync<PartyIndexSdkReadModel>(StoreName, key, TestContext.Current.CancellationToken);
+        var scope = new ReadModelBatchScope(StoreName, "tenant-a", "party", PartySdkReadModelAddresses.SharedIndexAggregateId, PartyProjectionNames.Index, identity.OperationId);
+
+        ReadModelBatchResult result = await store.ExecuteAsync(new ReadModelBatch(scope, plan.Operations), TestContext.Current.CancellationToken);
+
+        result.Status.ShouldBe(ReadModelBatchStatus.Conflict);
+        result.ConflictKind.ShouldBe(ReadModelBatchConflictKind.Optimistic);
+        ReadModelEntry<PartyIndexSdkReadModel> after = await store.GetAsync<PartyIndexSdkReadModel>(StoreName, key, TestContext.Current.CancellationToken);
+        after.ETag.ShouldBe(before.ETag);
+        JsonSerializer.Serialize(after.Value, PartiesJsonOptions.Default).ShouldBe(JsonSerializer.Serialize(before.Value, PartiesJsonOptions.Default));
+        after.Value!.Entries.Keys.ShouldBe(["concurrent-party"]);
     }
 
     private static PartyIndexSdkReadModel NullIndexDictionary(string dictionary)

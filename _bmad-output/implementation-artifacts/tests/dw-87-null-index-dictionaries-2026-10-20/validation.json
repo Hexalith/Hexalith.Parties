@@ -1,0 +1,158 @@
+{
+  "work": "DW-87",
+  "date": "2026-10-20",
+  "baseline_commit": "fa708d1cdb71a8926c9ed82e2e18a3ce58fd52ef",
+  "observed_workspace_commit": "ed66683252e08c48b757f776ab06378153b20ca9",
+  "builds": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    }
+  ],
+  "tests": [
+    {
+      "name": "projections-red",
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -method '*NullIndexDictionary*' -method '*NullIndexDictionaryCannot*' -method '*ValidFullRebuildReplacesCorrupt*' -result-xml /tmp/parties-dw87-projections-red.xml",
+      "exit_code": 1,
+      "summary": {
+        "total": "20",
+        "passed": "4",
+        "failed": "16",
+        "skipped": "0",
+        "errors": "0",
+        "not-run": "0"
+      },
+      "failures": [
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryRequiresRebuildWithoutChangingPersistedStateAsync(dictionary: \\\"Entries\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryRequiresRebuildWithoutChangingPersistedStateAsync(dictionary: \\\"LastIndexedEvents\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryRequiresRebuildWithoutChangingPersistedStateAsync(dictionary: \\\"LastSequenceNumbers\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryRequiresRebuildWithoutChangingPersistedStateAsync(dictionary: \\\"ErasureSequenceNumbers\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryCannotBeAcceptedAsAStagedCandidateAsync(dictionary: \\\"Entries\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryCannotBeAcceptedAsAStagedCandidateAsync(dictionary: \\\"LastIndexedEvents\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryCannotBeAcceptedAsAStagedCandidateAsync(dictionary: \\\"LastSequenceNumbers\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryCannotBeAcceptedAsAStagedCandidateAsync(dictionary: \\\"ErasureSequenceNumbers\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryOnOptimisticRetryCannotProduceAnotherWriteAsync(dictionary: \\\"Entries\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryOnOptimisticRetryCannotProduceAnotherWriteAsync(dictionary: \\\"LastIndexedEvents\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryOnOptimisticRetryCannotProduceAnotherWriteAsync(dictionary: \\\"LastSequenceNumbers\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.NullIndexDictionaryOnOptimisticRetryCannotProduceAnotherWriteAsync(dictionary: \\\"ErasureSequenceNumbers\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRejectsNullIndexDictionaryBeforeAnyCoordinatedWriteAsync(dictionary: \\\"Entries\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRejectsNullIndexDictionaryBeforeAnyCoordinatedWriteAsync(dictionary: \\\"LastIndexedEvents\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRejectsNullIndexDictionaryBeforeAnyCoordinatedWriteAsync(dictionary: \\\"LastSequenceNumbers\\\")",
+        "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.EraserRejectsNullIndexDictionaryBeforeAnyCoordinatedWriteAsync(dictionary: \\\"ErasureSequenceNumbers\\\")"
+      ]
+    },
+    {
+      "name": "projections-full",
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -result-xml /tmp/parties-dw87-projections-full.xml",
+      "exit_code": 0,
+      "summary": {
+        "total": "428",
+        "passed": "428",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "not-run": "0"
+      },
+      "failures": []
+    },
+    {
+      "name": "service-focused",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests -class Hexalith.Parties.Tests.Gateway.PartySdkCrossInstanceErasureTests -class Hexalith.Parties.Tests.Projections.ProjectionPlatformAdapterTests -result-xml /tmp/parties-dw87-service-focused.xml",
+      "exit_code": 0,
+      "summary": {
+        "total": "785",
+        "passed": "785",
+        "failed": "0",
+        "skipped": "0",
+        "errors": "0",
+        "not-run": "0"
+      },
+      "failures": []
+    },
+    {
+      "name": "service-full",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/parties-dw87-service-full.xml",
+      "exit_code": 1,
+      "summary": {
+        "total": "2128",
+        "passed": "2127",
+        "failed": "1",
+        "skipped": "0",
+        "errors": "0",
+        "not-run": "0"
+      },
+      "failures": [
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph"
+      ]
+    }
+  ],
+  "regression_fixture_note": "The first original-code regression run exposed 16 failures among 20 cases. Serialization fixtures were then corrected to retain explicit null JSON properties (production write options omit them). Only final complete-suite results qualify explicit-null persistence/candidate coverage. One initial service test build had a nullable assertion error; corrected before passing builds and test runs.",
+  "broad_gate": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/parties-dw87-service-full.xml",
+    "exit_code": 1,
+    "test": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+    "expected_eventstore_gitlink": "54261aeccb1d8d8c5c99beb2437e2e8a5ad69eaa",
+    "actual_eventstore_gitlink": "a07265f00994a3ad093184cec0f329d11184c3e9",
+    "baseline_fitness_blob": "6b6e9029c7cba79678fc3782660b0de7064181a1",
+    "current_fitness_blob": "6b6e9029c7cba79678fc3782660b0de7064181a1",
+    "note": "Unchanged fitness source; concurrent workspace sync advanced gitlinks outside this task. No green full-service claim."
+  },
+  "source_launcher": {
+    "command": "dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json --output json",
+    "exit_code": 2,
+    "rule": "HXW004",
+    "note": "At invocation, EventStore checkout a07265f00994a3ad093184cec0f329d11184c3e9 differed from staged gitlink 54261aeccb1d8d8c5c99beb2437e2e8a5ad69eaa. Secondary HXW008/HXW011/HXW010 diagnostics report Platform identity, absent local release tag and tool-range mismatch. No source launcher processes started; dependency selections were preserved."
+  },
+  "runtime_baseline": {
+    "start_command": "aspire start --non-interactive --no-build --isolated --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json",
+    "start_exit_code": 0,
+    "wait_command": "aspire wait parties --timeout 15 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "wait_exit_code": 0,
+    "describe_command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+    "describe_exit_code": 0,
+    "note": "parties, parties-ui and eventstore healthy; tenants and admin finished. Startup observation, no full authenticated-topology claim.",
+    "stop_command": "aspire stop --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+    "stop_exit_code": 0
+  },
+  "checks": [
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "node_modules/.bin/commitlint --edit /tmp/parties-dw87-commit.txt --verbose",
+      "version": "21.2.2",
+      "exit_code": 0,
+      "evidence": "commitlint.txt"
+    }
+  ],
+  "limitations": "Source launcher and full solution/Release/topology qualification are not claimed. Canonical repair cannot reconstruct missing remote Memories inventory; DW-82 remains open. An explicit-null canonical erasure-fence dictionary blocks finalization until owner-qualified evidence restores eventless cleanup fences; event replay alone cannot certify their absence.",
+  "sha256": {
+    "src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs": "900495453e650244d6e73dc4e3cd4ac80c83334334d7c970925da1dbc7eb3322",
+    "src/Hexalith.Parties.Projections/Services/PartySdkReadModelEraser.cs": "6071d2becca7a03dc8c0601ce95b3f36a81546b5b0ea668fd84f740e0edee24e",
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "00e903d3011a8846459f4235e0ce8f4aadf7093d37d3d91502c7e1f96089dcc5",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs": "d2156693fd8e6282122614b77f8e75c2d32d2136d72a761b5ef7a3114b9ec48d",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkCrossInstanceErasureTests.cs": "fa995d67d44f69f26cb32f69b3a95214b3f773b455664910627adb2e2de57071",
+    "docs/data-models.md": "3243409440c38effb36d19be8bf1f513b8ea5a5e5ec685dd2b3c628c27e4c404",
+    "_bmad-output/implementation-artifacts/spec-dw-87-null-index-dictionaries.md": "9088b17586df3bc763e0ae10c2832de3bafba944bc0258b6b272823e5bd8445b"
+  },
+  "review": {
+    "layer": "blind-hunter",
+    "findings": 6,
+    "patched": 6,
+    "deferred": 0,
+    "followup": "Independent read-only reviewer confirmed all six findings addressed and found no remaining concrete introduced issue. Reviewer did not run tests."
+  }
+}

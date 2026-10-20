@@ -228,6 +228,56 @@ per-tenant `Dictionary<partyId, PartyIndexEntry>` by
 `SearchableContactChannels` / `SearchableIdentifiers`. **Erased parties are
 removed from the index** entirely (never appear in search).
 
+### Null Party index dictionaries and recovery
+
+An existing `PartyIndexSdkReadModel` must have nonnull `Entries`,
+`LastIndexedEvents`, `LastSequenceNumbers`, and `ErasureSequenceNumbers`.
+An explicit JSON `null` is corruption, even if the other dictionaries are empty.
+Omitted properties in older JSON retain their empty initializer defaults; a
+missing canonical row retains the existing initialization/not-found behavior.
+
+Live index delivery returns retryable `projection-rebuild-required` before
+writing a malformed row, including when corruption appears during an optimistic
+retry. List and search queries return the bounded `ActorException` failure
+without payload or freshness metadata and evict the cached index. A previously
+cached empty index cannot conceal a successful canonical read of corrupt data.
+Coordinated SDK erasure cleanup also fails before writing any of its three
+slots, so it cannot certify cleanup by discarding unrelated entries or fences.
+
+Use the existing EventStore staged shared `party-index` rebuild from complete,
+retained, readable event histories. Its authoritative entry point is the
+[internal SDK rebuild surface](api-contracts.md#4-internal--operational-endpoints),
+invoked by the authorized EventStore orchestrator through the existing DAPR ACL.
+Scope the session to the affected tenant, domain `party`, projection
+`party-index`, and the shared index; do not rebuild only one aggregate.
+Start a fresh operation/candidate from the authoritative tenant inventory and
+captured source positions, accumulate every owner's complete history, then
+finalize, stage, verify and commit through that orchestrator. A corrupt wrapped
+or legacy candidate is rejected even for empty accumulation; do not resume it.
+After commit, complete search reconciliation, verify the canonical index's
+entries, checkpoints and fences plus a successful list/search query, then retry
+blocked delivery or erasure verification. A conflicting commit requires fresh
+finalization against the current canonical ETag. These internal routes are not
+public recovery APIs or a Parties CLI.
+
+A valid candidate can replace corrupt entries, descriptors or checkpoints with
+the existing ETag concurrency guard while retaining surviving canonical erasure
+fences. Cleanup can create a permanent fence before `PartyErased` is persisted;
+event history alone cannot establish that such fences never existed. An explicit
+null canonical `ErasureSequenceNumbers` therefore blocks finalization with
+`projection-rebuild-required` until owner-qualified recovery restores that
+evidence. There is no automatic reconstruction or operator override for lost
+fences in this module. Do not clear dictionaries manually or treat a partial delivery as full
+recovery: that can lose sequence evidence and permanent erasure fences. If the
+necessary history is unavailable, recovery requires owner-qualified source
+evidence; this guard does not invent a replacement history.
+
+When the old `Entries` dictionary is null, its prior external search-removal
+inventory is unavailable. Canonical index repair does not prove that historical
+Memories units are absent or cleaned. Authoritative remote inventory and cleanup
+remain separately tracked by DW-82; do not use rebuild completion as external
+erasure certification.
+
 ### Party index search notification provenance
 
 `PartyIndexSdkReadModel.LastIndexedEvents` retains at most one

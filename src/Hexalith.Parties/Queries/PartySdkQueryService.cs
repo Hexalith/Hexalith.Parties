@@ -268,7 +268,7 @@ public sealed partial class PartySdkQueryService(
 
         return await ReadIndexAsync(query, cancellationToken, (model, freshness) =>
         {
-            IEnumerable<PartyIndexEntry> entries = (model.Entries ?? new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)).Values;
+            IEnumerable<PartyIndexEntry> entries = model.Entries.Values;
             PagedResult<PartyIndexEntry> page = PartySearchResultsBuilder.BuildPagedList(
                 entries,
                 payload.Type,
@@ -308,7 +308,7 @@ public sealed partial class PartySdkQueryService(
 
         return await ReadIndexAsync(query, cancellationToken, (model, freshness) =>
         {
-            IEnumerable<PartyIndexEntry> entries = (model.Entries ?? new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)).Values
+            IEnumerable<PartyIndexEntry> entries = model.Entries.Values
                 .Where(static entry => !entry.IsErased);
             PagedResult<PartySearchResult> page = searchProvider.Search(
                 entries,
@@ -375,6 +375,15 @@ public sealed partial class PartySdkQueryService(
                 read = await readModelStore
                     .GetAsync<PartyIndexSdkReadModel>(storeName, PartySdkReadModelAddresses.Index(query.TenantId), cancellationToken)
                     .ConfigureAwait(false);
+                if (read.Value is not null
+                    && read.Value is not { Entries: not null, LastIndexedEvents: not null, LastSequenceNumbers: not null, ErasureSequenceNumbers: not null })
+                {
+                    // A successful read of corrupt canonical data cannot use an older empty
+                    // cache to conceal the need for a rebuild or cache the malformed row.
+                    lastKnownCache.EvictIndex(query.TenantId);
+                    return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
+                }
+
                 if (read.Value is null)
                 {
                     lastKnownCache.EvictIndex(query.TenantId);
@@ -397,7 +406,7 @@ public sealed partial class PartySdkQueryService(
 
                 // Another instance may have erased any indexed party while this host was offline.
                 // Only an already-empty index is safe without a successful canonical read.
-                if (cached!.Entries is not { Count: 0 })
+                if (cached is not { Entries.Count: 0, LastIndexedEvents: not null, LastSequenceNumbers: not null, ErasureSequenceNumbers: not null })
                 {
                     lastKnownCache.EvictIndex(query.TenantId);
                     throw;

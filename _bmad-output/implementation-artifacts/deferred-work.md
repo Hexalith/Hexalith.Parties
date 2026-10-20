@@ -705,7 +705,10 @@ origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review
 location: PartyIndexSdkReadModel
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: A malformed persisted `PartyIndexSdkReadModel` with null dictionaries can reach dictionary operations and throw rather than producing a controlled rebuild-required or corruption result.
-status: open
+status: done 2026-10-20
+
+resolution: Reject explicit null Entries, LastIndexedEvents, LastSequenceNumbers or ErasureSequenceNumbers before live folding (including optimistic retries), query caching and coordinated erasure writes. Use existing bounded failure surfaces; evict unsafe cached rows. Reject malformed wrapped/raw rebuild candidates while allowing a valid full replay candidate to replace corrupt entries/descriptors/checkpoints using its ETag. Preserve omitted-property defaults and surviving cleanup-created permanent fences, including fences absent from event history. Explicit-null canonical erasure-fence evidence blocks finalization until owner-qualified restoration. Recovery and unavailable prior remote-search inventory are documented in docs/data-models.md; DW-82 remains separate.
+verification: Debug affected-project builds have zero warnings/errors; complete projection suite passes 428/428, focused query/cache/adapter suite passes 785/785. Full service suite passes 2127/2128 with the unchanged dependency-receipt fitness gate reporting concurrently advanced EventStore identity drift. Independent review and final guard evidence are recorded by spec-dw-87-null-index-dictionaries.md and tests/dw-87-null-index-dictionaries-2026-10-20/validation.json.
 
 ### DW-88: Bound Party search inputs before cursor and index evaluation
 
