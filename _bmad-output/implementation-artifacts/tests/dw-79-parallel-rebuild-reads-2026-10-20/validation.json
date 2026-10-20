@@ -1,0 +1,121 @@
+{
+  "spec": "spec-dw-79-parallel-rebuild-reads.md",
+  "baseline_commit": "b38fcdb7200f0ed4a46627b460caf84d0fb30499",
+  "date": "2026-10-20",
+  "scope": "DW-79: overlap the two independent snapshot reads in detail rebuild preparation",
+  "validation_mode": "Debug with existing package dependencies; tool-mapped source-mode launcher unavailable",
+  "checks": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj -c Debug -m:1 --no-restore",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "note": "Final restored implementation after both mutation probes"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -result-xml /tmp/parties-dw79-final-projections.xml",
+      "exit_code": 0,
+      "total": 399,
+      "passed": 399,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "focused_new_cases": 14
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "node_modules/.bin/commitlint --edit /tmp/parties-dw79-commit.txt --verbose",
+      "version": "21.2.2",
+      "exit_code": 0,
+      "problems": 0,
+      "warnings": 0,
+      "evidence": "commitlint.txt"
+    }
+  ],
+  "regression_probes": [
+    {
+      "implementation": "Exact original HEAD handler with the final new test class",
+      "build_exit": 0,
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -class Hexalith.Parties.Projections.Tests.Handlers.PartyDetailRebuildReadTests -result-xml /tmp/parties-dw79-original-tests.xml",
+      "exit_code": 1,
+      "total": 14,
+      "passed": 1,
+      "failed": 13,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "qualification": "Expected failures demonstrate original sequential reads are rejected"
+    },
+    {
+      "implementation": "Change joint await to Task.WhenAll(...).WaitAsync(cancellationToken)",
+      "build_exit": 0,
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll -method *PrepareRebuildAsync_CancelledReadWaitsForSiblingAndPropagatesAsync -result-xml /tmp/parties-dw79-early-cancel-tests.xml",
+      "exit_code": 1,
+      "total": 2,
+      "passed": 0,
+      "failed": 2,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "qualification": "Expected failures demonstrate deterministic detection of early return before sibling draining"
+    }
+  ],
+  "implementation_restored_exactly": true,
+  "separate_blockers": [
+    {
+      "command": "aspire start --no-build --isolated --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+      "exit_code": 0,
+      "note": "Starts existing assets for baseline only"
+    },
+    {
+      "command": "aspire wait parties --timeout 15 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 17,
+      "result": "Timed out; aspire describe shows security Running/Unhealthy and dependent projects Waiting"
+    },
+    {
+      "command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 0,
+      "result": "Exact owned AppHost stopped; absent from final aspire ps"
+    },
+    {
+      "command": "dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json --output json",
+      "exit_code": 2,
+      "rule": "HXR011",
+      "result": "Isolated Dapr home is not configured"
+    },
+    {
+      "command": "HEXALITH_DAPR_HOME=/tmp/story-1-6-builds-toolchain dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json --output json",
+      "exit_code": 3,
+      "rule": "HXP020",
+      "result": "parties/domain: mapped source project is unavailable; no resources were started"
+    }
+  ],
+  "review": {
+    "layer": "blind-hunter",
+    "findings": 4,
+    "patched": 2,
+    "false_for_registered_runtime": 1,
+    "low_rejected_as_redundant_coverage": 1,
+    "followup": "Independent reviewer confirms deterministic cancellation correction and mixed/dual-fault coverage; no remaining blocking findings",
+    "new_deferred_work": 0
+  },
+  "limitations": "No source-mode, Release, deployment or full-topology qualification. Runtime changes only rebuild preparation; existing ETag-guarded commit and live projection paths remain unchanged.",
+  "sha256": {
+    "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs": "0b3220d7ae83fb151121479eb336fd911cd63f52c9fade28ba498c347c90575e",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/PartyDetailRebuildReadTests.cs": "a8cdc98ba99590d9129aa82c785a0ecd2ed25bc2f527516db8df128a4261f348"
+  }
+}

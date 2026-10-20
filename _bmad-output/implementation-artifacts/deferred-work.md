@@ -637,7 +637,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of spec-8-6-pro
 location: PartyDetailSdkProjectionHandler.PrepareRebuildAsync
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `PrepareRebuildAsync` awaits `readModelStore.GetAsync<PartyDetailSdkReadModel>` and `GetAsync<PartyProcessingSdkReadModel>` sequentially rather than concurrently with `Task.WhenAll`.
-status: open
+status: done 2026-10-20
+resolution: Rebuild preparation starts both independent snapshot reads before awaiting their joint completion, preserving full replay, keys, caller token and per-slot ETag concurrency. Final Debug build has zero warnings/errors; all 399 projection tests pass, including fourteen focused overlap/failure/cancellation cases. The original handler fails 13/14 focused cases and an early-cancellation mutation fails 2/2; implementation bytes are restored exactly. Independent review corrected two verification gaps and confirmed the follow-up; no new deferred work. Source-mode launcher and external-security topology blockers remain separately recorded; no Release or full-topology qualification is claimed. See spec-dw-79-parallel-rebuild-reads.md and tests/dw-79-parallel-rebuild-reads-2026-10-20/validation.json.
 
 ### DW-80: Make Memories rebuild reconciliation atomic with concurrent erase and re-add
 
