@@ -94,6 +94,7 @@ HexalithEventStoreResources eventStoreResources = builder.AddHexalithEventStore(
     resiliencyConfigPath);
 daprMtls?.ConfigureProjectSidecar(eventStore);
 daprMtls?.ConfigureProjectSidecar(adminServer);
+daprMtls?.ConfigureProjectSidecar(adminUI, mtlsOnlyConfigPath);
 
 IResourceBuilder<ProjectResource> parties = builder.AddProject<Projects.Hexalith_Parties>("parties")
     .WithEnvironment("EventStore__DomainService__AppId", "parties")
@@ -165,8 +166,8 @@ _ = tenants
     .WithReference(eventStore)
     .WaitFor(eventStore);
 
-// parties-ui: Blazor Server BFF over HTTP/SignalR — NO DAPR sidecar (like parties-mcp /
-// eventstore-admin-ui). Auto-starts (no WithExplicitStart) so AC2 — "healthy once eventstore/
+// parties-ui: Blazor Server BFF over HTTP/SignalR — NO DAPR sidecar (like parties-mcp).
+// Auto-starts (no WithExplicitStart) so AC2 — "healthy once eventstore/
 // tenants are healthy" — is observable on `aspire run`. OIDC/Keycloak wiring is Story 1.2;
 // ServiceDefaults health-check endpoints are Story 1.10.
 IResourceBuilder<ProjectResource> partiesUi = builder.AddProject<Projects.Hexalith_Parties_UI>("parties-ui")

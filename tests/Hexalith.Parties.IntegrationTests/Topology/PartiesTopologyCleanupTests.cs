@@ -48,4 +48,35 @@ public sealed class PartiesTopologyCleanupTests
         builderDisposed.ShouldBeTrue();
         controlPlaneRemoved.ShouldBeFalse();
     }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task BootstrapDisposalFailure_StillCleansTopologyAndPreservesEveryFailure(bool topologyAlsoFails)
+    {
+        var events = new List<string>();
+        var bootstrapFailure = new InvalidOperationException("bootstrap disposal failed");
+        var topologyFailure = new InvalidOperationException("application disposal failed");
+        Task Step(string name)
+        {
+            events.Add(name);
+            return name == "application" && topologyAlsoFails
+                ? Task.FromException(topologyFailure)
+                : Task.CompletedTask;
+        }
+        Task cleanup = PartiesTopologyCleanup.RunAsync(
+            () => Step("stop"), () => Step("application"), () => Step("builder"), () => Step("control-plane"),
+            () => { events.Add("bootstrap"); return Task.FromException(bootstrapFailure); });
+        if (topologyAlsoFails)
+        {
+            AggregateException failure = await Should.ThrowAsync<AggregateException>(() => cleanup).ConfigureAwait(true);
+            failure.InnerExceptions.ShouldBe([bootstrapFailure, topologyFailure]);
+        }
+        else
+        {
+            (await Should.ThrowAsync<InvalidOperationException>(() => cleanup).ConfigureAwait(true))
+                .ShouldBeSameAs(bootstrapFailure);
+        }
+        events.ShouldBe(["bootstrap", "stop", "application", "builder", "control-plane"]);
+    }
+
 }

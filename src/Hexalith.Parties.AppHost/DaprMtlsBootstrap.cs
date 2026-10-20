@@ -109,7 +109,9 @@ internal sealed class DaprMtlsBootstrap
     }
 
     /// <summary>Applies the trust bundle to the single sidecar already attached to a project resource.</summary>
-    public void ConfigureProjectSidecar(IResourceBuilder<ProjectResource> project)
+    /// <param name="project">The project with its existing sidecar.</param>
+    /// <param name="configurationPath">An optional generated configuration; other sidecar options are preserved.</param>
+    public void ConfigureProjectSidecar(IResourceBuilder<ProjectResource> project, string? configurationPath = null)
     {
         ArgumentNullException.ThrowIfNull(project);
         if (!project.Resource.TryGetAnnotationsOfType<DaprSidecarAnnotation>(out IEnumerable<DaprSidecarAnnotation>? annotations))
@@ -124,7 +126,7 @@ internal sealed class DaprMtlsBootstrap
                 $"Project resource '{project.Resource.Name}' must have exactly one Dapr sidecar, but has {materialized.Length}.");
         }
 
-        ConfigureSidecar(materialized[0].Sidecar);
+        ConfigureSidecar(materialized[0].Sidecar, configurationPath);
     }
 
     private static string ReadPem(string certificateDirectory, string fileName, string expectedPemLabel)
@@ -146,7 +148,7 @@ internal sealed class DaprMtlsBootstrap
         return value;
     }
 
-    private void ConfigureSidecar(IDaprSidecarResource sidecar)
+    private void ConfigureSidecar(IDaprSidecarResource sidecar, string? configurationPath = null)
     {
         DaprSidecarOptionsAnnotation[] optionsAnnotations = sidecar.Annotations
             .OfType<DaprSidecarOptionsAnnotation>()
@@ -167,6 +169,7 @@ internal sealed class DaprMtlsBootstrap
 
         sidecar.Annotations.Add(new DaprSidecarOptionsAnnotation(options with
         {
+            Config = configurationPath ?? options.Config,
             PlacementHostAddress = PlacementHostAddress,
             SchedulerHostAddress = SchedulerHostAddress,
         }));

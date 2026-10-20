@@ -3,12 +3,19 @@ extern alias apphost;
 using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text.Json;
 using System.Security.Claims;
 using System.Text;
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
+
+using CommunityToolkit.Aspire.Hosting.Dapr;
+
+using Hexalith.EventStore.Aspire;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -23,21 +30,9 @@ namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 /// When the infrastructure is unavailable (no Docker, no DAPR), the fixture
 /// captures the failure and exposes <see cref="IsAvailable"/> so tests can skip gracefully.
 /// </summary>
-/// <remarks>
-/// <para>
-/// <strong>This fixture does NOT seed any tenants.</strong> Story 12.2 retired the in-process
-/// REST/MCP surface and the integration test project Compile-Removes
-/// <c>Tenants/**/*.cs</c> (including <c>TenantIntegrationTestSeeder</c>). All current consumers
-/// of this fixture exercise only the health/ready/alive endpoints, which do not require an
-/// authenticated tenant.
-/// </para>
-/// <para>
-/// If you add a test that requires tenant access (a tenant-scoped projection, an RBAC-protected
-/// route, an authenticated query), call <see cref="RequireSeededTenants"/> as a precondition so
-/// the failure is loud and self-explanatory instead of a silent 401/403. You will also need to
-/// reinstate the seeder before that test can pass.
-/// </para>
-/// </remarks>
+/// <remarks>The ordinary profile retains unseeded defaults. The explicit complete mTLS profile
+/// enables both optional services and qualifies the real subscription route. Its in-process
+/// controlled host uses production subscription/access registrations without adding an endpoint.</remarks>
 public class PartiesAspireTopologyFixture : IAsyncLifetime
 {
     /// <summary>The symmetric signing key used only by this test topology and its gateway token.</summary>
@@ -46,28 +41,33 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     /// <summary>The issuer used only by this test topology and its gateway token.</summary>
     internal const string JwtIssuer = "hexalith-dev";
 
-    private readonly Func<Task<IDistributedApplicationTestingBuilder>> _createBuilder;
+    private readonly Func<CancellationToken, Task<IDistributedApplicationTestingBuilder>> _createBuilder;
+    private readonly bool _completeMtlsProfile;
+    private readonly Dictionary<string, string?> _previousEnvironment = new(StringComparer.Ordinal);
+    private readonly string _appChannelToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+    private bool _environmentCaptured;
     private readonly Func<DistributedApplication, CancellationToken, Task> _startApplication;
     private readonly bool _prepareCiBootstrap;
     private DistributedApplication? _app;
     private IDistributedApplicationTestingBuilder? _builder;
-    private string? _previousEnableKeycloak;
-    private string? _previousAspNetCoreEnvironment;
-    private string? _previousDotNetEnvironment;
-    private string? _previousDaprMtlsEnabled;
-    private string? _previousDaprMtlsCertificateDirectory;
     private string? _ciMtlsCertificateDirectory;
     private string? _ciMtlsBootstrapScript;
     private HttpClient? _partiesClient;
     private HttpClient? _eventStoreClient;
     private IResourceBuilder<ContainerResource>? _redis;
 
+    /// <summary>Initializes the ordinary health-check topology.</summary>
+    public PartiesAspireTopologyFixture() : this(completeMtlsProfile: false)
+    {
+    }
+
     /// <summary>Initializes a fixture that owns its complete disposable topology.</summary>
-    public PartiesAspireTopologyFixture()
+    internal PartiesAspireTopologyFixture(bool completeMtlsProfile)
         : this(
-            () => DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(),
+            cancellationToken => DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(cancellationToken),
             (application, cancellationToken) => application.StartAsync(cancellationToken),
-            prepareCiBootstrap: true)
+            prepareCiBootstrap: true,
+            completeMtlsProfile: completeMtlsProfile)
     {
     }
 
@@ -76,13 +76,15 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     /// <param name="startApplication">Starts the constructed application.</param>
     /// <param name="prepareCiBootstrap">Whether this fixture must prepare a real secure control plane.</param>
     internal PartiesAspireTopologyFixture(
-        Func<Task<IDistributedApplicationTestingBuilder>> createBuilder,
+        Func<CancellationToken, Task<IDistributedApplicationTestingBuilder>> createBuilder,
         Func<DistributedApplication, CancellationToken, Task> startApplication,
-        bool prepareCiBootstrap = false)
+        bool prepareCiBootstrap = false,
+        bool completeMtlsProfile = false)
     {
         _createBuilder = createBuilder;
         _startApplication = startApplication;
         _prepareCiBootstrap = prepareCiBootstrap;
+        _completeMtlsProfile = completeMtlsProfile;
     }
 
     /// <summary>
@@ -122,34 +124,55 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             ? "Test infrastructure not initialized. Ensure InitializeAsync has completed."
             : $"Test infrastructure unavailable: {UnavailableReason}");
 
-    public async ValueTask InitializeAsync()
-    {
-        // Disable Keycloak for health check tests — symmetric key JWT auth is sufficient.
-        _previousEnableKeycloak = Environment.GetEnvironmentVariable("EnableKeycloak");
-        Environment.SetEnvironmentVariable("EnableKeycloak", "false");
+    /// <summary>Gets the controlled in-process host used to inspect production tenant-access effects.</summary>
+    internal PartiesTenantBootstrapHost? TenantBootstrapHost { get; private set; }
 
-        // Force Development environment so Parties service loads appsettings.Development.json.
-        _previousAspNetCoreEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-        _previousDotNetEnvironment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
-        _previousDaprMtlsEnabled = Environment.GetEnvironmentVariable("Dapr__Mtls__Enabled");
-        _previousDaprMtlsCertificateDirectory = Environment.GetEnvironmentVariable("Dapr__Mtls__CertificateDirectory");
+    /// <summary>Gets the exact identities required by the complete qualification profile.</summary>
+    internal static IReadOnlyList<string> CompleteSidecarIds { get; } =
+        ["eventstore", "eventstore-admin", "eventstore-admin-ui", "memories", "parties", "sample", "sample-blazor-ui", "tenants"];
+
+    /// <summary>Starts the topology with the current test's cancellation token.</summary>
+    public ValueTask InitializeAsync() => InitializeAsync(TestContext.Current.CancellationToken);
+
+    /// <summary>Starts the topology within a bounded lifetime linked to caller cancellation.</summary>
+    internal async ValueTask InitializeAsync(CancellationToken cancellationToken)
+    {
+        foreach (string name in new[] { "EnableKeycloak", "ASPNETCORE_ENVIRONMENT", "DOTNET_ENVIRONMENT",
+                     "Dapr__Mtls__Enabled", "Dapr__Mtls__CertificateDirectory", "EnableMemoriesSearch", "EnableEventStoreSampleUi" })
+        {
+            _previousEnvironment[name] = Environment.GetEnvironmentVariable(name);
+        }
+        _environmentCaptured = true;
+        Environment.SetEnvironmentVariable("EnableKeycloak", "false");
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Development");
+        if (_completeMtlsProfile)
+        {
+            Environment.SetEnvironmentVariable("EnableMemoriesSearch", "true");
+            Environment.SetEnvironmentVariable("EnableEventStoreSampleUi", "true");
+        }
 
         try
         {
             // 5-minute timeout for full Aspire topology startup including DAPR sidecar
             // initialization and health check stabilization.
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            cts.CancelAfter(TimeSpan.FromMinutes(5));
 
             if (_prepareCiBootstrap)
             {
                 await PrepareCiDaprMtlsAsync(cts.Token).ConfigureAwait(false);
             }
 
-            _builder = await _createBuilder().ConfigureAwait(false);
+            _builder = await _createBuilder(cts.Token).ConfigureAwait(false);
 
             _redis = PartiesTestRedis.Configure(_builder);
+            if (_completeMtlsProfile)
+            {
+                PartiesMtlsProfile.ConfigureOptionalDependencies(_builder);
+                IResourceBuilder<ParameterResource> token = _builder.AddParameter("fixture-parties-channel-token", _appChannelToken, secret: true);
+                _ = _builder.CreateResourceBuilder<ProjectResource>("parties").WithEventStoreAppChannelToken(token);
+            }
 
             // The normal AppHost clears symmetric keys for its OIDC topology. Override
             // the test resources after model construction when Keycloak is disabled.
@@ -169,8 +192,21 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 logging.AddFilter("Aspire.", LogLevel.Warning);
             });
 
-            _app = await _builder.BuildAsync().ConfigureAwait(false);
+            _app = await _builder.BuildAsync(cts.Token).ConfigureAwait(false);
             await _startApplication(_app, cts.Token).ConfigureAwait(false);
+            if (_completeMtlsProfile)
+            {
+                // Keep the AppHost's explicit-start semantics and start the optional UI through Aspire.
+                await _app.ResourceNotifications.WaitForResourceAsync("eventstore-admin-ui", KnownResourceStates.NotStarted, cts.Token)
+                    .ConfigureAwait(false);
+                ExecuteCommandResult start = await _app.Services.GetRequiredService<ResourceCommandService>()
+                    .ExecuteCommandAsync("eventstore-admin-ui", KnownResourceCommands.StartCommand, cts.Token).ConfigureAwait(false);
+                if (!start.Success)
+                {
+                    throw new InvalidOperationException("The explicit EventStore admin UI start command failed.");
+                }
+                await WaitForAllSidecarsAsync(cts.Token).ConfigureAwait(false);
+            }
 
             // Wait for parties to be healthy. This includes the DAPR health checks
             // (sidecar, state store, pub/sub) becoming healthy after sidecar initialization.
@@ -207,14 +243,21 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 "/health",
                 [HttpStatusCode.OK],
                 TimeSpan.FromMinutes(3),
-                TimeSpan.FromSeconds(3)).ConfigureAwait(false);
+                TimeSpan.FromSeconds(3), cts.Token).ConfigureAwait(false);
             await WaitForEndpointAsync(
                 _eventStoreClient,
                 "/health",
                 [HttpStatusCode.OK],
                 TimeSpan.FromMinutes(3),
-                TimeSpan.FromSeconds(3)).ConfigureAwait(false);
+                TimeSpan.FromSeconds(3), cts.Token).ConfigureAwait(false);
 
+            if (_completeMtlsProfile)
+            {
+                TenantBootstrapHost = await PartiesTenantBootstrapHost.StartAsync(_appChannelToken, cts.Token).ConfigureAwait(false);
+                using HttpClient localClient = TenantBootstrapHost.CreateClient();
+                await PartiesTenantBootstrapHost.SeedAsync(_partiesClient, _appChannelToken, cts.Token).ConfigureAwait(false);
+                await PartiesTenantBootstrapHost.SeedAsync(localClient, _appChannelToken, cts.Token).ConfigureAwait(false);
+            }
             IsAvailable = true;
         }
         catch (Exception ex)
@@ -230,21 +273,21 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             {
                 UnavailableReason += $"; topology cleanup failed: {cleanupException}";
             }
+            finally
+            {
+                RestoreEnvironment();
+            }
         }
     }
 
-    /// <summary>
-    /// Precondition guard for tests that require seeded tenant access. Always throws because
-    /// Story 12.2 retired the in-process tenant-seeding plumbing. Call this at the top of any
-    /// new test that depends on tenant context so the failure is explicit.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">Always thrown.</exception>
+    /// <summary>Rejects tenant-dependent tests using the ordinary unseeded health profile.</summary>
+    /// <remarks>Tenant bootstrap qualification uses the explicit complete mTLS profile and its
+    /// registered subscription handler; ordinary shared health fixtures remain unseeded.</remarks>
+    /// <exception cref="InvalidOperationException">The ordinary profile has no seeded tenant context.</exception>
     public static void RequireSeededTenants() => throw new InvalidOperationException(
-        "PartiesAspireTopologyFixture does not seed tenants. Story 12.2 retired the in-process "
-        + "REST/MCP surface and TenantIntegrationTestSeeder is Compile-Removed in the integration "
-        + "test project (Tenants/**/*.cs). Reinstate the seeder and update this fixture if your "
-        + "test needs authenticated tenant access. Health/ready/alive endpoints do not require "
-        + "seeded tenants.");
+        "The ordinary PartiesAspireTopologyFixture health profile does not seed tenants. "
+        + "Use the explicit complete mTLS qualification profile and authenticated subscription "
+        + "bootstrap when testing tenant access. Health/ready/alive endpoints do not require seeded tenants.");
 
     public async ValueTask DisposeAsync()
     {
@@ -254,11 +297,52 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         }
         finally
         {
-            Environment.SetEnvironmentVariable("EnableKeycloak", _previousEnableKeycloak);
-            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", _previousAspNetCoreEnvironment);
-            Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", _previousDotNetEnvironment);
-            Environment.SetEnvironmentVariable("Dapr__Mtls__Enabled", _previousDaprMtlsEnabled);
-            Environment.SetEnvironmentVariable("Dapr__Mtls__CertificateDirectory", _previousDaprMtlsCertificateDirectory);
+            RestoreEnvironment();
+        }
+    }
+
+    private void RestoreEnvironment()
+    {
+        if (!_environmentCaptured)
+        {
+            return;
+        }
+        foreach ((string name, string? value) in _previousEnvironment)
+        {
+            Environment.SetEnvironmentVariable(name, value);
+        }
+        _environmentCaptured = false;
+    }
+
+    /// <summary>Creates an HTTP client for the named project's own Dapr metadata/invocation API.</summary>
+    internal HttpClient CreateSidecarClient(string appId)
+    {
+        ProjectResource project = App.Services.GetRequiredService<DistributedApplicationModel>().Resources.OfType<ProjectResource>().Single(resource => resource.Name == appId);
+        DaprSidecarAnnotation sidecar = project.Annotations.OfType<DaprSidecarAnnotation>().Single();
+        return App.CreateHttpClient(sidecar.Sidecar.Name + "-cli", "http");
+    }
+
+    private async Task WaitForAllSidecarsAsync(CancellationToken cancellationToken)
+    {
+        string[] actual = App.Services.GetRequiredService<DistributedApplicationModel>().Resources.OfType<ProjectResource>()
+            .SelectMany(project => project.Annotations.OfType<DaprSidecarAnnotation>())
+            .Select(sidecar => sidecar.Sidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().Single().Options.AppId!)
+            .Order(StringComparer.Ordinal).ToArray();
+        if (!actual.SequenceEqual(CompleteSidecarIds))
+        {
+            throw new InvalidOperationException("The complete mTLS model does not contain the exact eight expected sidecars.");
+        }
+        foreach (string appId in CompleteSidecarIds)
+        {
+            using HttpClient client = CreateSidecarClient(appId);
+            await WaitForEndpointAsync(client, "/v1.0/healthz", [HttpStatusCode.NoContent],
+                TimeSpan.FromMinutes(2), TimeSpan.FromMilliseconds(250), cancellationToken).ConfigureAwait(false);
+            using JsonDocument metadata = await client.GetFromJsonAsync<JsonDocument>("/v1.0/metadata", cancellationToken).ConfigureAwait(false)
+                ?? throw new InvalidOperationException($"Sidecar '{appId}' returned no metadata.");
+            if (metadata.RootElement.GetProperty("id").GetString() != appId)
+            {
+                throw new InvalidOperationException($"Sidecar '{appId}' returned another application's metadata.");
+            }
         }
     }
 
@@ -272,7 +356,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 if (_app is not null)
                 {
                     // Stop all workers and sidecars before disposal removes the owned Redis container.
-                    await _app.StopAsync().ConfigureAwait(false);
+                    using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                    await _app.StopAsync(timeout.Token).ConfigureAwait(false);
                 }
             },
             async () =>
@@ -291,7 +376,15 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                     _builder = null;
                 }
             },
-            CleanupCiDaprMtlsAsync).ConfigureAwait(false);
+            CleanupCiDaprMtlsAsync,
+            async () =>
+            {
+                if (TenantBootstrapHost is not null)
+                {
+                    await TenantBootstrapHost.DisposeAsync().ConfigureAwait(false);
+                    TenantBootstrapHost = null;
+                }
+            }).ConfigureAwait(false);
     }
 
     private static string CreateAdministratorToken()
@@ -315,8 +408,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
     private async Task PrepareCiDaprMtlsAsync(CancellationToken cancellationToken)
     {
-        if (!OperatingSystem.IsLinux()
-            || !string.Equals(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase)
+        if ((!_completeMtlsProfile && (!OperatingSystem.IsLinux()
+                || !string.Equals(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase)))
             || string.Equals(Environment.GetEnvironmentVariable("Dapr__Mtls__Enabled"), "true", StringComparison.OrdinalIgnoreCase))
         {
             return;
@@ -408,12 +501,14 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         }
     }
 
-    private static async Task WaitForEndpointAsync(
+    /// <summary>Polls readiness while honoring cancellation of an in-flight HTTP request.</summary>
+    internal static async Task WaitForEndpointAsync(
         HttpClient client,
         string url,
         IReadOnlyCollection<HttpStatusCode> expectedStatusCodes,
         TimeSpan timeout,
-        TimeSpan pollInterval)
+        TimeSpan pollInterval,
+        CancellationToken cancellationToken)
     {
         DateTimeOffset deadline = DateTimeOffset.UtcNow.Add(timeout);
         Exception? lastException = null;
@@ -424,7 +519,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             try
             {
                 using HttpResponseMessage response = await client
-                    .GetAsync(url)
+                    .GetAsync(url, cancellationToken)
                     .ConfigureAwait(false);
 
                 lastStatusCode = response.StatusCode;
@@ -437,12 +532,12 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             {
                 lastException = ex;
             }
-            catch (TaskCanceledException ex)
+            catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
             {
                 lastException = ex;
             }
 
-            await Task.Delay(pollInterval).ConfigureAwait(false);
+            await Task.Delay(pollInterval, cancellationToken).ConfigureAwait(false);
         }
 
         throw new TimeoutException(

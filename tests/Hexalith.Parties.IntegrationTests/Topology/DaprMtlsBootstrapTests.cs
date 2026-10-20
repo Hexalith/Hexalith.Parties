@@ -2,6 +2,7 @@ extern alias apphost;
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Testing;
 
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
@@ -101,6 +102,87 @@ public sealed class DaprMtlsBootstrapTests
         finally
         {
             Directory.Delete(certificateDirectory, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task ActualAppHostModel_ConfiguresEverySidecarAndIsolatesApplicationCredentials(bool mtls, bool complete)
+    {
+        string directory = CreateCertificateDirectory(includePrivateKey: true);
+        try
+        {
+            string[] arguments =
+            [
+                "--EnableKeycloak=false",
+                $"--EnableMemoriesSearch={complete}",
+                $"--EnableEventStoreSampleUi={complete}",
+                $"--Dapr:Mtls:Enabled={mtls}",
+                $"--Dapr:Mtls:CertificateDirectory={directory}",
+            ];
+            IDistributedApplicationTestingBuilder builder = await DistributedApplicationTestingBuilder
+                .CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(arguments, TestContext.Current.CancellationToken).ConfigureAwait(true);
+            await using var lifetime = builder.ConfigureAwait(true);
+            string[] expected = complete
+                ? ["eventstore", "eventstore-admin", "eventstore-admin-ui", "memories", "parties", "sample", "sample-blazor-ui", "tenants"]
+                : ["eventstore", "eventstore-admin", "eventstore-admin-ui", "parties", "tenants"];
+            var sidecars = builder.Resources.OfType<ProjectResource>()
+                .SelectMany(project => project.Annotations.OfType<DaprSidecarAnnotation>())
+                .ToArray();
+            sidecars.Select(sidecar => sidecar.Sidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().Single().Options.AppId)
+                .Order(StringComparer.Ordinal).ShouldBe(expected);
+            foreach (DaprSidecarAnnotation sidecar in sidecars)
+            {
+                DaprSidecarOptions options = sidecar.Sidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().Single().Options;
+                IDictionary<string, object> environment = await ResolveEnvironmentAsync(sidecar.Sidecar);
+                if (mtls)
+                {
+                    options.Config.ShouldNotBeNullOrWhiteSpace();
+                    string rendered = File.ReadAllText(options.Config);
+                    rendered.ShouldContain("  mtls:" + Environment.NewLine + "    enabled: true");
+                    environment["DAPR_TRUST_ANCHORS"].ShouldBe(CertificatePem);
+                    environment["DAPR_CERT_CHAIN"].ShouldBe(CertificatePem);
+                    environment["DAPR_CERT_KEY"].ShouldBe(PrivateKeyPem);
+                    environment["NAMESPACE"].ShouldBe("default");
+                    options.PlacementHostAddress.ShouldBe("127.0.0.1:55005");
+                    options.SchedulerHostAddress.ShouldBe("127.0.0.1:55006");
+                    if (options.AppId is not ("eventstore-admin-ui" or "sample-blazor-ui"))
+                    {
+                        string source = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "DaprComponents", Path.GetFileName(options.Config)));
+                        rendered.Replace("  mtls:" + Environment.NewLine + "    enabled: true" + Environment.NewLine
+                            + "  features:" + Environment.NewLine + "    - name: HotReload" + Environment.NewLine
+                            + "      enabled: false" + Environment.NewLine, string.Empty).ShouldBe(source.Replace("\r\n", Environment.NewLine));
+                    }
+                }
+                else
+                {
+                    environment.Keys.ShouldNotContain("DAPR_TRUST_ANCHORS");
+                    environment.Keys.ShouldNotContain("DAPR_CERT_CHAIN");
+                    environment.Keys.ShouldNotContain("DAPR_CERT_KEY");
+                    if (options.AppId == "eventstore-admin-ui")
+                    {
+                        options.Config.ShouldBeNull();
+                    }
+                }
+            }
+
+            foreach (ProjectResource project in builder.Resources.OfType<ProjectResource>())
+            {
+                IDictionary<string, object> environment = await ResolveEnvironmentAsync(project);
+                environment.Keys.ShouldNotContain("DAPR_TRUST_ANCHORS");
+                environment.Keys.ShouldNotContain("DAPR_CERT_CHAIN");
+                environment.Keys.ShouldNotContain("DAPR_CERT_KEY");
+            }
+
+            ProjectResource adminUi = builder.Resources.OfType<ProjectResource>().Single(project => project.Name == "eventstore-admin-ui");
+            adminUi.Annotations.OfType<ExplicitStartupAnnotation>().ShouldNotBeEmpty();
+            adminUi.Annotations.OfType<WaitAnnotation>().Select(wait => wait.Resource.Name).ShouldContain("eventstore-admin");
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
         }
     }
 

@@ -616,8 +616,10 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: configured Dapr sidecar topology tests
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: Current tests inspect generated YAML and one synthetic sidecar but never start the mTLS topology or prove a cross-service invocation with all sidecars credentialed.
-status: open
+status: done 2026-10-20
 decision: 2026-09-06 Add test-only topology support — Introduce test-scoped readiness and tenant bootstrap, run all sidecars, and prove a credentialed cross-service invocation.
+
+resolution: All eight complete-profile sidecars initialized Dapr security and answered their own metadata; real Parties-to-Tenants readiness returned 200 through the existing ACL. Authenticated callback bootstrap passed and missing/wrong tokens were rejected; controlled production subscription/access registrations verify membership and authorization effects. Final CI-runtime 1.18.2 proof: 2/2 pass, no skips, including the repaired admin UI-to-admin path; Release/package assembly: 98 pass, zero failures, 6 pre-existing health-test skips. Commands, scope limits and sanitized proof: tests/dw-77-all-sidecar-mtls-2026-10-20/validation.json and runtime-proof.txt.
 
 ### DW-78: Align PartyErased timestamp resolution across projection folds
 
