@@ -46,7 +46,7 @@ It uses only mapped direct projects and Debug assets. Missing selected source fa
 with a diagnostic; sibling checkouts and packages are not fallback sources.
 Do not initialize references inside those direct references.
 Memories is a required reference service; optional rich Parties search remains disabled.
-Stop only this run with `dotnet tool run hexalith-module -- down --run-id <run-id>`.
+Stop only this run with `dotnet tool run hexalith-module -- down --manifest module/hexalith.module-manifest.v2.json --run-id <run-id>`.
 
 **Legacy hosting scope:** the retained `Hexalith.Parties.AppHost` command
 `dotnet aspire run --project src/Hexalith.Parties.AppHost` remains available for

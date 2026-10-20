@@ -260,7 +260,7 @@ direct references, including Platform, Memories and McpCli. The tool selects the
 seven-server dependency closure and emits a run ID, mapping and diagnostics.
 Break in `MvpComplianceWarningMiddleware.InvokeAsync` on `/ready`; a disposable
 edit to `MvpComplianceWarning.Message` must change the existing warning header.
-Restore the edit, stop the exact run (`down --run-id <run-id>`), and rerun clean.
+Restore the edit, stop the exact run (`down --manifest module/hexalith.module-manifest.v2.json --run-id <run-id>`), and rerun clean.
 Record full revisions, environment, active source/PDB paths, results and cleanup.
 Owner review and upstream integration are required before qualification is complete.
 

@@ -31,10 +31,10 @@ dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manif
 The repository pins accepted module tool **4.34.0** alongside aspirate. From this
 independent checkout, `debug` resolves direct references once, builds the selected
 source projects in Debug, and waits for exactly `parties`, `eventstore`, `tenants`,
-`tenants-api`, `memories`, `memories-clock`, and `memories-access-telemetry`.
+`tenants-api`, `memories`, `memories-access-telemetry-clock`, and `memories-access-telemetry`.
 The tool reports its run ID and source mapping; attach the debugger to the Parties
 service child process. Stop that exact environment with
-`dotnet tool run hexalith-module -- down --run-id <run-id>`.
+`dotnet tool run hexalith-module -- down --manifest module/hexalith.module-manifest.v2.json --run-id <run-id>`.
 Initialize only this checkout's direct references; leave their nested references
 uninitialized. Ordinary package CI keeps package references and Release builds.
 
