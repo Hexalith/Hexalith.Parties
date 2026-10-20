@@ -696,7 +696,8 @@ origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review
 location: ErasureVerificationService.VerifyErasureAsync
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `ErasureVerificationService.VerifyErasureAsync` accepts an `ErasureCertificate` but never verifies it belongs to the requested tenant and party or represents a completed key-destruction state.
-status: open
+status: done 2026-10-20
+resolution: Verification rejects mismatched scope, incomplete/unknown key status and malformed version evidence before any cleanup. Verified empty version lists remain valid for idempotent deletion. Cleanup retries preserve original certificate bytes; reports/status retain cleanup outcomes and timestamps. Admin confirmation requires affirmative cleanup status and uses its timestamp. Three affected Debug builds have zero warnings/errors; Security.Tests passes 280/280, AdminPortal.Tests 201/201, focused service tests 143/143 and complete service 2108/2109 (sole unchanged Builds dependency-receipt mismatch, no skips/errors/not-run). Five independent review findings are patched and legacy certificate recovery is explicitly deferred to key-management owners; follow-up confirms the corrections. No dependency, gitlink or broad-gate signoff is claimed. See spec-dw-86-erasure-certificate-validation.md and tests/dw-86-erasure-certificate-validation-2026-10-20/validation.json.
 
 ### DW-87: Handle null Party index dictionaries with bounded recovery
 
@@ -1687,3 +1688,8 @@ resolution: Declared the existing named-enum wire policy on all six Parties comm
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-72-production-publish-environments.md`
   summary: Reconcile current dependency package documentation and source-selection receipts after the concurrent root-gitlink sync.
   evidence: After rebasing onto bec09f01aa00bd9ef83554fd099ed36fb59ab2c6, the complete service suite passes 2001/2003. MaintainedTechnologyTablesMatchCentralPackageCatalog expects docs/ci.md to describe EventStore 3.126.0 selected by the new Builds catalog, and FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph still expects Builds 332b2c144defba546fe0a09626a4a72f2340e22f while the parent selects 5d03f1db9c38db34ecac7fe6048937478ffb82cc. Both unchanged methods fail identically on the exact parent checkout; commands, results and matching test-source blob identities are retained in the DW-72 evidence. Refresh current observations without weakening gates, fabricating owner approval or recertifying historical parity evidence.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-86-erasure-certificate-validation.md`
+  summary: Provide an owner-supported recovery path for legacy erasure certificates.
+  severity: medium
+  evidence: Earlier cleanup retries overwrote key-destruction certificate status with Pending/Failed, indistinguishable from genuine key deletion failures. DW-86 must reject that ambiguous evidence; the current Parties gateway exposes no supported reissuance/persistence command. Key-management owners must qualify authoritative read-back and auditable certificate replacement before legacy retries can be certified. Never manually promote status or accept failed evidence.

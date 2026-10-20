@@ -34,14 +34,54 @@ public sealed partial class ErasureVerificationService(
     /// <param name="partyId">The party identifier.</param>
     /// <param name="erasureCertificate">The key-destruction certificate.</param>
     /// <param name="cancellationToken">A token that cancels verification.</param>
-    /// <returns>The verification report with per-store results.</returns>
+    /// <returns>
+    /// The cleanup report, or a Failed report without invoking cleanup when certificate evidence is invalid.
+    /// </returns>
+    /// <remarks>
+    /// The certificate must match the requested scope using ordinal comparison, attest Verified key destruction,
+    /// and contain a non-null list of positive destroyed versions. An empty list is valid for idempotent deletion.
+    /// </remarks>
+    /// <exception cref="ArgumentException">A requested identifier is null, empty or whitespace.</exception>
+    /// <exception cref="ArgumentNullException">The certificate is null.</exception>
+    /// <exception cref="OperationCanceledException">The caller cancels verification.</exception>
     public async Task<ErasureVerificationReport> VerifyErasureAsync(
         string tenantId,
         string partyId,
         ErasureCertificate erasureCertificate,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
+        ArgumentNullException.ThrowIfNull(erasureCertificate);
+        cancellationToken.ThrowIfCancellationRequested();
         LogVerificationStarted();
+
+        if (!string.Equals(erasureCertificate.TenantId, tenantId, StringComparison.Ordinal)
+            || !string.Equals(erasureCertificate.PartyId, partyId, StringComparison.Ordinal)
+            || erasureCertificate.VerificationStatus != ErasureVerificationStatus.Verified
+            || erasureCertificate.KeyVersionsDestroyed is null
+            || erasureCertificate.KeyVersionsDestroyed.Any(static version => version <= 0))
+        {
+            DateTimeOffset timestamp = _timeProvider.GetUtcNow();
+            LogVerificationCompleted(nameof(ErasureVerificationOverallStatus.Failed), 0);
+            return new ErasureVerificationReport
+            {
+                TenantId = tenantId,
+                PartyId = partyId,
+                Timestamp = timestamp,
+                OverallStatus = ErasureVerificationOverallStatus.Failed,
+                StoreResults =
+                [
+                    new()
+                    {
+                        StoreName = "key-destruction",
+                        Status = ErasureStoreCleanupStatus.Failed,
+                        Timestamp = timestamp,
+                        ErrorMessage = "Key-destruction certificate is invalid for this erasure.",
+                    },
+                ],
+            };
+        }
 
         List<ErasureVerificationStoreResult> storeResults = [];
 

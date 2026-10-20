@@ -1,0 +1,191 @@
+{
+  "spec": "spec-dw-86-erasure-certificate-validation.md",
+  "date": "2026-10-20",
+  "baseline_commit": "7334c703585329ac7ac9fae40c08dd40b8a207c0",
+  "scope": "DW-86: require matching verified key evidence before cleanup and preserve it across retries",
+  "builds": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    }
+  ],
+  "build_mode": "Debug with the currently selected package dependencies; source launcher is prerequisite-blocked, no source-mode qualification claimed",
+  "results": {
+    "security-red": {
+      "total": 49,
+      "passed": 24,
+      "failed": 25,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "6cc5936407b7daad719c621333b97065b6d473a14be04a6c40d5ae87c3228d8a",
+      "exit_code": 1,
+      "command": "dotnet tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll -class Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests -result-xml /tmp/parties-dw86-security-red.xml",
+      "failures": [
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"tenant\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"null-versions\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"unknown-status\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"failed\\\", noStores: True)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"failed\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"pending\\\", noStores: True)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"pending\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"party-blank\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"tenant-blank\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"party-null\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"tenant-null\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"party-case\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"tenant-case\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"party\\\", noStores: True)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"party\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"tenant\\\", noStores: True)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"zero-version\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(invalidField: \\\"negative-version\\\", noStores: False)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidRequestedScopeThrowsBeforeCleanup(invalidTenant: True, invalidId: null)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidRequestedScopeThrowsBeforeCleanup(invalidTenant: True, invalidId: \\\"\\\")",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidRequestedScopeThrowsBeforeCleanup(invalidTenant: True, invalidId: \\\" \\\")",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidRequestedScopeThrowsBeforeCleanup(invalidTenant: False, invalidId: null)",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidRequestedScopeThrowsBeforeCleanup(invalidTenant: False, invalidId: \\\"\\\")",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_InvalidRequestedScopeThrowsBeforeCleanup(invalidTenant: False, invalidId: \\\" \\\")",
+        "Hexalith.Parties.Security.Tests.ErasureVerificationServiceTests.VerifyErasureAsync_NullCertificateThrowsBeforeCleanup"
+      ],
+      "description": "Original production code, initial certificate-validation regression tests. Twenty-five cases reproduce the defect."
+    },
+    "security-full": {
+      "total": 280,
+      "passed": 280,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "2bd012b376b7ee3cbaa9f807830493529b3978282702316215062aaed744c51c",
+      "exit_code": 0,
+      "command": "dotnet tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll -result-xml /tmp/parties-dw86-security-full.xml",
+      "failures": []
+    },
+    "service-focused": {
+      "total": 143,
+      "passed": 143,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "76caa796ddac6cd5835fdde07b2add86c937f359514be66a6ba9af6b8207706c",
+      "exit_code": 0,
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests -class Hexalith.Parties.Tests.Projections.ProjectionPlatformAdapterTests -result-xml /tmp/parties-dw86-service-focused.xml",
+      "failures": []
+    },
+    "service-full": {
+      "total": 2109,
+      "passed": 2108,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "09986dcf73de591fdc5aa412b2290654eaf329a02b0661bbb6c8c4e0452d636b",
+      "exit_code": 1,
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/parties-dw86-service-full.xml",
+      "failures": [
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph"
+      ]
+    },
+    "admin-focused": {
+      "total": 11,
+      "passed": 11,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "ca7b954b5e7ffff50a58a6cda3d4dc637c62b91f20e44899c8e400b7f16c6825",
+      "exit_code": 0,
+      "command": "dotnet tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll -class Hexalith.Parties.AdminPortal.Tests.Components.ErasureVerificationReportPanelTests -result-xml /tmp/parties-dw86-admin-focused.xml",
+      "failures": []
+    },
+    "admin-full": {
+      "total": 201,
+      "passed": 201,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "xml_sha256": "20a04a95cdf90fed55306cc2b2ae1e774441a71ab29e79ad1eb3b0db12bb959c",
+      "exit_code": 0,
+      "command": "dotnet tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll -result-xml /tmp/parties-dw86-admin-full.xml",
+      "failures": []
+    }
+  },
+  "known_broad_gate_blocker": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/parties-dw86-service-full.xml",
+    "exit_code": 1,
+    "test": "PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+    "expected_builds_gitlink": "5d03f1db9c38db34ecac7fe6048937478ffb82cc",
+    "actual_builds_gitlink": "fff4a212180d8cd1c5c0759655a9bc4fb6963c45",
+    "fitness_baseline_blob": "d3b400c43142bc1ff3aa84cbc0c602d7a8d52804",
+    "fitness_worktree_blob": "d3b400c43142bc1ff3aa84cbc0c602d7a8d52804",
+    "prior_record": "tests/dw-85-disabled-indexing-cleanup-health-2026-10-20/validation.json",
+    "description": "Same unchanged dependency-receipt failure recorded by DW-85; gitlink, fitness test and receipt remain unchanged in this work. No dependency owner signoff or full green suite claim."
+  },
+  "source_launcher": {
+    "command": "dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json --output json",
+    "exit_code": 2,
+    "rule": "HXR011",
+    "description": "HEXALITH_DAPR_HOME is not configured; no launcher processes started."
+  },
+  "baseline_runtime": {
+    "start": "aspire start --non-interactive --no-build --isolated --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json",
+    "start_exit_code": 0,
+    "wait": "aspire wait parties --timeout 15 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "wait_exit_code": 0,
+    "describe": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+    "description": "Existing assets started: parties and parties-ui healthy, eventstore and tenants finished. Startup observation only; no authenticated full-topology qualification.",
+    "stop": "aspire stop --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+    "stop_exit_code": 0
+  },
+  "checks": [
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "node_modules/.bin/commitlint --edit /tmp/parties-dw86-commit.txt --verbose",
+      "version": "21.2.2",
+      "exit_code": 0,
+      "evidence": "commitlint.txt"
+    }
+  ],
+  "review": {
+    "layer": "blind-hunter",
+    "findings": 6,
+    "patched": 5,
+    "deferred": 1,
+    "followup": "Independent read-only reviewer confirmed all six findings addressed, with legacy recovery explicitly tracked; no concrete introduced issues found. Reviewer did not rerun tests."
+  },
+  "limitations": "Legacy Pending/Failed certificate recovery needs key-management owner work. Full service gate remains red on unchanged Builds receipt drift. Source launcher, Release, deployment, key-provider authentication and full topology are not qualified by these checks.",
+  "sha256": {
+    "src/Hexalith.Parties.Security/ErasureVerificationService.cs": "94e99c6d90c843eccf2de72f060760a43bd348c0c1b72dd8aed4dc228d4de233",
+    "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs": "863f26e3ad9cd987186641501fe9f1348b028a50e4d6cdb2355ca57163334121",
+    "src/Hexalith.Parties.AdminPortal/Components/ErasureVerificationReportPanel.razor": "bca29659c05948cf68ca37328f8afad6614f5f3ac087d4a86eb69db8e6b00d9e",
+    "tests/Hexalith.Parties.Security.Tests/ErasureVerificationServiceTests.cs": "ec2bfe80a7388dfffc4dcba2b489630775a066108b3c51e5f6d15eaa6aead665",
+    "tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs": "0783dcf07f3868dc94bb57eddec15c21b22f95ab5edfcb8f681faf45404aab5f",
+    "tests/Hexalith.Parties.Tests/Projections/ProjectionPlatformAdapterTests.cs": "ff59d600bbc36d11acf5522ab7a28aff1bbd24471430d3a49971a17b8c0bd0ae",
+    "tests/Hexalith.Parties.AdminPortal.Tests/Components/ErasureVerificationReportPanelTests.cs": "70f2cf1f40eb7d6d9c0b15ffd435359a0c5d2aab0094eef3c98ba074e7e78594",
+    "docs/gdpr-key-rotation-and-shredding.md": "04a3b79e694a107f25641478b70bef8363245b02f0e8b8edccdf63aa99d19b1e"
+  }
+}

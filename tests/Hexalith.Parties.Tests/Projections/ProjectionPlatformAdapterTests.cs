@@ -240,7 +240,7 @@ public sealed class ProjectionPlatformAdapterTests
                 TenantId = tenantId,
                 Timestamp = DateTimeOffset.UnixEpoch,
                 KeyVersionsDestroyed = [1],
-                VerificationStatus = ErasureVerificationStatus.Pending,
+                VerificationStatus = ErasureVerificationStatus.Verified,
             },
             TestContext.Current.CancellationToken);
 

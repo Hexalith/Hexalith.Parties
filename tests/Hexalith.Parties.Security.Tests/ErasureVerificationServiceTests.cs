@@ -13,6 +13,149 @@ public class ErasureVerificationServiceTests
     private const string TenantId = "test-tenant";
     private const string PartyId = "party-1";
 
+    [Theory]
+    [InlineData("tenant", false)]
+    [InlineData("tenant", true)]
+    [InlineData("party", false)]
+    [InlineData("party", true)]
+    [InlineData("tenant-case", false)]
+    [InlineData("party-case", false)]
+    [InlineData("tenant-null", false)]
+    [InlineData("party-null", false)]
+    [InlineData("tenant-blank", false)]
+    [InlineData("party-blank", false)]
+    [InlineData("pending", false)]
+    [InlineData("pending", true)]
+    [InlineData("failed", false)]
+    [InlineData("failed", true)]
+    [InlineData("unknown-status", false)]
+    [InlineData("null-versions", false)]
+    [InlineData("zero-version", false)]
+    [InlineData("negative-version", false)]
+    public async Task VerifyErasureAsync_InvalidCertificateFailsBeforeCleanup(string invalidField, bool noStores)
+    {
+        ErasureCertificate certificate = invalidField switch
+        {
+            "tenant" => CreateCertificate() with { TenantId = "other-tenant-secret" },
+            "party" => CreateCertificate() with { PartyId = "other-party-secret" },
+            "tenant-case" => CreateCertificate() with { TenantId = TenantId.ToUpperInvariant() },
+            "party-case" => CreateCertificate() with { PartyId = PartyId.ToUpperInvariant() },
+            "tenant-null" => CreateCertificate() with { TenantId = null! },
+            "party-null" => CreateCertificate() with { PartyId = null! },
+            "tenant-blank" => CreateCertificate() with { TenantId = " " },
+            "party-blank" => CreateCertificate() with { PartyId = " " },
+            "pending" => CreateCertificate() with { VerificationStatus = ErasureVerificationStatus.Pending },
+            "failed" => CreateCertificate() with { VerificationStatus = ErasureVerificationStatus.Failed },
+            "unknown-status" => CreateCertificate() with { VerificationStatus = (ErasureVerificationStatus)999 },
+            "null-versions" => CreateCertificate() with { KeyVersionsDestroyed = null! },
+            "zero-version" => CreateCertificate() with { KeyVersionsDestroyed = [1, 0] },
+            "negative-version" => CreateCertificate() with { KeyVersionsDestroyed = [-1, 1] },
+            _ => throw new ArgumentOutOfRangeException(nameof(invalidField)),
+        };
+        DateTimeOffset now = DateTimeOffset.UnixEpoch.AddYears(60);
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        clock.GetUtcNow().Returns(now);
+        bool cleanupCalled = false;
+        ErasureStoreCleanupDelegate cleanup = (_, _, _) =>
+        {
+            cleanupCalled = true;
+            throw new InvalidOperationException("Invalid evidence must not reach cleanup.");
+        };
+        var logger = new CapturingLogger<ErasureVerificationService>();
+        var service = new ErasureVerificationService(noStores ? [] : [cleanup], logger, clock);
+
+        ErasureVerificationReport report = await service.VerifyErasureAsync(
+            TenantId, PartyId, certificate, TestContext.Current.CancellationToken);
+
+        cleanupCalled.ShouldBeFalse();
+        report.TenantId.ShouldBe(TenantId);
+        report.PartyId.ShouldBe(PartyId);
+        report.Timestamp.ShouldBe(now);
+        report.OverallStatus.ShouldBe(ErasureVerificationOverallStatus.Failed);
+        ErasureVerificationStoreResult evidence = report.StoreResults.ShouldHaveSingleItem();
+        evidence.StoreName.ShouldBe("key-destruction");
+        evidence.Status.ShouldBe(ErasureStoreCleanupStatus.Failed);
+        evidence.Timestamp.ShouldBe(now);
+        evidence.ErrorMessage.ShouldBe("Key-destruction certificate is invalid for this erasure.");
+        string diagnostics = string.Join("\n", logger.Messages.Append(evidence.ErrorMessage));
+        diagnostics.ShouldNotContain(TenantId);
+        diagnostics.ShouldNotContain(PartyId);
+        diagnostics.ShouldNotContain("other-tenant-secret");
+        diagnostics.ShouldNotContain("other-party-secret");
+    }
+
+    [Theory]
+    [InlineData(true, null)]
+    [InlineData(true, "")]
+    [InlineData(true, " ")]
+    [InlineData(false, null)]
+    [InlineData(false, "")]
+    [InlineData(false, " ")]
+    public async Task VerifyErasureAsync_InvalidRequestedScopeThrowsBeforeCleanup(bool invalidTenant, string? invalidId)
+    {
+        bool cleanupCalled = false;
+        ErasureStoreCleanupDelegate cleanup = (_, _, _) =>
+        {
+            cleanupCalled = true;
+            throw new InvalidOperationException("Invalid scope must not reach cleanup.");
+        };
+        var service = CreateService([cleanup]);
+
+        ArgumentException exception = await Should.ThrowAsync<ArgumentException>(() => service.VerifyErasureAsync(
+            invalidTenant ? invalidId! : TenantId,
+            invalidTenant ? PartyId : invalidId!,
+            CreateCertificate(),
+            TestContext.Current.CancellationToken));
+
+        exception.ParamName.ShouldBe(invalidTenant ? "tenantId" : "partyId");
+        cleanupCalled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyErasureAsync_NullCertificateThrowsBeforeCleanup()
+    {
+        bool cleanupCalled = false;
+        ErasureStoreCleanupDelegate cleanup = (_, _, _) =>
+        {
+            cleanupCalled = true;
+            throw new InvalidOperationException("Missing evidence must not reach cleanup.");
+        };
+        var service = CreateService([cleanup]);
+
+        ArgumentNullException exception = await Should.ThrowAsync<ArgumentNullException>(() => service.VerifyErasureAsync(
+            TenantId, PartyId, null!, TestContext.Current.CancellationToken));
+
+        exception.ParamName.ShouldBe("erasureCertificate");
+        cleanupCalled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyErasureAsync_VerifiedEmptyVersionListAllowsIdempotentCleanup()
+    {
+        bool cleanupCalled = false;
+        ErasureStoreCleanupDelegate cleanup = (tenantId, partyId, token) =>
+        {
+            tenantId.ShouldBe(TenantId);
+            partyId.ShouldBe(PartyId);
+            token.ShouldBe(TestContext.Current.CancellationToken);
+            cleanupCalled = true;
+            return Task.FromResult(new ErasureVerificationStoreResult
+            {
+                StoreName = "detail-projection",
+                Status = ErasureStoreCleanupStatus.Cleaned,
+                Timestamp = DateTimeOffset.UnixEpoch,
+            });
+        };
+        var service = CreateService([cleanup]);
+
+        ErasureVerificationReport report = await service.VerifyErasureAsync(
+            TenantId, PartyId, CreateCertificate() with { KeyVersionsDestroyed = [] }, TestContext.Current.CancellationToken);
+
+        cleanupCalled.ShouldBeTrue();
+        report.OverallStatus.ShouldBe(ErasureVerificationOverallStatus.Complete);
+        report.StoreResults.ShouldHaveSingleItem().Status.ShouldBe(ErasureStoreCleanupStatus.Cleaned);
+    }
+
     [Fact]
     public async Task VerifyErasureAsync_UsesClockAfterCleanupAndPreservesStoreTimestamp()
     {
@@ -444,7 +587,7 @@ public class ErasureVerificationServiceTests
 
         var logger = new CapturingLogger<ErasureVerificationService>();
         var service = new ErasureVerificationService([corruptedStore, healthyStore], logger);
-        ErasureCertificate certificate = CreateCertificate();
+        ErasureCertificate certificate = CreateCertificate() with { TenantId = "tenant-secret", PartyId = "party-secret" };
 
         ErasureVerificationReport report = await service.VerifyErasureAsync(
             "tenant-secret", "party-secret", certificate, CancellationToken.None);
@@ -465,6 +608,32 @@ public class ErasureVerificationServiceTests
             !message.Contains("tenant-secret", StringComparison.Ordinal)
             && !message.Contains("party-secret", StringComparison.Ordinal)
             && !message.Contains("Ada Lovelace", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task VerifyErasureAsync_PreCanceledCallerCannotReceiveReportOrRunCleanup(bool noStores, bool invalidCertificate)
+    {
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        cancellation.Cancel();
+        bool cleanupCalled = false;
+        ErasureStoreCleanupDelegate cleanup = (_, _, _) =>
+        {
+            cleanupCalled = true;
+            throw new InvalidOperationException("Pre-canceled verification must not reach cleanup.");
+        };
+        var service = CreateService(noStores ? [] : [cleanup]);
+        ErasureCertificate certificate = invalidCertificate
+            ? CreateCertificate() with { VerificationStatus = ErasureVerificationStatus.Pending } : CreateCertificate();
+
+        OperationCanceledException exception = await Should.ThrowAsync<OperationCanceledException>(() => service.VerifyErasureAsync(
+            TenantId, PartyId, certificate, cancellation.Token));
+
+        exception.CancellationToken.ShouldBe(cancellation.Token);
+        cleanupCalled.ShouldBeFalse();
     }
 
     [Fact]
@@ -548,6 +717,6 @@ public class ErasureVerificationServiceTests
         TenantId = TenantId,
         Timestamp = DateTimeOffset.UtcNow,
         KeyVersionsDestroyed = [1],
-        VerificationStatus = ErasureVerificationStatus.Pending,
+        VerificationStatus = ErasureVerificationStatus.Verified,
     };
 }

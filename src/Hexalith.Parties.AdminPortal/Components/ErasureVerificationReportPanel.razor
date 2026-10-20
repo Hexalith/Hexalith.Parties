@@ -13,9 +13,9 @@ else
         {
             <dt>@Labels.GdprReportStatus</dt>
             <dd>@Status.Status</dd>
+            <dt>@Labels.GdprReportTimestamp</dt>
+            <dd>@FormatDate(Status.UpdatedAt)</dd>
         }
-        <dt>@Labels.GdprReportTimestamp</dt>
-        <dd>@FormatDate(Certificate.Timestamp)</dd>
         <dt>@Labels.GdprVerifiedAcrossProjections</dt>
         <dd>@FormatBoolean(IsVerified)</dd>
         <dt>@Labels.GdprKeyVersionCount</dt>
@@ -35,7 +35,7 @@ else
 
     private bool IsVerified
         => Certificate?.VerificationStatus == ErasureVerificationStatus.Verified
-            && Status?.Status is null or "Verified" or "Complete" or "Erased";
+            && Status?.Status is "Verified" or "Complete" or "Erased";
 
     private string VerificationMessage
         => IsVerified ? Labels.GdprVerificationConfirmed : Labels.GdprVerificationNeedsAttention;

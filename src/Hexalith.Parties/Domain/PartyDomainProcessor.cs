@@ -296,14 +296,8 @@ internal sealed partial class PartyDomainProcessor(
             .ConfigureAwait(false);
         await erasureRecordStore.SaveVerificationReportAsync(report, cancellationToken).ConfigureAwait(false);
 
-        ErasureVerificationStatus certificateStatus = report.OverallStatus == ErasureVerificationOverallStatus.Complete
-            ? ErasureVerificationStatus.Verified
-            : report.OverallStatus == ErasureVerificationOverallStatus.Pending
-                ? ErasureVerificationStatus.Pending
-                : ErasureVerificationStatus.Failed;
-        await erasureRecordStore
-            .SaveCertificateAsync(certificate with { Timestamp = report.Timestamp, VerificationStatus = certificateStatus }, cancellationToken)
-            .ConfigureAwait(false);
+        // The certificate attests key destruction and must remain unchanged. Cleanup
+        // outcomes and timestamps belong to the report and status records.
         if (report.OverallStatus != ErasureVerificationOverallStatus.Complete)
         {
             await erasureRecordStore

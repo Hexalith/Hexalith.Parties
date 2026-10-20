@@ -3,6 +3,8 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using Dapr.Client;
+
 using FluentValidation;
 
 using Hexalith.Commons.UniqueIds;
@@ -833,7 +835,7 @@ public sealed class PartyDomainProcessorValidationTests
             TenantId = "tenant-a",
             Timestamp = DateTimeOffset.Parse("2026-05-21T20:45:00Z"),
             KeyVersionsDestroyed = [1],
-            VerificationStatus = ErasureVerificationStatus.Failed,
+            VerificationStatus = ErasureVerificationStatus.Verified,
         };
         ErasureCertificate persistedCertificate = certificate;
         recordStore.GetCertificateAsync("tenant-a", partyId, Arg.Any<CancellationToken>())
@@ -872,14 +874,10 @@ public sealed class PartyDomainProcessorValidationTests
                 && report.OverallStatus == ErasureVerificationOverallStatus.Complete
                 && report.Timestamp == verificationAt),
             Arg.Any<CancellationToken>());
-        await recordStore.Received(1).SaveCertificateAsync(
-            Arg.Is<ErasureCertificate>(saved => saved != null
-                && saved.VerificationStatus == ErasureVerificationStatus.Verified
-                && saved.Timestamp == verificationAt),
-            Arg.Any<CancellationToken>());
+        await recordStore.DidNotReceiveWithAnyArgs().SaveCertificateAsync(default!, default);
         ErasureCertificate savedCertificate = (await recordStore.GetCertificateAsync(
             "tenant-a", partyId, TestContext.Current.CancellationToken)).ShouldNotBeNull();
-        savedCertificate.Timestamp.ShouldBe(verificationAt);
+        savedCertificate.Timestamp.ShouldBe(certificate.Timestamp);
         savedCertificate.VerificationStatus.ShouldBe(ErasureVerificationStatus.Verified);
         await recordStore.Received(1).SaveStatusAsync(
             Arg.Is<PartyErasureStatusRecord>(saved => saved != null && saved.Status == ErasureStatus.Verified.ToString() && saved.ErrorMessage == null),
@@ -901,7 +899,7 @@ public sealed class PartyDomainProcessorValidationTests
             TenantId = "tenant-a",
             Timestamp = DateTimeOffset.Parse("2026-05-21T20:45:00Z"),
             KeyVersionsDestroyed = [1],
-            VerificationStatus = ErasureVerificationStatus.Pending,
+            VerificationStatus = ErasureVerificationStatus.Verified,
         };
         recordStore.GetCertificateAsync("tenant-a", partyId, Arg.Any<CancellationToken>())
             .Returns(certificate);
@@ -933,13 +931,146 @@ public sealed class PartyDomainProcessorValidationTests
                 && report.StoreResults.Single().StoreName == "sdk-read-models"
                 && report.StoreResults.Single().Status == ErasureStoreCleanupStatus.Failed),
             Arg.Any<CancellationToken>());
-        await recordStore.Received(1).SaveCertificateAsync(
-            Arg.Is<ErasureCertificate>(saved => saved != null
-                && saved.VerificationStatus == ErasureVerificationStatus.Failed),
-            Arg.Any<CancellationToken>());
-        await recordStore.DidNotReceive().SaveCertificateAsync(
-            Arg.Is<ErasureCertificate>(saved => saved != null
-                && saved.VerificationStatus == ErasureVerificationStatus.Verified),
+        await recordStore.DidNotReceiveWithAnyArgs().SaveCertificateAsync(default!, default);
+    }
+
+    [Theory]
+    [InlineData(ErasureStoreCleanupStatus.Failed, false)]
+    [InlineData(ErasureStoreCleanupStatus.Pending, false)]
+    [InlineData(ErasureStoreCleanupStatus.Failed, true)]
+    public async Task ProcessAsync_RetryErasureVerification_PreservesPersistedKeyEvidenceUntilCleanupSucceeds(
+        ErasureStoreCleanupStatus incompleteStatus, bool mixedStores)
+    {
+        string partyId = UniqueIdHelper.GenerateSortableUniqueStringId();
+        using DaprClient daprClient = Substitute.For<DaprClient>();
+        Dictionary<string, string> persistedState = new(StringComparer.Ordinal);
+        ConfigureErasureRecordState<ErasureCertificate>(daprClient, persistedState);
+        ConfigureErasureRecordState<ErasureVerificationReport>(daprClient, persistedState);
+        ConfigureErasureRecordState<PartyErasureStatusRecord>(daprClient, persistedState);
+        var recordStore = new PartyErasureRecordStore(daprClient);
+        CancellationToken token = TestContext.Current.CancellationToken;
+        ErasureCertificate certificate = new()
+        {
+            PartyId = partyId,
+            TenantId = "tenant-a",
+            Timestamp = DateTimeOffset.UnixEpoch,
+            KeyVersionsDestroyed = [1, 2],
+            VerificationStatus = ErasureVerificationStatus.Verified,
+        };
+        await recordStore.SaveCertificateAsync(certificate, token);
+        string originalCertificate = persistedState[$"tenant-a:erasure:{partyId}"];
+        int attempts = 0;
+        DateTimeOffset verificationAt = certificate.Timestamp.AddMinutes(5);
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        clock.GetUtcNow().Returns(_ => verificationAt);
+        List<ErasureStoreCleanupDelegate> cleanups =
+            [
+                (tenant, party, cancellation) =>
+                {
+                    tenant.ShouldBe("tenant-a");
+                    party.ShouldBe(partyId);
+                    cancellation.ShouldBe(token);
+                    attempts++;
+                    return Task.FromResult(new ErasureVerificationStoreResult
+                    {
+                        StoreName = "sdk-read-models",
+                        Status = attempts == 1 ? incompleteStatus : ErasureStoreCleanupStatus.Cleaned,
+                        Timestamp = verificationAt,
+                    });
+                },
+            ];
+        if (mixedStores)
+        {
+            cleanups.Add((_, _, _) => Task.FromResult(new ErasureVerificationStoreResult
+            {
+                StoreName = "cache",
+                Status = ErasureStoreCleanupStatus.Cleaned,
+                Timestamp = verificationAt,
+            }));
+        }
+
+        var verification = new ErasureVerificationService(cleanups, NullLogger<ErasureVerificationService>.Instance, clock);
+        PartyDomainProcessor processor = CreateInvoker(
+            Substitute.For<IEventPayloadProtectionService>(), recordStore, CreateOrchestrator(verification));
+        PartyState state = PartyTestState(partyId, ErasureStatus.KeyDestroyed);
+        CommandEnvelope command = CreateCommand(new RetryErasureVerification { PartyId = partyId, TenantId = "tenant-a" });
+
+        DomainResult first = await processor.ProcessAsync(command, state, token);
+
+        first.Events.ShouldBeEmpty();
+        persistedState[$"tenant-a:erasure:{partyId}"].ShouldBe(originalCertificate);
+        ErasureVerificationReport incomplete = (await recordStore.GetVerificationReportAsync("tenant-a", partyId, token)).ShouldNotBeNull();
+        incomplete.OverallStatus.ShouldBe(mixedStores ? ErasureVerificationOverallStatus.Partial
+            : incompleteStatus == ErasureStoreCleanupStatus.Pending
+                ? ErasureVerificationOverallStatus.Pending : ErasureVerificationOverallStatus.Failed);
+        incomplete.Timestamp.ShouldBe(verificationAt);
+        PartyErasureStatusRecord pending = (await recordStore.GetStatusAsync("tenant-a", partyId, token)).ShouldNotBeNull();
+        pending.Status.ShouldBe(incomplete.OverallStatus.ToString());
+        pending.ErasedAt.ShouldBeNull();
+        pending.UpdatedAt.ShouldBe(verificationAt);
+        verificationAt = verificationAt.AddMinutes(5);
+
+        DomainResult retry = await processor.ProcessAsync(command, state, token);
+
+        attempts.ShouldBe(2);
+        retry.IsSuccess.ShouldBeTrue();
+        retry.Events.OfType<ErasureVerified>().ShouldHaveSingleItem().VerifiedAt.ShouldBe(verificationAt);
+        retry.Events.OfType<PartyErased>().ShouldHaveSingleItem().ErasedAt.ShouldBe(verificationAt);
+        persistedState[$"tenant-a:erasure:{partyId}"].ShouldBe(originalCertificate);
+        ErasureVerificationReport complete = (await recordStore.GetVerificationReportAsync("tenant-a", partyId, token)).ShouldNotBeNull();
+        complete.OverallStatus.ShouldBe(ErasureVerificationOverallStatus.Complete);
+        complete.Timestamp.ShouldBe(verificationAt);
+        complete.StoreResults.Count.ShouldBe(mixedStores ? 2 : 1);
+        complete.StoreResults.ShouldAllBe(store => store.Status == ErasureStoreCleanupStatus.Cleaned);
+        PartyErasureStatusRecord erased = (await recordStore.GetStatusAsync("tenant-a", partyId, token)).ShouldNotBeNull();
+        erased.Status.ShouldBe(nameof(ErasureStatus.Erased));
+        erased.UpdatedAt.ShouldBe(verificationAt);
+        erased.ErasedAt.ShouldBe(verificationAt);
+        erased.ErrorMessage.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("tenant")]
+    [InlineData("party")]
+    [InlineData("pending")]
+    [InlineData("failed")]
+    public async Task ProcessAsync_RetryErasureVerification_InvalidCertificateCannotCleanOrEmitErasure(string invalidField)
+    {
+        string partyId = UniqueIdHelper.GenerateSortableUniqueStringId();
+        ErasureCertificate certificate = new()
+        {
+            PartyId = invalidField == "party" ? "other-party" : partyId,
+            TenantId = invalidField == "tenant" ? "other-tenant" : "tenant-a",
+            Timestamp = DateTimeOffset.UnixEpoch,
+            KeyVersionsDestroyed = [1],
+            VerificationStatus = invalidField == "pending" ? ErasureVerificationStatus.Pending
+                : invalidField == "failed" ? ErasureVerificationStatus.Failed : ErasureVerificationStatus.Verified,
+        };
+        IPartyErasureRecordStore recordStore = Substitute.For<IPartyErasureRecordStore>();
+        recordStore.GetCertificateAsync("tenant-a", partyId, Arg.Any<CancellationToken>()).Returns(certificate);
+        bool cleanupCalled = false;
+        ErasureStoreCleanupDelegate cleanup = (_, _, _) =>
+        {
+            cleanupCalled = true;
+            throw new InvalidOperationException("Invalid certificate must not reach cleanup.");
+        };
+        var verification = new ErasureVerificationService([cleanup], NullLogger<ErasureVerificationService>.Instance);
+        PartyDomainProcessor processor = CreateInvoker(
+            Substitute.For<IEventPayloadProtectionService>(), recordStore, CreateOrchestrator(verification));
+        PartyState state = PartyTestState(partyId, ErasureStatus.KeyDestroyed);
+        CommandEnvelope command = CreateCommand(new RetryErasureVerification { PartyId = partyId, TenantId = "tenant-a" });
+
+        DomainResult result = await processor.ProcessAsync(command, state, TestContext.Current.CancellationToken);
+
+        cleanupCalled.ShouldBeFalse();
+        result.Events.ShouldBeEmpty();
+        await recordStore.DidNotReceiveWithAnyArgs().SaveCertificateAsync(default!, default);
+        await recordStore.Received(1).SaveVerificationReportAsync(
+            Arg.Is<ErasureVerificationReport>(report => report.TenantId == "tenant-a" && report.PartyId == partyId
+                && report.OverallStatus == ErasureVerificationOverallStatus.Failed), Arg.Any<CancellationToken>());
+        await recordStore.Received(1).SaveStatusAsync(
+            Arg.Is<PartyErasureStatusRecord>(status => status.TenantId == "tenant-a" && status.PartyId == partyId
+                && status.Status == nameof(ErasureVerificationOverallStatus.Failed) && status.ErasedAt == null),
             Arg.Any<CancellationToken>());
     }
 
@@ -966,6 +1097,19 @@ public sealed class PartyDomainProcessorValidationTests
         await recordStore.DidNotReceiveWithAnyArgs().SaveCertificateAsync(default!, default);
         await recordStore.DidNotReceiveWithAnyArgs().SaveVerificationReportAsync(default!, default);
         await verificationService.DidNotReceiveWithAnyArgs().VerifyErasureAsync(default!, default!, default!, default);
+    }
+
+    private static void ConfigureErasureRecordState<T>(DaprClient client, Dictionary<string, string> state)
+        where T : class
+    {
+        client.SaveStateAsync("statestore", Arg.Any<string>(), Arg.Any<T>(), cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                state[call.ArgAt<string>(1)] = JsonSerializer.Serialize(call.ArgAt<T>(2));
+                return Task.CompletedTask;
+            });
+        client.GetStateAsync<T>("statestore", Arg.Any<string>(), cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(call => state.TryGetValue(call.ArgAt<string>(1), out string? json) ? JsonSerializer.Deserialize<T>(json)! : null!);
     }
 
     [Theory]
