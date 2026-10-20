@@ -118,8 +118,18 @@ internal sealed class PartyMemoryIndexingService(
                     cancellationToken)
                 .ConfigureAwait(false);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException ex) when (cancellationToken.IsCancellationRequested)
         {
+            // Ingestion has already been acknowledged. Caller cancellation must not skip
+            // compensation, and recovery failure must not replace the original cancellation.
+            using var recovery = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await TryCompensatingDeleteAsync(
+                    unit,
+                    workflowInstanceId,
+                    ex.GetType().Name,
+                    recovery.Token,
+                    propagateCancellation: false)
+                .ConfigureAwait(false);
             throw;
         }
         catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
@@ -150,7 +160,8 @@ internal sealed class PartyMemoryIndexingService(
         PartyMemoryUnit unit,
         string workflowInstanceId,
         string originalFailureType,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool propagateCancellation = true)
     {
         try
         {
@@ -183,7 +194,7 @@ internal sealed class PartyMemoryIndexingService(
                 (int)response.StatusCode,
                 originalFailureType);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (propagateCancellation && cancellationToken.IsCancellationRequested)
         {
             throw;
         }

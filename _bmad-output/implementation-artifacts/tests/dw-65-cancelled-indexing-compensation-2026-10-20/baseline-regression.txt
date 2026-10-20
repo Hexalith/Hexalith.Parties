@@ -1,0 +1,102 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Tests
+  Discovered:  Hexalith.Parties.Tests
+  Starting:    Hexalith.Parties.Tests
+    Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(status: 202, body: "", accepted: True) [FAIL]
+      Shouldly.ShouldAssertException : deletes
+          should be
+      1
+          but was
+      0
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(199,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(208,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(208,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(status: 404, body: "{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}", accepted: True) [FAIL]
+      Shouldly.ShouldAssertException : deletes
+          should be
+      1
+          but was
+      0
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(199,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(208,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(208,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(status: 404, body: "", accepted: False) [FAIL]
+      Shouldly.ShouldAssertException : deletes
+          should be
+      1
+          but was
+      0
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(199,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(208,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(208,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(status: 404, body: "{\"code\":\"CASE_NOT_FOUND\"}", accepted: False) [FAIL]
+      Shouldly.ShouldAssertException : deletes
+          should be
+      1
+          but was
+      0
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(199,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(208,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(208,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+    Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(status: 503, body: "private-response", accepted: False) [FAIL]
+      Shouldly.ShouldAssertException : deletes
+          should be
+      1
+          but was
+      0
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(199,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(208,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexingCancellationTests.cs(208,0): at Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CompensationResponseNeverReplacesOriginalCancellation(Int32 status, String body, Boolean accepted)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+  Finished:    Hexalith.Parties.Tests (ID = '3203e2eac1e69d356617e4cae5fa3f440c852a12ac575ed4cb685ab408c9c2ba')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 5, Errors: 0, Failed: 5, Skipped: 0, Not Run: 0, Time: 0.306s

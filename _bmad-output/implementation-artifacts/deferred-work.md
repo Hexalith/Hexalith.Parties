@@ -509,7 +509,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: PartyMemoryIndexingService
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `PartyMemoryIndexingService` rethrows caller cancellation from `RecordMappingAsync` without deleting the already-created Memories unit, leaving an untracked unit outside erasure discovery. Also recorded in "Deferred from: bmad-build Story 8.6 review (2026-08-16)": `PartyMemoryIndexingService` propagates caller cancellation from the mapping write without deleting the already-created unit, leaving it outside later erasure discovery.
-status: open
+status: done 2026-10-20
+resolution: Caller cancellation after acknowledged Memories ingestion now awaits compensating DELETE under an independent five-second cooperative recovery token, then rethrows the original cancellation. Captured tenant/case/unit routing, response qualification, ordinary cancellation behavior and persisted mapping inventories are preserved. Final Debug/source build has zero warnings/errors; focused tests pass 61/61 and the complete affected service assembly passes 1933/1933 without failures/errors/skips. The baseline reproduces all five response regressions; exercised rollback passes 1920/1920 existing tests. All five independent review findings are patched and follow-up verified; no new deferred work. See spec-dw-65-cancelled-indexing-compensation.md and tests/dw-65-cancelled-indexing-compensation-2026-10-20/validation.json. Terminal deletion and durable reconciliation remain open as DW-168/DW-170; no complete-topology qualification is claimed.
 
 ### DW-66: Use ingestion-time identity for Memories compensating deletion
 

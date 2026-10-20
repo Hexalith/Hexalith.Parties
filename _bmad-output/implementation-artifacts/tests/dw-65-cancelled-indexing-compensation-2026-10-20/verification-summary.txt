@@ -1,0 +1,44 @@
+final-build
+  Hexalith.Parties.Tests -> {repo}/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:14.74
+
+final-focused
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Tests
+  Discovered:  Hexalith.Parties.Tests
+  Starting:    Hexalith.Parties.Tests
+  Finished:    Hexalith.Parties.Tests (ID = '3203e2eac1e69d356617e4cae5fa3f440c852a12ac575ed4cb685ab408c9c2ba')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 61, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 10.376s
+
+final-full
+{"EventId":0,"LogLevel":"Information","Category":"Microsoft.Hosting.Lifetime","Message":"Application is shutting down...","State":{"{OriginalFormat}":"Application is shutting down..."}}
+{"EventId":3,"LogLevel":"Debug","Category":"Microsoft.Extensions.Hosting.Internal.Host","Message":"Hosting stopping","State":{"{OriginalFormat}":"Hosting stopping"}}
+{"EventId":4,"LogLevel":"Debug","Category":"Microsoft.Extensions.Hosting.Internal.Host","Message":"Hosting stopped","State":{"{OriginalFormat}":"Hosting stopped"}}
+{"EventId":4,"LogLevel":"Debug","Category":"Microsoft.Extensions.Hosting.Internal.Host","Message":"Hosting stopped","State":{"{OriginalFormat}":"Hosting stopped"}}
+  Finished:    Hexalith.Parties.Tests (ID = '3203e2eac1e69d356617e4cae5fa3f440c852a12ac575ed4cb685ab408c9c2ba')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 1933, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 14.911s
+
+rollback-build
+  Hexalith.Parties.Tests -> {repo}/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:16.59
+
+rollback-full
+{"EventId":0,"LogLevel":"Information","Category":"Microsoft.Hosting.Lifetime","Message":"Application is shutting down...","State":{"{OriginalFormat}":"Application is shutting down..."}}
+{"EventId":3,"LogLevel":"Debug","Category":"Microsoft.Extensions.Hosting.Internal.Host","Message":"Hosting stopping","State":{"{OriginalFormat}":"Hosting stopping"}}
+{"EventId":4,"LogLevel":"Debug","Category":"Microsoft.Extensions.Hosting.Internal.Host","Message":"Hosting stopped","State":{"{OriginalFormat}":"Hosting stopped"}}
+{"EventId":4,"LogLevel":"Debug","Category":"Microsoft.Extensions.Hosting.Internal.Host","Message":"Hosting stopped","State":{"{OriginalFormat}":"Hosting stopped"}}
+  Finished:    Hexalith.Parties.Tests (ID = '3203e2eac1e69d356617e4cae5fa3f440c852a12ac575ed4cb685ab408c9c2ba')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 1920, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 13.806s
