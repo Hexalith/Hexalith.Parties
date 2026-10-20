@@ -551,7 +551,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: scripts/validate-nuget-packages.py
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `scripts/validate-nuget-packages.py` performs case-sensitive package-ID checks even though NuGet identifiers are case-insensitive.
-status: open
+status: done 2026-10-20
+resolution: Forbidden dependency IDs and fragments are compared with casefold while preserving the policy vocabulary, substring matching and original diagnostic spelling. Eighteen executable cases cover 216 zipped-nuspec fixtures across four casings, direct/first/last-group layouts, allowed near matches and multi-ID diagnostics. Final Debug CI build has zero warnings/errors; 34 focused, 148 complete affected CI tests and 18 optimized-environment cases pass without failures/errors/skips/not-run. Three review verification gaps were corrected and independently checked with targeted mutations; no new deferred work. See spec-dw-70-case-insensitive-forbidden-packages.md and tests/dw-70-case-insensitive-forbidden-packages-2026-10-20/validation.json. Existing-build Parties baseline was healthy; complete Release package publication and fresh full-topology qualification remain separate CI gates.
 
 ### DW-71: Pin reusable CI and CodeQL workflows to immutable revisions
 

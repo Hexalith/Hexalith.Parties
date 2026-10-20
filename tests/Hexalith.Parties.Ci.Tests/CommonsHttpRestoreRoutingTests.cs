@@ -908,6 +908,106 @@ with tempfile.TemporaryDirectory() as temporary_root:
         standardOutput.ShouldContain("missing-group-contracts|rejected");
     }
 
+    [Theory]
+    [InlineData("Hexalith.Parties", true)]
+    [InlineData("Hexalith.Parties.AppHost", true)]
+    [InlineData("Hexalith.Parties.Mcp", true)]
+    [InlineData("Hexalith.Parties.UI", true)]
+    [InlineData("External.Tests.Helpers", true)]
+    [InlineData("External.Test.Helpers", true)]
+    [InlineData("External.Sample.Helpers", true)]
+    [InlineData("External.Samples.Helpers", true)]
+    [InlineData("External.AppHost.Helpers", true)]
+    [InlineData("External.TeStTools", true)]
+    [InlineData("External.SaMpLeTools", true)]
+    [InlineData("External.ApPhOsTTools", true)]
+    [InlineData("Hexalith.Parties;hExAlItH.pArTiEs.uI;ExTeRnAl.tEsT.sUpPoRt", true)]
+    [InlineData("Hexalith.Parties.Client", false)]
+    [InlineData("Hexalith.Parties.Security", false)]
+    [InlineData("Hexalith.Parties.McpClient", false)]
+    [InlineData("Hexalith.Parties.UITools", false)]
+    [InlineData("External.UnitTesting.Helpers", false)]
+    public void NuspecDependencyBoundariesIgnoreCaseAndPreserveDiagnostics(string dependencyIds, bool forbidden)
+    {
+        const string probe = """
+import importlib.util
+import sys
+import tempfile
+import zipfile
+from pathlib import Path
+from xml.etree import ElementTree
+
+scripts_directory = Path(sys.argv[1])
+sys.path.insert(0, str(scripts_directory))
+script_file = scripts_directory / "validate-nuget-packages.py"
+spec = importlib.util.spec_from_file_location("nuspec_boundaries_probe", script_file)
+if spec is None or spec.loader is None:
+    raise SystemExit(f"Could not load {script_file}")
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+
+dependency_ids = sys.argv[2]
+forbidden = sys.argv[3] == "True"
+variants = (dependency_ids, dependency_ids.lower(), dependency_ids.upper(), dependency_ids.swapcase())
+checked = 0
+with tempfile.TemporaryDirectory() as temporary_root:
+    package_path = Path(temporary_root) / "Hexalith.Parties.Client.1.2.3.nupkg"
+    for candidate in variants:
+        for layout in ("direct", "first-group", "last-group"):
+            root = ElementTree.Element("package")
+            metadata_element = ElementTree.SubElement(root, "metadata")
+            for key, value in (("id", "Hexalith.Parties.Client"), ("version", "1.2.3"), ("readme", "README.md")):
+                ElementTree.SubElement(metadata_element, key).text = value
+            dependencies = ElementTree.SubElement(metadata_element, "dependencies")
+            if layout != "direct":
+                first_group = ElementTree.SubElement(dependencies, "group", targetFramework="net9.0")
+                last_group = ElementTree.SubElement(dependencies, "group", targetFramework="net10.0")
+                dependencies, other_group = (
+                    (first_group, last_group) if layout == "first-group" else (last_group, first_group)
+                )
+                ElementTree.SubElement(other_group, "dependency", id="Hexalith.Parties.Contracts", version="1.2.3")
+            original_ids = candidate.split(";")
+            for original_id in original_ids:
+                ElementTree.SubElement(dependencies, "dependency", id=original_id, version="1.2.3")
+            with zipfile.ZipFile(package_path, "w") as package:
+                package.writestr("Hexalith.Parties.Client.nuspec", ElementTree.tostring(root))
+                package.writestr("README.md", "readme")
+
+            metadata = module.get_metadata(package_path)
+            try:
+                module.validate_dependency_boundaries(package_path, metadata)
+            except ValueError as error:
+                if not forbidden:
+                    raise SystemExit(f"Allowed dependency {candidate!r} was rejected: {error}")
+                message = str(error)
+                if (
+                    "dependency boundary" not in message
+                    or any(repr(original_id) not in message for original_id in original_ids)
+                    or package_path.name not in message
+                ):
+                    raise SystemExit(f"Forbidden dependency diagnostic lost original identity: {message}")
+            else:
+                if forbidden:
+                    raise SystemExit(f"Forbidden dependency {candidate!r} was accepted (layout={layout})")
+            checked += 1
+if checked != 12:
+    raise SystemExit(f"Expected twelve package fixtures, checked {checked}")
+print(f"boundaries|checked={checked}")
+""";
+
+        (int exitCode, string standardOutput, string standardError) = RunPython(
+            "-E",
+            "-c",
+            probe,
+            CiTestPaths.RepoFile("scripts"),
+            dependencyIds,
+            forbidden.ToString());
+
+        exitCode.ShouldBe(0, standardError);
+        standardOutput.ShouldContain("boundaries|checked=12");
+    }
+
     [Fact]
     public void SupportPackingRequiresExactProducedPackageMetadata()
     {

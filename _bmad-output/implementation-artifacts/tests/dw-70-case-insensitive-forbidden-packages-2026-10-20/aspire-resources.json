@@ -1,0 +1,75 @@
+[
+  {
+    "name": "eventstore-admin-dapr-cli-pyvpvzff",
+    "resourceType": "Executable",
+    "state": "Running",
+    "healthStatus": "Healthy"
+  },
+  {
+    "name": "eventstore-admin-tzcqemmp",
+    "resourceType": "Project",
+    "state": "Finished"
+  },
+  {
+    "name": "eventstore-admin-ui-dapr-cli-jrdwjxkj",
+    "resourceType": "Executable",
+    "state": "Running",
+    "healthStatus": "Healthy"
+  },
+  {
+    "name": "eventstore-admin-ui-vxpydphp",
+    "resourceType": "Project",
+    "state": "NotStarted"
+  },
+  {
+    "name": "eventstore-dapr-cli-pqcnmudj",
+    "resourceType": "Executable",
+    "state": "Running",
+    "healthStatus": "Healthy"
+  },
+  {
+    "name": "eventstore-jezdqbdy",
+    "resourceType": "Project",
+    "state": "Finished"
+  },
+  {
+    "name": "parties-dapr-cli-scrrvvwq",
+    "resourceType": "Executable",
+    "state": "Running",
+    "healthStatus": "Healthy"
+  },
+  {
+    "name": "parties-mcp-vwxvdegu",
+    "resourceType": "Project",
+    "state": "NotStarted"
+  },
+  {
+    "name": "parties-ui-rhesckwq",
+    "resourceType": "Project",
+    "state": "Running",
+    "healthStatus": "Healthy"
+  },
+  {
+    "name": "parties-xaegamfx",
+    "resourceType": "Project",
+    "state": "Running",
+    "healthStatus": "Healthy"
+  },
+  {
+    "name": "security-pymwuxnq",
+    "resourceType": "Container",
+    "state": "Running",
+    "healthStatus": "Healthy"
+  },
+  {
+    "name": "tenants-dapr-cli-tfkbteee",
+    "resourceType": "Executable",
+    "state": "Running",
+    "healthStatus": "Healthy"
+  },
+  {
+    "name": "tenants-emrtpcqy",
+    "resourceType": "Project",
+    "state": "Finished"
+  }
+]

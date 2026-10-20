@@ -176,11 +176,13 @@ def get_metadata(package_path: Path) -> PackageMetadata:
 
 def validate_dependency_boundaries(package_path: Path, metadata: PackageMetadata) -> None:
     """Validate package dependency metadata against the intended package boundaries."""
+    forbidden_ids = {package_id.casefold() for package_id in FORBIDDEN_DEPENDENCY_IDS}
+    forbidden_fragments = tuple(fragment.casefold() for fragment in FORBIDDEN_DEPENDENCY_FRAGMENTS)
     forbidden_dependencies = sorted(
         dependency.package_id
         for dependency in metadata.dependencies
-        if dependency.package_id in FORBIDDEN_DEPENDENCY_IDS
-        or any(fragment in dependency.package_id for fragment in FORBIDDEN_DEPENDENCY_FRAGMENTS)
+        if dependency.package_id.casefold() in forbidden_ids
+        or any(fragment in dependency.package_id.casefold() for fragment in forbidden_fragments)
     )
     if forbidden_dependencies:
         raise ValueError(
