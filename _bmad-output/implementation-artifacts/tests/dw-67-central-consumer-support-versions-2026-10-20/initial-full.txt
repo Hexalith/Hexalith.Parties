@@ -1,0 +1,72 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Ci.Tests
+  Discovered:  Hexalith.Parties.Ci.Tests
+  Starting:    Hexalith.Parties.Ci.Tests
+    Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(project: "Hexalith.Parties.Contracts.Tests") [FAIL]
+      Shouldly.ShouldAssertException : File.Exists(assetsPath)
+          should be
+      True
+          but was
+      False
+
+      Additional Info:
+          CI must restore the configured solution before executing its verification lane.
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs(20,0): at Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(String project)
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+    Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(project: "Hexalith.Parties.Client.Tests") [FAIL]
+      Shouldly.ShouldAssertException : File.Exists(assetsPath)
+          should be
+      True
+          but was
+      False
+
+      Additional Info:
+          CI must restore the configured solution before executing its verification lane.
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs(20,0): at Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(String project)
+           at InvokeStub_SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(project: "Hexalith.Parties.AdminPortal.Tests") [FAIL]
+      Shouldly.ShouldAssertException : File.Exists(assetsPath)
+          should be
+      True
+          but was
+      False
+
+      Additional Info:
+          CI must restore the configured solution before executing its verification lane.
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs(20,0): at Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(String project)
+           at InvokeStub_SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(project: "Hexalith.Parties.ConsumerPortal.Tests") [FAIL]
+      Shouldly.ShouldAssertException : File.Exists(assetsPath)
+          should be
+      True
+          but was
+      False
+
+      Additional Info:
+          CI must restore the configured solution before executing its verification lane.
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs(20,0): at Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(String project)
+           at InvokeStub_SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(project: "Hexalith.Parties.UI.Tests") [FAIL]
+      Shouldly.ShouldAssertException : File.Exists(assetsPath)
+          should be
+      True
+          but was
+      False
+
+      Additional Info:
+          CI must restore the configured solution before executing its verification lane.
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs(20,0): at Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(String project)
+           at InvokeStub_SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Finished:    Hexalith.Parties.Ci.Tests (ID = '2e1d720a7326db56ca3b7efb965d81920d1d84c3a2caf8a75762b742603e0246')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Ci.Tests  Total: 128, Errors: 0, Failed: 5, Skipped: 0, Not Run: 0, Time: 6.180s

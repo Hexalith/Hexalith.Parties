@@ -1,0 +1,364 @@
+{
+  "work_item": "DW-67",
+  "baseline": "ba3b25bd7768c4865e522ed9b6e400f0af870196",
+  "baseline_reproduction": {
+    "baseline": "ba3b25bd7768c4865e522ed9b6e400f0af870196",
+    "expected_evaluated_versions": {
+      "Hexalith.FrontComposer": "4.6.0",
+      "Hexalith.Tenants": "5.8.0"
+    },
+    "obsolete_baseline_support_versions": [
+      {
+        "project": "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj",
+        "expected": "4.6.0",
+        "actual": "1.7.0"
+      },
+      {
+        "project": "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.csproj",
+        "expected": "4.6.0",
+        "actual": "1.7.0"
+      },
+      {
+        "project": "references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Hexalith.Tenants.Contracts.csproj",
+        "expected": "5.8.0",
+        "actual": "2.4.2"
+      },
+      {
+        "project": "references/Hexalith.Tenants/src/Hexalith.Tenants.Client/Hexalith.Tenants.Client.csproj",
+        "expected": "5.8.0",
+        "actual": "2.4.2"
+      }
+    ],
+    "result": "confirmed all four baseline support projects use obsolete versions"
+  },
+  "selected_sources_command": [
+    "git",
+    "ls-tree",
+    "HEAD",
+    "references/Hexalith.Builds",
+    "references/Hexalith.FrontComposer",
+    "references/Hexalith.Tenants"
+  ],
+  "selected_sources": [
+    "160000 commit 332b2c144defba546fe0a09626a4a72f2340e22f\treferences/Hexalith.Builds",
+    "160000 commit 1513fe3ed21a554eeee7a9d807f9b9e25fdb4cd2\treferences/Hexalith.FrontComposer",
+    "160000 commit c9feedb6656d70c7271e851c844ee29bdfb28c3e\treferences/Hexalith.Tenants"
+  ],
+  "checks": [
+    {
+      "label": "build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-m:1",
+        "-nr:false"
+      ],
+      "exit_code": 0,
+      "seconds": 7.623
+    },
+    {
+      "label": "focused",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests",
+        "-result-xml",
+        "/tmp/parties-dw67-validation/focused-final.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 8.377,
+      "test_counts": {
+        "total": "14",
+        "passed": "14",
+        "failed": "0",
+        "errors": "0",
+        "skipped": "0",
+        "not-run": "0"
+      }
+    },
+    {
+      "label": "full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-dw67-validation/full.xml"
+      ],
+      "exit_code": 1,
+      "seconds": 6.587,
+      "test_counts": {
+        "total": "128",
+        "passed": "123",
+        "failed": "5",
+        "errors": "0",
+        "skipped": "0",
+        "not-run": "0"
+      },
+      "explanation": "Five prerequisites were absent: consumer obj/project.assets.json. No changed test failed. Full run after solution restore passes."
+    }
+  ],
+  "prerequisite_restore": {
+    "command": [
+      "dotnet",
+      "restore",
+      "Hexalith.Parties.slnx",
+      "-p:Configuration=Debug",
+      "-m:1",
+      "-nr:false"
+    ],
+    "exit_code": 0,
+    "seconds": 4.753
+  },
+  "final_full_assembly": {
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+      "-result-xml",
+      "/tmp/parties-dw67-validation/full-after-restore.xml"
+    ],
+    "exit_code": 0,
+    "seconds": 6.662,
+    "test_counts": {
+      "total": "128",
+      "passed": "128",
+      "failed": "0",
+      "errors": "0",
+      "skipped": "0",
+      "not-run": "0"
+    }
+  },
+  "other_checks": [
+    {
+      "command": [
+        "python3",
+        "-m",
+        "py_compile",
+        "scripts/msbuild_properties.py",
+        "scripts/validate-consumer-package-references.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0,
+      "result": "no warning-override or nested-submodule regressions"
+    },
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "aspire_baseline": {
+    "start_command": [
+      "aspire",
+      "start",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--no-build",
+      "--format",
+      "Json",
+      "--non-interactive"
+    ],
+    "start_exit_code": 0,
+    "wait_command": [
+      "aspire",
+      "wait",
+      "parties",
+      "--timeout",
+      "20",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--non-interactive"
+    ],
+    "wait_exit_code": 0,
+    "wait_result": "parties healthy after 7.7 seconds",
+    "describe_command": [
+      "aspire",
+      "describe",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--format",
+      "Json",
+      "--non-interactive"
+    ],
+    "initial_resources": [
+      {
+        "displayName": "eventstore-admin-dapr-cli",
+        "state": "Waiting"
+      },
+      {
+        "displayName": "eventstore-admin",
+        "state": "Waiting"
+      },
+      {
+        "displayName": "eventstore-admin-ui-dapr-cli",
+        "state": "Waiting"
+      },
+      {
+        "displayName": "eventstore-admin-ui",
+        "state": "NotStarted"
+      },
+      {
+        "displayName": "eventstore-dapr-cli",
+        "state": "Waiting"
+      },
+      {
+        "displayName": "eventstore",
+        "state": "Waiting"
+      },
+      {
+        "displayName": "parties-dapr-cli",
+        "state": "Waiting"
+      },
+      {
+        "displayName": "parties-mcp",
+        "state": "NotStarted"
+      },
+      {
+        "displayName": "parties",
+        "state": "Waiting"
+      },
+      {
+        "displayName": "parties-ui",
+        "state": "Waiting"
+      },
+      {
+        "displayName": "security-eventstore-client-password",
+        "state": "Running",
+        "healthStatus": "Healthy"
+      },
+      {
+        "displayName": "security-eventstore-client-username",
+        "state": "Running",
+        "healthStatus": "Healthy"
+      },
+      {
+        "displayName": "security",
+        "state": "Running",
+        "healthStatus": "Unhealthy"
+      },
+      {
+        "displayName": "tenants-dapr-cli",
+        "state": "Waiting"
+      },
+      {
+        "displayName": "tenants",
+        "state": "Waiting"
+      }
+    ],
+    "stop_command": [
+      "aspire",
+      "stop",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--non-interactive"
+    ],
+    "stop_exit_code": 0,
+    "limitation": "Pre-existing built AppHost baseline; does not establish fresh full-topology qualification. Raw authenticated endpoints and environment values are deliberately excluded."
+  },
+  "commitlint": {
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/parties-dw67-validation/commit-message.txt",
+      "--verbose"
+    ],
+    "exit_code": 0,
+    "message": "fix: resolve central consumer support versions\n",
+    "lockfile_version": "21.2.2",
+    "installed_version": "21.2.2"
+  },
+  "review": {
+    "reviewer": "independent context-free blind review at the session model level",
+    "findings": 5,
+    "patched": 3,
+    "deferred_preexisting": 2,
+    "followup": "All three corrections independently verified; no concrete remaining correction defect. Artifact probe passes all 20 new-family rejection cases."
+  },
+  "source_sha256": {
+    "scripts/msbuild_properties.py": "988d9241f276c2dd80fd7d5dba7df7dfbf0af01ef4c1e021d79d70eaaf83528e",
+    "scripts/validate-consumer-package-references.py": "5028645f650060e05f4a95bbe72ad39ac30b89c4636faada0dedc9fbce1d4a23",
+    "tests/Hexalith.Parties.Ci.Tests/CommonsHttpRestoreRoutingTests.cs": "2f49ec47c449ee544a0e785f8f63ce09dd3bd6c1fcd13d7651fea2bc1751a920"
+  },
+  "limits": [
+    "Support packing is exercised through subprocess command capture and real synthetic nupkg/nuspec files; actual Release package packing/isolated consumer restore/build was not executed locally. Existing CI retains that gate.",
+    "No dependency versions, gitlinks, public contracts or runtime code changed."
+  ],
+  "post_review_checks": [
+    {
+      "label": "review-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-m:1",
+        "-nr:false"
+      ],
+      "exit_code": 0,
+      "seconds": 9.096,
+      "retained_log": "build.txt"
+    },
+    {
+      "label": "review-focused",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests",
+        "-result-xml",
+        "/tmp/parties-dw67-validation/review-focused.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 5.461,
+      "test_counts": {
+        "total": "14",
+        "passed": "14",
+        "failed": "0",
+        "errors": "0",
+        "skipped": "0",
+        "not-run": "0"
+      },
+      "retained_log": "focused.txt"
+    },
+    {
+      "label": "review-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-dw67-validation/review-full.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 4.74,
+      "test_counts": {
+        "total": "128",
+        "passed": "128",
+        "failed": "0",
+        "errors": "0",
+        "skipped": "0",
+        "not-run": "0"
+      },
+      "retained_log": "full.txt"
+    }
+  ],
+  "result": "DW-67 complete: final Debug build 0 warnings/errors; 14 focused and 128 full affected tests pass with no failures/errors/skips/not-run; three review corrections verified, two existing hardening items deferred."
+}

@@ -124,21 +124,23 @@ public sealed class CommonsHttpRestoreRoutingTests
     [Fact]
     public void MsbuildPropertyResolverReturnsCurrentCentralVersion()
     {
-        (_, string centralVersion) = ReadCentralCommonsHttpPackageVersion();
-        (_, string eventStoreVersion) = ReadCentralPackageVersion(EventStoreContractsPackageId);
-        (int commonsExitCode, string commonsOutput, string commonsError) = RunPython(
-            "scripts/msbuild_properties.py",
-            "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
-            "HexalithCommonsVersion");
-        (int eventStoreExitCode, string eventStoreOutput, string eventStoreError) = RunPython(
-            "scripts/msbuild_properties.py",
-            "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
-            "HexalithEventStoreVersion");
+        foreach (string packageId in new[]
+        {
+            PackageId,
+            EventStoreContractsPackageId,
+            "Hexalith.FrontComposer.Contracts",
+            "Hexalith.Tenants.Contracts",
+        })
+        {
+            (string alias, string centralVersion) = ReadCentralPackageVersion(packageId);
+            (int exitCode, string output, string error) = RunPython(
+                "scripts/msbuild_properties.py",
+                "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj",
+                alias[2..^1]);
 
-        commonsExitCode.ShouldBe(0, commonsError);
-        commonsOutput.Trim().ShouldBe(centralVersion);
-        eventStoreExitCode.ShouldBe(0, eventStoreError);
-        eventStoreOutput.Trim().ShouldBe(eventStoreVersion);
+            exitCode.ShouldBe(0, error);
+            output.Trim().ShouldBe(centralVersion);
+        }
     }
 
     [Fact]
@@ -242,33 +244,53 @@ for label, failure in failures:
     [Fact]
     public void MsbuildPropertyResolverTracksCentralVersionChanges()
     {
-        string temporaryDirectory = Path.Combine(Path.GetTempPath(), $"parties-msbuild-property-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(temporaryDirectory);
-        try
-        {
-            string projectFile = Path.Combine(temporaryDirectory, "VersionProbe.proj");
-            File.WriteAllText(
-                projectFile,
-                """
-<Project>
-  <PropertyGroup>
-    <HexalithCommonsVersion>9.8.7</HexalithCommonsVersion>
-  </PropertyGroup>
-</Project>
-""");
+        const string probe = """
+import sys
+import tempfile
+from pathlib import Path
 
-            (int exitCode, string standardOutput, string standardError) = RunPython(
-                "scripts/msbuild_properties.py",
-                projectFile,
-                "HexalithCommonsVersion");
+sys.path.insert(0, sys.argv[1])
+import msbuild_properties
 
-            exitCode.ShouldBe(0, standardError);
-            standardOutput.Trim().ShouldBe("9.8.7");
-        }
-        finally
-        {
-            Directory.Delete(temporaryDirectory, recursive: true);
-        }
+resolvers = (
+    ("HexalithCommonsVersion", msbuild_properties.resolve_hexalith_commons_version),
+    ("HexalithEventStoreVersion", msbuild_properties.resolve_hexalith_event_store_version),
+    ("HexalithFrontComposerVersion", msbuild_properties.resolve_hexalith_front_composer_version),
+    ("HexalithTenantsVersion", msbuild_properties.resolve_hexalith_tenants_version),
+)
+with tempfile.TemporaryDirectory() as temporary_root:
+    root = Path(temporary_root)
+    project_file = root / "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj"
+    project_file.parent.mkdir(parents=True)
+    project_file.write_text('<Project><Import Project="../../central.props" /></Project>', encoding="utf-8")
+    for generation, versions in enumerate((
+        ("9.8.7", "7.6.5", "6.5.4-preview.2", "5.4.3"),
+        ("9.8.8", "7.6.6", "6.5.5", "5.4.4-preview.1"),
+    )):
+        properties = "".join(
+            f"<{name} Condition=\"'$(Configuration)' == 'Release'\">{version}</{name}>"
+            for (name, _), version in zip(resolvers, versions)
+        )
+        (root / "central.props").write_text(
+            f"<Project><PropertyGroup>{properties}</PropertyGroup></Project>", encoding="utf-8"
+        )
+        selected = tuple(resolve(root) for _, resolve in resolvers)
+        if selected != versions:
+            raise SystemExit(f"Generation {generation} expected {versions!r}, found {selected!r}")
+        print(f"central-generation|{generation}|{'|'.join(selected)}")
+""";
+
+        // Eight bounded MSBuild evaluations run sequentially inside this probe.
+        int probeTimeoutMilliseconds = (8 * PythonProcessTimeoutMilliseconds) + PythonCaptureTimeoutMilliseconds;
+        (int exitCode, string standardOutput, string standardError) = RunPython(
+            probeTimeoutMilliseconds,
+            "-c",
+            probe,
+            CiTestPaths.RepoFile("scripts"));
+
+        exitCode.ShouldBe(0, standardError);
+        standardOutput.ShouldContain("central-generation|0|9.8.7|7.6.5|6.5.4-preview.2|5.4.3");
+        standardOutput.ShouldContain("central-generation|1|9.8.8|7.6.6|6.5.5|5.4.4-preview.1");
     }
 
     [Fact]
@@ -287,7 +309,7 @@ module = importlib.util.module_from_spec(spec)
 sys.path.insert(0, sys.argv[1])
 spec.loader.exec_module(module)
 
-for project, version in module.support_package_projects("9.8.7", "7.6.5"):
+for project, version in module.support_package_projects("9.8.7", "7.6.5", "6.5.4", "5.4.3"):
     if project in (
         "references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/Hexalith.Commons.Http.csproj",
         "references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/Hexalith.Commons.UniqueIds.csproj",
@@ -326,7 +348,7 @@ sys.path.insert(0, str(scripts_directory))
 sys.modules["consumer_solution_inventory_probe"] = module
 spec.loader.exec_module(module)
 
-for project, _ in module.support_package_projects("0.0.0", "0.0.0"):
+for project, _ in module.support_package_projects("0.0.0", "0.0.0", "0.0.0", "0.0.0"):
     print(project)
 """;
 
@@ -375,6 +397,7 @@ from unittest.mock import patch
 
 scripts_directory = Path(sys.argv[1])
 sys.path.insert(0, str(scripts_directory))
+import msbuild_properties
 
 def load_module(name, file_name):
     script_file = scripts_directory / file_name
@@ -391,6 +414,8 @@ validator = load_module("validate_nuget_main_probe", "validate-nuget-packages.py
 consumer = load_module("validate_consumer_main_probe", "validate-consumer-package-references.py")
 commons_version = "9.8.7"
 event_store_version = "7.6.5"
+front_composer_version = "6.5.4-preview.2"
+tenants_version = "5.4.3"
 
 with tempfile.TemporaryDirectory() as temporary_root:
     temporary_root = Path(temporary_root)
@@ -527,14 +552,27 @@ with tempfile.TemporaryDirectory() as temporary_root:
 
     captured_consumer_versions = []
     captured_consumer_validations = []
-    consumer.resolve_hexalith_commons_version = lambda repository_root: commons_version
-    consumer.resolve_hexalith_event_store_version = lambda repository_root: event_store_version
+    central_versions = {
+        "HexalithCommonsVersion": commons_version,
+        "HexalithEventStoreVersion": event_store_version,
+        "HexalithFrontComposerVersion": front_composer_version,
+        "HexalithTenantsVersion": tenants_version,
+    }
+    resolved_properties = []
+    def resolve_property(project_file, property_name, **kwargs):
+        if project_file != consumer.REPO_ROOT / "src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj":
+            raise SystemExit(f"Wrong version evaluation project: {project_file}")
+        if kwargs.get("working_directory") != consumer.REPO_ROOT:
+            raise SystemExit("Version evaluation did not use the repository root")
+        resolved_properties.append(property_name)
+        return central_versions[property_name]
+    msbuild_properties.resolve_msbuild_property = resolve_property
     consumer.package_versions = lambda package_directory: {
         package_id: "1.2.3" for package_id in consumer.PACKAGE_IDS
     }
 
-    def capture_support_pack(output_directory, captured_commons_version, captured_event_store_version):
-        captured_consumer_versions.append((captured_commons_version, captured_event_store_version))
+    def capture_support_pack(output_directory, *versions):
+        captured_consumer_versions.append(versions)
         output_directory.mkdir(parents=True)
         return output_directory
 
@@ -559,14 +597,39 @@ with tempfile.TemporaryDirectory() as temporary_root:
     ):
         if consumer.main() != 0:
             raise SystemExit("Consumer validator main did not succeed")
-    if captured_consumer_versions != [(commons_version, event_store_version)]:
+    if captured_consumer_versions != [(commons_version, event_store_version, front_composer_version, tenants_version)]:
         raise SystemExit(f"Consumer main propagated {captured_consumer_versions!r}")
+    if resolved_properties != list(central_versions):
+        raise SystemExit(f"Consumer main did not resolve every central property: {resolved_properties!r}")
     if captured_consumer_validations != [
         ("ClientConsumer.csproj", event_store_version, consumer.CLIENT_REQUIRED_EVENT_STORE_PACKAGE_IDS),
         ("PortalConsumer.csproj", event_store_version, consumer.PORTAL_REQUIRED_EVENT_STORE_PACKAGE_IDS),
     ]:
         raise SystemExit(f"Consumer asset validations were not wired correctly: {captured_consumer_validations!r}")
     print(f"consumer|{commons_version}|{event_store_version}")
+
+    for failed_property in ("HexalithFrontComposerVersion", "HexalithTenantsVersion"):
+        sentinel = temporary_root / "consumer-work" / "keep-on-resolution-failure.txt"
+        sentinel.write_text("existing workspace", encoding="utf-8")
+        def fail_resolution(project_file, property_name, **kwargs):
+            if property_name == failed_property:
+                raise msbuild_properties.MsbuildPropertyResolutionError(f"Unavailable {property_name}")
+            return resolve_property(project_file, property_name, **kwargs)
+        msbuild_properties.resolve_msbuild_property = fail_resolution
+        with patch.object(sys, "argv", [
+            "validate-consumer-package-references.py", str(consumer_packages),
+            "--work-directory", str(temporary_root / "consumer-work"),
+        ]):
+            try:
+                consumer.main()
+            except msbuild_properties.MsbuildPropertyResolutionError as error:
+                if failed_property not in str(error):
+                    raise
+            else:
+                raise SystemExit(f"Consumer continued after {failed_property} resolution failed")
+        if sentinel.read_text(encoding="utf-8") != "existing workspace" or len(captured_consumer_versions) != 1:
+            raise SystemExit("Consumer modified the workspace or packed after version resolution failed")
+        print(f"resolution-failure|{failed_property}|preserved-workspace")
 """;
 
         (int exitCode, string standardOutput, string standardError) = RunPython(
@@ -578,6 +641,8 @@ with tempfile.TemporaryDirectory() as temporary_root:
         standardOutput.ShouldContain("pack|9.8.7");
         standardOutput.ShouldContain("validator|9.8.7|7.6.5");
         standardOutput.ShouldContain("consumer|9.8.7|7.6.5");
+        standardOutput.ShouldContain("resolution-failure|HexalithFrontComposerVersion|preserved-workspace");
+        standardOutput.ShouldContain("resolution-failure|HexalithTenantsVersion|preserved-workspace");
     }
 
     [Fact]
@@ -736,17 +801,32 @@ spec.loader.exec_module(module)
 
 commons_version = "9.8.7"
 event_store_version = "7.6.5"
+front_composer_version = "6.5.4-preview.2"
+tenants_version = "5.4.3"
 mode = {"value": "exact"}
+fault_package = {"value": ""}
+expected_versions = {
+    "Hexalith.Commons.Http": commons_version,
+    "Hexalith.Commons.UniqueIds": commons_version,
+    "Hexalith.EventStore.Client": event_store_version,
+    "Hexalith.EventStore.Contracts": event_store_version,
+    "Hexalith.FrontComposer.Contracts": front_composer_version,
+    "Hexalith.FrontComposer.Shell": front_composer_version,
+    "Hexalith.Tenants.Client": tenants_version,
+    "Hexalith.Tenants.Contracts": tenants_version,
+}
+packed_projects = []
 
-def write_package(output_directory, package_id, file_version, metadata_version):
+def write_package(output_directory, package_id, file_version, metadata_version, metadata_id=None):
     package_path = output_directory / f"{package_id}.{file_version}.nupkg"
     nuspec = (
         "<package><metadata>"
-        f"<id>{package_id}</id><version>{metadata_version}</version>"
+        f"<id>{metadata_id or package_id}</id><version>{metadata_version}</version>"
         "</metadata></package>"
     )
     with zipfile.ZipFile(package_path, "w") as package:
         package.writestr(f"{package_id}.nuspec", nuspec)
+    return package_path
 
 def fake_pack(command, **kwargs):
     if command[:2] != ["dotnet", "pack"]:
@@ -760,12 +840,17 @@ def fake_pack(command, **kwargs):
         raise SystemExit(f"Support package packing must use Release, found {configuration!r}")
 
     project_name = Path(command[2]).stem
-    validated_package_ids = module.COMMONS_SUPPORT_PACKAGE_IDS | module.EVENT_STORE_SUPPORT_PACKAGE_IDS
-    if project_name not in validated_package_ids:
-        return subprocess.CompletedProcess(command, 0)
+    expected_version = expected_versions[project_name]
+    packed_projects.append(project_name)
+    for property_name in ("Version", "MinVerVersionOverride", "PackageVersion"):
+        expected_argument = f"-p:{property_name}={expected_version}"
+        if expected_argument not in command:
+            raise SystemExit(f"Incorrect {project_name} {property_name}: {command!r}")
     if mode["value"] == "missing-http" and project_name == "Hexalith.Commons.Http":
         return subprocess.CompletedProcess(command, 0)
     if mode["value"] == "missing-eventstore" and project_name == "Hexalith.EventStore.Contracts":
+        return subprocess.CompletedProcess(command, 0)
+    if mode["value"] == "missing-family-package" and project_name == fault_package["value"]:
         return subprocess.CompletedProcess(command, 0)
 
     output_directory = Path(command[command.index("--output") + 1])
@@ -779,20 +864,36 @@ def fake_pack(command, **kwargs):
         if mode["value"] == "wrong-uniqueids" and project_name == "Hexalith.Commons.UniqueIds"
         else "7.6.4"
         if mode["value"] == "wrong-eventstore" and project_name == "Hexalith.EventStore.Client"
+        else "0.0.1"
+        if mode["value"] == "wrong-family-package" and project_name == fault_package["value"]
         else requested_version
     )
-    write_package(output_directory, project_name, requested_version, metadata_version)
+    is_fault_target = project_name == fault_package["value"]
+    metadata_id = "Hexalith.Unexpected.Package" if is_fault_target and mode["value"] == "wrong-family-id" else project_name
+    package_path = write_package(output_directory, project_name, requested_version, metadata_version, metadata_id)
+    if is_fault_target and mode["value"] == "wrong-family-filename":
+        package_path.rename(package_path.with_suffix(".unexpected.nupkg"))
+    if is_fault_target and mode["value"] == "duplicate-family-package":
+        duplicate = write_package(output_directory, project_name, "duplicate", metadata_version)
+        if duplicate == package_path:
+            raise SystemExit("Duplicate fixture overwrote the original package")
     return subprocess.CompletedProcess(command, 0)
 
 with tempfile.TemporaryDirectory() as temporary_root:
     temporary_root = Path(temporary_root)
     with patch.object(module.subprocess, "run", side_effect=fake_pack):
-        module.pack_support_packages(temporary_root / "exact", commons_version, event_store_version)
+        module.pack_support_packages(
+            temporary_root / "exact", commons_version, event_store_version, front_composer_version, tenants_version
+        )
+        if sorted(packed_projects) != sorted(expected_versions):
+            raise SystemExit(f"Support packing omitted or duplicated projects: {packed_projects!r}")
         print("exact|accepted")
 
         mode["value"] = "wrong-uniqueids"
         try:
-            module.pack_support_packages(temporary_root / "wrong", commons_version, event_store_version)
+            module.pack_support_packages(
+                temporary_root / "wrong", commons_version, event_store_version, front_composer_version, tenants_version
+            )
         except ValueError as error:
             if "Hexalith.Commons.UniqueIds" not in str(error) or "metadata version 9.8.6" not in str(error):
                 raise
@@ -802,7 +903,9 @@ with tempfile.TemporaryDirectory() as temporary_root:
 
         mode["value"] = "missing-http"
         try:
-            module.pack_support_packages(temporary_root / "missing", commons_version, event_store_version)
+            module.pack_support_packages(
+                temporary_root / "missing", commons_version, event_store_version, front_composer_version, tenants_version
+            )
         except ValueError as error:
             if "Hexalith.Commons.Http" not in str(error) or "<none>" not in str(error):
                 raise
@@ -812,7 +915,9 @@ with tempfile.TemporaryDirectory() as temporary_root:
 
         mode["value"] = "wrong-eventstore"
         try:
-            module.pack_support_packages(temporary_root / "wrong-eventstore", commons_version, event_store_version)
+            module.pack_support_packages(
+                temporary_root / "wrong-eventstore", commons_version, event_store_version, front_composer_version, tenants_version
+            )
         except ValueError as error:
             if "Hexalith.EventStore.Client" not in str(error) or "metadata version 7.6.4" not in str(error):
                 raise
@@ -822,13 +927,42 @@ with tempfile.TemporaryDirectory() as temporary_root:
 
         mode["value"] = "missing-eventstore"
         try:
-            module.pack_support_packages(temporary_root / "missing-eventstore", commons_version, event_store_version)
+            module.pack_support_packages(
+                temporary_root / "missing-eventstore", commons_version, event_store_version, front_composer_version, tenants_version
+            )
         except ValueError as error:
             if "Hexalith.EventStore.Contracts" not in str(error) or "<none>" not in str(error):
                 raise
             print("missing-eventstore|rejected")
         else:
             raise SystemExit("Missing exact EventStore.Contracts package was accepted")
+
+        for package_id in (
+            "Hexalith.FrontComposer.Contracts", "Hexalith.FrontComposer.Shell",
+            "Hexalith.Tenants.Client", "Hexalith.Tenants.Contracts",
+        ):
+            fault_package["value"] = package_id
+            expected_details = {
+                "missing-family-package": "<none>",
+                "wrong-family-package": "metadata version 0.0.1",
+                "wrong-family-filename": ".unexpected.nupkg",
+                "wrong-family-id": "<none>",
+                "duplicate-family-package": ".duplicate.nupkg",
+            }
+            for failure_mode, expected_detail in expected_details.items():
+                mode["value"] = failure_mode
+                try:
+                    module.pack_support_packages(
+                        temporary_root / f"{package_id}-{failure_mode}",
+                        commons_version, event_store_version, front_composer_version, tenants_version,
+                    )
+                except ValueError as error:
+                    if (package_id not in str(error) or expected_versions[package_id] not in str(error)
+                            or expected_detail not in str(error)):
+                        raise
+                    print(f"{package_id}|{failure_mode}|rejected")
+                else:
+                    raise SystemExit(f"Invalid {package_id} support package was accepted: {failure_mode}")
 """;
 
         (int exitCode, string standardOutput, string standardError) = RunPython(
@@ -842,6 +976,20 @@ with tempfile.TemporaryDirectory() as temporary_root:
         standardOutput.ShouldContain("missing|rejected");
         standardOutput.ShouldContain("wrong-eventstore|rejected");
         standardOutput.ShouldContain("missing-eventstore|rejected");
+        foreach (string packageId in new[]
+        {
+            "Hexalith.FrontComposer.Contracts",
+            "Hexalith.FrontComposer.Shell",
+            "Hexalith.Tenants.Client",
+            "Hexalith.Tenants.Contracts",
+        })
+        {
+            standardOutput.ShouldContain($"{packageId}|missing-family-package|rejected");
+            standardOutput.ShouldContain($"{packageId}|wrong-family-package|rejected");
+            standardOutput.ShouldContain($"{packageId}|wrong-family-filename|rejected");
+            standardOutput.ShouldContain($"{packageId}|wrong-family-id|rejected");
+            standardOutput.ShouldContain($"{packageId}|duplicate-family-package|rejected");
+        }
     }
 
     [Fact]

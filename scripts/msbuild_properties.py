@@ -141,6 +141,26 @@ def resolve_hexalith_event_store_version(repository_root: Path = REPO_ROOT) -> s
     )
 
 
+def resolve_hexalith_front_composer_version(repository_root: Path = REPO_ROOT) -> str:
+    """Resolve the central Hexalith FrontComposer version used by package publication."""
+    project_file = repository_root / CENTRAL_VERSION_PROJECT.relative_to(REPO_ROOT)
+    return resolve_msbuild_property(
+        project_file,
+        "HexalithFrontComposerVersion",
+        working_directory=repository_root,
+    )
+
+
+def resolve_hexalith_tenants_version(repository_root: Path = REPO_ROOT) -> str:
+    """Resolve the central Hexalith Tenants version used by package publication."""
+    project_file = repository_root / CENTRAL_VERSION_PROJECT.relative_to(REPO_ROOT)
+    return resolve_msbuild_property(
+        project_file,
+        "HexalithTenantsVersion",
+        working_directory=repository_root,
+    )
+
+
 def main() -> int:
     """Resolve a requested property for command-line diagnostics and tests."""
     parser = argparse.ArgumentParser(description="Resolve an evaluated MSBuild property.")

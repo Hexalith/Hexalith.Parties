@@ -525,7 +525,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: scripts/validate-consumer-package-references.py
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `scripts/validate-consumer-package-references.py` hard-codes obsolete FrontComposer and Tenants versions instead of the currently evaluated dependency set.
-status: open
+status: done 2026-10-20
+
+resolution: FrontComposer and Tenants support packages now use evaluated central MSBuild versions instead of obsolete constants, with exact generated artifact validation. Final Debug CI build has zero warnings/errors; 14 focused and 128 full affected CI tests pass without failures/errors/skips/not-run. Three independent review corrections are patched and verified; two pre-existing shared-normalization/restore-graph limitations are recorded separately below. Package versions, gitlinks, public contracts and runtime code are unchanged. See spec-dw-67-central-consumer-support-versions.md and tests/dw-67-central-consumer-support-versions-2026-10-20/validation.json.
 
 ### DW-68: Contain consumer-validation package caches in the disposable workspace
 
@@ -1643,3 +1645,13 @@ resolution: Declared the existing named-enum wire policy on all six Parties comm
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-163-coordinated-unresolved-projection.md`
   summary: Complete legacy non-retained normal-batch compaction before a subsequent projection tail needs writable ETags.
   evidence: The baseline PartyDetailSdkProjectionHandler from 6b0641829b68d22656fb173eec6578c65e8e91f0, compiled against the actual 3.125.1 package graph, returns Indeterminate after an injected AfterCommit failure, AlreadyCompleted on original redelivery, then Retryable/projection_partial_retry for a subsequent supported tail while its committed envelopes remain uncompacted. Replaying the exact original SDK batch compacts them. This predates DW-163 and the approved fix preserves normal batching; do not repair it by retaining payload-bearing manifests without owner-supported erasure/recovery guarantees. Reproduction uses that tracked baseline handler with ReadModelBatchPhase.AfterCommit fault injection in the existing SDK fake.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-67-central-consumer-support-versions.md`
+  summary: Normalize NuGet versions consistently before validating support artifact filenames and nuspec versions.
+  severity: medium
+  evidence: The unchanged validate_support_packages helper rejects SDK-produced 6.5.4.0 and 6.5.4+build.9 packages: both filenames normalize to 6.5.4, while nuspec versions are respectively 6.5.4 and 6.5.4+build.9. Independent review reproduced both forms for FrontComposer.Contracts, Commons.Http and EventStore.Client, confirming a pre-existing shared-helper limitation. Current selected 4.6.0/5.8.0 versions do not trigger it; fix and cover all families together rather than changing established Commons/EventStore semantics inside DW-67.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-67-central-consumer-support-versions.md`
+  summary: Qualify restored FrontComposer and Tenants consumer versions against their evaluated central support versions.
+  severity: medium
+  evidence: validate_consumer calls only validate_event_store_assets after restore, so correct local FrontComposer/Tenants support artifacts do not prove those versions were selected if NuGet chooses a different transitive requirement. The same gap exists in the baseline; add restored-asset family checks and a synthetic selected-version mismatch regression separately. DW-67 checks the generated direct support artifacts and preserves the existing configured-feed transitive boundary.

@@ -17,6 +17,8 @@ from msbuild_properties import (
     MsbuildPropertyResolutionError,
     resolve_hexalith_commons_version,
     resolve_hexalith_event_store_version,
+    resolve_hexalith_front_composer_version,
+    resolve_hexalith_tenants_version,
 )
 
 
@@ -65,20 +67,43 @@ PORTAL_REQUIRED_EVENT_STORE_PACKAGE_IDS = frozenset(
     }
 )
 
-OTHER_SUPPORT_PACKAGE_PROJECTS = [
-    ("references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj", "1.7.0"),
-    ("references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.csproj", "1.7.0"),
-    ("references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Hexalith.Tenants.Contracts.csproj", "2.4.2"),
-    ("references/Hexalith.Tenants/src/Hexalith.Tenants.Client/Hexalith.Tenants.Client.csproj", "2.4.2"),
+# This inventory packs direct support dependencies; remaining transitive packages,
+# including FrontComposer.Contracts.UI, are restored from the configured feeds.
+FRONT_COMPOSER_SUPPORT_PACKAGE_PROJECTS = [
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj",
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Hexalith.FrontComposer.Shell.csproj",
 ]
+FRONT_COMPOSER_SUPPORT_PACKAGE_IDS = frozenset(
+    {
+        "Hexalith.FrontComposer.Contracts",
+        "Hexalith.FrontComposer.Shell",
+    }
+)
+
+TENANTS_SUPPORT_PACKAGE_PROJECTS = [
+    "references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Hexalith.Tenants.Contracts.csproj",
+    "references/Hexalith.Tenants/src/Hexalith.Tenants.Client/Hexalith.Tenants.Client.csproj",
+]
+TENANTS_SUPPORT_PACKAGE_IDS = frozenset(
+    {
+        "Hexalith.Tenants.Client",
+        "Hexalith.Tenants.Contracts",
+    }
+)
 
 
-def support_package_projects(commons_version: str, event_store_version: str) -> list[tuple[str, str]]:
+def support_package_projects(
+    commons_version: str,
+    event_store_version: str,
+    front_composer_version: str,
+    tenants_version: str,
+) -> list[tuple[str, str]]:
     """Return support projects with central package versions applied."""
     return [
         *((project, commons_version) for project in COMMONS_SUPPORT_PACKAGE_PROJECTS),
         *((project, event_store_version) for project in EVENT_STORE_SUPPORT_PACKAGE_PROJECTS),
-        *OTHER_SUPPORT_PACKAGE_PROJECTS,
+        *((project, front_composer_version) for project in FRONT_COMPOSER_SUPPORT_PACKAGE_PROJECTS),
+        *((project, tenants_version) for project in TENANTS_SUPPORT_PACKAGE_PROJECTS),
     ]
 
 
@@ -184,9 +209,13 @@ def pack_support_packages(
     output_directory: Path,
     commons_version: str,
     event_store_version: str,
+    front_composer_version: str,
+    tenants_version: str,
 ) -> Path:
     output_directory.mkdir(parents=True, exist_ok=True)
-    for project, version in support_package_projects(commons_version, event_store_version):
+    for project, version in support_package_projects(
+        commons_version, event_store_version, front_composer_version, tenants_version
+    ):
         project_path = REPO_ROOT / project
         if not project_path.exists():
             raise ValueError(f"Support package project not found: {project_path}")
@@ -213,6 +242,8 @@ def pack_support_packages(
 
     validate_commons_support_packages(output_directory, commons_version)
     validate_event_store_support_packages(output_directory, event_store_version)
+    validate_support_packages(output_directory, FRONT_COMPOSER_SUPPORT_PACKAGE_IDS, front_composer_version)
+    validate_support_packages(output_directory, TENANTS_SUPPORT_PACKAGE_IDS, tenants_version)
     return output_directory
 
 
@@ -393,6 +424,8 @@ def main() -> int:
 
     commons_version = resolve_hexalith_commons_version(REPO_ROOT)
     event_store_version = resolve_hexalith_event_store_version(REPO_ROOT)
+    front_composer_version = resolve_hexalith_front_composer_version(REPO_ROOT)
+    tenants_version = resolve_hexalith_tenants_version(REPO_ROOT)
     package_directory = args.package_directory.resolve()
     versions = package_versions(package_directory)
     version = versions["Hexalith.Parties.Contracts"]
@@ -405,6 +438,8 @@ def main() -> int:
         work_directory / "support-packages",
         commons_version,
         event_store_version,
+        front_composer_version,
+        tenants_version,
     )
     write_nuget_config(work_directory, [package_directory, support_feed], args.nuget_source)
 
