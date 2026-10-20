@@ -560,7 +560,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: .github/workflows/ci.yml and .github/workflows/codeql.yml
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `.github/workflows/ci.yml` and `.github/workflows/codeql.yml` invoke reusable workflows through mutable `@main` references.
-status: open
+status: done 2026-10-20
+resolution: Both reusable validation callers now pin Builds 332b2c144defba546fe0a09626a4a72f2340e22f, with exact remote workflow-blob verification and aligned update guidance. Final Debug/source build has zero warnings/errors; 48 focused workflow and 148 full CI tests pass without failures/errors/skips/not-run. Three independent review findings are patched and verified, including commented-reference rejection and selected-object checkout-divergence/missing-object probes; no new deferred work. Release execution pin and root gitlinks remain unchanged. See spec-dw-71-immutable-ci-workflows.md and tests/dw-71-immutable-ci-workflows-2026-10-20/validation.json.
 
 ### DW-72: Publish Aspire-hosted services with Production defaults
 

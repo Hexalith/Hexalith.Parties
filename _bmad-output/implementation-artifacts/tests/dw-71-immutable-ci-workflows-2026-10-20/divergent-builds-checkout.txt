@@ -1,0 +1,7 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Ci.Tests
+  Discovered:  Hexalith.Parties.Ci.Tests
+  Starting:    Hexalith.Parties.Ci.Tests
+  Finished:    Hexalith.Parties.Ci.Tests (ID = '05be468212abb7e14aa44688abacc6d1574977fed93c18118d7506e9dd99d446')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Ci.Tests  Total: 1, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.107s

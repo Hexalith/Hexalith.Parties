@@ -1,0 +1,29 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Ci.Tests
+  Discovered:  Hexalith.Parties.Ci.Tests
+  Starting:    Hexalith.Parties.Ci.Tests
+    Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.MainPushRunsCiAndCodeQlWhileReleaseRequiresManualDispatch [FAIL]
+      Shouldly.ShouldAssertException : workflow
+          should contain (case insensitive comparison)
+      "
+      jobs:
+        codeql:
+          uses: Hexalith/Hexalith.Builds/.github/workflows/codeql.yml@332b2c144defba546fe0a09626a4a72f2340e22f
+      "
+          but was actually
+      "name: CodeQL
+
+      on:
+        push:
+          branches: [main]
+        pull_request:
+          branches: [main]
+        schedule:
+          ..."
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs(310,0): at Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.MainPushRunsCiAndCodeQlWhileReleaseRequiresManualDispatch()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Finished:    Hexalith.Parties.Ci.Tests (ID = '05be468212abb7e14aa44688abacc6d1574977fed93c18118d7506e9dd99d446')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Ci.Tests  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 0.119s

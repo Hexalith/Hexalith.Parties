@@ -6,7 +6,9 @@ namespace Hexalith.Parties.Ci.Tests;
 public sealed class PartiesContainerPublishWorkflowTests
 {
     private const int ExpectedPackageCount = 9;
+    private const string BuildsValidationSha = "332b2c144defba546fe0a09626a4a72f2340e22f";
     private const string BuildsExecutionSha = "397c94a4e246c90b21cf408790fa0d55bf32d795";
+    private static readonly TimeSpan WorkflowReadTimeout = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan PublicationPreflightTimeout = TimeSpan.FromSeconds(10);
 
     [Theory]
@@ -45,7 +47,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     {
         string workflow = CiTestPaths.ReadRepoFile(".github/workflows/ci.yml");
 
-        workflow.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main");
+        workflow.ShouldContain($"Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@{BuildsValidationSha}");
         workflow.ShouldContain("solution: Hexalith.Parties.slnx");
         workflow.ShouldContain("test-platform: microsoft-testing-platform");
         workflow.ShouldContain("run-consumer-validation: true");
@@ -68,7 +70,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldContain("aspire-continue-on-error: false");
         workflow.ShouldNotContain("submodules: recursive");
 
-        string sharedWorkflow = CiTestPaths.ReadRepoFile("references/Hexalith.Builds/.github/workflows/domain-ci.yml");
+        string sharedWorkflow = ReadPinnedBuildsWorkflow("domain-ci.yml");
         sharedWorkflow.ShouldContain("default: 'vstest'");
         sharedWorkflow.ShouldContain("inputs.test-platform == 'microsoft-testing-platform'");
         sharedWorkflow.ShouldContain("--report-xunit-trx");
@@ -303,6 +305,9 @@ public sealed class PartiesContainerPublishWorkflowTests
             string workflow = CiTestPaths.ReadRepoFile(path).Replace("\r\n", "\n");
             string triggers = workflow[..workflow.IndexOf("\nconcurrency:", StringComparison.Ordinal)];
             triggers.ShouldContain("on:\n  push:\n    branches: [main]\n");
+            string sharedWorkflow = path == ".github/workflows/ci.yml" ? "domain-ci.yml" : "codeql.yml";
+            string job = path == ".github/workflows/ci.yml" ? "ci" : "codeql";
+            workflow.ShouldContain($"\njobs:\n  {job}:\n    uses: Hexalith/Hexalith.Builds/.github/workflows/{sharedWorkflow}@{BuildsValidationSha}\n");
         }
 
         string release = CiTestPaths.ReadRepoFile(".github/workflows/release.yml").Replace("\r\n", "\n");
@@ -544,7 +549,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         string ci = CiTestPaths.ReadRepoFile("docs/ci.md");
         string secrets = CiTestPaths.ReadRepoFile("docs/ci-secrets-checklist.md");
 
-        ci.ShouldContain("Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main");
+        ci.ShouldContain($"Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@{BuildsValidationSha}");
         ci.ShouldContain($"Hexalith/Hexalith.Builds/Github/prepare-domain-release@{BuildsExecutionSha}");
         ci.ShouldContain("workflow_dispatch");
         ci.ShouldContain("successful exact-source push run of `ci.yml`");
@@ -567,6 +572,37 @@ public sealed class PartiesContainerPublishWorkflowTests
         secrets.ShouldContain("HEXALITH_ZOT_API_KEY");
         secrets.ShouldContain("Zot API key");
         secrets.ShouldNotContain("ZOT_REGISTRY_PASSWORD");
+    }
+
+    /// <summary>
+    /// Reads the selected reusable workflow from its immutable Git object rather than the checkout.
+    /// </summary>
+    private static string ReadPinnedBuildsWorkflow(string workflow)
+    {
+        ProcessStartInfo start = new("git")
+        {
+            WorkingDirectory = CiTestPaths.RepoFile("references/Hexalith.Builds"),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        start.ArgumentList.Add("show");
+        start.ArgumentList.Add($"{BuildsValidationSha}:.github/workflows/{workflow}");
+        using Process process = new() { StartInfo = start };
+        process.Start().ShouldBeTrue("Could not read the selected Builds workflow Git object.");
+        Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
+        Task<string> errorTask = process.StandardError.ReadToEndAsync();
+        bool exited = process.WaitForExit((int)WorkflowReadTimeout.TotalMilliseconds);
+        if (!exited)
+        {
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit();
+        }
+
+        string error = errorTask.GetAwaiter().GetResult();
+        exited.ShouldBeTrue($"Reading the selected Builds workflow timed out: {error}");
+        process.ExitCode.ShouldBe(0, $"The Builds checkout must contain {BuildsValidationSha}: {error}");
+        return outputTask.GetAwaiter().GetResult();
     }
 
     private static void RequireManualReleaseTrigger(string workflow)

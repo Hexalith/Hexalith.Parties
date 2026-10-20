@@ -4,12 +4,28 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 
 ## Workflows
 
-- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@main`.
+- `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@332b2c144defba546fe0a09626a4a72f2340e22f`.
 - `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@397c94a4e246c90b21cf408790fa0d55bf32d795` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation for pull requests.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
-- `.github/workflows/codeql.yml` delegates C# CodeQL scanning.
+- `.github/workflows/codeql.yml` delegates C# CodeQL scanning to `Hexalith/Hexalith.Builds/.github/workflows/codeql.yml@332b2c144defba546fe0a09626a4a72f2340e22f`.
 - `.github/workflows/rc-gate.yml` remains Parties-specific and validates root gitlink release-candidate signoff.
+
+Both validation callers pin their reusable workflow definitions to the existing
+Builds source selection. For a revision update, inspect the selected workflow
+and caller inputs, then update the caller SHA, `BuildsValidationSha` in
+`tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs`, and the
+references in this document and `docs/architecture.md` together. The Builds
+checkout must contain the selected Git object: the compatibility check reads
+that immutable object, even when the checkout moves to another revision.
+These pins are independent of the release execution pin and do not pin every
+transitive action used by Builds. Validate an update with:
+
+```bash
+actionlint .github/workflows/ci.yml .github/workflows/codeql.yml
+dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
+dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests
+```
 
 ## CI
 

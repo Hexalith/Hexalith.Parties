@@ -1,0 +1,495 @@
+{
+  "work_item": "DW-71",
+  "baseline": "4d4be476687cff4210774ec62558131ff8659558",
+  "builds_validation_sha": "332b2c144defba546fe0a09626a4a72f2340e22f",
+  "checks": [
+    {
+      "label": "build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-m:1",
+        "-nr:false"
+      ],
+      "exit_code": 0,
+      "retained_log": "build.txt"
+    },
+    {
+      "label": "focused",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests",
+        "-result-xml",
+        "/tmp/parties-dw71-validation/focused.xml"
+      ],
+      "exit_code": 0,
+      "retained_log": "focused.txt",
+      "assemblies": [
+        {
+          "errors": "0",
+          "failed": "0",
+          "not-run": "0",
+          "passed": "48",
+          "skipped": "0",
+          "time": "0.272",
+          "total": "48"
+        }
+      ]
+    },
+    {
+      "label": "full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-dw71-validation/full.xml"
+      ],
+      "exit_code": 0,
+      "retained_log": "full.txt",
+      "assemblies": [
+        {
+          "errors": "0",
+          "failed": "0",
+          "not-run": "0",
+          "passed": "148",
+          "skipped": "0",
+          "time": "6.486",
+          "total": "148"
+        }
+      ]
+    },
+    {
+      "label": "actionlint",
+      "command": [
+        "actionlint",
+        ".github/workflows/ci.yml",
+        ".github/workflows/codeql.yml"
+      ],
+      "exit_code": 0,
+      "retained_log": "actionlint.txt"
+    },
+    {
+      "label": "warning-guard",
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0,
+      "retained_log": "warning-guard.txt"
+    },
+    {
+      "label": "whitespace",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "retained_log": "whitespace.txt"
+    }
+  ],
+  "selected_revision": {
+    "sha": "332b2c144defba546fe0a09626a4a72f2340e22f",
+    "commit_command": [
+      "gh",
+      "api",
+      "repos/Hexalith/Hexalith.Builds/commits/332b2c144defba546fe0a09626a4a72f2340e22f",
+      "--jq",
+      ".sha"
+    ],
+    "workflows": [
+      {
+        "path": ".github/workflows/domain-ci.yml",
+        "local_blob": "a2a1bf4ca1dbc72da6ab991995149e045c1dfad8",
+        "remote_blob": "a2a1bf4ca1dbc72da6ab991995149e045c1dfad8",
+        "remote_command": [
+          "gh",
+          "api",
+          "repos/Hexalith/Hexalith.Builds/contents/.github/workflows/domain-ci.yml?ref=332b2c144defba546fe0a09626a4a72f2340e22f",
+          "--jq",
+          ".sha"
+        ]
+      },
+      {
+        "path": ".github/workflows/codeql.yml",
+        "local_blob": "b1da105e418524dee9bb66e16d37cc7b21a5babe",
+        "remote_blob": "b1da105e418524dee9bb66e16d37cc7b21a5babe",
+        "remote_command": [
+          "gh",
+          "api",
+          "repos/Hexalith/Hexalith.Builds/contents/.github/workflows/codeql.yml?ref=332b2c144defba546fe0a09626a4a72f2340e22f",
+          "--jq",
+          ".sha"
+        ]
+      }
+    ],
+    "remote_commit_sha": "332b2c144defba546fe0a09626a4a72f2340e22f"
+  },
+  "commitlint": {
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/parties-dw71-validation/commit-message.txt",
+      "--verbose"
+    ],
+    "exit_code": 0,
+    "pinned_version": "21.2.2",
+    "installed_version": "21.2.2",
+    "message": "ci: pin reusable validation workflows\n"
+  },
+  "aspire_baseline": {
+    "commands": [
+      [
+        "aspire",
+        "start",
+        "--apphost",
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "--no-build",
+        "--format",
+        "Json",
+        "--non-interactive"
+      ],
+      [
+        "aspire",
+        "wait",
+        "parties",
+        "--timeout",
+        "20",
+        "--apphost",
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "--non-interactive"
+      ],
+      [
+        "aspire",
+        "describe",
+        "--apphost",
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "--format",
+        "Json",
+        "--non-interactive"
+      ],
+      [
+        "aspire",
+        "stop",
+        "--apphost",
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "--non-interactive"
+      ]
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "parties_wait": "Healthy after 3.4 seconds",
+    "limit": "Existing build output only; eventstore-admin-ui and parties-mcp were NotStarted. Fresh full-topology qualification is not claimed.",
+    "resources": [
+      {
+        "name": "eventstore-admin-dapr-cli-rmdeqhuc",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "eventstore-admin-ui-bfkmfecx",
+        "state": "NotStarted",
+        "health": null
+      },
+      {
+        "name": "eventstore-admin-ui-dapr-cli-fjqnuxmu",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "eventstore-admin-zdztkmjk",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "eventstore-dapr-cli-mqnytqaz",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "eventstore-wvxepzcx",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "parties-dapr-cli-vskhhfrz",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "parties-jyumzvka",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "parties-mcp-eyxtavqz",
+        "state": "NotStarted",
+        "health": null
+      },
+      {
+        "name": "parties-ui-ungvmdhn",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "security-awvcqyyy",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "security-eventstore-client-password",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "security-eventstore-client-username",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "tenants-dapr-cli-ymtuarts",
+        "state": "Running",
+        "health": "Healthy"
+      },
+      {
+        "name": "tenants-zemdyfhh",
+        "state": "Running",
+        "health": "Healthy"
+      }
+    ]
+  },
+  "source_sha256": {
+    ".github/workflows/ci.yml": "4354993b47949e4029b07b6d8717ed653cb8d2c529ce94568173ceae2a9003a7",
+    ".github/workflows/codeql.yml": "88f255bb454ff42f9ec10abd27c94767ad862e2cee9024318286fa0fb5d77149",
+    "tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs": "7e1fd1b4ee7974c8efc69abcef42b5a81ae52e8aed8aa5593fe7580c65cc021c",
+    "docs/ci.md": "74bd4ca82c49c829df6b26d2512136fd995b565e2e8d35fac1524452c964fa58",
+    "docs/architecture.md": "ddf990db0bb9be0ca1fe8fc64930670367105ec82e9587797ea86668a6bd2827"
+  },
+  "limits": [
+    "Pins the two reusable validation workflow definitions, not every upstream transitive action.",
+    "Release execution pin, package versions and root gitlinks unchanged.",
+    "Hosted GitHub Actions execution remains post-push validation; local verification covers syntax, exact remote workflow blobs and owned CI contracts."
+  ],
+  "caller_invariance": {
+    "comparison": "Each changed caller is byte-identical to baseline after replacing its single @main reference with the selected full SHA.",
+    "verified": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/codeql.yml"
+    ]
+  },
+  "post_review_checks": [
+    {
+      "label": "review-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-m:1",
+        "-nr:false"
+      ],
+      "exit_code": 0,
+      "retained_log": "review-build.txt",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "label": "review-focused",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests",
+        "-result-xml",
+        "/tmp/parties-dw71-validation/review-focused.xml"
+      ],
+      "exit_code": 0,
+      "retained_log": "review-focused.txt",
+      "counts": {
+        "errors": "0",
+        "failed": "0",
+        "not-run": "0",
+        "passed": "48",
+        "skipped": "0",
+        "total": "48"
+      }
+    },
+    {
+      "label": "review-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-dw71-validation/review-full.xml"
+      ],
+      "exit_code": 0,
+      "retained_log": "review-full.txt",
+      "counts": {
+        "errors": "0",
+        "failed": "0",
+        "not-run": "0",
+        "passed": "148",
+        "skipped": "0",
+        "total": "148"
+      }
+    },
+    {
+      "label": "review-actionlint",
+      "command": [
+        "actionlint",
+        ".github/workflows/ci.yml",
+        ".github/workflows/codeql.yml"
+      ],
+      "exit_code": 0,
+      "retained_log": "review-actionlint.txt"
+    },
+    {
+      "label": "review-whitespace",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "retained_log": "review-whitespace.txt"
+    }
+  ],
+  "review_probes": [
+    {
+      "label": "pin-baseline",
+      "command": [
+        "dotnet",
+        "/tmp/parties-dw71-probe-ehzdw8b4/tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-method",
+        "*MainPushRunsCiAndCodeQlWhileReleaseRequiresManualDispatch",
+        "-result-xml",
+        "/tmp/parties-dw71-validation/pin-baseline.xml"
+      ],
+      "exit_code": 0,
+      "expected": "pass",
+      "counts": {
+        "errors": "0",
+        "failed": "0",
+        "not-run": "0",
+        "passed": "1",
+        "skipped": "0",
+        "total": "1"
+      },
+      "retained_log": "pin-baseline.txt"
+    },
+    {
+      "label": "commented-pin-ci",
+      "command": [
+        "dotnet",
+        "/tmp/parties-dw71-probe-ehzdw8b4/tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-method",
+        "*MainPushRunsCiAndCodeQlWhileReleaseRequiresManualDispatch",
+        "-result-xml",
+        "/tmp/parties-dw71-validation/commented-pin-ci.xml"
+      ],
+      "exit_code": 1,
+      "expected": "fail",
+      "counts": {
+        "errors": "0",
+        "failed": "1",
+        "not-run": "0",
+        "passed": "0",
+        "skipped": "0",
+        "total": "1"
+      },
+      "retained_log": "commented-pin-ci.txt"
+    },
+    {
+      "label": "commented-pin-codeql",
+      "command": [
+        "dotnet",
+        "/tmp/parties-dw71-probe-ehzdw8b4/tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-method",
+        "*MainPushRunsCiAndCodeQlWhileReleaseRequiresManualDispatch",
+        "-result-xml",
+        "/tmp/parties-dw71-validation/commented-pin-codeql.xml"
+      ],
+      "exit_code": 1,
+      "expected": "fail",
+      "counts": {
+        "errors": "0",
+        "failed": "1",
+        "not-run": "0",
+        "passed": "0",
+        "skipped": "0",
+        "total": "1"
+      },
+      "retained_log": "commented-pin-codeql.txt"
+    },
+    {
+      "label": "divergent-builds-checkout",
+      "command": [
+        "dotnet",
+        "/tmp/parties-dw71-probe-ehzdw8b4/tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-method",
+        "*CiWorkflowDelegatesToSharedDomainCiWithPartiesTestLanes",
+        "-result-xml",
+        "/tmp/parties-dw71-validation/divergent-builds-checkout.xml"
+      ],
+      "exit_code": 0,
+      "expected": "pass",
+      "counts": {
+        "errors": "0",
+        "failed": "0",
+        "not-run": "0",
+        "passed": "1",
+        "skipped": "0",
+        "total": "1"
+      },
+      "retained_log": "divergent-builds-checkout.txt"
+    },
+    {
+      "label": "missing-pinned-object",
+      "command": [
+        "dotnet",
+        "/tmp/parties-dw71-probe-ehzdw8b4/tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-method",
+        "*CiWorkflowDelegatesToSharedDomainCiWithPartiesTestLanes",
+        "-result-xml",
+        "/tmp/parties-dw71-validation/missing-pinned-object.xml"
+      ],
+      "exit_code": 1,
+      "expected": "fail",
+      "counts": {
+        "errors": "0",
+        "failed": "1",
+        "not-run": "0",
+        "passed": "0",
+        "skipped": "0",
+        "total": "1"
+      },
+      "retained_log": "missing-pinned-object.txt"
+    }
+  ],
+  "review": {
+    "findings": 3,
+    "patched": 3,
+    "deferred": 0,
+    "followup": "Independent reviewer confirmed every correction and found no remaining introduced issue. Parent executed both commented-pin mutations, selected-object checkout-divergence and missing-object probes."
+  },
+  "result": "DW-71 complete: selected immutable CI/CodeQL workflow definitions confirmed against GitHub; final Debug build has zero warnings/errors, focused workflow tests pass 48/48 and the full affected CI assembly passes 148/148 without failures/errors/skips/not-run. All three review findings are patched and verified; no new deferred work.",
+  "retained_log_normalization": "Trailing whitespace removed and line endings normalized to CRLF in retained text logs; commands, exit codes and test outcomes preserved."
+}
