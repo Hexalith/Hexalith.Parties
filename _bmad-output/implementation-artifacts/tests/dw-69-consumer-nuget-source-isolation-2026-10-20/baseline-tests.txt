@@ -1,0 +1,46 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Ci.Tests
+  Discovered:  Hexalith.Parties.Ci.Tests
+  Starting:    Hexalith.Parties.Ci.Tests
+    Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.ConsumerSourcesUsePublicDefaultOnlyWithoutExplicitOverrides [FAIL]
+      Shouldly.ShouldAssertException : exitCode
+          should be
+      0
+          but was
+      1
+
+      Additional Info:
+          Traceback (most recent call last):
+        File "<string>", line 39, in <module>
+          assert [child.tag for child in sources] == ["clear", *(["add"] * (2 + len(expected)))], ElementTree.tostring(sources)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      AssertionError: b'<packageSources><add key="local-package-feed-1" value="/tmp/tmpd1b_6om8/packages &amp; artifacts" /><add key="local-package-feed-2" value="/tmp/tmpd1b_6om8/work-0/support-packages" /><add key="additional-source-1" value="https://api.nuget.org/v3/index.json" /></packageSources>'
+      Validated package-only consumers for Hexalith.Parties packages at version 1.0.0.
+
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/CommonsHttpRestoreRoutingTests.cs(701,0): at Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.ConsumerSourcesUsePublicDefaultOnlyWithoutExplicitOverrides()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+    Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.ConsumerRestoreCannotResolvePackagesFromUndeclaredInheritedFeed [FAIL]
+      Shouldly.ShouldAssertException : exitCode
+          should be
+      0
+          but was
+      1
+
+      Additional Info:
+          Traceback (most recent call last):
+        File "<string>", line 51, in <module>
+          assert explicit, "Undeclared inherited feed satisfied a missing consumer package"
+                 ^^^^^^^^
+      AssertionError: Undeclared inherited feed satisfied a missing consumer package
+        Determining projects to restore...
+        Restored /tmp/tmpvogxf7rs/isolated/consumer/Consumer.csproj (in 78 ms).
+
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/CommonsHttpRestoreRoutingTests.cs(773,0): at Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests.ConsumerRestoreCannotResolvePackagesFromUndeclaredInheritedFeed()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Finished:    Hexalith.Parties.Ci.Tests (ID = '2e1d720a7326db56ca3b7efb965d81920d1d84c3a2caf8a75762b742603e0246')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Ci.Tests  Total: 2, Errors: 0, Failed: 2, Skipped: 0, Not Run: 0, Time: 0.939s

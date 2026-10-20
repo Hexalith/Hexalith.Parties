@@ -54,6 +54,20 @@ The enabled job then prepares arm64 emulation and the shared container publisher
 
 The active NuGet trusted publishing policy has package owner `Hexalith`, creator account `jpiquot`, GitHub repository `Hexalith/Hexalith.Parties`, workflow filename `release.yml`, and environment `production`. Set `NUGET_USER=jpiquot` as a repository variable; the creator account is distinct from the package owner and GitHub actor. Authentication stays in the Parties job because NuGet matches the caller workflow identity; [NuGet/login issue 6](https://github.com/NuGet/login/issues/6) records the reusable-workflow limitation. No long-lived NuGet secret or fallback is used. Local policy JSON records registration and does not create a policy in NuGet.
 
+Consumer validation clears inherited NuGet package sources. By default it uses
+the local Parties and support-package feeds plus nuget.org. Supplying
+`--nuget-source SOURCE` replaces the nuget.org default; repeat the option for
+each desired source, including nuget.org if needed. Inherited `packageSources`
+entries are excluded. Other NuGet settings, including fallback package folders
+and disabled sources, still follow the normal configuration hierarchy.
+
+Explicit feeds are named `additional-source-1`, `additional-source-2`, and so
+on, in option order. Credentials stored under an inherited feed's original
+name are not reused. For a private feed, configure a credential provider or
+set `NuGetPackageSourceCredentials_additional-source-1` (adjust the number for
+later sources) to `Username=<user>;Password=<token>`, following
+[NuGet's authenticated-feed guidance](https://learn.microsoft.com/en-us/nuget/consume-packages/consuming-packages-authenticated-feeds).
+
 The publication preflight freezes the exact source, nine-package manifest, and complete three-container destination set. It rejects missing credentials, identity drift, or an existing package/container version before the first publication write; duplicate skipping is deliberately disabled.
 
 The release workflow does not apply runtime deployment manifests and does not publish EventStore, Tenants, Memories, Sample, Redis, or FalkorDB images. Runtime deployment orchestration is owned outside this repository and consumes immutable release tags from Zot.

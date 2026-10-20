@@ -542,7 +542,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: scripts/validate-consumer-package-references.py
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: The generated NuGet configuration lacks `<clear/>`, and the CLI always retains nuget.org, allowing undeclared user or machine feeds to hide incomplete local package output.
-status: open
+status: done 2026-10-20
+resolution: Generated consumer packageSources now clears inherited feeds, and explicit repeated --nuget-source values replace the nuget.org default while preserving both local feeds. Four CLI cases and a real offline NuGet restore cover exact source selection, inherited-feed rejection, explicit-feed success and XML escaping. Final Debug CI build has zero warnings/errors; 16 focused and 130 full affected CI tests pass without failures/errors/skips/not-run, including both new probes under PYTHONOPTIMIZE=1. Two introduced review findings are corrected and independently verified; inherited fallback-folder and disabled-source limits are documented and deferred separately. See spec-dw-69-consumer-nuget-source-isolation.md and tests/dw-69-consumer-nuget-source-isolation-2026-10-20/validation.json. Private-feed authentication binds to documented generated names; full Release consumer and fresh topology qualification remain separate gates.
 
 ### DW-70: Compare forbidden NuGet package IDs case-insensitively
 
@@ -1655,3 +1656,13 @@ resolution: Declared the existing named-enum wire policy on all six Parties comm
   summary: Qualify restored FrontComposer and Tenants consumer versions against their evaluated central support versions.
   severity: medium
   evidence: validate_consumer calls only validate_event_store_assets after restore, so correct local FrontComposer/Tenants support artifacts do not prove those versions were selected if NuGet chooses a different transitive requirement. The same gap exists in the baseline; add restored-asset family checks and a synthetic selected-version mismatch regression separately. DW-67 checks the generated direct support artifacts and preserves the existing configured-feed transitive boundary.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-69-consumer-nuget-source-isolation.md`
+  summary: Isolate consumer validation from inherited NuGet fallback package folders.
+  severity: medium
+  evidence: Independent review restored a synthetic package from an inherited fallbackPackageFolders cache despite generated packageSources containing only empty local feeds. This separate setting is unchanged from baseline; resetting packageSources does not reset fallback folders. The DW-69 documentation now limits its guarantee to packageSources. Add deliberate fallback isolation and a missing-package regression without weakening package-only Release consumer validation.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-69-consumer-nuget-source-isolation.md`
+  summary: Prevent inherited disabledPackageSources from suppressing explicitly selected consumer feeds.
+  severity: medium
+  evidence: An inherited disabledPackageSources entry for additional-source-1 suppresses an explicitly selected generated feed and makes a synthetic package restore fail with NU1101. Generated keys and inheritance predate DW-69. The documentation exposes the limitation; isolate/reset disabled-source settings and cover effective restored sources separately.

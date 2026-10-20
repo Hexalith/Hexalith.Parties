@@ -248,10 +248,11 @@ def pack_support_packages(
 
 
 def write_nuget_config(root: Path, package_directories: list[Path], additional_sources: list[str]) -> Path:
-    """Add the local package directory while preserving explicitly supplied package sources."""
+    """Use only the local feeds and selected sources, clearing inherited feeds."""
     config_file = root / "NuGet.Config"
     configuration = ElementTree.Element("configuration")
     package_sources = ElementTree.SubElement(configuration, "packageSources")
+    ElementTree.SubElement(package_sources, "clear")
     for index, package_directory in enumerate(package_directories, start=1):
         ElementTree.SubElement(
             package_sources,
@@ -417,8 +418,7 @@ def main() -> int:
     parser.add_argument(
         "--nuget-source",
         action="append",
-        default=["https://api.nuget.org/v3/index.json"],
-        help="Additional NuGet package source to add. May be supplied more than once.",
+        help="NuGet source to use alongside local feeds. Repeat for multiple sources; replaces the nuget.org default.",
     )
     args = parser.parse_args()
 
@@ -441,7 +441,8 @@ def main() -> int:
         front_composer_version,
         tenants_version,
     )
-    write_nuget_config(work_directory, [package_directory, support_feed], args.nuget_source)
+    sources = args.nuget_source if args.nuget_source is not None else ["https://api.nuget.org/v3/index.json"]
+    write_nuget_config(work_directory, [package_directory, support_feed], sources)
 
     validate_consumer(
         write_client_consumer(work_directory, version),

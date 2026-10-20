@@ -1,0 +1,297 @@
+{
+  "work_item": "DW-69",
+  "baseline": "a4924d3eda23a9a57ddf3e859161077806b14490",
+  "build": {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+      "-c",
+      "Debug",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-m:1",
+      "-nr:false"
+    ],
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0,
+    "retained_log": "baseline-build.txt"
+  },
+  "checks": [
+    {
+      "label": "baseline",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-method",
+        "*ConsumerSourcesUsePublicDefaultOnlyWithoutExplicitOverrides",
+        "-method",
+        "*ConsumerRestoreCannotResolvePackagesFromUndeclaredInheritedFeed",
+        "-result-xml",
+        "/tmp/parties-dw69-validation/baseline.xml"
+      ],
+      "exit_code": 1,
+      "counts": {
+        "total": "2",
+        "passed": "0",
+        "failed": "2",
+        "errors": "0",
+        "skipped": "0",
+        "not-run": "0"
+      },
+      "retained_log": "baseline-tests.txt"
+    },
+    {
+      "label": "focused-green",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests",
+        "-result-xml",
+        "/tmp/parties-dw69-validation/focused-green.xml"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "total": "16",
+        "passed": "16",
+        "failed": "0",
+        "errors": "0",
+        "skipped": "0",
+        "not-run": "0"
+      },
+      "retained_log": "focused-green.txt"
+    },
+    {
+      "label": "full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-dw69-validation/full.xml"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "total": "130",
+        "passed": "130",
+        "failed": "0",
+        "errors": "0",
+        "skipped": "0",
+        "not-run": "0"
+      },
+      "retained_log": "full.txt"
+    }
+  ],
+  "offline_restore_proof": {
+    "command": "Embedded Python probe in ConsumerRestoreCannotResolvePackagesFromUndeclaredInheritedFeed, run by the focused/full commands above",
+    "behavior": "Synthetic package on inherited parent feed is denied with NU1101; explicit selection restores exact package, with separate disposable caches and exact assets source sets",
+    "audit": "Disabled only for the offline synthetic test restore; production validation is unchanged"
+  },
+  "other_checks": [
+    {
+      "command": [
+        "python3",
+        "-m",
+        "py_compile",
+        "scripts/validate-consumer-package-references.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "aspire_baseline": {
+    "commands": [
+      [
+        "aspire",
+        "start",
+        "--apphost",
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "--no-build",
+        "--format",
+        "Json",
+        "--non-interactive"
+      ],
+      [
+        "aspire",
+        "wait",
+        "parties",
+        "--timeout",
+        "20",
+        "--apphost",
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "--non-interactive"
+      ],
+      [
+        "aspire",
+        "describe",
+        "--apphost",
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "--format",
+        "Json",
+        "--non-interactive"
+      ],
+      [
+        "aspire",
+        "stop",
+        "--apphost",
+        "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+        "--non-interactive"
+      ]
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "parties_wait": "Healthy after 5.7 seconds",
+    "initial_resources": "aspire-resources.json",
+    "limit": "Existing-build baseline only; security initially unhealthy and other resources waiting. Does not establish fresh full-topology qualification. Credentials and authenticated endpoints are excluded."
+  },
+  "commitlint": {
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/parties-dw69-validation/commit-message.txt",
+      "--verbose"
+    ],
+    "exit_code": 0,
+    "message": "fix: isolate consumer validation nuget sources\n",
+    "locked_version": "21.2.2",
+    "installed_version": "21.2.2"
+  },
+  "source_sha256": {
+    "scripts/validate-consumer-package-references.py": "7c0f54e2d11a2100e1784690bb8979161751dc0c8a1fc2ba76ea8621504ece44",
+    "tests/Hexalith.Parties.Ci.Tests/CommonsHttpRestoreRoutingTests.cs": "158e32c294dae91d2ed9487aaa31344c3ba656d4364d1e4f8e5507401461ed1f",
+    "docs/ci.md": "3d5374c3e85ca759db03c1b77f11567f85bb7c52fa5862bb76c754e24809d7ea"
+  },
+  "limits": [
+    "Real NuGet restore is qualified against local synthetic feeds; complete Release package-consumer smoke remains an existing CI gate.",
+    "No dependency version, gitlink, runtime, publication or user NuGet configuration changes.",
+    "Private-feed credentials must target additional-source-N or a credential provider, as documented in docs/ci.md.",
+    "Fallback folders and disabled sources are still inherited; they have separate deferred entries."
+  ],
+  "review": {
+    "findings": 4,
+    "patched": 2,
+    "deferred_preexisting": 2,
+    "followup": "Independent reviewer verified credential guidance and Python -E corrections; parent reproduced both pre-existing settings limits.",
+    "patches": [
+      "Document source-name-based authentication after inherited source removal.",
+      "Run new probe interpreters with -E to keep assertions enabled under PYTHONOPTIMIZE."
+    ],
+    "deferred": [
+      "Inherited fallbackPackageFolders can satisfy a package absent from selected packageSources.",
+      "Inherited disabledPackageSources can suppress an explicitly selected source."
+    ],
+    "reproduction_command": [
+      "python3",
+      "_bmad-output/implementation-artifacts/tests/dw-69-consumer-nuget-source-isolation-2026-10-20/review-limit-probes.py"
+    ],
+    "reproduction_exit_code": 0,
+    "reproduction_log": "review-limits.txt"
+  },
+  "post_review_checks": [
+    {
+      "label": "review-focused",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests",
+        "-result-xml",
+        "/tmp/parties-dw69-validation/review-focused.xml"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "total": "16",
+        "passed": "16",
+        "failed": "0",
+        "errors": "0",
+        "skipped": "0",
+        "not-run": "0"
+      },
+      "retained_log": "review-focused.txt"
+    },
+    {
+      "label": "optimized-python",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-method",
+        "*ConsumerSourcesUsePublicDefaultOnlyWithoutExplicitOverrides",
+        "-method",
+        "*ConsumerRestoreCannotResolvePackagesFromUndeclaredInheritedFeed",
+        "-result-xml",
+        "/tmp/parties-dw69-validation/optimized-python.xml"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "total": "2",
+        "passed": "2",
+        "failed": "0",
+        "errors": "0",
+        "skipped": "0",
+        "not-run": "0"
+      },
+      "retained_log": "optimized-python.txt",
+      "environment": {
+        "PYTHONOPTIMIZE": "1"
+      }
+    },
+    {
+      "label": "review-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-dw69-validation/review-full.xml"
+      ],
+      "exit_code": 0,
+      "counts": {
+        "total": "130",
+        "passed": "130",
+        "failed": "0",
+        "errors": "0",
+        "skipped": "0",
+        "not-run": "0"
+      },
+      "retained_log": "review-full.txt"
+    }
+  ],
+  "post_review_build": {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+      "-c",
+      "Debug",
+      "-p:UseHexalithProjectReferences=true",
+      "-p:UseNuGetDeps=false",
+      "-m:1",
+      "-nr:false"
+    ],
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0,
+    "retained_log": "review-build.txt"
+  },
+  "result": "DW-69 complete: final Debug build 0 warnings/errors; 16 focused, 2 optimized-environment probes and 130 full CI tests pass without failures/errors/skips/not-run. Two review corrections verified; two pre-existing settings limits deferred."
+}

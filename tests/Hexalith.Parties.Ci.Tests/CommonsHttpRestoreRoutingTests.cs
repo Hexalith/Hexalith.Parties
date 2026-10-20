@@ -646,6 +646,137 @@ with tempfile.TemporaryDirectory() as temporary_root:
     }
 
     [Fact]
+    public void ConsumerSourcesUsePublicDefaultOnlyWithoutExplicitOverrides()
+    {
+        const string script = """
+import importlib.util
+import sys
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
+from xml.etree import ElementTree
+
+scripts = Path(sys.argv[1])
+sys.path.insert(0, str(scripts))
+spec = importlib.util.spec_from_file_location("consumer_source_probe", scripts / "validate-consumer-package-references.py")
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+for name in ("commons", "event_store", "front_composer", "tenants"):
+    setattr(module, f"resolve_hexalith_{name}_version", lambda root: "1.0.0")
+module.package_versions = lambda directory: {package_id: "1.0.0" for package_id in module.PACKAGE_IDS}
+module.pack_support_packages = lambda output, *versions: output
+validated = []
+module.validate_consumer = lambda project, *args: validated.append(project.name)
+
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    packages = root / "packages & artifacts"
+    packages.mkdir()
+    custom = "https://feed.example/v3/index.json?one=1&two=2"
+    cases = [
+        ([], ["https://api.nuget.org/v3/index.json"]),
+        (["--nuget-source", custom], [custom]),
+        (["--nuget-source", custom, "--nuget-source", "https://second.example/v3/index.json"],
+         [custom, "https://second.example/v3/index.json"]),
+        (["--nuget-source", custom, "--nuget-source", "https://api.nuget.org/v3/index.json"],
+         [custom, "https://api.nuget.org/v3/index.json"]),
+    ]
+    for index, (arguments, expected) in enumerate(cases):
+        work = root / f"work-{index}"
+        with patch.object(sys, "argv", ["validator", str(packages), "--work-directory", str(work), *arguments]):
+            assert module.main() == 0
+        sources = ElementTree.parse(work / "NuGet.Config").getroot().find("packageSources")
+        assert sources is not None
+        assert [child.tag for child in sources] == ["clear", *(["add"] * (2 + len(expected)))], ElementTree.tostring(sources)
+        assert [child.attrib["value"] for child in sources.findall("add")] == [
+            str(packages.resolve()), str((work / "support-packages").resolve()), *expected
+        ]
+    assert validated == ["ClientConsumer.csproj", "PortalConsumer.csproj"] * len(cases), validated
+print("source-selection-cases=4")
+""";
+
+        // Keep probe assertions enabled even when the caller sets PYTHONOPTIMIZE.
+        (int exitCode, string standardOutput, string standardError) = RunPython(
+            "-E", "-c", script, CiTestPaths.RepoFile("scripts"));
+
+        exitCode.ShouldBe(0, standardError + standardOutput);
+        standardOutput.ShouldContain("source-selection-cases=4");
+    }
+
+    [Fact]
+    public void ConsumerRestoreCannotResolvePackagesFromUndeclaredInheritedFeed()
+    {
+        const string script = """"
+import importlib.util
+import json
+import subprocess
+import sys
+import tempfile
+import zipfile
+from pathlib import Path
+from xml.etree import ElementTree
+
+scripts = Path(sys.argv[1])
+sys.path.insert(0, str(scripts))
+spec = importlib.util.spec_from_file_location("consumer_restore_source_probe", scripts / "validate-consumer-package-references.py")
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    inherited = root / "undeclared-feed"
+    inherited.mkdir()
+    package_id = "DW69.InheritedOnly"
+    with zipfile.ZipFile(inherited / f"{package_id}.1.0.0.nupkg", "w") as package:
+        package.writestr(f"{package_id}.nuspec", f"""<package><metadata>
+<id>{package_id}</id><version>1.0.0</version><authors>Tests</authors>
+<description>Offline feed isolation probe</description></metadata></package>""")
+    configuration = ElementTree.Element("configuration")
+    sources = ElementTree.SubElement(configuration, "packageSources")
+    ElementTree.SubElement(sources, "clear")
+    ElementTree.SubElement(sources, "add", {"key": "undeclared-parent-feed", "value": str(inherited)})
+    ElementTree.ElementTree(configuration).write(root / "NuGet.Config", encoding="utf-8", xml_declaration=True)
+
+    for explicit in (False, True):
+        work = root / ("explicit" if explicit else "isolated")
+        work.mkdir()
+        feeds = [work / "local-packages", work / "support-packages"]
+        for feed in feeds:
+            feed.mkdir()
+        module.write_nuget_config(work, feeds, [str(inherited)] if explicit else [])
+        project_dir = work / "consumer"
+        project_dir.mkdir()
+        project = project_dir / "Consumer.csproj"
+        project.write_text(f"""<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>
+<TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup>
+<PackageReference Include="{package_id}" Version="[1.0.0]" />
+</ItemGroup></Project>""", encoding="utf-8")
+        try:
+            module.run_dotnet(["restore", str(project), "--verbosity", "minimal", "-p:NuGetAudit=false"], project_dir)
+        except subprocess.CalledProcessError:
+            if explicit:
+                raise
+        else:
+            assert explicit, "Undeclared inherited feed satisfied a missing consumer package"
+        assets = json.loads((project_dir / "obj" / "project.assets.json").read_text(encoding="utf-8"))
+        expected_sources = [str(feed.resolve()) for feed in feeds] + ([str(inherited)] if explicit else [])
+        assert set(assets["project"]["restore"]["sources"]) == set(expected_sources), assets["project"]["restore"]["sources"]
+        if explicit:
+            assert f"{package_id}/1.0.0" in assets["libraries"], assets["libraries"]
+        else:
+            assert any(entry.get("code") == "NU1101" for entry in assets.get("logs", [])), assets.get("logs")
+print("inherited-feed-denied-explicit-feed-restored")
+"""";
+
+        // Keep probe assertions enabled even when the caller sets PYTHONOPTIMIZE.
+        (int exitCode, string standardOutput, string standardError) = RunPython(
+            60_000, "-E", "-c", script, CiTestPaths.RepoFile("scripts"));
+
+        exitCode.ShouldBe(0, standardError + standardOutput);
+        standardOutput.ShouldContain("inherited-feed-denied-explicit-feed-restored");
+    }
+
+    [Fact]
     public void ConsumerAssetsRejectStaleSelectedEventStorePackage()
     {
         const string probe = """

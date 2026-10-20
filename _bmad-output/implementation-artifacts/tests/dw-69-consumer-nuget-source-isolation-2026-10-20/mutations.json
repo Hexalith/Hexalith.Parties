@@ -1,0 +1,17 @@
+[
+  {
+    "case": "control",
+    "exit_code": 0,
+    "result": "control passes"
+  },
+  {
+    "case": "missing-clear",
+    "exit_code": 1,
+    "result": "source configuration assertion detects regression"
+  },
+  {
+    "case": "public-source-always-retained",
+    "exit_code": 1,
+    "result": "source configuration assertion detects regression"
+  }
+]

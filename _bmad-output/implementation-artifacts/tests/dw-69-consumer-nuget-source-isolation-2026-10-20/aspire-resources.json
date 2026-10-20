@@ -1,0 +1,65 @@
+[
+  {
+    "displayName": "eventstore-admin-dapr-cli",
+    "state": "Waiting"
+  },
+  {
+    "displayName": "eventstore-admin",
+    "state": "Waiting"
+  },
+  {
+    "displayName": "eventstore-admin-ui-dapr-cli",
+    "state": "Waiting"
+  },
+  {
+    "displayName": "eventstore-admin-ui",
+    "state": "NotStarted"
+  },
+  {
+    "displayName": "eventstore-dapr-cli",
+    "state": "Waiting"
+  },
+  {
+    "displayName": "eventstore",
+    "state": "Waiting"
+  },
+  {
+    "displayName": "parties-dapr-cli",
+    "state": "Waiting"
+  },
+  {
+    "displayName": "parties-mcp",
+    "state": "NotStarted"
+  },
+  {
+    "displayName": "parties",
+    "state": "Waiting"
+  },
+  {
+    "displayName": "parties-ui",
+    "state": "Waiting"
+  },
+  {
+    "displayName": "security-eventstore-client-password",
+    "state": "Running",
+    "healthStatus": "Healthy"
+  },
+  {
+    "displayName": "security-eventstore-client-username",
+    "state": "Running",
+    "healthStatus": "Healthy"
+  },
+  {
+    "displayName": "security",
+    "state": "Running",
+    "healthStatus": "Unhealthy"
+  },
+  {
+    "displayName": "tenants-dapr-cli",
+    "state": "Waiting"
+  },
+  {
+    "displayName": "tenants",
+    "state": "Waiting"
+  }
+]
