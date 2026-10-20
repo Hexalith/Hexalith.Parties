@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -5,6 +6,8 @@ using System.Text.Json.Nodes;
 using FluentValidation;
 
 using Hexalith.Commons.UniqueIds;
+using Hexalith.McpCli.Abstractions;
+using Hexalith.Parties.Contracts;
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Identity;
@@ -1010,6 +1013,130 @@ public sealed class PartyDomainProcessorValidationTests
     }
 
     [Theory]
+    [InlineData(typeof(CreatePartyComposite))]
+    [InlineData(typeof(UpdatePartyComposite))]
+    [InlineData(typeof(ReactivateParty))]
+    [InlineData(typeof(DeactivateParty))]
+    public void DeclaredCommandExamplesPassProductionDeserializationAndRegisteredValidation(Type commandType)
+    {
+        ArgumentNullException.ThrowIfNull(commandType);
+        HexalithCommandAttribute declaration = commandType.GetCustomAttribute<HexalithCommandAttribute>().ShouldNotBeNull();
+        object payload = JsonSerializer.Deserialize(declaration.Example!, commandType, PartiesJsonOptions.Default).ShouldNotBeNull();
+        using ServiceProvider provider = new ServiceCollection()
+            .AddValidatorsFromAssemblyContaining<CreatePartyValidator>()
+            .BuildServiceProvider();
+        IValidator validator = (IValidator)provider.GetRequiredService(typeof(IValidator<>).MakeGenericType(commandType));
+        validator.Validate(new ValidationContext<object>(payload)).Errors.ShouldBeEmpty();
+
+        if (payload is CreatePartyComposite create)
+        {
+            create.ContactChannels.ShouldBeEmpty();
+            create.Identifiers.ShouldBeEmpty();
+        }
+        else if (payload is UpdatePartyComposite update)
+        {
+            update.AddContactChannels.ShouldBeEmpty();
+            update.UpdateContactChannels.ShouldBeEmpty();
+            update.RemoveContactChannelIds.ShouldBeEmpty();
+            update.AddIdentifiers.ShouldBeEmpty();
+            update.RemoveIdentifierIds.ShouldBeEmpty();
+        }
+    }
+
+    [Theory]
+    [InlineData("add-contact")]
+    [InlineData("remove-contact")]
+    [InlineData("add-identifier")]
+    public void CompositeUpdatesAcceptEachSupportedListAsTheOnlyChange(string member)
+    {
+        UpdatePartyComposite payload = member switch
+        {
+            "add-contact" => new()
+            {
+                PartyId = "p",
+                AddContactChannels = [new() { PartyId = "p", ContactChannelId = "c", Type = ContactChannelType.Email, Value = "a@b.test" }],
+            },
+            "remove-contact" => new() { PartyId = "p", RemoveContactChannelIds = ["c"] },
+            _ => new()
+            {
+                PartyId = "p",
+                AddIdentifiers = [new() { PartyId = "p", IdentifierId = "i", Type = IdentifierType.Other, Value = "v" }],
+            },
+        };
+
+        new UpdatePartyCompositeValidator().Validate(payload).Errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ProcessAsync_EmptyContactUpdateHasOnlyTheEntryFailureBeforeProtectedStateAccess()
+    {
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        UpdatePartyComposite payload = new()
+        {
+            PartyId = "p",
+            UpdateContactChannels = [new() { PartyId = "p", ContactChannelId = "c" }],
+        };
+        CommandEnvelope command = CreateCommand(payload);
+        DomainResult result = await CreateInvoker(protection).ProcessAsync(command,
+            CreateCurrentStateWithProtectedSnapshot(command), TestContext.Current.CancellationToken);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyCommandValidationRejected rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<PartyCommandValidationRejected>();
+        rejection.CommandType.ShouldBe(typeof(UpdatePartyComposite).FullName);
+        rejection.Failures.ShouldBe([new PartyValidationFailure
+        {
+            PropertyName = "UpdateContactChannels[0]",
+            ErrorCode = "CompositeEmptyContactUpdate",
+        }]);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+    }
+
+    [Theory]
+    [MemberData(nameof(NullGatewayComposites))]
+    public async Task ProcessAsync_NullCompositeCollectionsAndItemsHaveExactFailuresBeforeProtectedStateAccess(object payload, string propertyName, bool removalItem)
+    {
+        ArgumentNullException.ThrowIfNull(payload);
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        CommandEnvelope command = CreateRawCommand(payload.GetType().FullName!, JsonSerializer.SerializeToUtf8Bytes(payload, payload.GetType()), "p");
+        DomainResult result = await CreateInvoker(protection).ProcessAsync(command,
+            CreateCurrentStateWithProtectedSnapshot(command), TestContext.Current.CancellationToken);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyCommandValidationRejected rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<PartyCommandValidationRejected>();
+        rejection.CommandType.ShouldBe(payload.GetType().FullName);
+        List<PartyValidationFailure> expected = [new() { PropertyName = propertyName, ErrorCode = "NotNullValidator" }];
+        if (removalItem)
+        {
+            expected.Add(new() { PropertyName = propertyName, ErrorCode = "NotEmptyValidator" });
+        }
+
+        rejection.Failures.ShouldBe(expected);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+    }
+
+    public static IEnumerable<object[]> NullGatewayComposites()
+    {
+        CreatePartyComposite create = new() { PartyId = "p", Type = PartyType.Person, PersonDetails = new() { FirstName = "A", LastName = "B" } };
+        UpdatePartyComposite update = new() { PartyId = "p", PersonDetails = create.PersonDetails };
+        yield return [create with { ContactChannels = null! }, "ContactChannels", false];
+        yield return [create with { Identifiers = null! }, "Identifiers", false];
+        yield return [create with { ContactChannels = [null!] }, "ContactChannels[0]", false];
+        yield return [create with { Identifiers = [null!] }, "Identifiers[0]", false];
+        yield return [update with { AddContactChannels = null! }, "AddContactChannels", false];
+        yield return [update with { UpdateContactChannels = null! }, "UpdateContactChannels", false];
+        yield return [update with { RemoveContactChannelIds = null! }, "RemoveContactChannelIds", false];
+        yield return [update with { AddIdentifiers = null! }, "AddIdentifiers", false];
+        yield return [update with { RemoveIdentifierIds = null! }, "RemoveIdentifierIds", false];
+        yield return [update with { AddContactChannels = [null!] }, "AddContactChannels[0]", false];
+        yield return [update with { UpdateContactChannels = [null!] }, "UpdateContactChannels[0]", false];
+        yield return [update with { AddIdentifiers = [null!] }, "AddIdentifiers[0]", false];
+        yield return [update with { RemoveContactChannelIds = [null!] }, "RemoveContactChannelIds[0]", true];
+        yield return [update with { RemoveIdentifierIds = [null!] }, "RemoveIdentifierIds[0]", true];
+    }
+
+    [Theory]
     [InlineData("type")]
     [InlineData("value")]
     [InlineData("empty")]
@@ -1048,21 +1175,6 @@ public sealed class PartyDomainProcessorValidationTests
         yield return [create with { PersonDetails = create.PersonDetails! with { FirstName = new string(' ', 513) } }, "CompositeStringLength"];
         yield return [update with { OrganizationDetails = new() { LegalName = "private-value" + new string('x', 513) } }, "CompositeStringLength"];
         yield return [new UpdatePartyComposite { PartyId = "p" }, "CompositeEmptyUpdate"];
-        yield return [new UpdatePartyComposite { PartyId = "p", UpdateContactChannels = [new() { PartyId = "p", ContactChannelId = "c" }] }, "CompositeEmptyContactUpdate"];
-        yield return [create with { ContactChannels = null! }, "NotNullValidator"];
-        yield return [create with { Identifiers = null! }, "NotNullValidator"];
-        yield return [create with { ContactChannels = [null!] }, "NotNullValidator"];
-        yield return [create with { Identifiers = [null!] }, "NotNullValidator"];
-        yield return [update with { AddContactChannels = null! }, "NotNullValidator"];
-        yield return [update with { UpdateContactChannels = null! }, "NotNullValidator"];
-        yield return [update with { RemoveContactChannelIds = null! }, "NotNullValidator"];
-        yield return [update with { AddIdentifiers = null! }, "NotNullValidator"];
-        yield return [update with { RemoveIdentifierIds = null! }, "NotNullValidator"];
-        yield return [update with { AddContactChannels = [null!] }, "NotNullValidator"];
-        yield return [update with { UpdateContactChannels = [null!] }, "NotNullValidator"];
-        yield return [update with { AddIdentifiers = [null!] }, "NotNullValidator"];
-        yield return [update with { RemoveContactChannelIds = [null!] }, "NotNullValidator"];
-        yield return [update with { RemoveIdentifierIds = [null!] }, "NotNullValidator"];
         yield return [create with { ContactChannels = [new() { PartyId = "other", ContactChannelId = "c", Type = ContactChannelType.Email, Value = "a@b.test" }] }, "PredicateValidator"];
         yield return [update with { AddIdentifiers = [new() { PartyId = "other", IdentifierId = "i", Type = IdentifierType.Other, Value = "v" }] }, "PredicateValidator"];
         yield return [create with { PartyId = new string('p', 129) }, "PredicateValidator"];

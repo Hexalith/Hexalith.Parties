@@ -401,10 +401,18 @@ jobs:
             [ -n "$tag_name" ] || continue
             encoded_tag="$(jq -rn --arg tag "$tag_name" '$tag | @uri')"
             expected_ref="refs/tags/${tag_name}"
-            if ! tag_ref="$(gh api "repos/${REPOSITORY}/git/ref/tags/${encoded_tag}")"; then
+            if ! tag_response="$(gh api --include "repos/${REPOSITORY}/git/ref/tags/${encoded_tag}")"; then
+              # Releases can outlive their tag refs. Only a missing ref may be skipped;
+              # authentication, rate-limit and transport failures still invalidate proof.
+              if [[ "$tag_response" =~ ^HTTP/[0-9.]+[[:blank:]]404[[:blank:]] ]]; then
+                echo "Skipping published release tag '${expected_ref}': ref no longer exists (HTTP 404)."
+                continue
+              fi
               echo "The exact tag ref '${expected_ref}' could not be resolved." >&2
               exit 1
             fi
+            # gh includes a status line and headers; accept CRLF and LF separators.
+            tag_ref="$(printf '%s\n' "$tag_response" | tr -d '\r' | sed '1,/^$/d')"
             if ! printf '%s\n' "$tag_ref" | jq -e --arg expected_ref "$expected_ref" '
               type == "object" and
               .ref == $expected_ref and

@@ -1,0 +1,122 @@
+{
+  "work_item": "DW-76",
+  "base_commit": "836c315269b196a49455aacf7534c48fba3cb834",
+  "verified_at_utc": "2026-10-20T11:12:24.864976+00:00",
+  "environment": {
+    "dotnet_sdk": "10.0.402",
+    "aspnet_runtime": "10.0.13",
+    "node_ci_parity": "24.21.0",
+    "npm_ci_parity": "11.19.0",
+    "local_os": "Ubuntu 26.04",
+    "workflow_os": "Ubuntu 24.04"
+  },
+  "checks": [
+    {
+      "command": "dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "description": "Same UI build in a temporary git-archive snapshot containing only the root repository, Hexalith.Builds and Hexalith.Commons at their selected commits",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "working_directory": "tests/e2e",
+      "commands": [
+        "npm ci",
+        "npm run typecheck",
+        "CI=true BASE_URL=http://127.0.0.1:5072 PLAYWRIGHT_SKIP_WEBSERVER= npm run test:a11y"
+      ],
+      "node": "24.21.0",
+      "exit_code": 0,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "npm_vulnerabilities": 0
+    },
+    {
+      "working_directory": "tests/e2e",
+      "command": "env -u CI -u PLAYWRIGHT_SKIP_WEBSERVER -u BASE_URL npm run test:a11y",
+      "host_mode": "Debug/source",
+      "exit_code": 0,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.AccessibilityWorkflowTests",
+      "exit_code": 0,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+      "exit_code": 0,
+      "passed": 188,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "actionlint .github/workflows/ci.yml",
+      "exit_code": 0,
+      "output": ""
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "output": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0,
+      "output": ""
+    }
+  ],
+  "mutation_checks": [
+    {
+      "mutation": "Add a top-level push paths filter",
+      "result": "Rejected by AccessibilityIsAnUnconditionalBlockingCiJob"
+    },
+    {
+      "mutation": "Change the CI prebuilt host from Release to Debug",
+      "result": "Rejected by AccessibilityCiHostUsesThePrebuiltReleaseAndTestFixture"
+    },
+    {
+      "mutation": "Use success() for artifact upload and append a later always() cleanup",
+      "result": "Rejected by AccessibilityEvidenceUploadsAfterFailure"
+    }
+  ],
+  "resolved_validation_issue": "A local diagnostic host run wrote audit-disabled generated UI restore assets. SignalRSecurityFloorTests detected this in one assembly attempt. Rebuilding the Release/package UI with audit enabled restored the intended artifacts; the final complete assembly passes 188/188.",
+  "review": {
+    "type": "independent blind review",
+    "findings": 4,
+    "patched": 4,
+    "remaining": 0,
+    "deferred": 0,
+    "followup": "Independent reviewer confirmed all four corrections"
+  },
+  "limits": [
+    "Local browser runs use cached Chromium; fresh OS dependency installation and hosted job execution are delegated to the new GitHub job.",
+    "This receipt does not replace successful exact-source hosted CI proof or runtime-topology qualification."
+  ],
+  "commitlint": {
+    "command": "node node_modules/@commitlint/cli/cli.js --edit .git/dw76-commit-message.txt --verbose",
+    "version": "21.2.2",
+    "exit_code": 0,
+    "problems": 0,
+    "warnings": 0,
+    "evidence": "commitlint.txt"
+  }
+}

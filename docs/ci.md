@@ -37,6 +37,25 @@ The shared CI workflow restores and builds `Hexalith.Parties.slnx`, initializes 
 - Tier 2: integration and CI contract tests.
 - Tier 3: Aspire topology tests through `tests/Hexalith.Parties.IntegrationTests`.
 
+The blocking `ui-a11y` job runs on every CI trigger without path filters or
+failure suppression. It installs Node 24, the SDK from `global.json`, locked
+browser-test dependencies, and Chromium with its system dependencies. It
+typechecks the tests, builds the UI in Release/package mode, then runs the six
+existing `npm run test:a11y` cases against Playwright's isolated Test-environment
+host. Only the root Builds and Commons submodules are needed for this UI build;
+Docker, Dapr and Keycloak are not required. The host's Test-only fixture opt-ins
+and loopback address are explicit, and CI does not reuse an existing server.
+
+The lane covers blocking axe violations, shell skip links, keyboard traversal,
+media settings, button styling and the semantic visual baseline. It attaches a
+screenshot; pixel-diff baselines and broader accessibility coverage remain
+separate deferred work. HTML/JUnit reports, axe summaries and available failure
+traces, screenshots and videos are uploaded as `ui-a11y-results` for 14 days,
+including after a failed run. A failed accessibility job fails `ci.yml`, so it
+also prevents successful exact-source CI proof for release. Repository branch
+protection is managed separately. See the local reproduction commands in
+[the development guide](development-guide.md#4-test).
+
 The separate `bmad-config` job in the same CI workflow runs the offline BMAD
 configuration suite on Ubuntu 24.04 using Python 3.11 or later. It checks
 duplicate identifiers, layer precedence, resolver errors, and renderer
@@ -94,6 +113,21 @@ later sources) to `Username=<user>;Password=<token>`, following
 [NuGet's authenticated-feed guidance](https://learn.microsoft.com/en-us/nuget/consume-packages/consuming-packages-authenticated-feeds).
 
 The publication preflight freezes the exact source, nine-package manifest, and complete three-container destination set. It rejects missing credentials, identity drift, or an existing package/container version before the first publication write; duplicate skipping is deliberately disabled.
+
+After publication, verification requires a published, non-draft GitHub Release
+whose validated tag resolves to the exact dispatched commit. A tag-ref lookup
+returning HTTP 404 is logged and skipped because older releases can outlive
+their tags. Other API failures, invalid responses and invalid tag objects still
+fail verification. Missing tags alone never prove publication. Execute the
+workflow shell regression fixtures locally using the commands below.
+
+The fixtures require Bash and `jq` on a non-Windows system; they are skipped on
+Windows. Check the executed and skipped counts when assessing local evidence.
+
+```bash
+dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
+dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests
+```
 
 The release workflow does not apply runtime deployment manifests and does not publish EventStore, Tenants, Memories, Sample, Redis, or FalkorDB images. Runtime deployment orchestration is owned outside this repository and consumes immutable release tags from Zot.
 

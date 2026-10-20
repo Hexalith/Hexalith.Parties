@@ -2,7 +2,9 @@
 
 `parties-ui` targets WCAG 2.2 AA for consumer-facing surfaces. Automated bUnit gates run on every CI build and catch detectable regressions in markup and styling. They are not a complete manual WCAG audit.
 
-**Lane status (accurate as of 2026-08-19):** the Playwright accessibility suite in `tests/e2e` is **not** wired into any workflow — `.github/workflows/` has no Playwright step and `scripts/test.ps1` invokes no npm lane. It runs on demand via `npm --prefix tests/e2e run test:a11y`, and its results are recorded manually in `_bmad-output/implementation-artifacts/tests/test-summary.md`. Making it an always-on CI gate is a tracked open item (Epic 8 spine §7, invariant I12). Treat browser-observable guarantees below as verified-on-demand, not continuously enforced.
+**Lane status (2026-10-20):** the blocking `ui-a11y` job in `.github/workflows/ci.yml` runs `npm run test:a11y` from `tests/e2e` on every CI trigger. It runs all six existing Chromium accessibility cases against the Release/package-mode UI in the explicit Test environment. Reports and available failure diagnostics are retained in the `ui-a11y-results` artifact for 14 days, including after failures. A failed lane fails CI and prevents successful exact-source CI proof for release. See [CI details](ci.md#ci) and [local reproduction](development-guide.md#4-test); `scripts/test.ps1` continues to run only .NET lanes.
+
+The browser suite continuously checks its existing specimen scope: blocking axe violations in main content, seeded shell skip-link focus, representative keyboard traversal, media settings, button color, and the semantic visual baseline. Whole-shell axe scans, app-content focus/media behavior and pixel-diff baselines remain separate deferred work. The automation does not establish every browser guarantee below or replace a manual WCAG audit.
 
 ## Shell Primitives
 

@@ -22,6 +22,7 @@ public sealed class McpCliDecorationTests
         module.IdentifierKind.ShouldBe(IdentifierKind.String);
         module.WireTypeConvention.ShouldBe(WireTypeConvention.FullTypeName);
         module.FixedTenant.ShouldBeNull();
+        module.SerializerOptionsProvider.ShouldBeNull();
         module.Description.ShouldNotBeNullOrWhiteSpace();
 
         Type[] commands = assembly.GetTypes().Where(t => t.IsDefined(typeof(HexalithCommandAttribute))).OrderBy(t => t.Name).ToArray();
@@ -34,8 +35,16 @@ public sealed class McpCliDecorationTests
             command.AggregateIdProperty.ShouldBe("PartyId");
             command.WireType.ShouldBeNull();
             command.TenantProperty.ShouldBeNull();
+            command.CorrelationProperty.ShouldBeNull();
+            command.IdempotencyKeyProperty.ShouldBeNull();
+            command.ActorProperty.ShouldBeNull();
             command.Description.ShouldNotBeNullOrWhiteSpace();
             command.Name.ShouldBe(type == typeof(CreatePartyComposite) ? "create-party" : type == typeof(UpdatePartyComposite) ? "update-party" : null);
+            command.Example.ShouldBe(type == typeof(CreatePartyComposite)
+                ? """{"PartyId":"party-49","Type":"Person","PersonDetails":{"FirstName":"Ada","LastName":"Lovelace"}}"""
+                : type == typeof(UpdatePartyComposite)
+                    ? """{"PartyId":"party-49","PersonDetails":{"FirstName":"Augusta Ada","LastName":"Lovelace"}}"""
+                    : """{"PartyId":"party-49"}""");
             type.GetInterfaces().ShouldNotContain(i => i.Name == "ICommandContract");
 
             JsonSerializerOptions options = new() { UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow };

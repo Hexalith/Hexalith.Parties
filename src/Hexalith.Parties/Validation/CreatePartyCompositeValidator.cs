@@ -117,6 +117,6 @@ public sealed class CreatePartyCompositeValidator : AbstractValidator<CreatePart
         => 1 + (command.ContactChannels?.Count ?? 0) + (command.Identifiers?.Count ?? 0);
 
     private static bool HaveMatchingChildPartyIds(CreatePartyComposite command)
-        => command.ContactChannels is not null && command.ContactChannels.All(channel => channel is not null && string.Equals(channel.PartyId, command.PartyId, StringComparison.Ordinal))
-            && command.Identifiers is not null && command.Identifiers.All(identifier => identifier is not null && string.Equals(identifier.PartyId, command.PartyId, StringComparison.Ordinal));
+        => (command.ContactChannels?.All(channel => channel is null || string.Equals(channel.PartyId, command.PartyId, StringComparison.Ordinal)) ?? true)
+            && (command.Identifiers?.All(identifier => identifier is null || string.Equals(identifier.PartyId, command.PartyId, StringComparison.Ordinal)) ?? true);
 }

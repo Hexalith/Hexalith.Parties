@@ -154,7 +154,7 @@ public sealed class UpdatePartyCompositeValidator : AbstractValidator<UpdatePart
             || (command.RemoveContactChannelIds?.Count ?? 0) > 0
             || (command.AddIdentifiers?.Count ?? 0) > 0
             || (command.RemoveIdentifierIds?.Count ?? 0) > 0
-            || (command.UpdateContactChannels?.Any(c => c is not null && (c.Type is not null || c.Value is not null || c.IsPreferred is not null)) ?? false);
+            || (command.UpdateContactChannels?.Count ?? 0) > 0;
 
     private static int CountSubOperations(UpdatePartyComposite command)
         => (command.PersonDetails is not null ? 1 : 0)
@@ -166,7 +166,7 @@ public sealed class UpdatePartyCompositeValidator : AbstractValidator<UpdatePart
             + (command.RemoveIdentifierIds?.Count ?? 0);
 
     private static bool HaveMatchingChildPartyIds(UpdatePartyComposite command)
-        => command.AddContactChannels is not null && command.AddContactChannels.All(channel => channel is not null && string.Equals(channel.PartyId, command.PartyId, StringComparison.Ordinal))
-            && command.UpdateContactChannels is not null && command.UpdateContactChannels.All(channel => channel is not null && string.Equals(channel.PartyId, command.PartyId, StringComparison.Ordinal))
-            && command.AddIdentifiers is not null && command.AddIdentifiers.All(identifier => identifier is not null && string.Equals(identifier.PartyId, command.PartyId, StringComparison.Ordinal));
+        => (command.AddContactChannels?.All(channel => channel is null || string.Equals(channel.PartyId, command.PartyId, StringComparison.Ordinal)) ?? true)
+            && (command.UpdateContactChannels?.All(channel => channel is null || string.Equals(channel.PartyId, command.PartyId, StringComparison.Ordinal)) ?? true)
+            && (command.AddIdentifiers?.All(identifier => identifier is null || string.Equals(identifier.PartyId, command.PartyId, StringComparison.Ordinal)) ?? true);
 }

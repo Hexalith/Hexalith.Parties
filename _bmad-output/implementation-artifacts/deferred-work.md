@@ -598,7 +598,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: .github/workflows/release.yml
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `.github/workflows/release.yml` can report a successful current publication as failed when an older release references a tag that no longer exists.
-status: open
+status: done 2026-10-20
+resolution: Publication verification skips only explicit HTTP 404 tag-ref responses, then still requires a validated non-draft release tag resolving to the exact dispatched SHA. Other API/transport failures and invalid refs or annotated objects remain fatal. The original workflow fails eight new regressions; final Debug/source build has zero warnings/errors, focused shell fixtures pass 36/36 and the complete affected CI assembly passes 184/184 without errors/failures/skips/not-run. Workflow lint and repository guards pass. All five independent review findings are corrected and follow-up verified; no new deferred work. See spec-dw-75-deleted-historical-release-tags.md and tests/dw-75-deleted-historical-release-tags-2026-10-20/validation.json.
 
 ### DW-76: Restore the Playwright accessibility lane as a required CI gate
 
@@ -606,7 +607,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: .github/workflows, scripts/test.ps1, and tests/e2e/package.json
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: The replacement CI workflow no longer runs `npm run test:a11y`, leaving axe, keyboard-focus, forced-colors, computed-style, and visual checks unexecuted. Also recorded in "Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-08-19)": The Playwright accessibility lane is wired into no workflow. `.github/workflows/` contains no Playwright or `test:a11y` step, `scripts/test.ps1` invokes no npm lane, and `tests/e2e/package.json`'s `test:a11y` script is called by nothing. Spine §7 I12 already records the always-on CI a11y lane as a separate open ledger item.
-status: open
+status: done 2026-10-20
+resolution: Restored unconditional blocking ui-a11y CI with Release/package browser execution and retained diagnostics; six Chromium cases and 188 CI tests pass. See spec-dw-76-required-accessibility-ci.md and tests/dw-76-required-accessibility-ci-2026-10-20/validation.json.
 
 ### DW-77: Exercise mTLS across every configured Dapr sidecar
 
