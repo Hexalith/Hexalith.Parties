@@ -94,3 +94,35 @@ Every new test should be deterministic, isolated, explicit, focused, and fast:
 - xUnit.net v3 getting started: https://xunit.net/docs/getting-started/v3/getting-started
 - `dotnet test` CLI: https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test
 - coverlet collector: https://github.com/coverlet-coverage/coverlet
+
+## Complete local mTLS qualification (DW-77)
+
+The opt-in qualification starts the actual AppHost with `EnableMemoriesSearch`
+and `EnableEventStoreSampleUi` enabled, then explicitly starts the existing admin
+UI resource. It requires Linux, Docker, .NET 10, the pinned Aspire/Dapr tooling,
+`bash`, `curl`, and the standard initialized root references plus
+`references/Hexalith.Memories`. It uses the existing mTLS bootstrap and owns fresh
+Redis, Redis Stack and FalkorDB containers; it never routes fixture state to
+shared developer Redis. The fixed local Dapr control-plane names and ports
+require serial execution with other Parties topologies stopped.
+
+```bash
+dotnet build tests/Hexalith.Parties.IntegrationTests -c Debug \
+  -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
+PARTIES_MTLS_TOPOLOGY_TESTS=true dotnet \
+  tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll \
+  -class Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests
+```
+
+The runtime check requires all eight sidecar metadata responses and a real
+Parties-to-Tenants `GET /ready` through the existing identity-specific ACL. It
+also checks the production tenant callback with authenticated bootstrap envelopes
+and rejects missing/wrong channel tokens. Tenant projection contents and access
+decisions are inspected separately through production subscription, security and
+access-service registrations in a controlled in-process host. The process-external
+service has no public tenant-projection read endpoint.
+This qualifies local mTLS transport and the registered subscription-handler trust
+boundary; it does not certify external deployment, optional Memories search
+behavior, or an authenticated command/projection round trip. Local runs without
+the opt-in flag skip the runtime case; GitHub Actions requires it and treats
+infrastructure failures as test failures. A skip cannot close DW-77.

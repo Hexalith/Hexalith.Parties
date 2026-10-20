@@ -1,0 +1,6 @@
+⧗   --- input ---
+fix(aspire): secure every Dapr sidecar with mTLS
+
+Configure the existing admin UI sidecar with the mTLS trust bundle.
+Qualify all eight sidecars and authenticated tenant bootstrap.
+✔   found 0 problems, 0 warnings

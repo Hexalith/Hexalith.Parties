@@ -1,0 +1,214 @@
+{
+  "spec": "spec-dw-77-all-sidecar-mtls.md",
+  "baseline_commit": "a5102784b358432795808b1456b39554b8275b5b",
+  "qualification_date": "2026-10-20",
+  "scope": "Local complete AppHost mTLS profile, authenticated subscription-handler bootstrap and existing tenant access services",
+  "sidecar_ids": [
+    "eventstore",
+    "eventstore-admin",
+    "eventstore-admin-ui",
+    "memories",
+    "parties",
+    "sample",
+    "sample-blazor-ui",
+    "tenants"
+  ],
+  "checks": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.IntegrationTests -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.DaprMtlsBootstrapTests",
+      "exit_code": 0,
+      "total": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "exit_code": 0,
+      "total": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "PARTIES_MTLS_TOPOLOGY_TESTS=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests",
+      "exit_code": 0,
+      "total": 2,
+      "failed": 0,
+      "skipped": 0,
+      "elapsed_seconds": 53.573
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0,
+      "note": "Recognizes the CRLF line endings required by .editorconfig; no Git configuration changed."
+    },
+    {
+      "command": "GITHUB_ACTIONS=true PARTIES_MTLS_TOPOLOGY_TESTS=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "exit_code": 0,
+      "total": 99,
+      "passed": 93,
+      "failed": 0,
+      "skipped": 6,
+      "elapsed_seconds": 94.233,
+      "skip_scope": "Six pre-existing explicit HealthEndpointE2ETests skips remain; the DW-77 runtime test ran and passed again. No DW-77 acceptance depends on these skips."
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.IntegrationTests -c Release -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "environment": {
+        "GITHUB_ACTIONS": "true",
+        "PARTIES_MTLS_TOPOLOGY_TESTS": "true"
+      },
+      "exit_code": 0,
+      "runtime": "1.18.7",
+      "total": 104,
+      "passed": 98,
+      "failed": 0,
+      "skipped": 6,
+      "errors": 0,
+      "not_run": 0,
+      "elapsed_seconds": 125.019,
+      "note": "Final complete Release/package assembly after review patches; six pre-existing explicit health skips remain."
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests",
+      "environment": {
+        "GITHUB_ACTIONS": "true",
+        "PARTIES_MTLS_TOPOLOGY_TESTS": "true",
+        "DAPR_RUNTIME_PATH": "isolated official v1.18.2 installation"
+      },
+      "exit_code": 0,
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not_run": 0,
+      "elapsed_seconds": 45.675,
+      "runtime": "1.18.2",
+      "note": "Temporary report/install paths omitted; all eight actual sidecars report runtime 1.18.2. Both Parties-to-Tenants and admin UI-to-admin calls return 200."
+    }
+  ],
+  "earlier_attempts": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.IntegrationTests -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false --no-restore",
+      "result": "Failed CS1704 from stale mixed source/package assets; restored source build resolves it."
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.IntegrationTests -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "result": "Succeeded with one transient MSB3026 copy retry; serialized build passes with zero warnings/errors."
+    },
+    {
+      "command": "git diff --check",
+      "result": "Reports CR bytes as trailing whitespace under the workspace default core.whitespace. The explicit CRLF-aware check passes with the same substantive whitespace rules."
+    },
+    {
+      "stage": "Post-review Debug/source focused runtime",
+      "result": "First attempt failed during dynamic-project build with MSB3030 for a concurrently rebuilt EventStore.Contracts output; fixture readiness timed out and owned resources were cleaned. One bounded retry passed 2/2 in 45.376 seconds. Final coherent Release/package assembly and CI-runtime focused run pass separately."
+    }
+  ],
+  "evidence_scopes": {
+    "process_external": "Actual AppHost with both optional profiles, eight sidecars returning their own metadata, Dapr security initialization for every participant, Parties-to-Tenants readiness 200, authenticated tenant/member callback 200, missing/wrong channel token 401.",
+    "in_process": "Controlled HTTP TestServer uses production AddHexalithTenants, SDK subscription route, SDK channel scheme and policies, real TenantAccessService and projection store. In-memory projection/idempotency stores; no background workers or invoked Dapr operations. Denied deliveries create no projection/access; valid deliveries establish contributor write access but deny admin and unrelated members.",
+    "limitations": "No new public tenant-projection read endpoint; externally hosted in-memory tenant-access state is not separately read. Optional Memories search, command/projection semantics and runtime deployment remain outside this qualification."
+  },
+  "disposable_image_provenance": [
+    {
+      "image": "redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf",
+      "source": "Existing PartiesTestRedis pin, cached locally."
+    },
+    {
+      "image": "redis/redis-stack-server@sha256:798ab84d9f266936b034ab11c4d04a2b8e4b441884c5aa7d17ac951eefdf742a",
+      "source": "Existing cached Redis Stack 7.4.0-v8 image; immutable digest inspected locally."
+    },
+    {
+      "image": "falkordb/falkordb@sha256:7927eb194df0fadf70e2deb6c20c8178743ec92aacd739c790f8a35ce5dee613",
+      "source": "Existing cached FalkorDB v4.12.0 image; immutable digest inspected locally."
+    },
+    {
+      "image": "daprio/dapr@sha256:b42eeb03c4300938226b7a5d7a15db5513e69e1d55570967c290d670c7612df2",
+      "source": "Existing scripts/aspire-start-mtls.sh control-plane pin; reused unchanged."
+    }
+  ],
+  "privacy": "Only bounded qualification summaries are retained; trust bundles, private keys, app-channel tokens, bearer tokens and raw application logs are excluded.",
+  "remaining_skips": {
+    "class": "Hexalith.Parties.IntegrationTests.HealthChecks.HealthEndpointE2ETests",
+    "count": 6,
+    "reason": "Pre-existing explicit skips: Tier 3 AppHost runtime health proof is blocked by the deferred Tenants sidecar readiness path; static topology plus Tier 2 health coverage remain active.",
+    "qualification": "Dedicated DW-77 runtime readiness invocation now passes; broader health/recovery cases were not changed."
+  },
+  "cleanup_verification": {
+    "after_full_assembly": "No fixture Redis/Memories containers, hexalith-parties-dapr containers or owned mTLS control-plane network remained.",
+    "commands": [
+      "docker container ls --all --format '{{.Names}}' (filter fixture Redis/Memories and hexalith-parties-dapr)",
+      "docker network ls --format '{{.Name}}' (filter hexalith-parties-dapr-mtls)"
+    ],
+    "result": "Both filtered inventories empty.",
+    "after_final_runs": "No fixture-owned database containers or hexalith-parties-dapr control-plane containers/network remained."
+  },
+  "post_review_focused_checks": [
+    {
+      "class": "PartiesTopologyCleanupTests",
+      "total": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "class": "PartiesAspireTopologyFixtureTests",
+      "total": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "class": "PartiesMtlsProfileTests",
+      "total": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "class": "PartiesMtlsTopologyTests",
+      "total": 2,
+      "failed": 0,
+      "skipped": 0,
+      "elapsed_seconds": 45.376
+    }
+  ],
+  "ci_runtime_provenance": {
+    "cli_version": "1.18.2",
+    "runtime_version": "1.18.2",
+    "asset": "https://github.com/dapr/dapr/releases/download/v1.18.2/daprd_linux_amd64.tar.gz",
+    "sha256": "5e9b01848d256f3ee931235d0d70e3cc97dd2b8e8f4d35b2abdc97d57195a188",
+    "verification": "Archive SHA-256 matches the official GitHub release asset digest; CLI --version and all eight startup security messages confirm 1.18.2. DAPR_RUNTIME_PATH selects a task-local installation without changing the developer runtime. Existing pinned control-plane container image is unchanged."
+  },
+  "commitlint": {
+    "version": "21.2.2",
+    "command": "node_modules/.bin/commitlint --edit <temporary-message-file> --verbose",
+    "exit_code": 0,
+    "problems": 0,
+    "warnings": 0,
+    "evidence": "commitlint.txt"
+  },
+  "review": {
+    "layers": [
+      "blind-hunter",
+      "edge-case-hunter",
+      "verification-gap"
+    ],
+    "findings": 11,
+    "triage": "Every finding is recorded in the spec. Four code/test root causes were patched; Release/package and CI-runtime validation gaps were closed. Edge-case and verification reviewers independently confirmed remediation. No new deferred work."
+  }
+}

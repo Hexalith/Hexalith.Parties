@@ -272,3 +272,18 @@ and verify with `--check`. Security record keys and formats remain unchanged whe
 gates on sidecar, state and enabled Tenants integration; pub/sub stays a degraded
 health signal. Tenant subscriptions are declarative at `/tenants/events` on
 `system.tenants.events` and rich Memories search remains disabled.
+
+### Qualifying all local Dapr sidecars with mTLS
+
+Use the [DW-77 qualification command and prerequisites](../tests/README.md#complete-local-mtls-qualification-dw-77)
+to start the complete disposable test profile. Both optional profiles are enabled;
+the ordinary health fixture keeps its default profile. Run serially because the
+secure Dapr control plane uses fixed local names and loopback ports. The fixture
+restores its environment and removes only resources it owns, including after
+startup failure or cancellation. Credentials must stay out of captured evidence.
+
+Qualification proves eight responsive credentialed sidecars, the existing
+Parties-to-Tenants readiness invocation and authenticated tenant-event bootstrap.
+Production subscription-handler access effects are inspected in process through
+existing services; no public endpoint is added. Runtime deployment and end-to-end
+command/projection qualification remain separate work.

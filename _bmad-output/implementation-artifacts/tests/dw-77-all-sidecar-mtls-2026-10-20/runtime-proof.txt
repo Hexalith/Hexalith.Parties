@@ -1,0 +1,20 @@
+Dapr 1.18.7 security initialized successfully: sample
+Dapr 1.18.7 security initialized successfully: eventstore-admin
+Dapr 1.18.7 security initialized successfully: memories
+Dapr 1.18.7 security initialized successfully: tenants
+Dapr 1.18.7 security initialized successfully: eventstore
+Dapr 1.18.7 security initialized successfully: eventstore-admin-ui
+Dapr 1.18.7 security initialized successfully: sample-blazor-ui
+Dapr 1.18.7 security initialized successfully: parties
+Runtime metadata verified: eventstore
+Runtime metadata verified: eventstore-admin
+Runtime metadata verified: eventstore-admin-ui
+Runtime metadata verified: memories
+Runtime metadata verified: parties
+Runtime metadata verified: sample
+Runtime metadata verified: sample-blazor-ui
+Runtime metadata verified: tenants
+Runtime Parties-to-Tenants GET /ready: 200 through existing ACL
+Runtime tenant callback: authenticated bootstrap accepted; missing/wrong token rejected
+In-process production subscription handler: projected member has write access
+Runtime class: Total 2; errors 0; failed 0; skipped 0; elapsed 53.573s
