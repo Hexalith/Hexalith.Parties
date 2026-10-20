@@ -27,6 +27,14 @@ to `Production` on every project resource in publish mode, including the optiona
 Memories and sample services. Local runs retain their launch-profile settings
 and environment overrides.
 
+Publishing with the retained AppHost also requires `PartiesUi:OidcClientSecret`
+through AppHost configuration, for example the `PartiesUi__OidcClientSecret`
+environment variable supplied by your secret store. A missing, empty, or whitespace-only value stops AppHost model
+construction before publishing artifacts. The AppHost maps this value to the UI
+container's `Authentication__OpenIdConnect__ClientSecret`; an external orchestrator
+deploying images directly supplies that runtime variable. Local runs continue to
+use the local Keycloak client secret.
+
 Runtime deployment orchestration is externally owned. The orchestrator must consume immutable image tags from:
 
 - `registry.hexalith.com/parties`

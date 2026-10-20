@@ -4,6 +4,14 @@ using Hexalith.EventStore.Aspire;
 using Hexalith.Parties.AppHost;
 
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
+string? publishOidcClientSecret = builder.Configuration["PartiesUi:OidcClientSecret"];
+if (builder.ExecutionContext.IsPublishMode && string.IsNullOrWhiteSpace(publishOidcClientSecret))
+{
+    throw new InvalidOperationException(
+        "Publishing requires a non-whitespace PartiesUi:OidcClientSecret. "
+        + "Supply it through configuration, for example the PartiesUi__OidcClientSecret environment variable.");
+}
+
 DaprMtlsBootstrap? daprMtls = DaprMtlsBootstrap.Load(builder.Configuration);
 
 string eventStoreAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.yaml");
@@ -382,7 +390,7 @@ else if (builder.ExecutionContext.IsPublishMode)
     _ = partiesUi
         .WithEnvironment("Authentication__OpenIdConnect__Authority", PublishModeJwtAuthority)
         .WithEnvironment("Authentication__OpenIdConnect__ClientId", "hexalith-parties-ui")
-        .WithEnvironment("Authentication__OpenIdConnect__ClientSecret", builder.Configuration["PartiesUi:OidcClientSecret"] ?? "")
+        .WithEnvironment("Authentication__OpenIdConnect__ClientSecret", publishOidcClientSecret)
         .WithEnvironment("Authentication__OpenIdConnect__Audience", "hexalith-eventstore");
 }
 

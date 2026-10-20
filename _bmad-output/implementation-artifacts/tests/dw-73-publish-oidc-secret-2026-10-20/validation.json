@@ -1,0 +1,391 @@
+{
+  "deferred_item": "DW-73",
+  "parent_sha": "e1db1b61de4d47336e474d41eed18b68d43d7377",
+  "cwd": "/home/administrator/projects/hexalith/parties",
+  "sdk": "10.0.402",
+  "checks": [
+    {
+      "label": "integration-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-m:1",
+        "-nr:false"
+      ],
+      "exit_code": 0,
+      "summary": "Build succeeded; 0 warnings, 0 errors."
+    },
+    {
+      "label": "service-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-m:1",
+        "-nr:false"
+      ],
+      "exit_code": 0,
+      "summary": "Build succeeded; 0 warnings, 0 errors."
+    },
+    {
+      "label": "model-tests",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishOidcTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesUiTopologyTests",
+        "-result-xml",
+        "/tmp/parties-dw73-model-tests.xml"
+      ],
+      "exit_code": 0,
+      "assemblies": [
+        {
+          "total": "40",
+          "passed": "40",
+          "failed": "0",
+          "skipped": "0",
+          "not-run": "0",
+          "errors": "0",
+          "time": "0.556",
+          "run-date": "2026-10-20",
+          "run-time": "09:19:45",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0"
+        }
+      ]
+    },
+    {
+      "label": "ambient-isolation",
+      "command": [
+        "env",
+        "PartiesUi__OidcClientSecret=ambient-model-only-secret",
+        "PUBLISH_TARGET=invalid-ambient-target",
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishOidcTests",
+        "-result-xml",
+        "/tmp/parties-dw73-isolation-tests.xml"
+      ],
+      "exit_code": 0,
+      "assemblies": [
+        {
+          "total": "29",
+          "passed": "29",
+          "failed": "0",
+          "skipped": "0",
+          "not-run": "0",
+          "errors": "0",
+          "time": "0.359",
+          "run-date": "2026-10-20",
+          "run-time": "09:19:45",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0"
+        }
+      ]
+    },
+    {
+      "label": "full-service-suite",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-dw73-service-tests.xml"
+      ],
+      "exit_code": 0,
+      "assemblies": [
+        {
+          "total": "2004",
+          "passed": "2004",
+          "failed": "0",
+          "skipped": "0",
+          "not-run": "0",
+          "errors": "0",
+          "time": "14.592",
+          "run-date": "2026-10-20",
+          "run-time": "09:16:07",
+          "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+          "target-framework": ".NETCoreApp,Version=v10.0"
+        }
+      ]
+    },
+    {
+      "label": "warning-guard",
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0,
+      "summary": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+    },
+    {
+      "label": "whitespace",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "source_sha256": {
+    "src/Hexalith.Parties.AppHost/Program.cs": "0750ca95679ef11add8c4a8f9636c1ef5239404478bedee0d8e95226def1826a",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesPublishOidcTests.cs": "1809c43a0b300da49237efcc1ed66a4b1fcc66b040edccbdd365ab8348f7cbfc",
+    "docs/deployment-guide.md": "509e157799c663e0525788d61f82d57a67fa916adfbbbaa2c9e12594cc43d66f"
+  },
+  "root_gitlinks": [
+    "100644 blob 3db00e0ee697303e809551a8c860fcd05cb61fd9\treferences/Directory.Build.targets",
+    "160000 commit 3f194e17174994d308ec84af9ee2b5aa68674d0d\treferences/Hexalith.AI.Tools",
+    "160000 commit 5d03f1db9c38db34ecac7fe6048937478ffb82cc\treferences/Hexalith.Builds",
+    "160000 commit 5c23c818f639c5bb3175f964c5549440bd5b876d\treferences/Hexalith.Commons",
+    "160000 commit c9f47dd5ba72918445dfd24a674a5b2c310589bd\treferences/Hexalith.EventStore",
+    "160000 commit d52526a4bd1272760543e6a65840dc2b0ed93cee\treferences/Hexalith.FrontComposer",
+    "160000 commit b616db3092a9b1c5af196538a3de37a5c7f2d7ca\treferences/Hexalith.McpCli",
+    "160000 commit c082f8151328b1ac91939cda8733ab78ae68e1c4\treferences/Hexalith.Memories",
+    "160000 commit bb81fc9e98533246cfeed43ffcce08866a2a57f6\treferences/Hexalith.Platform",
+    "160000 commit 221ac4592ba908ae7661ba1fa9e2d1fcc23baee0\treferences/Hexalith.PolymorphicSerializations",
+    "160000 commit ce88a70b6af777c059b5fb4335d429b9272911bd\treferences/Hexalith.Tenants"
+  ],
+  "commitlint": {
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/parties-dw73-commit-message.txt",
+      "--verbose"
+    ],
+    "exit_code": 0,
+    "pinned_version": "21.2.2",
+    "installed_version": "@commitlint/cli@21.2.2",
+    "message": "fix: reject missing publish oidc secrets\n",
+    "retained_output": "commitlint.txt"
+  },
+  "runtime_baseline": {
+    "start_command": [
+      "aspire",
+      "start",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--no-build",
+      "--isolated",
+      "--non-interactive",
+      "--format",
+      "Json",
+      "--",
+      "--PUBLISH_TARGET="
+    ],
+    "start_exit_code": 0,
+    "wait_command": [
+      "aspire",
+      "wait",
+      "parties",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--timeout",
+      "30",
+      "--non-interactive"
+    ],
+    "wait_exit_code": 0,
+    "wait_result": "Parties healthy in 13.2 seconds.",
+    "describe_command": [
+      "aspire",
+      "describe",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--format",
+      "Json",
+      "--non-interactive"
+    ],
+    "describe_exit_code": 0,
+    "projects": [
+      {
+        "displayName": "eventstore-admin",
+        "state": "Finished",
+        "healthStatus": null,
+        "exitCode": 134
+      },
+      {
+        "displayName": "eventstore-admin-ui",
+        "state": "NotStarted",
+        "healthStatus": null,
+        "exitCode": null
+      },
+      {
+        "displayName": "eventstore",
+        "state": "Running",
+        "healthStatus": "Healthy",
+        "exitCode": null
+      },
+      {
+        "displayName": "parties",
+        "state": "Running",
+        "healthStatus": "Healthy",
+        "exitCode": null
+      },
+      {
+        "displayName": "parties-mcp",
+        "state": "NotStarted",
+        "healthStatus": null,
+        "exitCode": null
+      },
+      {
+        "displayName": "parties-ui",
+        "state": "Running",
+        "healthStatus": "Healthy",
+        "exitCode": null
+      },
+      {
+        "displayName": "tenants",
+        "state": "Finished",
+        "healthStatus": null,
+        "exitCode": 134
+      }
+    ],
+    "stop_exit_code": 0
+  },
+  "runtime_final": {
+    "start_command": [
+      "aspire",
+      "start",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--no-build",
+      "--isolated",
+      "--non-interactive",
+      "--format",
+      "Json",
+      "--",
+      "--PUBLISH_TARGET=",
+      "--PartiesUi:OidcClientSecret=",
+      "--EnableMemoriesSearch=false",
+      "--EnableEventStoreSampleUi=false"
+    ],
+    "start_exit_code": 0,
+    "wait_command": [
+      "aspire",
+      "wait",
+      "parties",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--timeout",
+      "30",
+      "--non-interactive"
+    ],
+    "wait_exit_code": 0,
+    "wait_result": "Waiting for resource 'parties' to be healthy...\n\n\u2705 Resource 'parties' is healthy. (0.0s)",
+    "describe_command": [
+      "aspire",
+      "describe",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--format",
+      "Json",
+      "--non-interactive"
+    ],
+    "describe_exit_code": 0,
+    "projects": [
+      {
+        "displayName": "eventstore-admin",
+        "state": "Finished",
+        "healthStatus": null,
+        "exitCode": 134
+      },
+      {
+        "displayName": "eventstore-admin-ui",
+        "state": "NotStarted",
+        "healthStatus": null,
+        "exitCode": null
+      },
+      {
+        "displayName": "eventstore",
+        "state": "Finished",
+        "healthStatus": null,
+        "exitCode": 134
+      },
+      {
+        "displayName": "parties",
+        "state": "Running",
+        "healthStatus": "Healthy",
+        "exitCode": null
+      },
+      {
+        "displayName": "parties-mcp",
+        "state": "NotStarted",
+        "healthStatus": null,
+        "exitCode": null
+      },
+      {
+        "displayName": "parties-ui",
+        "state": "Running",
+        "healthStatus": "Healthy",
+        "exitCode": null
+      },
+      {
+        "displayName": "tenants",
+        "state": "Finished",
+        "healthStatus": null,
+        "exitCode": 134
+      }
+    ],
+    "stop_command": [
+      "aspire",
+      "stop",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--non-interactive"
+    ],
+    "stop_exit_code": 0,
+    "full_topology_qualified": false
+  },
+  "review": {
+    "mode": "Independent context-free blind review and follow-up",
+    "result": "Provider precedence issue corrected; environment-input, disabled-Keycloak and documentation gaps patched. Follow-up found no introduced defect. Fixture-specific automation rejected as low; hostile-environment command retained above."
+  },
+  "superseded_checks": [
+    {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false",
+        "-m:1",
+        "-nr:false"
+      ],
+      "exit_code": 1,
+      "result": "Three CA2007 disposal errors in new tests; fixed by configuring asynchronous disposal, without warning overrides."
+    },
+    {
+      "command": [
+        "env",
+        "PartiesUi__OidcClientSecret=ambient-model-only-secret",
+        "PUBLISH_TARGET=invalid-ambient-target",
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishOidcTests",
+        "-result-xml",
+        "/tmp/parties-dw73-isolation-tests.xml"
+      ],
+      "exit_code": 1,
+      "result": "Initial 24 cases failed under an ambient placeholder. Reordered providers with defaults disabled; final 29 cases pass under the same environment."
+    }
+  ],
+  "limits": "Model-only checks do not deploy artifacts. Both local runs had runtime participants exit 134; full integrated topology and release qualification are not claimed. No dependency selection, gitlink or external deployment was changed."
+}

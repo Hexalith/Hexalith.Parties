@@ -579,7 +579,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: src/Hexalith.Parties.AppHost/Program.cs
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `src/Hexalith.Parties.AppHost/Program.cs` substitutes an empty client secret and continues producing deployment artifacts that cannot authenticate.
-status: open
+status: done 2026-10-20
+resolution: The retained AppHost rejects missing, empty and whitespace OIDC secrets before constructing its publish model, with actionable configuration guidance and unchanged valid secret bytes. Debug/source builds pass with zero warnings/errors; 40 model checks, 29 hostile-environment checks and 2004 service tests pass without failures or skips. Local Keycloak enabled/disabled behavior and the documented environment variable are covered. Independent review corrected fixture-provider precedence and verified the follow-up. See spec-dw-73-publish-oidc-secret.md and tests/dw-73-publish-oidc-secret-2026-10-20/validation.json. Full topology and release qualification remain separate.
+
 
 ### DW-74: Reject duplicate keys in merged BMAD configuration arrays
 
