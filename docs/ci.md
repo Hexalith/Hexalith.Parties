@@ -95,6 +95,21 @@ later sources) to `Username=<user>;Password=<token>`, following
 
 The publication preflight freezes the exact source, nine-package manifest, and complete three-container destination set. It rejects missing credentials, identity drift, or an existing package/container version before the first publication write; duplicate skipping is deliberately disabled.
 
+After publication, verification requires a published, non-draft GitHub Release
+whose validated tag resolves to the exact dispatched commit. A tag-ref lookup
+returning HTTP 404 is logged and skipped because older releases can outlive
+their tags. Other API failures, invalid responses and invalid tag objects still
+fail verification. Missing tags alone never prove publication. Execute the
+workflow shell regression fixtures locally using the commands below.
+
+The fixtures require Bash and `jq` on a non-Windows system; they are skipped on
+Windows. Check the executed and skipped counts when assessing local evidence.
+
+```bash
+dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
+dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests
+```
+
 The release workflow does not apply runtime deployment manifests and does not publish EventStore, Tenants, Memories, Sample, Redis, or FalkorDB images. Runtime deployment orchestration is owned outside this repository and consumes immutable release tags from Zot.
 
 ## Local Parity

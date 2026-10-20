@@ -1,0 +1,119 @@
+{
+  "item": "DW-75",
+  "date": "2026-10-20",
+  "baseline_revision": "f48d5b9db4ce7b02f8b00c1f8fcf9aa8d2484408",
+  "runs": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "log": "build.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests -xml /tmp/dw-75-baseline-tests.xml",
+      "state": "Initial 32-case harness against original release.yml; extended to 36 cases after review",
+      "exit_code": 1,
+      "result": {
+        "total": 32,
+        "passed": 24,
+        "failed": 8,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "log": "baseline-tests.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests -xml /tmp/dw-75-focused-tests.xml",
+      "exit_code": 0,
+      "result": {
+        "total": 32,
+        "passed": 32,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "log": "focused-tests.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -xml /tmp/dw-75-ci-tests.xml",
+      "exit_code": 0,
+      "result": {
+        "total": 180,
+        "passed": 180,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "log": "ci-tests.txt"
+    },
+    {
+      "command": "actionlint .github/workflows/release.yml",
+      "exit_code": 0
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "output": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+    },
+    {
+      "command": "git -c core.whitespace=cr-at-eol diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "node_modules/.bin/commitlint --edit /tmp/dw-75-commit-message.txt --verbose",
+      "version": "21.2.2",
+      "exit_code": 0,
+      "log": "commitlint.txt",
+      "message_file_contents": "fix(ci): tolerate deleted historical release tags\n"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "log": "final-build.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests -result-xml /tmp/dw-75-final-focused-tests.xml",
+      "exit_code": 0,
+      "result": {
+        "total": 36,
+        "passed": 36,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "log": "final-focused-tests.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -result-xml /tmp/dw-75-final-ci-tests.xml",
+      "exit_code": 0,
+      "result": {
+        "total": 184,
+        "passed": 184,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "not-run": 0
+      },
+      "log": "final-ci-tests.txt"
+    }
+  ],
+  "source_sha256": {
+    ".github/workflows/release.yml": "b62a7ae153a9542604c62a399fd3207ed0fc315e199c5630f3eeb4a470d32b30",
+    "tests/Hexalith.Parties.Ci.Tests/ReleasePublicationVerificationTests.cs": "28c8ee612c38d3bd4a36fa8d7420a6621b4e50c9a9d373c538ce03feaf3dfef3",
+    "docs/ci.md": "999fd5ae02536719ce4af14b063e610a78e60b9d38ba1ab6f8f4fabaf491a3fd"
+  },
+  "scope": "Offline workflow shell verification against isolated GitHub API fixtures; no release dispatch or publication performed.",
+  "api_contract_sources": [
+    "https://cli.github.com/manual/gh_api",
+    "https://docs.github.com/en/rest/git/refs#get-a-reference"
+  ],
+  "review": "Independent blind review completed; five low verification/documentation findings patched; targeted independent follow-up found no remaining issue. No new deferrals.",
+  "transcript_format": "Captured stdout/stderr; line endings normalized to CRLF and trailing whitespace removed for the repository whitespace gate."
+}

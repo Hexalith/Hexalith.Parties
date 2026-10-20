@@ -1,0 +1,123 @@
+The '-xml' switch has been deprecated in favor of '-result-xml' and will be removed in the next major version
+
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Ci.Tests
+  Discovered:  Hexalith.Parties.Ci.Tests
+  Starting:    Hexalith.Parties.Ci.Tests
+    Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(scenario: "deleted-lightweight") [FAIL]
+      Shouldly.ShouldAssertException : exitCode
+          should be
+      0
+          but was
+      1
+
+      Additional Info:
+          Fixture HTTP failure (404).
+      The exact tag ref 'refs/tags/vdeleted' could not be resolved.
+
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/ReleasePublicationVerificationTests.cs(30,0): at Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(String scenario)
+           at InvokeStub_ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(scenario: "deleted-annotated") [FAIL]
+      Shouldly.ShouldAssertException : exitCode
+          should be
+      0
+          but was
+      1
+
+      Additional Info:
+          Fixture HTTP failure (404).
+      The exact tag ref 'refs/tags/vdeleted' could not be resolved.
+
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/ReleasePublicationVerificationTests.cs(30,0): at Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(String scenario)
+           at InvokeStub_ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(scenario: "deleted-lf") [FAIL]
+      Shouldly.ShouldAssertException : exitCode
+          should be
+      0
+          but was
+      1
+
+      Additional Info:
+          Fixture HTTP failure (404).
+      The exact tag ref 'refs/tags/vdeleted' could not be resolved.
+
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/ReleasePublicationVerificationTests.cs(30,0): at Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(String scenario)
+           at InvokeStub_ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(scenario: "deleted-http11") [FAIL]
+      Shouldly.ShouldAssertException : exitCode
+          should be
+      0
+          but was
+      1
+
+      Additional Info:
+          Fixture HTTP failure (404).
+      The exact tag ref 'refs/tags/vdeleted' could not be resolved.
+
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/ReleasePublicationVerificationTests.cs(30,0): at Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(String scenario)
+           at InvokeStub_ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(scenario: "paginated") [FAIL]
+      Shouldly.ShouldAssertException : exitCode
+          should be
+      0
+          but was
+      1
+
+      Additional Info:
+          Fixture HTTP failure (404).
+      The exact tag ref 'refs/tags/vdeleted' could not be resolved.
+
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/ReleasePublicationVerificationTests.cs(30,0): at Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(String scenario)
+           at InvokeStub_ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(scenario: "encoded") [FAIL]
+      Shouldly.ShouldAssertException : exitCode
+          should be
+      0
+          but was
+      1
+
+      Additional Info:
+          Fixture HTTP failure (404).
+      The exact tag ref 'refs/tags/vdeleted' could not be resolved.
+
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/ReleasePublicationVerificationTests.cs(30,0): at Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(String scenario)
+           at InvokeStub_ReleasePublicationVerificationTests.PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationWithoutAResolvableExactSourceReleaseFails(scenario: "missing-only") [FAIL]
+      Shouldly.ShouldAssertException : error
+          should contain (case insensitive comparison)
+      "no published GitHub Release tag resolves to dispatched SHA"
+          but was actually
+      "Fixture HTTP failure (404).
+      The exact tag ref 'refs/tags/vdeleted' could not be resolved.
+      "
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/ReleasePublicationVerificationTests.cs(62,0): at Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationWithoutAResolvableExactSourceReleaseFails(String scenario)
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+    Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationWithoutAResolvableExactSourceReleaseFails(scenario: "all-missing") [FAIL]
+      Shouldly.ShouldAssertException : error
+          should contain (case insensitive comparison)
+      "no published GitHub Release tag resolves to dispatched SHA"
+          but was actually
+      "Fixture HTTP failure (404).
+      The exact tag ref 'refs/tags/vdeleted' could not be resolved.
+      "
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/ReleasePublicationVerificationTests.cs(62,0): at Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests.PublicationWithoutAResolvableExactSourceReleaseFails(String scenario)
+           at InvokeStub_ReleasePublicationVerificationTests.PublicationWithoutAResolvableExactSourceReleaseFails(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Finished:    Hexalith.Parties.Ci.Tests (ID = '2e1d720a7326db56ca3b7efb965d81920d1d84c3a2caf8a75762b742603e0246')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Ci.Tests  Total: 32, Errors: 0, Failed: 8, Skipped: 0, Not Run: 0, Time: 1.489s
