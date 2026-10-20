@@ -620,6 +620,17 @@ type class Hexalith.Parties.Contracts.Queries.ChatBotPartyAuthorityResult interf
   property System.Int64 SourceVersion getset
   property System.String TenantId getset
   method System.Void Deconstruct(System.String& TenantId, System.String& PrincipalId, System.String& PartyId, System.String& Operation, System.String& ActorClass, System.String& Origin, System.Boolean& Allowed, System.Int64& SourceVersion, System.String& ObservationId, System.DateTimeOffset& ObservedAt)
+type class Hexalith.Parties.Contracts.Queries.GetParty interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.GetParty>
+  ctor ()
+  property System.String PartyId required getset
+type class Hexalith.Parties.Contracts.Queries.ListParties interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.ListParties>
+  ctor ()
+  property System.Nullable<System.Boolean> Active getset
+  property System.Nullable<System.DateTimeOffset> CreatedAfter getset
+  property System.Nullable<System.DateTimeOffset> CreatedBefore getset
+  property System.Nullable<System.DateTimeOffset> ModifiedAfter getset
+  property System.Nullable<System.DateTimeOffset> ModifiedBefore getset
+  property System.Nullable<Hexalith.Parties.Contracts.ValueObjects.PartyType> Type getset
 type class Hexalith.Parties.Contracts.Queries.ResolveChatBotPartyAuthority interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.ResolveChatBotPartyAuthority>
   ctor (System.String TenantId, System.String PrincipalId, System.String PartyId, System.String Operation, System.String ActorClass, System.String Origin)
   property System.String ActorClass getset
@@ -644,6 +655,11 @@ type class Hexalith.Parties.Contracts.Queries.ResolvePartyIdentity interfaces:Sy
   property System.String PartyId getset
   property System.String TenantId getset
   method System.Void Deconstruct(System.String& TenantId, System.String& PartyId, System.String& ExpectedActorId)
+type class Hexalith.Parties.Contracts.Queries.SearchParties interfaces:System.IEquatable<Hexalith.Parties.Contracts.Queries.SearchParties>
+  ctor ()
+  property System.Nullable<System.Boolean> Active getset
+  property System.String Query required getset
+  property System.Nullable<Hexalith.Parties.Contracts.ValueObjects.PartyType> Type getset
 type class Hexalith.Parties.Contracts.Results.CompositeCommandResult base:Hexalith.EventStore.Contracts.Results.DomainResult interfaces:System.IEquatable<Hexalith.EventStore.Contracts.Results.DomainResult>,System.IEquatable<Hexalith.Parties.Contracts.Results.CompositeCommandResult>
   ctor (System.Collections.Generic.IReadOnlyList<Hexalith.EventStore.Contracts.Events.IEventPayload> events, System.Collections.Generic.IReadOnlyList<System.String> applied, System.Collections.Generic.IReadOnlyList<System.String> skipped, System.Collections.Generic.IReadOnlyList<System.String> rejected, Hexalith.Parties.Contracts.Models.PartyDetail updatedPartyDetail)
   property System.Collections.Generic.IReadOnlyList<System.String> Applied get

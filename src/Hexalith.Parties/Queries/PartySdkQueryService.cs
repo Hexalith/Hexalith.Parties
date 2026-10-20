@@ -34,7 +34,7 @@ public sealed partial class PartySdkQueryService(
     private static readonly JsonSerializerOptions s_jsonOptions = PartiesJsonOptions.Default;
     private static readonly PartyDetailSdkReadModel s_unknownFreshness = new();
 
-    [GeneratedRegex(@"^[A-Za-z0-9_\-\.]{1,128}$", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"\A[A-Za-z0-9_\-\.]{1,128}\z", RegexOptions.CultureInvariant)]
     private static partial Regex ValidTenantIdRegex();
 
     public Task<QueryResult> GetPartyAsync(QueryEnvelope query, CancellationToken cancellationToken)
@@ -255,7 +255,7 @@ public sealed partial class PartySdkQueryService(
     {
         ArgumentNullException.ThrowIfNull(query);
         if (!TryValidateIndexEnvelope(query)
-            || !PartyIndexProjectionQueryActor.TryParseListPayload(query.Payload, out PartyIndexProjectionQueryActor.ListPartiesQueryPayload payload))
+            || !PartyIndexProjectionQueryActor.TryParseListPayload(query.Payload, out ListPartiesQueryPayload payload, query.Paging is not null))
         {
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
         }
@@ -290,12 +290,12 @@ public sealed partial class PartySdkQueryService(
     {
         ArgumentNullException.ThrowIfNull(query);
         if (!TryValidateIndexEnvelope(query)
-            || !PartyIndexProjectionQueryActor.TryParseSearchPayload(query.Payload, out PartyIndexProjectionQueryActor.SearchPartiesQueryPayload payload))
+            || !PartyIndexProjectionQueryActor.TryParseSearchPayload(query.Payload, out SearchPartiesQueryPayload payload, query.Paging is not null))
         {
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
         }
 
-        if (PartyIndexProjectionQueryActor.IsUnsupportedSearchMode(payload.Mode))
+        if (PartyIndexProjectionQueryActor.IsUnsupportedSearchMode(payload.Mode) || payload.CaseId is not null)
         {
             return QueryResult.Failure(QueryAdapterFailureReason.UnsupportedQueryType);
         }
@@ -308,7 +308,8 @@ public sealed partial class PartySdkQueryService(
 
         return await ReadIndexAsync(query, cancellationToken, (model, freshness) =>
         {
-            IEnumerable<PartyIndexEntry> entries = (model.Entries ?? new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)).Values;
+            IEnumerable<PartyIndexEntry> entries = (model.Entries ?? new Dictionary<string, PartyIndexEntry>(StringComparer.Ordinal)).Values
+                .Where(static entry => !entry.IsErased);
             PagedResult<PartySearchResult> page = searchProvider.Search(
                 entries,
                 payload.Query,
@@ -338,7 +339,7 @@ public sealed partial class PartySdkQueryService(
                 partyId,
                 cancellationToken)
                 .ConfigureAwait(false);
-            if (read.Value?.Detail is not { } stored)
+            if (read.Value?.Detail is not { IsErased: false } stored)
             {
                 return QueryResult.Failure(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
             }
@@ -442,6 +443,18 @@ public sealed partial class PartySdkQueryService(
                 StoreName,
                 PartySdkReadModelAddresses.Detail(tenantId, partyId),
                 cancellationToken).ConfigureAwait(false);
+            if (read.Value?.Detail is { IsErased: true } erasedDetail)
+            {
+                read = new ReadModelEntry<PartyDetailSdkReadModel>(read.Value with
+                {
+                    Detail = PartyDetailProjectionHandler.ApplyErasure(partyId, erasedDetail)! with
+                    {
+                        ErasedAt = erasedDetail.ErasedAt,
+                        LastModifiedAt = erasedDetail.LastModifiedAt,
+                    },
+                }, read.ETag);
+            }
+
             if (read.Value is null)
             {
                 lastKnownCache.EvictDetail(tenantId, partyId);
@@ -616,7 +629,8 @@ public sealed partial class PartySdkQueryService(
             return true;
         }
 
-        pageSize = query.Paging.PageSize ?? pageSize;
+        pageSize = query.Paging.PageSize ?? 20;
+        offset = 0;
         string? failureReason = null;
         if (pageSize is < 1 or > 100
             || query.Paging.Offset is < 0
@@ -664,11 +678,11 @@ public sealed partial class PartySdkQueryService(
     }
 
     private static int ScopePageSize(QueryEnvelope query, int payloadPageSize)
-        => query.Paging?.PageSize ?? Math.Clamp(payloadPageSize, 1, 100);
+        => query.Paging is null ? Math.Clamp(payloadPageSize, 1, 100) : query.Paging.PageSize ?? 20;
 
     private static string CreateListCursorScope(
         QueryEnvelope query,
-        PartyIndexProjectionQueryActor.ListPartiesQueryPayload payload,
+        ListPartiesQueryPayload payload,
         int pageSize)
         => QueryCursorScope.Create()
             .Add("tenant", query.TenantId)
@@ -684,7 +698,7 @@ public sealed partial class PartySdkQueryService(
 
     private static string CreateSearchCursorScope(
         QueryEnvelope query,
-        PartyIndexProjectionQueryActor.SearchPartiesQueryPayload payload,
+        SearchPartiesQueryPayload payload,
         int pageSize)
         => QueryCursorScope.Create()
             .Add("tenant", query.TenantId)

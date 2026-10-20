@@ -1,0 +1,221 @@
+{
+  "formatVersion": 1,
+  "package": {
+    "id": "Hexalith.Parties.Contracts",
+    "version": "0.0.0-story410"
+  },
+  "operation": "parties.list-parties",
+  "kind": "query",
+  "prerequisites": [
+    {
+      "operation": "parties.create-party",
+      "kind": "command",
+      "payload": {
+        "PartyId": "party-story49",
+        "Type": "Person",
+        "PersonDetails": {
+          "FirstName": "Ada",
+          "LastName": "Lovelace"
+        },
+        "ContactChannels": [
+          {
+            "PartyId": "party-story49",
+            "ContactChannelId": "email-story49",
+            "Type": "Email",
+            "Value": "ada@example.test",
+            "IsPreferred": true
+          }
+        ],
+        "Identifiers": [
+          {
+            "PartyId": "party-story49",
+            "IdentifierId": "external-story49",
+            "Type": "Other",
+            "Value": "customer-49"
+          }
+        ]
+      },
+      "envelope": {
+        "tenant": "tenant-a",
+        "correlationId": "01J9MZHXT3RKM0VWXRXGSJDATK"
+      },
+      "expectedGateway": {
+        "method": "POST",
+        "path": "/api/v1/commands",
+        "body": {
+          "messageId": "<generated>",
+          "tenant": "tenant-a",
+          "domain": "party",
+          "aggregateId": "party-story49",
+          "commandType": "Hexalith.Parties.Contracts.Commands.CreatePartyComposite",
+          "payload": {
+            "PartyId": "party-story49",
+            "Type": "Person",
+            "PersonDetails": {
+              "FirstName": "Ada",
+              "LastName": "Lovelace"
+            },
+            "ContactChannels": [
+              {
+                "PartyId": "party-story49",
+                "ContactChannelId": "email-story49",
+                "Type": "Email",
+                "Value": "ada@example.test",
+                "IsPreferred": true
+              }
+            ],
+            "Identifiers": [
+              {
+                "PartyId": "party-story49",
+                "IdentifierId": "external-story49",
+                "Type": "Other",
+                "Value": "customer-49"
+              }
+            ]
+          },
+          "correlationId": "01J9MZHXT3RKM0VWXRXGSJDATK"
+        },
+        "maskGenerated": [
+          "/messageId"
+        ]
+      },
+      "scriptedResponse": {
+        "statusCode": 202,
+        "body": {},
+        "echoRequestFields": [
+          "correlationId",
+          "messageId"
+        ]
+      },
+      "assertions": [
+        {
+          "path": "/status",
+          "operator": "equals",
+          "value": "accepted"
+        }
+      ]
+    }
+  ],
+  "invocation": {
+    "operation": "parties.list-parties",
+    "kind": "query",
+    "payload": {
+      "Type": "Person",
+      "Active": true,
+      "CreatedAfter": "2026-01-01T00:00:00Z"
+    },
+    "envelope": {
+      "tenant": "tenant-a",
+      "entityId": "parties",
+      "pageSize": 2,
+      "offset": 0
+    },
+    "expectedGateway": {
+      "method": "POST",
+      "path": "/api/v1/queries",
+      "body": {
+        "tenant": "tenant-a",
+        "domain": "party",
+        "aggregateId": "parties",
+        "queryType": "PartyIndex",
+        "projectionType": "party-index",
+        "projectionActorType": "PartyIndexProjectionQueryActor",
+        "entityId": "parties",
+        "payload": {
+          "Type": "Person",
+          "Active": true,
+          "CreatedAfter": "2026-01-01T00:00:00Z"
+        },
+        "paging": {
+          "pageSize": 2,
+          "offset": 0
+        }
+      },
+      "maskGenerated": []
+    },
+    "scriptedResponse": {
+      "statusCode": 200,
+      "body": {
+        "success": true,
+        "payload": {
+          "items": [
+            {
+              "id": "party-story49",
+              "displayName": "Ada Lovelace",
+              "type": "Person",
+              "isActive": true,
+              "isErased": false
+            }
+          ],
+          "totalCount": 1,
+          "page": 1,
+          "pageSize": 2,
+          "totalPages": 1
+        },
+        "metadata": {
+          "paging": {
+            "pageSize": 2,
+            "offset": 0,
+            "totalCount": 1,
+            "hasMore": false
+          }
+        },
+        "correlationId": "01J9MZHXT3RKM0VWXRXGSJDATK"
+      },
+      "echoRequestFields": []
+    },
+    "assertions": [
+      {
+        "path": "/document/items",
+        "operator": "arrayLength",
+        "value": 1
+      },
+      {
+        "path": "/document/totalCount",
+        "operator": "equals",
+        "value": 1
+      },
+      {
+        "path": "/document/pageSize",
+        "operator": "equals",
+        "value": 2
+      },
+      {
+        "path": "/paging/offset",
+        "operator": "equals",
+        "value": 0
+      },
+      {
+        "path": "/paging/totalCount",
+        "operator": "equals",
+        "value": 1
+      },
+      {
+        "path": "/paging/hasMore",
+        "operator": "equals",
+        "value": false
+      },
+      {
+        "path": "/document/items/0/isErased",
+        "operator": "equals",
+        "value": false
+      },
+      {
+        "path": "/document/items/0/id",
+        "operator": "equals",
+        "value": "party-story49"
+      },
+      {
+        "path": "/document/items/0/type",
+        "operator": "equals",
+        "value": "Person"
+      },
+      {
+        "path": "/document/items/0/isActive",
+        "operator": "equals",
+        "value": true
+      }
+    ]
+  },
+  "postconditions": []
+}

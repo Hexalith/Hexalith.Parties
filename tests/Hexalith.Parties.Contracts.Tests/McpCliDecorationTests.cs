@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 
 using Hexalith.McpCli.Abstractions;
 using Hexalith.Parties.Contracts.Commands;
+using Hexalith.Parties.Contracts.Queries;
 using Hexalith.Parties.Contracts.ValueObjects;
 
 using Shouldly;
@@ -14,7 +15,7 @@ namespace Hexalith.Parties.Contracts.Tests;
 public sealed class McpCliDecorationTests
 {
     [Fact]
-    public void ModuleDeclaresOnlyTheFourApprovedCommandsAndExistingRouting()
+    public void ModuleDeclaresExactlySevenApprovedOperationsAndExistingRouting()
     {
         Assembly assembly = typeof(CreatePartyComposite).Assembly;
         HexalithModuleAttribute module = assembly.GetCustomAttribute<HexalithModuleAttribute>()!;
@@ -27,7 +28,24 @@ public sealed class McpCliDecorationTests
 
         Type[] commands = assembly.GetTypes().Where(t => t.IsDefined(typeof(HexalithCommandAttribute))).OrderBy(t => t.Name).ToArray();
         commands.ShouldBe(new[] { typeof(CreatePartyComposite), typeof(DeactivateParty), typeof(ReactivateParty), typeof(UpdatePartyComposite) });
-        assembly.GetTypes().Where(t => t.IsDefined(typeof(HexalithQueryAttribute))).ShouldBeEmpty();
+        Type[] queries = assembly.GetTypes().Where(t => t.IsDefined(typeof(HexalithQueryAttribute))).OrderBy(t => t.Name).ToArray();
+        queries.ShouldBe(new[] { typeof(GetParty), typeof(ListParties), typeof(SearchParties) });
+        foreach (Type type in queries)
+        {
+            HexalithQueryAttribute query = type.GetCustomAttribute<HexalithQueryAttribute>()!;
+            query.Domain.ShouldBe("party");
+            query.WireType.ShouldBe(type == typeof(GetParty) ? "PartyDetail" : type == typeof(ListParties) ? "PartyIndex" : "PartySearch");
+            query.ProjectionType.ShouldBe(type == typeof(GetParty) ? "party-detail" : "party-index");
+            query.ProjectionActorType.ShouldBe(type == typeof(GetParty) ? "PartyDetailProjectionQueryActor" : "PartyIndexProjectionQueryActor");
+            query.AggregateIdProperty.ShouldBe(type == typeof(GetParty) ? "PartyId" : null);
+            query.AggregateId.ShouldBe(type == typeof(GetParty) ? null : "parties");
+            query.TenantProperty.ShouldBeNull();
+            query.Description.ShouldNotBeNullOrWhiteSpace();
+            query.Example.ShouldNotBeNullOrWhiteSpace();
+            JsonSerializer.Deserialize(query.Example!, type, new JsonSerializerOptions { UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow }).ShouldNotBeNull();
+            type.GetProperty("Page").ShouldBeNull();
+            type.GetProperty("PageSize").ShouldBeNull();
+        }
         foreach (Type type in commands)
         {
             HexalithCommandAttribute command = type.GetCustomAttribute<HexalithCommandAttribute>()!;
@@ -58,7 +76,7 @@ public sealed class McpCliDecorationTests
     public void EveryExposedMemberIncludingNestedMembersHasADescriptionAndScalarIdsAreMarked()
     {
         Type[] types = [typeof(CreatePartyComposite), typeof(UpdatePartyComposite), typeof(ReactivateParty), typeof(DeactivateParty),
-            typeof(AddContactChannel), typeof(UpdateContactChannel), typeof(AddIdentifier), typeof(PersonDetails), typeof(OrganizationDetails)];
+            typeof(GetParty), typeof(ListParties), typeof(SearchParties), typeof(AddContactChannel), typeof(UpdateContactChannel), typeof(AddIdentifier), typeof(PersonDetails), typeof(OrganizationDetails)];
         foreach (PropertyInfo property in types.SelectMany(t => t.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)))
         {
             (property.GetCustomAttribute<DescriptionAttribute>()?.Description).ShouldNotBeNullOrWhiteSpace($"{property.DeclaringType!.Name}.{property.Name}");

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "package": {
     "id": "Hexalith.Parties.Contracts",
-    "version": "0.0.0-story49"
+    "version": "0.0.0-story410"
   },
   "operation": "parties.deactivate-party",
   "kind": "command",
@@ -222,7 +222,8 @@
               "lastName": "Lovelace"
             },
             "isErased": false
-          }
+          },
+          "correlationId": "01J9MZHXT3RKM0VWXRXGSJDATK"
         },
         "echoRequestFields": []
       },

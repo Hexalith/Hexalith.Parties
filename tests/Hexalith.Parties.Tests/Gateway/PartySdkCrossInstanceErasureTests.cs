@@ -90,9 +90,19 @@ public sealed class PartySdkCrossInstanceErasureTests
         sameTenant.GetPayload().Deserialize<PartyDetail>(PartiesJsonOptions.Default)!.DisplayName.ShouldBe("unaffected-a-display");
         readsB.UnavailableKeys.Clear();
         QueryResult recovered = await ExecuteAsync(hostB, queryType);
-        recovered.Success.ShouldBeTrue();
-        recovered.Metadata!.IsDegraded.ShouldBe(false);
-        AssertNoPersonalData(recovered);
+        if (queryType is "GetParty" or "PartyDetail")
+        {
+            recovered.Success.ShouldBeFalse();
+            recovered.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+            recovered.PayloadBytes.ShouldBeNull();
+            recovered.Metadata.ShouldBeNull();
+        }
+        else
+        {
+            recovered.Success.ShouldBeTrue();
+            recovered.Metadata!.IsDegraded.ShouldBe(false);
+            AssertNoPersonalData(recovered);
+        }
     }
 
     /// <summary>Uses the same privacy policy during outages even without any known erasure.</summary>
@@ -140,29 +150,36 @@ public sealed class PartySdkCrossInstanceErasureTests
             Detail = existing.Detail! with { IsErased = true, ErasedAt = erasedAt, LastModifiedAt = modifiedAt },
         }, TestContext.Current.CancellationToken).ConfigureAwait(true);
         var reads = new PartySdkFaultingReadModelStore(store);
-        PartySdkQueryService service = Service(reads, new PartySdkLastKnownReadModelCache());
-        (await ExecuteAsync(service, queryType)).Success.ShouldBeTrue();
+        var cache = new PartySdkLastKnownReadModelCache();
+        PartySdkQueryService service = Service(reads, cache);
+        QueryResult canonical = await ExecuteAsync(service, queryType);
+        canonical.Success.ShouldBe(queryType == "ExportPartyData");
         reads.UnavailableKeys.Add(key);
 
         QueryResult result = await ExecuteAsync(service, queryType);
-        result.Success.ShouldBeTrue();
-        AssertDegraded(result);
-        AssertNoPersonalData(result);
+        cache.TryGetDetail("tenant-a", "party-1", out PartyDetailSdkReadModel? retained).ShouldBeTrue();
+        PartyDetail redacted = retained!.Detail!;
+        redacted.IsErased.ShouldBeTrue();
+        redacted.ErasedAt.ShouldBe(erasedAt);
+        redacted.LastModifiedAt.ShouldBe(modifiedAt);
+        redacted.PersonDetails.ShouldBeNull();
+        redacted.OrganizationDetails.ShouldBeNull();
+        redacted.ContactChannels.ShouldBeEmpty();
+        redacted.Identifiers.ShouldBeEmpty();
+        redacted.ConsentRecords.ShouldBeEmpty();
+        redacted.NameHistory.ShouldBeEmpty();
         if (queryType != "ExportPartyData")
         {
-            PartyDetail detail = result.GetPayload().Deserialize<PartyDetail>(PartiesJsonOptions.Default)!;
-            detail.IsErased.ShouldBeTrue();
-            detail.ErasedAt.ShouldBe(erasedAt);
-            detail.LastModifiedAt.ShouldBe(modifiedAt);
-            detail.PersonDetails.ShouldBeNull();
-            detail.OrganizationDetails.ShouldBeNull();
-            detail.ContactChannels.ShouldBeEmpty();
-            detail.Identifiers.ShouldBeEmpty();
-            detail.ConsentRecords.ShouldBeEmpty();
-            detail.NameHistory.ShouldBeEmpty();
+            result.Success.ShouldBeFalse();
+            result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+            result.PayloadBytes.ShouldBeNull();
+            result.Metadata.ShouldBeNull();
         }
         else
         {
+            result.Success.ShouldBeTrue();
+            AssertDegraded(result);
+            AssertNoPersonalData(result);
             PartyDataPortabilityPackage package = result.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!;
             package.Status.ShouldBe("Erased");
             package.Party.ShouldBeNull();

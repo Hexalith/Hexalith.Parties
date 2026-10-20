@@ -70,6 +70,9 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
         XDocument xmlDocs = XDocument.Load(xmlEntry.Open());
         string docs = xmlDocs.ToString(SaveOptions.DisableFormatting);
 
+        docs.ShouldContain("T:Hexalith.Parties.Contracts.Queries.GetParty");
+        docs.ShouldContain("T:Hexalith.Parties.Contracts.Queries.ListParties");
+        docs.ShouldContain("T:Hexalith.Parties.Contracts.Queries.SearchParties");
         docs.ShouldContain("T:Hexalith.Parties.Contracts.Events.PartyMerged");
         docs.ShouldContain("T:Hexalith.Parties.Contracts.Models.TemporalNameResult");
     }
@@ -136,6 +139,7 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
             using Hexalith.Parties.Contracts.Events;
             using Hexalith.Parties.Contracts.Models;
             using Hexalith.Parties.Contracts.Results;
+            using Hexalith.Parties.Contracts.Queries;
             using Hexalith.Parties.Contracts.Search;
             using Hexalith.Parties.Contracts.Security;
             using Hexalith.Parties.Contracts.State;
@@ -143,6 +147,9 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
 
             Type[] contractTypes =
             [
+                typeof(GetParty),
+                typeof(ListParties),
+                typeof(SearchParties),
                 typeof(CreateParty),
                 typeof(UpdatePersonDetails),
                 typeof(PartyCreated),

@@ -345,3 +345,52 @@ without updating the established party classification; these four operations do
 not provide a classification-change command. Lifecycle operations require an
 existing unrestricted party with current erasure status Active, including
 when requesting an already-current active state.
+
+### Generic McpCli read declarations (local candidate)
+
+The Contracts candidate declares exactly seven operations: `parties.get-party`,
+`parties.list-parties`, `parties.search-parties`, `parties.create-party`,
+`parties.update-party`, `parties.reactivate-party` and `parties.deactivate-party`.
+The complete candidate still requires fresh maintainer approval, exact-source CI,
+and the protected owning release workflow before its published version can be
+pinned in Builds and enrolled in McpCli. The existing five-tool MCP host remains
+available; this declaration work does not authorize retirement.
+
+Queries use domain `party` and envelope tenant authority. Detail uses wire type
+`PartyDetail`, projection `party-detail`, historical compatibility name
+`PartyDetailProjectionQueryActor`, and root `PartyId`. List and search use wire
+`PartyIndex` / `PartySearch`, projection `party-index`, compatibility name
+`PartyIndexProjectionQueryActor`, and aggregate `parties`. The current SDK
+`PartyDetailQueryHandler`, `PartyIndexQueryHandler` and `PartySearchQueryHandler`
+dispatch directly to canonical read models; actor compatibility fields do not
+prove actor execution. Omitted EntityId falls back to AggregateId; supplied
+EntityId must match before any read. String IDs retain existing Parties syntax;
+McpCli still refuses legacy braced, parenthesized and X-format GUID IDs.
+
+Erased detail has the same safe not-found outcome as missing detail. Inactive
+detail stays visible. List accepts optional `Type` (Person or Organization),
+`Active`, and inclusive `CreatedAfter`, `CreatedBefore`, `ModifiedAfter` and
+`ModifiedBefore` instants with explicit offsets. Invalid instants and inverted
+ranges reject. Search accepts `Query`, `Type` and `Active`; it trims the query
+and uses case-insensitive, diacritic-normalized display-name matching, including
+fuzzy matches. Empty/whitespace query returns no matches. Date filters, CaseId,
+unknown fields and unsupported search modes reject rather than being ignored;
+legacy Lexical/DisplayName mode names remain accepted. Duplicate case aliases
+such as `Type` plus `type` reject. Filters and erasure suppression apply before
+paging and totals exclude erased entries.
+
+The new Query DTOs have no payload paging members. When envelope Paging is
+present, it alone governs: size defaults to 20, position to offset 0, maximum
+size 100, and offsets must align with the effective size. A nonblank cursor
+cannot combine with an offset. Cursors bind query type, tenant, user, filters
+and size; changed scope rejects before reading. Response paging reports effective
+size/offset, filtered total, hasMore and nextCursor. When envelope Paging is
+absent, the legacy payload Page/PageSize behavior remains (page defaults to 1,
+size to 20, maximum 100; nonpositive values reject).
+
+`tests/conformance-vectors/mcpcli-v1/` contains seven vectors bound to the local
+`0.0.0-story410` artifact, with prerequisite creates and original write-vector
+Query postconditions retained. Shared McpCli validation and both-head replay
+check wire envelopes, filtered totals, paging and result assertions. Scripted
+replay does not prove live authorization, persisted domain effects or C06–C08;
+Stories 4.11/4.13 remain required before replacement or retirement.

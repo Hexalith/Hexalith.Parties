@@ -1,0 +1,202 @@
+{
+  "formatVersion": 1,
+  "package": {
+    "id": "Hexalith.Parties.Contracts",
+    "version": "0.0.0-story410"
+  },
+  "operation": "parties.get-party",
+  "kind": "query",
+  "prerequisites": [
+    {
+      "operation": "parties.create-party",
+      "kind": "command",
+      "payload": {
+        "PartyId": "party-story49",
+        "Type": "Person",
+        "PersonDetails": {
+          "FirstName": "Ada",
+          "LastName": "Lovelace"
+        },
+        "ContactChannels": [
+          {
+            "PartyId": "party-story49",
+            "ContactChannelId": "email-story49",
+            "Type": "Email",
+            "Value": "ada@example.test",
+            "IsPreferred": true
+          }
+        ],
+        "Identifiers": [
+          {
+            "PartyId": "party-story49",
+            "IdentifierId": "external-story49",
+            "Type": "Other",
+            "Value": "customer-49"
+          }
+        ]
+      },
+      "envelope": {
+        "tenant": "tenant-a",
+        "correlationId": "01J9MZHXT3RKM0VWXRXGSJDATK"
+      },
+      "expectedGateway": {
+        "method": "POST",
+        "path": "/api/v1/commands",
+        "body": {
+          "messageId": "<generated>",
+          "tenant": "tenant-a",
+          "domain": "party",
+          "aggregateId": "party-story49",
+          "commandType": "Hexalith.Parties.Contracts.Commands.CreatePartyComposite",
+          "payload": {
+            "PartyId": "party-story49",
+            "Type": "Person",
+            "PersonDetails": {
+              "FirstName": "Ada",
+              "LastName": "Lovelace"
+            },
+            "ContactChannels": [
+              {
+                "PartyId": "party-story49",
+                "ContactChannelId": "email-story49",
+                "Type": "Email",
+                "Value": "ada@example.test",
+                "IsPreferred": true
+              }
+            ],
+            "Identifiers": [
+              {
+                "PartyId": "party-story49",
+                "IdentifierId": "external-story49",
+                "Type": "Other",
+                "Value": "customer-49"
+              }
+            ]
+          },
+          "correlationId": "01J9MZHXT3RKM0VWXRXGSJDATK"
+        },
+        "maskGenerated": [
+          "/messageId"
+        ]
+      },
+      "scriptedResponse": {
+        "statusCode": 202,
+        "body": {},
+        "echoRequestFields": [
+          "correlationId",
+          "messageId"
+        ]
+      },
+      "assertions": [
+        {
+          "path": "/status",
+          "operator": "equals",
+          "value": "accepted"
+        }
+      ]
+    }
+  ],
+  "invocation": {
+    "operation": "parties.get-party",
+    "kind": "query",
+    "payload": {
+      "PartyId": "party-story49"
+    },
+    "envelope": {
+      "tenant": "tenant-a",
+      "entityId": "party-story49"
+    },
+    "expectedGateway": {
+      "method": "POST",
+      "path": "/api/v1/queries",
+      "body": {
+        "tenant": "tenant-a",
+        "domain": "party",
+        "aggregateId": "party-story49",
+        "queryType": "PartyDetail",
+        "projectionType": "party-detail",
+        "projectionActorType": "PartyDetailProjectionQueryActor",
+        "payload": {
+          "PartyId": "party-story49"
+        },
+        "entityId": "party-story49"
+      },
+      "maskGenerated": []
+    },
+    "scriptedResponse": {
+      "statusCode": 200,
+      "body": {
+        "success": true,
+        "payload": {
+          "id": "party-story49",
+          "isActive": true,
+          "personDetails": {
+            "firstName": "Ada",
+            "lastName": "Lovelace"
+          },
+          "isErased": false,
+          "contactChannels": [
+            {
+              "id": "email-story49",
+              "type": "Email",
+              "value": "ada@example.test",
+              "isPreferred": true
+            }
+          ],
+          "identifiers": [
+            {
+              "id": "external-story49",
+              "type": "Other",
+              "value": "customer-49"
+            }
+          ]
+        },
+        "correlationId": "01J9MZHXT3RKM0VWXRXGSJDATK"
+      },
+      "echoRequestFields": []
+    },
+    "assertions": [
+      {
+        "path": "/document/id",
+        "operator": "equals",
+        "value": "party-story49"
+      },
+      {
+        "path": "/document/isActive",
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "path": "/document/personDetails/firstName",
+        "operator": "equals",
+        "value": "Ada"
+      },
+      {
+        "path": "/document/isErased",
+        "operator": "equals",
+        "value": false
+      },
+      {
+        "path": "/document/contactChannels/0/id",
+        "operator": "equals",
+        "value": "email-story49"
+      },
+      {
+        "path": "/document/contactChannels/0/value",
+        "operator": "equals",
+        "value": "ada@example.test"
+      },
+      {
+        "path": "/document/identifiers/0/id",
+        "operator": "equals",
+        "value": "external-story49"
+      },
+      {
+        "path": "/document/identifiers/0/value",
+        "operator": "equals",
+        "value": "customer-49"
+      }
+    ]
+  },
+  "postconditions": []
+}

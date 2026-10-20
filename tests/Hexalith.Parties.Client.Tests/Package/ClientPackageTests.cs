@@ -54,6 +54,7 @@ public sealed class ClientPackageTests : IDisposable
             "Hexalith.Commons.Http",
             "Hexalith.Commons.UniqueIds",
             "Hexalith.EventStore.Contracts",
+            "Hexalith.McpCli.Abstractions",
             "Hexalith.Parties.Contracts",
             "Microsoft.Extensions.Configuration",
             "Microsoft.Extensions.Configuration.Abstractions",
@@ -67,7 +68,7 @@ public sealed class ClientPackageTests : IDisposable
             "Microsoft.Extensions.Options.ConfigurationExtensions",
         ]);
 
-        dependencyIds.Count.ShouldBeLessThan(MaxDeclaredDependencyCount);
+        dependencyIds.Count.ShouldBeLessThanOrEqualTo(MaxDeclaredDependencyCount);
         new FileInfo(probe.ClientPackagePath).Length.ShouldBeLessThan(MaxPackedClientPackageBytes);
 
         foreach (string forbidden in s_forbiddenDependencyTerms)

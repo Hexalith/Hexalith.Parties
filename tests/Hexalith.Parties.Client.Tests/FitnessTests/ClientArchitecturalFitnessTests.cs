@@ -433,6 +433,7 @@ public sealed class ClientArchitecturalFitnessTests
             "Grpc.Net.Client",
             "Grpc.Net.Common",
             "Hexalith.Commons.UniqueIds",
+            "Hexalith.McpCli.Abstractions",
         ];
 
         List<string> violations =
@@ -443,7 +444,7 @@ public sealed class ClientArchitecturalFitnessTests
         ];
 
         violations.ShouldBeEmpty(
-            $"Client transitive packages must remain limited to Microsoft.Extensions shared framework packages plus the Dapr/Grpc/Protobuf actor-transport stack and identity infrastructure inherited through Hexalith.EventStore.Contracts. " +
+            $"Client transitive packages must remain limited to Microsoft.Extensions shared framework packages plus the Dapr/Grpc/Protobuf actor-transport stack and identity infrastructure inherited through Hexalith.EventStore.Contracts, plus the declaration-only McpCli.Abstractions dependency inherited through Parties.Contracts. " +
             $"Found unexpected: {string.Join(", ", violations)}");
     }
 }

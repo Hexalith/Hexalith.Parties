@@ -24,10 +24,10 @@ public static class PartyIndexProjectionQueryActor
     };
 
     private static readonly Regex s_iso8601WithOffset = new(
-        @"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})$",
+        @"\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})\z",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-    internal static bool TryParseListPayload(byte[]? payloadBytes, out ListPartiesQueryPayload payload)
+    internal static bool TryParseListPayload(byte[]? payloadBytes, out ListPartiesQueryPayload payload, bool ignorePayloadPaging = false)
     {
         payload = new ListPartiesQueryPayload(1, 20, null, null, null, null, null, null);
         if (payloadBytes is null || payloadBytes.Length == 0)
@@ -38,9 +38,9 @@ public static class PartyIndexProjectionQueryActor
         ListPartiesQueryPayloadWire? wire;
         try
         {
-            wire = JsonSerializer.Deserialize<ListPartiesQueryPayloadWire>(payloadBytes, s_jsonOptions);
+            wire = DeserializePayload<ListPartiesQueryPayloadWire>(payloadBytes, ignorePayloadPaging);
         }
-        catch (Exception exception) when (exception is JsonException or ArgumentException or NotSupportedException)
+        catch (Exception exception) when (exception is JsonException or ArgumentException or NotSupportedException or InvalidOperationException)
         {
             return false;
         }
@@ -71,7 +71,7 @@ public static class PartyIndexProjectionQueryActor
         return true;
     }
 
-    internal static bool TryParseSearchPayload(byte[]? payloadBytes, out SearchPartiesQueryPayload payload)
+    internal static bool TryParseSearchPayload(byte[]? payloadBytes, out SearchPartiesQueryPayload payload, bool ignorePayloadPaging = false)
     {
         payload = new SearchPartiesQueryPayload(string.Empty, 1, 20, null, null, null, null);
         if (payloadBytes is null || payloadBytes.Length == 0)
@@ -82,9 +82,9 @@ public static class PartyIndexProjectionQueryActor
         SearchPartiesQueryPayloadWire? wire;
         try
         {
-            wire = JsonSerializer.Deserialize<SearchPartiesQueryPayloadWire>(payloadBytes, s_jsonOptions);
+            wire = DeserializePayload<SearchPartiesQueryPayloadWire>(payloadBytes, ignorePayloadPaging);
         }
-        catch (Exception exception) when (exception is JsonException or ArgumentException or NotSupportedException)
+        catch (Exception exception) when (exception is JsonException or ArgumentException or NotSupportedException or InvalidOperationException)
         {
             return false;
         }
@@ -116,7 +116,7 @@ public static class PartyIndexProjectionQueryActor
     private static bool TryParsePartyType(string? value, out PartyType? type)
     {
         type = null;
-        if (string.IsNullOrWhiteSpace(value))
+        if (value is null)
         {
             return true;
         }
@@ -139,7 +139,7 @@ public static class PartyIndexProjectionQueryActor
     private static bool TryParseInstant(string? value, out DateTimeOffset? instant)
     {
         instant = null;
-        if (string.IsNullOrWhiteSpace(value))
+        if (value is null)
         {
             return true;
         }
@@ -161,41 +161,38 @@ public static class PartyIndexProjectionQueryActor
         }
     }
 
-    internal sealed record ListPartiesQueryPayload(
-        int Page,
-        int PageSize,
-        PartyType? Type,
-        bool? Active,
-        DateTimeOffset? CreatedAfter,
-        DateTimeOffset? CreatedBefore,
-        DateTimeOffset? ModifiedAfter,
-        DateTimeOffset? ModifiedBefore);
+    private static TPayload? DeserializePayload<TPayload>(byte[] bytes, bool ignorePayloadPaging)
+    {
+        using JsonDocument document = JsonDocument.Parse(bytes);
+        if (document.RootElement.ValueKind != JsonValueKind.Object)
+        {
+            return default;
+        }
 
-    private sealed record ListPartiesQueryPayloadWire(
-        int? Page = null,
-        int? PageSize = null,
-        string? Type = null,
-        bool? Active = null,
-        string? CreatedAfter = null,
-        string? CreatedBefore = null,
-        string? ModifiedAfter = null,
-        string? ModifiedBefore = null);
+        HashSet<string> names = new(StringComparer.OrdinalIgnoreCase);
+        using MemoryStream normalized = new();
+        using (Utf8JsonWriter writer = new(normalized))
+        {
+            writer.WriteStartObject();
+            foreach (JsonProperty property in document.RootElement.EnumerateObject())
+            {
+                if (!names.Add(property.Name))
+                {
+                    return default;
+                }
 
-    internal sealed record SearchPartiesQueryPayload(
-        string Query,
-        int Page,
-        int PageSize,
-        PartyType? Type,
-        bool? Active,
-        string? Mode,
-        string? CaseId);
+                if (ignorePayloadPaging && (property.Name.Equals("Page", StringComparison.OrdinalIgnoreCase)
+                    || property.Name.Equals("PageSize", StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
 
-    private sealed record SearchPartiesQueryPayloadWire(
-        string? Query = null,
-        int? Page = null,
-        int? PageSize = null,
-        string? Type = null,
-        bool? Active = null,
-        string? Mode = null,
-        string? CaseId = null);
+                property.WriteTo(writer);
+            }
+
+            writer.WriteEndObject();
+        }
+
+        return JsonSerializer.Deserialize<TPayload>(normalized.ToArray(), s_jsonOptions);
+    }
 }

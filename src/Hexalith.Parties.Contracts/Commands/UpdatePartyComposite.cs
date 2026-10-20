@@ -17,12 +17,12 @@ public sealed record UpdatePartyComposite
     [HexalithIdentifier]
     public required string PartyId { get; init; }
 
-    /// <summary>Complete replacement for an existing Person party only. Omitted or null leaves details unchanged; supplying this for another party type rejects the whole update. Party type cannot change.</summary>
-    [Description("Complete replacement for an existing Person party only. Omitted or null leaves details unchanged; supplying this for another party type rejects the whole update. Party type cannot change.")]
+    /// <summary>Complete replacement for an existing Person party only. Omitting this object or supplying null leaves details unchanged; supplying this for another party type rejects the whole update. Inside a supplied replacement, omitted optional members become null. Party type cannot change.</summary>
+    [Description("Complete replacement for an existing Person party only. Omitting this object or supplying null leaves details unchanged; supplying this for another party type rejects the whole update. Inside a supplied replacement, omitted optional members become null. Party type cannot change.")]
     public PersonDetails? PersonDetails { get; init; }
 
-    /// <summary>Complete replacement for an existing Organization party only. Omitted or null leaves details unchanged; supplying this for another party type rejects the whole update. Party type cannot change.</summary>
-    [Description("Complete replacement for an existing Organization party only. Omitted or null leaves details unchanged; supplying this for another party type rejects the whole update. Party type cannot change.")]
+    /// <summary>Complete replacement for an existing Organization party only. Omitting this object or supplying null leaves details unchanged; supplying this for another party type rejects the whole update. Inside a supplied replacement, omitted optional members become null and IsNaturalPerson defaults to false. The established root classification remains unchanged. Party type cannot change.</summary>
+    [Description("Complete replacement for an existing Organization party only. Omitting this object or supplying null leaves details unchanged; supplying this for another party type rejects the whole update. Inside a supplied replacement, omitted optional members become null and IsNaturalPerson defaults to false. The established root classification remains unchanged. Party type cannot change.")]
     public OrganizationDetails? OrganizationDetails { get; init; }
 
     /// <summary>Contact channels to add with explicit child IDs and matching PartyId. An existing exact ID is skipped even when also listed in UpdateContactChannels; that update still applies.</summary>

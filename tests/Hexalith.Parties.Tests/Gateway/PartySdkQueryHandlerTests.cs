@@ -12,6 +12,7 @@ using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Projections.Services;
 using Hexalith.Parties.Queries;
+using Hexalith.Parties.Search;
 using Hexalith.Parties.Testing;
 
 using Microsoft.Extensions.Logging;
@@ -88,7 +89,7 @@ public sealed class PartySdkQueryHandlerTests
     }
 
     [Fact]
-    public async Task DetailHandlers_ErasedPartyReturnOnlyRedactedStateAsync()
+    public async Task DetailHandlers_ErasedPartyReturnSameSafeMissingResultAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
         PartyDetail erased = Detail("party-1") with
@@ -117,15 +118,14 @@ public sealed class PartySdkQueryHandlerTests
             CreateDetailEnvelope(PartyDetailProjectionQueryActor.PartyDetailQueryType),
             TestContext.Current.CancellationToken);
 
-        getParty.Success.ShouldBeTrue();
-        partyDetail.Success.ShouldBeTrue();
-        PartyDetail getPartyPayload = getParty.GetPayload().Deserialize<PartyDetail>(PartiesJsonOptions.Default)!;
-        PartyDetail partyDetailPayload = partyDetail.GetPayload().Deserialize<PartyDetail>(PartiesJsonOptions.Default)!;
-        getPartyPayload.IsErased.ShouldBeTrue();
-        partyDetailPayload.IsErased.ShouldBeTrue();
-        string serialized = JsonSerializer.Serialize(new[] { getPartyPayload, partyDetailPayload }, PartiesJsonOptions.Default);
-        serialized.ShouldNotContain("Ada Lovelace");
-        serialized.ShouldNotContain("Lovelace, Ada");
+        getParty.Success.ShouldBeFalse();
+        partyDetail.Success.ShouldBeFalse();
+        getParty.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        partyDetail.ErrorMessage.ShouldBe(getParty.ErrorMessage);
+        getParty.PayloadBytes.ShouldBeNull();
+        partyDetail.PayloadBytes.ShouldBeNull();
+        getParty.Metadata.ShouldBeNull();
+        partyDetail.Metadata.ShouldBeNull();
     }
 
     [Fact]
@@ -1277,7 +1277,7 @@ public sealed class PartySdkQueryHandlerTests
         PartySdkQueryService service = CreateService(store, lastKnownCache: cache);
 
         QueryResult saturated = await ExecuteCacheQueryAsync(service, slot, TestContext.Current.CancellationToken);
-        saturated.Success.ShouldBe(seeded || slot == "processing");
+        saturated.Success.ShouldBe((seeded && slot != "detail") || slot == "processing");
         if (saturated.Success)
         {
             saturated.Metadata!.IsDegraded.ShouldBe(true);
@@ -1285,7 +1285,7 @@ public sealed class PartySdkQueryHandlerTests
         }
         else
         {
-            saturated.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+            saturated.ErrorMessage.ShouldBe(slot == "detail" && seeded ? QueryAdapterFailureReason.ActorNotFoundInfrastructure : QueryAdapterFailureReason.ActorException);
         }
 
         string? cachedVersion = slot switch
@@ -1425,8 +1425,8 @@ public sealed class PartySdkQueryHandlerTests
             else
             {
                 QueryResult result = await ExecuteCacheQueryAsync(service, slot, TestContext.Current.CancellationToken);
-                result.Success.ShouldBe(slot == "processing" || outcome is "success" or "degraded");
-                if (outcome == "degraded")
+                result.Success.ShouldBe(slot == "processing" || outcome == "success" || (outcome == "degraded" && slot != "detail"));
+                if (outcome == "degraded" && slot != "detail")
                 {
                     result.Metadata!.IsDegraded.ShouldBe(true);
                 }
@@ -1532,14 +1532,16 @@ public sealed class PartySdkQueryHandlerTests
         await store.DidNotReceiveWithAnyArgs().GetAsync<PartyIndexSdkReadModel>(default!, default!, default);
     }
 
-    [Fact]
-    public async Task DetailHandler_TenantKeySeparatorFailsClosedBeforeStoreReadAsync()
+    [Theory]
+    [InlineData("tenant:escape")]
+    [InlineData("tenant-a\n")]
+    public async Task DetailHandler_TenantKeySeparatorFailsClosedBeforeStoreReadAsync(string tenantId)
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
         var handler = new GetPartyQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType) with { TenantId = "tenant:escape" },
+            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType) with { TenantId = tenantId },
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeFalse();
@@ -2333,6 +2335,260 @@ public sealed class PartySdkQueryHandlerTests
             "processing" => service.GetProcessingRecordsAsync(CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType), cancellationToken),
             _ => service.GetPartyIndexAsync(CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType), cancellationToken),
         };
+
+    [Theory]
+    [InlineData("PartyIndex", null)]
+    [InlineData("PartyIndex", "parties")]
+    [InlineData("PartySearch", null)]
+    [InlineData("PartySearch", "parties")]
+    public async Task PublicIndexRoutes_RetainOptionalEntityFallbackAndSdkDispatchAsync(string queryType, string? entityId)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel { Entries = new Dictionary<string, PartyIndexEntry>() }, "etag"));
+        PartySdkQueryService service = CreateService(store, new LocalFuzzyPartySearchProvider());
+        PartySdkQueryHandler handler = queryType == "PartyIndex" ? new PartyIndexQueryHandler(service) : new PartySearchQueryHandler(service);
+        QueryResult result = await handler.ExecuteAsync(CreateIndexEnvelope(queryType) with { EntityId = entityId }, TestContext.Current.CancellationToken);
+        result.Success.ShouldBeTrue();
+        await store.Received(1).GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("PartyIndex")]
+    [InlineData("PartySearch")]
+    public async Task PublicIndexRoutes_RejectMismatchedIdentityBeforeReadAsync(string queryType)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        PartySdkQueryService service = CreateService(store);
+        PartySdkQueryHandler handler = queryType == "PartyIndex" ? new PartyIndexQueryHandler(service) : new PartySearchQueryHandler(service);
+        QueryResult result = await handler.ExecuteAsync(CreateIndexEnvelope(queryType) with { EntityId = "other" }, TestContext.Current.CancellationToken);
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
+        result.PayloadBytes.ShouldBeNull();
+        await store.DidNotReceiveWithAnyArgs().GetAsync<PartyIndexSdkReadModel>(default!, default!, default);
+    }
+
+    [Theory]
+    [InlineData("PartyIndex", "{\"Type\":\"Person\",\"type\":\"Organization\"}")]
+    [InlineData("PartySearch", "{\"Query\":\"Ada\",\"query\":\"Grace\"}")]
+    [InlineData("PartyIndex", "{\"Page\":1,\"page\":2}")]
+    [InlineData("PartySearch", "{\"CreatedAfter\":\"2026-01-01T00:00:00Z\"}")]
+    [InlineData("PartyIndex", "{\"CreatedAfter\":\"not-a-date\"}")]
+    [InlineData("PartyIndex", "{\"CreatedAfter\":\" \"}")]
+    [InlineData("PartyIndex", "{\"CreatedAfter\":\"2026-01-01T00:00:00Z\\n\"}")]
+    [InlineData("PartyIndex", "{\"ModifiedAfter\":\"2026-02-01T00:00:00Z\",\"ModifiedBefore\":\"2026-01-01T00:00:00Z\"}")]
+    [InlineData("PartyIndex", "{\"CreatedAfter\":\"\"}")]
+    [InlineData("PartyIndex", "{\"Type\":\" \"}")]
+    [InlineData("PartyIndex", """{"\ud800":1}""")]
+    [InlineData("PartyIndex", """{"Type":"\ud800"}""")]
+    [InlineData("PartyIndex", """{"\udc00":1}""")]
+    [InlineData("PartyIndex", """{"Type":"\udc00"}""")]
+    [InlineData("PartySearch", """{"\ud800":1}""")]
+    [InlineData("PartySearch", """{"Query":"\ud800"}""")]
+    [InlineData("PartySearch", """{"\udc00":1}""")]
+    [InlineData("PartySearch", """{"Query":"\udc00"}""")]
+    public async Task PublicQueryPayloads_RejectAmbiguousAliasesAndInvalidFiltersBeforeReadAsync(string queryType, string payload)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        PartySdkQueryService service = CreateService(store);
+        PartySdkQueryHandler handler = queryType == "PartyIndex" ? new PartyIndexQueryHandler(service) : new PartySearchQueryHandler(service);
+        QueryResult result = await handler.ExecuteAsync(CreateIndexEnvelope(queryType) with
+        { Payload = System.Text.Encoding.UTF8.GetBytes(payload), Paging = new QueryPagingOptions() }, TestContext.Current.CancellationToken);
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
+        result.PayloadBytes.ShouldBeNull();
+        result.Metadata.ShouldBeNull();
+        result.ProjectionType.ShouldBeNull();
+        await store.DidNotReceiveWithAnyArgs().GetAsync<PartyIndexSdkReadModel>(default!, default!, default);
+    }
+
+    [Theory]
+    [InlineData("PartyIndex")]
+    [InlineData("PartySearch")]
+    public async Task PublicQueries_FilterErasedAndMixedRowsBeforePagingAndReturnEffectiveTotalsAsync(string queryType)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        PartyIndexEntry[] entries = [
+            IndexEntry("party-1") with { DisplayName = "Ada 1" },
+            IndexEntry("party-2") with { DisplayName = "Ada 2", IsErased = true },
+            IndexEntry("party-3") with { DisplayName = "Ada 3", Type = PartyType.Organization },
+            IndexEntry("party-4") with { DisplayName = "Ada 4", IsActive = false },
+            IndexEntry("party-5") with { DisplayName = "Ada 5" },
+            IndexEntry("party-6") with { DisplayName = "Ada 6" },
+        ];
+        if (queryType == "PartyIndex")
+        {
+            entries = [.. entries,
+                IndexEntry("created-too-early") with { CreatedAt = s_now.AddDays(-1).AddTicks(-1) },
+                IndexEntry("created-too-late") with { CreatedAt = s_now.AddDays(-1).AddTicks(1) },
+                IndexEntry("modified-too-early") with { LastModifiedAt = s_now.AddMinutes(-1).AddTicks(-1) },
+                IndexEntry("modified-too-late") with { LastModifiedAt = s_now.AddMinutes(-1).AddTicks(1) },
+            ];
+        }
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel
+            { Entries = entries.ToDictionary(e => e.Id), ProjectedAt = s_now }, "etag"));
+        PartySdkQueryService service = CreateService(store, new LocalFuzzyPartySearchProvider());
+        PartySdkQueryHandler handler = queryType == "PartyIndex" ? new PartyIndexQueryHandler(service) : new PartySearchQueryHandler(service);
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(queryType == "PartyIndex"
+            ? new { Type = "Person", Active = true, Query = (string?)null }
+            : new { Type = "Person", Active = true, Query = (string?)"  Ada  " });
+        if (queryType == "PartyIndex")
+        {
+            payload = JsonSerializer.SerializeToUtf8Bytes(new { Type = "Person", Active = true,
+                CreatedAfter = s_now.AddDays(-1), CreatedBefore = s_now.AddDays(-1),
+                ModifiedAfter = s_now.AddMinutes(-1), ModifiedBefore = s_now.AddMinutes(-1) });
+        }
+        QueryEnvelope envelope = CreateIndexEnvelope(queryType) with { Payload = payload, Paging = new QueryPagingOptions(PageSize: 2) };
+        QueryResult first = await handler.ExecuteAsync(envelope, TestContext.Current.CancellationToken);
+        first.Success.ShouldBeTrue();
+        JsonElement page = first.GetPayload();
+        page.GetProperty("totalCount").GetInt32().ShouldBe(3);
+        page.GetProperty("items").GetArrayLength().ShouldBe(2);
+        string[] ids = page.GetProperty("items").EnumerateArray().Select(e => (queryType == "PartyIndex" ? e : e.GetProperty("party")).GetProperty("id").GetString()!).ToArray();
+        ids.ShouldBe(["party-1", "party-5"]);
+        first.Metadata!.Paging!.PageSize.ShouldBe(2);
+        first.Metadata.Paging.Offset.ShouldBe(0);
+        first.Metadata.Paging.TotalCount.ShouldBe(3);
+        first.Metadata.Paging.HasMore.ShouldBe(true);
+        QueryResult second = await handler.ExecuteAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 2, Cursor: first.Metadata.Paging.NextCursor) }, TestContext.Current.CancellationToken);
+        second.Success.ShouldBeTrue();
+        second.Metadata!.Paging!.Offset.ShouldBe(2);
+        second.Metadata.Paging.HasMore.ShouldBe(false);
+        second.Metadata.Paging.NextCursor.ShouldBeNull();
+        JsonElement last = second.GetPayload().GetProperty("items").EnumerateArray().Single();
+        (queryType == "PartyIndex" ? last : last.GetProperty("party")).GetProperty("id").GetString().ShouldBe("party-6");
+    }
+
+    [Theory]
+    [InlineData("PartyIndex", false)]
+    [InlineData("PartyIndex", true)]
+    [InlineData("PartySearch", false)]
+    [InlineData("PartySearch", true)]
+    public async Task EnvelopePagingAloneGovernsAndLegacyPayloadPagingRemainsAvailableAsync(string queryType, bool envelopePresent)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        PartyIndexEntry[] entries = Enumerable.Range(1, 30).Select(i => IndexEntry($"party-{i:00}") with { DisplayName = $"Ada {i:00}" }).ToArray();
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel { Entries = entries.ToDictionary(e => e.Id) }, "etag"));
+        PartySdkQueryService service = CreateService(store, new LocalFuzzyPartySearchProvider());
+        PartySdkQueryHandler handler = queryType == "PartyIndex" ? new PartyIndexQueryHandler(service) : new PartySearchQueryHandler(service);
+        string payload = queryType == "PartyIndex" ? "{\"Page\":2,\"PageSize\":2}" : "{\"Query\":\"Ada\",\"Page\":2,\"PageSize\":2}";
+        QueryEnvelope envelope = CreateIndexEnvelope(queryType) with { Payload = System.Text.Encoding.UTF8.GetBytes(payload), Paging = envelopePresent ? new QueryPagingOptions() : null };
+        QueryResult result = await handler.ExecuteAsync(envelope, TestContext.Current.CancellationToken);
+        result.Success.ShouldBeTrue();
+        result.GetPayload().GetProperty("page").GetInt32().ShouldBe(envelopePresent ? 1 : 2);
+        result.GetPayload().GetProperty("pageSize").GetInt32().ShouldBe(envelopePresent ? 20 : 2);
+        result.GetPayload().GetProperty("items").GetArrayLength().ShouldBe(envelopePresent ? 20 : 2);
+        if (envelopePresent)
+        {
+            result.Metadata!.Paging!.Offset.ShouldBe(0);
+            result.Metadata.Paging.PageSize.ShouldBe(20);
+            envelope = envelope with { Payload = System.Text.Encoding.UTF8.GetBytes(queryType == "PartyIndex" ? "{\"Page\":-1,\"PageSize\":\"ignored\"}" : "{\"Query\":\"Ada\",\"Page\":-1,\"PageSize\":\"ignored\"}") };
+            (await handler.ExecuteAsync(envelope, TestContext.Current.CancellationToken)).Success.ShouldBeTrue();
+        }
+        else
+        {
+            result.Metadata!.Paging.ShouldBeNull();
+        }
+    }
+
+    [Theory]
+    [InlineData("PartyIndex", 0, 0, null)]
+    [InlineData("PartyIndex", 101, 0, null)]
+    [InlineData("PartyIndex", 2, -1, null)]
+    [InlineData("PartyIndex", 2, 1, null)]
+    [InlineData("PartyIndex", 2, 0, "invalid")]
+    [InlineData("PartySearch", 101, 0, null)]
+    [InlineData("PartySearch", 2, 1, null)]
+    [InlineData("PartySearch", 2, null, "invalid")]
+    public async Task PublicPaging_RejectsInvalidBoundsCursorAndOffsetBeforeReadAsync(string queryType, int pageSize, int? offset, string? cursor)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        PartySdkQueryService service = CreateService(store);
+        PartySdkQueryHandler handler = queryType == "PartyIndex" ? new PartyIndexQueryHandler(service) : new PartySearchQueryHandler(service);
+        QueryResult result = await handler.ExecuteAsync(CreateIndexEnvelope(queryType) with { Paging = new QueryPagingOptions(PageSize: pageSize, Cursor: cursor, Offset: offset) }, TestContext.Current.CancellationToken);
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidCursor);
+        result.PayloadBytes.ShouldBeNull();
+        await store.DidNotReceiveWithAnyArgs().GetAsync<PartyIndexSdkReadModel>(default!, default!, default);
+    }
+
+    [Fact]
+    public async Task SearchCaseFilterIsRejectedBeforeReadAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var handler = new PartySearchQueryHandler(CreateService(store));
+        QueryResult result = await handler.ExecuteAsync(CreateIndexEnvelope("PartySearch") with { Payload = JsonSerializer.SerializeToUtf8Bytes(new { Query = "Ada", CaseId = "unsupported" }) }, TestContext.Current.CancellationToken);
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.UnsupportedQueryType);
+        result.PayloadBytes.ShouldBeNull();
+        await store.DidNotReceiveWithAnyArgs().GetAsync<PartyIndexSdkReadModel>(default!, default!, default);
+    }
+
+    [Theory]
+    [InlineData("PartyIndex", "tenant")]
+    [InlineData("PartyIndex", "user")]
+    [InlineData("PartyIndex", "type")]
+    [InlineData("PartyIndex", "active")]
+    [InlineData("PartyIndex", "date")]
+    [InlineData("PartyIndex", "size")]
+    [InlineData("PartySearch", "tenant")]
+    [InlineData("PartySearch", "user")]
+    [InlineData("PartySearch", "type")]
+    [InlineData("PartySearch", "active")]
+    [InlineData("PartySearch", "query")]
+    [InlineData("PartySearch", "size")]
+    public async Task PublicContinuationRejectsScopeChangesBeforeAnotherReadAsync(string queryType, string change)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        PartyIndexEntry[] entries = Enumerable.Range(1, 3).Select(i => IndexEntry($"party-{i}") with { DisplayName = $"Ada {i}" }).ToArray();
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel { Entries = entries.ToDictionary(e => e.Id) }, "etag"));
+        PartySdkQueryService service = CreateService(store, new LocalFuzzyPartySearchProvider());
+        PartySdkQueryHandler handler = queryType == "PartyIndex" ? new PartyIndexQueryHandler(service) : new PartySearchQueryHandler(service);
+        byte[] payload = System.Text.Encoding.UTF8.GetBytes(queryType == "PartyIndex"
+            ? "{\"Type\":\"Person\",\"Active\":true,\"CreatedAfter\":\"2026-01-01T00:00:00Z\"}"
+            : "{\"Query\":\"Ada\",\"Type\":\"Person\",\"Active\":true}");
+        QueryEnvelope envelope = CreateIndexEnvelope(queryType) with { Payload = payload, Paging = new QueryPagingOptions(PageSize: 2) };
+        QueryResult first = await handler.ExecuteAsync(envelope, TestContext.Current.CancellationToken);
+        first.Success.ShouldBeTrue();
+        string cursor = first.Metadata!.Paging!.NextCursor.ShouldNotBeNull();
+        QueryEnvelope continuation = envelope with { Paging = new QueryPagingOptions(PageSize: change == "size" ? 3 : 2, Cursor: cursor) };
+        string changedPayload = System.Text.Encoding.UTF8.GetString(payload);
+        continuation = change switch
+        {
+            "tenant" => continuation with { TenantId = "tenant-b" },
+            "user" => continuation with { UserId = "other-user" },
+            "type" => continuation with { Payload = System.Text.Encoding.UTF8.GetBytes(changedPayload.Replace("Person", "Organization", StringComparison.Ordinal)) },
+            "active" => continuation with { Payload = System.Text.Encoding.UTF8.GetBytes(changedPayload.Replace("true", "false", StringComparison.Ordinal)) },
+            "date" => continuation with { Payload = System.Text.Encoding.UTF8.GetBytes(changedPayload.Replace("2026-01-01", "2026-02-01", StringComparison.Ordinal)) },
+            "query" => continuation with { Payload = System.Text.Encoding.UTF8.GetBytes(changedPayload.Replace("Ada", "Grace", StringComparison.Ordinal)) },
+            _ => continuation,
+        };
+        store.ClearReceivedCalls();
+        QueryResult rejected = await handler.ExecuteAsync(continuation, TestContext.Current.CancellationToken);
+        rejected.Success.ShouldBeFalse();
+        rejected.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidCursor);
+        rejected.PayloadBytes.ShouldBeNull();
+        await store.DidNotReceiveWithAnyArgs().GetAsync<PartyIndexSdkReadModel>(default!, default!, default);
+    }
+
+    [Fact]
+    public async Task SearchProviderNeverReceivesErasedEntriesAsync()
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        PartyIndexEntry[] entries = [IndexEntry("visible"), IndexEntry("erased") with { IsErased = true }];
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel { Entries = entries.ToDictionary(e => e.Id) }, "etag"));
+        IPartySearchProvider provider = Substitute.For<IPartySearchProvider>();
+        string[]? receivedIds = null;
+        provider.Search(Arg.Do<IEnumerable<PartyIndexEntry>>(items => receivedIds = items.Select(e => e.Id).ToArray()),
+            Arg.Any<string>(), Arg.Any<PartyType?>(), Arg.Any<bool?>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(new PagedResult<PartySearchResult> { Items = [], Page = 1, PageSize = 20, TotalCount = 0, TotalPages = 1 });
+        QueryResult result = await new PartySearchQueryHandler(CreateService(store, provider)).ExecuteAsync(CreateIndexEnvelope("PartySearch"), TestContext.Current.CancellationToken);
+        result.Success.ShouldBeTrue();
+        receivedIds.ShouldBe(["visible"]);
+    }
 
     private static PartySdkQueryService CreateService(
         IReadModelStore store,
