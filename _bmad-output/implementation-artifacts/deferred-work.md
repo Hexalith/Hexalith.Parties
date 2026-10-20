@@ -499,7 +499,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: PartyMemoryCleanupService.DeleteByPartyAsync
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `PartyMemoryCleanupService.DeleteByPartyAsync` uses the already-cancelled caller token in its `finally` mapping update, so cancellation can prevent the promised resumable audit state from being saved.
-status: open
+status: done 2026-10-20
+resolution: Confirmed deletion progress is reconciled through exact-entry, concurrency-safe removal using an independent five-second cooperative cancellation budget before caller cancellation propagates. Unfinished, ambiguous and concurrent mappings remain discoverable; failed recovery logs only its type and preserves caller cancellation. Debug/source build has zero warnings/errors; 96 focused and 1920 full service tests pass without failures/errors/skips/not-run. Exercised rollback passes 1901 baseline tests and restores implementation bytes exactly. All six independent review findings are patched and follow-up verified; no new deferrals. See spec-dw-64-cancelled-cleanup-progress.md and tests/dw-64-cancelled-cleanup-progress-2026-10-20/validation.json. Existing-build EventStore/Tenants startup failures remain a separate topology qualification limitation; terminal Memories workflow completion is not claimed.
+activated_by_spec: `_bmad-output/implementation-artifacts/spec-dw-64-cancelled-cleanup-progress.md`
 
 ### DW-65: Compensate after cancellation between Memories ingestion and mapping persistence
 

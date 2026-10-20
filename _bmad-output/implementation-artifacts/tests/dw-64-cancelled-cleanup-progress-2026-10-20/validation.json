@@ -1,0 +1,249 @@
+{
+    "scope": "DW-64: preserve confirmed Memories cleanup progress after caller cancellation",
+    "date": "2026-10-20",
+    "baseline_parties_sha": "500bcc7d143c12a995eae886ff9c706024da25af",
+    "dependency_mode": "Debug assets with UseHexalithProjectReferences=true; selected dependencies unchanged",
+    "selected_root_gitlinks": {
+        "references/Hexalith.AI.Tools": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+        "references/Hexalith.Builds": "332b2c144defba546fe0a09626a4a72f2340e22f",
+        "references/Hexalith.Commons": "b7e6e7d5e28568b30c523130339cc4c52e12c674",
+        "references/Hexalith.EventStore": "d55c6f7c11e9bce6f17d490a84c83f1561979d63",
+        "references/Hexalith.FrontComposer": "1513fe3ed21a554eeee7a9d807f9b9e25fdb4cd2",
+        "references/Hexalith.McpCli": "c25e2140e14a76b696a76aed30c8302107714fd6",
+        "references/Hexalith.Memories": "d0c5d8ca96b06e02acdda88f255b33288642a7f7",
+        "references/Hexalith.Platform": "5f18593639832d1245577dd93ec07687517d3acb",
+        "references/Hexalith.PolymorphicSerializations": "80ce5afd99216ce5f591d66c833feafaf371f171",
+        "references/Hexalith.Tenants": "c9feedb6656d70c7271e851c844ee29bdfb28c3e"
+    },
+    "checked_out_root_revisions": {
+        "references/Hexalith.AI.Tools": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+        "references/Hexalith.Builds": "332b2c144defba546fe0a09626a4a72f2340e22f",
+        "references/Hexalith.Commons": "b7e6e7d5e28568b30c523130339cc4c52e12c674",
+        "references/Hexalith.EventStore": "d55c6f7c11e9bce6f17d490a84c83f1561979d63",
+        "references/Hexalith.FrontComposer": "1513fe3ed21a554eeee7a9d807f9b9e25fdb4cd2",
+        "references/Hexalith.McpCli": "c25e2140e14a76b696a76aed30c8302107714fd6",
+        "references/Hexalith.Memories": "d0c5d8ca96b06e02acdda88f255b33288642a7f7",
+        "references/Hexalith.Platform": "5f18593639832d1245577dd93ec07687517d3acb",
+        "references/Hexalith.PolymorphicSerializations": "80ce5afd99216ce5f591d66c833feafaf371f171",
+        "references/Hexalith.Tenants": "c9feedb6656d70c7271e851c844ee29bdfb28c3e"
+    },
+    "build": {
+        "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+        "exit_code": 0,
+        "warnings": 0,
+        "errors": 0,
+        "log_sha256": "65b073e395e85fb8c4a5ddb99664fe4983bee2087354f56573bd33d97f9b7e9a"
+    },
+    "baseline_focused": {
+        "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Search.PartyMemoryCleanupServiceTests -result-xml /tmp/dw-64-baseline-focused.xml",
+        "exit_code": 0,
+        "outcomes": {
+            "total": 47,
+            "passed": 47,
+            "failed": 0,
+            "skipped": 0,
+            "not-run": 0,
+            "errors": 0
+        },
+        "xml_sha256": "528e21782a86d4996966caff564252d9398c9cb7e02e94221ab601bb07b4f82f"
+    },
+    "final_focused": {
+        "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Search.PartyMemoryCleanupCancellationTests -class Hexalith.Parties.Tests.Search.PartyMemoryCleanupServiceTests -class Hexalith.Parties.Tests.Search.PartyMemoryUnitMappingStoreTests -result-xml /tmp/dw-64-final-focused.xml",
+        "exit_code": 0,
+        "outcomes": {
+            "total": 96,
+            "passed": 96,
+            "failed": 0,
+            "skipped": 0,
+            "not-run": 0,
+            "errors": 0
+        },
+        "xml_sha256": "15c744d572418866a829fc6ae7b64fc241e0fe3fefae13831cd8ebd64432e93c"
+    },
+    "final_full": {
+        "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-64-final-full.xml",
+        "exit_code": 0,
+        "outcomes": {
+            "total": 1920,
+            "passed": 1920,
+            "failed": 0,
+            "skipped": 0,
+            "not-run": 0,
+            "errors": 0
+        },
+        "xml_sha256": "0ba4eac9c7ef1c5121e1e9bad40b0306973db7823425ef015f7fdaa8a9a085c0"
+    },
+    "rollback": {
+        "revision": "500bcc7d143c12a995eae886ff9c706024da25af",
+        "commands": [
+            {
+                "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+                "exit_code": 0,
+                "elapsed_seconds": 16.542,
+                "log": "/tmp/dw-64-rollback-build.log"
+            },
+            {
+                "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/dw-64-rollback-full.xml",
+                "exit_code": 0,
+                "elapsed_seconds": 12.371,
+                "log": "/tmp/dw-64-rollback-full.log"
+            }
+        ],
+        "restored_byte_for_byte": true,
+        "scope": "Restore baseline cleanup source and omit only the three owned new test files; restore exact implementation bytes afterward",
+        "baseline_full_outcomes": {
+            "total": 1901,
+            "passed": 1901,
+            "failed": 0,
+            "skipped": 0,
+            "not-run": 0,
+            "errors": 0
+        },
+        "baseline_xml_sha256": "d195b9ef4ff4dfaa12b1f189dc56410dfeba14737e52aacccc8749b80ee5ce54",
+        "build_log_sha256": "465043153446be362e309aecc2ee1a7c2099ca4c89df148b3b875090e672a206"
+    },
+    "runtime_baseline": {
+        "initial_running_apphosts": [],
+        "start": {
+            "command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --no-build --format Json --non-interactive",
+            "exit_code": 0
+        },
+        "waits": [
+            {
+                "command": "aspire wait parties --status healthy --timeout 20 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+                "exit_code": 0,
+                "result": "healthy"
+            },
+            {
+                "command": "aspire wait eventstore --status healthy --timeout 20 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+                "exit_code": 18,
+                "result": "failed to start; resource finished"
+            },
+            {
+                "command": "aspire wait tenants --status healthy --timeout 20 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+                "exit_code": 18,
+                "result": "failed to start; resource finished"
+            }
+        ],
+        "describe_command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+        "resources": [
+            {
+                "displayName": "eventstore-admin-dapr-cli",
+                "state": "Running",
+                "healthStatus": "Healthy"
+            },
+            {
+                "displayName": "eventstore-admin",
+                "state": "Finished"
+            },
+            {
+                "displayName": "eventstore-admin-ui-dapr-cli",
+                "state": "Running",
+                "healthStatus": "Healthy"
+            },
+            {
+                "displayName": "eventstore-admin-ui",
+                "state": "NotStarted"
+            },
+            {
+                "displayName": "eventstore-dapr-cli",
+                "state": "Running",
+                "healthStatus": "Healthy"
+            },
+            {
+                "displayName": "eventstore",
+                "state": "Finished"
+            },
+            {
+                "displayName": "parties-dapr-cli",
+                "state": "Running",
+                "healthStatus": "Healthy"
+            },
+            {
+                "displayName": "parties",
+                "state": "Running",
+                "healthStatus": "Healthy"
+            },
+            {
+                "displayName": "parties-mcp",
+                "state": "NotStarted"
+            },
+            {
+                "displayName": "parties-ui",
+                "state": "Running",
+                "healthStatus": "Healthy"
+            },
+            {
+                "displayName": "security-eventstore-client-password",
+                "state": "Running",
+                "healthStatus": "Healthy"
+            },
+            {
+                "displayName": "security-eventstore-client-username",
+                "state": "Running",
+                "healthStatus": "Healthy"
+            },
+            {
+                "displayName": "security",
+                "state": "Running",
+                "healthStatus": "Healthy"
+            },
+            {
+                "displayName": "tenants-dapr-cli",
+                "state": "Running",
+                "healthStatus": "Healthy"
+            },
+            {
+                "displayName": "tenants",
+                "state": "Finished"
+            }
+        ],
+        "stop": {
+            "command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+            "exit_code": 0
+        },
+        "final_running_apphosts": [],
+        "qualification": "Existing-build readiness observation only; EventStore/Tenants startup failures prevent complete-topology qualification"
+    },
+    "static_checks": [
+        {
+            "command": "bash scripts/check-no-warning-override.sh",
+            "exit_code": 0
+        },
+        {
+            "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check",
+            "exit_code": 0
+        }
+    ],
+    "commitlint": {
+        "command": "node_modules/.bin/commitlint --edit /tmp/dw-64-commit-message.txt --verbose",
+        "exit_code": 0,
+        "pinned_and_installed_cli_version": "21.2.2",
+        "message": "fix: preserve cancelled memories cleanup progress",
+        "evidence": "commitlint.txt"
+    },
+    "review": {
+        "layers": [
+            "blind-hunter"
+        ],
+        "skipped_layers": [],
+        "findings": 6,
+        "patched": 6,
+        "new_deferrals": 0,
+        "followup": "Independent read-only follow-up verified all six test corrections; no concrete remaining issue found"
+    },
+    "source_sha256": {
+        "src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs": "c0af2277a479e23571ec2bd56839b8ad46d49e6690ef43a2009c8eb618504eef",
+        "tests/Hexalith.Parties.Tests/Search/PartyMemoryCleanupCancellationTests.cs": "438399143067714b80b11b2ba6cfb4a3f9dea9d91b57112db22d58ccd9957c2a",
+        "tests/Hexalith.Parties.Tests/Search/InterceptedPartyMemoryMappingStore.cs": "dd5f3ca1f980829aff00173e61775d0d17c7bf799e9cb4564c44562ad41c05c3",
+        "tests/Hexalith.Parties.Tests/Search/BlockingCleanupResponseStream.cs": "05a278a61a3ab46ae5f5dbab297a1bd17403a3d0bb6f889ba9096dc76fa5fb34"
+    },
+    "assembly_sha256": {
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll": "015646808d2eef0159b4442f9d80e7f49de50da543dcd3b67abe38056fe90f8c",
+        "src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll": "4d97b50b6922428a85eb9b89f354b67d1f8bfad638e250c86b41d4f7b856e5a4"
+    },
+    "limitations": [
+        "Recovery deadline bounds cooperative cancellation; terminal Memories workflow completion and ingestion-before-mapping cancellation remain separate deferred work",
+        "No dependency, gitlink, event/query contract, migration, deployment or remote publication changes"
+    ]
+}

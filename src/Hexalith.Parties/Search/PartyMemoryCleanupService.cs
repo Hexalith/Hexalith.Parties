@@ -9,7 +9,7 @@ namespace Hexalith.Parties.Search;
 /// <summary>
 /// Deletes mapped Memories units and probes the versioned per-unit cleanup route.
 /// </summary>
-internal sealed class PartyMemoryCleanupService(
+internal sealed partial class PartyMemoryCleanupService(
     HttpClient httpClient,
     IPartyMemoryUnitMappingStore mappingStore,
     ILogger<PartyMemoryCleanupService> logger)
@@ -91,6 +91,9 @@ internal sealed class PartyMemoryCleanupService(
     /// <b>Inventory progress (P17 / P25).</b> Successfully cleaned exact snapshot entries
     /// are removed in the final mapping update using optimistic concurrency. Failed entries,
     /// concurrent additions and changed case/source identities remain available for a retry.
+    /// Progress persistence has a five-second cancellation budget independent of the caller;
+    /// caller cancellation propagates after that attempt. A recovery failure during caller
+    /// cancellation is logged without masking cancellation; other persistence failures propagate.
     /// Deletion counts describe this call's snapshot, not terminal physical-erasure proof.
     /// </para>
     /// <para>
@@ -143,6 +146,8 @@ internal sealed class PartyMemoryCleanupService(
                 Cleaned: false,
                 BlockedReason: "Memories cleanup could not verify its mapping inventory.");
         }
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (mappings.Count == 0)
         {
@@ -204,15 +209,25 @@ internal sealed class PartyMemoryCleanupService(
         }
         finally
         {
-            // Remove only completed targets; never replace the inventory from our old
-            // snapshot. Caller-cancellation recovery is tracked separately in DW-64.
+            // Preserve confirmed progress even when the caller cancels during a DELETE
+            // or this write. The independent budget bounds cooperative store recovery.
             if (cleanedEntries.Count > 0)
             {
-                retainedCount = await mappingStore
-                    .RemoveMappingsAsync(tenantId, partyId, cleanedEntries, cancellationToken)
-                    .ConfigureAwait(false);
+                using var recovery = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                try
+                {
+                    retainedCount = await mappingStore
+                        .RemoveMappingsAsync(tenantId, partyId, cleanedEntries, recovery.Token)
+                        .ConfigureAwait(false);
+                }
+                catch (Exception ex) when (cancellationToken.IsCancellationRequested)
+                {
+                    LogCancelledProgressPersistenceFailure(logger, ex.GetType().Name);
+                }
             }
         }
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (firstBlockedReason is not null)
         {
@@ -326,4 +341,9 @@ internal sealed class PartyMemoryCleanupService(
                 "Memories cleanup API token is not a valid HTTP header value (likely contains whitespace or control characters). The token has been ignored; cleanup calls will be unauthenticated.");
         }
     }
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Memories cleanup progress persistence failed after caller cancellation with {ExceptionType}; cleanup must be retried.")]
+    private static partial void LogCancelledProgressPersistenceFailure(ILogger logger, string exceptionType);
 }
