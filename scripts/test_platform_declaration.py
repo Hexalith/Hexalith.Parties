@@ -3,6 +3,7 @@ import copy
 import importlib.util
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -43,7 +44,7 @@ class PlatformDeclarationTests(unittest.TestCase):
             "tag": self.acl.replace("appId: eventstore", "appId: !unsafe eventstore"),
             "missing route": self.acl[:self.acl.index("          - name: /project/rebuild/verify/v1")],
         }.items():
-            with self.subTest(label=label), self.assertRaises((AssertionError, ValueError, SyntaxError)):
+            with self.subTest(label=label), self.assertRaises((ValueError, SyntaxError)):
                 renderer.declaration(content)
 
     def test_check_rejects_missing_stale_and_unsafe_inputs_without_rewriting(self):
@@ -72,6 +73,35 @@ class PlatformDeclarationTests(unittest.TestCase):
                 with patch("sys.argv", [str(SCRIPT)]):
                     self.assertEqual(renderer.main(), 1)
                 self.assertEqual(manifest.read_bytes(), rendered)
+
+    def test_optimized_process_rejects_unsafe_acl_without_rewriting(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            script = root / "scripts/render-platform-declaration.py"
+            script.parent.mkdir()
+            script.write_bytes(SCRIPT.read_bytes())
+            acl = root / "src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml"
+            acl.parent.mkdir(parents=True)
+            manifest = root / "module/hexalith.module-manifest.v2.json"
+            manifest.parent.mkdir()
+            original = renderer.MANIFEST.read_bytes()
+            manifest.write_bytes(original)
+            for content in (
+                self.acl.replace("appId: eventstore", "appId: unexpected"),
+                self.acl.replace("['POST']", "['GET']", 1),
+                self.acl.replace("appId: eventstore", "appId: unexpected").replace("['POST']", "['GET']", 1),
+            ):
+                with self.subTest(content=content):
+                    acl.write_text(content)
+                    result = subprocess.run([sys.executable, "-O", str(script)], capture_output=True, text=True, check=False)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn("Platform declaration:", result.stderr)
+                    self.assertNotIn("Traceback", result.stderr)
+                    self.assertEqual(manifest.read_bytes(), original)
+            acl.write_text(self.acl)
+            result = subprocess.run([sys.executable, "-O", str(script)], capture_output=True, text=True, check=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(manifest.read_bytes(), original)
 
     def test_build_files_leave_all_source_selection_to_the_tool(self):
         root = SCRIPT.parents[1]

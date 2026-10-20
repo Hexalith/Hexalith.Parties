@@ -110,6 +110,20 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Initialize direct declaration owners
+        run: git -c submodule.recurse=false submodule update --init references/Hexalith.EventStore references/Hexalith.Tenants references/Hexalith.Memories
+      - name: Restore the pinned module tool
+        run: dotnet tool restore
+      - name: Validate Parties with its reference declarations
+        run: >-
+          dotnet tool run hexalith-module -- validate
+          --manifest module/hexalith.module-manifest.v2.json
+          --manifest references/Hexalith.EventStore/module/hexalith.module-manifest.v2.json
+          --manifest references/Hexalith.Tenants/module/hexalith.module-manifest.v2.json
+          --manifest references/Hexalith.Memories/module/hexalith.module-manifest.v2.json
       - name: Check the owner ACL declaration
         run: python3 scripts/render-platform-declaration.py --check
       - name: Test strict declaration rendering

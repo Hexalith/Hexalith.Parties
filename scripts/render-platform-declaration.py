@@ -22,7 +22,8 @@ def _acl_yaml_lines(content: str) -> list[tuple[int, str]]:
     """Tokenize the policy's supported YAML subset, ignoring comments outside quotes."""
     lines = []
     for raw in content.splitlines():
-        assert "\t" not in raw, "ACL YAML tabs are unsupported"
+        if not ('\t' not in raw):
+            raise ValueError('ACL YAML tabs are unsupported')
         quote = None
         for position, character in enumerate(raw):
             if character in "\"'" and (position == 0 or raw[position - 1] != "\\"):
@@ -37,30 +38,36 @@ def _acl_yaml_lines(content: str) -> list[tuple[int, str]]:
 
 def _acl_pair(text: str) -> tuple[str, object]:
     key, separator, raw_value = text.partition(":")
-    assert separator and re.fullmatch(r"[A-Za-z][A-Za-z0-9]*", key), f"Unsupported ACL YAML field: {text}"
+    if not (separator and re.fullmatch('[A-Za-z][A-Za-z0-9]*', key)):
+        raise ValueError(f'Unsupported ACL YAML field: {text}')
     raw_value = raw_value.strip()
     if raw_value.startswith(("[", "'", '"')):
         value = ast.literal_eval(raw_value)
     else:
-        assert not raw_value.startswith(("&", "*", "!", "{", "}")), f"Unsupported ACL YAML value: {text}"
+        if not (not raw_value.startswith(('&', '*', '!', '{', '}'))):
+            raise ValueError(f'Unsupported ACL YAML value: {text}')
         value = raw_value
     return key, value
 
 
 def _acl_set(target: dict, key: str, value: object) -> None:
-    assert key not in target, f"Duplicate ACL YAML field: {key}"
+    if not (key not in target):
+        raise ValueError(f'Duplicate ACL YAML field: {key}')
     target[key] = value
 
 
 def parse_effective_acl(content: str) -> dict:
     """Parse the ACL's map/list YAML shape without adding a checkout dependency."""
     lines = _acl_yaml_lines(content)
-    assert sum(indent == 0 and text.startswith("spec:") for indent, text in lines) == 1, "Duplicate or missing ACL spec"
-    assert sum(indent == 2 and text.startswith("accessControl:") for indent, text in lines) == 1, (
-        "Duplicate or missing spec.accessControl")
-    assert (0, "spec:") in lines, "Unsupported ACL spec mapping"
+    if not (sum((indent == 0 and text.startswith('spec:') for indent, text in lines)) == 1):
+        raise ValueError('Duplicate or missing ACL spec')
+    if not (sum((indent == 2 and text.startswith('accessControl:') for indent, text in lines)) == 1):
+        raise ValueError('Duplicate or missing spec.accessControl')
+    if not ((0, 'spec:') in lines):
+        raise ValueError('Unsupported ACL spec mapping')
     spec_index = lines.index((0, "spec:"))
-    assert (2, "accessControl:") in lines[spec_index + 1:], "Missing spec.accessControl"
+    if not ((2, 'accessControl:') in lines[spec_index + 1:]):
+        raise ValueError('Missing spec.accessControl')
     start = lines.index((2, "accessControl:"), spec_index + 1) + 1
     acl: dict = {}
     policy = None
@@ -71,37 +78,45 @@ def parse_effective_acl(content: str) -> dict:
         if indent == 4:
             key, value = _acl_pair(text)
             if key == "policies":
-                assert value == "", "ACL policies must be a sequence"
+                if not (value == ''):
+                    raise ValueError('ACL policies must be a sequence')
                 value = []
             _acl_set(acl, key, value)
             policy = operation = None
         elif indent == 6:
-            assert text.startswith("- ") and isinstance(acl.get("policies"), list)
+            if not (text.startswith('- ') and isinstance(acl.get('policies'), list)):
+                raise ValueError('Malformed ACL policy structure')
             key, value = _acl_pair(text[2:])
-            assert key == "appId"
+            if not (key == 'appId'):
+                raise ValueError('Malformed ACL policy structure')
             policy = {key: value}
             acl["policies"].append(policy)
             operation = None
         elif indent == 8:
-            assert policy is not None
+            if not (policy is not None):
+                raise ValueError('Malformed ACL policy structure')
             key, value = _acl_pair(text)
             if key == "operations":
-                assert value == "", "ACL operations must be a sequence"
+                if not (value == ''):
+                    raise ValueError('ACL operations must be a sequence')
                 value = []
             _acl_set(policy, key, value)
             operation = None
         elif indent == 10:
-            assert policy is not None and isinstance(policy.get("operations"), list) and text.startswith("- ")
+            if not (policy is not None and isinstance(policy.get('operations'), list) and text.startswith('- ')):
+                raise ValueError('Malformed ACL policy structure')
             key, value = _acl_pair(text[2:])
-            assert key == "name"
+            if not (key == 'name'):
+                raise ValueError('Malformed ACL policy structure')
             operation = {key: value}
             policy["operations"].append(operation)
         elif indent == 12:
-            assert operation is not None
+            if not (operation is not None):
+                raise ValueError('Malformed ACL policy structure')
             key, value = _acl_pair(text)
             _acl_set(operation, key, value)
         else:
-            raise AssertionError(f"Unsupported ACL YAML indentation: {indent}: {text}")
+            raise ValueError(f"Unsupported ACL YAML indentation: {indent}: {text}")
     return acl
 
 
@@ -442,30 +457,39 @@ TEMPLATE = json.loads(r'''
 def declaration(content: str) -> dict:
     """Fail closed before deriving the effective invocation grants."""
     lines = _acl_yaml_lines(content)
-    assert [(indent, text) for indent, text in lines if indent == 0] == [
-        (0, "apiVersion: dapr.io/v1alpha1"), (0, "kind: Configuration"),
-        (0, "metadata:"), (0, "spec:")], "Unsupported or duplicate ACL root fields"
+    if not ([(indent, text) for indent, text in lines if indent == 0] == [(0, 'apiVersion: dapr.io/v1alpha1'), (0, 'kind: Configuration'), (0, 'metadata:'), (0, 'spec:')]):
+        raise ValueError('Unsupported or duplicate ACL root fields')
     metadata = lines[lines.index((0, "metadata:")) + 1:lines.index((0, "spec:"))]
-    assert metadata == [(2, "name: accesscontrol-parties")], "Invalid ACL metadata"
-    assert [line for line in lines if line[0] == 2 and line not in metadata] == [
-        (2, "accessControl:")], "Unsupported ACL spec fields"
+    if not (metadata == [(2, 'name: accesscontrol-parties')]):
+        raise ValueError('Invalid ACL metadata')
+    if not ([line for line in lines if line[0] == 2 and line not in metadata] == [(2, 'accessControl:')]):
+        raise ValueError('Unsupported ACL spec fields')
     acl = parse_effective_acl(content)
-    assert set(acl) == {"defaultAction", "trustDomain", "policies"}, "Unsupported ACL fields"
-    assert acl["defaultAction"] == "deny" and acl["trustDomain"] == "public", "Unsafe ACL defaults"
-    assert len(acl["policies"]) == 1, "Only the EventStore caller is approved"
+    if not (set(acl) == {'defaultAction', 'trustDomain', 'policies'}):
+        raise ValueError('Unsupported ACL fields')
+    if not (acl['defaultAction'] == 'deny' and acl['trustDomain'] == 'public'):
+        raise ValueError('Unsafe ACL defaults')
+    if not (len(acl['policies']) == 1):
+        raise ValueError('Only the EventStore caller is approved')
     policy = acl["policies"][0]
-    assert set(policy) == {"appId", "defaultAction", "trustDomain", "namespace", "operations"}, "Unsupported caller fields"
-    assert (policy["appId"], policy["defaultAction"], policy["trustDomain"], policy["namespace"]) == (
-        "eventstore", "deny", "public", "default"), "Unsafe caller policy"
+    if not (set(policy) == {'appId', 'defaultAction', 'trustDomain', 'namespace', 'operations'}):
+        raise ValueError('Unsupported caller fields')
+    if not ((policy['appId'], policy['defaultAction'], policy['trustDomain'], policy['namespace']) == ('eventstore', 'deny', 'public', 'default')):
+        raise ValueError('Unsafe caller policy')
     rules = []
     for operation in policy["operations"]:
-        assert set(operation) == {"name", "httpVerb", "action"}, "Unsupported operation fields"
+        if not (set(operation) == {'name', 'httpVerb', 'action'}):
+            raise ValueError('Unsupported operation fields')
         path = operation["name"]
-        assert isinstance(path, str) and re.fullmatch(r"/[a-z0-9/-]+", path), "Unsafe operation path"
-        assert "//" not in path and not path.endswith("/"), "Unsafe operation path"
-        assert operation["httpVerb"] == ["POST"] and operation["action"] == "allow", "Unsafe operation grant"
+        if not (isinstance(path, str) and re.fullmatch('/[a-z0-9/-]+', path)):
+            raise ValueError('Unsafe operation path')
+        if not ('//' not in path and (not path.endswith('/'))):
+            raise ValueError('Unsafe operation path')
+        if not (operation['httpVerb'] == ['POST'] and operation['action'] == 'allow'):
+            raise ValueError('Unsafe operation grant')
         rules.append({"caller": policy["appId"], "path": path, "verbs": operation["httpVerb"]})
-    assert len(rules) == len({rule["path"] for rule in rules}) == 13, "Expected thirteen unique owner routes"
+    if not (len(rules) == len({rule['path'] for rule in rules}) == 13):
+        raise ValueError('Expected thirteen unique owner routes')
     result = copy.deepcopy(TEMPLATE)
     surface = result["modules"][0]["surfaces"]["interfaces"][0]
     surface["callers"] = [policy["appId"]]
@@ -485,7 +509,7 @@ def main() -> int:
         else:
             MANIFEST.parent.mkdir(exist_ok=True)
             MANIFEST.write_text(rendered, encoding="utf-8")
-    except (OSError, AssertionError, ValueError, SyntaxError) as error:
+    except (OSError, ValueError, SyntaxError) as error:
         print(f"{ACL}: Platform declaration: {error}", file=sys.stderr)
         return 1
     return 0

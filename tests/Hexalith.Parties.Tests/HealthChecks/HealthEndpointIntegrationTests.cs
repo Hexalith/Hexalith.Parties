@@ -180,6 +180,47 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
         response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
     }
 
+    [Fact]
+    public async Task ConfiguredComponentsAreUsedByProgramReadinessAndHealthAsync()
+    {
+        const string stateStore = "configured-security";
+        const string pubSub = "configured-events";
+        using HealthTestFactory factory = new(new Dictionary<string, string>
+        {
+            ["Parties:Security:StateStoreName"] = stateStore,
+            ["EventStore:Projections:ReadModelStateStoreName"] = stateStore,
+            ["Tenants:PubSubName"] = pubSub,
+        });
+        factory.DaprClient.CheckHealthAsync(Arg.Any<CancellationToken>()).Returns(true);
+        factory.DaprClient.GetStateAsync<string?>(
+            Arg.Any<string>(), Arg.Any<string>(), cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(call => call.ArgAt<string>(0) == stateStore
+                ? (string?)null
+                : throw new InvalidOperationException("Only the configured state store is available."));
+        factory.DaprClient.GetByteStateAndETagAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<ConsistencyMode?>(), Arg.Any<IReadOnlyDictionary<string, string>>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.ArgAt<string>(0) == stateStore
+                ? (Array.Empty<byte>(), string.Empty)
+                : throw new InvalidOperationException("Only the configured read-model state store is available."));
+        factory.DaprClient.GetMetadataAsync(Arg.Any<CancellationToken>()).Returns(new DaprMetadata(
+            "test", [], new Dictionary<string, string>(),
+            [new DaprComponentsMetadata(pubSub, "pubsub.redis", "v1", [])]));
+
+        using HttpClient client = factory.CreateClient();
+        using HttpResponseMessage ready = await client.GetAsync("/ready");
+        using HttpResponseMessage health = await client.GetAsync("/health");
+        ready.StatusCode.ShouldBe(HttpStatusCode.OK);
+        health.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using JsonDocument payload = await JsonDocument.ParseAsync(await health.Content.ReadAsStreamAsync());
+        JsonElement results = payload.RootElement.GetProperty("results");
+        results.GetProperty("dapr-statestore").GetProperty("status").GetString().ShouldBe("Healthy");
+        results.GetProperty("dapr-statestore").GetProperty("description").GetString().ShouldNotBeNull().ShouldContain(stateStore);
+        results.GetProperty("dapr-pubsub").GetProperty("status").GetString().ShouldBe("Healthy");
+        results.GetProperty("dapr-pubsub").GetProperty("description").GetString().ShouldNotBeNull().ShouldContain(pubSub);
+        await factory.DaprClient.Received().GetStateAsync<string?>(
+            stateStore, "__health_check__", cancellationToken: Arg.Any<CancellationToken>());
+    }
+
     private HttpClient CreateAuthenticatedClient()
     {
         HttpClient client = _factory.CreateClient();
@@ -224,7 +265,7 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
         LastModifiedAt = DateTimeOffset.UtcNow,
     };
 
-    public sealed class HealthTestFactory : WebApplicationFactory<Program>
+    public sealed class HealthTestFactory(IReadOnlyDictionary<string, string>? settings = null) : WebApplicationFactory<Program>
     {
         internal DaprClient DaprClient { get; } = Substitute.For<DaprClient>();
         internal ICommandRouter CommandRouter { get; } = Substitute.For<ICommandRouter>();
@@ -235,6 +276,11 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
             ArgumentNullException.ThrowIfNull(builder);
 
             builder.UseEnvironment("Development");
+            foreach (KeyValuePair<string, string> setting in settings ?? new Dictionary<string, string>())
+            {
+                builder.UseSetting(setting.Key, setting.Value);
+            }
+
 
             CommandRouter.RouteCommandAsync(Arg.Any<SubmitCommand>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new CommandProcessingResult(true)));

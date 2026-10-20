@@ -139,7 +139,7 @@ npm run install:browsers
 npm run test:a11y
 ```
 
-The local Playwright server builds Debug/source assets and uses the explicit
+The local Playwright server builds Debug assets with package dependencies and uses the explicit
 `Test` environment with the accessibility fixture enabled. For CI parity, build
 the UI in Release/package mode first, then run the browser lane with `CI=true`
 from `tests/e2e` (Bash):
