@@ -589,7 +589,8 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: _bmad/scripts/config_utils.py
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `_bmad/scripts/config_utils.py` can retain repeated base codes or ids, leaving ambiguous effective configuration after overrides.
-status: open
+status: done 2026-10-20
+resolution: Per-input and merge-selected keyed identities now reject duplicates, including single-layer and nested arrays. Errors identify files, paths, sides and item indexes without identifier values. Valid replacement/order/append semantics remain intact; real central configuration and all 49 installed skill customizations match baseline. All 17 Python methods and 48 adjacent CI contract tests pass; Debug build has zero warnings/errors. actionlint and the warning/submodule guard pass. A dedicated CI job runs the suite. Independent review and follow-ups are resolved with no new deferred work. See spec-dw-74-duplicate-bmad-identifiers.md and tests/dw-74-duplicate-bmad-identifiers-2026-10-20/validation.json.
 
 ### DW-75: Tolerate deleted historical tags during release verification
 

@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-20",
+  "baseline_commit": "b776849c1f19b50e940b8fd10d70d4611fecbcc6",
+  "environment": {
+    "python": "3.14.4",
+    "dotnet_sdk": "10.0.402",
+    "test_runtime": "10.0.13"
+  },
+  "commands": [
+    {
+      "command": "python3 -B -m unittest discover -s _bmad/scripts/tests -v",
+      "exit_code": 0,
+      "result": "17 test methods pass; no skips or failures. Initial baseline: 12 methods, 23 failing subcases."
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -m:1",
+      "exit_code": 0,
+      "result": "Build succeeded; 0 warnings; 0 errors."
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests",
+      "exit_code": 0,
+      "result": "48 total; 0 errors; 0 failed; 0 skipped; 0 not run."
+    },
+    {
+      "command": "python3 -B _bmad/scripts/resolve_config.py --project-root {project-root} --key core.project_name",
+      "exit_code": 0,
+      "stdout": "{\n  \"core.project_name\": \"parties\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": "python3 -B _bmad/scripts/resolve_customization.py --project-root {project-root} --skill {project-root}/.agents/skills/bmad-build --key workflow.open_spec",
+      "exit_code": 0,
+      "stdout": "{\n  \"workflow.open_spec\": \"\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": "actionlint .github/workflows/ci.yml",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": "git -c core.whitespace=cr-at-eol diff --check",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "stdout": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.\n",
+      "stderr": ""
+    }
+  ],
+  "compatibility": {
+    "baseline_commit": "b776849c1f19b50e940b8fd10d70d4611fecbcc6",
+    "central_configuration_equal": true,
+    "equal_installed_skill_customizations": 49,
+    "method": "Compile the unchanged baseline config_utils Git blob into an isolated module; compare both loaders against the updated helper using the real project configuration."
+  },
+  "review": "Independent blind review and follow-ups completed; all five findings triaged; final reviewer reports no remaining findings or directly introduced defects.",
+  "source_sha256": {
+    "_bmad/scripts/config_utils.py": "7cd53bc80fc41d3268a506ef0b1d7baa3b62b7a9a57620bca4f40ec4dbf1e909",
+    "_bmad/scripts/tests/test_config_utils.py": "0465e6a7380d1399d97af1e14c82918a660fae27a3e2affc9adc28cd7f004ec0",
+    ".github/workflows/ci.yml": "7d3d7b3c3504e410d26e119cfa9686ea3be496e527b036c4576d22f1b08f8b0b",
+    "docs/ci.md": "619856e29a4f21c6eb2bf1ad5572ee07dd5716e3af478400f730fcc47e1c27bd"
+  },
+  "limits": "Offline configuration tooling and adjacent workflow contracts validated. No full .NET application topology or remote CI result is claimed. The new CI job runs the same Python command on Ubuntu 24.04."
+}

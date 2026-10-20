@@ -1,0 +1,6 @@
+Pinned and installed commitlint: 21.2.2
+Command: node_modules/.bin/commitlint --edit <temporary-message-file> --verbose
+⧗   --- input ---
+fix(bmad): reject duplicate array identifiers
+✔   found 0 problems, 0 warnings
+Exit: 0

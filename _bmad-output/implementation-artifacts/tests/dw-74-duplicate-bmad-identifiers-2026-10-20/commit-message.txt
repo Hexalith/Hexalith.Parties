@@ -1,0 +1,1 @@
+fix(bmad): reject duplicate array identifiers

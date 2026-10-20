@@ -37,6 +37,15 @@ The shared CI workflow restores and builds `Hexalith.Parties.slnx`, initializes 
 - Tier 2: integration and CI contract tests.
 - Tier 3: Aspire topology tests through `tests/Hexalith.Parties.IntegrationTests`.
 
+The separate `bmad-config` job in the same CI workflow runs the offline BMAD
+configuration suite on Ubuntu 24.04 using Python 3.11 or later. It checks
+duplicate identifiers, layer precedence, resolver errors, and renderer
+publication. Run it locally with:
+
+```bash
+python3 -B -m unittest discover -s _bmad/scripts/tests -v
+```
+
 Coverage is intentionally not enabled yet in `ci.yml`; the local `coverage` lane is still blocked under the current Microsoft.Testing.Platform/xUnit v3 setup until an MTP-compatible coverage path is configured.
 
 CI explicitly selects the shared workflow's `microsoft-testing-platform`
