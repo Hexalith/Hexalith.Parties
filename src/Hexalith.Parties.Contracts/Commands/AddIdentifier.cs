@@ -9,13 +9,13 @@ namespace Hexalith.Parties.Contracts.Commands;
 /// <summary>Supplied add identifier for a typed party command.</summary>
 public sealed record AddIdentifier
 {
-    /// <summary>The supplied PartyId, at most 128 characters, shared by the root and every child operation; tenant comes from the gateway envelope.</summary>
-    [Description("The supplied PartyId, at most 128 characters, shared by the root and every child operation; tenant comes from the gateway envelope.")]
+    /// <summary>The supplied PartyId, at most 128 characters, shared by the root and every child operation; tenant comes from the gateway envelope. For new IDs use ASCII letters or digits plus '.', '_' or '-'; start and end with an ASCII letter or digit. Parties accepts legacy braced, parenthesized and X-format GUID IDs, but their McpCli/Gateway reachability remains unproven.</summary>
+    [Description("The supplied PartyId, at most 128 characters, shared by the root and every child operation; tenant comes from the gateway envelope. For new IDs use ASCII letters or digits plus '.', '_' or '-'; start and end with an ASCII letter or digit. Parties accepts legacy braced, parenthesized and X-format GUID IDs, but their McpCli/Gateway reachability remains unproven.")]
     [HexalithIdentifier]
     public required string PartyId { get; init; }
 
-    /// <summary>The supplied IdentifierId, at most 128 characters; distinct from the business identifier Value, which has a 512 UTF-16-unit limit.</summary>
-    [Description("The supplied IdentifierId, at most 128 characters; distinct from the business identifier Value, which has a 512 UTF-16-unit limit.")]
+    /// <summary>The supplied IdentifierId, at most 128 characters; distinct from the business identifier Value, which has a 512 UTF-16-unit limit. For new IDs use ASCII letters or digits plus '.', '_' or '-'; start and end with an ASCII letter or digit. Parties accepts legacy braced, parenthesized and X-format GUID IDs, but their McpCli/Gateway reachability remains unproven.</summary>
+    [Description("The supplied IdentifierId, at most 128 characters; distinct from the business identifier Value, which has a 512 UTF-16-unit limit. For new IDs use ASCII letters or digits plus '.', '_' or '-'; start and end with an ASCII letter or digit. Parties accepts legacy braced, parenthesized and X-format GUID IDs, but their McpCli/Gateway reachability remains unproven.")]
     [HexalithIdentifier]
     public required string IdentifierId { get; init; }
 

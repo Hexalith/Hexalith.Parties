@@ -9,13 +9,13 @@ namespace Hexalith.Parties.Contracts.Commands;
 /// <summary>Supplied add contact channel for a typed party command.</summary>
 public sealed record AddContactChannel
 {
-    /// <summary>The supplied PartyId, at most 128 characters, shared by the root and every child operation; tenant comes from the gateway envelope.</summary>
-    [Description("The supplied PartyId, at most 128 characters, shared by the root and every child operation; tenant comes from the gateway envelope.")]
+    /// <summary>The supplied PartyId, at most 128 characters, shared by the root and every child operation; tenant comes from the gateway envelope. For new IDs use ASCII letters or digits plus '.', '_' or '-'; start and end with an ASCII letter or digit. Parties accepts legacy braced, parenthesized and X-format GUID IDs, but their McpCli/Gateway reachability remains unproven.</summary>
+    [Description("The supplied PartyId, at most 128 characters, shared by the root and every child operation; tenant comes from the gateway envelope. For new IDs use ASCII letters or digits plus '.', '_' or '-'; start and end with an ASCII letter or digit. Parties accepts legacy braced, parenthesized and X-format GUID IDs, but their McpCli/Gateway reachability remains unproven.")]
     [HexalithIdentifier]
     public required string PartyId { get; init; }
 
-    /// <summary>The supplied ContactChannelId, at most 128 characters; additions must be unique ignoring case, while updates address exact case.</summary>
-    [Description("The supplied ContactChannelId, at most 128 characters; additions must be unique ignoring case, while updates address exact case.")]
+    /// <summary>The supplied ContactChannelId, at most 128 characters; additions must be unique ignoring case, while updates address exact case. For new IDs use ASCII letters or digits plus '.', '_' or '-'; start and end with an ASCII letter or digit. Parties accepts legacy braced, parenthesized and X-format GUID IDs, but their McpCli/Gateway reachability remains unproven.</summary>
+    [Description("The supplied ContactChannelId, at most 128 characters; additions must be unique ignoring case, while updates address exact case. For new IDs use ASCII letters or digits plus '.', '_' or '-'; start and end with an ASCII letter or digit. Parties accepts legacy braced, parenthesized and X-format GUID IDs, but their McpCli/Gateway reachability remains unproven.")]
     [HexalithIdentifier]
     public required string ContactChannelId { get; init; }
 

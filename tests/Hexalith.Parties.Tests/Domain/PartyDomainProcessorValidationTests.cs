@@ -322,6 +322,29 @@ public sealed class PartyDomainProcessorValidationTests
     }
 
     [Fact]
+    public async Task ProcessAsync_OrganizationOnlyCompositeProducesReplacementEvents()
+    {
+        PartyState state = PartyTestData.CreateOrganizationState();
+        OrganizationDetails replacement = new() { LegalName = "Replacement Organization" };
+        CommandEnvelope command = CreateCommand(new UpdatePartyComposite
+        {
+            PartyId = "organization-story49",
+            OrganizationDetails = replacement,
+        });
+
+        DomainResult result = await CreateInvoker(Substitute.For<IEventPayloadProtectionService>())
+            .ProcessAsync(command, state, TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        OrganizationDetailsUpdated updated = result.Events.OfType<OrganizationDetailsUpdated>().ShouldHaveSingleItem();
+        updated.OrganizationDetails.ShouldBe(replacement);
+        result.Events.ShouldContain(e => e is PartyDisplayNameDerived);
+        result.Events.OfType<PartyCommandValidationRejected>().ShouldBeEmpty();
+        state.Apply(updated);
+        state.Organization.ShouldBe(replacement);
+    }
+
+    [Fact]
     public async Task ProcessAsync_ProtectedHistoricalPayloadWithDestroyedKey_RedactsAndContinuesRehydration()
     {
         string partyId = Guid.NewGuid().ToString("D");

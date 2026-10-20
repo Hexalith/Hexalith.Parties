@@ -48,7 +48,50 @@ retention action, and does not change Story 8.7's `blocked` status: the
 release adds Story 8.6's shared-projection rebuild completion mechanics only,
 not the G5 runtime engine.
 
-### Current source observation — 2026-10-18
+### Current source observation — 2026-10-20
+
+Story 4.9 verification housekeeping reconciles the independently committed
+source graph at Parties `14ad39f85eae152c7a7e22ff261cc534ff5dab1e`. Every root checkout below
+matches its committed gitlink and has an empty `git status --porcelain` result.
+This records present-tense selection facts only; it does not extend dated owner
+approvals, parity/runtime/custody qualification or migration authority. The
+2026-10-18 observation and earlier receipts remain historical below.
+
+The imported Builds catalog and evaluated default Release graph select EventStore package `3.126.0`, Commons `2.30.3`, FrontComposer `4.7.0`,
+Memories `2.27.1`, Tenants `5.9.0`, and Parties `1.5.0`.
+CommunityToolkit.Aspire.Hosting.Dapr remains `13.6.1-beta.935`. Default package
+mode and the explicit source graph remain distinct; Commons HTTP continues to
+use its configured source fallback. Catalog selection is separate from the
+immutable validation/release workflow pins and their approval receipts.
+
+Reproduce the committed source selection with:
+
+```bash
+git ls-tree 14ad39f85eae152c7a7e22ff261cc534ff5dab1e references/Hexalith.<dependency>
+git -C references/Hexalith.<dependency> rev-parse HEAD
+git -C references/Hexalith.<dependency> describe --tags --always --abbrev=8 HEAD
+git -C references/Hexalith.<dependency> status --porcelain
+dotnet msbuild src/Hexalith.Parties/Hexalith.Parties.csproj -p:Configuration=Release -getProperty:HexalithEventStoreVersion,HexalithCommonsVersion,HexalithFrontComposerVersion,HexalithMemoriesVersion,HexalithTenantsVersion,HexalithPartiesVersion
+```
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` (`3f194e17`) | Instruction baseline. |
+| Builds | `5d03f1db9c38db34ecac7fe6048937478ffb82cc` (`v4.33.1-49-g5d03f1db`) | Imported package catalog and build tooling; EventStore 3.126.0 selected. |
+| Commons | `5c23c818f639c5bb3175f964c5549440bd5b876d` (`v2.30.3`) | Source fallback; catalog package is `2.30.3`. |
+| EventStore | `c9f47dd5ba72918445dfd24a674a5b2c310589bd` (`v3.126.0-17-gc9f47dd5`) | Source inspection; runtime consumers restore package `3.126.0`. |
+| FrontComposer | `d52526a4bd1272760543e6a65840dc2b0ed93cee` (`v4.7.0-9-gd52526a4`) | Selected package is `4.7.0`. |
+| McpCli | `b616db3092a9b1c5af196538a3de37a5c7f2d7ca` (`v1.0.0-23-gb616db30`) | Committed root pointer; not used for G5 proof. |
+| Memories | `c082f8151328b1ac91939cda8733ab78ae68e1c4` (`v2.29.3-1-gc082f815`) | Selected package remains `2.27.1`. |
+| Platform | `bb81fc9e98533246cfeed43ffcce08866a2a57f6` (`bb81fc9e`) | Committed root pointer; not used for G5 proof. |
+| PolymorphicSerializations | `221ac4592ba908ae7661ba1fa9e2d1fcc23baee0` (`v1.19.5`) | Existing source dependency. |
+| Tenants | `ce88a70b6af777c059b5fb4335d429b9272911bd` (`v5.9.0-13-gce88a70b`) | Selected package is `5.9.0`. |
+
+Selection does not revalidate historical parity receipts or authorize deletion
+of migration rollback paths. Historical owner approvals remain attached to their
+recorded identities; G5 remains `needs-additive-api`.
+
+### Historical source observation — 2026-10-18
 
 DW-163 began at Parties `6b0641829b68d22656fb173eec6578c65e8e91f0`.
 During implementation, a separate `/pushall` advanced the committed root graph
