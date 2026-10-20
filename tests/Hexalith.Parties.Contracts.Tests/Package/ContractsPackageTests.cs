@@ -81,17 +81,18 @@ public sealed class ContractsPackageTests : IClassFixture<ContractsPackageFixtur
 
         string[] dependencies = ReadDependencyIds(package.PartiesPackagePath);
 
-        dependencies.ShouldBe(["ByteAether.Ulid", "Hexalith.Commons.UniqueIds", "Hexalith.EventStore.Contracts"]);
+        dependencies.ShouldBe(["ByteAether.Ulid", "Hexalith.Commons.UniqueIds", "Hexalith.EventStore.Contracts", "Hexalith.McpCli.Abstractions"]);
         ReadDependencyVersion(package.PartiesPackagePath, "Hexalith.EventStore.Contracts")
             .ShouldBe(package.EventStoreVersion);
+        ReadDependencyVersion(package.PartiesPackagePath, "Hexalith.McpCli.Abstractions").ShouldBe("1.0.0");
         AssertNoForbiddenDependencyIds(dependencies, package.PartiesPackagePath);
     }
 
     [Fact]
     public void PackedEventStoreContractsPackage_DoesNotLeakDaprOrInfrastructureDependencies()
     {
-        // Story 3.1 keeps Hexalith.EventStore.Contracts as the only direct Parties.Contracts
-        // dependency. AC1 therefore requires proving the transitive nuspec of EventStore.Contracts
+        // EventStore.Contracts remains a contract-only dependency alongside the declaration-only
+        // McpCli.Abstractions package. AC1 therefore requires proving the transitive nuspec of EventStore.Contracts
         // is also contract-only — otherwise a consumer of Parties.Contracts inherits the leak.
         ContractsPackageArtifacts package = _fixture.Artifacts;
 

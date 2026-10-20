@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using FluentValidation;
 
@@ -17,6 +18,7 @@ using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Domain;
 using Hexalith.Parties.Security;
+using Hexalith.Parties.Testing;
 using Hexalith.Parties.Validation;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -938,6 +940,235 @@ public sealed class PartyDomainProcessorValidationTests
         await recordStore.DidNotReceiveWithAnyArgs().SaveCertificateAsync(default!, default);
         await recordStore.DidNotReceiveWithAnyArgs().SaveVerificationReportAsync(default!, default);
         await verificationService.DidNotReceiveWithAnyArgs().VerifyErasureAsync(default!, default!, default!, default);
+    }
+
+    [Theory]
+    [MemberData(nameof(InvalidGatewayComposites))]
+    public async Task ProcessAsync_InvalidGatewayCompositeRejectsBeforeProtectedStateAccess(object payload, string code)
+    {
+        ArgumentNullException.ThrowIfNull(payload);
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        PartyDomainProcessor invoker = CreateInvoker(protection);
+        CommandEnvelope command = CreateRawCommand(payload.GetType().FullName!, JsonSerializer.SerializeToUtf8Bytes(payload, payload.GetType()), "p");
+        DomainResult result = await invoker.ProcessAsync(command, CreateCurrentStateWithProtectedSnapshot(command), TestContext.Current.CancellationToken);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyCommandValidationRejected rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<PartyCommandValidationRejected>();
+        rejection.CommandType.ShouldBe(payload.GetType().FullName);
+        rejection.Failures.ShouldContain(f => f.ErrorCode == code);
+        JsonSerializer.Serialize(rejection).ShouldNotContain("private-value");
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_UndefinedContactUpdateTypeRejectsBeforeProtectedStateAccess()
+    {
+        IEventPayloadProtectionService protection = Substitute.For<IEventPayloadProtectionService>();
+        UpdatePartyComposite payload = new()
+        {
+            PartyId = "p",
+            UpdateContactChannels = [new() { PartyId = "p", ContactChannelId = "c", Type = (ContactChannelType)999 }],
+        };
+        CommandEnvelope command = CreateCommand(payload);
+        DomainResult result = await CreateInvoker(protection).ProcessAsync(command,
+            CreateCurrentStateWithProtectedSnapshot(command), TestContext.Current.CancellationToken);
+
+        result.IsRejection.ShouldBeTrue();
+        PartyCommandValidationRejected rejection = result.Events.ShouldHaveSingleItem().ShouldBeOfType<PartyCommandValidationRejected>();
+        rejection.CommandType.ShouldBe(typeof(UpdatePartyComposite).FullName);
+        rejection.Failures.ShouldBe([new PartyValidationFailure
+        {
+            PropertyName = "UpdateContactChannels[0].Type",
+            ErrorCode = "EnumValidator",
+        }]);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectSnapshotStateAsync(default!, default!, default);
+        await protection.DidNotReceiveWithAnyArgs().UnprotectEventPayloadAsync(default!, default!, default!, default!, default);
+    }
+
+    [Theory]
+    [InlineData("type")]
+    [InlineData("value")]
+    [InlineData("empty")]
+    [InlineData("false")]
+    public void CompositeContactUpdatesAcceptOneNonNullMutableValue(string member)
+    {
+        UpdateContactChannel change = member switch
+        {
+            "type" => new() { PartyId = "p", ContactChannelId = "ch-email-1", Type = ContactChannelType.Phone },
+            "value" => new() { PartyId = "p", ContactChannelId = "ch-email-1", Value = "replacement@example.test" },
+            "empty" => new() { PartyId = "p", ContactChannelId = "ch-email-1", Value = string.Empty },
+            _ => new() { PartyId = "p", ContactChannelId = "ch-email-1", IsPreferred = false },
+        };
+        UpdatePartyComposite payload = new() { PartyId = "p", UpdateContactChannels = [change] };
+        new UpdatePartyCompositeValidator().Validate(payload).IsValid.ShouldBeTrue();
+
+        PartyState state = PartyTestData.CreatePersonStateWithChannelsAndIdentifiers();
+        ContactChannel before = state.ContactChannels.Single(c => c.Id == change.ContactChannelId);
+        var result = PartyAggregate.Handle(payload, state);
+        result.IsSuccess.ShouldBeTrue();
+        ContactChannelUpdated update = result.Events.OfType<ContactChannelUpdated>().ShouldHaveSingleItem();
+        update.Type.ShouldBe(change.Type);
+        update.Value.ShouldBe(change.Value);
+        update.IsPreferred.ShouldBe(change.IsPreferred);
+        state.Apply(update);
+        ContactChannel after = state.ContactChannels.Single(c => c.Id == change.ContactChannelId);
+        after.Type.ShouldBe(change.Type ?? before.Type);
+        after.Value.ShouldBe(change.Value ?? before.Value);
+        after.IsPreferred.ShouldBe(change.IsPreferred ?? before.IsPreferred);
+    }
+
+    public static IEnumerable<object[]> InvalidGatewayComposites()
+    {
+        CreatePartyComposite create = new() { PartyId = "p", Type = PartyType.Person, PersonDetails = new() { FirstName = "A", LastName = "B" } };
+        UpdatePartyComposite update = new() { PartyId = "p", PersonDetails = create.PersonDetails };
+        yield return [create with { PersonDetails = create.PersonDetails! with { FirstName = new string(' ', 513) } }, "CompositeStringLength"];
+        yield return [update with { OrganizationDetails = new() { LegalName = "private-value" + new string('x', 513) } }, "CompositeStringLength"];
+        yield return [new UpdatePartyComposite { PartyId = "p" }, "CompositeEmptyUpdate"];
+        yield return [new UpdatePartyComposite { PartyId = "p", UpdateContactChannels = [new() { PartyId = "p", ContactChannelId = "c" }] }, "CompositeEmptyContactUpdate"];
+        yield return [create with { ContactChannels = null! }, "NotNullValidator"];
+        yield return [create with { Identifiers = null! }, "NotNullValidator"];
+        yield return [create with { ContactChannels = [null!] }, "NotNullValidator"];
+        yield return [create with { Identifiers = [null!] }, "NotNullValidator"];
+        yield return [update with { AddContactChannels = null! }, "NotNullValidator"];
+        yield return [update with { UpdateContactChannels = null! }, "NotNullValidator"];
+        yield return [update with { RemoveContactChannelIds = null! }, "NotNullValidator"];
+        yield return [update with { AddIdentifiers = null! }, "NotNullValidator"];
+        yield return [update with { RemoveIdentifierIds = null! }, "NotNullValidator"];
+        yield return [update with { AddContactChannels = [null!] }, "NotNullValidator"];
+        yield return [update with { UpdateContactChannels = [null!] }, "NotNullValidator"];
+        yield return [update with { AddIdentifiers = [null!] }, "NotNullValidator"];
+        yield return [update with { RemoveContactChannelIds = [null!] }, "NotNullValidator"];
+        yield return [update with { RemoveIdentifierIds = [null!] }, "NotNullValidator"];
+        yield return [create with { ContactChannels = [new() { PartyId = "other", ContactChannelId = "c", Type = ContactChannelType.Email, Value = "a@b.test" }] }, "PredicateValidator"];
+        yield return [update with { AddIdentifiers = [new() { PartyId = "other", IdentifierId = "i", Type = IdentifierType.Other, Value = "v" }] }, "PredicateValidator"];
+        yield return [create with { PartyId = new string('p', 129) }, "PredicateValidator"];
+        yield return [update with { RemoveIdentifierIds = [new string('i', 129)] }, "PredicateValidator"];
+        yield return [create with { Identifiers = Enumerable.Range(0, 100).Select(_ => new AddIdentifier { PartyId = "p", IdentifierId = "i", Type = IdentifierType.Other, Value = "v" }).ToArray() }, "PredicateValidator"];
+        yield return [update with { RemoveContactChannelIds = Enumerable.Repeat("c", 100).ToArray() }, "PredicateValidator"];
+        yield return [create with { Identifiers = Enumerable.Range(0, 8).Select(_ => new AddIdentifier { PartyId = "p", IdentifierId = "i", Type = IdentifierType.Other, Value = new string('x', 512) }).ToArray() }, "CompositeTotalLength"];
+        yield return [update with { RemoveIdentifierIds = Enumerable.Repeat(new string('i', 128), 32).ToArray() }, "CompositeTotalLength"];
+    }
+
+    [Theory]
+    [MemberData(nameof(OversizedCompositeStrings))]
+    public async Task ProcessAsync_EveryExposedStringIsBoundedBeforeStateAccess(object payload)
+        => await ProcessAsync_InvalidGatewayCompositeRejectsBeforeProtectedStateAccess(payload, "CompositeStringLength");
+
+    public static IEnumerable<object[]> OversizedCompositeStrings()
+    {
+        PersonDetails person = new() { FirstName = "A", LastName = "B", Prefix = "Dr", Suffix = "Jr" };
+        OrganizationDetails organization = new() { LegalName = "Company", TradingName = "Trade", LegalForm = "Ltd", RegistrationNumber = "reg" };
+        AddContactChannel channel = new() { PartyId = "p", ContactChannelId = "c", Type = ContactChannelType.Email, Value = "mail@example.test" };
+        AddIdentifier identifier = new() { PartyId = "p", IdentifierId = "i", Type = IdentifierType.Other, Value = "v" };
+        object[] commands = [
+            new CreatePartyComposite { PartyId = "p", Type = PartyType.Person, PersonDetails = person, OrganizationDetails = organization, ContactChannels = [channel], Identifiers = [identifier] },
+            new UpdatePartyComposite { PartyId = "p", PersonDetails = person, OrganizationDetails = organization, AddContactChannels = [channel], UpdateContactChannels = [new() { PartyId = "p", ContactChannelId = "u", Value = "v" }], AddIdentifiers = [identifier], RemoveContactChannelIds = ["r"], RemoveIdentifierIds = ["r"] }];
+        foreach (object command in commands)
+        {
+            JsonNode root = JsonSerializer.SerializeToNode(command)!;
+            foreach (string path in StringPaths(root, ""))
+            {
+                JsonNode copy = root.DeepClone();
+                string[] segments = path.Split('/');
+                JsonNode parent = copy;
+                foreach (string segment in segments[..^1])
+                {
+                    parent = parent is JsonArray array ? array[int.Parse(segment)]! : parent[segment]!;
+                }
+
+                if (parent is JsonArray list)
+                {
+                    list[int.Parse(segments[^1])] = new string(' ', 513);
+                }
+                else
+                {
+                    parent[segments[^1]] = new string(' ', 513);
+                }
+
+                yield return [copy.Deserialize(command.GetType())!];
+            }
+        }
+    }
+
+    private static IEnumerable<string> StringPaths(JsonNode node, string prefix)
+    {
+        if (node is JsonObject obj)
+        {
+            foreach ((string key, JsonNode? value) in obj)
+            {
+                if (value is not null && key != "Type")
+                {
+                    foreach (string path in StringPaths(value, prefix + key + "/"))
+                    {
+                        yield return path;
+                    }
+                }
+            }
+        }
+        else if (node is JsonArray array)
+        {
+            for (int i = 0; i < array.Count; i++)
+            {
+                foreach (string path in StringPaths(array[i]!, prefix + i + "/"))
+                {
+                    yield return path;
+                }
+            }
+        }
+        else if (node is JsonValue value && value.TryGetValue(out string? _))
+        {
+            yield return prefix.TrimEnd('/');
+        }
+    }
+
+    [Fact]
+    public void RepeatedSoftDeactivationDoesNotEraseOrEmitAnotherEvent()
+    {
+        PartyState state = PartyTestState("p", ErasureStatus.Active);
+        state.Apply(new PartyDeactivated());
+        string before = JsonSerializer.Serialize(state);
+        PartyAggregate.Handle(new DeactivateParty { PartyId = "p" }, state).Events.ShouldBeEmpty();
+        PartyAggregate.Handle(new DeactivateParty { PartyId = "p" }, state).Events.ShouldBeEmpty();
+        JsonSerializer.Serialize(state).ShouldBe(before);
+        state.ErasureStatus.ShouldBe(ErasureStatus.Active);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CompositeValidatorsAcceptExactRawStringAndTotalBoundaries(bool updating)
+    {
+        // Root ID (1), person strings (512 + 512 + 512 + 512), organization strings
+        // (512 + 512 + 512 + 511) = 4096 raw UTF-16 units, including all whitespace.
+        PersonDetails person = new() { FirstName = new string(' ', 512), LastName = new string('x', 512), Prefix = new string('x', 512), Suffix = new string('x', 512) };
+        OrganizationDetails organization = new() { LegalName = new string('x', 512), TradingName = new string('x', 512), LegalForm = new string('x', 512), RegistrationNumber = new string('x', 511) };
+        if (updating)
+        {
+            UpdatePartyComposite command = new() { PartyId = "p", PersonDetails = person, OrganizationDetails = organization };
+            new UpdatePartyCompositeValidator().Validate(command).IsValid.ShouldBeTrue();
+            new UpdatePartyCompositeValidator().Validate(command with { OrganizationDetails = organization with { RegistrationNumber = new string('x', 512) } }).Errors.ShouldContain(f => f.ErrorCode == "CompositeTotalLength");
+        }
+        else
+        {
+            CreatePartyComposite command = new() { PartyId = "p", Type = PartyType.Person, PersonDetails = person, OrganizationDetails = organization };
+            new CreatePartyCompositeValidator().Validate(command).IsValid.ShouldBeTrue();
+            new CreatePartyCompositeValidator().Validate(command with { OrganizationDetails = organization with { RegistrationNumber = new string('x', 512) } }).Errors.ShouldContain(f => f.ErrorCode == "CompositeTotalLength");
+        }
+    }
+
+    [Fact]
+    public void CompositeValidatorsCountEveryRepeatedIdAndKeepTheOperationCap()
+    {
+        CreatePartyComposite create = new() { PartyId = "p", Type = PartyType.Person, PersonDetails = new() { FirstName = "A", LastName = "B" },
+            Identifiers = Enumerable.Range(0, 99).Select(_ => new AddIdentifier { PartyId = "p", IdentifierId = "i", Type = IdentifierType.Other, Value = "v" }).ToArray() };
+        new CreatePartyCompositeValidator().Validate(create).IsValid.ShouldBeTrue();
+        UpdatePartyComposite update = new() { PartyId = "p", RemoveIdentifierIds = Enumerable.Repeat("i", 100).ToArray() };
+        new UpdatePartyCompositeValidator().Validate(update).IsValid.ShouldBeTrue();
+        new UpdatePartyCompositeValidator().Validate(update with { RemoveIdentifierIds = Enumerable.Repeat("i", 101).ToArray() }).IsValid.ShouldBeFalse();
+        string repeated = new('p', 128);
+        CreatePartyComposite repeatedIds = create with { PartyId = repeated, Identifiers = Enumerable.Range(0, 16).Select(_ => new AddIdentifier { PartyId = repeated, IdentifierId = repeated, Type = IdentifierType.Other, Value = "v" }).ToArray() };
+        new CreatePartyCompositeValidator().Validate(repeatedIds).Errors.ShouldContain(f => f.ErrorCode == "CompositeTotalLength");
     }
 
     private static PartyDomainProcessor CreateInvoker(

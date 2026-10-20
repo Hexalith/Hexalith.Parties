@@ -267,3 +267,76 @@ empty stale/degraded page. Export and processing queries use the same detail
 admission first. If only the processing slot is unavailable, retained cached
 Article 30 records remain available, or an empty degraded record list is returned
 when that cache is absent.
+
+### Generic McpCli command declarations (local migration increment)
+
+The Contracts assembly declares exactly `parties.create-party`,
+`parties.update-party`, `parties.reactivate-party` and `parties.deactivate-party`.
+The module uses String identifiers, domain `party`, the existing full CLR command
+wire names, and root `PartyId` for aggregate routing. Tenant authority remains in
+the gateway envelope. `Hexalith.McpCli.Abstractions` 1.0.0 supplies declaration
+attributes only; the package/source pair follows `UseHexalithProjectReferences`.
+This increment does not enroll or publish a module or retire the legacy host.
+
+McpCli payloads use exact CLR property casing and typed nested values. For example,
+`parties.create-party` accepts:
+
+```json
+{"PartyId":"party-49","Type":"Person","PersonDetails":{"FirstName":"Ada","LastName":"Lovelace"},"ContactChannels":[{"PartyId":"party-49","ContactChannelId":"email-49","Type":"Email","Value":"ada@example.test","IsPreferred":true}]}
+```
+
+Supply IDs explicitly; every child `PartyId` must equal the root. No alias mapping,
+ID generation, person/organization inference or read/merge patch is performed.
+An update supplies complete `PersonDetails` or `OrganizationDetails` replacements
+and/or typed add, update or removal lists. A `PartyId`-only update is rejected;
+every `UpdateContactChannels` item must supply at least one of `Type`, `Value` or
+`IsPreferred` (including `false`). Activation is a separate command. Repeated
+soft deactivation is a safe no-op after lifecycle guards and never performs GDPR
+erasure.
+
+Both shared composite validators enforce a maximum **raw UTF-16 length of 512
+per string and 4096 combined**, without trimming or rewriting values. Every root,
+nested, child and removal string occurrence counts, including whitespace and
+repeated IDs. The tighter support-safe 128-character rule applies to `PartyId`,
+`ContactChannelId`, `IdentifierId` and removal ID entries. Business identifier
+`Value` strings retain the 512 UTF-16-unit limit. This is stricter than legacy wrapper counting of trimmed fields; the total
+budget can bind before the configured composite sub-operation cap (default 100).
+Explicit null lists and null list items reject; omitted lists retain empty defaults.
+Create counts 1 plus every item in `ContactChannels` and `Identifiers` toward
+the operation cap. Update counts each non-null details object plus every item
+in its five operation lists. Removing a channel ID also listed for addition or
+update rejects the entire update; adding and removing the same identifier ID
+also rejects. An existing channel ID listed for both addition and update has
+its addition skipped and its update applied.
+All these checks run before protected aggregate state is accessed.
+
+The four local vectors in `tests/conformance-vectors/mcpcli-v1/` target only the
+unpublished scratch package `Hexalith.Parties.Contracts` **0.0.0-story49**. They
+include prerequisite writes, repeat deactivation and semantic `parties.get-party`
+postconditions using the approved `PartyDetail` / `party-detail` /
+`PartyDetailProjectionQueryActor` route. Those Query contracts do not exist in this
+increment: postconditions remain unexecuted until Story 4.10, which must rebind
+vectors to the complete immutable artifact. Shared-validator format and artifact
+checks do not prove handler effects. Stories 4.11/4.13 own parity and persistent
+semantic proof. Maintainer approval must name the exact artifact hash and shared
+validator revision. C06 error privacy, C07 legacy-ID reachability and C08 credential
+and cross-tenant authorization evidence remain replacement/retirement gates.
+
+The detail kind on update must match the existing party type; an update cannot
+change that type. Omitted/null details preserve the existing object, while a
+supplied object replaces it completely. Create requires the detail kind matching
+`Type`, but also accepts/stores an extra opposite-kind object without changing
+`Type`. Business identifiers are added or removed; there is no identifier-update
+list. Contact updates require at least one non-null mutable member: omitted/null
+preserves that member, `IsPreferred: false` clears that channel's preference,
+and `Value: ""` replaces the value with an empty string. All contact kinds,
+including PostalAddress/SocialMedia, store a raw string; no structured format is
+defined. Preference is scoped to channel type; supply `IsPreferred: true` with a
+type change to reconcile preferences in the target type.
+
+`OrganizationDetails.IsNaturalPerson` defaults to false and initializes party
+classification on create. Existing detail replacement changes the nested flag
+without updating the established party classification; these four operations do
+not provide a classification-change command. Lifecycle operations require an
+existing unrestricted party with current erasure status Active, including
+when requesting an already-current active state.

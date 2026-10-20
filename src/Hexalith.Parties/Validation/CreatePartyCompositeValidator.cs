@@ -12,6 +12,22 @@ public sealed class CreatePartyCompositeValidator : AbstractValidator<CreatePart
 {
     public CreatePartyCompositeValidator()
     {
+        RuleFor(x => x)
+            .Must(CompositeInputPolicy.HasBoundedFields)
+            .WithMessage("Every input string must be at most 512 UTF-16 code units.")
+            .WithErrorCode("CompositeStringLength");
+
+        RuleFor(x => x)
+            .Must(CompositeInputPolicy.HasBoundedTotal)
+            .WithMessage("Combined input strings must be at most 4096 UTF-16 code units.")
+            .WithErrorCode("CompositeTotalLength");
+
+        RuleFor(x => x.ContactChannels).NotNull();
+        RuleForEach(x => x.ContactChannels).NotNull();
+
+        RuleFor(x => x.Identifiers).NotNull();
+        RuleForEach(x => x.Identifiers).NotNull();
+
         RuleFor(x => x.PartyId)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
@@ -98,9 +114,9 @@ public sealed class CreatePartyCompositeValidator : AbstractValidator<CreatePart
     }
 
     private static int CountSubOperations(CreatePartyComposite command)
-        => 1 + command.ContactChannels.Count + command.Identifiers.Count;
+        => 1 + (command.ContactChannels?.Count ?? 0) + (command.Identifiers?.Count ?? 0);
 
     private static bool HaveMatchingChildPartyIds(CreatePartyComposite command)
-        => command.ContactChannels.All(channel => channel is not null && string.Equals(channel.PartyId, command.PartyId, StringComparison.Ordinal))
-            && command.Identifiers.All(identifier => identifier is not null && string.Equals(identifier.PartyId, command.PartyId, StringComparison.Ordinal));
+        => command.ContactChannels is not null && command.ContactChannels.All(channel => channel is not null && string.Equals(channel.PartyId, command.PartyId, StringComparison.Ordinal))
+            && command.Identifiers is not null && command.Identifiers.All(identifier => identifier is not null && string.Equals(identifier.PartyId, command.PartyId, StringComparison.Ordinal));
 }

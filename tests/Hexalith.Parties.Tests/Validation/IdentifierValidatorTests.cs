@@ -357,7 +357,7 @@ public sealed class IdentifierValidatorTests
             PartyId = id,
             OrganizationDetails = new OrganizationDetails { LegalName = "Acme Corp" },
         })),
-        new("UpdatePartyComposite", id => new UpdatePartyCompositeValidator().Validate(new UpdatePartyComposite { PartyId = id })),
+        new("UpdatePartyComposite", id => new UpdatePartyCompositeValidator().Validate(new UpdatePartyComposite { PartyId = id, PersonDetails = new PersonDetails { FirstName = "Jane", LastName = "Doe" } })),
         new("UpdatePersonDetails", id => new UpdatePersonDetailsValidator().Validate(new UpdatePersonDetails
         {
             PartyId = id,

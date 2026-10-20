@@ -17,6 +17,7 @@
     <HexalithFrontComposerRoot Condition="'$(HexalithFrontComposerRoot)' == '' and Exists('$(MSBuildThisFileDirectory)..\Hexalith.FrontComposer\src\Hexalith.FrontComposer.Contracts')">$(MSBuildThisFileDirectory)..\Hexalith.FrontComposer</HexalithFrontComposerRoot>
     <HexalithFrontComposerRoot Condition="'$(HexalithFrontComposerRoot)' == '' and Exists('$(MSBuildThisFileDirectory)..\..\src\Hexalith.FrontComposer.Contracts')">$(MSBuildThisFileDirectory)..\..</HexalithFrontComposerRoot>
     <HexalithFrontComposerRoot Condition="'$(HexalithFrontComposerRoot)' == '' and Exists('$(MSBuildThisFileDirectory)..\references\Hexalith.FrontComposer\src\Hexalith.FrontComposer.Contracts')">$(MSBuildThisFileDirectory)..\references\Hexalith.FrontComposer</HexalithFrontComposerRoot>
+    <HexalithMcpCliRoot Condition="'$(HexalithMcpCliRoot)' == '' and Exists('$(MSBuildThisFileDirectory)references\Hexalith.McpCli\src\Hexalith.McpCli.Abstractions')">$(MSBuildThisFileDirectory)references\Hexalith.McpCli</HexalithMcpCliRoot>
     <UseHexalithProjectReferences Condition="'$(UseHexalithProjectReferences)' == '' and '$(UseNuGetDeps)' == 'true'">false</UseHexalithProjectReferences>
     <UseHexalithProjectReferences Condition="'$(UseHexalithProjectReferences)' == '' and '$(UseNuGetDeps)' == 'false'">true</UseHexalithProjectReferences>
     <UseHexalithProjectReferences Condition="'$(UseHexalithProjectReferences)' == '' and '$(Configuration)' == ''">false</UseHexalithProjectReferences>
@@ -29,6 +30,7 @@
     <!-- Hexalith.Commons.ServiceDefaults is consumed from source when available because the
          corresponding package is not published to the public feed used by package-mode tests. -->
     <HexalithCommonsServiceDefaultsFromSource Condition="'$(HexalithCommonsServiceDefaultsFromSource)' == '' and Exists('$(HexalithCommonsRoot)\src\libraries\Hexalith.Commons.ServiceDefaults\Hexalith.Commons.ServiceDefaults.csproj')">true</HexalithCommonsServiceDefaultsFromSource>
+    <HexalithMcpCliFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithMcpCliRoot)\src\Hexalith.McpCli.Abstractions\Hexalith.McpCli.Abstractions.csproj')">true</HexalithMcpCliFromSource>
     <HexalithEventStoreFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithEventStoreRoot)\src\Hexalith.EventStore.Contracts\Hexalith.EventStore.Contracts.csproj')">true</HexalithEventStoreFromSource>
     <HexalithFrontComposerFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithFrontComposerRoot)\src\Hexalith.FrontComposer.Contracts\Hexalith.FrontComposer.Contracts.csproj')">true</HexalithFrontComposerFromSource>
     <HexalithMemoriesFromSource Condition="'$(UseHexalithProjectReferences)' == 'true' and Exists('$(HexalithMemoriesRoot)\src\Hexalith.Memories.Contracts\Hexalith.Memories.Contracts.csproj')">true</HexalithMemoriesFromSource>

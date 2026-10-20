@@ -594,7 +594,8 @@ public sealed class ArchitecturalFitnessTests
 
         foreach (AssemblyName referenced in referencedAssemblies)
         {
-            bool allowed = allowedPrefixes.Any(prefix =>
+            bool allowed = string.Equals(referenced.Name, "Hexalith.McpCli.Abstractions", StringComparison.Ordinal)
+                || allowedPrefixes.Any(prefix =>
                 referenced.Name!.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
 
             if (!allowed)
@@ -604,7 +605,7 @@ public sealed class ArchitecturalFitnessTests
         }
 
         violations.ShouldBeEmpty(
-            $"Contracts project should only depend on netstandard, System.*, and Hexalith.EventStore.Contracts. "
+            $"Contracts project should only depend on netstandard, System.*, Hexalith.EventStore.Contracts, and Hexalith.McpCli.Abstractions. "
             + $"Found: {string.Join(", ", violations)}");
     }
 
