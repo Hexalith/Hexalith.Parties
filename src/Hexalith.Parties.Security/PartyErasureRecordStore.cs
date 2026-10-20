@@ -7,6 +7,12 @@ using Hexalith.Parties.Contracts.Security;
 namespace Hexalith.Parties.Security;
 
 public sealed class PartyErasureRecordStore(DaprClient daprClient, IOptions<PartiesSecurityStoreOptions>? options = null) : IPartyErasureRecordStore {
+    /// <summary>Creates an erasure store with the compatible default component.</summary>
+    /// <param name="daprClient">The Dapr client.</param>
+    public PartyErasureRecordStore(DaprClient daprClient) : this(daprClient, null)
+    {
+    }
+
     private readonly string _storeName = (options?.Value ?? new PartiesSecurityStoreOptions()).StateStoreName;
 
     public Task SaveStatusAsync(PartyErasureStatusRecord status, CancellationToken cancellationToken = default) {

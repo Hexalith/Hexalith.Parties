@@ -22,11 +22,11 @@ needed by the baseline solution and local topology:
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties
-git submodule update --init references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants
+git submodule update --init references/Hexalith.Platform references/Hexalith.Builds references/Hexalith.Commons references/Hexalith.EventStore references/Hexalith.FrontComposer references/Hexalith.PolymorphicSerializations references/Hexalith.Tenants references/Hexalith.Memories references/Hexalith.McpCli
 # Do NOT use --recursive for the default local run (the build gate forbids nested-submodule init).
 ```
 
-Optional rich search adds the `references/Hexalith.Memories` submodule (run with `EnableMemoriesSearch=true`).
+Memories is a required reference service. Its optional rich-search feature stays disabled in the Platform reference composition.
 
 Plain builds retain package references. For local source development use the pinned module tool; it injects the selected direct roots, source flags and Debug configuration. Directory.Build.props does not probe siblings or choose a mode. Directory.Packages.props imports the direct Builds catalog default while respecting the tool-injected catalog authority.
 
@@ -58,19 +58,22 @@ dotnet tool restore
 dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
 ```
 
-Open the Aspire dashboard URL and confirm `security`, `eventstore`, `eventstore-admin`, `parties`, `parties-ui`, `tenants`, `redis`, the DAPR sidecars, `statestore`, and `pubsub` are healthy. `eventstore-admin-ui` and `parties-mcp` are **explicit-start** — start them from the dashboard when needed. AppHost http profile: `http://localhost:15100` (OTLP `21100`).
+Wait for the tool to report all seven servers ready: `parties`, `eventstore`,
+`tenants`, `tenants-api`, `memories`, `memories-access-telemetry-clock`, and
+`memories-access-telemetry`. Infrastructure and sidecars are run-owned. Stop the
+exact run with `dotnet tool run hexalith-module -- down --manifest module/hexalith.module-manifest.v2.json --run-id <run-id>`.
 
-Treat the system as usable only after `eventstore`, `parties`, and `tenants` are healthy (public traffic enters through EventStore). Health endpoints per service: `/ready`, `/health`, `/alive`.
+Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home as described in
+the [pinned Platform prerequisites](../references/Hexalith.Platform/README.md#run-and-debug-a-technical-module).
+An unset or unprepared home is refused before launch. Public traffic enters through
+EventStore; service health endpoints remain `/ready`, `/health` and `/alive`.
 
-### AppHost feature flags (orchestration-time)
+### Retained legacy AppHost flags
 
-| Flag | Effect |
-|------|--------|
-| `EnableMemoriesSearch=true` | composes the `memories` service + injects `Parties__MemoriesSearch__Enabled=true` (requires the Memories submodule) |
-| `EnableEventStoreSampleUi=true` | composes `sample` + `sample-blazor-ui` |
-| `EnableKeycloak` | local Keycloak-backed `security` resource (default true in run mode; publish uses the external `tache` realm) |
-| `PartiesAccessibilitySpecimen:Enabled=true` | exposes the `parties-ui` deterministic accessibility specimen in Development/Test |
-| `PUBLISH_TARGET` | `docker` / `k8s` / `aca` for Aspire-native experimentation only; runtime deployment orchestration is external to this repository |
+The legacy AppHost's `EnableMemoriesSearch`, `EnableEventStoreSampleUi`,
+`EnableKeycloak`, `PartiesAccessibilitySpecimen:Enabled`, and `PUBLISH_TARGET`
+flags belong to its frozen owner-test/UI/MCP topology. They do not enable extra
+servers in the Platform reference run above.
 
 ## 4. Test
 

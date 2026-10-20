@@ -3,6 +3,7 @@
 using Dapr.Client;
 using Hexalith.Parties.Contracts.Security;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Shouldly;
 
@@ -25,7 +26,12 @@ public sealed class SecurityComponentBindingTests
             });
         client.GetStateAsync<PartyErasureStatusRecord>(component, "tenant:erasure-status:party",
             cancellationToken: Arg.Any<CancellationToken>()).Returns(_ => saved);
-        PartyErasureRecordStore store = new(client, Options.Create(new PartiesSecurityStoreOptions { StateStoreName = component }));
+        ServiceCollection services = new();
+        services.AddSingleton(client);
+        services.AddSingleton<IOptions<PartiesSecurityStoreOptions>>(Options.Create(new PartiesSecurityStoreOptions { StateStoreName = component }));
+        services.AddSingleton<IPartyErasureRecordStore, PartyErasureRecordStore>();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        IPartyErasureRecordStore store = provider.GetRequiredService<IPartyErasureRecordStore>();
         PartyErasureStatusRecord status = new() { TenantId = "tenant", PartyId = "party", Status = "erased", UpdatedAt = DateTimeOffset.UtcNow };
         await store.SaveStatusAsync(status);
         (await store.GetStatusAsync("tenant", "party")).ShouldBe(status);
@@ -62,14 +68,33 @@ public sealed class SecurityComponentBindingTests
         client.TrySaveStateAsync(component, "tenant:tenant-key-rotation:rotation", Arg.Any<TenantKeyRotationProgress>(), Arg.Any<string>(),
             cancellationToken: Arg.Any<CancellationToken>()).Returns(call => { progress = call.ArgAt<TenantKeyRotationProgress>(2); return true; });
         IOptions<PartiesSecurityStoreOptions> options = Options.Create(new PartiesSecurityStoreOptions { StateStoreName = component });
-        KeyOperationAuditService service = new(client, options);
-        TenantKeyRotationService rotation = new(new LocalDevKeyStorageBackend(), client, service, [], new CorrelationContextAccessor(), options);
+        ServiceCollection services = new();
+        services.AddSingleton(client);
+        services.AddSingleton(options);
+        services.AddSingleton<IKeyStorageBackend, LocalDevKeyStorageBackend>();
+        services.AddSingleton<ICorrelationContextAccessor, CorrelationContextAccessor>();
+        services.AddSingleton<IKeyOperationAuditService, KeyOperationAuditService>();
+        services.AddSingleton<ITenantKeyRotationService, TenantKeyRotationService>();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        IKeyOperationAuditService service = provider.GetRequiredService<IKeyOperationAuditService>();
+        ITenantKeyRotationService rotation = provider.GetRequiredService<ITenantKeyRotationService>();
         TenantKeyRotationStatus status = await rotation.RotateAsync(new TenantKeyRotationRequest { TenantId = "tenant", OperationId = "rotation" });
         status.Phase.ShouldBe(TenantKeyRotationPhase.Completed);
         progress.ShouldNotBeNull().Status.ShouldBe(status);
         (await rotation.GetStatusAsync("tenant", "rotation")).ShouldBe(status);
         (await service.GetAuditTrailAsync("tenant", "tenant-key-rotation")).Single().OperationId.ShouldBe("rotation");
         audit.ShouldNotBeNull().Single().OperationType.ShouldBe(KeyOperationType.TenantRotate);
+    }
+
+    [Fact]
+    public void ExistingConstructorSignaturesRemainAvailable()
+    {
+        typeof(PartyErasureRecordStore).GetConstructor([typeof(DaprClient)]).ShouldNotBeNull();
+        typeof(KeyOperationAuditService).GetConstructor([typeof(DaprClient)]).ShouldNotBeNull();
+        typeof(TenantKeyRotationService).GetConstructor([
+            typeof(IKeyStorageBackend), typeof(DaprClient), typeof(IKeyOperationAuditService),
+            typeof(IEnumerable<ITenantKeyRotationCacheInvalidator>), typeof(ICorrelationContextAccessor)])
+            .ShouldNotBeNull();
     }
 
     [Fact]

@@ -20,6 +20,10 @@ Hexalith.Parties is a ready-to-deploy party management domain service for people
 
 ## Quick Start
 
+Set `HEXALITH_DAPR_HOME` to a prepared, absolute isolated Dapr home before
+starting. Follow the [pinned Platform runtime prerequisites](references/Hexalith.Platform/README.md#run-and-debug-a-technical-module);
+the tool refuses an unset or unprepared home.
+
 ```bash
 git clone https://github.com/Hexalith/Hexalith.Parties.git
 cd Hexalith.Parties

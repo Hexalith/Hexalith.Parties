@@ -8,6 +8,12 @@ namespace Hexalith.Parties.Security;
 
 public sealed class KeyOperationAuditService(DaprClient daprClient, IOptions<PartiesSecurityStoreOptions>? options = null) : IKeyOperationAuditService
 {
+    /// <summary>Creates an audit service with the compatible default component.</summary>
+    /// <param name="daprClient">The Dapr client.</param>
+    public KeyOperationAuditService(DaprClient daprClient) : this(daprClient, null)
+    {
+    }
+
     private readonly string _storeName = (options?.Value ?? new PartiesSecurityStoreOptions()).StateStoreName;
     private const int MaxRetries = 5;
 

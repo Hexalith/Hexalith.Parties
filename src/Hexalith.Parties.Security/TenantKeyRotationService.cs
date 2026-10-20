@@ -18,6 +18,22 @@ public sealed class TenantKeyRotationService(
     ICorrelationContextAccessor correlationContextAccessor,
     IOptions<PartiesSecurityStoreOptions>? options = null) : ITenantKeyRotationService
 {
+    /// <summary>Creates a rotation service with the compatible default component.</summary>
+    /// <param name="backend">The key storage backend.</param>
+    /// <param name="daprClient">The Dapr client.</param>
+    /// <param name="auditService">The audit service.</param>
+    /// <param name="cacheInvalidators">The cache invalidators.</param>
+    /// <param name="correlationContextAccessor">The correlation context accessor.</param>
+    public TenantKeyRotationService(
+        IKeyStorageBackend backend,
+        DaprClient daprClient,
+        IKeyOperationAuditService auditService,
+        IEnumerable<ITenantKeyRotationCacheInvalidator> cacheInvalidators,
+        ICorrelationContextAccessor correlationContextAccessor)
+        : this(backend, daprClient, auditService, cacheInvalidators, correlationContextAccessor, null)
+    {
+    }
+
     private readonly string _storeName = (options?.Value ?? new PartiesSecurityStoreOptions()).StateStoreName;
     private const int MaxRetries = 5;
 
