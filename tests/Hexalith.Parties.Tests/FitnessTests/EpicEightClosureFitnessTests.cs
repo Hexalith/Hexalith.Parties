@@ -49,8 +49,8 @@ public sealed class EpicEightClosureFitnessTests
         {
             DescribeDeferralGaps(deferral).ShouldBeEmpty(deferral.Id);
             DescribeEvidenceAnchorGaps(root, deferral.Evidence).ShouldBeEmpty(deferral.Id);
-            // Membership in ExpectedDeferrals is the accepted-wait set. First-class ledger
-            // `status: open` is the work-queue field; packed `status: accepted` was stripped.
+            // Only open ledger work can satisfy the accepted-wait expectation. Completing one
+            // requires reconciling ExpectedDeferrals and its dependent invariants explicitly.
         }
 
         string sprintStatus = Read(root, SprintStatusPath);
@@ -111,6 +111,178 @@ public sealed class EpicEightClosureFitnessTests
         deferrals.ShouldHaveSingleItem();
         ClosureDeferral deferral = deferrals[0];
         deferral.Evidence.ShouldBe("_bmad-output/implementation-artifacts/deferred-work.md");
+        DescribeDeferralGaps(deferral).ShouldBe(["owner"]);
+    }
+
+    /// <summary>
+    /// Verifies that retained reason fields cannot keep completed or unclassified work accepted.
+    /// </summary>
+    [Theory]
+    [InlineData("done")]
+    [InlineData("done 2026-10-21")]
+    [InlineData("resolved")]
+    [InlineData("archived")]
+    [InlineData("unknown")]
+    [InlineData("")]
+    public void CurrentDeferralRequiresAnExplicitOpenLedgerStatus(string status)
+    {
+        string markdown = $"""
+            ### DW-999: Example closure deferral
+
+            reason: deferral_id: `example` status: accepted owner: `owner` exit_proof: `proof` rollback: `rollback` evidence: `docs/architecture.md`
+            {(string.IsNullOrEmpty(status) ? string.Empty : $"status: {status}")}
+            """;
+
+        ParseDeferrals(markdown).ShouldBeEmpty();
+    }
+
+    /// <summary>
+    /// Verifies first-class status wins over packed history without leaking across entries.
+    /// </summary>
+    [Fact]
+    public void CurrentDeferralStatusIsAuthoritativeAndBoundedByItsOwnEntry()
+    {
+        const string markdown = """
+            ### DW-998: Completed deferral
+
+            status: done 2026-10-21
+            reason: deferral_id: `completed` status: accepted owner: `old owner` exit_proof: `old proof` rollback: `old rollback` evidence: `old.md`
+
+            ### DW-999: Open deferral
+
+            reason: deferral_id: `example` status: done owner: `owner` exit_proof: `proof` rollback: `rollback` evidence: `docs/architecture.md`
+            status: open
+
+            ### DW-1000: Unrelated work
+
+            status: done
+            """;
+
+        ClosureDeferral deferral = ParseDeferrals(markdown).ShouldHaveSingleItem();
+        deferral.Id.ShouldBe("example");
+        deferral.Status.ShouldBe("open");
+        deferral.Owner.ShouldBe("owner");
+        DescribeDeferralGaps(deferral).ShouldBeEmpty();
+    }
+
+    /// <summary>
+    /// Verifies legacy bullet status still governs eligibility before ledger migration.
+    /// </summary>
+    [Theory]
+    [InlineData("accepted", true)]
+    [InlineData("open", true)]
+    [InlineData("done", false)]
+    [InlineData("done 2026-10-21", false)]
+    [InlineData("unknown", false)]
+    [InlineData("", false)]
+    public void LegacyDeferralRequiresAnAcceptedOrOpenStatus(string status, bool expected)
+    {
+        string markdown = $"""
+            - deferral_id: `example`
+              owner: `owner`
+              exit_proof: `proof`
+              rollback: `rollback`
+              evidence: `docs/architecture.md`
+              status: {status}
+            """;
+
+        ParseDeferrals(markdown).Length.ShouldBe(expected ? 1 : 0);
+    }
+
+    /// <summary>
+    /// Verifies legacy formatting inside completed ledger work cannot bypass its status.
+    /// </summary>
+    [Fact]
+    public void CompletedLedgerEntryCannotContributeANestedLegacyDeferral()
+    {
+        const string markdown = """
+            ### DW-999: Completed migrated work
+
+            status: done 2026-10-21
+            - deferral_id: `example`
+              status: accepted
+              owner: `owner`
+              exit_proof: `proof`
+              rollback: `rollback`
+              evidence: `docs/architecture.md`
+            """;
+
+        ParseDeferrals(markdown).ShouldBeEmpty();
+    }
+
+    /// <summary>
+    /// Verifies unrelated provenance cannot supply a required packed reason field.
+    /// </summary>
+    [Fact]
+    public void CurrentDeferralCannotBorrowRequiredFieldsFromMetadata()
+    {
+        const string markdown = """
+            ### DW-999: Open migrated work
+
+            status: open
+            origin: Earlier owner: `historical owner`
+            reason: deferral_id: `example` exit_proof: `proof` rollback: `rollback` evidence: `docs/architecture.md`
+            resolution: Historical outcome retained for context
+            """;
+
+        ClosureDeferral deferral = ParseDeferrals(markdown).ShouldHaveSingleItem();
+        deferral.Id.ShouldBe("example");
+        DescribeDeferralGaps(deferral).ShouldBe(["owner"]);
+    }
+
+    /// <summary>
+    /// Verifies duplicated or conflicting status fields cannot establish acceptance.
+    /// </summary>
+    [Theory]
+    [InlineData(true, "open", "open")]
+    [InlineData(true, "open", "done")]
+    [InlineData(true, "done", "open")]
+    [InlineData(false, "accepted", "accepted")]
+    [InlineData(false, "accepted", "done")]
+    [InlineData(false, "done", "accepted")]
+    public void DuplicateDeferralStatusesCannotEstablishAcceptance(bool current, string first, string second)
+    {
+        string markdown = current
+            ? $"""
+                ### DW-999: Ambiguous status
+
+                status: {first}
+                reason: deferral_id: `example` owner: `owner` exit_proof: `proof` rollback: `rollback` evidence: `docs/architecture.md`
+                status: {second}
+                """
+            : $"""
+                - deferral_id: `example`
+                  status: {first}
+                  owner: `owner`
+                  exit_proof: `proof`
+                  rollback: `rollback`
+                  evidence: `docs/architecture.md`
+                  status: {second}
+                """;
+
+        ParseDeferrals(markdown).ShouldBeEmpty();
+    }
+
+    /// <summary>
+    /// Verifies a following bullet or heading cannot fill an incomplete legacy deferral.
+    /// </summary>
+    [Theory]
+    [InlineData("- Unrelated work")]
+    [InlineData("### Unrelated work")]
+    public void LegacyDeferralFieldsAreBoundedByTheNextItem(string boundary)
+    {
+        string markdown = $"""
+            - deferral_id: `example`
+              status: accepted
+              exit_proof: `proof`
+              rollback: `rollback`
+              evidence: `docs/architecture.md`
+
+            {boundary}
+              owner: `unrelated owner`
+            """;
+
+        ClosureDeferral deferral = ParseDeferrals(markdown).ShouldHaveSingleItem();
         DescribeDeferralGaps(deferral).ShouldBe(["owner"]);
     }
 
@@ -472,36 +644,56 @@ public sealed class EpicEightClosureFitnessTests
 
     private static ClosureDeferral[] ParseDeferrals(string markdown)
     {
+        MatchCollection ledgerEntries = Regex.Matches(
+            markdown,
+            @"(?ms)^### DW-\d+:[^\r\n]*\r?\n.*?(?=^#{1,3} |\z)",
+            RegexOptions.CultureInvariant);
+
         // Legacy multi-line bulleted form (still exercised by
         // DeferralParserPreservesReorderedAndMissingFieldsForSpecificDiagnostics): a top-level
-        // "- deferral_id:" line followed by indented sub-field lines.
+        // "- deferral_id:" line followed by indented sub-field lines. It cannot bypass a current
+        // ledger entry's status merely because migrated evidence retains the old bullet format.
         IEnumerable<string> bulletedBlocks = Regex.Matches(
                 markdown,
-                @"(?ms)^- deferral_id:.*?(?=^- deferral_id:|\z)",
+                @"(?ms)^- deferral_id:.*?(?=^- |^#{1,6} |\z)",
                 RegexOptions.CultureInvariant)
+            .Where(match => !ledgerEntries.Any(entry => match.Index >= entry.Index && match.Index < entry.Index + entry.Length))
             .Select(static match => match.Value);
 
-        // Current deferred-work.md form: each closure deferral's fields are embedded in a single
-        // "reason:" line inside its own "### DW-N" ledger entry rather than under a dedicated
-        // heading. "deferral_id:" not preceded by "- " identifies such a line; it is unique to
-        // exactly these entries in deferred-work.md.
-        IEnumerable<string> inlineBlocks = Regex.Matches(
-                markdown,
-                @"(?m)^(?!- deferral_id:).*\bdeferral_id:.*$",
-                RegexOptions.CultureInvariant)
-            .Select(static match => match.Value);
+        // Current ledger entries keep the authoritative status outside the packed reason.
+        // Read the whole entry, bounded by the next heading, so completed history cannot borrow
+        // an open status from adjacent work or stay accepted through a stale packed token.
+        IEnumerable<string> ledgerBlocks = ledgerEntries
+            .Select(static match => match.Value)
+            .Where(static block => Regex.IsMatch(block, @"(?m)^reason:.*\bdeferral_id:", RegexOptions.CultureInvariant));
 
-        return bulletedBlocks.Concat(inlineBlocks)
-            .Select(static block => new ClosureDeferral(
-                ReadDeferralField(block, "deferral_id"),
-                ReadDeferralField(block, "status"),
-                ReadDeferralField(block, "owner"),
-                ReadDeferralField(block, "exit_proof"),
-                ReadDeferralField(block, "rollback"),
-                ReadDeferralField(block, "evidence")))
+        IEnumerable<ClosureDeferral> legacy = bulletedBlocks
+            .Select(static block => ParseDeferral(block, ReadDeferralField(block, "status")))
+            .Where(static deferral => deferral.Status is "accepted" or "open");
+        IEnumerable<ClosureDeferral> current = ledgerBlocks
+            .Select(static block =>
+            {
+                MatchCollection statuses = Regex.Matches(block, @"(?m)^status:[ \t]*(?<value>[^\r\n]*)", RegexOptions.CultureInvariant);
+                string status = statuses.Count == 1 ? statuses[0].Groups["value"].Value.Trim() : string.Empty;
+                MatchCollection reasons = Regex.Matches(block, @"(?m)^reason:[ \t]*(?<value>[^\r\n]*)", RegexOptions.CultureInvariant);
+                string reason = reasons.Count == 1 ? reasons[0].Groups["value"].Value : string.Empty;
+                return ParseDeferral(reason, status);
+            })
+            .Where(static deferral => string.Equals(deferral.Status, "open", StringComparison.Ordinal));
+
+        return legacy.Concat(current)
             .OrderBy(static deferral => Array.IndexOf(ExpectedDeferrals, deferral.Id))
             .ToArray();
     }
+
+    private static ClosureDeferral ParseDeferral(string block, string status)
+        => new(
+            ReadDeferralField(block, "deferral_id"),
+            status,
+            ReadDeferralField(block, "owner"),
+            ReadDeferralField(block, "exit_proof"),
+            ReadDeferralField(block, "rollback"),
+            ReadDeferralField(block, "evidence"));
 
     private static string ReadDeferralField(string block, string field)
     {
@@ -509,12 +701,12 @@ public sealed class EpicEightClosureFitnessTests
         // preceded by whitespace mid-line among several fields packed onto one line (current
         // form). An unquoted value's end is bounded by the next "field: " marker or end of line/
         // block, so a value on a shared line does not swallow the fields that follow it.
-        Match match = Regex.Match(
+        MatchCollection matches = Regex.Matches(
             block,
             $@"(?:^|(?<=\s))(?:-\s*)?{Regex.Escape(field)}:\s*(?:`(?<quoted>[^`]*)`|(?<plain>\S.*?))(?=\s+[A-Za-z][A-Za-z_]*:\s|\s*$)",
             RegexOptions.CultureInvariant | RegexOptions.Multiline);
-        return match.Success
-            ? (match.Groups["quoted"].Success ? match.Groups["quoted"].Value : match.Groups["plain"].Value.Trim())
+        return matches.Count == 1
+            ? (matches[0].Groups["quoted"].Success ? matches[0].Groups["quoted"].Value : matches[0].Groups["plain"].Value.Trim())
             : string.Empty;
     }
 

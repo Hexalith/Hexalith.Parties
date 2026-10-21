@@ -1,0 +1,30 @@
+{
+  "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -result-xml /tmp/five-closure-review-red.xml",
+  "parser": "initial implementation before review patches",
+  "total": 58,
+  "failed": 4,
+  "passed": 54,
+  "skipped": 0,
+  "failures": [
+    {
+      "method": "CompletedLedgerEntryCannotContributeANestedLegacyDeferral",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CompletedLedgerEntryCannotContributeANestedLegacyDeferral",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown)\n    should be empty but had\n1\n    item and was\n[ClosureDeferral { Id = example, Status = accepted, Owner = owner, ExitProof = proof, Rollback = rollback, Evidence = docs/architecture.md }]"
+    },
+    {
+      "method": "CurrentDeferralCannotBorrowRequiredFieldsFromMetadata",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentDeferralCannotBorrowRequiredFieldsFromMetadata",
+      "message": "Shouldly.ShouldAssertException : DescribeDeferralGaps(deferral)\n    should be\n[\\\"owner\\\"]\n    but was (case sensitive comparison)\n[]\n    difference\n[*]"
+    },
+    {
+      "method": "DuplicateDeferralStatusesCannotEstablishAcceptance",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.DuplicateDeferralStatusesCannotEstablishAcceptance(current: False, first: \\\"accepted\\\", second: \\\"accepted\\\")",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown)\n    should be empty but had\n1\n    item and was\n[ClosureDeferral { Id = example, Status = accepted, Owner = owner, ExitProof = proof, Rollback = rollback, Evidence = docs/architecture.md }]"
+    },
+    {
+      "method": "DuplicateDeferralStatusesCannotEstablishAcceptance",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.DuplicateDeferralStatusesCannotEstablishAcceptance(current: False, first: \\\"accepted\\\", second: \\\"done\\\")",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown)\n    should be empty but had\n1\n    item and was\n[ClosureDeferral { Id = example, Status = accepted, Owner = owner, ExitProof = proof, Rollback = rollback, Evidence = docs/architecture.md }]"
+    }
+  ]
+}

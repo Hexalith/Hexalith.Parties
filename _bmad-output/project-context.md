@@ -237,7 +237,8 @@ _This file contains critical rules and patterns that AI agents must follow when 
   merge, fixup, squash, version-only, or Git-generated revert defaults even if commitlint exits successfully;
   intentional reverts use `revert: …`. Validate the exact candidate with repository-pinned commitlint when
   available and revise until both policies pass; otherwise explicitly report that validation was not run.
-  Work on a typed branch (`<type>/<slug>`) and merge via PR.
+  Work on `main` by default. Create or switch branches only when the task requires it;
+  when needed, use a descriptive typed branch (`<type>/<slug>`).
 - **CI** (`.github/workflows/test.yml`, the only workflow): `lint` (analyzers build + Story 9.8 build-gate)
   → in parallel `test` (**4 named shards**: `contracts-client-security-mcp`, `domain-server`, `projections-ui`,
   `integration-deploy`) **and `ui-a11y`** (UI accessibility gate, bUnit) → `contract-test` → `report` (quality

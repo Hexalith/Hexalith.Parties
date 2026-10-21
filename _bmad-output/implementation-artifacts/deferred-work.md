@@ -117,7 +117,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: persistent BMAD project context and Hexalith Git guidance
 source_spec: `_bmad-output/implementation-artifacts/spec-align-assistant-commit-message-generation.md`
 reason: The pre-existing project context still requires a typed branch and PR, while the authoritative Hexalith Git instructions say to work on `main` by default and branch only when genuinely required.
-status: open
+status: done 2026-10-21
+resolution: Default-main guidance now matches the authoritative Hexalith Git policy; typed branches are conditional on task need.
+verification: `tests/five-closure-guidance-deferred-items-2026-10-21/validation.json`; spec `spec-five-closure-guidance-deferred-items.md`.
 
 ### DW-17: Pin the Node and npm runtime in release workflows
 
@@ -301,15 +303,19 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: _bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md
 source_spec: `_bmad-output/implementation-artifacts/spec-scp-2026-08-04-story-8-6-g5-receipt-recovery.md`
 reason: Blind-hunter review of the 2026-08-04 SCP recovery found the G5 row's `git ls-tree HEAD references/Hexalith.EventStore` / `references/Hexalith.Builds` commands resolve against whatever the working tree currently points to, unlike the sibling projection/query SDK and DataProtection rows in the same matrix, which pin to an exact Parties commit (`03ab938c637aa15f7a0af402afc8664dfc54d1a4`) for reproducibility. This pattern pre-dates the 2026-08-04 identity refresh; the refresh preserved rather than introduced it.
-status: open
+status: done 2026-10-21
+resolution: The G5 validation cell records exact historical Parties, EventStore and Builds identities with executable ls-tree/tag commands. Historical identity proof is explicitly separate from current parity and adoption approval.
+verification: `tests/five-closure-guidance-deferred-items-2026-10-21/validation.json`; spec `spec-five-closure-guidance-deferred-items.md`.
 
 ### DW-43: Restore dropped G8 and cross-story guidance in Epic 8 context
 
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-04, fresh full-diff pass)"), 2026-09-06
-location: _bmad-output/planning-artifacts/epic-8-context.md
+location: _bmad-output/implementation-artifacts/epic-8-context.md
 source_spec: `_bmad-output/implementation-artifacts/spec-scp-2026-08-04-story-8-6-g5-receipt-recovery.md`
 reason: Blind-hunter review found the working-tree regeneration of `epic-8-context.md` (predating this SCP recovery; only its line endings were normalized here) silently dropped the G8 local-run/publish JWT, audience-relationship, HTTPS-metadata, and secret-free-manifest proof requirements, and the sentence tying `AddEventStoreDataProtection`/`DaprXmlRepository`/cursor-codec consumption to the DataProtection prerequisite identity. It also compressed the explicit list of what stays externally owned for Stories 8.12/8.13 (production manifests, DAPR components, ingress, secrets, scans, signatures, promotion gates) into one generic sentence. A future Story 8.8/8.9/8.10 session loading only the cached epic context would miss this guidance.
-status: open
+status: done 2026-10-21
+resolution: Restored G8 local-run/publish authentication and topology proof, DataProtection prerequisite identity binding, and explicit external deployment ownership to the actual implementation-artifacts Epic 8 context. Existing gates and rollback requirements remain.
+verification: `tests/five-closure-guidance-deferred-items-2026-10-21/validation.json`; spec `spec-five-closure-guidance-deferred-items.md`.
 
 ### DW-44: Prevent rebuild finalization from overwriting concurrent live projection writes
 
@@ -324,7 +330,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: .agents/skills/bmad-sprint-planning/scripts/sprint_plan.py
 source_spec: `_bmad-output/implementation-artifacts/spec-scp-2026-08-04-story-8-6-g5-receipt-recovery.md`
 reason: Blind-hunter review found this fix and its new test assertions are a distinct bug from the previously-documented STORY_RANK/`_slug()` regeneration incident, but no file in the current diff explains or attributes it, leaving a future reader unable to tell why `sprint_plan.py` changed.
-status: open
+status: done 2026-10-21
+resolution: Attributed the original fresh-generation timestamp fix and its later upstream regression; restored the fresh-only creation-date reset and YAML/JSON timestamp assertions while preserving incremental timestamps, action items and explicit overrides.
+verification: `tests/five-closure-guidance-deferred-items-2026-10-21/validation.json`; spec `spec-five-closure-guidance-deferred-items.md`.
 
 ### DW-46: Align PartySdkProjectionFold logging with house style
 
@@ -834,7 +842,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-fi
 location: tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs (ParseDeferrals)
 source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
 reason: `ParseDeferrals` reads packed fields from each reason but not the ledger entry's first-class status, so a resolved entry whose reason remains can still satisfy `ExpectedDeferrals`.
-status: open
+status: done 2026-10-21
+resolution: Closure parsing uses first-class status from each whole ledger entry; resolved/missing/unknown status cannot satisfy accepted waits. Legacy accepted/open entries and required-field diagnostics remain supported. Completing an expected deferral now fails the stale expectation until its dependent invariants are deliberately reconciled.
+verification: `tests/five-closure-guidance-deferred-items-2026-10-21/validation.json`; spec `spec-five-closure-guidance-deferred-items.md`.
 
 ### DW-115: Reconcile the README SDK prerequisite with global.json.
 

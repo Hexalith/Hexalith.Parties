@@ -1,0 +1,3 @@
+⧗   --- input ---
+fix: close five deferred planning and closure gaps
+✔   found 0 problems, 0 warnings

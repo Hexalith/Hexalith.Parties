@@ -1,0 +1,124 @@
+{
+  "baseline_revision": "4fbe30883eb18ec074530e49a42669b5600ba2af",
+  "items": [
+    "DW-16",
+    "DW-42",
+    "DW-43",
+    "DW-45",
+    "DW-114"
+  ],
+  "checks": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "phase": "final after review patches"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -xml /tmp/five-closure-focused.xml",
+      "exit_code": 0,
+      "total": 106,
+      "failed": 0,
+      "skipped": 0,
+      "phase": "before review corrections"
+    },
+    {
+      "command": "uv run --with pytest --with ruamel.yaml -m pytest .agents/skills/bmad-sprint-planning/scripts/tests/test_sprint_plan.py -q",
+      "exit_code": 0,
+      "total": 37,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/five-closure-full.xml",
+      "exit_code": 0,
+      "total": 2227,
+      "passed": 2227,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0,
+      "phase": "before review corrections"
+    },
+    {
+      "command": "node node_modules/@commitlint/cli/cli.js --edit /tmp/five-closure-commit-message.txt --verbose",
+      "exit_code": 0,
+      "version": "21.2.2",
+      "problems": 0,
+      "warnings": 0,
+      "candidate_file": "commit-message.txt",
+      "evidence_file": "commitlint.txt"
+    },
+    {
+      "phase": "final after review patches",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/five-closure-final-full.xml",
+      "exit_code": 0,
+      "total": 2237,
+      "passed": 2237,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0,
+      "included_class_counts": {
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests": 58,
+        "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests": 58
+      }
+    }
+  ],
+  "historical_git_proof": [
+    {
+      "command": "git ls-tree 75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6 references/Hexalith.EventStore",
+      "exit_code": 0,
+      "stdout": "160000 commit 865cd9e49273dffbb1cdae85efeaf1aac322e09e\treferences/Hexalith.EventStore"
+    },
+    {
+      "command": "git ls-tree 75b4fa1fe2cfd2167c186e94faf52e18be4b0ff6 references/Hexalith.Builds",
+      "exit_code": 0,
+      "stdout": "160000 commit 360a2b9c4e96809365a7de785be9a68152d5ac28\treferences/Hexalith.Builds"
+    },
+    {
+      "command": "git -C references/Hexalith.EventStore describe --tags --exact-match --match v3.113.0 865cd9e49273dffbb1cdae85efeaf1aac322e09e",
+      "exit_code": 0,
+      "stdout": "v3.113.0"
+    }
+  ],
+  "graph": "Debug/default published dependencies; test/helper and documentation scope. No source-mode, topology, shared-provider parity or new adoption approval.",
+  "preservation_checks": [
+    "Only the G5 matrix row changed; all other original matrix bytes are preserved.",
+    "Canonical sprint-status.yaml unchanged.",
+    "All root gitlinks unchanged."
+  ],
+  "review": {
+    "findings": 6,
+    "patched": 5,
+    "rejected_low": 1,
+    "new_cases": 10,
+    "failing_before_patches": 4,
+    "followup": "No remaining material introduced defects found; unsupported fenced-example concern remains rejected within the flat ledger schema."
+  },
+  "python_regression": {
+    "command": "uv run --with pytest --with ruamel.yaml -m pytest .agents/skills/bmad-sprint-planning/scripts/tests/test_sprint_plan.py -q",
+    "phase": "restored assertions before guard restoration",
+    "exit_code": 1,
+    "passed": 36,
+    "failed": 1,
+    "test": "test_fresh_rebuild_ignores_existing_statuses",
+    "actual_generated": "01-01-2026 09:00",
+    "expected_generated": "08-01-2026 14:30"
+  },
+  "final_file_sha256": {
+    ".agents/skills/bmad-sprint-planning/scripts/sprint_plan.py": "af0770755ee072e181fa75af1eb572ab7c8e2edb58ec0decb8b44f36f1d16107",
+    ".agents/skills/bmad-sprint-planning/scripts/tests/test_sprint_plan.py": "04a56a1c535b593ef4c8b51c7c55bc57e8acf9a5583dce3cfab8c489bc125cfe",
+    "tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs": "44b62dd7f4f98fcbc1331ab41461440f685867408454c51768429cd26f8d047a",
+    "tests/Hexalith.Parties.Tests/FitnessTests/ClosureDeferral.cs": "c36765f0213bc72ccc6c0d3f0862e2e046199107c6ba87af8213bfc763ff11f2",
+    "_bmad-output/project-context.md": "3f54d6097568aaf7f8636b5393679bdbfa1c05b8beb03fcf3496e85aa357bea3",
+    "_bmad-output/implementation-artifacts/epic-8-context.md": "33e58f50e86004605818bc89f2913b4707034891ab8b24f9be997634d2cf3dd7",
+    "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md": "2093f653b1abff60b3389ca0d0e9d9e2f2d013242252cd61f8255012ade9db16",
+    "_bmad-output/implementation-artifacts/deferred-work.md": "6929e88966e7149fb2dd8d0b55445d34cd19d857d231ab895a433550d056e20f"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -xml /tmp/five-closure-red.xml",
+  "parser": "baseline production test-helper implementation plus new regression cases",
+  "total": 48,
+  "failed": 11,
+  "passed": 37,
+  "skipped": 0,
+  "failures": [
+    {
+      "method": "CurrentDeferralRequiresAnExplicitOpenLedgerStatus",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentDeferralRequiresAnExplicitOpenLedgerStatus(status: \\\"done\\\")",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown)\n    should be empty but had\n1\n    item and was\n[ClosureDeferral { Id = example, Status = accepted, Owner = owner, ExitProof = proof, Rollback = rollback, Evidence = docs/architecture.md }]"
+    },
+    {
+      "method": "CurrentDeferralRequiresAnExplicitOpenLedgerStatus",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentDeferralRequiresAnExplicitOpenLedgerStatus(status: \\\"done 2026-10-21\\\")",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown)\n    should be empty but had\n1\n    item and was\n[ClosureDeferral { Id = example, Status = accepted, Owner = owner, ExitProof = proof, Rollback = rollback, Evidence = docs/architecture.md }]"
+    },
+    {
+      "method": "CurrentDeferralRequiresAnExplicitOpenLedgerStatus",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentDeferralRequiresAnExplicitOpenLedgerStatus(status: \\\"resolved\\\")",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown)\n    should be empty but had\n1\n    item and was\n[ClosureDeferral { Id = example, Status = accepted, Owner = owner, ExitProof = proof, Rollback = rollback, Evidence = docs/architecture.md }]"
+    },
+    {
+      "method": "CurrentDeferralRequiresAnExplicitOpenLedgerStatus",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentDeferralRequiresAnExplicitOpenLedgerStatus(status: \\\"archived\\\")",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown)\n    should be empty but had\n1\n    item and was\n[ClosureDeferral { Id = example, Status = accepted, Owner = owner, ExitProof = proof, Rollback = rollback, Evidence = docs/architecture.md }]"
+    },
+    {
+      "method": "CurrentDeferralRequiresAnExplicitOpenLedgerStatus",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentDeferralRequiresAnExplicitOpenLedgerStatus(status: \\\"unknown\\\")",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown)\n    should be empty but had\n1\n    item and was\n[ClosureDeferral { Id = example, Status = accepted, Owner = owner, ExitProof = proof, Rollback = rollback, Evidence = docs/architecture.md }]"
+    },
+    {
+      "method": "CurrentDeferralRequiresAnExplicitOpenLedgerStatus",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentDeferralRequiresAnExplicitOpenLedgerStatus(status: \\\"\\\")",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown)\n    should be empty but had\n1\n    item and was\n[ClosureDeferral { Id = example, Status = accepted, Owner = owner, ExitProof = proof, Rollback = rollback, Evidence = docs/architecture.md }]"
+    },
+    {
+      "method": "CurrentDeferralStatusIsAuthoritativeAndBoundedByItsOwnEntry",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentDeferralStatusIsAuthoritativeAndBoundedByItsOwnEntry",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown)\n    should have single item but had\n2\n    items and was\n[ClosureDeferral { Id = completed, Status = accepted, Owner = old owner, ExitProof = old proof, Rollback = old rollback, Evidence = old.md }, ClosureDeferral { Id = example, Status = done, Owner = owner, ExitProof = proof, Rollback = rollback, Evidence = docs/architecture.md }]"
+    },
+    {
+      "method": "LegacyDeferralRequiresAnAcceptedOrOpenStatus",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.LegacyDeferralRequiresAnAcceptedOrOpenStatus(status: \\\"done\\\", expected: False)",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown).Length\n    should be\n0\n    but was\n1"
+    },
+    {
+      "method": "LegacyDeferralRequiresAnAcceptedOrOpenStatus",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.LegacyDeferralRequiresAnAcceptedOrOpenStatus(status: \\\"done 2026-10-21\\\", expected: False)",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown).Length\n    should be\n0\n    but was\n1"
+    },
+    {
+      "method": "LegacyDeferralRequiresAnAcceptedOrOpenStatus",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.LegacyDeferralRequiresAnAcceptedOrOpenStatus(status: \\\"unknown\\\", expected: False)",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown).Length\n    should be\n0\n    but was\n1"
+    },
+    {
+      "method": "LegacyDeferralRequiresAnAcceptedOrOpenStatus",
+      "name": "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.LegacyDeferralRequiresAnAcceptedOrOpenStatus(status: \\\"\\\", expected: False)",
+      "message": "Shouldly.ShouldAssertException : ParseDeferrals(markdown).Length\n    should be\n0\n    but was\n1"
+    }
+  ]
+}

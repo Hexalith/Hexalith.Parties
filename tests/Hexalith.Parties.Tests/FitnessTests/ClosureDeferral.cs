@@ -4,7 +4,7 @@ namespace Hexalith.Parties.Tests.FitnessTests;
 /// Represents an accepted Epic 8 closure deferral parsed from the deferred-work ledger.
 /// </summary>
 /// <param name="Id">The stable deferral identifier.</param>
-/// <param name="Status">Optional packed status token when present (legacy fixtures still use <c>accepted</c>); membership in ExpectedDeferrals is the accepted-wait set.</param>
+/// <param name="Status">Authoritative ledger status, or the packed status in legacy bullet entries. Only open ledger entries or accepted/open legacy entries can satisfy the accepted-wait expectation.</param>
 /// <param name="Owner">The accountable owner.</param>
 /// <param name="ExitProof">The proof required to close the deferral.</param>
 /// <param name="Rollback">The retained rollback path.</param>

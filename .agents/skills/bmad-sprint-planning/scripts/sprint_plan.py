@@ -400,7 +400,8 @@ def cmd_generate(args):
         return default
 
     generated = args.date
-    if existing is not None and existing.get("generated"):
+    # A fresh rebuild starts a new plan; incremental refresh keeps its creation date.
+    if not args.fresh and existing is not None and existing.get("generated"):
         generated = str(existing["generated"])
 
     if existing is not None and not args.fresh:
