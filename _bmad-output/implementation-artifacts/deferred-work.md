@@ -731,7 +731,8 @@ archived: 2026-10-13
 origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-08-19)"), 2026-09-06
 location: EpicEightClosureFitnessTests, PlatformApiPrerequisitesTests, and DocumentationFitnessTests
 reason: Duplicated, timeout-free git/process helpers. `RunGit`/`TryRunGit` are defined in both `EpicEightClosureFitnessTests` and `PlatformApiPrerequisitesTests`, and `Read(root, relativePath)` a third time in `DocumentationFitnessTests`. `RunGit` drains stdout fully before stderr with no timeout; not a realistic deadlock at these output sizes, but the pattern should be consolidated.
-status: open
+status: done 2026-10-21
+resolution: Consolidated repository Git/process calls through the existing shared runner, preserving literal arguments, concurrent capture, a shared execution deadline and bounded cleanup. Reused RepositoryRoot.Read. Focused process/fitness checks, complete Contracts and Client suites pass; the broader service suite retains the independently reproduced baseline Builds-receipt mismatch. Independent review and follow-up completed. See spec-dw-90-bounded-test-processes.md and tests/dw-90-bounded-test-processes-2026-10-21/validation.json.
 
 ### DW-91: Restore forward skip-link reachability after route focus
 
@@ -1698,3 +1699,8 @@ resolution: Declared the existing named-enum wire policy on all six Parties comm
   summary: Provide an owner-supported recovery path for legacy erasure certificates.
   severity: medium
   evidence: Earlier cleanup retries overwrote key-destruction certificate status with Pending/Failed, indistinguishable from genuine key deletion failures. DW-86 must reject that ambiguous evidence; the current Parties gateway exposes no supported reissuance/persistence command. Key-management owners must qualify authoritative read-back and auditable certificate replacement before legacy retries can be certified. Never manually promote status or accept failed evidence.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-90-bounded-test-processes.md`
+  summary: Contain test-process descendants that inherit output pipes after their direct parent has already exited.
+  severity: medium
+  evidence: Independent DW-90 review reproduced the same orphan in the baseline shared package runner and the consolidation candidate. Once the direct parent exits, Process.Kill(entireProcessTree: true) cannot identify that orphan; bounded output capture still fails promptly. The inherited-pipe regression explicitly owns and terminates its descendant. Qualify an appropriate process-group/job strategy separately before claiming orphan cleanup.

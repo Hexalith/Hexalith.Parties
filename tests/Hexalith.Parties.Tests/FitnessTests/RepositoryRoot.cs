@@ -21,6 +21,10 @@ internal static class RepositoryRoot
             $"Could not locate repository root: '{SolutionFileName}' was not found above '{AppContext.BaseDirectory}'.");
     }
 
+    /// <summary>Reads a repository file without altering its text.</summary>
+    internal static string Read(string root, string relativePath)
+        => File.ReadAllText(Path.Combine(root, relativePath));
+
     public static string ProjectFile(string projectName)
         => Path.Combine(Locate(), "src", projectName, projectName + ".csproj");
 }

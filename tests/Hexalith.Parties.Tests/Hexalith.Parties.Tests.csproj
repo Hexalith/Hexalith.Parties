@@ -46,6 +46,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\PackageTests.Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

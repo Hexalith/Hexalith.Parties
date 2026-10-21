@@ -4,6 +4,8 @@ using System.Xml.Linq;
 
 using Shouldly;
 
+using static Hexalith.Parties.Tests.FitnessTests.RepositoryRoot;
+
 namespace Hexalith.Parties.Tests.FitnessTests;
 
 public sealed class DocumentationFitnessTests
@@ -360,9 +362,6 @@ public sealed class DocumentationFitnessTests
             .Distinct(StringComparer.Ordinal)
             .ToArray();
     }
-
-    private static string Read(string root, string relativePath)
-        => File.ReadAllText(Path.Combine(root, relativePath));
 
     /// <summary>
     /// Evaluates the catalog properties that apply to a Parties project in document order:

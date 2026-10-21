@@ -1,6 +1,6 @@
-using System.Diagnostics;
-
 using Shouldly;
+
+using static Hexalith.Parties.Tests.FitnessTests.RepositoryTestProcess;
 
 namespace Hexalith.Parties.Tests.FitnessTests;
 
@@ -55,25 +55,8 @@ public sealed class IdentifierHygieneFitnessTests
     public void Repository_DoesNotTrackLanguageServerCacheArtifacts()
     {
         string root = RepositoryRoot.Locate();
-        using var process = new Process
-        {
-            StartInfo = new ProcessStartInfo("git")
-            {
-                WorkingDirectory = root,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-            },
-        };
-        process.StartInfo.ArgumentList.Add("ls-files");
-        process.StartInfo.ArgumentList.Add("*.csproj.lscache");
-        process.StartInfo.ArgumentList.Add("*.lscache");
+        string output = RunGit(root, "ls-files", "*.csproj.lscache", "*.lscache");
 
-        process.Start().ShouldBeTrue();
-        string output = process.StandardOutput.ReadToEnd();
-        string error = process.StandardError.ReadToEnd();
-        process.WaitForExit();
-
-        process.ExitCode.ShouldBe(0, error);
         output.Trim().ShouldBeEmpty();
     }
 }

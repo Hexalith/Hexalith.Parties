@@ -52,20 +52,52 @@ internal static class PackageTestProcess
         int processTimeoutMilliseconds = DefaultProcessTimeoutMilliseconds,
         int postKillExitTimeoutMilliseconds = DefaultOutputCaptureTimeoutMilliseconds,
         int outputCaptureTimeoutMilliseconds = DefaultOutputCaptureTimeoutMilliseconds)
+        => Run(
+            new ProcessStartInfo(fileName) { Arguments = arguments },
+            workingDirectory,
+            processTimeoutMilliseconds,
+            postKillExitTimeoutMilliseconds,
+            outputCaptureTimeoutMilliseconds);
+
+    /// <summary>Runs a child process with literal arguments and finite execution and cleanup bounds.</summary>
+    internal static PackageTestProcessResult Run(
+        string fileName,
+        IReadOnlyList<string> arguments,
+        string workingDirectory,
+        int processTimeoutMilliseconds = DefaultProcessTimeoutMilliseconds,
+        int postKillExitTimeoutMilliseconds = DefaultOutputCaptureTimeoutMilliseconds,
+        int outputCaptureTimeoutMilliseconds = DefaultOutputCaptureTimeoutMilliseconds)
     {
-        using Process process = new()
+        ArgumentNullException.ThrowIfNull(arguments);
+        var startInfo = new ProcessStartInfo(fileName);
+        foreach (string argument in arguments)
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = arguments,
-                WorkingDirectory = workingDirectory,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            },
-        };
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        return Run(startInfo, workingDirectory, processTimeoutMilliseconds,
+            postKillExitTimeoutMilliseconds, outputCaptureTimeoutMilliseconds);
+    }
+
+    /// <summary>Captures both streams under one deadline and reaps a stalled process tree.</summary>
+    private static PackageTestProcessResult Run(
+        ProcessStartInfo startInfo,
+        string workingDirectory,
+        int processTimeoutMilliseconds,
+        int postKillExitTimeoutMilliseconds,
+        int outputCaptureTimeoutMilliseconds)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(processTimeoutMilliseconds);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(postKillExitTimeoutMilliseconds);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(outputCaptureTimeoutMilliseconds);
+
+        startInfo.WorkingDirectory = workingDirectory;
+        startInfo.RedirectStandardError = true;
+        startInfo.RedirectStandardOutput = true;
+        startInfo.UseShellExecute = false;
+        startInfo.CreateNoWindow = true;
+        string fileName = startInfo.FileName;
+        using Process process = new() { StartInfo = startInfo };
 
         bool started;
         try
@@ -82,27 +114,53 @@ internal static class PackageTestProcess
             throw new InvalidOperationException($"Could not start {fileName}.");
         }
 
+        Stopwatch stopwatch = Stopwatch.StartNew();
         Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
         Task<string> standardError = process.StandardError.ReadToEndAsync();
-        if (!process.WaitForExit(processTimeoutMilliseconds))
+        bool exited;
+        try
         {
-            TryKill(process);
-            if (!process.WaitForExit(postKillExitTimeoutMilliseconds))
-            {
-                throw new TimeoutException(
-                    $"{fileName} did not exit within {postKillExitTimeoutMilliseconds} ms after termination was requested.");
-            }
+            // Both streams drain concurrently while exit and capture share one deadline.
+            // Once the direct child exits, preserve the shorter output-capture allowance.
+            exited = process.WaitForExit(processTimeoutMilliseconds);
+        }
+        catch
+        {
+            KillAndWaitForExit(process, postKillExitTimeoutMilliseconds);
+            throw;
+        }
 
+        if (!exited)
+        {
+            KillAndWaitForExit(process, postKillExitTimeoutMilliseconds);
             WaitForOutput(standardOutput, standardError, outputCaptureTimeoutMilliseconds, fileName);
             string diagnostic = string.IsNullOrWhiteSpace(standardError.Result)
                 ? standardOutput.Result
                 : standardError.Result;
+            string arguments = startInfo.ArgumentList.Count == 0
+                ? startInfo.Arguments
+                : string.Join(' ', startInfo.ArgumentList);
             throw new TimeoutException(
-                $"{fileName} exceeded the {processTimeoutMilliseconds} ms timeout.{Environment.NewLine}{diagnostic}");
+                $"{fileName} exceeded the {processTimeoutMilliseconds} ms timeout.{Environment.NewLine}"
+                    + $"Arguments: {arguments}{Environment.NewLine}{diagnostic}");
         }
 
-        WaitForOutput(standardOutput, standardError, outputCaptureTimeoutMilliseconds, fileName);
+        int remainingMilliseconds = (int)Math.Min(
+            outputCaptureTimeoutMilliseconds,
+            Math.Max(0, processTimeoutMilliseconds - stopwatch.ElapsedMilliseconds));
+        WaitForOutput(standardOutput, standardError, remainingMilliseconds, fileName);
         return new PackageTestProcessResult(process.ExitCode, standardOutput.Result, standardError.Result);
+    }
+
+    /// <summary>Requests termination and waits only for the configured cleanup interval.</summary>
+    private static void KillAndWaitForExit(Process process, int timeoutMilliseconds)
+    {
+        TryKill(process);
+        if (!process.WaitForExit(timeoutMilliseconds))
+        {
+            throw new TimeoutException(
+                $"{process.StartInfo.FileName} did not exit within {timeoutMilliseconds} ms after termination was requested.");
+        }
     }
 
     private static void TryKill(Process process)

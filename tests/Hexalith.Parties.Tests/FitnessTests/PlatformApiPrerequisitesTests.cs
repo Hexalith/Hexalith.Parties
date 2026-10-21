@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -6,6 +5,8 @@ using System.Xml.Linq;
 using Hexalith.Parties.Contracts.Authorization;
 
 using Shouldly;
+
+using static Hexalith.Parties.Tests.FitnessTests.RepositoryTestProcess;
 
 namespace Hexalith.Parties.Tests.FitnessTests;
 
@@ -18,9 +19,6 @@ public sealed class PlatformApiPrerequisitesTests
     private const string EventStoreStoryMigrationRelativePath = "references/Hexalith.EventStore/_bmad-output/planning-artifacts/story-id-migration-2026-08-01.md";
     private const string MatrixRelativePath = "_bmad-output/implementation-artifacts/story-8-3-platform-api-prerequisite-matrix.md";
 
-    // Every child process here is a git query or an MSBuild evaluation. None should approach this;
-    // the bound exists so a hung child fails the lane with a diagnosable message instead of blocking.
-    private const int ProcessTimeoutMilliseconds = 300_000;
     private const string AiToolsSha = "3f194e17174994d308ec84af9ee2b5aa68674d0d";
     private const string BuildsSha = "360a2b9c4e96809365a7de785be9a68152d5ac28";
     private const string CommonsSha = "116d26815eb81e35b3c161e1799e5ee12805fc0a";
@@ -2023,14 +2021,7 @@ public sealed class PlatformApiPrerequisitesTests
     }
 
     private static bool GitObjectExists(string root, string revision)
-    {
-        using var process = CreateGitProcess(root, "cat-file", "-e", $"{revision}^{{commit}}");
-
-        process.Start().ShouldBeTrue();
-        process.WaitForExit();
-
-        return process.ExitCode == 0;
-    }
+        => TryRunGit(root, out _, "cat-file", "-e", $"{revision}^{{commit}}");
 
     private static bool IsNotBuildOutput(string root, string path)
         => !Path.GetRelativePath(root, path).Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
@@ -2068,83 +2059,6 @@ public sealed class PlatformApiPrerequisitesTests
         return string.Equals(actualIdentity, expectedIdentity, StringComparison.Ordinal)
             ? string.Empty
             : $"mismatched dependency identity: expected {expectedIdentity}, actual {actualIdentity}";
-    }
-
-    private static string RunGit(string root, params string[] arguments)
-        => RunProcess(root, "git", arguments);
-
-    private static string RunProcess(string root, string fileName, params string[] arguments)
-    {
-        using Process process = CreateProcess(root, fileName);
-        foreach (string argument in arguments)
-        {
-            process.StartInfo.ArgumentList.Add(argument);
-        }
-
-        process.Start().ShouldBeTrue();
-
-        // Drain stdout and stderr concurrently and under one shared deadline. Reading either
-        // stream to completion synchronously deadlocks if the child fills the other pipe's
-        // buffer, or blocks forever if the child hangs while keeping a stream open -- a verbose
-        // or stalled MSBuild evaluation can do either. A single Stopwatch-tracked deadline (rather
-        // than two independent full timeouts) bounds total detection time at ProcessTimeoutMilliseconds
-        // instead of up to double that; the catch-all kills the child on a stream fault too, not only
-        // on timeout, so a faulted read task cannot leak the process tree.
-        Stopwatch stopwatch = Stopwatch.StartNew();
-        Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
-        Task<string> errorTask = process.StandardError.ReadToEndAsync();
-        try
-        {
-            if (!Task.WaitAll([outputTask, errorTask], ProcessTimeoutMilliseconds))
-            {
-                throw new TimeoutException(
-                    $"{fileName} {string.Join(' ', arguments)} did not exit within {ProcessTimeoutMilliseconds / 1000} seconds.");
-            }
-
-            int remainingMilliseconds = (int)Math.Max(0, ProcessTimeoutMilliseconds - stopwatch.ElapsedMilliseconds);
-            if (!process.WaitForExit(remainingMilliseconds))
-            {
-                throw new TimeoutException(
-                    $"{fileName} {string.Join(' ', arguments)} did not exit within {ProcessTimeoutMilliseconds / 1000} seconds.");
-            }
-        }
-        catch
-        {
-            process.Kill(entireProcessTree: true);
-            throw;
-        }
-
-        string output = outputTask.GetAwaiter().GetResult();
-        string error = errorTask.GetAwaiter().GetResult();
-        process.ExitCode.ShouldBe(0, error);
-        return output;
-    }
-
-    private static Process CreateGitProcess(string root, params string[] arguments)
-    {
-        Process process = CreateProcess(root, "git");
-
-        foreach (string argument in arguments)
-        {
-            process.StartInfo.ArgumentList.Add(argument);
-        }
-
-        return process;
-    }
-
-    private static Process CreateProcess(string root, string fileName)
-    {
-        var process = new Process
-        {
-            StartInfo = new ProcessStartInfo(fileName)
-            {
-                WorkingDirectory = root,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-            },
-        };
-
-        return process;
     }
 
     private sealed record EvaluatedProjectGraph(

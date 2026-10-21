@@ -1,7 +1,9 @@
-using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 using Shouldly;
+
+using static Hexalith.Parties.Tests.FitnessTests.RepositoryRoot;
+using static Hexalith.Parties.Tests.FitnessTests.RepositoryTestProcess;
 
 namespace Hexalith.Parties.Tests.FitnessTests;
 
@@ -681,59 +683,5 @@ public sealed class EpicEightClosureFitnessTests
             RegexOptions.CultureInvariant);
         match.Success.ShouldBeTrue(key);
         return match.Groups["value"].Value;
-    }
-
-    private static string Read(string root, string relativePath)
-        => File.ReadAllText(Path.Combine(root, relativePath));
-
-    private static string RunGit(string root, params string[] arguments)
-    {
-        using var process = new Process
-        {
-            StartInfo = new ProcessStartInfo("git")
-            {
-                WorkingDirectory = root,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-            },
-        };
-        foreach (string argument in arguments)
-        {
-            process.StartInfo.ArgumentList.Add(argument);
-        }
-
-        process.Start().ShouldBeTrue();
-        string output = process.StandardOutput.ReadToEnd();
-        string error = process.StandardError.ReadToEnd();
-        process.WaitForExit();
-        process.ExitCode.ShouldBe(0, error);
-        return output;
-    }
-
-    private static bool TryRunGit(string root, out string output, params string[] arguments)
-    {
-        using var process = new Process
-        {
-            StartInfo = new ProcessStartInfo("git")
-            {
-                WorkingDirectory = root,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-            },
-        };
-        foreach (string argument in arguments)
-        {
-            process.StartInfo.ArgumentList.Add(argument);
-        }
-
-        if (!process.Start())
-        {
-            output = string.Empty;
-            return false;
-        }
-
-        output = process.StandardOutput.ReadToEnd();
-        process.WaitForExit();
-        return process.ExitCode == 0;
     }
 }
