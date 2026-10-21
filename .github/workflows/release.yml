@@ -237,7 +237,7 @@ jobs:
               if type == "object" and (.versions | type == "array") then
                 .versions
                 | map(
-                    if type == "string" and test("^[0-9]+(\\.[0-9]+){1,3}(-[0-9A-Za-z.-]+)?$")
+                    if type == "string" and test("^[0-9]+(\\.[0-9]+){1,3}(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$")
                     then . else error("unrecognised published version") end)
                 | map(select(test("-") | not))
                 | map(select(parts > ($floor | parts)))

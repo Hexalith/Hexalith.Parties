@@ -1,0 +1,103 @@
+{
+  "baseline_revision": "63cd1279a82df47af3d16dd0ff9f002f3e4c86eb",
+  "results": [
+    {
+      "source": "baseline",
+      "version": "3.16.0-a..b",
+      "exit_code": 0,
+      "output": "",
+      "error": ""
+    },
+    {
+      "source": "baseline",
+      "version": "3.16.0-.",
+      "exit_code": 0,
+      "output": "",
+      "error": ""
+    },
+    {
+      "source": "baseline",
+      "version": "3.16.0-.a",
+      "exit_code": 0,
+      "output": "",
+      "error": ""
+    },
+    {
+      "source": "baseline",
+      "version": "3.16.0-a.",
+      "exit_code": 0,
+      "output": "",
+      "error": ""
+    },
+    {
+      "source": "baseline",
+      "version": "3.16.0-a...b",
+      "exit_code": 0,
+      "output": "",
+      "error": ""
+    },
+    {
+      "source": "baseline",
+      "version": "99.0.0-a-b.9",
+      "exit_code": 0,
+      "output": "",
+      "error": ""
+    },
+    {
+      "source": "baseline",
+      "version": "99.0.0--",
+      "exit_code": 0,
+      "output": "",
+      "error": ""
+    },
+    {
+      "source": "candidate",
+      "version": "3.16.0-a..b",
+      "exit_code": 5,
+      "output": "",
+      "error": "jq: error (at <stdin>:0): unrecognised published version"
+    },
+    {
+      "source": "candidate",
+      "version": "3.16.0-.",
+      "exit_code": 5,
+      "output": "",
+      "error": "jq: error (at <stdin>:0): unrecognised published version"
+    },
+    {
+      "source": "candidate",
+      "version": "3.16.0-.a",
+      "exit_code": 5,
+      "output": "",
+      "error": "jq: error (at <stdin>:0): unrecognised published version"
+    },
+    {
+      "source": "candidate",
+      "version": "3.16.0-a.",
+      "exit_code": 5,
+      "output": "",
+      "error": "jq: error (at <stdin>:0): unrecognised published version"
+    },
+    {
+      "source": "candidate",
+      "version": "3.16.0-a...b",
+      "exit_code": 5,
+      "output": "",
+      "error": "jq: error (at <stdin>:0): unrecognised published version"
+    },
+    {
+      "source": "candidate",
+      "version": "99.0.0-a-b.9",
+      "exit_code": 0,
+      "output": "",
+      "error": ""
+    },
+    {
+      "source": "candidate",
+      "version": "99.0.0--",
+      "exit_code": 0,
+      "output": "",
+      "error": ""
+    }
+  ]
+}

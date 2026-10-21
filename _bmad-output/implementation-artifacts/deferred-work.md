@@ -283,7 +283,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: .github/workflows/commitlint.yml
 source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-8-6-projection-and-query-sdk-migration.md`
 reason: Incidental review found `.github/workflows/commitlint.yml` consumes `Hexalith/Hexalith.Builds/.github/workflows/commitlint.yml@main`, allowing unrelated upstream changes to alter validation without a reviewed Parties change.
-status: open
+status: done 2026-10-21
+resolution: Pinned the reusable commitlint workflow to the existing immutable CI validation revision; required CI assertion verifies the caller pin and pull-request-title forwarding.
+verification: `tests/five-validation-boundary-deferred-items-2026-10-21/validation.json`; spec `spec-five-validation-boundary-deferred-items.md`.
 
 ### DW-41: Verify all release package and container artifacts
 
@@ -921,7 +923,9 @@ origin: Story 8.10 Round 6 ledger normalization (2026-10-04); preserved package-
 location: tests/e2e/package.json
 source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-dotnet-10-0-401-and-submodules.md`
 reason: Node >=24.0.0 is supported but @types/node selects major 26; choosing Node 24 declarations or raising the runtime floor remains a compatibility decision.
-status: open
+status: done 2026-10-21
+resolution: Selected and locked Node 24.19.2 declarations for the supported Node 24 runtime floor; Node 24.22.0 typecheck and all eight configuration cases pass.
+verification: `tests/five-validation-boundary-deferred-items-2026-10-21/validation.json`; spec `spec-five-validation-boundary-deferred-items.md`.
 
 ### DW-126: Reconcile the runtime-toolchain qualification packet
 
@@ -1023,7 +1027,9 @@ status: open
 origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
 location: src/Hexalith.Parties/Authorization/PartyIdentityAuthority.cs:14-38; tests/Hexalith.Parties.Tests/Domain/PartyIdentityAdmissionTests.cs:25
 severity: medium
-status: open
+status: done 2026-10-21
+resolution: Production PartyIdentityAuthority and RSA-backed IdentityAdmissionProof tests bind every command/query scope field and reject absent, wrong-key, malformed, expired and future-issued proofs. Also closes duplicate DW-152.
+verification: `tests/five-validation-boundary-deferred-items-2026-10-21/validation.json`; spec `spec-five-validation-boundary-deferred-items.md`.
 
 ### DW-152: Test real Parties identity admission scope construction rather than replacing the whole authority.
 
@@ -1031,7 +1037,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties/Authorization/PartyIdentityAuthority.cs:14-38; tests/Hexalith.Parties.Tests/Domain/PartyIdentityAdmissionTests.cs:25
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: Blind 8: repository C# searches find only substituted IPartyIdentityAuthority consumers; the real wrapper builds payload digest, logical ID, message ID, operation and tenant/target scope before invoking the owner verifier. Existing identity-feature code, unchanged here. Exit proof: real-wrapper signed evidence acceptance and changed payload/scope/operation/message/logical ID, expiry, and missing-proof rejection before protected state unwrap.
-status: open
+status: done 2026-10-21
+resolution: Duplicate of DW-133; real registered authority/proof scope tests now cover both command and query admission, including crypto/time/target rejection.
+verification: `tests/five-validation-boundary-deferred-items-2026-10-21/validation.json`; spec `spec-five-validation-boundary-deferred-items.md`.
 
 ### DW-134: Make visual regression and baseline updates executable
 
@@ -1083,7 +1091,9 @@ status: open
 origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
 location: src/Hexalith.Parties/Domain/PartyDomainProcessor.cs:157-159; tests/Hexalith.Parties.Tests/Domain/PartyIdentityAdmissionTests.cs:22
 severity: medium
-status: open
+status: done 2026-10-21
+resolution: Party-keyed production IAsyncDomainProcessor registration provisions from serialized payload without caller Authorization, emits ordered creation/marker events and exact enriched identity, and preserves original provenance/revision on a later-snapshot retry. Also closes duplicate DW-156.
+verification: `tests/five-validation-boundary-deferred-items-2026-10-21/validation.json`; spec `spec-five-validation-boundary-deferred-items.md`.
 
 ### DW-156: Add successful provisioning-envelope verification through PartyDomainProcessor with emitted events and enriched result assertions.
 
@@ -1091,7 +1101,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties/Domain/PartyDomainProcessor.cs:157-159; tests/Hexalith.Parties.Tests/Domain/PartyIdentityAdmissionTests.cs:22
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: Verification 1, pre-verified regression gap: aggregate tests supply hand-built Authorization and bypass the processor; processor tests cover only unsupported-policy rejection. Removing trusted Authorization injection can break registered command dispatch without those tests failing. Existing identity-feature paths from 37d87f5a2869b076c651a58714d60f64647848bc, unchanged here. Exit proof: accepted provisioning envelope yields creation/marker events and matching result identity at the processor boundary.
-status: open
+status: done 2026-10-21
+resolution: Duplicate of DW-137; registered production dispatch and enriched result/retry assertions satisfy the original boundary proof.
+verification: `tests/five-validation-boundary-deferred-items-2026-10-21/validation.json`; spec `spec-five-validation-boundary-deferred-items.md`.
 
 ### DW-138: Isolate wrong-purpose human custody rejection
 
@@ -1598,4 +1610,6 @@ archived: 2026-10-21
   summary: Reject malformed prerelease identifiers in the release registry-floor version index.
   severity: medium
   evidence: Independent review executes the unchanged registry-floor jq expression with 3.16.0-a..b and 3.16.0-.; both are accepted by the permissive prerelease regex and then excluded as prereleases. These invalid identifiers should make the registry evidence unprovable. The behavior predates DW-188, which qualifies stable numerical floor comparison; correct the grammar and add executable rejection fixtures in separate release-gate work.
-  status: open
+  status: done 2026-10-21
+  resolution: Require nonempty dot-separated prerelease identifiers before excluding prereleases. Full workflow-shell rejection fixtures and valid dotted/hyphenated controls pass.
+  verification: `tests/five-validation-boundary-deferred-items-2026-10-21/validation.json`; spec `spec-five-validation-boundary-deferred-items.md`.

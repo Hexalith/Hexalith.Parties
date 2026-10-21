@@ -22,6 +22,7 @@ public sealed class ReleaseRegistryFloorTests
     [InlineData("3.15.1", "{\"versions\":[\"3.15.1\",\"3.15.0\"]}")]
     [InlineData("3.15.1", "{\"versions\":[\"99.0.0-rc.1\",\"4.0.0-preview.2\"]}")]
     [InlineData("3.15.1", "{\"versions\":[\"3.15.1\",\"99.0.0-rc.1\"]}")]
+    [InlineData("3.15.1", "{\"versions\":[\"99.0.0-a-b.9\",\"99.0.0--\"]}")]
     [InlineData("3.16.0", "{\"versions\":[\"3.16.0.0\"]}")]
     [InlineData("3.16.0", "{\"versions\":[\"3.16.0.7\",\"3.15.9.8\"]}")]
     [InlineData("3.16.0", "{\"versions\":[\"3.16\"]}")]
@@ -72,6 +73,12 @@ public sealed class ReleaseRegistryFloorTests
     [InlineData("{\"versions\":[\"3.15.1\",\"broken\"]}")]
     [InlineData("{\"versions\":[\"3.15.1.0.0\"]}")]
     [InlineData("{\"versions\":[\"3.15.1+build.9\"]}")]
+    [InlineData("{\"versions\":[\"3.16.0-a..b\"]}")]
+    [InlineData("{\"versions\":[\"3.16.0-.\"]}")]
+    [InlineData("{\"versions\":[\"3.16.0-.a\"]}")]
+    [InlineData("{\"versions\":[\"3.16.0-a.\"]}")]
+    [InlineData("{\"versions\":[\"3.16.0-\"]}")]
+    [InlineData("{\"versions\":[\"3.16.0-a...b\",\"3.15.1\"]}")]
     public void RegistryFloorRejectsUnprovableVersionIndexes(string index)
     {
         (int exitCode, string output, string error, string outputs, _) = RunGate("3.15.1", index);

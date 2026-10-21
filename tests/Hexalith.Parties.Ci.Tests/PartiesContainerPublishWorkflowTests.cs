@@ -21,7 +21,7 @@ public sealed class PartiesContainerPublishWorkflowTests
     [InlineData("package.json", "package-lock.json", "semantic-release", "^25.0.9", "25.0.9")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@axe-core/playwright", "^4.13.0", "4.13.0")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@playwright/test", "^1.63.0", "1.63.0")]
-    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@types/node", "^26.5.1", "26.5.1")]
+    [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "@types/node", "^24.19.2", "24.19.2")]
     [InlineData("tests/e2e/package.json", "tests/e2e/package-lock.json", "typescript", "^7.0.2", "7.0.2")]
     public void DependencyManifestsAndLocksMatchSelectedVersions(
         string manifestPath,
@@ -40,6 +40,16 @@ public sealed class PartiesContainerPublishWorkflowTests
             .ShouldBe(expectedRange);
         lockPackages.GetProperty($"node_modules/{packageName}").GetProperty("version").GetString()
             .ShouldBe(expectedResolvedVersion);
+    }
+
+    [Fact]
+    public void CommitlintWorkflowUsesTheReviewedValidationRevision()
+    {
+        string workflow = CiTestPaths.ReadRepoFile(".github/workflows/commitlint.yml");
+
+        workflow.ShouldContain($"uses: Hexalith/Hexalith.Builds/.github/workflows/commitlint.yml@{BuildsValidationSha}");
+        workflow.ShouldContain("pull-request-title: ${{ github.event.pull_request.title || '' }}");
+        workflow.ShouldNotContain("commitlint.yml@main");
     }
 
     [Fact]

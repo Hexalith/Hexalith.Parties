@@ -44,34 +44,34 @@ public sealed class PlatformApiPrerequisitesTests
     // Release selection is separate from the historical migration/parity receipt constants.
     private const string CurrentReleaseEventStoreVersion = "3.126.0";
     private const string CurrentCatalogEventStoreVersion = "3.126.0";
-    private const string CurrentReleaseEventStoreSha = "54261aeccb1d8d8c5c99beb2437e2e8a5ad69eaa";
-    private const string CurrentReleaseEventStoreDescribe = "v3.126.0-20-g54261aec";
+    private const string CurrentReleaseEventStoreSha = "bbfd0fada14ce11e137365637238af4fec2f7f7f";
+    private const string CurrentReleaseEventStoreDescribe = "v3.126.0-34-gbbfd0fad";
     private const string CurrentReleaseEventStoreTag = "v3.126.0";
     private static readonly IReadOnlyDictionary<string, string> CurrentReleaseGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = AiToolsSha,
-        ["references/Hexalith.Builds"] = "fff4a212180d8cd1c5c0759655a9bc4fb6963c45",
+        ["references/Hexalith.Builds"] = "2744d549270298cfe73679f76b477a7368429006",
         ["references/Hexalith.Commons"] = "5c23c818f639c5bb3175f964c5549440bd5b876d",
         [EventStoreRelativePath] = CurrentReleaseEventStoreSha,
-        ["references/Hexalith.FrontComposer"] = "913c4132c71cd7f77fcdf6befa9e396d284dd4bc",
-        ["references/Hexalith.Memories"] = "35df7e2080c369003cacac12f5b44117d7f3ed35",
+        ["references/Hexalith.FrontComposer"] = "099299cb5da4ec1ffa3b19cc0387f06d5bbb7634",
+        ["references/Hexalith.Memories"] = "08c9a5c64379519ec594a7007118edc364fe8a99",
         ["references/Hexalith.PolymorphicSerializations"] = "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
-        ["references/Hexalith.Tenants"] = "3ae9db014dfe52bdee4f6731465cc2a7b65701b7",
-        ["references/Hexalith.McpCli"] = "9354dc08176744c75c2ddb61d924c0948b373b98",
-        ["references/Hexalith.Platform"] = "4f036ced45aa40700948c19949bb874881c960b5",
+        ["references/Hexalith.Tenants"] = "73e4cbee3c3d429ee90a81562ceb9060f8a82ce5",
+        ["references/Hexalith.McpCli"] = "558ce91f495072ecd1d96cb16e0efda9fa3b0722",
+        ["references/Hexalith.Platform"] = "69d46d59dcf138db2d60756142bc943cd63533bd",
     };
 
     private static readonly IReadOnlyDictionary<string, string> CurrentSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["references/Hexalith.Builds"] = "v4.35.0",
+        ["references/Hexalith.Builds"] = "v4.35.1-3-g2744d549",
         [EventStoreRelativePath] = CurrentReleaseEventStoreDescribe,
-        ["references/Hexalith.FrontComposer"] = "v4.7.0-16-g913c4132",
-        ["references/Hexalith.Memories"] = "v2.29.5",
-        ["references/Hexalith.Tenants"] = "v5.9.0-26-g3ae9db01",
+        ["references/Hexalith.FrontComposer"] = "v4.7.0-28-g099299cb",
+        ["references/Hexalith.Memories"] = "v2.29.6-2-g08c9a5c6",
+        ["references/Hexalith.Tenants"] = "v5.9.0-37-g73e4cbee",
         ["references/Hexalith.AI.Tools"] = "3f194e17",
         ["references/Hexalith.Commons"] = "v2.30.3",
-        ["references/Hexalith.McpCli"] = "v1.0.0-32-g9354dc08",
-        ["references/Hexalith.Platform"] = "4f036ced",
+        ["references/Hexalith.McpCli"] = "v1.0.0-34-g558ce91f",
+        ["references/Hexalith.Platform"] = "69d46d59",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.5",
     };
 
@@ -690,10 +690,10 @@ public sealed class PlatformApiPrerequisitesTests
         string root = RepositoryRoot.Locate();
         string matrix = ReadMatrix();
 
-        const string currentHeading = "### Current source observation — 2026-10-20";
+        const string currentHeading = "### Current source observation — 2026-10-21";
         int currentStart = matrix.IndexOf(currentHeading, StringComparison.Ordinal);
         currentStart.ShouldBeGreaterThanOrEqualTo(0, currentHeading);
-        int historicalStart = matrix.IndexOf("### Historical source observation — 2026-10-18", currentStart, StringComparison.Ordinal);
+        int historicalStart = matrix.IndexOf("### Historical source observation — 2026-10-20", currentStart, StringComparison.Ordinal);
         historicalStart.ShouldBeGreaterThan(currentStart);
         string currentSelection = matrix[currentStart..historicalStart];
         currentSelection.ShouldContain($"EventStore package `{CurrentReleaseEventStoreVersion}`");
@@ -758,7 +758,7 @@ public sealed class PlatformApiPrerequisitesTests
         catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">4.7.0</HexalithFrontComposerVersion>");
         catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">2.27.1</HexalithMemoriesVersion>");
         catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">5.9.0</HexalithTenantsVersion>");
-        catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">1.5.0</HexalithPartiesVersion>");
+        catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">1.5.1</HexalithPartiesVersion>");
         // The selected Builds catalog routes this version through a property whose unconditional value applies to
         // every Parties project (only Hexalith.Folders.Aspire overrides it), so pin both halves exactly.
         catalog.ShouldContain("<HexalithAspireHostingDaprVersion>13.6.1-beta.935</HexalithAspireHostingDaprVersion>");

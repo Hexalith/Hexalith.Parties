@@ -1,0 +1,91 @@
+{
+  "baseline_revision": "63cd1279a82df47af3d16dd0ff9f002f3e4c86eb",
+  "items": [
+    "DW-40",
+    "DW-125",
+    "DW-133 (alias DW-152)",
+    "DW-137 (alias DW-156)",
+    "Malformed prerelease follow-up from spec-five-package-validation-deferred-items.md"
+  ],
+  "checks": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Domain.PartyIdentityBoundaryTests",
+      "exit_code": 0,
+      "total": 33,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "exit_code": 0,
+      "total": 2214,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+      "exit_code": 0,
+      "total": 246,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "cwd": "tests/e2e",
+      "command": "npm exec --yes --package=node@24 -- node node_modules/typescript/lib/tsc.js --noEmit",
+      "exit_code": 0,
+      "runtime": "v24.22.0"
+    },
+    {
+      "cwd": "tests/e2e",
+      "command": "npm exec --yes --package=node@24 -- node --experimental-strip-types --test config-tests/server-ownership.test.mjs",
+      "exit_code": 0,
+      "total": 8,
+      "failed": 0,
+      "skipped": 0,
+      "runtime": "v24.22.0"
+    },
+    {
+      "command": "python3 -B _bmad-output/implementation-artifacts/tests/five-validation-boundary-deferred-items-2026-10-21/grammar-baseline-probe.py",
+      "exit_code": 0
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "node node_modules/@commitlint/cli/cli.js --edit /tmp/five-boundary-commit-message.txt --verbose",
+      "exit_code": 0,
+      "version": "21.2.2"
+    }
+  ],
+  "graph": "Debug tests use the repository default published dependency graph. Bare legacy source switches do not select project roots; no source-mode or runtime topology qualification is claimed.",
+  "baseline_failure": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+    "exit_code": 1,
+    "total": 2208,
+    "failed": 1,
+    "test": "FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+    "reason": "Unchanged starting fitness source expects Builds fff4a212180d8cd1c5c0759655a9bc4fb6963c45; committed gitlink is 2744d549270298cfe73679f76b477a7368429006. The old source file SHA256 is 9d4a4a0b45803aaa728b447378d1e17da5d53a222d2760bcc936ded3defd9eb0. Current observations/constants have been reconciled; previous observation bytes retained except heading rename."
+  },
+  "review": {
+    "findings_patched": 6,
+    "followup": "No remaining material introduced issue; reviewer independently passed 33 identity tests and 1 receipt fitness case."
+  },
+  "aspire_baseline": {
+    "start": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --no-build --non-interactive --format Json",
+    "describe": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --format Table",
+    "result": "Security unhealthy; dependent resources waiting. Not fresh topology qualification. Selected AppHost stopped successfully before builds."
+  }
+}

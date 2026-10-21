@@ -6,7 +6,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 
 - `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@332b2c144defba546fe0a09626a4a72f2340e22f`.
 - `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@397c94a4e246c90b21cf408790fa0d55bf32d795` and takes the nested publisher from that same immutable Builds checkout.
-- `.github/workflows/commitlint.yml` delegates Conventional Commit validation for pull requests.
+- `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the same immutable Builds validation revision as CI, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
 - `.github/workflows/codeql.yml` delegates C# CodeQL scanning to `Hexalith/Hexalith.Builds/.github/workflows/codeql.yml@332b2c144defba546fe0a09626a4a72f2340e22f`.
 - `.github/workflows/rc-gate.yml` remains Parties-specific and validates root gitlink release-candidate signoff.
@@ -39,8 +39,8 @@ The shared CI workflow restores and builds `Hexalith.Parties.slnx`, initializes 
 
 The blocking `ui-a11y` job runs on every CI trigger without path filters or
 failure suppression. It installs Node 24, the SDK from `global.json`, locked
-browser-test dependencies, and Chromium with its system dependencies. It
-typechecks the tests, builds the UI in Release/package mode, then runs the six
+browser-test dependencies with Node 24 type declarations, and Chromium with its
+system dependencies. It typechecks the tests, builds the UI in Release/package mode, then runs the six
 existing `npm run test:a11y` cases against Playwright's isolated Test-environment
 host. Only the root Builds and Commons submodules are needed for this UI build;
 Docker, Dapr and Keycloak are not required. The host's Test-only fixture opt-ins
