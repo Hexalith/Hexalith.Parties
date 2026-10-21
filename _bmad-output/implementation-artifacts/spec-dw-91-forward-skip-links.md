@@ -2,8 +2,8 @@
 title: 'DW-91: Restore forward skip access after route focus'
 type: 'bugfix'
 created: '2026-10-21'
-status: 'draft'
-route: 'dispatch'
+status: 'in-progress'
+route: 'oneshot'
 review_loop_iteration: 0
 baseline_commit: '457031c91fea0857321399722b5a89aeb7ce64b3'
 context: []
@@ -40,13 +40,16 @@ context: []
 - FrontComposer `.github/workflows/release.yml`: operator-dispatched production release with exact-source CI and owner gates. Do not trigger as an incidental Git push action.
 - Builds `Props/Directory.Packages.props`: current FrontComposer version 4.7.0 governs Parties package consumers; any adoption needs a real published successor and its own verified catalog change.
 
-## Open Questions
-
-- Delivery scope — finish the reviewed producer fix and retain consumer adoption as deferred until owner publication, preserving existing package-mode CI coverage; or expand to prepare coordinated FrontComposer publication and Builds/Parties package adoption, honoring all existing owner and release gates.
-
 ## Review Triage Log
 
 - Medium, patched: pending heading was consumed by unrelated keys. Shift, ArrowDown and Escape now retain forward access while heading focus remains unchanged; regressions pass in all three engines.
 - Medium, patched: reverse traversal assertions were too weak. The test now compares with the same browser's native destination and checks the event is not prevented.
 - Medium, patched: onward traversal allowed any non-skip destination. Producer asserts the Overview tab, and Parties asserts its primary control after both cold-load and client-route skip activation.
 - Medium, patched: lifecycle and shell scoping lacked regression evidence. Two unregister/re-register cycles and an unrelated banner heading are covered in all three engines.
+
+## Resume Implementation Notes
+
+- User confirmed resuming existing DW-91 on 2026-10-21. The requested main push authorizes delivering the producer fix and source regressions; it does not dispatch the protected owner-controlled package release. Publication/adoption remains a ledger follow-up, and DW-91 must stay open until package CI can enforce the forward-Tab assertions unconditionally.
+- During investigation the user's concurrent `0c9572bc2cc7a476343f11a488b9311ebbbcb8c9` committed the starting changes. Preserve that commit and all dependency selections. The next commit repairs package-mode coverage with the original always-on seeded-root test and two explicit `PARTIES_E2E_FORWARD_SKIP_LINKS=1` source regressions; no behavior detection or automatic skip on failure.
+- Footprint stays small: existing producer keyboard module, producer browser regression file, Parties accessibility tests and test instructions/evidence. No public API, release dispatch, catalog edit, data mutation or unrelated gitlink update.
+- Producer remote main advanced to `6a6f06fd02f2acb72d00eb4971a639b0e366ee1e`; neither touched source path changed. Keep the fix commit directly based on selected `913c4132c71cd7f77fcdf6befa9e396d284dd4bc`, merge it into producer main, then select only the focused source commit in Parties.

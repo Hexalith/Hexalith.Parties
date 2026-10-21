@@ -57,6 +57,26 @@ dotnet test .\tests\Hexalith.Parties.IntegrationTests\Hexalith.Parties.Integrati
 
 xUnit v3 runs under Microsoft.Testing.Platform here. For focused filters, build the target project and invoke its test executable directly with single-dash arguments such as `-class Fully.Qualified.TestClass` or `-method Fully.Qualified.TestClass.TestMethod`.
 
+## Forward skip-link source qualification (DW-91)
+
+The normal `npm run test:a11y` gate retains the published-package skip-target
+coverage. FrontComposer 4.7.0 predates the route-heading focus fix, so two
+additional forward-Tab regressions are explicitly opt-in until a fixed package
+is published and adopted. They never detect support from the application under
+test: enabling them against an unfixed shell must fail.
+
+Build and serve the Debug UI with the root-selected FrontComposer project
+references, then run from `tests/e2e`:
+
+```bash
+PARTIES_E2E_FORWARD_SKIP_LINKS=1 PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test:a11y
+```
+
+The existing Playwright web-server configuration also builds Debug source when
+run locally without `PLAYWRIGHT_SKIP_WEBSERVER`. Do not enable this flag in the
+Release/package CI lane until the catalog selects a published fixed package.
+DW-91 remains open for that publication/adoption and removal of the opt-in.
+
 ## Architecture
 
 Keep tests aligned with production ownership:
