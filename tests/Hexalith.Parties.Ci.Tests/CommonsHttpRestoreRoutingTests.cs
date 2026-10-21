@@ -578,8 +578,8 @@ with tempfile.TemporaryDirectory() as temporary_root:
     consumer.write_nuget_config = lambda *args: temporary_root / "NuGet.Config"
     consumer.write_client_consumer = lambda root, version: root / "ClientConsumer.csproj"
     consumer.write_portal_consumer = lambda root, version: root / "PortalConsumer.csproj"
-    consumer.validate_consumer = lambda project_file, version, required: captured_consumer_validations.append(
-        (project_file.name, version, required)
+    consumer.validate_consumer = lambda project_file, version, required, front, tenants, **options: captured_consumer_validations.append(
+        (project_file.name, version, required, front, tenants, options)
     )
     consumer_packages = temporary_root / "consumer-packages"
     consumer_packages.mkdir()
@@ -600,8 +600,10 @@ with tempfile.TemporaryDirectory() as temporary_root:
     if resolved_properties != list(central_versions):
         raise SystemExit(f"Consumer main did not resolve every central property: {resolved_properties!r}")
     if captured_consumer_validations != [
-        ("ClientConsumer.csproj", event_store_version, consumer.CLIENT_REQUIRED_EVENT_STORE_PACKAGE_IDS),
-        ("PortalConsumer.csproj", event_store_version, consumer.PORTAL_REQUIRED_EVENT_STORE_PACKAGE_IDS),
+        ("ClientConsumer.csproj", event_store_version, consumer.CLIENT_REQUIRED_EVENT_STORE_PACKAGE_IDS,
+         front_composer_version, tenants_version, {"require_portal_packages": False}),
+        ("PortalConsumer.csproj", event_store_version, consumer.PORTAL_REQUIRED_EVENT_STORE_PACKAGE_IDS,
+         front_composer_version, tenants_version, {"require_portal_packages": True}),
     ]:
         raise SystemExit(f"Consumer asset validations were not wired correctly: {captured_consumer_validations!r}")
     print(f"consumer|{commons_version}|{event_store_version}")
@@ -664,7 +666,7 @@ for name in ("commons", "event_store", "front_composer", "tenants"):
 module.package_versions = lambda directory: {package_id: "1.0.0" for package_id in module.PACKAGE_IDS}
 module.pack_support_packages = lambda output, *versions: output
 validated = []
-module.validate_consumer = lambda project, *args: validated.append(project.name)
+module.validate_consumer = lambda project, *args, **kwargs: validated.append(project.name)
 
 with tempfile.TemporaryDirectory() as directory:
     root = Path(directory)
@@ -1004,6 +1006,26 @@ print(f"boundaries|checked={checked}")
 
         exitCode.ShouldBe(0, standardError);
         standardOutput.ShouldContain("boundaries|checked=12");
+    }
+
+    /// <summary>
+    /// Executes offline support-version, restored-graph and inherited-configuration regressions.
+    /// </summary>
+    /// <param name="suite">The Python regression suite to execute.</param>
+    [Theory]
+    [InlineData("SupportVersions")]
+    [InlineData("RestoredVersions")]
+    [InlineData("RestoreIsolation")]
+    public void ConsumerValidationQualifiesNuGetIdentityAndRestoreIsolation(string suite)
+    {
+        (int exitCode, string output, string error) = RunPython(
+            180_000,
+            "-E",
+            CiTestPaths.RepoFile("tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py"),
+            suite);
+
+        exitCode.ShouldBe(0, error + output);
+        error.ShouldContain("OK");
     }
 
     [Fact]

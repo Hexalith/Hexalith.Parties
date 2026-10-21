@@ -19,6 +19,7 @@ from msbuild_properties import (
     resolve_hexalith_event_store_version,
     resolve_hexalith_front_composer_version,
     resolve_hexalith_tenants_version,
+    validate_msbuild_property,
 )
 
 
@@ -143,12 +144,24 @@ def package_versions(package_directory: Path) -> dict[str, str]:
     return versions
 
 
+def normalize_nuget_version(version: str) -> str:
+    """Normalize package identity: pad the core, omit zero revision and metadata."""
+    concrete = validate_msbuild_property("NuGet package version", version)
+    core, separator, release = concrete.split("+", 1)[0].partition("-")
+    components = core.split(".")
+    components += ["0"] * max(0, 3 - len(components))
+    if len(components) == 4 and components[-1] == "0":
+        components.pop()
+    return ".".join(components) + (separator + release if separator else "")
+
+
 def validate_support_packages(
     package_directory: Path,
     package_ids: frozenset[str],
     expected_version: str,
 ) -> None:
-    """Require one exact-version package for each requested support identity."""
+    """Require one NuGet-equivalent version and its normalized archive filename."""
+    normalized_version = normalize_nuget_version(expected_version)
     packages: dict[str, list[tuple[Path, str]]] = {
         package_id: [] for package_id in package_ids
     }
@@ -169,8 +182,9 @@ def validate_support_packages(
             )
 
         package_path, metadata_version = artifacts[0]
-        expected_filename = f"{package_id}.{expected_version}.nupkg"
-        if metadata_version != expected_version or package_path.name != expected_filename:
+        normalized_metadata = normalize_nuget_version(metadata_version)
+        expected_filename = f"{package_id}.{normalized_metadata}.nupkg"
+        if normalized_metadata.casefold() != normalized_version.casefold() or package_path.name != expected_filename:
             raise ValueError(
                 f"Expected exact {package_id} support package {expected_filename} with metadata version "
                 f"{expected_version}, found {package_path.name} with metadata version {metadata_version}"
@@ -192,6 +206,7 @@ def run_dotnet(args: list[str], working_directory: Path) -> None:
     env.setdefault("DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER", "1")
     env.setdefault("MSBUILDDISABLENODEREUSE", "1")
     env["NUGET_PACKAGES"] = str(working_directory.parent / ".nuget" / "packages")
+    env.pop("NUGET_FALLBACK_PACKAGES", None)
     subprocess.run(["dotnet", *args], cwd=working_directory, check=True, env=env)
 
 
@@ -248,7 +263,7 @@ def pack_support_packages(
 
 
 def write_nuget_config(root: Path, package_directories: list[Path], additional_sources: list[str]) -> Path:
-    """Use only the local feeds and selected sources, clearing inherited feeds."""
+    """Use selected feeds without inherited fallback caches or disabled sources."""
     config_file = root / "NuGet.Config"
     configuration = ElementTree.Element("configuration")
     package_sources = ElementTree.SubElement(configuration, "packageSources")
@@ -261,6 +276,9 @@ def write_nuget_config(root: Path, package_directories: list[Path], additional_s
         )
     for index, source in enumerate(additional_sources, start=1):
         ElementTree.SubElement(package_sources, "add", {"key": f"additional-source-{index}", "value": source})
+
+    for setting in ("fallbackPackageFolders", "disabledPackageSources"):
+        ElementTree.SubElement(ElementTree.SubElement(configuration, setting), "clear")
 
     ElementTree.ElementTree(configuration).write(config_file, encoding="utf-8", xml_declaration=True)
     return config_file
@@ -339,12 +357,14 @@ def write_portal_consumer(root: Path, version: str) -> Path:
     return project_file
 
 
-def validate_event_store_assets(
+def validate_family_assets(
     assets_file: Path,
     expected_version: str,
     required_package_ids: frozenset[str],
+    family: str,
 ) -> None:
-    """Validate the EventStore package versions selected by NuGet restore."""
+    """Validate all restored family versions and require package-backed identities."""
+    normalized_version = normalize_nuget_version(expected_version).casefold()
     if not assets_file.is_file():
         raise ValueError(f"Restore did not produce assets file: {assets_file}")
 
@@ -358,19 +378,19 @@ def validate_event_store_assets(
         if not isinstance(identity, str) or "/" not in identity:
             continue
         package_id, version = identity.rsplit("/", 1)
-        if package_id.casefold().startswith("hexalith.eventstore."):
-            if isinstance(library, dict) and library.get("type") not in (None, "package"):
-                continue
+        if package_id.casefold().startswith(f"hexalith.{family}.".casefold()):
+            if not isinstance(library, dict) or library.get("type") != "package":
+                raise ValueError(f"{assets_file}: selected {package_id} must be a NuGet package")
             selected.append((package_id, version))
 
     invalid = sorted(
         f"{package_id}={version or '<missing>'}"
         for package_id, version in selected
-        if version != expected_version
+        if not version or normalize_nuget_version(version).casefold() != normalized_version
     )
     if invalid:
         raise ValueError(
-            f"{assets_file}: every selected Hexalith.EventStore.* package must use version "
+            f"{assets_file}: every selected Hexalith.{family}.* package must use version "
             f"{expected_version}, found {invalid}"
         )
 
@@ -382,20 +402,42 @@ def validate_event_store_assets(
     )
     if missing:
         raise ValueError(
-            f"{assets_file}: missing required selected EventStore packages: {missing}"
+            f"{assets_file}: missing required selected {family} packages: {missing}"
         )
+
+
+def validate_event_store_assets(
+    assets_file: Path,
+    expected_version: str,
+    required_package_ids: frozenset[str],
+) -> None:
+    """Validate the EventStore package versions selected by NuGet restore."""
+    validate_family_assets(assets_file, expected_version, required_package_ids, "EventStore")
 
 
 def validate_consumer(
     project_file: Path,
     event_store_version: str,
     required_event_store_package_ids: frozenset[str],
+    front_composer_version: str,
+    tenants_version: str,
+    *,
+    require_portal_packages: bool,
 ) -> None:
     run_dotnet(["restore", str(project_file)], project_file.parent)
+    assets_file = project_file.parent / "obj" / "project.assets.json"
     validate_event_store_assets(
-        project_file.parent / "obj" / "project.assets.json",
+        assets_file,
         event_store_version,
         required_event_store_package_ids,
+    )
+    validate_family_assets(
+        assets_file, front_composer_version,
+        FRONT_COMPOSER_SUPPORT_PACKAGE_IDS if require_portal_packages else frozenset(), "FrontComposer",
+    )
+    validate_family_assets(
+        assets_file, tenants_version,
+        TENANTS_SUPPORT_PACKAGE_IDS if require_portal_packages else frozenset(), "Tenants",
     )
     run_dotnet(
         [
@@ -448,11 +490,17 @@ def main() -> int:
         write_client_consumer(work_directory, version),
         event_store_version,
         CLIENT_REQUIRED_EVENT_STORE_PACKAGE_IDS,
+        front_composer_version,
+        tenants_version,
+        require_portal_packages=False,
     )
     validate_consumer(
         write_portal_consumer(work_directory, version),
         event_store_version,
         PORTAL_REQUIRED_EVENT_STORE_PACKAGE_IDS,
+        front_composer_version,
+        tenants_version,
+        require_portal_packages=True,
     )
 
     print(f"Validated package-only consumers for Hexalith.Parties packages at version {version}.")

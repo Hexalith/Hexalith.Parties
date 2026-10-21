@@ -98,12 +98,20 @@ The enabled job then prepares arm64 emulation and the shared container publisher
 
 The active NuGet trusted publishing policy has package owner `Hexalith`, creator account `jpiquot`, GitHub repository `Hexalith/Hexalith.Parties`, workflow filename `release.yml`, and environment `production`. Set `NUGET_USER=jpiquot` as a repository variable; the creator account is distinct from the package owner and GitHub actor. Authentication stays in the Parties job because NuGet matches the caller workflow identity; [NuGet/login issue 6](https://github.com/NuGet/login/issues/6) records the reusable-workflow limitation. No long-lived NuGet secret or fallback is used. Local policy JSON records registration and does not create a policy in NuGet.
 
-Consumer validation clears inherited NuGet package sources. By default it uses
+Consumer validation clears inherited NuGet package sources, fallback package
+folders and disabled-source settings. By default it uses
 the local Parties and support-package feeds plus nuget.org. Supplying
 `--nuget-source SOURCE` replaces the nuget.org default; repeat the option for
-each desired source, including nuget.org if needed. Inherited `packageSources`
-entries are excluded. Other NuGet settings, including fallback package folders
-and disabled sources, still follow the normal configuration hierarchy.
+each desired source, including nuget.org if needed. Generated configuration excludes
+inherited `packageSources`, `fallbackPackageFolders` and `disabledPackageSources`
+entries. Consumer subprocesses also discard inherited
+`NUGET_FALLBACK_PACKAGES`. Other NuGet settings retain their normal hierarchy.
+
+Support artifacts use NuGet-normalized version identities and filenames, including
+zero fourth components and build metadata. After restore, every selected
+EventStore, FrontComposer and Tenants package must match its evaluated central
+version. Portal consumers also require the four direct FrontComposer/Tenants
+support packages; missing packages and project substitutions fail before build.
 
 Explicit feeds are named `additional-source-1`, `additional-source-2`, and so
 on, in option order. Credentials stored under an inherited feed's original

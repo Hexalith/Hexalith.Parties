@@ -1,0 +1,493 @@
+test_inherited_fallback_and_disabled_sources (__main__.RestoreIsolation.test_inherited_fallback_and_disabled_sources) ... FAIL
+test_consumer_checks_each_selected_family_and_required_portal_packages (__main__.RestoredVersions.test_consumer_checks_each_selected_family_and_required_portal_packages) ... ERROR
+test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) ...
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.Http', expected='6.5.4.0') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.Http', expected='6.5.4+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.Http', expected='6.5') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.Http', expected='6.5.4-preview.2+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.UniqueIds', expected='6.5.4.0') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.UniqueIds', expected='6.5.4+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.UniqueIds', expected='6.5') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.UniqueIds', expected='6.5.4-preview.2+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Client', expected='6.5.4.0') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Client', expected='6.5.4+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Client', expected='6.5') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Client', expected='6.5.4-preview.2+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Contracts', expected='6.5.4.0') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Contracts', expected='6.5.4+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Contracts', expected='6.5') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Contracts', expected='6.5.4-preview.2+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Contracts', expected='6.5.4.0') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Contracts', expected='6.5.4+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Contracts', expected='6.5') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Contracts', expected='6.5.4-preview.2+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Shell', expected='6.5.4.0') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Shell', expected='6.5.4+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Shell', expected='6.5') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Shell', expected='6.5.4-preview.2+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Client', expected='6.5.4.0') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Client', expected='6.5.4+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Client', expected='6.5') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Client', expected='6.5.4-preview.2+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Contracts', expected='6.5.4.0') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Contracts', expected='6.5.4+build.9') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Contracts', expected='6.5') ... ERROR
+  test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Contracts', expected='6.5.4-preview.2+build.9') ... ERROR
+test_sdk_produced_normalized_archives (__main__.SupportVersions.test_sdk_produced_normalized_archives) ... ERROR
+
+======================================================================
+ERROR: test_consumer_checks_each_selected_family_and_required_portal_packages (__main__.RestoredVersions.test_consumer_checks_each_selected_family_and_required_portal_packages)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 106, in test_consumer_checks_each_selected_family_and_required_portal_packages
+    validate(good)
+    ~~~~~~~~^^^^^^
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 102, in validate
+    CONSUMER.validate_consumer(project, '6.5.4.0', families['Hexalith.EventStore'],
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              '6.5.4+build.9', '6.5.4', require_portal_packages=portal)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: validate_consumer() got an unexpected keyword argument 'require_portal_packages'
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.Http', expected='6.5.4.0')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Commons.Http support package Hexalith.Commons.Http.6.5.4.0.nupkg with metadata version 6.5.4.0, found Hexalith.Commons.Http.6.5.4.nupkg with metadata version 6.5.4
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.Http', expected='6.5.4+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Commons.Http support package Hexalith.Commons.Http.6.5.4+build.9.nupkg with metadata version 6.5.4+build.9, found Hexalith.Commons.Http.6.5.4.nupkg with metadata version 6.5.4+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.Http', expected='6.5')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Commons.Http support package Hexalith.Commons.Http.6.5.nupkg with metadata version 6.5, found Hexalith.Commons.Http.6.5.0.nupkg with metadata version 6.5.0
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.Http', expected='6.5.4-preview.2+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Commons.Http support package Hexalith.Commons.Http.6.5.4-preview.2+build.9.nupkg with metadata version 6.5.4-preview.2+build.9, found Hexalith.Commons.Http.6.5.4-preview.2.nupkg with metadata version 6.5.4-preview.2+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.UniqueIds', expected='6.5.4.0')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Commons.UniqueIds support package Hexalith.Commons.UniqueIds.6.5.4.0.nupkg with metadata version 6.5.4.0, found Hexalith.Commons.UniqueIds.6.5.4.nupkg with metadata version 6.5.4
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.UniqueIds', expected='6.5.4+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Commons.UniqueIds support package Hexalith.Commons.UniqueIds.6.5.4+build.9.nupkg with metadata version 6.5.4+build.9, found Hexalith.Commons.UniqueIds.6.5.4.nupkg with metadata version 6.5.4+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.UniqueIds', expected='6.5')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Commons.UniqueIds support package Hexalith.Commons.UniqueIds.6.5.nupkg with metadata version 6.5, found Hexalith.Commons.UniqueIds.6.5.0.nupkg with metadata version 6.5.0
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Commons.UniqueIds', expected='6.5.4-preview.2+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Commons.UniqueIds support package Hexalith.Commons.UniqueIds.6.5.4-preview.2+build.9.nupkg with metadata version 6.5.4-preview.2+build.9, found Hexalith.Commons.UniqueIds.6.5.4-preview.2.nupkg with metadata version 6.5.4-preview.2+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Client', expected='6.5.4.0')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.EventStore.Client support package Hexalith.EventStore.Client.6.5.4.0.nupkg with metadata version 6.5.4.0, found Hexalith.EventStore.Client.6.5.4.nupkg with metadata version 6.5.4
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Client', expected='6.5.4+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.EventStore.Client support package Hexalith.EventStore.Client.6.5.4+build.9.nupkg with metadata version 6.5.4+build.9, found Hexalith.EventStore.Client.6.5.4.nupkg with metadata version 6.5.4+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Client', expected='6.5')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.EventStore.Client support package Hexalith.EventStore.Client.6.5.nupkg with metadata version 6.5, found Hexalith.EventStore.Client.6.5.0.nupkg with metadata version 6.5.0
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Client', expected='6.5.4-preview.2+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.EventStore.Client support package Hexalith.EventStore.Client.6.5.4-preview.2+build.9.nupkg with metadata version 6.5.4-preview.2+build.9, found Hexalith.EventStore.Client.6.5.4-preview.2.nupkg with metadata version 6.5.4-preview.2+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Contracts', expected='6.5.4.0')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.EventStore.Contracts support package Hexalith.EventStore.Contracts.6.5.4.0.nupkg with metadata version 6.5.4.0, found Hexalith.EventStore.Contracts.6.5.4.nupkg with metadata version 6.5.4
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Contracts', expected='6.5.4+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.EventStore.Contracts support package Hexalith.EventStore.Contracts.6.5.4+build.9.nupkg with metadata version 6.5.4+build.9, found Hexalith.EventStore.Contracts.6.5.4.nupkg with metadata version 6.5.4+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Contracts', expected='6.5')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.EventStore.Contracts support package Hexalith.EventStore.Contracts.6.5.nupkg with metadata version 6.5, found Hexalith.EventStore.Contracts.6.5.0.nupkg with metadata version 6.5.0
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.EventStore.Contracts', expected='6.5.4-preview.2+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.EventStore.Contracts support package Hexalith.EventStore.Contracts.6.5.4-preview.2+build.9.nupkg with metadata version 6.5.4-preview.2+build.9, found Hexalith.EventStore.Contracts.6.5.4-preview.2.nupkg with metadata version 6.5.4-preview.2+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Contracts', expected='6.5.4.0')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.FrontComposer.Contracts support package Hexalith.FrontComposer.Contracts.6.5.4.0.nupkg with metadata version 6.5.4.0, found Hexalith.FrontComposer.Contracts.6.5.4.nupkg with metadata version 6.5.4
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Contracts', expected='6.5.4+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.FrontComposer.Contracts support package Hexalith.FrontComposer.Contracts.6.5.4+build.9.nupkg with metadata version 6.5.4+build.9, found Hexalith.FrontComposer.Contracts.6.5.4.nupkg with metadata version 6.5.4+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Contracts', expected='6.5')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.FrontComposer.Contracts support package Hexalith.FrontComposer.Contracts.6.5.nupkg with metadata version 6.5, found Hexalith.FrontComposer.Contracts.6.5.0.nupkg with metadata version 6.5.0
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Contracts', expected='6.5.4-preview.2+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.FrontComposer.Contracts support package Hexalith.FrontComposer.Contracts.6.5.4-preview.2+build.9.nupkg with metadata version 6.5.4-preview.2+build.9, found Hexalith.FrontComposer.Contracts.6.5.4-preview.2.nupkg with metadata version 6.5.4-preview.2+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Shell', expected='6.5.4.0')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.FrontComposer.Shell support package Hexalith.FrontComposer.Shell.6.5.4.0.nupkg with metadata version 6.5.4.0, found Hexalith.FrontComposer.Shell.6.5.4.nupkg with metadata version 6.5.4
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Shell', expected='6.5.4+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.FrontComposer.Shell support package Hexalith.FrontComposer.Shell.6.5.4+build.9.nupkg with metadata version 6.5.4+build.9, found Hexalith.FrontComposer.Shell.6.5.4.nupkg with metadata version 6.5.4+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Shell', expected='6.5')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.FrontComposer.Shell support package Hexalith.FrontComposer.Shell.6.5.nupkg with metadata version 6.5, found Hexalith.FrontComposer.Shell.6.5.0.nupkg with metadata version 6.5.0
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.FrontComposer.Shell', expected='6.5.4-preview.2+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.FrontComposer.Shell support package Hexalith.FrontComposer.Shell.6.5.4-preview.2+build.9.nupkg with metadata version 6.5.4-preview.2+build.9, found Hexalith.FrontComposer.Shell.6.5.4-preview.2.nupkg with metadata version 6.5.4-preview.2+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Client', expected='6.5.4.0')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Tenants.Client support package Hexalith.Tenants.Client.6.5.4.0.nupkg with metadata version 6.5.4.0, found Hexalith.Tenants.Client.6.5.4.nupkg with metadata version 6.5.4
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Client', expected='6.5.4+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Tenants.Client support package Hexalith.Tenants.Client.6.5.4+build.9.nupkg with metadata version 6.5.4+build.9, found Hexalith.Tenants.Client.6.5.4.nupkg with metadata version 6.5.4+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Client', expected='6.5')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Tenants.Client support package Hexalith.Tenants.Client.6.5.nupkg with metadata version 6.5, found Hexalith.Tenants.Client.6.5.0.nupkg with metadata version 6.5.0
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Client', expected='6.5.4-preview.2+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Tenants.Client support package Hexalith.Tenants.Client.6.5.4-preview.2+build.9.nupkg with metadata version 6.5.4-preview.2+build.9, found Hexalith.Tenants.Client.6.5.4-preview.2.nupkg with metadata version 6.5.4-preview.2+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Contracts', expected='6.5.4.0')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Tenants.Contracts support package Hexalith.Tenants.Contracts.6.5.4.0.nupkg with metadata version 6.5.4.0, found Hexalith.Tenants.Contracts.6.5.4.nupkg with metadata version 6.5.4
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Contracts', expected='6.5.4+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Tenants.Contracts support package Hexalith.Tenants.Contracts.6.5.4+build.9.nupkg with metadata version 6.5.4+build.9, found Hexalith.Tenants.Contracts.6.5.4.nupkg with metadata version 6.5.4+build.9
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Contracts', expected='6.5')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Tenants.Contracts support package Hexalith.Tenants.Contracts.6.5.nupkg with metadata version 6.5, found Hexalith.Tenants.Contracts.6.5.0.nupkg with metadata version 6.5.0
+
+======================================================================
+ERROR: test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) (package_id='Hexalith.Tenants.Contracts', expected='6.5.4-preview.2+build.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 49, in test_normalized_versions_across_every_support_identity
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), expected)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.Tenants.Contracts support package Hexalith.Tenants.Contracts.6.5.4-preview.2+build.9.nupkg with metadata version 6.5.4-preview.2+build.9, found Hexalith.Tenants.Contracts.6.5.4-preview.2.nupkg with metadata version 6.5.4-preview.2+build.9
+
+======================================================================
+ERROR: test_sdk_produced_normalized_archives (__main__.SupportVersions.test_sdk_produced_normalized_archives)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 79, in test_sdk_produced_normalized_archives
+    CONSUMER.validate_support_packages(feed, frozenset({package_id}), version)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/administrator/projects/hexalith/parties/scripts/validate-consumer-package-references.py", line 174, in validate_support_packages
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Expected exact Hexalith.FrontComposer.Contracts support package Hexalith.FrontComposer.Contracts.6.5.4.0.nupkg with metadata version 6.5.4.0, found Hexalith.FrontComposer.Contracts.6.5.4.nupkg with metadata version 6.5.4
+
+======================================================================
+FAIL: test_inherited_fallback_and_disabled_sources (__main__.RestoreIsolation.test_inherited_fallback_and_disabled_sources)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 172, in test_inherited_fallback_and_disabled_sources
+    self.assertNotEqual(result.returncode, 0, 'Inherited fallback satisfied a missing consumer package')
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 == 0 : Inherited fallback satisfied a missing consumer package
+
+----------------------------------------------------------------------
+Ran 4 tests in 2.337s
+
+FAILED (failures=1, errors=34)

@@ -1,0 +1,316 @@
+{
+  "baseline": "1bed6c139f7699bc717182763c04099ea75abc5b",
+  "commands": [
+    {
+      "label": "baseline-ci-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "-c",
+        "Debug",
+        "--no-restore",
+        "-m:1",
+        "-nr:false"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.65,
+      "log": "baseline-ci-build.txt"
+    },
+    {
+      "label": "baseline-consumer-regressions",
+      "command": [
+        "python3",
+        "-E",
+        "tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 2.4,
+      "log": "baseline-consumer-regressions.txt"
+    },
+    {
+      "label": "consumer-regressions",
+      "command": [
+        "python3",
+        "-E",
+        "tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 7.67,
+      "log": "consumer-regressions.txt"
+    },
+    {
+      "label": "ci-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "-c",
+        "Debug",
+        "--no-restore",
+        "-m:1",
+        "-nr:false"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1.17,
+      "log": "ci-build.txt"
+    },
+    {
+      "label": "consumer-ci-class",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 14.56,
+      "log": "consumer-ci-class.txt"
+    },
+    {
+      "label": "full-ci-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "-c",
+        "Debug",
+        "--no-restore",
+        "-m:1",
+        "-nr:false"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.66,
+      "log": "full-ci-build.txt"
+    },
+    {
+      "label": "warning-and-submodule-guard",
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1.76,
+      "log": "warning-and-submodule-guard.txt"
+    },
+    {
+      "label": "full-ci-tests",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 15.74,
+      "log": "full-ci-tests.txt"
+    },
+    {
+      "label": "python-syntax",
+      "command": [
+        "python3",
+        "-c",
+        "import ast,pathlib; files=[\"scripts/validate-consumer-package-references.py\",\"tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py\"]; [ast.parse(pathlib.Path(f).read_text(),filename=f) for f in files]; print(\"Python syntax passes for both changed sources\")"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.03,
+      "log": "python-syntax.txt"
+    },
+    {
+      "label": "whitespace",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.09,
+      "log": "whitespace.txt"
+    },
+    {
+      "label": "baseline-restored-versions",
+      "command": [
+        "python3",
+        "-E",
+        "_bmad-output/implementation-artifacts/tests/five-package-validation-deferred-items-2026-10-21/baseline-restored-versions-probe.py"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.06,
+      "log": "baseline-restored-versions.txt"
+    },
+    {
+      "label": "commitlint",
+      "command": [
+        "node_modules/.bin/commitlint",
+        "--edit",
+        "/tmp/parties-five-package-commit.txt"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.24,
+      "log": "commitlint.txt"
+    },
+    {
+      "label": "review-environment-fallback-red",
+      "command": [
+        "python3",
+        "-E",
+        "tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py",
+        "RestoreIsolation"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 2.97,
+      "log": "review-environment-fallback-red.txt"
+    },
+    {
+      "label": "baseline-inherited-settings",
+      "command": [
+        "python3",
+        "-E",
+        "_bmad-output/implementation-artifacts/tests/five-package-validation-deferred-items-2026-10-21/baseline-inherited-settings-probe.py"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 2.26,
+      "log": "baseline-inherited-settings.txt"
+    },
+    {
+      "label": "review-consumer-regressions",
+      "command": [
+        "python3",
+        "-E",
+        "tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 13.46,
+      "log": "review-consumer-regressions.txt"
+    },
+    {
+      "label": "deferred-prerelease-gap",
+      "command": [
+        "python3",
+        "-E",
+        "_bmad-output/implementation-artifacts/tests/five-package-validation-deferred-items-2026-10-21/deferred-prerelease-probe.py"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.03,
+      "log": "deferred-prerelease-gap.txt"
+    },
+    {
+      "label": "reviewed-ci-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "-c",
+        "Debug",
+        "--no-restore",
+        "-m:1",
+        "-nr:false"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.87,
+      "log": "reviewed-ci-build.txt"
+    },
+    {
+      "label": "reviewed-full-ci-tests",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 28.52,
+      "log": "reviewed-full-ci-tests.txt"
+    },
+    {
+      "label": "final-python-syntax",
+      "command": [
+        "python3",
+        "-c",
+        "import ast,pathlib; files=[\"scripts/validate-consumer-package-references.py\",\"tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py\"]; [ast.parse(pathlib.Path(f).read_text(),filename=f) for f in files]; print(\"Python syntax passes for both changed sources\")"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.04,
+      "log": "final-python-syntax.txt"
+    },
+    {
+      "label": "final-guard",
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 2.53,
+      "log": "final-guard.txt"
+    },
+    {
+      "label": "final-whitespace",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.08,
+      "log": "final-whitespace.txt"
+    }
+  ],
+  "commitlint": {
+    "version": "@commitlint/cli@21.2.2",
+    "candidate_file": "commit-message.txt",
+    "validated_exact_candidate": true
+  },
+  "aspire_baseline": {
+    "command": [
+      "aspire",
+      "start",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--no-build",
+      "--isolated",
+      "--non-interactive",
+      "--format",
+      "Json"
+    ],
+    "exit_code": 0,
+    "observed_state": "Existing-build startup succeeds; dependent resources wait on external security endpoint. No fresh topology proof.",
+    "describe_command": [
+      "aspire",
+      "describe",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--format",
+      "Json",
+      "--non-interactive"
+    ],
+    "stop_command": [
+      "aspire",
+      "stop",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--non-interactive"
+    ],
+    "stop_exit_code": 0
+  },
+  "final_results": {
+    "build_warnings": 0,
+    "build_errors": 0,
+    "ci_tests": 238,
+    "ci_test_failures": 0,
+    "ci_test_errors": 0,
+    "ci_test_skips": 0,
+    "registry_floor_cases": 47,
+    "python_regression_methods": 4,
+    "sdk": "10.0.402",
+    "independent_review": "No remaining material issues in corrections; pre-existing malformed prerelease grammar remains deferred."
+  },
+  "final_source_sha256": {
+    "scripts/validate-consumer-package-references.py": "93f1791813ec23d4d32461a6843a30a3e8ad82ea2396f28916f14a96f65ae740",
+    "tests/Hexalith.Parties.Ci.Tests/CommonsHttpRestoreRoutingTests.cs": "0f87d241605c1fd124d6b5efb29eb02f8aee286c4a80f2d3928e7d7c68668885",
+    "tests/Hexalith.Parties.Ci.Tests/ReleaseRegistryFloorTests.cs": "49f26198ddb300b6b8ae9a82424e8d444b5b86fe68a8c2257002123bf8b97cb9",
+    "tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py": "bc8e149a60d33ad6724f5fe0373cc2ce93a91d587f2d3f2952d218e140bf69f3",
+    "docs/ci.md": "7de8cecd63b5ef1ac0dc5938516dfb17353fa5ac815ac88ce7d8c8c928d31b4f",
+    "_bmad-output/implementation-artifacts/deferred-work.md": "f12bff2faa42e5dec4f370a01ea5327270f6b45a24caa925c8175da0ba6c29fc",
+    "_bmad-output/implementation-artifacts/spec-five-package-validation-deferred-items.md": "00e823e7b4991a36f9414b3d3b29c97197b883e809582543809307d9db632ebd"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "baseline_accepts_stale_frontcomposer_and_tenants": true,
+  "calls": [
+    "restore",
+    "build"
+  ],
+  "libraries": {
+    "Hexalith.EventStore.Contracts/1.0.0": {
+      "type": "package"
+    },
+    "Hexalith.EventStore.Client/1.0.0": {
+      "type": "package"
+    },
+    "Hexalith.FrontComposer.Contracts/0.9.0": {
+      "type": "package"
+    },
+    "Hexalith.Tenants.Client/0.9.0": {
+      "type": "package"
+    }
+  }
+}

@@ -1,0 +1,2 @@
+3.16.0-a..b: existing expression exits 0 and excludes the malformed version
+3.16.0-.: existing expression exits 0 and excludes the malformed version

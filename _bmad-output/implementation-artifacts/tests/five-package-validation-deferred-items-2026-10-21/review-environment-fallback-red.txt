@@ -1,0 +1,15 @@
+test_inherited_fallback_and_disabled_sources (__main__.RestoreIsolation.test_inherited_fallback_and_disabled_sources) ... FAIL
+
+======================================================================
+FAIL: test_inherited_fallback_and_disabled_sources (__main__.RestoreIsolation.test_inherited_fallback_and_disabled_sources)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Ci.Tests/consumer_validation_cases.py", line 212, in test_inherited_fallback_and_disabled_sources
+    self.assertNotEqual(result, 0, 'Inherited environment fallback satisfied a missing consumer package')
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 == 0 : Inherited environment fallback satisfied a missing consumer package
+
+----------------------------------------------------------------------
+Ran 1 test in 2.895s
+
+FAILED (failures=1)

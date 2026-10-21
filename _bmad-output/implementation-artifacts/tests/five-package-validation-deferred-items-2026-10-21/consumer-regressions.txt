@@ -1,0 +1,9 @@
+test_inherited_fallback_and_disabled_sources (__main__.RestoreIsolation.test_inherited_fallback_and_disabled_sources) ... ok
+test_consumer_checks_each_selected_family_and_required_portal_packages (__main__.RestoredVersions.test_consumer_checks_each_selected_family_and_required_portal_packages) ... ok
+test_normalized_versions_across_every_support_identity (__main__.SupportVersions.test_normalized_versions_across_every_support_identity) ... ok
+test_sdk_produced_normalized_archives (__main__.SupportVersions.test_sdk_produced_normalized_archives) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 7.604s
+
+OK

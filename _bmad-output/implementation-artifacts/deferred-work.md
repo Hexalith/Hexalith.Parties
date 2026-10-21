@@ -1418,7 +1418,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: .github/workflows/release.yml (registry-floor parts > floor comparison); CI tests
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: Current CI tests inspect `.github/workflows/release.yml` text and step ordering but do not run its `parts > floor` comparison; a mutation that admits a stale tag could reach the protected release job. This gate was added after the original Parties release patch.
-status: open
+status: done 2026-10-21
+resolution: The CI assembly executes the exact registry-floor workflow bash with isolated GitHub/NuGet fixtures; numeric ordering, equality, prerelease and four-component behavior, invalid indexes and request failures are verified without publication.
+verification: `_bmad-output/implementation-artifacts/tests/five-package-validation-deferred-items-2026-10-21/validation.json`; spec `spec-five-package-validation-deferred-items.md`.
 
 ### DW-189: Run the existing contact-selector browser test in required CI.
 
@@ -1540,21 +1542,33 @@ archived: 2026-10-21
   summary: Normalize NuGet versions consistently before validating support artifact filenames and nuspec versions.
   severity: medium
   evidence: The unchanged validate_support_packages helper rejects SDK-produced 6.5.4.0 and 6.5.4+build.9 packages: both filenames normalize to 6.5.4, while nuspec versions are respectively 6.5.4 and 6.5.4+build.9. Independent review reproduced both forms for FrontComposer.Contracts, Commons.Http and EventStore.Client, confirming a pre-existing shared-helper limitation. Current selected 4.6.0/5.8.0 versions do not trigger it; fix and cover all families together rather than changing established Commons/EventStore semantics inside DW-67.
+  status: done 2026-10-21
+  resolution: The shared support validator normalizes zero revisions, short cores and build metadata across Commons, EventStore, FrontComposer and Tenants. Strict filenames, meaningful revisions, prereleases and artifact inventories remain checked; real SDK-produced archive regressions cover the normalized forms.
+  verification: `_bmad-output/implementation-artifacts/tests/five-package-validation-deferred-items-2026-10-21/validation.json`; spec `spec-five-package-validation-deferred-items.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-67-central-consumer-support-versions.md`
   summary: Qualify restored FrontComposer and Tenants consumer versions against their evaluated central support versions.
   severity: medium
   evidence: validate_consumer calls only validate_event_store_assets after restore, so correct local FrontComposer/Tenants support artifacts do not prove those versions were selected if NuGet chooses a different transitive requirement. The same gap exists in the baseline; add restored-asset family checks and a synthetic selected-version mismatch regression separately. DW-67 checks the generated direct support artifacts and preserves the existing configured-feed transitive boundary.
+  status: done 2026-10-21
+  resolution: Consumer validation checks every restored family package against its evaluated central version before build, and portal consumers require all four direct FrontComposer/Tenants support packages. Main-path wiring and stale, missing, project-backed and case-variant selection regressions cover both consumers.
+  verification: `_bmad-output/implementation-artifacts/tests/five-package-validation-deferred-items-2026-10-21/validation.json`; spec `spec-five-package-validation-deferred-items.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-69-consumer-nuget-source-isolation.md`
   summary: Isolate consumer validation from inherited NuGet fallback package folders.
   severity: medium
   evidence: Independent review restored a synthetic package from an inherited fallbackPackageFolders cache despite generated packageSources containing only empty local feeds. This separate setting is unchanged from baseline; resetting packageSources does not reset fallback folders. The DW-69 documentation now limits its guarantee to packageSources. Add deliberate fallback isolation and a missing-package regression without weakening package-only Release consumer validation.
+  status: done 2026-10-21
+  resolution: Generated NuGet configuration clears fallbackPackageFolders. Real offline restores prove a populated parent fallback cannot satisfy an undeclared dependency while explicit feed selection succeeds with a fresh private cache.
+  verification: `_bmad-output/implementation-artifacts/tests/five-package-validation-deferred-items-2026-10-21/validation.json`; spec `spec-five-package-validation-deferred-items.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-69-consumer-nuget-source-isolation.md`
   summary: Prevent inherited disabledPackageSources from suppressing explicitly selected consumer feeds.
   severity: medium
   evidence: An inherited disabledPackageSources entry for additional-source-1 suppresses an explicitly selected generated feed and makes a synthetic package restore fail with NU1101. Generated keys and inheritance predate DW-69. The documentation exposes the limitation; isolate/reset disabled-source settings and cover effective restored sources separately.
+  status: done 2026-10-21
+  resolution: Generated NuGet configuration clears disabledPackageSources. An offline restore succeeds with both generated local and explicit feed keys disabled by the parent, and asserts the effective source set and selected package.
+  verification: `_bmad-output/implementation-artifacts/tests/five-package-validation-deferred-items-2026-10-21/validation.json`; spec `spec-five-package-validation-deferred-items.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-72-production-publish-environments.md`
   summary: Qualify production authentication configuration for optional Memories in retained AppHost publish output.
@@ -1578,3 +1592,10 @@ archived: 2026-10-21
   summary: Bind accepted edit convergence to a command-specific projection witness or expected edited state.
   severity: medium
   evidence: DW-178 deliberately closes matching-row identity visibility. An existing party already has that identity, so a healthy Current list/search response can contain its pre-edit row before the accepted update projects. The accepted receipt currently carries only party ID and authorization context, without a command/version witness. Matching identity must not be advertised as proof of the latest edit; qualify an owner-supported witness and an edit-specific stale-value regression separately.
+
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-package-validation-deferred-items.md`
+  summary: Reject malformed prerelease identifiers in the release registry-floor version index.
+  severity: medium
+  evidence: Independent review executes the unchanged registry-floor jq expression with 3.16.0-a..b and 3.16.0-.; both are accepted by the permissive prerelease regex and then excluded as prereleases. These invalid identifiers should make the registry evidence unprovable. The behavior predates DW-188, which qualifies stable numerical floor comparison; correct the grammar and add executable rejection fixtures in separate release-gate work.
+  status: open
