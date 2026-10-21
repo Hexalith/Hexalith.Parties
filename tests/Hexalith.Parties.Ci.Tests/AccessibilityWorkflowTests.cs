@@ -47,7 +47,7 @@ public sealed class AccessibilityWorkflowTests
         ciCommand.ShouldNotContain("UseHexalithProjectReferences=true");
         ciCommand.ShouldNotContain("NuGetAudit=false");
 
-        config.ShouldContain("reuseExistingServer: !IS_CI &&");
+        config.ShouldContain("reuseExistingServer: false");
         config.ShouldContain("ASPNETCORE_ENVIRONMENT: 'Test'");
         config.ShouldContain("Hexalith__Parties__AccessibilitySpecimens__Enabled: 'true'");
         config.ShouldContain("Hexalith__Parties__AdminPortalE2E__Enabled: 'true'");
@@ -71,7 +71,9 @@ public sealed class AccessibilityWorkflowTests
         string[] commands =
         [
             "run: npm ci\n",
+            "run: npm run test:config\n",
             "run: npm run typecheck\n",
+            "run: python3 ../Hexalith.Parties.UI.Tests/verify-restored-assets.py\n",
             "run: npm run install:browsers\n",
             "run: dotnet build ../../src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true\n",
             "run: npm run test:a11y\n",

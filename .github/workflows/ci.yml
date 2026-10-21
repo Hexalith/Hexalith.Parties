@@ -75,8 +75,12 @@ jobs:
           cache-dependency-path: tests/e2e/package-lock.json
       - name: Install locked browser-test dependencies
         run: npm ci
+      - name: Test browser server configuration
+        run: npm run test:config
       - name: Typecheck browser tests
         run: npm run typecheck
+      - name: Test restored UI asset resolution
+        run: python3 ../Hexalith.Parties.UI.Tests/verify-restored-assets.py
       - name: Install Chromium and system dependencies
         run: npm run install:browsers
       - name: Build UI with published dependencies

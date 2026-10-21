@@ -134,7 +134,9 @@ The UI accessibility workspace lives under `tests/e2e`:
 ```bash
 cd tests/e2e
 npm ci
+npm run test:config
 npm run typecheck
+python3 ../Hexalith.Parties.UI.Tests/verify-restored-assets.py
 npm run install:browsers
 npm run test:a11y
 ```

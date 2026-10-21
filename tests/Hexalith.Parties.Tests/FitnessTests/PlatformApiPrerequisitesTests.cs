@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -198,7 +199,7 @@ public sealed class PlatformApiPrerequisitesTests
         ["EventStore client envelopes/freshness/error codes"] = ["IEventStoreGatewayClient", "QueryResponseMetadata", "QueryProblemReasonCodes", "GatewayProblemDetailsExtensions"],
         ["Tenant claims transformation"] = [PartiesClaimTypes.EventStoreTenant, "AggregateIdentity.IsValid(string)", "UniqueIdHelper.IsValidUlid(string)"],
         ["Aspire publish helpers"] = ["AddEventStoreDomainModule", "WithJwtBearerSecurity", "WithEventStoreJwtAuthentication", "HexalithEventStoreJwtAuthenticationOptions", "PrimaryAudience", "ValidAudiences", "AddEventStoreGatewayClient"],
-        ["FrontComposer UI primitives"] = ["FcEntityPicker", "FcDestructiveConfirmationDialog", "FileDownload", "JsonDownload"],
+        ["FrontComposer UI primitives"] = ["FcEntityPicker", "FcDestructiveConfirmationDialog", "FileDownload", "JsonDownload", "FcSurfaceStatus", "aria-live=\"@(_suppressSpeech ? \"off\" : \"polite\")\""],
         ["Commons HTTP helpers"] = ["HttpClientRegistration", "BoundedProblemDetailsReader", "HttpCorrelation"],
         ["MCP, deep-link, and search probes"] = ["GetContext()", "IFrontComposerMcpTenantToolGate", "TryAddWithoutValidation", "BuildCorrelationLink", "GetRichSearchCapabilityAsync"],
         ["Builds shared props/targets"] = ["TreatWarningsAsErrors", "Directory.Packages.props"],
@@ -211,6 +212,10 @@ public sealed class PlatformApiPrerequisitesTests
             ["EventStore degraded response and DAPR health checks"] =
             [
                 ("AddEventStoreDaprHealthChecks", "references/Hexalith.EventStore/src/Hexalith.EventStore/HealthChecks/HealthCheckBuilderExtensions.cs"),
+            ],
+            ["FrontComposer UI primitives"] =
+            [
+                ("aria-live=\"@(_suppressSpeech ? \"off\" : \"polite\")\"", "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Components/Rendering/FcSurfaceStatus.razor"),
             ],
             ["Aspire publish helpers"] =
             [
@@ -1048,6 +1053,7 @@ public sealed class PlatformApiPrerequisitesTests
     [InlineData("Aspire publish helpers", "HexalithEventStoreJwtAuthenticationOptions")]
     [InlineData("Aspire publish helpers", "PrimaryAudience")]
     [InlineData("Aspire publish helpers", "ValidAudiences")]
+    [InlineData("FrontComposer UI primitives", "aria-live=\"@(_suppressSpeech ? \"off\" : \"polite\")\"")]
     public void DeliveredApiCommandEvidenceCannotBeReplacedByProse(string surface, string pattern)
     {
         string evidence = ReadRows()[surface].ValidationEvidence;
@@ -1061,11 +1067,12 @@ public sealed class PlatformApiPrerequisitesTests
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void DeliveredApiCommandEvidenceRequiresPositiveExactSourcePaths(bool expectMatch)
+    [InlineData("EventStore degraded response and DAPR health checks", true)]
+    [InlineData("EventStore degraded response and DAPR health checks", false)]
+    [InlineData("FrontComposer UI primitives", true)]
+    [InlineData("FrontComposer UI primitives", false)]
+    public void DeliveredApiCommandEvidenceRequiresPositiveExactSourcePaths(string surface, bool expectMatch)
     {
-        const string surface = "EventStore degraded response and DAPR health checks";
         (string pattern, string path) = RequiredDeliveredApiCommands[surface].Single();
         (string Pattern, string[] Paths, bool ExpectMatch)[] commands =
         [
@@ -1348,12 +1355,7 @@ public sealed class PlatformApiPrerequisitesTests
                 "-p:MinVerVersionOverride=1.0.0",
                 .. mappedSourceProperties
             ]);
-        // MSBuild can emit restore or NuGet preamble on stdout ahead of the JSON payload; parsing
-        // the raw stream throws JsonException instead of reporting a graph difference.
-        int jsonStart = output.IndexOf('{', StringComparison.Ordinal);
-        jsonStart.ShouldBeGreaterThanOrEqualTo(0, $"MSBuild produced no JSON payload for {relativeProject}: {output}");
-
-        using JsonDocument document = JsonDocument.Parse(output[jsonStart..]);
+        using JsonDocument document = ParseMsbuildJson(output, relativeProject);
         Dictionary<string, string> properties = document.RootElement.GetProperty("Properties")
             .EnumerateObject()
             .ToDictionary(static property => property.Name, static property => property.Value.GetString() ?? string.Empty, StringComparer.Ordinal);
@@ -1368,6 +1370,81 @@ public sealed class PlatformApiPrerequisitesTests
         }
 
         return new EvaluatedProjectGraph(properties, packages, projects, ReadPackageMetadata(items));
+    }
+
+    /// <summary>Consumes one structured MSBuild payload while leaving surrounding diagnostics alone.</summary>
+    [Theory]
+    [InlineData("")]
+    [InlineData("Restore complete.\n")]
+    [InlineData("warning: unresolved {Property}\n")]
+    [InlineData("warning: {\"level\":\"diagnostic\"}\n")]
+    [InlineData("{\"level\":\"diagnostic\"}\n")]
+    public void MsbuildJsonParsingIgnoresSurroundingDiagnostics(string prefix)
+    {
+        const string payload = """{"Properties":{"Value":"brace } and { and quote \""},"Items":{"PackageReference":[{"Identity":"example"}]}}""";
+        using JsonDocument document = ParseMsbuildJson(prefix + payload + "\nBuild succeeded. {not JSON}", "fixture.csproj");
+
+        document.RootElement.GetProperty("Properties").GetProperty("Value").GetString().ShouldBe("brace } and { and quote \"");
+        document.RootElement.GetProperty("Items").GetProperty("PackageReference")[0].GetProperty("Identity").GetString().ShouldBe("example");
+    }
+
+    /// <summary>Absent or incomplete payloads must not become successful graph evaluations.</summary>
+    [Fact]
+    public void MsbuildJsonParsingRejectsMissingPayload()
+        => Should.Throw<JsonException>(() => ParseMsbuildJson("diagnostics without a payload", "fixture.csproj"));
+
+    /// <summary>Malformed or incomplete JSON remains an explicit parse failure.</summary>
+    [Theory]
+    [InlineData("preamble\n{\"Properties\":{")]
+    [InlineData("preamble\n{invalid}")]
+    [InlineData("{\"Properties\":{\"Value\":\"outer\"},\"Items\":{\"Properties\":{},\"Items\":{}}")]
+    public void MsbuildJsonParsingRejectsInvalidPayload(string output)
+        => Should.Throw<JsonException>(() => ParseMsbuildJson(output, "fixture.csproj"));
+
+    /// <summary>Reports the owning project and bounded stdout when the graph payload is unavailable.</summary>
+    [Fact]
+    public void MsbuildJsonParsingFailureRetainsBoundedProjectDiagnostics()
+    {
+        JsonException failure = Should.Throw<JsonException>(() => ParseMsbuildJson("restore failed " + new string('x', 2_000), "fixture.csproj"));
+        failure.Message.ShouldContain("fixture.csproj");
+        failure.Message.ShouldContain("restore failed");
+        failure.Message.Length.ShouldBeLessThan(1_200);
+    }
+
+    private static JsonDocument ParseMsbuildJson(string output, string projectFile)
+    {
+        for (int start = output.IndexOf('{', StringComparison.Ordinal); start >= 0; start = output.IndexOf('{', start + 1))
+        {
+            // MSBuild emits its root object at the start of a line. Braces inside diagnostics
+            // or a malformed payload must never become nested replacement graph roots.
+            if (start > 0 && output[start - 1] != '\n')
+            {
+                continue;
+            }
+
+            try
+            {
+                byte[] payload = Encoding.UTF8.GetBytes(output[start..]);
+                var reader = new Utf8JsonReader(payload);
+                JsonDocument document = JsonDocument.ParseValue(ref reader);
+                if (document.RootElement.TryGetProperty("Properties", out JsonElement properties) && properties.ValueKind == JsonValueKind.Object
+                    && document.RootElement.TryGetProperty("Items", out JsonElement items) && items.ValueKind == JsonValueKind.Object)
+                {
+                    return document;
+                }
+
+                document.Dispose();
+                start += Encoding.UTF8.GetCharCount(payload.AsSpan(0, (int)reader.BytesConsumed)) - 1;
+            }
+            catch (JsonException)
+            {
+                // A malformed independent object cannot be repaired by accepting one of its children.
+                break;
+            }
+        }
+
+        string diagnostic = output[..Math.Min(output.Length, 1_000)].Replace('\r', ' ').Replace('\n', ' ');
+        throw new JsonException($"MSBuild produced no complete project graph JSON for {projectFile}: {diagnostic}");
     }
 
     private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> ReadPackageMetadata(JsonElement items)

@@ -10,6 +10,7 @@
     "test:visual": "playwright test specs/parties-accessibility.spec.ts --project=chromium --grep \"visual baseline\"",
     "test:visual:update": "playwright test specs/parties-accessibility.spec.ts --project=chromium --grep \"visual baseline\" --update-snapshots",
     "install:browsers": "playwright install chromium --with-deps",
+    "test:config": "node --experimental-strip-types --test config-tests/server-ownership.test.mjs",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

@@ -822,7 +822,9 @@ origin: code review of spec-8-10-final-readiness-documentation-and-retirement-ga
 location: tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: `EvaluateProjectGraph` slices from the first `{` to end of string. Trailing restore/log text after the JSON object would throw `JsonException` instead of a graph assertion. Unverified whether current MSBuild emits trailing content on this invocation; settle by capturing a live `-getItem` payload. If true, severity is medium.
-status: open
+status: done 2026-10-21
+resolution: EvaluateProjectGraph consumes one complete JSON object with Utf8JsonReader/ParseValue. Nested, escaped-string, trailing-log and malformed/missing-payload regressions cover the behavior. Current live MSBuild emits no trailing logs; this is robustness evidence, not a claimed current reproduction.
+verification: `_bmad-output/implementation-artifacts/tests/five-test-harness-deferred-items-2026-10-21/validation.json`; spec `spec-five-test-harness-deferred-items.md`. The separate existing Builds receipt mismatch is reproduced against baseline and remains outside these corrections.
 
 ### DW-114: Retire resolved Epic 8 closure deferrals from the accepted-wait set.
 
@@ -853,7 +855,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-fi
 location: tests/Hexalith.Parties.UI.Tests/AccessibilityStyleGuardTests.cs (ResolveNuGetPackagesRoot)
 source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
 reason: The style guard accepts an empty `NUGET_PACKAGES` value and otherwise assumes the default user cache, ignoring `RestorePackagesPath` and NuGet `globalPackagesFolder`.
-status: open
+status: done 2026-10-21
+resolution: The stylesheet guard consumes NuGetPackageFolders and the catalog-selected FrontComposer version captured as evaluated build metadata. The maintained CI probe restores a fixture package, compiles the actual resolver and metadata, and verifies asset bytes for globalPackagesFolder, RestorePackagesPath, NUGET_PACKAGES, empty NUGET_PACKAGES and fallback folders; no runtime cache guessing remains.
+verification: `_bmad-output/implementation-artifacts/tests/five-test-harness-deferred-items-2026-10-21/validation.json`; spec `spec-five-test-harness-deferred-items.md`. The separate existing Builds receipt mismatch is reproduced against baseline and remains outside these corrections.
 
 ### DW-118: Make Playwright web-server ownership deterministic and test its environment matrix.
 
@@ -861,7 +865,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-fi
 location: tests/e2e/playwright.config.ts and tests/Hexalith.Parties.UI.Tests/PartiesUiHostCompositionTests.cs
 source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
 reason: Local `ASPNETCORE_ENVIRONMENT=Test` runs may reuse an unrelated process at the expected URL, while current checks only inspect configuration text and do not execute the CI/local and Test/Development matrix.
-status: open
+status: done 2026-10-21
+resolution: Managed Playwright runs always use reuseExistingServer=false. Eight executable configuration tests cover CI/local and Test/Development, explicit external-server ownership, an occupied-URL refusal and managed startup/response/cleanup by the real Playwright runner. They also pass on the declared Node 24.0.0 runtime floor. The existing required CI job runs test:config.
+verification: `_bmad-output/implementation-artifacts/tests/five-test-harness-deferred-items-2026-10-21/validation.json`; spec `spec-five-test-harness-deferred-items.md`. The separate existing Builds receipt mismatch is reproduced against baseline and remains outside these corrections.
 
 ### DW-119: RecordConsentValidator does not guard LawfulBasis with IsInEnum and RevokeConsentValidator leaves Reason unbounded, unlike every sibling command validator.
 
@@ -1092,7 +1098,9 @@ status: open
 origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
 location: tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs:67
 severity: medium
-status: open
+status: done 2026-10-21
+resolution: Current human evidence now has a fixed-clock valid control plus independent wrong-purpose and expired-interval cases, each asserting bounded 503 failure. This also resolves duplicate DW-157.
+verification: `_bmad-output/implementation-artifacts/tests/five-test-harness-deferred-items-2026-10-21/validation.json`; spec `spec-five-test-harness-deferred-items.md`. The separate existing Builds receipt mismatch is reproduced against baseline and remains outside these corrections.
 
 ### DW-157: Separate expired-interval and wrong-purpose client rejection cases.
 
@@ -1100,7 +1108,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: tests/Hexalith.Parties.Client.Tests/HttpPartiesIdentityClientTests.cs:67
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: Verification 2, pre-verified broken-verification gap: the current case combines an expired interval with other-purpose, so removing the purpose check still rejects on expiry. Existing identity-feature test from 37d87f5a2869b076c651a58714d60f64647848bc, unchanged here. Exit proof: otherwise valid current human evidence with the wrong purpose is rejected independently, and expired evidence with the correct purpose is rejected independently.
-status: open
+status: done 2026-10-21
+resolution: Duplicate of DW-138; the same valid control and independently corrupted purpose/interval cases supply its exit proof. Counted once in the five-item batch.
+verification: `_bmad-output/implementation-artifacts/tests/five-test-harness-deferred-items-2026-10-21/validation.json`; spec `spec-five-test-harness-deferred-items.md`. The separate existing Builds receipt mismatch is reproduced against baseline and remains outside these corrections.
 
 ### DW-139: Wire FrontComposer reserved segments and module landing in package mode after a Shell release
 
@@ -1424,7 +1434,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: RequiredEvidenceTokensBySurface and RequiredDeliveredApiCommands (FrontComposer FcSurfaceStatus command)
 source_spec: `_bmad-output/implementation-artifacts/spec-gh-38399980224-fix-ci-and-publish-release.md`
 reason: Existing RequiredEvidenceTokensBySurface and RequiredDeliveredApiCommands do not mandate the FcSurfaceStatus command; removing an individual FrontComposer command leaves other searches satisfying the row's nonempty-command guard. This gap predates the current conditional-expression refresh.
-status: open
+status: done 2026-10-21
+resolution: FrontComposer required tokens now include FcSurfaceStatus and its structural aria-live expression. RequiredDeliveredApiCommands mandates the exact positive command/path; command-removal and wrong-path/negative-search cases protect this requirement.
+verification: `_bmad-output/implementation-artifacts/tests/five-test-harness-deferred-items-2026-10-21/validation.json`; spec `spec-five-test-harness-deferred-items.md`. The separate existing Builds receipt mismatch is reproduced against baseline and remains outside these corrections.
 
 ### DW-191: Validate McpCli and Platform source-selection rows independently of the eight consumed dependency fitness checks.
 

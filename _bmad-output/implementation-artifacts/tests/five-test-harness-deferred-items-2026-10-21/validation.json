@@ -1,0 +1,493 @@
+[
+  {
+    "phase": "baseline-lifecycle",
+    "command": [
+      "aspire",
+      "start",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--non-interactive"
+    ],
+    "exit_code": 0,
+    "result": "AppHost started successfully. Token-bearing dashboard URL omitted."
+  },
+  {
+    "phase": "baseline-lifecycle",
+    "command": [
+      "aspire",
+      "describe",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--non-interactive"
+    ],
+    "exit_code": 0,
+    "result": "Security Starting; dependent service resources Waiting. No complete topology readiness proof."
+  },
+  {
+    "phase": "baseline-lifecycle",
+    "command": [
+      "aspire",
+      "stop",
+      "--apphost",
+      "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+      "--non-interactive"
+    ],
+    "exit_code": 0,
+    "result": "Exact AppHost stopped successfully before builds."
+  },
+  {
+    "phase": "source-launcher",
+    "command": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "debug",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json"
+    ],
+    "exit_code": 2,
+    "result": "unavailable: PrerequisiteUnavailable\nHXR011 Prerequisite PrerequisiteUnavailable field=HEXALITH_DAPR_HOME: The isolated Dapr home is not configured. (Set HEXALITH_DAPR_HOME to an absolute directory prepared with the selected Dapr CLI and runtime.)"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+      "-c",
+      "Debug",
+      "--no-restore",
+      "-m:1"
+    ],
+    "exit_code": 0,
+    "result": "Build succeeded. 0 Warning(s), 0 Error(s). Observed in the initial build tool output."
+  },
+  {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Debug",
+      "--no-restore",
+      "-m:1"
+    ],
+    "exit_code": 0,
+    "seconds": 4.86,
+    "result": "  Hexalith.Parties.Contracts -> [repository]/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll\n  Hexalith.Parties.Authentication -> [repository]/src/Hexalith.Parties.Authentication/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll\n  Hexalith.Parties.Client -> [repository]/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll\n  Hexalith.Parties.AdminPortal -> [repository]/src/Hexalith.Parties.AdminPortal/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.dll\n  Hexalith.Parties.ConsumerPortal -> [repository]/src/Hexalith.Parties.ConsumerPortal/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal.dll\n  Hexalith.Parties.Picker -> [repository]/src/Hexalith.Parties.Picker/bin/Debug/net10.0/Hexalith.Parties.Picker.dll\n  Hexalith.Parties.UI -> [repository]/src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.Parties.UI.dll\n  Hexalith.Parties.UI.Tests -> [repository]/tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll\n\nBuild succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:04.46\n"
+  },
+  {
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll"
+    ],
+    "exit_code": 0,
+    "seconds": 3.01,
+    "result": "xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)\n  Discovering: Hexalith.Parties.UI.Tests\n  Discovered:  Hexalith.Parties.UI.Tests\n  Starting:    Hexalith.Parties.UI.Tests\n{\"EventId\":6007,\"LogLevel\":\"Information\",\"Category\":\"Hexalith.FrontComposer.Shell.Extensions.AddFrontComposerDevModeExtensions.DevModeNonDevelopmentLogger\",\"Message\":\"HFC2010: FrontComposer dev-mode AddFrontComposerDevMode invoked outside Development; overlay services were not registered. Environment=Test\",\"State\":{\"EnvironmentName\":\"Test\",\"{OriginalFormat}\":\"HFC2010: FrontComposer dev-mode AddFrontComposerDevMode invoked outside Development; overlay services were not registered. Environment={EnvironmentName}\"}}\n{\"EventId\":0,\"LogLevel\":\"Information\",\"Category\":\"Microsoft.Hosting.Lifetime\",\"Message\":\"Application started. Press Ctrl\\u002BC to shut down.\",\"State\":{\"{OriginalFormat}\":\"Application started. Press Ctrl\\u002BC to shut down.\"}}\n{\"EventId\":0,\"LogLevel\":\"Information\",\"Category\":\"Microsoft.Hosting.Lifetime\",\"Message\":\"Hosting environment: Test\",\"State\":{\"EnvName\":\"Test\",\"{OriginalFormat}\":\"Hosting environment: {EnvName}\"}}\n{\"EventId\":0,\"LogLevel\":\"Information\",\"Category\":\"Microsoft.Hosting.Lifetime\",\"Message\":\"Content root path: [repository]/src/Hexalith.Parties.UI\",\"State\":{\"ContentRoot\":\"[repository]/src/Hexalith.Parties.UI\",\"{OriginalFormat}\":\"Content root path: {ContentRoot}\"}}\n{\"EventId\":0,\"LogLevel\":\"Information\",\"Category\":\"Microsoft.Hosting.Lifetime\",\"Message\":\"Application is shutting down...\",\"State\":{\"{OriginalFormat}\":\"Application is shutting down...\"}}\n  Finished:    Hexalith.Parties.UI.Tests (ID = '9812e9faeeb02435ec3e3f64d27bb949708b2c96c3c0b79631ff3ccd4712e5b8')\n=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.UI.Tests  Total: 387, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 2.603s\n"
+  },
+  {
+    "command": [
+      "npm",
+      "--prefix",
+      "tests/e2e",
+      "run",
+      "test:config"
+    ],
+    "exit_code": 0,
+    "seconds": 3.63,
+    "result": "\n> hexalith-parties-e2e@0.0.0 test:config\n> node --experimental-strip-types --test config-tests/*.test.mjs\n\n\u2714 managed server: CI=false, parent=Test (428.102445ms)\n\u2714 managed server: CI=false, parent=Development (547.003554ms)\n\u2714 explicit external server: CI=false (414.708955ms)\n\u2714 managed server: CI=true, parent=Test (473.919431ms)\n\u2714 managed server: CI=true, parent=Development (450.831945ms)\n\u2714 explicit external server: CI=true (470.375173ms)\n\u2714 Playwright rejects an unrelated listener instead of using it (579.370437ms)\n\u2139 tests 7\n\u2139 suites 0\n\u2139 pass 7\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 3464.911643\n"
+  },
+  {
+    "command": [
+      "npm",
+      "--prefix",
+      "tests/e2e",
+      "run",
+      "typecheck"
+    ],
+    "exit_code": 0,
+    "seconds": 0.25,
+    "result": "\n> hexalith-parties-e2e@0.0.0 typecheck\n> tsc --noEmit\n\n"
+  },
+  {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Debug",
+      "--no-restore",
+      "-m:1"
+    ],
+    "exit_code": 0,
+    "seconds": 5.21,
+    "result": "  Hexalith.Parties.Contracts -> [repository]/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll\n  Hexalith.Parties.Authentication -> [repository]/src/Hexalith.Parties.Authentication/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll\n  Hexalith.Parties.Projections -> [repository]/src/Hexalith.Parties.Projections/bin/Debug/net10.0/Hexalith.Parties.Projections.dll\n  Hexalith.Parties.Security -> [repository]/src/Hexalith.Parties.Security/bin/Debug/net10.0/Hexalith.Parties.Security.dll\n  Hexalith.Parties -> [repository]/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll\n  Hexalith.Parties.Client -> [repository]/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll\n  Hexalith.Parties.Testing -> [repository]/src/Hexalith.Parties.Testing/bin/Debug/net10.0/Hexalith.Parties.Testing.dll\n  Hexalith.Parties.EventStoreGateway.TestHost -> [repository]/tests/Hexalith.Parties.EventStoreGateway.TestHost/bin/Debug/net10.0/Hexalith.Parties.EventStoreGateway.TestHost.dll\n  Hexalith.Parties.Tests -> [repository]/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll\n\nBuild succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:04.92\n"
+  },
+  {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+      "-c",
+      "Debug",
+      "--no-restore",
+      "-m:1"
+    ],
+    "exit_code": 0,
+    "seconds": 1.16,
+    "result": "  Hexalith.Parties.Ci.Tests -> [repository]/tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll\n\nBuild succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:00.86\n"
+  },
+  {
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "-class",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests"
+    ],
+    "exit_code": 1,
+    "seconds": 4.0,
+    "result": "xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)\n  Discovering: Hexalith.Parties.Tests\n  Discovered:  Hexalith.Parties.Tests\n  Starting:    Hexalith.Parties.Tests\n    Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph [FAIL]\n      Shouldly.ShouldAssertException : gitlink.Replace('\\t', ' ')\n          should be\n      \"160000 commit fff4a212180d8cd1c5c0759655a9bc4fb6963c45 references/Hexalith.Builds\"\n          but was\n      \"160000 commit 2744d549270298cfe73679f76b477a7368429006 references/Hexalith.Builds\"\n          difference\n      Difference     |       |    |    |         |    |    |    |    |    |         |    |    |    |    |    |    |    |    |             \n                     |      \\|/  \\|/  \\|/       \\|/  \\|/  \\|/  \\|/  \\|/  \\|/       \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/            \n      Index          | ...  14   15   16   17   18   19   20   21   22   23   24   25   26   27   28   29   30   31   32   33   34   ...  \n      Expected Value | ...  f    f    f    4    a    2    1    2    1    8    0    d    8    c    d    1    c    5    c    0    7    ...  \n      Actual Value   | ...  2    7    4    4    d    5    4    9    2    7    0    2    9    8    c    f    e    7    3    6    7    ...  \n      Expected Code  | ...  102  102  102  52   97   50   49   50   49   56   48   100  56   99   100  49   99   53   99   48   55   ...  \n      Actual Code    | ...  50   55   52   52   100  53   52   57   50   55   48   50   57   56   99   102  101  55   51   54   55   ...  \n      \n      Difference     |            |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |             \n                     |           \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/            \n      Index          | ...  34   35   36   37   38   39   40   41   42   43   44   45   46   47   48   49   50   51   52   53   54   ...  \n      Expected Value | ...  7    5    9    6    5    5    a    9    b    c    4    f    b    6    9    6    3    c    4    5    \\s   ...  \n      Actual Value   | ...  7    9    f    7    6    b    4    7    7    a    7    3    6    8    4    2    9    0    0    6    \\s   ...  \n      Expected Code  | ...  55   53   57   54   53   53   97   57   98   99   52   102  98   54   57   54   51   99   52   53   32   ...  \n      Actual Code    | ...  55   57   102  55   54   98   52   55   55   97   55   51   54   56   52   50   57   48   48   54   32   ...  \n      \n      Additional Info:\n          references/Hexalith.Builds committed gitlink must match selected fff4a212180d8cd1c5c0759655a9bc4fb6963c45; HEAD entry was '160000 commit 2744d549270298cfe73679f76b477a7368429006\treferences/Hexalith.Builds'.\n      Stack Trace:\n        tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs(2067,0): at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.AssertGitlinkAndCheckout(String root, String relativePath, String expectedIdentity)\n        tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs(707,0): at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph()\n           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)\n           at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)\n  Finished:    Hexalith.Parties.Tests (ID = '3203e2eac1e69d356617e4cae5fa3f440c852a12ac575ed4cb685ab408c9c2ba')\n=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.Tests  Total: 52, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 3.647s\n"
+  },
+  {
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll"
+    ],
+    "exit_code": 0,
+    "seconds": 7.65,
+    "result": "xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)\n  Discovering: Hexalith.Parties.Ci.Tests\n  Discovered:  Hexalith.Parties.Ci.Tests\n  Starting:    Hexalith.Parties.Ci.Tests\n  Finished:    Hexalith.Parties.Ci.Tests (ID = '2e1d720a7326db56ca3b7efb965d81920d1d84c3a2caf8a75762b742603e0246')\n=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.Ci.Tests  Total: 188, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 7.421s\n"
+  },
+  {
+    "command": [
+      "python3",
+      "_bmad-output/implementation-artifacts/tests/five-test-harness-deferred-items-2026-10-21/verify-nuget-metadata.py"
+    ],
+    "exit_code": 0,
+    "seconds": 7.77,
+    "result": "PASS configuration: evaluated metadata matches the restored package location\nPASS restore-property: evaluated metadata matches the restored package location\nPASS environment: evaluated metadata matches the restored package location\nPASS empty-environment: evaluated metadata matches the restored package location\n"
+  },
+  {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Debug",
+      "--no-restore",
+      "-m:1"
+    ],
+    "exit_code": 0,
+    "seconds": 4.14,
+    "result": "  Hexalith.Parties.Contracts -> [repository]/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll\n  Hexalith.Parties.Authentication -> [repository]/src/Hexalith.Parties.Authentication/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll\n  Hexalith.Parties.Projections -> [repository]/src/Hexalith.Parties.Projections/bin/Debug/net10.0/Hexalith.Parties.Projections.dll\n  Hexalith.Parties.Security -> [repository]/src/Hexalith.Parties.Security/bin/Debug/net10.0/Hexalith.Parties.Security.dll\n  Hexalith.Parties -> [repository]/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll\n  Hexalith.Parties.Client -> [repository]/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll\n  Hexalith.Parties.Testing -> [repository]/src/Hexalith.Parties.Testing/bin/Debug/net10.0/Hexalith.Parties.Testing.dll\n  Hexalith.Parties.EventStoreGateway.TestHost -> [repository]/tests/Hexalith.Parties.EventStoreGateway.TestHost/bin/Debug/net10.0/Hexalith.Parties.EventStoreGateway.TestHost.dll\n  Hexalith.Parties.Tests -> [repository]/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll\n\nBuild succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:03.86\n"
+  },
+  {
+    "command": [
+      "bash",
+      "scripts/check-no-warning-override.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 0.66,
+    "result": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.\n"
+  },
+  {
+    "phase": "baseline-platform-source",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Debug",
+      "--no-restore",
+      "-m:1"
+    ],
+    "exit_code": 0,
+    "seconds": 6.54,
+    "result": "  Hexalith.Parties.Contracts -> [repository]/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll\n  Hexalith.Parties.Authentication -> [repository]/src/Hexalith.Parties.Authentication/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll\n  Hexalith.Parties.Projections -> [repository]/src/Hexalith.Parties.Projections/bin/Debug/net10.0/Hexalith.Parties.Projections.dll\n  Hexalith.Parties.Security -> [repository]/src/Hexalith.Parties.Security/bin/Debug/net10.0/Hexalith.Parties.Security.dll\n  Hexalith.Parties -> [repository]/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll\n  Hexalith.Parties.Client -> [repository]/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll\n  Hexalith.Parties.Testing -> [repository]/src/Hexalith.Parties.Testing/bin/Debug/net10.0/Hexalith.Parties.Testing.dll\n  Hexalith.Parties.EventStoreGateway.TestHost -> [repository]/tests/Hexalith.Parties.EventStoreGateway.TestHost/bin/Debug/net10.0/Hexalith.Parties.EventStoreGateway.TestHost.dll\n  Hexalith.Parties.Tests -> [repository]/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll\n\nBuild succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:06.21\n"
+  },
+  {
+    "phase": "baseline-platform-source",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "-method",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph"
+    ],
+    "exit_code": 1,
+    "seconds": 0.68,
+    "result": "xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)\n  Discovering: Hexalith.Parties.Tests\n  Discovered:  Hexalith.Parties.Tests\n  Starting:    Hexalith.Parties.Tests\n    Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph [FAIL]\n      Shouldly.ShouldAssertException : gitlink.Replace('\\t', ' ')\n          should be\n      \"160000 commit fff4a212180d8cd1c5c0759655a9bc4fb6963c45 references/Hexalith.Builds\"\n          but was\n      \"160000 commit 2744d549270298cfe73679f76b477a7368429006 references/Hexalith.Builds\"\n          difference\n      Difference     |       |    |    |         |    |    |    |    |    |         |    |    |    |    |    |    |    |    |             \n                     |      \\|/  \\|/  \\|/       \\|/  \\|/  \\|/  \\|/  \\|/  \\|/       \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/            \n      Index          | ...  14   15   16   17   18   19   20   21   22   23   24   25   26   27   28   29   30   31   32   33   34   ...  \n      Expected Value | ...  f    f    f    4    a    2    1    2    1    8    0    d    8    c    d    1    c    5    c    0    7    ...  \n      Actual Value   | ...  2    7    4    4    d    5    4    9    2    7    0    2    9    8    c    f    e    7    3    6    7    ...  \n      Expected Code  | ...  102  102  102  52   97   50   49   50   49   56   48   100  56   99   100  49   99   53   99   48   55   ...  \n      Actual Code    | ...  50   55   52   52   100  53   52   57   50   55   48   50   57   56   99   102  101  55   51   54   55   ...  \n      \n      Difference     |            |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |             \n                     |           \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/  \\|/            \n      Index          | ...  34   35   36   37   38   39   40   41   42   43   44   45   46   47   48   49   50   51   52   53   54   ...  \n      Expected Value | ...  7    5    9    6    5    5    a    9    b    c    4    f    b    6    9    6    3    c    4    5    \\s   ...  \n      Actual Value   | ...  7    9    f    7    6    b    4    7    7    a    7    3    6    8    4    2    9    0    0    6    \\s   ...  \n      Expected Code  | ...  55   53   57   54   53   53   97   57   98   99   52   102  98   54   57   54   51   99   52   53   32   ...  \n      Actual Code    | ...  55   57   102  55   54   98   52   55   55   97   55   51   54   56   52   50   57   48   48   54   32   ...  \n      \n      Additional Info:\n          references/Hexalith.Builds committed gitlink must match selected fff4a212180d8cd1c5c0759655a9bc4fb6963c45; HEAD entry was '160000 commit 2744d549270298cfe73679f76b477a7368429006\treferences/Hexalith.Builds'.\n      Stack Trace:\n        tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs(2037,0): at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.AssertGitlinkAndCheckout(String root, String relativePath, String expectedIdentity)\n        tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs(702,0): at Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph()\n           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)\n           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)\n  Finished:    Hexalith.Parties.Tests (ID = '3203e2eac1e69d356617e4cae5fa3f440c852a12ac575ed4cb685ab408c9c2ba')\n=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.Tests  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 0.293s\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Debug",
+      "--no-restore",
+      "-m:1"
+    ],
+    "exit_code": 0,
+    "seconds": 8.11,
+    "result": "  Hexalith.Parties.Contracts -> [repository]/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll\n  Hexalith.Parties.Authentication -> [repository]/src/Hexalith.Parties.Authentication/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll\n  Hexalith.Parties.Projections -> [repository]/src/Hexalith.Parties.Projections/bin/Debug/net10.0/Hexalith.Parties.Projections.dll\n  Hexalith.Parties.Security -> [repository]/src/Hexalith.Parties.Security/bin/Debug/net10.0/Hexalith.Parties.Security.dll\n  Hexalith.Parties -> [repository]/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll\n  Hexalith.Parties.Client -> [repository]/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll\n  Hexalith.Parties.Testing -> [repository]/src/Hexalith.Parties.Testing/bin/Debug/net10.0/Hexalith.Parties.Testing.dll\n  Hexalith.Parties.EventStoreGateway.TestHost -> [repository]/tests/Hexalith.Parties.EventStoreGateway.TestHost/bin/Debug/net10.0/Hexalith.Parties.EventStoreGateway.TestHost.dll\n  Hexalith.Parties.Tests -> [repository]/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll\n\nBuild succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:07.72\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll"
+    ],
+    "exit_code": 0,
+    "seconds": 28.29,
+    "result": "xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)\n  Discovering: Hexalith.Parties.Client.Tests\n  Discovered:  Hexalith.Parties.Client.Tests\n  Starting:    Hexalith.Parties.Client.Tests\n  Finished:    Hexalith.Parties.Client.Tests (ID = '88901f5ba37331f04a5fc3ca3646afacf33cf26b9db29b46308716bf9481dee1')\n=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.Client.Tests  Total: 332, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 28.036s\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "-method",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.MsbuildJson*",
+      "-method",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DeliveredApiCommand*",
+      "-method",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_ValidationEvidence*"
+    ],
+    "exit_code": 0,
+    "seconds": 0.69,
+    "result": "xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)\n  Discovering: Hexalith.Parties.Tests\n  Discovered:  Hexalith.Parties.Tests\n  Starting:    Hexalith.Parties.Tests\n  Finished:    Hexalith.Parties.Tests (ID = '3203e2eac1e69d356617e4cae5fa3f440c852a12ac575ed4cb685ab408c9c2ba')\n=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.Tests  Total: 17, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.371s\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "npm",
+      "--prefix",
+      "tests/e2e",
+      "run",
+      "test:config"
+    ],
+    "exit_code": 0,
+    "seconds": 2.98,
+    "result": "\n> hexalith-parties-e2e@0.0.0 test:config\n> node --experimental-strip-types --test config-tests/server-ownership.test.mjs\n\n\u2714 managed server: CI=false, parent=Test (342.517707ms)\n\u2714 managed server: CI=false, parent=Development (318.029855ms)\n\u2714 explicit external server: CI=false (539.938723ms)\n\u2714 managed server: CI=true, parent=Test (464.937714ms)\n\u2714 managed server: CI=true, parent=Development (299.197661ms)\n\u2714 explicit external server: CI=true (304.604002ms)\n\u2714 Playwright rejects an unrelated listener instead of using it (505.382987ms)\n\u2139 tests 7\n\u2139 suites 0\n\u2139 pass 7\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 2849.643634\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "npm",
+      "exec",
+      "--yes",
+      "--package=node@24.0.0",
+      "--",
+      "node",
+      "--experimental-strip-types",
+      "--test",
+      "tests/e2e/config-tests/server-ownership.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 11.38,
+    "result": "\u2714 managed server: CI=false, parent=Test (303.6654ms)\n\u2714 managed server: CI=false, parent=Development (358.537956ms)\n\u2714 explicit external server: CI=false (323.543778ms)\n\u2714 managed server: CI=true, parent=Test (305.831592ms)\n\u2714 managed server: CI=true, parent=Development (293.597142ms)\n\u2714 explicit external server: CI=true (294.307924ms)\n\u2714 Playwright rejects an unrelated listener instead of using it (545.679902ms)\n\u2139 tests 7\n\u2139 suites 0\n\u2139 pass 7\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 2490.116323\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "python3",
+      "tests/Hexalith.Parties.UI.Tests/verify-restored-assets.py"
+    ],
+    "exit_code": 0,
+    "seconds": 8.53,
+    "result": "PASS configuration: compiled metadata and actual stylesheet lookup match the restored package\nPASS restore-property: compiled metadata and actual stylesheet lookup match the restored package\nPASS environment: compiled metadata and actual stylesheet lookup match the restored package\nPASS empty-environment: compiled metadata and actual stylesheet lookup match the restored package\nPASS fallback: compiled metadata and actual stylesheet lookup match the restored package\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "npm",
+      "--prefix",
+      "tests/e2e",
+      "run",
+      "test:config"
+    ],
+    "exit_code": 0,
+    "seconds": 3.2,
+    "result": "\n> hexalith-parties-e2e@0.0.0 test:config\n> node --experimental-strip-types --test config-tests/server-ownership.test.mjs\n\n\u2714 managed server: CI=false, parent=Test (301.296058ms)\n\u2714 managed server: CI=false, parent=Development (293.07829ms)\n\u2714 explicit external server: CI=false (271.098016ms)\n\u2714 managed server: CI=true, parent=Test (276.736088ms)\n\u2714 managed server: CI=true, parent=Development (274.790233ms)\n\u2714 explicit external server: CI=true (279.351675ms)\n\u2714 Playwright rejects an unrelated listener (425.739285ms)\n\u2714 Playwright starts and cleans up its managed fixture (889.105599ms)\n\u2139 tests 8\n\u2139 suites 0\n\u2139 pass 8\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 3076.8798\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Debug",
+      "--no-restore",
+      "-m:1"
+    ],
+    "exit_code": 0,
+    "seconds": 2.69,
+    "result": "  Hexalith.Parties.Contracts -> [repository]/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll\n  Hexalith.Parties.Authentication -> [repository]/src/Hexalith.Parties.Authentication/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll\n  Hexalith.Parties.Client -> [repository]/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll\n  Hexalith.Parties.AdminPortal -> [repository]/src/Hexalith.Parties.AdminPortal/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.dll\n  Hexalith.Parties.ConsumerPortal -> [repository]/src/Hexalith.Parties.ConsumerPortal/bin/Debug/net10.0/Hexalith.Parties.ConsumerPortal.dll\n  Hexalith.Parties.Picker -> [repository]/src/Hexalith.Parties.Picker/bin/Debug/net10.0/Hexalith.Parties.Picker.dll\n  Hexalith.Parties.UI -> [repository]/src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.Parties.UI.dll\n  Hexalith.Parties.UI.Tests -> [repository]/tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll\n\nBuild succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:02.43\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Debug",
+      "--no-restore",
+      "-m:1"
+    ],
+    "exit_code": 0,
+    "seconds": 6.22,
+    "result": "  Hexalith.Parties.Contracts -> [repository]/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll\n  Hexalith.Parties.Authentication -> [repository]/src/Hexalith.Parties.Authentication/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll\n  Hexalith.Parties.Projections -> [repository]/src/Hexalith.Parties.Projections/bin/Debug/net10.0/Hexalith.Parties.Projections.dll\n  Hexalith.Parties.Security -> [repository]/src/Hexalith.Parties.Security/bin/Debug/net10.0/Hexalith.Parties.Security.dll\n  Hexalith.Parties -> [repository]/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll\n  Hexalith.Parties.Client -> [repository]/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll\n  Hexalith.Parties.Testing -> [repository]/src/Hexalith.Parties.Testing/bin/Debug/net10.0/Hexalith.Parties.Testing.dll\n  Hexalith.Parties.EventStoreGateway.TestHost -> [repository]/tests/Hexalith.Parties.EventStoreGateway.TestHost/bin/Debug/net10.0/Hexalith.Parties.EventStoreGateway.TestHost.dll\n  Hexalith.Parties.Tests -> [repository]/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll\n\nBuild succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:05.91\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll"
+    ],
+    "exit_code": 0,
+    "seconds": 1.61,
+    "result": "xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)\n  Discovering: Hexalith.Parties.UI.Tests\n  Discovered:  Hexalith.Parties.UI.Tests\n  Starting:    Hexalith.Parties.UI.Tests\n{\"EventId\":6007,\"LogLevel\":\"Information\",\"Category\":\"Hexalith.FrontComposer.Shell.Extensions.AddFrontComposerDevModeExtensions.DevModeNonDevelopmentLogger\",\"Message\":\"HFC2010: FrontComposer dev-mode AddFrontComposerDevMode invoked outside Development; overlay services were not registered. Environment=Test\",\"State\":{\"EnvironmentName\":\"Test\",\"{OriginalFormat}\":\"HFC2010: FrontComposer dev-mode AddFrontComposerDevMode invoked outside Development; overlay services were not registered. Environment={EnvironmentName}\"}}\n{\"EventId\":0,\"LogLevel\":\"Information\",\"Category\":\"Microsoft.Hosting.Lifetime\",\"Message\":\"Application started. Press Ctrl\\u002BC to shut down.\",\"State\":{\"{OriginalFormat}\":\"Application started. Press Ctrl\\u002BC to shut down.\"}}\n{\"EventId\":0,\"LogLevel\":\"Information\",\"Category\":\"Microsoft.Hosting.Lifetime\",\"Message\":\"Hosting environment: Test\",\"State\":{\"EnvName\":\"Test\",\"{OriginalFormat}\":\"Hosting environment: {EnvName}\"}}\n{\"EventId\":0,\"LogLevel\":\"Information\",\"Category\":\"Microsoft.Hosting.Lifetime\",\"Message\":\"Content root path: [repository]/src/Hexalith.Parties.UI\",\"State\":{\"ContentRoot\":\"[repository]/src/Hexalith.Parties.UI\",\"{OriginalFormat}\":\"Content root path: {ContentRoot}\"}}\n{\"EventId\":0,\"LogLevel\":\"Information\",\"Category\":\"Microsoft.Hosting.Lifetime\",\"Message\":\"Application is shutting down...\",\"State\":{\"{OriginalFormat}\":\"Application is shutting down...\"}}\n  Finished:    Hexalith.Parties.UI.Tests (ID = '9812e9faeeb02435ec3e3f64d27bb949708b2c96c3c0b79631ff3ccd4712e5b8')\n=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.UI.Tests  Total: 387, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 1.354s\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+      "-c",
+      "Debug",
+      "--no-restore",
+      "-m:1"
+    ],
+    "exit_code": 0,
+    "seconds": 0.81,
+    "result": "  Hexalith.Parties.Ci.Tests -> [repository]/tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll\n\nBuild succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:00.57\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "npm",
+      "exec",
+      "--yes",
+      "--package=node@24.0.0",
+      "--",
+      "node",
+      "--experimental-strip-types",
+      "--test",
+      "tests/e2e/config-tests/server-ownership.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 3.86,
+    "result": "\u2714 managed server: CI=false, parent=Test (335.706152ms)\n\u2714 managed server: CI=false, parent=Development (311.325647ms)\n\u2714 explicit external server: CI=false (273.329469ms)\n\u2714 managed server: CI=true, parent=Test (296.881286ms)\n\u2714 managed server: CI=true, parent=Development (320.500243ms)\n\u2714 explicit external server: CI=true (278.62448ms)\n\u2714 Playwright rejects an unrelated listener (494.887292ms)\n\u2714 Playwright starts and cleans up its managed fixture (1061.971243ms)\n\u2139 tests 8\n\u2139 suites 0\n\u2139 pass 8\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 3437.751216\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "npm",
+      "--prefix",
+      "tests/e2e",
+      "run",
+      "typecheck"
+    ],
+    "exit_code": 0,
+    "seconds": 0.29,
+    "result": "\n> hexalith-parties-e2e@0.0.0 typecheck\n> tsc --noEmit\n\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "env",
+      "NUGET_PACKAGES=",
+      "dotnet",
+      "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "-class",
+      "Hexalith.Parties.UI.Tests.AccessibilityStyleGuardTests"
+    ],
+    "exit_code": 0,
+    "seconds": 0.38,
+    "result": "xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)\n  Discovering: Hexalith.Parties.UI.Tests\n  Discovered:  Hexalith.Parties.UI.Tests\n  Starting:    Hexalith.Parties.UI.Tests\n  Finished:    Hexalith.Parties.UI.Tests (ID = '9812e9faeeb02435ec3e3f64d27bb949708b2c96c3c0b79631ff3ccd4712e5b8')\n=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.UI.Tests  Total: 4, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.159s\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "-method",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.MsbuildJson*",
+      "-method",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DeliveredApiCommand*",
+      "-method",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_ValidationEvidence*"
+    ],
+    "exit_code": 0,
+    "seconds": 0.67,
+    "result": "xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)\n  Discovering: Hexalith.Parties.Tests\n  Discovered:  Hexalith.Parties.Tests\n  Starting:    Hexalith.Parties.Tests\n  Finished:    Hexalith.Parties.Tests (ID = '3203e2eac1e69d356617e4cae5fa3f440c852a12ac575ed4cb685ab408c9c2ba')\n=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.Tests  Total: 20, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.373s\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "bash",
+      "scripts/check-no-warning-override.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 0.35,
+    "result": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll"
+    ],
+    "exit_code": 0,
+    "seconds": 10.22,
+    "result": "xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)\n  Discovering: Hexalith.Parties.Ci.Tests\n  Discovered:  Hexalith.Parties.Ci.Tests\n  Starting:    Hexalith.Parties.Ci.Tests\n  Finished:    Hexalith.Parties.Ci.Tests (ID = '2e1d720a7326db56ca3b7efb965d81920d1d84c3a2caf8a75762b742603e0246')\n=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.Ci.Tests  Total: 188, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 9.780s\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "env",
+      "CI=true",
+      "python3",
+      "tests/Hexalith.Parties.UI.Tests/verify-restored-assets.py"
+    ],
+    "exit_code": 0,
+    "seconds": 9.93,
+    "result": "PASS configuration: compiled metadata and actual stylesheet lookup match the restored package\nPASS restore-property: compiled metadata and actual stylesheet lookup match the restored package\nPASS environment: compiled metadata and actual stylesheet lookup match the restored package\nPASS empty-environment: compiled metadata and actual stylesheet lookup match the restored package\nPASS fallback: compiled metadata and actual stylesheet lookup match the restored package\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "-c",
+      "Debug",
+      "--no-restore",
+      "-m:1"
+    ],
+    "exit_code": 0,
+    "seconds": 3.56,
+    "result": "  Hexalith.Parties.Contracts -> [repository]/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll\n  Hexalith.Parties.Authentication -> [repository]/src/Hexalith.Parties.Authentication/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll\n  Hexalith.Parties.Projections -> [repository]/src/Hexalith.Parties.Projections/bin/Debug/net10.0/Hexalith.Parties.Projections.dll\n  Hexalith.Parties.Security -> [repository]/src/Hexalith.Parties.Security/bin/Debug/net10.0/Hexalith.Parties.Security.dll\n  Hexalith.Parties -> [repository]/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll\n  Hexalith.Parties.Client -> [repository]/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll\n  Hexalith.Parties.Testing -> [repository]/src/Hexalith.Parties.Testing/bin/Debug/net10.0/Hexalith.Parties.Testing.dll\n  Hexalith.Parties.EventStoreGateway.TestHost -> [repository]/tests/Hexalith.Parties.EventStoreGateway.TestHost/bin/Debug/net10.0/Hexalith.Parties.EventStoreGateway.TestHost.dll\n  Hexalith.Parties.Tests -> [repository]/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll\n\nBuild succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:03.32\n"
+  },
+  {
+    "phase": "candidate",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "-method",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.MsbuildJson*",
+      "-method",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.DeliveredApiCommand*",
+      "-method",
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_ValidationEvidence*"
+    ],
+    "exit_code": 0,
+    "seconds": 0.57,
+    "result": "xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)\n  Discovering: Hexalith.Parties.Tests\n  Discovered:  Hexalith.Parties.Tests\n  Starting:    Hexalith.Parties.Tests\n  Finished:    Hexalith.Parties.Tests (ID = '3203e2eac1e69d356617e4cae5fa3f440c852a12ac575ed4cb685ab408c9c2ba')\n=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.Tests  Total: 22, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.302s\n"
+  }
+]

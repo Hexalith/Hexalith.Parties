@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 
 using Shouldly;
 
@@ -63,20 +62,7 @@ public sealed partial class AccessibilityStyleGuardTests
         appRazor.ShouldContain("_content/Hexalith.FrontComposer.Shell/css/fc-shell.css");
         appRazor.ShouldContain("Hexalith.Parties.UI.styles.css");
 
-        string packagedVersion = XDocument.Load(Path.Combine(root, "references/Hexalith.Builds/Props/Directory.Packages.props"))
-            .Descendants("HexalithFrontComposerVersion").Single().Value;
-
-        // The catalog package is the CI/bUnit/container identity. Reading submodule wwwroot would skip
-        // on a package-mode clone and would not prove the asset that actually ships.
-        string packagedCss = Path.Combine(
-            ResolveNuGetPackagesRoot(),
-            "hexalith.frontcomposer.shell",
-            packagedVersion,
-            "staticwebassets",
-            "css",
-            "fc-shell.css");
-        File.Exists(packagedCss).ShouldBeTrue(
-            $"Restore Hexalith.FrontComposer.Shell {packagedVersion}; missing packaged stylesheet {packagedCss}.");
+        string packagedCss = RestoredFrontComposerAssets.ResolveShellStylesheet(typeof(AccessibilityStyleGuardTests).Assembly);
 
         string content = File.ReadAllText(packagedCss);
         content.ShouldContain("@media (forced-colors: active)", Case.Insensitive);
@@ -141,10 +127,6 @@ public sealed partial class AccessibilityStyleGuardTests
 
         throw new InvalidOperationException("Could not locate repository root.");
     }
-
-    private static string ResolveNuGetPackagesRoot()
-        => Environment.GetEnvironmentVariable("NUGET_PACKAGES")
-            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
 
     [GeneratedRegex(@"(?:outline|box-shadow)\s*:\s*none", RegexOptions.IgnoreCase)]
     private static partial Regex FocusSuppressionRegex();

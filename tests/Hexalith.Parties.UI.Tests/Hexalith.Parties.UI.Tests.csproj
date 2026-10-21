@@ -19,6 +19,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Capture NuGet's restored location rather than guessing from the test process environment. -->
+    <AssemblyMetadata Include="NuGetPackageFolders" Value="$(NuGetPackageFolders)" />
+    <AssemblyMetadata Include="HexalithFrontComposerVersion" Value="$(HexalithFrontComposerVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="bunit" />
     <PackageReference Include="coverlet.collector" PrivateAssets="All" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />

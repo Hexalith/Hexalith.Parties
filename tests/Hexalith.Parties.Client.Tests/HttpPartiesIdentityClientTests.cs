@@ -555,16 +555,45 @@ public sealed class HttpPartiesIdentityClientTests
             new("tenant-a", "party-1", "01HX0000000000000000000001", 1, 1, 0, DateTimeOffset.UtcNow, "logical", "synthetic"), TestContext.Current.CancellationToken));
     }
 
-    [Fact]
-    public async Task CurrentHumanWithExpiredIntervalOrWrongPurpose_Denies()
+    /// <summary>Purpose and interval guards independently reject otherwise valid current evidence.</summary>
+    [Theory]
+    [InlineData("valid")]
+    [InlineData("wrong-purpose")]
+    [InlineData("expired-interval")]
+    public async Task CurrentHumanEvidence_ValidatesPurposeAndIntervalIndependently(string scenario)
     {
-        DateTimeOffset now = DateTimeOffset.UtcNow;
-        var binding = new HumanActorBindingEvidence("tenant-a", "party-1", "01HX0000000000000000000001", 1, 1, now.AddDays(-2), now.AddDays(-1), "writer", "operator",
-            new("synthetic", "other-purpose", now.AddDays(1), 1, "custody", true, true, true));
-        var result = new PartyIdentityResult(PartyIdentityOutcome.Resolved, new(1, "tenant-a", "party-1", PartyIdentityClassification.Human, true, false, false, 1, now, "observation", binding));
+        DateTimeOffset now = DateTimeOffset.Parse("2026-10-21T12:00:00Z", System.Globalization.CultureInfo.InvariantCulture);
+        var binding = new HumanActorBindingEvidence("tenant-a", "party-1", "01HX0000000000000000000001", 1, 1,
+            now.AddDays(-2), now.AddDays(1), "writer", "operator",
+            new("synthetic", "party-actor-history-v1", now.AddDays(2), 1, "custody", true, true, true));
+        binding = scenario switch
+        {
+            "wrong-purpose" => binding with { Custody = binding.Custody with { Purpose = "other-purpose" } },
+            "expired-interval" => binding with { ValidUntil = now.AddDays(-1) },
+            _ => binding,
+        };
+        // Observation remains inside the binding interval, so expiry is rejected at completion only.
+        var result = new PartyIdentityResult(PartyIdentityOutcome.Resolved,
+            new(1, "tenant-a", "party-1", PartyIdentityClassification.Human, true, false, false, 1,
+                now.AddHours(-36), "observation", binding));
         using var http = new HttpClient(new Handler(_ => Task.FromResult(Json(new SubmitQueryResponse("c", JsonSerializer.SerializeToElement(result, PartiesJsonOptions.Default))))))
             { BaseAddress = new Uri("https://gateway.test/") };
-        await Should.ThrowAsync<PartiesClientException>(() => new HttpPartiesIdentityClient(http).ResolvePartyIdentityAsync("tenant-a", new("tenant-a", "party-1", binding.ActorId), TestContext.Current.CancellationToken));
+        TimeProvider clock = NSubstitute.Substitute.For<TimeProvider>();
+        NSubstitute.SubstituteExtensions.Returns(clock.GetUtcNow(), now);
+        var client = new HttpPartiesIdentityClient(http, clock);
+        var query = new ResolvePartyIdentity("tenant-a", "party-1", binding.ActorId);
+
+        if (scenario == "valid")
+        {
+            (await client.ResolvePartyIdentityAsync("tenant-a", query, TestContext.Current.CancellationToken)).ShouldBe(result);
+        }
+        else
+        {
+            PartiesClientException failure = await Should.ThrowAsync<PartiesClientException>(() =>
+                client.ResolvePartyIdentityAsync("tenant-a", query, TestContext.Current.CancellationToken));
+            failure.Status.ShouldBe(503);
+            failure.Detail.ShouldBe("Authoritative identity evidence is unavailable.");
+        }
     }
 
     private static HttpResponseMessage Json<T>(T value) => new(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(value, PartiesJsonOptions.Default), Encoding.UTF8, "application/json") };

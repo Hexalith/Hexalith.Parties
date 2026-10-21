@@ -150,3 +150,17 @@ boundary; it does not certify external deployment, optional Memories search
 behavior, or an authenticated command/projection round trip. Local runs without
 the opt-in flag skip the runtime case; GitHub Actions requires it and treats
 infrastructure failures as test failures. A skip cannot close DW-77.
+
+## Browser harness configuration checks
+
+Run `npm --prefix tests/e2e run test:config` to execute the CI/local and
+Test/Development server-ownership matrix without starting a browser. It also
+uses the real Playwright runner to verify that a managed run refuses an
+unrelated listener and starts and cleans up its own fixture. The required UI accessibility CI job runs these checks.
+Managed runs start their own Test fixture; explicitly set
+`PLAYWRIGHT_SKIP_WEBSERVER=1` and `BASE_URL` when using an externally managed host.
+The UI stylesheet guard uses restore-evaluated build metadata, so changing
+NuGet cache settings requires restoring and rebuilding the test project.
+The CI job also runs `python3 tests/Hexalith.Parties.UI.Tests/verify-restored-assets.py`
+(from the repository root) to compile and execute the real stylesheet resolver
+against isolated primary and fallback NuGet caches without external feeds.

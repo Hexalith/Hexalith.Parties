@@ -251,17 +251,6 @@ public sealed class PartiesUiHostCompositionTests
     }
 
     [Fact]
-    public void PlaywrightWebServer_RunsInTheTestEnvironmentThatOptsInStaticWebAssets()
-    {
-        string playwrightConfig = File.ReadAllText(ProjectRoot("tests/e2e/playwright.config.ts"));
-
-        playwrightConfig.ShouldContain(
-            "ASPNETCORE_ENVIRONMENT: 'Test'",
-            Case.Sensitive,
-            "The webServer must run in the environment Program.cs opts in.");
-    }
-
-    [Fact]
     public async Task TestEnvironment_ServesBlazorFrameworkScript_WhenStaticWebAssetsAreOptedInAsync()
     {
         await using WebApplicationFactory<global::Program> factory = new WebApplicationFactory<global::Program>()

@@ -42,7 +42,7 @@ export default defineConfig({
           ? 'dotnet run --project ../../src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Release --no-build --no-restore --no-launch-profile -- --urls http://127.0.0.1:5072'
           : 'dotnet run --project ../../src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Debug --no-launch-profile -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -p:BuildInParallel=false -- --urls http://127.0.0.1:5072',
         url: BASE_URL,
-        reuseExistingServer: !IS_CI && process.env.ASPNETCORE_ENVIRONMENT === 'Test',
+        reuseExistingServer: false,
         timeout: 120_000,
         env: {
           ASPNETCORE_ENVIRONMENT: 'Test',
