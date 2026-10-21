@@ -1,0 +1,65 @@
+{
+  "source_files": [
+    {
+      "path": "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot/js/fc-keyboard.js",
+      "sha256": "ae0b229e3d478eeeb8235229a8ebcba428923e502de5b64ffecb899489c5b512",
+      "normalized_sha256": "b8c526e4e1ef5245aaa624937c83d5dd58f0c66d041c4f09f4e151f04fcd9011"
+    },
+    {
+      "path": "references/Hexalith.FrontComposer/tests/e2e/specs/route-skip-links.spec.ts",
+      "sha256": "23a8692fb26765509114aac380dbaf0bcdaa90001a5bb0dae5dd72d48546cfe0",
+      "normalized_sha256": "23a8692fb26765509114aac380dbaf0bcdaa90001a5bb0dae5dd72d48546cfe0"
+    },
+    {
+      "path": "tests/e2e/specs/parties-accessibility.spec.ts",
+      "sha256": "ca1ece1e2f87cb27a33686f3957e2981c583884e79494aaec179fb88efb85efa",
+      "normalized_sha256": "ca1ece1e2f87cb27a33686f3957e2981c583884e79494aaec179fb88efb85efa"
+    }
+  ],
+  "parent_head": "8c88c27acd5ed3ee2d2f2b6f51f3432d536f2021",
+  "producer_base": "913c4132c71cd7f77fcdf6befa9e396d284dd4bc",
+  "served_assets": [
+    {
+      "url": "http://127.0.0.1:5070/_content/Hexalith.FrontComposer.Shell/js/fc-keyboard.js",
+      "matches_candidate": true,
+      "sha256": "ae0b229e3d478eeeb8235229a8ebcba428923e502de5b64ffecb899489c5b512"
+    },
+    {
+      "url": "http://127.0.0.1:5072/_content/Hexalith.FrontComposer.Shell/js/fc-keyboard.js",
+      "matches_candidate": true,
+      "sha256": "ae0b229e3d478eeeb8235229a8ebcba428923e502de5b64ffecb899489c5b512"
+    }
+  ],
+  "checks": [
+    {
+      "cwd": "references/Hexalith.FrontComposer/tests/e2e",
+      "command": "PLAYWRIGHT_SKIP_WEBSERVER=1 FC_E2E_OUTPUT_DIR=/tmp/dw-91-final-producer-artifacts FC_E2E_HTML_REPORT_DIR=/tmp/dw-91-final-producer-report npm exec playwright test specs/route-skip-links.spec.ts specs/route-contract.spec.ts -- --project=chromium --project=firefox --project=webkit --workers=1 --retries=0",
+      "exit_code": 0,
+      "result": "90 passed",
+      "log": "producer-browser.log"
+    },
+    {
+      "cwd": "tests/e2e",
+      "command": "PLAYWRIGHT_SKIP_WEBSERVER=1 npm exec playwright test specs/parties-accessibility.spec.ts -- --project=chromium --retries=0",
+      "exit_code": 0,
+      "result": "7 passed against source-backed assets; not Release/package qualification",
+      "log": "parties-browser.log"
+    },
+    {
+      "cwd": "references/Hexalith.FrontComposer/tests/e2e",
+      "command": "npm run typecheck",
+      "exit_code": 0
+    },
+    {
+      "cwd": "tests/e2e",
+      "command": "npm run typecheck",
+      "exit_code": 0
+    }
+  ],
+  "package_boundary": {
+    "current_frontcomposer_version": "4.7.0",
+    "producer_publication": "not dispatched",
+    "consumer_package_adoption": "pending user delivery-scope choice",
+    "release_qualification_claimed": false
+  }
+}

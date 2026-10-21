@@ -34,32 +34,63 @@ test.describe('Parties UI accessibility specimen', () => {
     });
   });
 
-  // Scoped deliberately to the shell subtree, and named for what it proves. Tabbing from a cold
-  // document is NOT assertable here: once the shell hydrates it moves focus to the route <h1>
-  // (an intentional SPA announcement pattern), which also advances the browser's sequential focus
-  // navigation point past the skip links. Measured 2026-08-19 -- after load, activeElement is
-  // `h1#parties-accessibility-specimen-title`, so the first Tab reaches the specimen's primary
-  // button. Seeding focus on `.fc-shell-root` (tabindex="-1", the skip links' parent) restores a
-  // meaningful assertion: the skip links are the first two focusable descendants of the shell, in
-  // order, and Enter moves focus to their targets. Whether a keyboard user can still reach the skip
-  // links after route-heading focus is a FrontComposer shell question -- see the
-  // `frontcomposer-skip-link-reachability-after-route-focus` entry in deferred-work.md.
-  test('skip links are the first two focusable elements in the shell and focus their targets', async ({ page }) => {
+  test('route-heading announcement leaves skip links forward reachable and focuses their targets', async ({ page }) => {
     await gotoSpecimen(page);
-    await page.locator('.fc-shell-root').focus();
+    await expect(page.locator('#parties-accessibility-specimen-title')).toBeFocused();
 
     await page.keyboard.press('Tab');
     await expect(page.locator(':focus')).toHaveText('Skip to content');
     await page.keyboard.press('Enter');
     await expect(page.locator(':focus')).toHaveAttribute('id', 'fc-main-content');
+    await page.keyboard.press('Tab');
+    await expect(page.getByTestId('parties-specimen-primary-action')).toBeFocused();
 
     await gotoSpecimen(page);
-    await page.locator('.fc-shell-root').focus();
+    await expect(page.locator('#parties-accessibility-specimen-title')).toBeFocused();
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
     await expect(page.locator(':focus')).toHaveText('Skip to navigation');
     await page.keyboard.press('Enter');
     await expect(page.locator(':focus')).toHaveAttribute('id', 'fc-nav');
+  });
+
+  test('client-side route focus restores forward skip access', async ({ page }) => {
+    await gotoSpecimen(page);
+    await page.evaluate(() => {
+      document.documentElement.setAttribute('data-dw91-document', 'original');
+      document.querySelector('.fc-shell-root')!.setAttribute('data-dw91-shell', 'original');
+    });
+
+    // Navigate between different page components: a query-only change can keep the original
+    // heading focused without exercising FocusOnNavigate or a new focus announcement.
+    for (const route of ['/parties', `${SPECIMEN_ROUTE}?dw91=client-navigation`]) {
+      await page.evaluate((href) => {
+        document.querySelector('[data-testid="dw91-client-route"]')?.remove();
+        const link = document.createElement('a');
+        link.href = href;
+        link.textContent = 'Navigate to next accessibility route';
+        link.dataset.testid = 'dw91-client-route';
+        document.querySelector('#fc-main-content')!.append(link);
+      }, route);
+      await page.getByTestId('dw91-client-route').click();
+      await expect(page).toHaveURL(new RegExp(`${route.replace(/[?]/g, '\\?')}$`));
+      await expect(page.locator('html')).toHaveAttribute('data-dw91-document', 'original');
+      await expect(page.locator('.fc-shell-root')).toHaveAttribute('data-dw91-shell', 'original');
+      await expect(page.locator('#fc-main-content h1')).toBeFocused();
+      if (route === '/parties') {
+        await expect(page.locator('#parties-accessibility-specimen-title')).toHaveCount(0);
+      }
+    }
+
+    await page.getByTestId('dw91-client-route').evaluate((link) => link.remove());
+    await expect(page.locator('#parties-accessibility-specimen-title')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('link', { name: 'Skip to content', exact: true })).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#fc-main-content')).toBeFocused();
+    await expect(page).toHaveURL(/\?dw91=client-navigation$/);
+    await page.keyboard.press('Tab');
+    await expect(page.getByTestId('parties-specimen-primary-action')).toBeFocused();
   });
 
   test('keyboard flow reaches representative controls without trapping focus', async ({ page }) => {
