@@ -1,0 +1,205 @@
+
+> hexalith-parties-e2e@0.0.0 test:ui
+> playwright test specs/parties-accessibility.spec.ts specs/admin-parties-list.spec.ts specs/consumer-portal-routes.spec.ts specs/party-picker.spec.ts --project=chromium
+
+
+Running 59 tests using 1 worker
+
+(node:80286) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [chromium] › specs/admin-parties-list.spec.ts:23:3 › Admin parties list › debounced display-name search combines with type and active filters (2.9s)
+  ✓   2 [chromium] › specs/admin-parties-list.spec.ts:41:3 › Admin parties list › normalized display-name search matches diacritics and keeps local fallback status polite (2.0s)
+  ✓   3 [chromium] › specs/admin-parties-list.spec.ts:64:3 › Admin parties list › normalized display-name search keeps deterministic row ordering (1.5s)
+  ✓   4 [chromium] › specs/admin-parties-list.spec.ts:83:3 › Admin parties list › next page preserves the current search criteria (2.3s)
+  ✓   5 [chromium] › specs/admin-parties-list.spec.ts:107:3 › Admin parties list › degraded search preserves last-known rows and announces stale data (1.6s)
+  ✓   6 [chromium] › specs/admin-parties-list.spec.ts:117:3 › Admin parties list › empty search has a clear-filters recovery path (1.5s)
+  ✓   7 [chromium] › specs/admin-parties-list.spec.ts:129:3 › Admin parties list › keyboard navigation opens a row and type-ahead focuses search (1.5s)
+  ✓   8 [chromium] › specs/admin-parties-list.spec.ts:147:3 › Admin parties list › desktop row click and direct route render the existing party detail surface (1.4s)
+  ✓   9 [chromium] › specs/admin-parties-list.spec.ts:167:3 › Admin parties list › direct GDPR route opens operations destination without browser-visible command/query calls or overflow (3.8s)
+  ✓  10 [chromium] › specs/admin-parties-list.spec.ts:322:3 › Admin parties list › direct GDPR route for a missing party renders bounded state with no mutation controls (995ms)
+  ✓  11 [chromium] › specs/admin-parties-list.spec.ts:333:3 › Admin parties list › direct GDPR route for an erased party keeps export and records available without PII (1.7s)
+  ✓  12 [chromium] › specs/admin-parties-list.spec.ts:446:3 › Admin parties list › direct GDPR route rejects unsafe scoped ids before fetching party data (1.1s)
+  ✓  13 [chromium] › specs/admin-parties-list.spec.ts:456:3 › Admin parties list › detail GDPR action navigates to the party-scoped operations route (1.1s)
+  ✓  14 [chromium] › specs/admin-parties-list.spec.ts:469:3 › Admin parties list › create form submits and navigates with optimistic status (1.6s)
+  ✘  15 [chromium] › specs/admin-parties-list.spec.ts:493:3 › Admin parties list › edit form uses detail edit action and submits route-authoritative update (11.4s)
+(node:1762) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  16 [chromium] › specs/admin-parties-list.spec.ts:493:3 › Admin parties list › edit form uses detail edit action and submits route-authoritative update (retry #1) (11.9s)
+(node:9189) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  17 [chromium] › specs/admin-parties-list.spec.ts:493:3 › Admin parties list › edit form uses detail edit action and submits route-authoritative update (retry #2) (11.9s)
+(node:15589) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  18 [chromium] › specs/admin-parties-list.spec.ts:511:3 › Admin parties list › validation alert is assertive and preserves entered values (843ms)
+  ✓  19 [chromium] › specs/admin-parties-list.spec.ts:522:3 › Admin parties list › gateway validation rejection is announced without losing entered values (795ms)
+  ✓  20 [chromium] › specs/admin-parties-list.spec.ts:538:3 › Admin parties list › phone and zoom form layout avoids horizontal overflow (664ms)
+  ✓  21 [chromium] › specs/admin-parties-list.spec.ts:553:3 › Admin parties list › phone detail behaves as a full-screen sheet and restores row focus on close (931ms)
+  ✓  22 [chromium] › specs/admin-parties-list.spec.ts:576:3 › Admin parties list › phone detail remains readable under zoom-equivalent narrow emulation (948ms)
+  ✓  23 [chromium] › specs/admin-parties-list.spec.ts:596:3 › Admin parties list › phone direct route opens detail without an originating row and closes to search focus (852ms)
+  ✓  24 [chromium] › specs/consumer-portal-routes.spec.ts:30:5 › Consumer portal route shells › bound Consumer can open /me without browser-visible gateway calls (612ms)
+  ✓  25 [chromium] › specs/consumer-portal-routes.spec.ts:30:5 › Consumer portal route shells › bound Consumer can open /me/edit without browser-visible gateway calls (673ms)
+  ✓  26 [chromium] › specs/consumer-portal-routes.spec.ts:30:5 › Consumer portal route shells › bound Consumer can open /me/consent without browser-visible gateway calls (592ms)
+  ✓  27 [chromium] › specs/consumer-portal-routes.spec.ts:30:5 › Consumer portal route shells › bound Consumer can open /me/privacy without browser-visible gateway calls (710ms)
+  ✓  28 [chromium] › specs/consumer-portal-routes.spec.ts:67:5 › Consumer portal route shells › unauthenticated /me challenges sign-in with the return URL preserved (181ms)
+  ✓  29 [chromium] › specs/consumer-portal-routes.spec.ts:67:5 › Consumer portal route shells › unauthenticated /me/edit challenges sign-in with the return URL preserved (217ms)
+  ✓  30 [chromium] › specs/consumer-portal-routes.spec.ts:67:5 › Consumer portal route shells › unauthenticated /me/consent challenges sign-in with the return URL preserved (202ms)
+  ✓  31 [chromium] › specs/consumer-portal-routes.spec.ts:67:5 › Consumer portal route shells › unauthenticated /me/privacy challenges sign-in with the return URL preserved (184ms)
+  ✓  32 [chromium] › specs/consumer-portal-routes.spec.ts:83:3 › Consumer portal route shells › Admin-only user cannot open /me/consent or see Consumer consent data (638ms)
+  ✓  33 [chromium] › specs/consumer-portal-routes.spec.ts:98:3 › Consumer portal route shells › Admin-only user cannot open /me/privacy or see Consumer export data (602ms)
+  ✓  34 [chromium] › specs/consumer-portal-routes.spec.ts:115:3 › Consumer portal route shells › bound Consumer saves editable profile details through the self-scoped command path (792ms)
+  ✓  35 [chromium] › specs/consumer-portal-routes.spec.ts:136:3 › Consumer portal route shells › bound Consumer validation preserves typed values and does not issue a command (844ms)
+  ✓  36 [chromium] › specs/consumer-portal-routes.spec.ts:156:3 › Consumer portal route shells › bound Consumer consent surface exposes semantic switches and honest lawful-basis split (729ms)
+  ✓  37 [chromium] › specs/consumer-portal-routes.spec.ts:182:3 › Consumer portal route shells › bound Consumer grants and withdraws consent through the self-scoped command path (970ms)
+  ✓  38 [chromium] › specs/consumer-portal-routes.spec.ts:215:3 › Consumer portal route shells › bound Consumer exports own data through the self-scoped path (962ms)
+  ✓  39 [chromium] › specs/consumer-portal-routes.spec.ts:246:3 › Consumer portal route shells › bound Consumer sees processing summary through the self-scoped path (718ms)
+  ✓  40 [chromium] › specs/consumer-portal-routes.spec.ts:270:3 › Consumer portal route shells › bound Consumer sees bounded empty processing state with privacy actions still usable (1.1s)
+  ✓  41 [chromium] › specs/consumer-portal-routes.spec.ts:292:3 › Consumer portal route shells › bound Consumer sees bounded processing retry guidance after transient load failure (975ms)
+  ✓  42 [chromium] › specs/consumer-portal-routes.spec.ts:316:3 › Consumer portal route shells › bound Consumer requests and cancels erasure through the self-scoped path (1.1s)
+  ✓  43 [chromium] › specs/consumer-portal-routes.spec.ts:348:3 › Consumer portal route shells › bound Consumer cannot cancel erasure once deletion has begun (740ms)
+  ✓  44 [chromium] › specs/consumer-portal-routes.spec.ts:377:3 › Consumer portal route shells › bound Consumer sees permanent erasure copy without a cancel action after deletion completes (952ms)
+  ✓  45 [chromium] › specs/consumer-portal-routes.spec.ts:403:3 › Consumer portal route shells › bound Consumer sees retry guidance when the JSON download helper fails (1.3s)
+  ✓  46 [chromium] › specs/parties-accessibility.spec.ts:21:3 › Parties UI accessibility specimen › specimen is nonblank and passes the blocking axe gate (2.7s)
+  ✓  47 [chromium] › specs/parties-accessibility.spec.ts:62:5 › Parties UI accessibility specimen › blocking axe gate rejects an inaccessible navigation outside main content (1.7s)
+  ✓  48 [chromium] › specs/parties-accessibility.spec.ts:62:5 › Parties UI accessibility specimen › blocking axe gate rejects an inaccessible skip link outside main content (1.4s)
+  ✓  49 [chromium] › specs/parties-accessibility.spec.ts:91:3 › Parties UI accessibility specimen › skip links are the first two focusable elements in the shell and focus their targets (1.1s)
+  -  50 [chromium] › specs/parties-accessibility.spec.ts:109:3 › Parties UI accessibility specimen › route-heading announcement leaves skip links forward reachable and focuses their targets
+  -  51 [chromium] › specs/parties-accessibility.spec.ts:131:3 › Parties UI accessibility specimen › client-side route focus restores forward skip access
+  ✓  52 [chromium] › specs/parties-accessibility.spec.ts:172:3 › Parties UI accessibility specimen › keyboard flow reaches representative controls without trapping focus (637ms)
+  ✓  53 [chromium] › specs/parties-accessibility.spec.ts:182:5 › Parties UI accessibility specimen › content controls have visible keyboard focus with forced colors none (662ms)
+  ✓  54 [chromium] › specs/parties-accessibility.spec.ts:182:5 › Parties UI accessibility specimen › content controls have visible keyboard focus with forced colors active (678ms)
+  ✓  55 [chromium] › specs/parties-accessibility.spec.ts:301:3 › Parties UI accessibility specimen › content reduced-motion rules suppress nonzero animation and transition settings (688ms)
+  ✓  56 [chromium] › specs/parties-accessibility.spec.ts:341:3 › Parties UI accessibility specimen › filled primary button does not compute to raw teal (579ms)
+  ✓  57 [chromium] › specs/parties-accessibility.spec.ts:351:3 › Parties UI accessibility specimen › semantic visual baseline for deterministic shell specimen (670ms)
+  ✓  58 [chromium] › specs/parties-accessibility.spec.ts:357:3 › Parties UI accessibility specimen › visual baseline for deterministic shell specimen (727ms)
+  ✓  59 [chromium] › specs/party-picker.spec.ts:20:3 › Party picker combobox › keyboard selection keeps focus on the input and emits a bounded event (627ms)
+  ✓  60 [chromium] › specs/party-picker.spec.ts:60:3 › Party picker combobox › escape closes degraded results without changing durable selection (602ms)
+  ✓  61 [chromium] › specs/party-picker.spec.ts:83:3 › Party picker combobox › admin form bridge receives the bounded party-selected event (697ms)
+
+
+  1) [chromium] › specs/admin-parties-list.spec.ts:493:3 › Admin parties list › edit form uses detail edit action and submits route-authoritative update
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Saved - updating...')
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('Saved - updating...') with timeout 10000ms
+      - waiting for getByText('Saved - updating...')
+
+
+      504 |     await page.getByRole('button', { name: 'Save changes' }).click();
+      505 |
+    > 506 |     await expect(page.getByText('Saved - updating...')).toBeVisible();
+          |                                                         ^
+      507 |     await expect.poll(async () => (await latestUpdateRequest(request))?.partyId).toBe('ada-lovelace');
+      508 |     await page.waitForURL('**/admin/parties/ada-lovelace');
+      509 |   });
+        at /home/administrator/projects/hexalith/parties/tests/e2e/specs/admin-parties-list.spec.ts:506:57
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Saved - updating...')
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('Saved - updating...') with timeout 10000ms
+      - waiting for getByText('Saved - updating...')
+
+
+      504 |     await page.getByRole('button', { name: 'Save changes' }).click();
+      505 |
+    > 506 |     await expect(page.getByText('Saved - updating...')).toBeVisible();
+          |                                                         ^
+      507 |     await expect.poll(async () => (await latestUpdateRequest(request))?.partyId).toBe('ada-lovelace');
+      508 |     await page.waitForURL('**/admin/parties/ada-lovelace');
+      509 |   });
+        at /home/administrator/projects/hexalith/parties/tests/e2e/specs/admin-parties-list.spec.ts:506:57
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Saved - updating...')
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('Saved - updating...') with timeout 10000ms
+      - waiting for getByText('Saved - updating...')
+
+
+      504 |     await page.getByRole('button', { name: 'Save changes' }).click();
+      505 |
+    > 506 |     await expect(page.getByText('Saved - updating...')).toBeVisible();
+          |                                                         ^
+      507 |     await expect.poll(async () => (await latestUpdateRequest(request))?.partyId).toBe('ada-lovelace');
+      508 |     await page.waitForURL('**/admin/parties/ada-lovelace');
+      509 |   });
+        at /home/administrator/projects/hexalith/parties/tests/e2e/specs/admin-parties-list.spec.ts:506:57
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium-retry2/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium-retry2/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/admin-parties-list-Admin-p-47e54--route-authoritative-update-chromium-retry2/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › specs/admin-parties-list.spec.ts:493:3 › Admin parties list › edit form uses detail edit action and submits route-authoritative update
+  2 skipped
+  56 passed (1.7m)

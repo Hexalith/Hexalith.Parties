@@ -1,0 +1,12 @@
+
+> hexalith-parties-e2e@0.0.0 test:visual:update
+> playwright test specs/parties-accessibility.spec.ts --project=chromium --grep "visual baseline" --update-snapshots
+
+
+Running 2 tests using 1 worker
+
+  ✓  1 [chromium] › specs/parties-accessibility.spec.ts:351:3 › Parties UI accessibility specimen › semantic visual baseline for deterministic shell specimen (1.0s)
+/validation/specs/parties-accessibility.spec.ts-snapshots/parties-accessibility-shell-chromium-linux.png is re-generated, writing actual.
+  ✓  2 [chromium] › specs/parties-accessibility.spec.ts:357:3 › Parties UI accessibility specimen › visual baseline for deterministic shell specimen (1.5s)
+
+  2 passed (3.4s)

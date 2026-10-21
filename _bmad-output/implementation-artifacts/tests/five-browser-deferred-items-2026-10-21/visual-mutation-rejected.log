@@ -1,0 +1,190 @@
+
+> hexalith-parties-e2e@0.0.0 test:visual
+> playwright test specs/parties-accessibility.spec.ts --project=chromium --grep "visual baseline"
+
+
+Running 2 tests using 1 worker
+
+  ✓  1 [chromium] › specs/parties-accessibility.spec.ts:351:3 › Parties UI accessibility specimen › semantic visual baseline for deterministic shell specimen (749ms)
+  ✘  2 [chromium] › specs/parties-accessibility.spec.ts:357:3 › Parties UI accessibility specimen › visual baseline for deterministic shell specimen (1.4s)
+  ✘  3 [chromium] › specs/parties-accessibility.spec.ts:357:3 › Parties UI accessibility specimen › visual baseline for deterministic shell specimen (retry #1) (1.3s)
+  ✘  4 [chromium] › specs/parties-accessibility.spec.ts:357:3 › Parties UI accessibility specimen › visual baseline for deterministic shell specimen (retry #2) (1.2s)
+
+
+  1) [chromium] › specs/parties-accessibility.spec.ts:357:3 › Parties UI accessibility specimen › visual baseline for deterministic shell specimen
+
+    Error: expect(page).toHaveScreenshot(expected) failed
+
+      1906 pixels (ratio 0.01 of all image pixels) are different.
+
+      Snapshot: parties-accessibility-shell.png
+
+    Call log:
+      - Expect "toHaveScreenshot(parties-accessibility-shell.png)" with timeout 10000ms
+        - verifying given screenshot expectation
+      - taking page screenshot
+        - disabled all CSS animations
+      - waiting for fonts to load...
+      - fonts loaded
+      - 1906 pixels (ratio 0.01 of all image pixels) are different.
+      - waiting 100ms before taking screenshot
+      - taking page screenshot
+        - disabled all CSS animations
+      - waiting for fonts to load...
+      - fonts loaded
+      - captured a stable screenshot
+      - 1906 pixels (ratio 0.01 of all image pixels) are different.
+
+
+      374 |     });
+      375 |     await page.addStyleTag({ content: '[data-testid=parties-specimen-primary-action] { transform: translateX(24px) !important; }' });
+    > 376 |     await expect(page).toHaveScreenshot('parties-accessibility-shell.png', {
+          |                        ^
+      377 |       fullPage: true,
+      378 |       animations: 'disabled',
+      379 |       caret: 'hide',
+        at /validation/specs/parties-accessibility.spec.ts:376:24
+
+    attachment #2: parties-accessibility-shell (image/png) ─────────────────────────────────────────
+    Expected: specs/parties-accessibility.spec.ts-snapshots/parties-accessibility-shell-chromium-linux.png
+    Received: test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium/parties-accessibility-shell-actual.png
+    Diff:     test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium/parties-accessibility-shell-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium/error-context.md
+
+    attachment #6: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(page).toHaveScreenshot(expected) failed
+
+      1906 pixels (ratio 0.01 of all image pixels) are different.
+
+      Snapshot: parties-accessibility-shell.png
+
+    Call log:
+      - Expect "toHaveScreenshot(parties-accessibility-shell.png)" with timeout 10000ms
+        - verifying given screenshot expectation
+      - taking page screenshot
+        - disabled all CSS animations
+      - waiting for fonts to load...
+      - fonts loaded
+      - 1906 pixels (ratio 0.01 of all image pixels) are different.
+      - waiting 100ms before taking screenshot
+      - taking page screenshot
+        - disabled all CSS animations
+      - waiting for fonts to load...
+      - fonts loaded
+      - captured a stable screenshot
+      - 1906 pixels (ratio 0.01 of all image pixels) are different.
+
+
+      374 |     });
+      375 |     await page.addStyleTag({ content: '[data-testid=parties-specimen-primary-action] { transform: translateX(24px) !important; }' });
+    > 376 |     await expect(page).toHaveScreenshot('parties-accessibility-shell.png', {
+          |                        ^
+      377 |       fullPage: true,
+      378 |       animations: 'disabled',
+      379 |       caret: 'hide',
+        at /validation/specs/parties-accessibility.spec.ts:376:24
+
+    attachment #2: parties-accessibility-shell (image/png) ─────────────────────────────────────────
+    Expected: specs/parties-accessibility.spec.ts-snapshots/parties-accessibility-shell-chromium-linux.png
+    Received: test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry1/parties-accessibility-shell-actual.png
+    Diff:     test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry1/parties-accessibility-shell-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry1/error-context.md
+
+    attachment #6: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(page).toHaveScreenshot(expected) failed
+
+      1906 pixels (ratio 0.01 of all image pixels) are different.
+
+      Snapshot: parties-accessibility-shell.png
+
+    Call log:
+      - Expect "toHaveScreenshot(parties-accessibility-shell.png)" with timeout 10000ms
+        - verifying given screenshot expectation
+      - taking page screenshot
+        - disabled all CSS animations
+      - waiting for fonts to load...
+      - fonts loaded
+      - 1906 pixels (ratio 0.01 of all image pixels) are different.
+      - waiting 100ms before taking screenshot
+      - taking page screenshot
+        - disabled all CSS animations
+      - waiting for fonts to load...
+      - fonts loaded
+      - captured a stable screenshot
+      - 1906 pixels (ratio 0.01 of all image pixels) are different.
+
+
+      374 |     });
+      375 |     await page.addStyleTag({ content: '[data-testid=parties-specimen-primary-action] { transform: translateX(24px) !important; }' });
+    > 376 |     await expect(page).toHaveScreenshot('parties-accessibility-shell.png', {
+          |                        ^
+      377 |       fullPage: true,
+      378 |       animations: 'disabled',
+      379 |       caret: 'hide',
+        at /validation/specs/parties-accessibility.spec.ts:376:24
+
+    attachment #2: parties-accessibility-shell (image/png) ─────────────────────────────────────────
+    Expected: specs/parties-accessibility.spec.ts-snapshots/parties-accessibility-shell-chromium-linux.png
+    Received: test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry2/parties-accessibility-shell-actual.png
+    Diff:     test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry2/parties-accessibility-shell-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry2/error-context.md
+
+    attachment #6: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry2/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/parties-accessibility-Part-35264-eterministic-shell-specimen-chromium-retry2/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › specs/parties-accessibility.spec.ts:357:3 › Parties UI accessibility specimen › visual baseline for deterministic shell specimen
+  1 passed (6.9s)

@@ -37,21 +37,28 @@ The shared CI workflow restores and builds `Hexalith.Parties.slnx`, initializes 
 - Tier 2: integration and CI contract tests.
 - Tier 3: Aspire topology tests through `tests/Hexalith.Parties.IntegrationTests`.
 
-The blocking `ui-a11y` job runs on every CI trigger without path filters or
+The blocking `ui-a11y` job retains its **UI accessibility** check name and runs on every CI trigger without path filters or
 failure suppression. It installs Node 24, the SDK from `global.json`, locked
 browser-test dependencies with Node 24 type declarations, and Chromium with its
-system dependencies. It typechecks the tests, builds the UI in Release/package mode, then runs the six
-existing `npm run test:a11y` cases against Playwright's isolated Test-environment
-host. Only the root Builds and Commons submodules are needed for this UI build;
+system dependencies. It typechecks the tests, builds the UI in Release/package mode, then runs
+`npm run test:ui` against Playwright's isolated Test-environment host. That single
+Playwright invocation includes `parties-accessibility.spec.ts`,
+`admin-parties-list.spec.ts`, `consumer-portal-routes.spec.ts`, and
+`party-picker.spec.ts`, so every suite contributes to the same HTML/JUnit report
+and retained diagnostics. Only the root Builds and Commons submodules are needed for this UI build;
 Docker, Dapr and Keycloak are not required. The host's Test-only fixture opt-ins
 and loopback address are explicit, and CI does not reuse an existing server.
 
 The lane covers blocking axe violations, shell skip links, keyboard traversal,
-media settings, button styling and the semantic visual baseline. It attaches a
-screenshot; pixel-diff baselines and broader accessibility coverage remain
-separate deferred work. HTML/JUnit reports, axe summaries and available failure
+media settings, button styling, the semantic visual baseline and the asserted
+Chromium/Linux screenshot baseline. Admin dialog warnings and dropdown semantics,
+contact Email selection, consumer routes and party-picker behavior run as required
+checks without optional environment flags. For focused local runs,
+`npm run test:a11y` retains the accessibility specimen suite, and
+`npm run test:portals` runs the three portal/picker suites. HTML/JUnit reports,
+axe summaries and available failure
 traces, screenshots and videos are uploaded as `ui-a11y-results` for 14 days,
-including after a failed run. A failed accessibility job fails `ci.yml`, so it
+including after a failed run. A failed browser gate fails `ci.yml`, so it
 also prevents successful exact-source CI proof for release. Repository branch
 protection is managed separately. See the local reproduction commands in
 [the development guide](development-guide.md#4-test).

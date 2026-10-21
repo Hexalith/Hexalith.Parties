@@ -3,16 +3,22 @@ using System.Xml.Linq;
 
 using Hexalith.FrontComposer.Contracts.Attributes;
 using Hexalith.FrontComposer.Contracts.Registration;
+using Hexalith.FrontComposer.Contracts.Rendering;
 using Hexalith.FrontComposer.Shell.Extensions;
 using Hexalith.Parties.AdminPortal.Extensions;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Client.Abstractions;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.UI.IdentityBinding;
+using Hexalith.Parties.UI.Services;
 
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.FluentUI.AspNetCore.Components;
 
 using NSubstitute;
@@ -270,6 +276,66 @@ public sealed class PartiesUiHostCompositionTests
         response.IsSuccessStatusCode.ShouldBeTrue(
             $"Test-environment static web assets must serve blazor.web.js; got {(int)response.StatusCode} {response.ReasonPhrase}.");
         body.Length.ShouldBeGreaterThan(0, "A 0-byte blazor.web.js means the Test host fell back to SSR-only output.");
+    }
+
+    /// <summary>Resolves fixture shell scope through the actual host registration for each browser principal.</summary>
+    /// <param name="accessibilityEnabled">Whether to include Playwright's accessibility scope wrapper.</param>
+    /// <param name="route">The browser route represented by the circuit navigation service.</param>
+    /// <param name="cookie">The browser fixture cookie, or empty for an anonymous request.</param>
+    /// <param name="expectedUser">The expected shell user without changing authorization.</param>
+    [Theory]
+    [InlineData(false, "/admin/parties", "parties-admin-e2e=enabled", "admin-e2e")]
+    [InlineData(false, "/me", "parties-consumer-e2e=bound", "consumer-e2e")]
+    [InlineData(false, "/me", "", "anonymous-e2e")]
+    [InlineData(true, "/admin/parties", "parties-admin-e2e=enabled", "admin-e2e")]
+    [InlineData(true, "/me/privacy", "parties-consumer-e2e=bound", "consumer-e2e")]
+    [InlineData(true, "/__parties/specimens/party-picker", "", "anonymous-e2e")]
+    [InlineData(true, "/__parties/specimens/accessibility", "parties-admin-e2e=enabled", "parties-accessibility-user")]
+    public async Task EnabledBrowserFixture_ResolvesCurrentShellScopeFromHostAsync(
+        bool accessibilityEnabled, string route, string cookie, string expectedUser)
+    {
+        using var navigationContext = new Bunit.BunitContext();
+        NavigationManager navigation = navigationContext.Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo(route);
+        await using WebApplicationFactory<global::Program> factory = new WebApplicationFactory<global::Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.UseEnvironment("Test");
+                builder.UseSetting("Parties:BaseUrl", "http://127.0.0.1:59999");
+                builder.UseSetting("Parties:Tenant", "test-tenant");
+                builder.UseSetting(PartiesAdminPortalE2eFixture.EnabledConfigurationKey, "true");
+                builder.UseSetting("Hexalith:Parties:AccessibilitySpecimens:Enabled", accessibilityEnabled.ToString());
+                // A circuit normally initializes navigation; the host's user-context
+                // registration and wrapper order remain the real Program.cs composition.
+                builder.ConfigureTestServices(services => services.Replace(
+                    ServiceDescriptor.Scoped<NavigationManager>(_ => navigation)));
+            });
+
+        using IServiceScope scope = factory.Services.CreateScope();
+        IHttpContextAccessor httpContext = scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>();
+        HttpContext? previous = httpContext.HttpContext;
+        try
+        {
+            httpContext.HttpContext = new DefaultHttpContext();
+            httpContext.HttpContext.Request.Headers.Cookie = cookie;
+            IUserContextAccessor shellContext = scope.ServiceProvider.GetRequiredService<IUserContextAccessor>();
+
+            if (accessibilityEnabled)
+            {
+                shellContext.ShouldBeOfType<PartiesAccessibilitySpecimenUserContextAccessor>();
+            }
+            else
+            {
+                shellContext.ShouldBeOfType<PartiesAdminPortalE2eUserContextAccessor>();
+            }
+
+            shellContext.TenantId.ShouldBe(route == "/__parties/specimens/accessibility" ? "parties-accessibility-tenant" : "test-tenant");
+            shellContext.UserId.ShouldBe(expectedUser);
+        }
+        finally
+        {
+            httpContext.HttpContext = previous;
+        }
     }
 
     private static string ProjectRoot(string relativePath)

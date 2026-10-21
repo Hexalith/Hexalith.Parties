@@ -1089,7 +1089,9 @@ verification: `tests/five-validation-boundary-deferred-items-2026-10-21/validati
 origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
 location: tests/e2e/specs/parties-accessibility.spec.ts:105; tests/e2e/package.json:11
 severity: medium
-status: open
+status: done 2026-10-21
+resolution: The deterministic specimen has an asserted Chromium/Linux PNG, separate all-platform semantic JSON checks, loaded fonts and normalized copyright year. The updater replaces the asserted PNG. Ubuntu 24.04/Release qualification passes; deliberate layout mutation fails, updating changes the PNG, and a future-year control passes normalization.
+verification: `spec-five-browser-deferred-items.md`; `tests/five-browser-deferred-items-2026-10-21/validation.json`.
 
 ### DW-153: Provide an actual image regression baseline and an update command that updates the asserted artifact.
 
@@ -1097,7 +1099,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: tests/e2e/specs/parties-accessibility.spec.ts:105; tests/e2e/package.json:11
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: Blind 9: the browser test attaches a screenshot and checks byte length, then compares manually read JSON text/visibility fields. No image matcher or JSON updater consumes --update-snapshots. Existing f8fd74045d95d441ee5adb0809a254307d0a24a6 test, unchanged here. Exit proof: deterministic layout/style image regression is detected and test:visual:update regenerates its asserted baseline.
-status: open
+status: done 2026-10-21
+resolution: Duplicate of DW-134, completed by the same asserted PNG, executable updater and mutation proof. This is one work item, not an additional closure toward the five-item batch.
+verification: `spec-five-browser-deferred-items.md`; `tests/five-browser-deferred-items-2026-10-21/validation.json`.
 
 ### DW-135: Observe content forced-colors and reduced-motion behavior
 
@@ -1216,7 +1220,9 @@ source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-do
 severity: medium
 reason: With FrontComposer `2cc8dd3a3ac76c03f5ea6f6f92e65829306db470`, `FrontComposerShell` renders `FcScopeBlocked` unless `IUserContextAccessor` yields a current tenant and user. The AdminPortal E2E fixture (Test environment, `AdminPortalE2E__Enabled`) replaces authentication, authorization and the API clients but keeps Quickstart's `NullUserContextAccessor`, and the 2026-10-04 repair supplies a synthetic scope only at the accessibility specimen route. The admin, consumer and picker Playwright specs therefore cannot observe their flows (pre-verified by code reading; not executed). Production (OIDC claims) and CI (no e2e job) are unaffected, and only `test:a11y` is a closure lane. Administrator / jpiquot chose to defer on 2026-10-05. Exit proof: the fixture branch supplies the fixture principal's tenant and user through `IUserContextAccessor`, a `PartiesUiHostCompositionTests` case resolves a non-null scope under the fixture composition, and a recorded green run of the non-a11y Playwright specs. Rollback: remove the fixture accessor registration.
 decision: 2026-10-05 Defer — Administrator / jpiquot (spec 8.10 review of the closure-blocker resolution, Verification 1 and other): keep the AdminPortal E2E fixture's `NullUserContextAccessor` for Story 8.10; only `test:a11y` is a closure lane, and the fixture-scope repair and the non-a11y Playwright run wait for this entry's exit proof.
-status: open
+status: done 2026-10-21
+resolution: The existing Test-only shell scope is now qualified through actual host DI with seven cases covering admin, Consumer, anonymous, both fixture wrappers and route delegation. All three portal/picker specs execute successfully in the Release/package browser run. Production authentication remains unchanged.
+verification: `spec-five-browser-deferred-items.md`; `tests/five-browser-deferred-items-2026-10-21/validation.json`.
 
 ### DW-144: Require the stamped identity in every canonical closure receipt, not only Playwright
 
@@ -1428,7 +1434,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties.UI/wwwroot/admin-privacy-export.js
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: `admin-privacy-export.js` revokes the object URL immediately after `anchor.click()`; a supported-browser download trace would settle whether the scheduling can cancel the download. Unverified medium in later UI work.
-status: open
+status: done 2026-10-21
+resolution: Supported Chromium completes the real erased-party export despite immediate object-URL revocation. The browser regression verifies exact bytes, JSON MIME type, bounded valid UTC filename, object-URL creation/revocation and retained digest metadata. No speculative download timing change or cross-browser guarantee is introduced.
+verification: `spec-five-browser-deferred-items.md`; `tests/five-browser-deferred-items-2026-10-21/validation.json`.
 
 ### DW-181: Resolve the loop-sweep ledger fallback through layered BMAD configuration.
 
@@ -1510,7 +1518,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: contact-selector Playwright create-form test; component FluentSelect.ValueChanged tests; configured CI workflow
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: Component tests invoke `FluentSelect.ValueChanged` directly while the Playwright create-form test is outside the configured CI workflow. Removing the rendered `FluentOption` children could pass required tests but leave users unable to select a contact type. This is later UI work.
-status: open
+status: done 2026-10-21
+resolution: The unconditional blocking UI job runs the full admin, Consumer and picker specs in one Playwright invocation alongside the accessibility specimen, including actual contact Email option selection. CI contract tests preserve required execution and existing check identity; a Release/package browser run passes.
+verification: `spec-five-browser-deferred-items.md`; `tests/five-browser-deferred-items-2026-10-21/validation.json`.
 
 ### DW-190: Require the FrontComposer shared-status structural command and test its missing-command outcome.
 
@@ -1568,6 +1578,9 @@ archived: 2026-10-21
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
   summary: Run the existing admin browser accessibility assertions in a blocking CI lane.
   evidence: The shadow-root warning and dropdown semantics are tested by Playwright, but root CI executes only .NET suites with mocked JS interop; the later portal behavior can regress while those suites pass.
+  status: done 2026-10-21
+  resolution: The required combined UI browser command executes the existing shadow-root warning, accessible-description, dropdown relationship and option semantics in the full admin spec. All three portal/picker specs pass in Release/package mode with the specimen in one report; the CI job remains unconditional and blocking.
+  verification: `spec-five-browser-deferred-items.md`; `tests/five-browser-deferred-items-2026-10-21/validation.json`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
   summary: Give concurrent Parties integration topologies independent Dapr control planes, namespaces and app identities.

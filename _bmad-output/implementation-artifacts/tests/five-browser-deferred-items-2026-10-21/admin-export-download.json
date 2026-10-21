@@ -1,0 +1,12 @@
+{
+  "fileName": "party-erased-route-20261021T210037Z.json",
+  "byteLength": 203,
+  "sha256": "51962bb4036a949fbe395357858e03916a00f9c642da3c323859baee70f0a923",
+  "transfers": [
+    {
+      "contentType": "application/json",
+      "byteLength": 203,
+      "revoked": true
+    }
+  ]
+}

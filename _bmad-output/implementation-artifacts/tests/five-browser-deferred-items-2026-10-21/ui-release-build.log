@@ -1,0 +1,21 @@
+  Determining projects to restore...
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj (in 412 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj (in 411 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj (in 411 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj (in 412 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj (in 411 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj (in 411 ms).
+  Restored /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj (in 411 ms).
+  Hexalith.Parties.Contracts -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Contracts/bin/Release/net10.0/Hexalith.Parties.Contracts.dll
+  Hexalith.Parties.Client -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Client/bin/Release/net10.0/Hexalith.Parties.Client.dll
+  Hexalith.Parties.AdminPortal -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.AdminPortal/bin/Release/net10.0/Hexalith.Parties.AdminPortal.dll
+  Hexalith.Parties.Authentication -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Authentication/bin/Release/net10.0/Hexalith.Parties.Authentication.dll
+  Hexalith.Parties.ConsumerPortal -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.ConsumerPortal/bin/Release/net10.0/Hexalith.Parties.ConsumerPortal.dll
+  Hexalith.Parties.Picker -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.Picker/bin/Release/net10.0/Hexalith.Parties.Picker.dll
+  Hexalith.Parties.UI -> /home/administrator/projects/hexalith/parties/src/Hexalith.Parties.UI/bin/Release/net10.0/Hexalith.Parties.UI.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.58

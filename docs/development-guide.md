@@ -138,7 +138,7 @@ npm run test:config
 npm run typecheck
 python3 ../Hexalith.Parties.UI.Tests/verify-restored-assets.py
 npm run install:browsers
-npm run test:a11y
+npm run test:ui
 ```
 
 The local Playwright server builds Debug assets with package dependencies and uses the explicit
@@ -148,7 +148,7 @@ from `tests/e2e` (Bash):
 
 ```bash
 dotnet build ../../src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true
-CI=true BASE_URL=http://127.0.0.1:5072 PLAYWRIGHT_SKIP_WEBSERVER= npm run test:a11y
+CI=true BASE_URL=http://127.0.0.1:5072 PLAYWRIGHT_SKIP_WEBSERVER= npm run test:ui
 ```
 
 CI runs the prebuilt UI without restoring or rebuilding in Playwright. This

@@ -1,0 +1,47 @@
+[
+  {
+    "command": [
+      "dotnet",
+      "restore",
+      "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+      "--disable-parallel"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "dotnet",
+      "restore",
+      "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+      "--disable-parallel"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "dotnet",
+      "restore",
+      "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+      "--disable-parallel"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "dotnet",
+      "restore",
+      "tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj",
+      "--disable-parallel"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "dotnet",
+      "restore",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "--disable-parallel"
+    ],
+    "exit_code": 0
+  }
+]

@@ -3,10 +3,10 @@ using System.Text.RegularExpressions;
 
 namespace Hexalith.Parties.Ci.Tests;
 
-/// <summary>Protects the accessibility lane's blocking CI and release-proof contract.</summary>
+/// <summary>Protects the UI browser lane's blocking CI and release-proof contract.</summary>
 public sealed class AccessibilityWorkflowTests
 {
-    /// <summary>Requires every CI event to run the entire accessibility suite without a bypass.</summary>
+    /// <summary>Requires every CI event to run accessibility and portal browser suites without a bypass.</summary>
     [Fact]
     public void AccessibilityIsAnUnconditionalBlockingCiJob()
     {
@@ -18,6 +18,7 @@ public sealed class AccessibilityWorkflowTests
 
         string job = ReadAccessibilityJob();
 
+        job.ShouldContain("name: UI accessibility");
         job.ShouldNotContain("continue-on-error:");
         job.ShouldNotContain("needs:");
         Regex.IsMatch(job, @"^    if:", RegexOptions.Multiline).ShouldBeFalse();
@@ -27,11 +28,34 @@ public sealed class AccessibilityWorkflowTests
         job.ShouldContain("BASE_URL: http://127.0.0.1:5072");
         job.ShouldContain("PLAYWRIGHT_SKIP_WEBSERVER: ''");
 
-        ReadAccessibilityStep(job, "Run accessibility gate").Trim().ShouldBe("run: npm run test:a11y");
+        ReadAccessibilityStep(job, "Run UI browser gate").Trim().ShouldBe("run: npm run test:ui");
+        Regex.Matches(job, @"^        run: npm run test:(?:ui|a11y|portals)\b", RegexOptions.Multiline)
+            .Count.ShouldBe(1, "All required browser suites must share one report-producing Playwright invocation.");
 
         using JsonDocument package = JsonDocument.Parse(CiTestPaths.ReadRepoFile("tests/e2e/package.json"));
-        package.RootElement.GetProperty("scripts").GetProperty("test:a11y").GetString()
+        JsonElement scripts = package.RootElement.GetProperty("scripts");
+        scripts.GetProperty("test:a11y").GetString()
             .ShouldBe("playwright test specs/parties-accessibility.spec.ts --project=chromium");
+        const string portalSpecs = "specs/admin-parties-list.spec.ts specs/consumer-portal-routes.spec.ts specs/party-picker.spec.ts";
+        scripts.GetProperty("test:portals").GetString()
+            .ShouldBe($"playwright test {portalSpecs} --project=chromium");
+        scripts.GetProperty("test:ui").GetString()
+            .ShouldBe($"playwright test specs/parties-accessibility.spec.ts {portalSpecs} --project=chromium");
+    }
+
+    /// <summary>Keeps every required portal and picker check independent of optional environment flags.</summary>
+    [Theory]
+    [InlineData("admin-parties-list.spec.ts")]
+    [InlineData("consumer-portal-routes.spec.ts")]
+    [InlineData("party-picker.spec.ts")]
+    public void PortalBrowserRegressionsRemainRequired(string spec)
+    {
+        string source = CiTestPaths.ReadRepoFile($"tests/e2e/specs/{spec}");
+        source.ShouldNotContain("test.skip");
+        source.ShouldNotContain("test.fixme");
+        source.ShouldNotContain("test.describe.skip");
+        source.ShouldNotContain("test.describe.fixme");
+        source.ShouldNotContain("PARTIES_E2E_");
     }
 
     /// <summary>Requires the isolated CI fixture to launch prebuilt Release assets with its Test-only opt-ins.</summary>
@@ -76,7 +100,7 @@ public sealed class AccessibilityWorkflowTests
             "run: python3 ../Hexalith.Parties.UI.Tests/verify-restored-assets.py\n",
             "run: npm run install:browsers\n",
             "run: dotnet build ../../src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Release -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true\n",
-            "run: npm run test:a11y\n",
+            "run: npm run test:ui\n",
         ];
         int previous = -1;
         foreach (string command in commands)
@@ -92,13 +116,15 @@ public sealed class AccessibilityWorkflowTests
     public void AccessibilityEvidenceUploadsAfterFailure()
     {
         string job = ReadAccessibilityJob();
-        string step = ReadAccessibilityStep(job, "Upload accessibility evidence");
+        string step = ReadAccessibilityStep(job, "Upload UI browser evidence");
         Regex.IsMatch(step, @"^        if: always\(\)$", RegexOptions.Multiline).ShouldBeTrue();
         step.ShouldContain("uses: actions/upload-artifact@");
         step.ShouldContain("name: ui-a11y-results");
         step.ShouldContain("tests/e2e/playwright-report");
         step.ShouldContain("tests/e2e/test-results");
         step.ShouldContain("retention-days: 14");
+        job.IndexOf("- name: Upload UI browser evidence", StringComparison.Ordinal)
+            .ShouldBeGreaterThan(job.IndexOf("- name: Run UI browser gate", StringComparison.Ordinal));
     }
 
     private static string ReadAccessibilityStep(string job, string name)

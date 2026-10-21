@@ -348,8 +348,21 @@ test.describe('Parties UI accessibility specimen', () => {
     await expect(button).toBeVisible();
   });
 
-  test('visual baseline for deterministic shell specimen', async ({ page }, testInfo) => {
+  test('semantic visual baseline for deterministic shell specimen', async ({ page }) => {
     await gotoSpecimen(page);
+    const expected = JSON.parse(await readFile(VISUAL_BASELINE, 'utf8')) as PartiesVisualBaseline;
+    expect(await collectVisualBaseline(page)).toEqual(expected);
+  });
+
+  test('visual baseline for deterministic shell specimen', async ({ page }, testInfo) => {
+    test.skip(process.platform !== 'linux', 'The pixel baseline is qualified on Ubuntu 24.04 with locked Chromium.');
+    await gotoSpecimen(page);
+    await page.evaluate(() => document.fonts.ready);
+    // The producer footer uses the server's current year. Normalize only that
+    // dynamic value so year rollover cannot change the visual contract.
+    await page.getByText(/^Hexalith FrontComposer © \d{4}$/).evaluate((element) => {
+      element.textContent = element.textContent!.replace(/\d{4}$/, '2000');
+    });
 
     const screenshot = await page.screenshot({
       fullPage: true,
@@ -359,10 +372,12 @@ test.describe('Parties UI accessibility specimen', () => {
       body: screenshot,
       contentType: 'image/png',
     });
-    expect(screenshot.byteLength, 'shell specimen screenshot should not be blank or tiny').toBeGreaterThan(10_000);
-
-    const expected = JSON.parse(await readFile(VISUAL_BASELINE, 'utf8')) as PartiesVisualBaseline;
-    expect(await collectVisualBaseline(page)).toEqual(expected);
+    await expect(page).toHaveScreenshot('parties-accessibility-shell.png', {
+      fullPage: true,
+      animations: 'disabled',
+      caret: 'hide',
+      maxDiffPixels: 0,
+    });
   });
 });
 

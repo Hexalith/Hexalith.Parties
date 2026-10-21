@@ -1,4 +1,6 @@
 import { expect, test, type APIRequestContext, type BrowserContext, type Locator, type Page } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 
 const ADMIN_ROUTE = '/admin/parties';
 const ADMIN_COOKIE = 'parties-admin-e2e';
@@ -328,7 +330,7 @@ test.describe('Admin parties list', () => {
     await expect(detail.getByText('Ada Lovelace')).toHaveCount(0);
   });
 
-  test('direct GDPR route for an erased party keeps export and records available without PII', async ({ page, request, context }) => {
+  test('direct GDPR route for an erased party keeps export and records available without PII', async ({ page, request, context }, testInfo) => {
     const nativeDialogs: string[] = [];
     const browserVisibleDataRequests: string[] = [];
     page.on('dialog', async dialog => {
@@ -352,9 +354,53 @@ test.describe('Admin parties list', () => {
     await expect(detail.getByRole('button', { name: 'Request erasure' })).toBeDisabled();
     await expect(detail.getByRole('button', { name: 'Restrict processing' })).toBeDisabled();
 
+    await page.evaluate(() => {
+      const transfers: AdminExportObjectUrl[] = [];
+      window.__adminExportObjectUrls = transfers;
+      const create = URL.createObjectURL.bind(URL);
+      const revoke = URL.revokeObjectURL.bind(URL);
+      URL.createObjectURL = (blob) => {
+        const url = create(blob);
+        if (blob instanceof Blob) {
+          transfers.push({ url, contentType: blob.type, byteLength: blob.size, revoked: false });
+        }
+        return url;
+      };
+      URL.revokeObjectURL = (url) => {
+        revoke(url);
+        const transfer = transfers.find(item => item.url === url);
+        if (transfer) transfer.revoked = true;
+      };
+    });
+    const exportStarted = Date.now();
+    const downloadPending = page.waitForEvent('download');
     await detail.getByRole('button', { name: 'Export party data' }).click();
+    const download = await downloadPending;
+    expect(await download.failure()).toBeNull();
+    const fileName = download.suggestedFilename();
+    expect(fileName).toMatch(/^party-erased-route-\d{8}T\d{6}Z\.json$/);
+    const instant = fileName.replace(/^party-erased-route-(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z\.json$/, '$1-$2-$3T$4:$5:$6.000Z');
+    const exportedAt = Date.parse(instant);
+    expect(new Date(exportedAt).toISOString()).toBe(instant);
+    expect(exportedAt).toBeGreaterThanOrEqual(Math.floor(exportStarted / 1000) * 1000);
+    expect(exportedAt).toBeLessThanOrEqual(Date.now());
+    const downloadedPath = await download.path();
+    expect(downloadedPath).not.toBeNull();
+    const expectedExport = '{"partyId":"erased-route","tenantId":"test-tenant","status":"Erased","exportedAt":"2026-06-10T10:00:00Z","exportedBy":"consumer-e2e","correlationId":"corr-export-e2e","party":null,"processingRecords":[]}';
+    const bytes = await readFile(downloadedPath!);
+    expect(bytes).toEqual(Buffer.from(expectedExport, 'utf8'));
     await expect(detail.getByRole('status').filter({ hasText: 'Export prepared' })).toBeVisible();
-    await expect(detail.getByText(/party-erased-route-\d{8}T\d{6}Z\.json/)).toBeVisible();
+    const transfers = await page.evaluate(() => window.__adminExportObjectUrls);
+    await testInfo.attach('admin-export-download.json', {
+      body: JSON.stringify({ fileName, byteLength: bytes.length,
+        sha256: createHash('sha256').update(bytes).digest('hex'),
+        transfers: transfers.map(({ contentType, byteLength, revoked }) => ({ contentType, byteLength, revoked })),
+      }, null, 2),
+      contentType: 'application/json',
+    });
+    expect(transfers).toEqual([{ url: expect.stringMatching(/^blob:/),
+      contentType: 'application/json', byteLength: bytes.length, revoked: true }]);
+    await expect(detail.getByText(download.suggestedFilename())).toBeVisible();
     await expect(detail.getByText(/party-erased-route-export-.*Z\.json/)).toHaveCount(0);
     await expect.poll(async () => {
       const snapshot = await requestSnapshot(request);
@@ -457,9 +503,11 @@ test.describe('Admin parties list', () => {
 
     await page.getByRole('button', { name: 'Save changes' }).click();
 
-    await expect(page.getByText('Saved - updating...')).toBeVisible();
+    // An existing Current row can clear pending status immediately. The create
+    // case checks that status; this case proves accepted routing, not edited-state convergence.
     await expect.poll(async () => (await latestUpdateRequest(request))?.partyId).toBe('ada-lovelace');
     await page.waitForURL('**/admin/parties/ada-lovelace');
+    await expect(page.getByLabel('Party detail')).toBeVisible();
   });
 
   test('validation alert is assertive and preserves entered values', async ({ page }) => {
@@ -704,6 +752,19 @@ interface AdminPortalRequestCapture {
   type: string | null;
   active: boolean | null;
   partyId: string | null;
+}
+
+interface AdminExportObjectUrl {
+  url: string;
+  contentType: string;
+  byteLength: number;
+  revoked: boolean;
+}
+
+declare global {
+  interface Window {
+    __adminExportObjectUrls: AdminExportObjectUrl[];
+  }
 }
 
 interface GdprRequestCounts {

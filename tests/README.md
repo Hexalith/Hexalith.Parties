@@ -57,6 +57,22 @@ dotnet test .\tests\Hexalith.Parties.IntegrationTests\Hexalith.Parties.Integrati
 
 xUnit v3 runs under Microsoft.Testing.Platform here. For focused filters, build the target project and invoke its test executable directly with single-dash arguments such as `-class Fully.Qualified.TestClass` or `-method Fully.Qualified.TestClass.TestMethod`.
 
+## Browser UI and visual checks
+
+From `tests/e2e`, `npm run test:ui` runs the accessibility specimen and the admin,
+consumer and picker browser flows together, retaining one complete report. This
+is the blocking CI command. `npm run test:portals` runs only those three portal
+specs; `npm run test:a11y` runs only the specimen.
+
+`npm run test:visual` compares the deterministic specimen with the committed
+Chromium/Linux PNG under `specs/parties-accessibility.spec.ts-snapshots/`.
+Use Ubuntu 24.04 and the locked browser installation. After building the UI in
+Release/package mode, run `CI=true PLAYWRIGHT_SKIP_WEBSERVER= npm run test:visual:update`
+to regenerate the CI PNG, then inspect its diff. The pixel case is skipped on
+Windows/macOS; its separate semantic baseline test still runs there. The separately maintained
+semantic JSON under `baselines/` is checked as well and is not rewritten by this
+image update command. See [the visual contract and exact build commands](../docs/accessibility.md).
+
 ## Forward skip-link source qualification (DW-91)
 
 The normal `npm run test:a11y` gate retains the published-package skip-target

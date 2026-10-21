@@ -1,0 +1,7 @@
+{
+  "parent": "d5d322024c6be773f9eec0c9439e32757b6766a8",
+  "method_unchanged_before_correction": true,
+  "method_sha256": "cddcf5289f2be8839cd6a4f99b4d072e6335231a898aa54fa732b86493500495",
+  "failure": "Release browser run navigates to detail and records accepted update; Current matching row clears pending status before polling observes it",
+  "log": "five-browser-ci-browser-first.log"
+}

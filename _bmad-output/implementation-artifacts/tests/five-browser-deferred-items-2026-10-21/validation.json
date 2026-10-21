@@ -1,0 +1,109 @@
+{
+  "parent_revision": "d5d322024c6be773f9eec0c9439e32757b6766a8",
+  "work_items": [
+    "DW-143",
+    "DW-180",
+    "DW-189",
+    "DW-134 (DW-153 duplicate)",
+    "unnumbered admin browser accessibility CI"
+  ],
+  "preserved_submodule_updates": true,
+  "checks": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -c Debug --no-restore -m:1",
+      "exit_code": 0,
+      "result": "zero warnings/errors"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll -noLogo",
+      "exit_code": 0,
+      "passed": 394,
+      "skipped": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug --no-restore -m:1",
+      "exit_code": 0,
+      "result": "zero warnings/errors"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -noLogo",
+      "exit_code": 0,
+      "passed": 252,
+      "skipped": 0
+    },
+    {
+      "command": "dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release -m:1 -p:UseHexalithProjectReferences=false -p:UseNuGetDeps=true",
+      "exit_code": 0,
+      "result": "zero warnings/errors, normal audit enabled"
+    },
+    {
+      "cwd": "tests/e2e",
+      "environment": {
+        "CI": "true",
+        "node": "v24.21.0"
+      },
+      "command": "npm run test:ui",
+      "exit_code": 0,
+      "passed": 57,
+      "skipped": 2,
+      "retries": 0,
+      "skip_reason": "pre-existing DW-91 source/adoption cases"
+    },
+    {
+      "cwd": "tests/e2e",
+      "command": "npm run test:config",
+      "exit_code": 0,
+      "passed": 8
+    },
+    {
+      "cwd": "tests/e2e",
+      "command": "npm run typecheck",
+      "exit_code": 0
+    },
+    {
+      "command": "actionlint .github/workflows/ci.yml",
+      "exit_code": 0
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "node_modules/.bin/commitlint --edit /tmp/five-browser-commit-message.txt --verbose",
+      "exit_code": 0,
+      "pinned_version": "21.2.2"
+    }
+  ],
+  "pixel_qualification": {
+    "container": "sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27 [\"mcr.microsoft.com/playwright@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27\"]",
+    "host": "Release/package UI, Test environment, both explicit fixture flags",
+    "snapshot_sha256": "7118a280eff9945ac40e3a612b62ba6aa311ca705a160adbfcacf9be01aa5da7",
+    "positive_cases": 2,
+    "mutation_proof": "visual-mutations.json"
+  },
+  "source_gate": {
+    "command": "dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json",
+    "exit_code": 2,
+    "result": "HXW004 preserved checkout/gitlink mismatch; existing Platform, catalog and tool-range diagnostics. See source-launcher.log. No source qualification claimed."
+  },
+  "aspire_baseline": {
+    "apphost": "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+    "commands": [
+      "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --format Json",
+      "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --format Json",
+      "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive"
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0
+    ],
+    "result": "security Running/Unhealthy, dependent resources Waiting; exact AppHost stopped. Full topology readiness not claimed."
+  },
+  "review": {
+    "findings": 10,
+    "followups": "no remaining concrete defects; edit-test correction independently accepted",
+    "new_deferred_work": 0
+  },
+  "cleanup": "All owned AppHost and standalone image-qualification UI processes stopped; temporary mutation source/PNG restored."
+}
