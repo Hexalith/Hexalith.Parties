@@ -63,6 +63,9 @@ public sealed class PartyIdentityQueryHandlerTests
     [InlineData("unsupported-protection-state")]
     [InlineData("unsupported-format")]
     [InlineData("unsupported-protection-version")]
+    [InlineData("event-metadata-zero")]
+    [InlineData("event-metadata-negative")]
+    [InlineData("event-metadata-future")]
     [InlineData("binding-after-observation")]
     [InlineData("rebind-after-observation")]
     [InlineData("revoke-after-observation")]
@@ -93,6 +96,7 @@ public sealed class PartyIdentityQueryHandlerTests
             "rebind-after-observation" or "revoke-after-observation" => stream with { ObservedAt = boundary.AddTicks(-1) },
             _ => stream with { Events = [stream.Events[0], stream.Events[1] with
                 {
+                    MetadataVersion = corruption switch { "event-metadata-zero" => 0, "event-metadata-negative" => -1, "event-metadata-future" => 2, _ => 1 },
                     SerializationFormat = corruption switch
                     {
                         "ciphertext-format" => "json+identity-history-v1",
@@ -1422,6 +1426,175 @@ public sealed class PartyIdentityQueryHandlerTests
         result.BindingSourcePosition.ShouldBe(4); result.SourcePosition.ShouldBe(4);
         (await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start.AddDays(5), Actor, 1)), TestContext.Current.CancellationToken)).Evidence.ShouldBeNull();
         (await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start.AddDays(20), intermediateActor, 2)), TestContext.Current.CancellationToken)).Evidence.ShouldBeNull();
+    }
+
+    /// <summary>Readable retained evidence uses only the supported event and protection representations.</summary>
+    /// <param name="corruption">The unsupported wire representation.</param>
+    /// <param name="suffix">Whether valid queried evidence precedes the malformed transition.</param>
+    [Theory]
+    [InlineData("event-zero", false)]
+    [InlineData("event-negative", false)]
+    [InlineData("event-future", false)]
+    [InlineData("protection-zero", false)]
+    [InlineData("protection-future", false)]
+    [InlineData("format", false)]
+    [InlineData("event-zero", true)]
+    [InlineData("event-negative", true)]
+    [InlineData("event-future", true)]
+    [InlineData("protection-zero", true)]
+    [InlineData("protection-future", true)]
+    [InlineData("format", true)]
+    public async Task UnsupportedRetainedRepresentation_DeniesBeforeCustody(string corruption, bool suffix)
+    {
+        DateTimeOffset boundary = Start.AddHours(1);
+        HumanActorBindingEvidence successor = Binding() with
+        {
+            BindingVersion = 2, ValidFrom = boundary, ValidUntil = boundary.AddDays(10),
+            Custody = Binding().Custody with { ExpiresAt = boundary.AddDays(10) },
+        };
+        var fixture = Service([.. Events(), new HumanActorBindingRebound(new(successor, "second", "digest-2"), boundary, 1)]);
+        RetainedIdentityHistoryStream original = (await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"),
+            RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken)).Stream!;
+        StreamReadEvent malformed = original.Events[suffix ? 1 : 0] with
+        {
+            MetadataVersion = corruption switch { "event-zero" => 0, "event-negative" => -1, "event-future" => 2, _ => 1 },
+            SerializationFormat = corruption == "format" ? "json-v2" : "json",
+            ProtectionMetadata = EventStorePayloadProtectionMetadata.Unprotected() with
+            {
+                MetadataVersion = corruption switch { "protection-zero" => 0, "protection-future" => 2, _ => 1 },
+            },
+        };
+        fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new RetainedIdentityHistoryReadResult(original with
+            {
+                Events = suffix ? [original.Events[0], malformed] : [malformed, original.Events[1]],
+            }, null));
+
+        HumanActorBindingResult result = await fixture.Service.ResolveAtAsync(
+            Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, Actor, 1)), TestContext.Current.CancellationToken);
+
+        result.Outcome.ShouldBe(HumanActorBindingOutcome.Unavailable);
+        result.Evidence.ShouldBeNull();
+        result.BindingSourcePosition.ShouldBe(0);
+        await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+    }
+
+    /// <summary>Long histories preserve early, middle and final evidence and reject late invalid ordering.</summary>
+    /// <param name="corruption">An optional malformed transition near the end of the history.</param>
+    [Theory]
+    [InlineData("valid")]
+    [InlineData("backdated")]
+    [InlineData("empty-interval")]
+    public async Task LongRetainedHistory_PreservesIntervalsAndOriginalSourcePositions(string corruption)
+    {
+        const int count = 4096;
+        var events = new List<IEventPayload> { Events()[0] };
+        for (int index = 0; index < count; index++)
+        {
+            DateTimeOffset at = Start.AddSeconds(index);
+            if (index == count - 1 && corruption == "backdated")
+            {
+                at = Start.AddSeconds(index - 2);
+            }
+            HumanActorBindingEvidence evidence = Binding() with
+            {
+                BindingVersion = index + 1,
+                ValidFrom = at,
+                ValidUntil = index == count - 2 && corruption == "empty-interval" ? at : at.AddDays(10),
+                Custody = Binding().Custody with { ExpiresAt = at.AddDays(10) },
+            };
+            var binding = new HumanActorBinding(evidence, "logical-" + index, "digest-" + index);
+            events.Add(index == 0 ? new HumanActorBindingEstablished(binding, at, 0)
+                : new HumanActorBindingRebound(binding, at, index));
+        }
+        var fixture = Service([.. events]);
+        foreach (int index in new[] { 0, count / 2, count - 1 })
+        {
+            DateTimeOffset actionAt = Start.AddSeconds(index);
+            HumanActorBindingResult result = await fixture.Service.ResolveAtAsync(
+                Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", actionAt, Actor, index + 1)), TestContext.Current.CancellationToken);
+            if (corruption != "valid")
+            {
+                result.Outcome.ShouldBe(HumanActorBindingOutcome.Unavailable);
+                result.Evidence.ShouldBeNull();
+                result.BindingSourcePosition.ShouldBe(0);
+                continue;
+            }
+
+            result.Outcome.ShouldBe(HumanActorBindingOutcome.Resolved);
+            result.Evidence!.BindingVersion.ShouldBe(index + 1);
+            result.Evidence.ValidFrom.ShouldBe(actionAt);
+            result.Evidence.ValidUntil.ShouldBe(index < count - 1 ? actionAt.AddSeconds(1) : actionAt.AddDays(10));
+            result.SourcePosition.ShouldBe(count + 1);
+            result.BindingSourcePosition.ShouldBe(index + 2);
+        }
+        if (corruption != "valid")
+        {
+            await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+        }
+    }
+
+    /// <summary>Actor-free certified prefixes obey the same live/revoked transition lifecycle as readable history.</summary>
+    /// <param name="middle">The three prefix transitions before the readable successor.</param>
+    /// <param name="valid">Whether the prefix contains a supported lifecycle.</param>
+    [Theory]
+    [InlineData("revoke-revoke", false)]
+    [InlineData("revoke-rebind", true)]
+    [InlineData("rebind-revoke", true)]
+    public async Task CertifiedExpiredPrefix_RejectsConsecutiveRevocations(string middle, bool valid)
+    {
+        ArgumentNullException.ThrowIfNull(middle);
+        const string policy = "party-actor-retention-v1";
+        DateTimeOffset now = Start.AddDays(376);
+        DateTimeOffset successorAt = Start.AddDays(200);
+        HumanActorBindingEvidence successor = Binding() with
+        {
+            BindingVersion = 4, ValidFrom = successorAt, ValidUntil = successorAt.AddDays(365),
+            Custody = Binding().Custody with { PolicyId = policy, ExpiresAt = successorAt.AddDays(365), LifecycleRevision = 4 },
+        };
+        var fixture = Service(Events()[0], new HumanActorBindingRebound(new(successor, "fourth", "digest-4"), successorAt, 3));
+        fixture.Options.CurrentValue.Returns(new PartyIdentityOptions { PolicyId = policy, Retention = TimeSpan.FromDays(365), ExpiryTrigger = "binding-effective-at" });
+        RetainedIdentityHistoryStream original = (await fixture.HistoryReader.ReadAsync(new("tenant-a", "party", "party-1"),
+            RetainedIdentityHistoryReadRequest.AttributionPurpose, TestContext.Current.CancellationToken)).Stream!;
+        string revoked = typeof(HumanActorBindingRevoked).FullName!;
+        string rebound = typeof(HumanActorBindingRebound).FullName!;
+        var first = new ExpiredIdentityHistoryCertificate(original.Identity, original.Purpose, policy, 2,
+            typeof(HumanActorBindingEstablished).FullName!, new string('A', 64), "destruction-first", 5, "authority", now, now.AddMinutes(1));
+        var second = first with { SourceSequence = 3, EventTypeName = middle.StartsWith("revoke", StringComparison.Ordinal) ? revoked : rebound,
+            SealedPayloadDigest = new string('B', 64), DestructionReceiptId = "destruction-second" };
+        var third = first with { SourceSequence = 4, EventTypeName = middle.EndsWith("revoke", StringComparison.Ordinal) ? revoked : rebound,
+            SealedPayloadDigest = new string('C', 64), DestructionReceiptId = "destruction-third" };
+        RetainedIdentityHistoryStream source = original with
+        {
+            Head = 5, ObservedAt = now, ValidUntil = now.AddMinutes(1),
+            Events = [original.Events[0] with { SequenceNumber = 5 }], ExpiredEvents = [first, second, third],
+        };
+        byte[] transport = JsonSerializer.SerializeToUtf8Bytes(source, PartiesJsonOptions.Default);
+        source = JsonSerializer.Deserialize<RetainedIdentityHistoryStream>(transport, PartiesJsonOptions.Default)!;
+        fixture.HistoryReader.ReadAsync(Arg.Any<Hexalith.EventStore.Contracts.Identity.AggregateIdentity>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new RetainedIdentityHistoryReadResult(source, null));
+        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(new PartyIdentityAdmissionResult(new(new("tenant-a", "party", "party-1", "Read", "c", "c", "d"),
+            "reader", null, Actor, 1, true, Start, Start.AddDays(600), 1), null));
+        TimeProvider clock = Substitute.For<TimeProvider>();
+        ConfigureSystemTimer(clock);
+        clock.GetUtcNow().Returns(now);
+        var service = new PartyIdentityQueryService(fixture.Authority, clock, custody: fixture.Custody, historyReader: fixture.HistoryReader, identityOptions: fixture.Options);
+
+        HumanActorBindingResult result = await service.ResolveAtAsync(
+            Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", successorAt, Actor, 4)), TestContext.Current.CancellationToken);
+
+        result.Outcome.ShouldBe(valid ? HumanActorBindingOutcome.Resolved : HumanActorBindingOutcome.Unavailable);
+        if (valid)
+        {
+            result.Evidence.ShouldBe(successor);
+            result.BindingSourcePosition.ShouldBe(5);
+        }
+        else
+        {
+            result.Evidence.ShouldBeNull();
+            result.BindingSourcePosition.ShouldBe(0);
+            await fixture.Custody.DidNotReceiveWithAnyArgs().CanReadAsync(default!, default!, default);
+        }
     }
 
     /// <summary>One deadline cancels noncooperative source/custody and cannot admit a late success or fault.</summary>

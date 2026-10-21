@@ -31,7 +31,7 @@ public static class PartyIdentitySourceFold
         foreach (StreamReadEvent item in stream.Events)
         {
             if (item is null || item.SequenceNumber != ++sequence || item.Payload is null
-                || item.SerializationFormat != "json"
+                || item.SerializationFormat != "json" || item.MetadataVersion != 1
                 || item.ProtectionMetadata is { } protection && (protection.State is not (PayloadProtectionState.Unprotected or PayloadProtectionState.Protected)
                     || protection.MetadataVersion != EventStorePayloadProtectionMetadata.CurrentMetadataVersion))
             {

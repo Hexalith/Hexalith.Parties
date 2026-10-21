@@ -1,0 +1,17 @@
+# Five identity and callback deferred tasks
+
+The batch closes five actual tasks. DW-131 and DW-150 are duplicate reports of the same representation-validation gap and are reconciled together. DW-176 and DW-187 close retained-fold and HTTP-callback work. Two legacy unnumbered entries close consecutive expired revocations and the already-implemented final-health-wait cancellation.
+
+The current and retained folds accept version-1 JSON evidence only, preserving strict protection metadata checks. The retained fold processes an ordered expired prefix and readable tail without sorting or prior-binding scans. The 4096-binding regression checks early, middle and final intervals/source positions; invalid late history and certified repeated revocations fail closed. Valid certified lifecycle controls remain queryable.
+
+HTTP tests exercise the production tenant pipeline and registered PartyKeyRetryActor through its actual PUT route. Assertions inspect stored tenant membership and access, deduplication, actor pending-state contents and reminder creation/deletion. The actor backend is a private loopback state/reminder implementation; the production runtime and credential checks remain active. This is service-route qualification, not real Dapr ACL or topology parity.
+
+The readiness fixture already passes one linked startup token through both final HTTP waits. All six fixture tests pass, including cancellation during a pending request and owned-resource/environment cleanup. The corresponding stale ledger entry is superseded without new fixture plumbing.
+
+See validation.json for exact commands and scope. Test logs retain runner summaries; build logs redact local paths. The baseline Aspire start and stop succeeded; dependent resources were Waiting when described. No healthy live-topology, external runtime, release or producer-adoption qualification is claimed.
+
+Complexity evidence comes from the algorithm, not a wall-clock threshold: the existing validator traverses each disjoint partition once using hash sets; one boundary comparison establishes the expired prefix; concatenation visits each transition once; Append and Close inspect only the last binding. The fold has expected O(n + B) work and O(n) auxiliary space for n positions and B decoded payload bytes. The long-history test protects semantic parity, including interval closure and original source positions.
+
+Final qualification: both Debug project builds have zero warnings/errors; 284 focused cases and all six readiness cases pass without skips. The full service assembly passes 2395/2395 in the isolated checkout at integration base 4fc1124eb995a40553cb23b042d4a3c1add3dfb2 with every root dependency at its committed identity. This is 2401 unique passing cases; focused cases are a subset. The original checkout's four identity failures are retained separately and arise from externally advanced submodule checkouts. No external changes are staged, and no fitness gate is weakened. All eight independent review findings are addressed; follow-up reports no unresolved concrete issue or new deferral.
+
+A subsequent upstream catalog-guard change was fast-forwarded at a8e52fdcf7d1e1754743b7bdb2262cd07abf398a. The task-owned source hashes remain identical to the full isolated qualification. Supplementary service/CI Debug builds and focused service/catalog checks cover this integration; 37 catalog cases pass. This does not relabel the earlier full-suite revision or certify the externally changed dependency checkouts.

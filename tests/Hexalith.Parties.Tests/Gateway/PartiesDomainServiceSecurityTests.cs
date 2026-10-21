@@ -3,20 +3,34 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 
+using Dapr.Actors.Runtime;
+
+using Hexalith.EventStore.Client.Subscriptions;
 using Hexalith.EventStore.Contracts.Commands;
+using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.DomainService;
 using Hexalith.EventStore.ServiceDefaults.Authentication;
+using Hexalith.Parties.Authorization;
+using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Authorization;
+using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.Security;
+using Hexalith.Tenants.Client.Projections;
+using Hexalith.Tenants.Contracts.Enums;
+using Hexalith.Tenants.Contracts.Events;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+
+using NSubstitute;
 
 using Shouldly;
 
@@ -168,6 +182,134 @@ public sealed class PartiesDomainServiceSecurityTests
         using HttpClient client = factory.CreateClient();
         using HttpResponseMessage response = await client.PostAsync(route, JsonContent.Create(new { }), TestContext.Current.CancellationToken);
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        factory.Processor.ShouldNotBeNull().ReceivedCommands.ShouldBeEmpty();
+    }
+
+    /// <summary>Authenticated tenant delivery reaches the registered handler and deduplicates persisted projection effects.</summary>
+    /// <param name="channel">The sidecar channel credential variant.</param>
+    [Theory]
+    [InlineData("valid")]
+    [InlineData("missing")]
+    [InlineData("wrong")]
+    [InlineData("duplicate")]
+    public async Task TenantDelivery_RequiresChannel_ProjectsMembershipAndDeduplicates(string channel)
+    {
+        using var factory = new PartiesProcessTestFactory();
+        using HttpClient client = factory.CreateClient();
+        if (channel != "missing")
+        {
+            client.DefaultRequestHeaders.Add(DaprAppChannelToken.HeaderName,
+                channel == "wrong" ? "forged-channel" : PartiesProcessTestFactory.ChannelToken);
+            if (channel == "duplicate")
+            {
+                client.DefaultRequestHeaders.Add(DaprAppChannelToken.HeaderName, PartiesProcessTestFactory.ChannelToken);
+            }
+        }
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var created = new EventStoreDomainEventEnvelope("01HX0000000000000000000001", "tenant-callback", "system",
+            typeof(TenantCreated).FullName!, 1, now, "callback-correlation", "json",
+            JsonSerializer.SerializeToUtf8Bytes(new TenantCreated("tenant-callback", "Synthetic tenant", null, now)));
+        var membership = created with
+        {
+            MessageId = "01HX0000000000000000000002", SequenceNumber = 2,
+            EventTypeName = typeof(UserAddedToTenant).FullName!,
+            Payload = JsonSerializer.SerializeToUtf8Bytes(new UserAddedToTenant("tenant-callback", "callback-user", TenantRole.TenantContributor)),
+        };
+        foreach (EventStoreDomainEventEnvelope envelope in new[] { created, membership, membership with
+            { Payload = JsonSerializer.SerializeToUtf8Bytes(new UserAddedToTenant("tenant-callback", "callback-user", TenantRole.TenantReader)) } })
+        {
+            using HttpResponseMessage response = await client.PostAsJsonAsync("/tenants/events", envelope, TestContext.Current.CancellationToken);
+            response.StatusCode.ShouldBe(channel == "valid" ? HttpStatusCode.OK : HttpStatusCode.Unauthorized);
+        }
+
+        TenantLocalState? state = await factory.Services.GetRequiredService<ITenantProjectionStore>()
+            .GetAsync("tenant-callback", TestContext.Current.CancellationToken);
+        factory.Processor.ShouldNotBeNull().ReceivedCommands.ShouldBeEmpty();
+        if (channel != "valid")
+        {
+            state.ShouldBeNull();
+            return;
+        }
+        state.ShouldNotBeNull();
+        state.Status.ShouldBe(TenantStatus.Active);
+        state.Members.Count.ShouldBe(1);
+        state.Members["callback-user"].ShouldBe(TenantRole.TenantContributor);
+        TenantAccessDecision decision = await factory.Services.GetRequiredService<ITenantAccessService>()
+            .CheckAccessAsync("tenant-callback", "callback-user", TenantAccessRequirement.Write, TestContext.Current.CancellationToken);
+        decision.IsAllowed.ShouldBeTrue();
+        factory.Processor.ShouldNotBeNull().ReceivedCommands.ShouldBeEmpty();
+    }
+
+    /// <summary>The actual PUT actor route admits channel callbacks and commits retry state/reminder changes.</summary>
+    /// <param name="channel">The sidecar channel credential variant.</param>
+    [Theory]
+    [InlineData("valid")]
+    [InlineData("missing")]
+    [InlineData("wrong")]
+    [InlineData("duplicate")]
+    public async Task ActorDelivery_ActualRegisteredRoute_RequiresChannelAndCommitsState(string channel)
+    {
+        PartyActorSidecarTestHost sidecar = await PartyActorSidecarTestHost.StartAsync(TestContext.Current.CancellationToken);
+        await using var sidecarLifetime = sidecar.ConfigureAwait(true);
+        using var factory = new PartiesProcessTestFactory();
+        IKeyStorageBackend keys = Substitute.For<IKeyStorageBackend>();
+        keys.ListKeyVersionsAsync("tenant-a", "party-1", Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<int>>([1]));
+        using var configured = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.Configure<ActorRuntimeOptions>(options => options.HttpEndpoint = sidecar.Endpoint);
+            services.AddSingleton(keys);
+        }));
+        using HttpClient client = configured.CreateClient();
+        if (channel != "missing")
+        {
+            client.DefaultRequestHeaders.Add(DaprAppChannelToken.HeaderName,
+                channel == "wrong" ? "forged-channel" : PartiesProcessTestFactory.ChannelToken);
+            if (channel == "duplicate")
+            {
+                client.DefaultRequestHeaders.Add(DaprAppChannelToken.HeaderName, PartiesProcessTestFactory.ChannelToken);
+            }
+        }
+        const string route = "/actors/PartyKeyRetryActor/tenant-a:party-1/method/";
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var pending = new CryptoPendingRecord
+        {
+            TenantId = "tenant-a", PartyId = "party-1", LastError = "Synthetic test retry",
+            FirstMarkedAt = now, LastAttemptedAt = now, AttemptCount = 1,
+        };
+        using HttpResponseMessage scheduled = await client.PutAsJsonAsync(route + "ScheduleRetryAsync", pending,
+            PartiesJsonOptions.Default, TestContext.Current.CancellationToken);
+        scheduled.StatusCode.ShouldBe(channel == "valid" ? HttpStatusCode.OK : HttpStatusCode.Unauthorized);
+        if (channel != "valid")
+        {
+            sidecar.Pending.ShouldBeNull();
+            sidecar.HasReminder.ShouldBeFalse();
+            return;
+        }
+
+        sidecar.Pending.ShouldBe(pending);
+        sidecar.HasReminder.ShouldBeTrue();
+        sidecar.Reminder.GetProperty("dueTime").GetString().ShouldBe("0h0m30s0ms");
+        sidecar.Reminder.GetProperty("period").GetString().ShouldBe("0h1m0s0ms");
+        // A new activation must restore the committed record through the backend GET.
+        using HttpResponseMessage deactivated = await client.DeleteAsync("/actors/PartyKeyRetryActor/tenant-a:party-1", TestContext.Current.CancellationToken);
+        deactivated.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using HttpResponseMessage pendingResponse = await client.PutAsync(route + "IsPendingAsync", null, TestContext.Current.CancellationToken);
+        pendingResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await pendingResponse.Content.ReadFromJsonAsync<bool>(TestContext.Current.CancellationToken)).ShouldBeTrue();
+        using HttpResponseMessage cleared = await client.PutAsync(route + "ClearRetryAsync", null, TestContext.Current.CancellationToken);
+        cleared.StatusCode.ShouldBe(HttpStatusCode.OK);
+        sidecar.Pending.ShouldBeNull();
+        sidecar.HasReminder.ShouldBeFalse();
+        using HttpResponseMessage rescheduled = await client.PutAsJsonAsync(route + "ScheduleRetryAsync", pending,
+            PartiesJsonOptions.Default, TestContext.Current.CancellationToken);
+        rescheduled.StatusCode.ShouldBe(HttpStatusCode.OK);
+        sidecar.Pending.ShouldBe(pending);
+        sidecar.HasReminder.ShouldBeTrue();
+        using HttpResponseMessage reminder = await client.PutAsJsonAsync(route + "remind/retry-key-creation", sidecar.Reminder,
+            TestContext.Current.CancellationToken);
+        reminder.StatusCode.ShouldBe(HttpStatusCode.OK);
+        sidecar.Pending.ShouldBeNull();
+        sidecar.HasReminder.ShouldBeFalse();
         factory.Processor.ShouldNotBeNull().ReceivedCommands.ShouldBeEmpty();
     }
 

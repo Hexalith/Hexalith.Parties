@@ -1030,7 +1030,9 @@ status: open
 origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
 location: src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs:39
 severity: medium
-status: open
+status: done 2026-10-21
+resolution: Current and retained identity folds reject unsupported event metadata versions before releasing evidence. Existing JSON/protection checks remain strict; DW-150 is the duplicate report, counted as one task.
+verification: `spec-five-identity-callback-deferred-items.md`; `tests/five-identity-callback-deferred-items-2026-10-21/validation.json`.
 
 ### DW-150: Reject unsupported serialization formats and metadata versions before identity source folding.
 
@@ -1038,7 +1040,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs:39
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: Blind 5: the fold deserializes every payload as JSON without checking its StreamReadEvent format/version. The owner authoritative reader validates continuity; StreamReadPageValidator only requires nonblank format and metadata version >=1, not Party representation support. Existing 37d87f5a2869b076c651a58714d60f64647848bc code, unchanged here. Exit proof: supported representations pass and otherwise contiguous unsupported-format/version streams are rejected.
-status: open
+status: done 2026-10-21
+resolution: Require version-1 event metadata as well as the supported JSON and protection representation on both identity paths. Current/retained malformed-version regressions and supported-history controls pass. This reconciles the duplicate DW-131 report.
+verification: `spec-five-identity-callback-deferred-items.md`; `tests/five-identity-callback-deferred-items-2026-10-21/validation.json`.
 
 ### DW-132: Require test evidence on release validation bypass
 
@@ -1387,7 +1391,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs (Append and Close)
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: `RetainedHumanActorHistoryFold.Append` scans prior bindings and `Close` searches by version for each transition; the scans existed at this spec's baseline.
-status: open
+status: done 2026-10-21
+resolution: The retained fold validates the expired-prefix boundary, concatenates already ordered partitions and checks only the last binding on append/closure. A 4096-binding history preserves first/middle/final intervals and original source positions; late backdating and empty intervals reject. Existing sparse/expired/revoked lifecycle coverage remains green.
+verification: `spec-five-identity-callback-deferred-items.md`; `tests/five-identity-callback-deferred-items-2026-10-21/validation.json`.
 
 ### DW-177: Show accepted-command acknowledgement before slow admin list loading finishes.
 
@@ -1484,7 +1490,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs; actor and /tenants/events service callbacks
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: `PartiesDomainServiceSecurityTests` checks denial and endpoint policy metadata, but no owned test sends a valid channel request to the actor or `/tenants/events` handler. A later HTTP security change could block legitimate delivery without a failing test.
-status: open
+status: done 2026-10-21
+resolution: Real production HTTP routes admit channel-only tenant delivery and registered PartyKeyRetryActor PUT calls. Tests inspect committed tenant membership/access, message deduplication, actor pending-state writes/deletion, reactivation read-back and real reminder callbacks through a private HTTP backend; missing, wrong and duplicate actor/tenant channel credentials reject. No runtime or authorization handler is replaced.
+verification: `spec-five-identity-callback-deferred-items.md`; `tests/five-identity-callback-deferred-items-2026-10-21/validation.json`.
 
 ### DW-188: Exercise the release registry-floor comparison with isolated published-version fixtures.
 
@@ -1553,6 +1561,10 @@ archived: 2026-10-21
   summary: Reject inconsistent consecutive revocations in certified expired actor-history prefixes.
   evidence: RetainedHumanActorHistoryFold advances expired certificate versions without live/revoked state; readable transitions enforce a stronger lifecycle. Later domain work, separate from the CI/release patch.
 
+  status: done 2026-10-21
+  resolution: Certified expired prefixes now track whether the current version is revoked and reject a second revocation without a rebind. Serialized establish/revoke/revoke plus readable-successor regression rejects before custody; establish/revoke/rebind and establish/rebind/revoke controls retain exact successor evidence.
+  verification: `spec-five-identity-callback-deferred-items.md`; `tests/five-identity-callback-deferred-items-2026-10-21/validation.json`.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
   summary: Run the existing admin browser accessibility assertions in a blocking CI lane.
   evidence: The shadow-root warning and dropdown semantics are tested by Playwright, but root CI executes only .NET suites with mocked JS interop; the later portal behavior can regress while those suites pass.
@@ -1564,6 +1576,10 @@ archived: 2026-10-21
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
   summary: Propagate the topology startup token through its final HTTP health waits.
   evidence: Both independent three-minute health waits lack the overall startup cancellation token at the original release baseline, so total startup can exceed the declared five-minute budget.
+
+  status: done 2026-10-21
+  resolution: Already implemented by the current fixture: one linked five-minute startup token reaches both final HTTP health waits, in-flight GetAsync and poll delays. All six existing fixture cases pass, including pending-request cancellation, environment restoration, owned control-plane cleanup and retry after failed cleanup. No extra fixture abstraction or runtime-topology qualification is claimed.
+  verification: `spec-five-identity-callback-deferred-items.md`; `tests/five-identity-callback-deferred-items-2026-10-21/validation.json`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
   summary: Verify bounded Aspire shutdown before adding explicit teardown deadlines.

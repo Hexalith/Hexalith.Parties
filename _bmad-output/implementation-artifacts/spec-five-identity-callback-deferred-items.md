@@ -1,0 +1,55 @@
+---
+title: 'Close five identity and callback deferred tasks'
+type: 'bugfix'
+created: '2026-10-21'
+status: 'done'
+route: 'oneshot'
+review_loop_iteration: 0
+context: []
+---
+
+<frozen-after-approval reason="human-owned intent — do not modify unless human renegotiates">
+
+## Intent
+
+**Problem:** Deferred identity and service-boundary work leaves event metadata versions unchecked, retained history repeatedly scanned, expired revocations insufficiently checked, and successful sidecar delivery unproved. An older startup-cancellation report also needs reconciliation against the current fixture.
+
+**Approach:** Complete five tasks: DW-131/DW-150's duplicate representation-validation gap, DW-176's retained-history complexity, DW-187's authenticated actor and tenant callbacks, the unnumbered consecutive-expired-revocation deferral, and the unnumbered startup health-wait cancellation deferral. Preserve supported wire contracts, sparse original positions, expired actor confidentiality, real HTTP authorization, dependency selections and rollback boundaries. Verify existing startup cancellation before closing that already-implemented task. Review, commit and push the completed batch to main, as requested.
+
+</frozen-after-approval>
+
+## Implementation Notes
+
+- Initial clean main revision: 61921f7c0a25e00d9dd102d863e366cf67120f3d, read directly with git rev-parse HEAD. User authorized five deferred tasks and publication on main. DW-131 and DW-150 describe one behavioral gap and are counted together. The five-task batch is explicitly requested; no scope splitting is needed.
+- Route facts: no unresolved product choice, dependency update, external owner change, new public API, stored-data migration or destructive operation. Changes are bounded to two identity folds, existing service tests, deferred tracking and evidence. Use oneshot; a new specification approval would repeat the authorization already supplied.
+- Code map: src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs already checks exact json and supported protection metadata, but not StreamReadEvent.MetadataVersion. Require version 1 before deserialization. RetainedHumanActorHistoryFold.cs must apply the same event/protection representation bounds on readable retained events; do not edit EventStore's generic validator or contracts.
+- Code map: RetainedHumanActorHistoryFold currently sorts merged readable/certified transitions, scans every prior binding on Append and searches by version on Close. EventStore's RetainedIdentityHistoryValidator already verifies sorted individual partitions and an exhaustive disjoint source-position partition. Enforce that certificates form an expired prefix, concatenate the ordered expired prefix and readable tail, and use the last readable binding for overlap and current-version closure. Preserve gaps, after-expiry rebind behavior, original positions and failure confidentiality. Track certificate lifecycle so revocation cannot directly follow another revocation; rebind after revocation remains supported.
+- Code map: tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs supplies current/history source factories, accepted policies, caller authority and custody doubles. Add unsupported event-version cases, retained representation faults, a large valid history with first/middle/final lookups and late invalid boundaries, and certified expired lifecycle controls. Test evidence and original positions, not wall-clock performance thresholds.
+- Code map: tests/Hexalith.Parties.Tests/Gateway/PartiesDomainServiceSecurityTests.cs and PartiesProcessTestFactory.cs host the real production middleware, routing, SDK channel authorization and tenant subscription pipeline. Exercise valid /tenants/events delivery and inspect ITenantProjectionStore end-state and access decisions. Exercise a registered actor through its actual endpoint with isolated backend dependencies and an observable dispatch effect. Keep missing/wrong/duplicate channel denial covered; do not replace authentication or authorize arbitrary workloads.
+- Code map: tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs already links its five-minute startup budget to the caller, passes it into both final HTTP health waits and cancellation-aware GetAsync/Delay. Existing Topology/PartiesAspireTopologyFixtureTests.cs exercises pending-HTTP cancellation plus owned-resource cleanup. Run those tests and document the stale report as superseded; do not create an unnecessary fixture abstraction.
+- Acceptance: Given valid version-1 json identity history, when queried, then existing outcomes and source positions remain exact. Given unsupported format, event metadata or protection metadata, when folded, then no identity/custody evidence is released. Given long valid history, when early, middle and final bindings are queried, then intervals and source positions are preserved with a linear fold. Given consecutive certified revocations, when followed by a readable successor, then the history is unavailable; valid establish/revoke/rebind lifecycles still resolve. Given authenticated channel callbacks, when sent through the real service routes, then the actor dispatch and tenant projection effects are observable, while forged channels remain denied. Given pending readiness HTTP, when startup is cancelled, then it stops promptly and restores owned environment/infrastructure.
+- Verification: build the affected service and integration test projects in Debug with warnings as errors, invoke focused xUnit classes directly, run the complete service test assembly if the affected build permits, check warning policy and diff, and preserve exact commands/results. The required baseline Aspire start and exact-target stop succeeded; describe showed dependent resources Waiting. This baseline is not claimed as a healthy full topology or external runtime qualification.
+
+- Implementation: exact event metadata version checks now cover both current and retained reads. The retained fold validates its expired-prefix ordering once, concatenates the already ordered partitions, and inspects only the last readable binding for append/closure. Certified revocation state rejects consecutive revocations. No persisted data or wire shape changed.
+- Authenticated callback coverage uses the production tenant handler/store and production registered PartyKeyRetryActor through its actual PUT endpoint. A private loopback backend captures state/reminder commits; authentication, authorization and actor dispatch are unchanged. Initial test setup corrections align each custody expiry with its effective time and the backend with Dapr's transaction protocol.
+- Both affected Debug test-project builds pass with zero warnings/errors. All six existing topology fixture/cancellation cases pass without skips, verifying that the unnumbered health-wait propagation report is already resolved. Runtime baseline start/describe/stop succeeded; dependent resources were Waiting when inspected.
+- Several root submodule checkouts advanced concurrently after the initial clean check. They are external working-tree changes, are preserved, and will not be staged. Dependency selection and any broad-gate effects must be reported separately from this patch's focused qualification.
+
+
+## Review Triage Log
+
+- Medium, patch: tenant-route denial coverage lacked valid event bodies with wrong/duplicate credentials. Added missing/wrong/duplicate channel cases and independent empty-projection assertions alongside successful membership and deduplication.
+- Medium, patch: actor method dispatch alone did not cover retry reminders. Replay the captured registration through the actual reminder callback with the real retry actor/key-management service and a controlled existing-key backend; inspect pending-state and reminder deletion.
+- Low, patch: the actor backend accepted uninspected reminder bodies. Parse the registration, assert its exact 30-second due time and one-minute period, and reuse those bytes for delivery.
+- Low, patch: the one-key backend could partly mutate unsupported multi-operation batches. Restrict it to one-operation transactions and reject all other batch sizes before mutation. No general Dapr transaction implementation is claimed.
+- Low, patch: a same-activation pending read could use cached state. Deactivate through the real DELETE callback before reading the committed pending record through a new actor activation.
+- Low, patch/documentation: large-history correctness is not a performance benchmark. Record the algorithm's traversal and constant-work append/close argument separately; retain deterministic correctness tests without timing thresholds or a claim of benchmark protection.
+- Medium, patch: unsupported retained metadata needed coverage after valid queried evidence. Add all six corruption variants as both first-transition and suffix cases, querying the otherwise valid early binding and requiring denial before custody.
+- Medium, patch: successful runs needed exact source/dependency attribution. Preserve changed-source hashes, the committed root gitlink set and resolved package assets. Validate the complete suite in an isolated checkout at those committed identities because external root checkouts moved during this run.
+
+- Independent follow-up confirmed all eight review findings addressed, with no unresolved concrete issues or new deferrals. The final focused run passes 284/284; readiness remains 6/6. The complete isolated pre-review service run passed 2386/2386 with no skips, confirming the four original-worktree failures were caused by external checkout drift.
+- Before push, origin/main advanced to 4fc1124eb995a40553cb23b042d4a3c1add3dfb2 with a disjoint Directory.Build.props catalog-fallback correction. Fast-forwarded main without altering task-owned changes or external submodule checkouts. Final isolated qualification includes this upstream correction.
+
+- Final verification after review and upstream fast-forward: complete isolated service assembly 2395/2395, focused 284/284 (subset), and separate readiness 6/6, all without skips. Both affected Debug builds have zero warnings/errors. Exact source hashes, root gitlinks, selected package assets, commands and separate original-checkout drift failures are retained in the evidence directory. Warning-policy and CRLF-aware whitespace checks pass; the repository-pinned commitlint validates the exact commit message. All five actual deferred tasks are complete, including both duplicate representation reports.
+
+- A second disjoint upstream catalog-guard correction advanced main to a8e52fdcf7d1e1754743b7bdb2262cd07abf398a. Task-owned source hashes are unchanged. Rebuilt the service and CI projects with zero warnings/errors and reran the 37 catalog-routing cases successfully; the final focused rerun verifies the integrated sources. Full-suite evidence remains explicitly bound to the earlier qualified revision rather than recertified. Temporary qualification worktrees were removed; original external dependency checkouts remain intact.

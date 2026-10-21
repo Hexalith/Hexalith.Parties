@@ -25,13 +25,21 @@ internal static class RetainedHumanActorHistoryFold
         var bindings = new List<RetainedHumanActorBinding>();
         var logicalIds = new HashSet<string>(StringComparer.Ordinal);
         long version = 0;
-        bool hasReadableTransition = false;
+        bool revoked = false;
         var certifiedExpiredLiveVersions = new HashSet<long>();
-        var transitions = stream.Events.Select(item => (Position: item.SequenceNumber, Event: (StreamReadEvent?)item,
-                Expired: (ExpiredIdentityHistoryCertificate?)null))
-            .Concat(stream.ExpiredEvents.Select(certificate => (Position: certificate.SourceSequence,
-                Event: (StreamReadEvent?)null, Expired: (ExpiredIdentityHistoryCertificate?)certificate)))
-            .OrderBy(item => item.Position);
+        // The validator guarantees individually ordered, disjoint partitions. Expired
+        // transitions must be a prefix; their concatenation with the readable tail
+        // therefore preserves source order without sorting or revisiting bindings.
+        if (stream.ExpiredEvents.Count > 0 && stream.Events.Count > 0
+            && stream.ExpiredEvents[^1].SourceSequence > stream.Events[0].SequenceNumber)
+        {
+            throw InvalidHistory();
+        }
+
+        var transitions = stream.ExpiredEvents.Select(certificate => (Event: (StreamReadEvent?)null,
+                Expired: (ExpiredIdentityHistoryCertificate?)certificate))
+            .Concat(stream.Events.Select(item => (Event: (StreamReadEvent?)item,
+                Expired: (ExpiredIdentityHistoryCertificate?)null)));
         foreach (var transition in transitions)
         {
             if (transition.Expired is { } expired)
@@ -39,7 +47,7 @@ internal static class RetainedHumanActorHistoryFold
                 // Existing ciphertext contract/position and current terminal destruction proof
                 // authenticate version continuity without recovering any expired relationship.
                 // The accepted fixed effective-at lifetime permits only an expired prefix.
-                if (hasReadableTransition || expired.PolicyId != policyId) { throw InvalidHistory(); }
+                if (expired.PolicyId != policyId) { throw InvalidHistory(); }
                 if (expired.EventTypeName == typeof(HumanActorBindingEstablished).FullName)
                 {
                     if (version != 0) { throw InvalidHistory(); }
@@ -47,12 +55,20 @@ internal static class RetainedHumanActorHistoryFold
                 else if (expired.EventTypeName != typeof(HumanActorBindingRebound).FullName
                     && expired.EventTypeName != typeof(HumanActorBindingRevoked).FullName || version == 0)
                 { throw InvalidHistory(); }
+                bool isRevocation = expired.EventTypeName == typeof(HumanActorBindingRevoked).FullName;
+                if (isRevocation && revoked) { throw InvalidHistory(); }
                 version = checked(version + 1);
-                if (expired.EventTypeName != typeof(HumanActorBindingRevoked).FullName) { certifiedExpiredLiveVersions.Add(version); }
+                revoked = isRevocation;
+                if (!isRevocation) { certifiedExpiredLiveVersions.Add(version); }
                 continue;
             }
             StreamReadEvent item = transition.Event ?? throw InvalidHistory();
-            hasReadableTransition = true;
+            if (item.SerializationFormat != "json" || item.MetadataVersion != 1
+                || item.ProtectionMetadata is not { MetadataVersion: EventStorePayloadProtectionMetadata.CurrentMetadataVersion,
+                    State: PayloadProtectionState.Unprotected })
+            {
+                throw InvalidHistory();
+            }
             string eventName = item.EventTypeName;
             if (eventName == typeof(HumanActorBindingEstablished).FullName)
             {
@@ -90,6 +106,7 @@ internal static class RetainedHumanActorHistoryFold
 
                 Close(value.ExpectedBindingVersion, value.EffectiveAt, requireLivePredecessor: !certifiedExpiredLiveVersions.Contains(version));
                 version = checked(version + 1);
+                revoked = true;
             }
             else
             {
@@ -112,13 +129,14 @@ internal static class RetainedHumanActorHistoryFold
                 || end > evidence.Custody.ExpiresAt || string.IsNullOrWhiteSpace(evidence.SourceId)
                 || string.IsNullOrWhiteSpace(evidence.ProvenanceId) || string.IsNullOrWhiteSpace(binding!.IntentDigest)
                 || string.IsNullOrWhiteSpace(binding.LogicalId) || !logicalIds.Add(binding.LogicalId)
-                || bindings.Any(previous => previous.Evidence.ValidFrom >= at || previous.Evidence.ValidUntil > at))
+                || bindings.Count > 0 && (bindings[^1].Evidence.ValidFrom >= at || bindings[^1].Evidence.ValidUntil > at))
             {
                 throw InvalidHistory();
             }
 
             bindings.Add(new(evidence, position));
             version = evidence.BindingVersion;
+            revoked = false;
         }
 
         void Close(long expectedVersion, DateTimeOffset at, bool requireLivePredecessor)
@@ -128,8 +146,8 @@ internal static class RetainedHumanActorHistoryFold
                 throw InvalidHistory();
             }
 
-            int index = bindings.FindIndex(binding => binding.Evidence.BindingVersion == expectedVersion);
-            if (index < 0)
+            int index = bindings.Count - 1;
+            if (index < 0 || bindings[index].Evidence.BindingVersion != expectedVersion)
             {
                 if (requireLivePredecessor)
                 {
