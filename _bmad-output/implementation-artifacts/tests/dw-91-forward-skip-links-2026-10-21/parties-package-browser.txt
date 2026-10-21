@@ -1,0 +1,20 @@
+
+> hexalith-parties-e2e@0.0.0 test:a11y
+> playwright test specs/parties-accessibility.spec.ts --project=chromium
+
+
+Running 8 tests using 1 worker
+
+(node:87821) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › specs/parties-accessibility.spec.ts:20:3 › Parties UI accessibility specimen › specimen is nonblank and passes the blocking axe gate (2.0s)
+  ✓  2 [chromium] › specs/parties-accessibility.spec.ts:40:3 › Parties UI accessibility specimen › skip links are the first two focusable elements in the shell and focus their targets (798ms)
+  -  3 [chromium] › specs/parties-accessibility.spec.ts:58:3 › Parties UI accessibility specimen › route-heading announcement leaves skip links forward reachable and focuses their targets
+  -  4 [chromium] › specs/parties-accessibility.spec.ts:80:3 › Parties UI accessibility specimen › client-side route focus restores forward skip access
+  ✓  5 [chromium] › specs/parties-accessibility.spec.ts:121:3 › Parties UI accessibility specimen › keyboard flow reaches representative controls without trapping focus (603ms)
+  ✓  6 [chromium] › specs/parties-accessibility.spec.ts:130:3 › Parties UI accessibility specimen › forced-colors and reduced-motion media are observable (685ms)
+  ✓  7 [chromium] › specs/parties-accessibility.spec.ts:151:3 › Parties UI accessibility specimen › filled primary button does not compute to raw teal (581ms)
+  ✓  8 [chromium] › specs/parties-accessibility.spec.ts:161:3 › Parties UI accessibility specimen › visual baseline for deterministic shell specimen (626ms)
+
+  2 skipped
+  6 passed (6.6s)

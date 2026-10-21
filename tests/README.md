@@ -65,17 +65,21 @@ additional forward-Tab regressions are explicitly opt-in until a fixed package
 is published and adopted. They never detect support from the application under
 test: enabling them against an unfixed shell must fail.
 
-Build and serve the Debug UI with the root-selected FrontComposer project
-references, then run from `tests/e2e`:
+Serve a Debug UI whose keyboard asset is the selected FrontComposer candidate,
+then run from `tests/e2e` with its explicit URL:
 
 ```bash
-PARTIES_E2E_FORWARD_SKIP_LINKS=1 PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test:a11y
+BASE_URL=http://127.0.0.1:5073 PARTIES_E2E_FORWARD_SKIP_LINKS=1 PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test:a11y
 ```
 
-The existing Playwright web-server configuration also builds Debug source when
-run locally without `PLAYWRIGHT_SKIP_WEBSERVER`. Do not enable this flag in the
-Release/package CI lane until the catalog selects a published fixed package.
-DW-91 remains open for that publication/adoption and removal of the opt-in.
+The flag enables assertions only; it never substitutes application assets or
+infers support. The default local Playwright server uses package dependencies,
+so it cannot satisfy these assertions yet. The DW-91 evidence records a local
+diagnostic host that substitutes only `fc-keyboard.js` through a temporary static
+asset manifest, alongside an unmodified package host. This proves candidate
+integration, not published-package adoption. Do not enable the flag in the
+Release/package CI lane until a fixed package is adopted. DW-91 stays open for
+publication/adoption and removal of the opt-in.
 
 ## Architecture
 

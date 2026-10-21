@@ -1,0 +1,11 @@
+producer: repository-pinned @commitlint/cli 21.2.2
+command: ./node_modules/.bin/commitlint --edit dw-91-producer-commit-message.txt (temporary message file)
+candidate sha256: fde6b4b1f4d7492f1186332669a5fe1c65364e67896c39ae95ce93a33cd562be
+candidate: fix(a11y): preserve forward skip access
+exit: 0; stdout/stderr: empty
+
+parties: repository-pinned @commitlint/cli 21.2.2
+command: ./node_modules/.bin/commitlint --edit dw-91-parties-commit-message.txt (temporary message file)
+candidate sha256: 286ac8d8770f51fd6d4ba1036c3113ab1f8c0fd7da811fa5e0bc64a3cd266fe4
+candidate: fix(a11y): qualify forward skip access
+exit: 0; stdout/stderr: empty

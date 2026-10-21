@@ -1,0 +1,121 @@
+
+Running 2 tests using 1 worker
+
+(node:22823) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [chromium] › specs/parties-accessibility.spec.ts:58:3 › Parties UI accessibility specimen › route-heading announcement leaves skip links forward reachable and focuses their targets (10.8s)
+(node:28294) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 [chromium] › specs/parties-accessibility.spec.ts:80:3 › Parties UI accessibility specimen › client-side route focus restores forward skip access (11.0s)
+
+
+  1) [chromium] › specs/parties-accessibility.spec.ts:58:3 › Parties UI accessibility specimen › route-heading announcement leaves skip links forward reachable and focuses their targets
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: locator(':focus')
+    Timeout: 10000ms
+    - Expected  -  1
+    + Received  + 10
+
+    - Skip to content
+    +
+    +
+    +                     Save synthetic party
+    +
+    +
+    +
+    +
+    +
+    +
+    +
+
+    Call log:
+      - Expect "toHaveText" locator(':focus') with timeout 10000ms
+      - waiting for locator(':focus')
+        24 × locator resolved to <fluent-button tabindex="0" role="button" appearance="primary" _bl_7651303f-72d7-46a6-8878-1bfbfd81011e="" data-testid="parties-specimen-primary-action">…</fluent-button>
+           - unexpected value "
+
+                        Save synthetic party
+
+
+
+
+
+
+        "
+
+
+      63 |
+      64 |     await page.keyboard.press('Tab');
+    > 65 |     await expect(page.locator(':focus')).toHaveText('Skip to content');
+         |                                          ^
+      66 |     await page.keyboard.press('Enter');
+      67 |     await expect(page.locator(':focus')).toHaveAttribute('id', 'fc-main-content');
+      68 |     await page.keyboard.press('Tab');
+        at {project-root}/tests/e2e/specs/parties-accessibility.spec.ts:65:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-40e49-e-and-focuses-their-targets-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-40e49-e-and-focuses-their-targets-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/parties-accessibility-Part-40e49-e-and-focuses-their-targets-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-40e49-e-and-focuses-their-targets-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/parties-accessibility-Part-40e49-e-and-focuses-their-targets-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › specs/parties-accessibility.spec.ts:80:3 › Parties UI accessibility specimen › client-side route focus restores forward skip access
+
+    Error: expect(locator).toBeFocused() failed
+
+    Locator:  getByRole('link', { name: 'Skip to content', exact: true })
+    Expected: focused
+    Received: inactive
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeFocused" getByRole('link', { name: 'Skip to content', exact: true }) with timeout 10000ms
+      - waiting for getByRole('link', { name: 'Skip to content', exact: true })
+        24 × locator resolved to <a b-zbeq395ew8="" class="fc-skip-link" data-enhance-nav="false" href="/__parties/specimens/accessibility?dw91=client-navigation#fc-main-content">Skip to content</a>
+           - unexpected value "inactive"
+
+
+      111 |     await expect(page.locator('#parties-accessibility-specimen-title')).toBeFocused();
+      112 |     await page.keyboard.press('Tab');
+    > 113 |     await expect(page.getByRole('link', { name: 'Skip to content', exact: true })).toBeFocused();
+          |                                                                                    ^
+      114 |     await page.keyboard.press('Enter');
+      115 |     await expect(page.locator('#fc-main-content')).toBeFocused();
+      116 |     await expect(page).toHaveURL(/\?dw91=client-navigation$/);
+        at {project-root}/tests/e2e/specs/parties-accessibility.spec.ts:113:84
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-c82b4-estores-forward-skip-access-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-c82b4-estores-forward-skip-access-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/parties-accessibility-Part-c82b4-estores-forward-skip-access-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/parties-accessibility-Part-c82b4-estores-forward-skip-access-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/parties-accessibility-Part-c82b4-estores-forward-skip-access-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [chromium] › specs/parties-accessibility.spec.ts:58:3 › Parties UI accessibility specimen › route-heading announcement leaves skip links forward reachable and focuses their targets
+    [chromium] › specs/parties-accessibility.spec.ts:80:3 › Parties UI accessibility specimen › client-side route focus restores forward skip access

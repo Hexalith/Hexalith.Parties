@@ -2,7 +2,7 @@
 title: 'DW-91: Restore forward skip access after route focus'
 type: 'bugfix'
 created: '2026-10-21'
-status: 'in-progress'
+status: 'done'
 route: 'oneshot'
 review_loop_iteration: 0
 baseline_commit: '457031c91fea0857321399722b5a89aeb7ce64b3'
@@ -53,3 +53,10 @@ context: []
 - During investigation the user's concurrent `0c9572bc2cc7a476343f11a488b9311ebbbcb8c9` committed the starting changes. Preserve that commit and all dependency selections. The next commit repairs package-mode coverage with the original always-on seeded-root test and two explicit `PARTIES_E2E_FORWARD_SKIP_LINKS=1` source regressions; no behavior detection or automatic skip on failure.
 - Footprint stays small: existing producer keyboard module, producer browser regression file, Parties accessibility tests and test instructions/evidence. No public API, release dispatch, catalog edit, data mutation or unrelated gitlink update.
 - Producer remote main advanced to `6a6f06fd02f2acb72d00eb4971a639b0e366ee1e`; neither touched source path changed. Keep the fix commit directly based on selected `913c4132c71cd7f77fcdf6befa9e396d284dd4bc`, merge it into producer main, then select only the focused source commit in Parties.
+
+## Final Source Delivery
+
+- Completion scope: reviewed producer implementation and consumer source qualification. DW-91 remains open for owner-controlled package publication/adoption; no release was dispatched or package version changed.
+- Resumed review patched authored tabindex handling, native pointer comparisons, overlay restoration, reused active headings, fresh pointer input after a URL change, and the tabindex-0 traversal loop. Historical receipts remain unchanged; replacement receipts and tracked .txt outputs are linked in `tests/dw-91-forward-skip-links-2026-10-21/README.md`.
+- Final verification: 105 producer browser cases across Chromium/Firefox/WebKit; 8 consumer source-asset cases; 6 unchanged-package cases plus 2 explicit source skips; both TypeScript checks; Debug builds with zero warnings/errors. The negative package control fails both new assertions as intended. This is not Release/package-adoption evidence.
+- The concurrent workspace sync committed the original source/tests and changed several gitlinks. Preserved it verbatim. The final source patch builds on current producer main after a fast-forward whose changes did not touch the keyboard module or browser tests. Exact producer identity and candidate/served hashes are in `validation-resume.json`.

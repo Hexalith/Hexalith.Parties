@@ -1,0 +1,146 @@
+{
+  "root_head_before_final_commit": "e040342887db74b01d8d49c5c98b82e2610b7cda",
+  "producer_parent": "ec73fcba9bc5f9a54a853bb9c96ef2fb9d2ca1b2",
+  "source_files": [
+    {
+      "path": "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot/js/fc-keyboard.js",
+      "sha256": "d4df1413a9be54d7cb53c7d76391136e6f053651e8210aa88b9117f4d4dbdbe9",
+      "normalized_sha256": "de1d5372ca13651652d95b9c645345e6cacaa288435640a83870504d760a1de9"
+    },
+    {
+      "path": "references/Hexalith.FrontComposer/tests/e2e/specs/route-skip-links.spec.ts",
+      "sha256": "54ebe7541d317489453950fbc8a085d9d2d82e0068915f34cd2e2ac0f1641085",
+      "normalized_sha256": "934fdb9c82ff211430e98a39c37da8a1cdd6f5650c42647c2e28648a01473fd4"
+    },
+    {
+      "path": "tests/e2e/specs/parties-accessibility.spec.ts",
+      "sha256": "f64c38840572615c39ca738cbe3cb954d42a14f98c100075aaf19874a3d40bc9",
+      "normalized_sha256": "f64c38840572615c39ca738cbe3cb954d42a14f98c100075aaf19874a3d40bc9"
+    }
+  ],
+  "served_assets": [
+    {
+      "url": "http://127.0.0.1:5070/_content/Hexalith.FrontComposer.Shell/js/fc-keyboard.js",
+      "sha256": "d4df1413a9be54d7cb53c7d76391136e6f053651e8210aa88b9117f4d4dbdbe9",
+      "matches_candidate": true
+    },
+    {
+      "url": "http://127.0.0.1:5072/_content/Hexalith.FrontComposer.Shell/js/fc-keyboard.js",
+      "sha256": "fba2d6220a898b0e6bf57f8d6d23960a21194ce575ed36a1d63c0050dec8a14f",
+      "matches_candidate": false
+    },
+    {
+      "url": "http://127.0.0.1:5073/_content/Hexalith.FrontComposer.Shell/js/fc-keyboard.js",
+      "sha256": "d4df1413a9be54d7cb53c7d76391136e6f053651e8210aa88b9117f4d4dbdbe9",
+      "matches_candidate": true
+    }
+  ],
+  "producer_revision": "099299cb5da4ec1ffa3b19cc0387f06d5bbb7634",
+  "outputs": [
+    {
+      "path": "producer-browser.txt",
+      "sha256": "492cb8d9c7cd3b7efc71828a820b422bbb522790c667eea98aa518480ad980e2",
+      "summary": "105 passed"
+    },
+    {
+      "path": "parties-source-browser.txt",
+      "sha256": "d5201381dedf4df9273af687f578e495e647666996848105fa132a7d67bf8440",
+      "summary": "8 passed"
+    },
+    {
+      "path": "parties-package-browser.txt",
+      "sha256": "bfe097b2618d705d13dbc97c6bce850812bb15dd8bc0d3e4296e319d2f55cebe",
+      "summary": "6 passed"
+    },
+    {
+      "path": "parties-negative-browser.txt",
+      "sha256": "7a2252714f4b7f0e797a3f91bcd28cf6262db21fa275e10c2600b36959a7f79c",
+      "summary": "2 failed"
+    }
+  ],
+  "checks": [
+    {
+      "cwd": "references/Hexalith.FrontComposer",
+      "command": "dotnet build samples/Counter/Counter.Web/Counter.Web.csproj -c Debug -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -m:1",
+      "exit_code": 0,
+      "result": "0 warnings, 0 errors; no C# changed in subsequent keyboard patches"
+    },
+    {
+      "cwd": ".",
+      "command": "dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -m:1",
+      "exit_code": 0,
+      "result": "0 warnings, 0 errors; effective graph uses published FrontComposer 4.7.0; legacy switches do not inject source mapping"
+    },
+    {
+      "cwd": "references/Hexalith.FrontComposer/tests/e2e",
+      "command": "npm run typecheck",
+      "exit_code": 0
+    },
+    {
+      "cwd": "tests/e2e",
+      "command": "npm run typecheck",
+      "exit_code": 0
+    },
+    {
+      "cwd": "references/Hexalith.FrontComposer/tests/e2e",
+      "command": "PLAYWRIGHT_SKIP_WEBSERVER=1 FC_E2E_OUTPUT_DIR=/tmp/dw-91-final-verified-producer-artifacts FC_E2E_HTML_REPORT_DIR=/tmp/dw-91-final-verified-producer-report npm exec playwright test specs/route-skip-links.spec.ts specs/route-contract.spec.ts -- --project=chromium --project=firefox --project=webkit --workers=1 --retries=0",
+      "exit_code": 0,
+      "result": "105 passed: 15 skip-link and 20 route-contract cases per engine",
+      "output": "producer-browser.txt"
+    },
+    {
+      "cwd": "tests/e2e",
+      "command": "BASE_URL=http://127.0.0.1:5073 PARTIES_E2E_FORWARD_SKIP_LINKS=1 PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test:a11y",
+      "exit_code": 0,
+      "result": "8 passed against isolated candidate keyboard asset with all other package assets unchanged",
+      "output": "parties-source-browser.txt"
+    },
+    {
+      "cwd": "tests/e2e",
+      "command": "PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test:a11y",
+      "exit_code": 0,
+      "result": "6 passed; 2 explicitly skipped source qualifications on unchanged package host",
+      "output": "parties-package-browser.txt"
+    },
+    {
+      "cwd": "tests/e2e",
+      "command": "BASE_URL=http://127.0.0.1:5072 PARTIES_E2E_FORWARD_SKIP_LINKS=1 PLAYWRIGHT_SKIP_WEBSERVER=1 npm exec playwright test specs/parties-accessibility.spec.ts -- --project=chromium --grep 'route-heading announcement|client-side route focus' --retries=0",
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "result": "Both forward-Tab assertions fail on the unfixed package; focus reaches content instead of the skip link",
+      "output": "parties-negative-browser.txt"
+    },
+    {
+      "cwd": ".",
+      "command": "python3 _bmad-output/implementation-artifacts/tests/dw-91-forward-skip-links-2026-10-21/prepare-keyboard-asset.py src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.Parties.UI.staticwebassets.runtime.json references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot /tmp/dw-91-repro-source-assets.runtime.json",
+      "exit_code": 0,
+      "result": "Generated manifest byte-equals the diagnostic manifest used by the source host"
+    }
+  ],
+  "package_boundary": {
+    "current_frontcomposer_version": "4.7.0",
+    "producer_publication": "not dispatched",
+    "consumer_package_adoption": "pending owner publication and catalog adoption; DW-91 stays open",
+    "release_qualification_claimed": false
+  },
+  "diagnostics": [
+    "An initial producer run overlapped the concurrent branch sync and discovered only the 60 route-contract cases. One Firefox heading-geometry assertion failed; a stable 90-case rerun passed before review patches. The final 105-case run passes with retries disabled.",
+    "Intermediate edge regressions exposed and fixed native tabindex-0 looping and pointer/reused-heading behavior. Firefox native traversal must be compared after the same overlay lifecycle. Reused-heading assertions must locate the updated accessible name. See review-resume.md."
+  ],
+  "cleanup": [
+    {
+      "port": 5070,
+      "result": "sent SIGTERM to the exact qualification host"
+    },
+    {
+      "port": 5072,
+      "result": "sent SIGTERM to the exact qualification host"
+    },
+    {
+      "port": 5073,
+      "result": "sent SIGTERM to the exact qualification host"
+    }
+  ],
+  "producer_remote_main_verified": "099299cb5da4ec1ffa3b19cc0387f06d5bbb7634",
+  "log_normalization": "Workspace path prefix replaced with {project-root}; trailing whitespace trimmed in negative-control output."
+}
