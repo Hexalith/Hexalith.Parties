@@ -1,0 +1,181 @@
+{
+  "baseline_commit": "df46e53e33bd19fd64c33e11bf13d48e4e6fd604",
+  "date": "2026-10-21",
+  "completed_deferred_items": [
+    "DW-177",
+    "DW-178",
+    "DW-179",
+    "DW-183",
+    "DW-184"
+  ],
+  "final_checks": [
+    {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+        "-c",
+        "Debug",
+        "--no-restore"
+      ],
+      "exit_code": 0,
+      "result": "Build succeeded.; 0 Warning(s); 0 Error(s)"
+    },
+    {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll"
+      ],
+      "exit_code": 0,
+      "result": "Hexalith.Parties.AdminPortal.Tests  Total: 231, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 2.518s"
+    },
+    {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "-c",
+        "Debug",
+        "--no-restore"
+      ],
+      "exit_code": 0,
+      "result": "Build succeeded.; 0 Warning(s); 0 Error(s)"
+    },
+    {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll"
+      ],
+      "exit_code": 0,
+      "result": "Hexalith.Parties.UI.Tests  Total: 388, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 1.464s"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "exit_code": 0,
+      "result": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+    },
+    {
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "result": "passed"
+    }
+  ],
+  "original_regression_run": {
+    "build_command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+      "-c",
+      "Debug",
+      "--no-restore"
+    ],
+    "build_exit": 0,
+    "test_command": [
+      "dotnet",
+      "tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+      "-method",
+      "*AcceptedStatus*",
+      "-method",
+      "*ReasonOnlyDegradedEmptySearch*",
+      "-method",
+      "*DialogOpenFailure*",
+      "-method",
+      "*InputFocusFailure*",
+      "-method",
+      "*RadioGroupSwitches*"
+    ],
+    "test_exit": 1,
+    "total": 19,
+    "failed": 5,
+    "skipped": 0,
+    "failures": [
+      "pending list acknowledgement",
+      "pending detail acknowledgement",
+      "healthy matching-row convergence",
+      "unchanged-context receipt",
+      "dialog opening recovery"
+    ]
+  },
+  "render_window_mutation": {
+    "mutation": "Temporarily remove the pre-render list-version increment and cancellation; restore final bytes in finally.",
+    "build_exit": 0,
+    "test_command": [
+      "dotnet",
+      "tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+      "-method",
+      "*ReadStartedBeforeReceipt*"
+    ],
+    "test_exit_without_fix": 1,
+    "total": 1,
+    "failed_without_fix": 1,
+    "test_exit_with_fix": 0,
+    "result": "The old matching response completes inline during receipt rendering. It clears the notice without invalidation and is rejected with the fix."
+  },
+  "source_launcher_blocker": {
+    "command": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "debug",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json"
+    ],
+    "exit_code": 2,
+    "output": "unavailable: PrerequisiteUnavailable\nHXR011 Prerequisite PrerequisiteUnavailable field=HEXALITH_DAPR_HOME: The isolated Dapr home is not configured. (Set HEXALITH_DAPR_HOME to an absolute directory prepared with the selected Dapr CLI and runtime.)",
+    "fallback": "Debug builds and direct individual-assembly tests using the repository-selected package graph. No source-mode or full topology qualification claimed."
+  },
+  "aspire_baseline": {
+    "commands": [
+      "timeout 50s aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "timeout 20s aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --format Json",
+      "timeout 25s aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive"
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0
+    ],
+    "result": "Started and inspected exact AppHost; security was Running while dependent services were Waiting. Stopped exact AppHost before builds. Lifecycle inspection only."
+  },
+  "review": {
+    "active_layers": [
+      "Blind Hunter"
+    ],
+    "result": "Independent initial review and focused follow-ups completed; no remaining concrete introduced defect.",
+    "patched": [
+      "pre-receipt read invalidation before rendering",
+      "payload freshness propagation and reconciliation",
+      "clear old failure correlation",
+      "reset focus marker on repeated failures"
+    ],
+    "deferred": [
+      "Command-specific accepted-edit convergence; matching identity alone proves row visibility."
+    ],
+    "rejected_low": [
+      "Optional separate delayed capability-probe test beyond required pending list/detail cases."
+    ]
+  },
+  "commitlint": {
+    "command": [
+      "node_modules/.bin/commitlint",
+      "--edit",
+      "/tmp/five-admin-commit-message.txt",
+      "--verbose"
+    ],
+    "pinned_version": "21.2.2",
+    "exit_code": 0,
+    "result": "0 problems, 0 warnings",
+    "message": "fix(admin): resolve five deferred portal items"
+  }
+}

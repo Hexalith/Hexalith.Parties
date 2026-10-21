@@ -649,12 +649,28 @@
         }
 
         bool acceptedCommand = QueryService.ConsumeAcceptedCommand(RoutePartyId, authorizationState.ContextSignature);
+        string? acceptedPartyId = acceptedCommand ? NormalizeRoutePartyId(RoutePartyId) : null;
         string signature = string.Join('|',
             ContextKey ?? "<null>",
             authorizationState.ContextSignature,
             PageSize);
         if (string.Equals(_previousContextSignature, signature, StringComparison.Ordinal))
         {
+            if (acceptedPartyId is not null)
+            {
+                // Rendering can yield to an older list response; invalidate it first.
+                Interlocked.Increment(ref _listVersion);
+                SafeCancel(Interlocked.Exchange(ref _listCts, null));
+                _acceptedCommandPartyId = acceptedPartyId;
+                await SafeStateHasChangedAsync().ConfigureAwait(false);
+                if (claim != Volatile.Read(ref _authContextClaim))
+                {
+                    return;
+                }
+
+                await LoadPageAsync().ConfigureAwait(false);
+            }
+
             await ApplyRoutePartySelectionAsync().ConfigureAwait(false);
             return;
         }
@@ -696,6 +712,12 @@
             return;
         }
 
+        if (acceptedPartyId is not null)
+        {
+            _acceptedCommandPartyId = acceptedPartyId;
+            await SafeStateHasChangedAsync().ConfigureAwait(false);
+        }
+
         await EnsureRichSearchCapabilityAsync(authorizationState.ContextSignature).ConfigureAwait(false);
 
         if (claim != Volatile.Read(ref _authContextClaim))
@@ -705,10 +727,6 @@
 
         await LoadPageAsync().ConfigureAwait(false);
         await ApplyRoutePartySelectionAsync().ConfigureAwait(false);
-        if (acceptedCommand && claim == Volatile.Read(ref _authContextClaim))
-        {
-            _acceptedCommandPartyId = RoutePartyId;
-        }
     }
 
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs args)
@@ -921,6 +939,7 @@
                     PageSize = result.Payload.PageSize,
                     TotalCount = result.Payload.TotalCount,
                     TotalPages = result.Payload.TotalPages,
+                    Freshness = result.Payload.Freshness,
                 };
                 await ApplyRowsAsync(page, result.Metadata, version).ConfigureAwait(false);
             }
@@ -951,6 +970,14 @@
         if (version != _listVersion)
         {
             return;
+        }
+
+        if (_acceptedCommandPartyId is not null
+            && !metadata.IsDegraded
+            && page.Freshness is null or { Status: ProjectionFreshnessStatus.Current }
+            && page.Items.Any(row => string.Equals(row.Id, _acceptedCommandPartyId, StringComparison.Ordinal)))
+        {
+            _acceptedCommandPartyId = null;
         }
 
         bool preserveLastKnownRows = _rows.Count > 0

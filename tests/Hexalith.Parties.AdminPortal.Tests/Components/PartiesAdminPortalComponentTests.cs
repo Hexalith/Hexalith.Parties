@@ -892,6 +892,33 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
     }
 
     [Fact]
+    public void PartiesAdminPortal_ReasonOnlyDegradedEmptySearch_PreservesLastKnownRows()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-last-known", "Last Known Row", PartyType.Person, true)));
+        api.EnqueueSearch(Page<PartySearchResult>(),
+            new AdminPortalQueryMetadata(SearchDegradedReason: "private backend detail"));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        PartiesAdminListCoordinator coordinator = Services.GetRequiredService<PartiesAdminListCoordinator>();
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-reason", searchDebounceDelay: TimeSpan.FromHours(1));
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Last Known Row"));
+
+        SetSearch(cut, "needle");
+        ClickFluentButton(cut, "Search");
+
+        cut.WaitForAssertion(() =>
+        {
+            api.SearchRequests.Count.ShouldBe(1);
+            cut.Find("table").TextContent.ShouldContain("Last Known Row");
+            cut.Find(".hx-parties-admin__status").TextContent.ShouldContain("Data may be stale or degraded");
+            cut.Find(".hx-parties-admin__status").GetAttribute("aria-live").ShouldBe("polite");
+            coordinator.State.ShouldBe(AdminPortalListState.DegradedSearch);
+            cut.Markup.ShouldNotContain("private backend detail");
+            cut.FindAll(".hx-parties-admin__empty").ShouldBeEmpty();
+        });
+    }
+
+    [Fact]
     public void PartiesAdminPortal_GridKeyboard_ArrowsAndEnterActivateFocusedRow()
     {
         var api = new RecordingAdminPortalApiClient();
@@ -2552,6 +2579,89 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Markup.ShouldContain("EventStore Admin UI unavailable");
             cut.FindAll("a[href*='streams']").ShouldBeEmpty();
         });
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_RequestErasure_DialogOpenFailureAllowsFreshRetry()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-dialog-retry", "Dialog Retry", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-dialog-retry", "Dialog Retry", PartyType.Person, isActive: true));
+        api.EnqueueDetail(Detail("party-dialog-retry", "Dialog Retry", PartyType.Person, isActive: true, isRestricted: true));
+        api.EnqueueRestrictionResult(new AdminPortalGdprCommandResult(AdminPortalGdprOutcome.Accepted, "corr-before-dialog"));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        bool failOpen = true;
+        JSInterop.SetupVoid("Microsoft.FluentUI.Blazor.Components.Dialog.Show", _ => failOpen)
+            .SetException(new JSException("private dialog failure"));
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-dialog-retry");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Dialog Retry"));
+        ClickFluentButton(cut, "Dialog Retry");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse());
+        SetTextInput(cut, "Restriction reason", "restrict before erasure");
+        ClickFluentButton(cut, "Restrict processing");
+        ClickFluentButton(cut, "Confirm");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("corr-before-dialog"));
+
+        ClickFluentButton(cut, "Request erasure");
+
+        cut.WaitForAssertion(() =>
+        {
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse();
+            cut.FindComponents<FluentDialog>().ShouldBeEmpty();
+            api.ErasureRequests.ShouldBeEmpty();
+            cut.Markup.ShouldNotContain("private dialog failure");
+            cut.Markup.ShouldNotContain("corr-before-dialog");
+            cut.Find("[data-gdpr-operation-announcement]").GetAttribute("role").ShouldBe("alert");
+        });
+        cut.WaitForAssertion(() => JSInterop.Invocations["Blazor._internal.domWrapper.focus"].Count.ShouldBeGreaterThan(0));
+        int focusAfterFirstFailure = JSInterop.Invocations["Blazor._internal.domWrapper.focus"].Count;
+        ClickFluentButton(cut, "Request erasure");
+        cut.WaitForAssertion(() =>
+        {
+            FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse();
+            cut.FindComponents<FluentDialog>().ShouldBeEmpty();
+            JSInterop.Invocations["Blazor._internal.domWrapper.focus"].Count.ShouldBeGreaterThan(focusAfterFirstFailure);
+            api.ErasureRequests.ShouldBeEmpty();
+        });
+        failOpen = false;
+        ClickFluentButton(cut, "Request erasure");
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindComponents<FluentDialog>().Count.ShouldBe(1);
+            FindTextInput(cut, "Type the selected party display name").Instance.Value.ShouldBeNullOrEmpty();
+            FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeTrue();
+            api.ErasureRequests.ShouldBeEmpty();
+        });
+        SetTextInput(cut, "Type the selected party display name", "Dialog Retry");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeFalse());
+        ClickFluentButton(cut, "Erase");
+        cut.WaitForAssertion(() => api.ErasureRequests.Single().ShouldBe("party-dialog-retry"));
+    }
+
+    [Fact]
+    public void PartiesAdminPortal_RequestErasure_InputFocusFailureKeepsOpenedDialog()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        api.EnqueueList(Page(IndexEntry("party-dialog-focus", "Dialog Focus", PartyType.Person, true)));
+        api.EnqueueDetail(Detail("party-dialog-focus", "Dialog Focus", PartyType.Person, isActive: true));
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        JSInterop.SetupVoid("Blazor._internal.domWrapper.focus", _ => true)
+            .SetException(new JSException("focus unavailable"));
+        IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-dialog-focus");
+        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Dialog Focus"));
+        ClickFluentButton(cut, "Dialog Focus");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Request erasure").HasAttribute("disabled").ShouldBeFalse());
+
+        ClickFluentButton(cut, "Request erasure");
+
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindComponents<FluentDialog>().Count.ShouldBe(1);
+            FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeTrue();
+            api.ErasureRequests.ShouldBeEmpty();
+        });
+        SetTextInput(cut, "Type the selected party display name", "Dialog Focus");
+        cut.WaitForAssertion(() => FindFluentButton(cut, "Erase").HasAttribute("disabled").ShouldBeFalse());
     }
 
     [Fact]

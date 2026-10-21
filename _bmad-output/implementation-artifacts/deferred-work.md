@@ -1315,7 +1315,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor (LoadPageAsync and route selection)
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: `PartiesAdminPortal` sets its updating notice only after awaiting `LoadPageAsync` and route selection; this ordering predates the release patch.
-status: open
+status: done 2026-10-21
+resolution: Accepted receipts render a polite notice before capability/list/detail reads, including unchanged authorization contexts. A new receipt starts a new list version; delayed reads cannot restore a cleared notice. Covered by pending-read, pre-receipt, supersession and route/authentication regressions. Independent review completed. See spec-five-admin-deferred-items.md and tests/five-admin-deferred-items-2026-10-21/validation.json.
 
 ### DW-178: Clear the admin updating notice when the saved party reaches the projection.
 
@@ -1323,7 +1324,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor (_acceptedCommandPartyId)
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: `PartiesAdminPortal` clears `_acceptedCommandPartyId` on navigation and context reset but has no convergence clear, so the notice can remain after the row appears; this behavior predates the release patch.
-status: open
+status: done 2026-10-21
+resolution: Current healthy matching rows clear the notice; wrapper degradation, every non-current payload freshness state, unrelated/empty pages and superseded reads retain it. List/search freshness is preserved. This closes matching-row visibility only; command-specific edit convergence is tracked separately below. Independent review completed. See spec-five-admin-deferred-items.md and tests/five-admin-deferred-items-2026-10-21/validation.json.
 
 ### DW-179: Restore the erasure confirmation action after a dialog open failure.
 
@@ -1331,7 +1333,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties.AdminPortal/Components/PartyGdprOperationsPanel.razor (_pendingErasureDialogOpen, ShowAsync, _confirmErasure)
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: `PartyGdprOperationsPanel` consumes `_pendingErasureDialogOpen` before `ShowAsync` and catches `JSException` while `_confirmErasure` keeps the action button replaced; this is later UI work.
-status: open
+status: done 2026-10-21
+resolution: A failed Fluent dialog opening resets typed confirmation, restores the request action and announces a bounded transient failure without an older correlation. Repeated failures refocus the announcement; input-focus failures keep an opened dialog usable. Retry still requires fresh exact confirmation and sends only the explicitly confirmed command. Independent review completed. See spec-five-admin-deferred-items.md and tests/five-admin-deferred-items-2026-10-21/validation.json.
 
 ### DW-180: Reproduce whether immediate blob URL revocation loses a supported-browser privacy export.
 
@@ -1363,7 +1366,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: admin search SearchDegradedReason branch and component tests
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: The new `SearchDegradedReason` branch preserves rows for an empty response, but existing tests use a nonempty page or other degradation signals; removing the branch would clear rows without a test failure. This is later UI work.
-status: open
+status: done 2026-10-21
+resolution: A reason-only empty degraded search regression asserts retained grid rows, bounded polite degraded status, no empty state and no raw backend reason. Independent review completed. See spec-five-admin-deferred-items.md and tests/five-admin-deferred-items-2026-10-21/validation.json.
 
 ### DW-184: Assert accessible checked state after switching the admin party-type radios.
 
@@ -1371,7 +1375,8 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: admin party-type radio aria-checked expressions and component/browser tests
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: The new `aria-checked` expressions are not asserted by component tests or the browser test, which only checks radiogroup visibility; an inverted expression could misannounce the type. This is later UI work.
-status: open
+status: done 2026-10-21
+resolution: The existing party-type switching regression now checks both rendered aria-checked values initially and after switching to Organization, back to Person and again to Organization. Independent review completed. See spec-five-admin-deferred-items.md and tests/five-admin-deferred-items-2026-10-21/validation.json.
 
 ### DW-185: Narrow the operator-created NuGet trusted-publishing policy to the Parties package IDs and publish-only operations.
 
@@ -1556,3 +1561,8 @@ archived: 2026-10-21
   summary: Contain test-process descendants that inherit output pipes after their direct parent has already exited.
   severity: medium
   evidence: Independent DW-90 review reproduced the same orphan in the baseline shared package runner and the consolidation candidate. Once the direct parent exits, Process.Kill(entireProcessTree: true) cannot identify that orphan; bounded output capture still fails promptly. The inherited-pipe regression explicitly owns and terminates its descendant. Qualify an appropriate process-group/job strategy separately before claiming orphan cleanup.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-admin-deferred-items.md`
+  summary: Bind accepted edit convergence to a command-specific projection witness or expected edited state.
+  severity: medium
+  evidence: DW-178 deliberately closes matching-row identity visibility. An existing party already has that identity, so a healthy Current list/search response can contain its pre-edit row before the accepted update projects. The accepted receipt currently carries only party ID and authorization context, without a command/version witness. Matching identity must not be advertised as proof of the latest edit; qualify an owner-supported witness and an edit-specific stale-value regression separately.

@@ -141,23 +141,40 @@ public sealed class CreateEditPartyPageTests : BunitContext
         cut.WaitForAssertion(() => cut.FindComponent<FluentRadioGroup<string>>().Instance.Value.ShouldBe("Person"));
         cut.Markup.ShouldContain("Person");
         cut.Markup.ShouldContain("Organization");
+        cut.Find("[role='radio'][value='Person']").GetAttribute("aria-checked").ShouldBe("true");
+        cut.Find("[role='radio'][value='Organization']").GetAttribute("aria-checked").ShouldBe("false");
         SetTextInput(cut, "First name", "Ada");
         SetTextInput(cut, "Last name", "Lovelace");
 
         SetPartyType(cut, "Organization");
 
-        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Organization details"));
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Organization details");
+            cut.Find("[role='radio'][value='Person']").GetAttribute("aria-checked").ShouldBe("false");
+            cut.Find("[role='radio'][value='Organization']").GetAttribute("aria-checked").ShouldBe("true");
+        });
         SetTextInput(cut, "Legal name", "Analytical Engines Ltd");
 
         SetPartyType(cut, "Person");
 
-        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Person details"));
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Person details");
+            cut.Find("[role='radio'][value='Person']").GetAttribute("aria-checked").ShouldBe("true");
+            cut.Find("[role='radio'][value='Organization']").GetAttribute("aria-checked").ShouldBe("false");
+        });
         FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada");
         FindTextInput(cut, "Last name").Instance.Value.ShouldBe("Lovelace");
 
         SetPartyType(cut, "Organization");
 
-        cut.WaitForAssertion(() => cut.Markup.ShouldContain("Organization details"));
+        cut.WaitForAssertion(() =>
+        {
+            cut.Markup.ShouldContain("Organization details");
+            cut.Find("[role='radio'][value='Person']").GetAttribute("aria-checked").ShouldBe("false");
+            cut.Find("[role='radio'][value='Organization']").GetAttribute("aria-checked").ShouldBe("true");
+        });
         FindTextInput(cut, "Legal name").Instance.Value.ShouldBe("Analytical Engines Ltd");
     }
 
@@ -367,6 +384,326 @@ public sealed class CreateEditPartyPageTests : BunitContext
     }
 
     [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void AcceptedStatus_ShowsBeforePendingProjectionReadCompletes(bool delayList)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-pending");
+        string partyId = SubmitAcceptedCreate(api);
+        var list = new TaskCompletionSource<AdminPortalQueryResult<PagedResult<PartyIndexEntry>>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var detail = new TaskCompletionSource<AdminPortalQueryResult<PartyDetail>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (delayList)
+        {
+            api.EnqueueList(token => list.Task.WaitAsync(token));
+        }
+        else
+        {
+            api.EnqueueDetail(token => detail.Task.WaitAsync(token));
+        }
+
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>(parameters =>
+            parameters.Add(x => x.RoutePartyId, partyId));
+
+        portal.WaitForAssertion(() =>
+        {
+            var notice = portal.Find(".hx-parties-admin__accepted-command-status");
+            notice.TextContent.ShouldBe("Saved - updating...");
+            notice.GetAttribute("role").ShouldBe("status");
+            notice.GetAttribute("aria-live").ShouldBe("polite");
+            api.ListRequests.Count.ShouldBe(1);
+            api.DetailRequests.Count.ShouldBe(delayList ? 0 : 1);
+            list.Task.IsCompleted.ShouldBeFalse();
+            detail.Task.IsCompleted.ShouldBeFalse();
+        });
+    }
+
+    [Theory]
+    [InlineData("healthy", false)]
+    [InlineData("empty", true)]
+    [InlineData("unrelated", true)]
+    [InlineData("stale", true)]
+    [InlineData("degraded", true)]
+    [InlineData("reason-only", true)]
+    [InlineData("local-only", true)]
+    public void AcceptedStatus_ReconcilesOnlyMatchingHealthyCurrentRows(string response, bool remainsPending)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-convergence");
+        string partyId = SubmitAcceptedCreate(api);
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>(parameters =>
+            parameters.Add(x => x.RoutePartyId, partyId));
+        portal.WaitForAssertion(() => portal.Find(".hx-parties-admin__accepted-command-status")
+            .TextContent.ShouldBe("Saved - updating..."));
+        AdminPortalQueryMetadata metadata = response switch
+        {
+            "stale" => new(StaleDataAge: "5"),
+            "degraded" => new(ServiceDegraded: true),
+            "reason-only" => new(SearchDegradedReason: "backend-unavailable"),
+            "local-only" => new(SearchStatus: "LocalOnly"),
+            _ => AdminPortalQueryMetadata.Empty,
+        };
+        api.EnqueueList(new PagedResult<PartyIndexEntry>
+        {
+            Items = response == "empty" ? [] : [new PartyIndexEntry
+            {
+                Id = response == "unrelated" ? "another-party" : partyId,
+                DisplayName = "Projected party",
+                SortName = "Projected party",
+                Type = PartyType.Person,
+                IsActive = true,
+            }],
+            Page = 1,
+            PageSize = 20,
+            TotalCount = response == "empty" ? 0 : 1,
+            TotalPages = response == "empty" ? 0 : 1,
+        }, metadata);
+
+        portal.FindAll("fluent-button").Single(button => button.TextContent.Trim() == "Search").Click();
+
+        portal.WaitForAssertion(() =>
+        {
+            api.ListRequests.Count.ShouldBe(2);
+            portal.FindAll(".hx-parties-admin__accepted-command-status").Count.ShouldBe(remainsPending ? 1 : 0);
+        });
+    }
+
+    [Theory]
+    [InlineData(ProjectionFreshnessStatus.Current, false)]
+    [InlineData(ProjectionFreshnessStatus.Stale, false)]
+    [InlineData(ProjectionFreshnessStatus.Rebuilding, false)]
+    [InlineData(ProjectionFreshnessStatus.Degraded, false)]
+    [InlineData(ProjectionFreshnessStatus.Unavailable, false)]
+    [InlineData(ProjectionFreshnessStatus.LocalOnly, false)]
+    [InlineData(ProjectionFreshnessStatus.Current, true)]
+    [InlineData(ProjectionFreshnessStatus.Stale, true)]
+    [InlineData(ProjectionFreshnessStatus.Rebuilding, true)]
+    [InlineData(ProjectionFreshnessStatus.Degraded, true)]
+    [InlineData(ProjectionFreshnessStatus.Unavailable, true)]
+    [InlineData(ProjectionFreshnessStatus.LocalOnly, true)]
+    public async Task AcceptedStatus_PayloadFreshnessControlsListAndSearchConvergenceAsync(ProjectionFreshnessStatus status, bool search)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-payload-freshness");
+        string partyId = SubmitAcceptedCreate(api);
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>(parameters => parameters
+            .Add(x => x.RoutePartyId, partyId)
+            .Add(x => x.SearchDebounceDelay, TimeSpan.FromHours(1)));
+        portal.WaitForAssertion(() => portal.Find(".hx-parties-admin__accepted-command-status")
+            .TextContent.ShouldBe("Saved - updating..."));
+        var row = new PartyIndexEntry { Id = partyId, DisplayName = "Freshness row", Type = PartyType.Person };
+        var freshness = new ProjectionFreshnessMetadata { Status = status };
+        if (search)
+        {
+            api.EnqueueSearch(new PagedResult<PartySearchResult>
+            {
+                Items = [new PartySearchResult { Party = row, Matches = [] }],
+                Page = 1,
+                PageSize = 20,
+                TotalCount = 1,
+                TotalPages = 1,
+                Freshness = freshness,
+            });
+            await portal.InvokeAsync(() => portal.FindComponent<FluentTextInput>().Instance.ValueChanged.InvokeAsync("needle"));
+        }
+        else
+        {
+            api.EnqueueList(new PagedResult<PartyIndexEntry>
+            {
+                Items = [row],
+                Page = 1,
+                PageSize = 20,
+                TotalCount = 1,
+                TotalPages = 1,
+                Freshness = freshness,
+            });
+        }
+
+        portal.FindAll("fluent-button").Single(button => button.TextContent.Trim() == "Search").Click();
+
+        portal.WaitForAssertion(() =>
+        {
+            if (search)
+            {
+                api.SearchRequests.Count.ShouldBe(1);
+            }
+            else
+            {
+                api.ListRequests.Count.ShouldBe(2);
+            }
+
+            portal.FindAll(".hx-parties-admin__accepted-command-status").Count
+                .ShouldBe(status == ProjectionFreshnessStatus.Current ? 0 : 1);
+        });
+    }
+
+    [Fact]
+    public void AcceptedStatus_SameAuthorizationContextConsumesNewReceipt()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-existing");
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>();
+        portal.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+        string partyId = SubmitAcceptedCreate(api);
+
+        portal.Render(parameters => parameters.Add(x => x.RoutePartyId, partyId));
+
+        portal.WaitForAssertion(() => portal.Find(".hx-parties-admin__accepted-command-status")
+            .TextContent.ShouldBe("Saved - updating..."));
+    }
+
+    [Fact]
+    public async Task AcceptedStatus_ReadStartedBeforeReceiptCannotReconcileNoticeAsync()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-before-receipt");
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>();
+        portal.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+        // Inline continuations force the old read to finish during receipt rendering.
+        var before = new TaskCompletionSource<AdminPortalQueryResult<PagedResult<PartyIndexEntry>>>();
+        var after = new TaskCompletionSource<AdminPortalQueryResult<PagedResult<PartyIndexEntry>>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        api.EnqueueList(_ => before.Task);
+        Task beforeUpdate = portal.InvokeAsync(() => portal.Instance.SetParametersAsync(ParameterView.FromDictionary(
+            new Dictionary<string, object?> { [nameof(PartiesAdminPortal.ContextKey)] = "reload" })));
+        portal.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(2));
+        string partyId = SubmitAcceptedCreate(api);
+        api.EnqueueList(_ => after.Task);
+        portal.OnAfterRender += (_, _) =>
+        {
+            if (!before.Task.IsCompleted && portal.FindAll(".hx-parties-admin__accepted-command-status").Count > 0)
+            {
+                before.SetResult(new AdminPortalQueryResult<PagedResult<PartyIndexEntry>>(
+                    new PagedResult<PartyIndexEntry>
+                    {
+                        Items = [new PartyIndexEntry { Id = partyId, DisplayName = "Before receipt", Type = PartyType.Person }],
+                        Page = 1,
+                        PageSize = 20,
+                        TotalCount = 1,
+                        TotalPages = 1,
+                    }, AdminPortalQueryMetadata.Empty));
+            }
+        };
+        Task afterUpdate = portal.InvokeAsync(() => portal.Instance.SetParametersAsync(ParameterView.FromDictionary(
+            new Dictionary<string, object?> { [nameof(PartiesAdminPortal.ContextKey)] = "reload", [nameof(PartiesAdminPortal.RoutePartyId)] = partyId })));
+        try
+        {
+            portal.WaitForAssertion(() =>
+            {
+                api.ListRequests.Count.ShouldBe(3);
+                portal.Find(".hx-parties-admin__accepted-command-status").TextContent.ShouldBe("Saved - updating...");
+            });
+            await beforeUpdate.WaitAsync(TimeSpan.FromSeconds(10), Xunit.TestContext.Current.CancellationToken);
+            portal.Find(".hx-parties-admin__accepted-command-status").TextContent.ShouldBe("Saved - updating...");
+            portal.Find("table").TextContent.ShouldNotContain("Before receipt");
+        }
+        finally
+        {
+            var empty = new AdminPortalQueryResult<PagedResult<PartyIndexEntry>>(
+                new PagedResult<PartyIndexEntry> { Items = [], Page = 1, PageSize = 20 }, AdminPortalQueryMetadata.Empty);
+            before.TrySetResult(empty);
+            after.TrySetResult(empty);
+            await Task.WhenAll(beforeUpdate, afterUpdate).WaitAsync(TimeSpan.FromSeconds(10), Xunit.TestContext.Current.CancellationToken);
+        }
+    }
+
+    [Theory]
+    [InlineData("route")]
+    [InlineData("tenant")]
+    [InlineData("sign-out")]
+    public async Task AcceptedStatus_PendingReadCannotRestoreNoticeAfterBoundaryChangeAsync(string boundary)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-delayed-boundary");
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>();
+        portal.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+        string partyId = SubmitAcceptedCreate(api);
+        var list = new TaskCompletionSource<AdminPortalQueryResult<PagedResult<PartyIndexEntry>>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        api.EnqueueList(_ => list.Task);
+        Task parameterUpdate = portal.InvokeAsync(() => portal.Instance.SetParametersAsync(ParameterView.FromDictionary(
+            new Dictionary<string, object?> { [nameof(PartiesAdminPortal.RoutePartyId)] = partyId, [nameof(PartiesAdminPortal.ContextKey)] = "reload" })));
+        try
+        {
+            portal.WaitForAssertion(() =>
+            {
+                api.ListRequests.Count.ShouldBe(2);
+                portal.Find(".hx-parties-admin__accepted-command-status").TextContent.ShouldBe("Saved - updating...");
+            });
+            await portal.InvokeAsync(() =>
+            {
+                if (boundary == "route")
+                {
+                    Services.GetRequiredService<NavigationManager>().NavigateTo("/admin/parties");
+                }
+                else if (boundary == "tenant")
+                {
+                    RenderAuthorizedTenant("scope-new");
+                }
+                else
+                {
+                    _authProvider.SetUnauthenticated();
+                }
+            });
+            portal.WaitForAssertion(() => portal.FindAll(".hx-parties-admin__accepted-command-status").ShouldBeEmpty());
+        }
+        finally
+        {
+            // Ignore cancellation deliberately to exercise a successful late response.
+            list.TrySetResult(new AdminPortalQueryResult<PagedResult<PartyIndexEntry>>(
+                new PagedResult<PartyIndexEntry> { Items = [], Page = 1, PageSize = 20 }, AdminPortalQueryMetadata.Empty));
+            await parameterUpdate.WaitAsync(TimeSpan.FromSeconds(10), Xunit.TestContext.Current.CancellationToken);
+        }
+
+        portal.FindAll(".hx-parties-admin__accepted-command-status").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task AcceptedStatus_SupersededMatchingPageDoesNotReconcileNoticeAsync()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-superseded");
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>();
+        portal.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+        string partyId = SubmitAcceptedCreate(api);
+        var list = new TaskCompletionSource<AdminPortalQueryResult<PagedResult<PartyIndexEntry>>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        api.EnqueueList(_ => list.Task);
+        Task parameterUpdate = portal.InvokeAsync(() => portal.Instance.SetParametersAsync(ParameterView.FromDictionary(
+            new Dictionary<string, object?> { [nameof(PartiesAdminPortal.RoutePartyId)] = partyId, [nameof(PartiesAdminPortal.ContextKey)] = "reload" })));
+        try
+        {
+            portal.WaitForAssertion(() =>
+            {
+                api.ListRequests.Count.ShouldBe(2);
+                portal.Find(".hx-parties-admin__accepted-command-status").TextContent.ShouldBe("Saved - updating...");
+            });
+            portal.FindAll("fluent-button").Single(button => button.TextContent.Trim() == "Search").Click();
+            portal.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(3));
+        }
+        finally
+        {
+            list.TrySetResult(new AdminPortalQueryResult<PagedResult<PartyIndexEntry>>(
+                new PagedResult<PartyIndexEntry>
+                {
+                    Items = [new PartyIndexEntry { Id = partyId, DisplayName = "Superseded row", Type = PartyType.Person }],
+                    Page = 1,
+                    PageSize = 20,
+                    TotalCount = 1,
+                    TotalPages = 1,
+                }, AdminPortalQueryMetadata.Empty));
+            await parameterUpdate.WaitAsync(TimeSpan.FromSeconds(10), Xunit.TestContext.Current.CancellationToken);
+        }
+
+        portal.Find(".hx-parties-admin__accepted-command-status").TextContent.ShouldBe("Saved - updating...");
+        portal.Find("table").TextContent.ShouldNotContain("Superseded row");
+    }
+
+    [Theory]
     [InlineData("tenant")]
     [InlineData("user")]
     [InlineData("missing-tenant")]
@@ -410,6 +747,17 @@ public sealed class CreateEditPartyPageTests : BunitContext
         }
 
         portal.WaitForAssertion(() => portal.FindAll(".hx-parties-admin__accepted-command-status").ShouldBeEmpty());
+    }
+
+    private string SubmitAcceptedCreate(RecordingAdminPortalApiClient api)
+    {
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>();
+        form.WaitForAssertion(() => form.Markup.ShouldContain("Create party"));
+        SetTextInput(form, "First name", "Katherine");
+        SetTextInput(form, "Last name", "Johnson");
+        form.Find("form").Submit();
+        form.WaitForAssertion(() => api.CreateRequests.Count.ShouldBe(1));
+        return api.CreateRequests[0].PartyId;
     }
 
     private void RenderAuthorizedTenant(string tenantId)

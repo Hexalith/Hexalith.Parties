@@ -356,16 +356,33 @@
         if (_pendingErasureDialogOpen && _erasureDialog is not null)
         {
             _pendingErasureDialogOpen = false;
+            FluentDialog dialog = _erasureDialog;
             try
             {
-                await _erasureDialog.ShowAsync().ConfigureAwait(false);
-                if (_erasureInput is not null)
-                {
-                    await _erasureInput.Element.FocusAsync().ConfigureAwait(false);
-                }
+                await dialog.ShowAsync().ConfigureAwait(false);
             }
             catch (JSException)
             {
+                if (ReferenceEquals(_erasureDialog, dialog))
+                {
+                    ClearErasureDialogState();
+                    _correlationId = null;
+                    _focusedOutcome = null;
+                    _lastOutcome = AdminPortalGdprOutcome.TransientFailure;
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+
+            if (ReferenceEquals(_erasureDialog, dialog) && _erasureInput is not null)
+            {
+                try
+                {
+                    await _erasureInput.Element.FocusAsync().ConfigureAwait(false);
+                }
+                catch (JSException)
+                {
+                    // The open dialog remains usable when programmatic focus fails.
+                }
             }
         }
 
