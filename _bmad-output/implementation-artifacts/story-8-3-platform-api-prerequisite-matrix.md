@@ -57,7 +57,7 @@ This records present-tense selection facts only; it does not extend dated owner
 approvals, parity/runtime/custody qualification or migration authority. The
 2026-10-20 observation and earlier receipts remain historical below.
 
-The imported Builds catalog and evaluated default Release graph select EventStore package `3.126.0`, Commons `2.30.3`, FrontComposer `4.7.0`,
+The imported Builds catalog and evaluated default Release graph select EventStore package `3.126.1`, Commons `2.30.3`, FrontComposer `4.7.0`,
 Memories `2.27.1`, Tenants `5.9.0`, and Parties `1.5.1`.
 CommunityToolkit.Aspire.Hosting.Dapr remains `13.6.1-beta.935`. Default package
 mode and the explicit source graph remain distinct; ordinary Release builds
@@ -80,15 +80,15 @@ dotnet msbuild src/Hexalith.Parties/Hexalith.Parties.csproj -p:Configuration=Rel
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` (`3f194e17`) | Instruction baseline. |
-| Builds | `2744d549270298cfe73679f76b477a7368429006` (`v4.35.1-3-g2744d549`) | Imported package catalog and build tooling; EventStore 3.126.0 selected. |
+| Builds | `3fcb8f38919bb0961b06a19b57aa45623b35a33e` (`v4.35.1-13-g3fcb8f38`) | Imported package catalog and build tooling; EventStore 3.126.1 selected. |
 | Commons | `5c23c818f639c5bb3175f964c5549440bd5b876d` (`v2.30.3`) | Default Release package is `2.30.3`; source requires explicit tool mapping. |
-| EventStore | `bbfd0fada14ce11e137365637238af4fec2f7f7f` (`v3.126.0-34-gbbfd0fad`) | Source inspection; runtime consumers restore package `3.126.0`. |
-| FrontComposer | `099299cb5da4ec1ffa3b19cc0387f06d5bbb7634` (`v4.7.0-28-g099299cb`) | Selected package is `4.7.0`. |
-| McpCli | `558ce91f495072ecd1d96cb16e0efda9fa3b0722` (`v1.0.0-34-g558ce91f`) | Committed root pointer; not used for G5 proof. |
-| Memories | `08c9a5c64379519ec594a7007118edc364fe8a99` (`v2.29.6-2-g08c9a5c6`) | Selected package remains `2.27.1`. |
-| Platform | `69d46d59dcf138db2d60756142bc943cd63533bd` (`69d46d59`) | Committed root pointer; not used for G5 proof. |
+| EventStore | `1748b16b11fb63b885dfa2fd4a9c7a420ea103a9` (`v3.126.1`) | Source inspection; runtime consumers restore package `3.126.1`. |
+| FrontComposer | `a258b992d08e73e2d3251c865ef01a982eba31ac` (`v4.7.0-42-ga258b992`) | Selected package is `4.7.0`. |
+| McpCli | `7f4a08cb4b7ff9402d1dcf0826ad45ab0256ba65` (`v1.0.0-42-g7f4a08cb`) | Committed root pointer; not used for G5 proof. |
+| Memories | `0af009c20c97038b685f3d4b62c0c8e757982d14` (`v2.29.8`) | Selected package remains `2.27.1`. |
+| Platform | `d189c7de74293e1a718e5e78b1b3b7c0e47b48b5` (`d189c7de`) | Committed root pointer; not used for G5 proof. |
 | PolymorphicSerializations | `221ac4592ba908ae7661ba1fa9e2d1fcc23baee0` (`v1.19.5`) | Existing source dependency. |
-| Tenants | `73e4cbee3c3d429ee90a81562ceb9060f8a82ce5` (`v5.9.0-37-g73e4cbee`) | Selected package is `5.9.0`. |
+| Tenants | `66def172379f37d12e746fe6eb9195801929c572` (`v5.9.0-50-g66def172`) | Selected package is `5.9.0`. |
 
 Source-mode consumer property fixtures use Debug and explicit inputs, for
 example:

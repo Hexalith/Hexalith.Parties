@@ -1,11 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <!-- Only the pinned module tool supplies source roots and mode selectors.
-         When this repo is consumed as a submodule, its nested Builds checkout is absent.
-         Use the parent repository's root-declared catalog in that case. -->
-    <HexalithBuildsRoot Condition="'$(HexalithBuildsRoot)' == '' and $([System.IO.File]::Exists('$(MSBuildThisFileDirectory)references/Hexalith.Builds/Props/Directory.Packages.props'))">$(MSBuildThisFileDirectory)references/Hexalith.Builds</HexalithBuildsRoot>
-    <HexalithBuildsRoot Condition="'$(HexalithBuildsRoot)' == '' and $([System.IO.File]::Exists('$(MSBuildThisFileDirectory)../Hexalith.Builds/Props/Directory.Packages.props'))">$(MSBuildThisFileDirectory)../Hexalith.Builds</HexalithBuildsRoot>
+    <!-- Only the pinned module tool supplies source roots and mode selectors. -->
     <HexalithBuildsRoot Condition="'$(HexalithBuildsRoot)' == ''">$(MSBuildThisFileDirectory)references/Hexalith.Builds</HexalithBuildsRoot>
     <!-- The Web SDK prunes SignalR.Common in favor of Microsoft.AspNetCore.App.
          Require the fixed shared runtime for the UI as well as the central NuGet floor. -->
