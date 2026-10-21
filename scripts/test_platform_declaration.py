@@ -109,8 +109,8 @@ class PlatformDeclarationTests(unittest.TestCase):
         packages = (root / "Directory.Packages.props").read_text()
         for forbidden in ("FromSource", "UseNuGetDeps", "UseHexalithProjectReferences", "Exists("):
             self.assertNotIn(forbidden, props)
-        self.assertNotIn("Exists(", packages)
-        self.assertIn("'$(HexalithBuildsRoot)' == ''", packages)
+        self.assertIn("$(Hexalith1BuildPackageProps)", packages)
+        self.assertIn("Exists('$(Hexalith1BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'", packages)
         for name in ("Contracts", "Client"):
             self.assertNotIn("<HexalithEventStoreRoot", (root / f"src/Hexalith.Parties.{name}/Hexalith.Parties.{name}.csproj").read_text())
         host = (root / "src/Hexalith.Parties/Hexalith.Parties.csproj").read_text()
