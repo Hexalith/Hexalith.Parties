@@ -1,0 +1,32 @@
+[
+  {
+    "testId": "parties-specimen-primary-action",
+    "ordinary": {
+      "animationDuration": "2s",
+      "animationIterationCount": "infinite",
+      "transitionDuration": "3s",
+      "scrollBehavior": "smooth"
+    },
+    "reduced": {
+      "animationDuration": "1e-05s",
+      "animationIterationCount": "1",
+      "transitionDuration": "1e-05s",
+      "scrollBehavior": "auto"
+    }
+  },
+  {
+    "testId": "parties-specimen-link",
+    "ordinary": {
+      "animationDuration": "2s",
+      "animationIterationCount": "infinite",
+      "transitionDuration": "3s",
+      "scrollBehavior": "smooth"
+    },
+    "reduced": {
+      "animationDuration": "1e-05s",
+      "animationIterationCount": "1",
+      "transitionDuration": "1e-05s",
+      "scrollBehavior": "auto"
+    }
+  }
+]

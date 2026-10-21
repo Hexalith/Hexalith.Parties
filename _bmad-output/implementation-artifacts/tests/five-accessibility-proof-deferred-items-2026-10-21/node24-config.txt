@@ -1,0 +1,17 @@
+npm warn exec The following package was not found and will be installed: node@24.22.0
+✔ managed server: CI=false, parent=Test (359.184013ms)
+✔ managed server: CI=false, parent=Development (262.018958ms)
+✔ explicit external server: CI=false (252.555064ms)
+✔ managed server: CI=true, parent=Test (260.047685ms)
+✔ managed server: CI=true, parent=Development (272.274076ms)
+✔ explicit external server: CI=true (254.67263ms)
+✔ Playwright rejects an unrelated listener (411.307303ms)
+✔ Playwright starts and cleans up its managed fixture (845.688908ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3006.508978

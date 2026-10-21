@@ -1,0 +1,21 @@
+npm warn exec The following package was not found and will be installed: node@24.22.0
+
+Running 12 tests using 1 worker
+
+(node:76393) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [chromium] › specs/parties-accessibility.spec.ts:21:3 › Parties UI accessibility specimen › specimen is nonblank and passes the blocking axe gate (2.7s)
+  ✓   2 [chromium] › specs/parties-accessibility.spec.ts:62:5 › Parties UI accessibility specimen › blocking axe gate rejects an inaccessible navigation outside main content (1.2s)
+  ✓   3 [chromium] › specs/parties-accessibility.spec.ts:62:5 › Parties UI accessibility specimen › blocking axe gate rejects an inaccessible skip link outside main content (1.2s)
+  ✓   4 [chromium] › specs/parties-accessibility.spec.ts:91:3 › Parties UI accessibility specimen › skip links are the first two focusable elements in the shell and focus their targets (832ms)
+  -   5 [chromium] › specs/parties-accessibility.spec.ts:109:3 › Parties UI accessibility specimen › route-heading announcement leaves skip links forward reachable and focuses their targets
+  -   6 [chromium] › specs/parties-accessibility.spec.ts:131:3 › Parties UI accessibility specimen › client-side route focus restores forward skip access
+  ✓   7 [chromium] › specs/parties-accessibility.spec.ts:172:3 › Parties UI accessibility specimen › keyboard flow reaches representative controls without trapping focus (645ms)
+  ✓   8 [chromium] › specs/parties-accessibility.spec.ts:182:5 › Parties UI accessibility specimen › content controls have visible keyboard focus with forced colors none (701ms)
+  ✓   9 [chromium] › specs/parties-accessibility.spec.ts:182:5 › Parties UI accessibility specimen › content controls have visible keyboard focus with forced colors active (722ms)
+  ✓  10 [chromium] › specs/parties-accessibility.spec.ts:301:3 › Parties UI accessibility specimen › content reduced-motion rules suppress nonzero animation and transition settings (729ms)
+  ✓  11 [chromium] › specs/parties-accessibility.spec.ts:341:3 › Parties UI accessibility specimen › filled primary button does not compute to raw teal (599ms)
+  ✓  12 [chromium] › specs/parties-accessibility.spec.ts:351:3 › Parties UI accessibility specimen › visual baseline for deterministic shell specimen (717ms)
+
+  2 skipped
+  10 passed (15.1s)

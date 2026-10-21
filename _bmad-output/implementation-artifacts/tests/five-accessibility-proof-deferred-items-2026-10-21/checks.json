@@ -1,0 +1,52 @@
+[
+  {
+    "name": "node24-config",
+    "command": "npm exec --offline --package=node@24 -- node --experimental-strip-types --test config-tests/server-ownership.test.mjs",
+    "cwd": "tests/e2e",
+    "exit_code": 0,
+    "duration_seconds": 3.26,
+    "output": "node24-config.txt"
+  },
+  {
+    "name": "ui-build",
+    "command": "dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj --configuration Debug --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+    "cwd": ".",
+    "exit_code": 0,
+    "duration_seconds": 2.08,
+    "output": "ui-build.txt"
+  },
+  {
+    "name": "ui-tests",
+    "command": "dotnet tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll -xml {project-root}/_bmad-output/implementation-artifacts/tests/five-accessibility-proof-deferred-items-2026-10-21/ui-tests.xml",
+    "cwd": ".",
+    "exit_code": 0,
+    "duration_seconds": 1.61,
+    "output": "ui-tests.txt"
+  },
+  {
+    "name": "repository-guard",
+    "command": "bash scripts/check-no-warning-override.sh",
+    "cwd": ".",
+    "exit_code": 0,
+    "duration_seconds": 0.22,
+    "output": "repository-guard.txt"
+  },
+  {
+    "name": "node24-typecheck",
+    "command": "npm exec --offline --package=node@24 -- node node_modules/typescript/lib/tsc.js --noEmit",
+    "cwd": "tests/e2e",
+    "exit_code": 0,
+    "duration_seconds": 0.36,
+    "output": "node24-typecheck.txt",
+    "note": "Final unmodified source after all review patches and regression experiments, including outline clipping"
+  },
+  {
+    "name": "node24-browser",
+    "command": "npm exec --offline --package=node@24 -- node node_modules/@playwright/test/cli.js test specs/parties-accessibility.spec.ts --project=chromium",
+    "cwd": "tests/e2e",
+    "exit_code": 0,
+    "duration_seconds": 15.82,
+    "output": "browser-tests.txt",
+    "note": "Final unmodified source after all review patches and regression experiments, including outline clipping"
+  }
+]

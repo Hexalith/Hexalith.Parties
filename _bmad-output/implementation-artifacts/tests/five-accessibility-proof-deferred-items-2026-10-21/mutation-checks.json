@@ -1,0 +1,349 @@
+{
+  "source_sha256": "d1989b5d00dcd9cf45ea564435f24f67e00069061d4659e2c27bfa7c4436948d",
+  "checks": [
+    {
+      "name": "missing-content-scope",
+      "mutation": {
+        "replace": "  await expect(page).toHaveTitle('Parties accessibility specimen');",
+        "with": "  await expect(page).toHaveTitle('Parties accessibility specimen');\n  await page.locator('.parties-main-content').evaluate((element) => element.classList.remove('parties-main-content'));"
+      },
+      "command": [
+        "npm",
+        "exec",
+        "--offline",
+        "--package=node@24",
+        "--",
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "specs/parties-accessibility.spec.ts",
+        "--project=chromium",
+        "--grep",
+        "content controls|content reduced-motion",
+        "--reporter=json"
+      ],
+      "cwd": "tests/e2e",
+      "exit_code": 1,
+      "expected_failures": 3,
+      "stats": {
+        "startTime": "2026-10-21T16:03:51.070Z",
+        "duration": 19309.91,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 3,
+        "flaky": 0
+      },
+      "failures": [
+        {
+          "title": "content controls have visible keyboard focus with forced colors none",
+          "error": "Error: expect(received).toBeGreaterThan(expected)\n\nExpected: > 0\nReceived:   0"
+        },
+        {
+          "title": "content controls have visible keyboard focus with forced colors active",
+          "error": "Error: expect(received).toBeGreaterThan(expected)\n\nExpected: > 0\nReceived:   0"
+        },
+        {
+          "title": "content reduced-motion rules suppress nonzero animation and transition settings",
+          "error": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 2\n+ Received  + 2\n\n  Array [\n-   true,\n-   true,\n+   false,\n+   false,\n  ]\n\nCall Log:\n- Timeout 10000ms exceeded while waiting on the predicate"
+        }
+      ],
+      "source_restored": true,
+      "source_sha256": "a23dafbf11cb26bc5f6dc1995b1f77d01a288ece3f87a450b889bf2213c149ae"
+    },
+    {
+      "name": "main-only-axe",
+      "mutation": {
+        "replace": "    artifactPath,\n  });",
+        "with": "    artifactPath,\n    include: ['#fc-main-content'],\n  });"
+      },
+      "command": [
+        "npm",
+        "exec",
+        "--offline",
+        "--package=node@24",
+        "--",
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "specs/parties-accessibility.spec.ts",
+        "--project=chromium",
+        "--grep",
+        "rejects an inaccessible",
+        "--reporter=json"
+      ],
+      "cwd": "tests/e2e",
+      "exit_code": 1,
+      "expected_failures": 2,
+      "stats": {
+        "startTime": "2026-10-21T16:04:11.670Z",
+        "duration": 11706.95,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 2,
+        "flaky": 0
+      },
+      "failures": [
+        {
+          "title": "blocking axe gate rejects an inaccessible navigation outside main content",
+          "error": "Error: expect(received).rejects.toThrow()\n\nReceived promise resolved instead of rejected\nResolved to value: undefined"
+        },
+        {
+          "title": "blocking axe gate rejects an inaccessible skip link outside main content",
+          "error": "Error: expect(received).rejects.toThrow()\n\nReceived promise resolved instead of rejected\nResolved to value: undefined"
+        }
+      ],
+      "source_restored": true,
+      "source_sha256": "a23dafbf11cb26bc5f6dc1995b1f77d01a288ece3f87a450b889bf2213c149ae"
+    },
+    {
+      "name": "transparent-controls",
+      "mutation": {
+        "replace": "  await expect(page).toHaveTitle('Parties accessibility specimen');",
+        "with": "  await expect(page).toHaveTitle('Parties accessibility specimen');\n  await page.locator('.parties-main-content').evaluate((element) => { element.style.opacity = '0'; });"
+      },
+      "command": [
+        "npm",
+        "exec",
+        "--offline",
+        "--package=node@24",
+        "--",
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "specs/parties-accessibility.spec.ts",
+        "--project=chromium",
+        "--grep",
+        "content controls",
+        "--reporter=json"
+      ],
+      "cwd": "tests/e2e",
+      "exit_code": 1,
+      "expected_failures": 2,
+      "stats": {
+        "startTime": "2026-10-21T16:04:24.082Z",
+        "duration": 7813.43,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 2,
+        "flaky": 0
+      },
+      "failures": [
+        {
+          "title": "content controls have visible keyboard focus with forced colors none",
+          "error": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false"
+        },
+        {
+          "title": "content controls have visible keyboard focus with forced colors active",
+          "error": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false"
+        }
+      ],
+      "source_restored": true,
+      "source_sha256": "a23dafbf11cb26bc5f6dc1995b1f77d01a288ece3f87a450b889bf2213c149ae"
+    },
+    {
+      "name": "white-on-white-outline",
+      "mutation": {
+        "replace": "  await expect(page).toHaveTitle('Parties accessibility specimen');",
+        "with": "  await expect(page).toHaveTitle('Parties accessibility specimen');\n  await page.locator('.parties-main-content').evaluate((element) => { element.style.setProperty('--colorStrokeFocus2', 'white'); element.style.backgroundColor = 'white'; });"
+      },
+      "command": [
+        "npm",
+        "exec",
+        "--offline",
+        "--package=node@24",
+        "--",
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "specs/parties-accessibility.spec.ts",
+        "--project=chromium",
+        "--grep",
+        "forced colors none",
+        "--reporter=json"
+      ],
+      "cwd": "tests/e2e",
+      "exit_code": 1,
+      "expected_failures": 1,
+      "stats": {
+        "startTime": "2026-10-21T16:04:32.577Z",
+        "duration": 6431.98,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "failures": [
+        {
+          "title": "content controls have visible keyboard focus with forced colors none",
+          "error": "Error: parties-specimen-primary-action outline contrast against its surrounding surface\n\nexpect(received).toBeGreaterThanOrEqual(expected)\n\nExpected: >= 3\nReceived:    1"
+        }
+      ],
+      "source_restored": true,
+      "source_sha256": "a23dafbf11cb26bc5f6dc1995b1f77d01a288ece3f87a450b889bf2213c149ae"
+    },
+    {
+      "name": "low-contrast-exposed-skip",
+      "mutation": {
+        "replace": "  await expect(page).toHaveTitle('Parties accessibility specimen');",
+        "with": "  await expect(page).toHaveTitle('Parties accessibility specimen');\n  await page.locator(\".fc-skip-link[href$='#fc-main-content']\").evaluate((element) => { element.style.setProperty('color', '#eee', 'important'); element.style.setProperty('background-color', 'white', 'important'); });"
+      },
+      "command": [
+        "npm",
+        "exec",
+        "--offline",
+        "--package=node@24",
+        "--",
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "specs/parties-accessibility.spec.ts",
+        "--project=chromium",
+        "--grep",
+        "specimen is nonblank",
+        "--reporter=json"
+      ],
+      "cwd": "tests/e2e",
+      "exit_code": 1,
+      "expected_failures": 1,
+      "stats": {
+        "startTime": "2026-10-21T16:04:39.680Z",
+        "duration": 7827.34,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "failures": [
+        {
+          "title": "specimen is nonblank and passes the blocking axe gate",
+          "error": "Error: color-contrast [serious]: Elements must meet minimum color contrast ratio thresholds (1 node(s))\n\nexpect(received).toEqual(expected) // deep equality\n\n- Expected  -  1\n+ Received  + 58\n\n- Array []\n+ Array [\n+   Object {\n+     \"description\": \"Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds\",\n+     \"help\": \"Elements must meet minimum color contrast ratio thresholds\",\n+     \"helpUrl\": \"https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright\",\n+     \"id\": \"color-contrast\",\n+     \"impact\": \"serious\",\n+     \"nodes\": Array [\n+       Object {\n+         \"all\": Array [],\n+         \"any\": Array [\n+           Object {\n+             \"data\": Object {\n+               \"bgColor\": \"#ffffff\",\n+               \"contrastRatio\": 1.16,\n+               \"expectedContrastRatio\": \"4.5:1\",\n+               \"fgColor\": \"#eeeeee\",\n+               \"fontSize\": \"10.5pt (14px)\",\n+               \"fontWeight\": \"normal\",\n+               \"messageKey\": null,\n+             },\n+             \"id\": \"color-contrast\",\n+             \"impact\": \"serious\",\n+             \"message\": \"Element has insufficient color contrast of 1.16 (foreground color: #eeeeee, background color: #ffffff, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1\",\n+             \"relatedNodes\": Array [\n+               Object {\n+                 \"html\": \"<a class=\\\"fc-skip-link\\\" href=\\\"/__parties/specimens/accessibility#fc-main-content\\\" data-enhance-nav=\\\"false\\\" b-zbeq395ew8=\\\"\\\" style=\\\"color: rgb(238, 238, 238) !important; background-color: white !important;\\\">Skip to content</a>\",\n+                 \"target\": Array [\n+                   \".fc-skip-link[data-enhance-nav=\\\"false\\\"]:nth-child(1)\",\n+                 ],\n+               },\n+             ],\n+           },\n+         ],\n+         \"failureSummary\": \"Fix any of the following:\n+   Element has insufficient color contrast of 1.16 (foreground color: #eeeeee, background color: #ffffff, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1\",\n+         \"html\": \"<a class=\\\"fc-skip-link\\\" href=\\\"/__parties/specimens/accessibility#fc-main-content\\\" data-enhance-nav=\\\"false\\\" b-zbeq395ew8=\\\"\\\" style=\\\"color: rgb(238, 238, 238) !important; background-color: white !important;\\\">Skip to content</a>\",\n+         \"impact\": \"serious\",\n+         \"none\": Array [],\n+         \"target\": Array [\n+           \".fc-skip-link[data-enhance-nav=\\\"false\\\"]:nth-child(1)\",\n+         ],\n+       },\n+     ],\n+     \"tags\": Array [\n+       \"cat.color\",\n+       \"wcag2aa\",\n+       \"wcag143\",\n+       \"TTv5\",\n+       \"TT13.c\",\n+       \"EN-301-549\",\n+       \"EN-9.1.4.3\",\n+       \"ACT\",\n+       \"RGAAv4\",\n+       \"RGAA-3.2.1\",\n+     ],\n+   },\n+ ]"
+        }
+      ],
+      "source_restored": true,
+      "source_sha256": "a23dafbf11cb26bc5f6dc1995b1f77d01a288ece3f87a450b889bf2213c149ae"
+    },
+    {
+      "name": "unscoped-link-motion",
+      "mutation": {
+        "replace": "  await expect(page).toHaveTitle('Parties accessibility specimen');",
+        "with": "  await expect(page).toHaveTitle('Parties accessibility specimen');\n  await page.getByTestId('parties-specimen-link').evaluate((element) => document.querySelector('#fc-main-content')!.append(element));"
+      },
+      "command": [
+        "npm",
+        "exec",
+        "--offline",
+        "--package=node@24",
+        "--",
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "specs/parties-accessibility.spec.ts",
+        "--project=chromium",
+        "--grep",
+        "content reduced-motion",
+        "--reporter=json"
+      ],
+      "cwd": "tests/e2e",
+      "exit_code": 1,
+      "expected_failures": 1,
+      "stats": {
+        "startTime": "2026-10-21T16:04:48.133Z",
+        "duration": 15450.85,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "failures": [
+        {
+          "title": "content reduced-motion rules suppress nonzero animation and transition settings",
+          "error": "Error: expect(received).toEqual(expected) // deep equality\n\n- Expected  - 1\n+ Received  + 1\n\n  Array [\n    true,\n-   true,\n+   false,\n  ]\n\nCall Log:\n- Timeout 10000ms exceeded while waiting on the predicate"
+        }
+      ],
+      "source_restored": true,
+      "source_sha256": "a23dafbf11cb26bc5f6dc1995b1f77d01a288ece3f87a450b889bf2213c149ae"
+    },
+    {
+      "name": "zero-duration-is-valid",
+      "mutation": {
+        "replace": "  await expect(page).toHaveTitle('Parties accessibility specimen');",
+        "with": "  await expect(page).toHaveTitle('Parties accessibility specimen');\n  await page.addStyleTag({ content: '@media (prefers-reduced-motion: reduce) { #fc-main-content .parties-main-content :where(a, button) { animation-duration: 0s !important; transition-duration: 0s !important; animation-iteration-count: 0 !important; } }' });"
+      },
+      "command": [
+        "npm",
+        "exec",
+        "--offline",
+        "--package=node@24",
+        "--",
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "specs/parties-accessibility.spec.ts",
+        "--project=chromium",
+        "--grep",
+        "content reduced-motion",
+        "--reporter=json"
+      ],
+      "cwd": "tests/e2e",
+      "exit_code": 0,
+      "expected_failures": 0,
+      "stats": {
+        "startTime": "2026-10-21T16:05:04.246Z",
+        "duration": 6072.42,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "failures": [],
+      "source_restored": true,
+      "source_sha256": "a23dafbf11cb26bc5f6dc1995b1f77d01a288ece3f87a450b889bf2213c149ae"
+    },
+    {
+      "name": "clipped-focus-outline",
+      "source_sha256": "d1989b5d00dcd9cf45ea564435f24f67e00069061d4659e2c27bfa7c4436948d",
+      "mutation": {
+        "replace": "  await expect(page).toHaveTitle('Parties accessibility specimen');",
+        "with": "  await expect(page).toHaveTitle('Parties accessibility specimen');\n  await page.getByTestId('parties-specimen-primary-action').evaluate((element) => { const box = element.getBoundingClientRect(); const clip = document.createElement('div'); clip.style.cssText = `display: inline-flex; align-items: center; width: ${Math.ceil(box.width) + 2}px; height: ${Math.ceil(box.height) + 2}px; overflow: hidden;`; element.before(clip); clip.append(element); });"
+      },
+      "command": [
+        "npm",
+        "exec",
+        "--offline",
+        "--package=node@24",
+        "--",
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "specs/parties-accessibility.spec.ts",
+        "--project=chromium",
+        "--grep",
+        "content controls",
+        "--reporter=json"
+      ],
+      "cwd": "tests/e2e",
+      "exit_code": 1,
+      "expected_failures": 2,
+      "stats": {
+        "startTime": "2026-10-21T16:08:55.470Z",
+        "duration": 7468.861999999999,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 2,
+        "flaky": 0
+      },
+      "failures": [
+        {
+          "title": "content controls have visible keyboard focus with forced colors none",
+          "error": "Error: parties-specimen-primary-action outline must fit outside its box without clipping\n\nexpect(received).toEqual(expected) // deep equality\n\n- Expected  - 1\n+ Received  + 3\n\n- Array []\n+ Array [\n+   \"DIV\",\n+ ]"
+        },
+        {
+          "title": "content controls have visible keyboard focus with forced colors active",
+          "error": "Error: parties-specimen-primary-action outline must fit outside its box without clipping\n\nexpect(received).toEqual(expected) // deep equality\n\n- Expected  - 1\n+ Received  + 3\n\n- Array []\n+ Array [\n+   \"DIV\",\n+ ]"
+        }
+      ],
+      "source_restored": true
+    }
+  ],
+  "note": "Each check records its tested source SHA-256; the last check qualifies the additional outline-clipping guard, followed by the final unmodified suite."
+}

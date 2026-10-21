@@ -818,7 +818,9 @@ location: src/Hexalith.Parties.UI/Components/Layout/MainLayout.razor.css; tests/
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: Frozen §4.6 already records I13 as not discharged because Playwright focuses `.fc-skip-link` rather than a content control. `AccessibilityStyleGuardTests` only `ShouldContain`s CSS tokens. Moving `class="parties-main-content"` onto `<FrontComposerShell>` would keep those greps green while isolation stamps nothing. A computed-style assertion on `parties-specimen-primary-action` belongs in `npm --prefix tests/e2e run test:a11y`, which CI does not run (DW-76).
 decision: 2026-10-05 Accept as named closure deferral — Administrator / jpiquot accepted the missing runtime content-control focus, forced-colors, and reduced-motion proof as a named deferral owned by `8.9-frontcomposer-ui-consolidation` for Story 8.10 closure (8.3 I20 "I13 / DW-111 accepted closure deferral" row). I13 is not discharged and spine §7 keeps it Deferred; this entry stays open as the exit-proof carrier.
-status: open
+status: done 2026-10-21
+resolution: Required browser lane now measures keyboard-focused content controls in normal/forced colors and proves reduced-motion overrides against nonzero settings.
+verification: `tests/five-accessibility-proof-deferred-items-2026-10-21/checks.json`; browser observations and rejection artifacts in the same directory; spec `spec-five-accessibility-proof-deferred-items.md`. Historical I13/Story 8.9 approval scope is unchanged.
 
 ### DW-112: Hide or retarget Skip to navigation when FrontComposer unmounts `#fc-nav` on compact viewports.
 
@@ -1080,7 +1082,9 @@ status: open
 origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
 location: tests/e2e/specs/parties-accessibility.spec.ts:85
 severity: medium
-status: open
+status: done 2026-10-21
+resolution: Content controls now have direct forced-colors and reduced-motion computed-style proof; duplicate scope of DW-111/DW-154.
+verification: `tests/five-accessibility-proof-deferred-items-2026-10-21/checks.json`; browser observations and rejection artifacts in the same directory; spec `spec-five-accessibility-proof-deferred-items.md`. Historical I13/Story 8.9 approval scope is unchanged.
 
 ### DW-154: Measure visible app-content focus and reduced-motion styles in the browser.
 
@@ -1088,14 +1092,18 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: tests/e2e/specs/parties-accessibility.spec.ts:85
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: Blind 10: media emulation is asserted, but the sole style value is a truthy outlineColor on a shell skip link; no content control outline style/width or animation/transition duration is checked. Existing browser test, unchanged here. Exit proof: focus a representative app-owned control and verify visible normal/forced-colors outline plus reduced-motion behavior. I13 remains open; this entry supplies no parity approval.
-status: open
+status: done 2026-10-21
+resolution: Actual app-content button/link outlines, widths, offsets and colors are asserted; nonzero motion settings must be suppressed by the production stylesheet.
+verification: `tests/five-accessibility-proof-deferred-items-2026-10-21/checks.json`; browser observations and rejection artifacts in the same directory; spec `spec-five-accessibility-proof-deferred-items.md`. Historical I13/Story 8.9 approval scope is unchanged.
 
 ### DW-136: Audit the complete shell with axe
 
 origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
 location: tests/e2e/specs/parties-accessibility.spec.ts:25
 severity: medium
-status: open
+status: done 2026-10-21
+resolution: The blocking axe scan covers the complete specimen document, including shell navigation and skip links.
+verification: `tests/five-accessibility-proof-deferred-items-2026-10-21/checks.json`; browser observations and rejection artifacts in the same directory; spec `spec-five-accessibility-proof-deferred-items.md`. Historical I13/Story 8.9 approval scope is unchanged.
 
 ### DW-155: Include navigation and skip links in the blocking accessibility scan.
 
@@ -1103,7 +1111,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: tests/e2e/specs/parties-accessibility.spec.ts:25
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: Blind 11: axe includes only #fc-main-content, while requiredSelectors merely assert that navigation and skip links exist. Existing browser test, unchanged here. Exit proof: full-shell or dedicated omitted-region scans fail on navigation/skip-link accessibility regressions.
-status: open
+status: done 2026-10-21
+resolution: The shared full-document axe gate rejects deliberate inaccessible navigation and skip-link controls outside main content; duplicate scope of DW-136.
+verification: `tests/five-accessibility-proof-deferred-items-2026-10-21/checks.json`; browser observations and rejection artifacts in the same directory; spec `spec-five-accessibility-proof-deferred-items.md`. Historical I13/Story 8.9 approval scope is unchanged.
 
 ### DW-137: Verify provisioning through the registered domain processor
 

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { readFile, writeFile } from 'node:fs/promises';
 import { expectNoBlockingAxeViolations } from '../helpers/a11y.js';
 
 const SPECIMEN_ROUTE = '/__parties/specimens/accessibility';
@@ -20,19 +21,69 @@ test.describe('Parties UI accessibility specimen', () => {
   test('specimen is nonblank and passes the blocking axe gate', async ({ page }, testInfo) => {
     await gotoSpecimen(page);
 
-    await expectNoBlockingAxeViolations(page, {
-      route: SPECIMEN_ROUTE,
-      include: ['#fc-main-content'],
-      requiredSelectors: [
-        "[data-testid='parties-accessibility-specimen-ready']",
-        '#fc-main-content',
-        '#fc-nav',
-        "a[href$='#fc-main-content']",
-        "a[href$='#fc-nav']",
-      ],
-      artifactPath: testInfo.outputPath('axe-parties-accessibility.json'),
-    });
+    const assetPaths = [
+      '/Hexalith.Parties.UI.styles.css',
+      '/_content/Hexalith.FrontComposer.Shell/css/fc-shell.css',
+      '/_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.bundle.scp.css',
+    ];
+    const assets = await Promise.all(assetPaths.map(async (path) => {
+      const response = await page.request.get(path);
+      expect(response.ok(), `served accessibility stylesheet ${path}`).toBe(true);
+      const bytes = await response.body();
+      return { path, sha256: createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length };
+    }));
+    const server = testInfo.config.webServer;
+    const identityPath = testInfo.outputPath('browser-identity.json');
+    await writeFile(identityPath, `${JSON.stringify({
+      browser: page.context().browser()?.version(),
+      node: process.version,
+      baseURL: testInfo.project.use.baseURL,
+      server: server ? {
+        mode: 'managed', command: server.command,
+        environment: Object.fromEntries(Object.entries(server.env ?? {})
+          .filter(([key]) => ['ASPNETCORE_ENVIRONMENT', 'Hexalith__Parties__AccessibilitySpecimens__Enabled',
+            'Hexalith__Parties__AdminPortalE2E__Enabled', 'Parties__BaseUrl', 'Parties__Tenant'].includes(key))),
+      } : { mode: 'external', environment: 'not observed' },
+      assets,
+    }, null, 2)}\n`);
+    await testInfo.attach('browser-identity.json', { path: identityPath, contentType: 'application/json' });
+
+    await auditSpecimen(page, testInfo.outputPath('axe-parties-accessibility.json'));
+    for (const target of ['fc-main-content', 'fc-nav']) {
+      const skipLink = page.locator(`.fc-skip-link[href$='#${target}']`);
+      await skipLink.focus();
+      await expect(skipLink).toBeFocused();
+      await expect(skipLink).toBeInViewport();
+      await auditSpecimen(page, testInfo.outputPath(`axe-exposed-skip-${target}.json`));
+    }
   });
+
+  for (const region of ['navigation', 'skip link'] as const) {
+    test(`blocking axe gate rejects an inaccessible ${region} outside main content`, async ({ page }, testInfo) => {
+      await gotoSpecimen(page);
+      if (region === 'navigation') {
+        await page.getByRole('navigation', { name: 'Primary navigation' }).evaluate((navigation) => {
+          const button = document.createElement('button');
+          button.dataset.testid = 'inaccessible-navigation-control';
+          navigation.append(button);
+        });
+      } else {
+        const skipLink = page.getByRole('link', { name: 'Skip to content', exact: true });
+        await skipLink.evaluate((link) => {
+          link.textContent = '';
+          link.removeAttribute('aria-label');
+          link.removeAttribute('aria-labelledby');
+          link.removeAttribute('title');
+        });
+        // Shell skip links are offscreen until focused. Scan the visibly exposed link.
+        await page.locator(".fc-skip-link[href$='#fc-main-content']").focus();
+      }
+
+      await expect(auditSpecimen(page,
+        testInfo.outputPath(`axe-rejected-${region.replace(' ', '-')}.json`),
+      )).rejects.toThrow(region === 'navigation' ? /button-name/ : /link-name/);
+    });
+  }
 
   // Always-on package coverage checks shell order and skip targets from its root.
   // Forward reachability from the announced route heading is qualified separately below;
@@ -127,25 +178,164 @@ test.describe('Parties UI accessibility specimen', () => {
     }
   });
 
-  test('forced-colors and reduced-motion media are observable', async ({ browser }) => {
-    const context = await browser.newContext({
-      baseURL: process.env.BASE_URL ?? 'http://127.0.0.1:5072',
-      forcedColors: 'active',
-      reducedMotion: 'reduce',
-      ignoreHTTPSErrors: true,
+  for (const forcedColors of ['none', 'active'] as const) {
+    test(`content controls have visible keyboard focus with forced colors ${forcedColors}`, async ({ page }, testInfo) => {
+      await page.emulateMedia({ forcedColors });
+      await gotoSpecimen(page);
+
+      const observations = [];
+      for (const testId of ['parties-specimen-primary-action', 'parties-specimen-link']) {
+        await tabUntilTestId(page, testId);
+        const control = page.getByTestId(testId);
+        await expect(control).toBeFocused();
+        await expect(control).toBeInViewport({ ratio: 1 });
+        const focus = await control.evaluate((element, forced) => {
+          const expected = document.createElement('span');
+          expected.style.cssText = `outline: var(--strokeWidthThick) solid ${forced ? 'Highlight' : 'var(--colorStrokeFocus2)'}; outline-offset: var(--spacingHorizontalXS); background: Canvas; color: CanvasText;`;
+          element.parentElement!.append(expected);
+          const actualStyle = getComputedStyle(element);
+          const expectedStyle = getComputedStyle(expected);
+          // The outline sits outside the control. Composite ancestor fills so a
+          // transparent link or a colored button cannot hide white-on-white focus.
+          const canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 1;
+          const context = canvas.getContext('2d')!;
+          context.fillStyle = expectedStyle.backgroundColor;
+          context.fillRect(0, 0, 1, 1);
+          const surfaces: Element[] = [];
+          for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+            surfaces.unshift(parent);
+          }
+          for (const surface of surfaces) {
+            context.fillStyle = getComputedStyle(surface).backgroundColor;
+            context.fillRect(0, 0, 1, 1);
+          }
+          const backgroundPixel = context.getImageData(0, 0, 1, 1).data;
+          context.fillStyle = actualStyle.outlineColor;
+          context.fillRect(0, 0, 1, 1);
+          const outlinePixel = context.getImageData(0, 0, 1, 1).data;
+          const luminance = (pixel: Uint8ClampedArray): number => {
+            const [r, g, b] = Array.from(pixel).slice(0, 3).map((value) => {
+              const channel = value / 255;
+              return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+            });
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          };
+          const backgroundLuminance = luminance(backgroundPixel);
+          const outlineLuminance = luminance(outlinePixel);
+          const box = element.getBoundingClientRect();
+          const outset = parseFloat(actualStyle.outlineWidth) + parseFloat(actualStyle.outlineOffset);
+          const ring = { left: box.left - outset, right: box.right + outset,
+            top: box.top - outset, bottom: box.bottom + outset };
+          const clippedBy: string[] = [];
+          if (ring.left < 0 || ring.top < 0 || ring.right > innerWidth || ring.bottom > innerHeight) {
+            clippedBy.push('viewport');
+          }
+          for (const surface of surfaces) {
+            const style = getComputedStyle(surface);
+            const bounds = surface.getBoundingClientRect();
+            const left = bounds.left + surface.clientLeft;
+            const top = bounds.top + surface.clientTop;
+            const paintContainment = /(?:paint|strict|content)/.test(style.contain);
+            const clipsX = style.overflowX !== 'visible' || paintContainment;
+            const clipsY = style.overflowY !== 'visible' || paintContainment;
+            if ((clipsX && (ring.left < left || ring.right > left + surface.clientWidth))
+              || (clipsY && (ring.top < top || ring.bottom > top + surface.clientHeight))) {
+              clippedBy.push(surface.tagName);
+            }
+          }
+          const observation = {
+            focusVisible: element.matches(':focus-visible'),
+            paintVisible: element.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true }),
+            clippedBy,
+            outlineStyle: actualStyle.outlineStyle,
+            outlineWidth: actualStyle.outlineWidth,
+            outlineOffset: actualStyle.outlineOffset,
+            outlineColor: actualStyle.outlineColor,
+            backgroundColor: actualStyle.backgroundColor,
+            color: actualStyle.color,
+            expectedWidth: expectedStyle.outlineWidth,
+            expectedOffset: expectedStyle.outlineOffset,
+            expectedColor: expectedStyle.outlineColor,
+            expectedBackground: expectedStyle.backgroundColor,
+            expectedText: expectedStyle.color,
+            surroundingPixel: Array.from(backgroundPixel),
+            outlinePixel: Array.from(outlinePixel),
+            outlineContrast: (Math.max(backgroundLuminance, outlineLuminance) + 0.05)
+              / (Math.min(backgroundLuminance, outlineLuminance) + 0.05),
+            backgroundImages: surfaces.map((surface) => getComputedStyle(surface).backgroundImage)
+              .filter((image) => image !== 'none'),
+          };
+          expected.remove();
+          return observation;
+        }, forcedColors === 'active');
+
+        observations.push({ testId, ...focus });
+      }
+      const artifactPath = testInfo.outputPath('content-focus.json');
+      await writeFile(artifactPath, `${JSON.stringify(observations, null, 2)}\n`);
+      await testInfo.attach('content-focus.json', { path: artifactPath, contentType: 'application/json' });
+
+      for (const focus of observations) {
+        expect(focus.focusVisible).toBe(true);
+        expect(focus.paintVisible).toBe(true);
+        expect(focus.clippedBy, `${focus.testId} outline must fit outside its box without clipping`).toEqual([]);
+        expect(focus.outlineStyle).toBe('solid');
+        expect(parseFloat(focus.outlineWidth)).toBeGreaterThan(0);
+        expect(parseFloat(focus.outlineOffset)).toBeGreaterThan(0);
+        expect(focus.outlineWidth).toBe(focus.expectedWidth);
+        expect(focus.outlineOffset).toBe(focus.expectedOffset);
+        expect(focus.outlineColor).toBe(focus.expectedColor);
+        expect(focus.outlineColor).not.toBe('rgba(0, 0, 0, 0)');
+        expect(focus.outlineColor).not.toBe(focus.backgroundColor);
+        expect(focus.backgroundImages, 'specimen backdrop must be solid for computed contrast proof').toEqual([]);
+        expect(focus.outlineContrast, `${focus.testId} outline contrast against its surrounding surface`).toBeGreaterThanOrEqual(3);
+        if (forcedColors === 'active') {
+          expect(focus.backgroundColor).toBe(focus.expectedBackground);
+          expect(focus.color).toBe(focus.expectedText);
+        }
+      }
     });
-    const page = await context.newPage();
+  }
 
+  test('content reduced-motion rules suppress nonzero animation and transition settings', async ({ page }, testInfo) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
     await gotoSpecimen(page);
-
-    expect(await page.evaluate(() => matchMedia('(forced-colors: active)').matches)).toBe(true);
-    expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
-
-    await page.locator(".fc-skip-link[href$='#fc-main-content']").focus();
-    const outlineColor = await page.locator(':focus').evaluate((element) => getComputedStyle(element).outlineColor);
-    expect(outlineColor).toBeTruthy();
-
-    await context.close();
+    const controls = ['parties-specimen-primary-action', 'parties-specimen-link']
+      .map((testId) => ({ testId, locator: page.getByTestId(testId) }));
+    // Nonzero inline stimulus makes a missing or unscoped production override fail.
+    // The test supplies no reduced-motion CSS or important declarations of its own.
+    const ordinary: Awaited<ReturnType<typeof readMotionStyle>>[] = [];
+    for (const control of controls) {
+      await control.locator.evaluate((element) => {
+        Object.assign(element.style, {
+          animationDuration: '2s', animationIterationCount: 'infinite',
+          transitionDuration: '3s', scrollBehavior: 'smooth',
+        });
+      });
+      ordinary.push(await readMotionStyle(control.locator));
+    }
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    try {
+      await expect.poll(async () => Promise.all(controls.map(async (control) =>
+        motionIsSuppressed(await readMotionStyle(control.locator)),
+      ))).toEqual(controls.map(() => true));
+    } finally {
+      const observations = await Promise.all(controls.map(async (control, index) => ({
+        testId: control.testId, ordinary: ordinary[index], reduced: await readMotionStyle(control.locator),
+      })));
+      const artifactPath = testInfo.outputPath('content-motion.json');
+      await writeFile(artifactPath, `${JSON.stringify(observations, null, 2)}\n`);
+      await testInfo.attach('content-motion.json', { path: artifactPath, contentType: 'application/json' });
+    }
+    for (const [index, control] of controls.entries()) {
+      expect(ordinary[index]).toEqual({
+        animationDuration: '2s', animationIterationCount: 'infinite',
+        transitionDuration: '3s', scrollBehavior: 'smooth',
+      });
+      await expect(control.locator).toBeVisible();
+      await expect(control.locator).not.toBeEmpty();
+    }
   });
 
   test('filled primary button does not compute to raw teal', async ({ page }) => {
@@ -176,10 +366,44 @@ test.describe('Parties UI accessibility specimen', () => {
   });
 });
 
+const auditSpecimen = async (page: import('@playwright/test').Page, artifactPath: string): Promise<void> =>
+  expectNoBlockingAxeViolations(page, {
+    route: SPECIMEN_ROUTE,
+    requiredSelectors: [
+      "[data-testid='parties-accessibility-specimen-ready']",
+      '#fc-main-content',
+      '#fc-nav',
+      "a[href$='#fc-main-content']",
+      "a[href$='#fc-nav']",
+    ],
+    artifactPath,
+  });
+
+const readMotionStyle = async (control: import('@playwright/test').Locator) => control.evaluate((element) => {
+  const style = getComputedStyle(element);
+  return {
+    animationDuration: style.animationDuration,
+    animationIterationCount: style.animationIterationCount,
+    transitionDuration: style.transitionDuration,
+    scrollBehavior: style.scrollBehavior,
+  };
+});
+
+const motionIsSuppressed = (style: Awaited<ReturnType<typeof readMotionStyle>>): boolean => {
+  const durationsAreShort = (value: string) => value.split(',').every((duration) => {
+    const milliseconds = parseFloat(duration) * (duration.trim().endsWith('ms') ? 1 : 1_000);
+    return Number.isFinite(milliseconds) && milliseconds >= 0 && milliseconds <= 10;
+  });
+  return durationsAreShort(style.animationDuration) && durationsAreShort(style.transitionDuration)
+    && style.animationIterationCount.split(',').every((count) => Number(count) >= 0 && Number(count) <= 1)
+    && style.scrollBehavior === 'auto';
+};
+
 const gotoSpecimen = async (page: import('@playwright/test').Page): Promise<void> => {
   await page.goto(SPECIMEN_ROUTE);
   await expect(page.getByTestId('parties-accessibility-specimen-ready'), `${SPECIMEN_ROUTE} missing ready marker`).toBeVisible();
   await expect(page.locator('.fc-shell-root[data-fc-interactive="true"]')).toBeVisible();
+  await expect(page).toHaveTitle('Parties accessibility specimen');
   const text = await page.locator('body').innerText();
   expect(text.trim().length, `${SPECIMEN_ROUTE} rendered blank text`).toBeGreaterThan(0);
 };

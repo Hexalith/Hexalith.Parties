@@ -1,0 +1,17 @@
+{
+  "route": "/__parties/specimens/accessibility",
+  "blocking": [
+    {
+      "id": "button-name",
+      "impact": "critical",
+      "help": "Buttons must have discernible text",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/button-name?application=playwright",
+      "selectors": [
+        "button"
+      ],
+      "truncated": false
+    }
+  ],
+  "reportOnly": [],
+  "unknown": []
+}

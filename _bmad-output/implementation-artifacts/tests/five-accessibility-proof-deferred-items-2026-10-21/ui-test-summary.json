@@ -1,0 +1,21 @@
+[
+  {
+    "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+    "id": "8833bb55-86b7-4fd3-8dd6-2e85ddec44ab",
+    "name": "{project-root}/tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+    "run-date": "2026-10-21",
+    "run-time": "15:53:46",
+    "start-rtf": "2026-10-21T15:53:46.9584127+00:00",
+    "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+    "target-framework": ".NETCoreApp,Version=v10.0",
+    "errors": "0",
+    "failed": "0",
+    "finish-rtf": "2026-10-21T15:53:48.2729421+00:00",
+    "not-run": "0",
+    "passed": "387",
+    "skipped": "0",
+    "time": "1.315",
+    "time-rtf": "00:00:01.3150000",
+    "total": "387"
+  }
+]

@@ -1,0 +1,6 @@
+Pinned @commitlint/cli and @commitlint/config-conventional: 21.2.2
+Command: node_modules/.bin/commitlint --edit /tmp/parties-five-accessibility-commit.txt --verbose
+⧗   --- input ---
+test: close five accessibility proof deferrals
+✔   found 0 problems, 0 warnings
+Exit code: 0

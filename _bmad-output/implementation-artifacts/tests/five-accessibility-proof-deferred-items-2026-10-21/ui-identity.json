@@ -1,0 +1,52 @@
+{
+  "configuration": "Debug",
+  "dependency_mode": "published packages for external Hexalith dependencies; owned project references for Parties packages",
+  "files": [
+    {
+      "path": "src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.Parties.UI.dll",
+      "sha256": "1a8e5da76ee186c3b5ca50855d86b26a83e3e64e90f6461a38f92aebdbeaa814"
+    },
+    {
+      "path": "src/Hexalith.Parties.UI/bin/Debug/net10.0/Hexalith.Parties.UI.deps.json",
+      "sha256": "16ddbe39b7b0b93b040d4b396e19daeb540a2b19d90f8c411e1acd99debc1590"
+    },
+    {
+      "path": "src/Hexalith.Parties.UI/obj/project.assets.json",
+      "sha256": "419d02623d5810a7b94078c1bdb5f62aeabf38ad74721bb535d49b8930fefef1"
+    },
+    {
+      "path": "tests/e2e/playwright.config.ts",
+      "sha256": "f4fb2c40072f91dab076a4734ab3d58d92920badc6d618cb752fbba9c8533828"
+    },
+    {
+      "path": "src/Hexalith.Parties.UI/Components/Layout/MainLayout.razor",
+      "sha256": "1ed28477c79db1d16a4a6697c43cb9fa68ed5f1b19fde302428bd7f48829a2ba"
+    },
+    {
+      "path": "src/Hexalith.Parties.UI/Components/Layout/MainLayout.razor.css",
+      "sha256": "1ed16019a205f6c73244feda354bf104e85286d1cf324f4f790f65ed617d3c64"
+    },
+    {
+      "path": "src/Hexalith.Parties.UI/Components/Specimens/PartiesAccessibilitySpecimen.razor",
+      "sha256": "68814b41af263fce2807d348ccc9324d8ce3fc793a5c4f8f0a7c268e0dd093df"
+    }
+  ],
+  "evaluated_packages": {
+    "Hexalith.Commons.Http/2.30.3": "package",
+    "Hexalith.Commons.ServiceDefaults/2.30.3": "package",
+    "Hexalith.Commons.UniqueIds/2.30.3": "package",
+    "Hexalith.EventStore.Client/3.126.0": "package",
+    "Hexalith.EventStore.Contracts/3.126.0": "package",
+    "Hexalith.EventStore.SignalR/3.126.0": "package",
+    "Hexalith.FrontComposer.Contracts/4.7.0": "package",
+    "Hexalith.FrontComposer.Contracts.UI/4.7.0": "package",
+    "Hexalith.FrontComposer.Mcp/4.7.0": "package",
+    "Hexalith.FrontComposer.Schema/4.7.0": "package",
+    "Hexalith.FrontComposer.Shell/4.7.0": "package",
+    "Hexalith.FrontComposer.SourceTools/4.7.0": "package",
+    "Microsoft.FluentUI.AspNetCore.Components/5.0.1": "package",
+    "Microsoft.FluentUI.AspNetCore.Components.Icons/5.0.1": "package"
+  },
+  "build_reference": "ui-build.txt",
+  "served_stylesheet_reference": "browser-identity.json"
+}

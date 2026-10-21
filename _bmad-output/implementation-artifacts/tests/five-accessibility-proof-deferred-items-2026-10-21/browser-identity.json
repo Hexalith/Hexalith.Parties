@@ -1,0 +1,33 @@
+{
+  "browser": "153.0.8010.12",
+  "node": "v24.22.0",
+  "baseURL": "http://127.0.0.1:5072",
+  "server": {
+    "mode": "managed",
+    "command": "dotnet run --project ../../src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj --configuration Debug --no-launch-profile -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -p:BuildInParallel=false -- --urls http://127.0.0.1:5072",
+    "environment": {
+      "ASPNETCORE_ENVIRONMENT": "Test",
+      "Hexalith__Parties__AccessibilitySpecimens__Enabled": "true",
+      "Hexalith__Parties__AdminPortalE2E__Enabled": "true",
+      "Parties__BaseUrl": "http://127.0.0.1:59999",
+      "Parties__Tenant": "test-tenant"
+    }
+  },
+  "assets": [
+    {
+      "path": "/Hexalith.Parties.UI.styles.css",
+      "sha256": "55cd61861ee66c9dedbf6090066a3d63a1258af4c1919346eaf706ba23d70cc3",
+      "bytes": 4232
+    },
+    {
+      "path": "/_content/Hexalith.FrontComposer.Shell/css/fc-shell.css",
+      "sha256": "dceb51b05c81b0b5f1a90b5318ede9366dfdb9c2d10b6b1d9f89f4389a35d3a3",
+      "bytes": 2042
+    },
+    {
+      "path": "/_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.bundle.scp.css",
+      "sha256": "b19e1ee20f32df30f563083bc6d239c70c576bef29cd9f89dda3076146881ca8",
+      "bytes": 174641
+    }
+  ]
+}
