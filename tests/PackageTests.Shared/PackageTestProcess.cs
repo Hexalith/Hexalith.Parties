@@ -11,23 +11,7 @@ internal static class PackageTestProcess
         string repositoryRoot,
         string projectRelativePath,
         string propertyName)
-    {
-        PackageTestProcessResult result = Run(
-            "dotnet",
-            $"msbuild \"{Path.Combine(repositoryRoot, projectRelativePath)}\" -nologo "
-                + $"-p:Configuration=Release -getProperty:{propertyName}",
-            repositoryRoot);
-        EnsureSuccess(result, $"resolve MSBuild property {propertyName}");
-
-        string value = result.StandardOutput.Trim();
-        if (string.IsNullOrWhiteSpace(value) || value.Contains("$(", StringComparison.Ordinal))
-        {
-            throw new InvalidOperationException(
-                $"MSBuild property {propertyName} did not resolve to a concrete value: {result.Diagnostic}");
-        }
-
-        return value;
-    }
+        => EffectivePackageVersions.ReadProperty(repositoryRoot, propertyName, projectRelativePath);
 
     internal static PackageTestProcessResult RunDotnet(string arguments, string workingDirectory)
     {

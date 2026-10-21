@@ -45,7 +45,7 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task HealthEndpoint_AllComponentsHealthy_Returns200WithoutRetiredProjectionActorCheckAsync()
+    public async Task HealthEndpoint_RegisteredInfrastructureHealthy_Returns200WithSdkReadModelCheckAsync()
     {
         ConfigureHealthyDaprClient();
 
@@ -141,7 +141,7 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task ReadyEndpoint_AllComponentsHealthy_Returns200Async()
+    public async Task ReadyEndpoint_RequiredDependenciesHealthy_Returns200Async()
     {
         ConfigureHealthyDaprClient();
 

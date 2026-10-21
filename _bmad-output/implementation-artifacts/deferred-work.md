@@ -241,7 +241,9 @@ decision: 2026-09-06 Add compatible SDK names — Introduce canonical SDK names 
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 5)"), 2026-09-06
 location: Group 5 DI, health, query naming, and MessageId status handling
 reason: Prior Group 5 cosmetic defer remains open (stringly DI absence checks; health "all components" naming; partial Ada→Synthetic rename; undocumented MessageId status-key change).
-status: open
+status: done 2026-10-21
+resolution: Typed SDK DI checks replace string exclusions; existing architectural guards cover deleted local interfaces. Health/readiness test names describe registered dependencies. Privacy sentinels have explicit leak-detection scope, and a distinct MessageId/CorrelationId regression verifies both persisted status entries and correlation metadata.
+verification: spec-five-verification-maintenance-deferred-items.md; tests/five-verification-maintenance-deferred-items-2026-10-21/validation.json. Both Debug builds are clean and 397 focused tests pass without skips; source/runtime qualification limits remain explicit.
 
 ### DW-34: Strengthen cursor, payload, and hosted-service test fidelity
 
@@ -389,7 +391,9 @@ verification: spec-five-projection-migration-deferred-items.md; tests/five-proje
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
 location: rollback query shims, configuration, DI tests, and health tests
 reason: Minor/cosmetic, rollback-shim naming and test quality: `PartyDetailProjectionQueryActor` / `PartyIndexProjectionQueryActor` keep the "Actor" name with zero actor behavior (intentional temporary rollback shims); `PartySdkReadModelOptions.ConfigurationSection` reuses the retired `Hexalith.EventStore.Server.Configuration.ProjectionOptions`'s `"EventStore:Projections"` config key; the new `Dapr.Actors.AspNetCore` package reference and `$(HexalithCommonsHttpFromSource)` MSBuild property rename are undocumented but verified correct; the DI test `AddParties_UsesSdkReadModelsAndCursorCodecWithoutLocalProjectionMechanics` asserts absence via a brittle `descriptor.ServiceType.FullName` string match rather than a type reference; `HealthEndpoint_AllComponentsHealthy_Returns200WithoutRetiredProjectionActorCheckAsync` keeps an "all components healthy" framing that now excludes SDK read models from what "all" verifies; the PII seed rename (`"Ada"/"Lovelace"` → `"SyntheticPrivateFirstName8472"/"SyntheticPrivateLastName6391"`) landed in only 2 of dozens of usages across `EventStoreGatewayRoutingTests.cs`, with 7 other test files still using `"Ada"/"Lovelace"`; `DirectPartiesCommandRouter`'s test double now keys its completion write on `command.MessageId` instead of `command.CorrelationId`, correctly mirroring production `SubmitCommandHandler.cs` behavior but undocumented in the diff.
-status: open
+status: done 2026-10-21
+resolution: The canonical query constants, obsolete aliases, Parties:Projections fallback and build-selector documentation already delivered by DW-32 are retained. Remaining DI, health, privacy-fixture and status-key cleanup is complete under DW-33, with runtime behavior and ordinary fixture data preserved.
+verification: spec-five-verification-maintenance-deferred-items.md; tests/five-verification-maintenance-deferred-items-2026-10-21/validation.json. Both Debug builds are clean and 397 focused tests pass without skips; source/runtime qualification limits remain explicit.
 
 ### DW-53: Correct the Epic 7 rollback-retention approval chronology
 
@@ -682,8 +686,10 @@ decision: 2026-09-06 Restore forward skip access — Adjust FrontComposer route 
 origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-08-19)"), 2026-09-06
 location: PlatformApiPrerequisitesTests, docs/ci.md, and docs/architecture.md
 reason: EventStore's exact version is hardcoded in five or more places (`PlatformApiPrerequisitesTests`, `docs/ci.md`, `docs/architecture.md` §3) rather than read from the Builds catalog's `HexalithEventStoreVersion`. This is the drift the "CI identity regression — one stale live assertion expecting EventStore 3.90.0" receipt already recorded once. (Updated 2026-09-06: the cited value was `3.95.0` when this note was written 2026-08-19; the 2026-09-05 catalog adopt advanced all cited places to `3.102.0` together, so the specific hardcoded value drifts each time the catalog moves — the underlying "not read from the catalog" gap remains.)
-status: open
+status: done 2026-10-21
 note: 2026-10-05 (Story 8.10 review loop 3, Blind 11) — the effective EventStore version is now the Parties pre-import pin `HexalithEventStoreVersion=3.113.0` in `Directory.Packages.props`; the Builds catalog default at `360a2b9c` is `3.112.0`, so the governing value is the effective MSBuild property, not the catalog default. Consolidating the test-side version lookups into one effective-value reader is in this entry's scope: `CommonsHttpRestoreRoutingTests`, `PartiesContainerPublishWorkflowTests.ReadEffectiveEventStoreVersion`, the `DocumentationFitnessTests` catalog evaluator, the `AccessibilityStyleGuardTests` FrontComposer lookup, and `PlatformApiPrerequisitesTests.EventStorePackageVersion`. They agree today only because EventStore is the sole root pin; a root pin of another package would make them diverge.
+resolution: One bounded actual-MSBuild version reader now supplies live prerequisite, documentation, publication, restore-routing and package-test lookups. Root pins, conditional/import order, Debug/Release selection and malformed values are covered. Historical package/source receipts retain their original versions and full IDs; live documentation names the governing properties and reproducible query.
+verification: spec-five-verification-maintenance-deferred-items.md; tests/five-verification-maintenance-deferred-items-2026-10-21/validation.json. Both Debug builds are clean and 397 focused tests pass without skips; source/runtime qualification limits remain explicit.
 
 ### DW-93: Define authored_by_spec as non-activating deferral metadata
 
@@ -1213,7 +1219,9 @@ location: tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 severity: medium
 reason: The closure gate checks the selected FrontComposer SHA only in the Playwright accessibility evidence. The warning-policy, Release build, all-tests, package/consumer, and npm rows accept any exact `Pass`, so a row left over from a superseded identity would satisfy closure. That contradicts I16's rule that a receipt counts only when rerun at the stamped identity. Pre-existing: Parties `c782b68c` already had the Playwright-only check. Exit proof: each required row must carry a machine-checkable stamp of the final set (for example the EventStore source SHA or a named final-set token) and the Parties tree, with rejection cases. Rollback: keep the current Playwright-only stamp check.
-status: open
+status: done 2026-10-21
+resolution: Every required passing closure receipt requires exact row-local Parties snapshot and dependency-set digests, with negative and actual filesystem/Git regressions. Current selected FrontComposer is checked independently. Only canonical receipt payload and three explicit closure bookkeeping values are normalized; all other content remains bound. Historical passes are preserved; current full closure rows are Unvalidated, Story 8.10 is in-review and Epic 8 in-progress pending genuine full requalification.
+verification: spec-five-verification-maintenance-deferred-items.md; tests/five-verification-maintenance-deferred-items-2026-10-21/validation.json. Both Debug builds are clean and 397 focused tests pass without skips; source/runtime qualification limits remain explicit.
 
 ### DW-145: Extend the personal-data inventory to the identity-feature contracts
 
@@ -1238,7 +1246,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs (external runtime project inventory)
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: PlatformApiPrerequisitesTests inventories only owned src, samples, and tests projects, so it cannot detect the pre-existing upstream Tenants source/package mismatch before topology startup.
-status: open
+status: done 2026-10-21
+resolution: Preflight inventories all seven AppHost external runtime roots and their 24-project closure in both Debug and Release, comparing EventStore packages against independently evaluated Parties selection. Missing references, package overrides, hidden source selection, unsupported edge contexts, unexpanded multi-target graphs and nonliteral resolver paths fail explicitly; cycles are bounded. This verifies graph selection, not compilation or runtime parity.
+verification: spec-five-verification-maintenance-deferred-items.md; tests/five-verification-maintenance-deferred-items-2026-10-21/validation.json. Both Debug builds are clean and 397 focused tests pass without skips; source/runtime qualification limits remain explicit.
 
 ### DW-160: Extend the existing gateway command test with a direct persisted-stream and aggregate identity read.
 

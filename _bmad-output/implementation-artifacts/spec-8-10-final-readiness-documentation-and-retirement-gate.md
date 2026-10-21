@@ -2,7 +2,7 @@
 title: '8.10 Final readiness, documentation, and retirement gate'
 type: 'refactor'
 created: '2026-08-17'
-status: 'done'
+status: 'in-review'
 baseline_commit: '37f4ec826c6f4aea4651cfbad94fb6ab7fc4f0a0'
 review_loop_iteration: 3
 context:
@@ -683,3 +683,16 @@ errors for missing FrontComposer Shell 4.5.0 module-landing types (DW-124).
 The original baseline/frozen intent are retained. Existing user source advances
 remain untouched and unvalidated; no source-pin guard or approval was weakened.
 Story 8.10 stays in-progress. Exact commands are in tests/test-summary.md.
+
+
+## Receipt identity requalification — 2026-10-21
+
+DW-144 requires every required passing closure lane to bind the exact current
+Parties snapshot and dependency set. The historical 2026-10-05 receipts remain
+preserved in `tests/test-summary.md`; they do not establish a current full
+snapshot qualification. The current canonical rows are honestly `Unvalidated`,
+so this story returns to `in-review` and Epic 8 to `in-progress` until all six lanes
+are rerun and stamped. This maintenance correction does not alter the frozen
+intent, accepted historical decisions, dependency selections, or other blocked
+story statuses. The executable gate and stamp format are documented in the
+canonical test summary.

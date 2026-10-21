@@ -158,7 +158,32 @@ pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure -ResultsDire
 
 CI and default local commands run in package mode (`UseNuGetDeps=true`, `UseHexalithProjectReferences=false`). If unpublished Hexalith packages block restore, record the package-mode blocker and rerun source-mode triage with `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false` only as diagnostic evidence.
 
-The effective package graph selects EventStore 3.126.0 and Commons 2.30.3 from the shared Builds catalog at `5d03f1db9c38db34ecac7fe6048937478ffb82cc`, selected by the committed graph at Parties `14ad39f85eae152c7a7e22ff261cc534ff5dab1e`. There is no Parties override in `Directory.Packages.props`; the exact-identity/clean-checkout gate stays in force. This selection supplies retained-manifest recovery and does not renew historical runtime qualification. The earlier 3.120.0 MSBuild/build evidence and 3.117.1 [consumer receipt](../_bmad-output/implementation-artifacts/tests/eventstore-3.117.1-consumer-2026-10-08/README.md) remain historical. Exact-source push CI and release gates must validate the selected graph.
+The effective package graph selects EventStore through `HexalithEventStoreVersion`
+and Commons through `HexalithCommonsVersion`. Root pins in
+`Directory.Packages.props` and the imported Builds catalog govern these values;
+query the effective Release graph after any dependency selection change:
+
+```bash
+dotnet msbuild src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj -nologo -p:Configuration=Release -getProperty:HexalithEventStoreVersion,HexalithCommonsVersion
+```
+
+The repository fitness and publication tests use the same MSBuild evaluation
+order, including root pins and conditional imports. Current selection does not
+renew historical runtime qualification. The earlier 3.120.0 MSBuild/build
+evidence and 3.117.1 [consumer receipt](../_bmad-output/implementation-artifacts/tests/eventstore-3.117.1-consumer-2026-10-08/README.md)
+remain historical. Exact-source push CI and release gates must validate the
+selected graph.
+
+Before topology startup, `PlatformApiPrerequisitesTests` inventories the seven
+external EventStore, Tenants, Memories and optional sample projects declared by
+the AppHost, then follows their selected project references. It rejects missing
+projects, unexpected source selection and EventStore packages that disagree
+with the independently evaluated Parties package version. This preflight checks
+dependency selection in both Debug and Release; separate project compilation
+and runtime qualification remain required. Unexpanded multi-target graphs and
+project-reference property modifiers fail with an explicit diagnostic until their
+contexts are qualified. Removing an unset SDK publish-profile property is the
+only supported no-op modifier.
 
 The owned central catalog pins `Microsoft.AspNetCore.SignalR.Common` to `10.0.13`
 for GHSA-334f-vvp4-7g6p, with its required Options and

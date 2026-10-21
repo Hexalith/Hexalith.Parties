@@ -565,7 +565,8 @@ public sealed class PartiesContainerPublishWorkflowTests
         ci.ShouldContain("successful exact-source push run of `ci.yml`");
         ci.ShouldNotContain("bypass-validation");
         secrets.ShouldNotContain("bypass-validation");
-        ci.ShouldContain($"package graph selects EventStore {ReadEffectiveEventStoreVersion()}");
+        ci.ShouldContain("package graph selects EventStore through `HexalithEventStoreVersion`");
+        ci.ShouldContain("-getProperty:HexalithEventStoreVersion,HexalithCommonsVersion");
         ci.ShouldContain("Package mode remains the authoritative CI and release path");
         ci.ShouldContain("source mode is diagnostic only");
         ci.ShouldContain("registry.hexalith.com/parties");
@@ -641,16 +642,6 @@ public sealed class PartiesContainerPublishWorkflowTests
     private static string ReadReleaseStep(string name, string? release = null)
         => (release ?? ReadReleaseJob()).Split("      - name: ", StringSplitOptions.None)
             .Single(step => step.StartsWith($"{name}\n", StringComparison.Ordinal));
-
-    /// <summary>
-    /// Reads the EventStore package version the Parties graph actually selects: the root pre-import
-    /// pin when present, otherwise the shared catalog default.
-    /// </summary>
-    private static string ReadEffectiveEventStoreVersion()
-        => System.Xml.Linq.XDocument.Load(CiTestPaths.RepoFile("Directory.Packages.props"))
-                .Descendants("HexalithEventStoreVersion").SingleOrDefault()?.Value
-            ?? System.Xml.Linq.XDocument.Load(CiTestPaths.RepoFile("references/Hexalith.Builds/Props/Directory.Packages.props"))
-                .Descendants("HexalithEventStoreVersion").Single().Value;
 
     private static string[] ArgumentValues(string[] arguments, string option)
     {

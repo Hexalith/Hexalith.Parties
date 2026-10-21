@@ -559,8 +559,9 @@ does not approve I16 parity, owner releases, publishing, or deletion.
 ### Initial validation receipts (superseded 2026-08-18)
 
 Retained as the audit trail for the first run. **These rows are not the closure
-gate** — the authoritative table is the `### Validation receipts` section below,
-after the authorized remediation. The heading here deliberately omits the exact
+gate** — the authoritative table is the latest `### Validation receipts`
+section under "Story 8.10 receipt identity correction — 2026-10-21" near the
+end of this file. The 2026-10-05 table remains historical evidence. The heading here deliberately omits the exact
 phrase `Validation receipts` so the closure fitness parser cannot select it.
 
 | Check | Result | Evidence |
@@ -583,8 +584,9 @@ phrase `Validation receipts` so the closure fitness parser cannot select it.
 ### Historical closure blockers — 2026-08-18
 
 The dated blockers below retain their original evidence. Current blockers and
-execution outcomes are recorded in the canonical `### Validation receipts` table
-and the 2026-10-05 sections at the end of this file.
+execution outcomes are recorded in the latest canonical `### Validation receipts`
+table near the end of this file. The 2026-10-05 sections retain their historical
+evidence and identities.
 
 - blocker: `release-solution-polymorphic-stylecop`
   owner: `Hexalith.PolymorphicSerializations maintainers for the dependency fix; Amelia (Parties Developer) and Murat (Test Architect) for consuming-graph revalidation`
@@ -613,9 +615,9 @@ status selectors. The Playwright Test host explicitly serves static web assets
 and builds the selected FrontComposer source graph, so the accessibility lane
 exercises an interactive Blazor UI rather than SSR-only output.
 
-### Validation receipts
+### Historical validation receipts — 2026-10-05
 
-Authoritative closure-gate table. Check names are canonical: the closure fitness
+Historical closure-gate table, retained at its recorded identities. Check names are canonical: the closure fitness
 test requires all six canonical Verification-lane rows (warning policy, Release
 build, all .NET tests, packages/consumers, npm/typecheck, and Playwright), and
 accepts only an exact `Pass` Result (bold markup tolerated); any other or
@@ -2536,3 +2538,110 @@ are missing. Production KMS is a separate release gate. No production source,
 dependency, gitlink, local DI, public API, or rollback file changed. Mixed-history
 provider parity, GDPR, post-v2 rollback, and KMS tests did not run and receive
 no credit.
+
+
+## Story 8.10 receipt identity correction — 2026-10-21
+
+DW-144 closes the gap that allowed five required lanes to qualify without any
+machine-checked identity. The 2026-10-05 table above remains historical evidence;
+its description of Parties `75b4fa1f` plus an unspecified review diff does not
+provide an exact current snapshot. No stamps have been retrofitted to those
+results and no gate rerun is credited by this correction. Story 8.10 returns to
+`review` and Epic 8 to `in-progress` until all six required current receipts
+qualify. Other blocked stories and historical approvals keep their scope.
+
+### Validation receipts
+
+Current canonical closure table. Every required clean `Pass` must carry its own
+matching `parties_snapshot` and `dependency_set` tokens. An honest unsuccessful
+receipt remains recordable without stamps. These rows are Unvalidated because
+the full closure suite has not been rerun for the current snapshot.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Warning and nested-submodule policy | Unvalidated | No current exact-snapshot closure qualification recorded. |
+| Release solution build | Unvalidated | No current exact-snapshot closure qualification recorded. |
+| All .NET test projects | Unvalidated | No current exact-snapshot closure qualification recorded. |
+| Package/API and package-only consumers | Unvalidated | No current exact-snapshot closure qualification recorded. |
+| npm install and typecheck | Unvalidated | No current exact-snapshot closure qualification recorded. |
+| Playwright accessibility | Unvalidated | No current exact-snapshot closure qualification recorded; a future Pass also requires the selected FrontComposer source stamp. |
+
+### Closure receipt identity format — 2026-10-21
+
+Each passing required row's Evidence cell must contain exactly one
+`parties_snapshot=<64 lowercase hexadecimal characters>` token and exactly one
+`dependency_set=<64 lowercase hexadecimal characters>` token. Both values must
+match independently derived current values. Tokens in another row, historical
+section, or later prose cannot supply a missing stamp. Malformed, repeated,
+conflicting, and stale tokens fail closed. The accessibility-specific
+FrontComposer source assertion remains a separate condition. A digest is an
+identity check; it does not prove that a command ran or passed.
+
+`parties_snapshot` is a SHA256 content digest, not a Git tree or commit ID.
+`EpicEightClosureFitnessTests.ReadCurrentClosureIdentity` builds its version-1
+manifest from `git ls-files --cached --others --exclude-standard -z`, including
+all tracked paths (with a missing marker for deletions), unignored untracked
+root files, Git-compatible file modes, symlink targets, and the committed
+selection plus actual checkout SHA of every root-declared gitlink. Root
+checkouts must be initialized, clean, and match their committed gitlinks.
+Ignored generated outputs are excluded by Git; submodule files stay represented
+by their root gitlinks. On Unix, only the owner-executable (`UserExecute`)
+worktree bit determines Git's executable file mode; group-only or other-only
+execute bits do not. On Windows, tracked index modes apply. It does not stage files or write Git
+objects.
+
+The content exemptions are limited to receipt bookkeeping. The latest
+canonical `### Validation receipts` section through the next level-1/2/3 heading
+is replaced by the fixed UTF-8 marker `<!-- closure-receipt-payload:v1 -->`
+followed by LF. Three exact status values are replaced with
+`<closure-status:v1>` while preserving their surrounding bytes: Story 8.10's
+frontmatter `status` (`in-review`/`review`/`done`), sprint key
+`8-10-final-readiness-documentation-and-retirement-gate` (`review`/`done`), and
+sprint key `epic-8` (`in-progress`/`done`). Frontmatter normalization ends at its
+closing delimiter; identically spelled fields in later prose are covered.
+No other status, text, whitespace, quotation, or file-mode change is exempt.
+
+These narrow exemptions prevent recursive receipt hashes and permit honest
+closure after qualification. First stabilize all other files with the story
+`in-review` (sprint `review`) and Epic 8 `in-progress`. Collect the identity
+without assigning Pass, run all required gates against that snapshot, and
+record successful rows with their exact stamps. After all six lanes qualify,
+transition only the three normalized status values to `done`; the existing
+strict done-and-green checks remain in force. Historical evidence and these
+instructions remain covered. Any other code, configuration, document, status,
+mode, path, or root-gitlink change invalidates the snapshot and requires fresh
+qualification.
+
+For each manifest entry, compute the lowercase SHA256 of its bytes (gitlinks
+use UTF-8 `selected=<sha>` plus LF plus `checkout=<sha>`). Sort entries by path
+using ordinal comparison. Hash UTF-8 `parties-snapshot-v1` plus NUL, followed by
+`path`, NUL, `mode`, NUL, `entry digest`, NUL for every entry. Deleted files use
+mode `missing` and empty bytes. Symlink mode is `120000`, ordinary files are
+`100644` or `100755`, and gitlinks are `160000`.
+
+`dependency_set` uses the same manifest encoding with the domain prefix
+`parties-dependency-set-v1`. Its independent inputs are all root-declared
+selected/checked-out gitlinks, `.gitmodules`, `global.json`, top-level `.props`
+and `.targets` files, the selected Builds `Props/Directory.Packages.props`, and
+all effective Release `PackageVersion` items evaluated through the Client
+project by `EffectivePackageVersions.ReadPackages`. Evaluated versions use
+path `evaluated-package/<package ID>`, mode `version`, and UTF-8 version bytes.
+These catalog selection inputs are also bound by the full snapshot. Missing or
+unresolved evaluated versions fail closed. Expected token values are reported
+in receipt identity failure diagnostics; deriving them grants no test credit.
+Only a real rerun against the final snapshot can justify replacing Unvalidated
+with Pass.
+
+
+To collect the two current tokens honestly, build the Debug service test
+project, then run its read-only identity fact with live output directed
+outside the repository:
+
+```bash
+dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification -showLiveOutput > /tmp/parties-closure-identity.txt
+```
+
+The fact emits `parties_snapshot=... dependency_set=...` and assigns no
+closure-lane qualification. Keeping this output outside the root avoids
+adding an input while collecting the snapshot. Do not change a canonical row
+to Pass merely to obtain the tokens.

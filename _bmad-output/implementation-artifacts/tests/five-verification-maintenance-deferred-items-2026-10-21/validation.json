@@ -1,0 +1,152 @@
+{
+  "baseline": "80f4c8f562b3d663c94f4d0c36cccff6189257ec",
+  "checks": [
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "elapsed_seconds": 1.89,
+      "log": "policy.txt"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj --configuration Debug -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -m:1",
+      "exit_code": 0,
+      "elapsed_seconds": 1.24,
+      "log": "ci-build.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests",
+      "exit_code": 0,
+      "elapsed_seconds": 30.93,
+      "log": "ci-tests.txt"
+    },
+    {
+      "command": "dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json",
+      "exit_code": 2,
+      "elapsed_seconds": 5.04,
+      "log": "source-launcher.txt"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -m:1",
+      "exit_code": 0,
+      "elapsed_seconds": 10.55,
+      "log": "main-build.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Projections.ProjectionPlatformAdapterTests -class Hexalith.Parties.Tests.Projections.PartySdkConfigurationCompatibilityTests -class Hexalith.Parties.Tests.HealthChecks.HealthEndpointIntegrationTests -class Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests -class Hexalith.Parties.Tests.FitnessTests.ArchitecturalFitnessTests -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -class Hexalith.Parties.Tests.FitnessTests.EffectivePackageVersionsTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests",
+      "exit_code": 0,
+      "elapsed_seconds": 55.9,
+      "log": "main-tests-summary.txt"
+    },
+    {
+      "command": "node_modules/.bin/commitlint --edit /tmp/parties-verification-commit-message.txt --verbose",
+      "exit_code": 0,
+      "elapsed_seconds": 0.61,
+      "log": "commitlint.txt"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -m:1",
+      "exit_code": 0,
+      "elapsed_seconds": 5.15,
+      "log": "main-review-build.txt"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj --configuration Debug -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -m:1",
+      "exit_code": 0,
+      "elapsed_seconds": 1.18,
+      "log": "ci-review-build.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.CommonsHttpRestoreRoutingTests -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests",
+      "exit_code": 0,
+      "elapsed_seconds": 23.18,
+      "log": "ci-review-tests.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Projections.ProjectionPlatformAdapterTests -class Hexalith.Parties.Tests.Projections.PartySdkConfigurationCompatibilityTests -class Hexalith.Parties.Tests.HealthChecks.HealthEndpointIntegrationTests -class Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests -class Hexalith.Parties.Tests.FitnessTests.ArchitecturalFitnessTests -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests -class Hexalith.Parties.Tests.FitnessTests.EffectivePackageVersionsTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests",
+      "exit_code": 0,
+      "elapsed_seconds": 56.48,
+      "log": "main-review-tests-summary.txt"
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "elapsed_seconds": 0.33,
+      "log": "final-policy.txt"
+    },
+    {
+      "command": "git -c core.whitespace=cr-at-eol diff --check",
+      "exit_code": 0,
+      "elapsed_seconds": 0.11,
+      "log": "final-diff.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests -class Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests",
+      "exit_code": 0,
+      "elapsed_seconds": 1.92,
+      "log": "final-tracking-tests.txt"
+    }
+  ],
+  "baseline_observations": [
+    {
+      "command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 0,
+      "result": "Started successfully."
+    },
+    {
+      "command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 0,
+      "result": "security Running/Unhealthy; dependent services Waiting; no ready topology qualification."
+    },
+    {
+      "command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 0,
+      "result": "This run stopped successfully; unrelated Tenants AppHost left running."
+    }
+  ],
+  "limits": [
+    "Supported source launcher refuses before launch with HXR011 because HEXALITH_DAPR_HOME is unset.",
+    "Legacy Aspire baseline has an unhealthy security container; no runtime or end-to-end qualification is claimed.",
+    "Focused Debug checks use the selected package graph; they do not certify the full Release solution, all test projects, package publication or source runtime.",
+    "No dependency or root gitlink changed. Story 8.10 is in-review and Epic 8 in-progress until current full closure receipts are qualified."
+  ],
+  "initial_results": {
+    "main_tests": {
+      "total": 280,
+      "failed": 0,
+      "skipped": 0
+    },
+    "ci_tests": {
+      "total": 86,
+      "failed": 0,
+      "skipped": 0
+    },
+    "build_warnings": 0,
+    "build_errors": 0
+  },
+  "final_results": {
+    "main_tests": {
+      "total": 311,
+      "failed": 0,
+      "skipped": 0
+    },
+    "ci_tests": {
+      "total": 86,
+      "failed": 0,
+      "skipped": 0
+    },
+    "total_unique_selected_tests": 397,
+    "build_warnings": 0,
+    "build_errors": 0,
+    "post_reconciliation_tracking_tests": {
+      "total": 82,
+      "failed": 0,
+      "skipped": 0,
+      "note": "Subset of the 397 unique selected tests; rerun after ledger and status finalization."
+    }
+  },
+  "review": {
+    "findings": 10,
+    "disposition": "All ten verified and patched; no new deferrals.",
+    "follow_up": "Independent reviewer reran the six original repros and bookkeeping/filesystem/Git regressions; all original findings addressed, no remaining concrete defects."
+  }
+}

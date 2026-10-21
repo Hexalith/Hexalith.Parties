@@ -818,6 +818,8 @@ public sealed class EventStoreGatewayRoutingTests
         using var factory = new EventStoreGatewayTestFactory(usePartiesDomainRouter: true);
         using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["commands:*"]);
         string partyId = Guid.NewGuid().ToString("D");
+        // Distinctive synthetic sentinels let status-store privacy assertions identify payload leaks.
+        // Ordinary fixture names elsewhere remain representative domain data.
         const string syntheticFirstName = "SyntheticPrivateFirstName8472";
         const string syntheticLastName = "SyntheticPrivateLastName6391";
 
@@ -851,6 +853,7 @@ public sealed class EventStoreGatewayRoutingTests
         using var factory = new EventStoreGatewayTestFactory(usePartiesDomainRouter: true);
         using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["commands:*"]);
         string partyId = Guid.NewGuid().ToString("D");
+        // Keep the same leak-detection sentinels for retry status history.
         const string syntheticFirstName = "SyntheticPrivateFirstName8472";
         const string syntheticLastName = "SyntheticPrivateLastName6391";
 
@@ -998,6 +1001,37 @@ public sealed class EventStoreGatewayRoutingTests
 
         statusStore.GetStatusHistory("tenant-a", "message-id-1").ShouldHaveSingleItem();
         statusStore.GetStatusHistory("tenant-a", "correlation-id-1").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task DirectPartiesCommandRouter_StatusWritesUseMessageIdWhenCorrelationDiffersAsync()
+    {
+        var statusStore = new InMemoryCommandStatusStore();
+        var router = new DirectPartiesCommandRouter(statusStore);
+        const string partyId = "01ARZ3NDEKTSV4RRFFQ69G5FAV";
+        var command = new SubmitCommand(
+            MessageId: "direct-message-id-1",
+            Tenant: "tenant-a",
+            Domain: "party",
+            AggregateId: partyId,
+            CommandType: typeof(CreatePartyComposite).FullName!,
+            Payload: JsonSerializer.SerializeToUtf8Bytes(new CreatePartyComposite
+            {
+                PartyId = partyId,
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails { FirstName = "Ada", LastName = "Lovelace" },
+            }),
+            CorrelationId: "direct-correlation-id-1",
+            UserId: "user-1");
+
+        CommandProcessingResult result = await router.RouteCommandAsync(command, TestContext.Current.CancellationToken);
+
+        result.Accepted.ShouldBeTrue();
+        result.CorrelationId.ShouldBe(command.CorrelationId);
+        IReadOnlyList<CommandStatusRecord> history = statusStore.GetStatusHistory(command.Tenant, command.MessageId);
+        history.Select(static status => status.Status).ShouldBe([CommandStatus.Received, CommandStatus.Completed]);
+        history.ShouldAllBe(status => status.MessageId == command.MessageId && status.CorrelationId == command.CorrelationId);
+        statusStore.GetStatusHistory(command.Tenant, command.CorrelationId).ShouldBeEmpty();
     }
 
     private sealed class ConfigurableCommandRouter : ICommandRouter
@@ -1253,6 +1287,8 @@ public sealed class EventStoreGatewayRoutingTests
         {
             ArgumentNullException.ThrowIfNull(command);
 
+            // Mirror EventStore SubmitCommandHandler: status history uses tenant/message identity.
+            // Received precedes domain processing; correlation remains metadata in both status records.
             await _statusStore.WriteStatusAsync(
                 command.Tenant,
                 command.MessageId,

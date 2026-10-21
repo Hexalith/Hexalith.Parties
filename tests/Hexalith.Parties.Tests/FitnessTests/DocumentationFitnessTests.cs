@@ -2,6 +2,8 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
+using Hexalith.Parties.PackageTests;
+
 using Shouldly;
 
 using static Hexalith.Parties.Tests.FitnessTests.RepositoryRoot;
@@ -166,15 +168,8 @@ public sealed class DocumentationFitnessTests
     public void MaintainedTechnologyTablesMatchCentralPackageCatalog()
     {
         string root = RepositoryRoot.Locate();
-        XDocument catalog = XDocument.Parse(Read(root, "references/Hexalith.Builds/Props/Directory.Packages.props"));
-        Dictionary<string, string> versions = catalog.Descendants("PackageVersion")
-            .ToDictionary(element => element.Attribute("Include")!.Value, element => element.Attribute("Version")!.Value, StringComparer.Ordinal);
-        IReadOnlyDictionary<string, string> catalogProperties = ReadDefaultCatalogProperties(catalog);
-        string Version(string packageId) => Regex.Replace(
-            versions[packageId],
-            @"\$\((?<name>[A-Za-z0-9_.]+)\)",
-            match => catalogProperties[match.Groups["name"].Value],
-            RegexOptions.CultureInvariant);
+        IReadOnlyDictionary<string, string> versions = EffectivePackageVersions.ReadPackages(root);
+        string Version(string packageId) => versions[packageId];
         string aspire = Version("Aspire.Hosting");
         XDocument appHost = XDocument.Parse(Read(root, "src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj"));
         appHost.Root!.Attribute("Sdk")!.Value.ShouldBe($"Aspire.AppHost.Sdk/{aspire}");
@@ -219,10 +214,9 @@ public sealed class DocumentationFitnessTests
             Read(root, document).ShouldContain($"Aspire {aspire}", Case.Sensitive, document);
         }
 
-        XDocument rootPackages = XDocument.Parse(Read(root, "Directory.Packages.props"));
-        string eventStoreVersion = rootPackages.Descendants("HexalithEventStoreVersion").SingleOrDefault()?.Value
-            ?? catalog.Descendants("HexalithEventStoreVersion").Single().Value;
-        Read(root, "docs/ci.md").ShouldContain($"package graph selects EventStore {eventStoreVersion}");
+        architecture.ShouldContain("package selected by `HexalithEventStoreVersion`");
+        Read(root, "docs/ci.md").ShouldContain("package graph selects EventStore through `HexalithEventStoreVersion`");
+        Version("Hexalith.EventStore.Contracts").ShouldBe(EffectivePackageVersions.ReadProperty(root, "HexalithEventStoreVersion"));
     }
 
     [Fact]
@@ -363,28 +357,4 @@ public sealed class DocumentationFitnessTests
             .ToArray();
     }
 
-    /// <summary>
-    /// Evaluates the catalog properties that apply to a Parties project in document order:
-    /// unconditional assignments overwrite, <c>'$(Name)' == ''</c> defaults apply only when unset,
-    /// and any other condition (for example a different <c>MSBuildProjectName</c>) is skipped.
-    /// </summary>
-    private static IReadOnlyDictionary<string, string> ReadDefaultCatalogProperties(XDocument catalog)
-    {
-        Dictionary<string, string> properties = new(StringComparer.Ordinal);
-        foreach (XElement property in catalog.Descendants("PropertyGroup").Elements())
-        {
-            string name = property.Name.LocalName;
-            string? condition = property.Attribute("Condition")?.Value;
-            if (condition is null)
-            {
-                properties[name] = property.Value.Trim();
-            }
-            else if (string.Equals(condition.Replace(" ", string.Empty, StringComparison.Ordinal), $"'$({name})'==''", StringComparison.Ordinal))
-            {
-                properties.TryAdd(name, property.Value.Trim());
-            }
-        }
-
-        return properties;
-    }
 }

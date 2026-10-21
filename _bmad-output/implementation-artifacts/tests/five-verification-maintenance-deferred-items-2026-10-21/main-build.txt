@@ -1,0 +1,23 @@
+  Determining projects to restore...
+  Restored <repository>/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj (in 327 ms).
+  Restored <repository>/src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj (in 330 ms).
+  Restored <repository>/src/Hexalith.Parties/Hexalith.Parties.csproj (in 341 ms).
+  Restored <repository>/src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj (in 337 ms).
+  Restored <repository>/src/Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj (in 337 ms).
+  Restored <repository>/src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj (in 348 ms).
+  3 of 9 projects are up-to-date for restore.
+  Hexalith.Parties.Contracts -> <repository>/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll
+  Hexalith.Parties.Authentication -> <repository>/src/Hexalith.Parties.Authentication/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll
+  Hexalith.Parties.Projections -> <repository>/src/Hexalith.Parties.Projections/bin/Debug/net10.0/Hexalith.Parties.Projections.dll
+  Hexalith.Parties.Security -> <repository>/src/Hexalith.Parties.Security/bin/Debug/net10.0/Hexalith.Parties.Security.dll
+  Hexalith.Parties -> <repository>/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll
+  Hexalith.Parties.Client -> <repository>/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll
+  Hexalith.Parties.Testing -> <repository>/src/Hexalith.Parties.Testing/bin/Debug/net10.0/Hexalith.Parties.Testing.dll
+  Hexalith.Parties.EventStoreGateway.TestHost -> <repository>/tests/Hexalith.Parties.EventStoreGateway.TestHost/bin/Debug/net10.0/Hexalith.Parties.EventStoreGateway.TestHost.dll
+  Hexalith.Parties.Tests -> <repository>/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:10.10

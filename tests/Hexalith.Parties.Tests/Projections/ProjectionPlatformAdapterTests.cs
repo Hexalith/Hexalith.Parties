@@ -1,6 +1,7 @@
 using Hexalith.EventStore.Client.Projections;
 using Hexalith.EventStore.Client.Queries;
 using Hexalith.EventStore.Contracts.Security;
+using Hexalith.EventStore.Server.Projections;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -35,18 +36,10 @@ public sealed class ProjectionPlatformAdapterTests
         services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(TimeProvider));
         services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(PartySdkQueryService));
         services.ShouldContain(static descriptor => descriptor.ServiceType == typeof(PartySdkLastKnownReadModelCache));
-        services.ShouldNotContain(static descriptor => string.Equals(
-            descriptor.ServiceType.FullName,
-            "Hexalith.Parties.Projections.Services.IPartyProjectionPlatformAdapter",
-            StringComparison.Ordinal));
-        services.ShouldNotContain(static descriptor => string.Equals(
-            descriptor.ServiceType.FullName,
-            "Hexalith.Parties.Projections.Services.IProjectionRebuildService",
-            StringComparison.Ordinal));
-        services.ShouldNotContain(static descriptor => string.Equals(
-            descriptor.ServiceType.FullName,
-            "Hexalith.EventStore.Server.Projections.IProjectionUpdateOrchestrator",
-            StringComparison.Ordinal));
+        services.ShouldNotContain(static descriptor => descriptor.ServiceType == typeof(IProjectionUpdateOrchestrator));
+        // The local adapter and rebuild interfaces were deleted. Their retired-file guards live in
+        // ArchitecturalFitnessTests.PartiesProjectionRuntimeUsesOnlyEventStoreSdkHandlers;
+        // the typed registrations and resolutions here verify the active SDK services.
     }
 
     [Fact]

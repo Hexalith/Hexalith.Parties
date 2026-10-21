@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Xml.Linq;
 
+using Hexalith.Parties.PackageTests;
+
 namespace Hexalith.Parties.Ci.Tests;
 
 public sealed class CommonsHttpRestoreRoutingTests
@@ -1273,14 +1275,7 @@ with tempfile.TemporaryDirectory() as temporary_root:
         string propertyName = alias.StartsWith("$(", StringComparison.Ordinal) && alias.EndsWith(')')
             ? alias[2..^1]
             : throw new InvalidOperationException($"{packageId} version '{alias}' is not a central property alias.");
-        // Parties may pin a central property (for example HexalithEventStoreVersion) in its root
-        // Directory.Packages.props before importing the shared catalog; that pin wins in MSBuild
-        // evaluation order, so it is the effective version the resolver must report.
-        XDocument rootProps = XDocument.Load(CiTestPaths.RepoFile("Directory.Packages.props"));
-        string version = rootProps.Descendants(propertyName).SingleOrDefault()?.Value
-            ?? props.Descendants(propertyName).SingleOrDefault()?.Value
-            ?? throw new InvalidOperationException($"Central property {propertyName} was not found in shared package props.");
-
+        string version = EffectivePackageVersions.ReadProperty(CiTestPaths.RepositoryRoot, propertyName);
         return (alias, version);
     }
 
