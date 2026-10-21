@@ -2,6 +2,7 @@ using System.Text.Json;
 
 using Hexalith.EventStore.Client.Projections;
 using Hexalith.EventStore.Client.Queries;
+using Hexalith.EventStore.Client.Registration;
 using Hexalith.EventStore.Contracts.Queries;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
@@ -15,6 +16,8 @@ using Hexalith.Parties.Queries;
 using Hexalith.Parties.Search;
 using Hexalith.Parties.Testing;
 
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -29,6 +32,93 @@ namespace Hexalith.Parties.Tests.Gateway;
 public sealed class PartySdkQueryHandlerTests
 {
     private static readonly DateTimeOffset s_now = new(2026, 8, 1, 12, 0, 0, TimeSpan.Zero);
+
+    [Theory]
+    [InlineData(false, "continue")]
+    [InlineData(false, "tamper")]
+    [InlineData(false, "user")]
+    [InlineData(false, "tenant")]
+    [InlineData(false, "query")]
+    [InlineData(false, "type")]
+    [InlineData(false, "active")]
+    [InlineData(false, "mode")]
+    [InlineData(false, "page-size")]
+    [InlineData(true, "continue")]
+    [InlineData(true, "tamper")]
+    [InlineData(true, "user")]
+    [InlineData(true, "tenant")]
+    [InlineData(true, "query")]
+    [InlineData(true, "type")]
+    [InlineData(true, "active")]
+    [InlineData(true, "mode")]
+    [InlineData(true, "page-size")]
+    public async Task SearchHandler_ProductionCursorRetainsScopeAcrossIndependentHandlersAndRejectsEachBindingChangeAsync(bool compact, string scenario)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        string query = compact ? string.Concat(Enumerable.Repeat("\U0001F600", 256)) : "Party";
+        PartyIndexEntry[] entries = [IndexEntry("party-a") with { DisplayName = query }, IndexEntry("party-b") with { DisplayName = query }];
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel { Entries = entries.ToDictionary(entry => entry.Id) }, "etag"));
+        var keys = new EphemeralDataProtectionProvider();
+        IQueryCursorCodec firstCodec = CreateCursorCodec(keys);
+        var firstHandler = new PartySearchQueryHandler(CreateService(store, new LocalFuzzyPartySearchProvider(), cursorCodec: firstCodec));
+        var payload = new Dictionary<string, object?> { ["Query"] = query, ["Type"] = "Person", ["Active"] = true, ["Mode"] = "Lexical" };
+        QueryEnvelope envelope = CreateIndexEnvelope("PartySearch") with
+        {
+            Payload = JsonSerializer.SerializeToUtf8Bytes(payload),
+            Paging = new QueryPagingOptions(PageSize: 1),
+        };
+        string scope = QueryCursorScope.Create().Add("tenant", "tenant-a").Add("user", "user-1")
+            .Add("query", query).Add("type", "Person").Add("active", "True")
+            .Add("mode", "Lexical").Add("case", (string?)null).Add("page-size", "1").Build();
+        QueryResult first = await firstHandler.ExecuteAsync(envelope, TestContext.Current.CancellationToken);
+        first.Success.ShouldBeTrue();
+        string cursor = first.Metadata!.Paging!.NextCursor.ShouldNotBeNull();
+        cursor.Length.ShouldBeLessThanOrEqualTo(QueryPolicyLimits.MaxCursorLength);
+        // A pre-change reader can consume every still-bounded raw cursor during rolling upgrade.
+        if (!compact)
+        {
+            firstCodec.TryDecode(cursor, "PartySearch", scope, out string? position, out _).ShouldBeTrue();
+            position.ShouldBe("1");
+        }
+
+        if (scenario == "tamper")
+        {
+            int middle = cursor.Length / 2;
+            cursor = cursor[..middle] + (cursor[middle] == 'a' ? "b" : "a") + cursor[(middle + 1)..];
+        }
+
+        if (scenario is "query" or "type" or "active" or "mode")
+        {
+            payload[scenario switch { "query" => "Query", "type" => "Type", "active" => "Active", _ => "Mode" }] = scenario switch
+            {
+                "query" => "other", "type" => "Organization", "active" => false, _ => "DisplayName",
+            };
+        }
+
+        envelope = envelope with
+        {
+            Paging = new QueryPagingOptions(PageSize: scenario == "page-size" ? 2 : 1, Cursor: cursor),
+            Payload = JsonSerializer.SerializeToUtf8Bytes(payload),
+            UserId = scenario == "user" ? "other-user" : envelope.UserId,
+            TenantId = scenario == "tenant" ? "other-tenant" : envelope.TenantId,
+        };
+        store.ClearReceivedCalls();
+        var nextHandler = new PartySearchQueryHandler(CreateService(store, new LocalFuzzyPartySearchProvider(), cursorCodec: CreateCursorCodec(keys)));
+        QueryResult result = await nextHandler.ExecuteAsync(envelope, TestContext.Current.CancellationToken);
+        if (scenario == "continue")
+        {
+            result.Success.ShouldBeTrue();
+            result.GetPayload().Deserialize<PagedResult<PartySearchResult>>(PartiesJsonOptions.Default)!
+                .Items.ShouldHaveSingleItem().Party.Id.ShouldBe("party-b");
+        }
+        else
+        {
+            result.Success.ShouldBeFalse();
+            result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidCursor);
+            store.ReceivedCalls().ShouldBeEmpty();
+        }
+    }
 
     [Fact]
     public async Task DetailHandler_ReadsCanonicalStoreAndSurfacesPersistedFreshnessAsync()
@@ -49,7 +139,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetPartyQueryHandler(service);
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeTrue();
@@ -81,7 +171,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetPartyQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeTrue();
@@ -112,10 +202,10 @@ public sealed class PartySdkQueryHandlerTests
         PartySdkQueryService service = CreateService(store);
 
         QueryResult getParty = await new GetPartyQueryHandler(service).ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
         QueryResult partyDetail = await new PartyDetailQueryHandler(service).ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.PartyDetailQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.PartyDetailQueryType),
             TestContext.Current.CancellationToken);
 
         getParty.Success.ShouldBeFalse();
@@ -145,7 +235,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetPartyQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeTrue();
@@ -176,7 +266,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new PartyIndexQueryHandler(service);
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType),
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeTrue();
@@ -219,7 +309,7 @@ public sealed class PartySdkQueryHandlerTests
                 ProjectionVersion = "global:4",
             }, "index-etag"));
         var handler = new PartyIndexQueryHandler(CreateService(store));
-        QueryEnvelope envelope = CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType) with
+        QueryEnvelope envelope = CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType) with
         {
             Payload = JsonSerializer.SerializeToUtf8Bytes(new
             {
@@ -259,13 +349,13 @@ public sealed class PartySdkQueryHandlerTests
         PartySdkQueryService service = CreateService(store);
 
         QueryResult detail = await new GetPartyQueryHandler(service).ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
         QueryResult export = await new ExportPartyDataQueryHandler(service).ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.ExportPartyDataQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.ExportPartyDataQueryType),
             TestContext.Current.CancellationToken);
         QueryResult index = await new PartyIndexQueryHandler(service).ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType),
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType),
             TestContext.Current.CancellationToken);
 
         detail.Success.ShouldBeFalse();
@@ -304,7 +394,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetErasureStatusQueryHandler(service);
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetErasureStatusQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetErasureStatusQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeTrue();
@@ -320,7 +410,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetPartyQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.PartyDetailQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.PartyDetailQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeFalse();
@@ -338,7 +428,7 @@ public sealed class PartySdkQueryHandlerTests
 
         await Should.ThrowAsync<OperationCanceledException>(
             () => handler.ExecuteAsync(
-                CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+                CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
                 cancellation.Token));
 
         await store.DidNotReceiveWithAnyArgs().GetAsync<PartyDetailSdkReadModel>(default!, default!, default);
@@ -357,7 +447,7 @@ public sealed class PartySdkQueryHandlerTests
 
         await Should.ThrowAsync<OperationCanceledException>(
             () => handler.ExecuteAsync(
-                CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+                CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
                 TestContext.Current.CancellationToken));
     }
 
@@ -374,7 +464,7 @@ public sealed class PartySdkQueryHandlerTests
                 new InvalidOperationException(
                     "Ada Lovelace <ada@example.test> leaked from readmodel:tenant-a:party:party-detail:party-1:detail")));
         QueryResult failed = await new GetPartyQueryHandler(CreateService(failingStore, logger: logger)).ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
 
         IReadModelStore processingStore = Substitute.For<IReadModelStore>();
@@ -395,17 +485,17 @@ public sealed class PartySdkQueryHandlerTests
             .Returns(Task.FromException<ReadModelEntry<PartyProcessingSdkReadModel>>(
                 new InvalidOperationException("Ada Lovelace processing payload unavailable")));
         QueryResult degraded = await new ExportPartyDataQueryHandler(CreateService(processingStore, logger: logger)).ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.ExportPartyDataQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.ExportPartyDataQueryType),
             TestContext.Current.CancellationToken);
 
         IReadModelStore cursorStore = Substitute.For<IReadModelStore>();
-        var codec = new TestCursorCodec();
+        IQueryCursorCodec codec = CreateCursorCodec();
         QueryResult rejected = await new PartyIndexQueryHandler(CreateService(cursorStore, cursorCodec: codec, logger: logger)).ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType) with
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType) with
             {
                 Paging = new QueryPagingOptions(
                     PageSize: 20,
-                    Cursor: codec.Encode(PartyIndexProjectionQueryActor.PartyIndexQueryType, "different-scope", "20")),
+                    Cursor: codec.Encode(PartyIndexQueryTypes.PartyIndexQueryType, "different-scope", "20")),
             },
             TestContext.Current.CancellationToken);
 
@@ -447,10 +537,10 @@ public sealed class PartySdkQueryHandlerTests
                 ProjectedAt = s_now,
                 ProjectionVersion = "global:3",
             }, "etag"));
-        var handler = new PartyIndexQueryHandler(CreateService(store, cursorCodec: new TestCursorCodec()));
+        var handler = new PartyIndexQueryHandler(CreateService(store, cursorCodec: CreateCursorCodec()));
 
         QueryResult first = await handler.ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType) with
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType) with
             {
                 Paging = new QueryPagingOptions(PageSize: 2),
             },
@@ -465,7 +555,7 @@ public sealed class PartySdkQueryHandlerTests
         first.Metadata.Paging.NextCursor.ShouldNotBeNullOrWhiteSpace();
 
         QueryResult second = await handler.ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType) with
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType) with
             {
                 Paging = new QueryPagingOptions(PageSize: 2, Cursor: first.Metadata.Paging.NextCursor),
             },
@@ -483,15 +573,15 @@ public sealed class PartySdkQueryHandlerTests
     public async Task IndexHandler_CursorBoundToDifferentCallerFailsClosedBeforeStoreReadAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
-        var codec = new TestCursorCodec();
+        IQueryCursorCodec codec = CreateCursorCodec();
         string cursor = codec.Encode(
-            PartyIndexProjectionQueryActor.PartyIndexQueryType,
+            PartyIndexQueryTypes.PartyIndexQueryType,
             "different-scope",
             "2");
         var handler = new PartyIndexQueryHandler(CreateService(store, cursorCodec: codec));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType) with
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType) with
             {
                 Paging = new QueryPagingOptions(PageSize: 2, Cursor: cursor),
             },
@@ -526,10 +616,10 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetPartyQueryHandler(CreateService(store, lastKnownCache: cache));
 
         QueryResult current = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
         QueryResult degraded = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
 
         current.Success.ShouldBeTrue();
@@ -565,10 +655,10 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new PartyIndexQueryHandler(CreateService(store, lastKnownCache: cache));
 
         QueryResult current = await handler.ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType),
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType),
             TestContext.Current.CancellationToken);
         QueryResult degraded = await handler.ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType),
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType),
             TestContext.Current.CancellationToken);
 
         current.Success.ShouldBeTrue();
@@ -638,16 +728,16 @@ public sealed class PartySdkQueryHandlerTests
         PartySdkQueryService service = CreateService(store, recordStore: erasure);
 
         QueryResult exportResult = await new ExportPartyDataQueryHandler(service).ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.ExportPartyDataQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.ExportPartyDataQueryType),
             TestContext.Current.CancellationToken);
         QueryResult processingResult = await new GetProcessingRecordsQueryHandler(service).ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetProcessingRecordsQueryType),
             TestContext.Current.CancellationToken);
         QueryResult statusResult = await new GetErasureStatusQueryHandler(service).ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetErasureStatusQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetErasureStatusQueryType),
             TestContext.Current.CancellationToken);
         QueryResult certificateResult = await new GetErasureCertificateQueryHandler(service).ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetErasureCertificateQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetErasureCertificateQueryType),
             TestContext.Current.CancellationToken);
 
         exportResult.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!
@@ -695,7 +785,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new ExportPartyDataQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.ExportPartyDataQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.ExportPartyDataQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeTrue();
@@ -716,7 +806,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetErasureCertificateQueryHandler(CreateService(store, recordStore: erasure));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetErasureCertificateQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetErasureCertificateQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeTrue();
@@ -733,7 +823,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetErasureStatusQueryHandler(CreateService(store, recordStore: erasure));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetErasureStatusQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetErasureStatusQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeFalse();
@@ -750,7 +840,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetErasureCertificateQueryHandler(CreateService(store, recordStore: erasure));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetErasureCertificateQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetErasureCertificateQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeFalse();
@@ -850,7 +940,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetPartyQueryHandler(CreateService(store, lastKnownCache: cache));
 
         Task<QueryResult> pending = handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
         cache.EvictDetail("tenant-a", "party-1");
         completion.SetResult(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel
@@ -903,7 +993,7 @@ public sealed class PartySdkQueryHandlerTests
 
         // First read succeeds and populates the last-known cache with pre-erasure PII.
         QueryResult firstResult = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
         firstResult.Success.ShouldBeTrue();
 
@@ -912,7 +1002,7 @@ public sealed class PartySdkQueryHandlerTests
         // read repopulates it.
         lastKnownCache.EvictDetail("tenant-a", "party-1");
         QueryResult degradedResult = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
 
         // The eviction means ReadDetailModelAsync's exception filter no longer has a cached value
@@ -942,13 +1032,13 @@ public sealed class PartySdkQueryHandlerTests
         var cache = new PartySdkLastKnownReadModelCache();
         var handler = new GetPartyQueryHandler(CreateService(store, lastKnownCache: cache));
 
-        (await handler.ExecuteAsync(CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType), TestContext.Current.CancellationToken))
+        (await handler.ExecuteAsync(CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType), TestContext.Current.CancellationToken))
             .Success.ShouldBeTrue();
         QueryResult missing = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
         QueryResult outage = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
 
         missing.Success.ShouldBeFalse();
@@ -980,13 +1070,13 @@ public sealed class PartySdkQueryHandlerTests
         var cache = new PartySdkLastKnownReadModelCache();
         var handler = new PartyIndexQueryHandler(CreateService(store, lastKnownCache: cache));
 
-        (await handler.ExecuteAsync(CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType), TestContext.Current.CancellationToken))
+        (await handler.ExecuteAsync(CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType), TestContext.Current.CancellationToken))
             .Success.ShouldBeTrue();
         QueryResult missing = await handler.ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType),
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType),
             TestContext.Current.CancellationToken);
         QueryResult outage = await handler.ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType),
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType),
             TestContext.Current.CancellationToken);
 
         missing.Success.ShouldBeFalse();
@@ -1033,13 +1123,13 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetProcessingRecordsQueryHandler(CreateService(store, lastKnownCache: cache));
 
         QueryResult first = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetProcessingRecordsQueryType),
             TestContext.Current.CancellationToken);
         QueryResult missing = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetProcessingRecordsQueryType),
             TestContext.Current.CancellationToken);
         QueryResult outage = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetProcessingRecordsQueryType),
             TestContext.Current.CancellationToken);
 
         first.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.ShouldHaveSingleItem();
@@ -1521,7 +1611,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new PartyIndexQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType) with
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType) with
             {
                 Payload = JsonSerializer.SerializeToUtf8Bytes(JsonDocument.Parse(json).RootElement),
             },
@@ -1541,7 +1631,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetPartyQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType) with { TenantId = tenantId },
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType) with { TenantId = tenantId },
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeFalse();
@@ -1556,7 +1646,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new PartySearchQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartySearchQueryType) with
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartySearchQueryType) with
             {
                 Payload = JsonSerializer.SerializeToUtf8Bytes(new
                 {
@@ -1580,7 +1670,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new PartySearchQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartySearchQueryType) with
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartySearchQueryType) with
             {
                 Payload = JsonSerializer.SerializeToUtf8Bytes(new
                 {
@@ -1615,7 +1705,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new PartyDetailQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.PartyDetailQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.PartyDetailQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeTrue();
@@ -1671,7 +1761,7 @@ public sealed class PartySdkQueryHandlerTests
                 TotalCount = 1,
             });
         var handler = new PartySearchQueryHandler(CreateService(store, searchProvider: searchProvider));
-        QueryEnvelope envelope = CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartySearchQueryType) with
+        QueryEnvelope envelope = CreateIndexEnvelope(PartyIndexQueryTypes.PartySearchQueryType) with
         {
             Payload = JsonSerializer.SerializeToUtf8Bytes(new { query = "ada", page = 1, pageSize = 20 }),
         };
@@ -1732,7 +1822,7 @@ public sealed class PartySdkQueryHandlerTests
                 TotalCount = 0,
             });
         var handler = new PartySearchQueryHandler(CreateService(store, searchProvider: searchProvider));
-        QueryEnvelope envelope = CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartySearchQueryType) with
+        QueryEnvelope envelope = CreateIndexEnvelope(PartyIndexQueryTypes.PartySearchQueryType) with
         {
             Payload = JsonSerializer.SerializeToUtf8Bytes(new
             {
@@ -1787,7 +1877,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new ExportPartyDataQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.ExportPartyDataQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.ExportPartyDataQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeTrue();
@@ -1822,7 +1912,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new ExportPartyDataQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.ExportPartyDataQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.ExportPartyDataQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeTrue();
@@ -1848,7 +1938,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetProcessingRecordsQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetProcessingRecordsQueryType),
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeFalse();
@@ -1906,10 +1996,10 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetProcessingRecordsQueryHandler(CreateService(store));
 
         QueryResult current = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetProcessingRecordsQueryType),
             TestContext.Current.CancellationToken);
         QueryResult degraded = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetProcessingRecordsQueryType),
             TestContext.Current.CancellationToken);
 
         current.Success.ShouldBeTrue();
@@ -1944,10 +2034,10 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetPartyQueryHandler(service);
 
         QueryResult tenantA = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType),
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType),
             TestContext.Current.CancellationToken);
         QueryResult tenantB = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType) with { TenantId = "tenant-b" },
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType) with { TenantId = "tenant-b" },
             TestContext.Current.CancellationToken);
 
         tenantA.Success.ShouldBeTrue();
@@ -1957,18 +2047,18 @@ public sealed class PartySdkQueryHandlerTests
     }
 
     [Theory]
-    [InlineData(PartyDetailProjectionQueryActor.GetPartyQueryType, "party-2")]
-    [InlineData(PartyDetailProjectionQueryActor.PartyDetailQueryType, "party-2")]
-    [InlineData(PartyDetailProjectionQueryActor.ExportPartyDataQueryType, "party-2")]
-    [InlineData(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType, "party-2")]
-    [InlineData(PartyDetailProjectionQueryActor.GetErasureStatusQueryType, "party-2")]
-    [InlineData(PartyDetailProjectionQueryActor.GetErasureCertificateQueryType, "party-2")]
-    [InlineData(PartyDetailProjectionQueryActor.GetPartyQueryType, "Party-1")]
-    [InlineData(PartyDetailProjectionQueryActor.PartyDetailQueryType, "Party-1")]
-    [InlineData(PartyDetailProjectionQueryActor.ExportPartyDataQueryType, "Party-1")]
-    [InlineData(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType, "Party-1")]
-    [InlineData(PartyDetailProjectionQueryActor.GetErasureStatusQueryType, "Party-1")]
-    [InlineData(PartyDetailProjectionQueryActor.GetErasureCertificateQueryType, "Party-1")]
+    [InlineData(PartyDetailQueryTypes.GetPartyQueryType, "party-2")]
+    [InlineData(PartyDetailQueryTypes.PartyDetailQueryType, "party-2")]
+    [InlineData(PartyDetailQueryTypes.ExportPartyDataQueryType, "party-2")]
+    [InlineData(PartyDetailQueryTypes.GetProcessingRecordsQueryType, "party-2")]
+    [InlineData(PartyDetailQueryTypes.GetErasureStatusQueryType, "party-2")]
+    [InlineData(PartyDetailQueryTypes.GetErasureCertificateQueryType, "party-2")]
+    [InlineData(PartyDetailQueryTypes.GetPartyQueryType, "Party-1")]
+    [InlineData(PartyDetailQueryTypes.PartyDetailQueryType, "Party-1")]
+    [InlineData(PartyDetailQueryTypes.ExportPartyDataQueryType, "Party-1")]
+    [InlineData(PartyDetailQueryTypes.GetProcessingRecordsQueryType, "Party-1")]
+    [InlineData(PartyDetailQueryTypes.GetErasureStatusQueryType, "Party-1")]
+    [InlineData(PartyDetailQueryTypes.GetErasureCertificateQueryType, "Party-1")]
     public async Task DetailHandler_AggregateAndEntityMismatchFailsClosedBeforeStoreReadAsync(string queryType, string entityId)
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
@@ -2015,10 +2105,10 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetPartyQueryHandler(CreateService(store));
 
         QueryResult wrongTenant = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType) with { TenantId = "tenant-b" },
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType) with { TenantId = "tenant-b" },
             TestContext.Current.CancellationToken);
         QueryResult absent = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType) with
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType) with
             {
                 TenantId = "tenant-b",
                 AggregateId = "party-missing",
@@ -2064,13 +2154,13 @@ public sealed class PartySdkQueryHandlerTests
         PartySdkQueryService service = CreateService(store);
 
         QueryResult tenantA = await new PartyIndexQueryHandler(service).ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType),
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType),
             TestContext.Current.CancellationToken);
         QueryResult tenantBIndex = await new PartyIndexQueryHandler(service).ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType) with { TenantId = "tenant-b" },
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType) with { TenantId = "tenant-b" },
             TestContext.Current.CancellationToken);
         QueryResult tenantBSearch = await new PartySearchQueryHandler(service).ExecuteAsync(
-            CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartySearchQueryType) with
+            CreateIndexEnvelope(PartyIndexQueryTypes.PartySearchQueryType) with
             {
                 TenantId = "tenant-b",
                 Payload = JsonSerializer.SerializeToUtf8Bytes(new { query = "secret", page = 1, pageSize = 20 }),
@@ -2093,7 +2183,7 @@ public sealed class PartySdkQueryHandlerTests
         var handler = new GetPartyQueryHandler(CreateService(store));
 
         QueryResult result = await handler.ExecuteAsync(
-            CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType) with
+            CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType) with
             {
                 AggregateId = "party|1",
                 EntityId = "party|1",
@@ -2228,11 +2318,11 @@ public sealed class PartySdkQueryHandlerTests
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeTrue();
-        if (queryType == PartyDetailProjectionQueryActor.GetErasureStatusQueryType)
+        if (queryType == PartyDetailQueryTypes.GetErasureStatusQueryType)
         {
             await erasure.Received(1).GetStatusAsync("tenant-a", partyId, Arg.Any<CancellationToken>());
         }
-        else if (queryType == PartyDetailProjectionQueryActor.GetErasureCertificateQueryType)
+        else if (queryType == PartyDetailQueryTypes.GetErasureCertificateQueryType)
         {
             await erasure.Received(1).GetCertificateAsync("tenant-a", partyId, Arg.Any<CancellationToken>());
         }
@@ -2242,11 +2332,11 @@ public sealed class PartySdkQueryHandlerTests
                 "statestore", PartySdkReadModelAddresses.Detail("tenant-a", partyId), Arg.Any<CancellationToken>());
         }
 
-        if (queryType is PartyDetailProjectionQueryActor.ExportPartyDataQueryType or PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType)
+        if (queryType is PartyDetailQueryTypes.ExportPartyDataQueryType or PartyDetailQueryTypes.GetProcessingRecordsQueryType)
         {
             await store.Received(1).GetAsync<PartyProcessingSdkReadModel>(
                 "statestore", PartySdkReadModelAddresses.Processing("tenant-a", partyId), Arg.Any<CancellationToken>());
-            IReadOnlyList<ProcessingActivityRecord> records = queryType == PartyDetailProjectionQueryActor.ExportPartyDataQueryType
+            IReadOnlyList<ProcessingActivityRecord> records = queryType == PartyDetailQueryTypes.ExportPartyDataQueryType
                 ? result.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!.ProcessingRecords
                 : result.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!;
             records.ShouldHaveSingleItem().ShouldBe(activity);
@@ -2255,23 +2345,23 @@ public sealed class PartySdkQueryHandlerTests
 
     private static string[] DetailQueryTypes =>
     [
-        PartyDetailProjectionQueryActor.GetPartyQueryType,
-        PartyDetailProjectionQueryActor.PartyDetailQueryType,
-        PartyDetailProjectionQueryActor.ExportPartyDataQueryType,
-        PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType,
-        PartyDetailProjectionQueryActor.GetErasureStatusQueryType,
-        PartyDetailProjectionQueryActor.GetErasureCertificateQueryType,
+        PartyDetailQueryTypes.GetPartyQueryType,
+        PartyDetailQueryTypes.PartyDetailQueryType,
+        PartyDetailQueryTypes.ExportPartyDataQueryType,
+        PartyDetailQueryTypes.GetProcessingRecordsQueryType,
+        PartyDetailQueryTypes.GetErasureStatusQueryType,
+        PartyDetailQueryTypes.GetErasureCertificateQueryType,
     ];
 
     private static PartySdkQueryHandler CreateDetailHandler(string queryType, PartySdkQueryService service)
         => queryType switch
         {
-            PartyDetailProjectionQueryActor.GetPartyQueryType => new GetPartyQueryHandler(service),
-            PartyDetailProjectionQueryActor.PartyDetailQueryType => new PartyDetailQueryHandler(service),
-            PartyDetailProjectionQueryActor.ExportPartyDataQueryType => new ExportPartyDataQueryHandler(service),
-            PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType => new GetProcessingRecordsQueryHandler(service),
-            PartyDetailProjectionQueryActor.GetErasureStatusQueryType => new GetErasureStatusQueryHandler(service),
-            PartyDetailProjectionQueryActor.GetErasureCertificateQueryType => new GetErasureCertificateQueryHandler(service),
+            PartyDetailQueryTypes.GetPartyQueryType => new GetPartyQueryHandler(service),
+            PartyDetailQueryTypes.PartyDetailQueryType => new PartyDetailQueryHandler(service),
+            PartyDetailQueryTypes.ExportPartyDataQueryType => new ExportPartyDataQueryHandler(service),
+            PartyDetailQueryTypes.GetProcessingRecordsQueryType => new GetProcessingRecordsQueryHandler(service),
+            PartyDetailQueryTypes.GetErasureStatusQueryType => new GetErasureStatusQueryHandler(service),
+            PartyDetailQueryTypes.GetErasureCertificateQueryType => new GetErasureCertificateQueryHandler(service),
             _ => throw new ArgumentOutOfRangeException(nameof(queryType)),
         };
 
@@ -2331,9 +2421,9 @@ public sealed class PartySdkQueryHandlerTests
     private static Task<QueryResult> ExecuteCacheQueryAsync(PartySdkQueryService service, string slot, CancellationToken cancellationToken)
         => slot switch
         {
-            "detail" => service.GetPartyAsync(CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetPartyQueryType), cancellationToken),
-            "processing" => service.GetProcessingRecordsAsync(CreateDetailEnvelope(PartyDetailProjectionQueryActor.GetProcessingRecordsQueryType), cancellationToken),
-            _ => service.GetPartyIndexAsync(CreateIndexEnvelope(PartyIndexProjectionQueryActor.PartyIndexQueryType), cancellationToken),
+            "detail" => service.GetPartyAsync(CreateDetailEnvelope(PartyDetailQueryTypes.GetPartyQueryType), cancellationToken),
+            "processing" => service.GetProcessingRecordsAsync(CreateDetailEnvelope(PartyDetailQueryTypes.GetProcessingRecordsQueryType), cancellationToken),
+            _ => service.GetPartyIndexAsync(CreateIndexEnvelope(PartyIndexQueryTypes.PartyIndexQueryType), cancellationToken),
         };
 
     [Theory]
@@ -2667,6 +2757,11 @@ public sealed class PartySdkQueryHandlerTests
         QueryResult first = await handler.ExecuteAsync(envelope, TestContext.Current.CancellationToken);
 
         first.Success.ShouldBeTrue();
+        if (envelopePaging)
+        {
+            first.Metadata!.Paging!.NextCursor!.Length.ShouldBeLessThanOrEqualTo(QueryPolicyLimits.MaxCursorLength);
+        }
+
         PagedResult<PartySearchResult> firstPage = first.GetPayload().Deserialize<PagedResult<PartySearchResult>>(PartiesJsonOptions.Default)!;
         firstPage.TotalCount.ShouldBe(2);
         firstPage.Items.ShouldHaveSingleItem().Party.Id.ShouldBe("party-a");
@@ -2790,14 +2885,14 @@ public sealed class PartySdkQueryHandlerTests
             new FixedTimeProvider(s_now),
             searchProvider ?? Substitute.For<IPartySearchProvider>(),
             recordStore ?? Substitute.For<IPartyErasureRecordStore>(),
-            cursorCodec ?? new TestCursorCodec(),
+            cursorCodec ?? CreateCursorCodec(),
             lastKnownCache ?? new PartySdkLastKnownReadModelCache(),
             logger ?? NullLogger<PartySdkQueryService>.Instance);
 
     private static QueryEnvelope CreateDetailEnvelope(string queryType)
         => new(
             tenantId: "tenant-a",
-            domain: PartyDetailProjectionQueryActor.PartyDomain,
+            domain: PartyDetailQueryTypes.PartyDomain,
             aggregateId: "party-1",
             queryType: queryType,
             payload: JsonSerializer.SerializeToUtf8Bytes(new { }),
@@ -2808,13 +2903,13 @@ public sealed class PartySdkQueryHandlerTests
     private static QueryEnvelope CreateIndexEnvelope(string queryType)
         => new(
             tenantId: "tenant-a",
-            domain: PartyDetailProjectionQueryActor.PartyDomain,
-            aggregateId: PartyIndexProjectionQueryActor.ListAggregateId,
+            domain: PartyDetailQueryTypes.PartyDomain,
+            aggregateId: PartyIndexQueryTypes.ListAggregateId,
             queryType: queryType,
             payload: JsonSerializer.SerializeToUtf8Bytes(new { page = 1, pageSize = 20 }),
             correlationId: "correlation-1",
             userId: "user-1",
-            entityId: PartyIndexProjectionQueryActor.ListAggregateId);
+            entityId: PartyIndexQueryTypes.ListAggregateId);
 
     private static PartyDetail Detail(string id)
         => new()
@@ -2849,46 +2944,14 @@ public sealed class PartySdkQueryHandlerTests
         public void Advance(TimeSpan duration) => _now += duration;
     }
 
-    private sealed class TestCursorCodec : IQueryCursorCodec
+    private static IQueryCursorCodec CreateCursorCodec(IDataProtectionProvider? keys = null)
     {
-        public string Encode(string queryType, string scope, string position)
-            => Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(new CursorValue(queryType, scope, position)));
-
-        public bool TryDecode(
-            string? cursor,
-            string queryType,
-            string scope,
-            out string? position,
-            out string? failureReason)
-        {
-            position = null;
-            failureReason = null;
-            if (string.IsNullOrWhiteSpace(cursor))
-            {
-                return true;
-            }
-
-            try
-            {
-                CursorValue? value = JsonSerializer.Deserialize<CursorValue>(Convert.FromBase64String(cursor));
-                if (value is null
-                    || !string.Equals(value.QueryType, queryType, StringComparison.Ordinal)
-                    || !string.Equals(value.Scope, scope, StringComparison.Ordinal))
-                {
-                    failureReason = "wrong-scope";
-                    return false;
-                }
-
-                position = value.Position;
-                return true;
-            }
-            catch (Exception exception) when (exception is FormatException or JsonException)
-            {
-                failureReason = "malformed";
-                return false;
-            }
-        }
-
-        private sealed record CursorValue(string QueryType, string Scope, string Position);
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddDataProtection();
+        services.AddSingleton<IDataProtectionProvider>(keys ?? new EphemeralDataProtectionProvider());
+        services.AddEventStoreQueryCursorCodec("Hexalith.Parties.QueryCursor.v1");
+        using ServiceProvider provider = services.BuildServiceProvider();
+        return provider.GetRequiredService<IQueryCursorCodec>();
     }
 }

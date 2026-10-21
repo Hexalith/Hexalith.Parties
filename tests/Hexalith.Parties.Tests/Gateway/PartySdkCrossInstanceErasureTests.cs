@@ -526,7 +526,7 @@ public sealed class PartySdkCrossInstanceErasureTests
 
     private static Task<QueryResult> ExecuteAsync(PartySdkQueryService service, string queryType, string tenantId = "tenant-a", string detailPartyId = "party-1")
     {
-        string partyId = IsIndex(queryType) ? PartyIndexProjectionQueryActor.ListAggregateId : detailPartyId;
+        string partyId = IsIndex(queryType) ? PartyIndexQueryTypes.ListAggregateId : detailPartyId;
         var envelope = new QueryEnvelope(tenantId, "party", partyId, queryType,
             JsonSerializer.SerializeToUtf8Bytes(IsIndex(queryType) ? new { query = "private", page = 1, pageSize = 20 } : (object)new { }),
             "correlation-1", "user-1", entityId: partyId);

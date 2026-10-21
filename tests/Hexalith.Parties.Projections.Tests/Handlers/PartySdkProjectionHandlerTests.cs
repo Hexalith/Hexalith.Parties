@@ -13,7 +13,7 @@ using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.State;
 using Hexalith.Parties.Contracts.ValueObjects;
-using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Projections.Serialization;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Handlers;
 using Hexalith.Parties.Projections.Models;
@@ -43,6 +43,181 @@ public sealed class PartySdkProjectionHandlerTests
     };
     private static readonly IOptions<PartySdkReadModelOptions> s_options =
         Options.Create(new PartySdkReadModelOptions { ReadModelStateStoreName = "statestore" });
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AdvancingLiveDeliveryWaitsForEachReadAndPersistsBothCoordinatedSlotsAsync(bool processingFirst)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        IReadModelStore reads = Substitute.For<IReadModelStore>();
+        var writes = new InMemoryReadModelBatchStore();
+        var detail = new TaskCompletionSource<ReadModelEntry<PartyDetailSdkReadModel>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var processing = new TaskCompletionSource<ReadModelEntry<PartyProcessingSdkReadModel>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        reads.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token).Returns(detail.Task);
+        reads.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token).Returns(processing.Task);
+        var handler = new PartyDetailSdkProjectionHandler(reads, writes, s_options);
+        ProjectionRequest request = CreateRequest();
+        string detailKey = PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId);
+        string processingKey = PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId);
+        Task<DomainProjectionHandlerResult> projection = handler.ProjectAsync(request, "advancing-paired-reads", token);
+        await reads.Received(1).GetAsync<PartyDetailSdkReadModel>("statestore", detailKey, token);
+        await reads.Received(1).GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token);
+        try
+        {
+            if (processingFirst)
+            {
+                processing.SetResult(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
+            }
+            else
+            {
+                detail.SetResult(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
+            }
+
+            projection.IsCompleted.ShouldBeFalse();
+            (await writes.GetAsync<PartyDetailSdkReadModel>("statestore", detailKey, token)).Value.ShouldBeNull();
+            (await writes.GetAsync<PartyProcessingSdkReadModel>("statestore", processingKey, token)).Value.ShouldBeNull();
+            detail.TrySetResult(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
+            processing.TrySetResult(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
+            (await projection.ConfigureAwait(true)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+            PartyDetailSdkReadModel persisted = writes.Deserialize<PartyDetailSdkReadModel>(detailKey);
+            PartyProcessingSdkReadModel audit = writes.Deserialize<PartyProcessingSdkReadModel>(processingKey);
+            persisted.LastSequenceNumber.ShouldBe(2);
+            persisted.Detail.ShouldNotBeNull().Type.ShouldBe(PartyType.Person);
+            persisted.Detail.IsActive.ShouldBeFalse();
+            audit.LastSequenceNumber.ShouldBe(2);
+            audit.Records.ShouldNotBeEmpty();
+        }
+        finally
+        {
+            detail.TrySetResult(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
+            processing.TrySetResult(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
+        }
+    }
+
+    [Theory]
+    [InlineData(false, "success")]
+    [InlineData(true, "success")]
+    [InlineData(false, "fault")]
+    [InlineData(true, "fault")]
+    [InlineData(false, "processing-fault")]
+    [InlineData(true, "processing-fault")]
+    [InlineData(false, "cancel")]
+    [InlineData(true, "cancel")]
+    public async Task PairedLiveReadsStartTogetherAndDoNotWriteUntilBothSucceedAsync(bool reload, string outcome)
+    {
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        CancellationToken token = cancellation.Token;
+        IReadModelStore reads = Substitute.For<IReadModelStore>();
+        var writes = new InMemoryReadModelBatchStore();
+        var detail = new TaskCompletionSource<ReadModelEntry<PartyDetailSdkReadModel>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var processing = new TaskCompletionSource<ReadModelEntry<PartyProcessingSdkReadModel>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var processingStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        int detailReads = 0;
+        int processingReads = 0;
+        reads.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token).Returns(_ =>
+            reload && ++detailReads == 1
+                ? Task.FromResult(new ReadModelEntry<PartyDetailSdkReadModel>(null, null))
+                : detail.Task);
+        reads.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token).Returns(_ =>
+        {
+            if (reload && ++processingReads == 1)
+            {
+                return Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
+            }
+
+            processingStarted.TrySetResult();
+            return processing.Task;
+        });
+        var request = new ProjectionRequest("tenant-a", "party", "party-1",
+            [new ProjectionEventDto("Future.UnknownEvent", "{}"u8.ToArray(), "json", 1, DateTimeOffset.UnixEpoch, "correlation-1")]);
+        var handler = new PartyDetailSdkProjectionHandler(reads, writes, Options.Create(new PartySdkReadModelOptions()));
+        Task<DomainProjectionHandlerResult> projection = handler.ProjectAsync(request, "paired-reads", token);
+
+        try
+        {
+            await processingStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), token);
+            projection.IsCompleted.ShouldBeFalse();
+            detail.Task.IsCompleted.ShouldBeFalse();
+            processing.Task.IsCompleted.ShouldBeFalse();
+            await reads.Received(reload ? 2 : 1).GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token);
+
+            // Only the existing empty initialization may have persisted at the reload boundary.
+            string key = PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId);
+            if (reload)
+            {
+                writes.Deserialize<PartyDetailSdkReadModel>(key).Detail.ShouldBeNull();
+            }
+
+            var detailValue = new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { LastSequenceNumber = 1 }, "detail-etag");
+            var processingValue = new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel { LastSequenceNumber = 1 }, "processing-etag");
+            if (outcome == "fault")
+            {
+                detail.SetException(new InvalidOperationException("read failed"));
+                processing.SetResult(processingValue);
+                await Should.ThrowAsync<InvalidOperationException>(() => projection);
+            }
+            else if (outcome == "processing-fault")
+            {
+                detail.SetResult(detailValue);
+                processing.SetException(new InvalidOperationException("processing read failed"));
+                await Should.ThrowAsync<InvalidOperationException>(() => projection);
+            }
+            else if (outcome == "cancel")
+            {
+                using CancellationTokenRegistration registration = token.Register(() =>
+                {
+                    detail.TrySetCanceled(token);
+                    processing.TrySetCanceled(token);
+                });
+                cancellation.Cancel();
+                await Should.ThrowAsync<OperationCanceledException>(() => projection);
+            }
+            else
+            {
+                detail.SetResult(detailValue);
+                processing.SetResult(processingValue);
+                (await projection.ConfigureAwait(true)).Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+            }
+
+            ReadModelEntry<PartyDetailSdkReadModel> persisted = await writes.GetAsync<PartyDetailSdkReadModel>("statestore", key, TestContext.Current.CancellationToken);
+            ReadModelEntry<PartyProcessingSdkReadModel> persistedProcessing = await writes.GetAsync<PartyProcessingSdkReadModel>(
+                "statestore", PartySdkReadModelAddresses.Processing(request.TenantId, request.AggregateId), TestContext.Current.CancellationToken);
+            if (reload)
+            {
+                persisted.Value.ShouldNotBeNull().LastSequenceNumber.ShouldBe(long.MinValue);
+                persisted.Value.Detail.ShouldBeNull();
+                persistedProcessing.Value.ShouldNotBeNull().LastSequenceNumber.ShouldBe(long.MinValue);
+                persistedProcessing.Value.Records.ShouldBeEmpty();
+            }
+            else
+            {
+                persisted.Value.ShouldBeNull();
+                persistedProcessing.Value.ShouldBeNull();
+            }
+        }
+        finally
+        {
+            detail.TrySetResult(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
+            processing.TrySetResult(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null));
+        }
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("bad:aggregate")]
+    [InlineData("bad|aggregate")]
+    [InlineData("bad\0aggregate")]
+    [InlineData("bad\raggregate")]
+    [InlineData("bad\naggregate")]
+    public async Task IndexHandlerValidatesAggregateSegmentsWithoutBuildingADetailAddressAsync(string aggregateId)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var handler = new PartyIndexSdkProjectionHandler(store, s_options);
+        await Should.ThrowAsync<ArgumentException>(() => handler.ProjectAsync(
+            CreateRequest() with { AggregateId = aggregateId }, "invalid-segment", TestContext.Current.CancellationToken));
+        store.ReceivedCalls().ShouldBeEmpty();
+    }
 
     [Fact]
     public async Task LargeRebuildCountsOnceAcrossSerializedHandlersAndMatchesPersistedLiveIndexAsync()
@@ -3825,8 +4000,7 @@ public sealed class PartySdkProjectionHandlerTests
             ?? throw new InvalidOperationException("PartyEventTypeResolver.s_resolvedCache field not found.");
         object cache = cacheField.GetValue(null)
             ?? throw new InvalidOperationException("PartyEventTypeResolver.s_resolvedCache is null.");
-        Type outcomeType = resolverType.GetNestedType("ResolveOutcome", BindingFlags.NonPublic)
-            ?? throw new InvalidOperationException("PartyEventTypeResolver.ResolveOutcome type not found.");
+        Type outcomeType = typeof(ResolveOutcome);
         PropertyInfo ambiguousProperty = outcomeType.GetProperty("Ambiguous", BindingFlags.Public | BindingFlags.Static)
             ?? throw new InvalidOperationException("PartyEventTypeResolver.ResolveOutcome.Ambiguous property not found.");
         object ambiguousOutcome = ambiguousProperty.GetValue(null)

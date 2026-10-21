@@ -676,7 +676,7 @@ public sealed class ArchitecturalFitnessTests
     public void MvpPartySearchPathDoesNotRegisterSemanticProvider()
     {
         string registrations = ReadRepoFile("src", "Hexalith.Parties", "Extensions", "PartiesServiceCollectionExtensions.cs");
-        string queryActor = ReadRepoFile("src", "Hexalith.Parties", "Queries", "PartyIndexProjectionQueryActor.cs");
+        string queryActor = ReadRepoFile("src", "Hexalith.Parties", "Queries", "PartyIndexQueryTypes.cs");
 
         StripCommentsAndStringLiterals(registrations).ShouldNotContain("SemanticPartySearchProvider");
         StripCommentsAndStringLiterals(queryActor).ShouldNotContain("SemanticPartySearchProvider");

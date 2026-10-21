@@ -538,12 +538,12 @@ public sealed class EventStoreGatewayRoutingTests
         var request = new
         {
             tenant = "tenant-a",
-            domain = PartyDetailProjectionQueryActor.PartyDomain,
+            domain = PartyDetailQueryTypes.PartyDomain,
             aggregateId = "party-12-4",
-            queryType = PartyDetailProjectionQueryActor.PartyDetailQueryType,
-            projectionType = PartyDetailProjectionQueryActor.ProjectionType,
+            queryType = PartyDetailQueryTypes.PartyDetailQueryType,
+            projectionType = PartyDetailQueryTypes.ProjectionType,
             entityId = "party-12-4",
-            projectionActorType = PartyDetailProjectionQueryActor.ActorTypeName,
+            projectionActorType = PartyDetailQueryTypes.ActorTypeName,
         };
 
         using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
@@ -552,12 +552,12 @@ public sealed class EventStoreGatewayRoutingTests
 
         SubmitQuery query = factory.QueryRouter.ReceivedQueries.Single();
         query.Tenant.ShouldBe("tenant-a");
-        query.Domain.ShouldBe(PartyDetailProjectionQueryActor.PartyDomain);
+        query.Domain.ShouldBe(PartyDetailQueryTypes.PartyDomain);
         query.AggregateId.ShouldBe("party-12-4");
-        query.QueryType.ShouldBe(PartyDetailProjectionQueryActor.PartyDetailQueryType);
+        query.QueryType.ShouldBe(PartyDetailQueryTypes.PartyDetailQueryType);
         query.EntityId.ShouldBe("party-12-4");
-        query.ProjectionType.ShouldBe(PartyDetailProjectionQueryActor.ProjectionType);
-        query.ProjectionActorType.ShouldBe(PartyDetailProjectionQueryActor.ActorTypeName);
+        query.ProjectionType.ShouldBe(PartyDetailQueryTypes.ProjectionType);
+        query.ProjectionActorType.ShouldBe(PartyDetailQueryTypes.ActorTypeName);
     }
 
     [Fact]
@@ -578,12 +578,12 @@ public sealed class EventStoreGatewayRoutingTests
         var request = new
         {
             tenant = "tenant-a",
-            domain = PartyIndexProjectionQueryActor.PartyDomain,
-            aggregateId = PartyIndexProjectionQueryActor.ListAggregateId,
-            queryType = PartyIndexProjectionQueryActor.PartyIndexQueryType,
-            projectionType = PartyIndexProjectionQueryActor.ProjectionType,
-            entityId = PartyIndexProjectionQueryActor.ListAggregateId,
-            projectionActorType = PartyIndexProjectionQueryActor.ActorTypeName,
+            domain = PartyIndexQueryTypes.PartyDomain,
+            aggregateId = PartyIndexQueryTypes.ListAggregateId,
+            queryType = PartyIndexQueryTypes.PartyIndexQueryType,
+            projectionType = PartyIndexQueryTypes.ProjectionType,
+            entityId = PartyIndexQueryTypes.ListAggregateId,
+            projectionActorType = PartyIndexQueryTypes.ActorTypeName,
             payload = new
             {
                 page = 1,
@@ -599,12 +599,12 @@ public sealed class EventStoreGatewayRoutingTests
 
         SubmitQuery query = factory.QueryRouter.ReceivedQueries.Single();
         query.Tenant.ShouldBe("tenant-a");
-        query.Domain.ShouldBe(PartyIndexProjectionQueryActor.PartyDomain);
-        query.AggregateId.ShouldBe(PartyIndexProjectionQueryActor.ListAggregateId);
-        query.QueryType.ShouldBe(PartyIndexProjectionQueryActor.PartyIndexQueryType);
-        query.EntityId.ShouldBe(PartyIndexProjectionQueryActor.ListAggregateId);
-        query.ProjectionType.ShouldBe(PartyIndexProjectionQueryActor.ProjectionType);
-        query.ProjectionActorType.ShouldBe(PartyIndexProjectionQueryActor.ActorTypeName);
+        query.Domain.ShouldBe(PartyIndexQueryTypes.PartyDomain);
+        query.AggregateId.ShouldBe(PartyIndexQueryTypes.ListAggregateId);
+        query.QueryType.ShouldBe(PartyIndexQueryTypes.PartyIndexQueryType);
+        query.EntityId.ShouldBe(PartyIndexQueryTypes.ListAggregateId);
+        query.ProjectionType.ShouldBe(PartyIndexQueryTypes.ProjectionType);
+        query.ProjectionActorType.ShouldBe(PartyIndexQueryTypes.ActorTypeName);
     }
 
     [Fact]
@@ -625,12 +625,12 @@ public sealed class EventStoreGatewayRoutingTests
         var request = new
         {
             tenant = "tenant-a",
-            domain = PartyIndexProjectionQueryActor.PartyDomain,
-            aggregateId = PartyIndexProjectionQueryActor.ListAggregateId,
-            queryType = PartyIndexProjectionQueryActor.PartySearchQueryType,
-            projectionType = PartyIndexProjectionQueryActor.ProjectionType,
-            entityId = PartyIndexProjectionQueryActor.ListAggregateId,
-            projectionActorType = PartyIndexProjectionQueryActor.ActorTypeName,
+            domain = PartyIndexQueryTypes.PartyDomain,
+            aggregateId = PartyIndexQueryTypes.ListAggregateId,
+            queryType = PartyIndexQueryTypes.PartySearchQueryType,
+            projectionType = PartyIndexQueryTypes.ProjectionType,
+            entityId = PartyIndexQueryTypes.ListAggregateId,
+            projectionActorType = PartyIndexQueryTypes.ActorTypeName,
             payload = new
             {
                 query = "Acme",
@@ -645,12 +645,12 @@ public sealed class EventStoreGatewayRoutingTests
 
         SubmitQuery query = factory.QueryRouter.ReceivedQueries.Single();
         query.Tenant.ShouldBe("tenant-a");
-        query.Domain.ShouldBe(PartyIndexProjectionQueryActor.PartyDomain);
-        query.AggregateId.ShouldBe(PartyIndexProjectionQueryActor.ListAggregateId);
-        query.QueryType.ShouldBe(PartyIndexProjectionQueryActor.PartySearchQueryType);
-        query.EntityId.ShouldBe(PartyIndexProjectionQueryActor.ListAggregateId);
-        query.ProjectionType.ShouldBe(PartyIndexProjectionQueryActor.ProjectionType);
-        query.ProjectionActorType.ShouldBe(PartyIndexProjectionQueryActor.ActorTypeName);
+        query.Domain.ShouldBe(PartyIndexQueryTypes.PartyDomain);
+        query.AggregateId.ShouldBe(PartyIndexQueryTypes.ListAggregateId);
+        query.QueryType.ShouldBe(PartyIndexQueryTypes.PartySearchQueryType);
+        query.EntityId.ShouldBe(PartyIndexQueryTypes.ListAggregateId);
+        query.ProjectionType.ShouldBe(PartyIndexQueryTypes.ProjectionType);
+        query.ProjectionActorType.ShouldBe(PartyIndexQueryTypes.ActorTypeName);
     }
 
     [Fact]
@@ -662,12 +662,12 @@ public sealed class EventStoreGatewayRoutingTests
         var request = new
         {
             tenant = "tenant-a",
-            domain = PartyDetailProjectionQueryActor.PartyDomain,
+            domain = PartyDetailQueryTypes.PartyDomain,
             aggregateId = "party-legacy-projection",
-            queryType = PartyDetailProjectionQueryActor.PartyDetailQueryType,
+            queryType = PartyDetailQueryTypes.PartyDetailQueryType,
             projectionType = "PartyDetail",
             entityId = "party-legacy-projection",
-            projectionActorType = PartyDetailProjectionQueryActor.ActorTypeName,
+            projectionActorType = PartyDetailQueryTypes.ActorTypeName,
         };
 
         using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", request);
@@ -1062,22 +1062,18 @@ public sealed class EventStoreGatewayRoutingTests
         // service is actually safe to exclude here.
         private static readonly string[] KnownExcludedHostedServiceNames =
         [
-            // EventStore v3.91.0 added one more factory-registered hosted service (6th entry) —
-            // reviewed as part of the Story 8.6 v3.91.0 identity adoption: it is a background
-            // reconciliation-retry worker for the new bounded rebuild-completion manifest, which
-            // is Dapr-/shared-index-dependent like the others already excluded here.
-            "<factory-registered>",
-            "<factory-registered>",
-            "<factory-registered>",
-            "<factory-registered>",
-            "<factory-registered>",
-            "<factory-registered>",
             "DaprRateLimitConfigSync",
             "DataProtectionHostedService",
             "GenericWebHostService",
             "HealthCheckPublisherHostedService",
             "ProjectionDiscoveryHostedService",
             "TelemetryHostedService",
+            "factory:Hexalith.EventStore.Indexes.AdminOperationalIndexHostedService",
+            "factory:Hexalith.EventStore.Server.Configuration.NoOpHostedService",
+            "factory:Hexalith.EventStore.Server.Configuration.NoOpHostedService|Hexalith.EventStore.Server.Projections.ActiveRebuildIndexCleanupService",
+            "factory:Hexalith.EventStore.Server.Configuration.NoOpHostedService|Hexalith.EventStore.Server.Projections.ProjectionActivationWorker",
+            "factory:Hexalith.EventStore.Server.Configuration.NoOpHostedService|Hexalith.EventStore.Server.Projections.ProjectionDeliveryRetryWorker",
+            "factory:Hexalith.EventStore.Server.Configuration.NoOpHostedService|Hexalith.EventStore.Server.Projections.ProjectionPollerService",
         ];
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -1106,12 +1102,9 @@ public sealed class EventStoreGatewayRoutingTests
                 // auth-wiring regressions still fail fast at host build. Also preserve
                 // FoldedSnapshotQualificationHostedService: it only checks IServiceProviderIsService
                 // for qualification enrollment and logs a warning, with no Dapr calls or state writes.
-                // Factory registrations do
-                // not expose their implementation type, so all such hosted services are removed —
-                // an allowlist by name is not possible for every registration style. The assertion
-                // below is the safety net: it fails loudly if the set of removed hosted services
-                // changes, so a newly-added one still requires a conscious review instead of being
-                // silently swept out.
+                // Concrete factory service types resolved from IL metadata identify exclusions without
+                // constructing services or starting Dapr-dependent work. Changes to a factory
+                // service-type changes require review, just like direct implementation changes.
                 ServiceDescriptor[] removedHostedServices = [.. services
                     .Where(d => d.ServiceType == typeof(IHostedService)
                         && !string.Equals(
@@ -1123,7 +1116,7 @@ public sealed class EventStoreGatewayRoutingTests
                             "FoldedSnapshotQualificationHostedService",
                             StringComparison.Ordinal))];
                 string[] removedHostedServiceNames = [.. removedHostedServices
-                    .Select(d => d.ImplementationType?.Name ?? "<factory-registered>")
+                    .Select(d => HostedServiceRegistrationIdentity.Get(d))
                     .OrderBy(static name => name, StringComparer.Ordinal)];
                 removedHostedServiceNames.ShouldBe(
                     KnownExcludedHostedServiceNames,

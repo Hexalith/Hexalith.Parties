@@ -1,13 +1,13 @@
 using Hexalith.Parties.Contracts.Events;
-using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Projections.Serialization;
 
 using Shouldly;
 
-namespace Hexalith.Parties.Projections.Tests.Actors;
+namespace Hexalith.Parties.Projections.Tests.Serialization;
 
 /// <summary>
 /// Tests for the static <see cref="PartyEventTypeResolver"/>. The resolver is critical because
-/// projection actors dispatch event-type names from the wire to typed handlers; a wrong dispatch
+/// SDK projections dispatch event-type names from the wire to typed handlers; a wrong dispatch
 /// (e.g., ambiguous-short-name silently routed to a sibling type) would corrupt projection state.
 /// The class is internal — these tests rely on the InternalsVisibleTo wiring in the
 /// <c>Hexalith.Parties.Projections.csproj</c>.

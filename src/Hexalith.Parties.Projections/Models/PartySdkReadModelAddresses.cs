@@ -48,7 +48,10 @@ public static class PartySdkReadModelAddresses
         return $"readmodel:{tenantId}:party:{projection}:{aggregateId}:{slot}";
     }
 
-    private static void ValidateSegment(string value, string parameterName)
+    /// <summary>Validates one identity segment without coupling it to a projection address.</summary>
+    /// <param name="value">The segment to validate.</param>
+    /// <param name="parameterName">The parameter name for validation errors.</param>
+    internal static void ValidateSegment(string value, string parameterName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(value, parameterName);
 

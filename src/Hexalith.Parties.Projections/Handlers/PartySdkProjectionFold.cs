@@ -3,7 +3,7 @@ using System.Text.Json;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Projections;
 using Hexalith.Parties.Contracts;
-using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Projections.Serialization;
 
 using Microsoft.Extensions.Logging;
 

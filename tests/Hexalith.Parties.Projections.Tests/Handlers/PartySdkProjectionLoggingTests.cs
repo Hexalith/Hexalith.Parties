@@ -3,7 +3,7 @@ using System.Text;
 
 using Hexalith.EventStore.Contracts.Projections;
 using Hexalith.Parties.Contracts.Events;
-using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Projections.Serialization;
 using Hexalith.Parties.Projections.Handlers;
 
 using Microsoft.Extensions.Logging;
@@ -225,7 +225,7 @@ public sealed class PartySdkProjectionLoggingTests : IDisposable
         string eventName = "SyntheticAmbiguousProjectionLoggingEvent" + Guid.NewGuid().ToString("N");
         Type resolver = typeof(PartyEventTypeResolver);
         object cache = resolver.GetField("s_resolvedCache", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
-        Type outcomeType = resolver.GetNestedType("ResolveOutcome", BindingFlags.NonPublic)!;
+        Type outcomeType = typeof(ResolveOutcome);
         object outcome = outcomeType.GetProperty("Ambiguous", BindingFlags.Public | BindingFlags.Static)!.GetValue(null)!;
         ((bool)cache.GetType().GetMethod("TryAdd")!.Invoke(cache, [eventName, outcome])!).ShouldBeTrue();
         _ambiguousEventNames.Add(eventName);

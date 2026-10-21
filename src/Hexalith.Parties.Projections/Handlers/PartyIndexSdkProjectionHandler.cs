@@ -571,15 +571,7 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         return new PartyIndexFoldResult(model, lastIndexedEvent, removalObserved, null);
     }
 
-    private string StoreName
-    {
-        get
-        {
-            string value = options.Value.ReadModelStateStoreName;
-            ArgumentException.ThrowIfNullOrWhiteSpace(value);
-            return value;
-        }
-    }
+    private string StoreName => options.Value.GetStoreName();
 
     private static DomainProjectionHandlerResult DeliveryFailure(string reason)
         => DomainProjectionHandlerResult.Retryable(reason);
@@ -817,7 +809,7 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         }
 
         _ = PartySdkReadModelAddresses.Index(request.TenantId);
-        _ = PartySdkReadModelAddresses.Detail(request.TenantId, request.AggregateId);
+        PartySdkReadModelAddresses.ValidateSegment(request.AggregateId, nameof(request.AggregateId));
     }
 
 }

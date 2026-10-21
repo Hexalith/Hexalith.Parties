@@ -1,0 +1,10 @@
+
+Running 5 tests using 1 worker
+
+  ✓  1 [chromium] › specs/story-7-4-projection-platform-compatibility.spec.ts:40:3 › Story 7.4 projection platform compatibility adapter › documents adapter-first parity, rollback, and blocked validation evidence (7ms)
+  ✓  2 [chromium] › specs/story-7-4-projection-platform-compatibility.spec.ts:52:3 › Story 7.4 projection platform compatibility adapter › keeps the approved SDK-only boundary and retires every rollback projection path (8ms)
+  ✓  3 [chromium] › specs/story-7-4-projection-platform-compatibility.spec.ts:75:3 › Story 7.4 projection platform compatibility adapter › preserves ordered replay, duplicate and gap checks, and coordinated checkpoint persistence (4ms)
+  ✓  4 [chromium] › specs/story-7-4-projection-platform-compatibility.spec.ts:96:3 › Story 7.4 projection platform compatibility adapter › uses full replay and snapshot concurrency for canonical SDK rebuild plans (3ms)
+  ✓  5 [chromium] › specs/story-7-4-projection-platform-compatibility.spec.ts:118:3 › Story 7.4 projection platform compatibility adapter › pins SDK delivery, rebuild, degraded-read, and GDPR coverage after the approved migration (5ms)
+
+  5 passed (427ms)

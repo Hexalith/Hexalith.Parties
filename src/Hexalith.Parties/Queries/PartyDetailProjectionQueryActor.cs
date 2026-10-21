@@ -1,18 +1,36 @@
-using Hexalith.Parties.Contracts;
-
 namespace Hexalith.Parties.Queries;
 
-/// <summary>Stable Party detail query discriminators retained for wire compatibility.</summary>
+/// <summary>Compatibility alias for <see cref="PartyDetailQueryTypes"/>.</summary>
+[Obsolete("Use PartyDetailQueryTypes; SDK queries do not use projection actors.")]
 public static class PartyDetailProjectionQueryActor
 {
-    public const string ActorTypeName = nameof(PartyDetailProjectionQueryActor);
-    public const string ProjectionType = PartyProjectionNames.Detail;
-    public const string DataPortabilityProjectionType = "party-data-portability";
-    public const string GetPartyQueryType = "GetParty";
-    public const string PartyDetailQueryType = "PartyDetail";
-    public const string ExportPartyDataQueryType = "ExportPartyData";
-    public const string GetProcessingRecordsQueryType = "GetProcessingRecords";
-    public const string GetErasureStatusQueryType = "GetErasureStatus";
-    public const string GetErasureCertificateQueryType = "GetErasureCertificate";
-    public const string PartyDomain = "party";
+    /// <summary>Compatibility alias for <see cref="PartyDetailQueryTypes.ActorTypeName"/>.</summary>
+    public const string ActorTypeName = PartyDetailQueryTypes.ActorTypeName;
+
+    /// <summary>Compatibility alias for <see cref="PartyDetailQueryTypes.ProjectionType"/>.</summary>
+    public const string ProjectionType = PartyDetailQueryTypes.ProjectionType;
+
+    /// <summary>Compatibility alias for <see cref="PartyDetailQueryTypes.DataPortabilityProjectionType"/>.</summary>
+    public const string DataPortabilityProjectionType = PartyDetailQueryTypes.DataPortabilityProjectionType;
+
+    /// <summary>Compatibility alias for <see cref="PartyDetailQueryTypes.GetPartyQueryType"/>.</summary>
+    public const string GetPartyQueryType = PartyDetailQueryTypes.GetPartyQueryType;
+
+    /// <summary>Compatibility alias for <see cref="PartyDetailQueryTypes.PartyDetailQueryType"/>.</summary>
+    public const string PartyDetailQueryType = PartyDetailQueryTypes.PartyDetailQueryType;
+
+    /// <summary>Compatibility alias for <see cref="PartyDetailQueryTypes.ExportPartyDataQueryType"/>.</summary>
+    public const string ExportPartyDataQueryType = PartyDetailQueryTypes.ExportPartyDataQueryType;
+
+    /// <summary>Compatibility alias for <see cref="PartyDetailQueryTypes.GetProcessingRecordsQueryType"/>.</summary>
+    public const string GetProcessingRecordsQueryType = PartyDetailQueryTypes.GetProcessingRecordsQueryType;
+
+    /// <summary>Compatibility alias for <see cref="PartyDetailQueryTypes.GetErasureStatusQueryType"/>.</summary>
+    public const string GetErasureStatusQueryType = PartyDetailQueryTypes.GetErasureStatusQueryType;
+
+    /// <summary>Compatibility alias for <see cref="PartyDetailQueryTypes.GetErasureCertificateQueryType"/>.</summary>
+    public const string GetErasureCertificateQueryType = PartyDetailQueryTypes.GetErasureCertificateQueryType;
+
+    /// <summary>Compatibility alias for <see cref="PartyDetailQueryTypes.PartyDomain"/>.</summary>
+    public const string PartyDomain = PartyDetailQueryTypes.PartyDomain;
 }

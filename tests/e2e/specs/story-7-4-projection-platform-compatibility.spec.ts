@@ -65,6 +65,8 @@ test.describe('Story 7.4 projection platform compatibility adapter', () => {
     expect(index).toContain('IAsyncDomainSharedProjectionRebuildCompletionHandler');
     expect(registrations).toContain('AddOptions<PartySdkReadModelOptions>');
     expect(registrations).toContain('AddScoped<PartySdkQueryService>');
+    expect(registrations).toContain('PartySdkReadModelOptions.LegacyConfigurationSection');
+    expect(registrations).toContain('PartySdkReadModelOptions.ConfigurationSection');
     expect(queries).toContain('IReadModelStore readModelStore');
     expect(queries).toContain('ProjectionFreshnessStatus.Current');
     expect(queries).toContain('ProjectionFreshnessStatus.Unavailable');
@@ -136,9 +138,11 @@ test.describe('Story 7.4 projection platform compatibility adapter', () => {
     ]) {
       expect(handlers).toContain(testName);
     }
-    expect(queries).toContain('DetailHandler_StateStoreFailureReturnsTenantScopedLastKnownDataAsStaleAsync');
+    expect(queries).toContain('DetailHandler_StateStoreFailureRejectsAndEvictsPersonalLastKnownDataAsync');
+    expect(queries).toContain('IndexHandler_StateStoreFailureRejectsAndEvictsNonemptyLastKnownIndexAsync');
+    expect(queries).toContain('ProcessingHandler_StateStoreFailureReturnsTenantScopedLastKnownDataAsDegradedAsync');
     expect(queries).toContain('GdprHandlers_PreserveExportProcessingStatusAndCertificateSemanticsAsync');
-    expect(queries).toContain('DetailHandlers_ErasedPartyReturnOnlyRedactedStateAsync');
+    expect(queries).toContain('DetailHandlers_ErasedPartyReturnSameSafeMissingResultAsync');
     expect(queries).toContain('ExportHandler_UnavailablePersonalDataReturnsNoPartialPartyPayloadAsync');
   });
 });

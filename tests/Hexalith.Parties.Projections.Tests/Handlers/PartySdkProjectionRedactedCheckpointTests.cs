@@ -4,7 +4,7 @@ using System.Text;
 using Hexalith.EventStore.Contracts.Projections;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.ValueObjects;
-using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Projections.Serialization;
 using Hexalith.Parties.Projections.Handlers;
 using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Testing;
@@ -47,7 +47,7 @@ public sealed class PartySdkProjectionRedactedCheckpointTests
         string eventTypeName = "SyntheticRedactedAmbiguous" + Guid.NewGuid().ToString("N");
         Type resolver = typeof(PartyEventTypeResolver);
         object cache = resolver.GetField("s_resolvedCache", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
-        Type outcomeType = resolver.GetNestedType("ResolveOutcome", BindingFlags.NonPublic)!;
+        Type outcomeType = typeof(ResolveOutcome);
         object ambiguous = Activator.CreateInstance(outcomeType, [null, true])!;
         ((bool)cache.GetType().GetMethod("TryAdd")!.Invoke(cache, [eventTypeName, ambiguous])!).ShouldBeTrue();
         try

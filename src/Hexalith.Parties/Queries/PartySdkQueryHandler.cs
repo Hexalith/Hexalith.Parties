@@ -6,7 +6,7 @@ namespace Hexalith.Parties.Queries;
 /// <summary>Routes one query discriminator to a direct canonical read-model operation.</summary>
 public abstract class PartySdkQueryHandler(PartySdkQueryService queryService) : IDomainQueryHandler
 {
-    public string Domain => PartyDetailProjectionQueryActor.PartyDomain;
+    public string Domain => PartyDetailQueryTypes.PartyDomain;
 
     public abstract string QueryType { get; }
 

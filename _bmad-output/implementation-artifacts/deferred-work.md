@@ -231,7 +231,9 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 4)"), 2026-09-06
 location: Party query shims, EventStore:Projections configuration, and build documentation
 reason: Minor/cosmetic: query shim classes keep "Actor" names; `EventStore:Projections` config-key reuse; undocumented `Dapr.Actors.AspNetCore` / MSBuild property rename — intentional temporary trade-offs from the first Group 4 pass.
-status: open
+status: done 2026-10-21
+resolution: Added canonical PartyDetailQueryTypes/PartyIndexQueryTypes with obsolete public aliases and literal wire-compatibility assertions; layer Parties:Projections over legacy EventStore:Projections before binding, preserving per-property fallback and validation. Build guidance documents actor callbacks and the Commons HTTP source selector.
+verification: spec-five-projection-migration-deferred-items.md; tests/five-projection-migration-deferred-items-2026-10-21/validation.json. Focused checks pass; unchanged Tenants NativeSourceProof blocks the broad Debug solution build, and full runtime/source qualification is not claimed.
 decision: 2026-09-06 Add compatible SDK names — Introduce canonical SDK names and a Parties-specific configuration section while retaining obsolete aliases and fallback binding.
 
 ### DW-33: Clean up Group 5 DI, health, naming, and status-key polish
@@ -246,7 +248,9 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 5)"), 2026-09-06
 location: query and host test fixtures
 reason: `TestCursorCodec` private double instead of production DI codec; collapsed index invalid-payload theory; six indistinguishable `<factory-registered>` hosted-service exclusions — intentional test-isolation / factory-registration limits from the first Group 5 pass.
-status: open
+status: done 2026-10-21
+resolution: Replaced the default private cursor double with the production DI codec; preserve legacy bounded output and compact oversized Unicode scopes. Raw/compact binding and cross-handler tests pass. Pin each excluded hosted-service factory by its sorted concrete service types resolved from IL metadata. The already-expanded five-case invalid-payload theory is verified.
+verification: spec-five-projection-migration-deferred-items.md; tests/five-projection-migration-deferred-items-2026-10-21/validation.json. Focused checks pass; unchanged Tenants NativeSourceProof blocks the broad Debug solution build, and full runtime/source qualification is not claimed.
 
 ### DW-35: Define whole-payload json-redacted event handling
 
@@ -376,7 +380,9 @@ decision: 2026-09-06 Paged bucketed model — Partition records into bounded sta
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
 location: PartyDetailSdkProjectionHandler and PartyIndexSdkProjectionHandler
 reason: Minor/cosmetic, `PartyDetailSdkProjectionHandler`/`PartyIndexSdkProjectionHandler` family: sequential (not parallel) `GetAsync` calls doubling state-store round-trip latency on the busiest projection path; duplicated `StoreName` null-check across classes; `PartyErased.LastModifiedAt` immediately overwritten by `NormalizeEventTimestamps` (harmless while both timestamps match, would silently diverge otherwise); `PartyIndexSdkProjectionHandler.Validate` reusing `PartySdkReadModelAddresses.Detail(...)` purely for its validation side effect, coupling Index validation to Detail's address-shape rules.
-status: open
+status: done 2026-10-21
+resolution: Parallelized paired initial live reads and initialization reloads; shared store-name validation and direct identity-segment validation remove handler duplication and Index-to-Detail address coupling. Advancing end-state, both completion orders, either-slot faults and actual token cancellation are covered. Existing erased timestamp regression remains green.
+verification: spec-five-projection-migration-deferred-items.md; tests/five-projection-migration-deferred-items-2026-10-21/validation.json. Focused checks pass; unchanged Tenants NativeSourceProof blocks the broad Debug solution build, and full runtime/source qualification is not claimed.
 
 ### DW-52: Clean up rollback-shim naming, configuration, and test debt
 
@@ -420,7 +426,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: Projections/Actors/PartyEventTypeResolver
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: The resolver remains under Actors/ after projection actors were deleted, obscuring ownership.
-status: open
+status: done 2026-10-21
+resolution: Moved PartyEventTypeResolver and its tests to Serialization, extracted ResolveOutcome into its own file, updated all imports/reflection fixtures and corrected ownership documentation; allowlisted resolution and ambiguity tests pass.
+verification: spec-five-projection-migration-deferred-items.md; tests/five-projection-migration-deferred-items-2026-10-21/validation.json. Focused checks pass; unchanged Tenants NativeSourceProof blocks the broad Debug solution build, and full runtime/source qualification is not claimed.
 
 ### DW-58: Provide Dapr-actor to SDK read-model key backfill
 
@@ -449,7 +457,9 @@ archived: 2026-10-21
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-09)"), 2026-09-06
 location: tests/e2e/specs/story-7-4-projection-platform-compatibility.spec.ts
 reason: This came from the DI and query-host sub-chunk comparing PartiesServiceCollectionExtensions.cs with 2c4a7af. `tests/e2e/specs/story-7-4-projection-platform-compatibility.spec.ts` still expects deleted projection-adapter registrations and old `ProjectionPlatformAdapterTests` method names — deferred, pre-existing e2e drift outside this DI chunk.
-status: open
+status: done 2026-10-21
+resolution: Executed the existing SDK-oriented compatibility spec, corrected its two stale query test names, and pinned active Detail/Index outage rejection plus degraded processing behavior; all five source-contract cases pass.
+verification: spec-five-projection-migration-deferred-items.md; tests/five-projection-migration-deferred-items-2026-10-21/validation.json. Focused checks pass; unchanged Tenants NativeSourceProof blocks the broad Debug solution build, and full runtime/source qualification is not claimed.
 
 ### DW-62: Use TimeProvider for erasure cleanup timestamps
 

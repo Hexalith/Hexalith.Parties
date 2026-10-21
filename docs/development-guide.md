@@ -167,7 +167,7 @@ Read by the `parties` host (`appsettings*.json` / env, `__` nesting):
 |---------------|---------|
 | `Authentication:JwtBearer` | JWT validation (OIDC `Authority` or symmetric `SigningKey` ≥32 chars; `Issuer`, `Audience`) |
 | `Tenants` | tenant integration (ServiceName, PubSubName, TopicName `system.tenants.events`, CommandApiAppId) |
-| `EventStore:Projections` | SDK read-model options (`ReadModelStateStoreName`, `FreshnessAgingSeconds`, `FreshnessStaleSeconds`) bound by `PartySdkReadModelOptions` |
+| `Parties:Projections` (legacy fallback: `EventStore:Projections`) | SDK read-model options (`ReadModelStateStoreName`, `FreshnessAgingSeconds`, `FreshnessStaleSeconds`) bound by `PartySdkReadModelOptions` |
 | `Parties:CryptoShredding:IsEnabled` | crypto-shredding feature (**default true**) — see GDPR note below |
 | `Parties:Compliance:GdprFeaturesActive` | suppresses the MVP compliance warning (**default false**) |
 | `Parties:MemoriesSearch` | rich search (Enabled, Endpoint, ApiToken, TenantId, CaseId, EnabledAxes) |
@@ -292,3 +292,27 @@ Parties-to-Tenants readiness invocation and authenticated tenant-event bootstrap
 Production subscription-handler access effects are inspected in process through
 existing services; no public endpoint is added. Runtime deployment and end-to-end
 command/projection qualification remain separate work.
+
+### SDK projection configuration compatibility
+
+Configure `Parties:Projections:ReadModelStateStoreName`, `FreshnessAgingSeconds`,
+and `FreshnessStaleSeconds` for Parties SDK read models. Values absent from the
+Parties section fall back individually to `EventStore:Projections`, then to the
+existing defaults (`statestore`, 30 seconds and 300 seconds). Explicit invalid
+values in the Parties section fail options validation rather than falling back.
+The state key scheme and persisted read models are unchanged.
+
+SDK handlers use `PartyDetailQueryTypes` and `PartyIndexQueryTypes`. The obsolete
+`PartyDetailProjectionQueryActor` and `PartyIndexProjectionQueryActor` constants
+remain compatible aliases. Historical gateway routing names and query types stay
+unchanged. `Dapr.Actors.AspNetCore` remains for the retained key-retry actor and
+internal callbacks; SDK projection reads do not recreate projection actors.
+`HexalithCommonsHttpFromSource` is the source-reference selector for Commons HTTP;
+the pinned module tool supplies source roots and selectors for local Debug work.
+
+Paging continues through the EventStore protected cursor codec. Bounded tokens
+retain their existing raw scope for mixed-version deployments; only oversized
+protected tokens use a fixed-size digest of the same canonical scope. Updated
+readers accept both forms. Previously oversized Unicode continuations require
+an updated reader; cross-instance use still requires shared Data Protection keys
+and the same cursor protection purpose.

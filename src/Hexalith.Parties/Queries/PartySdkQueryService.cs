@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -97,7 +99,7 @@ public sealed partial class PartySdkQueryService(
             };
             return Success(
                 package,
-                PartyDetailProjectionQueryActor.DataPortabilityProjectionType,
+                PartyDetailQueryTypes.DataPortabilityProjectionType,
                 read.Value,
                 read.ETag,
                 now,
@@ -255,7 +257,7 @@ public sealed partial class PartySdkQueryService(
     {
         ArgumentNullException.ThrowIfNull(query);
         if (!TryValidateIndexEnvelope(query)
-            || !PartyIndexProjectionQueryActor.TryParseListPayload(query.Payload, out ListPartiesQueryPayload payload, query.Paging is not null))
+            || !PartyIndexQueryTypes.TryParseListPayload(query.Payload, out ListPartiesQueryPayload payload, query.Paging is not null))
         {
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
         }
@@ -290,12 +292,12 @@ public sealed partial class PartySdkQueryService(
     {
         ArgumentNullException.ThrowIfNull(query);
         if (!TryValidateIndexEnvelope(query)
-            || !PartyIndexProjectionQueryActor.TryParseSearchPayload(query.Payload, out SearchPartiesQueryPayload payload, query.Paging is not null))
+            || !PartyIndexQueryTypes.TryParseSearchPayload(query.Payload, out SearchPartiesQueryPayload payload, query.Paging is not null))
         {
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidEnvelope);
         }
 
-        if (PartyIndexProjectionQueryActor.IsUnsupportedSearchMode(payload.Mode) || payload.CaseId is not null)
+        if (PartyIndexQueryTypes.IsUnsupportedSearchMode(payload.Mode) || payload.CaseId is not null)
         {
             return QueryResult.Failure(QueryAdapterFailureReason.UnsupportedQueryType);
         }
@@ -617,6 +619,13 @@ public sealed partial class PartySdkQueryService(
         string? nextCursor = hasMore
             ? cursorCodec.Encode(query.QueryType, cursorScope, nextOffset.ToString(CultureInfo.InvariantCulture))
             : null;
+        // Keep bounded cursors readable by older instances during rolling upgrades. Compact
+        // only scopes whose protected JSON exceeds the SDK's accepted cursor size.
+        if (nextCursor?.Length > QueryPolicyLimits.MaxCursorLength)
+        {
+            nextCursor = cursorCodec.Encode(query.QueryType, CompactCursorScope(cursorScope), nextOffset.ToString(CultureInfo.InvariantCulture));
+        }
+
         return new QueryPagingMetadata(pageSize, offset, nextCursor, totalCount, hasMore);
     }
 
@@ -644,12 +653,7 @@ public sealed partial class PartySdkQueryService(
         if (pageSize is < 1 or > 100
             || query.Paging.Offset is < 0
             || (!string.IsNullOrWhiteSpace(query.Paging.Cursor) && query.Paging.Offset is not null)
-            || !cursorCodec.TryDecode(
-                query.Paging.Cursor,
-                query.QueryType,
-                cursorScope,
-                out string? position,
-                out failureReason))
+            || !TryDecodeCursor(query, cursorScope, out string? position, out failureReason))
         {
             if (!string.IsNullOrWhiteSpace(failureReason))
             {
@@ -685,6 +689,24 @@ public sealed partial class PartySdkQueryService(
         page = (int)resolvedPage;
         return true;
     }
+
+    private bool TryDecodeCursor(
+        QueryEnvelope query,
+        string cursorScope,
+        out string? position,
+        out string? failureReason)
+    {
+        if (cursorCodec.TryDecode(query.Paging!.Cursor, query.QueryType, cursorScope, out position, out failureReason))
+        {
+            return true;
+        }
+
+        return string.Equals(failureReason, "wrong-scope", StringComparison.Ordinal)
+            && cursorCodec.TryDecode(query.Paging.Cursor, query.QueryType, CompactCursorScope(cursorScope), out position, out failureReason);
+    }
+
+    private static string CompactCursorScope(string scope)
+        => "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(scope)));
 
     private static int ScopePageSize(QueryEnvelope query, int payloadPageSize)
         => query.Paging is null ? Math.Clamp(payloadPageSize, 1, 100) : query.Paging.PageSize ?? 20;
@@ -746,8 +768,8 @@ public sealed partial class PartySdkQueryService(
     {
         string entityId = string.IsNullOrWhiteSpace(query.EntityId) ? query.AggregateId : query.EntityId;
         return ValidTenantIdRegex().IsMatch(query.TenantId ?? string.Empty)
-            && string.Equals(query.AggregateId, PartyIndexProjectionQueryActor.ListAggregateId, StringComparison.Ordinal)
-            && string.Equals(entityId, PartyIndexProjectionQueryActor.ListAggregateId, StringComparison.Ordinal);
+            && string.Equals(query.AggregateId, PartyIndexQueryTypes.ListAggregateId, StringComparison.Ordinal)
+            && string.Equals(entityId, PartyIndexQueryTypes.ListAggregateId, StringComparison.Ordinal);
     }
 
     [LoggerMessage(

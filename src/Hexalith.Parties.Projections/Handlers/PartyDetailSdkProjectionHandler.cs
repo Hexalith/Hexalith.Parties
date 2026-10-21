@@ -73,12 +73,13 @@ public sealed class PartyDetailSdkProjectionHandler(
             return DeliveryFailure("projection-recovery-incomplete");
         }
 
-        ReadModelEntry<PartyDetailSdkReadModel> current = await readModelStore
-            .GetAsync<PartyDetailSdkReadModel>(storeName, key, cancellationToken)
-            .ConfigureAwait(false);
-        ReadModelEntry<PartyProcessingSdkReadModel> currentProcessing = await readModelStore
-            .GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken)
-            .ConfigureAwait(false);
+        Task<ReadModelEntry<PartyDetailSdkReadModel>> detailRead = readModelStore
+            .GetAsync<PartyDetailSdkReadModel>(storeName, key, cancellationToken);
+        Task<ReadModelEntry<PartyProcessingSdkReadModel>> processingRead = readModelStore
+            .GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken);
+        await Task.WhenAll(detailRead, processingRead).ConfigureAwait(false);
+        ReadModelEntry<PartyDetailSdkReadModel> current = await detailRead.ConfigureAwait(false);
+        ReadModelEntry<PartyProcessingSdkReadModel> currentProcessing = await processingRead.ConfigureAwait(false);
         // Detail and Processing are one coordinated aggregate-owned projection. If only one slot
         // survives, its checkpoint cannot prove the missing slot contains the prior history. A
         // live delivery must therefore stop and request a full replay instead of reconstructing
@@ -108,8 +109,11 @@ public sealed class PartyDetailSdkProjectionHandler(
 
             // A competing writer may have advanced or erased either slot during reconciliation.
             // Reload both before auditing; the initialization manifest never carries event data.
-            current = await readModelStore.GetAsync<PartyDetailSdkReadModel>(storeName, key, cancellationToken).ConfigureAwait(false);
-            currentProcessing = await readModelStore.GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken).ConfigureAwait(false);
+            detailRead = readModelStore.GetAsync<PartyDetailSdkReadModel>(storeName, key, cancellationToken);
+            processingRead = readModelStore.GetAsync<PartyProcessingSdkReadModel>(storeName, processingKey, cancellationToken);
+            await Task.WhenAll(detailRead, processingRead).ConfigureAwait(false);
+            current = await detailRead.ConfigureAwait(false);
+            currentProcessing = await processingRead.ConfigureAwait(false);
             if (current.Value is null || currentProcessing.Value is null)
             {
                 return DeliveryFailure(ProjectionRebuildRequiredReason);
@@ -277,15 +281,7 @@ public sealed class PartyDetailSdkProjectionHandler(
         };
     }
 
-    private string StoreName
-    {
-        get
-        {
-            string value = options.Value.ReadModelStateStoreName;
-            ArgumentException.ThrowIfNullOrWhiteSpace(value);
-            return value;
-        }
-    }
+    private string StoreName => options.Value.GetStoreName();
 
     private async Task RecordUnresolvedProcessingAsync(
         ProjectionRequest request,

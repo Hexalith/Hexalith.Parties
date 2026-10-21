@@ -1,0 +1,125 @@
+{
+  "baseline_revision": "f3e06a078d1d9bbb1be84df8fae67666829339a1",
+  "date": "2026-10-21",
+  "completed_items": [
+    "DW-32",
+    "DW-34",
+    "DW-51",
+    "DW-57",
+    "DW-61"
+  ],
+  "tests": {
+    "dotnet_passed": 1365,
+    "dotnet_skipped": 0,
+    "playwright_repository_contract_passed": 5
+  },
+  "checks": [
+    {
+      "command": "dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json",
+      "exit_code": 2,
+      "result": "HXR011 PrerequisiteUnavailable field=HEXALITH_DAPR_HOME: The isolated Dapr home is not configured.",
+      "scope": "Supported source runtime unavailable; focused pinned-package Debug fallback used."
+    },
+    {
+      "command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 0,
+      "result": "AppHost started"
+    },
+    {
+      "command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 0,
+      "result": "security Running/Unhealthy; dependent projects Waiting/NotStarted; no successful integrated runtime qualification"
+    },
+    {
+      "command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "exit_code": 0,
+      "result": "AppHost stopped successfully"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --configuration Debug -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -m:1",
+      "exit_code": 0,
+      "evidence": "main-build.txt",
+      "result": "0 warnings, 0 errors"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests -class Hexalith.Parties.Tests.Projections.PartySdkConfigurationCompatibilityTests -class Hexalith.Parties.Tests.Projections.ProjectionPlatformAdapterTests -class Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests -class Hexalith.Parties.Tests.FitnessTests.ArchitecturalFitnessTests -class Hexalith.Parties.Tests.Gateway.PartySdkCrossInstanceErasureTests",
+      "exit_code": 0,
+      "evidence": "main-tests-summary.txt",
+      "result": "921 passed; 0 failed; 0 skipped"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj --configuration Debug -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -m:1",
+      "exit_code": 0,
+      "evidence": "projections-build.txt",
+      "result": "0 warnings, 0 errors"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll",
+      "exit_code": 0,
+      "evidence": "projection-tests.txt",
+      "result": "444 passed; 0 failed; 0 skipped"
+    },
+    {
+      "command": "PLAYWRIGHT_SKIP_WEBSERVER=1 npx --no-install playwright test specs/story-7-4-projection-platform-compatibility.spec.ts --project=chromium",
+      "cwd": "tests/e2e",
+      "exit_code": 0,
+      "evidence": "playwright.txt",
+      "result": "5 passed; repository source-contract checks; no browser or running topology required"
+    },
+    {
+      "command": "npm run typecheck",
+      "cwd": "tests/e2e",
+      "exit_code": 0,
+      "evidence": "typecheck.txt"
+    },
+    {
+      "command": "dotnet build Hexalith.Parties.slnx --configuration Debug -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 -m:1",
+      "exit_code": 1,
+      "evidence": "solution-build.txt",
+      "result": "Unchanged Tenants.Contracts/TenantReadAuthorityResult.cs(12,5): CS0246 NativeSourceProof missing; broad source/package graph qualification not claimed."
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "result": "No warning-override or nested-submodule regressions detected in active CI/build scripts."
+    },
+    {
+      "command": "git -c core.whitespace=cr-at-eol diff --check",
+      "exit_code": 0,
+      "result": "Existing CRLF policy preserved; no introduced whitespace defects."
+    },
+    {
+      "command": "node_modules/.bin/commitlint --edit /tmp/parties-five-commit-message.txt --verbose",
+      "exit_code": 0,
+      "evidence": "commitlint.txt",
+      "result": "Pinned @commitlint/cli 21.2.2: 0 problems, 0 warnings"
+    }
+  ],
+  "initial_failures_fixed": [
+    "Production codec required Hexalith.EventStore.Client.Registration import.",
+    "New public theory parameter requires null validation under CA1062.",
+    "Extracted resolver outcome needed reflection fixture updates.",
+    "New test reuses the existing in-memory persistence helper and ConfigureAwait(true) to satisfy xUnit1030/CA2007.",
+    "Real production codec rejected an oversized Unicode search cursor hidden by the private base64 double; bounded scope digest and legacy decoding now pass.",
+    "Compatibility spec referenced two deleted query test names."
+  ],
+  "limits": [
+    "No full solution green claim: unchanged Tenants dependency mismatch above.",
+    "No source runtime or topology qualification: isolated Dapr prerequisite absent and legacy Aspire security unhealthy.",
+    "No dependency or gitlink changed."
+  ],
+  "review": {
+    "first_pass_findings": 10,
+    "disposition": "All verified and patched; no new deferrals.",
+    "follow_up": "Reviewer confirmed all ten findings addressed and no unresolved introduced defects.",
+    "factory_follow_up": "Raw IL/assembly-qualified hashes could drift between supported source/package builds. Final identities collect sorted concrete IHostedService Type.FullNames from IL metadata only; no compiler-generated names, token values or assembly versions are compared."
+  },
+  "final_behavior": [
+    "Canonical configuration precedence is resolved before conversion.",
+    "All historical discriminator literal values remain pinned.",
+    "Bounded protected cursors retain their original raw scope, allowing older instances to read them; only previously oversized tokens use a compact scope. Updated readers accept either form.",
+    "Raw and compact cursor scopes are checked across independently composed DI codecs/handlers sharing ephemeral keys; query/type/active/mode/page-size/tenant/user changes and tampering reject before reads.",
+    "Either live read can fault; actual request-token cancellation prevents coordinated writes, including after initialization. Advancing delivery tests assert both persisted slot end-states.",
+    "Excluded hosted-service factories are identified by concrete referenced service types without running constructors."
+  ]
+}

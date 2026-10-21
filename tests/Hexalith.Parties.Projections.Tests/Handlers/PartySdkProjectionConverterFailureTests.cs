@@ -4,7 +4,7 @@ using System.Text.Json;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.EventStore.Contracts.Projections;
-using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Projections.Serialization;
 using Hexalith.Parties.Projections.Handlers;
 using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Testing;
@@ -114,7 +114,7 @@ public sealed class PartySdkProjectionConverterFailureTests : IDisposable
         string eventName = "SyntheticConverterEvent" + Guid.NewGuid().ToString("N");
         Type resolver = typeof(PartyEventTypeResolver);
         object cache = resolver.GetField("s_resolvedCache", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
-        Type outcomeType = resolver.GetNestedType("ResolveOutcome", BindingFlags.NonPublic)!;
+        Type outcomeType = typeof(ResolveOutcome);
         object outcome = Activator.CreateInstance(outcomeType, [typeof(ProjectionConverterFailureEvent), false])!;
         ((bool)cache.GetType().GetMethod("TryAdd")!.Invoke(cache, [eventName, outcome])!).ShouldBeTrue();
         _eventNames.Add(eventName);

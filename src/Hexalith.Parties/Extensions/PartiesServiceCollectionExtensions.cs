@@ -23,7 +23,7 @@ using Hexalith.Parties.Search;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Search;
-using Hexalith.Parties.Projections.Actors;
+using Hexalith.Parties.Projections.Serialization;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Search;
 using Hexalith.Parties.Projections.Services;
@@ -170,8 +170,12 @@ public static class PartiesServiceCollectionExtensions {
         _ = services.AddEventStoreReadModelStore();
         _ = services.AddEventStoreDataProtection(configuration, "Hexalith.Parties");
         _ = services.AddEventStoreQueryCursorCodec("Hexalith.Parties.QueryCursor.v1");
+        IConfiguration projectionConfiguration = new ConfigurationBuilder()
+            .AddConfiguration(configuration.GetSection(PartySdkReadModelOptions.LegacyConfigurationSection))
+            .AddConfiguration(configuration.GetSection(PartySdkReadModelOptions.ConfigurationSection))
+            .Build();
         _ = services.AddOptions<PartySdkReadModelOptions>()
-            .Bind(configuration.GetSection(PartySdkReadModelOptions.ConfigurationSection))
+            .Bind(projectionConfiguration)
             .Validate(options => !string.IsNullOrWhiteSpace(options.ReadModelStateStoreName),
                 "Party SDK read-model state store name must not be empty.")
             .Validate(options => options.FreshnessAgingSeconds >= 0
