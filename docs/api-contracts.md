@@ -118,9 +118,9 @@ echoed in the failure. Strings are rejected rather than truncated. These limits
 apply with both envelope paging and legacy payload paging; JSON escape sequences
 count by their decoded characters, and supplementary characters count as two units.
 
-The `mode` payload field is a string. **Only** these values are honoured (everything else fails closed with `UnsupportedQueryType` *before* the projection read, echoing no tenant/query detail):
+After structural and length validation, the `mode` payload field accepts these values. Other bounded strings fail closed with `UnsupportedQueryType` before the projection read, echoing no tenant/query detail:
 
-- omitted / `null` / empty → MVP display-name search
+- omitted / `null` / empty / whitespace-only (at most 512 UTF-16 units) → MVP display-name search
 - `"Lexical"` → display-name lexical search
 - `"DisplayName"` → alias of the same
 

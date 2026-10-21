@@ -1,0 +1,6 @@
+⧗   --- input ---
+test(search): harden bounded input regressions
+
+Cover raw search limits and query validation precedence, then
+complete DW-88 review and record focused validation evidence.
+✔   found 0 problems, 0 warnings

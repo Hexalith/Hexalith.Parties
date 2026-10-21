@@ -1,0 +1,181 @@
+{
+  "work": "DW-88",
+  "date": "2026-10-21",
+  "baseline_commit": "6d9e3417f7abcd03e66a04de5084909c4b6c6115",
+  "implementation_included_by_concurrent_sync": "805adb50f5b0d05da42ee6c11efc8f504090a682",
+  "builds": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "name": "reviewed-service-build",
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0
+    }
+  ],
+  "tests": [
+    {
+      "name": "red",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method '*SearchHandler_OversizedRawStrings*' -method '*SearchHandler_MaximumQuery*' -method '*SearchHandler_BoundedUnsupportedFilters*' -result-xml /tmp/parties-dw88-red.xml",
+      "exit_code": 1,
+      "summary": {
+        "total": 22,
+        "passed": 10,
+        "failed": 12,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failures": [
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.SearchHandler_OversizedRawStringsRejectBeforeCursorStoreOrSearchAsync(field: \\\"Query\\\", content: \\\"text\\\", envelopePaging: False)",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.SearchHandler_OversizedRawStringsRejectBeforeCursorStoreOrSearchAsync(field: \\\"Query\\\", content: \\\"text\\\", envelopePaging: True)",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.SearchHandler_OversizedRawStringsRejectBeforeCursorStoreOrSearchAsync(field: \\\"Mode\\\", content: \\\"text\\\", envelopePaging: False)",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.SearchHandler_OversizedRawStringsRejectBeforeCursorStoreOrSearchAsync(field: \\\"Mode\\\", content: \\\"text\\\", envelopePaging: True)",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.SearchHandler_OversizedRawStringsRejectBeforeCursorStoreOrSearchAsync(field: \\\"CaseId\\\", content: \\\"text\\\", envelopePaging: False)",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.SearchHandler_OversizedRawStringsRejectBeforeCursorStoreOrSearchAsync(field: \\\"CaseId\\\", content: \\\"text\\\", envelopePaging: True)",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.SearchHandler_OversizedRawStringsRejectBeforeCursorStoreOrSearchAsync(field: \\\"Query\\\", content: \\\"whitespace\\\", envelopePaging: False)",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.SearchHandler_OversizedRawStringsRejectBeforeCursorStoreOrSearchAsync(field: \\\"Query\\\", content: \\\"whitespace\\\", envelopePaging: True)",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.SearchHandler_OversizedRawStringsRejectBeforeCursorStoreOrSearchAsync(field: \\\"Mode\\\", content: \\\"whitespace\\\", envelopePaging: False)",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.SearchHandler_OversizedRawStringsRejectBeforeCursorStoreOrSearchAsync(field: \\\"Mode\\\", content: \\\"whitespace\\\", envelopePaging: True)",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.SearchHandler_OversizedRawStringsRejectBeforeCursorStoreOrSearchAsync(field: \\\"Query\\\", content: \\\"supplementary\\\", envelopePaging: False)",
+        "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.SearchHandler_OversizedRawStringsRejectBeforeCursorStoreOrSearchAsync(field: \\\"Query\\\", content: \\\"supplementary\\\", envelopePaging: True)"
+      ]
+    },
+    {
+      "name": "focused",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests -class 'Hexalith.Parties.Tests.Search.*' -result-xml /tmp/parties-dw88-focused.xml",
+      "exit_code": 0,
+      "summary": {
+        "total": 1139,
+        "passed": 1139,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failures": []
+    },
+    {
+      "name": "contracts-full",
+      "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Debug/net10.0/Hexalith.Parties.Contracts.Tests.dll -result-xml /tmp/parties-dw88-contracts-full.xml",
+      "exit_code": 0,
+      "summary": {
+        "total": 201,
+        "passed": 201,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failures": []
+    },
+    {
+      "name": "service-full",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/parties-dw88-service-full.xml",
+      "exit_code": 1,
+      "summary": {
+        "total": 2158,
+        "passed": 2157,
+        "failed": 1,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failures": [
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph"
+      ]
+    },
+    {
+      "name": "reviewed-service-full",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /dev/shm/parties-dw88-reviewed-full.xml",
+      "exit_code": 1,
+      "summary": {
+        "total": 2162,
+        "passed": 2161,
+        "failed": 1,
+        "skipped": 0,
+        "errors": 0,
+        "not-run": 0
+      },
+      "failures": [
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph"
+      ]
+    }
+  ],
+  "broad_gate": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /dev/shm/parties-dw88-reviewed-full.xml",
+    "exit_code": 1,
+    "test": "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+    "expected_builds_gitlink": "fff4a212180d8cd1c5c0759655a9bc4fb6963c45",
+    "actual_builds_gitlink": "17d0c6ffec5fb3c8d8058e67cb85644460cb5256",
+    "baseline_fitness_blob": "6b6e9029c7cba79678fc3782660b0de7064181a1",
+    "current_fitness_blob": "6b6e9029c7cba79678fc3782660b0de7064181a1",
+    "note": "Unchanged fitness source; concurrent /pushall advanced root gitlinks. No full-service green claim or receipt recertification."
+  },
+  "source_launcher": {
+    "command": "dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json --output json",
+    "exit_code": 2,
+    "rule": "HXR011",
+    "note": "The isolated Dapr home is not configured (HEXALITH_DAPR_HOME). No source runtime was launched. Debug selected-package builds are focused fallback evidence."
+  },
+  "runtime_baseline": {
+    "start_command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --no-build --non-interactive --format Json",
+    "start_exit_code": 0,
+    "wait_command": "aspire wait parties --timeout 20 --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "wait_exit_code": 0,
+    "describe_command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+    "describe_exit_code": 0,
+    "stop_command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "stop_exit_code": 0,
+    "note": "Parties readiness passed; later inspection had healthy parties/UI/sidecars and finished eventstore/tenants/admin. Startup observation only; no authenticated integrated-topology qualification."
+  },
+  "checks": [
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff 6d9e3417f7abcd03e66a04de5084909c4b6c6115 --check -- src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs src/Hexalith.Parties.Contracts/Queries/SearchParties.cs tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs docs/api-contracts.md docs/deferred-search-and-temporal-queries.md",
+      "exit_code": 0
+    },
+    {
+      "command": "node_modules/.bin/commitlint --edit /tmp/parties-dw88-commit.txt --verbose",
+      "version": "21.2.2",
+      "exit_code": 0,
+      "evidence": "commitlint.txt"
+    }
+  ],
+  "review": {
+    "layer": "blind-hunter",
+    "findings": 4,
+    "patched": 4,
+    "deferred": 0,
+    "followup": "Independent read-only reviewer confirmed all four addressed and no concrete scoped regression. Reviewer did not run tests."
+  },
+  "limitations": "Bounds apply to decoded search strings before downstream cursor/index/provider processing. JSON body-size limits and full source/Release/topology qualification are not claimed.",
+  "sha256": {
+    "src/Hexalith.Parties/Queries/PartyIndexProjectionQueryActor.cs": "1a7ce5f455b4acd8ac2222f8363307c7abdedd95e8edf3348aebb343d5ab3948",
+    "src/Hexalith.Parties.Contracts/Queries/SearchParties.cs": "d73ad71614e4dfcf233cfefc95c990e827bb5f973060b9fd0180d0ffbe7cf7dc",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "3f95010067943b030b5ef2e08d760a8ccdb3f59fd501f4c144e4f2e3418ed85c",
+    "docs/api-contracts.md": "a62025b2a624778257c56d5852f422ecb4c5fddf9ddae8eceba8beb36fb21bdd",
+    "docs/deferred-search-and-temporal-queries.md": "fd99375ab9f14b02eb94253ba994dd67bd556bd1ea405f2c5cd615cfee7a49f4"
+  },
+  "final_regression_subset": {
+    "source": "reviewed-service-full",
+    "total": 34,
+    "passed": 34,
+    "failed": 0,
+    "skipped": 0
+  }
+}

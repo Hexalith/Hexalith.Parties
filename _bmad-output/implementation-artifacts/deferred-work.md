@@ -716,7 +716,9 @@ origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review
 location: Party search payload parsing and cursor-scope construction
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: Search payload parsing validates paging and type but imposes no length limits on strings copied into cursor scope and processed against tenant entries.
-status: open
+status: done 2026-10-21
+
+resolution: Reject decoded Query, Mode, CaseId and Type strings over 512 raw UTF-16 units before cursor decoding, index reads and search evaluation, counting whitespace before trimming. Preserve accepted bounded inputs and unsupported-filter failures; document the public query limit and mode-validation precedence. Both affected Debug builds have zero warnings/errors. Final service suite passes 2161/2162, including all 34 new regressions; Contracts.Tests passes 201/201. The sole full-service failure is the unchanged dependency-receipt fitness gate after the concurrent Builds gitlink sync. All four independent review findings are patched and follow-up confirmed; no new deferred item. Source launcher remains blocked by missing isolated Dapr home (HXR011). See spec-dw-88-bounded-search-inputs.md and tests/dw-88-bounded-search-inputs-2026-10-21/validation.json.
 
 ### DW-89: Verify EventStore-only deny ACL across all Dapr sidecars
 

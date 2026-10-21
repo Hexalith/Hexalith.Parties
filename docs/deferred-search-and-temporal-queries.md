@@ -30,11 +30,11 @@ Oversized values return `InvalidEnvelope` before cursor or index evaluation.
 Bounded unsupported modes and bounded supplied case filters retain
 `UnsupportedQueryType`; the length limit does not enable additional search modes.
 
-The `PartySearch` query envelope accepts a `mode` payload field of type string. Only the
-following values are honoured by the MVP query actor; everything else fails closed before
-the projection read:
+After structural and length validation, the `PartySearch` query envelope accepts
+the following `mode` string values; other bounded values fail closed with
+`UnsupportedQueryType` before the projection read:
 
-- omitted / `null` / empty — treated as MVP display-name search.
+- omitted / `null` / empty / whitespace-only (at most 512 UTF-16 units) — treated as MVP display-name search.
 - `"Lexical"` — MVP display-name lexical search.
 - `"DisplayName"` — wire-level alias for the same display-name path.
 

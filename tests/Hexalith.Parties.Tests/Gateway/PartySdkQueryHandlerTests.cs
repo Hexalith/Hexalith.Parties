@@ -2621,8 +2621,8 @@ public sealed class PartySdkQueryHandlerTests
         Dictionary<string, object?> payload = new(StringComparer.Ordinal)
         {
             ["qUeRy"] = "Ada",
-            ["page"] = envelopePaging ? "ignored" : 1,
-            ["pageSize"] = envelopePaging ? "ignored" : 20,
+            ["page"] = 1,
+            ["pageSize"] = 20,
         };
         payload[string.Equals(field, "Query", StringComparison.Ordinal) ? "qUeRy" : field] = value;
 
@@ -2670,6 +2670,7 @@ public sealed class PartySdkQueryHandlerTests
         PagedResult<PartySearchResult> firstPage = first.GetPayload().Deserialize<PagedResult<PartySearchResult>>(PartiesJsonOptions.Default)!;
         firstPage.TotalCount.ShouldBe(2);
         firstPage.Items.ShouldHaveSingleItem().Party.Id.ShouldBe("party-a");
+        firstPage.Items[0].Matches.ShouldHaveSingleItem().MatchType.ShouldBe("exact");
         QueryEnvelope continuation = envelopePaging
             ? envelope with { Paging = new QueryPagingOptions(PageSize: 1, Cursor: first.Metadata!.Paging!.NextCursor.ShouldNotBeNull()) }
             : envelope with { Payload = JsonSerializer.SerializeToUtf8Bytes(new { Query = query, Type = "Person", Active = true, Page = 2, PageSize = 1 }) };
@@ -2679,6 +2680,7 @@ public sealed class PartySdkQueryHandlerTests
         second.Success.ShouldBeTrue();
         PagedResult<PartySearchResult> secondPage = second.GetPayload().Deserialize<PagedResult<PartySearchResult>>(PartiesJsonOptions.Default)!;
         secondPage.Items.ShouldHaveSingleItem().Party.Id.ShouldBe("party-b");
+        secondPage.Items[0].Matches.ShouldHaveSingleItem().MatchType.ShouldBe("exact");
         secondPage.Page.ShouldBe(2);
         secondPage.TotalCount.ShouldBe(2);
     }
@@ -2701,6 +2703,36 @@ public sealed class PartySdkQueryHandlerTests
         result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.UnsupportedQueryType);
         result.PayloadBytes.ShouldBeNull();
         store.ReceivedCalls().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("Mode", false)]
+    [InlineData("Mode", true)]
+    [InlineData("CaseId", false)]
+    [InlineData("CaseId", true)]
+    public async Task SearchHandler_OversizedQueryPrecedesUnsupportedFiltersAsync(string field, bool envelopePaging)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        IPartySearchProvider provider = Substitute.For<IPartySearchProvider>();
+        IQueryCursorCodec codec = Substitute.For<IQueryCursorCodec>();
+        var handler = new PartySearchQueryHandler(CreateService(store, provider, cursorCodec: codec));
+
+        QueryResult result = await handler.ExecuteAsync(CreateIndexEnvelope("PartySearch") with
+        {
+            Payload = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, string>
+            {
+                ["Query"] = new string('x', 513),
+                [field] = "unsupported",
+            }),
+            Paging = envelopePaging ? new QueryPagingOptions(PageSize: 20, Cursor: "must-not-decode") : null,
+        }, TestContext.Current.CancellationToken);
+
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
+        result.PayloadBytes.ShouldBeNull();
+        result.Metadata.ShouldBeNull();
+        store.ReceivedCalls().ShouldBeEmpty();
+        provider.ReceivedCalls().ShouldBeEmpty();
+        codec.ReceivedCalls().ShouldBeEmpty();
     }
 
     [Theory]
