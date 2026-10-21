@@ -1,0 +1,96 @@
+{
+  "baseline": "fb07a6cf14507bcae371f957b0272f3f4bbead84",
+  "items": [
+    "DW-14",
+    "DW-164",
+    "DW-165",
+    "DW-181",
+    "DW-186"
+  ],
+  "checks": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --no-restore --disable-build-servers -m:1 -v:minimal",
+      "exit_code": 0,
+      "log": "main-build.txt"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj -c Debug --no-restore --disable-build-servers -m:1 -v:minimal",
+      "exit_code": 0,
+      "log": "integration-build.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.G8OwnerDeliveryReceiptTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -class Hexalith.Parties.Tests.FitnessTests.AppHostTenantsTopologyTests",
+      "exit_code": 0,
+      "log": "fitness-tests.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.PartiesOptionalResourceTests -class Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests -class Hexalith.Parties.IntegrationTests.Topology.PartiesPublishOidcTests -class Hexalith.Parties.IntegrationTests.Topology.PartiesUiTopologyTests",
+      "exit_code": 0,
+      "log": "topology-tests.txt"
+    },
+    {
+      "command": "python3 -B -m unittest discover -s _bmad/scripts/tests -v",
+      "exit_code": 0,
+      "log": "python-tests.txt"
+    },
+    {
+      "command": "python3 -B _bmad-output/implementation-artifacts/tests/five-runtime-config-deferred-items-2026-10-21/config-trace.py",
+      "exit_code": 0,
+      "log": "config-trace.json"
+    },
+    {
+      "command": "node_modules/.bin/commitlint --edit /tmp/parties-five-runtime-commit.txt --verbose",
+      "exit_code": 0,
+      "log": "commitlint.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.PartiesOptionalResourceTests",
+      "exit_code": 0,
+      "log": "topology-review-tests.txt",
+      "scope": "Reruns the two existing optional-resource cases after review fixes; included in the 42 unique topology cases."
+    }
+  ],
+  "additional_checks": [
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --cached --check",
+      "exit_code": 0,
+      "note": "Preserves normal whitespace checks while recognizing the CRLF line endings required by .editorconfig. Default staged diff checking reports CR characters as trailing whitespace; no actual trailing spaces were found."
+    }
+  ],
+  "tests": {
+    "fitness": 153,
+    "topology": 42,
+    "python": 20,
+    "unique_total": 215,
+    "failures": 0,
+    "skips": 0
+  },
+  "runtime": {
+    "commands": [
+      "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+      "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+      "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive"
+    ],
+    "baseline": "All commands exit 0. Keycloak initially Unhealthy; dependent resources Waiting. See baseline-resources.json.",
+    "final": "All commands exit 0. EventStore, Parties, Tenants and security Healthy. See final-resources.json. This run uses the default optional-resource flags; optional resource behavior is qualified by actual run/publish model tests."
+  },
+  "limits": [
+    "Historical producer test results are retained, not rerun or recertified.",
+    "Model checks are not live optional Memories/sample or external deployment parity.",
+    "No dependency selection, owner signoff or release status changed."
+  ],
+  "review": {
+    "findings": 8,
+    "patched": 8,
+    "deferred": 0,
+    "follow_up": "No unresolved concrete issues found in the eight fixes."
+  }
+}

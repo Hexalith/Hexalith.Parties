@@ -1,0 +1,15 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.IntegrationTests
+  Discovered:  Hexalith.Parties.IntegrationTests
+  Starting:    Hexalith.Parties.IntegrationTests
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+  Finished:    Hexalith.Parties.IntegrationTests (ID = '8c058a41fdb0e8ce0edf8e6fea62778b6c57cd794a94e6b6d2679195d4e32cbd')
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.IntegrationTests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.268s

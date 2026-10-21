@@ -1,0 +1,137 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.IntegrationTests
+  Discovered:  Hexalith.Parties.IntegrationTests
+  Starting:    Hexalith.Parties.IntegrationTests
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: Aspire.Hosting.Kubernetes.KubernetesEnvironmentResource[0]
+      Creating Kubernetes resource for k8s-dashboard
+info: Aspire.Hosting.Kubernetes.KubernetesEnvironmentResource[0]
+      Creating Kubernetes resource for eventstore
+info: Aspire.Hosting.Kubernetes.KubernetesEnvironmentResource[0]
+      Creating Kubernetes resource for eventstore-admin
+info: Aspire.Hosting.Kubernetes.KubernetesEnvironmentResource[0]
+      Creating Kubernetes resource for eventstore-admin-ui
+info: Aspire.Hosting.Kubernetes.KubernetesEnvironmentResource[0]
+      Creating Kubernetes resource for parties
+info: Aspire.Hosting.Kubernetes.KubernetesEnvironmentResource[0]
+      Creating Kubernetes resource for tenants
+info: Aspire.Hosting.Kubernetes.KubernetesEnvironmentResource[0]
+      Creating Kubernetes resource for memories
+info: Aspire.Hosting.Kubernetes.KubernetesEnvironmentResource[0]
+      Creating Kubernetes resource for parties-mcp
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+info: Aspire.Hosting.Docker.DockerComposeEnvironmentResource[0]
+      Creating Docker Compose resource for docker-dashboard
+info: Aspire.Hosting.Kubernetes.KubernetesEnvironmentResource[0]
+      Creating Kubernetes resource for parties-ui
+info: Aspire.Hosting.Docker.DockerComposeEnvironmentResource[0]
+      Creating Docker Compose resource for eventstore
+info: Aspire.Hosting.Docker.DockerComposeEnvironmentResource[0]
+      Creating Docker Compose resource for eventstore-admin
+info: Aspire.Hosting.Docker.DockerComposeEnvironmentResource[0]
+      Creating Docker Compose resource for eventstore-admin-ui
+info: Aspire.Hosting.Docker.DockerComposeEnvironmentResource[0]
+      Creating Docker Compose resource for parties
+info: Aspire.Hosting.Docker.DockerComposeEnvironmentResource[0]
+      Creating Docker Compose resource for parties-mcp
+info: Aspire.Hosting.Docker.DockerComposeEnvironmentResource[0]
+      Creating Docker Compose resource for tenants
+info: Aspire.Hosting.Docker.DockerComposeEnvironmentResource[0]
+      Creating Docker Compose resource for parties-ui
+info: Aspire.Hosting.Docker.DockerComposeEnvironmentResource[0]
+      Creating Docker Compose resource for memories
+info: Aspire.Hosting.Kubernetes.KubernetesEnvironmentResource[0]
+      Creating Kubernetes resource for sample
+info: Aspire.Hosting.Docker.DockerComposeEnvironmentResource[0]
+      Creating Docker Compose resource for sample
+info: Aspire.Hosting.Docker.DockerComposeEnvironmentResource[0]
+      Creating Docker Compose resource for sample-blazor-ui
+info: Aspire.Hosting.Kubernetes.KubernetesEnvironmentResource[0]
+      Creating Kubernetes resource for sample-blazor-ui
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+info: Aspire.Hosting.Azure.AppContainers.AzureContainerAppEnvironmentResource[0]
+      HTTP endpoints will use HTTPS (port 443) in Azure Container Apps: eventstore:http, eventstore-admin:http, eventstore-admin-ui:http, parties:http, parties-mcp:http, tenants:http, parties-ui:http, memories:http, sample:http, sample-blazor-ui:http. To opt out, use .WithHttpsUpgrade(false) on the container app environment.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+  Finished:    Hexalith.Parties.IntegrationTests (ID = '8c058a41fdb0e8ce0edf8e6fea62778b6c57cd794a94e6b6d2679195d4e32cbd')
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Starting Dapr-related resources...
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Unvalidated configuration state.redis for component 'statestore'.
+=== TEST EXECUTION SUMMARY ===
+info: CommunityToolkit.Aspire.Hosting.Dapr.DaprDistributedApplicationLifecycleHook[0]
+      Using default dapr path for component 'pubsub'.
+   Hexalith.Parties.IntegrationTests  Total: 42, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 1.682s

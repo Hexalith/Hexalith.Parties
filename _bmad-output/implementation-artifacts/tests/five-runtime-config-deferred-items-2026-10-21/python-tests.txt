@@ -1,0 +1,25 @@
+test_each_central_layer_rejects_duplicate_codes (test_config_utils.ConfigResolverTests.test_each_central_layer_rejects_duplicate_codes) ... ok
+test_each_customization_layer_rejects_duplicate_ids (test_config_utils.ConfigResolverTests.test_each_customization_layer_rejects_duplicate_ids) ... ok
+test_merge_identity_switch_errors_identify_the_contributing_files (test_config_utils.ConfigResolverTests.test_merge_identity_switch_errors_identify_the_contributing_files) ... ok
+test_renderer_publishes_valid_configuration (test_config_utils.ConfigResolverTests.test_renderer_publishes_valid_configuration) ... ok
+test_renderer_rejects_duplicate_inputs_before_publishing (test_config_utils.ConfigResolverTests.test_renderer_rejects_duplicate_inputs_before_publishing) ... ok
+test_resolvers_preserve_valid_layer_precedence (test_config_utils.ConfigResolverTests.test_resolvers_preserve_valid_layer_precedence) ... ok
+test_resolvers_report_duplicates_without_json_or_tracebacks (test_config_utils.ConfigResolverTests.test_resolvers_report_duplicates_without_json_or_tracebacks) ... ok
+test_code_precedes_secondary_id (test_config_utils.StructuralMergeTests.test_code_precedes_secondary_id) ... ok
+test_common_id_rejects_duplicates_when_only_one_input_has_codes (test_config_utils.StructuralMergeTests.test_common_id_rejects_duplicates_when_only_one_input_has_codes) ... ok
+test_cross_layer_replacement_keeps_position_and_replaces_whole_record (test_config_utils.StructuralMergeTests.test_cross_layer_replacement_keeps_position_and_replaces_whole_record) ... ok
+test_each_input_rejects_duplicate_codes_even_when_common_identity_is_id (test_config_utils.StructuralMergeTests.test_each_input_rejects_duplicate_codes_even_when_common_identity_is_id) ... ok
+test_invalid_selected_identifiers_still_fail (test_config_utils.StructuralMergeTests.test_invalid_selected_identifiers_still_fail) ... ok
+test_merge_does_not_mutate_inputs_on_success_or_failure (test_config_utils.StructuralMergeTests.test_merge_does_not_mutate_inputs_on_success_or_failure) ... ok
+test_rejects_duplicates_in_single_layer_and_new_fields (test_config_utils.StructuralMergeTests.test_rejects_duplicates_in_single_layer_and_new_fields) ... ok
+test_rejects_duplicates_within_either_input (test_config_utils.StructuralMergeTests.test_rejects_duplicates_within_either_input) ... ok
+test_rejects_nested_duplicates_and_type_replacements (test_config_utils.StructuralMergeTests.test_rejects_nested_duplicates_and_type_replacements) ... ok
+test_unkeyed_arrays_append_without_deduplicating (test_config_utils.StructuralMergeTests.test_unkeyed_arrays_append_without_deduplicating) ... ok
+test_both_installed_entry_points_require_the_orchestrator_ledger (test_loop_sweep_ledger_contract.LoopSweepLedgerContractTests.test_both_installed_entry_points_require_the_orchestrator_ledger) ... ok
+test_array_is_not_a_supported_scalar_template_input (test_visual_tool_resolution.VisualToolResolutionTests.test_array_is_not_a_supported_scalar_template_input) ... ok
+test_json_string_survives_each_layer_and_renders_without_array_coercion (test_visual_tool_resolution.VisualToolResolutionTests.test_json_string_survives_each_layer_and_renders_without_array_coercion) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.278s
+
+OK

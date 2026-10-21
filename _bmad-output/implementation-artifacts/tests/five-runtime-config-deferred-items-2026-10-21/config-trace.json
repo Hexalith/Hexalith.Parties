@@ -1,0 +1,22 @@
+{
+  "ledger_steps": [
+    ".agents/skills/bmad-loop-sweep/SKILL.md",
+    ".claude/skills/bmad-loop-sweep/SKILL.md"
+  ],
+  "ledger_disposition": "orchestrator path required; missing path escalates; no config fallback",
+  "resolved_visual_tools_type": "str",
+  "resolved_visual_tools": "[\"mermaid\", \"excalidraw\", \"gemini-nano\"]",
+  "decoded_visual_tools": [
+    "mermaid",
+    "excalidraw",
+    "gemini-nano"
+  ],
+  "render_inputs": {
+    "config.modules.cis.visual_tools": "[\"mermaid\", \"excalidraw\", \"gemini-nano\"]"
+  },
+  "tracked_visual_tools_references": [
+    "_bmad/cis/config.yaml:6:visual_tools: '[\"mermaid\", \"excalidraw\", \"gemini-nano\"]'",
+    "_bmad/config.toml:31:visual_tools = \"[\\\"mermaid\\\", \\\"excalidraw\\\", \\\"gemini-nano\\\"]\""
+  ],
+  "consumer_scope": "installed tracked non-reference files; tests and this trace do not imply a CIS runtime consumer"
+}

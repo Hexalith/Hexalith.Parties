@@ -196,8 +196,8 @@ if (builder.ExecutionContext.IsPublishMode
         "EnableMemoriesSearch");
 
     // Memories.Server is optional for the default one-command local Parties run, but publish
-    // mode always composes it as a first-class topology participant. The in-cluster Service URL
-    // is the only rich-search endpoint Parties uses.
+    // mode always composes it as a first-class topology participant. Resolve the HTTP
+    // endpoint from that resource for both local execution and published connectivity.
     IResourceBuilder<ProjectResource> memories = builder.AddProject("memories", memoriesProjectPath)
         .WithDaprSidecar(sidecar =>
         {
@@ -223,7 +223,7 @@ if (builder.ExecutionContext.IsPublishMode
         .WithReference(memories)
         .WaitFor(memories)
         .WithEnvironment("Parties__MemoriesSearch__Enabled", "true")
-        .WithEnvironment("Parties__MemoriesSearch__Endpoint", "http://memories:8080/")
+        .WithEnvironment("Parties__MemoriesSearch__Endpoint", memories.GetEndpoint("http"))
         .WithEnvironment("Parties__MemoriesSearch__RequireApiToken", "false")
         .WithEnvironment("Parties__MemoriesSearch__TenantId", "tenant-a")
         .WithEnvironment("Parties__MemoriesSearch__CaseId", "parties");
@@ -244,6 +244,7 @@ if (builder.ExecutionContext.IsPublishMode
     // EventStore__SignalR__Enabled is now set unconditionally near the eventstore definition (Story 1.7).
 
     IResourceBuilder<ProjectResource> sample = builder.AddProject("sample", sampleProjectPath)
+        .WithEnvironment("EventStore__DomainService__AppId", "sample")
         .WithDaprSidecar(sidecar =>
         {
             _ = sidecar.WithOptions(new DaprSidecarOptions

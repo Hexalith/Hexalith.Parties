@@ -102,7 +102,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: G8-A owner-delivery receipt and Parties fitness tests
 source_spec: `_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md`
 reason: The review confirmed that current Parties fitness tests parse only the marked matrix table and do not bind the supplemental receipt SHA, claimed four-file inventory, or focused EventStore test lane to the referenced Git objects.
-status: open
+status: done 2026-10-21
+resolution: Historical G8-A receipt is bound to the producer parent, full delivery/integration identities and ancestry, original consumer gitlink, complete four-file Git inventory and exact 26-case JWT lane source. Twenty-one malformed-claim regressions reject missing, altered, abbreviated, duplicated and unrelated evidence. This is immutable provenance validation, not a new producer runtime or adoption receipt.
+verification: `spec-five-runtime-config-deferred-items.md`; `tests/five-runtime-config-deferred-items-2026-10-21/validation.json`.
 
 ### DW-15: Bind the operational-index ACL route, verb, policy, and action
 
@@ -1290,7 +1292,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties.AppHost/Program.cs:237 (optional sample resource)
 source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
 reason: AppHost sample at Program.cs:237 lacks the parties/tenants AppId binding; SDK fallback uses ApplicationName when DAPR_APP_ID is absent in the observed child path; verified medium, pre-existing.
-status: open
+status: done 2026-10-21
+resolution: The optional sample explicitly receives EventStore__DomainService__AppId=sample. Actual run and publish model regressions compare it with the attached Dapr sidecar app identity.
+verification: `spec-five-runtime-config-deferred-items.md`; `tests/five-runtime-config-deferred-items-2026-10-21/validation.json`.
 
 ### DW-165: D3 — Resolve the optional Memories resource endpoint for local Aspire runs.
 
@@ -1298,7 +1302,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties.AppHost/Program.cs:217 (optional Memories run-mode endpoint)
 source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
 reason: Program.cs:217 supplies http://memories:8080/ in run mode although Memories is a host project with an Aspire-assigned endpoint; verified medium, pre-existing.
-status: open
+status: done 2026-10-21
+resolution: Memories search now receives the optional resource HTTP EndpointReference in both run and publish models. Regressions resolve two different allocated addresses and ports through that same reference and preserve the dependency wait and enablement.
+verification: `spec-five-runtime-config-deferred-items.md`; `tests/five-runtime-config-deferred-items-2026-10-21/validation.json`.
 
 ### DW-166: D4 — Align Memories cleanup, compensation and health probing with the versioned server route without accepting a routing 404 as proof of erasure.
 
@@ -1424,7 +1430,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: .agents/skills/bmad-loop-sweep/SKILL.md (Step 1 ledger fallback); layered BMAD configuration
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: With `BMAD_LOOP_LEDGER` absent, the skill reads legacy YAML despite describing `config.toml` layering, so a custom artifact location can be missed; this is agent-context work outside the release patch.
-status: open
+status: done 2026-10-21
+resolution: Already resolved by installed sweep update 777e0e7d0c33dad7230e6477d1c3987a4b843b5f. Both installed entry points require the orchestrator-resolved BMAD_LOOP_LEDGER, never re-derive it, and escalate missing/unreadable paths. No legacy fallback or speculative TOML fallback was added; config-trace.py reproduces the installed contract.
+verification: `spec-five-runtime-config-deferred-items.md`; `tests/five-runtime-config-deferred-items-2026-10-21/validation.json`.
 
 ### DW-182: Obtain owner signoff for all root gitlinks changed since Parties v1.2.1 before another release.
 
@@ -1466,7 +1474,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: _bmad/config.toml; _bmad/cis/config.yaml (visual_tools)
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: `_bmad/config.toml` and legacy `_bmad/cis/config.yaml` both encode `visual_tools` as a JSON string. No repository consumer requiring an array was found; a runtime consumer trace would settle this unverified medium agent-config concern.
-status: open
+status: done 2026-10-21
+resolution: Investigated; no installed tracked non-reference CIS consumer requires an array. Runtime layered resolution preserves the JSON-string setting, and the renderer accepts that scalar while rejecting a native array token. Both new configuration tests pass, including every override layer. Preserve installer-managed configuration; this closes the unverified concern without claiming a CIS consumer run.
+verification: `spec-five-runtime-config-deferred-items.md`; `tests/five-runtime-config-deferred-items-2026-10-21/validation.json`.
 
 ### DW-187: Test authenticated actor and tenant-delivery callbacks through the real service route.
 

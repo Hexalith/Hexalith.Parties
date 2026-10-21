@@ -892,6 +892,21 @@ publication completed at 09:49:12+02:00 without authorizing any remaining action
   selects the run or publish application model. The existing
   `WithJwtBearerSecurity` signature and local behavior remain available.
 
+### Verified delivery file inventory — 2026-10-21
+
+The historical delivery object's parent is the recorded producer base. Its complete
+changed-file inventory is below; Parties fitness checks bind these paths, the
+recorded consumer gitlink, integration ancestry, and the focused 26-case test lane
+to the immutable Git objects. This is provenance verification, not a new producer
+runtime run, package publication, adoption approval, or parity receipt.
+
+```text
+docs/reference/nuget-packages.md
+src/Hexalith.EventStore.Aspire/HexalithEventStoreJwtAuthenticationOptions.cs
+src/Hexalith.EventStore.Aspire/HexalithEventStoreSecurityExtensions.cs
+tests/Hexalith.EventStore.AppHost.Tests/Configuration/HexalithEventStoreJwtAuthenticationTests.cs
+```
+
 ### Producer evidence
 
 | Evidence | Exact command or inspection | Result |
