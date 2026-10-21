@@ -819,7 +819,7 @@ public sealed class PlatformApiPrerequisitesTests
         rootBuildProps.ShouldNotContain("<HexalithCommonsHttpFromSource");
 
         string rootPackages = File.ReadAllText(Path.Combine(root, "Directory.Packages.props"));
-        rootPackages.ShouldContain("$(HexalithBuildsRoot)/Props/Directory.Packages.props");
+        rootPackages.ShouldContain("$(MSBuildThisFileDirectory)references/Hexalith.Builds/Props/Directory.Packages.props");
         string rootBuildTargets = string.Join(
             '\n',
             File.ReadAllText(Path.Combine(root, "Directory.Build.props")),
