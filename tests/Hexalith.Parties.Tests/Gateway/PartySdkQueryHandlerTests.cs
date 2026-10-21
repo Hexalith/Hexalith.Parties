@@ -2590,6 +2590,156 @@ public sealed class PartySdkQueryHandlerTests
         receivedIds.ShouldBe(["visible"]);
     }
 
+    [Theory]
+    [InlineData("Query", "text", false)]
+    [InlineData("Query", "text", true)]
+    [InlineData("Mode", "text", false)]
+    [InlineData("Mode", "text", true)]
+    [InlineData("CaseId", "text", false)]
+    [InlineData("CaseId", "text", true)]
+    [InlineData("Type", "text", false)]
+    [InlineData("Type", "text", true)]
+    [InlineData("Query", "whitespace", false)]
+    [InlineData("Query", "whitespace", true)]
+    [InlineData("Mode", "whitespace", false)]
+    [InlineData("Mode", "whitespace", true)]
+    [InlineData("Query", "supplementary", false)]
+    [InlineData("Query", "supplementary", true)]
+    public async Task SearchHandler_OversizedRawStringsRejectBeforeCursorStoreOrSearchAsync(
+        string field, string content, bool envelopePaging)
+    {
+        string value = content switch
+        {
+            "whitespace" => new string(' ', 513),
+            "supplementary" => string.Concat(Enumerable.Repeat("\U0001F600", 256)) + "x",
+            _ => new string('x', 513),
+        };
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        IPartySearchProvider provider = Substitute.For<IPartySearchProvider>();
+        IQueryCursorCodec codec = Substitute.For<IQueryCursorCodec>();
+        var handler = new PartySearchQueryHandler(CreateService(store, provider, cursorCodec: codec));
+        Dictionary<string, object?> payload = new(StringComparer.Ordinal)
+        {
+            ["qUeRy"] = "Ada",
+            ["page"] = envelopePaging ? "ignored" : 1,
+            ["pageSize"] = envelopePaging ? "ignored" : 20,
+        };
+        payload[string.Equals(field, "Query", StringComparison.Ordinal) ? "qUeRy" : field] = value;
+
+        QueryResult result = await handler.ExecuteAsync(
+            CreateIndexEnvelope("PartySearch") with
+            {
+                Payload = JsonSerializer.SerializeToUtf8Bytes(payload),
+                Paging = envelopePaging ? new QueryPagingOptions(PageSize: 20, Cursor: "must-not-decode") : null,
+            },
+            TestContext.Current.CancellationToken);
+
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidEnvelope);
+        result.PayloadBytes.ShouldBeNull();
+        result.Metadata.ShouldBeNull();
+        result.ProjectionType.ShouldBeNull();
+        store.ReceivedCalls().ShouldBeEmpty();
+        provider.ReceivedCalls().ShouldBeEmpty();
+        codec.ReceivedCalls().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("ascii", false)]
+    [InlineData("ascii", true)]
+    [InlineData("supplementary", false)]
+    [InlineData("supplementary", true)]
+    public async Task SearchHandler_MaximumQueryRetainsMatchingAndContinuationAsync(string content, bool envelopePaging)
+    {
+        string query = content == "ascii" ? new string('a', 512) : string.Concat(Enumerable.Repeat("\U0001F600", 256));
+        query.Length.ShouldBe(512);
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        PartyIndexEntry[] entries = [IndexEntry("party-a") with { DisplayName = query }, IndexEntry("party-b") with { DisplayName = query }];
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel { Entries = entries.ToDictionary(e => e.Id) }, "etag"));
+        var handler = new PartySearchQueryHandler(CreateService(store, new LocalFuzzyPartySearchProvider()));
+        QueryEnvelope envelope = CreateIndexEnvelope("PartySearch") with
+        {
+            Payload = JsonSerializer.SerializeToUtf8Bytes(new { Query = query, Type = "Person", Active = true, Page = 1, PageSize = 1 }),
+            Paging = envelopePaging ? new QueryPagingOptions(PageSize: 1) : null,
+        };
+
+        QueryResult first = await handler.ExecuteAsync(envelope, TestContext.Current.CancellationToken);
+
+        first.Success.ShouldBeTrue();
+        PagedResult<PartySearchResult> firstPage = first.GetPayload().Deserialize<PagedResult<PartySearchResult>>(PartiesJsonOptions.Default)!;
+        firstPage.TotalCount.ShouldBe(2);
+        firstPage.Items.ShouldHaveSingleItem().Party.Id.ShouldBe("party-a");
+        QueryEnvelope continuation = envelopePaging
+            ? envelope with { Paging = new QueryPagingOptions(PageSize: 1, Cursor: first.Metadata!.Paging!.NextCursor.ShouldNotBeNull()) }
+            : envelope with { Payload = JsonSerializer.SerializeToUtf8Bytes(new { Query = query, Type = "Person", Active = true, Page = 2, PageSize = 1 }) };
+
+        QueryResult second = await handler.ExecuteAsync(continuation, TestContext.Current.CancellationToken);
+
+        second.Success.ShouldBeTrue();
+        PagedResult<PartySearchResult> secondPage = second.GetPayload().Deserialize<PagedResult<PartySearchResult>>(PartiesJsonOptions.Default)!;
+        secondPage.Items.ShouldHaveSingleItem().Party.Id.ShouldBe("party-b");
+        secondPage.Page.ShouldBe(2);
+        secondPage.TotalCount.ShouldBe(2);
+    }
+
+    [Theory]
+    [InlineData("Mode", false)]
+    [InlineData("CaseId", false)]
+    [InlineData("Mode", true)]
+    [InlineData("CaseId", true)]
+    public async Task SearchHandler_BoundedUnsupportedFiltersKeepExistingFailureAsync(string field, bool envelopePaging)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        var handler = new PartySearchQueryHandler(CreateService(store));
+        QueryResult result = await handler.ExecuteAsync(CreateIndexEnvelope("PartySearch") with
+        {
+            Payload = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, string> { ["Query"] = "Ada", [field] = new string('x', 512) }),
+            Paging = envelopePaging ? new QueryPagingOptions(PageSize: 20) : null,
+        }, TestContext.Current.CancellationToken);
+
+        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.UnsupportedQueryType);
+        result.PayloadBytes.ShouldBeNull();
+        store.ReceivedCalls().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("omitted", false)]
+    [InlineData("omitted", true)]
+    [InlineData("null", false)]
+    [InlineData("null", true)]
+    [InlineData("empty", false)]
+    [InlineData("empty", true)]
+    [InlineData("whitespace", false)]
+    [InlineData("whitespace", true)]
+    public async Task SearchHandler_BoundedEmptyInputsKeepEmptyResultsAsync(string content, bool envelopePaging)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant-a"), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyIndexSdkReadModel>(new PartyIndexSdkReadModel
+            {
+                Entries = new Dictionary<string, PartyIndexEntry> { ["party-a"] = IndexEntry("party-a") },
+            }, "etag"));
+        Dictionary<string, string?> payload = new(StringComparer.Ordinal);
+        if (content != "omitted")
+        {
+            payload["Query"] = content switch { "null" => null, "empty" => string.Empty, _ => new string(' ', 512) };
+            payload["Mode"] = payload["Query"];
+        }
+
+        var handler = new PartySearchQueryHandler(CreateService(store, new LocalFuzzyPartySearchProvider()));
+        QueryResult result = await handler.ExecuteAsync(CreateIndexEnvelope("PartySearch") with
+        {
+            Payload = JsonSerializer.SerializeToUtf8Bytes(payload),
+            Paging = envelopePaging ? new QueryPagingOptions(PageSize: 20) : null,
+        }, TestContext.Current.CancellationToken);
+
+        result.Success.ShouldBeTrue();
+        PagedResult<PartySearchResult> page = result.GetPayload().Deserialize<PagedResult<PartySearchResult>>(PartiesJsonOptions.Default)!;
+        page.Items.ShouldBeEmpty();
+        page.TotalCount.ShouldBe(0);
+    }
+
     private static PartySdkQueryService CreateService(
         IReadModelStore store,
         IPartySearchProvider? searchProvider = null,

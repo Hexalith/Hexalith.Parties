@@ -13,8 +13,8 @@ namespace Hexalith.Parties.Contracts.Queries;
     Example = """{"Query":"Ada","Type":"Person","Active":true}""")]
 public sealed record SearchParties
 {
-    /// <summary>Display-name query, trimmed before matching. Empty or whitespace returns no matches; contact channels and business identifiers are not searched.</summary>
-    [Description("Display-name query, trimmed before matching. Empty or whitespace returns no matches; contact channels and business identifiers are not searched.")]
+    /// <summary>Display-name query, at most 512 UTF-16 units including whitespace before trimming. Oversized input rejects; empty or whitespace returns no matches. Contact channels and business identifiers are not searched.</summary>
+    [Description("Display-name query, at most 512 UTF-16 units including whitespace before trimming. Oversized input rejects; empty or whitespace returns no matches. Contact channels and business identifiers are not searched.")]
     public required string Query { get; init; }
 
     /// <summary>Optional party kind: Person or Organization; Unknown and other values reject. Applied before paging.</summary>

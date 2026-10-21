@@ -18,6 +18,9 @@ public static class PartyIndexProjectionQueryActor
     public const string PartySearchQueryType = "PartySearch";
     public const string ProjectionType = PartyProjectionNames.Index;
 
+    // Count decoded UTF-16 units before trimming or building the cursor scope.
+    private const int MaximumSearchStringLength = 512;
+
     private static readonly JsonSerializerOptions s_jsonOptions = new(PartiesJsonOptions.Default)
     {
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
@@ -90,6 +93,10 @@ public static class PartyIndexProjectionQueryActor
         }
 
         if (wire is null
+            || wire.Query is { Length: > MaximumSearchStringLength }
+            || wire.Mode is { Length: > MaximumSearchStringLength }
+            || wire.CaseId is { Length: > MaximumSearchStringLength }
+            || wire.Type is { Length: > MaximumSearchStringLength }
             || (wire.Page is { } pageValue && pageValue < 1)
             || (wire.PageSize is { } pageSizeValue && pageSizeValue < 1)
             || !TryParsePartyType(wire.Type, out PartyType? type))

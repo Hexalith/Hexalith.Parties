@@ -24,6 +24,12 @@ stack traces, or internal capability metadata.
 
 ## MVP wire-mode allowlist
 
+Search payload strings (`Query`, `Type`, `Mode`, `CaseId`) have a 512 UTF-16-unit
+limit measured after JSON decoding and before trimming, including whitespace.
+Oversized values return `InvalidEnvelope` before cursor or index evaluation.
+Bounded unsupported modes and bounded supplied case filters retain
+`UnsupportedQueryType`; the length limit does not enable additional search modes.
+
 The `PartySearch` query envelope accepts a `mode` payload field of type string. Only the
 following values are honoured by the MVP query actor; everything else fails closed before
 the projection read:

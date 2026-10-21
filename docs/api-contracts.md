@@ -111,6 +111,13 @@ Envelope fields: `tenant`, `domain="party"`, `aggregateId`, `queryType`, `entity
 
 #### `PartySearch` wire-mode allowlist (fail-closed)
 
+Each decoded `Query`, `Type`, `Mode` and `CaseId` string is limited to 512 UTF-16
+units, including whitespace before trimming. Oversized input returns
+`InvalidEnvelope` before cursor decoding, index reads or matching, with no input
+echoed in the failure. Strings are rejected rather than truncated. These limits
+apply with both envelope paging and legacy payload paging; JSON escape sequences
+count by their decoded characters, and supplementary characters count as two units.
+
 The `mode` payload field is a string. **Only** these values are honoured (everything else fails closed with `UnsupportedQueryType` *before* the projection read, echoing no tenant/query detail):
 
 - omitted / `null` / empty → MVP display-name search
