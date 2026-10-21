@@ -1,0 +1,189 @@
+{
+  "baseline_revision": "8e9ddec689c6e144a527738e921e3161310179ec",
+  "items": [
+    "DW-106",
+    "DW-132",
+    "DW-151",
+    "DW-162",
+    "DW-191"
+  ],
+  "scope": "Reconcile already-committed exit conditions; strengthen test-helper identity binding and executable release preflight coverage. DW-132 and DW-151 are duplicate ledger records of one bypass gap.",
+  "checks": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "phase": "before review corrections"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "phase": "before review corrections"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests -xml /tmp/five-release-ci-focused.xml",
+      "exit_code": 0,
+      "started_utc": "2026-10-21T15:40:46.2033046+00:00",
+      "finished_utc": "2026-10-21T15:40:46.7838632+00:00",
+      "total": 31,
+      "passed": 31,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "phase": "before review corrections"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -xml /tmp/five-release-service-focused.xml",
+      "exit_code": 0,
+      "started_utc": "2026-10-21T15:41:01.1159099+00:00",
+      "finished_utc": "2026-10-21T15:41:26.1445491+00:00",
+      "total": 72,
+      "passed": 72,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "phase": "before review corrections"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -xml /tmp/five-release-ci-full.xml",
+      "exit_code": 0,
+      "started_utc": "2026-10-21T15:41:01.0749645+00:00",
+      "finished_utc": "2026-10-21T15:41:22.0014407+00:00",
+      "total": 249,
+      "passed": 249,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "phase": "before review corrections"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/five-release-service-full.xml",
+      "exit_code": 0,
+      "started_utc": "2026-10-21T15:41:59.6253099+00:00",
+      "finished_utc": "2026-10-21T15:42:32.0843081+00:00",
+      "total": 2251,
+      "passed": 2251,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "phase": "before review corrections"
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "result": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+    },
+    {
+      "command": "node node_modules/@commitlint/cli/cli.js --edit /tmp/five-release-commit-message.txt --verbose",
+      "exit_code": 0,
+      "version": "21.2.2",
+      "problems": 0,
+      "warnings": 0,
+      "candidate_file": "commit-message.txt",
+      "evidence_file": "commitlint.txt"
+    },
+    {
+      "command": "git -c core.whitespace=cr-at-eol diff --check",
+      "exit_code": 0,
+      "note": "Honor the required CRLF C# line endings when checking whitespace."
+    },
+    {
+      "command": "git rev-list --left-right --count HEAD...origin/main",
+      "exit_code": 0,
+      "stdout": "0\t0",
+      "after": "git fetch origin main"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "phase": "final after review corrections"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -m:1",
+      "exit_code": 0,
+      "warnings": 0,
+      "errors": 0,
+      "phase": "final after review corrections"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml /tmp/five-release-service-final-full.xml",
+      "exit_code": 0,
+      "phase": "final after review corrections",
+      "started_utc": "2026-10-21T15:45:37.3392605+00:00",
+      "finished_utc": "2026-10-21T15:46:06.1130327+00:00",
+      "total": 2257,
+      "passed": 2257,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -result-xml /tmp/five-release-ci-final-full.xml",
+      "exit_code": 0,
+      "phase": "final after review corrections",
+      "started_utc": "2026-10-21T15:45:37.3075658+00:00",
+      "finished_utc": "2026-10-21T15:45:59.1821497+00:00",
+      "total": 249,
+      "passed": 249,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "not-run": 0
+    }
+  ],
+  "implementation_provenance": {
+    "release_harness_latest_change": "5d1701371273eb0d1ed9a3360c54e62254d11419",
+    "bypass_removal": "2c2ff2ea4ead2c4b8cbd3a96c60f04426630efd1",
+    "available_row_heading": "890119f1b4ced37ccec34787c812f064199fb3ef",
+    "current_source_selection_refresh": "4fbe30883eb18ec074530e49a42669b5600ba2af"
+  },
+  "aspire_baseline": {
+    "start_command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --format Json",
+    "start_exit_code": 0,
+    "describe_command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --format Json",
+    "describe_exit_code": 0,
+    "observed": "Security container unhealthy after HTTPS handshake EOF; dependent resources waiting. No runtime topology qualification claimed.",
+    "stop_command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "stop_exit_code": 0
+  },
+  "graph": "Debug/default published dependencies; Parties test/helper scope only. No source-mode parity, full solution, Release/package or runtime-health qualification claimed.",
+  "preservation": [
+    "No root gitlinks or package versions changed.",
+    "No canonical sprint-status or frozen existing story content changed.",
+    "Historical receipts and owner approvals remain bound to their original identities.",
+    "Compared ledger entries against starting HEAD: only DW-106, DW-132, DW-151, DW-162 and DW-191 changed; unrelated content is byte-for-byte preserved after normalizing line endings."
+  ],
+  "review": {
+    "findings": 4,
+    "patched": 4,
+    "deferred": 0,
+    "followup": "Independent reviewer confirmed all four findings addressed and found no material introduced issue."
+  },
+  "final_test_source_sha256": {
+    "tests/Hexalith.Parties.Ci.Tests/ReleaseSourcePreflightTests.cs": "f670fe6a6221b24c552980113a59567cd67c36b3bc6757af1f4a60e580dda7a8",
+    "tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs": "15d94ffea5e3786b44d75c58c6d294aff97835eeeb2b43d01772d3605ef1589b"
+  },
+  "review_regression": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceRowsRequireUniqueExactIdentityReceipts -result-xml /tmp/five-release-review-red.xml",
+    "phase": "new spacing cases before the review parser correction",
+    "exit_code": 1,
+    "total": 18,
+    "failed": 4,
+    "result": "Two spaced duplicates were accepted and two compact valid controls rejected. Final suite passes all eighteen row-boundary cases."
+  },
+  "policy_authority": {
+    "path": "_bmad-output/implementation-artifacts/spec-align-parties-ci-cd-with-eventstore-tenants.md",
+    "heading": "Release-gate decision \u2014 2026-10-07",
+    "decision": "The user selected removal of the bypass and mandatory full CI. This task verifies the existing policy."
+  }
+}

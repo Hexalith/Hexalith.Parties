@@ -775,7 +775,10 @@ origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferra
 location: .github/workflows/release.yml verify-source logic
 source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
 reason: Parties currently asserts bypass mapping by YAML substring order; a later assignment after esac can invert ci.yml vs commitlint.yml without failing those tests. Also recorded in "Deferred from: code review of story-8-10 (2026-09-06)": Release workflow's bypass-validation→proof-source mapping (`false→ci.yml`/`true→commitlint.yml`) is verified only by substring-ordering in the YAML text, not by executing the bash — already self-disclosed above ("Execute the Release verify-source bash with a fake gh/GITHUB_OUTPUT harness..."); the review layer that raised this again confirmed no further action is needed beyond what that entry already tracks. [.github/workflows/release.yml:44-56, tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs:100-116]
-status: open
+status: done 2026-10-21
+resolution: The existing executable harness runs the tracked release source Bash with fake gh and GITHUB_OUTPUT. Exact-main, missing/malformed/wrong-source CI, API errors, successful Commitlint without CI, and retired bypass values are exercised. Mixed matching/unrelated runs succeed; split proof across invalid runs rejects. The retired bypass mapping is superseded by fixed full-CI proof.
+verification: `tests/five-release-proof-deferred-items-2026-10-21/validation.json`; spec `spec-five-release-proof-deferred-items.md`.
+
 
 ### DW-107: Add MSBuild/PublishContainer proof for rebound OCI created labels and reject impossible RFC 3339 calendar days.
 
@@ -1022,7 +1025,10 @@ status: open
 origin: Story 8.10 baseline review after three-pin approval (2026-10-04)
 location: .github/workflows/release.yml:49,312
 severity: medium
-status: open
+status: done 2026-10-21
+resolution: The committed caller, shared preparation and publication wrapper require exact-source ci.yml proof; successful Commitlint and every retired bypass fixture cannot substitute. The human policy authority is recorded in spec-align-parties-ci-cd-with-eventstore-tenants.md under Release-gate decision — 2026-10-07; this verifies that policy without changing it or publishing. DW-151 is the duplicate record of this same gap.
+verification: `tests/five-release-proof-deferred-items-2026-10-21/validation.json`; spec `spec-five-release-proof-deferred-items.md`.
+
 
 ### DW-151: Ensure the Commitlint-only release bypass cannot substitute for required test evidence.
 
@@ -1030,7 +1036,10 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: .github/workflows/release.yml:49,312
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: Blind 6: bypass-validation=true selects commitlint.yml exact-source proof while publication receives empty test-projects based on a CI-tested assumption. Protected operator approval supplies no test receipt. Existing workflow from 14d249fde316b0002aec84351d7a7cdf953d1d30, unchanged here. Exit proof: a release-policy decision and a test-backed path for the exact source; no release-policy change or publication is authorized by this entry.
-status: open
+status: done 2026-10-21
+resolution: Duplicate of DW-132. The bypass was already removed and full exact-source CI is fixed at every publication boundary. Executable legacy bypass/Commitlint rejection plus publication-wrapper cases pass under the existing documented release policy; no new policy or publication action is introduced.
+verification: `tests/five-release-proof-deferred-items-2026-10-21/validation.json`; spec `spec-five-release-proof-deferred-items.md`.
+
 
 ### DW-133: Exercise real Parties admission proof construction
 
@@ -1233,7 +1242,10 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: Story 8.8 spec available-row identity heading; AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity
 source_spec: `_bmad-output/implementation-artifacts/spec-unblock-eventstore-api-publication.md`
 reason: The committed isolated integration run fails AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity because spec-8-8 lacks the required heading; the main working tree already contains the 10-line correction as separate user work and this task preserves it unstaged.
-status: open
+status: done 2026-10-21
+resolution: The previously separate ten-line Story 8.8 available-row heading correction was committed at 890119f1b4ced37ccec34787c812f064199fb3ef and remains intact. AvailableRowConsumersFailClosedOnMissingOrMismatchedIdentity and identity-gap cases pass. Frozen story intent and canonical sprint status are unchanged.
+verification: `tests/five-release-proof-deferred-items-2026-10-21/validation.json`; spec `spec-five-release-proof-deferred-items.md`.
+
 
 ### DW-163: D1 — Preserve coordinated Detail/Processing slots when recording an unresolved first projection delivery.
 
@@ -1468,7 +1480,10 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: CurrentReleaseGitlinks; McpCli and Platform source-selection documentation rows
 source_spec: `_bmad-output/implementation-artifacts/spec-gh-38399980224-fix-ci-and-publish-release.md`
 reason: Existing CurrentReleaseGitlinks excludes these non-consumed root selections even though the current documentation table records them; release gitlink signing protects changed pointers, while direct table identity coverage remains future hardening.
-status: open
+status: done 2026-10-21
+resolution: All ten current root selections, including non-consumed McpCli and Platform, match current table rows, committed gitlinks, clean checkouts and exact Git describes. Eighteen independent row-boundary cases and two standalone real Git-receipt cases cover both non-consumed dependencies. Describes must now occur in the identity cell; historical/prose mentions cannot repair stale identity evidence. No source pointer, owner approval or historical receipt changed.
+verification: `tests/five-release-proof-deferred-items-2026-10-21/validation.json`; spec `spec-five-release-proof-deferred-items.md`.
+
 
 ### DW-192: Derive erasure status from committed events or reconcile it after event persistence; cover failed append and retry before reporting Verified or Erased.
 origin: retro action item epic-8-retro-erasure-status-after-commit

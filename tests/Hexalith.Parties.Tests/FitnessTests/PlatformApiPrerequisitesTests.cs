@@ -684,34 +684,94 @@ public sealed class PlatformApiPrerequisitesTests
         }
     }
 
+    /// <summary>Qualifies non-consumed source selections independently of package-consumption rows.</summary>
+    /// <param name="dependency">The root source selection being qualified.</param>
+    /// <param name="scenario">The malformed receipt to reject, or the valid control.</param>
+    [Theory]
+    [InlineData("McpCli", "valid")]
+    [InlineData("Platform", "valid")]
+    [InlineData("McpCli", "missing")]
+    [InlineData("Platform", "missing")]
+    [InlineData("McpCli", "duplicate")]
+    [InlineData("Platform", "duplicate")]
+    [InlineData("McpCli", "duplicate-spaced")]
+    [InlineData("Platform", "duplicate-spaced")]
+    [InlineData("McpCli", "compact")]
+    [InlineData("Platform", "compact")]
+    [InlineData("McpCli", "wrong-sha")]
+    [InlineData("Platform", "wrong-sha")]
+    [InlineData("McpCli", "wrong-describe")]
+    [InlineData("Platform", "wrong-describe")]
+    [InlineData("McpCli", "describe-in-prose")]
+    [InlineData("Platform", "describe-in-prose")]
+    [InlineData("McpCli", "missing-column")]
+    [InlineData("Platform", "missing-column")]
+    public void NonConsumedSourceRowsRequireUniqueExactIdentityReceipts(string dependency, string scenario)
+    {
+        string path = $"references/Hexalith.{dependency}";
+        string identity = CurrentReleaseGitlinks[path];
+        string describe = CurrentSourceDescribes[path];
+        string valid = $"| {dependency} | `{identity}` (`{describe}`) | Source selection only. |";
+        string selection = scenario switch
+        {
+            "valid" => valid,
+            "missing" => "| Unrelated | Other identity | Source selection only. |",
+            "duplicate" => $"{valid}\n{valid}",
+            "duplicate-spaced" => $"{valid}\n| {dependency}| `stale-identity` (`stale-describe`) | Source selection only. |",
+            "compact" => $"|{dependency}|`{identity}` (`{describe}`)|Source selection only.|",
+            "wrong-sha" => valid.Replace(identity, new string('a', 40), StringComparison.Ordinal),
+            "wrong-describe" => valid.Replace($"`{describe}`", "`stale-describe`", StringComparison.Ordinal),
+            "describe-in-prose" => $"| {dependency} | `{identity}` (`stale-describe`) | Historical `{describe}`. |",
+            "missing-column" => $"| {dependency} | `{identity}` (`{describe}`) |",
+            _ => throw new ArgumentException("Unknown source-selection fixture.", nameof(scenario)),
+        };
+
+        if (scenario is "valid" or "compact")
+        {
+            AssertCurrentSourceRow(selection, path, identity, describe);
+        }
+        else
+        {
+            Should.Throw<ShouldAssertException>(() => AssertCurrentSourceRow(selection, path, identity, describe));
+        }
+    }
+
+    /// <summary>Runs real source-selection proof without requiring consumed-package qualification.</summary>
+    /// <param name="dependency">The non-consumed root dependency to inspect.</param>
+    [Theory]
+    [InlineData("McpCli")]
+    [InlineData("Platform")]
+    public void NonConsumedSourceSelectionsMatchCurrentGitReceipts(string dependency)
+    {
+        string root = RepositoryRoot.Locate();
+        string path = $"references/Hexalith.{dependency}";
+        string identity = CurrentReleaseGitlinks[path];
+        string describe = CurrentSourceDescribes[path];
+
+        AssertCurrentSourceRow(ReadCurrentSourceSelection(ReadMatrix()), path, identity, describe);
+        AssertGitlinkAndCheckout(root, path, identity);
+        RunGit(root, "-C", path, "describe", "--tags", "--always", "--abbrev=8", "HEAD")
+            .Trim()
+            .ShouldBe(describe, path);
+    }
+
     [Fact]
     public void FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph()
     {
         string root = RepositoryRoot.Locate();
         string matrix = ReadMatrix();
 
-        const string currentHeading = "### Current source observation — 2026-10-21";
-        int currentStart = matrix.IndexOf(currentHeading, StringComparison.Ordinal);
-        currentStart.ShouldBeGreaterThanOrEqualTo(0, currentHeading);
-        int historicalStart = matrix.IndexOf("### Historical source observation — 2026-10-20", currentStart, StringComparison.Ordinal);
-        historicalStart.ShouldBeGreaterThan(currentStart);
-        string currentSelection = matrix[currentStart..historicalStart];
+        string currentSelection = ReadCurrentSourceSelection(matrix);
         currentSelection.ShouldContain($"EventStore package `{CurrentReleaseEventStoreVersion}`");
         currentSelection.ShouldContain("Selection does not revalidate historical parity receipts");
         foreach ((string path, string identity) in CurrentReleaseGitlinks)
         {
-            string dependency = Path.GetFileName(path).Replace("Hexalith.", string.Empty, StringComparison.Ordinal);
-            string row = currentSelection.Split('\n', StringSplitOptions.TrimEntries)
-                .Single(line => line.StartsWith($"| {dependency} |", StringComparison.Ordinal));
-            row.Split('|', StringSplitOptions.TrimEntries)[2].Split(' ')[0].ShouldBe($"`{identity}`", path);
+            string describe = CurrentSourceDescribes[path];
+            AssertCurrentSourceRow(currentSelection, path, identity, describe);
             AssertGitlinkAndCheckout(root, path, identity);
-            if (CurrentSourceDescribes.TryGetValue(path, out string? describe))
-            {
-                row.ShouldContain($"`{describe}`", Case.Sensitive, path);
-                RunGit(root, "-C", path, "describe", "--tags", "--always", "--abbrev=8", "HEAD")
-                    .Trim()
-                    .ShouldBe(describe, path);
-            }
+            RunGit(root, "-C", path, "describe", "--tags", "--always", "--abbrev=8", "HEAD")
+                .Trim()
+                .ShouldBe(describe, path);
         }
 
         RunGit(root, "-C", EventStoreRelativePath, "describe", "--tags", "--match", CurrentReleaseEventStoreTag, "--abbrev=8", "HEAD")
@@ -2103,6 +2163,31 @@ public sealed class PlatformApiPrerequisitesTests
     private static bool IsNotBuildOutput(string root, string path)
         => !Path.GetRelativePath(root, path).Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
             && !Path.GetRelativePath(root, path).Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
+
+    private static string ReadCurrentSourceSelection(string matrix)
+    {
+        const string currentHeading = "### Current source observation — 2026-10-21";
+        int currentStart = matrix.IndexOf(currentHeading, StringComparison.Ordinal);
+        currentStart.ShouldBeGreaterThanOrEqualTo(0, currentHeading);
+        int historicalStart = matrix.IndexOf("### Historical source observation — 2026-10-20", currentStart, StringComparison.Ordinal);
+        historicalStart.ShouldBeGreaterThan(currentStart);
+        return matrix[currentStart..historicalStart];
+    }
+
+    // Keep source-selection evidence separate from the consumed-package matrix and historical receipts.
+    private static void AssertCurrentSourceRow(string currentSelection, string path, string identity, string describe)
+    {
+        string dependency = Path.GetFileName(path).Replace("Hexalith.", string.Empty, StringComparison.Ordinal);
+        string[][] rows = currentSelection.Split('\n', StringSplitOptions.TrimEntries)
+            .Where(static line => line.StartsWith('|'))
+            .Select(static line => line.Split('|', StringSplitOptions.TrimEntries))
+            .Where(cells => cells.Length > 1 && string.Equals(cells[1], dependency, StringComparison.Ordinal))
+            .ToArray();
+        rows.Length.ShouldBe(1, $"{path} must have exactly one current source-selection row.");
+        string[] cells = rows[0];
+        cells.Length.ShouldBe(5, $"{path} must have dependency, identity and release-use columns.");
+        cells[2].ShouldBe($"`{identity}` (`{describe}`)", path);
+    }
 
     private static void AssertGitlinkAndCheckout(string root, string relativePath, string expectedIdentity)
     {

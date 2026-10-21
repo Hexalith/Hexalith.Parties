@@ -38,6 +38,7 @@ public sealed class ReleaseSourcePreflightTests
     [InlineData("boolean-ci-id")]
     [InlineData("api-failure")]
     [InlineData("ci-api-failure")]
+    [InlineData("split-proof-ci")]
     public void SourceGateRejectsInvalidDispatchOrIncompletePushEvidence(string scenario)
     {
         (int exitCode, string error, string[] requests, string outputs) = RunSourceGate(scenario);
@@ -78,10 +79,13 @@ public sealed class ReleaseSourcePreflightTests
     /// <summary>
     /// Verifies full CI proof must bind the exact current main SHA and a completed push.
     /// </summary>
-    [Fact]
-    public void SourceGateAcceptsOnlySuccessfulExactCurrentMainPush()
+    /// <param name="scenario">A matching run alone or among unrelated successful runs.</param>
+    [Theory]
+    [InlineData("green")]
+    [InlineData("mixed-valid-ci")]
+    public void SourceGateAcceptsOnlySuccessfulExactCurrentMainPush(string scenario)
     {
-        (int exitCode, string error, string[] requests, string outputs) = RunSourceGate("green");
+        (int exitCode, string error, string[] requests, string outputs) = RunSourceGate(scenario);
 
         exitCode.ShouldBe(0, error);
         requests.ShouldContain("repos/Hexalith/Hexalith.Parties/git/ref/heads/main");
@@ -99,6 +103,7 @@ public sealed class ReleaseSourcePreflightTests
     /// <param name="legacyBypassValidation">A value supplied through the retired bypass environment.</param>
     [Theory]
     [InlineData("")]
+    [InlineData("false")]
     [InlineData("true")]
     [InlineData("TRUE")]
     [InlineData("unknown")]
@@ -226,9 +231,14 @@ public sealed class ReleaseSourcePreflightTests
                 };
             }
 
+            Dictionary<string, object> wrongShaRun = new(run) { ["head_sha"] = OtherSha };
+            Dictionary<string, object> incompleteRun = new(run) { ["status"] = "in_progress" };
+            Dictionary<string, object> failedRun = new(run) { ["conclusion"] = "failure" };
             string ciRuns = scenario switch
             {
                 "malformed-ci" => "{}",
+                "mixed-valid-ci" => JsonSerializer.Serialize(new { workflow_runs = new[] { wrongShaRun, failedRun, run, incompleteRun } }),
+                "split-proof-ci" => JsonSerializer.Serialize(new { workflow_runs = new[] { wrongShaRun, incompleteRun } }),
                 "array-ci-response" => JsonSerializer.Serialize(new[] { new { workflow_runs = new[] { run } } }),
                 "object-ci-runs" => JsonSerializer.Serialize(new { workflow_runs = new { matching = run } }),
                 _ => JsonSerializer.Serialize(new
