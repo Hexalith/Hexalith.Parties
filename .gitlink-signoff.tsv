@@ -249,3 +249,15 @@ references/Hexalith.Memories|35df7e2080c369003cacac12f5b44117d7f3ed35|validated-
 references/Hexalith.Platform|4f036ced45aa40700948c19949bb874881c960b5|validated-advance|4f036ced|jpiquot|2026-10-21
 references/Hexalith.PolymorphicSerializations|221ac4592ba908ae7661ba1fa9e2d1fcc23baee0|validated-advance|v1.19.5|jpiquot|2026-10-21
 references/Hexalith.Tenants|3ae9db014dfe52bdee4f6731465cc2a7b65701b7|validated-advance|v5.9.0-26-g3ae9db01|jpiquot|2026-10-21
+
+# --- 2026-10-21 release selection. The operator ordered this release and
+#     bypass of the production reviewer wait in this session. These seven
+#     pointers are the current main tips, including EventStore v3.126.1.
+#     Selection only; automated CI and publication gates remain required.
+references/Hexalith.Builds|3fcb8f38919bb0961b06a19b57aa45623b35a33e|validated-advance|v4.35.1-13-g3fcb8f3|jpiquot|2026-10-21
+references/Hexalith.EventStore|1748b16b11fb63b885dfa2fd4a9c7a420ea103a9|validated-advance|v3.126.1|jpiquot|2026-10-21
+references/Hexalith.FrontComposer|a258b992d08e73e2d3251c865ef01a982eba31ac|validated-advance|v4.7.0-42-ga258b992|jpiquot|2026-10-21
+references/Hexalith.McpCli|7f4a08cb4b7ff9402d1dcf0826ad45ab0256ba65|validated-advance|v1.0.0-42-g7f4a08c|jpiquot|2026-10-21
+references/Hexalith.Memories|0af009c20c97038b685f3d4b62c0c8e757982d14|validated-advance|v2.29.8|jpiquot|2026-10-21
+references/Hexalith.Platform|d189c7de74293e1a718e5e78b1b3b7c0e47b48b5|validated-advance|d189c7d|jpiquot|2026-10-21
+references/Hexalith.Tenants|66def172379f37d12e746fe6eb9195801929c572|validated-advance|v5.9.0-50-g66def172|jpiquot|2026-10-21
