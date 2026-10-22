@@ -1,0 +1,12 @@
+Command: dotnet msbuild src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -getProperty:HexalithFrontComposerVersion,HexalithEventStoreVersion,HexalithFrontComposerFromSource,Configuration,TreatWarningsAsErrors -p:Configuration=Release
+Exit code: 0
+
+{
+  "Properties": {
+    "HexalithFrontComposerVersion": "4.7.0",
+    "HexalithEventStoreVersion": "3.126.1",
+    "HexalithFrontComposerFromSource": "",
+    "Configuration": "Release",
+    "TreatWarningsAsErrors": "true"
+  }
+}

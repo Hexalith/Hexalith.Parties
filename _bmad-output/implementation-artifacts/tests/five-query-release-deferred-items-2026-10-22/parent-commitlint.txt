@@ -1,0 +1,6 @@
+$ node_modules/.bin/commitlint --edit <temporary-message-file> --verbose
+⧗   --- input ---
+fix: close five query and release deferrals
+✔   found 0 problems, 0 warnings
+
+Exit code: 0

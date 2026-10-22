@@ -1,0 +1,2 @@
+Command: git -c core.whitespace=trailing-space,space-before-tab,cr-at-eol diff --check
+Exit code: 0

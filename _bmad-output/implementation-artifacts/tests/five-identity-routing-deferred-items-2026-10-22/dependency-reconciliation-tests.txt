@@ -1,0 +1,10 @@
+Command: dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -method '*MaintainedTechnologyTablesMatchCentralPackageCatalog' -method '*FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph'
+Exit code: 0
+
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Tests
+  Discovered:  Hexalith.Parties.Tests
+  Starting:    Hexalith.Parties.Tests
+  Finished:    Hexalith.Parties.Tests (ID = '2bb5d4d40fa5e5c74ccb63f43e26ac34db7945db1c1453a699311dae6526e17b')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 2, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 26.052s

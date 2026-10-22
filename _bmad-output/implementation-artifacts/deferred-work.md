@@ -303,7 +303,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: .github/workflows/release.yml
 source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-8-6-projection-and-query-sdk-migration.md`
 reason: Incidental review found `.github/workflows/release.yml` treats a non-draft GitHub Release at the dispatched commit as sufficient proof, without verifying the complete NuGet and container artifact set.
-status: open
+status: done 2026-10-22
+resolution: The post-release job now requires all nine declared NuGet archives and all three two-platform container images after exact-tag proof. It checks out exact dispatched source and immutable Builds, enforces bounded registry reads/retries, and always uploads byte-derived diagnostics and receipts.
+verification: `tests/five-query-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-query-release-deferred-items.md`.
 
 ### DW-42: Pin Story 8.7 G5 validation evidence to an exact commit
 
@@ -820,7 +822,9 @@ origin: code review of spec-8-10-final-readiness-documentation-and-retirement-ga
 location: .github/workflows/rc-gate.yml; tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: rc-gate.yml enforces `.gitlink-signoff.tsv` only on a release-candidate-labeled PR or a push to `rc/**`/`release/**`/a `v*` tag — never an ordinary push to `main`, which is this repo's actual workflow. PlatformApiPrerequisitesTests now pins all eight root identities, including Tenants and Memories, so that portion is complete. The RC signoff workflow still excludes ordinary main pushes; enabling owner-signoff enforcement there remains open.
-status: open
+status: done 2026-10-22
+resolution: Ordinary main pushes use a validated ancestor event.before and inspect every root pointer change throughout the complete push range. Missing bases, unsigned intermediate bumps, stale or placeholder signoffs, reset entries and malformed root declarations fail closed. Existing Tenants/Memories fitness pins and RC/tag/manual behavior are preserved.
+verification: `tests/five-query-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-query-release-deferred-items.md`.
 
 ### DW-110: Verify validate-publication-preflight.sh's commitlint-proof path is only ever reachable through an authorized bypass.
 
@@ -1186,7 +1190,9 @@ location: src/Hexalith.Parties.UI/Program.cs; src/Hexalith.Parties.UI/Components
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 severity: low
 reason: Commit `47e2da3244fd7d6d14e39bc30513b23504e9bc27` cleared DW-124's package build failure by compiling the `FrontComposerRouteOptions.ReservedSegments` wiring (`admin`, `me`, `no-party-binding`) only under `HFC_ROUTE_OPTIONS`, which is defined only when `HexalithFrontComposerFromSource=true`. The package-mode graph (CI, bUnit, and the released `parties-ui` container) therefore registers no reserved segments, and packaged Shell `4.5.0` carries no `FcModuleLandingPage`, so the module-landing route surface stays source-only. Since 2026-10-05 (DW-141 resolution) the same gate also covers `PartiesOverview.razor`: its `FcPageTabs` `ModuleRoute="/parties"` and `DefaultTabId="overview"` parameters, which packaged Shell `4.5.0` lacks, are passed only under `HFC_ROUTE_OPTIONS` through the `ModuleRouteTabAttributes` `@attributes` dictionary in `PartiesOverview.razor.cs` (empty in package mode). Exit proof: a published `Hexalith.FrontComposer.Shell` release containing both types and the `FcPageTabs` `ModuleRoute`/`DefaultTabId` parameters, a Builds catalog bump selecting it, removal of the `HFC_ROUTE_OPTIONS` gate (in `Program.cs` and in `PartiesOverview.razor.cs`, with `PartiesOverview.razor` passing `ModuleRoute`/`DefaultTabId` directly), a green package-mode `Hexalith.Parties.UI` Release build and `PartiesOverviewTests`, a test pinning the reserved-segment set, and matching 8.3 G4 and identity rows. Rollback: keep the source-mode gate (the current state). Bound to the `8.9-frontcomposer-ui-consolidation` slot (G4 surface).
-status: open
+status: done 2026-10-22
+resolution: The already-selected published Shell 4.7.0 exposes reserved route options, module landings and route-backed tabs. Removed HFC_ROUTE_OPTIONS and its attributes dictionary; PartiesOverview passes ModuleRoute and DefaultTabId directly. Published-package Release build, actual host collision/route/role checks and default-tab fallback checks pass. Current routing proof is appended to the Story 8.3 matrix; historical approvals and broader G4 prerequisites remain unchanged.
+verification: `spec-five-identity-routing-deferred-items.md`; `tests/five-identity-routing-deferred-items-2026-10-22/validation.json`.
 
 ### DW-140: Classify the identity-binding and agent-provisioning commands in the Art.18 restriction inventory
 
@@ -1242,7 +1248,9 @@ location: tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTe
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 severity: medium
 reason: `s_inspectedTypes` omits contracts that carry actor identities: `EstablishHumanActorBinding`, `RebindHumanActorBinding`, `RevokeHumanActorBinding`, `ResolveHumanActorBindingAt`, `HumanActorBindingEvidence`, and the nested `HumanActorBinding`, `HumanActorBindingTransition`, `AgentPartyProvisioningResult`, and `AgentPartyIdentity` records. Members of the `[PersonalData]`-marked `PartyState.AgentProvisioning` are neither marked nor classified. All of these were added by `37d87f5a2869b076c651a58714d60f64647848bc`, before this delta; DW-142 classified only the six properties that failed. This is an I8 decision for the Parties GDPR owners, related to DW-129. Exit proof: every identity-feature contract type is inspected, and each property is classified with its rationale. Rollback: revert the added inventory rows.
-status: open
+status: done 2026-10-22
+resolution: The inventory inspects identity commands, queries, events and nested binding, provisioning, response, admission and custody records. Every property has an explicit contextual classification and rationale, with completeness checks for identity roots and nested records. Opaque linkages remain sensitive; transient proofs/authorization, finite identity-history custody and profile-protected provisioning are distinguished. Production annotations remain unchanged; focused inventory passes 9/9 and the full Contracts suite passes 211/211.
+verification: `spec-five-identity-routing-deferred-items.md`; `tests/five-identity-routing-deferred-items-2026-10-22/validation.json`.
 
 ### DW-158: Reconcile the upstream Tenants runtime project's administrator verifier contracts with a published EventStore SDK.
 
@@ -1276,7 +1284,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: release verify-publication job; NuGet registry package bytes and repository commit metadata
 source_spec: `_bmad-output/implementation-artifacts/spec-nuget-trusted-publishing.md`
 reason: The pre-existing verify-publication job checks a GitHub Release tag only; this task performs independent nine-package download/metadata verification after Release rather than treating that tag as package publication evidence.
-status: open
+status: done 2026-10-22
+resolution: The persistent verifier downloads each of the nine exact declared packages, reuses archive and dependency-boundary checks, and requires exact nuspec ID/version/repository URL/type/commit. Receipts hash observed registry bytes without asserting equality with unsigned build archives.
+verification: `tests/five-query-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-query-release-deferred-items.md`.
 
 ### DW-162: Commit the existing Story 8.8 available-row identity gate correction through its owning work.
 
@@ -1381,7 +1391,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs; PartyIdentitySourceFold.Fold; authority.Admit
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: `authority.Admit` and `PartyIdentitySourceFold.Fold` execute between deadline checks, so a stalled provider or large source can exceed the configured budget; both paths predate the release patch.
-status: open
+status: done 2026-10-22
+resolution: Initial and final authority admission, both folds and retained-source validation run within the original whole-query deadline. Internal fold overloads check cooperative cancellation between transitions. Controlled stalls, cancellation precedence, exact-position success and terminal historical source-expiry/authority-revocation regressions pass; final focused identity suite passes 267/267.
+verification: `spec-five-identity-routing-deferred-items.md`; `tests/five-identity-routing-deferred-items-2026-10-22/validation.json`.
 
 ### DW-175: Bound noncooperative identity-query provider work after a caller deadline.
 
@@ -1389,7 +1401,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs (ReadAsync)
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: `PartyIdentityQueryDeadline.ReadAsync` stops awaiting a stalled provider task but leaves it running; repeated calls can accumulate worker tasks. The deadline work was introduced separately from this release patch.
-status: open
+status: done 2026-10-22
+resolution: One finite process-wide limiter admits at most 16 current/historical queries without a waiting queue. Each query retains its lease until abandoned work and asynchronous provider cancellation callbacks both finish; late faults are observed. Controlled saturation, budget-acquisition and both completion-order recovery cases pass. Noncooperative work is bounded, not terminated; final full service suite passes 2421/2421.
+verification: `spec-five-identity-routing-deferred-items.md`; `tests/five-identity-routing-deferred-items-2026-10-22/validation.json`.
 
 ### DW-176: Make long retained human-actor history folds linear.
 
@@ -1683,6 +1697,9 @@ archived: 2026-10-21
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-72-production-publish-environments.md`
   summary: Reconcile current dependency package documentation and source-selection receipts after the concurrent root-gitlink sync.
   evidence: After rebasing onto bec09f01aa00bd9ef83554fd099ed36fb59ab2c6, the complete service suite passes 2001/2003. MaintainedTechnologyTablesMatchCentralPackageCatalog expects docs/ci.md to describe EventStore 3.126.0 selected by the new Builds catalog, and FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph still expects Builds 332b2c144defba546fe0a09626a4a72f2340e22f while the parent selects 5d03f1db9c38db34ecac7fe6048937478ffb82cc. Both unchanged methods fail identically on the exact parent checkout; commands, results and matching test-source blob identities are retained in the DW-72 evidence. Refresh current observations without weakening gates, fabricating owner approval or recertifying historical parity evidence.
+  status: done 2026-10-22
+  resolution: The existing reconciliation is verified with fresh Release/package binaries at d55058ddaa4bfc94c47b799e5f5d9e9eff8dce77. MaintainedTechnologyTablesMatchCentralPackageCatalog and FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph both pass (2/2); the full service assembly passes 2421/2421. Selected EventStore 3.126.1, Builds 3fcb8f38919bb0961b06a19b57aa45623b35a33e and FrontComposer a258b992d08e73e2d3251c865ef01a982eba31ac agree with maintained observations. No dependencies, gitlinks, historical receipts or owner approvals change.
+  verification: `tests/five-identity-routing-deferred-items-2026-10-22/validation.json`; spec `spec-five-identity-routing-deferred-items.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-86-erasure-certificate-validation.md`
   summary: Provide an owner-supported recovery path for legacy erasure certificates.
@@ -1707,3 +1724,26 @@ archived: 2026-10-21
   status: done 2026-10-21
   resolution: Require nonempty dot-separated prerelease identifiers before excluding prereleases. Full workflow-shell rejection fixtures and valid dotted/hyphenated controls pass.
   verification: `tests/five-validation-boundary-deferred-items-2026-10-21/validation.json`; spec `spec-five-validation-boundary-deferred-items.md`.
+
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-identity-routing-deferred-items.md`
+  summary: Bound identity-query options acquisition and policy revalidation when an options provider is noncooperative.
+  severity: medium
+  evidence: Both baseline and current PartyIdentityQueryService call IOptionsMonitor.CurrentValue synchronously before creating the deadline and in PolicyIsCurrent. The admission/fold work boundary does not cover these pre-existing calls. A gated CurrentValue implementation should qualify caller completion, cancellation precedence and shared capacity before changing setup semantics.
+  status: done 2026-10-22
+  resolution: Both queries establish a thirty-second setup boundary before options access, then apply the configured cumulative budget from original query entry without releasing the lease. Every policy read uses bounded work; caller cancellation wins and abandoned options work retains capacity through late faults and cleanup.
+  verification: `tests/five-query-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-query-release-deferred-items.md`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-identity-routing-deferred-items.md`
+  summary: Include post-fold current and historical interval selection in the identity-query work budget.
+  severity: medium
+  evidence: Both baseline and current PartyIdentityQueryService synchronously materialize state.HumanActorBindings candidates and historical matches after the bounded fold. The following deadline checks deny late evidence but do not bound the scan itself. Qualify a gated or large-source selection with unavailable completion before releasing work; preserve exact interval semantics and cancellation precedence.
+  status: done 2026-10-22
+  resolution: Both interval scans now execute inside the same query deadline and work lease, with cooperative cancellation between items. Gated real-scanner tests prove bounded caller waiting and retained capacity; existing query and focused interval tests preserve ambiguity/gap outcomes, exclusive ends, custody and source positions.
+  verification: `tests/five-query-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-query-release-deferred-items.md`.
+
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-query-release-deferred-items.md`
+  summary: Bind successful main-push range signoff proof to release publication.
+  severity: medium
+  evidence: Both the baseline and current publication workflow require successful exact-source ci.yml and a release-floor tip diff, but do not consume the independent RC workflow verdict. An unsigned intermediate pointer can fail a range check while the final signed tip passes the existing publication check. Qualify a governed exact-source range-proof integration separately; this batch preserves the approved full-CI and protected manual publication contract.

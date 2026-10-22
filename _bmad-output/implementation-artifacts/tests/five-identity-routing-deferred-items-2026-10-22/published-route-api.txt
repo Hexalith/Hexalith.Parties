@@ -1,0 +1,5 @@
+Command: dnx dotnet-inspect -y -- member FrontComposerRouteOptions --package Hexalith.FrontComposer.Shell@4.7.0 -S Properties --table
+Exit code: 0
+
+Name              Digest      Signature                                                                 Description
+ReservedSegments  5fe02e2141  public System.Collections.Generic.ISet<string> ReservedSegments { get; }  Host-owned top-level segments, compared without regard to case.

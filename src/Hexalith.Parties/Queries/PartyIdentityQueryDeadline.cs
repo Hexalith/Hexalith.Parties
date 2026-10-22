@@ -6,15 +6,24 @@ internal sealed class PartyIdentityQueryDeadline : IDisposable
     private readonly CancellationToken _callerToken;
     private readonly TimeProvider _timeProvider;
     private readonly long _startedAt;
-    private readonly TimeSpan _timeout;
+    private TimeSpan _timeout;
     private readonly CancellationTokenSource _timeoutSource;
     private readonly CancellationTokenSource _linkedSource;
     private readonly CancellationTokenSource _providerSource = new();
     private Task? _providerCancellation;
+    private Task? _pending;
+    private bool _hasLease;
+    private bool _disposed;
+    private readonly PartyIdentityQueryWorkLimiter _workLimiter;
+
+    /// <summary>Gets completion of retained work and callback cleanup after disposal.</summary>
+    internal Task WorkCompleted { get; private set; } = Task.CompletedTask;
 
     /// <summary>Starts the remaining timer for one finite budget measured from query entry.</summary>
-    public PartyIdentityQueryDeadline(TimeSpan timeout, TimeProvider timeProvider, CancellationToken callerToken, long startedAt)
+    public PartyIdentityQueryDeadline(TimeSpan timeout, TimeProvider timeProvider, CancellationToken callerToken, long startedAt,
+        PartyIdentityQueryWorkLimiter? workLimiter = null)
     {
+        _workLimiter = workLimiter ?? PartyIdentityQueryWorkLimiter.Shared;
         _callerToken = callerToken;
         _timeProvider = timeProvider;
         _startedAt = startedAt;
@@ -22,6 +31,29 @@ internal sealed class PartyIdentityQueryDeadline : IDisposable
         TimeSpan remaining = timeout - timeProvider.GetElapsedTime(startedAt);
         _timeoutSource = new(remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, timeProvider);
         _linkedSource = CancellationTokenSource.CreateLinkedTokenSource(callerToken, _timeoutSource.Token);
+    }
+
+    /// <summary>Applies the configured total budget without releasing work or resetting query entry.</summary>
+    public void ApplyTimeout(TimeSpan timeout)
+    {
+        ThrowIfCancellationRequested();
+        if (timeout <= TimeSpan.Zero || timeout > TimeSpan.FromSeconds(30))
+        {
+            throw new InvalidOperationException("Identity query timeout is outside the supported bound.");
+        }
+
+        _timeout = timeout;
+        ThrowIfCancellationRequested();
+        TimeSpan remaining = timeout - _timeProvider.GetElapsedTime(_startedAt);
+        if (remaining <= TimeSpan.Zero)
+        {
+            _timeoutSource.Cancel();
+        }
+        else
+        {
+            _timeoutSource.CancelAfter(remaining);
+        }
+        ThrowIfCancellationRequested();
     }
 
     /// <summary>Rejects caller cancellation first, then elapsed or timer-expired deadlines.</summary>
@@ -50,8 +82,21 @@ internal sealed class PartyIdentityQueryDeadline : IDisposable
     public async Task<T> ReadAsync<T>(Func<CancellationToken, Task<T>> read)
     {
         ThrowIfCancellationRequested();
+        if (!_hasLease)
+        {
+            // No admission queue: saturation fails closed without allocating more workers.
+            _hasLease = _workLimiter.TryAcquire();
+            if (!_hasLease)
+            {
+                ThrowIfCancellationRequested();
+                throw new InvalidOperationException("Identity query work capacity is exhausted.");
+            }
+        }
+
+        ThrowIfCancellationRequested();
         CancellationToken token = _providerSource.Token;
         Task<T> pending = Task.Run(() => read(token), token);
+        _pending = pending;
         // A provider can fault after the caller has stopped waiting. Observe that fault
         // without ever resuming the identity query or releasing its result.
         _ = pending.ContinueWith(static task => { _ = task.Exception; }, CancellationToken.None,
@@ -87,20 +132,33 @@ internal sealed class PartyIdentityQueryDeadline : IDisposable
             TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }
 
+    /// <summary>Bounds synchronous admission and replay using the same budget and work lease.</summary>
+    public Task<T> RunAsync<T>(Func<CancellationToken, T> work)
+        => ReadAsync(token => Task.FromResult(work(token)));
+
     /// <inheritdoc/>
     public void Dispose()
     {
+        if (_disposed) { return; }
+        _disposed = true;
         _linkedSource.Dispose();
         _timeoutSource.Dispose();
-        if (_providerCancellation is { IsCompleted: false } cancellation)
+        // Successful previous operations are complete. The last operation may still be
+        // running, and callbacks from any operation may still own work on this token.
+        // Retain the one query lease until both settle; this does not terminate them.
+        WorkCompleted = ReleaseAfterWorkAsync(_pending ?? Task.CompletedTask, _providerCancellation ?? Task.CompletedTask);
+    }
+
+    private async Task ReleaseAfterWorkAsync(Task pending, Task cancellation)
+    {
+        try { await pending.ConfigureAwait(false); }
+        catch (Exception) { /* Observe abandoned provider faults without releasing evidence. */ }
+        try { await cancellation.ConfigureAwait(false); }
+        catch (Exception) { /* Observe asynchronous provider callback faults as well. */ }
+        _providerSource.Dispose();
+        if (_hasLease)
         {
-            // Cleanup also stays independent of callbacks that have not returned yet.
-            _ = cancellation.ContinueWith(static (_, state) => ((CancellationTokenSource)state!).Dispose(),
-                _providerSource, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
-        }
-        else
-        {
-            _providerSource.Dispose();
+            _workLimiter.Release();
         }
     }
 }

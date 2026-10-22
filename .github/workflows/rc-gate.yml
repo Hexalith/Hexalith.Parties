@@ -10,6 +10,7 @@ on:
     types: [opened, synchronize, reopened, labeled]
   push:
     branches:
+      - main
       - 'rc/**'
       - 'release/**'
     tags:
@@ -25,7 +26,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.sha || 'latest' }}
   cancel-in-progress: true
 
 jobs:
@@ -49,17 +50,38 @@ jobs:
 
       - name: Determine base ref
         id: base
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_REF: ${{ github.ref }}
+          EVENT_BEFORE: ${{ github.event.before }}
+          BASE_REF: ${{ github.base_ref }}
+          MANUAL_BASE: ${{ github.event.inputs.base_ref || '' }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            base="origin/${{ github.base_ref }}"
-          elif [ -n "${{ github.event.inputs.base_ref || '' }}" ]; then
-            base="${{ github.event.inputs.base_ref }}"
+          mode=diff
+          if [ "$EVENT_NAME" = push ] && [ "$EVENT_REF" = refs/heads/main ]; then
+            base="$EVENT_BEFORE"
+            if [[ ! "$base" =~ ^[0-9a-f]{40}$ ]] || [[ "$base" =~ ^0+$ ]] ||
+               ! git cat-file -e "${base}^{commit}" || ! git merge-base --is-ancestor "$base" HEAD; then
+              echo "Main push requires a usable ancestor event.before commit." >&2
+              exit 1
+            fi
+            mode=push-range
+          elif [ "$EVENT_NAME" = pull_request ]; then
+            base="origin/$BASE_REF"
+          elif [ -n "$MANUAL_BASE" ]; then
+            base="$MANUAL_BASE"
           else
             base="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo origin/main)"
           fi
           echo "ref=$base" >> "$GITHUB_OUTPUT"
-          echo "Diffing root gitlinks against: $base"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "Checking root gitlinks against: $base ($mode)"
 
       - name: Root gitlink RC gate
-        run: bash scripts/gitlink-rc-gate.sh --diff "${{ steps.base.outputs.ref }}"
+        shell: bash
+        env:
+          GATE_BASE: ${{ steps.base.outputs.ref }}
+          GATE_MODE: ${{ steps.base.outputs.mode }}
+        run: bash scripts/gitlink-rc-gate.sh "--$GATE_MODE" "$GATE_BASE"

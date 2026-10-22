@@ -13,6 +13,8 @@
 #                           "Reset" a drift by restoring the recorded commit
 #                           (git submodule update --checkout <path>) — that clears
 #                           the drift and needs no ledger entry.
+#   --push-range <sha>    Main-push mode: require an ancestor SHA and check every
+#                           root pointer change in every commit after that base.
 #   --diff <base-ref>       CI mode. Fail if any root gitlink SHA recorded at HEAD
 #                           differs from <base-ref> and the HEAD SHA has no
 #                           matching validated-advance ledger entry.
@@ -36,8 +38,9 @@ mode="worktree"
 base_ref=""
 case "${1:-}" in
   --diff)          mode="diff"; base_ref="${2:-}" ;;
+  --push-range)    mode="push-range"; base_ref="${2:-}" ;;
   --worktree|"")   mode="worktree" ;;
-  *) echo "usage: $0 [--worktree | --diff <base-ref>]" >&2; exit 2 ;;
+  *) echo "usage: $0 [--worktree | --diff <base-ref> | --push-range <event-before>]" >&2; exit 2 ;;
 esac
 
 # Root-declared submodule paths (root .gitmodules only — never nested).
@@ -58,6 +61,20 @@ ledger_has() {
 
 fail=0
 report() { printf '  %-45s %s\n' "$1" "$2"; }
+
+# Resolve only the .gitmodules blob at this root commit. Report parsing/object
+# errors rather than silently losing paths through a process substitution.
+root_paths_at() {
+  local revision="$1" entry values status
+  entry="$(git ls-tree "$revision" -- .gitmodules)" || return 1
+  [ -n "$entry" ] || return 0
+  git config --blob "$revision:.gitmodules" --list >/dev/null || return 1
+  values="$(git config --blob "$revision:.gitmodules" --get-regexp '^submodule\..*\.path$')" || {
+    status=$?
+    [ "$status" -eq 1 ] || return "$status"
+  }
+  printf '%s\n' "$values" | awk 'NF {sub(/^[^[:space:]]+[[:space:]]+/, ""); print}'
+}
 
 if [ "$mode" = "worktree" ]; then
   echo "gitlink-rc-gate: working-tree drift check"
@@ -84,20 +101,63 @@ if [ "$mode" = "worktree" ]; then
   done < <(git submodule status -- "${SUBMODULES[@]}")
 else
   [ -n "$base_ref" ] || { echo "--diff requires <base-ref>" >&2; exit 2; }
-  echo "gitlink-rc-gate: recorded-pointer diff vs $base_ref"
-  for path in "${SUBMODULES[@]}"; do
-    head_sha="$(git ls-tree HEAD "$path" | awk '{print $3}')"
-    base_sha="$(git ls-tree "$base_ref" "$path" 2>/dev/null | awk '{print $3}')"
-    [ -n "$head_sha" ] || continue
-    if [ "$head_sha" != "$base_sha" ]; then
-      if ledger_has "$path" "$head_sha"; then
-        report "$path" "BUMP ok — validated-advance @ ${head_sha:0:12}"
-      else
-        report "$path" "BUMP UNVALIDATED ${base_sha:0:12}->${head_sha:0:12} — add ledger entry"
-        fail=1
-      fi
+  if ! git rev-parse --verify --end-of-options "${base_ref}^{commit}" >/dev/null 2>&1; then
+    echo "gitlink-rc-gate: unusable base commit" >&2
+    exit 1
+  fi
+  if [ "$mode" = push-range ]; then
+    if [[ ! "$base_ref" =~ ^[0-9a-f]{40}$ ]] || [[ "$base_ref" =~ ^0+$ ]] ||
+       ! git merge-base --is-ancestor "$base_ref" HEAD; then
+      echo "gitlink-rc-gate: push base must be an exact nonzero ancestor commit" >&2
+      exit 1
     fi
-  done
+    # Collect the complete root inventory first: declaration can follow a pointer.
+    # Visit reachable branch commits, comparing each actual first-parent advance.
+    commits="$(git rev-list --topo-order --reverse "$base_ref..HEAD")" || exit 1
+    known_paths="$(root_paths_at "$base_ref")" || exit 1
+    while read -r commit; do
+      [ -n "$commit" ] || continue
+      declared="$(root_paths_at "$commit")" || exit 1
+      known_paths="$(printf '%s\n%s\n' "$known_paths" "$declared" | awk 'NF' | sort -u)"
+    done <<< "$commits"
+    mapfile -t paths <<< "$known_paths"
+    while read -r commit; do
+      [ -n "$commit" ] || continue
+      parent="$(git rev-parse --verify "${commit}^1" 2>/dev/null || true)"
+      for path in "${paths[@]}"; do
+        [ -n "$path" ] || continue
+        head_sha="$(git ls-tree "$commit" -- "$path" | awk '$1 == "160000" {print $3}')"
+        [ -n "$head_sha" ] || continue
+        parent_sha=""
+        if [ -n "$parent" ]; then
+          parent_sha="$(git ls-tree "$parent" -- "$path" | awk '$1 == "160000" {print $3}')"
+        fi
+        if [ "$head_sha" != "$parent_sha" ]; then
+          if ledger_has "$path" "$head_sha"; then
+            report "$path" "BUMP ok — validated-advance @ ${head_sha:0:12} in ${commit:0:12}"
+          else
+            report "$path" "BUMP UNVALIDATED @ ${head_sha:0:12} in ${commit:0:12} — add ledger entry"
+            fail=1
+          fi
+        fi
+      done
+    done <<< "$commits"
+  else
+    echo "gitlink-rc-gate: recorded-pointer diff vs $base_ref"
+    for path in "${SUBMODULES[@]}"; do
+      head_sha="$(git ls-tree HEAD -- "$path" | awk '{print $3}')"
+      base_sha="$(git ls-tree "$base_ref" -- "$path" 2>/dev/null | awk '{print $3}')"
+      [ -n "$head_sha" ] || continue
+      if [ "$head_sha" != "$base_sha" ]; then
+        if ledger_has "$path" "$head_sha"; then
+          report "$path" "BUMP ok — validated-advance @ ${head_sha:0:12}"
+        else
+          report "$path" "BUMP UNVALIDATED ${base_sha:0:12}->${head_sha:0:12} — add ledger entry"
+          fail=1
+        fi
+      fi
+    done
+  fi
 fi
 
 if [ "$fail" -ne 0 ]; then

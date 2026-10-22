@@ -4,6 +4,7 @@ using Bunit;
 using Bunit.TestDoubles;
 
 using Hexalith.FrontComposer.Shell.Extensions;
+using Hexalith.FrontComposer.Shell.Components.Layout;
 using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.UI.Components.Pages;
 
@@ -37,6 +38,32 @@ public sealed class PartiesOverviewTests : BunitContext
             .Select(attribute => attribute.Template)];
         routes.ShouldContain("/parties");
         routes.ShouldContain("/parties/overview");
+    }
+
+    /// <summary>Tests FcPageTabs behavior inside an already-mounted overview component, independently of host route selection.</summary>
+    [Theory]
+    [InlineData("/parties")]
+    [InlineData("/parties/overview")]
+    [InlineData("/parties/retired-tab")]
+    public void MountedOverviewComponent_SelectsDefaultTabAndFallsBackForUnknownTab(string route)
+    {
+        ArgumentNullException.ThrowIfNull(route);
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo(route);
+        IRenderedComponent<PartiesOverview> cut = Render<PartiesOverview>();
+
+        FcPageTabs tabs = cut.FindComponent<FcPageTabs>().Instance;
+        tabs.ModuleRoute.ShouldBe("/parties");
+        tabs.DefaultTabId.ShouldBe("overview");
+        cut.WaitForAssertion(() => cut.FindComponent<FluentTabs>().Instance.ActiveTabId.ShouldBe("overview"));
+        if (route.EndsWith("retired-tab", StringComparison.Ordinal))
+        {
+            cut.WaitForAssertion(() => navigation.Uri.ShouldEndWith("/parties/overview"));
+        }
+        // Route-backed default selection must preserve the authorization boundary.
+        cut.FindAll("[data-testid='parties-overview-admin']").ShouldBeEmpty();
+        cut.FindAll("[data-testid='parties-overview-consumer']").ShouldBeEmpty();
+        cut.FindAll("[data-testid='parties-overview-no-access']").ShouldHaveSingleItem();
     }
 
     [Fact]

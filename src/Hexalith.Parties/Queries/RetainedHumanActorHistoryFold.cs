@@ -14,7 +14,12 @@ internal static class RetainedHumanActorHistoryFold
 {
     /// <summary>Preserves original binding positions and rejects incomplete, foreign or inconsistent lifecycle history.</summary>
     public static IReadOnlyList<RetainedHumanActorBinding> Fold(RetainedIdentityHistoryStream stream, string policyId)
+        => Fold(stream, policyId, CancellationToken.None);
+
+    /// <summary>Replays with cooperative cancellation between source transitions and validations.</summary>
+    internal static IReadOnlyList<RetainedHumanActorBinding> Fold(RetainedIdentityHistoryStream stream, string policyId, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         ArgumentNullException.ThrowIfNull(stream);
         if (stream.Identity.Domain != "party" || !RetainedIdentityHistoryValidator.IsComplete(
                 new(stream.Identity, RetainedIdentityHistoryReadRequest.AttributionPurpose), stream, stream.ObservedAt))
@@ -42,6 +47,7 @@ internal static class RetainedHumanActorHistoryFold
                 Expired: (ExpiredIdentityHistoryCertificate?)null)));
         foreach (var transition in transitions)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (transition.Expired is { } expired)
             {
                 // Existing ciphertext contract/position and current terminal destruction proof
@@ -116,6 +122,7 @@ internal static class RetainedHumanActorHistoryFold
             }
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         return bindings.AsReadOnly();
 
         void Append(HumanActorBinding binding, DateTimeOffset at, long expectedVersion, long position)

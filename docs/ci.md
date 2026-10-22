@@ -9,7 +9,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the same immutable Builds validation revision as CI, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
 - `.github/workflows/codeql.yml` delegates C# CodeQL scanning to `Hexalith/Hexalith.Builds/.github/workflows/codeql.yml@332b2c144defba546fe0a09626a4a72f2340e22f`.
-- `.github/workflows/rc-gate.yml` remains Parties-specific and validates root gitlink release-candidate signoff.
+- `.github/workflows/rc-gate.yml` validates root gitlink signoff on ordinary `main` pushes, release candidates and tags.
 
 Both validation callers pin their reusable workflow definitions to the existing
 Builds source selection. For a revision update, inspect the selected workflow
@@ -133,15 +133,69 @@ After publication, verification requires a published, non-draft GitHub Release
 whose validated tag resolves to the exact dispatched commit. A tag-ref lookup
 returning HTTP 404 is logged and skipped because older releases can outlive
 their tags. Other API failures, invalid responses and invalid tag objects still
-fail verification. Missing tags alone never prove publication. Execute the
-workflow shell regression fixtures locally using the commands below.
+fail verification. The matched tag is exposed as `verify-publication`'s
+`matching-tag` output and supplies the release version to artifact verification.
 
-The fixtures require Bash and `jq` on a non-Windows system; they are skipped on
-Windows. Check the executed and skipped counts when assessing local evidence.
+The read-only verification job checks out the exact dispatched Parties source
+and Builds `397c94a4e246c90b21cf408790fa0d55bf32d795`, with persisted checkout
+credentials disabled. It also initializes only the dispatched root Builds
+gitlink, without recursion, and installs the SDK from `global.json` to evaluate
+that source's package catalog. `scripts/verify-release-publication.py` requires
+all nine unique IDs in `tools/release-packages.json`, downloads each `.nupkg`,
+and reuses archive, README/license and dependency-boundary validation. Nuspec
+ID, version, repository URL, repository type `git` and commit must match the
+release exactly. Existing required dependency and version checks use the evaluated
+source catalog. Metadata must be direct nuspec children, and referenced license
+files must exist. Malformed archives, duplicate members/nuspecs and ambiguous or
+partial inventories fail closed.
+
+All three Zot images (`parties`, `parties-mcp`, `parties-ui`) must also pass the
+immutable Builds OCI validator; its file hash is checked before loading. It
+checks tag and immutable index bytes, every child manifest/config digest and
+size, exactly `linux/amd64` and `linux/arm64`, and each child's source,
+revision, release version, release URL and documentation provenance. Verification
+uses registry read requests and the existing protected production credentials;
+it performs no publication writes. The job retains the production environment
+boundary and has only `contents: read` GitHub permission.
+
+Downloads have per-response byte bounds, a thirty-second absolute request timeout
+covering connection setup, headers, bodies and redirects, four attempts with
+two-second delays for missing/transient responses, and one ten-minute total
+download budget. Uninterruptible resolver work can retain one of four shared
+connection slots until it settles; late sockets are closed. Redirect bodies are
+closed unread, same-origin credentials are preserved, cross-origin authorization
+is removed, and HTTPS downgrades fail. Authentication failures and malformed
+bytes fail immediately. Registry propagation may recover within those limits;
+exhaustion fails the job. The always-run upload retains bounded downloaded
+packages, partial failure captures, OCI raw manifests/configs, attempt diagnostics
+and `publication-verification.json`
+under the `publication-verification-RUN_ID-RUN_ATTEMPT` artifact for 30 days.
+Receipts derive hashes from observed registry bytes. NuGet may add signatures,
+so those hashes do not prove equality with unsigned build archives. OCI proof
+covers the shared validator's manifest/config graph and provenance.
+
+Ordinary `main` pushes use the event's exact, nonzero `before` commit as the
+root-gitlink gate base. It must exist and be an ancestor of the checked-out
+source; invalid, missing, zero or divergent bases fail closed. `--push-range`
+checks every root pointer change in every commit in that range, including
+intermediate changes later replaced at the tip. The final ledger must authorize
+each advanced pointer; stale SHAs, placeholder owners and `reset` entries cannot
+authorize a bump. Existing RC, tag and manual `--diff` behavior remains available.
+No fallback to the newly updated `origin/main` is used for main pushes. Each
+main source SHA has a separate concurrency group, so later pushes cannot replace
+its running or pending check. The complete range's root declarations are collected
+before checking advances, including declarations added after their gitlinks.
+Merge results are compared with their first parent while reachable branch
+commits are also checked.
+
+The executable fixtures require Python, Git, Bash and `jq` on a non-Windows
+system, plus the pinned Builds Git object available in the direct root checkout.
+They use isolated temporary Git histories and loopback HTTP registries; they
+never publish. Check executed and skipped counts when assessing local evidence.
 
 ```bash
 dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
-dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests
+dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests -class Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests -class Hexalith.Parties.Ci.Tests.GitlinkGateWorkflowTests
 ```
 
 The release workflow does not apply runtime deployment manifests and does not publish EventStore, Tenants, Memories, Sample, Redis, or FalkorDB images. Runtime deployment orchestration is owned outside this repository and consumes immutable release tags from Zot.

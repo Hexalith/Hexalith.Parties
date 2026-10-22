@@ -1,0 +1,4 @@
+$ python3 tests/Hexalith.Parties.Ci.Tests/release_artifact_cases.py . download-late-socket
+download-late-socket: bounded resolver/candidate waits, retained capacity, observed late faults and closed late sockets verified
+
+Exit code: 0

@@ -1,0 +1,5 @@
+$ HEXALITH_DAPR_HOME="$HOME/.hexalith/dapr/1.18.2" dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
+failed: TopologyOrLifecycle
+HXP020 Topology TopologyOrLifecycle field=platform: ../../../../../../../../projects/hexalith/parties/module/hexalith.module-manifest.v2.json: parties/domain: project: mapped source project is unavailable. deadline='600s' diagnostics='$HOME/.local/share/hexalith-builds/g4-runs/diagnostics/24f226f3b32fed8ed04203c87cb73688'. (Supply the named owner input; no resources were started.)
+
+Exit code: 3

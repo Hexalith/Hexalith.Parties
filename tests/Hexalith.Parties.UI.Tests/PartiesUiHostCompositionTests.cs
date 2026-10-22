@@ -1,10 +1,13 @@
 using System.Reflection;
+using System.Security.Claims;
 using System.Xml.Linq;
 
 using Hexalith.FrontComposer.Contracts.Attributes;
 using Hexalith.FrontComposer.Contracts.Registration;
 using Hexalith.FrontComposer.Contracts.Rendering;
 using Hexalith.FrontComposer.Shell.Extensions;
+using Hexalith.FrontComposer.Shell.Options;
+using Hexalith.Parties.UI.Authentication;
 using Hexalith.Parties.AdminPortal.Extensions;
 using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Client.Abstractions;
@@ -13,11 +16,14 @@ using Hexalith.Parties.UI.IdentityBinding;
 using Hexalith.Parties.UI.Services;
 
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.FluentUI.AspNetCore.Components;
 
@@ -337,6 +343,131 @@ public sealed class PartiesUiHostCompositionTests
             httpContext.HttpContext = previous;
         }
     }
+
+    /// <summary>The actual package host reserves its area routes and rejects colliding module registration.</summary>
+    [Theory]
+    [InlineData("admin")]
+    [InlineData("me")]
+    [InlineData("no-party-binding")]
+    public async Task ActualHost_ReservesAreaSegmentsAndDiscoversShellModuleRoutes(string reserved)
+    {
+        await using WebApplicationFactory<global::Program> factory = RoutingHost();
+        using HttpClient client = factory.CreateClient();
+        using IServiceScope scope = factory.Services.CreateScope();
+        FrontComposerRouteOptions options = scope.ServiceProvider.GetRequiredService<IOptions<FrontComposerRouteOptions>>().Value;
+        options.ReservedSegments.Order(StringComparer.Ordinal).ShouldBe(new[] { "admin", "me", "no-party-binding" });
+        IFrontComposerRegistry registry = scope.ServiceProvider.GetRequiredService<IFrontComposerRegistry>();
+        Should.Throw<InvalidOperationException>(() => registry.RegisterDomain(new("Collision", reserved.ToUpperInvariant(), [], [])));
+        registry.RegisterDomain(new("Routing proof", "routing-proof", [], []));
+        foreach (string route in new[] { "/routing-proof", "/routing-proof/overview" })
+        {
+            using HttpResponseMessage response = await client.GetAsync(route, TestContext.Current.CancellationToken);
+            response.EnsureSuccessStatusCode();
+            (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).ShouldContain("Routing proof");
+        }
+
+        string[] routes = [.. factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
+            .OfType<RouteEndpoint>().Select(endpoint => endpoint.RoutePattern.RawText).OfType<string>()];
+        routes.ShouldContain("/{Module}");
+        routes.ShouldContain("/{Module}/overview");
+        routes.ShouldContain("/{Module}/{Tab}");
+        routes.ShouldContain("/parties");
+        routes.ShouldContain("/parties/overview");
+    }
+
+    /// <summary>Host-registered role policies continue to restrict destinations when package routing is enabled.</summary>
+    [Theory]
+    [InlineData("Admin", true, false)]
+    [InlineData("TenantOwner", true, false)]
+    [InlineData("Consumer", false, true)]
+    [InlineData("unrelated", false, false)]
+    public async Task ActualHost_RoutePoliciesRetainRoleRestrictions(string role, bool adminAllowed, bool consumerAllowed)
+    {
+        await using WebApplicationFactory<global::Program> factory = RoutingHost();
+        using IServiceScope scope = factory.Services.CreateScope();
+        IAuthorizationService authorization = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
+        var principal = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Role, role)], "routing-proof"));
+        (await authorization.AuthorizeAsync(principal, null, PartiesUiAuthorization.AdminPolicy)).Succeeded.ShouldBe(adminAllowed);
+        (await authorization.AuthorizeAsync(principal, null, PartiesUiAuthorization.ConsumerPolicy)).Succeeded.ShouldBe(consumerAllowed);
+    }
+
+    /// <summary>Real endpoint requests cannot use generic module routes to bypass the area role boundary.</summary>
+    [Theory]
+    [InlineData("/admin/parties", "parties-consumer-e2e=bound", "hx-parties-admin")]
+    [InlineData("/me", "parties-admin-e2e=enabled", "hx-parties-profile")]
+    [InlineData("/me/privacy", "parties-admin-e2e=enabled", "hx-parties-privacy")]
+    [InlineData("/no-party-binding", "parties-admin-e2e=enabled", "linked to a profile yet")]
+    public async Task ActualHost_RejectsWrongRoleAreaRequests(string route, string cookie, string requestedAreaMarker)
+    {
+        await using WebApplicationFactory<global::Program> factory = RoutingHost();
+        using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        using var request = new HttpRequestMessage(HttpMethod.Get, route);
+        request.Headers.Add("Cookie", cookie);
+        using HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        // AuthorizeRouteView renders the forbidden page inside the successful SSR shell.
+        body.ShouldContain("Forbidden");
+        body.ShouldNotContain("parties-overview-tabs");
+        body.ShouldNotContain(requestedAreaMarker);
+        AdminPortalE2eSnapshot reads = factory.Services.GetRequiredService<PartiesAdminPortalE2eFixtureState>().Snapshot();
+        reads.ListRequests.ShouldBeEmpty();
+        reads.SearchRequests.ShouldBeEmpty();
+        reads.DetailRequests.ShouldBeEmpty();
+        reads.PickerSearchRequests.ShouldBeEmpty();
+        reads.PickerDetailRequests.ShouldBeEmpty();
+        reads.ProcessingRecordRequests.ShouldBeEmpty();
+        reads.ErasureCertificateRequests.ShouldBeEmpty();
+        reads.ExportRequests.ShouldBeEmpty();
+    }
+
+    /// <summary>The actual router distinguishes explicit Parties aliases, registered module landings and unregistered module routes.</summary>
+    [Theory]
+    [InlineData("/parties", "overview")]
+    [InlineData("/parties/overview", "overview")]
+    [InlineData("/parties/retired-tab", "module")]
+    [InlineData("/missing-module/retired-tab", "unavailable")]
+    public async Task ActualHost_PartiesAliasesAndUnknownRoutesKeepExistingSelection(string route, string expectedPage)
+    {
+        await using WebApplicationFactory<global::Program> factory = RoutingHost();
+        using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        IFrontComposerRegistry registry = factory.Services.GetRequiredService<IFrontComposerRegistry>();
+        registry.GetManifests().ShouldContain(manifest => manifest.BoundedContext == "parties"
+            && manifest.Commands.Count == 0 && manifest.Projections.Count == 0);
+        using var request = new HttpRequestMessage(HttpMethod.Get, route);
+        request.Headers.Add("Cookie", "parties-admin-e2e=enabled");
+        using HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        response.Headers.Location.ShouldBeNull();
+        string body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        if (expectedPage == "overview")
+        {
+            body.ShouldContain("parties-overview-tabs");
+            body.ShouldContain("parties-overview-admin");
+            body.ShouldNotContain("data-fc-route-unavailable");
+        }
+        else if (expectedPage == "module")
+        {
+            body.ShouldContain("data-testid=\"fc-page-tabs\"");
+            body.ShouldContain("data-fc-module-route=\"/parties\"");
+            body.ShouldNotContain("parties-overview-tabs");
+            body.ShouldNotContain("data-fc-route-unavailable");
+        }
+        else
+        {
+            body.ShouldContain("data-fc-route-unavailable=\"true\"");
+            body.ShouldNotContain("parties-overview-tabs");
+        }
+    }
+
+    private static WebApplicationFactory<global::Program> RoutingHost()
+        => new WebApplicationFactory<global::Program>().WithWebHostBuilder(static builder =>
+        {
+            builder.UseEnvironment("Test");
+            builder.UseSetting("Parties:BaseUrl", "http://127.0.0.1:59999");
+            builder.UseSetting("Parties:Tenant", "test-tenant");
+            builder.UseSetting(PartiesAdminPortalE2eFixture.EnabledConfigurationKey, "true");
+        });
 
     private static string ProjectRoot(string relativePath)
     {

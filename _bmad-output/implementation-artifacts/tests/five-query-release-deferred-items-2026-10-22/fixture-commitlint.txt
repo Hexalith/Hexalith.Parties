@@ -1,0 +1,6 @@
+$ node_modules/.bin/commitlint --edit /tmp/five-deferrals-fixture-message.txt --verbose
+⧗   --- input ---
+test: construct gitlink gate fixture
+✔   found 0 problems, 0 warnings
+
+Exit code: 0

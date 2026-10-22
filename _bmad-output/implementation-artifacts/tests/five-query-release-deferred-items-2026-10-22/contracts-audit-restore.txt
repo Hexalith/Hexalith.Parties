@@ -1,0 +1,6 @@
+$ dotnet restore tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -p:NuGetAudit=true -p:MinVerVersionOverride=1.0.0
+  Determining projects to restore...
+  Restored ./tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj (in 169 ms).
+  4 of 5 projects are up-to-date for restore.
+
+Exit code: 0

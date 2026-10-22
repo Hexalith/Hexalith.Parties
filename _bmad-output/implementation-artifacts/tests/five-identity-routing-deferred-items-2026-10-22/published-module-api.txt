@@ -1,0 +1,6 @@
+Command: dnx dotnet-inspect -y -- member FcModuleLandingPage --package Hexalith.FrontComposer.Shell@4.7.0 -v q
+Exit code: 0
+
+# Hexalith.FrontComposer.Shell.Components.Layout.FcModuleLandingPage
+
+Package: Hexalith.FrontComposer.Shell | Version: 4.7.0 | TFM: net10.0 | Library: lib/net10.0/Hexalith.FrontComposer.Shell.dll | Source: NuGet | Kind: class | Base: Microsoft.AspNetCore.Components.ComponentBase | Constructors: 1 | Properties: 2

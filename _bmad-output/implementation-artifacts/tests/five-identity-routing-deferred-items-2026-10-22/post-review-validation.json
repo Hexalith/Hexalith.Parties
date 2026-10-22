@@ -1,0 +1,110 @@
+{
+  "stage": "after independent-review corrections",
+  "checks": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "post-review-service-build.txt",
+      "duration_seconds": 1.881
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "post-review-contracts-build.txt",
+      "duration_seconds": 1.535
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "post-review-ui-build.txt",
+      "duration_seconds": 2.087
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+      "exit_code": 0,
+      "output": "post-review-service-suite.txt",
+      "duration_seconds": 47.191,
+      "total": 2421,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll",
+      "exit_code": 0,
+      "output": "post-review-contracts-suite.txt",
+      "duration_seconds": 6.705,
+      "total": 211,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "exit_code": 0,
+      "output": "post-review-ui-suite.txt",
+      "duration_seconds": 3.355,
+      "total": 412,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "output": "post-review-warning-guard.txt",
+      "duration_seconds": 0.2
+    },
+    {
+      "command": "git -c core.whitespace=trailing-space,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0,
+      "output": "post-review-whitespace.txt",
+      "duration_seconds": 0.062
+    },
+    {
+      "command": "git -c core.whitespace=trailing-space,space-before-tab,cr-at-eol diff --cached --check",
+      "exit_code": 0,
+      "output": "post-review-staged-whitespace.txt",
+      "duration_seconds": 0.006
+    }
+  ],
+  "implementation_file_sha256": {
+    "src/Hexalith.Parties.UI/Components/Pages/PartiesOverview.razor": "4d47df8e4ba4c3b856347d28ee2b96f741476ab8360914e82b415c0c5a2ed9ed",
+    "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj": "372a3afc78428b0d4a678da109640b2b4ed49323cc84cb0928f5fc18fec0b481",
+    "src/Hexalith.Parties.UI/Program.cs": "52d0f6205197d7f1a3e7bb2de53efa53f9882f8ef2ffe541de29b3e0247e72b7",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs": "78b7a80308a3a77467d01e0d6104c6e8b58d4287fc16a43017e4a78aef904918",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs": "54a995b3dbde1435403240c9dc59acbb22b17d397a68ba2250d5a594a6802b6c",
+    "src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs": "39a070b25e9760c75d645d2578c7722bc58167b70c507252287fadd5feb66b42",
+    "src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs": "67484fdc1f9bf65c3b5fbc4096968d1f8a5dade40686fb59d382116eb3547846",
+    "tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs": "76f4425966fb51aa49b5a3fe89fba26a0621cb8dd795a0f43f81d97797c94540",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "979e0efb63a948862c201caf90902b6ee01e3bc3e44106a3f373a639dd7055a1",
+    "tests/Hexalith.Parties.UI.Tests/PartiesOverviewTests.cs": "88535753cf95b10b5e0814e4f1810e526e710bda6e298cf73773e54447a71165",
+    "tests/Hexalith.Parties.UI.Tests/PartiesUiHostCompositionTests.cs": "5fd7f64ea642a652850d8768a4f012054ef190e4392a203822d47a2be74567b6",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryWorkLimiter.cs": "822d72426cd36d58d4276f1777b515eb7b426d033a1369d50e8ef5855c501e43",
+    "tests/Hexalith.Parties.Contracts.Tests/Privacy/IdentityInventoryValueRecord.cs": "073088310a396435ca90e3427595e290be061daa136fab421a1f05b93eb089ae"
+  },
+  "frozen_intent_sha256": "62d8a757030ee673802833053fb768af6daec6721ae9267692d2cee7888c134b",
+  "resolved_verification_issue": "An initial staged check detected a terminal blank line in an owned receipt. Receipts were trimmed and the final staged whitespace check passes with exit 0.",
+  "review": {
+    "layers": [
+      "blind-hunter",
+      "edge-case-hunter",
+      "verification-gap"
+    ],
+    "followup": "Terminal-clock correction independently rechecked; no remaining production regression found. Test-fixture issue corrected and both controls reach final admission.",
+    "triage": "../../spec-five-identity-routing-deferred-items.md",
+    "preexisting_deferred": [
+      "synchronous identity options access",
+      "post-fold interval selection outside the worker budget"
+    ]
+  },
+  "commitlint": {
+    "cli": "21.2.2",
+    "exit_code": 0,
+    "output": "commitlint.txt",
+    "message_sha256": "7140b4c84907bbde24019d2a44314acad00d51a35583025cc54972a35d631e30"
+  }
+}

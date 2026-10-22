@@ -1,0 +1,15 @@
+Command: dnx dotnet-inspect -y -- member FcPageTabs --package Hexalith.FrontComposer.Shell@4.7.0 -S Properties --table
+Exit code: 0
+
+Name                Digest      Signature                                                                                                 Description
+ActiveTabId         e81ac62cea  public string? ActiveTabId { get; set; }                                                                  Currently active tab id.
+ActiveTabIdChanged  dcb2ed2280  public Microsoft.AspNetCore.Components.EventCallback<string?> ActiveTabIdChanged { get; set; }            Raised when Fluent UI changes the active tab id.
+Appearance          48cef8fc15  public System.Nullable<Microsoft.FluentUI.AspNetCore.Components.TabsAppearance> Appearance { get; set; }  Fluent tab appearance. Defaults to the subtle page-level treatment.
+AriaLabel           9cc22e2515  public string AriaLabel { get; set; }                                                                     Accessible name for the page tab list.
+ChildContent        ca583d3bf2  public Microsoft.AspNetCore.Components.RenderFragment? ChildContent { get; set; }                         Caller-owned FcPageTab children.
+DefaultTabId        c5c8f8204f  public string? DefaultTabId { get; set; }                                                                 The declared default tab id required for route-backed tabs.
+Disabled            748db3ad30  public bool Disabled { get; set; }                                                                        Whether the entire tab set is disabled.
+ModuleRoute         fb17176f66  public string? ModuleRoute { get; set; }                                                                  The Module route prefix. Set this to enable route-backed tabs.
+Orientation         d36e472569  public System.Nullable<Microsoft.FluentUI.AspNetCore.Components.Orientation> Orientation { get; set; }    Fluent tab orientation. Defaults to horizontal.
+TestId              cf24a1a533  public string TestId { get; set; }                                                                        Stable selector applied to the Fluent tabs root.
+Width               f1c0a90b4b  public string? Width { get; set; }                                                                        Width applied to the Fluent tabs root.

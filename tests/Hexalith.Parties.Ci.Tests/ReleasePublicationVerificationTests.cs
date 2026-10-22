@@ -269,6 +269,7 @@ public sealed class ReleasePublicationVerificationTests
             start.ArgumentList.Add("-c");
             start.ArgumentList.Add(script);
             start.Environment["PATH"] = $"{temporary}{Path.PathSeparator}{start.Environment["PATH"]}";
+            start.Environment["GITHUB_OUTPUT"] = Path.Combine(temporary, "github-output");
             start.Environment["GH_TOKEN"] = "fixture-token";
             start.Environment["REPOSITORY"] = "Hexalith/Hexalith.Parties";
             start.Environment["DISPATCH_SHA"] = scenario == "invalid-source" ? "main" : SourceSha;

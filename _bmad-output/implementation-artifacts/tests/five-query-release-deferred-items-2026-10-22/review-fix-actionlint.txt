@@ -1,0 +1,3 @@
+$ actionlint .github/workflows/rc-gate.yml .github/workflows/release.yml
+
+Exit code: 0
