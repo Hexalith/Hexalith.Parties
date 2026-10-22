@@ -11,6 +11,7 @@ using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.AdminPortal.Tests.Services;
 using Hexalith.Parties.Client.AdminPortal;
 using Hexalith.Parties.Contracts.Authorization;
+using Hexalith.Parties.Contracts.Commands;
 using Hexalith.Parties.Contracts.Models;
 using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
@@ -4210,6 +4211,100 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         });
     }
 
+    [Theory]
+    [InlineData("supersede")]
+    [InlineData("tenant")]
+    [InlineData("route")]
+    [InlineData("sign-out")]
+    [InlineData("dispose")]
+    public async Task AcceptedEdit_LateDetailCannotAcknowledgeNewReceiptOrContextAsync(string boundary)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        SeedTenant("scope-edit-fence", AdminUserId, TenantRole.TenantOwner);
+        _authProvider.SetAuthenticated(AdminUserId, "scope-edit-fence");
+        PartyDetail source = Detail("edit-fenced", "Edit fenced", PartyType.Person, true) with
+        {
+            PersonDetails = new() { FirstName = "Before", LastName = "Edit" },
+            Freshness = new() { Status = ProjectionFreshnessStatus.Current },
+        };
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>();
+        portal.WaitForAssertion(() => api.ListRequests.Count.ShouldBe(1));
+        SubmitEdit();
+        PartyDetail matching = source with { PersonDetails = api.UpdateRequests[0].Command.PersonDetails };
+        var pending = new TaskCompletionSource<AdminPortalQueryResult<PartyDetail>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        api.EnqueueDetail(_ => pending.Task); // Ignore cancellation to exercise the version fence.
+        api.EnqueueList(Page(IndexEntry(source.Id, source.DisplayName, source.Type, true)));
+        Task originalRead = portal.InvokeAsync(() => portal.Instance.SetParametersAsync(ParameterView.FromDictionary(
+            new Dictionary<string, object?> { [nameof(PartiesAdminPortal.RoutePartyId)] = source.Id })));
+        portal.WaitForAssertion(() =>
+        {
+            api.DetailRequests.Count.ShouldBe(2);
+            portal.Find(".hx-parties-admin__accepted-command-status").TextContent.ShouldBe("Saved - updating...");
+        });
+        try
+        {
+            switch (boundary)
+            {
+                case "supersede":
+                    SubmitEdit();
+                    api.EnqueueList(Page(IndexEntry(source.Id, source.DisplayName, source.Type, true)));
+                    portal.Render(p => p.Add(x => x.RoutePartyId, source.Id));
+                    portal.WaitForAssertion(() => api.DetailRequests.Count.ShouldBe(4));
+                    break;
+                case "tenant":
+                    await portal.InvokeAsync(() =>
+                    {
+                        SeedTenant("scope-other-edit", AdminUserId, TenantRole.TenantOwner);
+                        _authProvider.SetAuthenticated(AdminUserId, "scope-other-edit");
+                    }).ConfigureAwait(true);
+                    break;
+                case "route":
+                    await portal.InvokeAsync(() => Services.GetRequiredService<NavigationManager>().NavigateTo("/admin/parties")).ConfigureAwait(true);
+                    break;
+                case "sign-out":
+                    await portal.InvokeAsync(_authProvider.SetAnonymous).ConfigureAwait(true);
+                    break;
+                case "dispose":
+                    portal.Dispose();
+                    break;
+            }
+        }
+        finally
+        {
+            pending.TrySetResult(new(matching, AdminPortalQueryMetadata.Empty));
+            await originalRead.WaitAsync(TimeSpan.FromSeconds(10), Xunit.TestContext.Current.CancellationToken).ConfigureAwait(true);
+        }
+
+        if (boundary == "dispose")
+        {
+            return;
+        }
+
+        // Wait for the original read to finish as well as the new context's rendering.
+        await portal.InvokeAsync(() => Task.CompletedTask).ConfigureAwait(true);
+        portal.WaitForAssertion(() => portal.FindAll(".hx-parties-admin__accepted-command-status").Count
+            .ShouldBe(boundary == "supersede" ? 1 : 0));
+        if (boundary == "supersede")
+        {
+            api.EnqueueDetail(matching);
+            ClickFluentButton(portal, source.DisplayName);
+            portal.WaitForAssertion(() => portal.FindAll(".hx-parties-admin__accepted-command-status").ShouldBeEmpty());
+        }
+
+        void SubmitEdit()
+        {
+            int expectedCount = api.UpdateRequests.Count + 1;
+            api.EnqueueDetail(source);
+            using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, source.Id));
+            form.WaitForAssertion(() => form.Find("form").ShouldNotBeNull());
+            IRenderedComponent<FluentTextInput> firstName = form.FindComponents<FluentTextInput>().Single(x => x.Instance.Label == "First name");
+            form.InvokeAsync(() => firstName.Instance.ValueChanged.InvokeAsync("After")).GetAwaiter().GetResult();
+            form.Find("form").Submit();
+            form.WaitForAssertion(() => api.UpdateRequests.Count.ShouldBe(expectedCount));
+        }
+    }
+
     private IRenderedComponent<PartiesAdminPortal> RenderAuthorized(
         string contextKey,
         int pageSize = AdminPortalQueryBounds.DefaultPageSize,
@@ -4379,6 +4474,12 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         private AuthenticationState _state = new(new ClaimsPrincipal(new ClaimsIdentity()));
 
         public override Task<AuthenticationState> GetAuthenticationStateAsync() => Task.FromResult(_state);
+
+        public void SetAnonymous()
+        {
+            _state = new(new ClaimsPrincipal(new ClaimsIdentity()));
+            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+        }
 
         public void SetAuthenticated(string userId, string tenantId)
         {

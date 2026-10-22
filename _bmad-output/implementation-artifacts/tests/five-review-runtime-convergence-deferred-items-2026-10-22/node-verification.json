@@ -1,0 +1,93 @@
+{
+  "node": "24.22.1",
+  "npm": "11.19.1",
+  "wrong_node": "26.4.0",
+  "wrong_npm": "11.18.0",
+  "archive_sha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+  "source": "https://nodejs.org/dist/v24.22.1/SHASUMS256.txt",
+  "checks": [
+    {
+      "project": ".",
+      "check": "wrong-node",
+      "command": [
+        "<user-home>/.nvm/versions/node/v26.4.0/bin/node",
+        "<node24>/lib/node_modules/npm/bin/npm-cli.js",
+        "ci",
+        "--ignore-scripts"
+      ],
+      "exit_code": 1,
+      "lock_unchanged": true,
+      "node_modules_unchanged": true,
+      "output": "node-root-wrong-node.txt"
+    },
+    {
+      "project": ".",
+      "check": "wrong-npm",
+      "command": [
+        "<node24>/bin/node",
+        "<user-home>/.nvm/versions/node/v26.4.0/lib/node_modules/npm/bin/npm-cli.js",
+        "ci",
+        "--ignore-scripts"
+      ],
+      "exit_code": 1,
+      "lock_unchanged": true,
+      "node_modules_unchanged": true,
+      "output": "node-root-wrong-npm.txt"
+    },
+    {
+      "project": ".",
+      "check": "locked-install",
+      "command": [
+        "<node24>/bin/node",
+        "<node24>/lib/node_modules/npm/bin/npm-cli.js",
+        "ci",
+        "--ignore-scripts"
+      ],
+      "exit_code": 0,
+      "lock_unchanged": true,
+      "node_modules_unchanged": false,
+      "output": "node-root-locked-install.txt"
+    },
+    {
+      "project": "tests/e2e",
+      "check": "wrong-node",
+      "command": [
+        "<user-home>/.nvm/versions/node/v26.4.0/bin/node",
+        "<node24>/lib/node_modules/npm/bin/npm-cli.js",
+        "ci",
+        "--ignore-scripts"
+      ],
+      "exit_code": 1,
+      "lock_unchanged": true,
+      "node_modules_unchanged": true,
+      "output": "node-browser-wrong-node.txt"
+    },
+    {
+      "project": "tests/e2e",
+      "check": "wrong-npm",
+      "command": [
+        "<node24>/bin/node",
+        "<user-home>/.nvm/versions/node/v26.4.0/lib/node_modules/npm/bin/npm-cli.js",
+        "ci",
+        "--ignore-scripts"
+      ],
+      "exit_code": 1,
+      "lock_unchanged": true,
+      "node_modules_unchanged": true,
+      "output": "node-browser-wrong-npm.txt"
+    },
+    {
+      "project": "tests/e2e",
+      "check": "locked-install",
+      "command": [
+        "<node24>/bin/node",
+        "<node24>/lib/node_modules/npm/bin/npm-cli.js",
+        "ci"
+      ],
+      "exit_code": 0,
+      "lock_unchanged": true,
+      "node_modules_unchanged": false,
+      "output": "node-browser-locked-install.txt"
+    }
+  ]
+}

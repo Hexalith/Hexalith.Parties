@@ -1,0 +1,30 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.AdminPortal.Tests
+  Discovered:  Hexalith.Parties.AdminPortal.Tests
+  Starting:    Hexalith.Parties.AdminPortal.Tests
+    Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.AcceptedEdit_LateSubmitCannotStageAfterBoundaryChangeAsync(boundary: "dispose") [FAIL]
+      Shouldly.ShouldAssertException : new Uri(navigation.Uri).AbsolutePath
+          should be
+      "/admin/parties/edit-party/edit"
+          but was
+      "/admin/parties/edit-party"
+          difference
+      Difference     |                                                                                       |    |    |    |    |
+                     |                                                                                      \|/  \|/  \|/  \|/  \|/
+      Index          | ...  9    10   11   12   13   14   15   16   17   18   19   20   21   22   23   24   25   26   27   28   29
+      Expected Value | ...  r    t    i    e    s    /    e    d    i    t    -    p    a    r    t    y    /    e    d    i    t
+      Actual Value   | ...  r    t    i    e    s    /    e    d    i    t    -    p    a    r    t    y
+      Expected Code  | ...  114  116  105  101  115  47   101  100  105  116  45   112  97   114  116  121  47   101  100  105  116
+      Actual Code    | ...  114  116  105  101  115  47   101  100  105  116  45   112  97   114  116  121
+      Stack Trace:
+        tests/Hexalith.Parties.AdminPortal.Tests/Components/CreateEditPartyPageTests.cs(907,0): at Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.AcceptedEdit_LateSubmitCannotStageAfterBoundaryChangeAsync(String boundary)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+  Finished:    Hexalith.Parties.AdminPortal.Tests (ID = 'e81b0735c5d07794fc568207f41cc9c81788683e36e767388e1fb24f4ea25c87')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.AdminPortal.Tests  Total: 194, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 3.133s

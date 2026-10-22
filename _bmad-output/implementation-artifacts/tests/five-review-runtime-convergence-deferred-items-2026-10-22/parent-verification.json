@@ -1,0 +1,84 @@
+{
+  "baseline_commit": "7b7898307e8eca3774843b145d339e9986018409",
+  "local_status": "passed after independent review patches",
+  "admin_parent": {
+    "build_exit_code": 0,
+    "test_exit_code": 0,
+    "total": 283,
+    "failed": 0,
+    "skipped": 0,
+    "output": [
+      "parent-admin-build.txt",
+      "parent-admin-tests.txt"
+    ],
+    "build_command": "dotnet build tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj -c Debug -m:1 -p:MinVerVersionOverride=1.0.0",
+    "test_command": "dotnet tests/Hexalith.Parties.AdminPortal.Tests/bin/Debug/net10.0/Hexalith.Parties.AdminPortal.Tests.dll"
+  },
+  "other_verified_tests": {
+    "service_focused": 172,
+    "aggregate_focused": 110,
+    "client_focused": 117,
+    "mcp": 94,
+    "ci": 429
+  },
+  "dotnet_total": 1205,
+  "node_qualification": {
+    "command": "python3 _bmad-output/implementation-artifacts/tests/five-review-runtime-convergence-deferred-items-2026-10-22/qualify-node.py --project-root . --wrong-node <user-home>/.nvm/versions/node/v26.4.0/bin/node --wrong-npm-cli <user-home>/.nvm/versions/node/v26.4.0/lib/node_modules/npm/bin/npm-cli.js",
+    "exit_code": 0,
+    "commands": 10,
+    "browser_configuration_tests": 8,
+    "verified_registry_signatures": 499,
+    "verified_attestations": 120,
+    "evidence": "node-reproducible-qualification.json"
+  },
+  "review": {
+    "layers": [
+      "blind-hunter",
+      "edge-case-hunter",
+      "verification-gap"
+    ],
+    "patches": "Generation-owned submit cleanup, post-acceptance authorization failure, terminal receipt disposal, read-only refresh, snapshot and cooperative-cancellation regressions, internal XML contracts and reproducible runtime evidence.",
+    "deferred": "One pre-existing form-context authorization gap groups B2/B3; high severity, recorded in deferred-work.md.",
+    "rejected": "B7: unsupported update/removal operations have no current production caller."
+  },
+  "commitlint": {
+    "version": "21.2.2",
+    "messages": {
+      "runtime": "build: pin the Node and npm toolchain\n",
+      "convergence": "fix: await projected edit convergence\n",
+      "receipts": "docs: record five deferred work closures\n"
+    },
+    "exit_codes": [
+      0,
+      0,
+      0
+    ]
+  },
+  "scheduler_status": "pending real reviewed main pushes",
+  "limits": [
+    "Package-mode Debug checks pass; HXP020 still blocks source launcher qualification.",
+    "No release, external deployment, owner approval or full-topology qualification.",
+    "Expected-state equality does not prove a command-specific projection version."
+  ],
+  "tested_source_sha256": {
+    ".github/workflows/ci.yml": "b77ca675fbe73ea4a4530b64db7eb9af80f0159f7d9d1f093dbc662ce382fcf8",
+    ".github/workflows/commitlint.yml": "e29c9d9593d5d085c7a9de8298f3379fe01fd484e9366391fcc44e93befe5061",
+    ".github/workflows/release.yml": "3cb9edd15b102987c75d728dfcd6eca391fe68be34e0c7b2ca63a89ca87e2fe9",
+    "package-lock.json": "a4c1f70c8ca17e27d6da2ec1b161dc3e946f81d3774f6ff90de644f9e59ecfdf",
+    "package.json": "db9be304052bbe22e2ee4820bb46177e6cedadc963ad6842f08e7eff8531ad87",
+    "src/Hexalith.Parties.AdminPortal/Components/CreateEditPartyPage.razor": "4a737f78ef88eea91b54d685e55c6f0ac374903e00607119ee75bb1ebf9870fe",
+    "src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor": "f645da744c001045dbe17d9155b468a4d78cd3d575ff61e36e9453b18e0ff358",
+    "src/Hexalith.Parties.AdminPortal/Services/AdminPortalPartyQueryService.cs": "12f33818401dd08e82028dab08d0053324b7c9a9e043f9c890928e58280fe5de",
+    "tests/Hexalith.Parties.AdminPortal.Tests/Components/CreateEditPartyPageTests.cs": "93e476b409483336c002e9cbc9dc47a822aaf0acfd43b8a3cfe77854660fe5d9",
+    "tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs": "89e6a2337adfd9bef61e837829085b5abc2fb6c74461b948e3267e9b8e45864e",
+    "tests/Hexalith.Parties.AdminPortal.Tests/Services/RecordingAdminPortalApiClient.cs": "2bf993ab6907ae16a7c42c44dca5672fb660c69de1f4cf7c8a91d1a66c59daa7",
+    "tests/Hexalith.Parties.Ci.Tests/AccessibilityWorkflowTests.cs": "d30e74f68e9b1647e56e526803a64947624ba83c828a796cdde464b7f676afa9",
+    "tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs": "e7f03c05ae4165da1a5aac2cf0b680bb8407f4a045b731fbacca41ad14f265d1",
+    "tests/e2e/package-lock.json": "f19301bcac4921ff9cf7183dc64189e877d983e83ab0d106904dad4074a2bd57",
+    "tests/e2e/package.json": "64a2c4752dd22c44e10d35cf81669615f906a48d08c5adb3b9e73522fda666c0",
+    ".npmrc": "85f476be1a3acba36c6d8ac40ab2943a77867cd18d7159cc5211a80e07eb3a62",
+    "tests/e2e/.npmrc": "85f476be1a3acba36c6d8ac40ab2943a77867cd18d7159cc5211a80e07eb3a62",
+    "src/Hexalith.Parties.AdminPortal/Services/AdminPortalAcceptedCommand.cs": "608de72662f4a2c7342b73100d3cfb5e9636fd48358a8dd3c92cfab6d42ad37a",
+    "_bmad-output/implementation-artifacts/tests/five-review-runtime-convergence-deferred-items-2026-10-22/qualify-node.py": "75e660e386c6df90f6faca24eead49b03a96b1b7fda948697df95da4c7eae506"
+  }
+}

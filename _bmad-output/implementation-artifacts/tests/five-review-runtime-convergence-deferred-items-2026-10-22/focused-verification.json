@@ -1,0 +1,42 @@
+[
+  {
+    "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:MinVerVersionOverride=1.0.0",
+    "exit_code": 0,
+    "output": "service-build.txt"
+  },
+  {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Validation.IdentifierValidatorTests -class Hexalith.Parties.Tests.Validation.ContactChannelValidatorTests -class Hexalith.Parties.Tests.FitnessTests.IdentifierHygieneFitnessTests -class Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests -class Hexalith.Parties.Tests.FitnessTests.G8OwnerDeliveryReceiptTests",
+    "exit_code": 0,
+    "output": "service-tests.txt"
+  },
+  {
+    "command": "dotnet build tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj -c Debug -m:1 -p:MinVerVersionOverride=1.0.0",
+    "exit_code": 0,
+    "output": "server-build.txt"
+  },
+  {
+    "command": "dotnet tests/Hexalith.Parties.Server.Tests/bin/Debug/net10.0/Hexalith.Parties.Server.Tests.dll -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateIdentifierTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCreateTests -class Hexalith.Parties.Server.Tests.Aggregates.PartyAggregateCompositeTests",
+    "exit_code": 0,
+    "output": "server-tests.txt"
+  },
+  {
+    "command": "dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Debug -m:1 -p:MinVerVersionOverride=1.0.0",
+    "exit_code": 0,
+    "output": "client-build.txt"
+  },
+  {
+    "command": "dotnet tests/Hexalith.Parties.Client.Tests/bin/Debug/net10.0/Hexalith.Parties.Client.Tests.dll -class Hexalith.Parties.Client.Tests.HttpPartiesCommandClientTests -class Hexalith.Parties.Client.Tests.HttpPartiesQueryClientTests -class Hexalith.Parties.Client.Tests.AdminPortal.AdminPortalGdprOperationContractTests",
+    "exit_code": 0,
+    "output": "client-tests.txt"
+  },
+  {
+    "command": "dotnet build tests/Hexalith.Parties.Mcp.Tests/Hexalith.Parties.Mcp.Tests.csproj -c Debug -m:1 -p:MinVerVersionOverride=1.0.0",
+    "exit_code": 0,
+    "output": "mcp-build.txt"
+  },
+  {
+    "command": "dotnet tests/Hexalith.Parties.Mcp.Tests/bin/Debug/net10.0/Hexalith.Parties.Mcp.Tests.dll",
+    "exit_code": 0,
+    "output": "mcp-tests.txt"
+  }
+]

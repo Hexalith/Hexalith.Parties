@@ -19,9 +19,16 @@
     <header class="hx-parties-admin__header">
         <h1 id="@($"hx-parties-admin-title-{_instanceId}")">@EffectiveLabels.Title</h1>
         <p class="hx-parties-admin__status" role="status" aria-live="polite">@StatusText</p>
-        @if (_acceptedCommandPartyId is not null)
+        @if (_acceptedCommand is not null)
         {
             <p class="hx-parties-admin__accepted-command-status" role="status" aria-live="polite">@EffectiveLabels.SavedUpdating</p>
+            @if (_acceptedCommand.ExpectedUpdate is not null)
+            {
+                <FluentButton role="button" Appearance="ButtonAppearance.Outline" OnClick="RefreshSelectedPartyAsync"
+                              Disabled="@_isDetailLoading" aria-label="@($"{EffectiveLabels.Retry}: {EffectiveLabels.DetailRegion}")">
+                    @EffectiveLabels.Retry
+                </FluentButton>
+            }
         }
     </header>
 
@@ -479,7 +486,7 @@
     private string? _originatingPartyId;
     private string? _pendingRowFocusPartyId;
     private string? _rowFocusAfterRenderId;
-    private string? _acceptedCommandPartyId;
+    private AdminPortalAcceptedCommand? _acceptedCommand;
     private readonly Dictionary<string, FluentButton> _rowButtonRefs = new(StringComparer.Ordinal);
     private int _focusedRowIndex;
 
@@ -648,20 +655,23 @@
             return;
         }
 
-        bool acceptedCommand = QueryService.ConsumeAcceptedCommand(RoutePartyId, authorizationState.ContextSignature);
-        string? acceptedPartyId = acceptedCommand ? NormalizeRoutePartyId(RoutePartyId) : null;
+        AdminPortalAcceptedCommand? acceptedCommand = QueryService.ConsumeAcceptedCommand(RoutePartyId, authorizationState.ContextSignature);
         string signature = string.Join('|',
             ContextKey ?? "<null>",
             authorizationState.ContextSignature,
             PageSize);
         if (string.Equals(_previousContextSignature, signature, StringComparison.Ordinal))
         {
-            if (acceptedPartyId is not null)
+            if (acceptedCommand is not null)
             {
                 // Rendering can yield to an older list response; invalidate it first.
                 Interlocked.Increment(ref _listVersion);
                 SafeCancel(Interlocked.Exchange(ref _listCts, null));
-                _acceptedCommandPartyId = acceptedPartyId;
+                Interlocked.Increment(ref _detailVersion);
+                SafeCancel(Interlocked.Exchange(ref _detailCts, null));
+                _isDetailLoading = false;
+                _detail = null;
+                _acceptedCommand = acceptedCommand;
                 await SafeStateHasChangedAsync().ConfigureAwait(false);
                 if (claim != Volatile.Read(ref _authContextClaim))
                 {
@@ -712,9 +722,9 @@
             return;
         }
 
-        if (acceptedPartyId is not null)
+        if (acceptedCommand is not null)
         {
-            _acceptedCommandPartyId = acceptedPartyId;
+            _acceptedCommand = acceptedCommand;
             await SafeStateHasChangedAsync().ConfigureAwait(false);
         }
 
@@ -731,10 +741,10 @@
 
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs args)
     {
-        if (_acceptedCommandPartyId is not null
-            && !string.Equals(CurrentPath, BuildPartyRoute(PartiesAdminPortalManifest.DetailRoute, _acceptedCommandPartyId), StringComparison.Ordinal))
+        if (_acceptedCommand is not null
+            && !string.Equals(CurrentPath, BuildPartyRoute(PartiesAdminPortalManifest.DetailRoute, _acceptedCommand.PartyId), StringComparison.Ordinal))
         {
-            _acceptedCommandPartyId = null;
+            _acceptedCommand = null;
         }
 
         _ = SafeStateHasChangedAsync();
@@ -972,12 +982,12 @@
             return;
         }
 
-        if (_acceptedCommandPartyId is not null
+        if (_acceptedCommand is { ExpectedUpdate: null } acceptedCreate
             && !metadata.IsDegraded
             && page.Freshness is null or { Status: ProjectionFreshnessStatus.Current }
-            && page.Items.Any(row => string.Equals(row.Id, _acceptedCommandPartyId, StringComparison.Ordinal)))
+            && page.Items.Any(row => string.Equals(row.Id, acceptedCreate.PartyId, StringComparison.Ordinal)))
         {
-            _acceptedCommandPartyId = null;
+            _acceptedCommand = null;
         }
 
         bool preserveLastKnownRows = _rows.Count > 0
@@ -1065,6 +1075,7 @@
             NavigateToPartyDetailRoute(partyId);
         }
 
+        AdminPortalAcceptedCommand? acceptedAtStart = _acceptedCommand;
         long version = SwapDetailCts(out CancellationToken token);
         _isDetailLoading = true;
         await SafeStateHasChangedAsync().ConfigureAwait(false);
@@ -1078,6 +1089,7 @@
             {
                 if (result.Payload.IsErased)
                 {
+                    _acceptedCommand = null;
                     // P30: align 200-with-erased path to the 410 path by removing the row.
                     // For direct GDPR routes, keep only a bounded terminal shell so Art.20
                     // export and Art.30 records can still run without restoring personal data.
@@ -1091,6 +1103,16 @@
                 {
                     _detail = NormalizeDetail(result.Payload);
                     _detailMetadata = result.Metadata;
+                    if (acceptedAtStart is not null
+                        && ReferenceEquals(acceptedAtStart, _acceptedCommand)
+                        && string.Equals(acceptedAtStart.ContextSignature, _authorizationState.ContextSignature, StringComparison.Ordinal)
+                        && !result.Metadata.IsDegraded
+                        && _detail.Freshness is { Status: ProjectionFreshnessStatus.Current }
+                        && acceptedAtStart.Matches(_detail))
+                    {
+                        _acceptedCommand = null;
+                    }
+
                     _detailEmptyKind = DetailEmptyKind.SelectParty;
                     if (focusDetail)
                     {
@@ -1106,6 +1128,11 @@
         {
             if (version == _detailVersion)
             {
+                if (IsTerminalReceiptFailure(ex.Kind))
+                {
+                    _acceptedCommand = null;
+                }
+
                 _detail = null;
                 _detailMetadata = null;
                 _detailEmptyKind = ex.Kind switch
@@ -1448,7 +1475,7 @@
     private void ResetVisibleState()
     {
         _rowFocusAfterRenderId = null;
-        _acceptedCommandPartyId = null;
+        _acceptedCommand = null;
         CancelInFlight();
         // Bump both versions so any in-flight list/detail tasks that resume after this reset
         // see a stale version and short-circuit, preventing cross-tenant data being painted
@@ -1489,8 +1516,19 @@
             NameHistory = detail.NameHistory ?? [],
         };
 
+    private static bool IsTerminalReceiptFailure(AdminPortalQueryFailureKind kind)
+        => kind is AdminPortalQueryFailureKind.AuthenticationRequired
+            or AdminPortalQueryFailureKind.TenantRequired
+            or AdminPortalQueryFailureKind.Forbidden
+            or AdminPortalQueryFailureKind.Gone;
+
     private void ApplyFailure(AdminPortalQueryException ex)
     {
+        if (IsTerminalReceiptFailure(ex.Kind))
+        {
+            _acceptedCommand = null;
+        }
+
         _rowButtonRefs.Clear();
         _rows.Clear();
         _detail = null;
@@ -1838,6 +1876,7 @@
 
         AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
         NavigationManager.LocationChanged -= OnLocationChanged;
+        _acceptedCommand = null;
         CancelInFlight();
         try
         {

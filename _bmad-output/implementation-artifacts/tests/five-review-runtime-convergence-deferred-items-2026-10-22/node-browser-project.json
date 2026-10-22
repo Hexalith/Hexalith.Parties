@@ -1,0 +1,28 @@
+{
+  "name": "hexalith-parties-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Playwright E2E accessibility and visual gate for Hexalith.Parties UI",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:a11y": "playwright test specs/parties-accessibility.spec.ts --project=chromium",
+    "test:portals": "playwright test specs/admin-parties-list.spec.ts specs/consumer-portal-routes.spec.ts specs/party-picker.spec.ts --project=chromium",
+    "test:ui": "playwright test specs/parties-accessibility.spec.ts specs/admin-parties-list.spec.ts specs/consumer-portal-routes.spec.ts specs/party-picker.spec.ts --project=chromium",
+    "test:visual": "playwright test specs/parties-accessibility.spec.ts --project=chromium --grep \"visual baseline\"",
+    "test:visual:update": "playwright test specs/parties-accessibility.spec.ts --project=chromium --grep \"visual baseline\" --update-snapshots",
+    "install:browsers": "playwright install chromium --with-deps",
+    "test:config": "node --experimental-strip-types --test config-tests/server-ownership.test.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.19.2",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": "24.22.1",
+    "npm": "11.19.1"
+  }
+}

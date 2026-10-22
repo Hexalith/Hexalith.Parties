@@ -105,6 +105,9 @@ internal sealed class RecordingAdminPortalApiClient : IPartiesAdminPortalApiClie
     public void EnqueueUpdate(AdminPortalCommandResult result)
         => _updateResponses.Enqueue(_ => Task.FromResult(result));
 
+    public void EnqueueUpdate(Func<CancellationToken, Task<AdminPortalCommandResult>> response)
+        => _updateResponses.Enqueue(response);
+
     public void EnqueueErasureStatus(PartyErasureStatusRecord status)
         => _erasureStatusResponses.Enqueue(_ => Task.FromResult<PartyErasureStatusRecord?>(status));
 

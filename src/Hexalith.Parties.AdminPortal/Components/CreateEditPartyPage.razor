@@ -177,6 +177,7 @@
     private bool _submitting;
     private bool _detailsUnavailable;
     private bool _pendingAlertFocus;
+    private long _formVersion;
 
     [Parameter]
     public string? RoutePartyId { get; set; }
@@ -412,37 +413,93 @@
         string commandPartyId = IsEdit
             ? _normalizedRoutePartyId!
             : UniqueIdHelper.GenerateSortableUniqueStringId();
-        AdminPortalCommandResult result = IsEdit
-            ? await QueryService.ApiClient.UpdatePartyCompositeAsync(commandPartyId, BuildUpdateCommand(commandPartyId), _lifetimeCts.Token).ConfigureAwait(false)
-            : await QueryService.ApiClient.CreatePartyCompositeAsync(BuildCreateCommand(commandPartyId), _lifetimeCts.Token).ConfigureAwait(false);
-
-        if (result.Outcome == AdminPortalCommandOutcome.Accepted)
+        UpdatePartyComposite? updateCommand = IsEdit ? BuildUpdateCommand(commandPartyId) : null;
+        string commandContext = _authorizationState.ContextSignature;
+        long commandVersion = _formVersion;
+        CancellationToken commandScope = QueryService.ScopeCancellationToken;
+        using var commandCts = CancellationTokenSource.CreateLinkedTokenSource(_lifetimeCts.Token, commandScope);
+        try
         {
-            _statusMessage = EffectiveLabels.SavedUpdating;
-            _loadedDetail = result.Detail is null ? BuildOptimisticDetail(commandPartyId) : NormalizeDetail(result.Detail);
-            string target = PartiesAdminPortalManifest.DetailRoute.Replace(
-                "{partyId}",
-                Uri.EscapeDataString(commandPartyId),
-                StringComparison.Ordinal);
-            if (AdminPortalRouteIds.IsSafe(commandPartyId))
+            AdminPortalCommandResult result = updateCommand is not null
+                ? await QueryService.ApiClient.UpdatePartyCompositeAsync(commandPartyId, updateCommand, commandCts.Token).ConfigureAwait(false)
+                : await QueryService.ApiClient.CreatePartyCompositeAsync(BuildCreateCommand(commandPartyId), commandCts.Token).ConfigureAwait(false);
+
+            if (commandCts.IsCancellationRequested || !OwnsSubmission(commandVersion))
             {
-                QueryService.StageAcceptedCommand(commandPartyId, _authorizationState.ContextSignature);
-                NavigationManager.NavigateTo(target);
+                return;
+            }
+
+            if (result.Outcome == AdminPortalCommandOutcome.Accepted)
+            {
+                AdminPortalAuthorizationState currentAuthorization;
+                try
+                {
+                    currentAuthorization = await AuthorizationService
+                        .GetAuthorizationStateAsync(commandCts.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (commandCts.IsCancellationRequested)
+                {
+                    return;
+                }
+                catch (Exception)
+                {
+                    if (OwnsSubmission(commandVersion))
+                    {
+                        // The command was accepted. Hide submission controls without suggesting a retry.
+                        Block(EffectiveLabels.DetailUnavailable);
+                        _statusMessage = EffectiveLabels.SavedUpdating;
+                    }
+
+                    return;
+                }
+
+                if (commandCts.IsCancellationRequested
+                    || !OwnsSubmission(commandVersion)
+                    || !currentAuthorization.IsAuthenticated
+                    || !currentAuthorization.HasTenantContext
+                    || !currentAuthorization.IsAdmin
+                    || !string.Equals(commandContext, currentAuthorization.ContextSignature, StringComparison.Ordinal))
+                {
+                    return;
+                }
+
+                _statusMessage = EffectiveLabels.SavedUpdating;
+                _loadedDetail = result.Detail is null ? BuildOptimisticDetail(commandPartyId) : NormalizeDetail(result.Detail);
+                string target = PartiesAdminPortalManifest.DetailRoute.Replace(
+                    "{partyId}",
+                    Uri.EscapeDataString(commandPartyId),
+                    StringComparison.Ordinal);
+                if (AdminPortalRouteIds.IsSafe(commandPartyId)
+                    && QueryService.TryStageAcceptedCommand(commandPartyId, commandContext, updateCommand, commandScope))
+                {
+                    NavigationManager.NavigateTo(target);
+                }
+            }
+            else if (result.Outcome == AdminPortalCommandOutcome.ValidationRejected)
+            {
+                MapServerValidation(result.ValidationFailures ?? []);
+                ApplyValidationFailure();
+            }
+            else
+            {
+                _formAlert = SafeCommandFailure(result.Outcome);
+                _pendingAlertFocus = true;
             }
         }
-        else if (result.Outcome == AdminPortalCommandOutcome.ValidationRejected)
+        catch (OperationCanceledException) when (commandCts.IsCancellationRequested)
         {
-            MapServerValidation(result.ValidationFailures ?? []);
-            ApplyValidationFailure();
         }
-        else
+        finally
         {
-            _formAlert = SafeCommandFailure(result.Outcome);
-            _pendingAlertFocus = true;
+            if (OwnsSubmission(commandVersion))
+            {
+                _submitting = false;
+            }
         }
-
-        _submitting = false;
     }
+
+    private bool OwnsSubmission(long commandVersion)
+        => commandVersion == _formVersion && Volatile.Read(ref _disposed) == 0;
 
     private bool ValidateClient()
     {
@@ -881,6 +938,7 @@
 
     private void ResetFormState()
     {
+        _formVersion++;
         _messages?.Clear();
         _editContext?.NotifyValidationStateChanged();
         _pickerAttached = false;

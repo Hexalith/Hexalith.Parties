@@ -1,0 +1,12 @@
+[
+  {
+    "file": "package-lock.json",
+    "result": "All lock contents apart from root engine metadata are unchanged.",
+    "normalized_lock_sha256_excluding_root_engines": "61374d9c534d3ecf61d2a4f00c70e8884a52d47c56caf93a8e7fa12f757bcccb"
+  },
+  {
+    "file": "tests/e2e/package-lock.json",
+    "result": "All lock contents apart from root engine metadata are unchanged.",
+    "normalized_lock_sha256_excluding_root_engines": "3c8606a0f08bce82590da55792cc4c29ebfc0d686cb096b748c96192013c220c"
+  }
+]

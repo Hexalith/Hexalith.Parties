@@ -1,0 +1,183 @@
+{
+  "status": "passed",
+  "node": "24.22.1",
+  "npm": "11.19.1",
+  "checks": [
+    {
+      "check": "root-wrong-node-reproduced",
+      "command": [
+        "<user-home>/.nvm/versions/node/v26.4.0/bin/node",
+        "<scratch>/node-v24.22.1-linux-x64/lib/node_modules/npm/bin/npm-cli.js",
+        "ci",
+        "--ignore-scripts"
+      ],
+      "cwd": "<scratch>/root",
+      "exit_code": 1,
+      "output": "root-wrong-node-reproduced.txt",
+      "before": {
+        "lock_sha256": "a4c1f70c8ca17e27d6da2ec1b161dc3e946f81d3774f6ff90de644f9e59ecfdf",
+        "modules_tree_sha256": "71ecf067a9b52ddf3e96c280ea277a08b71a4a20bbd0cda45e2f06f9efa75f27"
+      },
+      "after": {
+        "lock_sha256": "a4c1f70c8ca17e27d6da2ec1b161dc3e946f81d3774f6ff90de644f9e59ecfdf",
+        "modules_tree_sha256": "71ecf067a9b52ddf3e96c280ea277a08b71a4a20bbd0cda45e2f06f9efa75f27"
+      }
+    },
+    {
+      "check": "root-wrong-npm-reproduced",
+      "command": [
+        "<scratch>/node-v24.22.1-linux-x64/bin/node",
+        "<user-home>/.nvm/versions/node/v26.4.0/lib/node_modules/npm/bin/npm-cli.js",
+        "ci",
+        "--ignore-scripts"
+      ],
+      "cwd": "<scratch>/root",
+      "exit_code": 1,
+      "output": "root-wrong-npm-reproduced.txt",
+      "before": {
+        "lock_sha256": "a4c1f70c8ca17e27d6da2ec1b161dc3e946f81d3774f6ff90de644f9e59ecfdf",
+        "modules_tree_sha256": "71ecf067a9b52ddf3e96c280ea277a08b71a4a20bbd0cda45e2f06f9efa75f27"
+      },
+      "after": {
+        "lock_sha256": "a4c1f70c8ca17e27d6da2ec1b161dc3e946f81d3774f6ff90de644f9e59ecfdf",
+        "modules_tree_sha256": "71ecf067a9b52ddf3e96c280ea277a08b71a4a20bbd0cda45e2f06f9efa75f27"
+      }
+    },
+    {
+      "check": "root-locked-install-reproduced",
+      "command": [
+        "<scratch>/node-v24.22.1-linux-x64/bin/node",
+        "<scratch>/node-v24.22.1-linux-x64/lib/node_modules/npm/bin/npm-cli.js",
+        "ci",
+        "--ignore-scripts"
+      ],
+      "cwd": "<scratch>/root",
+      "exit_code": 0,
+      "output": "root-locked-install-reproduced.txt",
+      "lock_sha256_before": "a4c1f70c8ca17e27d6da2ec1b161dc3e946f81d3774f6ff90de644f9e59ecfdf",
+      "lock_sha256_after": "a4c1f70c8ca17e27d6da2ec1b161dc3e946f81d3774f6ff90de644f9e59ecfdf"
+    },
+    {
+      "check": "root-signatures-pinned",
+      "command": [
+        "<scratch>/node-v24.22.1-linux-x64/bin/node",
+        "<scratch>/node-v24.22.1-linux-x64/lib/node_modules/npm/bin/npm-cli.js",
+        "audit",
+        "signatures"
+      ],
+      "cwd": "<scratch>/root",
+      "exit_code": 0,
+      "output": "root-signatures-pinned.txt"
+    },
+    {
+      "check": "root-semantic-release-version-pinned",
+      "command": [
+        "<scratch>/node-v24.22.1-linux-x64/bin/node",
+        "<scratch>/node-v24.22.1-linux-x64/lib/node_modules/npm/bin/npm-cli.js",
+        "exec",
+        "--no",
+        "--",
+        "semantic-release",
+        "--version"
+      ],
+      "cwd": "<scratch>/root",
+      "exit_code": 0,
+      "output": "root-semantic-release-version-pinned.txt"
+    },
+    {
+      "check": "browser-wrong-node-reproduced",
+      "command": [
+        "<user-home>/.nvm/versions/node/v26.4.0/bin/node",
+        "<scratch>/node-v24.22.1-linux-x64/lib/node_modules/npm/bin/npm-cli.js",
+        "ci",
+        "--ignore-scripts"
+      ],
+      "cwd": "<scratch>/browser",
+      "exit_code": 1,
+      "output": "browser-wrong-node-reproduced.txt",
+      "before": {
+        "lock_sha256": "f19301bcac4921ff9cf7183dc64189e877d983e83ab0d106904dad4074a2bd57",
+        "modules_tree_sha256": "71ecf067a9b52ddf3e96c280ea277a08b71a4a20bbd0cda45e2f06f9efa75f27"
+      },
+      "after": {
+        "lock_sha256": "f19301bcac4921ff9cf7183dc64189e877d983e83ab0d106904dad4074a2bd57",
+        "modules_tree_sha256": "71ecf067a9b52ddf3e96c280ea277a08b71a4a20bbd0cda45e2f06f9efa75f27"
+      }
+    },
+    {
+      "check": "browser-wrong-npm-reproduced",
+      "command": [
+        "<scratch>/node-v24.22.1-linux-x64/bin/node",
+        "<user-home>/.nvm/versions/node/v26.4.0/lib/node_modules/npm/bin/npm-cli.js",
+        "ci",
+        "--ignore-scripts"
+      ],
+      "cwd": "<scratch>/browser",
+      "exit_code": 1,
+      "output": "browser-wrong-npm-reproduced.txt",
+      "before": {
+        "lock_sha256": "f19301bcac4921ff9cf7183dc64189e877d983e83ab0d106904dad4074a2bd57",
+        "modules_tree_sha256": "71ecf067a9b52ddf3e96c280ea277a08b71a4a20bbd0cda45e2f06f9efa75f27"
+      },
+      "after": {
+        "lock_sha256": "f19301bcac4921ff9cf7183dc64189e877d983e83ab0d106904dad4074a2bd57",
+        "modules_tree_sha256": "71ecf067a9b52ddf3e96c280ea277a08b71a4a20bbd0cda45e2f06f9efa75f27"
+      }
+    },
+    {
+      "check": "browser-locked-install-reproduced",
+      "command": [
+        "<scratch>/node-v24.22.1-linux-x64/bin/node",
+        "<scratch>/node-v24.22.1-linux-x64/lib/node_modules/npm/bin/npm-cli.js",
+        "ci"
+      ],
+      "cwd": "<scratch>/browser",
+      "exit_code": 0,
+      "output": "browser-locked-install-reproduced.txt",
+      "lock_sha256_before": "f19301bcac4921ff9cf7183dc64189e877d983e83ab0d106904dad4074a2bd57",
+      "lock_sha256_after": "f19301bcac4921ff9cf7183dc64189e877d983e83ab0d106904dad4074a2bd57"
+    },
+    {
+      "check": "browser-config-pinned",
+      "command": [
+        "<scratch>/node-v24.22.1-linux-x64/bin/node",
+        "<scratch>/node-v24.22.1-linux-x64/lib/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "test:config"
+      ],
+      "cwd": "<scratch>/browser",
+      "exit_code": 0,
+      "output": "browser-config-pinned.txt"
+    },
+    {
+      "check": "browser-typecheck-pinned",
+      "command": [
+        "<scratch>/node-v24.22.1-linux-x64/bin/node",
+        "<scratch>/node-v24.22.1-linux-x64/lib/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "typecheck"
+      ],
+      "cwd": "<scratch>/browser",
+      "exit_code": 0,
+      "output": "browser-typecheck-pinned.txt"
+    }
+  ],
+  "archive": {
+    "filename": "node-v24.22.1-linux-x64.tar.xz",
+    "url": "https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-x64.tar.xz",
+    "checksum_url": "https://nodejs.org/dist/v24.22.1/SHASUMS256.txt",
+    "expected_sha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+    "observed_sha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+    "comparison": "hashlib.sha256(archive.read_bytes()).hexdigest() == official SHASUMS256 entry"
+  },
+  "root_inputs": {
+    "package.json": "db9be304052bbe22e2ee4820bb46177e6cedadc963ad6842f08e7eff8531ad87",
+    "package-lock.json": "a4c1f70c8ca17e27d6da2ec1b161dc3e946f81d3774f6ff90de644f9e59ecfdf",
+    ".npmrc": "85f476be1a3acba36c6d8ac40ab2943a77867cd18d7159cc5211a80e07eb3a62"
+  },
+  "browser_inputs": {
+    "package.json": "64a2c4752dd22c44e10d35cf81669615f906a48d08c5adb3b9e73522fda666c0",
+    "package-lock.json": "f19301bcac4921ff9cf7183dc64189e877d983e83ab0d106904dad4074a2bd57",
+    ".npmrc": "85f476be1a3acba36c6d8ac40ab2943a77867cd18d7159cc5211a80e07eb3a62"
+  }
+}

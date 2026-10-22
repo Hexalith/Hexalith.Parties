@@ -5,14 +5,18 @@ origin: review-budget-followup
 source_spec: `spec-8-2-identifier-correctness-and-zero-risk-hygiene.md`
 severity: low
 reason: Review budget (3 cycles) was exhausted with the story finalized (status: done, verify green) while the review pass kept recommending an independent follow-up. The work was committed by bmad-loop run 20260707-072046-c4fb; this entry preserves the lingering follow-up recommendation for a deliberate later review.
-status: open
+status: done 2026-10-22
+resolution: Independent current-code follow-up review found no actionable in-scope defect; focused compatibility and prerequisite checks pass. Existing owner, transport, topology and migration gates retain their dispositions.
+verification: `spec-five-review-runtime-convergence-deferred-items.md`; `tests/five-review-runtime-convergence-deferred-items-2026-10-22/review-followups.json` and `validation.json`.
 
 ### DW-2: Follow-up review still recommended for 8-3-platform-api-prerequisites after the review budget was exhausted
 origin: review-budget-followup
 source_spec: `spec-8-3-platform-api-prerequisites.md`
 severity: low
 reason: Review budget (3 cycles) was exhausted with the story finalized (status: done, verify green) while the review pass kept recommending an independent follow-up. The work was committed by bmad-loop run 20260707-072046-c4fb; this entry preserves the lingering follow-up recommendation for a deliberate later review.
-status: open
+status: done 2026-10-22
+resolution: Independent current-code follow-up review found no actionable in-scope defect; focused compatibility and prerequisite checks pass. Existing owner, transport, topology and migration gates retain their dispositions.
+verification: `spec-five-review-runtime-convergence-deferred-items.md`; `tests/five-review-runtime-convergence-deferred-items-2026-10-22/review-followups.json` and `validation.json`.
 
 ### DW-3: Add a fail-continuing lane runner
 
@@ -129,8 +133,10 @@ origin: migrated from legacy ledger (flat source_spec "/home/administrator/proje
 location: .github/workflows CI and release Node setup
 source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-fix-memories-npm-vulnerabilities.md`
 reason: CI and release workflows use floating `lts/*`; changing this is pre-existing policy and the approved spec explicitly requires approval for Node engine policy changes.
-status: open
+status: done 2026-10-22
 decision: 2026-09-06 Pin Node 24 — Pin the tested Node 24 major and a repository-controlled npm version in CI and release workflows.
+resolution: Root and browser projects enforce exact Node 24.22.1 and bundled npm 11.19.1 with engine-strict; browser, commitlint and immutable release preparation callers select the distribution before installing. Checksum-verified locked installs and wrong-Node/wrong-npm no-mutation rejection checks pass; dependency resolutions are unchanged.
+verification: `tests/five-review-runtime-convergence-deferred-items-2026-10-22/validation.json`; spec `spec-five-review-runtime-convergence-deferred-items.md`.
 
 ### DW-18: Fail semantic-release closed to the local binary
 
@@ -1718,6 +1724,9 @@ archived: 2026-10-21
   severity: medium
   evidence: DW-178 deliberately closes matching-row identity visibility. An existing party already has that identity, so a healthy Current list/search response can contain its pre-edit row before the accepted update projects. The accepted receipt currently carries only party ID and authorization context, without a command/version witness. Matching identity must not be advertised as proof of the latest edit; qualify an owner-supported witness and an edit-specific stale-value regression separately.
 
+  status: done 2026-10-22
+  resolution: The circuit retains the submitted update and generated child IDs. Healthy Current authorized detail must match all replacement person/organization fields and added child IDs, types, values and preference before clearing the edit notice; list identity still reconciles creates. Receipt/detail version, submitting context, scope reset, route and disposal fences reject late work. This proves expected-state convergence, not that a specific command version projected.
+  verification: `tests/five-review-runtime-convergence-deferred-items-2026-10-22/validation.json`; spec `spec-five-review-runtime-convergence-deferred-items.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-package-validation-deferred-items.md`
   summary: Reject malformed prerelease identifiers in the release registry-floor version index.
@@ -1777,3 +1786,8 @@ archived: 2026-10-21
   status: done 2026-10-22
   resolution: Both credential-bearing jobs are independently extracted and required to declare production. The negative control removes only verify-publication protection while release remains protected and must fail; the reciprocal mutation is also rejected. This checks declarations locally and does not claim execution of GitHub environment protection.
   verification: `tests/five-runtime-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-runtime-release-deferred-items.md`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-review-runtime-convergence-deferred-items.md`
+  summary: Invalidate loaded admin form authorization across tenant/sign-in transitions and revalidate it before sending commands.
+  severity: high
+  evidence: Independent source review confirms the baseline CreateEditPartyPage loads authorization once, does not independently observe authentication transitions, and submits through the API client's current credentials without a pre-send comparison. Tenant A form values can therefore be sent after switching to B; an A/B/A transition can also evade a later signature-only comparison if no portal scope reset occurs. The current batch preserves that existing send behavior while qualifying accepted-receipt context, scope-reset and disposal fences. Add a stale-form/no-send regression and an authentication-transition epoch before claiming this broader form-context boundary.

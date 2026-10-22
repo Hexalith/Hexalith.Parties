@@ -749,6 +749,420 @@ public sealed class CreateEditPartyPageTests : BunitContext
         portal.WaitForAssertion(() => portal.FindAll(".hx-parties-admin__accepted-command-status").ShouldBeEmpty());
     }
 
+    [Theory]
+    [InlineData("old-person")]
+    [InlineData("prefix")]
+    [InlineData("suffix")]
+    [InlineData("dob")]
+    [InlineData("contact-id")]
+    [InlineData("contact-value")]
+    [InlineData("contact-type")]
+    [InlineData("contact-preferred")]
+    [InlineData("identifier-id")]
+    [InlineData("identifier-value")]
+    [InlineData("identifier-type")]
+    [InlineData("unrelated")]
+    [InlineData("stale")]
+    [InlineData("rebuilding")]
+    [InlineData("unavailable")]
+    [InlineData("local-only")]
+    [InlineData("freshness-degraded")]
+    [InlineData("no-freshness")]
+    [InlineData("degraded")]
+    [InlineData("search-degraded")]
+    [InlineData("organization-name")]
+    [InlineData("organization-trading")]
+    [InlineData("organization-form")]
+    [InlineData("organization-registration")]
+    [InlineData("organization-natural")]
+    public void AcceptedEdit_WaitsForAllSubmittedValuesThenConverges(string mismatch)
+    {
+        ArgumentNullException.ThrowIfNull(mismatch);
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-edit-convergence");
+        bool organization = mismatch.StartsWith("organization", StringComparison.Ordinal);
+        UpdatePartyComposite update = SubmitAcceptedEdit(api, organization);
+        PartyDetail expected = ProjectedUpdate(update);
+        PartyDetail actual = mismatch switch
+        {
+            "old-person" => expected with { PersonDetails = new PersonDetails { FirstName = "Prior", LastName = "Values" } },
+            "prefix" => expected with { PersonDetails = expected.PersonDetails! with { Prefix = null } },
+            "suffix" => expected with { PersonDetails = expected.PersonDetails! with { Suffix = null } },
+            "dob" => expected with { PersonDetails = expected.PersonDetails! with { DateOfBirth = null } },
+            "contact-id" => expected with { ContactChannels = [expected.ContactChannels[0] with { Id = "old-child" }] },
+            "contact-value" => expected with { ContactChannels = [expected.ContactChannels[0] with { Value = "old@example.test" }] },
+            "contact-type" => expected with { ContactChannels = [expected.ContactChannels[0] with { Type = ContactChannelType.Phone }] },
+            "contact-preferred" => expected with { ContactChannels = [expected.ContactChannels[0] with { IsPreferred = true }] },
+            "identifier-id" => expected with { Identifiers = [expected.Identifiers[0] with { Id = "old-child" }] },
+            "identifier-value" => expected with { Identifiers = [expected.Identifiers[0] with { Value = "old-value" }] },
+            "identifier-type" => expected with { Identifiers = [expected.Identifiers[0] with { Type = IdentifierType.VAT }] },
+            "unrelated" => expected with { Id = "another-party" },
+            "stale" => expected with { Freshness = new() { Status = ProjectionFreshnessStatus.Stale } },
+            "rebuilding" => expected with { Freshness = new() { Status = ProjectionFreshnessStatus.Rebuilding } },
+            "unavailable" => expected with { Freshness = new() { Status = ProjectionFreshnessStatus.Unavailable } },
+            "local-only" => expected with { Freshness = new() { Status = ProjectionFreshnessStatus.LocalOnly } },
+            "freshness-degraded" => expected with { Freshness = new() { Status = ProjectionFreshnessStatus.Degraded } },
+            "no-freshness" => expected with { Freshness = null },
+            "organization-name" => expected with { OrganizationDetails = expected.OrganizationDetails! with { LegalName = "Old name" } },
+            "organization-trading" => expected with { OrganizationDetails = expected.OrganizationDetails! with { TradingName = null } },
+            "organization-form" => expected with { OrganizationDetails = expected.OrganizationDetails! with { LegalForm = null } },
+            "organization-registration" => expected with { OrganizationDetails = expected.OrganizationDetails! with { RegistrationNumber = null } },
+            "organization-natural" => expected with { OrganizationDetails = expected.OrganizationDetails! with { IsNaturalPerson = true } },
+            _ => expected,
+        };
+        AdminPortalQueryMetadata metadata = mismatch switch
+        {
+            "degraded" => new(ServiceDegraded: true),
+            "search-degraded" => new(SearchDegradedReason: "unavailable"),
+            _ => AdminPortalQueryMetadata.Empty,
+        };
+        // A healthy matching list identity is already visible before the edit projects.
+        api.EnqueueList(new PagedResult<PartyIndexEntry>
+        {
+            Items = [new PartyIndexEntry { Id = update.PartyId, DisplayName = "Projected edit", Type = expected.Type }],
+            Page = 1, PageSize = 20, TotalCount = 1, TotalPages = 1,
+            Freshness = new() { Status = ProjectionFreshnessStatus.Current },
+        });
+        api.EnqueueDetail(actual, metadata);
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>(p => p.Add(x => x.RoutePartyId, update.PartyId));
+        portal.WaitForAssertion(() =>
+        {
+            api.DetailRequests.Count.ShouldBe(2);
+            portal.Find(".hx-parties-admin__accepted-command-status").TextContent.ShouldBe("Saved - updating...");
+        });
+        api.EnqueueDetail(expected);
+        portal.FindAll("fluent-button").Single(button => button.TextContent.Trim() == "Projected edit").Click();
+        portal.WaitForAssertion(() =>
+        {
+            api.DetailRequests.Count.ShouldBe(3);
+            portal.FindAll(".hx-parties-admin__accepted-command-status").ShouldBeEmpty();
+        });
+    }
+
+    [Fact]
+    public async Task AcceptedEdit_SnapshotUsesCommandBuiltBeforeAwaitAsync()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-submit-snapshot");
+        api.EnqueueDetail(EditSource(false));
+        var completion = new TaskCompletionSource<AdminPortalCommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        api.EnqueueUpdate(_ => completion.Task);
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, "edit-party"));
+        form.WaitForAssertion(() => form.Find("form").ShouldNotBeNull());
+        SetTextInput(form, "Date of birth", "1815-12-10");
+        Task submit = form.Find("form").SubmitAsync();
+        form.WaitForAssertion(() => api.UpdateRequests.Count.ShouldBe(1));
+        SetTextInput(form, "Date of birth", "1900-01-01");
+        completion.SetResult(new(AdminPortalCommandOutcome.Accepted, null));
+        await submit.ConfigureAwait(true);
+        api.EnqueueDetail(EditSource(false));
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>(p => p.Add(x => x.RoutePartyId, "edit-party"));
+        portal.WaitForAssertion(() =>
+        {
+            api.DetailRequests.Count.ShouldBe(2);
+            portal.Find(".hx-parties-admin__accepted-command-status").TextContent.ShouldBe("Saved - updating...");
+        });
+        api.EnqueueDetail(ProjectedUpdate(api.UpdateRequests[0].Command));
+        portal.Find("fluent-button[aria-label='Retry: Party detail']").Click();
+        portal.WaitForAssertion(() =>
+        {
+            api.DetailRequests.Count.ShouldBe(3);
+            portal.FindAll(".hx-parties-admin__accepted-command-status").ShouldBeEmpty();
+        });
+        api.UpdateRequests.Count.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData("scope-reset")]
+    [InlineData("tenant")]
+    [InlineData("sign-out")]
+    [InlineData("route")]
+    [InlineData("dispose")]
+    public async Task AcceptedEdit_LateSubmitCannotStageAfterBoundaryChangeAsync(string boundary)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-edit-submit-boundary");
+        api.EnqueueDetail(EditSource(false));
+        var completion = new TaskCompletionSource<AdminPortalCommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        api.EnqueueUpdate(_ => completion.Task); // Deliberately ignore cancellation.
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, "edit-party"));
+        form.WaitForAssertion(() => form.Find("form").ShouldNotBeNull());
+        SetTextInput(form, "First name", "Expected secret");
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo("/admin/parties/edit-party/edit");
+        Task submit = form.Find("form").SubmitAsync();
+        form.WaitForAssertion(() => api.UpdateRequests.Count.ShouldBe(1));
+        switch (boundary)
+        {
+            case "scope-reset":
+                Services.GetRequiredService<AdminPortalPartyQueryService>().ResetForTenantSwitch();
+                break;
+            case "tenant":
+                RenderAuthorizedTenant("scope-edit-submit-other");
+                break;
+            case "sign-out":
+                _authProvider.SetUnauthenticated();
+                break;
+            case "route":
+                api.EnqueueDetail(EditSource(false) with { Id = "another-edit" });
+                form.Render(p => p.Add(x => x.RoutePartyId, "another-edit"));
+                break;
+            case "dispose":
+                await form.InvokeAsync(form.Instance.Dispose).ConfigureAwait(true);
+                form.Dispose();
+                break;
+        }
+        completion.SetResult(new(AdminPortalCommandOutcome.Accepted, null));
+        await submit.WaitAsync(TimeSpan.FromSeconds(10), Xunit.TestContext.Current.CancellationToken).ConfigureAwait(true);
+        new Uri(navigation.Uri).AbsolutePath.ShouldBe("/admin/parties/edit-party/edit");
+        RenderAuthorizedTenant("scope-edit-submit-boundary");
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>(p => p.Add(x => x.RoutePartyId, "edit-party"));
+        portal.WaitForAssertion(() =>
+        {
+            api.ListRequests.Count.ShouldBe(1);
+            portal.FindAll(".hx-parties-admin__accepted-command-status").ShouldBeEmpty();
+        });
+    }
+
+    [Theory]
+    [InlineData("api")]
+    [InlineData("cancellation")]
+    [InlineData("authorization")]
+    public async Task AcceptedEdit_OldCompletionKeepsNewRouteSubmissionBusyAsync(string completionStage)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-generation-owned");
+        api.EnqueueDetail(EditSource(false));
+        var oldResponse = new TaskCompletionSource<AdminPortalCommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var newResponse = new TaskCompletionSource<AdminPortalCommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var oldAuthorization = new TaskCompletionSource<AuthenticationState>(TaskCreationOptions.RunContinuationsAsynchronously);
+        api.EnqueueUpdate(_ => oldResponse.Task);
+        api.EnqueueUpdate(_ => newResponse.Task);
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, "edit-party"));
+        form.WaitForAssertion(() => form.Find("form").ShouldNotBeNull());
+        if (completionStage == "authorization")
+        {
+            _authProvider.NextState = oldAuthorization.Task;
+            oldResponse.SetResult(new(AdminPortalCommandOutcome.Accepted, null));
+        }
+        Task oldSubmit = form.Find("form").SubmitAsync();
+        form.WaitForAssertion(() => api.UpdateRequests.Count.ShouldBe(1));
+        if (completionStage == "cancellation")
+        {
+            Services.GetRequiredService<AdminPortalPartyQueryService>().ResetForTenantSwitch();
+        }
+        api.EnqueueDetail(EditSource(false) with { Id = "new-route" });
+        form.Render(p => p.Add(x => x.RoutePartyId, "new-route"));
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo("/admin/parties/new-route/edit");
+        Task newSubmit = form.Find("form").SubmitAsync();
+        form.WaitForAssertion(() => api.UpdateRequests.Count.ShouldBe(2));
+        try
+        {
+            if (completionStage == "authorization")
+            {
+                oldAuthorization.SetException(new InvalidOperationException("private authorization diagnostic"));
+            }
+            else if (completionStage == "cancellation")
+            {
+                oldResponse.SetCanceled();
+            }
+            else
+            {
+                oldResponse.SetResult(new(AdminPortalCommandOutcome.Accepted, null));
+            }
+            await oldSubmit.WaitAsync(TimeSpan.FromSeconds(10), Xunit.TestContext.Current.CancellationToken).ConfigureAwait(true);
+            form.WaitForAssertion(() => form.FindComponents<FluentButton>()
+                .Single(x => x.Instance.Type == ButtonType.Submit).Instance.Disabled.ShouldBeTrue());
+            newSubmit.IsCompleted.ShouldBeFalse();
+            new Uri(navigation.Uri).AbsolutePath.ShouldBe("/admin/parties/new-route/edit");
+        }
+        finally
+        {
+            oldResponse.TrySetResult(new(AdminPortalCommandOutcome.Accepted, null));
+            oldAuthorization.TrySetResult(new(new ClaimsPrincipal(new ClaimsIdentity())));
+            newResponse.TrySetResult(new(AdminPortalCommandOutcome.Accepted, null));
+            await Task.WhenAll(oldSubmit, newSubmit).WaitAsync(TimeSpan.FromSeconds(10), Xunit.TestContext.Current.CancellationToken).ConfigureAwait(true);
+        }
+        new Uri(navigation.Uri).AbsolutePath.ShouldBe("/admin/parties/new-route");
+    }
+
+    [Fact]
+    public async Task AcceptedEdit_AuthorizationProviderFailureAfterAcceptanceBlocksResubmissionAsync()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-accepted-auth-failure");
+        api.EnqueueDetail(EditSource(false));
+        api.EnqueueUpdate(_ =>
+        {
+            _authProvider.NextState = Task.FromException<AuthenticationState>(new InvalidOperationException("private authorization diagnostic"));
+            return Task.FromResult(new AdminPortalCommandResult(AdminPortalCommandOutcome.Accepted, null));
+        });
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, "edit-party"));
+        form.WaitForAssertion(() => form.Find("form").ShouldNotBeNull());
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo("/admin/parties/edit-party/edit");
+        await form.Find("form").SubmitAsync().WaitAsync(TimeSpan.FromSeconds(10), Xunit.TestContext.Current.CancellationToken).ConfigureAwait(true);
+        form.WaitForAssertion(() =>
+        {
+            form.FindAll("form").ShouldBeEmpty();
+            form.Find("[role='alert']").TextContent.ShouldBe("The selected party is unavailable");
+            form.Find("[role='status']").TextContent.ShouldBe("Saved - updating...");
+            form.Markup.ShouldNotContain("private authorization diagnostic");
+            form.Markup.ShouldNotContain("Retry");
+        });
+        api.UpdateRequests.Count.ShouldBe(1);
+        new Uri(navigation.Uri).AbsolutePath.ShouldBe("/admin/parties/edit-party/edit");
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>(p => p.Add(x => x.RoutePartyId, "edit-party"));
+        portal.WaitForAssertion(() => portal.FindAll(".hx-parties-admin__accepted-command-status").ShouldBeEmpty());
+    }
+
+    [Fact]
+    public async Task AcceptedEdit_CooperativeCancellationReleasesCurrentControlsWithoutNavigationAsync()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-cooperative-submit");
+        api.EnqueueDetail(EditSource(false));
+        CancellationToken observedToken = default;
+        var response = new TaskCompletionSource<AdminPortalCommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        api.EnqueueUpdate(token =>
+        {
+            observedToken = token;
+            return response.Task.WaitAsync(token);
+        });
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, "edit-party"));
+        form.WaitForAssertion(() => form.Find("form").ShouldNotBeNull());
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo("/admin/parties/edit-party/edit");
+        Task submit = form.Find("form").SubmitAsync();
+        form.WaitForAssertion(() =>
+        {
+            api.UpdateRequests.Count.ShouldBe(1);
+            form.FindComponents<FluentButton>().Single(x => x.Instance.Type == ButtonType.Submit).Instance.Disabled.ShouldBeTrue();
+        });
+        Services.GetRequiredService<AdminPortalPartyQueryService>().ResetForTenantSwitch();
+        await submit.WaitAsync(TimeSpan.FromSeconds(2), Xunit.TestContext.Current.CancellationToken).ConfigureAwait(true);
+        observedToken.IsCancellationRequested.ShouldBeTrue();
+        response.Task.IsCompleted.ShouldBeFalse();
+        form.WaitForAssertion(() =>
+        {
+            form.FindComponents<FluentButton>().Single(x => x.Instance.Type == ButtonType.Submit).Instance.Disabled.ShouldBeFalse();
+            form.FindAll("[role='status']").ShouldNotContain(x => x.TextContent.Contains("Saved", StringComparison.Ordinal));
+        });
+        api.UpdateRequests.Count.ShouldBe(1);
+        new Uri(navigation.Uri).AbsolutePath.ShouldBe("/admin/parties/edit-party/edit");
+    }
+
+    [Theory]
+    [InlineData(AdminPortalQueryFailureKind.AuthenticationRequired, false, false)]
+    [InlineData(AdminPortalQueryFailureKind.TenantRequired, false, false)]
+    [InlineData(AdminPortalQueryFailureKind.Forbidden, false, false)]
+    [InlineData(AdminPortalQueryFailureKind.Gone, false, false)]
+    [InlineData(AdminPortalQueryFailureKind.NotFound, false, true)]
+    [InlineData(AdminPortalQueryFailureKind.AuthenticationRequired, true, false)]
+    [InlineData(AdminPortalQueryFailureKind.TenantRequired, true, false)]
+    [InlineData(AdminPortalQueryFailureKind.Forbidden, true, false)]
+    [InlineData(AdminPortalQueryFailureKind.Gone, true, false)]
+    [InlineData(AdminPortalQueryFailureKind.NotFound, true, true)]
+    public void AcceptedEdit_TerminalQueryFailuresDiscardReceiptButNotFoundRemainsPending(AdminPortalQueryFailureKind failure, bool listFailure, bool remainsPending)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-terminal-receipt");
+        UpdatePartyComposite update = SubmitAcceptedEdit(api);
+        if (listFailure)
+        {
+            api.EnqueueListFailure(failure);
+        }
+        else
+        {
+            api.EnqueueDetailFailure(failure);
+        }
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>(p => p.Add(x => x.RoutePartyId, update.PartyId));
+        portal.WaitForAssertion(() =>
+        {
+            api.ListRequests.Count.ShouldBe(1);
+            api.DetailRequests.Count.ShouldBe(2);
+            portal.FindAll(".hx-parties-admin__accepted-command-status").Count.ShouldBe(remainsPending ? 1 : 0);
+        });
+        api.UpdateRequests.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void AcceptedEdit_CurrentErasedDetailDiscardsReceiptWithoutClaimingConvergence()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("scope-erased-receipt");
+        UpdatePartyComposite update = SubmitAcceptedEdit(api);
+        api.EnqueueDetail(ProjectedUpdate(update) with { IsErased = true });
+        using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>(p => p.Add(x => x.RoutePartyId, update.PartyId));
+        portal.WaitForAssertion(() =>
+        {
+            api.DetailRequests.Count.ShouldBe(2);
+            portal.FindAll(".hx-parties-admin__accepted-command-status").ShouldBeEmpty();
+            portal.Markup.ShouldContain("The selected party is erased or no longer inspectable");
+        });
+    }
+
+    private UpdatePartyComposite SubmitAcceptedEdit(RecordingAdminPortalApiClient api, bool organization = false)
+    {
+        api.EnqueueDetail(EditSource(organization));
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, "edit-party"));
+        form.WaitForAssertion(() => form.Find("form").ShouldNotBeNull());
+        if (organization)
+        {
+            SetTextInput(form, "Legal name", "New legal name");
+            SetTextInput(form, "Trading name", "New trading name");
+            SetTextInput(form, "Legal form", "Ltd");
+            SetTextInput(form, "Registration number", "registration-123");
+        }
+        else
+        {
+            SetTextInput(form, "First name", "New first");
+            SetTextInput(form, "Last name", "New last");
+            SetTextInput(form, "Prefix", "Dr");
+            SetTextInput(form, "Suffix", "Jr");
+            SetTextInput(form, "Date of birth", "1815-12-10");
+        }
+        SetSelect(form, "Contact type", "Email");
+        SetTextInput(form, "Contact value", "new@example.test");
+        SetSelect(form, "Identifier type", "Other");
+        SetTextInput(form, "Identifier value", "new-identifier");
+        form.Find("form").Submit();
+        form.WaitForAssertion(() => api.UpdateRequests.Count.ShouldBeGreaterThan(0));
+        return api.UpdateRequests[^1].Command;
+    }
+
+    private static PartyDetail EditSource(bool organization) => new()
+    {
+        Id = "edit-party", Type = organization ? PartyType.Organization : PartyType.Person,
+        DisplayName = "Prior values", SortName = "Prior values", IsActive = true,
+        PersonDetails = organization ? null : new() { FirstName = "Prior", LastName = "Values" },
+        OrganizationDetails = organization ? new() { LegalName = "Prior organization" } : null,
+        CreatedAt = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+    };
+
+    private static PartyDetail ProjectedUpdate(UpdatePartyComposite update) => EditSource(update.OrganizationDetails is not null) with
+    {
+        PersonDetails = update.PersonDetails, OrganizationDetails = update.OrganizationDetails,
+        ContactChannels = update.AddContactChannels.Select(c => new ContactChannel
+        {
+            Id = c.ContactChannelId, Type = c.Type, Value = c.Value, IsPreferred = c.IsPreferred,
+        }).ToArray(),
+        Identifiers = update.AddIdentifiers.Select(i => new PartyIdentifier
+        {
+            Id = i.IdentifierId, Type = i.Type, Value = i.Value,
+        }).ToArray(),
+        Freshness = new() { Status = ProjectionFreshnessStatus.Current },
+    };
+
     private string SubmitAcceptedCreate(RecordingAdminPortalApiClient api)
     {
         using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>();
@@ -807,7 +1221,14 @@ public sealed class CreateEditPartyPageTests : BunitContext
     {
         private AuthenticationState _state = new(new ClaimsPrincipal(new ClaimsIdentity()));
 
-        public override Task<AuthenticationState> GetAuthenticationStateAsync() => Task.FromResult(_state);
+        public Task<AuthenticationState>? NextState { get; set; }
+
+        public override Task<AuthenticationState> GetAuthenticationStateAsync()
+        {
+            Task<AuthenticationState>? next = NextState;
+            NextState = null;
+            return next ?? Task.FromResult(_state);
+        }
 
         public void SetAuthenticated(string userId, string tenantId)
         {
