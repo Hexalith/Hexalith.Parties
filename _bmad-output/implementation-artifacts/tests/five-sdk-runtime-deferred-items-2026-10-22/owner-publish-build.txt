@@ -1,0 +1,47 @@
+  Determining projects to restore...
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/Hexalith.EventStore.Contracts.csproj (in 236 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/Hexalith.EventStore.SignalR.csproj (in 236 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/Hexalith.EventStore.Aspire.csproj (in 236 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Abstractions/Hexalith.EventStore.Admin.Abstractions.csproj (in 236 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/Hexalith.EventStore.Client.csproj (in 236 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/tests/Hexalith.EventStore.TestSubscriber/Hexalith.EventStore.TestSubscriber.csproj (in 236 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.Contracts/Hexalith.EventStore.Sample.Contracts.csproj (in 236 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server/Hexalith.EventStore.Admin.Server.csproj (in 236 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/Hexalith.EventStore.Admin.Server.Host.csproj (in 236 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.BlazorUI/Hexalith.EventStore.Sample.BlazorUI.csproj (in 236 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.Api/Hexalith.EventStore.Sample.Api.csproj (in 236 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample/Hexalith.EventStore.Sample.csproj (in 236 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj (in 236 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.ServiceDefaults/Hexalith.EventStore.ServiceDefaults.csproj (in 7 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.DomainService/Hexalith.EventStore.DomainService.csproj (in 7 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj (in 8 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Server/Hexalith.EventStore.Server.csproj (in 11 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Gateway/Hexalith.EventStore.Gateway.csproj (in 23 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.AppHost/Hexalith.EventStore.AppHost.csproj (in 303 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.RestApi.Generators/Hexalith.EventStore.RestApi.Generators.csproj (in 49 ms).
+  Hexalith.EventStore.Contracts -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/bin/Release/net10.0/Hexalith.EventStore.Contracts.dll
+  Hexalith.EventStore.Admin.Abstractions -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Abstractions/bin/Release/net10.0/Hexalith.EventStore.Admin.Abstractions.dll
+  Hexalith.EventStore.Admin.Server -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server/bin/Release/net10.0/Hexalith.EventStore.Admin.Server.dll
+  Hexalith.EventStore.ServiceDefaults -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.ServiceDefaults/bin/Release/net10.0/Hexalith.EventStore.ServiceDefaults.dll
+  Hexalith.EventStore.Admin.Server.Host -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Server.Host/bin/Release/net10.0/Hexalith.EventStore.Admin.Server.Host.dll
+  Hexalith.EventStore.Client -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/bin/Release/net10.0/Hexalith.EventStore.Client.dll
+  Hexalith.EventStore.SignalR -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.SignalR/bin/Release/net10.0/Hexalith.EventStore.SignalR.dll
+  Hexalith.EventStore.Admin.UI -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/bin/Release/net10.0/Hexalith.EventStore.Admin.UI.dll
+  Hexalith.EventStore.DomainService -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.DomainService/bin/Release/net10.0/Hexalith.EventStore.DomainService.dll
+  Hexalith.EventStore.Server -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Server/bin/Release/net10.0/Hexalith.EventStore.Server.dll
+  Hexalith.EventStore.Gateway -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Gateway/bin/Release/net10.0/Hexalith.EventStore.Gateway.dll
+  Hexalith.EventStore -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Release/net10.0/Hexalith.EventStore.dll
+  Hexalith.EventStore.Sample.Contracts -> ${PARTIES_ROOT}/references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.Contracts/bin/Release/net10.0/Hexalith.EventStore.Sample.Contracts.dll
+  Hexalith.EventStore.Sample -> ${PARTIES_ROOT}/references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample/bin/Release/net10.0/Hexalith.EventStore.Sample.dll
+  Hexalith.EventStore.Sample.BlazorUI -> ${PARTIES_ROOT}/references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.BlazorUI/bin/Release/net10.0/Hexalith.EventStore.Sample.BlazorUI.dll
+  Hexalith.EventStore.RestApi.Generators -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.RestApi.Generators/bin/Release/netstandard2.0/Hexalith.EventStore.RestApi.Generators.dll
+  Hexalith.EventStore.Sample.Api -> ${PARTIES_ROOT}/references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.Api/bin/Release/net10.0/Hexalith.EventStore.Sample.Api.dll
+  Hexalith.EventStore.TestSubscriber -> ${PARTIES_ROOT}/references/Hexalith.EventStore/tests/Hexalith.EventStore.TestSubscriber/bin/Release/net10.0/Hexalith.EventStore.TestSubscriber.dll
+  Hexalith.EventStore.Aspire -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Aspire/bin/Release/net10.0/Hexalith.EventStore.Aspire.dll
+  Hexalith.EventStore.AppHost -> ${PARTIES_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.AppHost/bin/Release/net10.0/Hexalith.EventStore.AppHost.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.64

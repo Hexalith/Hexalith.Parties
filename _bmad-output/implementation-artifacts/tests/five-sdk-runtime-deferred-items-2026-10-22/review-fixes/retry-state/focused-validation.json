@@ -1,0 +1,83 @@
+{
+  "scope": "Focused stop-proof lifetime correction only. Parent owns final live, full suite, source, ledger and acceptance evidence.",
+  "diagnosis": {
+    "source_defect": "Completed stop names were local to QuiesceOwnedWorkersAsync. An observer failure discarded them, so an already stopped Unknown/disabled resource could be mistaken for a pending startup on the automatic fallback and explicit retries.",
+    "sibling_defect": "Task.WhenAll throws after all stop tasks settle; successful sibling names were collected only after a successful aggregate, losing completed proofs when another stop failed.",
+    "failed_live_log_timing_utc": {
+      "host_stop_began": "2026-10-22T21:05:19.4451723Z",
+      "memories_dcp_failure": "2026-10-22T21:05:36.9934543Z",
+      "last_sidecar_stop_succeeded": "2026-10-22T21:05:43.2139179Z",
+      "command_stages_elapsed_seconds": 23.769
+    },
+    "interpretation": "The stop command stages finished within the unchanged 30-second worker budget. Resource contention alone does not explain loss of retry progress. The source defect is reproduced independently with controlled real SDK notification/command services; the expired live control plane was not available for a fresh status observation."
+  },
+  "correction": [
+    "Retain completed stop proofs for the application lifetime, clearing only after application disposal succeeds.",
+    "After every stop group settles, collect each completed-success task sequentially in finally, even if another sibling failed.",
+    "Keep exact kernel-exit proof, pending-start fencing, retained failure ownership and existing deadlines unchanged."
+  ],
+  "regression": {
+    "cases": 2,
+    "behaviors": [
+      "Real owned process exits before a controlled DCP unsuccessful result is accepted.",
+      "Snapshot remains Unknown with stop disabled.",
+      "An optional genuinely unsuccessful sibling stop still retains the completed Unknown sibling proof.",
+      "Observer failures retain infrastructure across automatic fallback and an explicit retry.",
+      "Each completed worker is stopped only once; pending worker fences and setup cancellation remain covered."
+    ]
+  },
+  "commands": {
+    "build": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+    "focused": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method '*StoppedUnknownWorker_ObserverFailure*' -method '*FreshWorkerObservation*' -method '*ControlledWorker_SetupCancellationOrFailure*' -method '*PendingStartup_BlocksQuiescence*' -result-xml ${PRIVATE}/parties-sdk-retry-state-focused.xml"
+  },
+  "results": {
+    "build": {
+      "warnings": 0,
+      "errors": 0
+    },
+    "focused": {
+      "total": 7,
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "seconds": 0.943,
+      "methods": [
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+          "method": "ControlledWorker_SetupCancellationOrFailureStillReapsOwnedWorkersAsync",
+          "result": "Pass",
+          "cases": 2
+        },
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+          "method": "FreshWorkerObservation_RecognizesExitAndRejectsAReusedPidIdentityAsync",
+          "result": "Pass",
+          "cases": 1
+        },
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+          "method": "PendingStartup_BlocksQuiescenceUntilDelayedWorkerIsStoppableOrCanceledAsync",
+          "result": "Pass",
+          "cases": 2
+        },
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+          "method": "StoppedUnknownWorker_ObserverFailureRetainsStopProofAcrossAutomaticAndExplicitRetriesAsync",
+          "result": "Pass",
+          "cases": 2
+        }
+      ]
+    },
+    "targeted_crlf_aware_whitespace": "pass"
+  },
+  "source_sha256": {
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs": "a0d2578be73ec67f5371978e3d6515b069b5f161d7914b531013862f78d4c26d",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesTopologyCleanupTests.cs": "1f30bd0872a5f175d2d526da227905b7cfa63a7de09b3c57ac50b6e68bd2061e"
+  },
+  "limits": [
+    "No broad or live tests were rerun by this patch agent.",
+    "No running parent batch was signaled or changed; failed-session cleanup was performed separately by the parent.",
+    "This focused regression qualifies the retry protocol, not a new live-topology acceptance result."
+  ]
+}

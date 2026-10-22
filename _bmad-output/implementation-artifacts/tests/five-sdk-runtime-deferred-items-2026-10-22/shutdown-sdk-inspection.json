@@ -1,0 +1,45 @@
+{
+  "environment": {
+    "dotnet_sdk": "10.0.402",
+    "dotnet_runtime": "10.0.13",
+    "aspire_cli": "13.6.1+3751e615ad660621f2a7aa4c390ef48e08a0eed8",
+    "dapr_cli": "1.18.2",
+    "dapr_runtime": "1.18.7",
+    "dapr_dotnet_packages": "1.18.10",
+    "docker_server": "29.8.2",
+    "python": "3.14.4"
+  },
+  "installed_sha256": {
+    "Aspire.Hosting/13.6.1": "30d89e1adbccb28820d60f060ae87071d39ef99fe2bd04029ca736c660766f0e",
+    "Aspire.Hosting.Testing/13.6.1": "18926349776531642f94f9a349a62399b520983fbf02288439388e7524b8063b",
+    "Aspire.Hosting.Orchestration.linux-x64/13.6.1": "3a64784ef47718959f8410a164b9e3a981ea6617b2af5dd0f11398a7a11e47f5",
+    "runtime-selected CLI DCP bundle": "3a64784ef47718959f8410a164b9e3a981ea6617b2af5dd0f11398a7a11e47f5"
+  },
+  "observed_sdk_path": [
+    "DistributedApplicationTestingBuilder.DelegatedHost.StopAsync awaits testing-factory disposal with the caller token.",
+    "DistributedApplicationFactory sets DcpPublisher:WaitForResourceCleanup=true and reads HostOptions.ShutdownTimeout from the built host (live value: 30 seconds).",
+    "Factory disposal bounds entry-point exit, application StopAsync and DisposeAsync using that shutdown token; cancellation may complete the wrapper before a child process exit is visible.",
+    "DcpExecutor.StopAsync cancels watchers, optionally awaits CleanupResourcesAsync, and requests a Full orchestrator stop; it catches cancellation and logs other failures at Debug.",
+    "KubernetesService.CleanupResourcesAsync patches CleaningResources/Full and polls ResourcesCleanedUp; ordering is delegated to DCP, whose exact source does not order Executable cleanup before Container cleanup.",
+    "DcpExecutor.DisposeAsync uses a ten-second cancellation budget for StopAsync.",
+    "DcpExecutor.StopResourceAsync patches only the selected executable Stop flag and waits for Finished/Terminated, leaving backing containers intact."
+  ],
+  "fixture_repair": "Stop owned project hosts concurrently while sidecars and backing containers remain available, then stop owned executables/sidecars concurrently; re-observe and repeat within the same token for late partial-start workers. On Linux read /proc/PID/stat state and start-clock ticks directly, treating zombies as exited and rejecting reused PID identities. Only after exact worker quiescence and the optional test observer may the fully awaited testing-host disposal remove backing containers. One cumulative 30-second worker-quiescence budget covers stop passes, exit observations, the observer and automatic fallback within a cleanup attempt. Preserve app, builder, identities and control-plane ownership on failure; a later explicit retry gets its own attempt. An unsuccessful SDK stop can be resolved only by independent exit of its exact captured OS process.",
+  "inspection_commands": [
+    "dnx dotnet-inspect -y -- member Aspire.Hosting.DistributedApplication --package Aspire.Hosting@13.6.1 -m StopAsync -v:d -n 120",
+    "ilspycmd -t Aspire.Hosting.DistributedApplication ${NUGET_PACKAGES}/aspire.hosting/13.6.1/lib/net8.0/Aspire.Hosting.dll",
+    "ilspycmd -t Aspire.Hosting.Dcp.DcpExecutor ${NUGET_PACKAGES}/aspire.hosting/13.6.1/lib/net8.0/Aspire.Hosting.dll",
+    "ilspycmd -t Aspire.Hosting.Testing.DistributedApplicationFactory ${NUGET_PACKAGES}/aspire.hosting.testing/13.6.1/lib/net8.0/Aspire.Hosting.Testing.dll",
+    "ilspycmd -t Aspire.Hosting.Testing.DistributedApplicationTestingBuilder ${NUGET_PACKAGES}/aspire.hosting.testing/13.6.1/lib/net8.0/Aspire.Hosting.Testing.dll",
+    "ilspycmd -t Aspire.Hosting.Dcp.KubernetesService ${NUGET_PACKAGES}/aspire.hosting/13.6.1/lib/net8.0/Aspire.Hosting.dll"
+  ],
+  "observation_issue": "The original apparent survivor was an observation false positive: DCP reported executables Finished and independent /proc checks showed all recorded PIDs absent, while cached non-child Process observations timed out. Even opening another Process instance can share that cached wait state. The Linux kernel identity probe replaces it; a focused grandchild-process regression retains a .NET handle across live, mismatched-lifetime and actual-exit checks. This observation issue is separate from the source-proven absence of worker-before-container ordering in DCP.",
+  "budget_limits": "The 30-second worker-quiescence budget is cumulative for one cleanup attempt. Existing SDK host/factory shutdown and control-plane script budgets remain distinct; passing live tests observe total cleanup below 60 seconds, rather than asserting an unconditional global 60-second bound.",
+  "dcp_source": {
+    "version": "0.26.5",
+    "commit": "51648b2a8913b1d01df2e365c46cccc0b884a047",
+    "url": "https://github.com/microsoft/dcp/blob/51648b2a8913b1d01df2e365c46cccc0b884a047/internal/resourcecleanup/resources.go",
+    "sha256": "52a84305a4ad68decc46b632a6b4634c1d048d27ac328f521725b8622e245edc",
+    "ordering": "Container cleanup depends on ContainerExec only; Executable cleanup depends on ExecutableReplicaSet only. There is no executable-before-container cleanup dependency. Fully awaited SDK cleanup alone therefore does not establish the frozen backing-resource ordering."
+  }
+}

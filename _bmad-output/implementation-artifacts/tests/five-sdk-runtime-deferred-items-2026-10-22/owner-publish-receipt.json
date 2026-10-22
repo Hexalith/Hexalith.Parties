@@ -1,0 +1,22 @@
+{
+  "publisher": "Aspire SDK manifest",
+  "manifests": [
+    {
+      "sha256": "60529dc633f261ec160d1365aba237288667e9b06738b6d36d7da3aa91577884",
+      "grants": {
+        "sample": "client_credentials",
+        "admin": "password"
+      },
+      "resources": 21
+    },
+    {
+      "sha256": "e7ab30bb07ef2329ae40416894defbc755a165979837f8bd8a8ef6429b3aa741",
+      "grants": {
+        "sample": "password",
+        "admin": "client_credentials"
+      },
+      "resources": 21
+    }
+  ],
+  "private_output_removed": true
+}

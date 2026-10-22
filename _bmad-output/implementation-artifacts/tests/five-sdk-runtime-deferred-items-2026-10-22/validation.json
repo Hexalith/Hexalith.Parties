@@ -1,0 +1,129 @@
+{
+  "date": "2026-10-22",
+  "baseline_commit": "3ace477aa61f6cd936bd9c06d99fd8fe59a205a8",
+  "spec": "spec-five-sdk-runtime-deferred-items.md",
+  "dependencies": "dependency-identities.json",
+  "commands": {
+    "build_services": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+    "service_suite": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -result-xml ${PRIVATE}/parties-sdk-runtime-service-final.xml",
+    "build_integration": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+    "build_tenants_package": "dotnet build references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+    "build_owner": "dotnet build references/Hexalith.EventStore/src/Hexalith.EventStore.AppHost/Hexalith.EventStore.AppHost.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+    "publisher": "python3 scripts/verify-eventstore-publish.py --no-build",
+    "publisher_controls": "python3 -m unittest scripts/test_verify_eventstore_publish.py",
+    "process_regression": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method '*FreshWorkerObservation_RecognizesExitAndRejectsAReusedPidIdentityAsync' -result-xml ${PRIVATE}/parties-sdk-runtime-observation-regression.xml",
+    "live_suite": "PARTIES_MTLS_TOPOLOGY_TESTS=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests -class Hexalith.Parties.IntegrationTests.Gateway.EventStoreGatewayE2ETests -class Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests -class Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests -result-xml ${PRIVATE}/parties-sdk-runtime-live-kernel.xml",
+    "warning_guard": "bash scripts/check-no-warning-override.sh",
+    "whitespace_guard": "git -c core.whitespace=cr-at-eol diff --check"
+  },
+  "results": {
+    "affected_release_builds": {
+      "passed": 4,
+      "warnings": 0,
+      "errors": 0
+    },
+    "service_suite": {
+      "total": 2534,
+      "passed": 2534,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0,
+      "seconds": 46.335,
+      "started_utc": "2026-10-22T20:18:44.4395456+00:00",
+      "finished_utc": "2026-10-22T20:19:30.7735138+00:00"
+    },
+    "actual_manifest_publisher": {
+      "variants": 2,
+      "resources_per_variant": 21,
+      "private_output_removed": true,
+      "receipt": "owner-publish-receipt.json"
+    },
+    "publisher_controls": {
+      "passed": 5,
+      "failed": 0
+    },
+    "process_regression": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0,
+      "seconds": 0.098,
+      "started_utc": "2026-10-22T20:34:36.6077882+00:00",
+      "finished_utc": "2026-10-22T20:34:36.7052477+00:00"
+    },
+    "live_suite": {
+      "total": 22,
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0,
+      "seconds": 250.955,
+      "started_utc": "2026-10-22T20:34:44.0330892+00:00",
+      "finished_utc": "2026-10-22T20:38:54.9783145+00:00"
+    },
+    "guards": {
+      "warning_override": "pass",
+      "crlf_aware_whitespace": "pass"
+    }
+  },
+  "acceptance_mapping": {
+    "DW-27": "service-tests.json: SDK paging and real QueryRouter/public gateway mapping with substituted Dapr transport; this is HTTP/service proof, not Dapr runtime proof.",
+    "DW-84": "service-tests.json: persisted-byte-backed canonical target repair/redelivery, stored mapping and erasure controls; this is service integration, not durable Memories completion.",
+    "DW-13": "owner-publish-receipt.json and owner-publish-tests.txt: actual owner SDK manifests, poison and mutation controls; this is local emission, not target deployment.",
+    "DW-158": "tenants-package-build.txt, dependency-identities.json and runtime-tests.json: unchanged package-mode project plus real eight-sidecar Tenants readiness and authenticated gateway controls.",
+    "bounded Aspire shutdown": "shutdown-sdk-inspection.json and runtime-tests.json: exact SDK/DCP trace, corrected kernel observation, explicit ordering, controlled failures, fully awaited disposal and real normal/interrupted startup cleanup."
+  },
+  "unsuccessful_attempts": [
+    {
+      "attempt": "initial service full suite",
+      "result": "2532/2534; two pre-existing fitness assertions still expected literal identities after session remapping. Both refreshed to assert remapped expression and production default; final 2534/2534 supersedes."
+    },
+    {
+      "attempt": "initial live batch",
+      "result": "18/20; startup internal gRPC port collision with a DCP-owned proxy and cached non-child process exit observation. Superseded; no runtime acceptance claimed."
+    },
+    {
+      "attempt": "sequential and initial concurrent shutdown experiments",
+      "result": "Canceled managed test runners by exact owned PID after shutdown bounds/observation failures. Superseded; no acceptance claimed. Exact session cleanup verified."
+    },
+    {
+      "attempt": "fresh .NET Process probe live batch",
+      "result": "19/22, zero skips; fresh Process objects still shared stale non-child wait state; one DCP stop result raced an already exited executable. Replaced Linux observer with direct kernel identity and exact-exit guard; final 22/22 supersedes."
+    }
+  ],
+  "ownership_cleanup": {
+    "all_sessions": "all-owned-cleanup.json",
+    "all_backing_containers": "all-backing-cleanup.json",
+    "verified_session_count": 25,
+    "verified_backing_container_count": 75,
+    "remaining_owned_resources": 0,
+    "method": "Session IDs and backing-container names derived only from these owned run logs; exact bootstrap cleanup with certificate path/ownership checks; fresh process references, container/network listings and filesystem absence verified. Unrelated topologies untouched."
+  },
+  "limits": [
+    "Mapped Debug/source qualification remains a separate parent gate; the earlier module-tool run mappings were ephemeral and the prior UI MSB4044 blocker is not bypassed.",
+    "No cloud or Docker/Kubernetes/ACA target publish/deployment is claimed.",
+    "Linux process-start identities were live-qualified; other operating systems retain the platform Process start-time probe.",
+    "SDK/factory and bootstrap cleanup budgets are distinct from the cumulative worker-quiescence token; observed total durations are evidence, not an unconditional global deadline.",
+    "No dependency, gitlink, signoff, deployment or persistence-format change. DW-116 and DW-126 remain open."
+  ],
+  "source_sha256": {
+    "_bmad-output/implementation-artifacts/deferred-work.md": "0386a47f515b5856feccd1345f75f65416d3725efa502e92696710ec7dad54d3",
+    "docs/development-guide.md": "bc041dfc70d67c72ac8f4e2a9554c91ef4640551b6473146873be9c13c55dfd3",
+    "scripts/test_verify_eventstore_publish.py": "bd55ddc084e571c44ae5fa2fdf16cf0cecc511e551cdfafb73ec6fe51e997873",
+    "scripts/verify-eventstore-publish.py": "dc6d27784ce1d28a4ab081d10c3c84348a363e89c1bc04b197d3eac6e6353f85",
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "b84bcbd3237905178e8211b6a0aad61e8417c53c3256fb70059fefb63ec706fa",
+    "src/Hexalith.Parties/Search/PartyMemoryIndexEntrySearchIndexer.cs": "667caae6a6ecec509f0a02ca1d0c482b257a518432b5eaf5acc9129064c420f8",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs": "e51f409c3f9360a8ee1d5f30c431a900dae19da92cc0030e5df3e1c0ee12131c",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesTopologyCleanupTests.cs": "886c72c5559c0483199e91b95094d88471a98e927575ace471bddc4c60420b66",
+    "tests/Hexalith.Parties.Tests/FitnessTests/AppHostTenantsTopologyTests.cs": "0670ca7ae190f4c4ecf3b52d09d9566a8f8ed041b00cfc11a9ac440136887578",
+    "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": "5324007d17b8a2fe7d323c449eccb47268d946e5ab5a1dd2e976d7cb97da5088",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyPagingActorInvocationHandler.cs": "b7e83239fa143c45520ffdf6446d8af650f88fc7d2b486c84bc8e4c227d0800f",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "271fa3d57a604ecb209835a383f87f621446cc68933d9c62af1d0c059b8fe54e",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexEntrySearchIndexerTests.cs": "471d2d9cd5114ff3f56eb7c36b71af61301affbc38068197b4b94081acb6704f",
+    "tests/README.md": "b612bee26ad50af0334ecb0ab7111c70c5b4472258f1f3b973b9ead09cd3b9e0"
+  }
+}

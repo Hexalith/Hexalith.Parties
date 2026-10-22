@@ -263,9 +263,9 @@ public sealed partial class PartySdkQueryService(
         }
 
         string cursorScope = CreateListCursorScope(query, payload, ScopePageSize(query, payload.PageSize));
-        if (!TryResolvePaging(query, payload.Page, payload.PageSize, cursorScope, out int pageNumber, out int pageSize, out int offset))
+        if (!TryResolvePaging(query, payload.Page, payload.PageSize, cursorScope, out int pageNumber, out int pageSize, out int offset, out string failureReason))
         {
-            return QueryResult.Failure(QueryAdapterFailureReason.InvalidCursor);
+            return QueryResult.Failure(failureReason);
         }
 
         return await ReadIndexAsync(query, cancellationToken, (model, freshness) =>
@@ -303,9 +303,9 @@ public sealed partial class PartySdkQueryService(
         }
 
         string cursorScope = CreateSearchCursorScope(query, payload, ScopePageSize(query, payload.PageSize));
-        if (!TryResolvePaging(query, payload.Page, payload.PageSize, cursorScope, out int pageNumber, out int pageSize, out int offset))
+        if (!TryResolvePaging(query, payload.Page, payload.PageSize, cursorScope, out int pageNumber, out int pageSize, out int offset, out string failureReason))
         {
-            return QueryResult.Failure(QueryAdapterFailureReason.InvalidCursor);
+            return QueryResult.Failure(failureReason);
         }
 
         return await ReadIndexAsync(query, cancellationToken, (model, freshness) =>
@@ -636,8 +636,10 @@ public sealed partial class PartySdkQueryService(
         string cursorScope,
         out int page,
         out int pageSize,
-        out int offset)
+        out int offset,
+        out string failureReason)
     {
+        failureReason = QueryAdapterFailureReason.InvalidCursor;
         page = payloadPage;
         pageSize = Math.Clamp(payloadPageSize, 1, 100);
         long payloadOffset = (long)(page - 1) * pageSize;
@@ -649,15 +651,20 @@ public sealed partial class PartySdkQueryService(
 
         pageSize = query.Paging.PageSize ?? 20;
         offset = 0;
-        string? failureReason = null;
-        if (pageSize is < 1 or > 100
-            || query.Paging.Offset is < 0
-            || (!string.IsNullOrWhiteSpace(query.Paging.Cursor) && query.Paging.Offset is not null)
-            || !TryDecodeCursor(query, cursorScope, out string? position, out failureReason))
+        if (pageSize is < 1 or > 100)
         {
-            if (!string.IsNullOrWhiteSpace(failureReason))
+            failureReason = QueryAdapterFailureReason.InvalidPage;
+            return false;
+        }
+
+        string? cursorFailureReason = null;
+        if (query.Paging.Offset is < 0
+            || (!string.IsNullOrWhiteSpace(query.Paging.Cursor) && query.Paging.Offset is not null)
+            || !TryDecodeCursor(query, cursorScope, out string? position, out cursorFailureReason))
+        {
+            if (!string.IsNullOrWhiteSpace(cursorFailureReason))
             {
-                LogCursorRejected(query.QueryType, failureReason);
+                LogCursorRejected(query.QueryType, cursorFailureReason);
             }
 
             return false;

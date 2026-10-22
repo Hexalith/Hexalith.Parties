@@ -47,6 +47,22 @@ jobs:
       aspire-timeout-minutes: 30
       aspire-continue-on-error: false
 
+  owner-publish:
+    name: Owner publisher qualification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Initialize owner publisher build dependencies
+        run: git -c submodule.recurse=false submodule update --init references/Hexalith.EventStore references/Hexalith.Builds
+      - name: Qualify actual owner manifests and rejection controls
+        run: python3 -B -m unittest scripts.test_verify_eventstore_publish -v
+
   ui-a11y:
     name: UI accessibility
     runs-on: ubuntu-24.04

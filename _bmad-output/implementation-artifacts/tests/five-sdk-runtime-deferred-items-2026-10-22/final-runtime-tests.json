@@ -1,0 +1,218 @@
+{
+  "summary": {
+    "total": 28,
+    "passed": 28,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0,
+    "seconds": 261.335,
+    "started_utc": "2026-10-22T21:12:38.9168135+00:00",
+    "finished_utc": "2026-10-22T21:17:00.2364835+00:00"
+  },
+  "methods": [
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Gateway.EventStoreGatewayE2ETests",
+      "method": "AuthenticatedCreate_ProjectsDetailsAndPersistsMatchingEventEnvelopesAsync",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "method": "CallerCancellation_ReachesModelConstructionAndRestoresEveryProfileEnvironmentValue",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "method": "InitializationFailure_ReportsActualReasonAndRestoresEnvironmentOnDisposal",
+      "result": "Pass",
+      "cases": 2
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "method": "PreparedInfrastructure_CleansUpThroughFixtureAndRetainsOwnershipForFailedCleanupRetry",
+      "result": "Pass",
+      "cases": 2
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "method": "ReadinessRequestCancellation_InterruptsPendingHttpAndCleansOwnedProfileInfrastructure",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests",
+      "method": "CompleteProfile_AllEightSidecarsRespondAndPartiesInvokesTenantsReadiness",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests",
+      "method": "RegisteredTenantHandler_RejectsUnauthenticatedDeliveryAndEstablishesAccessOnlyWithTestToken",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "BootstrapDisposalFailure_StillCleansTopologyAndPreservesEveryFailure",
+      "result": "Pass",
+      "cases": 2
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "Cleanup_OrdersQuiescenceBeforeOwnedInfrastructureAndSurvivesFailures",
+      "result": "Pass",
+      "cases": 4
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "Cleanup_WhenQuiescenceCannotBeConfirmed_PreservesTheControlPlane",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "ControlledWorker_SetupCancellationOrFailureStillReapsOwnedWorkersAsync",
+      "result": "Pass",
+      "cases": 2
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "FreshWorkerObservation_RecognizesExitAndRejectsAReusedPidIdentityAsync",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync",
+      "result": "Pass",
+      "cases": 4
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "PendingDisposal_RetainsInfrastructureUntilTheAwaitedWorkerCompletesAsync",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "PendingStartup_BlocksQuiescenceUntilDelayedWorkerIsStoppableOrCanceledAsync",
+      "result": "Pass",
+      "cases": 2
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "StoppedUnknownWorker_ObserverFailureRetainsStopProofAcrossAutomaticAndExplicitRetriesAsync",
+      "result": "Pass",
+      "cases": 2
+    }
+  ],
+  "classification": {
+    "real_host_gateway_mtls_and_shutdown_cases": 7,
+    "other_integration_controls": 21,
+    "note": "The batch includes controlled failure/notification/command tests; these are distinct from the seven live host cases."
+  },
+  "live_cleanup": [
+    {
+      "mode": "normal",
+      "recorded_workers": 17,
+      "backing_containers_removed": 3,
+      "sdk_host_shutdown_seconds": 30,
+      "observed_cleanup_seconds": 29.418,
+      "workers_observed_before_backing_removal": true,
+      "private_root_network_and_listeners_cleaned": true
+    },
+    {
+      "mode": "canceled",
+      "recorded_workers": 14,
+      "backing_containers_removed": 3,
+      "sdk_host_shutdown_seconds": 30,
+      "observed_cleanup_seconds": 17.871,
+      "workers_observed_before_backing_removal": true,
+      "private_root_network_and_listeners_cleaned": true
+    },
+    {
+      "mode": "failed",
+      "recorded_workers": 16,
+      "backing_containers_removed": 3,
+      "sdk_host_shutdown_seconds": 30,
+      "observed_cleanup_seconds": 16.392,
+      "workers_observed_before_backing_removal": true,
+      "private_root_network_and_listeners_cleaned": true
+    },
+    {
+      "mode": "cleanup-failed",
+      "recorded_workers": 17,
+      "backing_containers_removed": 3,
+      "sdk_host_shutdown_seconds": 30,
+      "observed_cleanup_seconds": 7.467,
+      "workers_observed_before_backing_removal": true,
+      "private_root_network_and_listeners_cleaned": true
+    }
+  ],
+  "worker_quiescence_budget_seconds": 30,
+  "observation_deadline_seconds": 60,
+  "runtime_profile": "PARTIES_MTLS_TOPOLOGY_TESTS=true",
+  "ownership_cleanup": {
+    "sessions": [
+      {
+        "session": "03af96d45ed2",
+        "root_removed": true,
+        "owned_control_containers_remaining": 0,
+        "owned_networks_remaining": 0
+      },
+      {
+        "session": "29c8ab429975",
+        "root_removed": true,
+        "owned_control_containers_remaining": 0,
+        "owned_networks_remaining": 0
+      },
+      {
+        "session": "ab8de31888ca",
+        "root_removed": true,
+        "owned_control_containers_remaining": 0,
+        "owned_networks_remaining": 0
+      },
+      {
+        "session": "bbc0a4fb1919",
+        "root_removed": true,
+        "owned_control_containers_remaining": 0,
+        "owned_networks_remaining": 0
+      },
+      {
+        "session": "eade974c2fa9",
+        "root_removed": true,
+        "owned_control_containers_remaining": 0,
+        "owned_networks_remaining": 0
+      },
+      {
+        "session": "fa52649c98c1",
+        "root_removed": true,
+        "owned_control_containers_remaining": 0,
+        "owned_networks_remaining": 0
+      }
+    ],
+    "observed_backing_containers": [
+      "fixture-memories-graph-cbvnhtjx",
+      "fixture-memories-graph-kqsekvwj",
+      "fixture-memories-graph-mpbnyxdm",
+      "fixture-memories-graph-surchngw",
+      "fixture-memories-graph-tdsezjme",
+      "fixture-memories-graph-zekaqsnp",
+      "fixture-memories-search-epsvweqc",
+      "fixture-memories-search-jhxkdwfm",
+      "fixture-memories-search-kvnnrdvx",
+      "fixture-memories-search-vfgphqzm",
+      "fixture-memories-search-xnktxscn",
+      "fixture-memories-search-yncazwcp",
+      "fixture-redis-bswtfcbm",
+      "fixture-redis-jtptcrra",
+      "fixture-redis-mgnmjybz",
+      "fixture-redis-qxrnrnnh",
+      "fixture-redis-ujdmnqbs",
+      "fixture-redis-vfehvvrw"
+    ],
+    "remaining_observed_backing_containers": 0
+  }
+}

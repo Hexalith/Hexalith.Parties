@@ -1,0 +1,135 @@
+{
+  "summary": {
+    "total": 22,
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0,
+    "seconds": 250.955,
+    "started_utc": "2026-10-22T20:34:44.0330892+00:00",
+    "finished_utc": "2026-10-22T20:38:54.9783145+00:00"
+  },
+  "methods": [
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Gateway.EventStoreGatewayE2ETests",
+      "method": "AuthenticatedCreate_ProjectsDetailsAndPersistsMatchingEventEnvelopesAsync",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "method": "CallerCancellation_ReachesModelConstructionAndRestoresEveryProfileEnvironmentValue",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "method": "InitializationFailure_ReportsActualReasonAndRestoresEnvironmentOnDisposal",
+      "result": "Pass",
+      "cases": 2
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "method": "PreparedInfrastructure_CleansUpThroughFixtureAndRetainsOwnershipForFailedCleanupRetry",
+      "result": "Pass",
+      "cases": 2
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+      "method": "ReadinessRequestCancellation_InterruptsPendingHttpAndCleansOwnedProfileInfrastructure",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests",
+      "method": "CompleteProfile_AllEightSidecarsRespondAndPartiesInvokesTenantsReadiness",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests",
+      "method": "RegisteredTenantHandler_RejectsUnauthenticatedDeliveryAndEstablishesAccessOnlyWithTestToken",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "BootstrapDisposalFailure_StillCleansTopologyAndPreservesEveryFailure",
+      "result": "Pass",
+      "cases": 2
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "Cleanup_OrdersQuiescenceBeforeOwnedInfrastructureAndSurvivesFailures",
+      "result": "Pass",
+      "cases": 4
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "Cleanup_WhenQuiescenceCannotBeConfirmed_PreservesTheControlPlane",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "FreshWorkerObservation_RecognizesExitAndRejectsAReusedPidIdentityAsync",
+      "result": "Pass",
+      "cases": 1
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync",
+      "result": "Pass",
+      "cases": 4
+    },
+    {
+      "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+      "method": "PendingDisposal_RetainsInfrastructureUntilTheAwaitedWorkerCompletesAsync",
+      "result": "Pass",
+      "cases": 1
+    }
+  ],
+  "live_cleanup": [
+    {
+      "mode": "normal",
+      "recorded_workers": 17,
+      "backing_containers_removed": 3,
+      "sdk_host_shutdown_seconds": 30,
+      "observed_cleanup_seconds": 31.189,
+      "workers_observed_before_backing_removal": true,
+      "private_root_network_and_listeners_cleaned": true
+    },
+    {
+      "mode": "canceled",
+      "recorded_workers": 14,
+      "backing_containers_removed": 3,
+      "sdk_host_shutdown_seconds": 30,
+      "observed_cleanup_seconds": 26.131,
+      "workers_observed_before_backing_removal": true,
+      "private_root_network_and_listeners_cleaned": true
+    },
+    {
+      "mode": "failed",
+      "recorded_workers": 16,
+      "backing_containers_removed": 3,
+      "sdk_host_shutdown_seconds": 30,
+      "observed_cleanup_seconds": 15.759,
+      "workers_observed_before_backing_removal": true,
+      "private_root_network_and_listeners_cleaned": true
+    },
+    {
+      "mode": "cleanup-failed",
+      "recorded_workers": 17,
+      "backing_containers_removed": 3,
+      "sdk_host_shutdown_seconds": 30,
+      "observed_cleanup_seconds": 5.764,
+      "workers_observed_before_backing_removal": true,
+      "private_root_network_and_listeners_cleaned": true
+    }
+  ],
+  "worker_quiescence_budget_seconds": 30,
+  "observation_deadline_seconds": 60,
+  "deadline_scope": "Each cleanup attempt shares one 30s token across stop passes, kernel exit observations, observer and automatic fallback. Existing SDK/factory and control-plane cleanup budgets are distinct; actual total cleanup is observed below 60s, not asserted as an unconditional global bound.",
+  "runtime_profile": "PARTIES_MTLS_TOPOLOGY_TESTS=true; real Dapr/mTLS/Redis and authenticated EventStore gateway"
+}

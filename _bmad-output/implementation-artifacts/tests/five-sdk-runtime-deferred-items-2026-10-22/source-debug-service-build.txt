@@ -1,0 +1,60 @@
+  Determining projects to restore...
+  Restored ${SOURCE_ROOT}/references/Hexalith.Commons/src/libraries/Hexalith.Commons/Hexalith.Commons.csproj (in 248 ms).
+  Restored ${SOURCE_ROOT}/references/Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/Hexalith.Commons.ServiceDefaults.csproj (in 214 ms).
+  Restored ${SOURCE_ROOT}/src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj (in 248 ms).
+  Restored ${SOURCE_ROOT}/src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj (in 248 ms).
+  Restored ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Testing/Hexalith.EventStore.Testing.csproj (in 222 ms).
+  Restored ${SOURCE_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Testing/Hexalith.Tenants.Testing.csproj (in 251 ms).
+  Restored ${SOURCE_ROOT}/src/Hexalith.Parties/Hexalith.Parties.csproj (in 251 ms).
+  Restored ${SOURCE_ROOT}/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj (in 259 ms).
+  21 of 29 projects are up-to-date for restore.
+  Hexalith.Commons.UniqueIds -> ${SOURCE_ROOT}/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/net10.0/Hexalith.Commons.UniqueIds.dll
+  Successfully created package '${SOURCE_ROOT}/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/Hexalith.Commons.UniqueIds.1.0.0.nupkg'.
+  Successfully created package '${SOURCE_ROOT}/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/Hexalith.Commons.UniqueIds.1.0.0.snupkg'.
+  Hexalith.EventStore.Contracts -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll
+  Hexalith.McpCli.Analyzers -> ${SOURCE_ROOT}/references/Hexalith.McpCli/src/Hexalith.McpCli.Analyzers/bin/Debug/netstandard2.0/Hexalith.McpCli.Analyzers.dll
+  Hexalith.McpCli.Abstractions -> ${SOURCE_ROOT}/references/Hexalith.McpCli/src/Hexalith.McpCli.Abstractions/bin/Debug/net10.0/Hexalith.McpCli.Abstractions.dll
+  Hexalith.Parties.Contracts -> ${SOURCE_ROOT}/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll
+  Hexalith.Parties.Authentication -> ${SOURCE_ROOT}/src/Hexalith.Parties.Authentication/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll
+  Hexalith.EventStore.Client -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/bin/Debug/net10.0/Hexalith.EventStore.Client.dll
+  Hexalith.EventStore.ServiceDefaults -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.ServiceDefaults/bin/Debug/net10.0/Hexalith.EventStore.ServiceDefaults.dll
+  Hexalith.EventStore.DomainService -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.DomainService/bin/Debug/net10.0/Hexalith.EventStore.DomainService.dll
+  Hexalith.Parties.Projections -> ${SOURCE_ROOT}/src/Hexalith.Parties.Projections/bin/Debug/net10.0/Hexalith.Parties.Projections.dll
+  Hexalith.Commons.Http -> ${SOURCE_ROOT}/references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/bin/Debug/net10.0/Hexalith.Commons.Http.dll
+  Hexalith.Parties.Security -> ${SOURCE_ROOT}/src/Hexalith.Parties.Security/bin/Debug/net10.0/Hexalith.Parties.Security.dll
+  Hexalith.Commons -> ${SOURCE_ROOT}/references/Hexalith.Commons/src/libraries/Hexalith.Commons/bin/Debug/net10.0/Hexalith.Commons.dll
+  Hexalith.Commons.UniqueIds -> ${SOURCE_ROOT}/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/net10.0/Hexalith.Commons.UniqueIds.dll
+  Successfully created package '${SOURCE_ROOT}/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/Hexalith.Commons.UniqueIds.3.126.1.nupkg'.
+  Successfully created package '${SOURCE_ROOT}/references/Hexalith.Commons/src/libraries/Hexalith.Commons.UniqueIds/bin/Debug/Hexalith.Commons.UniqueIds.3.126.1.snupkg'.
+  Hexalith.EventStore.Contracts -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll
+  Hexalith.McpCli.Analyzers -> ${SOURCE_ROOT}/references/Hexalith.McpCli/src/Hexalith.McpCli.Analyzers/bin/Debug/netstandard2.0/Hexalith.McpCli.Analyzers.dll
+  Hexalith.McpCli.Abstractions -> ${SOURCE_ROOT}/references/Hexalith.McpCli/src/Hexalith.McpCli.Abstractions/bin/Debug/net10.0/Hexalith.McpCli.Abstractions.dll
+  Hexalith.Tenants.Contracts -> ${SOURCE_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/bin/Debug/net10.0/Hexalith.Tenants.Contracts.dll
+  Hexalith.EventStore.Client -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Client/bin/Debug/net10.0/Hexalith.EventStore.Client.dll
+  Hexalith.Tenants.Client -> ${SOURCE_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Client/bin/Debug/net10.0/Hexalith.Tenants.Client.dll
+  Hexalith.Memories.Contracts -> ${SOURCE_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Contracts/bin/Debug/net10.0/Hexalith.Memories.Contracts.dll
+  Hexalith.Memories.Client.Rest -> ${SOURCE_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Client.Rest/bin/Debug/net10.0/Hexalith.Memories.Client.Rest.dll
+  Hexalith.Parties -> ${SOURCE_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll
+  Hexalith.Parties.Client -> ${SOURCE_ROOT}/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll
+  Hexalith.Parties.Testing -> ${SOURCE_ROOT}/src/Hexalith.Parties.Testing/bin/Debug/net10.0/Hexalith.Parties.Testing.dll
+  Hexalith.EventStore.Admin.Abstractions -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.Abstractions/bin/Debug/net10.0/Hexalith.EventStore.Admin.Abstractions.dll
+  Hexalith.EventStore.Server -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Server/bin/Debug/net10.0/Hexalith.EventStore.Server.dll
+  Hexalith.EventStore.Gateway -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Gateway/bin/Debug/net10.0/Hexalith.EventStore.Gateway.dll
+  Hexalith.EventStore -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Hexalith.EventStore.dll
+  Hexalith.EventStore.Testing -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Testing/bin/Debug/net10.0/Hexalith.EventStore.Testing.dll
+  Hexalith.Commons.ServiceDefaults -> ${SOURCE_ROOT}/references/Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/bin/Debug/net10.0/Hexalith.Commons.ServiceDefaults.dll
+  The package Hexalith.Commons.ServiceDefaults.1.0.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package '${SOURCE_ROOT}/references/Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/bin/Debug/Hexalith.Commons.ServiceDefaults.1.0.0.nupkg'.
+  Successfully created package '${SOURCE_ROOT}/references/Hexalith.Commons/src/libraries/Hexalith.Commons.ServiceDefaults/bin/Debug/Hexalith.Commons.ServiceDefaults.1.0.0.snupkg'.
+  Hexalith.EventStore.ServiceDefaults -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.ServiceDefaults/bin/Debug/net10.0/Hexalith.EventStore.ServiceDefaults.dll
+  Hexalith.EventStore.DomainService -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.DomainService/bin/Debug/net10.0/Hexalith.EventStore.DomainService.dll
+  Hexalith.EventStore.Server -> ${SOURCE_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore.Server/bin/Debug/net10.0/Hexalith.EventStore.Server.dll
+  Hexalith.Tenants.Server -> ${SOURCE_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Server/bin/Debug/net10.0/Hexalith.Tenants.Server.dll
+  Hexalith.Tenants.Testing -> ${SOURCE_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Testing/bin/Debug/net10.0/Hexalith.Tenants.Testing.dll
+  Hexalith.Parties.Tests -> ${SOURCE_ROOT}/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:17.29

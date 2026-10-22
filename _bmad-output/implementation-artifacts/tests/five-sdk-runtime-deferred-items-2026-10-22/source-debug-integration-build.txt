@@ -1,0 +1,12 @@
+  Determining projects to restore...
+${SOURCE_MAPPING}/SourceMapping.values.targets(234,1): error MSB4044: The "SourceMappingValidationTask" task was not given a value for the required parameter "AssetsFile". [${SOURCE_ROOT}/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj]
+${SOURCE_MAPPING}/SourceMapping.values.targets(234,1): error MSB4044: The "SourceMappingValidationTask" task was not given a value for the required parameter "AssetsFile". [${SOURCE_ROOT}/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/Hexalith.FrontComposer.Schema.csproj]
+
+Build FAILED.
+
+${SOURCE_MAPPING}/SourceMapping.values.targets(234,1): error MSB4044: The "SourceMappingValidationTask" task was not given a value for the required parameter "AssetsFile". [${SOURCE_ROOT}/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj]
+${SOURCE_MAPPING}/SourceMapping.values.targets(234,1): error MSB4044: The "SourceMappingValidationTask" task was not given a value for the required parameter "AssetsFile". [${SOURCE_ROOT}/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/Hexalith.FrontComposer.Schema.csproj]
+    0 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:01.64

@@ -59,6 +59,13 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     private HttpClient? _partiesClient;
     private HttpClient? _eventStoreClient;
     private IResourceBuilder<ContainerResource>? _redis;
+    private readonly Dictionary<int, long> _ownedWorkers = [];
+    private readonly HashSet<string> _stoppedWorkerNames = new(StringComparer.Ordinal);
+    private bool _workersQuiesced;
+    private bool _startupScheduled;
+
+    /// <summary>Observes worker exit while backing containers and control-plane ownership still exist.</summary>
+    internal Func<DistributedApplication, CancellationToken, Task>? ObserveQuiescenceAsync { get; set; }
 
     /// <summary>Initializes the ordinary health-check topology.</summary>
     public PartiesAspireTopologyFixture() : this(completeMtlsProfile: false)
@@ -197,6 +204,11 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 logging.AddFilter("Aspire.", LogLevel.Warning);
             });
 
+            _builder.Eventing.Subscribe<BeforeStartEvent>((_, _) =>
+            {
+                _startupScheduled = true;
+                return Task.CompletedTask;
+            });
             _app = await _builder.BuildAsync(cts.Token).ConfigureAwait(false);
             await _startApplication(_app, cts.Token).ConfigureAwait(false);
             if (_completeMtlsProfile)
@@ -365,12 +377,20 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     {
         _partiesClient?.Dispose();
         _eventStoreClient?.Dispose();
+        // One cumulative worker-quiescence budget spans host/sidecar stop commands,
+        // fresh exit observations and the automatic fallback within this cleanup attempt.
+        using var quiescence = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await PartiesTopologyCleanup.RunAsync(
             async () =>
             {
                 if (_app is not null)
                 {
-                    // Stop all workers and sidecars before disposal removes the owned Redis container.
+                    if (!_workersQuiesced) { await QuiesceOwnedWorkersAsync(_app, quiescence.Token).ConfigureAwait(false); }
+                    // Stop all workers and sidecars before the testing host removes owned Redis.
+                    // Aspire.Hosting.Testing 13.6.1 delegates StopAsync to its factory disposal:
+                    // HostOptions.ShutdownTimeout bounds that path and DCP waits for resource
+                    // cleanup. Keep awaiting disposal below even if this observation cancels;
+                    // a caller-side WaitAsync timeout must never authorize control-plane removal.
                     using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
                     await _app.StopAsync(timeout.Token).ConfigureAwait(false);
                 }
@@ -379,19 +399,35 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             {
                 if (_app is not null)
                 {
+                    // A failed stop must not let testing-factory disposal remove infrastructure
+                    // while owned workers remain active. Retry quiescence before starting disposal.
+                    if (!_workersQuiesced) { await QuiesceOwnedWorkersAsync(_app, quiescence.Token).ConfigureAwait(false); }
                     await _app.DisposeAsync().ConfigureAwait(false);
                     _app = null;
+                    _stoppedWorkerNames.Clear();
                 }
             },
             async () =>
             {
                 if (_builder is not null)
                 {
+                    if (_app is not null && !_workersQuiesced)
+                    {
+                        // The application callback already reports the failed observation.
+                        // Retain the builder as well; disposing it would dispose the same app.
+                        return;
+                    }
                     await _builder.DisposeAsync().ConfigureAwait(false);
                     _builder = null;
                 }
             },
-            CleanupCiDaprMtlsAsync,
+            async () =>
+            {
+                // Retain the final check for retry after any SDK stop/disposal failure.
+                await ConfirmOwnedWorkersStoppedAsync(quiescence.Token).ConfigureAwait(false);
+                await CleanupCiDaprMtlsAsync().ConfigureAwait(false);
+                _ownedWorkers.Clear();
+            },
             async () =>
             {
                 if (TenantBootstrapHost is not null)
@@ -400,6 +436,189 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                     TenantBootstrapHost = null;
                 }
             }).ConfigureAwait(false);
+    }
+
+    private void CaptureOwnedWorkers(DistributedApplication application)
+    {
+        DistributedApplicationModel model = application.Services.GetRequiredService<DistributedApplicationModel>();
+        string[] names = model.Resources.Select(resource => resource.Name)
+            .Concat(model.Resources.SelectMany(resource => resource.Annotations.OfType<DaprSidecarAnnotation>())
+                .Select(sidecar => sidecar.Sidecar.Name + "-cli"))
+            .Distinct(StringComparer.Ordinal).ToArray();
+        foreach (string name in names)
+        {
+            if (!application.ResourceNotifications.TryGetCurrentState(name, out ResourceEvent? state)) { continue; }
+            object? value = state.Snapshot.Properties.FirstOrDefault(property => property.Name == "executable.pid")?.Value;
+            if (value is null || !int.TryParse(Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture), out int id)) { continue; }
+            if (ReadWorkerStartIdentity(id) is long started) { _ownedWorkers[id] = started; }
+        }
+    }
+
+    private Task QuiesceOwnedWorkersAsync(DistributedApplication application, CancellationToken cancellationToken)
+    {
+        // A constructed model whose SDK StartAsync was never entered has no queued
+        // launches. Preserve its existing disposal path without waiting for snapshots.
+        if (!_startupScheduled) { _workersQuiesced = true; return Task.CompletedTask; }
+        return QuiesceStartedWorkersAsync(application, cancellationToken);
+    }
+
+    /// <summary>Drains a started model, retaining completed stops across cleanup retries.</summary>
+    /// <param name="application">The application whose workers remain owned.</param>
+    /// <param name="cancellationToken">The cumulative cleanup-attempt deadline.</param>
+    internal async Task QuiesceStartedWorkersAsync(DistributedApplication application, CancellationToken cancellationToken)
+    {
+        _workersQuiesced = false;
+        ResourceCommandService commands = application.Services.GetRequiredService<ResourceCommandService>();
+        DistributedApplicationModel model = application.Services.GetRequiredService<DistributedApplicationModel>();
+        string[] hosts = model.Resources.OfType<ProjectResource>().Select(resource => resource.Name).ToArray();
+        string[] executables = model.Resources.OfType<ExecutableResource>().Select(resource => resource.Name)
+            .Concat(model.Resources.SelectMany(resource => resource.Annotations.OfType<DaprSidecarAnnotation>())
+                .Select(sidecar => sidecar.Sidecar.Name + "-cli"))
+            .Distinct(StringComparer.Ordinal).ToArray();
+        // An SDK stop can leave an exited worker Unknown with stop disabled. Keep
+        // its completed stop across observer failures until this app is disposed.
+        HashSet<string> stoppedNames = _stoppedWorkerNames;
+        using var observations = new PeriodicTimer(TimeSpan.FromMilliseconds(50));
+        do
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            // Keep dependencies available until every scheduled worker has a stable
+            // stopped state or an enabled stop command. Absent/Waiting/Starting and
+            // disabled-stop snapshots cannot authorize infrastructure removal.
+            await WaitForPendingStartsAsync(application.ResourceNotifications,
+                hosts.Concat(executables).Where(name => !stoppedNames.Contains(name)), cancellationToken).ConfigureAwait(false);
+            CaptureOwnedWorkers(application);
+            // Hosts drain while their sidecars and backing services remain available.
+            // Re-observe partial startup: a worker can become stoppable during this pass.
+            await StopGroupAsync(hosts).ConfigureAwait(false);
+            await StopGroupAsync(executables).ConfigureAwait(false);
+            CaptureOwnedWorkers(application);
+            if (!_ownedWorkers.Any(worker => IsWorkerRunning(worker.Key, worker.Value))) { break; }
+            await observations.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false);
+        }
+        while (true);
+
+        async Task StopGroupAsync(string[] names)
+        {
+            Task<string?>[] stops = names.Where(name => !stoppedNames.Contains(name)).Select(StopAsync).ToArray();
+            try
+            {
+                await Task.WhenAll(stops).ConfigureAwait(false);
+            }
+            finally
+            {
+                // WhenAll settles every sibling before throwing. Preserve successful
+                // stop proofs even if another worker fails, with no concurrent writes.
+                foreach (Task<string?> stop in stops)
+                {
+                    if (stop.IsCompletedSuccessfully && await stop.ConfigureAwait(false) is string name) { stoppedNames.Add(name); }
+                }
+            }
+        }
+
+        async Task<string?> StopAsync(string name)
+        {
+            if (!application.ResourceNotifications.TryGetCurrentState(name, out ResourceEvent? state)
+                || !state.Snapshot.Commands.Any(command => command.Name == KnownResourceCommands.StopCommand
+                    && command.State == ResourceCommandState.Enabled)) { return null; }
+            object? pid = state.Snapshot.Properties.FirstOrDefault(property => property.Name == "executable.pid")?.Value;
+            int.TryParse(Convert.ToString(pid, System.Globalization.CultureInfo.InvariantCulture), out int processId);
+            long? started = ReadWorkerStartIdentity(processId);
+            ExecuteCommandResult stopped = await commands.ExecuteCommandAsync(state.ResourceId, KnownResourceCommands.StopCommand, cancellationToken)
+                .ConfigureAwait(false);
+            // DCP can report an unsuccessful stop after an already exited executable's
+            // status becomes Unknown. Only the exact observed OS exit resolves that race.
+            if (!stopped.Success && (started is null || IsWorkerRunning(processId, started.Value)))
+            {
+                throw new InvalidOperationException("An owned worker stop command failed; topology ownership was retained.");
+            }
+            return name;
+        }
+        // Re-check any resource that changed lifecycle state during the stop passes.
+        await WaitForPendingStartsAsync(application.ResourceNotifications,
+            hosts.Concat(executables).Where(name => !stoppedNames.Contains(name)), cancellationToken).ConfigureAwait(false);
+        CaptureOwnedWorkers(application);
+        await ConfirmOwnedWorkersStoppedAsync(cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (ObserveQuiescenceAsync is not null) { await ObserveQuiescenceAsync(application, cancellationToken).ConfigureAwait(false); }
+        _workersQuiesced = true;
+    }
+
+    /// <summary>Fences scheduled launches before their dependencies can be drained.</summary>
+    /// <param name="notifications">The SDK's current owned-resource snapshots.</param>
+    /// <param name="names">Workers not already stopped by this cleanup attempt.</param>
+    /// <param name="cancellationToken">The cumulative cleanup-attempt deadline.</param>
+    internal static async Task WaitForPendingStartsAsync(ResourceNotificationService notifications,
+        IEnumerable<string> names, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        string[] workers = names.Distinct(StringComparer.Ordinal).ToArray();
+        using var observations = new PeriodicTimer(TimeSpan.FromMilliseconds(50));
+        while (workers.Any(name => !notifications.TryGetCurrentState(name, out ResourceEvent? state)
+            || !IsStoppedOrStoppable(state.Snapshot)))
+        {
+            await observations.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        static bool IsStoppedOrStoppable(CustomResourceSnapshot snapshot)
+        {
+            string? state = snapshot.State?.Text;
+            return state == KnownResourceStates.NotStarted || state == KnownResourceStates.Finished
+                || state == KnownResourceStates.Exited || state == KnownResourceStates.FailedToStart
+                || snapshot.Commands.Any(command => command.Name == KnownResourceCommands.StopCommand
+                    && command.State == ResourceCommandState.Enabled
+                    && state != KnownResourceStates.Starting && state != KnownResourceStates.Waiting && state != KnownResourceStates.Building);
+        }
+    }
+
+    private async Task ConfirmOwnedWorkersStoppedAsync(CancellationToken cancellationToken)
+    {
+        using var observations = new PeriodicTimer(TimeSpan.FromMilliseconds(50));
+        try
+        {
+            // A fresh Process instance can share .NET's cached non-child wait state.
+            // Compare kernel identities on Linux; a reused PID cannot match its start.
+            while (_ownedWorkers.Any(worker => IsWorkerRunning(worker.Key, worker.Value)))
+            {
+                await observations.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw new InvalidOperationException("Owned topology workers have not exited; control-plane ownership was retained.");
+        }
+    }
+
+    /// <summary>Checks an exact OS process lifetime rather than a cached exit observation.</summary>
+    /// <param name="processId">The PID observed in this topology's live resource snapshot.</param>
+    /// <param name="started">The OS start identity captured before shutdown.</param>
+    /// <returns>Whether that exact owned process is still running.</returns>
+    internal static bool IsWorkerRunning(int processId, long started) => ReadWorkerStartIdentity(processId) == started;
+
+    /// <summary>Reads a live process's immutable start identity, or null after exit.</summary>
+    /// <param name="processId">The PID in an owned resource snapshot.</param>
+    /// <returns>Kernel start-clock ticks on Linux; process start-time ticks elsewhere.</returns>
+    internal static long? ReadWorkerStartIdentity(int processId)
+    {
+        if (processId <= 0) { return null; }
+        try
+        {
+            if (OperatingSystem.IsLinux())
+            {
+                string stat = File.ReadAllText($"/proc/{processId}/stat");
+                // comm is parenthesized and may itself contain spaces or parentheses.
+                string[] fields = stat[(stat.LastIndexOf(')') + 2)..].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                return fields[0] is "Z" or "X" ? null
+                    : long.Parse(fields[19], System.Globalization.CultureInfo.InvariantCulture);
+            }
+            using Process current = Process.GetProcessById(processId);
+            return current.HasExited ? null : current.StartTime.ToUniversalTime().Ticks;
+        }
+        catch (FileNotFoundException) { return null; }
+        catch (DirectoryNotFoundException) { return null; }
+        catch (ArgumentException) { return null; }
+        catch (InvalidOperationException) { return null; }
+        catch (System.ComponentModel.Win32Exception exception) when (exception.NativeErrorCode == 3) { return null; }
     }
 
     private static string CreateAdministratorToken()

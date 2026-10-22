@@ -1,0 +1,15 @@
+test_failed_command_reaps_its_descendants_and_withholds_output (scripts.test_verify_eventstore_publish.OwnedCommandTests.test_failed_command_reaps_its_descendants_and_withholds_output) ... ok
+test_timeout_reaps_an_inherited_pipe_descendant_after_parent_exit (scripts.test_verify_eventstore_publish.OwnedCommandTests.test_timeout_reaps_an_inherited_pipe_descendant_after_parent_exit) ... ok
+test_credentials_in_args_connection_strings_and_url_userinfo (scripts.test_verify_eventstore_publish.OwnerPublishTests.test_credentials_in_args_connection_strings_and_url_userinfo) ... ok
+test_emitted_copy_rejects_audience_workload_and_secret_contract_mutations (scripts.test_verify_eventstore_publish.OwnerPublishTests.test_emitted_copy_rejects_audience_workload_and_secret_contract_mutations) ... ok
+test_emitted_copy_rejects_development_endpoints (scripts.test_verify_eventstore_publish.OwnerPublishTests.test_emitted_copy_rejects_development_endpoints) ... ok
+test_emitted_copy_rejects_literal_credentials_and_nonsecret_references (scripts.test_verify_eventstore_publish.OwnerPublishTests.test_emitted_copy_rejects_literal_credentials_and_nonsecret_references) ... ok
+test_emitted_copy_rejects_poison_anywhere (scripts.test_verify_eventstore_publish.OwnerPublishTests.test_emitted_copy_rejects_poison_anywhere) ... ok
+test_failed_emissions_remove_private_output_and_keep_diagnostics_bounded (scripts.test_verify_eventstore_publish.OwnerPublishTests.test_failed_emissions_remove_private_output_and_keep_diagnostics_bounded) ... ok
+test_real_owner_manifests_preserve_external_contract_for_both_grants (scripts.test_verify_eventstore_publish.OwnerPublishTests.test_real_owner_manifests_preserve_external_contract_for_both_grants) ... ok
+test_secret_parameter_rejects_top_level_literal_value (scripts.test_verify_eventstore_publish.OwnerPublishTests.test_secret_parameter_rejects_top_level_literal_value) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 5.253s
+
+OK

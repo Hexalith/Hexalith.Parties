@@ -68,8 +68,8 @@ public sealed class AppHostTenantsTopologyTests
         program.ShouldContain("AppId = \"tenants\"");
         program.ShouldContain("WithReference(eventStoreResources.StateStore)");
         program.ShouldContain("WithReference(eventStoreResources.PubSub)");
-        program.ShouldContain(@"WithEnvironment(""Tenants__ServiceName"", ""tenants"")");
-        program.ShouldContain(@"WithEnvironment(""Tenants__CommandApiAppId"", ""eventstore"")");
+        program.ShouldContain(@"WithEnvironment(""Tenants__ServiceName"", daprMtls?.AppId(""tenants"") ?? ""tenants"")");
+        program.ShouldContain(@"WithEnvironment(""Tenants__CommandApiAppId"", daprMtls?.AppId(""eventstore"") ?? ""eventstore"")");
         program.ShouldContain(@"WithEnvironment(""Tenants__PubSubName"", ""pubsub"")");
         program.ShouldContain(@"WithEnvironment(""Tenants__TopicName"", ""system.tenants.events"")");
     }
@@ -80,7 +80,7 @@ public sealed class AppHostTenantsTopologyTests
         string program = ReadAppHostProgram();
 
         program.ShouldMatch(
-            @"WithEnvironment\(""EventStore__DomainServices__Registrations__wildcard_party_v1__AppId"",\s*""parties""\)");
+            @"WithEnvironment\(""EventStore__DomainServices__Registrations__wildcard_party_v1__AppId"",\s*daprMtls\?\.AppId\(""parties""\)\s*\?\?\s*""parties""\)");
         program.ShouldMatch(
             @"WithEnvironment\(""EventStore__DomainServices__Registrations__wildcard_party_v1__MethodName"",\s*""process""\)");
         program.ShouldMatch(

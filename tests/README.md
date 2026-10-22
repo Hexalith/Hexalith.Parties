@@ -197,3 +197,64 @@ NuGet cache settings requires restoring and rebuilding the test project.
 The CI job also runs `python3 tests/Hexalith.Parties.UI.Tests/verify-restored-assets.py`
 (from the repository root) to compile and execute the real stylesheet resolver
 against isolated primary and fallback NuGet caches without external feeds.
+
+## SDK paging, Memories retry and owner publish qualification
+
+`PartySdkQueryHandlerTests` and `EventStoreGatewayRoutingTests` exercise the
+published EventStore SDK's `InvalidPage` result through actual gateway HTTP
+routing. Envelope sizes outside 1–100 fail before cursor decoding, read-model
+access or search. Valid-size cursor failures keep their existing category;
+legacy payload paging and protected continuation controls remain covered.
+
+`PartyMemoryIndexEntrySearchIndexerTests` keeps enabled indexing without a CaseId
+retryable. Its handler redelivery cases serialize the committed canonical model,
+repair configuration, and assert the latest target and stored mapping, including
+an intervening erasure. These are service integration checks, not proof that a
+Memories workflow has durably completed.
+
+Run the EventStore owner's actual SDK manifest publisher and the mutation suite:
+
+```bash
+python3 scripts/verify-eventstore-publish.py
+python3 -m unittest scripts/test_verify_eventstore_publish.py
+```
+
+The verifier builds the owner AppHost in Release and emits both UI grant variants
+into a private temporary directory with synthetic poison credentials. It checks
+external JWT audiences, workload and UI authentication, HTTPS metadata, and
+resolvable secret parameter references. Mutated emitted copies must reject
+literal credentials, poison values and local authentication endpoints. Raw
+output is removed on success and failure; stdout contains bounded diagnostics
+or hashes and counts. This qualifies actual SDK manifest emission, not a cloud
+deployment or the Docker/Kubernetes/ACA target publishers.
+
+Publisher command supervision is qualified on Linux. Each command owns a new
+process session; a scoped child subreaper terminates and reaps only that command's
+process group within a five-second cleanup allowance. Builds disable persistent
+build servers. Windows/macOS and descendants that deliberately leave the owned
+session are outside this qualification. Failure controls cover inherited pipes,
+publication, malformed JSON, validation and second-emission cleanup without
+retaining raw output or printing credential-bearing diagnostics.
+
+Add `-class Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests`
+and `-class Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests`
+to the explicit runtime command above for shutdown qualification. The live normal,
+canceled and failed-start cases require real workers, then inspect worker exit,
+owned container/network removal and released listeners under observation deadlines.
+The fixture stops application hosts concurrently, then sidecars, and confirms
+fresh OS identities by PID and kernel start-clock identity before Aspire removes backing
+containers. One cumulative thirty-second worker-quiescence budget covers both
+stop groups, exit observations and automatic fallback within each cleanup attempt.
+Pending or absent startup snapshots must become stopped or stoppable before
+backing dependencies drain; models that never enter SDK startup dispose normally.
+Completed stops remain recorded until application disposal succeeds, including
+observer failures and failed-stop siblings, so an exited `Unknown` worker cannot
+block automatic or explicit cleanup retries. Exact OS exit checks still apply.
+Docker inspections have a linked five-second local timeout and bounded owned
+process cleanup. Controlled worker setup owns cleanup immediately after launch,
+including cancellation and setup errors, with a bounded tree-termination fallback.
+Controlled failure tests separately protect cleanup ordering, retained ownership,
+retry and pending disposal. A missed observation deadline never abandons the
+underlying disposal task. Installed Aspire/DCP bounds and exact receipts are
+recorded with the batch evidence; no additional teardown deadline is inferred
+from model-only checks.

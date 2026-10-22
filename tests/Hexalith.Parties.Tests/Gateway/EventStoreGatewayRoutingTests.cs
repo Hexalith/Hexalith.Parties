@@ -10,10 +10,15 @@ using System.Text.Json;
 
 using FluentValidation;
 
+using Dapr.Actors.Client;
+
 using Hexalith.EventStore.Contracts.Commands;
 using Hexalith.EventStore.Contracts.Events;
 using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Results;
+using Hexalith.EventStore.Contracts.Queries;
+using Hexalith.EventStore.Client.Projections;
+using Hexalith.EventStore.Client.Queries;
 using Hexalith.EventStore.Configuration;
 using Hexalith.EventStore.Indexes;
 using Hexalith.EventStore.Models;
@@ -27,11 +32,16 @@ using Hexalith.EventStore.Server.Queries;
 using Hexalith.EventStore.Testing.Fakes;
 using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Contracts.Commands;
+using Hexalith.Parties.Contracts.Security;
+using Hexalith.Parties.Contracts.Search;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Queries;
 using Hexalith.Parties.Domain;
 using Hexalith.Parties.Validation;
+using Hexalith.Parties.Projections.Configuration;
+using Hexalith.Parties.Projections.Models;
+using Hexalith.Parties.Search;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -41,6 +51,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 using NSubstitute;
@@ -653,6 +664,112 @@ public sealed class EventStoreGatewayRoutingTests
         query.ProjectionActorType.ShouldBe(PartyIndexQueryTypes.ActorTypeName);
     }
 
+    /// <summary>
+    /// Verifies actual Parties handler failures reach safe gateway ProblemDetails.
+    /// </summary>
+    /// <param name="queryType">The list or search query discriminator.</param>
+    /// <param name="pageSize">The public envelope page size.</param>
+    /// <param name="cursor">The optional protected cursor.</param>
+    /// <param name="expectedReason">The expected safe public reason.</param>
+    /// <returns>A task that represents the verification.</returns>
+    [Theory]
+    [InlineData(PartyIndexQueryTypes.PartyIndexQueryType, 101, null, "invalid-page")]
+    [InlineData(PartyIndexQueryTypes.PartyIndexQueryType, 200, null, "invalid-page")]
+    [InlineData(PartyIndexQueryTypes.PartyIndexQueryType, 101, "protected.cursor.payload", "invalid-page")]
+    [InlineData(PartyIndexQueryTypes.PartyIndexQueryType, 200, "protected.cursor.payload", "invalid-page")]
+    [InlineData(PartyIndexQueryTypes.PartySearchQueryType, 101, null, "invalid-page")]
+    [InlineData(PartyIndexQueryTypes.PartySearchQueryType, 200, null, "invalid-page")]
+    [InlineData(PartyIndexQueryTypes.PartySearchQueryType, 101, "protected.cursor.payload", "invalid-page")]
+    [InlineData(PartyIndexQueryTypes.PartySearchQueryType, 200, "protected.cursor.payload", "invalid-page")]
+    [InlineData(PartyIndexQueryTypes.PartyIndexQueryType, 20, "protected.cursor.payload", "invalid-cursor")]
+    [InlineData(PartyIndexQueryTypes.PartySearchQueryType, 20, "protected.cursor.payload", "invalid-cursor")]
+    public async Task PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync(string queryType, int pageSize, string? cursor, string expectedReason)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        IQueryCursorCodec codec = Substitute.For<IQueryCursorCodec>();
+        IPartySearchProvider search = Substitute.For<IPartySearchProvider>();
+        using var transport = new PartyPagingActorInvocationHandler(CreatePagingGatewayHandler(queryType, store, codec, search));
+        var router = new QueryRouter(new ActorProxyFactory(new ActorProxyOptions
+        {
+            HttpEndpoint = "http://dapr-transport.test",
+            UseJsonSerialization = true,
+        }, transport), NullLogger<QueryRouter>.Instance);
+        using var factory = new EventStoreGatewayTestFactory(customQueryRouter: router);
+        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["query:read"]);
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", CreatePagingGatewayRequest(queryType, pageSize, cursor));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("application/problem+json");
+        JsonElement problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        problem.GetProperty("status").GetInt32().ShouldBe(400);
+        problem.GetProperty("reasonCode").GetString().ShouldBe("query_invalid_page");
+        problem.GetProperty("reason").GetString().ShouldBe(expectedReason);
+        problem.GetProperty("detail").GetString().ShouldBe(expectedReason == "invalid-page"
+            ? "The supplied page is invalid." : "The supplied cursor is invalid.");
+        string body = problem.GetRawText();
+        body.ShouldNotContain("protected.cursor.payload");
+        body.ShouldNotContain("protected-search-text");
+        transport.Envelopes.ShouldHaveSingleItem().Paging!.PageSize.ShouldBe(pageSize);
+        store.ReceivedCalls().ShouldBeEmpty();
+        search.ReceivedCalls().ShouldBeEmpty();
+        if (expectedReason == "invalid-page")
+        {
+            codec.ReceivedCalls().ShouldBeEmpty();
+        }
+    }
+
+    /// <summary>
+    /// Verifies the public gateway retains its maximum page size.
+    /// </summary>
+    /// <param name="queryType">The list or search query discriminator.</param>
+    /// <returns>A task that represents the verification.</returns>
+    [Theory]
+    [InlineData(PartyIndexQueryTypes.PartyIndexQueryType)]
+    [InlineData(PartyIndexQueryTypes.PartySearchQueryType)]
+    public async Task PostQueries_PageSizeAbovePublicMaximum_RejectsBeforeHandlerAsync(string queryType)
+    {
+        using var factory = new EventStoreGatewayTestFactory();
+        using HttpClient client = factory.CreateAuthenticatedClient(permissions: ["query:read"]);
+
+        using HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/queries", CreatePagingGatewayRequest(queryType, 201, null));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        factory.QueryRouter.ReceivedQueries.ShouldBeEmpty();
+    }
+
+    private static PartySdkQueryHandler CreatePagingGatewayHandler(string queryType, IReadModelStore store, IQueryCursorCodec codec, IPartySearchProvider search)
+    {
+        var service = new PartySdkQueryService(
+            store, Options.Create(new PartySdkReadModelOptions()), TimeProvider.System, search,
+            Substitute.For<IPartyErasureRecordStore>(), codec, new PartySdkLastKnownReadModelCache(), NullLogger<PartySdkQueryService>.Instance);
+        return queryType == PartyIndexQueryTypes.PartySearchQueryType
+            ? new PartySearchQueryHandler(service)
+            : new PartyIndexQueryHandler(service);
+    }
+
+    private static object CreatePagingGatewayRequest(string queryType, int pageSize, string? cursor)
+        => new
+        {
+            tenant = "tenant-a",
+            domain = PartyIndexQueryTypes.PartyDomain,
+            aggregateId = PartyIndexQueryTypes.ListAggregateId,
+            queryType,
+            payload = queryType == PartyIndexQueryTypes.PartySearchQueryType
+                ? JsonSerializer.SerializeToElement(new
+                {
+                    query = "protected-search-text",
+                })
+                : JsonSerializer.SerializeToElement(new
+                {
+                }),
+            paging = new
+            {
+                pageSize,
+                cursor,
+            },
+        };
+
     [Fact]
     public async Task PostQueries_LegacyPascalCaseProjectionType_Returns400BeforeQueryRoutingAsync()
     {
@@ -1078,7 +1195,8 @@ public sealed class EventStoreGatewayRoutingTests
     private sealed class EventStoreGatewayTestFactory(
         bool usePartiesDomainRouter = false,
         ConfigurableCommandRouter? customCommandRouter = null,
-        bool openApiEnabled = false) : WebApplicationFactory<EventStoreProgram>
+        bool openApiEnabled = false,
+        IQueryRouter? customQueryRouter = null) : WebApplicationFactory<EventStoreProgram>
     {
         public FakeAggregateActor CommandActor { get; } = new();
 
@@ -1199,7 +1317,7 @@ public sealed class EventStoreGatewayRoutingTests
                 }
 
                 services.RemoveAll<IQueryRouter>();
-                services.AddSingleton<IQueryRouter>(QueryRouter);
+                services.AddSingleton<IQueryRouter>(customQueryRouter ?? QueryRouter);
 
                 TestServiceOverrides.RemoveDaprHealthChecks(services);
             });

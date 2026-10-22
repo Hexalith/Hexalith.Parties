@@ -1,0 +1,84 @@
+{
+  "baseline_commit": "3ace477aa61f6cd936bd9c06d99fd8fe59a205a8",
+  "reviewed_diff_sha256": "8eb769b7f004cb5c77f0a2500a77fbae1770f7f8a051e719aea6805520c056fc",
+  "matrix": [
+    {
+      "row": "Invalid envelope PageSize with or without cursor",
+      "receipt": "service-tests.json",
+      "passing_controls": [
+        "Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync",
+        "PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Valid size with invalid cursor",
+      "receipt": "service-tests.json",
+      "passing_controls": [
+        "Paging_CursorAndOffsetErrors_PreserveCursorCategoryAsync",
+        "Paging_ValidContinuation_ReturnsRemainingContentsAsync",
+        "PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Enabled Memories without CaseId",
+      "receipt": "service-tests.json",
+      "passing_controls": [
+        "NotifyIndexedAsync_WhenEnabledWithoutCaseId_ReturnsRetryableWithoutIngestAsync",
+        "PartyMemoryIndexEntrySearchIndexerTests (all 24 cases, including bounded warning controls)"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Repair CaseId and redeliver",
+      "receipt": "service-tests.json",
+      "passing_controls": [
+        "ProjectionRetry_AfterCaseRepairIndexesLatestPersistedTargetAndHonorsErasureAsync",
+        "NotifyRemovedAsync_WhenEnabledWithoutCaseId_CleansPersistedCaseAfterSuppressedNotificationsAsync"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Owner publish with synthetic local credentials",
+      "receipt": "owner-publish-tests.txt",
+      "passing_controls": [
+        "test_real_owner_manifests_preserve_external_contract_for_both_grants",
+        "test_emitted_copy_rejects_poison_anywhere",
+        "test_emitted_copy_rejects_literal_credentials_and_nonsecret_references",
+        "test_emitted_copy_rejects_development_endpoints",
+        "test_emitted_copy_rejects_audience_workload_and_secret_contract_mutations"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Tenants package build and runtime",
+      "receipt": "runtime-tests.json",
+      "passing_controls": [
+        "CompleteProfile_AllEightSidecarsRespondAndPartiesInvokesTenantsReadiness",
+        "RegisteredTenantHandler_RejectsUnauthenticatedDeliveryAndEstablishesAccessOnlyWithTestToken",
+        "AuthenticatedCreate_ProjectsDetailsAndPersistsMatchingEventEnvelopesAsync"
+      ],
+      "result": "pass"
+    },
+    {
+      "row": "Normal, canceled or failed topology startup",
+      "receipt": "runtime-tests.json",
+      "passing_controls": [
+        "LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync (all four modes)",
+        "PendingDisposal_RetainsInfrastructureUntilTheAwaitedWorkerCompletesAsync",
+        "Cleanup_WhenQuiescenceCannotBeConfirmed_PreservesTheControlPlane",
+        "FreshWorkerObservation_RecognizesExitAndRejectsAReusedPidIdentityAsync"
+      ],
+      "result": "pass"
+    }
+  ],
+  "unchanged_open_entries": {
+    "116": true,
+    "126": true
+  },
+  "credential_value_audit": "pass; no inherited credential values found in staged owned files",
+  "limits": [
+    "Mapped Debug qualification remains a separate parent gate; package/live evidence does not claim source Debug success."
+  ]
+}

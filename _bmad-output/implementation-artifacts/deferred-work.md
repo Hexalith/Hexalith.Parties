@@ -97,8 +97,11 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: EventStore owner AppHost publish output
 source_spec: `_bmad-output/implementation-artifacts/spec-8-8-eventstore-aspire-audience-aware-jwt-parity.md`
 reason: This was split because owner-AppHost adoption and publish-output validation are independently shippable after the reusable JWT composition API exists.
-status: open
+status: done 2026-10-22
 decision: 2026-09-06 Authorize owner adoption — Adopt the helper in the owner AppHost and inspect publish output, failing on secret or poison values.
+resolution: The current owner AppHost already adopts the shared JWT helpers. The new verifier invokes its actual SDK manifest publisher privately for reciprocal sample/admin password and client-credentials variants, with synthetic poison inputs. It checks external authority/issuer, audiences, RS256, HTTPS metadata, workload identity and secret parameter references; the final ten publisher/mutation/failure controls reject credentials and development endpoints and verify private-output cleanup. Raw manifests are removed on success and failure. This closes local owner-manifest qualification, not a target deployment.
+verification: `spec-five-sdk-runtime-deferred-items.md`; `tests/five-sdk-runtime-deferred-items-2026-10-22/final-verification.json`. Release/package qualification is separate from mapped Debug and deployment qualification.
+
 
 ### DW-14: Validate G8-A delivery receipt integrity
 
@@ -200,11 +203,13 @@ archived: 2026-10-21
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 3)"), 2026-09-06
 location: Paging.PageSize validation
 reason: Out-of-range `PageSize` under `Paging` rejected as `InvalidCursor` even with no cursor — debugging misdirection only.
-status: open
+status: done 2026-10-22
 decision: 2026-09-06 Add invalid-page sentinel — Add and map an InvalidPage failure reason, distinguish cursor failures from paging validation, and cover EventStore and Parties compatibility.
 progress: 2026-10-17 Shared EventStore source prerequisite is prepared: additive InvalidPage sentinel, optional init-only exception discriminator, safe HTTP 400/query_invalid_page mapping, sanitized page logs and legacy cursor fallback. Contracts/Server Debug source builds have zero warnings/errors; focused suites pass 112/112 and 116/116.
-dependency: Publish a compatible EventStore Contracts/Server/gateway SDK before activating Parties. Fresh public NuGet inspection still selects 3.124.0 and confirms the new APIs are absent; no package version was changed. The tested Parties producer and handler/gateway regressions are retained as the unapplied patch tests/dw-27-invalid-page-failure-2026-10-17/parties-consumer-adoption.patch.
-verification: Candidate source build passes with zero warnings/errors and 214/214 focused tests. Its earlier pre-review full assembly has 1170/1171 passing, with immutable consumption proof blocked by the required dirty EventStore checkout. Restored tracked Parties pinned-package build passes with zero warnings/errors and 146/146 focused tests. Full EventStore attempts were stopped after packaging/Dapr failures outside the changed test classes (not reproduced against baseline); full topology and assembly qualification are not claimed. Exact commands, diagnostics and rollout gate are in tests/dw-27-invalid-page-failure-2026-10-17/validation.json. Keep DW-27 open until real package adoption and all required gates pass.
+historical_dependency_2026_10_17: Publish a compatible EventStore Contracts/Server/gateway SDK before activating Parties. Fresh public NuGet inspection still selects 3.124.0 and confirms the new APIs are absent; no package version was changed. The tested Parties producer and handler/gateway regressions are retained as the unapplied patch tests/dw-27-invalid-page-failure-2026-10-17/parties-consumer-adoption.patch.
+historical_verification_2026_10_17: Candidate source build passes with zero warnings/errors and 214/214 focused tests. Its earlier pre-review full assembly has 1170/1171 passing, with immutable consumption proof blocked by the required dirty EventStore checkout. Restored tracked Parties pinned-package build passes with zero warnings/errors and 146/146 focused tests. Full EventStore attempts were stopped after packaging/Dapr failures outside the changed test classes (not reproduced against baseline); full topology and assembly qualification are not claimed. Exact commands, diagnostics and rollout gate are in tests/dw-27-invalid-page-failure-2026-10-17/validation.json. Keep DW-27 open until real package adoption and all required gates pass.
+resolution: The selected published EventStore 3.126.1 SDK supplies InvalidPage and its safe gateway mapping. Parties now rejects envelope page sizes outside 1–100 before codec, read-model or search calls. The real public gateway router distinguishes HTTP 400/query_invalid_page from cursor failures, including public-schema-valid sizes 101/200; cursor, continuation and legacy controls remain covered. Full Parties.Tests passes 2534/2534 with zero skips. Earlier prerequisite observations above are historical and superseded by this package adoption.
+verification: `spec-five-sdk-runtime-deferred-items.md`; `tests/five-sdk-runtime-deferred-items-2026-10-22/final-verification.json`. Release/package qualification is separate from mapped Debug and deployment qualification.
 
 
 ### DW-28: Harden query compatibility shim lifecycle and state handling
@@ -642,7 +647,10 @@ origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review
 location: PartyMemoryIndexEntrySearchIndexer.NotifyIndexedAsync
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `PartyMemoryIndexEntrySearchIndexer.NotifyIndexedAsync` returns success when CaseId is absent, so fixing configuration alone does not cause the skipped party to be indexed.
-status: open
+status: done 2026-10-22
+resolution: Enabled indexing without CaseId now returns false, preserving projection reconciliation retry. Handler redelivery after configuration repair reads serialized persisted canonical state, indexes the latest intervening target and writes its stored mapping; an erasure control remains authoritative. Disabled/removal/cancellation behavior and bounded warning suppression remain covered. These are service integration checks, not durable Memories workflow runtime proof.
+verification: `spec-five-sdk-runtime-deferred-items.md`; `tests/five-sdk-runtime-deferred-items-2026-10-22/final-verification.json`. Release/package qualification is separate from mapped Debug and deployment qualification.
+
 
 ### DW-85: Keep Memories cleanup health observable when indexing is disabled
 
@@ -1270,7 +1278,10 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: upstream Tenants dynamically launched runtime project; published EventStore.DomainService SDK
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: The retained Tenants source fails its dynamically launched package-mode build with CS0246 for IDomainServiceAdministratorVerifier and DomainServiceAdministratorClaim; neither type exists in published DomainService 3.115.0. Root solution package-mode compilation succeeds separately.
-status: open
+status: done 2026-10-22
+resolution: The unchanged Tenants package-mode Release project restores EventStore DomainService 3.126.1, whose published assembly contains IDomainServiceAdministratorVerifier and DomainServiceAdministratorClaim. Its build succeeds with zero warnings/errors. The complete real eight-sidecar mTLS profile invokes Tenants readiness through Parties; authenticated gateway/persistence controls pass in the final 28/28, zero-skip integration batch, including seven real host cases. Exact restored package hashes, verifier assembly identity and source revisions are retained.
+verification: `spec-five-sdk-runtime-deferred-items.md`; `tests/five-sdk-runtime-deferred-items-2026-10-22/final-verification.json`. Release/package qualification is separate from mapped Debug and deployment qualification.
+
 
 ### DW-159: Include external dynamically launched runtime project graphs in orchestration dependency verification.
 
@@ -1629,6 +1640,9 @@ archived: 2026-10-21
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
   summary: Verify bounded Aspire shutdown before adding explicit teardown deadlines.
   evidence: Unverified medium: StopAsync and disposal lack caller-side bounds, but a nonterminating SDK shutdown path has not been reproduced; trace SDK host/DCP timeout behavior or demonstrate a hung owned process before changing cleanup semantics.
+  status: done 2026-10-22
+  resolution: Exact Aspire 13.6.1 IL and DCP 0.26.5 source establish SDK host/disposal bounds but no executable-before-container cleanup dependency. The fixture therefore stops owned hosts and then sidecars before fully awaited SDK disposal, re-observes late workers within one cumulative thirty-second quiescence budget, and retains ownership on failure. Direct Linux PID/start-clock observations repair a separately reproduced cached non-child Process false positive. Normal, canceled, failed-start and retained-cleanup-failure/retry cases pass with workers gone while backing containers still exist, followed by owned container/network/listener cleanup. Completed stop proof survives observer failures and failed-stop siblings across automatic and explicit retries. The final integration batch passes 28/28, including seven real host cases, with zero skips; total observed cleanup is below sixty seconds in these runs, not an unconditional global SDK bound. All recorded intermediate resources were checked absent by exact ownership.
+  verification: `spec-five-sdk-runtime-deferred-items.md`; `tests/five-sdk-runtime-deferred-items-2026-10-22/final-verification.json` and `shutdown-sdk-inspection.json`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-119-consent-validation.md`
   summary: Reconcile the isolated gateway fixture with the synced EventStore folded-snapshot qualification hosted service.
@@ -1812,3 +1826,7 @@ archived: 2026-10-21
 - source_spec: `spec-five-runtime-isolation-and-form-authorization-deferred-items.md`
   summary: Make the referenced EventStore admin/sample UI Dapr client target identities configurable before qualifying their application API flows in concurrent suffixed sessions.
   evidence: Upstream AdminUIServiceExtensions calls AddEventStoreDaprServiceInvocation("eventstore-admin") and Sample.BlazorUI Program calls it with "eventstore"; the current owner tests qualify Parties gateway/Tenants invocation and all eight sidecar metadata endpoints, not those reference UI API flows. The frozen intent forbids upstream edits; target configurability needs an upstream change and later adoption.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-sdk-runtime-deferred-items.md`
+  summary: Qualify descendant-process quiescence when a Dapr CLI wrapper exits before its runtime child.
+  evidence: Unverified medium: the current fixture observes DCP executable PID/start identities and qualified listener cleanup, but the reviewer could not establish that an escaped daprd child is impossible before backing removal. A controlled producer-owned wrapper/orphan case or exact CLI/DCP descendant-stop contract would settle the claim; normal 22/22 live results alone do not establish this broader guarantee.

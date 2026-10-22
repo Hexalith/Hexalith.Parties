@@ -1,0 +1,13 @@
+  Determining projects to restore...
+  Restored ${PARTIES_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/Hexalith.Tenants.Contracts.csproj (in 208 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj (in 224 ms).
+  Restored ${PARTIES_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Server/Hexalith.Tenants.Server.csproj (in 229 ms).
+  Hexalith.Tenants.Contracts -> ${PARTIES_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Contracts/bin/Release/net10.0/Hexalith.Tenants.Contracts.dll
+  Hexalith.Tenants.Server -> ${PARTIES_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Server/bin/Release/net10.0/Hexalith.Tenants.Server.dll
+  Hexalith.Tenants -> ${PARTIES_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Release/net10.0/Hexalith.Tenants.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.53

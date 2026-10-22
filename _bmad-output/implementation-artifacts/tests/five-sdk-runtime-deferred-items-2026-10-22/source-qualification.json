@@ -1,0 +1,202 @@
+{
+  "scope": "Fresh contained canonical checkout at the first review-patch checkpoint, exact selected root references, implementation copied without dependency changes; mapped Debug service build/tests qualify final service code. Integration/UI build is blocked before fixture compilation.",
+  "tool_version": "4.34.0",
+  "sdk": "10.0.402",
+  "preparation": "Local shared-object clones at selected root gitlinks; no remote or recursive submodule updates; no handwritten source selectors. Inherited credentials removed from command environment.",
+  "run_id": "4d0449cd8cd2ecf354c266b6e7187fd4",
+  "debug": {
+    "command": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "debug",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--output",
+      "json"
+    ],
+    "exit_code": 0,
+    "seconds": 177.753
+  },
+  "debug_result": {
+    "status": "ready",
+    "healthy_resources": 20,
+    "server_processes": 7
+  },
+  "mapping": {
+    "mapping_content_hash": "7d2451a5e0325ba5f1b06e2eb05b4c638585a8c3ff612001aa886025fadd8eb9",
+    "file_sha256": {
+      "SourceMapping.final.targets": "6d230666c9aa82809e4703deec1bc1a50679945f526cf6f85918eff384c92558",
+      "SourceMapping.before-targets.props": "5c619e814ae6c1b20c08967b31356767a4e15bef7b1ab7bbd515c5a65353971f",
+      "mapping.json": "e516a05bf4f92951b844e0d6e7e8cdeecd0ac487e39b99ee11821c9b81035f27",
+      "SourceMapping.values.props": "6579d25e0eea1af234839d570fda0583a462608b01552c819eb21b62643cd4fb",
+      "SourceMapping.late.props": "c3239fe6afe26b5a7446719fc9639138d46af264265ce799abc0d20af9b6fdbe",
+      "catalog-versions.json": "0f44c7652569258698eaa0a6490de1e1f25677ff1173400109c361e878978fde",
+      "SourceMapping.targets": "9adcfac25cb3251de197e298b5310d62c43b7100fb40636bfd3a748770a8ff45",
+      "SourceMapping.values.targets": "5e1200e1809bb64560538cc45b2c548c9d4f72d7ca3617be0dd687b7f71f4384",
+      "__HXW_DefaultCatalog__.proj": "f6b2b67858520ecc6b0e3e305aedb23793c648df4e9a16501a1db5b6e2721260",
+      "Hexalith.Folders.Aspire.proj": "f6b2b67858520ecc6b0e3e305aedb23793c648df4e9a16501a1db5b6e2721260",
+      "SourceMapping.props": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82"
+    },
+    "entry_count": 11
+  },
+  "mapping_hooks": {
+    "CustomBeforeDirectoryBuildProps": "${SOURCE_MAPPING}/SourceMapping.targets",
+    "CustomAfterMicrosoftCommonProps": "${SOURCE_MAPPING}/SourceMapping.props",
+    "CustomBeforeDirectoryBuildTargets": "${SOURCE_MAPPING}/SourceMapping.before-targets.props",
+    "CustomAfterDirectoryBuildTargets": "${SOURCE_MAPPING}/SourceMapping.late.props",
+    "AfterMicrosoftNETSdkTargets": "${SOURCE_MAPPING}/SourceMapping.final.targets"
+  },
+  "builds": [
+    {
+      "project": "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1"
+      ],
+      "exit_code": 0,
+      "seconds": 17.553
+    },
+    {
+      "project": "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-m:1"
+      ],
+      "exit_code": 1,
+      "seconds": 1.95
+    }
+  ],
+  "service_tests": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -result-xml ${PRIVATE}/parties-sdk-source-service.xml",
+    "results": {
+      "total": 2534,
+      "passed": 2534,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0,
+      "seconds": 46.318,
+      "started_utc": "2026-10-22T21:05:25.1467980+00:00",
+      "finished_utc": "2026-10-22T21:06:11.4603279+00:00"
+    }
+  },
+  "blocker": {
+    "command": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj -c Debug -m:1",
+    "result": "MSB4044 SourceMappingValidationTask requires AssetsFile for FrontComposer.Contracts and FrontComposer.Schema outer multi-target contexts; failure precedes integration compilation.",
+    "owner": "Pinned Builds source mapper / FrontComposer multi-target integration",
+    "gate_bypass": false
+  },
+  "down": {
+    "command": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "down",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--run-id",
+      "4d0449cd8cd2ecf354c266b6e7187fd4",
+      "--output",
+      "json"
+    ],
+    "exit_code": 0,
+    "seconds": 0.36
+  },
+  "cleanup": {
+    "status": "completed",
+    "rule_id": "HXI001",
+    "workspace_removed": true,
+    "observed_server_processes_remaining": 0
+  },
+  "root_reference_identities": [
+    {
+      "path": "references/Hexalith.EventStore",
+      "selected_commit": "1748b16b11fb63b885dfa2fd4a9c7a420ea103a9",
+      "source_head": "1748b16b11fb63b885dfa2fd4a9c7a420ea103a9",
+      "source_status": "## main...origin/main",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.Memories",
+      "selected_commit": "0af009c20c97038b685f3d4b62c0c8e757982d14",
+      "source_head": "0af009c20c97038b685f3d4b62c0c8e757982d14",
+      "source_status": "## main...origin/main",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.FrontComposer",
+      "selected_commit": "a258b992d08e73e2d3251c865ef01a982eba31ac",
+      "source_head": "a258b992d08e73e2d3251c865ef01a982eba31ac",
+      "source_status": "## main...origin/main",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.Tenants",
+      "selected_commit": "66def172379f37d12e746fe6eb9195801929c572",
+      "source_head": "66def172379f37d12e746fe6eb9195801929c572",
+      "source_status": "## main...origin/main",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.AI.Tools",
+      "selected_commit": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "source_head": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "source_status": "## main...origin/main",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.Commons",
+      "selected_commit": "5c23c818f639c5bb3175f964c5549440bd5b876d",
+      "source_head": "5c23c818f639c5bb3175f964c5549440bd5b876d",
+      "source_status": "## main...origin/main",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.Builds",
+      "selected_commit": "3fcb8f38919bb0961b06a19b57aa45623b35a33e",
+      "source_head": "3fcb8f38919bb0961b06a19b57aa45623b35a33e",
+      "source_status": "## main...origin/main",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.PolymorphicSerializations",
+      "selected_commit": "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
+      "source_head": "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
+      "source_status": "## main...origin/main",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.McpCli",
+      "selected_commit": "7f4a08cb4b7ff9402d1dcf0826ad45ab0256ba65",
+      "source_head": "7f4a08cb4b7ff9402d1dcf0826ad45ab0256ba65",
+      "source_status": "## main...origin/main",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.Platform",
+      "selected_commit": "d189c7de74293e1a718e5e78b1b3b7c0e47b48b5",
+      "source_head": "d189c7de74293e1a718e5e78b1b3b7c0e47b48b5",
+      "source_status": "## main...origin/main",
+      "nested_submodules_initialized": false
+    }
+  ],
+  "copied_source_sha256": {
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "b84bcbd3237905178e8211b6a0aad61e8417c53c3256fb70059fefb63ec706fa",
+    "src/Hexalith.Parties/Search/PartyMemoryIndexEntrySearchIndexer.cs": "667caae6a6ecec509f0a02ca1d0c482b257a518432b5eaf5acc9129064c420f8",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs": "69be8af38c49e570dd3f2488f154fce54de5c8e161740791a3689ac55ad091b6",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesTopologyCleanupTests.cs": "100cce1add548d43c2637eb89ed890688a0207916f9b390274cea3a9a866118a"
+  }
+}

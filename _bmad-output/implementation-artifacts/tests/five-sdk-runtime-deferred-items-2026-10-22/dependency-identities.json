@@ -1,0 +1,46 @@
+{
+  "revisions": {
+    ".": "3ace477aa61f6cd936bd9c06d99fd8fe59a205a8",
+    "references/Hexalith.EventStore": "1748b16b11fb63b885dfa2fd4a9c7a420ea103a9",
+    "references/Hexalith.Tenants": "66def172379f37d12e746fe6eb9195801929c572",
+    "references/Hexalith.Builds": "3fcb8f38919bb0961b06a19b57aa45623b35a33e"
+  },
+  "tenants_restored_eventstore_libraries": {
+    "Hexalith.EventStore.Admin.Abstractions/3.126.1": {
+      "type": "package",
+      "sha512": "EWrFprs9t1Mho8udbjcWRomjed7XP3oSmXtUS1D7CLSxtYt9FzjFcLCa+0g2C9yqWYHv78QHgjp157Sca89cuQ=="
+    },
+    "Hexalith.EventStore.Client/3.126.1": {
+      "type": "package",
+      "sha512": "x7xWMGJfAAVh6ILX5sicFhb77DnYC2Y3K1bnyrBRJSGGt2TcxPSBJaxkogKAlsEPaL39Yzz51TwoishLBNtuPg=="
+    },
+    "Hexalith.EventStore.Contracts/3.126.1": {
+      "type": "package",
+      "sha512": "ZMdL54lY8nZmFMU4FnxpZudbumAbWnhnXwPzyMnD7SVVGUb1AGG+Cac3oERVBvH0OHAjWkDeLSTazffmy9k+oQ=="
+    },
+    "Hexalith.EventStore.DomainService/3.126.1": {
+      "type": "package",
+      "sha512": "1YzRmuvTOJ0YaGU2aOrPn99EGGBNe9KNV3zx19TMOKRwaGrOme3XyfR9QPySyni1nXTYAGj2BWycdiKKPc+jBQ=="
+    },
+    "Hexalith.EventStore.Gateway/3.126.1": {
+      "type": "package",
+      "sha512": "evPOmUMg3rq+oNyCopQ3oQ82ZPXE7e2drWPp2vNT7ZEsJca5tDxIFa8xrpx3xFnQKhnEBvikWGXLRevdXybDqw=="
+    },
+    "Hexalith.EventStore.Server/3.126.1": {
+      "type": "package",
+      "sha512": "fCbDUrmaCnw8SyaXJ+FZAS+P5szJ4bNnqaitqF7CFDCr6NJe8ZMwHRqLv7Ocb07RYZ+tf5zspPRriTpiU29lFQ=="
+    },
+    "Hexalith.EventStore.ServiceDefaults/3.126.1": {
+      "type": "package",
+      "sha512": "/hg3Yn7DU7a4VDvaK+sGiuSQG/1w2fl6Y/H8G7vrId7iWn+9gU//aukYh2cYvSw2B9xmtYU++PD4As5+/SfnJw=="
+    }
+  },
+  "verifier_contracts": {
+    "package": "Hexalith.EventStore.DomainService/3.126.1",
+    "assembly_sha256": "a2c583ca9df91fff335784cecaa5824b43d1f140db5162e1a4bb39c5154198dd",
+    "types": [
+      "Hexalith.EventStore.DomainService.IDomainServiceAdministratorVerifier",
+      "Hexalith.EventStore.DomainService.DomainServiceAdministratorClaim"
+    ]
+  }
+}

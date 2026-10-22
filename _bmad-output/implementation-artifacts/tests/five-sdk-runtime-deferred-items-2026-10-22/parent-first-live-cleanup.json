@@ -1,0 +1,68 @@
+{
+  "scope": "First final live attempt; 25/26 passed. Cleanup retry-state regression retained ownership in session7a6f5af1c3ac; parent exact bootstrap cleanup completed after no session process references remained. Final acceptance awaits patched rerun.",
+  "sessions": [
+    {
+      "session": "054e13a58c52",
+      "root_removed": true,
+      "owned_control_containers_remaining": 0,
+      "owned_networks_remaining": 0
+    },
+    {
+      "session": "121bcde44270",
+      "root_removed": true,
+      "owned_control_containers_remaining": 0,
+      "owned_networks_remaining": 0
+    },
+    {
+      "session": "3ac804bbc6fd",
+      "root_removed": true,
+      "owned_control_containers_remaining": 0,
+      "owned_networks_remaining": 0
+    },
+    {
+      "session": "598ba71b67ca",
+      "root_removed": true,
+      "owned_control_containers_remaining": 0,
+      "owned_networks_remaining": 0
+    },
+    {
+      "session": "7a6f5af1c3ac",
+      "root_removed": true,
+      "owned_control_containers_remaining": 0,
+      "owned_networks_remaining": 0
+    },
+    {
+      "session": "822fa6e15b8e",
+      "root_removed": true,
+      "owned_control_containers_remaining": 0,
+      "owned_networks_remaining": 0
+    }
+  ],
+  "observed_backing_containers": [
+    "fixture-memories-graph-aewfenwj",
+    "fixture-memories-graph-hxtqtakn",
+    "fixture-memories-graph-jmarzvuy",
+    "fixture-memories-graph-rysrtppj",
+    "fixture-memories-graph-xshhcvsy",
+    "fixture-memories-graph-xydamtjp",
+    "fixture-memories-search-bdgutedb",
+    "fixture-memories-search-ezdtqsdr",
+    "fixture-memories-search-fhessucm",
+    "fixture-memories-search-jswfqbkd",
+    "fixture-memories-search-mnzyqjtt",
+    "fixture-memories-search-vwxtukeq",
+    "fixture-redis-fdnyfxds",
+    "fixture-redis-mkuxbydt",
+    "fixture-redis-natwpahs",
+    "fixture-redis-rhfwstyh",
+    "fixture-redis-tdhchxup",
+    "fixture-redis-tywukspd"
+  ],
+  "observed_backing_containers_remaining": 0,
+  "manual_cleanup": {
+    "session": "7a6f5af1c3ac",
+    "command": "DAPR_MTLS_SESSION_ID=7a6f5af1c3ac DAPR_MTLS_CERTIFICATE_DIRECTORY=${PRIVATE}/hexalith-parties-topology-7a6f5af1c3ac/certificates bash scripts/aspire-start-mtls.sh --cleanup-only",
+    "exit_code": 0,
+    "ownership_checks": "Pinned image, exact mounted certificate directory, control-plane network label and members; zero session-referencing process command lines before cleanup."
+  }
+}

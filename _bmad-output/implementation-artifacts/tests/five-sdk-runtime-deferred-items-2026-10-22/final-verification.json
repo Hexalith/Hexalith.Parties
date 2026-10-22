@@ -1,0 +1,120 @@
+{
+  "checkpoint": "Final parent acceptance after independent review and retry-state correction",
+  "baseline_commit": "3ace477aa61f6cd936bd9c06d99fd8fe59a205a8",
+  "service_release": {
+    "total": 2534,
+    "passed": 2534,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0,
+    "seconds": 60.609,
+    "started_utc": "2026-10-22T21:01:55.1769027+00:00",
+    "finished_utc": "2026-10-22T21:02:55.7810341+00:00"
+  },
+  "service_source_debug": {
+    "total": 2534,
+    "passed": 2534,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0,
+    "seconds": 46.318,
+    "started_utc": "2026-10-22T21:05:25.1467980+00:00",
+    "finished_utc": "2026-10-22T21:06:11.4603279+00:00"
+  },
+  "integration_batch": {
+    "total": 28,
+    "passed": 28,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "not-run": 0,
+    "seconds": 261.335,
+    "started_utc": "2026-10-22T21:12:38.9168135+00:00",
+    "finished_utc": "2026-10-22T21:17:00.2364835+00:00"
+  },
+  "publisher": {
+    "command": "python3 -B -m unittest scripts.test_verify_eventstore_publish -v",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 6.229,
+    "actual_owner_manifest_variants": 2,
+    "private_output_removed": true
+  },
+  "builds": {
+    "parent_service_release": "pass; 0 warnings/errors",
+    "final_integration_release": "review-fixes/retry-state/focused-validation.json; 0 warnings/errors",
+    "owner_and_tenants_release": "validation.json; unchanged owner/dependency source and package identities",
+    "source_debug": "source-qualification.json; service build/tests pass, integration mapper blocked"
+  },
+  "runtime_receipt": "final-runtime-tests.json",
+  "source_receipt": "source-qualification.json",
+  "review": {
+    "independent_reviewers": 3,
+    "triaged_findings": 13,
+    "patched_findings": 12,
+    "deferred_findings": [
+      {
+        "severity": "medium, unverified",
+        "summary": "Producer-owned proof for escaped Dapr runtime descendants remains open",
+        "settling_evidence": "Controlled wrapper/orphan scenario or exact Dapr CLI/DCP descendant-stop contract",
+        "ledger": "deferred-work.md append-only entry"
+      }
+    ],
+    "review_loop_iteration": 0,
+    "parent_audit": "Read complete initial implementation diff, every review patch and new focused receipt; verify all seven frozen matrix rows against named passing controls."
+  },
+  "matrix": "matrix-audit.json; original named controls pass in final fresh assemblies; owner controls expanded to10 and shutdown batch to28",
+  "earlier_unsuccessful_parent_attempt": {
+    "integration": {
+      "total": 26,
+      "passed": 25,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "not-run": 0,
+      "seconds": 310.82,
+      "started_utc": "2026-10-22T21:01:55.1153464+00:00",
+      "finished_utc": "2026-10-22T21:07:05.9106769+00:00"
+    },
+    "failure": "cleanup-failed stop proof was lost between retries; repaired without changing deadlines",
+    "diagnosis_and_focused_control": "review-fixes/retry-state/focused-validation.json",
+    "ownership_cleanup": "parent-first-live-cleanup.json",
+    "acceptance": false
+  },
+  "guards": {
+    "actionlint": "pass",
+    "warning_and_nested_submodule_guard": "pass",
+    "crlf_aware_whitespace": "pass",
+    "inherited_credential_value_audit": "pass; no values in owned changed files",
+    "dependencies_and_gitlinks": "unchanged",
+    "DW-116_and_DW-126": "unchanged and open",
+    "commitlint": "commitlint.json; exact candidate passed pinned21.2.2 on Node24.22.1"
+  },
+  "limits": [
+    "Integration Debug stops before fixture compilation in pinned FrontComposer source mapping: MSB4044, required AssetsFile missing. No gate bypass.",
+    "Local owner manifest emission only; no cloud or target deployment qualification.",
+    "Observed shutdown totals are below60seconds; they do not establish an unconditional global SDK bound.",
+    "Linux process identity and publisher process-group supervision are qualified; deliberately escaped descendants and other platforms remain outside this packet.",
+    "Hosted GitHub Actions execution follows the authorized push; local actionlint and the exact CI publisher command passed."
+  ],
+  "code_diff_sha256": "09cf18fc169d33b09d72969264f18d81ac5073fa31652c8e0ee261dfc31bddaa",
+  "source_sha256": {
+    ".github/workflows/ci.yml": "950b5c508781dac5fa2fef86419000d3b7b870dce93b2014deed1f71c2f75aa8",
+    "docs/development-guide.md": "fbc85ba5d2061e713fe5dc66b0cade86df5ea1e6f8c15022532b182bbc692671",
+    "scripts/test_verify_eventstore_publish.py": "0b2b168563d77ad27a73f5a261ec82ba126bc330b0b5412dae32a2c5fb5f6f5c",
+    "scripts/verify-eventstore-publish.py": "51e4be8570f3468cc6b36e3ab0d6bfbd737f6e4e3448c2d3627e30724ffa7a4f",
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "b84bcbd3237905178e8211b6a0aad61e8417c53c3256fb70059fefb63ec706fa",
+    "src/Hexalith.Parties/Search/PartyMemoryIndexEntrySearchIndexer.cs": "667caae6a6ecec509f0a02ca1d0c482b257a518432b5eaf5acc9129064c420f8",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs": "a0d2578be73ec67f5371978e3d6515b069b5f161d7914b531013862f78d4c26d",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesTopologyCleanupTests.cs": "1f30bd0872a5f175d2d526da227905b7cfa63a7de09b3c57ac50b6e68bd2061e",
+    "tests/Hexalith.Parties.Tests/FitnessTests/AppHostTenantsTopologyTests.cs": "0670ca7ae190f4c4ecf3b52d09d9566a8f8ed041b00cfc11a9ac440136887578",
+    "tests/Hexalith.Parties.Tests/Gateway/EventStoreGatewayRoutingTests.cs": "5324007d17b8a2fe7d323c449eccb47268d946e5ab5a1dd2e976d7cb97da5088",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyPagingActorInvocationHandler.cs": "b7e83239fa143c45520ffdf6446d8af650f88fc7d2b486c84bc8e4c227d0800f",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "271fa3d57a604ecb209835a383f87f621446cc68933d9c62af1d0c059b8fe54e",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexEntrySearchIndexerTests.cs": "471d2d9cd5114ff3f56eb7c36b71af61301affbc38068197b4b94081acb6704f",
+    "tests/README.md": "328682a26d5303d52506c5f5b7cf1a51204a14d26b4e9c67256fa91e9ea50b96"
+  }
+}

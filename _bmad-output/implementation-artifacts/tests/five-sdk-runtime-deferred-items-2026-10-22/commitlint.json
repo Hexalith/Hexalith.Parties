@@ -1,0 +1,10 @@
+{
+  "message": "fix: complete SDK and runtime deferred work\n\nDistinguish invalid pages, retain indexing retries, and qualify owner\npublication, Tenants compatibility, and bounded topology cleanup.\n",
+  "message_sha256": "01a1fffe4c3e14495f1644e5f2daa9c699febdc04fbdaf7a1eff86b27c9f654f",
+  "node": "v24.22.1",
+  "commitlint": "21.2.2",
+  "command": "${QUALIFIED_NODE24}/bin/node node_modules/@commitlint/cli/cli.js --edit ${PRIVATE}/parties-sdk-final-commit-message.txt --verbose",
+  "exit_code": 0,
+  "output": "\u29d7   --- input ---\nfix: complete SDK and runtime deferred work\n\nDistinguish invalid pages, retain indexing retries, and qualify owner\npublication, Tenants compatibility, and bounded topology cleanup.\n\u2714   found 0 problems, 0 warnings\n",
+  "hexalith_policy": "fix type; lowercase imperative; no generated subject; 43-character subject; body lines at most 72 characters"
+}

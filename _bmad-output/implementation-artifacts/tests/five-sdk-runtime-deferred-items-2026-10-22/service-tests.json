@@ -1,0 +1,552 @@
+{
+  "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -result-xml ${PRIVATE_RECEIPTS}/parties-sdk-runtime-service-final.xml",
+  "exit_code": 0,
+  "counts": {
+    "total": "2534",
+    "passed": "2534",
+    "failed": "0",
+    "skipped": "0",
+    "not-run": "0",
+    "errors": "0",
+    "time": "46.335"
+  },
+  "classes": {
+    "Hexalith.Parties.Tests.Search.MvpDisplayNameSearchContractTests": {
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.ErrorHandling.PartiesGlobalExceptionHandlerTests": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.HealthChecks.MemoriesSearchHealthCheckTests": {
+      "total": 41,
+      "passed": 41,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.SemanticPartySearchProviderTests": {
+      "total": 22,
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.FitnessTests.PartyStateApplyOrderingFitnessTests": {
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityRetentionConfigurationTests": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.FitnessTests.DocumentationFitnessTests": {
+      "total": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.HealthChecks.DaprPubSubHealthCheckTests": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests": {
+      "total": 37,
+      "passed": 37,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.FitnessTests.EffectivePackageVersionsTests": {
+      "total": 7,
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.FitnessTests.AppHostTenantsTopologyTests": {
+      "total": 16,
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.PartyMemoryUnitMapperTests": {
+      "total": 18,
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Gateway.PartySdkCrossInstanceErasureTests": {
+      "total": 37,
+      "passed": 37,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.ErrorHandling.PartiesValidationExceptionHandlerTests": {
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Authorization.TenantAccessServiceTests": {
+      "total": 21,
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Validation.IdentifierValidatorTests": {
+      "total": 17,
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests": {
+      "total": 133,
+      "passed": 133,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests": {
+      "total": 72,
+      "passed": 72,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Validation.RecordConsentValidatorTests": {
+      "total": 18,
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.PartyMemoryMappingConcurrencyTests": {
+      "total": 23,
+      "passed": 23,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.HealthChecks.ConfiguredComponentHealthCheckTests": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests": {
+      "total": 115,
+      "passed": 115,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.PartyMemoryIndexEntrySearchIndexerTests": {
+      "total": 24,
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.LocalFuzzyPartySearchProviderTests": {
+      "total": 32,
+      "passed": 32,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.FitnessTests.RepositoryTestProcessTests": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Gateway.PartiesProcessEndpointTests": {
+      "total": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Validation.PartiesValidatorRegistrationTests": {
+      "total": 32,
+      "passed": 32,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Authorization.HelperDrivenTenantAccessTests": {
+      "total": 9,
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Queries.ChatBotPartyAuthorityQueryHandlerTests": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.FitnessTests.ContractsArchitectureFitnessTests": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Projections.PartySdkConfigurationCompatibilityTests": {
+      "total": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Configuration.TenantIntegrationOptionsValidatorTests": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.MemoriesPartySearchServiceTests": {
+      "total": 20,
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.HealthChecks.HealthEndpointIntegrationTests": {
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.PartySearchErasureFenceTests": {
+      "total": 27,
+      "passed": 27,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Tenants.TenantEventInfrastructureTests": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests": {
+      "total": 846,
+      "passed": 846,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.PartySearchServiceBoundaryTests": {
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Domain.PartyIdentityBoundaryTests": {
+      "total": 33,
+      "passed": 33,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.FitnessTests.RetiredLeafProjectFitnessTests": {
+      "total": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Security.SecurityRegistrationTests": {
+      "total": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.HealthChecks.DaprSidecarHealthCheckTests": {
+      "total": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Validation.ContactChannelValidatorTests": {
+      "total": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.FitnessTests.PartyStateRejectionApplyEndToEndTests": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.PartyMemorySearchOptionsValidatorTests": {
+      "total": 7,
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.HealthChecks.PartyReadModelHealthCheckTests": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Authorization.DataSubjectAccessServiceTests": {
+      "total": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.HealthChecks.ServiceDefaultsCompatibilityTests": {
+      "total": 8,
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Domain.PartyIdentityAdmissionTests": {
+      "total": 50,
+      "passed": 50,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.HealthChecks.TenantsIntegrationHealthCheckTests": {
+      "total": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.FitnessTests.IdentifierHygieneFitnessTests": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests": {
+      "total": 310,
+      "passed": 310,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.SearchRelevanceCoverageTests": {
+      "total": 29,
+      "passed": 29,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.HealthChecks.DegradedResponseMiddlewareTests": {
+      "total": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.FitnessTests.G8OwnerDeliveryReceiptTests": {
+      "total": 22,
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests": {
+      "total": 66,
+      "passed": 66,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Projections.ProjectionPlatformAdapterTests": {
+      "total": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Domain.PartyDomainEventPublicationContractTests": {
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.PartyMemoryCleanupServiceTests": {
+      "total": 47,
+      "passed": 47,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Middleware.CorrelationIdMiddlewareTests": {
+      "total": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.HealthChecks.DaprStateStoreHealthCheckTests": {
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Authentication.PartiesAuthenticationCompositionTests": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.SemanticSearchPerformanceBenchmarkTests": {
+      "total": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.LocalFuzzySearchPerformanceBenchmarkTests": {
+      "total": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.SearchQueryCandidateTests": {
+      "total": 18,
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Validation.RevokeConsentValidatorTests": {
+      "total": 20,
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Gateway.PartiesDomainServiceSecurityTests": {
+      "total": 43,
+      "passed": 43,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.PartyMemoryCleanupCancellationTests": {
+      "total": 19,
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.HealthChecks.ProjectionFreshnessAndDegradationTests": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.PartyMemoryUnitMappingStoreTests": {
+      "total": 30,
+      "passed": 30,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.FitnessTests.ArchitecturalFitnessTests": {
+      "total": 21,
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Authorization.PartiesConsumerPolicyTests": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests": {
+      "total": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Hexalith.Parties.Tests.Search.BasicPartySearchProviderTests": {
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "matrix_controls": [
+    {
+      "method": "Hexalith.Parties.Tests.FitnessTests.AppHostTenantsTopologyTests.AppHostProgramSharesEventStoreDaprComponentsWithPartiesAndTenants",
+      "cases": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "method": "Hexalith.Parties.Tests.FitnessTests.AppHostTenantsTopologyTests.AppHostProgramMapsPartyDomainToPartiesActorHost",
+      "cases": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "method": "Hexalith.Parties.Tests.Search.PartyMemoryIndexEntrySearchIndexerTests.ProjectionRetry_AfterCaseRepairIndexesLatestPersistedTargetAndHonorsErasureAsync",
+      "cases": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "method": "Hexalith.Parties.Tests.Search.PartyMemoryIndexEntrySearchIndexerTests.NotifyRemovedAsync_WhenEnabledWithoutCaseId_CleansPersistedCaseAfterSuppressedNotificationsAsync",
+      "cases": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "method": "Hexalith.Parties.Tests.Search.PartyMemoryIndexEntrySearchIndexerTests.NotifyIndexedAsync_WhenEnabledWithoutCaseId_ReturnsRetryableWithoutIngestAsync",
+      "cases": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "method": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_AcceptedBoundariesDefaultsAndLegacyClamping_PreserveMetadataAsync",
+      "cases": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "method": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_InvalidEnvelopePageSize_FailsBeforeCodecStoreAndSearchAsync",
+      "cases": 48,
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "method": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.PublicPaging_RejectsInvalidBoundsCursorAndOffsetBeforeReadAsync",
+      "cases": 8,
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "method": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_ValidContinuation_ReturnsRemainingContentsAsync",
+      "cases": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "method": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_CursorAndOffsetErrors_PreserveCursorCategoryAsync",
+      "cases": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "method": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.Paging_EnvelopeAndSearchModePrecedence_RemainsUnchangedAsync",
+      "cases": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "method": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_PageSizeAbovePublicMaximum_RejectsBeforeHandlerAsync",
+      "cases": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "method": "Hexalith.Parties.Tests.Gateway.EventStoreGatewayRoutingTests.PostQueries_ActualPagingHandlerFailure_MapsSafeProblemAsync",
+      "cases": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}

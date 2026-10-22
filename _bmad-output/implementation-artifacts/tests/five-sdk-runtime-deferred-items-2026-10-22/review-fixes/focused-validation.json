@@ -1,0 +1,133 @@
+{
+  "scope": "Focused review fixes only; prior broad acceptance is historical. Parent owns final broad reruns and mapped Debug qualification.",
+  "changes": [
+    "Require canonical parameter-input value expressions for referenced authentication parameters and all secret parameters.",
+    "Reject literal credentials in args, connection strings and URL user information; retain valid secret parameter references.",
+    "Normalize inet-style decimal, hexadecimal, shortened and octal IPv4 without DNS before rejecting development endpoints.",
+    "Launch publisher/build commands in exclusive Linux sessions with a scoped child subreaper, five-second group cleanup and build servers disabled; exercise inherited pipes and all emission failure stages.",
+    "Add a normal required Ubuntu owner-publisher CI job using existing immutable action pins, root global.json and only EventStore/Builds root submodules.",
+    "Fence absent/pending/disabled-stop worker snapshots using the existing cumulative deadline before draining dependencies; preserve disposal for models whose SDK start was never entered.",
+    "Give every Docker inspection a linked five-second local timeout and bounded owned process reaping.",
+    "Own controlled Bash worker cleanup immediately after launch; cover setup cancellation/errors and bounded tree fallback."
+  ],
+  "commands": {
+    "publisher": "python3 -m unittest scripts/test_verify_eventstore_publish.py -v",
+    "build": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+    "cleanup": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method '*FreshWorkerObservation*' -method '*ControlledWorker_SetupCancellationOrFailure*' -method '*PendingStartup_BlocksQuiescence*' -result-xml ${PRIVATE}/parties-sdk-review-cleanup-focused.xml",
+    "fixture": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests -result-xml ${PRIVATE}/parties-sdk-review-fixture-focused.xml",
+    "ci": "actionlint .github/workflows/ci.yml"
+  },
+  "results": {
+    "publisher": {
+      "passed": 10,
+      "failed": 0,
+      "seconds": 5.253,
+      "actual_emissions": 2,
+      "private_output_removed": true,
+      "failure_stages": [
+        "publication",
+        "malformed-json",
+        "validation",
+        "second-emission"
+      ],
+      "owned_command_controls": [
+        "nonzero exit",
+        "parent exit with inherited stdout pipe"
+      ]
+    },
+    "build": {
+      "warnings": 0,
+      "errors": 0
+    },
+    "cleanup": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "seconds": 0.871,
+      "methods": [
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+          "method": "FreshWorkerObservation_RecognizesExitAndRejectsAReusedPidIdentityAsync",
+          "result": "Pass"
+        },
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+          "method": "ControlledWorker_SetupCancellationOrFailureStillReapsOwnedWorkersAsync",
+          "result": "Pass"
+        },
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+          "method": "ControlledWorker_SetupCancellationOrFailureStillReapsOwnedWorkersAsync",
+          "result": "Pass"
+        },
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+          "method": "PendingStartup_BlocksQuiescenceUntilDelayedWorkerIsStoppableOrCanceledAsync",
+          "result": "Pass"
+        },
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+          "method": "PendingStartup_BlocksQuiescenceUntilDelayedWorkerIsStoppableOrCanceledAsync",
+          "result": "Pass"
+        }
+      ]
+    },
+    "fixture": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "seconds": 1.15,
+      "methods": [
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+          "method": "InitializationFailure_ReportsActualReasonAndRestoresEnvironmentOnDisposal",
+          "result": "Pass"
+        },
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+          "method": "InitializationFailure_ReportsActualReasonAndRestoresEnvironmentOnDisposal",
+          "result": "Pass"
+        },
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+          "method": "PreparedInfrastructure_CleansUpThroughFixtureAndRetainsOwnershipForFailedCleanupRetry",
+          "result": "Pass"
+        },
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+          "method": "PreparedInfrastructure_CleansUpThroughFixtureAndRetainsOwnershipForFailedCleanupRetry",
+          "result": "Pass"
+        },
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+          "method": "CallerCancellation_ReachesModelConstructionAndRestoresEveryProfileEnvironmentValue",
+          "result": "Pass"
+        },
+        {
+          "class": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+          "method": "ReadinessRequestCancellation_InterruptsPendingHttpAndCleansOwnedProfileInfrastructure",
+          "result": "Pass"
+        }
+      ]
+    },
+    "actionlint": "pass",
+    "targeted_crlf_aware_diff_check": "pass"
+  },
+  "qualification_limits": [
+    "Owned publisher supervision is Linux-only; descendants deliberately escaping the owned session are outside qualification. No unrelated process groups or children are signaled/reaped.",
+    "CI job was syntax checked locally; hosted GitHub execution remains a parent/CI gate.",
+    "No live topology or full service suite was rerun for this patch; parent owns those gates."
+  ],
+  "source_sha256": {
+    "scripts/verify-eventstore-publish.py": "51e4be8570f3468cc6b36e3ab0d6bfbd737f6e4e3448c2d3627e30724ffa7a4f",
+    "scripts/test_verify_eventstore_publish.py": "0b2b168563d77ad27a73f5a261ec82ba126bc330b0b5412dae32a2c5fb5f6f5c",
+    ".github/workflows/ci.yml": "950b5c508781dac5fa2fef86419000d3b7b870dce93b2014deed1f71c2f75aa8",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs": "69be8af38c49e570dd3f2488f154fce54de5c8e161740791a3689ac55ad091b6",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesTopologyCleanupTests.cs": "100cce1add548d43c2637eb89ed890688a0207916f9b390274cea3a9a866118a",
+    "tests/README.md": "c1ab2bc4c42fc3445045fd057e83c78b07fbab1a2bcdca43486ba2f12647ff8a"
+  }
+}

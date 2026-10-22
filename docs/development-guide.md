@@ -333,3 +333,28 @@ protected tokens use a fixed-size digest of the same canonical scope. Updated
 readers accept both forms. Previously oversized Unicode continuations require
 an updated reader; cross-instance use still requires shared Data Protection keys
 and the same cursor protection purpose.
+
+Invalid envelope page sizes now return the selected SDK's `InvalidPage` failure
+(gateway HTTP 400, `query_invalid_page`) before cursor decoding or any read/search.
+Valid-size invalid cursors retain their existing failure and protected tokens
+remain compatible. Enabled Memories indexing without a CaseId returns
+non-convergence, leaving the projection delivery retryable. Repair the CaseId and
+redeliver through the existing projection reconciliation path; it indexes the
+current persisted target and continues to honor erasure and stored cleanup
+mappings. Missing-configuration warnings retain the bounded suppression history.
+
+The [SDK/runtime qualification instructions](../tests/README.md#sdk-paging-memories-retry-and-owner-publish-qualification)
+include the private owner-manifest verifier and explicit live shutdown profile.
+The verifier never retains raw manifests or credentials. Publish-mode manifest
+proof, package compatibility and live topology proof are separate from source
+Debug builds and deployment qualification. The shutdown profile observes the
+installed Aspire/DCP bounds and continues awaiting disposal before control-plane
+cleanup. It stops application hosts and then sidecars before backing-container
+removal, using one cumulative thirty-second worker-quiescence budget and fresh
+Linux kernel PID/start-clock observations. It does not replace SDK disposal with an abandoned
+timeout task.
+
+The fresh pinned-tool source run also qualifies the service Debug build and all
+2,534 service tests. Integration Debug still stops in FrontComposer outer
+multi-target mapping validation (`MSB4044`, missing `AssetsFile`) before fixture
+compilation. See the [source receipt](../_bmad-output/implementation-artifacts/tests/five-sdk-runtime-deferred-items-2026-10-22/source-qualification.json); no source selector or validation gate was bypassed.

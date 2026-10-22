@@ -53,7 +53,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
     }
 
     [Fact]
-    public async Task NotifyIndexedAsync_WhenEnabledWithoutCaseId_ReturnsConvergedWithoutIngestAsync()
+    public async Task NotifyIndexedAsync_WhenEnabledWithoutCaseId_ReturnsRetryableWithoutIngestAsync()
     {
         var client = new RecordingMemoriesClient();
         var mappingStore = new RecordingMappingStore();
@@ -75,7 +75,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             TestContext.Current.CancellationToken);
 
         client.IngestCount.ShouldBe(0);
-        result.ShouldBeTrue();
+        result.ShouldBeFalse();
     }
 
     [Fact]
@@ -186,6 +186,95 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             => new(payload.GetType().FullName!,
                 JsonSerializer.SerializeToUtf8Bytes(payload, payload.GetType(), PartiesJsonOptions.Default),
                 "json", sequence, eventTimestamp, "correlation-1");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ProjectionRetry_AfterCaseRepairIndexesLatestPersistedTargetAndHonorsErasureAsync(bool erasedBeforeRepair)
+    {
+        var client = new RecordingMemoriesClient();
+        var mappings = new RecordingMappingStore();
+        var monitor = new StaticOptionsMonitor(MissingCaseOptions());
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        string key = PartySdkReadModelAddresses.Index("tenant-a");
+        byte[]? persisted = null;
+        int writes = 0;
+        store.GetAsync<PartyIndexSdkReadModel>("statestore", key, Arg.Any<CancellationToken>())
+            .Returns(_ => new ReadModelEntry<PartyIndexSdkReadModel>(
+                persisted is null ? null : JsonSerializer.Deserialize<PartyIndexSdkReadModel>(persisted, PartiesJsonOptions.Default),
+                persisted is null ? null : "etag"));
+        store.TrySaveAsync("statestore", key, Arg.Any<PartyIndexSdkReadModel>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                writes++;
+                persisted = JsonSerializer.SerializeToUtf8Bytes(call.Arg<PartyIndexSdkReadModel>(), PartiesJsonOptions.Default);
+                return true;
+            });
+        var projectionOptions = Options.Create(new PartySdkReadModelOptions());
+        PartyIndexSdkProjectionHandler Handler() => new(store, projectionOptions,
+            CreateIndexer(client, mappings, monitor.CurrentValue, optionsMonitor: monitor));
+        ProjectionRequest created = new("tenant-a", "party", "party-1",
+        [
+            Delivery(new PartyCreated
+            {
+                Type = PartyType.Person,
+                PersonDetails = new PersonDetails { FirstName = "Canonical", LastName = "Party" },
+            }, 1),
+        ]);
+
+        DomainProjectionHandlerResult first = await Handler().ProjectAsync(created, "missing-case", TestContext.Current.CancellationToken);
+
+        first.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        first.ReasonCode.ShouldBe("search-reconciliation-required");
+        client.IngestCount.ShouldBe(0);
+        (await mappings.GetMappingsAsync("tenant-a", "party-1", TestContext.Current.CancellationToken)).ShouldBeEmpty();
+        persisted.ShouldNotBeNull();
+        JsonSerializer.Deserialize<PartyIndexSdkReadModel>(persisted, PartiesJsonOptions.Default)!.LastSequenceNumbers["party-1"].ShouldBe(1);
+
+        ProjectionRequest newer = created with { Events = [Delivery(new PartyDeactivated(), 2)] };
+        (await Handler().ProjectAsync(newer, "newer-target", TestContext.Current.CancellationToken)).Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        if (erasedBeforeRepair)
+        {
+            ProjectionRequest erased = created with
+            {
+                Events = [Delivery(new PartyErased { PartyId = "party-1", TenantId = "tenant-a", ErasedAt = DateTimeOffset.UnixEpoch.AddMinutes(3) }, 3)],
+            };
+            (await Handler().ProjectAsync(erased, "erased-target", TestContext.Current.CancellationToken)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        }
+        byte[] committed = persisted.ToArray();
+        monitor.CurrentValue = MissingCaseOptions("repaired-case");
+
+        // A fresh handler redelivers the old event after a newer target has been committed.
+        DomainProjectionHandlerResult repaired = await Handler().ProjectAsync(created, "repaired", TestContext.Current.CancellationToken);
+
+        repaired.Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        writes.ShouldBe(erasedBeforeRepair ? 3 : 2);
+        persisted.ShouldBe(committed);
+        PartyIndexSdkReadModel canonical = JsonSerializer.Deserialize<PartyIndexSdkReadModel>(persisted, PartiesJsonOptions.Default)!;
+        if (erasedBeforeRepair)
+        {
+            canonical.ErasureSequenceNumbers["party-1"].ShouldBe(3);
+            canonical.Entries.ShouldNotContainKey("party-1");
+            client.IngestCount.ShouldBe(0);
+            (await mappings.GetMappingsAsync("tenant-a", "party-1", TestContext.Current.CancellationToken)).ShouldBeEmpty();
+            return;
+        }
+        canonical.LastSequenceNumbers["party-1"].ShouldBe(2);
+        canonical.Entries["party-1"].IsActive.ShouldBeFalse();
+        client.IngestCount.ShouldBe(1);
+        client.LastCaseId.ShouldBe("repaired-case");
+        client.LastMetadata.ShouldNotBeNull();
+        client.LastMetadata["isActive"].Value.ShouldBe("false");
+        client.LastMetadata["eventType"].Value.ShouldBe(typeof(PartyDeactivated).FullName);
+        PartyMemoryUnitMappingEntry mapping = (await mappings.GetMappingsAsync("tenant-a", "party-1", TestContext.Current.CancellationToken)).ShouldHaveSingleItem();
+        mapping.MemoryUnitId.ShouldBe("workflow-1");
+        mapping.CaseId.ShouldBe("repaired-case");
+        mapping.SourceUri.ShouldBe(PartyMemoryUrn.Build("tenant-a", "party-1"));
+
+        static ProjectionEventDto Delivery(object payload, long sequence) => new(payload.GetType().FullName!,
+            JsonSerializer.SerializeToUtf8Bytes(payload, payload.GetType(), PartiesJsonOptions.Default),
+            "json", sequence, DateTimeOffset.UnixEpoch.AddMinutes(sequence), "correlation-1");
     }
 
     [Fact]
@@ -344,7 +433,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
 
         for (int attempt = 0; attempt < 10; attempt++)
         {
-            (await NotifyMissingCaseAsync(indexer, "private-tenant", "private-party")).ShouldBeTrue();
+            (await NotifyMissingCaseAsync(indexer, "private-tenant", "private-party")).ShouldBeFalse();
         }
 
         client.IngestCount.ShouldBe(0);
@@ -377,8 +466,8 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
 
         foreach ((string tenantId, string partyId) in pairs)
         {
-            (await NotifyMissingCaseAsync(indexer, tenantId, partyId)).ShouldBeTrue();
-            (await NotifyMissingCaseAsync(indexer, tenantId, partyId)).ShouldBeTrue();
+            (await NotifyMissingCaseAsync(indexer, tenantId, partyId)).ShouldBeFalse();
+            (await NotifyMissingCaseAsync(indexer, tenantId, partyId)).ShouldBeFalse();
         }
 
         WarningMessages(logger).Length.ShouldBe(pairs.Length);
@@ -395,14 +484,14 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
 
         for (int party = 0; party < capacity * 3; party++)
         {
-            (await NotifyMissingCaseAsync(indexer, "capacity-tenant", $"party-{party}")).ShouldBeTrue();
+            (await NotifyMissingCaseAsync(indexer, "capacity-tenant", $"party-{party}")).ShouldBeFalse();
         }
 
         WarningMessages(logger).Length.ShouldBe(capacity * 3);
         WarningTrackingCounts(indexer).ShouldAllBe(count => count == capacity);
-        (await NotifyMissingCaseAsync(indexer, "capacity-tenant", $"party-{(capacity * 3) - 1}")).ShouldBeTrue();
+        (await NotifyMissingCaseAsync(indexer, "capacity-tenant", $"party-{(capacity * 3) - 1}")).ShouldBeFalse();
         WarningMessages(logger).Length.ShouldBe(capacity * 3);
-        (await NotifyMissingCaseAsync(indexer, "capacity-tenant", "party-0")).ShouldBeTrue();
+        (await NotifyMissingCaseAsync(indexer, "capacity-tenant", "party-0")).ShouldBeFalse();
         WarningMessages(logger).Length.ShouldBe((capacity * 3) + 1);
         WarningTrackingCounts(indexer).ShouldAllBe(count => count == capacity);
         client.IngestCount.ShouldBe(0);
@@ -415,13 +504,13 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         var indexer = CreateIndexer(new RecordingMemoriesClient(), new RecordingMappingStore(), MissingCaseOptions(), logger);
         for (int party = 0; party < 1024; party++)
         {
-            (await NotifyMissingCaseAsync(indexer, "fifo-tenant", $"party-{party}")).ShouldBeTrue();
+            (await NotifyMissingCaseAsync(indexer, "fifo-tenant", $"party-{party}")).ShouldBeFalse();
         }
 
-        (await NotifyMissingCaseAsync(indexer, "fifo-tenant", "party-0")).ShouldBeTrue();
+        (await NotifyMissingCaseAsync(indexer, "fifo-tenant", "party-0")).ShouldBeFalse();
         WarningMessages(logger).Length.ShouldBe(1024);
-        (await NotifyMissingCaseAsync(indexer, "fifo-tenant", "party-1024")).ShouldBeTrue();
-        (await NotifyMissingCaseAsync(indexer, "fifo-tenant", "party-0")).ShouldBeTrue();
+        (await NotifyMissingCaseAsync(indexer, "fifo-tenant", "party-1024")).ShouldBeFalse();
+        (await NotifyMissingCaseAsync(indexer, "fifo-tenant", "party-0")).ShouldBeFalse();
 
         WarningMessages(logger).Length.ShouldBe(1026);
         WarningTrackingCounts(indexer).ShouldAllBe(count => count == 1024);
@@ -435,7 +524,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
 
         for (int attempt = 0; attempt < 4096; attempt++)
         {
-            (await NotifyMissingCaseAsync(indexer, "repeat-tenant", "repeat-party")).ShouldBeTrue();
+            (await NotifyMissingCaseAsync(indexer, "repeat-tenant", "repeat-party")).ShouldBeFalse();
         }
 
         WarningMessages(logger).ShouldHaveSingleItem();
@@ -450,8 +539,8 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         var first = CreateIndexer(new RecordingMemoriesClient(), new RecordingMappingStore(), MissingCaseOptions(), firstLogger);
         var second = CreateIndexer(new RecordingMemoriesClient(), new RecordingMappingStore(), MissingCaseOptions(), secondLogger);
 
-        (await NotifyMissingCaseAsync(first, "host-tenant", "host-party")).ShouldBeTrue();
-        (await NotifyMissingCaseAsync(second, "host-tenant", "host-party")).ShouldBeTrue();
+        (await NotifyMissingCaseAsync(first, "host-tenant", "host-party")).ShouldBeFalse();
+        (await NotifyMissingCaseAsync(second, "host-tenant", "host-party")).ShouldBeFalse();
 
         WarningMessages(firstLogger).ShouldHaveSingleItem();
         WarningMessages(secondLogger).ShouldHaveSingleItem();
@@ -476,7 +565,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         start.SetResult();
         bool[] outcomes = await Task.WhenAll(pending);
 
-        outcomes.ShouldAllBe(converged => converged);
+        outcomes.ShouldAllBe(converged => !converged);
         WarningMessages(logger).Length.ShouldBe(distinctPairs ? notifications : 1);
         WarningTrackingCounts(indexer).ShouldAllBe(count => count == (distinctPairs ? 1024 : 1));
         client.IngestCount.ShouldBe(0);
@@ -489,7 +578,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         var indexer = CreateIndexer(new RecordingMemoriesClient(), new RecordingMappingStore(), MissingCaseOptions(), logger);
         for (int party = 0; party < 1024; party++)
         {
-            (await NotifyMissingCaseAsync(indexer, "mixed-tenant", $"party-{party}")).ShouldBeTrue();
+            (await NotifyMissingCaseAsync(indexer, "mixed-tenant", $"party-{party}")).ShouldBeFalse();
         }
 
         TaskCompletionSource start = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -504,12 +593,12 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         start.SetResult();
         bool[] outcomes = await Task.WhenAll(pending);
 
-        outcomes.ShouldAllBe(converged => converged);
+        outcomes.ShouldAllBe(converged => !converged);
         WarningMessages(logger).Length.ShouldBe(1280);
         WarningTrackingCounts(indexer).ShouldAllBe(count => count == 1024);
-        (await NotifyMissingCaseAsync(indexer, "mixed-tenant", "party-1023")).ShouldBeTrue();
+        (await NotifyMissingCaseAsync(indexer, "mixed-tenant", "party-1023")).ShouldBeFalse();
         WarningMessages(logger).Length.ShouldBe(1280);
-        (await NotifyMissingCaseAsync(indexer, "mixed-tenant", "party-0")).ShouldBeTrue();
+        (await NotifyMissingCaseAsync(indexer, "mixed-tenant", "party-0")).ShouldBeFalse();
         WarningMessages(logger).Length.ShouldBe(1281);
         WarningTrackingCounts(indexer).ShouldAllBe(count => count == 1024);
     }
@@ -522,8 +611,8 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         var monitor = new StaticOptionsMonitor(MissingCaseOptions());
         var indexer = CreateIndexer(client, new RecordingMappingStore(), monitor.CurrentValue, logger, monitor);
 
-        (await NotifyMissingCaseAsync(indexer, "reload-tenant", "reload-party")).ShouldBeTrue();
-        (await NotifyMissingCaseAsync(indexer, "reload-tenant", "reload-party")).ShouldBeTrue();
+        (await NotifyMissingCaseAsync(indexer, "reload-tenant", "reload-party")).ShouldBeFalse();
+        (await NotifyMissingCaseAsync(indexer, "reload-tenant", "reload-party")).ShouldBeFalse();
         client.IngestCount.ShouldBe(0);
         WarningMessages(logger).ShouldHaveSingleItem();
 
@@ -533,7 +622,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         client.LastCaseId.ShouldBe("repaired-case");
 
         monitor.CurrentValue = MissingCaseOptions();
-        (await NotifyMissingCaseAsync(indexer, "reload-tenant", "reload-party")).ShouldBeTrue();
+        (await NotifyMissingCaseAsync(indexer, "reload-tenant", "reload-party")).ShouldBeFalse();
         client.IngestCount.ShouldBe(1);
         WarningMessages(logger).ShouldHaveSingleItem();
         WarningTrackingCounts(indexer).ShouldAllBe(count => count == 1);
@@ -554,8 +643,8 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
                 NullLogger<PartyMemoryCleanupService>.Instance),
             CreateMonitor(MissingCaseOptions()),
             logger);
-        (await NotifyMissingCaseAsync(indexer, "cleanup-tenant", "cleanup-party")).ShouldBeTrue();
-        (await NotifyMissingCaseAsync(indexer, "cleanup-tenant", "cleanup-party")).ShouldBeTrue();
+        (await NotifyMissingCaseAsync(indexer, "cleanup-tenant", "cleanup-party")).ShouldBeFalse();
+        (await NotifyMissingCaseAsync(indexer, "cleanup-tenant", "cleanup-party")).ShouldBeFalse();
         WarningMessages(logger).ShouldHaveSingleItem();
 
         bool removed = await indexer.NotifyRemovedAsync("cleanup-tenant", "cleanup-party", TestContext.Current.CancellationToken);
