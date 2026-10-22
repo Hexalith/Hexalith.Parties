@@ -1,7 +1,9 @@
 <Project>
 
   <PropertyGroup>
-    <!-- Only the pinned module tool supplies source roots and mode selectors. -->
+    <!-- Honor explicit tool roots; otherwise locate the available Builds checkout. -->
+    <!-- An umbrella workspace supplies Builds as a root-declared sibling; standalone uses its own checkout. -->
+    <HexalithBuildsRoot Condition="'$(HexalithBuildsRoot)' == '' and Exists('$(MSBuildThisFileDirectory)../Hexalith.Builds/Props/Directory.Packages.props')">$(MSBuildThisFileDirectory)../Hexalith.Builds</HexalithBuildsRoot>
     <HexalithBuildsRoot Condition="'$(HexalithBuildsRoot)' == ''">$(MSBuildThisFileDirectory)references/Hexalith.Builds</HexalithBuildsRoot>
     <!-- The Web SDK prunes SignalR.Common in favor of Microsoft.AspNetCore.App.
          Require the fixed shared runtime for the UI as well as the central NuGet floor. -->

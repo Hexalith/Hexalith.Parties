@@ -2,6 +2,8 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <!-- An umbrella workspace supplies Builds as a root-declared sibling; standalone uses its own checkout. -->
+    <HexalithBuildsRoot Condition="'$(HexalithBuildsRoot)' == '' and Exists('$(MSBuildThisFileDirectory)../Hexalith.Builds/Props/Directory.Packages.props')">$(MSBuildThisFileDirectory)../Hexalith.Builds</HexalithBuildsRoot>
     <HexalithBuildsRoot Condition="'$(HexalithBuildsRoot)' == ''">$(MSBuildThisFileDirectory)references/Hexalith.Builds</HexalithBuildsRoot>
   </PropertyGroup>
   <Import Project="$(HexalithBuildsRoot)/Props/Directory.Packages.props" Condition="'$(HexalithVersionsLoaded)' != 'true'" />
