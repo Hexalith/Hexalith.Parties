@@ -87,7 +87,7 @@ public sealed class AccessibilityWorkflowTests
         job.ShouldContain("git -c submodule.recurse=false submodule update --init references/Hexalith.Builds references/Hexalith.Commons");
         job.ShouldNotContain("--recursive");
         job.ShouldContain("global-json-file: global.json");
-        job.ShouldContain("node-version: '24'");
+        job.ShouldContain("node-version: '24.22.1'");
         job.ShouldContain("cache-dependency-path: tests/e2e/package-lock.json");
         job.ShouldNotContain("NuGetAudit=false");
         job.ShouldNotContain("TreatWarningsAsErrors=false");

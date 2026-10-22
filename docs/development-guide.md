@@ -8,7 +8,7 @@
 |------|---------|
 | .NET SDK | **10.0.402** (pinned in `global.json`, rollForward latestPatch) |
 | Docker Desktop | latest (must be running before Aspire) |
-| Node.js | **24+** for the Playwright accessibility workspace under `tests/e2e` |
+| Node.js | **24.22.1**, with bundled **npm 11.19.1**, for root release tools and `tests/e2e` |
 | Git | recent |
 | `jq` | optional (Bash examples) |
 | PowerShell `pwsh` 7+ | local scripts and CI parity commands |

@@ -12,6 +12,25 @@ public sealed class PartiesContainerPublishWorkflowTests
     private static readonly TimeSpan WorkflowReadTimeout = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan PublicationPreflightTimeout = TimeSpan.FromSeconds(10);
 
+    /// <summary>Both locked npm projects enforce the selected distribution before installing.</summary>
+    /// <param name="directory">The npm project directory.</param>
+    [Theory]
+    [InlineData("")]
+    [InlineData("tests/e2e/")]
+    public void NpmProjectsEnforceExactNodeAndNpm(string directory)
+    {
+        using JsonDocument manifest = JsonDocument.Parse(CiTestPaths.ReadRepoFile($"{directory}package.json"));
+        using JsonDocument packageLock = JsonDocument.Parse(CiTestPaths.ReadRepoFile($"{directory}package-lock.json"));
+        foreach (JsonElement project in new[] { manifest.RootElement, packageLock.RootElement.GetProperty("packages").GetProperty("") })
+        {
+            JsonElement engines = project.GetProperty("engines");
+            engines.GetProperty("node").GetString().ShouldBe("24.22.1");
+            engines.GetProperty("npm").GetString().ShouldBe("11.19.1");
+        }
+
+        CiTestPaths.ReadRepoFile($"{directory}.npmrc").Trim().ShouldBe("engine-strict=true");
+    }
+
     [Theory]
     [InlineData("package.json", "package-lock.json", "@commitlint/cli", "^21.2.2", "21.2.2")]
     [InlineData("package.json", "package-lock.json", "@commitlint/config-conventional", "^21.2.2", "21.2.2")]
@@ -49,6 +68,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         string workflow = CiTestPaths.ReadRepoFile(".github/workflows/commitlint.yml");
 
         workflow.ShouldContain($"uses: Hexalith/Hexalith.Builds/.github/workflows/commitlint.yml@{BuildsValidationSha}");
+        workflow.ShouldContain("node-version: '24.22.1'");
         workflow.ShouldContain("pull-request-title: ${{ github.event.pull_request.title || '' }}");
         workflow.ShouldNotContain("commitlint.yml@main");
     }
@@ -110,6 +130,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         preparation.ShouldContain($"uses: Hexalith/Hexalith.Builds/Github/prepare-domain-release@{BuildsExecutionSha}\n");
         preparation.ShouldContain($"builds-execution-sha: {BuildsExecutionSha}\n");
         preparation.ShouldContain("solution: Hexalith.Parties.slnx\n");
+        preparation.ShouldContain("node-version: '24.22.1'\n");
         preparation.ShouldContain("source-branch: main\n");
         preparation.ShouldContain("source-ci-workflow: ci.yml\n");
         preparation.ShouldContain("package-manifest: tools/release-packages.json\n");

@@ -323,6 +323,7 @@ jobs:
         uses: Hexalith/Hexalith.Builds/Github/prepare-domain-release@397c94a4e246c90b21cf408790fa0d55bf32d795
         with:
           solution: Hexalith.Parties.slnx
+          node-version: '24.22.1'
           builds-execution-sha: 397c94a4e246c90b21cf408790fa0d55bf32d795
           source-branch: main
           source-ci-workflow: ci.yml

@@ -203,6 +203,17 @@ Receipts derive hashes from observed registry bytes. NuGet may add signatures,
 so those hashes do not prove equality with unsigned build archives. OCI proof
 covers the shared validator's manifest/config graph and provenance.
 
+Root release tooling and the browser workspace both require Node **24.22.1**
+and its bundled npm **11.19.1**. Their exact `engines` metadata and project
+`.npmrc` (`engine-strict=true`) reject a different Node or npm before installing
+dependencies. The browser `setup-node` and reusable commitlint caller select
+that exact distribution. The release caller passes it as `node-version` to the
+immutable preparation action,
+so the action selects it before its first `npm ci --ignore-scripts`. Installing
+or checking npm after preparation would be too late. Dependency resolutions stay
+in the existing lockfiles; qualification uses the official distribution's SHA-256
+receipt and both real locked installs plus wrong-Node/wrong-npm rejection checks.
+
 Ordinary `main` pushes use the event's exact, nonzero `before` commit as the
 root-gitlink gate base. It must exist and be an ancestor of the checked-out
 source; invalid, missing, zero or divergent bases fail closed. `--push-range`
@@ -216,6 +227,14 @@ its running or pending check. The complete range's root declarations are collect
 before checking advances, including declarations added after their gitlinks.
 Merge results are compared with their first parent while reachable branch
 commits are also checked.
+
+Local fixtures verify the selected range script and the declared per-SHA group.
+GitHub scheduling qualification additionally requires two actual `main` push runs
+whose lifetimes overlap and both complete successfully. Retain each run's exact
+head SHA, event, branch, creation/completion timestamps, successful jobs and
+logged `before` range. Canceled, missing or nonoverlapping runs leave the live
+scheduling follow-up open; no workflow dispatch or release is needed for this
+qualification.
 
 The executable fixtures require Python, Git, Bash and `jq` on a non-Windows
 system, plus the pinned Builds Git object available in the direct root checkout.
