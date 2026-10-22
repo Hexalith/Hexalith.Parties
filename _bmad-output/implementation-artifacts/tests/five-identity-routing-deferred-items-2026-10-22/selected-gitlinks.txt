@@ -1,0 +1,5 @@
+Command: git ls-tree HEAD references/Hexalith.Builds references/Hexalith.FrontComposer
+Exit code: 0
+
+160000 commit 3fcb8f38919bb0961b06a19b57aa45623b35a33e	references/Hexalith.Builds
+160000 commit a258b992d08e73e2d3251c865ef01a982eba31ac	references/Hexalith.FrontComposer

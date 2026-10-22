@@ -1,0 +1,11 @@
+Command: dotnet tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll -class Hexalith.Parties.UI.Tests.PartiesOverviewTests -class Hexalith.Parties.UI.Tests.PartiesUiHostCompositionTests
+Exit code: 0
+
+Structured framework/host JSON log lines omitted; xUnit runner output follows.
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.UI.Tests
+  Discovered:  Hexalith.Parties.UI.Tests
+  Starting:    Hexalith.Parties.UI.Tests
+  Finished:    Hexalith.Parties.UI.Tests (ID = '0198cffcae4a8a9d689cbe5629780d2661cb43b1455b360b0368c2b89efbe739')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.UI.Tests  Total: 42, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 4.690s

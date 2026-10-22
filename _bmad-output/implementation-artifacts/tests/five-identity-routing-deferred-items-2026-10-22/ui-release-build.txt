@@ -1,0 +1,18 @@
+Command: dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0
+Exit code: 0
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Hexalith.Parties.Contracts -> <workspace>/src/Hexalith.Parties.Contracts/bin/Release/net10.0/Hexalith.Parties.Contracts.dll
+  Hexalith.Parties.Client -> <workspace>/src/Hexalith.Parties.Client/bin/Release/net10.0/Hexalith.Parties.Client.dll
+  Hexalith.Parties.AdminPortal -> <workspace>/src/Hexalith.Parties.AdminPortal/bin/Release/net10.0/Hexalith.Parties.AdminPortal.dll
+  Hexalith.Parties.Authentication -> <workspace>/src/Hexalith.Parties.Authentication/bin/Release/net10.0/Hexalith.Parties.Authentication.dll
+  Hexalith.Parties.ConsumerPortal -> <workspace>/src/Hexalith.Parties.ConsumerPortal/bin/Release/net10.0/Hexalith.Parties.ConsumerPortal.dll
+  Hexalith.Parties.Picker -> <workspace>/src/Hexalith.Parties.Picker/bin/Release/net10.0/Hexalith.Parties.Picker.dll
+  Hexalith.Parties.UI -> <workspace>/src/Hexalith.Parties.UI/bin/Release/net10.0/Hexalith.Parties.UI.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.38

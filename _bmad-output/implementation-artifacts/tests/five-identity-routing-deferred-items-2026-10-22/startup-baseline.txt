@@ -1,0 +1,17 @@
+Before any code edits, from the repository root:
+
+Command: dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
+Exit code: 2
+unavailable: PrerequisiteUnavailable
+HXR011 Prerequisite PrerequisiteUnavailable field=HEXALITH_DAPR_HOME: The isolated Dapr home is not configured. (Set HEXALITH_DAPR_HOME to an absolute directory prepared with the selected Dapr CLI and runtime.)
+
+Retried using the existing prepared isolated home from the pinned Platform prerequisites:
+Command: HEXALITH_DAPR_HOME="$HOME/.hexalith/dapr/1.18.2" dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
+Exit code: 3
+failed: TopologyOrLifecycle
+HXP020 Topology TopologyOrLifecycle field=platform: ../../../../../../../../projects/hexalith/parties/module/hexalith.module-manifest.v2.json: parties/domain: project: mapped source project is unavailable. deadline='600s' diagnostics='<runner-diagnostics>/39a64465fa34745acd76528e6aa3579c'. (Supply the named owner input; no resources were started.)
+
+The diagnostics path above is redacted. The retained startup summary is startup-summary.json.
+No resources started; no runner-owned teardown was required. No fallback AppHost was launched.
+Pinned Debug/source startup and validation remain blocked by HXP020. The explicitly permitted
+focused Release/package fallback establishes package behavior, not full topology/source qualification.

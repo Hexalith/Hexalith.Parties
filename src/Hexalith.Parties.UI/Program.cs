@@ -47,10 +47,8 @@ builder.Services.AddFluentUIComponents();
 builder.Services.AddHttpContextAccessor();
 
 // Quickstart chains AddLocalization + AddHexalithShellLocalization + AddHexalithFrontComposer.
-#if HFC_ROUTE_OPTIONS
 builder.Services.Configure<Hexalith.FrontComposer.Shell.Options.FrontComposerRouteOptions>(options =>
     options.ReservedSegments.UnionWith(["admin", "me", "no-party-binding"]));
-#endif
 builder.Services.AddHexalithFrontComposerQuickstart(o => o.ScanAssemblies(typeof(Program).Assembly));
 builder.Services.AddFrontComposerDevMode(builder.Environment);
 builder.Services.AddHexalithDomain<PartiesUiDomainMarker>();

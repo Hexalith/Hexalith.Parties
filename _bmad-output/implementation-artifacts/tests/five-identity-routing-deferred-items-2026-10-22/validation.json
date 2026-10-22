@@ -1,0 +1,170 @@
+{
+  "date": "2026-10-22",
+  "baseline_commit": "d55058ddaa4bfc94c47b799e5f5d9e9eff8dce77",
+  "mode": "Release / published packages; warnings as errors",
+  "selected_packages": {
+    "Hexalith.FrontComposer.Shell": "4.7.0",
+    "Hexalith.EventStore": "3.126.1"
+  },
+  "source_and_topology_status": "blocked: pinned module launcher HXP020; no resources started",
+  "checks": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "service-build.txt"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "contracts-build.txt"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "ui-tests-build.txt"
+    },
+    {
+      "command": "dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "ui-release-build.txt"
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests",
+      "exit_code": 0,
+      "output": "identity-query-tests.txt",
+      "total": 262,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll -class Hexalith.Parties.Contracts.Tests.Privacy.PersonalDataInventoryTests",
+      "exit_code": 0,
+      "output": "privacy-inventory-tests.txt",
+      "total": 8,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll -class Hexalith.Parties.UI.Tests.PartiesOverviewTests -class Hexalith.Parties.UI.Tests.PartiesUiHostCompositionTests",
+      "exit_code": 0,
+      "output": "routing-tests.txt",
+      "total": 42,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -method '*MaintainedTechnologyTablesMatchCentralPackageCatalog' -method '*FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph'",
+      "exit_code": 0,
+      "output": "dependency-reconciliation-tests.txt",
+      "total": 2,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+      "exit_code": 0,
+      "output": "service-suite-summary.txt",
+      "total": 2416,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll",
+      "exit_code": 0,
+      "output": "contracts-suite.txt",
+      "total": 210,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "exit_code": 0,
+      "output": "ui-suite-summary.txt",
+      "total": 404,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "output": "warning-guard.txt"
+    },
+    {
+      "command": "git -c core.whitespace=trailing-space,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0,
+      "output": "whitespace.txt"
+    },
+    {
+      "command": "dnx dotnet-inspect -y -- member FcPageTabs --package Hexalith.FrontComposer.Shell@4.7.0 -S Properties --table",
+      "exit_code": 0,
+      "output": "published-tabs-api.txt"
+    },
+    {
+      "command": "dnx dotnet-inspect -y -- member FrontComposerRouteOptions --package Hexalith.FrontComposer.Shell@4.7.0 -S Properties --table",
+      "exit_code": 0,
+      "output": "published-route-api.txt"
+    },
+    {
+      "command": "dnx dotnet-inspect -y -- member FcModuleLandingPage --package Hexalith.FrontComposer.Shell@4.7.0 -v q",
+      "exit_code": 0,
+      "output": "published-module-api.txt"
+    },
+    {
+      "command": "dotnet msbuild src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -getProperty:HexalithFrontComposerVersion,HexalithEventStoreVersion,HexalithFrontComposerFromSource,Configuration,TreatWarningsAsErrors -p:Configuration=Release",
+      "exit_code": 0,
+      "output": "package-graph.txt"
+    },
+    {
+      "command": "git ls-tree HEAD references/Hexalith.Builds references/Hexalith.FrontComposer",
+      "exit_code": 0,
+      "output": "selected-gitlinks.txt"
+    }
+  ],
+  "ui_suite_scope": "Full UI suite passed 404/404 before four additional wrong-role HTTP cases; rebuilt final focused routing suite passed 42/42 including those four cases. Runtime UI source is identical across these runs.",
+  "unchanged_boundaries": [
+    "wire contracts",
+    "retention policy",
+    "production cryptographic annotations",
+    "dependencies",
+    "gitlinks",
+    "deployments",
+    "historical approvals and parity receipts"
+  ],
+  "parent_handoff": [
+    "independent review",
+    "pinned commitlint validation of exact message",
+    "staging",
+    "commit",
+    "authorized push"
+  ],
+  "validation_stage": "initial implementation; final reviewed results are in post-review-validation.json",
+  "initial_implementation_file_sha256": {
+    "src/Hexalith.Parties.UI/Components/Pages/PartiesOverview.razor": "4d47df8e4ba4c3b856347d28ee2b96f741476ab8360914e82b415c0c5a2ed9ed",
+    "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj": "372a3afc78428b0d4a678da109640b2b4ed49323cc84cb0928f5fc18fec0b481",
+    "src/Hexalith.Parties.UI/Program.cs": "52d0f6205197d7f1a3e7bb2de53efa53f9882f8ef2ffe541de29b3e0247e72b7",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryDeadline.cs": "78b7a80308a3a77467d01e0d6104c6e8b58d4287fc16a43017e4a78aef904918",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs": "02aac3892324a85729fe8e0db5a2a0acf1e0b3a87bd84ba01e5b1cd9b8de4ae6",
+    "src/Hexalith.Parties/Queries/PartyIdentitySourceFold.cs": "39a070b25e9760c75d645d2578c7722bc58167b70c507252287fadd5feb66b42",
+    "src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs": "67484fdc1f9bf65c3b5fbc4096968d1f8a5dade40686fb59d382116eb3547846",
+    "tests/Hexalith.Parties.Contracts.Tests/Privacy/PersonalDataInventoryTests.cs": "c5c3e3c1e70a1a83e78d1ef06df11fec6e60f3950f4b331e6cb904c971990cfb",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "c860674e0126a7688daa8c7de4d933b4e0264edb22cde2d78efca6adfc7359b2",
+    "tests/Hexalith.Parties.UI.Tests/PartiesOverviewTests.cs": "af2f2e6098b20b4b7e02919d0dfd9de009c12ce26653c9814cea81558f56cf96",
+    "tests/Hexalith.Parties.UI.Tests/PartiesUiHostCompositionTests.cs": "d4d53de7b0c5df9a47525dfa1171ea8e78afaf43eec48847beac96b3676ecc6e",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryWorkLimiter.cs": "822d72426cd36d58d4276f1777b515eb7b426d033a1369d50e8ef5855c501e43"
+  },
+  "post_review_validation": "post-review-validation.json"
+}

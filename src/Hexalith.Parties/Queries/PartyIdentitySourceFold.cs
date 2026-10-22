@@ -16,7 +16,12 @@ public static class PartyIdentitySourceFold
 {
     /// <summary>Replays exact supported events and checks immutable evidence against stream scope.</summary>
     public static PartyState Fold(AuthoritativeEventStream stream)
+        => Fold(stream, CancellationToken.None);
+
+    /// <summary>Replays with cooperative cancellation between source transitions and validations.</summary>
+    internal static PartyState Fold(AuthoritativeEventStream stream, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         ArgumentNullException.ThrowIfNull(stream);
         if (stream.Identity is null || stream.Identity.Domain != "party" || stream.Head < 0
             || stream.Events is null || stream.Events.Count != stream.Head || stream.ObservedAt == default
@@ -30,6 +35,7 @@ public static class PartyIdentitySourceFold
         long sequence = 0;
         foreach (StreamReadEvent item in stream.Events)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (item is null || item.SequenceNumber != ++sequence || item.Payload is null
                 || item.SerializationFormat != "json" || item.MetadataVersion != 1
                 || item.ProtectionMetadata is { } protection && (protection.State is not (PayloadProtectionState.Unprotected or PayloadProtectionState.Protected)
@@ -75,16 +81,25 @@ public static class PartyIdentitySourceFold
             _ = apply.Invoke(state, [value]);
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         var logicalIds = new HashSet<string>(StringComparer.Ordinal);
         if (sequence != stream.Head || state.HumanActorBindings.Any(binding =>
-                binding.Evidence.TenantId != stream.Identity.TenantId || binding.Evidence.PartyId != stream.Identity.AggregateId
-                || !HasCompleteAttribution(binding))
-            || state.HumanActorTransitions.Any(transition => string.IsNullOrWhiteSpace(transition.LogicalId)
-                || string.IsNullOrWhiteSpace(transition.IntentDigest) || !logicalIds.Add(transition.LogicalId)))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return binding.Evidence.TenantId != stream.Identity.TenantId || binding.Evidence.PartyId != stream.Identity.AggregateId
+                || !HasCompleteAttribution(binding);
+            })
+            || state.HumanActorTransitions.Any(transition =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return string.IsNullOrWhiteSpace(transition.LogicalId)
+                    || string.IsNullOrWhiteSpace(transition.IntentDigest) || !logicalIds.Add(transition.LogicalId);
+            }))
         {
             throw new InvalidOperationException("Identity source scope or attribution history is unsupported.");
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         return state;
     }
 

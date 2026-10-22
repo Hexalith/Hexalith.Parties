@@ -1084,3 +1084,22 @@ selects 3.112.0; it does not certify these source identities or their parity.
 The committed-tree and clean matching-checkout guards remain unchanged. Any
 identity failure caused by this drift remains owner-visible; package build
 results are recorded separately in `tests/test-summary.md`.
+
+## 2026-10-22 published routing observation — DW-139
+
+This is current package-routing proof at Parties baseline
+`d55058ddaa4bfc94c47b799e5f5d9e9eff8dce77`, appended to the identity and
+FrontComposer G4 observations above. Earlier source identities, receipts and
+owner approvals retain their original scope.
+
+| Scope | Current observation | Proof and disposition |
+| --- | --- | --- |
+| Package and source selection | The evaluated Release graph already selects `Hexalith.FrontComposer.Shell` 4.7.0 and EventStore 3.126.1. Committed Builds is `3fcb8f38919bb0961b06a19b57aa45623b35a33e`; FrontComposer is `a258b992d08e73e2d3251c865ef01a982eba31ac`. | Published API inspection confirms `FrontComposerRouteOptions.ReservedSegments`, `FcModuleLandingPage`, and `FcPageTabs.ModuleRoute` / `DefaultTabId`. No package selection or gitlink is changed or newly approved. |
+| Package routing slice | Reserved segments `admin`, `me`, `no-party-binding` are configured without a source define. The obsolete `HFC_ROUTE_OPTIONS` gate and dictionary are removed; Parties overview passes its module/default-tab parameters directly. | Standalone UI Release/package build has zero warnings/errors. Actual-host checks reject reserved-name module collisions, discover generic module and Parties endpoints, and serve registered fixture module alias/canonical landings. bUnit verifies Parties alias/canonical/default-tab behavior and unknown-tab fallback. |
+| Authorization | The existing role policies and authorized overview destinations remain enforced. | Host policies cover Admin, TenantOwner, Consumer and unrelated roles. Wrong-role HTTP requests to admin, profile, privacy and no-binding areas render the forbidden page inside the Blazor SSR shell. Final focused routing suite passes 46/46; final full UI suite passes 412/412, including protected-content/read-capture checks and actual explicit, registered generic and unavailable route selection. |
+| G4 and topology boundary | DW-139 is complete for published-package routing. | G4 remains `needs-additive-api`; this receipt does not close the other primitive packages, focus/accessibility deferrals, owner signoffs or topology prerequisites. The pinned source launcher fails HXP020 because the mapped Parties project is unavailable; no resources started. Package checks do not certify Debug/source or integrated topology. |
+
+Commands, selected identities, exact outcomes and limitations:
+`tests/five-identity-routing-deferred-items-2026-10-22/validation.json` and its
+adjacent API, build, routing and startup receipts. Fresh dependency-reconciliation
+fitness checks pass 2/2; no historical parity is recertified.

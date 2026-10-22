@@ -1,0 +1,12 @@
+{
+  "schema": "hexalith.g4-startup-report.v1",
+  "runId": "39a64465fa34745acd76528e6aa3579c",
+  "ruleId": "HXP020",
+  "durationSeconds": 38.0794676,
+  "effectiveDeadlineSeconds": 600,
+  "effectiveDeadlineIsOverride": false,
+  "effectiveDeadlineJustification": null,
+  "effectiveDeadlineModuleId": null,
+  "failingTask": null,
+  "resources": []
+}

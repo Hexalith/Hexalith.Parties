@@ -1,0 +1,7 @@
+Command: node_modules/.bin/commitlint --edit <exact-message-file> --verbose
+Pinned CLI: 21.2.2
+Exit code: 0
+
+⧗   --- input ---
+fix: close five identity and routing deferrals
+✔   found 0 problems, 0 warnings

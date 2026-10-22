@@ -23,6 +23,9 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
     IAuthoritativeEventStreamReader? reader = null, IIdentityHistoryCustody? custody = null,
     IRetainedIdentityHistoryReader? historyReader = null, IOptionsMonitor<PartyIdentityOptions>? identityOptions = null)
 {
+    /// <summary>Gets the shared work boundary; tests may supply an isolated finite capacity.</summary>
+    internal PartyIdentityQueryWorkLimiter WorkLimiter { get; init; } = PartyIdentityQueryWorkLimiter.Shared;
+
     /// <summary>Resolves current classification and eligibility from complete source and actor evidence.</summary>
     public async Task<PartyIdentityResult> ResolveAsync(QueryEnvelope envelope, CancellationToken cancellationToken)
     {
@@ -39,7 +42,7 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
                 return new(PartyIdentityOutcome.Unavailable, null);
             }
 
-            using var deadline = new PartyIdentityQueryDeadline(timeout, timeProvider, cancellationToken, startedAt);
+            using var deadline = new PartyIdentityQueryDeadline(timeout, timeProvider, cancellationToken, startedAt, WorkLimiter);
             deadline.ThrowIfCancellationRequested();
             IdentityHistoryPolicy? policy = options?.Policy;
             ResolvePartyIdentity? query = JsonSerializer.Deserialize<ResolvePartyIdentity>(envelope.Payload, PartiesJsonOptions.Default);
@@ -49,7 +52,7 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
                 return new(PartyIdentityOutcome.Unavailable, null);
             }
 
-            IdentityAdmissionEvidence? admitted = authority.Admit(envelope).Evidence;
+            IdentityAdmissionEvidence? admitted = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
             if (admitted is null || reader is null
                 || query.ExpectedActorId is not null && admitted.TargetActorId != query.ExpectedActorId)
             {
@@ -67,7 +70,7 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
                 return new(PartyIdentityOutcome.Unavailable, null);
             }
 
-            PartyState state = PartyIdentitySourceFold.Fold(read.Stream!);
+            PartyState state = await deadline.RunAsync(token => PartyIdentitySourceFold.Fold(read.Stream!, token)).ConfigureAwait(false);
             if (!state.HasBeenCreated)
             {
                 deadline.ThrowIfCancellationRequested();
@@ -118,7 +121,7 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
                 eligible &= binding is not null;
             }
 
-            IdentityAdmissionEvidence? currentAuthority = authority.Admit(envelope).Evidence;
+            IdentityAdmissionEvidence? currentAuthority = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
             deadline.ThrowIfCancellationRequested();
             DateTimeOffset completedAt = timeProvider.GetUtcNow();
             if (completedAt < read.Stream!.ObservedAt || !SameAuthority(admitted, currentAuthority, completedAt)
@@ -168,12 +171,18 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
             }
 
-            using var deadline = new PartyIdentityQueryDeadline(timeout, timeProvider, cancellationToken, startedAt);
+            using var deadline = new PartyIdentityQueryDeadline(timeout, timeProvider, cancellationToken, startedAt, WorkLimiter);
             deadline.ThrowIfCancellationRequested();
             IdentityHistoryPolicy? policy = options?.Policy;
             if (query is null || !Matches(envelope, query.TenantId, query.PartyId)
-                || string.IsNullOrWhiteSpace(query.ExpectedActorId) || query.ExpectedBindingVersion <= 0
-                || authority.Admit(envelope).Evidence is not { } admitted
+                || string.IsNullOrWhiteSpace(query.ExpectedActorId) || query.ExpectedBindingVersion <= 0)
+            {
+                deadline.ThrowIfCancellationRequested();
+                return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
+            }
+
+            IdentityAdmissionEvidence? admitted = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
+            if (admitted is null
                 || admitted.TargetActorId != query.ExpectedActorId || historyReader is null || custody is null
                 || !PolicyIsCurrent(policy))
             {
@@ -187,8 +196,8 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
             deadline.ThrowIfCancellationRequested();
             if (!PolicyIsCurrent(policy) || !read.IsAuthoritative || read.Stream is not { } retainedSource
                 || retainedSource.Identity != new AggregateIdentity(query.TenantId, "party", query.PartyId)
-                || !RetainedIdentityHistoryValidator.IsComplete(new(retainedSource.Identity,
-                    RetainedIdentityHistoryReadRequest.AttributionPurpose), retainedSource, timeProvider.GetUtcNow()))
+                || !await deadline.RunAsync(_ => RetainedIdentityHistoryValidator.IsComplete(new(retainedSource.Identity,
+                    RetainedIdentityHistoryReadRequest.AttributionPurpose), retainedSource, timeProvider.GetUtcNow())).ConfigureAwait(false))
             {
                 deadline.ThrowIfCancellationRequested();
                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
@@ -200,8 +209,9 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
             }
 
-            IReadOnlyList<RetainedHumanActorBinding> history = RetainedHumanActorHistoryFold.Fold(read.Stream!, policy!.PolicyId);
-            if (!SameAuthority(admitted, authority.Admit(envelope).Evidence, timeProvider.GetUtcNow()) || !PolicyIsCurrent(policy))
+            IReadOnlyList<RetainedHumanActorBinding> history = await deadline.RunAsync(token => RetainedHumanActorHistoryFold.Fold(read.Stream!, policy!.PolicyId, token)).ConfigureAwait(false);
+            IdentityAdmissionEvidence? afterFoldAuthority = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
+            if (!SameAuthority(admitted, afterFoldAuthority, timeProvider.GetUtcNow()) || !PolicyIsCurrent(policy))
             {
                 deadline.ThrowIfCancellationRequested();
                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
@@ -249,7 +259,10 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
                 return HistoryFailure(query, HumanActorBindingOutcome.Expired);
             }
 
-            IdentityAdmissionEvidence? currentAuthority = authority.Admit(envelope).Evidence;
+            DateTimeOffset finalValidationAt = timeProvider.GetUtcNow();
+            bool completeSource = await deadline.RunAsync(_ => RetainedIdentityHistoryValidator.IsComplete(new(retainedSource.Identity,
+                RetainedIdentityHistoryReadRequest.AttributionPurpose), retainedSource, finalValidationAt)).ConfigureAwait(false);
+            IdentityAdmissionEvidence? currentAuthority = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
             completedAt = timeProvider.GetUtcNow();
             if (!PolicyIsCurrent(policy))
             {
@@ -263,9 +276,12 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
                 return HistoryFailure(query, HumanActorBindingOutcome.Expired);
             }
 
-            if (!SameAuthority(admitted, currentAuthority, completedAt)
-                || !RetainedIdentityHistoryValidator.IsComplete(new(retainedSource.Identity,
-                    RetainedIdentityHistoryReadRequest.AttributionPurpose), retainedSource, completedAt))
+            // Validation can be slow. Re-admit after it, and recheck its exclusive
+            // certificate expiry at the terminal instant rather than its start time.
+            // Reject backward UTC movement to preserve every validated observation
+            // lower bound, including destruction certificates, without another scan.
+            if (!completeSource || completedAt < finalValidationAt || retainedSource.ValidUntil <= completedAt
+                || !SameAuthority(admitted, currentAuthority, completedAt))
             {
                 deadline.ThrowIfCancellationRequested();
                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
