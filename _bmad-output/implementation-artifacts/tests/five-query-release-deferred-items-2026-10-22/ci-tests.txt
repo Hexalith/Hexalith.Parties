@@ -1,0 +1,10 @@
+$ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Ci.Tests
+  Discovered:  Hexalith.Parties.Ci.Tests
+  Starting:    Hexalith.Parties.Ci.Tests
+  Finished:    Hexalith.Parties.Ci.Tests (ID = 'e2ae03f1bfa16e52881bfe6142ad07fcf2cd34d86833309fc89c1c488a187e37')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Ci.Tests  Total: 314, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 25.120s
+
+Exit code: 0

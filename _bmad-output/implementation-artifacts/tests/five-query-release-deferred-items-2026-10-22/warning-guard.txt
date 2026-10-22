@@ -1,0 +1,4 @@
+$ bash scripts/check-no-warning-override.sh
+OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.
+
+Exit code: 0

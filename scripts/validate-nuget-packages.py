@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import zipfile
 from dataclasses import dataclass
@@ -79,30 +80,60 @@ class PackageMetadata:
     has_license: bool
     dependencies: frozenset[DependencyMetadata]
     dependency_groups: tuple[DependencyGroupMetadata, ...] = ()
+    repository_url: str | None = None
+    repository_type: str | None = None
+    repository_commit: str | None = None
 
 
 def get_metadata(package_path: Path) -> PackageMetadata:
     """Return package id, version, metadata flags, and dependency ids."""
     with zipfile.ZipFile(package_path) as package:
-        nuspec_names = [name for name in package.namelist() if name.endswith(".nuspec")]
+        names = package.namelist()
+        if len(names) > 10000 or sum(item.file_size for item in package.infolist()) > 256 * 1024 * 1024:
+            raise ValueError(f"{package_path.name}: archive exceeds the validation size bound")
+        if len({name.casefold() for name in names}) != len(names):
+            raise ValueError(f"{package_path.name}: duplicate archive member names")
+        nuspec_names = [name for name in names if name.casefold().endswith(".nuspec")]
         if len(nuspec_names) != 1:
             raise ValueError(f"{package_path.name}: expected exactly one .nuspec file")
 
+        if package.getinfo(nuspec_names[0]).file_size > 1024 * 1024:
+            raise ValueError(f"{package_path.name}: nuspec exceeds the metadata size bound")
+        if package.testzip() is not None:
+            raise ValueError(f"{package_path.name}: archive member CRC mismatch")
         root = ElementTree.fromstring(package.read(nuspec_names[0]))
+        if root.tag.rsplit("}", 1)[-1] != "package":
+            raise ValueError(f"{package_path.name}: invalid nuspec package element")
         ns = {"n": root.tag.split("}")[0].strip("{")} if root.tag.startswith("{") else {}
 
         def find_text(name: str) -> str | None:
-            element = root.find(f".//n:metadata/n:{name}", ns) if ns else root.find(f".//metadata/{name}")
-            return element.text.strip() if element is not None and element.text else None
+            elements = root.findall(f"n:metadata/n:{name}", ns) if ns else root.findall(f"metadata/{name}")
+            if len(elements) > 1:
+                raise ValueError(f"{package_path.name}: ambiguous nuspec {name} metadata")
+            return elements[0].text.strip() if elements and elements[0].text else None
 
         def find_elements(path: str) -> list[ElementTree.Element]:
             return root.findall(path, ns) if ns else root.findall(path.replace("n:", ""))
 
+        metadata_elements = find_elements("n:metadata")
+        if len(metadata_elements) != 1:
+            raise ValueError(f"{package_path.name}: expected exactly one nuspec metadata element")
+        repositories = find_elements("n:metadata/n:repository")
+        if len(repositories) > 1:
+            raise ValueError(f"{package_path.name}: ambiguous nuspec repository metadata")
+        repository = repositories[0].attrib if repositories else {}
         package_id = find_text("id")
         version = find_text("version")
         readme = find_text("readme")
         license_value = find_text("license")
         license_file = find_text("licenseFile")
+        license_elements = find_elements("n:metadata/n:license")
+        if license_elements and license_elements[0].get("type") == "file":
+            if not license_value or license_value not in names:
+                raise ValueError(f"{package_path.name}: referenced license file is not in the package")
+        if license_file and license_file not in names:
+            raise ValueError(f"{package_path.name}: referenced licenseFile is not in the package")
+
 
         if not package_id:
             raise ValueError(f"{package_path.name}: missing nuspec package id")
@@ -126,7 +157,7 @@ def get_metadata(package_path: Path) -> PackageMetadata:
             )
 
         dependency_groups: list[DependencyGroupMetadata] = []
-        dependencies_elements = find_elements(".//n:metadata/n:dependencies")
+        dependencies_elements = find_elements("n:metadata/n:dependencies")
         if not dependencies_elements:
             dependency_groups.append(DependencyGroupMetadata(None, ()))
         for dependencies_element in dependencies_elements:
@@ -171,6 +202,9 @@ def get_metadata(package_path: Path) -> PackageMetadata:
             bool(license_value or license_file),
             dependencies,
             tuple(dependency_groups),
+            repository.get("url"),
+            repository.get("type"),
+            repository.get("commit"),
         )
 
 
@@ -268,6 +302,46 @@ def validate_event_store_dependency_versions(
             )
 
 
+def load_package_inventory(manifest: Path) -> tuple[str, ...]:
+    """Require exactly the Parties inventory, with no duplicate or case-ambiguous IDs."""
+    def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Release package inventory contains duplicate JSON properties")
+            result[key] = value
+        return result
+
+    document = json.loads(manifest.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
+    entries = document.get("packages") if isinstance(document, dict) else None
+    if not isinstance(entries, list) or any(not isinstance(entry, dict) for entry in entries):
+        raise ValueError("Invalid release package inventory")
+    ids = [entry.get("id") for entry in entries]
+    if (any(not isinstance(package_id, str) for package_id in ids)
+            or len({package_id.casefold() for package_id in ids}) != len(ids)
+            or set(ids) != EXPECTED_PACKAGE_IDS):
+        raise ValueError("Release package inventory must declare exactly the nine unique Parties package IDs")
+    return tuple(ids)
+
+
+def validate_published_metadata(package_path: Path, package_id: str, version: str,
+                                repository_url: str, source_sha: str,
+                                expected_dependency_versions: dict[str, str],
+                                event_store_version: str) -> PackageMetadata:
+    """Reuse archive and boundary checks and require exact published source metadata."""
+    metadata = get_metadata(package_path)
+    validate_dependency_boundaries(package_path, metadata)
+    validate_expected_dependency_versions(package_path, metadata, expected_dependency_versions)
+    validate_event_store_dependency_versions(package_path, metadata, event_store_version)
+    if not metadata.has_license:
+        raise ValueError(f"{package_path.name}: missing license metadata")
+    if (metadata.package_id != package_id or metadata.version != version
+            or metadata.repository_url != repository_url or metadata.repository_type != "git"
+            or metadata.repository_commit != source_sha):
+        raise ValueError(f"{package_path.name}: published package metadata does not match the release identity")
+    return metadata
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate Hexalith.Parties NuGet package output.")
     parser.add_argument("package_directory", type=Path, help="Directory containing .nupkg files.")
@@ -321,6 +395,6 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (MsbuildPropertyResolutionError, ValueError) as exc:
+    except (MsbuildPropertyResolutionError, ValueError, OSError, zipfile.BadZipFile, ElementTree.ParseError) as exc:
         print(f"Package validation failed: {exc}", file=sys.stderr)
         raise SystemExit(1)

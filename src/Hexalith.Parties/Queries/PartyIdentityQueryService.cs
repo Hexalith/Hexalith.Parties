@@ -26,6 +26,10 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
     /// <summary>Gets the shared work boundary; tests may supply an isolated finite capacity.</summary>
     internal PartyIdentityQueryWorkLimiter WorkLimiter { get; init; } = PartyIdentityQueryWorkLimiter.Shared;
 
+    /// <summary>Gets an internal observer invoked within the bounded interval-selection operation.</summary>
+    internal Action? BeforeBindingSelection { get; init; }
+
+
     /// <summary>Resolves current classification and eligibility from complete source and actor evidence.</summary>
     public async Task<PartyIdentityResult> ResolveAsync(QueryEnvelope envelope, CancellationToken cancellationToken)
     {
@@ -34,15 +38,9 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
         long startedAt = timeProvider.GetTimestamp();
         try
         {
-            PartyIdentityOptions? options = identityOptions?.CurrentValue;
-            TimeSpan timeout = options?.QueryTimeout ?? TimeSpan.FromSeconds(30);
-            if (timeout <= TimeSpan.Zero || timeout > TimeSpan.FromSeconds(30))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                return new(PartyIdentityOutcome.Unavailable, null);
-            }
-
-            using var deadline = new PartyIdentityQueryDeadline(timeout, timeProvider, cancellationToken, startedAt, WorkLimiter);
+            using var deadline = new PartyIdentityQueryDeadline(TimeSpan.FromSeconds(30), timeProvider, cancellationToken, startedAt, WorkLimiter);
+            PartyIdentityOptions? options = await deadline.RunAsync(_ => identityOptions?.CurrentValue).ConfigureAwait(false);
+            deadline.ApplyTimeout(options?.QueryTimeout ?? TimeSpan.FromSeconds(30));
             deadline.ThrowIfCancellationRequested();
             IdentityHistoryPolicy? policy = options?.Policy;
             ResolvePartyIdentity? query = JsonSerializer.Deserialize<ResolvePartyIdentity>(envelope.Payload, PartiesJsonOptions.Default);
@@ -85,15 +83,15 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
             HumanActorBindingEvidence? binding = null;
             if (requiresHumanPolicy)
             {
-                if (!PolicyIsCurrent(policy))
+                if (!await PolicyIsCurrentAsync(policy, deadline).ConfigureAwait(false))
                 {
                     deadline.ThrowIfCancellationRequested();
                     return new(PartyIdentityOutcome.Unavailable, null);
                 }
 
-                DateTimeOffset now = timeProvider.GetUtcNow();
-                HumanActorBindingEvidence[] candidates = [.. state.HumanActorBindings.Select(item => item.Evidence)
-                    .Where(item => item.ValidFrom <= now && (item.ValidUntil is null || now < item.ValidUntil))];
+                HumanActorBindingEvidence[] candidates = await deadline.RunAsync(token =>
+                    SelectBindingsAt(state.HumanActorBindings.Select(item => item.Evidence),
+                        item => item, timeProvider.GetUtcNow(), token)).ConfigureAwait(false);
                 if (candidates.Length == 1 && candidates[0].ActorId == query.ExpectedActorId
                     && admitted.TargetActorId == candidates[0].ActorId && admitted.ActorActive
                     && admitted.ActorRevision >= candidates[0].ActorRevision && custody is not null)
@@ -106,7 +104,7 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
 
                     bool canRead = await deadline.ReadAsync(token => custody.CanReadAsync(read.Stream!.Identity, candidates[0].Custody, token)).ConfigureAwait(false);
                     deadline.ThrowIfCancellationRequested();
-                    if (!PolicyIsCurrent(policy))
+                    if (!await PolicyIsCurrentAsync(policy, deadline).ConfigureAwait(false))
                     {
                         deadline.ThrowIfCancellationRequested();
                         return new(PartyIdentityOutcome.Unavailable, null);
@@ -123,9 +121,10 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
 
             IdentityAdmissionEvidence? currentAuthority = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
             deadline.ThrowIfCancellationRequested();
+            bool currentPolicy = !requiresHumanPolicy || await PolicyIsCurrentAsync(policy, deadline).ConfigureAwait(false);
             DateTimeOffset completedAt = timeProvider.GetUtcNow();
             if (completedAt < read.Stream!.ObservedAt || !SameAuthority(admitted, currentAuthority, completedAt)
-                || requiresHumanPolicy && !PolicyIsCurrent(policy)
+                || !currentPolicy
                 || binding is not null && (!currentAuthority!.ActorActive || completedAt < binding.ValidFrom || completedAt >= binding.ValidUntil
                     || completedAt >= binding.Custody.ExpiresAt))
             {
@@ -163,15 +162,9 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
         try
         {
             query = JsonSerializer.Deserialize<ResolveHumanActorBindingAt>(envelope.Payload, PartiesJsonOptions.Default);
-            PartyIdentityOptions? options = identityOptions?.CurrentValue;
-            TimeSpan timeout = options?.QueryTimeout ?? TimeSpan.FromSeconds(30);
-            if (timeout <= TimeSpan.Zero || timeout > TimeSpan.FromSeconds(30))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
-            }
-
-            using var deadline = new PartyIdentityQueryDeadline(timeout, timeProvider, cancellationToken, startedAt, WorkLimiter);
+            using var deadline = new PartyIdentityQueryDeadline(TimeSpan.FromSeconds(30), timeProvider, cancellationToken, startedAt, WorkLimiter);
+            PartyIdentityOptions? options = await deadline.RunAsync(_ => identityOptions?.CurrentValue).ConfigureAwait(false);
+            deadline.ApplyTimeout(options?.QueryTimeout ?? TimeSpan.FromSeconds(30));
             deadline.ThrowIfCancellationRequested();
             IdentityHistoryPolicy? policy = options?.Policy;
             if (query is null || !Matches(envelope, query.TenantId, query.PartyId)
@@ -184,7 +177,7 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
             IdentityAdmissionEvidence? admitted = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
             if (admitted is null
                 || admitted.TargetActorId != query.ExpectedActorId || historyReader is null || custody is null
-                || !PolicyIsCurrent(policy))
+                || !await PolicyIsCurrentAsync(policy, deadline).ConfigureAwait(false))
             {
                 deadline.ThrowIfCancellationRequested();
                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
@@ -194,7 +187,7 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
             RetainedIdentityHistoryReadResult read = await deadline.ReadAsync(token => historyReader.ReadAsync(new(query.TenantId, "party", query.PartyId),
                 RetainedIdentityHistoryReadRequest.AttributionPurpose, token)).ConfigureAwait(false);
             deadline.ThrowIfCancellationRequested();
-            if (!PolicyIsCurrent(policy) || !read.IsAuthoritative || read.Stream is not { } retainedSource
+            if (!await PolicyIsCurrentAsync(policy, deadline).ConfigureAwait(false) || !read.IsAuthoritative || read.Stream is not { } retainedSource
                 || retainedSource.Identity != new AggregateIdentity(query.TenantId, "party", query.PartyId)
                 || !await deadline.RunAsync(_ => RetainedIdentityHistoryValidator.IsComplete(new(retainedSource.Identity,
                     RetainedIdentityHistoryReadRequest.AttributionPurpose), retainedSource, timeProvider.GetUtcNow())).ConfigureAwait(false))
@@ -211,14 +204,14 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
 
             IReadOnlyList<RetainedHumanActorBinding> history = await deadline.RunAsync(token => RetainedHumanActorHistoryFold.Fold(read.Stream!, policy!.PolicyId, token)).ConfigureAwait(false);
             IdentityAdmissionEvidence? afterFoldAuthority = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
-            if (!SameAuthority(admitted, afterFoldAuthority, timeProvider.GetUtcNow()) || !PolicyIsCurrent(policy))
+            if (!SameAuthority(admitted, afterFoldAuthority, timeProvider.GetUtcNow()) || !await PolicyIsCurrentAsync(policy, deadline).ConfigureAwait(false))
             {
                 deadline.ThrowIfCancellationRequested();
                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
             }
 
-            RetainedHumanActorBinding[] matches = [.. history
-                .Where(item => item.Evidence.ValidFrom <= query.ActionAt && (item.Evidence.ValidUntil is null || query.ActionAt < item.Evidence.ValidUntil))];
+            RetainedHumanActorBinding[] matches = await deadline.RunAsync(token =>
+                SelectBindingsAt(history, item => item.Evidence, query.ActionAt, token)).ConfigureAwait(false);
             if (matches.Length != 1)
             {
                 deadline.ThrowIfCancellationRequested();
@@ -246,13 +239,13 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
 
             bool canRead = await deadline.ReadAsync(token => custody.CanReadAsync(read.Stream!.Identity, evidence.Custody, token)).ConfigureAwait(false);
             deadline.ThrowIfCancellationRequested();
-            DateTimeOffset completedAt = timeProvider.GetUtcNow();
-            if (!PolicyIsCurrent(policy))
+            if (!await PolicyIsCurrentAsync(policy, deadline).ConfigureAwait(false))
             {
                 deadline.ThrowIfCancellationRequested();
                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
             }
 
+            DateTimeOffset completedAt = timeProvider.GetUtcNow();
             if (!canRead || completedAt >= evidence.Custody.ExpiresAt)
             {
                 deadline.ThrowIfCancellationRequested();
@@ -263,13 +256,13 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
             bool completeSource = await deadline.RunAsync(_ => RetainedIdentityHistoryValidator.IsComplete(new(retainedSource.Identity,
                 RetainedIdentityHistoryReadRequest.AttributionPurpose), retainedSource, finalValidationAt)).ConfigureAwait(false);
             IdentityAdmissionEvidence? currentAuthority = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
-            completedAt = timeProvider.GetUtcNow();
-            if (!PolicyIsCurrent(policy))
+            if (!await PolicyIsCurrentAsync(policy, deadline).ConfigureAwait(false))
             {
                 deadline.ThrowIfCancellationRequested();
                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
             }
 
+            completedAt = timeProvider.GetUtcNow();
             if (completedAt >= evidence.Custody.ExpiresAt)
             {
                 deadline.ThrowIfCancellationRequested();
@@ -303,8 +296,15 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
         }
     }
 
-    private bool PolicyIsCurrent(IdentityHistoryPolicy? policy)
-        => policy is { IsValid: true } && identityOptions?.CurrentValue.Policy == policy;
+    private T[] SelectBindingsAt<T>(IEnumerable<T> source, Func<T, HumanActorBindingEvidence> evidence,
+        DateTimeOffset at, CancellationToken cancellationToken)
+    {
+        BeforeBindingSelection?.Invoke();
+        return PartyIdentityBindingSelection.SelectAt(source, evidence, at, cancellationToken);
+    }
+
+    private Task<bool> PolicyIsCurrentAsync(IdentityHistoryPolicy? policy, PartyIdentityQueryDeadline deadline)
+        => deadline.RunAsync(_ => policy is { IsValid: true } && identityOptions?.CurrentValue.Policy == policy);
 
     private static HumanActorBindingResult HistoryFailure(ResolveHumanActorBindingAt? query, HumanActorBindingOutcome outcome)
         => new(outcome, 1, query?.TenantId ?? string.Empty, query?.PartyId ?? string.Empty,

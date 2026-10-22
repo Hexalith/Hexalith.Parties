@@ -1,0 +1,4 @@
+$ python3 tests/Hexalith.Parties.Ci.Tests/release_artifact_cases.py . download-same-origin-auth
+download-same-origin-auth: bounded headers/body/redirects and retained support-safe byte receipts verified
+
+Exit code: 0

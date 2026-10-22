@@ -1728,7 +1728,8 @@ public sealed class PartyIdentityQueryHandlerTests
     public async Task WholeQueryDeadline_SourceAndCustodyShareCumulativeBudget(bool historical)
     {
         var fixture = Service(Events());
-        var (clock, advance) = DeadlineClock();
+        ITimer? timer = null;
+        var (clock, advance) = DeadlineClock(onTimer: value => timer = value);
         PartyIdentityOptions configured = PolicyOptions();
         configured.QueryTimeout = TimeSpan.FromSeconds(10);
         fixture.Options.CurrentValue.Returns(configured);
@@ -1769,7 +1770,8 @@ public sealed class PartyIdentityQueryHandlerTests
         await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
         custodyToken.IsCancellationRequested.ShouldBeTrue();
         custodyPending.SetResult(true);
-        clock.Received(1).CreateTimer(Arg.Any<TimerCallback>(), Arg.Any<object?>(), TimeSpan.FromSeconds(10), Timeout.InfiniteTimeSpan);
+        clock.Received(1).CreateTimer(Arg.Any<TimerCallback>(), Arg.Any<object?>(), TimeSpan.FromSeconds(30), Timeout.InfiniteTimeSpan);
+        timer!.Received(1).Change(TimeSpan.FromSeconds(10), Timeout.InfiniteTimeSpan);
     }
 
     /// <summary>Monotonic elapsed checks deny late evidence even if a timer callback is delayed.</summary>
@@ -1950,7 +1952,8 @@ public sealed class PartyIdentityQueryHandlerTests
     public async Task WholeQueryDeadline_SetupTimeConsumesOperationBudget(bool historical, bool exhausted)
     {
         var fixture = Service(Events());
-        var (clock, advance) = DeadlineClock();
+        ITimer? timer = null;
+        var (clock, advance) = DeadlineClock(onTimer: value => timer = value);
         PartyIdentityOptions configured = PolicyOptions();
         configured.QueryTimeout = TimeSpan.FromSeconds(10);
         int optionsReads = 0;
@@ -1982,7 +1985,8 @@ public sealed class PartyIdentityQueryHandlerTests
         }
         else
         {
-            clock.Received(1).CreateTimer(Arg.Any<TimerCallback>(), Arg.Any<object?>(), TimeSpan.FromSeconds(3), Timeout.InfiniteTimeSpan);
+            clock.Received(1).CreateTimer(Arg.Any<TimerCallback>(), Arg.Any<object?>(), TimeSpan.FromSeconds(30), Timeout.InfiniteTimeSpan);
+            timer!.Received(1).Change(TimeSpan.FromSeconds(3), Timeout.InfiniteTimeSpan);
         }
 
         pending.TrySetResult(true);
@@ -2491,7 +2495,242 @@ public sealed class PartyIdentityQueryHandlerTests
         result.BindingSourcePosition.ShouldBe(0);
     }
 
-    private static (TimeProvider Clock, Action<TimeSpan, bool> Advance) DeadlineClock(Action? onDispose = null)
+    /// <summary>Options setup and every policy revalidation share bounded capacity, even after late faults.</summary>
+    [Theory]
+    [InlineData(false, 1, false)]
+    [InlineData(false, 1, true)]
+    [InlineData(false, 2, false)]
+    [InlineData(false, 2, true)]
+    [InlineData(false, 3, false)]
+    [InlineData(false, 3, true)]
+    [InlineData(false, 4, false)]
+    [InlineData(false, 4, true)]
+    [InlineData(true, 1, false)]
+    [InlineData(true, 1, true)]
+    [InlineData(true, 2, false)]
+    [InlineData(true, 2, true)]
+    [InlineData(true, 3, false)]
+    [InlineData(true, 3, true)]
+    [InlineData(true, 4, false)]
+    [InlineData(true, 4, true)]
+    [InlineData(true, 5, false)]
+    [InlineData(true, 5, true)]
+    [InlineData(true, 6, false)]
+    [InlineData(true, 6, true)]
+    public async Task OptionsAndPolicyProviders_AreBoundedAndRetainCapacity(bool historical, int stalledCall, bool cancelCaller)
+    {
+        var fixture = Service(Events());
+        var (clock, advance) = DeadlineClock();
+        PartyIdentityOptions configured = PolicyOptions();
+        var limiter = new PartyIdentityQueryWorkLimiter(1);
+        using var caller = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        using var release = new ManualResetEventSlim();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var returned = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        int calls = 0;
+        fixture.Options.CurrentValue.Returns(_ =>
+        {
+            if (Interlocked.Increment(ref calls) == stalledCall)
+            {
+                entered.TrySetResult();
+                release.Wait(TestContext.Current.CancellationToken);
+                returned.TrySetResult();
+                throw new InvalidOperationException("synthetic late options fault");
+            }
+            return configured;
+        });
+        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader,
+            fixture.Custody, fixture.HistoryReader, fixture.Options) { WorkLimiter = limiter };
+        Task result = cancelCaller ? InvokeIdentityAsync(service, historical, caller.Token) : AssertUnavailableAsync(service, historical);
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+            if (cancelCaller) { caller.Cancel(); }
+            else { advance(TimeSpan.FromSeconds(30), true); }
+            if (cancelCaller)
+            {
+                OperationCanceledException exception = await Should.ThrowAsync<OperationCanceledException>(() => result);
+                exception.CancellationToken.ShouldBe(caller.Token);
+            }
+            else { await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken); }
+            returned.Task.IsCompleted.ShouldBeFalse();
+            for (int i = 0; i < 10; i++) { await AssertUnavailableAsync(service, historical); }
+            Volatile.Read(ref calls).ShouldBe(stalledCall, "Saturated queries must not invoke another options provider.");
+        }
+        finally
+        {
+            release.Set();
+            await returned.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+        }
+
+        async Task AwaitCapacityAsync()
+        {
+            while (!limiter.TryAcquire()) { await Task.Yield(); }
+            limiter.Release();
+        }
+        await AwaitCapacityAsync().WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+        if (historical)
+        {
+            (await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, Actor, 1)),
+                TestContext.Current.CancellationToken)).Outcome.ShouldBe(HumanActorBindingOutcome.Resolved);
+        }
+        else
+        {
+            (await service.ResolveAsync(Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)),
+                TestContext.Current.CancellationToken)).Outcome.ShouldBe(PartyIdentityOutcome.Resolved);
+        }
+    }
+
+    /// <summary>Terminal policy awaits cannot leave expiry observations stamped before the await.</summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TerminalPolicyRevalidation_RechecksExpiryAfterTheAwait(bool historical)
+    {
+        var fixture = Service(Events());
+        var (clock, _) = DeadlineClock();
+        PartyIdentityOptions configured = PolicyOptions();
+        PartyIdentityAdmissionResult admitted = fixture.Authority.Admit(Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)));
+        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(admitted);
+        int reads = 0;
+        fixture.Options.CurrentValue.Returns(_ =>
+        {
+            if (Interlocked.Increment(ref reads) == (historical ? 6 : 4))
+            {
+                clock.GetUtcNow().Returns(admitted.Evidence!.ExpiresAt);
+            }
+            return configured;
+        });
+        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader,
+            fixture.Custody, fixture.HistoryReader, fixture.Options);
+        await AssertUnavailableAsync(service, historical);
+        reads.ShouldBe(historical ? 6 : 4);
+    }
+
+    /// <summary>Both actual service callers bound stalled selection and retain their shared lease through cleanup.</summary>
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task ServiceIntervalSelection_IsBoundedAndRecovers(bool historical, bool cancelCaller)
+    {
+        var fixture = Service(Events());
+        var (clock, advance) = DeadlineClock();
+        var limiter = new PartyIdentityQueryWorkLimiter(1);
+        using var caller = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        using var release = new ManualResetEventSlim();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var returned = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        int selections = 0;
+        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader,
+            fixture.Custody, fixture.HistoryReader, fixture.Options)
+        {
+            WorkLimiter = limiter,
+            BeforeBindingSelection = () =>
+            {
+                if (Interlocked.Increment(ref selections) == 1)
+                {
+                    entered.TrySetResult();
+                    release.Wait(TestContext.Current.CancellationToken);
+                    returned.TrySetResult();
+                }
+            },
+        };
+        Task result = Task.Run(() => cancelCaller ? InvokeIdentityAsync(service, historical, caller.Token)
+            : AssertUnavailableAsync(service, historical), TestContext.Current.CancellationToken);
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+            if (cancelCaller) { caller.Cancel(); }
+            else { advance(TimeSpan.FromSeconds(30), true); }
+            if (cancelCaller)
+            {
+                OperationCanceledException exception = await Should.ThrowAsync<OperationCanceledException>(() =>
+                    result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken));
+                exception.CancellationToken.ShouldBe(caller.Token);
+            }
+            else { await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken); }
+            returned.Task.IsCompleted.ShouldBeFalse();
+            limiter.TryAcquire().ShouldBeFalse();
+            await AssertUnavailableAsync(service, historical);
+            Volatile.Read(ref selections).ShouldBe(1);
+        }
+        finally { release.Set(); }
+        await returned.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+        async Task AwaitCapacityAsync()
+        {
+            while (!limiter.TryAcquire()) { await Task.Yield(); }
+            limiter.Release();
+        }
+        await AwaitCapacityAsync().WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+        if (historical)
+        {
+            (await service.ResolveAtAsync(Envelope(new ResolveHumanActorBindingAt("tenant-a", "party-1", Start, Actor, 1)),
+                TestContext.Current.CancellationToken)).Outcome.ShouldBe(HumanActorBindingOutcome.Resolved);
+        }
+        else
+        {
+            (await service.ResolveAsync(Envelope(new ResolvePartyIdentity("tenant-a", "party-1", Actor)),
+                TestContext.Current.CancellationToken)).Outcome.ShouldBe(PartyIdentityOutcome.Resolved);
+        }
+        Volatile.Read(ref selections).ShouldBe(2);
+    }
+
+    /// <summary>The actual interval scanner is bounded even when its input refuses cooperative cancellation.</summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task IntervalSelection_AbandonedScanRetainsLeaseAndRejectsLateMatches(bool cancelCaller)
+    {
+        var (clock, advance) = DeadlineClock();
+        var limiter = new PartyIdentityQueryWorkLimiter(1);
+        using var caller = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        using var release = new ManualResetEventSlim();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        IEnumerable<HumanActorBindingEvidence> Intervals()
+        {
+            entered.TrySetResult();
+            release.Wait(TestContext.Current.CancellationToken);
+            yield return Binding();
+        }
+        var deadline = new PartyIdentityQueryDeadline(TimeSpan.FromSeconds(30), clock, caller.Token, clock.GetTimestamp(), limiter);
+        Task<HumanActorBindingEvidence[]> selection = deadline.RunAsync(token =>
+            PartyIdentityBindingSelection.SelectAt(Intervals(), item => item, Start, token));
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+            if (cancelCaller) { caller.Cancel(); }
+            else { advance(TimeSpan.FromSeconds(30), true); }
+            await Should.ThrowAsync<OperationCanceledException>(() => selection);
+            deadline.Dispose();
+            deadline.WorkCompleted.IsCompleted.ShouldBeFalse();
+            limiter.TryAcquire().ShouldBeFalse();
+        }
+        finally
+        {
+            release.Set();
+            deadline.Dispose();
+            await deadline.WorkCompleted.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+        }
+        limiter.TryAcquire().ShouldBeTrue();
+        limiter.Release();
+    }
+
+    /// <summary>Selection preserves ambiguity, gaps, exclusive ends and original source positions.</summary>
+    [Fact]
+    public void IntervalSelection_PreservesOriginalItemsAndExclusiveEnd()
+    {
+        HumanActorBindingEvidence first = Binding() with { ValidUntil = Start.AddMinutes(1) };
+        HumanActorBindingEvidence second = Binding() with { ValidFrom = Start.AddMinutes(1), BindingVersion = 2 };
+        var original = new[] { (Evidence: first, SourcePosition: 41L), (Evidence: second, SourcePosition: 73L) };
+        PartyIdentityBindingSelection.SelectAt(original, item => item.Evidence, Start.AddTicks(-1), TestContext.Current.CancellationToken).ShouldBeEmpty();
+        PartyIdentityBindingSelection.SelectAt(original, item => item.Evidence, Start.AddMinutes(1), TestContext.Current.CancellationToken)
+            .Single().SourcePosition.ShouldBe(73L);
+        PartyIdentityBindingSelection.SelectAt(new[] { original[0], original[0] }, item => item.Evidence, Start, TestContext.Current.CancellationToken).Length.ShouldBe(2);
+    }
+
+    private static (TimeProvider Clock, Action<TimeSpan, bool> Advance) DeadlineClock(Action? onDispose = null, Action<ITimer>? onTimer = null)
     {
         TimeProvider clock = Substitute.For<TimeProvider>();
         DateTimeOffset now = DateTimeOffset.UtcNow.AddSeconds(1);
@@ -2508,7 +2747,13 @@ public sealed class PartyIdentityQueryHandlerTests
             state = call.ArgAt<object?>(1);
             dueAt = Interlocked.Read(ref timestamp) + call.ArgAt<TimeSpan>(2).Ticks;
             ITimer timer = Substitute.For<ITimer>();
+            timer.Change(Arg.Any<TimeSpan>(), Arg.Any<TimeSpan>()).Returns(change =>
+            {
+                dueAt = Interlocked.Read(ref timestamp) + change.ArgAt<TimeSpan>(0).Ticks;
+                return true;
+            });
             if (onDispose is not null) { timer.When(item => item.Dispose()).Do(_ => onDispose()); }
+            onTimer?.Invoke(timer);
             return timer;
         });
         return (clock, (elapsed, fire) =>

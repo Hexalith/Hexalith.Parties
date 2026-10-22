@@ -1,0 +1,5 @@
+$ python3 tests/Hexalith.Parties.Ci.Tests/release_artifact_cases.py . valid
+valid: verified complete pass
+Retained 27 bounded download observations; validated 9 packages and 3 images.
+
+Exit code: 0

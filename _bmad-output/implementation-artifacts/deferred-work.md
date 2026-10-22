@@ -303,7 +303,9 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: .github/workflows/release.yml
 source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-8-6-projection-and-query-sdk-migration.md`
 reason: Incidental review found `.github/workflows/release.yml` treats a non-draft GitHub Release at the dispatched commit as sufficient proof, without verifying the complete NuGet and container artifact set.
-status: open
+status: done 2026-10-22
+resolution: The post-release job now requires all nine declared NuGet archives and all three two-platform container images after exact-tag proof. It checks out exact dispatched source and immutable Builds, enforces bounded registry reads/retries, and always uploads byte-derived diagnostics and receipts.
+verification: `tests/five-query-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-query-release-deferred-items.md`.
 
 ### DW-42: Pin Story 8.7 G5 validation evidence to an exact commit
 
@@ -820,7 +822,9 @@ origin: code review of spec-8-10-final-readiness-documentation-and-retirement-ga
 location: .github/workflows/rc-gate.yml; tests/Hexalith.Parties.Tests/FitnessTests/PlatformApiPrerequisitesTests.cs
 source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-documentation-and-retirement-gate.md`
 reason: rc-gate.yml enforces `.gitlink-signoff.tsv` only on a release-candidate-labeled PR or a push to `rc/**`/`release/**`/a `v*` tag — never an ordinary push to `main`, which is this repo's actual workflow. PlatformApiPrerequisitesTests now pins all eight root identities, including Tenants and Memories, so that portion is complete. The RC signoff workflow still excludes ordinary main pushes; enabling owner-signoff enforcement there remains open.
-status: open
+status: done 2026-10-22
+resolution: Ordinary main pushes use a validated ancestor event.before and inspect every root pointer change throughout the complete push range. Missing bases, unsigned intermediate bumps, stale or placeholder signoffs, reset entries and malformed root declarations fail closed. Existing Tenants/Memories fitness pins and RC/tag/manual behavior are preserved.
+verification: `tests/five-query-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-query-release-deferred-items.md`.
 
 ### DW-110: Verify validate-publication-preflight.sh's commitlint-proof path is only ever reachable through an authorized bypass.
 
@@ -1280,7 +1284,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: release verify-publication job; NuGet registry package bytes and repository commit metadata
 source_spec: `_bmad-output/implementation-artifacts/spec-nuget-trusted-publishing.md`
 reason: The pre-existing verify-publication job checks a GitHub Release tag only; this task performs independent nine-package download/metadata verification after Release rather than treating that tag as package publication evidence.
-status: open
+status: done 2026-10-22
+resolution: The persistent verifier downloads each of the nine exact declared packages, reuses archive and dependency-boundary checks, and requires exact nuspec ID/version/repository URL/type/commit. Receipts hash observed registry bytes without asserting equality with unsigned build archives.
+verification: `tests/five-query-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-query-release-deferred-items.md`.
 
 ### DW-162: Commit the existing Story 8.8 available-row identity gate correction through its owning work.
 
@@ -1724,8 +1730,20 @@ archived: 2026-10-21
   summary: Bound identity-query options acquisition and policy revalidation when an options provider is noncooperative.
   severity: medium
   evidence: Both baseline and current PartyIdentityQueryService call IOptionsMonitor.CurrentValue synchronously before creating the deadline and in PolicyIsCurrent. The admission/fold work boundary does not cover these pre-existing calls. A gated CurrentValue implementation should qualify caller completion, cancellation precedence and shared capacity before changing setup semantics.
+  status: done 2026-10-22
+  resolution: Both queries establish a thirty-second setup boundary before options access, then apply the configured cumulative budget from original query entry without releasing the lease. Every policy read uses bounded work; caller cancellation wins and abandoned options work retains capacity through late faults and cleanup.
+  verification: `tests/five-query-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-query-release-deferred-items.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-identity-routing-deferred-items.md`
   summary: Include post-fold current and historical interval selection in the identity-query work budget.
   severity: medium
   evidence: Both baseline and current PartyIdentityQueryService synchronously materialize state.HumanActorBindings candidates and historical matches after the bounded fold. The following deadline checks deny late evidence but do not bound the scan itself. Qualify a gated or large-source selection with unavailable completion before releasing work; preserve exact interval semantics and cancellation precedence.
+  status: done 2026-10-22
+  resolution: Both interval scans now execute inside the same query deadline and work lease, with cooperative cancellation between items. Gated real-scanner tests prove bounded caller waiting and retained capacity; existing query and focused interval tests preserve ambiguity/gap outcomes, exclusive ends, custody and source positions.
+  verification: `tests/five-query-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-query-release-deferred-items.md`.
+
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-query-release-deferred-items.md`
+  summary: Bind successful main-push range signoff proof to release publication.
+  severity: medium
+  evidence: Both the baseline and current publication workflow require successful exact-source ci.yml and a release-floor tip diff, but do not consume the independent RC workflow verdict. An unsigned intermediate pointer can fail a range check while the final signed tip passes the existing publication check. Qualify a governed exact-source range-proof integration separately; this batch preserves the approved full-CI and protected manual publication contract.

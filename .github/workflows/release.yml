@@ -357,14 +357,40 @@ jobs:
           retention-days: 30
 
   verify-publication:
-    name: Verify exact source was published
+    name: Verify complete exact-source publication
     needs: release
     if: ${{ needs.release.outputs.publish-enabled == 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    outputs:
+      matching-tag: ${{ steps.published.outputs.matching-tag }}
     permissions:
       contents: read
     steps:
+      - name: Check out dispatched verification source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          submodules: false
+          persist-credentials: false
+      - name: Check out immutable publication validator
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Hexalith/Hexalith.Builds
+          ref: 397c94a4e246c90b21cf408790fa0d55bf32d795
+          path: .hexalith/builds-verification
+          submodules: false
+          persist-credentials: false
+      - name: Initialize dispatched source package catalog
+        shell: bash
+        run: git -c submodule.recurse=false submodule update --init references/Hexalith.Builds
+      - name: Set up dispatched source SDK for catalog evaluation
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
       - name: Require published release for exact dispatched source
+        id: published
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -479,3 +505,33 @@ jobs:
             exit 1
           fi
           echo "Published release tag '${matching_tag}' resolves to dispatched SHA ${DISPATCH_SHA}."
+          if [[ "$matching_tag" == *$'\n'* || "$matching_tag" == *$'\r'* ]]; then
+            echo "The matched release tag cannot contain line breaks." >&2
+            exit 1
+          fi
+          printf 'matching-tag=%s\n' "$matching_tag" >> "$GITHUB_OUTPUT"
+      - name: Verify every declared registry artifact
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ steps.published.outputs.matching-tag }}
+          DISPATCH_SHA: ${{ github.sha }}
+          HEXALITH_ZOT_REGISTRY: ${{ vars.HEXALITH_ZOT_REGISTRY || 'registry.hexalith.com' }}
+          HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME }}
+          HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_API_KEY }}
+        run: |
+          set -euo pipefail
+          python3 scripts/verify-release-publication.py \
+            --version "${RELEASE_TAG#v}" \
+            --source-sha "$DISPATCH_SHA" \
+            --package-manifest tools/release-packages.json \
+            --oci-validator .hexalith/builds-verification/Github/publish-containers/oci_registry_validator.py \
+            --evidence-directory .hexalith/publication-verification
+      - name: Upload complete publication verification evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: publication-verification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .hexalith/publication-verification/**
+          if-no-files-found: warn
+          include-hidden-files: true
+          retention-days: 30

@@ -6,7 +6,7 @@ internal sealed class PartyIdentityQueryDeadline : IDisposable
     private readonly CancellationToken _callerToken;
     private readonly TimeProvider _timeProvider;
     private readonly long _startedAt;
-    private readonly TimeSpan _timeout;
+    private TimeSpan _timeout;
     private readonly CancellationTokenSource _timeoutSource;
     private readonly CancellationTokenSource _linkedSource;
     private readonly CancellationTokenSource _providerSource = new();
@@ -31,6 +31,29 @@ internal sealed class PartyIdentityQueryDeadline : IDisposable
         TimeSpan remaining = timeout - timeProvider.GetElapsedTime(startedAt);
         _timeoutSource = new(remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, timeProvider);
         _linkedSource = CancellationTokenSource.CreateLinkedTokenSource(callerToken, _timeoutSource.Token);
+    }
+
+    /// <summary>Applies the configured total budget without releasing work or resetting query entry.</summary>
+    public void ApplyTimeout(TimeSpan timeout)
+    {
+        ThrowIfCancellationRequested();
+        if (timeout <= TimeSpan.Zero || timeout > TimeSpan.FromSeconds(30))
+        {
+            throw new InvalidOperationException("Identity query timeout is outside the supported bound.");
+        }
+
+        _timeout = timeout;
+        ThrowIfCancellationRequested();
+        TimeSpan remaining = timeout - _timeProvider.GetElapsedTime(_startedAt);
+        if (remaining <= TimeSpan.Zero)
+        {
+            _timeoutSource.Cancel();
+        }
+        else
+        {
+            _timeoutSource.CancelAfter(remaining);
+        }
+        ThrowIfCancellationRequested();
     }
 
     /// <summary>Rejects caller cancellation first, then elapsed or timer-expired deadlines.</summary>

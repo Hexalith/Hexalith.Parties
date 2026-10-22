@@ -1,0 +1,12 @@
+$ dotnet restore tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -p:NuGetAudit=true -p:MinVerVersionOverride=1.0.0
+  Determining projects to restore...
+  Restored ./src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj (in 216 ms).
+  Restored ./src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj (in 217 ms).
+  Restored ./src/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.csproj (in 217 ms).
+  Restored ./tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj (in 217 ms).
+  Restored ./src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj (in 217 ms).
+  Restored ./src/Hexalith.Parties.Picker/Hexalith.Parties.Picker.csproj (in 216 ms).
+  Restored ./src/Hexalith.Parties.ConsumerPortal/Hexalith.Parties.ConsumerPortal.csproj (in 216 ms).
+  Restored ./src/Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj (in 216 ms).
+
+Exit code: 0

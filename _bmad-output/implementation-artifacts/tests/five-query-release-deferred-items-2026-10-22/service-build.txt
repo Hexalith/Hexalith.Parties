@@ -1,0 +1,26 @@
+$ dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release -m:1 -p:MinVerVersionOverride=1.0.0
+  Determining projects to restore...
+  Restored ./tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj (in 220 ms).
+  Restored ./src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj (in 217 ms).
+  Restored ./src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj (in 220 ms).
+  Restored ./src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj (in 217 ms).
+  Restored ./src/Hexalith.Parties/Hexalith.Parties.csproj (in 224 ms).
+  Restored ./tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj (in 234 ms).
+  3 of 9 projects are up-to-date for restore.
+  Hexalith.Parties.Contracts -> ./src/Hexalith.Parties.Contracts/bin/Release/net10.0/Hexalith.Parties.Contracts.dll
+  Hexalith.Parties.Authentication -> ./src/Hexalith.Parties.Authentication/bin/Release/net10.0/Hexalith.Parties.Authentication.dll
+  Hexalith.Parties.Projections -> ./src/Hexalith.Parties.Projections/bin/Release/net10.0/Hexalith.Parties.Projections.dll
+  Hexalith.Parties.Security -> ./src/Hexalith.Parties.Security/bin/Release/net10.0/Hexalith.Parties.Security.dll
+  Hexalith.Parties -> ./src/Hexalith.Parties/bin/Release/net10.0/Hexalith.Parties.dll
+  Hexalith.Parties.Client -> ./src/Hexalith.Parties.Client/bin/Release/net10.0/Hexalith.Parties.Client.dll
+  Hexalith.Parties.Testing -> ./src/Hexalith.Parties.Testing/bin/Release/net10.0/Hexalith.Parties.Testing.dll
+  Hexalith.Parties.EventStoreGateway.TestHost -> ./tests/Hexalith.Parties.EventStoreGateway.TestHost/bin/Release/net10.0/Hexalith.Parties.EventStoreGateway.TestHost.dll
+  Hexalith.Parties.Tests -> ./tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.96
+
+Exit code: 0

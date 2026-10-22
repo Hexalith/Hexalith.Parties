@@ -1,0 +1,32 @@
+$ dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Ci.Tests
+  Discovered:  Hexalith.Parties.Ci.Tests
+  Starting:    Hexalith.Parties.Ci.Tests
+    Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(project: "Hexalith.Parties.Contracts.Tests") [FAIL]
+      Shouldly.ShouldAssertException : assets.RootElement.GetProperty("project").GetProperty("restore").GetProperty("restoreAuditProperties")
+                  .GetProperty("enableAudit").GetString()
+          should be
+      "true"
+          but was
+      "false"
+          difference
+      Difference     |  |    |    |    |    |
+                     | \|/  \|/  \|/  \|/  \|/
+      Index          | 0    1    2    3    4
+      Expected Value | t    r    u    e
+      Actual Value   | f    a    l    s    e
+      Expected Code  | 116  114  117  101
+      Actual Code    | 102  97   108  115  101
+
+      Additional Info:
+          ./tests/Hexalith.Parties.Contracts.Tests/obj/project.assets.json
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs(31,0): at Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(String project)
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Finished:    Hexalith.Parties.Ci.Tests (ID = 'e2ae03f1bfa16e52881bfe6142ad07fcf2cd34d86833309fc89c1c488a187e37')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Ci.Tests  Total: 312, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 21.154s
+
+Exit code: 1

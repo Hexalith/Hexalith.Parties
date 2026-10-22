@@ -1,0 +1,4 @@
+$ python3 tests/Hexalith.Parties.Ci.Tests/release_artifact_cases.py . download-default-ports
+download-default-ports: implicit and explicit default HTTPS ports retain same-origin credentials
+
+Exit code: 0
