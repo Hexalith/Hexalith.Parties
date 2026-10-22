@@ -100,7 +100,7 @@ if [ "$mode" = "worktree" ]; then
     esac
   done < <(git submodule status -- "${SUBMODULES[@]}")
 else
-  [ -n "$base_ref" ] || { echo "--diff requires <base-ref>" >&2; exit 2; }
+  [ -n "$base_ref" ] || { echo "--$mode requires <base-ref>" >&2; exit 2; }
   if ! git rev-parse --verify --end-of-options "${base_ref}^{commit}" >/dev/null 2>&1; then
     echo "gitlink-rc-gate: unusable base commit" >&2
     exit 1
@@ -126,12 +126,27 @@ else
       parent="$(git rev-parse --verify "${commit}^1" 2>/dev/null || true)"
       for path in "${paths[@]}"; do
         [ -n "$path" ] || continue
-        head_sha="$(git ls-tree "$commit" -- "$path" | awk '$1 == "160000" {print $3}')"
-        [ -n "$head_sha" ] || continue
+        head_entry="$(git ls-tree "$commit" -- "$path")"
+        head_mode="${head_entry%% *}"
+        head_sha=""
+        if [ "$head_mode" = 160000 ]; then
+          head_sha="$(printf '%s\n' "$head_entry" | awk '{print $3}')"
+        fi
+        parent_mode=""
         parent_sha=""
         if [ -n "$parent" ]; then
-          parent_sha="$(git ls-tree "$parent" -- "$path" | awk '$1 == "160000" {print $3}')"
+          parent_entry="$(git ls-tree "$parent" -- "$path")"
+          parent_mode="${parent_entry%% *}"
+          if [ "$parent_mode" = 160000 ]; then
+            parent_sha="$(printf '%s\n' "$parent_entry" | awk '{print $3}')"
+          fi
         fi
+        if [ "$parent_mode" = 160000 ] && [ "$head_mode" != 160000 ]; then
+          report "$path" "GITLINK REMOVED @ ${parent_sha:0:12} in ${commit:0:12} — root gitlink deleted or replaced"
+          fail=1
+          continue
+        fi
+        [ -n "$head_sha" ] || continue
         if [ "$head_sha" != "$parent_sha" ]; then
           if ledger_has "$path" "$head_sha"; then
             report "$path" "BUMP ok — validated-advance @ ${head_sha:0:12} in ${commit:0:12}"
@@ -162,7 +177,11 @@ fi
 
 if [ "$fail" -ne 0 ]; then
   echo ""
-  echo "gitlink-rc-gate: FAIL — resolve each pointer above before tagging." >&2
+  if [ "$mode" = push-range ]; then
+    echo "gitlink-rc-gate: FAIL — resolve each push-range pointer above before tagging." >&2
+  else
+    echo "gitlink-rc-gate: FAIL — resolve each pointer above before tagging." >&2
+  fi
   exit 1
 fi
 echo "gitlink-rc-gate: PASS — all root gitlinks validated or clean."

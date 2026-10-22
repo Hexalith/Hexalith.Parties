@@ -26,11 +26,12 @@ public sealed class ReleasePublicationVerificationTests
     public void PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(string scenario)
     {
         ArgumentNullException.ThrowIfNull(scenario);
-        (int exitCode, string output, string error, string[] requests) = RunGate(scenario);
+        (int exitCode, string output, string error, string[] requests, string githubOutput) = RunGate(scenario);
 
         exitCode.ShouldBe(0, error);
         output.ShouldContain($"resolves to dispatched SHA {SourceSha}.");
         string tag = scenario == "encoded" ? "release/with space+#?" : "vcurrent";
+        githubOutput.ShouldBe($"matching-tag={tag}\n");
         requests.ShouldContain($"{ApiPrefix}/git/ref/tags/{Uri.EscapeDataString(tag)}");
         if (scenario is not ("lightweight" or "annotated"))
         {
@@ -57,7 +58,7 @@ public sealed class ReleasePublicationVerificationTests
     public void PublicationWithoutAResolvableExactSourceReleaseFails(string scenario)
     {
         ArgumentNullException.ThrowIfNull(scenario);
-        (int exitCode, string output, string error, string[] requests) = RunGate(scenario);
+        (int exitCode, string output, string error, string[] requests, _) = RunGate(scenario);
 
         exitCode.ShouldNotBe(0);
         error.ShouldContain("no published GitHub Release tag resolves to dispatched SHA");
@@ -79,7 +80,7 @@ public sealed class ReleasePublicationVerificationTests
     public void OtherLookupFailuresRemainFatalEvenWithALaterValidRelease(string scenario)
     {
         ArgumentNullException.ThrowIfNull(scenario);
-        (int exitCode, string output, string error, string[] requests) = RunGate(scenario);
+        (int exitCode, string output, string error, string[] requests, _) = RunGate(scenario);
 
         exitCode.ShouldNotBe(0);
         error.ShouldContain("could not be resolved");
@@ -105,10 +106,11 @@ public sealed class ReleasePublicationVerificationTests
     [InlineData("tag-failure", "could not be peeled")]
     [InlineData("invalid-peeled-sha", "did not peel to an exact lowercase commit SHA")]
     [InlineData("peeled-type", "unsupported peeled object type")]
+    [InlineData("tag-line-break", "could not be validated safely")]
     public void InvalidPublicationEvidenceStillFails(string scenario, string expectedError)
     {
         ArgumentNullException.ThrowIfNull(scenario);
-        (int exitCode, string output, string error, string[] requests) = RunGate(scenario);
+        (int exitCode, string output, string error, string[] requests, string githubOutput) = RunGate(scenario);
 
         exitCode.ShouldNotBe(0);
         error.ShouldContain(expectedError);
@@ -117,12 +119,59 @@ public sealed class ReleasePublicationVerificationTests
         {
             requests.ShouldBeEmpty();
         }
+
+        if (scenario == "tag-line-break")
+        {
+            githubOutput.ShouldBeEmpty();
+        }
+    }
+
+    /// <summary>The artifact step removes one leading v and leaves a second v in place.</summary>
+    [Fact]
+    public void ArtifactStepStripsOneLeadingVersionPrefix()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.Skip("The release publication verifier requires bash.");
+        }
+
+        string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml").Replace("\r\n", "\n");
+        string step = workflow.Split("      - name: ", StringSplitOptions.None)
+            .Single(candidate => candidate.StartsWith("Verify every declared registry artifact\n", StringComparison.Ordinal));
+        const string marker = "--version \"";
+        int start = step.IndexOf(marker, StringComparison.Ordinal);
+        start.ShouldBeGreaterThanOrEqualTo(0);
+        start += marker.Length;
+        int end = step.IndexOf('"', start);
+        string expansion = step[start..end];
+        expansion.ShouldBe("${RELEASE_TAG#v}");
+
+        ProcessStartInfo processStart = new("bash")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        processStart.ArgumentList.Add("-c");
+        processStart.ArgumentList.Add(
+            "set -euo pipefail\n"
+            + "RELEASE_TAG='v1.2.3'\n"
+            + "[ \"$(printf '%s' " + expansion + ")\" = '1.2.3' ]\n"
+            + "RELEASE_TAG='vv1.2.3'\n"
+            + "[ \"$(printf '%s' " + expansion + ")\" = 'v1.2.3' ]\n"
+            + "RELEASE_TAG='1.2.3'\n"
+            + "[ \"$(printf '%s' " + expansion + ")\" = '1.2.3' ]\n");
+        using Process process = Process.Start(processStart)!;
+        string stdout = process.StandardOutput.ReadToEnd();
+        string stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit(5_000).ShouldBeTrue(stderr);
+        process.ExitCode.ShouldBe(0, stdout + stderr);
     }
 
     /// <summary>Runs the tracked shell with local responses and bounded process lifetime.</summary>
     /// <param name="scenario">The API fixture scenario.</param>
-    /// <returns>The exit code, stdout, stderr and GitHub API arguments.</returns>
-    private static (int ExitCode, string Output, string Error, string[] Requests) RunGate(string scenario)
+    /// <returns>The exit code, stdout, stderr, GitHub API arguments and github-output file.</returns>
+    private static (int ExitCode, string Output, string Error, string[] Requests, string GithubOutput) RunGate(string scenario)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -218,7 +267,12 @@ public sealed class ReleasePublicationVerificationTests
                 File.SetUnixFileMode(fakeGh, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             }
 
-            string tag = scenario == "encoded" ? "release/with space+#?" : "vcurrent";
+            string tag = scenario switch
+            {
+                "encoded" => "release/with space+#?",
+                "tag-line-break" => "vcurrent\ninjected",
+                _ => "vcurrent",
+            };
             bool annotated = scenario.Contains("annotated", StringComparison.Ordinal)
                 || scenario is "malformed-tag" or "tag-failure" or "invalid-peeled-sha" or "peeled-type";
             string tagRef = JsonSerializer.Serialize(new
@@ -259,6 +313,7 @@ public sealed class ReleasePublicationVerificationTests
             };
 
             string requestLog = Path.Combine(temporary, "requests");
+            string githubOutputPath = Path.Combine(temporary, "github-output");
             ProcessStartInfo start = new("bash")
             {
                 WorkingDirectory = CiTestPaths.RepositoryRoot,
@@ -269,7 +324,7 @@ public sealed class ReleasePublicationVerificationTests
             start.ArgumentList.Add("-c");
             start.ArgumentList.Add(script);
             start.Environment["PATH"] = $"{temporary}{Path.PathSeparator}{start.Environment["PATH"]}";
-            start.Environment["GITHUB_OUTPUT"] = Path.Combine(temporary, "github-output");
+            start.Environment["GITHUB_OUTPUT"] = githubOutputPath;
             start.Environment["GH_TOKEN"] = "fixture-token";
             start.Environment["REPOSITORY"] = "Hexalith/Hexalith.Parties";
             start.Environment["DISPATCH_SHA"] = scenario == "invalid-source" ? "main" : SourceSha;
@@ -297,7 +352,8 @@ public sealed class ReleasePublicationVerificationTests
             string stdout = output.GetAwaiter().GetResult();
             string stderr = error.GetAwaiter().GetResult();
             exited.ShouldBeTrue($"Publication verifier timed out: {stderr}");
-            return (process.ExitCode, stdout, stderr, File.Exists(requestLog) ? File.ReadAllLines(requestLog) : []);
+            string githubOutput = File.Exists(githubOutputPath) ? File.ReadAllText(githubOutputPath) : string.Empty;
+            return (process.ExitCode, stdout, stderr, File.Exists(requestLog) ? File.ReadAllLines(requestLog) : [], githubOutput);
         }
         finally
         {

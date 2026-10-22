@@ -414,7 +414,8 @@ jobs:
               type == "object" and
               (.draft | type == "boolean") and
               (.tag_name | type == "string") and
-              (.tag_name | length > 0)
+              (.tag_name | length > 0) and
+              (.tag_name | test("[\r\n]") | not)
             )
           ' >/dev/null; then
             echo "The GitHub Releases response could not be validated safely." >&2

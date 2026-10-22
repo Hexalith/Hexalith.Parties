@@ -2,7 +2,7 @@
 title: 'Complete five query and release verification deferrals'
 type: 'bugfix'
 created: '2026-10-22'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: 12a071cf7dfec52b335f52e7d162fb835f49af9c
@@ -65,6 +65,8 @@ context: ['AGENTS.md', 'docs/development-guide.md', 'tests/README.md']
 - Given a matching GitHub release, when any declared registry artifact fails validation, then verification fails and retains diagnostics; a complete valid set passes.
 
 ## Implementation Notes
+
+Review patches passed Release service 2454/2454 and CI 375/375, with focused identity 300/300 and CI 159/159 inside those totals. Actionlint, shell syntax, the warning guard and whitespace checks passed. Debug source launch remains the previously recorded HXR011/HXP020 blocker. Removed gitlinks, uppercase HTTPS redirects, root-only nuspecs and post-fold historical authority rechecks are covered. Four follow-ups stay open: publication range binding, pre-deadline history parsing, ambiguous multi-tag selection, and GitHub-only trigger/environment execution.
 
 Final parent verification after review: service 2,450/2,450 and CI 360/360 pass without failures, errors or skips. Focused identity 296/296 and all twelve connection/download controls pass. Independent follow-up confirms the caller-path, redirect and connection deadline findings are resolved. Exact main message passes pinned commitlint; remote main matched the baseline at the pre-push fetch.
 

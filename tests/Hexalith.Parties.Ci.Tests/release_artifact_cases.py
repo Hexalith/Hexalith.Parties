@@ -5,11 +5,13 @@ import io
 import json
 import os
 import socket
+import struct
 import subprocess
 import sys
 import tempfile
 import threading
 import zipfile
+import zlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -27,6 +29,27 @@ def data(value):
 
 def digest(value):
     return "sha256:" + hashlib.sha256(value).hexdigest()
+
+
+def stored_zip(entries):
+    """Build a stored zip. A declared size can exceed the bytes actually stored."""
+    local = bytearray()
+    central = bytearray()
+    offset = 0
+    for name, payload, declared in entries:
+        raw_name = name.encode()
+        payload = payload or b""
+        size = len(payload) if declared is None else declared
+        checksum = zlib.crc32(payload) & 0xFFFFFFFF
+        local_header = struct.pack("<IHHHHHIIIHH", 0x04034B50, 20, 0, 0, 0, 0, checksum, len(payload), size, len(raw_name), 0)
+        local += local_header + raw_name + payload
+        central_header = struct.pack(
+            "<IHHHHHHIIIHHHHHII", 0x02014B50, 20, 20, 0, 0, 0, 0, checksum, len(payload), size,
+            len(raw_name), 0, 0, 0, 0, 0, offset)
+        central += central_header + raw_name
+        offset += len(local_header) + len(raw_name) + len(payload)
+    eocd = struct.pack("<IHHHHIIH", 0x06054B50, 0, 0, len(entries), len(entries), len(central), offset, 0)
+    return bytes(local) + bytes(central) + eocd
 
 
 def run(repository, scenario):
@@ -53,12 +76,13 @@ def run(repository, scenario):
                     repo[key] = value
             if scenario == "missing-license":
                 del attributes["license"]
-        if affected and scenario in {"valid-file-license", "missing-file-license"}:
-            attributes["license"] = "LICENSE.txt"
+        if affected and scenario in {"valid-file-license", "missing-file-license", "uppercase-file-license"}:
+            attributes["license"] = "ABSENT.txt" if scenario == "uppercase-file-license" else "LICENSE.txt"
         if affected and scenario in {"valid-legacy-file-license", "missing-legacy-file-license"}:
             del attributes["license"]
             attributes["licenseFile"] = "LICENSE.txt"
-        fields = "".join((f'<license type="{"file" if value == "LICENSE.txt" else "expression"}">{value}</license>'
+        license_kind = "File" if affected and scenario == "uppercase-file-license" else None
+        fields = "".join((f'<license type="{license_kind or ("file" if value == "LICENSE.txt" else "expression")}">{value}</license>'
                           if key == "license" else f"<{key}>{value}</{key}>") for key, value in attributes.items())
         if affected and scenario == "ambiguous-metadata":
             fields += f"<id>{package_id}</id>"
@@ -86,9 +110,15 @@ def run(repository, scenario):
             nuspec = nuspec.replace(b"<metadata>", b"<wrapper><metadata>").replace(b"</metadata>", b"</metadata></wrapper>")
         elif affected and scenario == "nested-id":
             nuspec = nuspec.replace(f"<id>{package_id}</id>".encode(), f"<wrapper><id>{package_id}</id></wrapper>".encode())
+        elif affected and scenario == "duplicate-repository":
+            nuspec = nuspec.replace(b"</metadata>", b'<repository type="git" url="https://example.invalid/other" commit="' + (b"b" * 40) + b'" /></metadata>')
+        elif affected and scenario == "non-package-root":
+            nuspec = nuspec.replace(b"<package ", b"<bundle ", 1).replace(b"</package>", b"</bundle>")
+        elif affected and scenario == "nuspec-doctype":
+            nuspec = b'<!DOCTYPE package [<!ENTITY x "x">]>' + nuspec
         memory = io.BytesIO()
         with zipfile.ZipFile(memory, "w") as archive:
-            archive.writestr(package_id + ".nuspec", nuspec)
+            archive.writestr(("lib/" if affected and scenario == "nested-nuspec" else "") + package_id + ".nuspec", nuspec)
             if affected and scenario in {"valid-file-license", "valid-legacy-file-license"}:
                 archive.writestr("LICENSE.txt", "fixture license")
             if not affected or scenario != "missing-readme":
@@ -97,7 +127,18 @@ def run(repository, scenario):
                 archive.writestr("second.nuspec", nuspec)
             if affected and scenario == "duplicate-member":
                 archive.writestr("readme.md", "ambiguous")
-        package = b"malformed archive" if affected and scenario == "malformed-package" else memory.getvalue()
+        if affected and scenario == "malformed-package":
+            package = b"malformed archive"
+        elif affected and scenario == "member-count-bound":
+            package = stored_zip([(package_id + ".nuspec", nuspec, None), ("README.md", b"fixture", None),
+                                  *[(f"extra-{index}.txt", b"", None) for index in range(9999)]])
+        elif affected and scenario == "archive-size-bound":
+            package = stored_zip([(package_id + ".nuspec", nuspec, None), ("README.md", b"fixture", None),
+                                  ("pad.bin", b"", 256 * 1024 * 1024 + 1)])
+        elif affected and scenario == "nuspec-size-bound":
+            package = stored_zip([(package_id + ".nuspec", nuspec, 1024 * 1024 + 1), ("README.md", b"fixture", None)])
+        else:
+            package = memory.getvalue()
         if affected and scenario == "corrupt-package-crc":
             package = package.replace(b"fixture", b"fixturf", 1)
         lower = package_id.lower()
@@ -246,6 +287,9 @@ def run(repository, scenario):
             assert counts[package_target] == 1
         elif scenario in {"partial-inventory", "duplicate-inventory", "ambiguous-inventory", "duplicate-json-inventory", "unpinned-validator"}:
             assert not requests
+        elif scenario in {"member-count-bound", "archive-size-bound", "nuspec-size-bound", "duplicate-repository",
+                          "non-package-root", "nested-nuspec", "uppercase-file-license", "nuspec-doctype"}:
+            assert receipt["error"] == "Artifact metadata, archive or OCI graph validation failed", receipt
         text_evidence = result.stdout + result.stderr + "".join(path.read_text() for path in evidence.rglob("*.json"))
         assert "fixture-secret" not in text_evidence and "fixture-user" not in text_evidence
         print(scenario + ": verified " + ("complete pass" if expected else "fail-closed rejection"))
@@ -454,7 +498,7 @@ def exercise_download(repository, scenario):
                 self.end_headers()
                 self.wfile.write(b"complete")
 
-        if scenario in {"download-two-origin-auth", "download-https-downgrade"}:
+        if scenario in {"download-two-origin-auth", "download-https-downgrade", "download-unsafe-redirect"}:
             destination = ThreadingHTTPServer(("127.0.0.1", 0), Destination)
             destination_thread = threading.Thread(target=destination.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True)
             destination_thread.start()
@@ -466,6 +510,14 @@ def exercise_download(repository, scenario):
             def do_GET(self):
                 observed.append((self.path, self.headers.get("Authorization")))
                 try:
+                    if scenario == "download-unsafe-redirect":
+                        self.send_response(302)
+                        location = (f"http://user:secret@127.0.0.1:{destination.server_port}/stolen"
+                                    if self.path == "/userinfo" else f"ftp://127.0.0.1:{destination.server_port}/stolen")
+                        self.send_header("Location", location)
+                        self.send_header("Content-Length", "0")
+                        self.end_headers()
+                        return
                     if scenario == "download-slow-headers":
                         self.wfile.write(b"HTTP/1.1 200 OK\r\nX-Slow: ")
                         self.wfile.flush()
@@ -510,7 +562,7 @@ def exercise_download(repository, scenario):
 
         server = ThreadingHTTPServer(("127.0.0.1", 0), Origin)
         old_ca = os.environ.get("SSL_CERT_FILE")
-        if scenario == "download-https-downgrade":
+        if scenario in {"download-https-downgrade", "download-uppercase-https"}:
             certificate, key = root / "ca.pem", root / "key.pem"
             subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
                             "-subj", "/CN=localhost", "-addext", "subjectAltName=DNS:localhost,IP:127.0.0.1",
@@ -525,12 +577,21 @@ def exercise_download(repository, scenario):
                                retry_delay_seconds=0, evidence_directory=root / "evidence")
         evidence = {"downloads": []}
         downloader = verifier.Downloader(args, evidence)
-        scheme = "https" if scenario == "download-https-downgrade" else "http"
+        scheme = "HTTPS" if scenario == "download-uppercase-https" else "https" if scenario == "download-https-downgrade" else "http"
         path = "/hop/0" if scenario == "download-redirect-deadline" else "/start"
         started = time.monotonic()
         failure = None
+        unsafe_failures = []
         try:
-            downloader.get(f"{scheme}://127.0.0.1:{server.server_port}{path}", args.evidence_directory / "body.raw", "fixture", authorization)
+            if scenario == "download-unsafe-redirect":
+                for unsafe_path in ("/userinfo", "/scheme"):
+                    try:
+                        downloader.get(f"http://127.0.0.1:{server.server_port}{unsafe_path}",
+                                       args.evidence_directory / f"{unsafe_path.strip('/')}.raw", "fixture", authorization)
+                    except verifier.PublicationError as error:
+                        unsafe_failures.append(str(error))
+            else:
+                downloader.get(f"{scheme}://127.0.0.1:{server.server_port}{path}", args.evidence_directory / "body.raw", "fixture", authorization)
         except verifier.PublicationError as error:
             failure = str(error)
         finally:
@@ -553,11 +614,15 @@ def exercise_download(repository, scenario):
         elif scenario == "download-https-downgrade":
             assert failure == "HTTPS downgrade redirect rejected", (failure, evidence)
             assert not destination_observed
+        elif scenario == "download-unsafe-redirect":
+            assert unsafe_failures == ["Unsafe registry redirect rejected", "Unsafe registry redirect rejected"], unsafe_failures
+            assert destination_observed == []
+            assert [item[0] for item in observed] == ["/userinfo", "/scheme"]
         else:
             assert failure is None, (failure, evidence)
             assert (args.evidence_directory / "body.raw").read_bytes() == b"complete"
             assert elapsed < 0.5, (scenario, elapsed)
-        if scenario == "download-same-origin-auth":
+        if scenario in {"download-same-origin-auth", "download-uppercase-https"}:
             assert observed == [("/start", authorization["Authorization"]), ("/done", authorization["Authorization"])]
         elif scenario == "download-two-origin-auth":
             assert destination_observed == [None]

@@ -737,6 +737,53 @@ public sealed class PartyIdentityQueryHandlerTests
         (await fixture.Service.ResolveAtAsync(Envelope(query with { ExpectedBindingVersion = 2 }), TestContext.Current.CancellationToken)).Outcome.ShouldBe(HumanActorBindingOutcome.Mismatch);
     }
 
+    /// <summary>Gap and mismatch remain only when admission is still current after the post-fold policy await.</summary>
+    /// <param name="mismatch">The historical query expects a binding version that is not current.</param>
+    /// <param name="expireDuringPolicy">The post-fold policy read stalls until admission has expired.</param>
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task HistoricalOutcomes_RecheckAuthorityAfterPostFoldPolicy(bool mismatch, bool expireDuringPolicy)
+    {
+        var fixture = Service(Events());
+        var (clock, advance) = DeadlineClock();
+        DateTimeOffset issued = clock.GetUtcNow();
+        var admitted = new IdentityAdmissionEvidence(new("tenant-a", "party", "party-1", "Read", "c", "c", "d"),
+            "reader", null, Actor, 2, false, issued, issued.AddSeconds(5), 1);
+        fixture.Authority.Admit(Arg.Any<QueryEnvelope>()).Returns(new PartyIdentityAdmissionResult(admitted, null));
+        PartyIdentityOptions configured = PolicyOptions();
+        using var release = new ManualResetEventSlim();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        int reads = 0;
+        fixture.Options.CurrentValue.Returns(_ =>
+        {
+            if (expireDuringPolicy && Interlocked.Increment(ref reads) == 4)
+            {
+                entered.TrySetResult();
+                release.Wait(TestContext.Current.CancellationToken);
+            }
+
+            return configured;
+        });
+        var service = new PartyIdentityQueryService(fixture.Authority, clock, fixture.Reader, fixture.Custody, fixture.HistoryReader, fixture.Options);
+        var query = new ResolveHumanActorBindingAt("tenant-a", "party-1", mismatch ? Start : Start.AddTicks(-1), Actor, mismatch ? 2 : 1);
+        Task<HumanActorBindingResult> result = service.ResolveAtAsync(Envelope(query), TestContext.Current.CancellationToken);
+        if (expireDuringPolicy)
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+            advance(TimeSpan.FromSeconds(6), false);
+            release.Set();
+        }
+
+        HumanActorBindingResult outcome = await result.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+        outcome.Evidence.ShouldBeNull();
+        outcome.Outcome.ShouldBe(expireDuringPolicy
+            ? HumanActorBindingOutcome.Unavailable
+            : mismatch ? HumanActorBindingOutcome.Mismatch : HumanActorBindingOutcome.Gap);
+    }
+
     [Fact]
     public async Task HistoricalReplay_BeforeBoundaryReturnsOriginalAndAtBoundaryReturnsSuccessor()
     {

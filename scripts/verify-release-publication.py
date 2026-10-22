@@ -219,7 +219,8 @@ class Downloader:
                     complete = False
                     try:
                         parsed = urllib.parse.urlsplit(current)
-                        connection_type = http.client.HTTPSConnection if parsed.scheme == "https" else http.client.HTTPConnection
+                        scheme = parsed.scheme.lower()
+                        connection_type = http.client.HTTPSConnection if scheme == "https" else http.client.HTTPConnection
                         connection = connection_type(parsed.hostname, parsed.port, timeout=remaining())
                         connection.sock = self._connect(connection, remaining)
                         remaining()

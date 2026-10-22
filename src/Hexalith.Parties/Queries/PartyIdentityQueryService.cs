@@ -204,7 +204,8 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
 
             IReadOnlyList<RetainedHumanActorBinding> history = await deadline.RunAsync(token => RetainedHumanActorHistoryFold.Fold(read.Stream!, policy!.PolicyId, token)).ConfigureAwait(false);
             IdentityAdmissionEvidence? afterFoldAuthority = (await deadline.RunAsync(_ => authority.Admit(envelope)).ConfigureAwait(false)).Evidence;
-            if (!SameAuthority(admitted, afterFoldAuthority, timeProvider.GetUtcNow()) || !await PolicyIsCurrentAsync(policy, deadline).ConfigureAwait(false))
+            if (!SameAuthority(admitted, afterFoldAuthority, timeProvider.GetUtcNow()) || !await PolicyIsCurrentAsync(policy, deadline).ConfigureAwait(false)
+                || !SameAuthority(admitted, afterFoldAuthority, timeProvider.GetUtcNow()))
             {
                 deadline.ThrowIfCancellationRequested();
                 return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
@@ -215,6 +216,11 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
             if (matches.Length != 1)
             {
                 deadline.ThrowIfCancellationRequested();
+                if (!SameAuthority(admitted, afterFoldAuthority, timeProvider.GetUtcNow()))
+                {
+                    return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
+                }
+
                 return HistoryFailure(query, matches.Length == 0 ? HumanActorBindingOutcome.Gap : HumanActorBindingOutcome.Ambiguous);
             }
 
@@ -228,6 +234,11 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
             if (evidence.ActorId != query.ExpectedActorId || evidence.BindingVersion != query.ExpectedBindingVersion)
             {
                 deadline.ThrowIfCancellationRequested();
+                if (!SameAuthority(admitted, afterFoldAuthority, timeProvider.GetUtcNow()))
+                {
+                    return HistoryFailure(query, HumanActorBindingOutcome.Unavailable);
+                }
+
                 return HistoryFailure(query, HumanActorBindingOutcome.Mismatch);
             }
 

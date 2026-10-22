@@ -93,7 +93,10 @@ def get_metadata(package_path: Path) -> PackageMetadata:
             raise ValueError(f"{package_path.name}: archive exceeds the validation size bound")
         if len({name.casefold() for name in names}) != len(names):
             raise ValueError(f"{package_path.name}: duplicate archive member names")
-        nuspec_names = [name for name in names if name.casefold().endswith(".nuspec")]
+        nuspec_names = [
+            name for name in names
+            if "/" not in name and "\\" not in name and name.casefold().endswith(".nuspec")
+        ]
         if len(nuspec_names) != 1:
             raise ValueError(f"{package_path.name}: expected exactly one .nuspec file")
 
@@ -101,7 +104,11 @@ def get_metadata(package_path: Path) -> PackageMetadata:
             raise ValueError(f"{package_path.name}: nuspec exceeds the metadata size bound")
         if package.testzip() is not None:
             raise ValueError(f"{package_path.name}: archive member CRC mismatch")
-        root = ElementTree.fromstring(package.read(nuspec_names[0]))
+        nuspec_bytes = package.read(nuspec_names[0])
+        nuspec_markup = nuspec_bytes.lower()
+        if b"<!doctype" in nuspec_markup or b"<!entity" in nuspec_markup:
+            raise ValueError(f"{package_path.name}: nuspec must not declare a doctype or entity")
+        root = ElementTree.fromstring(nuspec_bytes)
         if root.tag.rsplit("}", 1)[-1] != "package":
             raise ValueError(f"{package_path.name}: invalid nuspec package element")
         ns = {"n": root.tag.split("}")[0].strip("{")} if root.tag.startswith("{") else {}
@@ -128,7 +135,7 @@ def get_metadata(package_path: Path) -> PackageMetadata:
         license_value = find_text("license")
         license_file = find_text("licenseFile")
         license_elements = find_elements("n:metadata/n:license")
-        if license_elements and license_elements[0].get("type") == "file":
+        if license_elements and (license_elements[0].get("type") or "").casefold() == "file":
             if not license_value or license_value not in names:
                 raise ValueError(f"{package_path.name}: referenced license file is not in the package")
         if license_file and license_file not in names:

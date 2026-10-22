@@ -25,10 +25,13 @@ def exercise(repository, scenario):
         (root / ".gitmodules").write_text('[submodule "root"]\n path = references/root\n url = https://example.invalid/root.git\n')
         old, middle, new = "a" * 40, "b" * 40, "c" * 40
 
-        def commit(pointer, ledger="", parents=None):
+        def commit(pointer, ledger="", parents=None, *, gitlink=True, mode_bits="160000", gitlink_sha=None):
             (root / ".gitlink-signoff.tsv").write_text(ledger)
             git("add", ".gitmodules", ".gitlink-signoff.tsv")
-            git("update-index", "--add", "--cacheinfo", f"160000,{pointer},references/root")
+            if gitlink:
+                git("update-index", "--add", "--cacheinfo", f"{mode_bits},{gitlink_sha or pointer},references/root")
+            else:
+                git("update-index", "--force-remove", "--", "references/root")
             tree = git("write-tree")
             parent_args = ["-p", git("rev-parse", "HEAD")] if parents is None and (root / ".git/refs/heads/main").exists() else []
             if parents is not None:
@@ -83,6 +86,11 @@ def exercise(repository, scenario):
         elif scenario == "malformed-declarations":
             (root / ".gitmodules").write_text("[malformed")
             commit(new, signoff(new))
+        elif scenario == "removed-gitlink":
+            commit(old, gitlink=False)
+        elif scenario == "gitlink-mode-change":
+            blob = git("hash-object", "-w", "--", str(root / ".gitmodules"))
+            commit(old, mode_bits="100644", gitlink_sha=blob)
         else:
             commit(new)
         if scenario == "empty-base":
@@ -136,6 +144,11 @@ def exercise(repository, scenario):
             result = subprocess.run(["bash", str(gate), mode, base], cwd=root, env=env, capture_output=True, text=True)
         expected = scenario in {"unchanged", "signed", "multi-signed", "diff-signed", "delayed-declaration-signed", "merge-inherited", "merge-branch-signed", "merge-resolution-signed"}
         assert (result.returncode == 0) == expected, (scenario, result.stdout, result.stderr)
+        if scenario == "empty-base":
+            assert "--push-range requires <base-ref>" in result.stderr, result.stderr
+        push_range = (not workflow_case and mode == "--push-range") or (workflow_case and workflow_route == "main")
+        if push_range and scenario in {"unsigned", "removed-gitlink", "gitlink-mode-change"}:
+            assert "push-range" in result.stderr, result.stderr
         print(scenario + ": verified " + ("pass" if expected else "rejection"))
         print(result.stdout + result.stderr)
 
