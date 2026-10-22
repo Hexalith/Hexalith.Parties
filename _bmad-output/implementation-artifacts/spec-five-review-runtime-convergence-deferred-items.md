@@ -2,7 +2,7 @@
 title: 'Close five review, runtime and convergence deferrals'
 type: 'bugfix'
 created: '2026-10-22'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: '7b7898307e8eca3774843b145d339e9986018409'
@@ -52,8 +52,8 @@ context: ['AGENTS.md', 'docs/development-guide.md', 'tests/README.md']
 - [x] Root/browser package metadata, project `.npmrc`, CI/release callers and CI fitness tests: pin the selected distribution and npm; qualify actual locked installs and wrong-runtime rejection without changing dependency resolutions.
 - [x] `src/Hexalith.Parties.AdminPortal/Services/AdminPortalAcceptedCommand.cs` (new internal type), query service, form and portal: retain a submitted-update snapshot, preserve create identity convergence, and compare complete expected edit fields against current detail under existing authorization/version fences.
 - [x] `tests/Hexalith.Parties.AdminPortal.Tests/Components/CreateEditPartyPageTests.cs`, `PartiesAdminPortalComponentTests.cs` and `Services/RecordingAdminPortalApiClient.cs`: cover stale pre-edit values, DOB/organization changes, generated child identities, degraded/non-current reads, supersession, context reset and eventual matching detail.
-- [ ] Batch evidence and `docs/ci.md`: qualify two logical reviewed main pushes, recording run creation/completion overlap, exact head SHAs, event/branch, successful jobs and logged before-range. Keep the scheduling entry open until this evidence exists.
-- [ ] `deferred-work.md`: close only the five scoped entries after their checks pass; document results and limits in the batch spec/evidence.
+- [x] Batch evidence and `docs/ci.md`: qualify two logical reviewed main pushes, recording run creation/completion overlap, exact head SHAs, event/branch, successful jobs and logged before-range. Keep the scheduling entry open until this evidence exists.
+- [x] `deferred-work.md`: close only the five scoped entries after their checks pass; document results and limits in the batch spec/evidence.
 
 **Acceptance Criteria:**
 
@@ -111,3 +111,9 @@ Clean main at the recorded baseline; no intent gaps. Baseline AppHost startup su
 ### Parent verification after review
 
 All patch findings are resolved. The fresh Debug/package AdminPortal build has zero warnings/errors and all 283 tests pass without skips. Together with the unchanged focused service/aggregate/client/MCP and CI evidence, 1,205 .NET cases pass. The reproducible Node driver passes ten commands, including eight browser configuration cases, type checking and registry signature/attestation verification. Exact pinned commitlint validates all three intended messages. B2/B3 remain one explicitly recorded pre-existing high-severity form-context follow-up; B7 is rejected for an unreachable caller shape. The real scheduling task is still pending and the spec remains in-review until the reviewed main pushes provide its receipt. See `tests/five-review-runtime-convergence-deferred-items-2026-10-22/parent-verification.json`.
+
+### Live acceptance and completion
+
+Remote main advanced through an unrelated eight-line CI assertion change during implementation. The two reviewed commits were rebased onto `3f377691c6bbe2d1f7b3a5c515b76b873379cc73` without conflicts; the fresh affected CI class passed 37/37 with zero warnings/errors and no skips. The original baseline identifier above is preserved.
+
+Authorized reviewed pushes `a450220208403ba9b3dd1a0f2a14143063bf8329` and `28598290cf97e4e69961a8a9fde3f77e96f89f63` produced successful RC runs 39820004780 and 39820014459. Their lifetimes overlap twelve seconds; their actual gate jobs overlap four seconds. Both logs prove the exact preceding main tip as event.before and a successful push-range gate. See the [live scheduler receipt](tests/five-review-runtime-convergence-deferred-items-2026-10-22/scheduler-proof.json). All six tasks, all five matrix rows and all four acceptance criteria are now satisfied. The five selected ledger items are closed; the pre-existing form-context authorization finding remains a separate high-severity deferral.

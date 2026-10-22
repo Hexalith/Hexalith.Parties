@@ -16,6 +16,8 @@ See node-reproducible-qualification.json for exact sanitized commands and inputs
 Published command logs redact local paths and normalize trailing whitespace;
 local originals remain outside this repository.
 
-The live scheduler acceptance is pending the reviewed main pushes. Its receipt
-will record exact run/job identities, overlapping lifetimes and before-ranges;
-the ledger must remain open for this item until that evidence passes.
+The live scheduler acceptance passes: runs 39820004780 and 39820014459 overlap
+twelve seconds, and their successful gate jobs overlap four seconds. Each log
+binds the preceding main tip to its exact source. See scheduler-proof.json and
+main-pushes.json. All five selected ledger entries are closed. The unrelated
+remote CI assertion change was preserved by rebase; its 37 affected cases pass.

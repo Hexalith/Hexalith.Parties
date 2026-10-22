@@ -54,7 +54,7 @@
       0
     ]
   },
-  "scheduler_status": "pending real reviewed main pushes",
+  "scheduler_status": "passed",
   "limits": [
     "Package-mode Debug checks pass; HXP020 still blocks source launcher qualification.",
     "No release, external deployment, owner approval or full-topology qualification.",
@@ -80,5 +80,35 @@
     "tests/e2e/.npmrc": "85f476be1a3acba36c6d8ac40ab2943a77867cd18d7159cc5211a80e07eb3a62",
     "src/Hexalith.Parties.AdminPortal/Services/AdminPortalAcceptedCommand.cs": "608de72662f4a2c7342b73100d3cfb5e9636fd48358a8dd3c92cfab6d42ad37a",
     "_bmad-output/implementation-artifacts/tests/five-review-runtime-convergence-deferred-items-2026-10-22/qualify-node.py": "75e660e386c6df90f6faca24eead49b03a96b1b7fda948697df95da4c7eae506"
-  }
+  },
+  "scheduler_receipt": "scheduler-proof.json",
+  "rebase": {
+    "onto": "3f377691c6bbe2d1f7b3a5c515b76b873379cc73",
+    "reviewed_commits": [
+      "a450220208403ba9b3dd1a0f2a14143063bf8329",
+      "28598290cf97e4e69961a8a9fde3f77e96f89f63"
+    ],
+    "external_change": "Eight assertions in CommonsHttpRestoreRoutingTests; preserved without conflict.",
+    "affected_ci_tests": 37,
+    "failed": 0,
+    "skipped": 0,
+    "output": [
+      "rebased-ci-build.txt",
+      "rebased-ci-tests.txt"
+    ]
+  },
+  "node_caller_contracts": [
+    {
+      "revision": "397c94a4e246c90b21cf408790fa0d55bf32d795",
+      "path": "Github/prepare-domain-release/action.yml",
+      "blob": "a5650c8aa77ccdf812549f6192193e6c50c419a2",
+      "result": "Exact pinned source declares and forwards inputs.node-version before its first npm install."
+    },
+    {
+      "revision": "332b2c144defba546fe0a09626a4a72f2340e22f",
+      "path": ".github/workflows/commitlint.yml",
+      "blob": "fe586ec3d437804de647e7ec9160c3c2379c7c09",
+      "result": "Exact pinned source declares and forwards inputs.node-version before its first npm install."
+    }
+  ]
 }

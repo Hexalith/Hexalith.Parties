@@ -1,0 +1,7 @@
+Root gitlink RC gate	Determine base ref	2026-10-22T17:08:19.9057773Z   EVENT_NAME: push
+Root gitlink RC gate	Determine base ref	2026-10-22T17:08:19.9058206Z   EVENT_REF: refs/heads/main
+Root gitlink RC gate	Determine base ref	2026-10-22T17:08:19.9059137Z   EVENT_BEFORE: 3f377691c6bbe2d1f7b3a5c515b76b873379cc73
+Root gitlink RC gate	Determine base ref	2026-10-22T17:08:19.9222742Z Checking root gitlinks against: 3f377691c6bbe2d1f7b3a5c515b76b873379cc73 (push-range)
+Root gitlink RC gate	Root gitlink RC gate	2026-10-22T17:08:19.9361711Z   GATE_BASE: 3f377691c6bbe2d1f7b3a5c515b76b873379cc73
+Root gitlink RC gate	Root gitlink RC gate	2026-10-22T17:08:19.9362098Z   GATE_MODE: push-range
+Root gitlink RC gate	Root gitlink RC gate	2026-10-22T17:08:20.0737414Z gitlink-rc-gate: PASS — all root gitlinks validated or clean.

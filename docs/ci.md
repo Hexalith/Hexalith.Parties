@@ -236,6 +236,11 @@ logged `before` range. Canceled, missing or nonoverlapping runs leave the live
 scheduling follow-up open; no workflow dispatch or release is needed for this
 qualification.
 
+The [2026-10-22 live receipt](../_bmad-output/implementation-artifacts/tests/five-review-runtime-convergence-deferred-items-2026-10-22/scheduler-proof.json)
+records two successful exact-source main push runs with twelve seconds of run
+overlap and four seconds of actual gate-job overlap. Both logs bind the preceding
+main tip to the checked push-range.
+
 The executable fixtures require Python, Git, Bash and `jq` on a non-Windows
 system, plus the pinned Builds Git object available in the direct root checkout.
 They use isolated temporary Git histories and loopback HTTP registries; they

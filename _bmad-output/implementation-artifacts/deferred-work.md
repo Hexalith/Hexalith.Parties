@@ -1780,6 +1780,10 @@ archived: 2026-10-21
   summary: Main-push workflow triggers and concurrency groups are not executed locally.
   evidence: GitHub evaluates the main push trigger and the per-SHA concurrency expression. Local fixtures run the step scripts those expressions select. A wording assertion would not execute scheduling.
 
+  status: done 2026-10-22
+  resolution: Two reviewed exact-source main push RC runs, 39820004780 and 39820014459, completed successfully. Their run lifetimes overlap twelve seconds and their actual gate jobs overlap four seconds. Logged event.before ranges bind the preceding remote main tips to both source SHAs; the RC workflow blob is unchanged. This is executed GitHub scheduling evidence, without a release dispatch or environment-approval claim.
+  verification: `tests/five-review-runtime-convergence-deferred-items-2026-10-22/scheduler-proof.json`; spec `spec-five-review-runtime-convergence-deferred-items.md`.
+
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-five-query-release-deferred-items.md`
   summary: The publication job's production environment is not isolated from the release job's environment assertion.
   evidence: The release job already contains environment production, so removing it from verify-publication still satisfies that assertion. GitHub is what enforces the environment rule.

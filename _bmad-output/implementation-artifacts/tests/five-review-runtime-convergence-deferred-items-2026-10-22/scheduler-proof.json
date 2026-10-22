@@ -1,0 +1,121 @@
+{
+  "status": "passed",
+  "scope": "Observed actual GitHub main-push trigger and per-source RC concurrency behavior for two reviewed commits; both exact-source jobs overlap and succeed.",
+  "workflow": {
+    "id": 308991611,
+    "name": "Release Candidate Gate",
+    "path": ".github/workflows/rc-gate.yml",
+    "state": "active"
+  },
+  "commands": [
+    [
+      "gh",
+      "api",
+      "repos/Hexalith/Hexalith.Parties/actions/workflows/rc-gate.yml"
+    ],
+    [
+      "gh",
+      "api",
+      "repos/Hexalith/Hexalith.Parties/actions/runs/39820004780"
+    ],
+    [
+      "gh",
+      "api",
+      "repos/Hexalith/Hexalith.Parties/actions/runs/39820004780/jobs"
+    ],
+    [
+      "gh",
+      "run",
+      "view",
+      "39820004780",
+      "--log"
+    ],
+    [
+      "gh",
+      "api",
+      "repos/Hexalith/Hexalith.Parties/actions/runs/39820014459"
+    ],
+    [
+      "gh",
+      "api",
+      "repos/Hexalith/Hexalith.Parties/actions/runs/39820014459/jobs"
+    ],
+    [
+      "gh",
+      "run",
+      "view",
+      "39820014459",
+      "--log"
+    ]
+  ],
+  "runs": [
+    {
+      "id": 39820004780,
+      "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/39820004780",
+      "workflow_id": 308991611,
+      "workflow_path": ".github/workflows/rc-gate.yml",
+      "head_sha": "a450220208403ba9b3dd1a0f2a14143063bf8329",
+      "before_sha": "3f377691c6bbe2d1f7b3a5c515b76b873379cc73",
+      "event": "push",
+      "branch": "main",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-22T17:08:11Z",
+      "run_started_at": "2026-10-22T17:08:11Z",
+      "updated_at": "2026-10-22T17:08:27Z",
+      "workflow_blob": "e474a10994a2ac722a905b4fdc4baa1b2ab6370c",
+      "range_log": "rc-39820004780-range-log.txt",
+      "range_log_sha256": "dc6346ceae3f4fd379c2d73ad9405887f7651075063ed62c9ed0c53c49429255",
+      "jobs": [
+        {
+          "id": 119968464684,
+          "name": "Root gitlink RC gate",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-22T17:08:15Z",
+          "completed_at": "2026-10-22T17:08:23Z"
+        }
+      ]
+    },
+    {
+      "id": 39820014459,
+      "url": "https://github.com/Hexalith/Hexalith.Parties/actions/runs/39820014459",
+      "workflow_id": 308991611,
+      "workflow_path": ".github/workflows/rc-gate.yml",
+      "head_sha": "28598290cf97e4e69961a8a9fde3f77e96f89f63",
+      "before_sha": "a450220208403ba9b3dd1a0f2a14143063bf8329",
+      "event": "push",
+      "branch": "main",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-22T17:08:15Z",
+      "run_started_at": "2026-10-22T17:08:15Z",
+      "updated_at": "2026-10-22T17:08:28Z",
+      "workflow_blob": "e474a10994a2ac722a905b4fdc4baa1b2ab6370c",
+      "range_log": "rc-39820014459-range-log.txt",
+      "range_log_sha256": "5e71fa67e8e015b23d721a1d4a4016e98adfcf5f18b348f471797c29f7453c03",
+      "jobs": [
+        {
+          "id": 119968499535,
+          "name": "Root gitlink RC gate",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-22T17:08:19Z",
+          "completed_at": "2026-10-22T17:08:25Z"
+        }
+      ]
+    }
+  ],
+  "run_overlap_seconds": 12.0,
+  "job_overlap_seconds": 4.0,
+  "invariants": [
+    "Exact main push source and unchanged RC workflow blob for each run",
+    "Logged event.before equals the preceding remote main tip",
+    "Push-range gate passed for both sources",
+    "Both run lifetimes and actual gate job lifetimes overlap without cancellation"
+  ],
+  "limits": [
+    "This is one observed run pair; local source assertions alone do not provide this scheduling evidence.",
+    "No release publication or GitHub environment approval was exercised."
+  ]
+}
