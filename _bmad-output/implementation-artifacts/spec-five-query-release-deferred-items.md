@@ -2,7 +2,7 @@
 title: 'Complete five query and release verification deferrals'
 type: 'bugfix'
 created: '2026-10-22'
-status: 'done'
+status: 'in-review'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: 12a071cf7dfec52b335f52e7d162fb835f49af9c
@@ -99,6 +99,32 @@ Final disposition: all patch findings below are resolved and verified. Follow-up
 - V2 — medium, patch, pre-verified: stalled scanner coverage constructs its own deadline and cannot detect either service caller reverting to synchronous selection. Cover actual current/historical service results, cancellation precedence and capacity retention/recovery.
 - V3 — medium, patch, pre-verified, grouped with B5/E2: no redirect fixtures protect credential isolation or downgrade rejection. Add same-origin, two-origin and HTTPS-downgrade cases with actual handler coverage.
 - P1 — medium, patch: parent reproduction adds an unsigned gitlink before declaring it in a later commit; the gate incorrectly passes because declarations are collected incrementally. Collect all root paths across the range before inspecting advances; add signed/unsigned delayed-declaration controls.
+
+- carried B2 — medium, defer: carried: `.github/workflows/release.yml` still proves the release-floor tip and does not read the main-push range verdict. The open ledger entry already records that gap. No second deferral and no patch.
+- R1 — medium, patch: `scripts/gitlink-rc-gate.sh` push-range skips a path when `git ls-tree` is not mode `160000`. Deleting a root gitlink or replacing it with a blob passes. A parent `160000` entry that is missing or no longer a gitlink must fail, with removal and mode-change fixtures.
+- R2 — low, rejected: `ledger_has` reads the worktree ledger. A GitHub checkout of the pushed commit is that committed file, and a missing file fails closed. A dirty local ledger is outside the main-push job.
+- R3 — low, patch: an empty `--push-range` base prints `--diff requires <base-ref>`, and a range failure still says to resolve pointers before tagging. Say which mode failed.
+- R4 — maybe-false, defer: the first non-draft tag whose peeled commit equals the dispatched SHA supplies `--version`. Whether GitHub lists a non-version tag first when two tags share that SHA is unverified. If it does, publication can prove the wrong version. Severity if true: medium.
+- R5 — false: image proof stops at the pinned validator's index, child manifests, configs and provenance. The accepted contract does not fetch layer blobs.
+- R6 — false: cross-origin HTTPS redirects are the reviewed credential design. Authorization is removed off-origin, and the downloaded bytes are the required evidence.
+- R7 — medium, patch: `ElementTree.fromstring` expands internal entities in a registry nuspec. Reject a nuspec that contains a doctype or entity declaration before parsing. `zlib.error` from `testzip` does not escape `verify-release-publication.py`; its broad handler already fails closed.
+- R8 — false: on the current query, `SameAuthority` uses `completedAt` sampled after `PolicyIsCurrentAsync` and checks revision and `ExpiresAt`. The policy flag is the result of the await that just finished.
+- R9 — defer: `ResolveAtAsync` still deserializes the envelope before the deadline. That placement predates this batch. The new boundary covers options and selection.
+- R10 — false: a 20-minute job timeout or a second production approval fails or holds the job. Neither accepts incomplete proof. The production environment is what supplies the read credentials.
+- R11 — false: author-supplied nuspec repository fields, and hashes that do not equal unsigned build archives, are the accepted publication limit.
+- R12 — false: `in-review` is this review's status. The ledger closures and the temporary commitlint file are the pre-commit record, not a product defect.
+- R13 — high, patch: `Downloader.get` treats only `scheme == "https"` as TLS, while origin comparison lowercases the scheme. A redirect to `HTTPS://` keeps `Authorization` and then uses `HTTPConnection` on port 80.
+- R14 — medium, patch: after the historical post-fold policy await, `SameAuthority` is not sampled again before gap, ambiguity or mismatch. A stall in that await can return those outcomes after `ExpiresAt`. Recheck at a fresh instant before those returns.
+- R15 — false: the current-query policy await sits before `SameAuthority`, and that check uses the later instant. Expired or revised admission does not resolve.
+- R16 — medium, patch: the only nuspec may live below the archive root. Require the sole nuspec path to contain no slash or backslash.
+- R17 — low, patch: license `type="File"` skips the file-exists check. Compare that type case-insensitively.
+- R18 — medium, patch, pre-verified: no executed test reads `matching-tag` or checks that artifact verification strips one leading `v`.
+- R19 — medium, patch, pre-verified: the 10000-member, 256 MiB and 1 MiB nuspec bounds have no failing fixture.
+- R20 — medium, patch, pre-verified: a second repository element and a non-package nuspec root have no failing fixture.
+- R21 — medium, patch, pre-verified: redirects with userinfo or a non-HTTP scheme have no fixture. Cover them with the uppercase-scheme case.
+- R22 — medium, patch, pre-verified: failing receipts do not assert the fixed non-`PublicationError` sentence, so a raw parser message could be uploaded unnoticed.
+- R23 — defer, pre-verified: GitHub evaluates `on: push` to `main` and the per-SHA concurrency group. The local suite runs the selected step scripts. Another wording assertion would not execute scheduling.
+- R24 — defer, pre-verified: deleting `environment: production` from `verify-publication` still satisfies the release job's existing environment assertion. Environment protection runs only on GitHub.
 
 ## Verification
 

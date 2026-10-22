@@ -1747,3 +1747,20 @@ archived: 2026-10-21
   summary: Bind successful main-push range signoff proof to release publication.
   severity: medium
   evidence: Both the baseline and current publication workflow require successful exact-source ci.yml and a release-floor tip diff, but do not consume the independent RC workflow verdict. An unsigned intermediate pointer can fail a range check while the final signed tip passes the existing publication check. Qualify a governed exact-source range-proof integration separately; this batch preserves the approved full-CI and protected manual publication contract.
+  status: open
+
+- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-five-query-release-deferred-items.md`
+  summary: Historical identity reads still deserialize the query envelope before the deadline.
+  evidence: ResolveAtAsync parses the envelope before PartyIdentityQueryDeadline exists. That order predates the options and selection budget. A bounded parse would need its own qualification.
+
+- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-five-query-release-deferred-items.md`
+  summary: The first matching GitHub release tag becomes the publication version when several tags share the dispatched commit.
+  evidence: maybe-false, medium if true. The selector breaks on the first non-draft tag whose peeled SHA matches. GitHub's list order for two tags on one SHA would settle whether a non-version tag can be proved.
+
+- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-five-query-release-deferred-items.md`
+  summary: Main-push workflow triggers and concurrency groups are not executed locally.
+  evidence: GitHub evaluates the main push trigger and the per-SHA concurrency expression. Local fixtures run the step scripts those expressions select. A wording assertion would not execute scheduling.
+
+- source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-five-query-release-deferred-items.md`
+  summary: The publication job's production environment is not isolated from the release job's environment assertion.
+  evidence: The release job already contains environment production, so removing it from verify-publication still satisfies that assertion. GitHub is what enforces the environment rule.
