@@ -1,0 +1,94 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+
+using Hexalith.Commons.UniqueIds;
+using Hexalith.Parties.IntegrationTests.Gateway;
+using Hexalith.Parties.IntegrationTests.HealthChecks;
+
+using Shouldly;
+
+namespace Hexalith.Parties.IntegrationTests.Topology;
+
+/// <summary>Proves two real mTLS sessions own disjoint discovery, routing, persisted state and cleanup.</summary>
+[Collection("Non-parallel")]
+public sealed class PartiesTopologyIsolationTests
+{
+    [Fact]
+    public void SessionConfiguration_SeparatesEveryOwnedIdentityPathAndLoopbackListener()
+    {
+        PartiesTopologySession first = PartiesTopologySession.Create(isolatedIdentities: true);
+        PartiesTopologySession second = PartiesTopologySession.Create(isolatedIdentities: true);
+        first.Id.ShouldNotBe(second.Id);
+        first.Namespace.ShouldNotBe(second.Namespace);
+        first.CertificateDirectory.ShouldNotBe(second.CertificateDirectory);
+        first.ConfigurationDirectory.ShouldNotBe(second.ConfigurationDirectory);
+        first.AppId("parties").ShouldNotBe(second.AppId("parties"));
+        var firstEnvironment = new Dictionary<string, string?>();
+        var secondEnvironment = new Dictionary<string, string?>();
+        first.ConfigureBootstrapEnvironment(firstEnvironment);
+        second.ConfigureBootstrapEnvironment(secondEnvironment);
+        firstEnvironment["DAPR_MTLS_SESSION_ID"].ShouldNotBe(secondEnvironment["DAPR_MTLS_SESSION_ID"]);
+        firstEnvironment.Where(pair => pair.Key.EndsWith("PORT", StringComparison.Ordinal)).Select(pair => pair.Value)
+            .Distinct().Count().ShouldBe(6);
+        firstEnvironment.Where(pair => pair.Key.EndsWith("PORT", StringComparison.Ordinal)).Select(pair => pair.Value)
+            .Intersect(secondEnvironment.Where(pair => pair.Key.EndsWith("PORT", StringComparison.Ordinal)).Select(pair => pair.Value))
+            .ShouldBeEmpty();
+        // The production ACL profile retains its original literal identities and namespace.
+        PartiesTopologySession production = PartiesTopologySession.Create();
+        production.AppId("parties").ShouldBe("parties");
+        production.Namespace.ShouldBe("default");
+    }
+
+    [Fact]
+    [Trait("Category", "E2E")]
+    [Trait("Tier", "3")]
+    public async Task ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync()
+    {
+        EventStoreGatewayE2ETests.RequireRuntimeProfile();
+        var first = new PartiesAspireTopologyFixture(completeMtlsProfile: true, isolatedIdentities: true);
+        var second = new PartiesAspireTopologyFixture(completeMtlsProfile: true, isolatedIdentities: true);
+        await using var firstLifetime = first.ConfigureAwait(true);
+        await using var secondLifetime = second.ConfigureAwait(true);
+        await Task.WhenAll(first.InitializeAsync(TestContext.Current.CancellationToken).AsTask(),
+            second.InitializeAsync(TestContext.Current.CancellationToken).AsTask());
+        first.IsAvailable.ShouldBeTrue(first.UnavailableReason);
+        second.IsAvailable.ShouldBeTrue(second.UnavailableReason);
+        const string markerKey = "fixture-runtime-isolation-marker";
+        foreach (PartiesAspireTopologyFixture fixture in new[] { first, second })
+        {
+            using HttpClient sidecar = fixture.CreateSidecarClient("parties");
+            using JsonDocument metadata = (await sidecar.GetFromJsonAsync<JsonDocument>("/v1.0/metadata", TestContext.Current.CancellationToken))!;
+            metadata.RootElement.GetProperty("id").GetString().ShouldBe(fixture.Session.AppId("parties"));
+            using HttpResponseMessage ready = await sidecar.GetAsync(
+                $"/v1.0/invoke/{fixture.Session.AppId("tenants")}/method/ready", TestContext.Current.CancellationToken);
+            ready.StatusCode.ShouldBe(HttpStatusCode.OK);
+            using HttpResponseMessage write = await sidecar.PostAsJsonAsync("/v1.0/state/statestore",
+                new[] { new { key = markerKey, value = fixture.Session.Id } }, TestContext.Current.CancellationToken);
+            write.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            (await fixture.ReadRedisDataAsync(markerKey, TestContext.Current.CancellationToken)).ShouldBe(JsonSerializer.Serialize(fixture.Session.Id));
+        }
+        foreach ((PartiesAspireTopologyFixture caller, PartiesAspireTopologyFixture target) in new[] { (first, second), (second, first) })
+        {
+            using HttpClient sidecar = caller.CreateSidecarClient("parties");
+            using HttpResponseMessage cross = await sidecar.GetAsync(
+                $"/v1.0/invoke/{target.Session.AppId("tenants")}/method/ready", TestContext.Current.CancellationToken);
+            cross.IsSuccessStatusCode.ShouldBeFalse();
+            string denial = await cross.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+            denial.ShouldContain("ERR_DIRECT_INVOKE");
+        }
+        string samePartyId = UniqueIdHelper.GenerateSortableUniqueStringId();
+        await EventStoreGatewayE2ETests.CreateAndVerifyAsync(first, samePartyId, "First session", TestContext.Current.CancellationToken);
+        await EventStoreGatewayE2ETests.CreateAndVerifyAsync(second, samePartyId, "Second session", TestContext.Current.CancellationToken);
+        await first.DisposeAsync();
+        Directory.Exists(first.Session.Root).ShouldBeFalse();
+        (await second.ReadRedisDataAsync(markerKey, TestContext.Current.CancellationToken)).ShouldBe(JsonSerializer.Serialize(second.Session.Id));
+        using HttpClient survivor = second.CreateSidecarClient("parties");
+        using HttpResponseMessage survivorReady = await survivor.GetAsync(
+            $"/v1.0/invoke/{second.Session.AppId("tenants")}/method/ready", TestContext.Current.CancellationToken);
+        survivorReady.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await EventStoreGatewayE2ETests.CreateAndVerifyAsync(second, UniqueIdHelper.GenerateSortableUniqueStringId(), "Survivor session", TestContext.Current.CancellationToken);
+        await second.DisposeAsync();
+        Directory.Exists(second.Session.Root).ShouldBeFalse();
+    }
+}

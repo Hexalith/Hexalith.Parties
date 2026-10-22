@@ -124,7 +124,7 @@ Every new test should be deterministic, isolated, explicit, focused, and fast:
 
 - No sleeps or arbitrary timeouts when an observable state, response, or actor/topology status can be awaited.
 - No broad cleanup of generated folders or shared state as part of unrelated tests.
-- No personal data, tokens, command payloads, tenant secrets, or local absolute paths in logs, snapshots, or public evidence.
+- No personal data, tokens, command payloads, tenant secrets, or local absolute paths in logs, snapshots, or public evidence. Public command/source receipts normalize local prefixes to documented `${VARIABLE}` placeholders while retaining exact relative paths, revisions, hashes, run IDs and arguments. Raw originals and placeholder values stay private.
 - No recursive submodule initialization in test setup. Root-level submodules are enough unless nested submodules are explicitly requested.
 - Use Shouldly assertions and NSubstitute when doubles are needed.
 
@@ -135,37 +135,54 @@ Every new test should be deterministic, isolated, explicit, focused, and fast:
 - `dotnet test` CLI: https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test
 - coverlet collector: https://github.com/coverlet-coverage/coverlet
 
-## Complete local mTLS qualification (DW-77)
+## Complete local mTLS and isolation qualification
 
-The opt-in qualification starts the actual AppHost with `EnableMemoriesSearch`
-and `EnableEventStoreSampleUi` enabled, then explicitly starts the existing admin
-UI resource. It requires Linux, Docker, .NET 10, the pinned Aspire/Dapr tooling,
-`bash`, `curl`, and the standard initialized root references plus
-`references/Hexalith.Memories`. It uses the existing mTLS bootstrap and owns fresh
-Redis, Redis Stack and FalkorDB containers; it never routes fixture state to
-shared developer Redis. The fixed local Dapr control-plane names and ports
-require serial execution with other Parties topologies stopped.
+The ordinary health fixture remains unseeded. The explicit complete profile enables
+Memories and the EventStore sample UI, starts the existing admin UI resource, and
+seeds a synthetic tenant/member through the authenticated production callback.
+It requires Linux, Docker, .NET 10, the pinned Aspire/Dapr tooling, `bash`, `curl`,
+and the initialized root references including `references/Hexalith.Memories`.
+
+Every fixture owns its control-plane names, loopback listeners (including each
+sidecar's internal gRPC listener), trust/configuration directories and disposable
+Redis, Redis Stack and FalkorDB containers. Configuration enters the AppHost before
+model construction; the fixture does not change process-wide environment values.
+Cleanup retains ownership evidence when Docker inspection or ownership checks fail.
+
+`PartiesMtlsTopologyTests` and `EventStoreGatewayE2ETests` retain the original app
+identities, namespaces and authoritative ACL bytes and run serially. Stop other
+topologies using those original identities before this profile. The concurrent
+`PartiesTopologyIsolationTests` profile uses suffixed literal app IDs, a private
+namespace, remapped generated ACL/routing/workload identities and its own Sentry.
+It verifies distinct persisted streams for the same party ID, rejects cross-session
+calls and creates/queries another party after disposing the other session.
+
+Concurrent routing qualification covers the exercised Parties gateway and Tenants flows. Reference admin/sample UI application clients still hardcode upstream target app IDs and are not concurrently qualified; their source remains unchanged.
+
+For the Release/package consumer qualification:
 
 ```bash
-dotnet build tests/Hexalith.Parties.IntegrationTests -c Debug \
-  -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
+dotnet build tests/Hexalith.Parties.IntegrationTests -c Release -m:1
 PARTIES_MTLS_TOPOLOGY_TESTS=true dotnet \
-  tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll \
-  -class Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests
+  tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll \
+  -class Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests \
+  -class Hexalith.Parties.IntegrationTests.Gateway.EventStoreGatewayE2ETests \
+  -class Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyIsolationTests
 ```
 
-The runtime check requires all eight sidecar metadata responses and a real
-Parties-to-Tenants `GET /ready` through the existing identity-specific ACL. It
-also checks the production tenant callback with authenticated bootstrap envelopes
-and rejects missing/wrong channel tokens. Tenant projection contents and access
-decisions are inspected separately through production subscription, security and
-access-service registrations in a controlled in-process host. The process-external
-service has no public tenant-projection read endpoint.
-This qualifies local mTLS transport and the registered subscription-handler trust
-boundary; it does not certify external deployment, optional Memories search
-behavior, or an authenticated command/projection round trip. Local runs without
-the opt-in flag skip the runtime case; GitHub Actions requires it and treats
-infrastructure failures as test failures. A skip cannot close DW-77.
+The gateway case asserts an authenticated projected detail with current freshness
+and independently deserializes exact Redis actor metadata/event keys derived from
+`AggregateIdentity`, without scans. The ACL cases require Dapr's policy-denial
+response for forbidden caller/verb/path combinations and successful permitted
+controls. Application rejection alone does not establish ACL enforcement.
+
+Without the explicit flag these runtime cases skip locally; GitHub Actions requires
+them and infrastructure failures fail the tests. Skips provide no qualification.
+The [batch receipts](../_bmad-output/implementation-artifacts/tests/five-runtime-isolation-and-form-authorization-2026-10-22/validation.json)
+separate these runtime results from source Debug consumer-build blockers. Use the
+pinned module tool's generated mapping for Debug source builds; do not substitute
+handwritten source selectors. These owner tests do not close DW-116 or qualify
+Memories persistence, rich search or external deployment.
 
 ## Browser harness configuration checks
 

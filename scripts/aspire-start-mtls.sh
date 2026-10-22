@@ -4,19 +4,28 @@ set -euo pipefail
 
 script_directory="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repository_root="$(cd -- "${script_directory}/.." && pwd)"
-certificate_directory="${DAPR_MTLS_CERTIFICATE_DIRECTORY:-${XDG_STATE_HOME:-${HOME}/.local/state}/hexalith-parties/dapr-certs}"
-sentry_container="hexalith-parties-dapr-sentry"
+session_id="${DAPR_MTLS_SESSION_ID:-}"
+certificate_directory="${DAPR_MTLS_CERTIFICATE_DIRECTORY:-${XDG_STATE_HOME:-${HOME}/.local/state}/hexalith-parties/dapr-certs${session_id:+-${session_id}}}"
+namespace="${DAPR_MTLS_NAMESPACE:-default}"
+name_suffix="${session_id:+-${session_id}}"
+sentry_port="${DAPR_MTLS_SENTRY_PORT:-50001}"
+sentry_health_port="${DAPR_MTLS_SENTRY_HEALTH_PORT:-18080}"
+placement_port="${DAPR_MTLS_PLACEMENT_PORT:-55005}"
+placement_health_port="${DAPR_MTLS_PLACEMENT_HEALTH_PORT:-18081}"
+scheduler_port="${DAPR_MTLS_SCHEDULER_PORT:-55006}"
+scheduler_health_port="${DAPR_MTLS_SCHEDULER_HEALTH_PORT:-18082}"
+sentry_container="hexalith-parties-dapr-sentry${name_suffix}"
 sentry_image="daprio/dapr@sha256:b42eeb03c4300938226b7a5d7a15db5513e69e1d55570967c290d670c7612df2"
 sentry_configuration="${repository_root}/src/Hexalith.Parties.AppHost/DaprComponents/sentry.yaml"
-sentry_grpc_binding="127.0.0.1:50001"
-sentry_health_binding="127.0.0.1:18080"
-placement_container="hexalith-parties-dapr-placement"
-placement_grpc_binding="127.0.0.1:55005"
-placement_health_binding="127.0.0.1:18081"
-scheduler_container="hexalith-parties-dapr-scheduler"
-scheduler_grpc_binding="127.0.0.1:55006"
-scheduler_health_binding="127.0.0.1:18082"
-control_plane_network="hexalith-parties-dapr-mtls"
+sentry_grpc_binding="127.0.0.1:${sentry_port}"
+sentry_health_binding="127.0.0.1:${sentry_health_port}"
+placement_container="hexalith-parties-dapr-placement${name_suffix}"
+placement_grpc_binding="127.0.0.1:${placement_port}"
+placement_health_binding="127.0.0.1:${placement_health_port}"
+scheduler_container="hexalith-parties-dapr-scheduler${name_suffix}"
+scheduler_grpc_binding="127.0.0.1:${scheduler_port}"
+scheduler_health_binding="127.0.0.1:${scheduler_health_port}"
+control_plane_network="hexalith-parties-dapr-mtls${name_suffix}"
 prepare_only=false
 cleanup_only=false
 
@@ -34,6 +43,29 @@ elif [[ "${1:-}" == "--cleanup-only" ]]; then
         echo "--cleanup-only does not accept Aspire arguments." >&2
         exit 2
     fi
+fi
+
+if [[ ( -n "${session_id}" && ! "${session_id}" =~ ^[a-z0-9-]{1,40}$ ) || ! "${namespace}" =~ ^[a-z0-9-]{1,63}$ ]]; then
+    echo "Dapr mTLS session identity or namespace is invalid." >&2
+    exit 2
+fi
+if [[ -z "${session_id}" && "${sentry_port}" != 50001 ]]; then
+    echo "A custom Sentry port requires DAPR_MTLS_SESSION_ID." >&2
+    exit 2
+fi
+if [[ -z "${session_id}" && "${namespace}" != default ]]; then
+    echo "A custom Dapr namespace requires a session identity and app-ID suffix." >&2
+    exit 2
+fi
+for port in "${sentry_port}" "${sentry_health_port}" "${placement_port}" "${placement_health_port}" "${scheduler_port}" "${scheduler_health_port}"; do
+    if [[ ! "${port}" =~ ^[0-9]{4,5}$ ]] || (( 10#${port} < 1024 || 10#${port} > 65535 )); then
+        echo "Dapr mTLS ports must be unprivileged loopback ports." >&2
+        exit 2
+    fi
+done
+if [[ "$(printf '%s\n' "${sentry_port}" "${sentry_health_port}" "${placement_port}" "${placement_health_port}" "${scheduler_port}" "${scheduler_health_port}" | sort -u | wc -l)" != 6 ]]; then
+    echo "Dapr mTLS listener ports must be distinct." >&2
+    exit 2
 fi
 
 read_configured_port_binding() {
@@ -108,6 +140,9 @@ cleanup_owned_control_plane() {
         if [[ "${configured_image}" == "${sentry_image}" \
             && "${configured_mount}" == "${certificate_directory}" ]]; then
             docker rm -f "${container_name}" >/dev/null
+        elif [[ -n "${session_id}" ]]; then
+            echo "Owned session container ${container_name} has conflicting ownership; retain session evidence." >&2
+            return 1
         fi
     done
 
@@ -117,6 +152,9 @@ cleanup_owned_control_plane() {
         network_members="$(docker network inspect --format '{{len .Containers}}' "${control_plane_network}")"
         if [[ "${network_label}" == "control-plane-v1" && "${network_members}" == "0" ]]; then
             docker network rm "${control_plane_network}" >/dev/null
+        elif [[ -n "${session_id}" ]]; then
+            echo "Owned session network ${control_plane_network} has conflicting ownership or active members; retain session evidence." >&2
+            return 1
         fi
     fi
 }
@@ -259,6 +297,7 @@ else
         --publish "${sentry_grpc_binding}:50001" \
         --publish "${sentry_health_binding}:18080" \
         --restart no \
+        --env "NAMESPACE=${namespace}" \
         --user "$(id -u):$(id -g)" \
         --mount "type=bind,source=${certificate_directory},target=/var/run/dapr/credentials" \
         --mount "type=bind,source=${sentry_configuration},target=/etc/dapr/sentry.yaml,readonly" \
@@ -298,7 +337,7 @@ if [[ "${credentials_ready}" != "true" ]]; then
     exit 1
 fi
 
-wait_for_control_plane_health "${sentry_container}" 18080
+wait_for_control_plane_health "${sentry_container}" "${sentry_health_port}"
 
 if docker container inspect "${placement_container}" >/dev/null 2>&1; then
     verify_control_plane_container \
@@ -316,8 +355,9 @@ else
         --publish "${placement_grpc_binding}:50005" \
         --publish "${placement_health_binding}:8080" \
         --restart no \
+        --env "NAMESPACE=${namespace}" \
         --user "$(id -u):$(id -g)" \
-        --env DAPR_CONTROLPLANE_NAMESPACE=default \
+        --env "DAPR_CONTROLPLANE_NAMESPACE=${namespace}" \
         --mount "type=bind,source=${certificate_directory},target=/var/run/secrets/dapr.io/tls,readonly" \
         "${sentry_image}" \
         ./placement \
@@ -346,8 +386,9 @@ else
         --publish "${scheduler_grpc_binding}:50006" \
         --publish "${scheduler_health_binding}:8080" \
         --restart no \
+        --env "NAMESPACE=${namespace}" \
         --user "$(id -u):$(id -g)" \
-        --env DAPR_CONTROLPLANE_NAMESPACE=default \
+        --env "DAPR_CONTROLPLANE_NAMESPACE=${namespace}" \
         --mount "type=bind,source=${certificate_directory},target=/var/run/secrets/dapr.io/tls,readonly" \
         "${sentry_image}" \
         ./scheduler \
@@ -358,21 +399,30 @@ else
         --listen-address 0.0.0.0 \
         --healthz-listen-address 0.0.0.0 \
         --port 50006 \
-        --override-broadcast-host-port 127.0.0.1:55006 \
+        --override-broadcast-host-port "127.0.0.1:${scheduler_port}" \
         --etcd-data-dir /tmp/dapr-scheduler \
         --etcd-client-listen-address 127.0.0.1 \
         --etcd-initial-cluster dapr-scheduler-server-0=http://127.0.0.1:2380 \
         --enable-metrics=false >/dev/null
 fi
 
-wait_for_control_plane_health "${placement_container}" 18081
-wait_for_control_plane_health "${scheduler_container}" 18082
-wait_for_control_plane_port "${sentry_container}" 50001
-wait_for_control_plane_port "${placement_container}" 55005
-wait_for_control_plane_port "${scheduler_container}" 55006
+wait_for_control_plane_health "${placement_container}" "${placement_health_port}"
+wait_for_control_plane_health "${scheduler_container}" "${scheduler_health_port}"
+wait_for_control_plane_port "${sentry_container}" "${sentry_port}"
+wait_for_control_plane_port "${placement_container}" "${placement_port}"
+wait_for_control_plane_port "${scheduler_container}" "${scheduler_port}"
 
 export Dapr__Mtls__Enabled=true
 export Dapr__Mtls__CertificateDirectory="${certificate_directory}"
+export Dapr__Mtls__Namespace="${namespace}"
+export Dapr__Mtls__PlacementHostAddress="127.0.0.1:${placement_port}"
+export Dapr__Mtls__SchedulerHostAddress="127.0.0.1:${scheduler_port}"
+if [[ -n "${session_id}" ]]; then
+    export Dapr__Mtls__SessionId="${session_id}"
+    export Dapr__Mtls__SentryHostAddress="127.0.0.1:${sentry_port}"
+    export Dapr__Mtls__ConfigurationDirectory="${certificate_directory}/configuration"
+    export Dapr__Mtls__AppIdSuffix="${session_id}"
+fi
 
 if [[ "${prepare_only}" == "true" ]]; then
     exit 0

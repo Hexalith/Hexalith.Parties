@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Reflection;
 
 using Bunit;
 
@@ -857,6 +858,7 @@ public sealed class CreateEditPartyPageTests : BunitContext
         SetTextInput(form, "Date of birth", "1900-01-01");
         completion.SetResult(new(AdminPortalCommandOutcome.Accepted, null));
         await submit.ConfigureAwait(true);
+        await form.InvokeAsync(form.Instance.Dispose);
         api.EnqueueDetail(EditSource(false));
         using IRenderedComponent<PartiesAdminPortal> portal = Render<PartiesAdminPortal>(p => p.Add(x => x.RoutePartyId, "edit-party"));
         portal.WaitForAssertion(() =>
@@ -940,13 +942,19 @@ public sealed class CreateEditPartyPageTests : BunitContext
         var oldResponse = new TaskCompletionSource<AdminPortalCommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         var newResponse = new TaskCompletionSource<AdminPortalCommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         var oldAuthorization = new TaskCompletionSource<AuthenticationState>(TaskCreationOptions.RunContinuationsAsynchronously);
-        api.EnqueueUpdate(_ => oldResponse.Task);
+        api.EnqueueUpdate(_ =>
+        {
+            if (completionStage == "authorization")
+            {
+                _authProvider.NextState = oldAuthorization.Task;
+            }
+            return oldResponse.Task;
+        });
         api.EnqueueUpdate(_ => newResponse.Task);
         using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, "edit-party"));
         form.WaitForAssertion(() => form.Find("form").ShouldNotBeNull());
         if (completionStage == "authorization")
         {
-            _authProvider.NextState = oldAuthorization.Task;
             oldResponse.SetResult(new(AdminPortalCommandOutcome.Accepted, null));
         }
         Task oldSubmit = form.Find("form").SubmitAsync();
@@ -1046,6 +1054,7 @@ public sealed class CreateEditPartyPageTests : BunitContext
             api.UpdateRequests.Count.ShouldBe(1);
             form.FindComponents<FluentButton>().Single(x => x.Instance.Type == ButtonType.Submit).Instance.Disabled.ShouldBeTrue();
         });
+        api.EnqueueDetail(EditSource(false));
         Services.GetRequiredService<AdminPortalPartyQueryService>().ResetForTenantSwitch();
         await submit.WaitAsync(TimeSpan.FromSeconds(2), Xunit.TestContext.Current.CancellationToken).ConfigureAwait(true);
         observedToken.IsCancellationRequested.ShouldBeTrue();
@@ -1111,6 +1120,380 @@ public sealed class CreateEditPartyPageTests : BunitContext
         });
     }
 
+    [Theory]
+    [InlineData("tenant")]
+    [InlineData("user")]
+    [InlineData("sign-out")]
+    [InlineData("a-b-a")]
+    [InlineData("scope-reset")]
+    [InlineData("same-context")]
+    public void LoadedCreate_ContextNotificationClearsValuesAndDoesNotSend(string change)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("loaded-context-a");
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>();
+        SetTextInput(form, "First name", "Old secret");
+        SetTextInput(form, "Last name", "Old name");
+        switch (change)
+        {
+            case "tenant": RenderAuthorizedTenant("loaded-context-b"); break;
+            case "user": _authProvider.SetAuthenticated("different-user", "loaded-context-a"); break;
+            case "sign-out": _authProvider.SetUnauthenticated(); break;
+            case "a-b-a":
+                RenderAuthorizedTenant("loaded-context-b");
+                RenderAuthorizedTenant("loaded-context-a");
+                break;
+            case "scope-reset": Services.GetRequiredService<AdminPortalPartyQueryService>().ResetForTenantSwitch(); break;
+            default: _authProvider.SetAuthenticated(AdminUserId, "loaded-context-a"); break;
+        }
+        form.WaitForAssertion(() =>
+        {
+            form.Markup.ShouldNotContain("Old secret");
+            if (form.FindAll("form").Count != 0)
+            {
+                FindTextInput(form, "First name").Instance.Value.ShouldBeNullOrEmpty();
+            }
+        });
+        if (form.FindAll("form").Count != 0)
+        {
+            form.Find("form").Submit();
+        }
+        api.CreateRequests.ShouldBeEmpty();
+        api.UpdateRequests.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task NotificationRendersClearedLoadingStateWhileAuthorizationRemainsPending(bool edit)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("pending-notification");
+        api.EnqueueDetail(EditSource(false));
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, edit ? "edit-party" : null));
+        SetTextInput(form, "First name", "Old secret");
+        var pending = new TaskCompletionSource<AuthenticationState>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _authProvider.NextState = pending.Task;
+        await Task.Run(_authProvider.NotifyCurrentState, Xunit.TestContext.Current.CancellationToken);
+        form.WaitForAssertion(() =>
+        {
+            pending.Task.IsCompleted.ShouldBeFalse();
+            form.FindAll("form").ShouldBeEmpty();
+            form.Markup.ShouldNotContain("Old secret");
+            form.Markup.ShouldContain("Loading");
+        });
+        await form.InvokeAsync(form.Instance.Dispose);
+        pending.SetResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
+        api.CreateRequests.ShouldBeEmpty();
+        api.UpdateRequests.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task BackgroundNotificationsFencePendingSubmissionAndWorkTokenOwnership(bool edit)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("background-notifications");
+        api.EnqueueDetail(EditSource(false));
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, edit ? "edit-party" : null));
+        SetTextInput(form, "First name", "Old secret");
+        SetTextInput(form, "Last name", "Old name");
+        var pending = new TaskCompletionSource<AuthenticationState>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _authProvider.NextState = pending.Task;
+        Task submit = form.Find("form").SubmitAsync();
+        for (int index = 0; index < 40; index++) { api.EnqueueDetail(EditSource(false)); }
+        await Task.WhenAll(Enumerable.Range(0, 32).Select(_ => Task.Run(_authProvider.NotifyCurrentState, Xunit.TestContext.Current.CancellationToken)));
+        pending.SetResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
+        await submit.WaitAsync(TimeSpan.FromSeconds(5), Xunit.TestContext.Current.CancellationToken);
+        form.WaitForAssertion(() =>
+        {
+            form.Find("form").ShouldNotBeNull();
+            form.Markup.ShouldNotContain("Old secret");
+        });
+        api.CreateRequests.ShouldBeEmpty();
+        api.UpdateRequests.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task SynchronouslyCanceledRegistrationCannotOverwriteReentrantReloadOwnership()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("registration-race");
+        api.EnqueueDetail(EditSource(false));
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, "edit-party"));
+        SetTextInput(form, "First name", "Old secret");
+        var service = Services.GetRequiredService<AdminPortalPartyQueryService>();
+        CancellationToken capturedScope = service.ScopeCancellationToken;
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        Type component = typeof(CreateEditPartyPage);
+        long version = (long)component.GetField("_formVersion", flags)!.GetValue(form.Instance)!;
+        var work = (CancellationTokenSource)component.GetField("_workCts", flags)!.GetValue(form.Instance)!;
+        var registration = (CancellationTokenRegistration)component.GetField("_scopeRegistration", flags)!.GetValue(form.Instance)!;
+        // Model cancellation after capture but before Register: the old subscription has not been published.
+        registration.Dispose();
+        service.ResetForTenantSwitch();
+        capturedScope.IsCancellationRequested.ShouldBeTrue();
+        api.EnqueueDetail(EditSource(false) with { PersonDetails = new() { FirstName = "Current", LastName = "Owner" } });
+        bool published = true;
+        await form.InvokeAsync(() => published = (bool)component.GetMethod("TryRegisterScope", flags)!
+            .Invoke(form.Instance, [version, capturedScope, work])!);
+        published.ShouldBeFalse();
+        form.WaitForAssertion(() =>
+        {
+            FindTextInput(form, "First name").Instance.Value.ShouldBe("Current");
+            form.Markup.ShouldNotContain("Old secret");
+            component.GetField("_workCts", flags)!.GetValue(form.Instance).ShouldNotBeSameAs(work);
+        });
+        // The newer registration remains live and clears the newer form on the next scope reset.
+        var next = new TaskCompletionSource<AuthenticationState>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _authProvider.NextState = next.Task;
+        service.ResetForTenantSwitch();
+        form.WaitForAssertion(() => form.FindAll("form").ShouldBeEmpty());
+        await form.InvokeAsync(form.Instance.Dispose);
+        next.SetResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
+        api.UpdateRequests.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task FreshLookupDifferentAuthorizedContextWithoutNotificationNeverSendsOldSnapshot(bool edit)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("signature-context-a");
+        var other = new TenantLocalState { TenantId = "signature-context-b", Status = TenantStatus.Active };
+        other.Members[AdminUserId] = TenantRole.TenantOwner;
+        await _tenantStore.SaveAsync(other, Xunit.TestContext.Current.CancellationToken);
+        api.EnqueueDetail(EditSource(false));
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, edit ? "edit-party" : null));
+        SetTextInput(form, "First name", "Old secret");
+        SetTextInput(form, "Last name", "Old name");
+        CancellationToken scope = Services.GetRequiredService<AdminPortalPartyQueryService>().ScopeCancellationToken;
+        _authProvider.NextState = Task.FromResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(PartiesClaimTypes.Subject, AdminUserId), new Claim(PartiesClaimTypes.EventStoreTenant, "signature-context-b")], "Test"))));
+        if (edit) { api.EnqueueDetail(EditSource(false)); }
+        await form.Find("form").SubmitAsync();
+        Services.GetRequiredService<AdminPortalPartyQueryService>().ScopeCancellationToken.ShouldBe(scope);
+        api.CreateRequests.ShouldBeEmpty();
+        api.UpdateRequests.ShouldBeEmpty();
+        form.WaitForAssertion(() => form.Markup.ShouldNotContain("Old secret"));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task LoadedForm_RevocationWithoutNotificationPreventsSend(bool edit)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("revoked-form");
+        api.EnqueueDetail(EditSource(false));
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, edit ? "edit-party" : null));
+        SetTextInput(form, "First name", "Old secret");
+        SetTextInput(form, "Last name", "Old name");
+        var state = new TenantLocalState { TenantId = "revoked-form", Status = TenantStatus.Active };
+        state.Members[AdminUserId] = TenantRole.TenantReader;
+        await _tenantStore.SaveAsync(state, Xunit.TestContext.Current.CancellationToken);
+        await form.Find("form").SubmitAsync();
+        form.WaitForAssertion(() =>
+        {
+            form.Markup.ShouldContain("Access denied");
+            form.FindAll("form").ShouldBeEmpty();
+            form.Markup.ShouldNotContain("Old secret");
+        });
+        api.CreateRequests.ShouldBeEmpty();
+        api.UpdateRequests.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task LoadedForm_InactiveTenantPreventsSend(bool edit)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("inactive-form");
+        api.EnqueueDetail(EditSource(false));
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, edit ? "edit-party" : null));
+        SetTextInput(form, "First name", "Old secret");
+        SetTextInput(form, "Last name", "Old name");
+        await _tenantStore.SaveAsync(new TenantLocalState { TenantId = "inactive-form", Status = TenantStatus.Disabled }, Xunit.TestContext.Current.CancellationToken);
+        await form.Find("form").SubmitAsync();
+        form.WaitForAssertion(() => form.Markup.ShouldContain("Tenant context is unavailable"));
+        api.CreateRequests.ShouldBeEmpty();
+        api.UpdateRequests.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task LoadedForm_AuthorizationFailureBeforeSendClearsValues(bool edit)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("failed-check-form");
+        api.EnqueueDetail(EditSource(false));
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, edit ? "edit-party" : null));
+        SetTextInput(form, "First name", "Old secret");
+        SetTextInput(form, "Last name", "Old name");
+        _authProvider.NextState = Task.FromException<AuthenticationState>(new InvalidOperationException("private auth failure"));
+        await form.Find("form").SubmitAsync();
+        form.WaitForAssertion(() =>
+        {
+            form.Markup.ShouldContain("The selected party is unavailable");
+            form.Markup.ShouldNotContain("private auth failure");
+            form.Markup.ShouldNotContain("Old secret");
+        });
+        api.CreateRequests.ShouldBeEmpty();
+        api.UpdateRequests.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("tenant", false)]
+    [InlineData("tenant", true)]
+    [InlineData("sign-out", false)]
+    [InlineData("sign-out", true)]
+    [InlineData("a-b-a", false)]
+    [InlineData("a-b-a", true)]
+    [InlineData("scope-reset", false)]
+    [InlineData("scope-reset", true)]
+    [InlineData("dispose", false)]
+    [InlineData("dispose", true)]
+    [InlineData("user", false)]
+    [InlineData("user", true)]
+    [InlineData("role", false)]
+    [InlineData("role", true)]
+    [InlineData("inactive", false)]
+    [InlineData("inactive", true)]
+    public async Task PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(string boundary, bool edit)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("pending-auth-a");
+        api.EnqueueDetail(EditSource(false));
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, edit ? "edit-party" : null));
+        SetTextInput(form, "First name", "Old secret");
+        SetTextInput(form, "Last name", "Old name");
+        var pending = new TaskCompletionSource<AuthenticationState>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _authProvider.NextState = pending.Task;
+        Task submit = form.Find("form").SubmitAsync();
+        form.WaitForAssertion(() => form.FindComponents<FluentButton>().Single(x => x.Instance.Type == ButtonType.Submit).Instance.Disabled.ShouldBeTrue());
+        api.CreateRequests.ShouldBeEmpty();
+        switch (boundary)
+        {
+            case "tenant": RenderAuthorizedTenant("pending-auth-b"); break;
+            case "user": _authProvider.SetAuthenticated("another-user", "pending-auth-a"); break;
+            case "role":
+                var revoked = new TenantLocalState { TenantId = "pending-auth-a", Status = TenantStatus.Active };
+                revoked.Members[AdminUserId] = TenantRole.TenantReader;
+                await _tenantStore.SaveAsync(revoked, Xunit.TestContext.Current.CancellationToken);
+                break;
+            case "inactive":
+                await _tenantStore.SaveAsync(new TenantLocalState { TenantId = "pending-auth-a", Status = TenantStatus.Disabled }, Xunit.TestContext.Current.CancellationToken);
+                break;
+            case "sign-out": _authProvider.SetUnauthenticated(); break;
+            case "a-b-a": RenderAuthorizedTenant("pending-auth-b"); RenderAuthorizedTenant("pending-auth-a"); break;
+            case "scope-reset": Services.GetRequiredService<AdminPortalPartyQueryService>().ResetForTenantSwitch(); break;
+            default: await form.InvokeAsync(form.Instance.Dispose); break;
+        }
+        pending.SetResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(PartiesClaimTypes.Subject, AdminUserId), new Claim(PartiesClaimTypes.EventStoreTenant, "pending-auth-a")], "Test"))));
+        await submit.WaitAsync(TimeSpan.FromSeconds(5), Xunit.TestContext.Current.CancellationToken);
+        api.CreateRequests.ShouldBeEmpty();
+        api.UpdateRequests.ShouldBeEmpty();
+        if (boundary != "dispose")
+        {
+            form.WaitForAssertion(() => form.Markup.ShouldNotContain("Old secret"));
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task FreshAuthorization_UsesSnapshotTakenBeforeAwaitAndSendsOnce(bool edit)
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("snapshot-before-authorization");
+        api.EnqueueDetail(EditSource(false));
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, edit ? "edit-party" : null));
+        SetTextInput(form, "First name", "Submitted first");
+        SetTextInput(form, "Last name", "Submitted last");
+        var pending = new TaskCompletionSource<AuthenticationState>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _authProvider.NextState = pending.Task;
+        Task submit = form.Find("form").SubmitAsync();
+        SetTextInput(form, "First name", "Later mutation");
+        api.CreateRequests.ShouldBeEmpty();
+        api.UpdateRequests.ShouldBeEmpty();
+        pending.SetResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(PartiesClaimTypes.Subject, AdminUserId), new Claim(PartiesClaimTypes.EventStoreTenant, "snapshot-before-authorization")], "Test"))));
+        await submit.WaitAsync(TimeSpan.FromSeconds(5), Xunit.TestContext.Current.CancellationToken);
+        if (edit)
+        {
+            api.UpdateRequests.ShouldHaveSingleItem().Command.PersonDetails!.FirstName.ShouldBe("Submitted first");
+            api.CreateRequests.ShouldBeEmpty();
+        }
+        else
+        {
+            api.CreateRequests.ShouldHaveSingleItem().PersonDetails!.FirstName.ShouldBe("Submitted first");
+            api.UpdateRequests.ShouldBeEmpty();
+        }
+    }
+
+    [Fact]
+    public async Task PreSendAuthorization_TimeoutBlocksAndLateLookupCannotSend()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("authorization-timeout");
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>();
+        SetTextInput(form, "First name", "Old secret");
+        SetTextInput(form, "Last name", "Old name");
+        var pending = new TaskCompletionSource<AuthenticationState>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _authProvider.NextState = pending.Task;
+        await form.Find("form").SubmitAsync().WaitAsync(TimeSpan.FromSeconds(15), Xunit.TestContext.Current.CancellationToken);
+        form.WaitForAssertion(() =>
+        {
+            form.FindAll("form").ShouldBeEmpty();
+            form.Markup.ShouldContain("The selected party is unavailable");
+            form.Markup.ShouldNotContain("Old secret");
+        });
+        pending.SetResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(PartiesClaimTypes.Subject, AdminUserId), new Claim(PartiesClaimTypes.EventStoreTenant, "authorization-timeout")], "Test"))));
+        await form.InvokeAsync(() => Task.CompletedTask);
+        api.CreateRequests.ShouldBeEmpty();
+        api.UpdateRequests.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task OldEditLoad_IgnoringCancellationCannotRestorePriorValues()
+    {
+        var api = new RecordingAdminPortalApiClient();
+        Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
+        RenderAuthorizedTenant("old-load-a");
+        var pending = new TaskCompletionSource<AdminPortalQueryResult<PartyDetail>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        api.EnqueueDetail(_ => pending.Task);
+        using IRenderedComponent<CreateEditPartyPage> form = Render<CreateEditPartyPage>(p => p.Add(x => x.RoutePartyId, "edit-party"));
+        form.WaitForAssertion(() => api.DetailRequests.Count.ShouldBe(1));
+        api.EnqueueDetail(EditSource(false) with { PersonDetails = new() { FirstName = "Current", LastName = "Tenant" } });
+        RenderAuthorizedTenant("old-load-b");
+        form.WaitForAssertion(() => FindTextInput(form, "First name").Instance.Value.ShouldBe("Current"));
+        pending.SetResult(new(EditSource(false) with { PersonDetails = new() { FirstName = "Old secret", LastName = "Name" } }, AdminPortalQueryMetadata.Empty));
+        await form.InvokeAsync(() => Task.CompletedTask);
+        form.WaitForAssertion(() =>
+        {
+            FindTextInput(form, "First name").Instance.Value.ShouldBe("Current");
+            form.Markup.ShouldNotContain("Old secret");
+        });
+        api.UpdateRequests.ShouldBeEmpty();
+    }
+
     private UpdatePartyComposite SubmitAcceptedEdit(RecordingAdminPortalApiClient api, bool organization = false)
     {
         api.EnqueueDetail(EditSource(organization));
@@ -1137,6 +1520,7 @@ public sealed class CreateEditPartyPageTests : BunitContext
         SetTextInput(form, "Identifier value", "new-identifier");
         form.Find("form").Submit();
         form.WaitForAssertion(() => api.UpdateRequests.Count.ShouldBeGreaterThan(0));
+        form.InvokeAsync(form.Instance.Dispose).GetAwaiter().GetResult();
         return api.UpdateRequests[^1].Command;
     }
 
@@ -1171,6 +1555,7 @@ public sealed class CreateEditPartyPageTests : BunitContext
         SetTextInput(form, "Last name", "Johnson");
         form.Find("form").Submit();
         form.WaitForAssertion(() => api.CreateRequests.Count.ShouldBe(1));
+        form.InvokeAsync(form.Instance.Dispose).GetAwaiter().GetResult();
         return api.CreateRequests[0].PartyId;
     }
 
@@ -1221,12 +1606,18 @@ public sealed class CreateEditPartyPageTests : BunitContext
     {
         private AuthenticationState _state = new(new ClaimsPrincipal(new ClaimsIdentity()));
 
-        public Task<AuthenticationState>? NextState { get; set; }
+        private Task<AuthenticationState>? _nextState;
+        public Task<AuthenticationState>? NextState
+        {
+            get => Volatile.Read(ref _nextState);
+            set => Volatile.Write(ref _nextState, value);
+        }
+
+        public void NotifyCurrentState() => NotifyAuthenticationStateChanged(Task.FromResult(_state));
 
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            Task<AuthenticationState>? next = NextState;
-            NextState = null;
+            Task<AuthenticationState>? next = Interlocked.Exchange(ref _nextState, null);
             return next ?? Task.FromResult(_state);
         }
 

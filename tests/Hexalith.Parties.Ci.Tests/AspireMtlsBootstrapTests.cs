@@ -1,5 +1,7 @@
 using System.Diagnostics;
 
+using Hexalith.Parties.TestInfrastructure;
+
 namespace Hexalith.Parties.Ci.Tests;
 
 /// <summary>
@@ -117,6 +119,73 @@ public sealed class AspireMtlsBootstrapTests
         requests.Contains("docker network rm hexalith-parties-dapr-mtls")
             .ShouldBe(ownsNetwork && foreignRole.Length == 0 && unrelatedMember.Length == 0);
         requests.ShouldNotContain(request => request.StartsWith("aspire ", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("DAPR_MTLS_SENTRY_PORT", "42001", "custom Sentry port")]
+    [InlineData("DAPR_MTLS_NAMESPACE", "parties-custom", "custom Dapr namespace")]
+    public async Task UnsupportedIdentityCombinationsFailBeforeSideEffects(string key, string value, string diagnostic)
+    {
+        using var commands = new MtlsBootstrapCommandDouble();
+        string certificates = Path.Combine(commands.Root, "not-created");
+        (int exit, string error) = await commands.RunAsync("--prepare-only", certificates, TestContext.Current.CancellationToken,
+            new Dictionary<string, string?> { ["DAPR_MTLS_SESSION_ID"] = "", [key] = value });
+        exit.ShouldBe(2);
+        error.ShouldContain(diagnostic);
+        commands.Requests.ShouldBeEmpty();
+        Directory.Exists(certificates).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task SessionLaunchExportsAllOwnedAppHostSettings()
+    {
+        using var commands = new MtlsBootstrapCommandDouble();
+        string certificates = Path.Combine(commands.Root, "certificates");
+        var settings = new Dictionary<string, string?>
+        {
+            ["DAPR_MTLS_SESSION_ID"] = "launch123", ["DAPR_MTLS_NAMESPACE"] = "parties-launch123",
+            ["DAPR_MTLS_SENTRY_PORT"] = "42001", ["DAPR_MTLS_SENTRY_HEALTH_PORT"] = "42002",
+            ["DAPR_MTLS_PLACEMENT_PORT"] = "42003", ["DAPR_MTLS_PLACEMENT_HEALTH_PORT"] = "42004",
+            ["DAPR_MTLS_SCHEDULER_PORT"] = "42005", ["DAPR_MTLS_SCHEDULER_HEALTH_PORT"] = "42006",
+        };
+        (int exit, string error) = await commands.RunAsync("", certificates, TestContext.Current.CancellationToken, settings);
+        exit.ShouldBe(0, error);
+        IReadOnlyDictionary<string, string?> exported = commands.LaunchedConfiguration;
+        exported["Dapr:Mtls:Enabled"].ShouldBe("true");
+        exported["Dapr:Mtls:CertificateDirectory"].ShouldBe(certificates);
+        exported["Dapr:Mtls:ConfigurationDirectory"].ShouldBe(Path.Combine(certificates, "configuration"));
+        exported["Dapr:Mtls:Namespace"].ShouldBe("parties-launch123");
+        exported["Dapr:Mtls:AppIdSuffix"].ShouldBe("launch123");
+        exported["Dapr:Mtls:SessionId"].ShouldBe("launch123");
+        exported["Dapr:Mtls:SentryHostAddress"].ShouldBe("127.0.0.1:42001");
+        exported["Dapr:Mtls:PlacementHostAddress"].ShouldBe("127.0.0.1:42003");
+        exported["Dapr:Mtls:SchedulerHostAddress"].ShouldBe("127.0.0.1:42005");
+        commands.Requests.ShouldContain(request => request.StartsWith("aspire start --apphost ", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SessionDefaultsSeparateTrustAndGeneratedConfigurationDirectories()
+    {
+        using var commands = new MtlsBootstrapCommandDouble();
+        var paths = new List<string>();
+        foreach (string session in new[] { "first123", "second123" })
+        {
+            string state = Path.Combine(commands.Root, "state");
+            string expected = Path.Combine(state, "hexalith-parties", "dapr-certs-" + session);
+            var settings = new Dictionary<string, string?>
+            {
+                ["DAPR_MTLS_SESSION_ID"] = session, ["DAPR_MTLS_NAMESPACE"] = "default",
+                ["XDG_STATE_HOME"] = state, ["FAKE_MTLS_EXPECTED_CERTIFICATES"] = expected,
+            };
+            (int exit, string error) = await commands.RunAsync("", null, TestContext.Current.CancellationToken, settings);
+            exit.ShouldBe(0, error);
+            commands.LaunchedConfiguration["Dapr:Mtls:CertificateDirectory"].ShouldBe(expected);
+            commands.LaunchedConfiguration["Dapr:Mtls:ConfigurationDirectory"].ShouldBe(Path.Combine(expected, "configuration"));
+            File.Exists(Path.Combine(expected, "ca.crt")).ShouldBeTrue();
+            paths.Add(expected);
+        }
+        paths.Distinct(StringComparer.Ordinal).Count().ShouldBe(2);
+        paths.ShouldAllBe(path => File.Exists(Path.Combine(path, "ca.crt")));
     }
 
     /// <summary>
@@ -283,6 +352,9 @@ public sealed class AspireMtlsBootstrapTests
                 set -euo pipefail
                 [[ "$Dapr__Mtls__Enabled" == true ]]
                 [[ "$Dapr__Mtls__CertificateDirectory" == "$DAPR_MTLS_CERTIFICATE_DIRECTORY" ]]
+                [[ "$Dapr__Mtls__Namespace" == default ]]
+                [[ "$Dapr__Mtls__PlacementHostAddress" == 127.0.0.1:55005 ]]
+                [[ "$Dapr__Mtls__SchedulerHostAddress" == 127.0.0.1:55006 ]]
                 printf 'aspire %s\n' "$*" >> "$FAKE_REQUEST_LOG"
                 """);
             WriteCommandDouble(temporary, "timeout", """

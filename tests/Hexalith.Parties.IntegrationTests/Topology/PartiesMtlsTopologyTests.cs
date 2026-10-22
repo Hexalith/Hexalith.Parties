@@ -52,6 +52,30 @@ public sealed class PartiesMtlsTopologyTests
         adminHealth.StatusCode.ShouldBe(HttpStatusCode.OK);
         Console.WriteLine("Runtime admin UI-to-admin server GET /health: 200 through existing ACL");
 
+        // Require the sidecar's policy diagnostic: an application 401/403 is insufficient.
+        foreach ((string caller, string target, HttpMethod verb, string path) in new[]
+        {
+            ("sample", "tenants", HttpMethod.Get, "ready"),
+            ("parties", "tenants", HttpMethod.Post, "ready"),
+            ("parties", "tenants", HttpMethod.Get, "health"),
+            ("eventstore", "parties", HttpMethod.Get, "process"),
+            ("eventstore", "parties", HttpMethod.Post, "health"),
+            ("sample", "parties", HttpMethod.Post, "process"),
+        })
+        {
+            using HttpClient callerSidecar = fixture.CreateSidecarClient(caller);
+            using var request = new HttpRequestMessage(verb, $"/v1.0/invoke/{target}/method/{path}");
+            using HttpResponseMessage denied = await callerSidecar.SendAsync(request, TestContext.Current.CancellationToken);
+            denied.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+            using JsonDocument evidence = JsonDocument.Parse(await denied.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            evidence.RootElement.GetProperty("errorCode").GetString().ShouldBe("ERR_DIRECT_INVOKE");
+            string diagnostic = evidence.RootElement.GetProperty("message").GetString()!;
+            diagnostic.ShouldContain("PermissionDenied");
+            diagnostic.ShouldContain("access control policy has denied access");
+            Console.WriteLine($"Dapr denied {caller} {verb.Method} {target}/{path}: {diagnostic}");
+        }
+        Console.WriteLine("Original identity ACLs rejected forbidden caller, verb and path combinations at Dapr");
+
         foreach (string? token in new string?[] { null, "invalid-test-channel-token" })
         {
             foreach (var envelope in PartiesTenantBootstrapHost.Envelopes("rejected-runtime-tenant", "rejected-runtime-member"))

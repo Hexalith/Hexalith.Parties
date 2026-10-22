@@ -1,0 +1,10 @@
+  Determining projects to restore...
+${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.values.targets(234,1): error MSB4044: The "SourceMappingValidationTask" task was not given a value for the required parameter "AssetsFile". [${SOURCE_VALIDATION_ROOT}/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj]
+
+Build FAILED.
+
+${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.values.targets(234,1): error MSB4044: The "SourceMappingValidationTask" task was not given a value for the required parameter "AssetsFile". [${SOURCE_VALIDATION_ROOT}/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:00.71

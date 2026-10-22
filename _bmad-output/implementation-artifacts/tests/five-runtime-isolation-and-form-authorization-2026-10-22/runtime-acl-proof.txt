@@ -1,0 +1,21 @@
+Runtime metadata verified: eventstore
+Runtime metadata verified: eventstore-admin
+Runtime metadata verified: eventstore-admin-ui
+Runtime metadata verified: memories
+Runtime metadata verified: parties
+Runtime metadata verified: sample
+Runtime metadata verified: sample-blazor-ui
+Runtime metadata verified: tenants
+Runtime Parties-to-Tenants GET /ready: 200 through existing ACL
+Runtime admin UI-to-admin server GET /health: 200 through existing ACL
+Dapr denied sample GET tenants/ready: failed to invoke, id: tenants, err: rpc error: code = PermissionDenied desc = access control policy has denied access to id: spiffe://public/ns/default/sample operation: ready verb: GET
+Dapr denied parties POST tenants/ready: failed to invoke, id: tenants, err: rpc error: code = PermissionDenied desc = access control policy has denied access to id: spiffe://public/ns/default/parties operation: ready verb: POST
+Dapr denied parties GET tenants/health: failed to invoke, id: tenants, err: rpc error: code = PermissionDenied desc = access control policy has denied access to id: spiffe://public/ns/default/parties operation: health verb: GET
+Dapr denied eventstore GET parties/process: failed to invoke, id: parties, err: rpc error: code = PermissionDenied desc = access control policy has denied access to id: spiffe://public/ns/default/eventstore operation: process verb: GET
+Dapr denied eventstore POST parties/health: failed to invoke, id: parties, err: rpc error: code = PermissionDenied desc = access control policy has denied access to id: spiffe://public/ns/default/eventstore operation: health verb: POST
+Dapr denied sample POST parties/process: failed to invoke, id: parties, err: rpc error: code = PermissionDenied desc = access control policy has denied access to id: spiffe://public/ns/default/sample operation: process verb: POST
+Original identity ACLs rejected forbidden caller, verb and path combinations at Dapr
+Runtime tenant callback: authenticated bootstrap accepted; missing/wrong token rejected
+In-process production subscription handler: projected member has write access
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.IntegrationTests  Total: 3, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 74.655s

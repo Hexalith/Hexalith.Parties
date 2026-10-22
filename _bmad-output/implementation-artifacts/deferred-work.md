@@ -224,7 +224,9 @@ archived: 2026-10-13
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 4)"), 2026-09-06
 location: host AddEventStoreDomainService registration and EventStoreGatewayE2ETests
 reason: Host `AddEventStoreDomainService(... PartyDetailProjectionHandler.Assembly)` remains source-text-only — closing properly needs reinstating the retired tenant seeder for authenticated query e2e. Also recorded in "Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)": Host wiring (`builder.AddEventStoreDomainService(typeof(PartyAggregate).Assembly, typeof(PartyDetailProjectionHandler).Assembly)`) is verified only as literal source text by `ArchitecturalFitnessTests`/`PlatformApiPrerequisitesTests`/ `RetiredLeafProjectFitnessTests`; no test queries a projected read model after an authenticated end-to-end command. Closing this needs `EventStoreGatewayE2ETests`, but its `PartiesAspireTopologyFixture.RequireSeededTenants()` unconditionally throws since Story 12.2 retired `TenantIntegrationTestSeeder` — reinstating that seeder is real work out of scope for a review-patch pass.
-status: open
+status: done 2026-10-22
+resolution: The seeded authenticated gateway create now queries canonical projected Party detail and checks party/tenant identity, payload and freshness. The complete original-identity runtime case passed against real sidecars and private Redis.
+verification: `spec-five-runtime-isolation-and-form-authorization-deferred-items.md`; `tests/five-runtime-isolation-and-form-authorization-2026-10-22/validation.json`. Release/package live acceptance passed with zero skips; mapped Debug test-build qualification limits are recorded separately.
 decision: 2026-09-06 Minimal test-only seeder — Add a narrowly scoped fixture seeder through the supported internal tenant-event callback, then submit an authenticated command and query its projection.
 
 ### DW-31: Add runtime DAPR ACL enforcement proof
@@ -232,7 +234,9 @@ decision: 2026-09-06 Minimal test-only seeder — Add a narrowly scoped fixture 
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-03 Group 4)"), 2026-09-06
 location: DAPR ACL allow-list
 reason: ACL allow-list has no runtime Dapr enforcement check beyond YAML fitness — same topology e2e class as the assembly-scan defer.
-status: open
+status: done 2026-10-22
+resolution: The original production ACL profile verifies all eight sidecars and allowed Parties-to-Tenants/admin controls, then requires HTTP 403, ERR_DIRECT_INVOKE, PermissionDenied and Dapr policy-denial text for six forbidden caller/verb/path combinations. Authoritative ACL bytes remain unchanged.
+verification: `spec-five-runtime-isolation-and-form-authorization-deferred-items.md`; `tests/five-runtime-isolation-and-form-authorization-2026-10-22/validation.json`. Release/package live acceptance passed with zero skips; mapped Debug test-build qualification limits are recorded separately.
 
 ### DW-32: Clean up query shim and configuration naming
 
@@ -1284,7 +1288,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: existing EventStore gateway command test; persisted event stream and aggregate identity
 source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
 reason: The pre-existing test observes Completed status and positive eventCount but does not read stored events; completion follows EventPersister in the SDK, but an independent persisted-stream assertion would strengthen that boundary.
-status: open
+status: done 2026-10-22
+resolution: The gateway independently reads exact actor metadata and EventEnvelope keys derived from AggregateIdentity, with no Redis scans. It validates bounded sequence, aggregate identity, command correlation/causation, user, event type and deserialized payload against the projected result.
+verification: `spec-five-runtime-isolation-and-form-authorization-deferred-items.md`; `tests/five-runtime-isolation-and-form-authorization-2026-10-22/validation.json`. Release/package live acceptance passed with zero skips; mapped Debug test-build qualification limits are recorded separately.
 
 ### DW-161: Extend the persistent release verification job to validate all declared NuGet registry package bytes and repository commit metadata.
 
@@ -1607,6 +1613,10 @@ archived: 2026-10-21
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
   summary: Give concurrent Parties integration topologies independent Dapr control planes, namespaces and app identities.
   evidence: The existing fixed control-plane container names/ports reject incompatible ownership; explicit mTLS reuse still shares application identities. Private Redis fixes direct store isolation but does not add general parallel-topology support.
+  status: done 2026-10-22
+  resolution: Immutable session configuration owns control-plane containers/networks, explicit external/internal ports, namespaces, trust/configuration paths and suffixed literal identities. Generated ACLs, workload/routing IDs and component scope follow the session without process-global environment mutation. The real two-session case proves independent markers and same-party event streams, own-peer routing, cross-session rejection and survivor work after peer disposal; bootstrap tests cover conflicts, cancellation and failed-cleanup ownership retry.
+  verification: `spec-five-runtime-isolation-and-form-authorization-deferred-items.md`; `tests/five-runtime-isolation-and-form-authorization-2026-10-22/validation.json`. Release/package live acceptance passed with zero skips; mapped Debug test-build qualification limits are recorded separately.
+
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-ci-and-publish-release.md`
   summary: Propagate the topology startup token through its final HTTP health waits.
@@ -1795,3 +1805,10 @@ archived: 2026-10-21
   summary: Invalidate loaded admin form authorization across tenant/sign-in transitions and revalidate it before sending commands.
   severity: high
   evidence: Independent source review confirms the baseline CreateEditPartyPage loads authorization once, does not independently observe authentication transitions, and submits through the API client's current credentials without a pre-send comparison. Tenant A form values can therefore be sent after switching to B; an A/B/A transition can also evade a later signature-only comparison if no portal scope reset occurs. The current batch preserves that existing send behavior while qualifying accepted-receipt context, scope-reset and disposal fences. Add a stale-form/no-send regression and an authentication-transition epoch before claiming this broader form-context boundary.
+  status: done 2026-10-22
+  resolution: Authentication notifications and captured query-scope cancellation synchronously invalidate the form generation and cancel pending work. The form clears/reloads and fences stale loads, including A/B/A and unchanged signatures; snapshot-before-await submissions require fresh bounded authority and unchanged context/scope/generation. Full AdminPortal regression passes 315/315, including zero-send role/inactive/fault/timeout/transition/disposal cases and unchanged create/update single-send controls, while accepted-edit convergence remains covered.
+  verification: `spec-five-runtime-isolation-and-form-authorization-deferred-items.md`; `tests/five-runtime-isolation-and-form-authorization-2026-10-22/validation.json`. Release/package live acceptance passed with zero skips; mapped Debug test-build qualification limits are recorded separately.
+
+- source_spec: `spec-five-runtime-isolation-and-form-authorization-deferred-items.md`
+  summary: Make the referenced EventStore admin/sample UI Dapr client target identities configurable before qualifying their application API flows in concurrent suffixed sessions.
+  evidence: Upstream AdminUIServiceExtensions calls AddEventStoreDaprServiceInvocation("eventstore-admin") and Sample.BlazorUI Program calls it with "eventstore"; the current owner tests qualify Parties gateway/Tenants invocation and all eight sidecar metadata endpoints, not those reference UI API flows. The frozen intent forbids upstream edits; target configurability needs an upstream change and later adoption.

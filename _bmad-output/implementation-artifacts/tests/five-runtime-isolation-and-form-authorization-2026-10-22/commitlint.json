@@ -1,0 +1,7 @@
+{
+  "command": "node node_modules/@commitlint/cli/cli.js --edit ${PRIVATE_RECEIPTS}/commit-message.txt",
+  "cliVersion": "21.2.2",
+  "exitCode": 0,
+  "stdout": "",
+  "message": "fix: isolate runtime sessions and guard form sends\n"
+}

@@ -1,0 +1,262 @@
+[
+  {
+    "matrixRow": "Seeded authenticated create",
+    "outcome": "passed",
+    "coveringExecutedTests": [
+      {
+        "name": "Hexalith.Parties.IntegrationTests.Gateway.EventStoreGatewayE2ETests.AuthenticatedCreate_ProjectsDetailsAndPersistsMatchingEventEnvelopesAsync",
+        "result": "Pass",
+        "receipt": "final-runtime-gateway-acl-isolation.xml"
+      }
+    ]
+  },
+  {
+    "matrixRow": "Wrong caller/verb/path",
+    "outcome": "passed",
+    "coveringExecutedTests": [
+      {
+        "name": "Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests.CompleteProfile_AllEightSidecarsRespondAndPartiesInvokesTenantsReadiness",
+        "result": "Pass",
+        "receipt": "final-runtime-gateway-acl-isolation.xml"
+      }
+    ]
+  },
+  {
+    "matrixRow": "Two sessions; stop one",
+    "outcome": "passed",
+    "coveringExecutedTests": [
+      {
+        "name": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyIsolationTests.ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync",
+        "result": "Pass",
+        "receipt": "final-runtime-gateway-acl-isolation.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Ci.Tests.AspireMtlsCleanupFailureTests.SessionCleanup_ConflictingNetworkRetainsOwnershipUntilSafeRetry",
+        "result": "Pass",
+        "receipt": "final-ci-bootstrap-cleanup.xml"
+      },
+      {
+        "name": "Hexalith.Parties.Ci.Tests.AspireMtlsCleanupFailureTests.SessionCleanup_ConflictingNetworkRetainsOwnershipUntilSafeRetry",
+        "result": "Pass",
+        "receipt": "final-ci-debug-final.xml"
+      },
+      {
+        "name": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests.PreparedInfrastructure_CleansUpThroughFixtureAndRetainsOwnershipForFailedCleanupRetry(cleanupFails: False)",
+        "result": "Pass",
+        "receipt": "final-integration-model-cleanup.xml"
+      },
+      {
+        "name": "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests.PreparedInfrastructure_CleansUpThroughFixtureAndRetainsOwnershipForFailedCleanupRetry(cleanupFails: True)",
+        "result": "Pass",
+        "receipt": "final-integration-model-cleanup.xml"
+      }
+    ]
+  },
+  {
+    "matrixRow": "Changed form context, including A/B/A",
+    "outcome": "passed",
+    "coveringExecutedTests": [
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.LoadedCreate_ContextNotificationClearsValuesAndDoesNotSend(change: \\\"tenant\\\")",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.LoadedCreate_ContextNotificationClearsValuesAndDoesNotSend(change: \\\"user\\\")",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.LoadedCreate_ContextNotificationClearsValuesAndDoesNotSend(change: \\\"sign-out\\\")",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.LoadedCreate_ContextNotificationClearsValuesAndDoesNotSend(change: \\\"a-b-a\\\")",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.LoadedCreate_ContextNotificationClearsValuesAndDoesNotSend(change: \\\"scope-reset\\\")",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.LoadedCreate_ContextNotificationClearsValuesAndDoesNotSend(change: \\\"same-context\\\")",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"tenant\\\", edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"tenant\\\", edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"sign-out\\\", edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"sign-out\\\", edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"a-b-a\\\", edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"a-b-a\\\", edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"scope-reset\\\", edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"scope-reset\\\", edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"dispose\\\", edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"dispose\\\", edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"user\\\", edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"user\\\", edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"role\\\", edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"role\\\", edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"inactive\\\", edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PendingPreSendAuthorization_ContextBoundaryNeverSendsOldSnapshot(boundary: \\\"inactive\\\", edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.OldEditLoad_IgnoringCancellationCannotRestorePriorValues",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.FreshAuthorization_UsesSnapshotTakenBeforeAwaitAndSendsOnce(edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.FreshAuthorization_UsesSnapshotTakenBeforeAwaitAndSendsOnce(edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.NotificationRendersClearedLoadingStateWhileAuthorizationRemainsPending(edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.NotificationRendersClearedLoadingStateWhileAuthorizationRemainsPending(edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.BackgroundNotificationsFencePendingSubmissionAndWorkTokenOwnership(edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.BackgroundNotificationsFencePendingSubmissionAndWorkTokenOwnership(edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.SynchronouslyCanceledRegistrationCannotOverwriteReentrantReloadOwnership",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.FreshLookupDifferentAuthorizedContextWithoutNotificationNeverSendsOldSnapshot(edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.FreshLookupDifferentAuthorizedContextWithoutNotificationNeverSendsOldSnapshot(edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      }
+    ]
+  },
+  {
+    "matrixRow": "Revoked role, inactive tenant, failed/delayed lookup",
+    "outcome": "passed",
+    "coveringExecutedTests": [
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.LoadedForm_RevocationWithoutNotificationPreventsSend(edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.LoadedForm_RevocationWithoutNotificationPreventsSend(edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.LoadedForm_InactiveTenantPreventsSend(edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.LoadedForm_InactiveTenantPreventsSend(edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.LoadedForm_AuthorizationFailureBeforeSendClearsValues(edit: False)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.LoadedForm_AuthorizationFailureBeforeSendClearsValues(edit: True)",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      },
+      {
+        "name": "Hexalith.Parties.AdminPortal.Tests.Components.CreateEditPartyPageTests.PreSendAuthorization_TimeoutBlocksAndLateLookupCannotSend",
+        "result": "Pass",
+        "receipt": "final-admin-suite.xml"
+      }
+    ]
+  }
+]

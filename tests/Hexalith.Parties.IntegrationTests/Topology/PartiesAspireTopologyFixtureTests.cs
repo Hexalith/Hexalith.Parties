@@ -28,8 +28,8 @@ public sealed class PartiesAspireTopologyFixtureTests
         string? previousEnvironment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
         int startAttempts = 0;
         var fixture = new PartiesAspireTopologyFixture(
-            cancellationToken => failsDuringStartup
-                ? DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(cancellationToken)
+            (session, cancellationToken) => failsDuringStartup
+                ? DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(session.Arguments(false, false), cancellationToken)
                 : Task.FromException<IDistributedApplicationTestingBuilder>(new FileNotFoundException("missing test infrastructure")),
             (_, _) =>
             {
@@ -74,9 +74,9 @@ public sealed class PartiesAspireTopologyFixtureTests
         });
         string? certificateDirectory = null;
         var fixture = new PartiesAspireTopologyFixture(
-            _ =>
+            (session, _) =>
             {
-                certificateDirectory = Environment.GetEnvironmentVariable("Dapr__Mtls__CertificateDirectory");
+                certificateDirectory = session.CertificateDirectory;
                 commands.SetFailure(cleanupFails ? "unavailable" : null);
                 throw new FileNotFoundException("model construction failed after scoped preparation");
             },
@@ -131,7 +131,7 @@ public sealed class PartiesAspireTopologyFixtureTests
         using var cancellation = new CancellationTokenSource();
         bool receivedCancellation = false;
         var fixture = new PartiesAspireTopologyFixture(
-            async token =>
+            async (session, token) =>
             {
                 cancellation.Cancel();
                 try
@@ -201,9 +201,9 @@ public sealed class PartiesAspireTopologyFixtureTests
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         string? certificateDirectory = null;
         var fixture = new PartiesAspireTopologyFixture(
-            async token =>
+            async (session, token) =>
             {
-                certificateDirectory = Environment.GetEnvironmentVariable("Dapr__Mtls__CertificateDirectory");
+                certificateDirectory = session.CertificateDirectory;
                 // Exercise the readiness poll directly after scoped preparation, without starting DCP.
                 await PartiesAspireTopologyFixture.WaitForEndpointAsync(client, "/pending", [HttpStatusCode.OK],
                     TimeSpan.FromMinutes(1), TimeSpan.FromMilliseconds(10), token).ConfigureAwait(false);

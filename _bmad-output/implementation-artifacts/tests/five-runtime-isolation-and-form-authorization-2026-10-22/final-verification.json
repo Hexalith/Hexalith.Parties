@@ -1,0 +1,313 @@
+{
+  "phase": "post-review final verification",
+  "baseline": "d2ad697dcf679dd8e174d83e6d2b4f0721174142",
+  "commands": [
+    {
+      "name": "admin-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedSeconds": 2.944
+    },
+    {
+      "name": "ci-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedSeconds": 1.234
+    },
+    {
+      "name": "integration-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Release",
+        "-m:1"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedSeconds": 6.829
+    },
+    {
+      "name": "admin-suite",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+        "-xml",
+        "${PRIVATE_RECEIPTS}/admin-suite.xml"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedSeconds": 13.717
+    },
+    {
+      "name": "ci-bootstrap-cleanup",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.AspireMtlsBootstrapTests",
+        "-class",
+        "Hexalith.Parties.Ci.Tests.AspireMtlsCleanupFailureTests",
+        "-xml",
+        "${PRIVATE_RECEIPTS}/ci-bootstrap-cleanup.xml"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedSeconds": 3.104
+    },
+    {
+      "name": "integration-model-cleanup",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.DaprMtlsBootstrapTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTestRedisTests",
+        "-xml",
+        "${PRIVATE_RECEIPTS}/integration-model-cleanup.xml"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedSeconds": 2.274
+    },
+    {
+      "name": "runtime-gateway-acl-isolation",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Gateway.EventStoreGatewayE2ETests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests",
+        "-class",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyIsolationTests",
+        "-xml",
+        "${PRIVATE_RECEIPTS}/runtime-gateway-acl-isolation.xml"
+      ],
+      "environment": {
+        "PARTIES_MTLS_TOPOLOGY_TESTS": "true"
+      },
+      "exitCode": 0,
+      "elapsedSeconds": 163.413
+    },
+    {
+      "name": "bash-syntax",
+      "command": [
+        "bash",
+        "-n",
+        "scripts/aspire-start-mtls.sh"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedSeconds": 0.002
+    },
+    {
+      "name": "warning-guard",
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedSeconds": 1.608
+    },
+    {
+      "name": "diff-whitespace",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check"
+      ],
+      "environment": {},
+      "exitCode": 0,
+      "elapsedSeconds": 0.07
+    }
+  ],
+  "testResults": {
+    "admin-suite": {
+      "total": 322,
+      "passed": 322,
+      "failed": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "errors": 0
+    },
+    "ci-bootstrap-cleanup": {
+      "total": 30,
+      "passed": 30,
+      "failed": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "errors": 0
+    },
+    "integration-model-cleanup": {
+      "total": 33,
+      "passed": 33,
+      "failed": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "errors": 0
+    },
+    "runtime-gateway-acl-isolation": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "errors": 0
+    },
+    "ci-debug-final": {
+      "total": 30,
+      "passed": 30,
+      "failed": 0,
+      "skipped": 0,
+      "not-run": 0,
+      "errors": 0
+    }
+  },
+  "sourceRefresh": {
+    "launchReceipt": "source-launch-final.json",
+    "builds": [
+      {
+        "name": "admin-source-final",
+        "command": [
+          "dotnet",
+          "build",
+          "tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+          "-c",
+          "Debug",
+          "-m:1"
+        ],
+        "cwd": "${SOURCE_VALIDATION_ROOT}",
+        "environment": {
+          "CustomBeforeDirectoryBuildProps": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.targets",
+          "CustomAfterMicrosoftCommonProps": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.props",
+          "CustomBeforeDirectoryBuildTargets": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.before-targets.props",
+          "CustomAfterDirectoryBuildTargets": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.late.props",
+          "AfterMicrosoftNETSdkTargets": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.final.targets",
+          "Configuration": "Debug",
+          "HEXALITH_SOURCE_MAPPING_HASH": "b2ad433d16cd291893c50384a08be073db343f5dc695666e316414c9c83acf4c"
+        },
+        "exitCode": 1,
+        "outcome": "blocked: MSB4044; required AssetsFile in FrontComposer outer multi-target validation"
+      },
+      {
+        "name": "integration-source-final",
+        "command": [
+          "dotnet",
+          "build",
+          "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+          "-c",
+          "Debug",
+          "-m:1"
+        ],
+        "cwd": "${SOURCE_VALIDATION_ROOT}",
+        "environment": {
+          "CustomBeforeDirectoryBuildProps": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.targets",
+          "CustomAfterMicrosoftCommonProps": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.props",
+          "CustomBeforeDirectoryBuildTargets": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.before-targets.props",
+          "CustomAfterDirectoryBuildTargets": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.late.props",
+          "AfterMicrosoftNETSdkTargets": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.final.targets",
+          "Configuration": "Debug",
+          "HEXALITH_SOURCE_MAPPING_HASH": "b2ad433d16cd291893c50384a08be073db343f5dc695666e316414c9c83acf4c"
+        },
+        "exitCode": 1,
+        "outcome": "blocked: MSB4044; required AssetsFile in FrontComposer outer multi-target validation"
+      },
+      {
+        "name": "ci-source-final",
+        "command": [
+          "dotnet",
+          "build",
+          "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+          "-c",
+          "Debug",
+          "-m:1"
+        ],
+        "cwd": "${SOURCE_VALIDATION_ROOT}",
+        "environment": {
+          "CustomBeforeDirectoryBuildProps": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.targets",
+          "CustomAfterMicrosoftCommonProps": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.props",
+          "CustomBeforeDirectoryBuildTargets": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.before-targets.props",
+          "CustomAfterDirectoryBuildTargets": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.late.props",
+          "AfterMicrosoftNETSdkTargets": "${HEXALITH_BUILDS_STATE}/g4-workspaces/d47d3b1f67bd26c7ce0d917afcc5d7f2/source-mapping/SourceMapping.final.targets",
+          "Configuration": "Debug",
+          "HEXALITH_SOURCE_MAPPING_HASH": "b2ad433d16cd291893c50384a08be073db343f5dc695666e316414c9c83acf4c"
+        },
+        "exitCode": 0,
+        "outcome": "passed"
+      },
+      {
+        "name": "ci-debug-final",
+        "command": [
+          "dotnet",
+          "${SOURCE_VALIDATION_ROOT}/tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+          "-class",
+          "Hexalith.Parties.Ci.Tests.AspireMtlsBootstrapTests",
+          "-class",
+          "Hexalith.Parties.Ci.Tests.AspireMtlsCleanupFailureTests",
+          "-xml",
+          "${PRIVATE_RECEIPTS}/ci-debug-final.xml"
+        ],
+        "exitCode": 0,
+        "outcome": "passed"
+      }
+    ],
+    "postBuildInspection": "source-postbuild-launchers.json",
+    "cleanupReceipt": "source-cleanup-final.json",
+    "note": "All seven healthy is the tool launch observation. No new loaded-assembly claim is made after post-build reported launcher PIDs disappeared; original loaded-source receipt remains historical."
+  },
+  "codeSha256": {
+    "scripts/aspire-start-mtls.sh": "5d83698c9707c37fbb9c25c3661ea5a13c1e90505957332587aad5fc32615f30",
+    "src/Hexalith.Parties.AdminPortal/Components/CreateEditPartyPage.razor": "3ef47dbe29c0148e7122e358c19dfc91c46d53291b0f13057f925f82b8575b14",
+    "src/Hexalith.Parties.AppHost/DaprMtlsBootstrap.cs": "5d4369184fe5d919158e48304d16afdb5cfeb88407118c403450e588c2c02e15",
+    "src/Hexalith.Parties.AppHost/Program.cs": "07f8ea6d33b01d3a62b40831b6a6d78048cdfce7e4d71b22c8f49da67e8fd2eb",
+    "tests/Hexalith.Parties.AdminPortal.Tests/Components/CreateEditPartyPageTests.cs": "36c94b1402948aa4004b9354c2820c924f06cd988afae93797e04f40aa6ef47e",
+    "tests/Hexalith.Parties.Ci.Tests/AspireMtlsBootstrapTests.cs": "2b6b9a87b638922ae07cdac797334324aaabe42a0dbee50aef45267b790a40b1",
+    "tests/Hexalith.Parties.Ci.Tests/AspireMtlsCleanupFailureTests.cs": "42bad95dc3495d2c9c7ee8bbb8a7340f232f92dbfafbb72740edcbf82aeed6e3",
+    "tests/Hexalith.Parties.IntegrationTests/Gateway/EventStoreGatewayE2ETests.cs": "1c5f051858b4bbb9efc7644cd344f009866bd9a8573325064f1c9587f4a5cf51",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesAspireTopologyFixture.cs": "7907770a2a0c4d97c9b206ee23cd0369b9b7c4be0a8cd5aa3c6151433b229045",
+    "tests/Hexalith.Parties.IntegrationTests/HealthChecks/PartiesTopologySession.cs": "a9cb29ed2f9229e3deed9dabe166ccec32630a9f5a1d4677050242d8690b8a8e",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/DaprMtlsBootstrapTests.cs": "c94b211d8e6a51e74819879874dd714d8af4be29d7a0e66be0b37930db94e0e0",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesAspireTopologyFixtureTests.cs": "501340ba016c520e0ffb9c7a9ba8d7a4f89aaead232f60be077006ef5c4680b6",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesMtlsTopologyTests.cs": "c10bff762dd71d58472bc8aa7fa24d70ccb75d7436bdb1e5c672474575504be4",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesTopologyIsolationTests.cs": "aaff44ebb44c0f9e2d1875c29c527983a652649ef82a17a347070204f4f59665",
+    "tests/TestInfrastructure.Shared/MtlsBootstrapCommandDouble.cs": "4b6ae1875e6b74353fb0d989ca5ccdb09e9940f4215ecb0c51b9baa37d458c85"
+  },
+  "releaseTestAssemblySha256": {
+    "tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll": "262daff18600e4a23e5dd42557465fcd2c96b07d801c2bafe0068441337b86bc",
+    "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll": "f5fa2b6e496e5a188c916288a11a28ae72143206936578e6776b29383d59730f",
+    "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll": "f8d96d0407081979ceeadacdbe51b22a635bcb928003f5fcdfdc1e03debce7c8"
+  },
+  "cleanupReceipt": "final-cleanup.json",
+  "commitlintReceipt": "commitlint.json",
+  "limits": [
+    "Mapped Debug AdminPortal/Integration builds remain blocked by FrontComposer SourceMappingValidationTask missing AssetsFile; neither is counted as passing.",
+    "Concurrent reference admin/sample UI application client flows remain unqualified because of upstream hardcoded targets; Parties gateway/Tenants routes and sidecar metadata are qualified.",
+    "DW-116 and Memories persistence remain open."
+  ]
+}

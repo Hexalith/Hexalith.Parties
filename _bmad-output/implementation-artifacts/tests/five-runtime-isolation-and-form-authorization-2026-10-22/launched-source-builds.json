@@ -1,0 +1,1274 @@
+[
+  {
+    "name": "eventstore",
+    "state": "Healthy",
+    "launcherPid": 2687058,
+    "launcherCommand": "dotnet run --project ${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/Hexalith.EventStore.csproj --configuration Debug --no-launch-profile ",
+    "loadedDebugAssemblies": [
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/ByteAether.Ulid.dll",
+        "sha256": "fc4f3d99e88023ffbd37eea2941ddd81f604611fc967fedb116a4daaf9ae4590"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Dapr.Actors.AspNetCore.dll",
+        "sha256": "c7deffe0f4b6c754fff3935a42ad378d729e85b277da853fbc8924790482d8b0"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Dapr.Actors.dll",
+        "sha256": "98d77fb28b39fe6832e06cb2bd66d58024b9587411b04965da385909f32a9dfa"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Dapr.AspNetCore.dll",
+        "sha256": "4db46444a22bbfd473e0f132139d943cec95e3637cdbf61077d88e618a48213d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Dapr.Client.dll",
+        "sha256": "cc7b8e629416c52be2569d7610c5c830b19ba690d4f54300ffdee901dec99115"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Dapr.Common.dll",
+        "sha256": "9c10b91825371c10e469e91627080414bde4e8fa5acd894a2dbe398af03e1893"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Dapr.Protos.dll",
+        "sha256": "659938b9475b4951bd49086a66d8ad24f89ac6c1c33d6888adfefb8420edf03c"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/FluentValidation.DependencyInjectionExtensions.dll",
+        "sha256": "32385a476b65365d0f9de1819cd1f46d155d1f46beea68176603cf341b29a797"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/FluentValidation.dll",
+        "sha256": "07373bb5527d6d96908c60962102c9c1339b363c4ee8ad62277eb2ffc6387df4"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Google.Protobuf.dll",
+        "sha256": "e9b892ac667931162ffefa411ef8dc3eae777d634d8bfe8beddc28b1de95a612"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Grpc.Core.Api.dll",
+        "sha256": "5674c1203706b5a261e8bbd3499147d94fc80b5f077bf45f9934ca28a9c8574b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Grpc.Net.Client.dll",
+        "sha256": "f884d8444feb888656cbb7de87ee8f53a50811329bb32c6e7a7a81cb1de008ef"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Grpc.Net.Common.dll",
+        "sha256": "fdff383bbd8e5015f3c4aaaa7508b769228f33c92ba14fec4e59d35c5d78e6ae"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Grpc.Reflection.dll",
+        "sha256": "87795d17c1385e7c05469c447ad8eecc883c3c71b4804319c5918a5a490c8d57"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Hexalith.Commons.UniqueIds.dll",
+        "sha256": "6058e2f67ecb73b3f6036834755ca17100af7b2ca1b080647766ec4c6d2b854d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Hexalith.EventStore.Admin.Abstractions.dll",
+        "sha256": "f8843eb80121930fbcfb1c07bad21223edf473b2478b5b49e0b7e1e48c5d187b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Hexalith.EventStore.Client.dll",
+        "sha256": "96260ccde8d0152ef1668f537ff43e6bfc0869db46969a4f7516fe18fae6b272"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll",
+        "sha256": "7dd418485ceea83113fec339595f31bed7e32a1a893e3bae840572b75f626b07"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Hexalith.EventStore.DomainService.dll",
+        "sha256": "5bf584e75a00db6a9c466b014ecb63d289f5a56045cd024653f97750ad6c1784"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Hexalith.EventStore.Gateway.dll",
+        "sha256": "a2ad42ba07ec233fbe72b6887abc2241620cd1807b34bd9ecef68ef502f6e299"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Hexalith.EventStore.Server.dll",
+        "sha256": "5fff64097500464c42c0593e37dbb2c5f8534652fc0440f80b5ff1442853b684"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Hexalith.EventStore.ServiceDefaults.dll",
+        "sha256": "6189e4d3d303cbcb306489937bc51fa4619c40494742d718caed2ddc4d693710"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Hexalith.EventStore.dll",
+        "sha256": "3ad44db1d9a5155127d1bd015ea4ddd6a1b60b286a2286b66999009f54ff4fac"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/MediatR.Contracts.dll",
+        "sha256": "c2601304aa9d15c51a543e1c3300368c64ac38633e7277bb835a04f68ddf6a61"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/MediatR.dll",
+        "sha256": "856b8a06d82033415ffef0edcac5f38256f1ef0336dbc372609f75b82a333d97"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll",
+        "sha256": "6aa38a3d01cc3e9bfd6ee5cc7c882f4d0399cfb807e52f19ff458f355a31851b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.AspNetCore.OpenApi.dll",
+        "sha256": "ed704f63de95981f91ded8d0cc7642ad73c455b54e741b18dd42e9e44e60c51f"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.AspNetCore.SignalR.StackExchangeRedis.dll",
+        "sha256": "10ccc62ca65bc2e202fa5d8b1714093c6320cc6a8dcef164c3656047cb609991"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.Extensions.Compliance.Abstractions.dll",
+        "sha256": "e4df4358dd2dd57be430a9e7f220bc49bef26ab00007c732605c0defc207e065"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.Extensions.Diagnostics.ExceptionSummarization.dll",
+        "sha256": "6ae3665434f016222e9d75a54a44a62d01c412ef63b5d7462c3a22ad9757c4d8"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.Extensions.Http.Diagnostics.dll",
+        "sha256": "56da1ed94fe5551db5b67292820634136fe8b6d991626288aebdce7ee25400ee"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.Extensions.Http.Resilience.dll",
+        "sha256": "b28b929922d42b1c979ee403f454387f4522bf973c149753f5300ae959d70531"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.Abstractions.dll",
+        "sha256": "58ac3be03e3c4ae03486b8ec619ca769bf94befd38f432d61b32b1fba8d7d193"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.dll",
+        "sha256": "3646d627b519e017c3392219b17416b04377c815a918248a503557fd40db9e0a"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.Extensions.Telemetry.Abstractions.dll",
+        "sha256": "57af8ce079eb3bcec63fd176f1034012f8199c44d38f10168438cc78364a9030"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.Extensions.Telemetry.dll",
+        "sha256": "cca41d630de69f9afda79cff76c26976c87ee28aec216cba63c2e81241b8f7f5"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.IdentityModel.Abstractions.dll",
+        "sha256": "46f14d67dfc1894eb24d80282895526db25a854af227eee2fa06a0383fd09e4c"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.IdentityModel.JsonWebTokens.dll",
+        "sha256": "b48515aeaa4a8fadc5fcacb45978c808a4d5bbffaf74f8894cc57c0769a9fb9e"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.IdentityModel.Logging.dll",
+        "sha256": "90b6fa70f28a3b7711fe95aa30a0c5551f1e6aa28565187aa7b3681194215c84"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll",
+        "sha256": "cf37440c96bd178f2676867b77fa651df001b56b2f42be99b08e5226b3ab4918"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.dll",
+        "sha256": "dd8823215cada7e1c7fe5d2a3b06395fb906baa5f79ec00411ad6a1f80585f60"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.IdentityModel.Tokens.dll",
+        "sha256": "84409b8c3a52313fe4f4f621fce39544f42074109e870ac2631e627c8b70210f"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Microsoft.OpenApi.dll",
+        "sha256": "dae97412c5804da0906639014cb6bd73b2cf37ad02da95437ded59578946e6e9"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/OpenTelemetry.Api.ProviderBuilderExtensions.dll",
+        "sha256": "d9248458b433d3317f3618b5d9fa9d776bd88a78220af2faab06f6416208094b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/OpenTelemetry.Api.dll",
+        "sha256": "43a7484269df9efae3a063198c42683a631d90c278940ee3cc11435719481ced"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/OpenTelemetry.Exporter.OpenTelemetryProtocol.dll",
+        "sha256": "02a75ffefd0ca9f79043af39c73d44e3773a03dca8a9eaa8c49d465197bf6b45"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/OpenTelemetry.Extensions.Hosting.dll",
+        "sha256": "617ca46b1297625de495f3e5a903701c19bef0f727de2e46c60c3246f898cb5d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/OpenTelemetry.Instrumentation.AspNetCore.dll",
+        "sha256": "10398265b32699e6f1087ade9c11ee5e331a9975b87b530dc418946fe4612fab"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Http.dll",
+        "sha256": "01d9c4411bd9d6c3e3223929c680cff1703f5bf2d4289baaac91e3b41bca70d2"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Runtime.dll",
+        "sha256": "fc12bb2bafc01952b83e0d452e717a6f466bd713453d6d95f0d50a4696f15799"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/OpenTelemetry.dll",
+        "sha256": "b780e5e7ec6b730b3207b5921395fe616070f13d0b0e63ad662131be4703a30b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Polly.Core.dll",
+        "sha256": "37762ea6fcf05154685b0a616461705c837c2f07d98e4037dc3a0e4b4c186ea5"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Polly.Extensions.dll",
+        "sha256": "8adac7a20cd056b9a8623efb6e6f9b99a82e18d3c7b7f6c788f7fc4b20ce5f18"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Polly.RateLimiting.dll",
+        "sha256": "afe3042cd4062438857d42880623845f32575375f460fd1ac07f705ea0211804"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerUI.dll",
+        "sha256": "e206aa659d72850c18102facaf0a12d946aa9a1b70b089fdf23b2853b6694e65"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore/src/Hexalith.EventStore/bin/Debug/net10.0/System.IdentityModel.Tokens.Jwt.dll",
+        "sha256": "593c82287b671e9cceefaf10c51df96793f6db30f9cfa60daabaaf80474670bf"
+      }
+    ]
+  },
+  {
+    "name": "memories",
+    "state": "Healthy",
+    "launcherPid": 2724633,
+    "launcherCommand": "dotnet run --project ${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj --configuration Debug --no-launch-profile ",
+    "loadedDebugAssemblies": [
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Dapr.AI.dll",
+        "sha256": "b8fa8fb23392a1985843a623c51058638451b4537aeccc2f5df4275fd3b3ba6d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Dapr.Actors.AspNetCore.dll",
+        "sha256": "c7deffe0f4b6c754fff3935a42ad378d729e85b277da853fbc8924790482d8b0"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Dapr.Actors.dll",
+        "sha256": "98d77fb28b39fe6832e06cb2bd66d58024b9587411b04965da385909f32a9dfa"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Dapr.AspNetCore.dll",
+        "sha256": "4db46444a22bbfd473e0f132139d943cec95e3637cdbf61077d88e618a48213d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Dapr.Client.dll",
+        "sha256": "cc7b8e629416c52be2569d7610c5c830b19ba690d4f54300ffdee901dec99115"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Dapr.Common.dll",
+        "sha256": "9c10b91825371c10e469e91627080414bde4e8fa5acd894a2dbe398af03e1893"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Dapr.Protos.dll",
+        "sha256": "659938b9475b4951bd49086a66d8ad24f89ac6c1c33d6888adfefb8420edf03c"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Dapr.Workflow.Abstractions.dll",
+        "sha256": "28a3d8fd6f95a92831088bdb1cb65ebac36c6f1921fa6ba2aabda347fdd8dde2"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Dapr.Workflow.Grpc.dll",
+        "sha256": "88d4943d7805389ca13e4816a9fc79815e9facb3985d7ca97d033728b38af86d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Dapr.Workflow.Versioning.Abstractions.dll",
+        "sha256": "2dcc6c92371032e6f74e2c872eb25c7c8bc54ca9f36bd7d5bae7425063f0101b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Dapr.Workflow.Versioning.Runtime.dll",
+        "sha256": "08aeda1d74cf43e73bb2005747945eccfe06b20d1e20d38d9ba17650927ff02f"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Dapr.Workflow.dll",
+        "sha256": "762298021bbcf72dd68477d9026910e091f7e816a240408ae84dcbd4e5e08af1"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Google.Protobuf.dll",
+        "sha256": "e9b892ac667931162ffefa411ef8dc3eae777d634d8bfe8beddc28b1de95a612"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Grpc.Core.Api.dll",
+        "sha256": "5674c1203706b5a261e8bbd3499147d94fc80b5f077bf45f9934ca28a9c8574b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Grpc.Net.Client.dll",
+        "sha256": "f884d8444feb888656cbb7de87ee8f53a50811329bb32c6e7a7a81cb1de008ef"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Grpc.Net.ClientFactory.dll",
+        "sha256": "3702c5ba264d5d3066f92b9473588608a408458b824771d015ad3c3cb7df4bdd"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Grpc.Net.Common.dll",
+        "sha256": "fdff383bbd8e5015f3c4aaaa7508b769228f33c92ba14fec4e59d35c5d78e6ae"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Grpc.Reflection.dll",
+        "sha256": "87795d17c1385e7c05469c447ad8eecc883c3c71b4804319c5918a5a490c8d57"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Hexalith.EventStore.Client.dll",
+        "sha256": "96260ccde8d0152ef1668f537ff43e6bfc0869db46969a4f7516fe18fae6b272"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll",
+        "sha256": "7dd418485ceea83113fec339595f31bed7e32a1a893e3bae840572b75f626b07"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Hexalith.Memories.AccessTelemetry.Contracts.dll",
+        "sha256": "c544d95baa0ece2041c71b90a866f5dbf77e782d23ee8fda84e4c8e2567a7723"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Hexalith.Memories.Contracts.dll",
+        "sha256": "3373b0797859b8f643801de4bb9d0ffb20bf3b213c23b181f436b2c79536a347"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Hexalith.Memories.EventStore.dll",
+        "sha256": "a2f4009f1270a4478c1666d7cc5b57ec04d581b8eabb53e7a2c432246d8b871e"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Hexalith.Memories.Server.dll",
+        "sha256": "d0433a761010ba0b7227d177925fe67e08380454369050fdb568e871d43244aa"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Hexalith.Memories.ServiceDefaults.dll",
+        "sha256": "1c999f0f57bb8e3584cfe9d45faa1145c92f1c7d01243f86b205bac3a9aada4d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Hexalith.Memories.Telemetry.dll",
+        "sha256": "0c4e0960d8890e89ff6985f7c1de9a348ac6e9d962bdd734363a8679906656fc"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Kreuzberg.dll",
+        "sha256": "2238efb1631979eff8c822de7601e2339c17ef26f2bf0f48b73bf7c3ae93d654"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll",
+        "sha256": "6aa38a3d01cc3e9bfd6ee5cc7c882f4d0399cfb807e52f19ff458f355a31851b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Microsoft.Extensions.Compliance.Abstractions.dll",
+        "sha256": "e4df4358dd2dd57be430a9e7f220bc49bef26ab00007c732605c0defc207e065"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Microsoft.Extensions.Diagnostics.ExceptionSummarization.dll",
+        "sha256": "6ae3665434f016222e9d75a54a44a62d01c412ef63b5d7462c3a22ad9757c4d8"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Microsoft.Extensions.Http.Resilience.dll",
+        "sha256": "b28b929922d42b1c979ee403f454387f4522bf973c149753f5300ae959d70531"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.Abstractions.dll",
+        "sha256": "58ac3be03e3c4ae03486b8ec619ca769bf94befd38f432d61b32b1fba8d7d193"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.dll",
+        "sha256": "3646d627b519e017c3392219b17416b04377c815a918248a503557fd40db9e0a"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Microsoft.Extensions.Telemetry.Abstractions.dll",
+        "sha256": "57af8ce079eb3bcec63fd176f1034012f8199c44d38f10168438cc78364a9030"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Microsoft.IdentityModel.JsonWebTokens.dll",
+        "sha256": "4f61fd3d3f5003951a09cdd27ffdc3c4841a158d27a6d7247be3e5939e7dab32"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Microsoft.IdentityModel.Logging.dll",
+        "sha256": "2bc4582ae62236f066901a7dcb2a88d04a181ad1978f2db2f4314df6ae1a50c6"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll",
+        "sha256": "7921aef6fa1da2e563a237dda129b12407ac6c56448bb0eb7eebc59bb6c6babb"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.dll",
+        "sha256": "40ada0b98384788970117cadf63863edd99bd5bd6fb8076f6da68d65f6dbda4f"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Microsoft.IdentityModel.Tokens.dll",
+        "sha256": "106db045348a9b767f3002d4ec3bb582c9141f6d8e9966e1e0ad58a71ba42b8b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/NFalkorDB.dll",
+        "sha256": "ea8d4275bb8cc7526475e7712b9315fbc2b6c0b7bdf26d56a53d3f7cf3530483"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/NRedisStack.dll",
+        "sha256": "57714f9cda4ca5bc72a82d88a3cb69d3cd5e2d7582828668c2e4203771eaaa05"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/OpenTelemetry.Api.ProviderBuilderExtensions.dll",
+        "sha256": "d9248458b433d3317f3618b5d9fa9d776bd88a78220af2faab06f6416208094b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/OpenTelemetry.Api.dll",
+        "sha256": "43a7484269df9efae3a063198c42683a631d90c278940ee3cc11435719481ced"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/OpenTelemetry.Exporter.OpenTelemetryProtocol.dll",
+        "sha256": "02a75ffefd0ca9f79043af39c73d44e3773a03dca8a9eaa8c49d465197bf6b45"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/OpenTelemetry.Extensions.Hosting.dll",
+        "sha256": "617ca46b1297625de495f3e5a903701c19bef0f727de2e46c60c3246f898cb5d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/OpenTelemetry.Instrumentation.AspNetCore.dll",
+        "sha256": "10398265b32699e6f1087ade9c11ee5e331a9975b87b530dc418946fe4612fab"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Http.dll",
+        "sha256": "01d9c4411bd9d6c3e3223929c680cff1703f5bf2d4289baaac91e3b41bca70d2"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Runtime.dll",
+        "sha256": "fc12bb2bafc01952b83e0d452e717a6f466bd713453d6d95f0d50a4696f15799"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/OpenTelemetry.Instrumentation.StackExchangeRedis.dll",
+        "sha256": "c3a4c104507d52c663a74002e7597f8d2c6bba99d4d04b49cccd334eac9291e7"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/OpenTelemetry.dll",
+        "sha256": "b780e5e7ec6b730b3207b5921395fe616070f13d0b0e63ad662131be4703a30b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Polly.Core.dll",
+        "sha256": "37762ea6fcf05154685b0a616461705c837c2f07d98e4037dc3a0e4b4c186ea5"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Polly.Extensions.dll",
+        "sha256": "8adac7a20cd056b9a8623efb6e6f9b99a82e18d3c7b7f6c788f7fc4b20ce5f18"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/Polly.RateLimiting.dll",
+        "sha256": "afe3042cd4062438857d42880623845f32575375f460fd1ac07f705ea0211804"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/RESPite.dll",
+        "sha256": "ec60961494a640b0faff3447afe14c90f5bd27e53f5ab0b4284b34cae717f4fa"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/StackExchange.Redis.dll",
+        "sha256": "e14460fe50cd699b34c75b9a8b10cdb79c2ed68f4088879afa2e073b7afba502"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Debug/net10.0/System.IdentityModel.Tokens.Jwt.dll",
+        "sha256": "3d55b14eabadaf18aefea2c4eb085428e0485063ae3ea91cac072e3b5f951a83"
+      }
+    ]
+  },
+  {
+    "name": "memories-access-telemetry",
+    "state": "Healthy",
+    "launcherPid": 2724680,
+    "launcherCommand": "dotnet run --project ${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/Hexalith.Memories.AccessTelemetry.csproj --configuration Debug --no-launch-profile ",
+    "loadedDebugAssemblies": [
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Dapr.Actors.AspNetCore.dll",
+        "sha256": "c7deffe0f4b6c754fff3935a42ad378d729e85b277da853fbc8924790482d8b0"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Dapr.Actors.dll",
+        "sha256": "98d77fb28b39fe6832e06cb2bd66d58024b9587411b04965da385909f32a9dfa"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Dapr.AspNetCore.dll",
+        "sha256": "4db46444a22bbfd473e0f132139d943cec95e3637cdbf61077d88e618a48213d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Dapr.Client.dll",
+        "sha256": "cc7b8e629416c52be2569d7610c5c830b19ba690d4f54300ffdee901dec99115"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Dapr.Common.dll",
+        "sha256": "9c10b91825371c10e469e91627080414bde4e8fa5acd894a2dbe398af03e1893"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Google.Protobuf.dll",
+        "sha256": "e9b892ac667931162ffefa411ef8dc3eae777d634d8bfe8beddc28b1de95a612"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Hexalith.Memories.AccessTelemetry.Contracts.dll",
+        "sha256": "c544d95baa0ece2041c71b90a866f5dbf77e782d23ee8fda84e4c8e2567a7723"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Hexalith.Memories.AccessTelemetry.dll",
+        "sha256": "7e9219b7391f8235330ca9d1e0e71cbbd4b96f71b6fb038bcb63612acef33aa8"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Hexalith.Memories.Contracts.dll",
+        "sha256": "3373b0797859b8f643801de4bb9d0ffb20bf3b213c23b181f436b2c79536a347"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Hexalith.Memories.ServiceDefaults.dll",
+        "sha256": "1c999f0f57bb8e3584cfe9d45faa1145c92f1c7d01243f86b205bac3a9aada4d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Hexalith.Memories.Telemetry.dll",
+        "sha256": "0c4e0960d8890e89ff6985f7c1de9a348ac6e9d962bdd734363a8679906656fc"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Microsoft.Extensions.Diagnostics.ExceptionSummarization.dll",
+        "sha256": "6ae3665434f016222e9d75a54a44a62d01c412ef63b5d7462c3a22ad9757c4d8"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Microsoft.Extensions.Http.Resilience.dll",
+        "sha256": "b28b929922d42b1c979ee403f454387f4522bf973c149753f5300ae959d70531"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.Abstractions.dll",
+        "sha256": "58ac3be03e3c4ae03486b8ec619ca769bf94befd38f432d61b32b1fba8d7d193"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.dll",
+        "sha256": "3646d627b519e017c3392219b17416b04377c815a918248a503557fd40db9e0a"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/OpenTelemetry.Api.ProviderBuilderExtensions.dll",
+        "sha256": "d9248458b433d3317f3618b5d9fa9d776bd88a78220af2faab06f6416208094b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/OpenTelemetry.Api.dll",
+        "sha256": "43a7484269df9efae3a063198c42683a631d90c278940ee3cc11435719481ced"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/OpenTelemetry.Exporter.OpenTelemetryProtocol.dll",
+        "sha256": "02a75ffefd0ca9f79043af39c73d44e3773a03dca8a9eaa8c49d465197bf6b45"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/OpenTelemetry.Extensions.Hosting.dll",
+        "sha256": "617ca46b1297625de495f3e5a903701c19bef0f727de2e46c60c3246f898cb5d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/OpenTelemetry.Instrumentation.AspNetCore.dll",
+        "sha256": "10398265b32699e6f1087ade9c11ee5e331a9975b87b530dc418946fe4612fab"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Http.dll",
+        "sha256": "01d9c4411bd9d6c3e3223929c680cff1703f5bf2d4289baaac91e3b41bca70d2"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Runtime.dll",
+        "sha256": "fc12bb2bafc01952b83e0d452e717a6f466bd713453d6d95f0d50a4696f15799"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/OpenTelemetry.dll",
+        "sha256": "b780e5e7ec6b730b3207b5921395fe616070f13d0b0e63ad662131be4703a30b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Polly.Core.dll",
+        "sha256": "37762ea6fcf05154685b0a616461705c837c2f07d98e4037dc3a0e4b4c186ea5"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Polly.Extensions.dll",
+        "sha256": "8adac7a20cd056b9a8623efb6e6f9b99a82e18d3c7b7f6c788f7fc4b20ce5f18"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry/bin/Debug/net10.0/Polly.RateLimiting.dll",
+        "sha256": "afe3042cd4062438857d42880623845f32575375f460fd1ac07f705ea0211804"
+      }
+    ]
+  },
+  {
+    "name": "memories-access-telemetry-clock",
+    "state": "Healthy",
+    "launcherPid": 2724724,
+    "launcherCommand": "dotnet run --project ${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/Hexalith.Memories.AccessTelemetry.Clock.csproj --configuration Debug --no-launch-profile ",
+    "loadedDebugAssemblies": [
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/ByteAether.Ulid.dll",
+        "sha256": "fc4f3d99e88023ffbd37eea2941ddd81f604611fc967fedb116a4daaf9ae4590"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Dapr.Client.dll",
+        "sha256": "cc7b8e629416c52be2569d7610c5c830b19ba690d4f54300ffdee901dec99115"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Dapr.Common.dll",
+        "sha256": "9c10b91825371c10e469e91627080414bde4e8fa5acd894a2dbe398af03e1893"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Dapr.Protos.dll",
+        "sha256": "659938b9475b4951bd49086a66d8ad24f89ac6c1c33d6888adfefb8420edf03c"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Google.Protobuf.dll",
+        "sha256": "e9b892ac667931162ffefa411ef8dc3eae777d634d8bfe8beddc28b1de95a612"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Grpc.Core.Api.dll",
+        "sha256": "5674c1203706b5a261e8bbd3499147d94fc80b5f077bf45f9934ca28a9c8574b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Grpc.Net.Client.dll",
+        "sha256": "f884d8444feb888656cbb7de87ee8f53a50811329bb32c6e7a7a81cb1de008ef"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Grpc.Net.Common.dll",
+        "sha256": "fdff383bbd8e5015f3c4aaaa7508b769228f33c92ba14fec4e59d35c5d78e6ae"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Grpc.Reflection.dll",
+        "sha256": "87795d17c1385e7c05469c447ad8eecc883c3c71b4804319c5918a5a490c8d57"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Hexalith.Memories.AccessTelemetry.Clock.dll",
+        "sha256": "053338fb1878125682237a180a190ce0214dac8cb105bf07b8246a1ef85503bf"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Hexalith.Memories.AccessTelemetry.Contracts.dll",
+        "sha256": "c544d95baa0ece2041c71b90a866f5dbf77e782d23ee8fda84e4c8e2567a7723"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Hexalith.Memories.Contracts.dll",
+        "sha256": "3373b0797859b8f643801de4bb9d0ffb20bf3b213c23b181f436b2c79536a347"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Hexalith.Memories.ServiceDefaults.dll",
+        "sha256": "1c999f0f57bb8e3584cfe9d45faa1145c92f1c7d01243f86b205bac3a9aada4d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Hexalith.Memories.Telemetry.dll",
+        "sha256": "0c4e0960d8890e89ff6985f7c1de9a348ac6e9d962bdd734363a8679906656fc"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Microsoft.Extensions.Diagnostics.ExceptionSummarization.dll",
+        "sha256": "6ae3665434f016222e9d75a54a44a62d01c412ef63b5d7462c3a22ad9757c4d8"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Microsoft.Extensions.Http.Resilience.dll",
+        "sha256": "b28b929922d42b1c979ee403f454387f4522bf973c149753f5300ae959d70531"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.Abstractions.dll",
+        "sha256": "58ac3be03e3c4ae03486b8ec619ca769bf94befd38f432d61b32b1fba8d7d193"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.dll",
+        "sha256": "3646d627b519e017c3392219b17416b04377c815a918248a503557fd40db9e0a"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/OpenTelemetry.Api.ProviderBuilderExtensions.dll",
+        "sha256": "d9248458b433d3317f3618b5d9fa9d776bd88a78220af2faab06f6416208094b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/OpenTelemetry.Api.dll",
+        "sha256": "43a7484269df9efae3a063198c42683a631d90c278940ee3cc11435719481ced"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/OpenTelemetry.Exporter.OpenTelemetryProtocol.dll",
+        "sha256": "02a75ffefd0ca9f79043af39c73d44e3773a03dca8a9eaa8c49d465197bf6b45"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/OpenTelemetry.Extensions.Hosting.dll",
+        "sha256": "617ca46b1297625de495f3e5a903701c19bef0f727de2e46c60c3246f898cb5d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/OpenTelemetry.Instrumentation.AspNetCore.dll",
+        "sha256": "10398265b32699e6f1087ade9c11ee5e331a9975b87b530dc418946fe4612fab"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Http.dll",
+        "sha256": "01d9c4411bd9d6c3e3223929c680cff1703f5bf2d4289baaac91e3b41bca70d2"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Runtime.dll",
+        "sha256": "fc12bb2bafc01952b83e0d452e717a6f466bd713453d6d95f0d50a4696f15799"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/OpenTelemetry.dll",
+        "sha256": "b780e5e7ec6b730b3207b5921395fe616070f13d0b0e63ad662131be4703a30b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Polly.Core.dll",
+        "sha256": "37762ea6fcf05154685b0a616461705c837c2f07d98e4037dc3a0e4b4c186ea5"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Polly.Extensions.dll",
+        "sha256": "8adac7a20cd056b9a8623efb6e6f9b99a82e18d3c7b7f6c788f7fc4b20ce5f18"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories/src/Hexalith.Memories.AccessTelemetry.Clock/bin/Debug/net10.0/Polly.RateLimiting.dll",
+        "sha256": "afe3042cd4062438857d42880623845f32575375f460fd1ac07f705ea0211804"
+      }
+    ]
+  },
+  {
+    "name": "parties",
+    "state": "Healthy",
+    "launcherPid": 2807785,
+    "launcherCommand": "dotnet run --project ${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/Hexalith.Parties.csproj --configuration Debug --no-launch-profile ",
+    "loadedDebugAssemblies": [
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Dapr.Actors.AspNetCore.dll",
+        "sha256": "c7deffe0f4b6c754fff3935a42ad378d729e85b277da853fbc8924790482d8b0"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Dapr.Actors.dll",
+        "sha256": "98d77fb28b39fe6832e06cb2bd66d58024b9587411b04965da385909f32a9dfa"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Dapr.AspNetCore.dll",
+        "sha256": "4db46444a22bbfd473e0f132139d943cec95e3637cdbf61077d88e618a48213d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Dapr.Client.dll",
+        "sha256": "cc7b8e629416c52be2569d7610c5c830b19ba690d4f54300ffdee901dec99115"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Dapr.Common.dll",
+        "sha256": "9c10b91825371c10e469e91627080414bde4e8fa5acd894a2dbe398af03e1893"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Dapr.Protos.dll",
+        "sha256": "659938b9475b4951bd49086a66d8ad24f89ac6c1c33d6888adfefb8420edf03c"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/FluentValidation.DependencyInjectionExtensions.dll",
+        "sha256": "32385a476b65365d0f9de1819cd1f46d155d1f46beea68176603cf341b29a797"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/FluentValidation.dll",
+        "sha256": "07373bb5527d6d96908c60962102c9c1339b363c4ee8ad62277eb2ffc6387df4"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Google.Protobuf.dll",
+        "sha256": "e9b892ac667931162ffefa411ef8dc3eae777d634d8bfe8beddc28b1de95a612"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Grpc.Core.Api.dll",
+        "sha256": "5674c1203706b5a261e8bbd3499147d94fc80b5f077bf45f9934ca28a9c8574b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Grpc.Net.Client.dll",
+        "sha256": "f884d8444feb888656cbb7de87ee8f53a50811329bb32c6e7a7a81cb1de008ef"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Grpc.Net.Common.dll",
+        "sha256": "fdff383bbd8e5015f3c4aaaa7508b769228f33c92ba14fec4e59d35c5d78e6ae"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Grpc.Reflection.dll",
+        "sha256": "87795d17c1385e7c05469c447ad8eecc883c3c71b4804319c5918a5a490c8d57"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Commons.Http.dll",
+        "sha256": "bdc0f4bdd0cbff354ef87947d16ae34c468c6820ff85e04b53c2e8a74878cf31"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.EventStore.Client.dll",
+        "sha256": "64d6afa3570a02c6feeb718c5b7b59ef2591a9f6e162179d2eeb438bda2bd09f"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll",
+        "sha256": "8440ee62ca4361c9e36fd2b6764452b4d5e4b7a47c0c9b86e745f006d6d152a6"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.EventStore.DomainService.dll",
+        "sha256": "407fbf2dbaf2b73fafac439ed89034baba92e4b9fa38ad7732d9aa9d99450e77"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.EventStore.ServiceDefaults.dll",
+        "sha256": "6189e4d3d303cbcb306489937bc51fa4619c40494742d718caed2ddc4d693710"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Memories.Client.Rest.dll",
+        "sha256": "df7706825df418b7c296bdd035979f3ed1b98b16ea310779ebe022dc8c531bb1"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Memories.Contracts.dll",
+        "sha256": "3373b0797859b8f643801de4bb9d0ffb20bf3b213c23b181f436b2c79536a347"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll",
+        "sha256": "bebc2e92fd5c3d353216b08a67424030d98b2b39309ae0adf009129c62609faa"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll",
+        "sha256": "140d37d44960740d8521f5158a8b446249e159c71bd10a32db17dfa50fdc2b44"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.Projections.dll",
+        "sha256": "6365e262e5ced84b8c37d8b2e772fbd58eabd17be701edbefbf83d60310e9a83"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.Security.dll",
+        "sha256": "c40f2a57b79178196218f8892dc0eac1193077c5b4eebd93253e76fd1c574047"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll",
+        "sha256": "c0eb921366457280e64f553e2d4462feecdda47b81fbb440da5defe7ce998ada"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Tenants.Client.dll",
+        "sha256": "5b5c219059ed2d041626901c70f11cd938941b74c23caa2af141de7959afe946"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Tenants.Contracts.dll",
+        "sha256": "0393499d3f9cb03f02c3b2acf1b9a757d439595fe1f52396356a844b38d54d8c"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll",
+        "sha256": "6aa38a3d01cc3e9bfd6ee5cc7c882f4d0399cfb807e52f19ff458f355a31851b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.Extensions.Diagnostics.ExceptionSummarization.dll",
+        "sha256": "6ae3665434f016222e9d75a54a44a62d01c412ef63b5d7462c3a22ad9757c4d8"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.Extensions.Http.Diagnostics.dll",
+        "sha256": "56da1ed94fe5551db5b67292820634136fe8b6d991626288aebdce7ee25400ee"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.Extensions.Http.Resilience.dll",
+        "sha256": "b28b929922d42b1c979ee403f454387f4522bf973c149753f5300ae959d70531"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.Abstractions.dll",
+        "sha256": "58ac3be03e3c4ae03486b8ec619ca769bf94befd38f432d61b32b1fba8d7d193"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.dll",
+        "sha256": "3646d627b519e017c3392219b17416b04377c815a918248a503557fd40db9e0a"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.Extensions.Telemetry.Abstractions.dll",
+        "sha256": "57af8ce079eb3bcec63fd176f1034012f8199c44d38f10168438cc78364a9030"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.Extensions.Telemetry.dll",
+        "sha256": "cca41d630de69f9afda79cff76c26976c87ee28aec216cba63c2e81241b8f7f5"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.IdentityModel.Abstractions.dll",
+        "sha256": "46f14d67dfc1894eb24d80282895526db25a854af227eee2fa06a0383fd09e4c"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.IdentityModel.JsonWebTokens.dll",
+        "sha256": "b48515aeaa4a8fadc5fcacb45978c808a4d5bbffaf74f8894cc57c0769a9fb9e"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.IdentityModel.Logging.dll",
+        "sha256": "90b6fa70f28a3b7711fe95aa30a0c5551f1e6aa28565187aa7b3681194215c84"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll",
+        "sha256": "cf37440c96bd178f2676867b77fa651df001b56b2f42be99b08e5226b3ab4918"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.dll",
+        "sha256": "dd8823215cada7e1c7fe5d2a3b06395fb906baa5f79ec00411ad6a1f80585f60"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Microsoft.IdentityModel.Tokens.dll",
+        "sha256": "84409b8c3a52313fe4f4f621fce39544f42074109e870ac2631e627c8b70210f"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/OpenTelemetry.Api.ProviderBuilderExtensions.dll",
+        "sha256": "d9248458b433d3317f3618b5d9fa9d776bd88a78220af2faab06f6416208094b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/OpenTelemetry.Api.dll",
+        "sha256": "43a7484269df9efae3a063198c42683a631d90c278940ee3cc11435719481ced"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/OpenTelemetry.Exporter.OpenTelemetryProtocol.dll",
+        "sha256": "02a75ffefd0ca9f79043af39c73d44e3773a03dca8a9eaa8c49d465197bf6b45"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/OpenTelemetry.Extensions.Hosting.dll",
+        "sha256": "617ca46b1297625de495f3e5a903701c19bef0f727de2e46c60c3246f898cb5d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/OpenTelemetry.Instrumentation.AspNetCore.dll",
+        "sha256": "10398265b32699e6f1087ade9c11ee5e331a9975b87b530dc418946fe4612fab"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Http.dll",
+        "sha256": "01d9c4411bd9d6c3e3223929c680cff1703f5bf2d4289baaac91e3b41bca70d2"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Runtime.dll",
+        "sha256": "fc12bb2bafc01952b83e0d452e717a6f466bd713453d6d95f0d50a4696f15799"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/OpenTelemetry.dll",
+        "sha256": "b780e5e7ec6b730b3207b5921395fe616070f13d0b0e63ad662131be4703a30b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Polly.Core.dll",
+        "sha256": "37762ea6fcf05154685b0a616461705c837c2f07d98e4037dc3a0e4b4c186ea5"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Polly.Extensions.dll",
+        "sha256": "8adac7a20cd056b9a8623efb6e6f9b99a82e18d3c7b7f6c788f7fc4b20ce5f18"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/Polly.RateLimiting.dll",
+        "sha256": "afe3042cd4062438857d42880623845f32575375f460fd1ac07f705ea0211804"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/src/Hexalith.Parties/bin/Debug/net10.0/System.IdentityModel.Tokens.Jwt.dll",
+        "sha256": "593c82287b671e9cceefaf10c51df96793f6db30f9cfa60daabaaf80474670bf"
+      }
+    ]
+  },
+  {
+    "name": "tenants",
+    "state": "Healthy",
+    "launcherPid": 2724683,
+    "launcherCommand": "dotnet run --project ${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj --configuration Debug --no-launch-profile ",
+    "loadedDebugAssemblies": [
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/ByteAether.Ulid.dll",
+        "sha256": "fc4f3d99e88023ffbd37eea2941ddd81f604611fc967fedb116a4daaf9ae4590"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Dapr.Actors.dll",
+        "sha256": "98d77fb28b39fe6832e06cb2bd66d58024b9587411b04965da385909f32a9dfa"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Dapr.AspNetCore.dll",
+        "sha256": "4db46444a22bbfd473e0f132139d943cec95e3637cdbf61077d88e618a48213d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Dapr.Client.dll",
+        "sha256": "cc7b8e629416c52be2569d7610c5c830b19ba690d4f54300ffdee901dec99115"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Dapr.Common.dll",
+        "sha256": "9c10b91825371c10e469e91627080414bde4e8fa5acd894a2dbe398af03e1893"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Dapr.Protos.dll",
+        "sha256": "659938b9475b4951bd49086a66d8ad24f89ac6c1c33d6888adfefb8420edf03c"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/FluentValidation.DependencyInjectionExtensions.dll",
+        "sha256": "32385a476b65365d0f9de1819cd1f46d155d1f46beea68176603cf341b29a797"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/FluentValidation.dll",
+        "sha256": "07373bb5527d6d96908c60962102c9c1339b363c4ee8ad62277eb2ffc6387df4"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Google.Protobuf.dll",
+        "sha256": "e9b892ac667931162ffefa411ef8dc3eae777d634d8bfe8beddc28b1de95a612"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Grpc.Core.Api.dll",
+        "sha256": "5674c1203706b5a261e8bbd3499147d94fc80b5f077bf45f9934ca28a9c8574b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Grpc.Net.Client.dll",
+        "sha256": "f884d8444feb888656cbb7de87ee8f53a50811329bb32c6e7a7a81cb1de008ef"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Grpc.Net.Common.dll",
+        "sha256": "fdff383bbd8e5015f3c4aaaa7508b769228f33c92ba14fec4e59d35c5d78e6ae"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Grpc.Reflection.dll",
+        "sha256": "87795d17c1385e7c05469c447ad8eecc883c3c71b4804319c5918a5a490c8d57"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Hexalith.Commons.UniqueIds.dll",
+        "sha256": "6058e2f67ecb73b3f6036834755ca17100af7b2ca1b080647766ec4c6d2b854d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Hexalith.EventStore.Admin.Abstractions.dll",
+        "sha256": "7a0c451d9268cde73f20c61d3e319500bce4604f233ba81b95b16ee05884f31b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Hexalith.EventStore.Client.dll",
+        "sha256": "96260ccde8d0152ef1668f537ff43e6bfc0869db46969a4f7516fe18fae6b272"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll",
+        "sha256": "7dd418485ceea83113fec339595f31bed7e32a1a893e3bae840572b75f626b07"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Hexalith.EventStore.DomainService.dll",
+        "sha256": "5bf584e75a00db6a9c466b014ecb63d289f5a56045cd024653f97750ad6c1784"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Hexalith.EventStore.Gateway.dll",
+        "sha256": "26247b2b7713e38d054c1c73f89944f55f5ba4a7d22ec1f1f44ece66b8b90f47"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Hexalith.EventStore.Server.dll",
+        "sha256": "659a2766618b319b1d07121daf63b76c59bf15f0ec0095af870505572df39a49"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Hexalith.EventStore.ServiceDefaults.dll",
+        "sha256": "d427268229c2f830af7df3c5951326f72abc568a4aee24afa0704b36077c5bea"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Hexalith.Tenants.Contracts.dll",
+        "sha256": "0393499d3f9cb03f02c3b2acf1b9a757d439595fe1f52396356a844b38d54d8c"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Hexalith.Tenants.Server.dll",
+        "sha256": "b689b2a568bb10e2d0daa473710c4b1a6960ad925ade395ada31b5613b9d991f"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Hexalith.Tenants.dll",
+        "sha256": "558caee02b061a3d8fe2005cf68ca0b1bbacbbcc061f56eac79504120660e188"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/MediatR.Contracts.dll",
+        "sha256": "c2601304aa9d15c51a543e1c3300368c64ac38633e7277bb835a04f68ddf6a61"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/MediatR.dll",
+        "sha256": "856b8a06d82033415ffef0edcac5f38256f1ef0336dbc372609f75b82a333d97"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll",
+        "sha256": "6aa38a3d01cc3e9bfd6ee5cc7c882f4d0399cfb807e52f19ff458f355a31851b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.AspNetCore.OpenApi.dll",
+        "sha256": "ed704f63de95981f91ded8d0cc7642ad73c455b54e741b18dd42e9e44e60c51f"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.Extensions.Compliance.Abstractions.dll",
+        "sha256": "e4df4358dd2dd57be430a9e7f220bc49bef26ab00007c732605c0defc207e065"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.Extensions.Diagnostics.ExceptionSummarization.dll",
+        "sha256": "6ae3665434f016222e9d75a54a44a62d01c412ef63b5d7462c3a22ad9757c4d8"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.Extensions.Http.Resilience.dll",
+        "sha256": "b28b929922d42b1c979ee403f454387f4522bf973c149753f5300ae959d70531"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.Abstractions.dll",
+        "sha256": "58ac3be03e3c4ae03486b8ec619ca769bf94befd38f432d61b32b1fba8d7d193"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.dll",
+        "sha256": "3646d627b519e017c3392219b17416b04377c815a918248a503557fd40db9e0a"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.Extensions.Telemetry.Abstractions.dll",
+        "sha256": "57af8ce079eb3bcec63fd176f1034012f8199c44d38f10168438cc78364a9030"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.IdentityModel.Abstractions.dll",
+        "sha256": "46f14d67dfc1894eb24d80282895526db25a854af227eee2fa06a0383fd09e4c"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.IdentityModel.JsonWebTokens.dll",
+        "sha256": "b48515aeaa4a8fadc5fcacb45978c808a4d5bbffaf74f8894cc57c0769a9fb9e"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.IdentityModel.Logging.dll",
+        "sha256": "90b6fa70f28a3b7711fe95aa30a0c5551f1e6aa28565187aa7b3681194215c84"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll",
+        "sha256": "cf37440c96bd178f2676867b77fa651df001b56b2f42be99b08e5226b3ab4918"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.dll",
+        "sha256": "dd8823215cada7e1c7fe5d2a3b06395fb906baa5f79ec00411ad6a1f80585f60"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.IdentityModel.Tokens.dll",
+        "sha256": "84409b8c3a52313fe4f4f621fce39544f42074109e870ac2631e627c8b70210f"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Microsoft.OpenApi.dll",
+        "sha256": "dae97412c5804da0906639014cb6bd73b2cf37ad02da95437ded59578946e6e9"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/OpenTelemetry.Api.ProviderBuilderExtensions.dll",
+        "sha256": "d9248458b433d3317f3618b5d9fa9d776bd88a78220af2faab06f6416208094b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/OpenTelemetry.Api.dll",
+        "sha256": "43a7484269df9efae3a063198c42683a631d90c278940ee3cc11435719481ced"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/OpenTelemetry.Exporter.OpenTelemetryProtocol.dll",
+        "sha256": "02a75ffefd0ca9f79043af39c73d44e3773a03dca8a9eaa8c49d465197bf6b45"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/OpenTelemetry.Extensions.Hosting.dll",
+        "sha256": "617ca46b1297625de495f3e5a903701c19bef0f727de2e46c60c3246f898cb5d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/OpenTelemetry.Instrumentation.AspNetCore.dll",
+        "sha256": "10398265b32699e6f1087ade9c11ee5e331a9975b87b530dc418946fe4612fab"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Http.dll",
+        "sha256": "01d9c4411bd9d6c3e3223929c680cff1703f5bf2d4289baaac91e3b41bca70d2"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Runtime.dll",
+        "sha256": "fc12bb2bafc01952b83e0d452e717a6f466bd713453d6d95f0d50a4696f15799"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/OpenTelemetry.dll",
+        "sha256": "b780e5e7ec6b730b3207b5921395fe616070f13d0b0e63ad662131be4703a30b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Polly.Core.dll",
+        "sha256": "37762ea6fcf05154685b0a616461705c837c2f07d98e4037dc3a0e4b4c186ea5"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Polly.Extensions.dll",
+        "sha256": "8adac7a20cd056b9a8623efb6e6f9b99a82e18d3c7b7f6c788f7fc4b20ce5f18"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/Polly.RateLimiting.dll",
+        "sha256": "afe3042cd4062438857d42880623845f32575375f460fd1ac07f705ea0211804"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants/bin/Debug/net10.0/System.IdentityModel.Tokens.Jwt.dll",
+        "sha256": "593c82287b671e9cceefaf10c51df96793f6db30f9cfa60daabaaf80474670bf"
+      }
+    ]
+  },
+  {
+    "name": "tenants-api",
+    "state": "Healthy",
+    "launcherPid": 2724682,
+    "launcherCommand": "dotnet run --project ${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/Hexalith.Tenants.Api.csproj --configuration Debug --no-launch-profile ",
+    "loadedDebugAssemblies": [
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Hexalith.EventStore.Client.dll",
+        "sha256": "64d6afa3570a02c6feeb718c5b7b59ef2591a9f6e162179d2eeb438bda2bd09f"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Hexalith.EventStore.Contracts.dll",
+        "sha256": "8440ee62ca4361c9e36fd2b6764452b4d5e4b7a47c0c9b86e745f006d6d152a6"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Hexalith.EventStore.ServiceDefaults.dll",
+        "sha256": "d427268229c2f830af7df3c5951326f72abc568a4aee24afa0704b36077c5bea"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Hexalith.McpCli.Abstractions.dll",
+        "sha256": "a85570ed2cc265ad7b641abb41b0864d1f1386046a9f9e6136b28c2ba5df2cd8"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Hexalith.Tenants.Api.dll",
+        "sha256": "45f3cf0c0c15db4b736d6646fc18be09e9a7588d6adff0d928bb3d84e91db7ae"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Hexalith.Tenants.Contracts.dll",
+        "sha256": "0393499d3f9cb03f02c3b2acf1b9a757d439595fe1f52396356a844b38d54d8c"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll",
+        "sha256": "6aa38a3d01cc3e9bfd6ee5cc7c882f4d0399cfb807e52f19ff458f355a31851b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Microsoft.Extensions.Diagnostics.ExceptionSummarization.dll",
+        "sha256": "6ae3665434f016222e9d75a54a44a62d01c412ef63b5d7462c3a22ad9757c4d8"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Microsoft.Extensions.Http.Diagnostics.dll",
+        "sha256": "56da1ed94fe5551db5b67292820634136fe8b6d991626288aebdce7ee25400ee"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Microsoft.Extensions.Http.Resilience.dll",
+        "sha256": "b28b929922d42b1c979ee403f454387f4522bf973c149753f5300ae959d70531"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.Abstractions.dll",
+        "sha256": "58ac3be03e3c4ae03486b8ec619ca769bf94befd38f432d61b32b1fba8d7d193"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Microsoft.Extensions.ServiceDiscovery.dll",
+        "sha256": "3646d627b519e017c3392219b17416b04377c815a918248a503557fd40db9e0a"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Microsoft.Extensions.Telemetry.Abstractions.dll",
+        "sha256": "57af8ce079eb3bcec63fd176f1034012f8199c44d38f10168438cc78364a9030"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Microsoft.Extensions.Telemetry.dll",
+        "sha256": "cca41d630de69f9afda79cff76c26976c87ee28aec216cba63c2e81241b8f7f5"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Microsoft.IdentityModel.JsonWebTokens.dll",
+        "sha256": "b48515aeaa4a8fadc5fcacb45978c808a4d5bbffaf74f8894cc57c0769a9fb9e"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Microsoft.IdentityModel.Logging.dll",
+        "sha256": "90b6fa70f28a3b7711fe95aa30a0c5551f1e6aa28565187aa7b3681194215c84"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll",
+        "sha256": "cf37440c96bd178f2676867b77fa651df001b56b2f42be99b08e5226b3ab4918"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.dll",
+        "sha256": "dd8823215cada7e1c7fe5d2a3b06395fb906baa5f79ec00411ad6a1f80585f60"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Microsoft.IdentityModel.Tokens.dll",
+        "sha256": "84409b8c3a52313fe4f4f621fce39544f42074109e870ac2631e627c8b70210f"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/OpenTelemetry.Api.ProviderBuilderExtensions.dll",
+        "sha256": "d9248458b433d3317f3618b5d9fa9d776bd88a78220af2faab06f6416208094b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/OpenTelemetry.Api.dll",
+        "sha256": "43a7484269df9efae3a063198c42683a631d90c278940ee3cc11435719481ced"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/OpenTelemetry.Exporter.OpenTelemetryProtocol.dll",
+        "sha256": "02a75ffefd0ca9f79043af39c73d44e3773a03dca8a9eaa8c49d465197bf6b45"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/OpenTelemetry.Extensions.Hosting.dll",
+        "sha256": "617ca46b1297625de495f3e5a903701c19bef0f727de2e46c60c3246f898cb5d"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/OpenTelemetry.Instrumentation.AspNetCore.dll",
+        "sha256": "10398265b32699e6f1087ade9c11ee5e331a9975b87b530dc418946fe4612fab"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Http.dll",
+        "sha256": "01d9c4411bd9d6c3e3223929c680cff1703f5bf2d4289baaac91e3b41bca70d2"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/OpenTelemetry.Instrumentation.Runtime.dll",
+        "sha256": "fc12bb2bafc01952b83e0d452e717a6f466bd713453d6d95f0d50a4696f15799"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/OpenTelemetry.dll",
+        "sha256": "b780e5e7ec6b730b3207b5921395fe616070f13d0b0e63ad662131be4703a30b"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Polly.Core.dll",
+        "sha256": "37762ea6fcf05154685b0a616461705c837c2f07d98e4037dc3a0e4b4c186ea5"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Polly.Extensions.dll",
+        "sha256": "8adac7a20cd056b9a8623efb6e6f9b99a82e18d3c7b7f6c788f7fc4b20ce5f18"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/Polly.RateLimiting.dll",
+        "sha256": "afe3042cd4062438857d42880623845f32575375f460fd1ac07f705ea0211804"
+      },
+      {
+        "path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants/src/Hexalith.Tenants.Api/bin/Debug/net10.0/System.IdentityModel.Tokens.Jwt.dll",
+        "sha256": "593c82287b671e9cceefaf10c51df96793f6db30f9cfa60daabaaf80474670bf"
+      }
+    ]
+  }
+]

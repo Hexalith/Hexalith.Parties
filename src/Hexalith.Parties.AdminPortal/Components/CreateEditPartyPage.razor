@@ -6,9 +6,11 @@
 @using Hexalith.Commons.UniqueIds
 @using Hexalith.Parties.Contracts.Authorization
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using Hexalith.Parties.Contracts.Commands
 @inject AdminPortalPartyQueryService QueryService
 @inject IAdminPortalAuthorizationService AuthorizationService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @implements IDisposable
@@ -155,7 +157,12 @@
     private readonly string[] _contactTypeOptions = ["", "Email", "Phone", "PostalAddress", "SocialMedia"];
     private readonly string[] _identifierTypeOptions = ["", "VAT", "SIRET", "NationalId", "CompanyRegistration", "TaxId", "Other"];
     private readonly string _instanceId = Guid.NewGuid().ToString("N").Substring(0, 8);
-    private readonly CancellationTokenSource _lifetimeCts = new();
+    private readonly object _workLock = new();
+    private CancellationToken _workToken = new(canceled: true);
+    private CancellationTokenSource? _workCts;
+    private CancellationTokenRegistration _scopeRegistration;
+    private CancellationToken _loadedScope;
+    private static readonly TimeSpan AuthorizationTimeout = TimeSpan.FromSeconds(10);
     private EditContext? _editContext;
     private ValidationMessageStore? _messages;
     private ElementReference _alertRef;
@@ -201,6 +208,7 @@
 
     protected override void OnInitialized()
     {
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
         _editContext = new EditContext(_model);
         _messages = new ValidationMessageStore(_editContext);
         _editContext.OnFieldChanged += OnFieldChanged;
@@ -215,8 +223,7 @@
         }
 
         _loadedRouteKey = routeKey;
-        ResetFormState();
-        await LoadAsync().ConfigureAwait(false);
+        await ReloadAsync(InvalidateWork()).ConfigureAwait(true);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -228,7 +235,7 @@
 
         if (_canRenderForm && !_pickerAttached)
         {
-            await AttachPickerAsync().ConfigureAwait(false);
+            await AttachPickerAsync().ConfigureAwait(true);
         }
 
         if (!_pendingAlertFocus)
@@ -239,7 +246,7 @@
         _pendingAlertFocus = false;
         try
         {
-            await _alertRef.FocusAsync().ConfigureAwait(false);
+            await _alertRef.FocusAsync().ConfigureAwait(true);
         }
         catch (InvalidOperationException)
         {
@@ -261,10 +268,10 @@
             _dotNetRef ??= DotNetObjectReference.Create(this);
             _pickerModule ??= await JSRuntime
                 .InvokeAsync<IJSObjectReference>("import", "./_content/Hexalith.Parties.AdminPortal/party-form-picker.js")
-                .ConfigureAwait(false);
+                .ConfigureAwait(true);
             if (Volatile.Read(ref _disposed) != 0)
             {
-                await DisposeInteropAsync().ConfigureAwait(false);
+                await DisposeInteropAsync().ConfigureAwait(true);
                 return;
             }
 
@@ -273,11 +280,11 @@
             {
                 await module
                     .InvokeVoidAsync("attachPartyPicker", _pickerElement, _dotNetRef, _instanceId)
-                    .ConfigureAwait(false);
+                    .ConfigureAwait(true);
                 _pickerAttached = true;
                 if (Volatile.Read(ref _disposed) != 0)
                 {
-                    await DisposeInteropAsync().ConfigureAwait(false);
+                    await DisposeInteropAsync().ConfigureAwait(true);
                 }
             }
         }
@@ -303,86 +310,194 @@
         return InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadAsync()
+    private long InvalidateWork(long? expectedVersion = null, bool dispose = false)
     {
-        _isLoading = true;
-        _statusMessage = EffectiveLabels.Loading;
-        _blockingMessage = null;
-        _formAlert = null;
-        _canRenderForm = false;
-
-        _authorizationState = await AuthorizationService
-            .GetAuthorizationStateAsync(_lifetimeCts.Token)
-            .ConfigureAwait(false);
-
-        if (!_authorizationState.IsAuthenticated)
+        CancellationTokenSource? previous;
+        CancellationTokenRegistration registration;
+        long version;
+        lock (_workLock)
         {
-            Block(EffectiveLabels.SignInRequired);
-            return;
-        }
-
-        if (!_authorizationState.HasTenantContext)
-        {
-            Block(EffectiveLabels.TenantUnavailable);
-            return;
-        }
-
-        if (!_authorizationState.IsAdmin)
-        {
-            Block(EffectiveLabels.AccessDenied);
-            return;
-        }
-
-        if (!IsEdit)
-        {
-            _model.TypeValue = PersonTypeValue;
-            _canRenderForm = true;
-            _statusMessage = EffectiveLabels.Loaded;
-            _isLoading = false;
-            return;
-        }
-
-        _normalizedRoutePartyId = AdminPortalRouteIds.Normalize(RoutePartyId);
-        if (!AdminPortalRouteIds.IsSafe(_normalizedRoutePartyId))
-        {
-            Block(EffectiveLabels.DetailUnavailable);
-            return;
-        }
-
-        try
-        {
-            AdminPortalQueryResult<PartyDetail> result = await QueryService.ApiClient
-                .GetPartyAsync(_normalizedRoutePartyId!, _lifetimeCts.Token)
-                .ConfigureAwait(false);
-            _loadedDetail = NormalizeDetail(result.Payload);
-            if (_loadedDetail.IsErased)
+            if (_disposed != 0 || (expectedVersion.HasValue && expectedVersion.Value != _formVersion))
             {
-                Block(EffectiveLabels.DetailErased);
+                return -1;
+            }
+
+            if (dispose) { _disposed = 1; }
+            version = ++_formVersion;
+            previous = _workCts;
+            _workCts = null;
+            _workToken = new(canceled: true);
+            registration = _scopeRegistration;
+            _scopeRegistration = default;
+        }
+
+        // No token capture can race disposal, and callbacks never run under the ownership lock.
+        previous?.Cancel();
+        previous?.Dispose();
+        registration.Dispose();
+        return version;
+    }
+
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> state)
+        => QueueReload();
+
+    private void QueueReload(long? expectedVersion = null)
+    {
+        // Claim the generation before dispatching so even A/B/A notifications fence old work.
+        long version = InvalidateWork(expectedVersion);
+        if (version < 0) { return; }
+        _ = InvokeAsync(async () =>
+        {
+            await ReloadAsync(version).ConfigureAwait(true);
+            lock (_workLock)
+            {
+                if (OwnsSubmission(version)) { StateHasChanged(); }
+            }
+        });
+    }
+
+    private async Task ReloadAsync(long version)
+    {
+        CancellationToken scope;
+        CancellationToken token;
+        CancellationTokenSource work;
+        lock (_workLock)
+        {
+            if (!OwnsSubmission(version)) { return; }
+            ResetFormState();
+            scope = QueryService.ScopeCancellationToken;
+            _loadedScope = scope;
+            if (scope.IsCancellationRequested)
+            {
+                Block(EffectiveLabels.DetailUnavailable);
+                StateHasChanged();
                 return;
             }
 
-            PopulateFromDetail(_loadedDetail);
-            _detailsUnavailable = IsPartialDetail(_loadedDetail);
-            _canRenderForm = true;
-            _statusMessage = _detailsUnavailable ? EffectiveLabels.DetailSectionStillLoading : EffectiveLabels.Loaded;
+            work = CancellationTokenSource.CreateLinkedTokenSource(scope);
+            token = work.Token;
+            _workCts = work;
+            _workToken = token;
+            _isLoading = true;
+            _statusMessage = EffectiveLabels.Loading;
+        }
+
+        if (!TryRegisterScope(version, scope, work)) { return; }
+
+        try
+        {
+            AdminPortalAuthorizationState authorization = await AuthorizationService
+                .GetAuthorizationStateAsync(token).WaitAsync(AuthorizationTimeout, token).ConfigureAwait(true);
+            string? partyId;
+            lock (_workLock)
+            {
+                if (!OwnsContext(version, scope)) { return; }
+                _authorizationState = authorization;
+                if (!CanAuthorize(authorization))
+                {
+                    Block(AuthorizationFailure(authorization));
+                    return;
+                }
+
+                if (!IsEdit)
+                {
+                    _canRenderForm = true;
+                    _statusMessage = EffectiveLabels.Loaded;
+                    return;
+                }
+
+                partyId = AdminPortalRouteIds.Normalize(RoutePartyId);
+                if (!AdminPortalRouteIds.IsSafe(partyId))
+                {
+                    Block(EffectiveLabels.DetailUnavailable);
+                    return;
+                }
+            }
+
+            AdminPortalQueryResult<PartyDetail> result = await QueryService.ApiClient
+                .GetPartyAsync(partyId!, token).ConfigureAwait(true);
+            lock (_workLock)
+            {
+                if (!OwnsContext(version, scope)) { return; }
+                _normalizedRoutePartyId = partyId;
+                _loadedDetail = NormalizeDetail(result.Payload);
+                if (_loadedDetail.IsErased)
+                {
+                    Block(EffectiveLabels.DetailErased);
+                    return;
+                }
+
+                PopulateFromDetail(_loadedDetail);
+                _detailsUnavailable = IsPartialDetail(_loadedDetail);
+                _canRenderForm = true;
+                _statusMessage = _detailsUnavailable ? EffectiveLabels.DetailSectionStillLoading : EffectiveLabels.Loaded;
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
         }
         catch (AdminPortalQueryException ex)
         {
-            Block(ex.Kind switch
+            lock (_workLock)
             {
-                AdminPortalQueryFailureKind.AuthenticationRequired => EffectiveLabels.SignInRequired,
-                AdminPortalQueryFailureKind.TenantRequired => EffectiveLabels.TenantUnavailable,
-                AdminPortalQueryFailureKind.Forbidden => EffectiveLabels.AccessDenied,
-                AdminPortalQueryFailureKind.Gone => EffectiveLabels.DetailErased,
-                AdminPortalQueryFailureKind.NotFound => EffectiveLabels.DetailUnavailable,
-                _ => EffectiveLabels.DetailLoadFailure,
-            });
+                if (OwnsContext(version, scope))
+                {
+                    Block(ex.Kind switch
+                    {
+                        AdminPortalQueryFailureKind.AuthenticationRequired => EffectiveLabels.SignInRequired,
+                        AdminPortalQueryFailureKind.TenantRequired => EffectiveLabels.TenantUnavailable,
+                        AdminPortalQueryFailureKind.Forbidden => EffectiveLabels.AccessDenied,
+                        AdminPortalQueryFailureKind.Gone => EffectiveLabels.DetailErased,
+                        AdminPortalQueryFailureKind.NotFound => EffectiveLabels.DetailUnavailable,
+                        _ => EffectiveLabels.DetailLoadFailure,
+                    });
+                }
+            }
+        }
+        catch (Exception)
+        {
+            lock (_workLock)
+            {
+                if (OwnsContext(version, scope)) { Block(EffectiveLabels.DetailUnavailable); }
+            }
         }
         finally
         {
-            _isLoading = false;
+            lock (_workLock)
+            {
+                if (OwnsContext(version, scope)) { _isLoading = false; }
+            }
         }
     }
+
+    private bool TryRegisterScope(long version, CancellationToken scope, CancellationTokenSource work)
+    {
+        // Register may invoke synchronously if the captured scope was canceled meanwhile.
+        // A reentrant newer reload owns its own registration and must never be overwritten.
+        CancellationTokenRegistration registration = scope.Register(() => QueueReload(version));
+        lock (_workLock)
+        {
+            if (OwnsContext(version, scope) && ReferenceEquals(_workCts, work))
+            {
+                _scopeRegistration = registration;
+                StateHasChanged(); // Remove previously rendered values before the first lookup await.
+                return true;
+            }
+        }
+        registration.Dispose();
+        return false;
+    }
+
+    private bool OwnsContext(long version, CancellationToken scope)
+        => OwnsSubmission(version) && !scope.IsCancellationRequested && scope == QueryService.ScopeCancellationToken;
+
+    private static bool CanAuthorize(AdminPortalAuthorizationState authorization)
+        => authorization.IsAuthenticated && authorization.HasTenantContext && authorization.IsAdmin;
+
+    private string AuthorizationFailure(AdminPortalAuthorizationState authorization)
+        => !authorization.IsAuthenticated ? EffectiveLabels.SignInRequired
+            : !authorization.HasTenantContext ? EffectiveLabels.TenantUnavailable
+            : EffectiveLabels.AccessDenied;
 
     private void Block(string message)
     {
@@ -395,69 +510,122 @@
 
     private async Task SubmitAsync()
     {
-        if (_editContext is null || _messages is null)
+        string commandPartyId;
+        UpdatePartyComposite? updateCommand;
+        CreatePartyComposite? createCommand;
+        string commandContext;
+        long commandVersion;
+        CancellationToken commandScope;
+        CancellationTokenSource commandCts;
+        lock (_workLock)
         {
-            return;
-        }
-
-        _submitting = true;
-        _formAlert = null;
-        _messages.Clear();
-        if (!ValidateClient())
-        {
-            ApplyValidationFailure();
-            _submitting = false;
-            return;
-        }
-
-        string commandPartyId = IsEdit
-            ? _normalizedRoutePartyId!
-            : UniqueIdHelper.GenerateSortableUniqueStringId();
-        UpdatePartyComposite? updateCommand = IsEdit ? BuildUpdateCommand(commandPartyId) : null;
-        string commandContext = _authorizationState.ContextSignature;
-        long commandVersion = _formVersion;
-        CancellationToken commandScope = QueryService.ScopeCancellationToken;
-        using var commandCts = CancellationTokenSource.CreateLinkedTokenSource(_lifetimeCts.Token, commandScope);
-        try
-        {
-            AdminPortalCommandResult result = updateCommand is not null
-                ? await QueryService.ApiClient.UpdatePartyCompositeAsync(commandPartyId, updateCommand, commandCts.Token).ConfigureAwait(false)
-                : await QueryService.ApiClient.CreatePartyCompositeAsync(BuildCreateCommand(commandPartyId), commandCts.Token).ConfigureAwait(false);
-
-            if (commandCts.IsCancellationRequested || !OwnsSubmission(commandVersion))
+            if (_disposed != 0 || _editContext is null || _messages is null || !_canRenderForm || _isLoading || _submitting)
             {
                 return;
             }
 
-            if (result.Outcome == AdminPortalCommandOutcome.Accepted)
+            _submitting = true;
+            _formAlert = null;
+            _messages.Clear();
+            if (!ValidateClient())
             {
-                AdminPortalAuthorizationState currentAuthorization;
-                try
+                ApplyValidationFailure();
+                _submitting = false;
+                return;
+            }
+
+            commandPartyId = IsEdit ? _normalizedRoutePartyId! : UniqueIdHelper.GenerateSortableUniqueStringId();
+            updateCommand = IsEdit ? BuildUpdateCommand(commandPartyId) : null;
+            createCommand = IsEdit ? null : BuildCreateCommand(commandPartyId);
+            commandContext = _authorizationState.ContextSignature;
+            commandVersion = _formVersion;
+            commandScope = _loadedScope;
+            commandCts = CancellationTokenSource.CreateLinkedTokenSource(commandScope, _workToken);
+        }
+        using var commandLifetime = commandCts;
+        try
+        {
+            AdminPortalAuthorizationState preSendAuthorization;
+            try
+            {
+                preSendAuthorization = await AuthorizationService.GetAuthorizationStateAsync(commandCts.Token)
+                    .WaitAsync(AuthorizationTimeout, commandCts.Token).ConfigureAwait(true);
+            }
+            catch (OperationCanceledException) when (commandCts.IsCancellationRequested) { return; }
+            catch (Exception)
+            {
+                lock (_workLock)
                 {
-                    currentAuthorization = await AuthorizationService
-                        .GetAuthorizationStateAsync(commandCts.Token).ConfigureAwait(false);
+                    if (OwnsContext(commandVersion, commandScope))
+                    {
+                        ResetFormState();
+                        Block(EffectiveLabels.DetailUnavailable);
+                    }
                 }
-                catch (OperationCanceledException) when (commandCts.IsCancellationRequested)
+                return;
+            }
+
+            Task<AdminPortalCommandResult>? send = null;
+            lock (_workLock)
+            {
+                if (!OwnsContext(commandVersion, commandScope) || commandCts.IsCancellationRequested) { return; }
+                if (CanAuthorize(preSendAuthorization)
+                    && string.Equals(commandContext, preSendAuthorization.ContextSignature, StringComparison.Ordinal))
                 {
+                    send = updateCommand is not null
+                        ? QueryService.ApiClient.UpdatePartyCompositeAsync(commandPartyId, updateCommand, commandCts.Token)
+                        : QueryService.ApiClient.CreatePartyCompositeAsync(createCommand!, commandCts.Token);
+                }
+            }
+            if (send is null)
+            {
+                await ReloadAsync(InvalidateWork(commandVersion)).ConfigureAwait(true);
+                return;
+            }
+
+            AdminPortalCommandResult result = await send.ConfigureAwait(true);
+            lock (_workLock)
+            {
+                if (commandCts.IsCancellationRequested || !OwnsContext(commandVersion, commandScope)) { return; }
+                if (result.Outcome == AdminPortalCommandOutcome.ValidationRejected)
+                {
+                    MapServerValidation(result.ValidationFailures ?? []);
+                    ApplyValidationFailure();
                     return;
                 }
-                catch (Exception)
+                if (result.Outcome != AdminPortalCommandOutcome.Accepted)
                 {
-                    if (OwnsSubmission(commandVersion))
+                    _formAlert = SafeCommandFailure(result.Outcome);
+                    _pendingAlertFocus = true;
+                    return;
+                }
+            }
+
+            AdminPortalAuthorizationState currentAuthorization;
+            try
+            {
+                currentAuthorization = await AuthorizationService
+                    .GetAuthorizationStateAsync(commandCts.Token).WaitAsync(AuthorizationTimeout, commandCts.Token).ConfigureAwait(true);
+            }
+            catch (OperationCanceledException) when (commandCts.IsCancellationRequested) { return; }
+            catch (Exception)
+            {
+                lock (_workLock)
+                {
+                    if (OwnsContext(commandVersion, commandScope))
                     {
                         // The command was accepted. Hide submission controls without suggesting a retry.
                         Block(EffectiveLabels.DetailUnavailable);
                         _statusMessage = EffectiveLabels.SavedUpdating;
                     }
-
-                    return;
                 }
+                return;
+            }
 
-                if (commandCts.IsCancellationRequested
-                    || !OwnsSubmission(commandVersion)
-                    || !currentAuthorization.IsAuthenticated
-                    || !currentAuthorization.HasTenantContext
-                    || !currentAuthorization.IsAdmin
+            lock (_workLock)
+            {
+                if (commandCts.IsCancellationRequested || !OwnsContext(commandVersion, commandScope)
+                    || !CanAuthorize(currentAuthorization)
                     || !string.Equals(commandContext, currentAuthorization.ContextSignature, StringComparison.Ordinal))
                 {
                     return;
@@ -466,34 +634,20 @@
                 _statusMessage = EffectiveLabels.SavedUpdating;
                 _loadedDetail = result.Detail is null ? BuildOptimisticDetail(commandPartyId) : NormalizeDetail(result.Detail);
                 string target = PartiesAdminPortalManifest.DetailRoute.Replace(
-                    "{partyId}",
-                    Uri.EscapeDataString(commandPartyId),
-                    StringComparison.Ordinal);
+                    "{partyId}", Uri.EscapeDataString(commandPartyId), StringComparison.Ordinal);
                 if (AdminPortalRouteIds.IsSafe(commandPartyId)
                     && QueryService.TryStageAcceptedCommand(commandPartyId, commandContext, updateCommand, commandScope))
                 {
                     NavigationManager.NavigateTo(target);
                 }
             }
-            else if (result.Outcome == AdminPortalCommandOutcome.ValidationRejected)
-            {
-                MapServerValidation(result.ValidationFailures ?? []);
-                ApplyValidationFailure();
-            }
-            else
-            {
-                _formAlert = SafeCommandFailure(result.Outcome);
-                _pendingAlertFocus = true;
-            }
         }
-        catch (OperationCanceledException) when (commandCts.IsCancellationRequested)
-        {
-        }
+        catch (OperationCanceledException) when (commandCts.IsCancellationRequested) { }
         finally
         {
-            if (OwnsSubmission(commandVersion))
+            lock (_workLock)
             {
-                _submitting = false;
+                if (OwnsSubmission(commandVersion)) { _submitting = false; }
             }
         }
     }
@@ -890,7 +1044,7 @@
         {
             try
             {
-                await module.InvokeVoidAsync("disposePortalInterop", _instanceId).ConfigureAwait(false);
+                await module.InvokeVoidAsync("disposePortalInterop", _instanceId).ConfigureAwait(true);
             }
             catch (JSException)
             {
@@ -904,7 +1058,7 @@
 
             try
             {
-                await module.DisposeAsync().ConfigureAwait(false);
+                await module.DisposeAsync().ConfigureAwait(true);
             }
             catch (JSException)
             {
@@ -920,7 +1074,7 @@
 
     public void Dispose()
     {
-        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        if (InvalidateWork(dispose: true) < 0)
         {
             return;
         }
@@ -930,15 +1084,13 @@
             _editContext.OnFieldChanged -= OnFieldChanged;
         }
 
-        _lifetimeCts.Cancel();
-        _lifetimeCts.Dispose();
+        AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
         _ = DisposeInteropAsync();
         _dotNetRef?.Dispose();
     }
 
     private void ResetFormState()
     {
-        _formVersion++;
         _messages?.Clear();
         _editContext?.NotifyValidationStateChanged();
         _pickerAttached = false;

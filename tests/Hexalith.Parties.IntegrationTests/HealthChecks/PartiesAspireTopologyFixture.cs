@@ -16,6 +16,10 @@ using Aspire.Hosting.Testing;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
 using Hexalith.EventStore.Aspire;
+using Hexalith.EventStore.Contracts.Identity;
+using Hexalith.EventStore.Server.Events;
+
+using StackExchange.Redis;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -41,11 +45,11 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     /// <summary>The issuer used only by this test topology and its gateway token.</summary>
     internal const string JwtIssuer = "hexalith-dev";
 
-    private readonly Func<CancellationToken, Task<IDistributedApplicationTestingBuilder>> _createBuilder;
+    private readonly Func<PartiesTopologySession, CancellationToken, Task<IDistributedApplicationTestingBuilder>> _createBuilder;
     private readonly bool _completeMtlsProfile;
-    private readonly Dictionary<string, string?> _previousEnvironment = new(StringComparer.Ordinal);
+
     private readonly string _appChannelToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-    private bool _environmentCaptured;
+
     private readonly Func<DistributedApplication, CancellationToken, Task> _startApplication;
     private readonly bool _prepareCiBootstrap;
     private DistributedApplication? _app;
@@ -62,12 +66,14 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     }
 
     /// <summary>Initializes a fixture that owns its complete disposable topology.</summary>
-    internal PartiesAspireTopologyFixture(bool completeMtlsProfile)
+    internal PartiesAspireTopologyFixture(bool completeMtlsProfile, bool isolatedIdentities = false)
         : this(
-            cancellationToken => DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(cancellationToken),
+            (session, cancellationToken) => DistributedApplicationTestingBuilder.CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(
+                session.Arguments(completeMtlsProfile, File.Exists(Path.Combine(session.CertificateDirectory, "ca.crt"))), cancellationToken),
             (application, cancellationToken) => application.StartAsync(cancellationToken),
             prepareCiBootstrap: true,
-            completeMtlsProfile: completeMtlsProfile)
+            completeMtlsProfile: completeMtlsProfile,
+            session: PartiesTopologySession.Create(isolatedIdentities))
     {
     }
 
@@ -76,11 +82,13 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     /// <param name="startApplication">Starts the constructed application.</param>
     /// <param name="prepareCiBootstrap">Whether this fixture must prepare a real secure control plane.</param>
     internal PartiesAspireTopologyFixture(
-        Func<CancellationToken, Task<IDistributedApplicationTestingBuilder>> createBuilder,
+        Func<PartiesTopologySession, CancellationToken, Task<IDistributedApplicationTestingBuilder>> createBuilder,
         Func<DistributedApplication, CancellationToken, Task> startApplication,
         bool prepareCiBootstrap = false,
-        bool completeMtlsProfile = false)
+        bool completeMtlsProfile = false,
+        PartiesTopologySession? session = null)
     {
+        Session = session ?? PartiesTopologySession.Create();
         _createBuilder = createBuilder;
         _startApplication = startApplication;
         _prepareCiBootstrap = prepareCiBootstrap;
@@ -124,6 +132,9 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             ? "Test infrastructure not initialized. Ensure InitializeAsync has completed."
             : $"Test infrastructure unavailable: {UnavailableReason}");
 
+    /// <summary>Gets this fixture's immutable private topology configuration.</summary>
+    internal PartiesTopologySession Session { get; }
+
     /// <summary>Gets the controlled in-process host used to inspect production tenant-access effects.</summary>
     internal PartiesTenantBootstrapHost? TenantBootstrapHost { get; private set; }
 
@@ -137,21 +148,6 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     /// <summary>Starts the topology within a bounded lifetime linked to caller cancellation.</summary>
     internal async ValueTask InitializeAsync(CancellationToken cancellationToken)
     {
-        foreach (string name in new[] { "EnableKeycloak", "ASPNETCORE_ENVIRONMENT", "DOTNET_ENVIRONMENT",
-                     "Dapr__Mtls__Enabled", "Dapr__Mtls__CertificateDirectory", "EnableMemoriesSearch", "EnableEventStoreSampleUi" })
-        {
-            _previousEnvironment[name] = Environment.GetEnvironmentVariable(name);
-        }
-        _environmentCaptured = true;
-        Environment.SetEnvironmentVariable("EnableKeycloak", "false");
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
-        Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Development");
-        if (_completeMtlsProfile)
-        {
-            Environment.SetEnvironmentVariable("EnableMemoriesSearch", "true");
-            Environment.SetEnvironmentVariable("EnableEventStoreSampleUi", "true");
-        }
-
         try
         {
             // 5-minute timeout for full Aspire topology startup including DAPR sidecar
@@ -164,7 +160,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 await PrepareCiDaprMtlsAsync(cts.Token).ConfigureAwait(false);
             }
 
-            _builder = await _createBuilder(cts.Token).ConfigureAwait(false);
+            _builder = await _createBuilder(Session, cts.Token).ConfigureAwait(false);
 
             _redis = PartiesTestRedis.Configure(_builder);
             if (_completeMtlsProfile)
@@ -183,6 +179,15 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                     .WithEnvironment("Authentication__JwtBearer__SigningKey", JwtSigningKey)
                     .WithEnvironment("Authentication__JwtBearer__Issuer", JwtIssuer)
                     .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false");
+            }
+
+            _ = _builder.CreateResourceBuilder<ProjectResource>("eventstore")
+                .WithEnvironment("EventStore__Actors__AggregateActorTypeName", "AggregateActor");
+            foreach (ProjectResource project in _builder.Resources.OfType<ProjectResource>())
+            {
+                _ = _builder.CreateResourceBuilder(project)
+                    .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
+                    .WithEnvironment("DOTNET_ENVIRONMENT", "Development");
             }
 
             _builder.Services.AddLogging(logging =>
@@ -273,10 +278,6 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             {
                 UnavailableReason += $"; topology cleanup failed: {cleanupException}";
             }
-            finally
-            {
-                RestoreEnvironment();
-            }
         }
     }
 
@@ -289,30 +290,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         + "Use the explicit complete mTLS qualification profile and authenticated subscription "
         + "bootstrap when testing tenant access. Health/ready/alive endpoints do not require seeded tenants.");
 
-    public async ValueTask DisposeAsync()
-    {
-        try
-        {
-            await DisposeApplicationAsync().ConfigureAwait(false);
-        }
-        finally
-        {
-            RestoreEnvironment();
-        }
-    }
-
-    private void RestoreEnvironment()
-    {
-        if (!_environmentCaptured)
-        {
-            return;
-        }
-        foreach ((string name, string? value) in _previousEnvironment)
-        {
-            Environment.SetEnvironmentVariable(name, value);
-        }
-        _environmentCaptured = false;
-    }
+    public async ValueTask DisposeAsync() => await DisposeApplicationAsync().ConfigureAwait(false);
 
     /// <summary>Creates an HTTP client for the named project's own Dapr metadata/invocation API.</summary>
     internal HttpClient CreateSidecarClient(string appId)
@@ -322,13 +300,50 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         return App.CreateHttpClient(sidecar.Sidecar.Name + "-cli", "http");
     }
 
+    /// <summary>Reads one exact private Redis key, never using scans or shared developer state.</summary>
+    internal async Task<string?> ReadRedisDataAsync(string key, CancellationToken cancellationToken)
+    {
+        if (_redis is null) { throw new InvalidOperationException("The session has no owned Redis."); }
+        using IConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(new ConfigurationOptions
+        {
+            EndPoints = { $"{_redis.GetEndpoint("tcp").Host}:{_redis.GetEndpoint("tcp").Port}" },
+            ConnectTimeout = 5000, SyncTimeout = 5000, AbortOnConnectFail = true, AllowAdmin = false,
+        }).WaitAsync(cancellationToken).ConfigureAwait(false);
+        RedisValue value = await redis.GetDatabase().HashGetAsync(key, "data").WaitAsync(cancellationToken).ConfigureAwait(false);
+        return value.IsNull ? null : value.ToString();
+    }
+
+    /// <summary>Reads actor-owned metadata and every exact event key independently of command status.</summary>
+    internal async Task<(AggregateMetadata Metadata, EventEnvelope[] Events)> ReadStoredStreamAsync(AggregateIdentity identity, CancellationToken cancellationToken)
+    {
+        string prefix = $"{Session.AppId("eventstore")}||AggregateActor||{identity.ActorId}||";
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        string metadataJson = await ReadRedisDataAsync(prefix + identity.MetadataKey, cancellationToken).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("The exact aggregate metadata key has no persisted bytes.");
+        AggregateMetadata metadata = JsonSerializer.Deserialize<AggregateMetadata>(metadataJson, options)
+            ?? throw new InvalidOperationException("The aggregate metadata could not be deserialized.");
+        if (metadata.CurrentSequence < 1 || metadata.CurrentSequence > 100 || metadata.RetainedFloor != 1)
+        {
+            throw new InvalidOperationException("A fresh synthetic create must have a bounded, complete persisted stream.");
+        }
+        var events = new List<EventEnvelope>();
+        for (long sequence = 1; sequence <= metadata.CurrentSequence; sequence++)
+        {
+            string json = await ReadRedisDataAsync(prefix + identity.EventStreamKeyPrefix + sequence, cancellationToken).ConfigureAwait(false)
+                ?? throw new InvalidOperationException("An exact aggregate event key has no persisted bytes.");
+            events.Add(JsonSerializer.Deserialize<EventEnvelope>(json, options)
+                ?? throw new InvalidOperationException("A persisted event envelope could not be deserialized."));
+        }
+        return (metadata, events.ToArray());
+    }
+
     private async Task WaitForAllSidecarsAsync(CancellationToken cancellationToken)
     {
         string[] actual = App.Services.GetRequiredService<DistributedApplicationModel>().Resources.OfType<ProjectResource>()
             .SelectMany(project => project.Annotations.OfType<DaprSidecarAnnotation>())
             .Select(sidecar => sidecar.Sidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().Single().Options.AppId!)
             .Order(StringComparer.Ordinal).ToArray();
-        if (!actual.SequenceEqual(CompleteSidecarIds))
+        if (!actual.SequenceEqual(CompleteSidecarIds.Select(Session.AppId).Order(StringComparer.Ordinal)))
         {
             throw new InvalidOperationException("The complete mTLS model does not contain the exact eight expected sidecars.");
         }
@@ -339,7 +354,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 TimeSpan.FromMinutes(2), TimeSpan.FromMilliseconds(250), cancellationToken).ConfigureAwait(false);
             using JsonDocument metadata = await client.GetFromJsonAsync<JsonDocument>("/v1.0/metadata", cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidOperationException($"Sidecar '{appId}' returned no metadata.");
-            if (metadata.RootElement.GetProperty("id").GetString() != appId)
+            if (metadata.RootElement.GetProperty("id").GetString() != Session.AppId(appId))
             {
                 throw new InvalidOperationException($"Sidecar '{appId}' returned another application's metadata.");
             }
@@ -408,9 +423,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
     private async Task PrepareCiDaprMtlsAsync(CancellationToken cancellationToken)
     {
-        if ((!_completeMtlsProfile && (!OperatingSystem.IsLinux()
+        if (!_completeMtlsProfile && (!OperatingSystem.IsLinux()
                 || !string.Equals(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase)))
-            || string.Equals(Environment.GetEnvironmentVariable("Dapr__Mtls__Enabled"), "true", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
@@ -426,16 +440,12 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             ?? throw new FileNotFoundException("The CI Dapr mTLS bootstrap script was not found above the test output directory.");
         string script = Path.Combine(repositoryRoot, "scripts", "aspire-start-mtls.sh");
 
-        string certificateDirectory = Path.Combine(
-            Path.GetTempPath(),
-            $"hexalith-parties-ci-dapr-certs-{Guid.NewGuid():N}");
+        string certificateDirectory = Session.CertificateDirectory;
         _ciMtlsCertificateDirectory = certificateDirectory;
         _ciMtlsBootstrapScript = script;
         await RunCiDaprBootstrapScriptAsync(script, certificateDirectory, "--prepare-only", cancellationToken)
             .ConfigureAwait(false);
 
-        Environment.SetEnvironmentVariable("Dapr__Mtls__Enabled", "true");
-        Environment.SetEnvironmentVariable("Dapr__Mtls__CertificateDirectory", certificateDirectory);
     }
 
     private async Task CleanupCiDaprMtlsAsync()
@@ -449,9 +459,9 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         await RunCiDaprBootstrapScriptAsync(script, certificateDirectory, "--cleanup-only", timeout.Token)
             .ConfigureAwait(false);
-        if (Directory.Exists(certificateDirectory))
+        if (Directory.Exists(Session.Root))
         {
-            Directory.Delete(certificateDirectory, recursive: true);
+            Directory.Delete(Session.Root, recursive: true);
         }
 
         // Retain ownership evidence when cleanup fails so disposal can retry safely.
@@ -459,7 +469,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         _ciMtlsBootstrapScript = null;
     }
 
-    private static async Task RunCiDaprBootstrapScriptAsync(
+    private async Task RunCiDaprBootstrapScriptAsync(
         string script,
         string certificateDirectory,
         string option,
@@ -474,7 +484,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         };
         start.ArgumentList.Add(script);
         start.ArgumentList.Add(option);
-        start.Environment["DAPR_MTLS_CERTIFICATE_DIRECTORY"] = certificateDirectory;
+        Session.ConfigureBootstrapEnvironment(start.Environment);
 
         using Process process = Process.Start(start)
             ?? throw new InvalidOperationException("The CI Dapr mTLS bootstrap could not start.");

@@ -1,0 +1,95 @@
+{
+  "Mode": "source",
+  "Root": "${SOURCE_VALIDATION_ROOT}",
+  "ActiveModule": "Hexalith.Parties",
+  "Entries": [
+    {
+      "Identity": "Hexalith.AI.Tools",
+      "Origin": "source",
+      "Path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.AI.Tools"
+    },
+    {
+      "Identity": "Hexalith.Builds",
+      "Origin": "source",
+      "Path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Builds"
+    },
+    {
+      "Identity": "Hexalith.Commons",
+      "Origin": "source",
+      "Path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Commons"
+    },
+    {
+      "Identity": "Hexalith.EventStore",
+      "Origin": "source",
+      "Path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.EventStore"
+    },
+    {
+      "Identity": "Hexalith.FrontComposer",
+      "Origin": "source",
+      "Path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.FrontComposer"
+    },
+    {
+      "Identity": "Hexalith.McpCli",
+      "Origin": "source",
+      "Path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.McpCli"
+    },
+    {
+      "Identity": "Hexalith.Memories",
+      "Origin": "source",
+      "Path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Memories"
+    },
+    {
+      "Identity": "Hexalith.Parties",
+      "Origin": "source",
+      "Path": "${SOURCE_VALIDATION_ROOT}"
+    },
+    {
+      "Identity": "Hexalith.Platform",
+      "Origin": "source",
+      "Path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Platform"
+    },
+    {
+      "Identity": "Hexalith.PolymorphicSerializations",
+      "Origin": "source",
+      "Path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.PolymorphicSerializations"
+    },
+    {
+      "Identity": "Hexalith.Tenants",
+      "Origin": "source",
+      "Path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Tenants"
+    }
+  ],
+  "HasGit": true,
+  "PlatformIdentity": {
+    "Commit": "d189c7de74293e1a718e5e78b1b3b7c0e47b48b5",
+    "CompositionCommit": "d189c7de74293e1a718e5e78b1b3b7c0e47b48b5",
+    "CheckoutCommit": "d189c7de74293e1a718e5e78b1b3b7c0e47b48b5",
+    "PlatformPath": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Platform",
+    "ReleaseTag": null,
+    "CatalogCommit": "359fee24aeca4d9eabed4b425d4cfa2520b2adda",
+    "ToolVersionRange": "[4.35.1, 5.0.0-0)",
+    "RecordPath": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Platform/hexalith-platform.json",
+    "IsPlatformRepository": false
+  },
+  "IdentityFindings": [
+    {
+      "RuleId": "HXW011",
+      "Message": "Platform identity d189c7de74293e1a718e5e78b1b3b7c0e47b48b5 has no local v\u003CSemVer\u003E release tag.",
+      "Path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Platform",
+      "Hint": "Fetch Platform tags, then retry."
+    },
+    {
+      "RuleId": "HXW009",
+      "Message": "Builds catalog \u0027${SOURCE_VALIDATION_ROOT}/references/Hexalith.Builds\u0027 is staged 3fcb8f38919bb0961b06a19b57aa45623b35a33e, checked out 3fcb8f38919bb0961b06a19b57aa45623b35a33e; Platform d189c7de74293e1a718e5e78b1b3b7c0e47b48b5 pins 359fee24aeca4d9eabed4b425d4cfa2520b2adda.",
+      "Path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Builds",
+      "Hint": null
+    },
+    {
+      "RuleId": "HXW010",
+      "Message": "Tool version 4.34.0 is outside Platform range [4.35.1, 5.0.0-0) at \u0027${SOURCE_VALIDATION_ROOT}/references/Hexalith.Platform/hexalith-platform.json\u0027.",
+      "Path": "${SOURCE_VALIDATION_ROOT}/references/Hexalith.Platform/hexalith-platform.json",
+      "Hint": null
+    }
+  ],
+  "ContentHash": "b2ad433d16cd291893c50384a08be073db343f5dc695666e316414c9c83acf4c"
+}

@@ -278,20 +278,37 @@ gates on sidecar, state and enabled Tenants integration; pub/sub stays a degrade
 health signal. Tenant subscriptions are declarative at `/tenants/events` on
 `system.tenants.events` and rich Memories search remains disabled.
 
-### Qualifying all local Dapr sidecars with mTLS
+### Qualifying local mTLS, gateway persistence and concurrent sessions
 
-Use the [DW-77 qualification command and prerequisites](../tests/README.md#complete-local-mtls-qualification-dw-77)
-to start the complete disposable test profile. Both optional profiles are enabled;
-the ordinary health fixture keeps its default profile. Run serially because the
-secure Dapr control plane uses fixed local names and loopback ports. The fixture
-restores its environment and removes only resources it owns, including after
-startup failure or cancellation. Credentials must stay out of captured evidence.
+Use the [runtime qualification profiles and prerequisites](../tests/README.md#complete-local-mtls-and-isolation-qualification)
+for the retained owner-test topology. The ordinary health fixture stays unseeded.
+Complete fixtures seed a synthetic tenant/member through the production authenticated
+callback and own all Redis, control-plane, listener, trust and generated-configuration
+resources. They supply builder configuration without changing the process environment.
 
-Qualification proves eight responsive credentialed sidecars, the existing
-Parties-to-Tenants readiness invocation and authenticated tenant-event bootstrap.
-Production subscription-handler access effects are inspected in process through
-existing services; no public endpoint is added. Runtime deployment and end-to-end
-command/projection qualification remain separate work.
+Original-identity gateway/ACL cases run serially and preserve production ACL bytes.
+They prove authenticated create/query convergence, exact persisted event bytes and
+Dapr-specific forbidden caller/verb/path denials alongside permitted controls. The
+concurrent profile suffixes literal app identities, remaps generated ACLs and routing,
+and supplies independent namespaces, workload issuers, Sentry endpoints and internal
+gRPC listeners. It proves isolated persisted state, rejected cross-session calls and
+survivor operation after peer disposal. Cleanup failures retain ownership for retry.
+
+Concurrent routing qualification covers the exercised Parties gateway and Tenants flows. Reference admin/sample UI application clients still hardcode upstream target app IDs and are not concurrently qualified; their source remains unchanged.
+
+Admin forms independently observe authentication notifications and query-scope reset,
+clear values and fence pending work by generation. Create/update snapshots require a
+fresh bounded authorization lookup before sending; unavailable or revoked authority
+prevents sending. Accepted edit receipts retain their existing convergence behavior.
+
+[Exact qualification receipts](../_bmad-output/implementation-artifacts/tests/five-runtime-isolation-and-form-authorization-2026-10-22/validation.json)
+record Release/package tests separately from Debug source mapping. A correctly named,
+contained local clone successfully starts the seven-server source composition with
+the pinned tool. Source Debug AdminPortal/Integration consumer builds currently fail
+in the pinned mapper's outer multi-target validation for FrontComposer (`MSB4044`,
+missing `AssetsFile`); the mapped CI project builds and its bootstrap tests pass.
+No source selector or validation bypass qualifies those blocked builds. These results
+do not close DW-116, Memories persistence or external deployment qualification.
 
 ### SDK projection configuration compatibility
 

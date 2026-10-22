@@ -3,6 +3,8 @@ using CommunityToolkit.Aspire.Hosting.Dapr;
 using Hexalith.EventStore.Aspire;
 using Hexalith.Parties.AppHost;
 
+using Microsoft.Extensions.Configuration;
+
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 string? publishOidcClientSecret = builder.Configuration["PartiesUi:OidcClientSecret"];
 if (builder.ExecutionContext.IsPublishMode && string.IsNullOrWhiteSpace(publishOidcClientSecret))
@@ -13,6 +15,7 @@ if (builder.ExecutionContext.IsPublishMode && string.IsNullOrWhiteSpace(publishO
 }
 
 DaprMtlsBootstrap? daprMtls = DaprMtlsBootstrap.Load(builder.Configuration);
+daprMtls?.ConfigureRuntimeLauncher(builder);
 
 string eventStoreAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.yaml");
 string adminServerAccessControlConfigPath = ResolveDaprConfigPath("accesscontrol.eventstore-admin.yaml");
@@ -24,13 +27,13 @@ string mtlsOnlyConfigPath = ResolveDaprConfigPath("mtls.yaml");
 string resiliencyConfigPath = ResolveDaprConfigPath("resiliency.yaml");
 if (daprMtls is not null)
 {
-    eventStoreAccessControlConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(eventStoreAccessControlConfigPath);
-    adminServerAccessControlConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(adminServerAccessControlConfigPath);
-    sampleAccessControlConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(sampleAccessControlConfigPath);
-    tenantsAccessControlConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(tenantsAccessControlConfigPath);
-    partiesAccessControlConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(partiesAccessControlConfigPath);
-    memoriesAccessControlConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(memoriesAccessControlConfigPath);
-    mtlsOnlyConfigPath = DaprMtlsBootstrap.CreateApplicationConfiguration(mtlsOnlyConfigPath);
+    eventStoreAccessControlConfigPath = daprMtls.CreateConfiguration(eventStoreAccessControlConfigPath);
+    adminServerAccessControlConfigPath = daprMtls.CreateConfiguration(adminServerAccessControlConfigPath);
+    sampleAccessControlConfigPath = daprMtls.CreateConfiguration(sampleAccessControlConfigPath);
+    tenantsAccessControlConfigPath = daprMtls.CreateConfiguration(tenantsAccessControlConfigPath);
+    partiesAccessControlConfigPath = daprMtls.CreateConfiguration(partiesAccessControlConfigPath);
+    memoriesAccessControlConfigPath = daprMtls.CreateConfiguration(memoriesAccessControlConfigPath);
+    mtlsOnlyConfigPath = daprMtls.CreateConfiguration(mtlsOnlyConfigPath);
 }
 
 const string PublishModeJwtIssuer = "https://auth.tache.ai/realms/tache";
@@ -65,8 +68,8 @@ string tenantsProjectPath = ReferenceProjectResolver.ResolveRequired(
 // The dictionary VALUE's TenantId field stays "*" — that is a value, not a key, and is valid in
 // env-var values.
 IResourceBuilder<ProjectResource> eventStore = builder.AddProject("eventstore", eventStoreProjectPath)
-    .WithEnvironment("Authentication__DaprInternal__AllowedCallers__0", "tenants")
-    .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__AppId", "parties")
+    .WithEnvironment("Authentication__DaprInternal__AllowedCallers__0", daprMtls?.AppId("tenants") ?? "tenants")
+    .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__AppId", daprMtls?.AppId("parties") ?? "parties")
     .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__MethodName", "process")
     .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__TenantId", "*")
     .WithEnvironment("EventStore__DomainServices__Registrations__wildcard_party_v1__Domain", "party")
@@ -91,13 +94,14 @@ HexalithEventStoreResources eventStoreResources = builder.AddHexalithEventStore(
     adminUI,
     eventStoreAccessControlConfigPath,
     adminServerAccessControlConfigPath,
-    resiliencyConfigPath);
+    resiliencyConfigPath,
+    eventStoreDaprHttpPort: builder.Configuration.GetValue("Dapr:EventStoreHttpPort", 3501));
 daprMtls?.ConfigureProjectSidecar(eventStore);
 daprMtls?.ConfigureProjectSidecar(adminServer);
 daprMtls?.ConfigureProjectSidecar(adminUI, mtlsOnlyConfigPath);
 
 IResourceBuilder<ProjectResource> parties = builder.AddProject<Projects.Hexalith_Parties>("parties")
-    .WithEnvironment("EventStore__DomainService__AppId", "parties")
+    .WithEnvironment("EventStore__DomainService__AppId", daprMtls?.AppId("parties") ?? "parties")
     .WithDaprSidecar(sidecar =>
     {
         _ = sidecar.WithOptions(new DaprSidecarOptions
@@ -122,7 +126,7 @@ IResourceBuilder<ProjectResource> partiesMcp = builder.AddProject<Projects.Hexal
 _ = partiesMcp.WithEnvironment("Parties__Mcp__EventStoreGatewayBaseUrl", ReferenceExpression.Create($"{eventStore.GetEndpoint("http")}"));
 
 IResourceBuilder<ProjectResource> tenants = builder.AddProject("tenants", tenantsProjectPath)
-    .WithEnvironment("EventStore__DomainService__AppId", "tenants")
+    .WithEnvironment("EventStore__DomainService__AppId", daprMtls?.AppId("tenants") ?? "tenants")
     .WithDaprSidecar(sidecar =>
     {
         _ = sidecar.WithOptions(new DaprSidecarOptions
@@ -137,6 +141,27 @@ IResourceBuilder<ProjectResource> tenants = builder.AddProject("tenants", tenant
     .WaitFor(eventStoreResources.StateStore)
     .WaitFor(eventStoreResources.PubSub);
 
+// Only the concurrent qualification profile remaps the hosts' inherited routing identities.
+if (daprMtls is not null && daprMtls.AppId("eventstore") != "eventstore")
+{
+    foreach (string registration in new[] { "*|counter|v1", "*|greeting|v1", "system|tenants|v1", "system|global-administrators|v1" })
+    {
+        string target = registration.StartsWith("*|", StringComparison.Ordinal) ? "sample" : "tenants";
+        _ = eventStore.WithEnvironment($"EventStore__DomainServices__Registrations__{registration}__AppId", daprMtls.AppId(target));
+    }
+    foreach (string registration in new[] { "system|tenants|v1", "system|global-administrators|v1" })
+    {
+        _ = tenants.WithEnvironment($"EventStore__DomainServices__Registrations__{registration}__AppId", daprMtls.AppId("tenants"));
+    }
+    _ = adminServer.WithEnvironment("AdminServer__EventStoreAppId", daprMtls.AppId("eventstore"))
+        .WithEnvironment("AdminServer__TenantServiceAppId", daprMtls.AppId("tenants"));
+    _ = eventStore.WithEnvironment("Authentication__WorkloadIssuer__Workload", daprMtls.AppId("eventstore"));
+    _ = parties.WithEnvironment("Authentication__WorkloadIssuer__Workload", daprMtls.AppId("parties"))
+        .WithEnvironment("Authentication__Workload__AllowedCallers__0", daprMtls.AppId("eventstore"));
+    _ = tenants.WithEnvironment("Authentication__WorkloadIssuer__Workload", daprMtls.AppId("tenants"))
+        .WithEnvironment("Authentication__Workload__AllowedCallers__0", daprMtls.AppId("eventstore"));
+}
+
 string? bootstrapGlobalAdminUserId = builder.Configuration["Tenants:BootstrapGlobalAdminUserId"];
 if (!string.IsNullOrWhiteSpace(bootstrapGlobalAdminUserId))
 {
@@ -149,8 +174,8 @@ _ = parties
     .WithReference(tenants)
     .WaitFor(tenants)
     .WithEnvironment("Tenants__Enabled", "true")
-    .WithEnvironment("Tenants__ServiceName", "tenants")
-    .WithEnvironment("Tenants__CommandApiAppId", "eventstore")
+    .WithEnvironment("Tenants__ServiceName", daprMtls?.AppId("tenants") ?? "tenants")
+    .WithEnvironment("Tenants__CommandApiAppId", daprMtls?.AppId("eventstore") ?? "eventstore")
     .WithEnvironment("Tenants__PubSubName", "pubsub")
     .WithEnvironment("Tenants__TopicName", "system.tenants.events");
 
@@ -244,7 +269,7 @@ if (builder.ExecutionContext.IsPublishMode
     // EventStore__SignalR__Enabled is now set unconditionally near the eventstore definition (Story 1.7).
 
     IResourceBuilder<ProjectResource> sample = builder.AddProject("sample", sampleProjectPath)
-        .WithEnvironment("EventStore__DomainService__AppId", "sample")
+        .WithEnvironment("EventStore__DomainService__AppId", daprMtls?.AppId("sample") ?? "sample")
         .WithDaprSidecar(sidecar =>
         {
             _ = sidecar.WithOptions(new DaprSidecarOptions

@@ -1,0 +1,12 @@
+{
+  "sourceRunId": "0a56caa10c4ea2758a03cdd88059ec09",
+  "remainingRecordedProcessIds": {},
+  "remainingPartiesControlPlaneContainers": [],
+  "remainingPartiesControlPlaneNetworks": [],
+  "remainingFixtureRoots": [],
+  "inspectionCommands": [
+    "docker ps -a --filter name=hexalith-parties-dapr --format {{.Names}}",
+    "docker network ls --filter name=hexalith-parties-dapr --format {{.Name}}",
+    "Recorded source process IDs checked via /proc; no environment or process command lines exposed"
+  ]
+}
