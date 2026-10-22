@@ -247,11 +247,12 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
     public async Task ConfiguredComponentsAreUsedByProgramReadinessAndHealthAsync()
     {
         const string stateStore = "configured-security";
+        const string readModelStore = "configured-read-models";
         const string pubSub = "configured-events";
         using HealthTestFactory factory = new(new Dictionary<string, string>
         {
             ["Parties:Security:StateStoreName"] = stateStore,
-            ["EventStore:Projections:ReadModelStateStoreName"] = stateStore,
+            ["EventStore:Projections:ReadModelStateStoreName"] = readModelStore,
             ["Tenants:PubSubName"] = pubSub,
         });
         factory.DaprClient.CheckHealthAsync(Arg.Any<CancellationToken>()).Returns(true);
@@ -262,7 +263,7 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
                 : throw new InvalidOperationException("Only the configured state store is available."));
         factory.DaprClient.GetByteStateAndETagAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<ConsistencyMode?>(), Arg.Any<IReadOnlyDictionary<string, string>>(), Arg.Any<CancellationToken>())
-            .Returns(call => call.ArgAt<string>(0) == stateStore
+            .Returns(call => call.ArgAt<string>(0) == readModelStore
                 ? (Array.Empty<byte>(), string.Empty)
                 : throw new InvalidOperationException("Only the configured read-model state store is available."));
         factory.DaprClient.GetMetadataAsync(Arg.Any<CancellationToken>()).Returns(new DaprMetadata(
@@ -280,8 +281,11 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
         results.GetProperty("dapr-statestore").GetProperty("description").GetString().ShouldNotBeNull().ShouldContain(stateStore);
         results.GetProperty("dapr-pubsub").GetProperty("status").GetString().ShouldBe("Healthy");
         results.GetProperty("dapr-pubsub").GetProperty("description").GetString().ShouldNotBeNull().ShouldContain(pubSub);
+        results.GetProperty("party-read-models").GetProperty("status").GetString().ShouldBe("Healthy");
         await factory.DaprClient.Received().GetStateAsync<string?>(
             stateStore, "__health_check__", cancellationToken: Arg.Any<CancellationToken>());
+        await factory.DaprClient.Received().GetByteStateAndETagAsync(
+            readModelStore, Arg.Any<string>(), Arg.Any<ConsistencyMode?>(), Arg.Any<IReadOnlyDictionary<string, string>>(), Arg.Any<CancellationToken>());
     }
 
     private HttpClient CreateAuthenticatedClient()

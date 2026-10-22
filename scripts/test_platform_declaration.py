@@ -34,14 +34,21 @@ class PlatformDeclarationTests(unittest.TestCase):
         for label, content in {
             "empty": "", "truncated": self.acl[:self.acl.index("    policies:")],
             "default allow": self.acl.replace("    defaultAction: deny", "    defaultAction: allow", 1),
+            "caller default allow": self.acl.replace("        defaultAction: deny", "        defaultAction: allow", 1),
+            "caller trust domain": self.acl.replace('        trustDomain: "public"', '        trustDomain: "other"', 1),
+            "caller namespace": self.acl.replace('        namespace: "default"', '        namespace: "other"', 1),
             "wildcard": self.acl.replace("name: /process", "name: /**"),
             "wrong caller": self.acl.replace("appId: eventstore", "appId: parties"),
             "wrong verb": self.acl.replace("['POST']", "['GET']", 1),
+            "deny operation": self.acl.replace("            action: allow", "            action: deny", 1),
+            "extra operation field": self.acl.replace("            action: allow", "            action: allow\n            extra: value", 1),
             "duplicate operation": self.acl.replace("name: /query", "name: /process"),
             "duplicate field": self.acl.replace("    defaultAction: deny", "    defaultAction: deny\n    defaultAction: allow", 1),
             "duplicate spec": self.acl + "\nspec:\n  accessControl:\n    defaultAction: allow\n",
             "unknown section": self.acl + "\n  unknown: value\n",
             "tag": self.acl.replace("appId: eventstore", "appId: !unsafe eventstore"),
+            "tab": self.acl.replace("    defaultAction: deny", "\tdefaultAction: deny", 1),
+            "reordered root keys": self.acl.replace("apiVersion: dapr.io/v1alpha1\nkind: Configuration", "kind: Configuration\napiVersion: dapr.io/v1alpha1", 1),
             "missing route": self.acl[:self.acl.index("          - name: /project/rebuild/verify/v1")],
         }.items():
             with self.subTest(label=label), self.assertRaises((ValueError, SyntaxError)):
@@ -73,6 +80,28 @@ class PlatformDeclarationTests(unittest.TestCase):
                 with patch("sys.argv", [str(SCRIPT)]):
                     self.assertEqual(renderer.main(), 1)
                 self.assertEqual(manifest.read_bytes(), rendered)
+
+    def test_malformed_literal_reports_failure_without_traceback_or_rewriting(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            script = root / "scripts/render-platform-declaration.py"
+            script.parent.mkdir()
+            script.write_bytes(SCRIPT.read_bytes())
+            acl = root / "src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml"
+            acl.parent.mkdir(parents=True)
+            acl.write_text(self.acl.replace("['POST']", "[{[]: 1}]", 1))
+            manifest = root / "module/hexalith.module-manifest.v2.json"
+            manifest.parent.mkdir()
+            original = renderer.MANIFEST.read_bytes()
+            manifest.write_bytes(original)
+            for optimize in ([], ["-O"]):
+                for arguments in ([], ["--check"]):
+                    with self.subTest(optimize=optimize, arguments=arguments):
+                        result = subprocess.run([sys.executable, *optimize, str(script), *arguments], capture_output=True, text=True, check=False)
+                        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                        self.assertIn("Platform declaration:", result.stderr)
+                        self.assertNotIn("Traceback", result.stderr)
+                        self.assertEqual(manifest.read_bytes(), original)
 
     def test_optimized_process_rejects_unsafe_acl_without_rewriting(self):
         with tempfile.TemporaryDirectory() as temporary:

@@ -163,7 +163,13 @@ To reproduce local test-lane evidence and continue past a failing project:
 pwsh -NoProfile -File scripts/test.ps1 -Lane all -ContinueOnFailure -ResultsDirectory TestResults
 ```
 
-CI and default local commands run in package mode (`UseNuGetDeps=true`, `UseHexalithProjectReferences=false`). If unpublished Hexalith packages block restore, record the package-mode blocker and rerun source-mode triage with `-p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false` only as diagnostic evidence.
+CI and the local commands above use package references and Release builds. If
+unpublished Hexalith packages block restore, record that package-mode blocker.
+For separate source diagnostics, use the pinned module tool's `debug` command
+from [getting-started.md](getting-started.md#step-1-deploy-locally); it selects
+direct source projects and Debug builds through its persisted mapping. Manual
+MSBuild mode selectors no longer select source references. A successful source
+run does not clear a package CI failure.
 
 The effective package graph selects EventStore through `HexalithEventStoreVersion`
 and Commons through `HexalithCommonsVersion`. Root pins in
@@ -238,12 +244,23 @@ Pact.js scripts are not currently exposed at the repository root. To make Pact c
 
 ## Platform declaration gate
 
-The `platform-declaration` CI job requires no submodules. It checks that
-`module/hexalith.module-manifest.v2.json` exactly matches the strict rendering of
-the owner ACL and runs the malformed/unsafe/stale-input test matrix. Regenerate
-with `python3 scripts/render-platform-declaration.py` after an owner-approved ACL
-change. Missing, duplicate, unsafe or stale input fails without rewriting in
-`--check` mode. The accepted local module tool is pinned to 4.34.0 alongside
-aspirate; package CI continues to restore packages and build Release. Source mode
-is selected only by the tool's persisted mapping, with no file-existence fallback.
-Legacy hosting projects and package publication gates remain in their existing scope.
+The `platform-declaration` CI job has a ten-minute timeout. It initializes only
+the direct EventStore, Tenants and Memories declaration owners, leaving their
+nested references uninitialized, and restores the pinned tool. It runs
+`dotnet tool run hexalith-module -- validate` with the Parties, EventStore,
+Tenants and Memories manifests before checking the generated declaration and
+running the malformed/unsafe/stale-input test matrix.
+
+`scripts/render-platform-declaration.py` derives `callers` and `invocationRules`
+from the owner ACL; its `TEMPLATE` owns every other declaration field. The strict
+parser requires thirteen unique POST routes from EventStore with the existing
+deny defaults, trust domain and namespace. After an owner-approved ACL change,
+regenerate with `python3 scripts/render-platform-declaration.py`; a route-count
+change also requires an approved parser-invariant and test update. Edit
+`TEMPLATE` for non-ACL changes, then regenerate. Missing, duplicate, unsafe or
+stale input fails without rewriting in `--check` mode.
+
+The accepted local module tool is pinned to 4.34.0 alongside aspirate; package CI
+continues to restore packages and build Release. Source mode is selected only
+by the tool's persisted mapping, with no file-existence fallback. Legacy hosting
+projects and package publication gates remain in their existing scope.

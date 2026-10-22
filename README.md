@@ -21,7 +21,7 @@ Hexalith.Parties is a ready-to-deploy party management domain service for people
 ## Quick Start
 
 Set `HEXALITH_DAPR_HOME` to a prepared, absolute isolated Dapr home before
-starting. Follow the [pinned Platform runtime prerequisites](references/Hexalith.Platform/README.md#run-and-debug-a-technical-module);
+starting. Follow the [pinned Platform runtime prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/17179e59843ee8cfb35892a74a2c18d3136fc9cf/README.md#run-and-debug-a-technical-module);
 the tool refuses an unset or unprepared home.
 
 ```bash
@@ -43,8 +43,16 @@ Initialize only this checkout's direct references; leave their nested references
 uninitialized. Ordinary package CI keeps package references and Release builds.
 
 The owner ACL remains `src/Hexalith.Parties.AppHost/DaprComponents/accesscontrol.parties.yaml`.
-After an owner-approved ACL change, run `python3 scripts/render-platform-declaration.py`;
-CI requires `python3 scripts/render-platform-declaration.py --check`.
+The renderer derives only `callers` and `invocationRules` from that ACL; its
+`TEMPLATE` in `scripts/render-platform-declaration.py` owns all other declaration
+fields. The strict parser accepts exactly thirteen unique POST routes from
+EventStore with the existing deny defaults, trust domain and namespace. After an
+owner-approved ACL change, run `python3 scripts/render-platform-declaration.py`;
+adding or removing routes also requires an approved update to the parser's
+thirteen-route invariant and its tests. Change `TEMPLATE` for non-ACL declaration
+updates, then regenerate. CI requires
+`python3 scripts/render-platform-declaration.py --check` and validates the generated
+declaration with its reference declarations using the pinned tool.
 Platform binds security storage through `Parties:Security:StateStoreName` and the
 existing projection/mapping component keys. The declarative tenant subscription
 uses `system.tenants.events` at `/tenants/events`; rich Memories search stays disabled.
@@ -52,7 +60,7 @@ uses `system.tenants.events` at `/tenants/events`; rich Memories search stays di
 **Legacy hosting scope:** `Hexalith.Parties.AppHost`, Aspire helpers, UI, proprietary
 MCP and sample hosts remain for existing owner tests and continuity. They are frozen
 and are outside this Platform qualification. The legacy local command is
-`dotnet aspire run --project src/Hexalith.Parties.AppHost`; its Keycloak, admin and
+`aspire run --apphost src/Hexalith.Parties.AppHost`; its Keycloak, admin and
 UI topology is separate from the seven-server minimum above. Retirement requires
 owner-approved parity and consumer-removal gates.
 

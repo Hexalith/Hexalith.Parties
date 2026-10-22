@@ -1,6 +1,9 @@
 # Getting Started with Hexalith.Parties
 
-This guide starts the local EventStore-fronted topology, sends a Parties command through EventStore, queries it back through EventStore, and shows the typed .NET client and separate MCP host integration paths. The default development path is the pinned Platform module tool. The command/query examples below also describe the retained legacy UI and MCP surfaces.
+This guide starts the seven-server reference environment with the pinned Platform
+module tool for readiness checks and source debugging. The command/query, typed
+.NET client, UI and MCP walkthroughs then use the retained legacy AppHost and its
+authentication setup; those hosts are outside the reference environment.
 
 **Time estimate:** Under 30 minutes from clone to first command/query round-trip.
 
@@ -17,7 +20,7 @@ This guide starts the local EventStore-fronted topology, sends a Parties command
 | Git | Any recent version | [git-scm.com](https://git-scm.com) |
 | `jq` | Latest, optional for Bash examples | [jqlang.org](https://jqlang.org) |
 
-Install the Platform-accepted Aspire CLI 13.6.1. The local tool manifest pins module tool **4.34.0**; `dotnet tool restore` restores that exact version. The tool owns run-scoped infrastructure, readiness and diagnostics. Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home using the [pinned Platform prerequisites](../references/Hexalith.Platform/README.md#run-and-debug-a-technical-module); an unset or unprepared home is refused.
+Install the Platform-accepted Aspire CLI 13.6.1. The local tool manifest pins module tool **4.34.0**; `dotnet tool restore` restores that exact version. The tool owns run-scoped infrastructure, readiness and diagnostics. Set `HEXALITH_DAPR_HOME` to a prepared absolute isolated Dapr home using the [pinned Platform prerequisites](https://github.com/Hexalith/Hexalith.Platform/blob/17179e59843ee8cfb35892a74a2c18d3136fc9cf/README.md#run-and-debug-a-technical-module); an unset or unprepared home is refused.
 
 Verify your setup:
 
@@ -49,7 +52,7 @@ Memories is a required reference service; optional rich Parties search remains d
 Stop only this run with `dotnet tool run hexalith-module -- down --manifest module/hexalith.module-manifest.v2.json --run-id <run-id>`.
 
 **Legacy hosting scope:** the retained `Hexalith.Parties.AppHost` command
-`dotnet aspire run --project src/Hexalith.Parties.AppHost` remains available for
+`aspire run --apphost src/Hexalith.Parties.AppHost` remains available for
 existing owner tests and UI/MCP continuity. The legacy Keycloak/admin/UI/MCP/sample
 hosts are outside Platform's reference composition and have not been extended or retired.
 The remaining browser and MCP walkthroughs describe those legacy surfaces.
@@ -67,11 +70,17 @@ not an alternate public API. The `accesscontrol.eventstore-admin.yaml`
 component is an explicit exception (`defaultAction: allow`); see
 [event-publishing.md](event-publishing.md).
 
-If startup fails before the dashboard appears, first check that Docker Desktop is running and that the baseline root submodules exist under `references/`. A missing build, Commons, EventStore, FrontComposer, PolymorphicSerializations, or Tenants checkout is a setup problem, not a partial local topology that should be treated as ready.
+The tool reports readiness only after all seven declared servers pass `/ready`.
+Use its run ID, readiness result and preserved diagnostics to assess startup;
+the default workflow does not require a browser dashboard. On failure, check
+Docker Desktop, the prepared Dapr home and the selected direct references named
+by the diagnostic. A partially started graph is not ready.
 
-Memories-backed rich search is optional for the default local Parties run. To include it, initialize the `references/Hexalith.Memories` submodule and run the AppHost with `EnableMemoriesSearch=true`; leave it unset for the baseline one-command local topology.
-
-Readiness is confirmed by the Aspire dashboard health column and by the service-default endpoints exposed by each HTTP resource: `/ready` for readiness, `/health` for full health, and `/alive` for liveness. Treat the system as usable only after `eventstore`, `parties`, and `tenants` are healthy; a live `parties` domain-service host alone is not enough because public traffic enters through EventStore.
+Memories is required in this reference environment. Parties rich search remains
+disabled; `EnableMemoriesSearch` belongs to the retained legacy AppHost and does
+not select Platform services. The HTTP resources expose `/ready` for readiness,
+`/health` for full health, and `/alive` for liveness. Attach your debugger to the
+Parties service child process identified by the tool to inspect the active source.
 
 ---
 
@@ -88,6 +97,13 @@ Runtime deployment manifests, platform dependencies, Dapr components, ingress, s
 ---
 
 ## Step 2: Configure Tenant and Auth
+
+**Legacy walkthrough (the following steps):** stop the tool run with its exact
+`down --run-id` command, then start the retained AppHost using the legacy command
+in Step 1. The following dashboard ports and Keycloak token examples belong to
+that host. The default seven-server tool composition uses per-run development
+authentication and starts no `security`, UI, admin or MCP resource; it does not
+provide the Keycloak credentials used below.
 
 Provision or use an active Hexalith.Tenants tenant membership before the first Parties call:
 
@@ -415,11 +431,19 @@ Local Aspire-issued dev certificates must be trusted before curl or HttpClient c
 
 ### EventStore Gateway Not Ready
 
-Check the Aspire dashboard for `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`, and `tenants`. Public command/query readiness is EventStore-owned; Parties health only proves the SDK domain-service host is alive behind the gateway.
+For the default tool run, inspect its readiness result and diagnostics for all
+seven servers listed in Step 1. For the legacy walkthrough, check the Aspire
+dashboard for `eventstore`, `eventstore-admin`, `eventstore-admin-ui`, `parties`,
+and `tenants`. Public command/query readiness is EventStore-owned; Parties health
+only proves the SDK domain-service host is alive behind the gateway.
 
 ### Docker or Submodule Startup Failures
 
-If Redis, Keycloak, EventStore, or Tenants fail before the dashboard reaches healthy state, confirm Docker Desktop is running and rerun the baseline root-submodule command from Step 1. Do not use --recursive for the default local run; missing nested submodules are not required by the baseline AppHost path.
+For a default tool-run failure, follow the named resource and cause in its
+diagnostics, confirm Docker Desktop is running, and check the direct-reference
+command and Dapr prerequisites from Step 1. Keycloak and dashboard failures
+belong to the legacy walkthrough. Do not use --recursive for either local path;
+leave nested references uninitialized.
 
 ### Authentication Errors
 

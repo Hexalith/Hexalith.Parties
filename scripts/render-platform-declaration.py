@@ -509,7 +509,7 @@ def main() -> int:
         else:
             MANIFEST.parent.mkdir(exist_ok=True)
             MANIFEST.write_text(rendered, encoding="utf-8")
-    except (OSError, ValueError, SyntaxError) as error:
+    except (OSError, ValueError, SyntaxError, TypeError) as error:
         print(f"{ACL}: Platform declaration: {error}", file=sys.stderr)
         return 1
     return 0

@@ -139,7 +139,7 @@ public sealed class SampleOnboardingGuardrailTests
         gettingStarted.ShouldContain("dotnet tool restore");
         gettingStarted.ShouldContain("dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json");
         gettingStarted.ShouldContain("dotnet tool run hexalith-module -- down --manifest module/hexalith.module-manifest.v2.json --run-id <run-id>");
-        gettingStarted.ShouldContain("dotnet aspire run --project src/Hexalith.Parties.AppHost");
+        gettingStarted.ShouldContain("aspire run --apphost src/Hexalith.Parties.AppHost");
         gettingStarted.ShouldContain("Legacy hosting scope");
 
         string[] directReferences = ReadSubmoduleUpdateReferences(gettingStarted).ShouldHaveSingleItem();
