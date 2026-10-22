@@ -1,0 +1,6 @@
+{
+  "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release -m:1 -p:MinVerVersionOverride=1.0.0",
+  "exit_code": 0,
+  "output": "service-release-build.txt",
+  "elapsed_seconds": 23.04
+}

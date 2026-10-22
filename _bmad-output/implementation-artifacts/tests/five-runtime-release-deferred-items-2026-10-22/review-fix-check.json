@@ -1,0 +1,34 @@
+{
+  "scope": "Eight review findings; only affected driver fixtures, query methods and source-preflight class were executed. Full verification remains with the parent.",
+  "driver_sha256": "431b1aa7145904e1777bce9b4f9236b13775e58ffee9bee6019fa28a348628bf",
+  "driver_fixtures": {
+    "passed": 17,
+    "total": 17,
+    "script": "/tmp/parties-five-runtime-release-raw/parties-ui-driver-review-fixtures.py",
+    "script_sha256": "bdd3ac2c11530d09a9a74472fba25764dedc84cc538a9a43320d1fbdbc3d8dea",
+    "output": "review-driver-fixtures-binding.txt"
+  },
+  "historical_parsing": {
+    "passed": 10,
+    "total": 10,
+    "output": "review-query-tests.txt"
+  },
+  "source_preflight": {
+    "passed": 63,
+    "total": 63,
+    "output": "review-source-tests.txt"
+  },
+  "optimized_ui": "review-ui-optimized-final.txt",
+  "raw_index": {
+    "checked": 41,
+    "mismatches": 0,
+    "duplicate_rows": 0,
+    "nested_headers": 0
+  },
+  "source_sha256": {
+    "src/Hexalith.Parties.Contracts/Models/HumanActorBindingResult.cs": "e41ebfdff50a734445280442a241aec46e42ac0146434f36fa614c56888bedf0",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "23fc316fc35ee99dfd82083ff76bdb6ab3d3effcc03fd63c514b5311ee9843e2",
+    "tests/Hexalith.Parties.Ci.Tests/ReleaseSourcePreflightTests.cs": "9e6a3b360a4ef97e2448f62ca2084d5a3ada073cd99fed15f39f177a657aa802"
+  },
+  "initial_real_driver_failure": "review-ui-optimized.txt retains successful health/running proof followed by refusal of the daemon-added batch RepoDigest. The final driver admits only that exact batch repository/image digest, and guarded owned-image cleanup is recorded in review-owned-image-cleanup.txt. Full failed receipt remains at /tmp/parties-five-runtime-release-raw/ui-container-qualification-optimized-failure.json."
+}

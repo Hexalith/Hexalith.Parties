@@ -1,0 +1,13 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests
+Exit code: 0
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/identity-debug-final-tests.txt
+Raw SHA-256: 266e38a54cabf8f4061a32d926d65aa9976d36ad36885253e7c81c73933b9209
+
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Tests
+  Discovered:  Hexalith.Parties.Tests
+  Starting:    Hexalith.Parties.Tests
+  Finished:    Hexalith.Parties.Tests (ID = '3203e2eac1e69d356617e4cae5fa3f440c852a12ac575ed4cb685ab408c9c2ba')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 310, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 1.799s

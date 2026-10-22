@@ -1,0 +1,13 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests
+Exit code: 0
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/ci-final-focused-tests.txt
+Raw SHA-256: d875c7101f6b5bf9d965f8b456165815715de3e6b069a34c74a6e94dfaa46e0c
+
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Ci.Tests
+  Discovered:  Hexalith.Parties.Ci.Tests
+  Starting:    Hexalith.Parties.Ci.Tests
+  Finished:    Hexalith.Parties.Ci.Tests (ID = 'e2ae03f1bfa16e52881bfe6142ad07fcf2cd34d86833309fc89c1c488a187e37')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Ci.Tests  Total: 170, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 2.245s

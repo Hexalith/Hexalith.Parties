@@ -1,0 +1,6 @@
+{
+  "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:MinVerVersionOverride=1.0.0",
+  "exit_code": 0,
+  "output": "service-debug-build.txt",
+  "elapsed_seconds": 13.98
+}

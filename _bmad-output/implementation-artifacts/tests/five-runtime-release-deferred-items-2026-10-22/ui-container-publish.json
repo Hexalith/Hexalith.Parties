@@ -1,0 +1,6 @@
+{
+  "command": "dotnet publish src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release -r linux-x64 --self-contained false -m:1 -t:Rebuild,PublishContainer -p:MinVerVersionOverride=1.0.0 -p:ContainerArchiveOutputPath=/tmp/parties-dw105-20261022-ui.tar.gz -p:ContainerRegistry= -p:ContainerRepository=parties-dw105-20261022-local -p:ContainerImageTag=0.0.0-local -p:ContainerProvenanceSourceSha=9a46682ad170ba70e395aa00012f86f09ef6b315 -p:ContainerProvenanceReleaseVersion=0.0.0-local -p:ContainerProvenanceCreated=2026-10-22T12:00:00Z",
+  "exit_code": 0,
+  "output": "ui-container-publish.txt",
+  "elapsed_seconds": 8.2
+}

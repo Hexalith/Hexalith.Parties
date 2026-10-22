@@ -1,0 +1,8 @@
+{
+  "command": "actionlint .github/workflows/release.yml .github/workflows/rc-gate.yml",
+  "exit_code": 0,
+  "elapsed_seconds": 0.47,
+  "raw": "/tmp/parties-five-runtime-release-raw/parent-actionlint.txt",
+  "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "summary": ""
+}

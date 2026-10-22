@@ -1,0 +1,6 @@
+{
+  "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests",
+  "exit_code": 1,
+  "output": "identity-debug-tests.txt",
+  "elapsed_seconds": 3.17
+}

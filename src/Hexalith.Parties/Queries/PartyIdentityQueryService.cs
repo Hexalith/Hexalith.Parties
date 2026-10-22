@@ -30,6 +30,9 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
     internal Action? BeforeBindingSelection { get; init; }
 
 
+    /// <summary>Gets an internal observer invoked within bounded historical envelope parsing.</summary>
+    internal Action? BeforeHistoricalParsing { get; init; }
+
     /// <summary>Resolves current classification and eligibility from complete source and actor evidence.</summary>
     public async Task<PartyIdentityResult> ResolveAsync(QueryEnvelope envelope, CancellationToken cancellationToken)
     {
@@ -161,12 +164,16 @@ public sealed class PartyIdentityQueryService(IPartyIdentityAuthority authority,
         ResolveHumanActorBindingAt? query = null;
         try
         {
-            query = JsonSerializer.Deserialize<ResolveHumanActorBindingAt>(envelope.Payload, PartiesJsonOptions.Default);
             using var deadline = new PartyIdentityQueryDeadline(TimeSpan.FromSeconds(30), timeProvider, cancellationToken, startedAt, WorkLimiter);
             PartyIdentityOptions? options = await deadline.RunAsync(_ => identityOptions?.CurrentValue).ConfigureAwait(false);
             deadline.ApplyTimeout(options?.QueryTimeout ?? TimeSpan.FromSeconds(30));
             deadline.ThrowIfCancellationRequested();
             IdentityHistoryPolicy? policy = options?.Policy;
+            query = await deadline.RunAsync(_ =>
+            {
+                BeforeHistoricalParsing?.Invoke();
+                return JsonSerializer.Deserialize<ResolveHumanActorBindingAt>(envelope.Payload, PartiesJsonOptions.Default);
+            }).ConfigureAwait(false);
             if (query is null || !Matches(envelope, query.TenantId, query.PartyId)
                 || string.IsNullOrWhiteSpace(query.ExpectedActorId) || query.ExpectedBindingVersion <= 0)
             {

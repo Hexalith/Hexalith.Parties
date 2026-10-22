@@ -1,0 +1,19 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: python3 /tmp/parties-ui-owned-review-cleanup.py
+Exit code: 0
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/review-owned-image-cleanup.txt
+Raw SHA-256: 4c971ad4c92e8d8d521d3ec34fe6dd825509908f231618f3fda8bdce10b50a2c
+
+{
+  "command": [
+    "docker",
+    "image",
+    "rm",
+    "--no-prune",
+    "sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80"
+  ],
+  "exit_code": 0,
+  "stdout": "Untagged: parties-dw105-20261022-local:0.0.0-local\nDeleted: sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\n",
+  "stderr": "",
+  "ownership": "Exact image ID and only the batch tag/digest confirmed against failed attempt receipt."
+}

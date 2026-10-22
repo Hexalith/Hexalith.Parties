@@ -1,0 +1,8 @@
+{
+  "command": "bash scripts/check-no-warning-override.sh",
+  "exit_code": 0,
+  "elapsed_seconds": 0.23,
+  "raw": "/tmp/parties-five-runtime-release-raw/parent-warning-guard.txt",
+  "raw_sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604",
+  "summary": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+}

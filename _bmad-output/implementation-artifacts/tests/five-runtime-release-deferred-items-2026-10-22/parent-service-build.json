@@ -1,0 +1,8 @@
+{
+  "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release -m:1 -p:MinVerVersionOverride=1.0.0",
+  "exit_code": 0,
+  "elapsed_seconds": 2.45,
+  "raw": "/tmp/parties-five-runtime-release-raw/parent-service-build.txt",
+  "raw_sha256": "4c3f1e407a0520f60535d628757250eac73efd1bbeade41b894c6d930402218c",
+  "summary": "  Hexalith.Parties.EventStoreGateway.TestHost -> <workspace>/tests/Hexalith.Parties.EventStoreGateway.TestHost/bin/Release/net10.0/Hexalith.Parties.EventStoreGateway.TestHost.dll\n  Hexalith.Parties.Tests -> <workspace>/tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll\n\nBuild succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:02.18"
+}

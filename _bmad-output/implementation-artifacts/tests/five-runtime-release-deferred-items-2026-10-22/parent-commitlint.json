@@ -1,0 +1,8 @@
+{
+  "command": "node_modules/.bin/commitlint --edit /tmp/parties-five-runtime-release-commit-message.txt --verbose",
+  "exit_code": 0,
+  "elapsed_seconds": 0.2,
+  "raw": "/tmp/parties-five-runtime-release-raw/parent-commitlint.txt",
+  "raw_sha256": "a4381c2db51d04cb79924606736f1f0c3d4ba547e6bafb1e9234ce03a99e2473",
+  "summary": "\u29d7   --- input ---\nfix: close five runtime and release deferrals\n\nBound historical parsing and require independent exact-source\nrange proof before publication. Reject ambiguous release versions,\nqualify the UI container, and isolate environment assertions.\n\u2714   found 0 problems, 0 warnings"
+}

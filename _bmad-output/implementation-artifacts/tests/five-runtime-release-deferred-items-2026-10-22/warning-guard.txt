@@ -1,0 +1,7 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: bash scripts/check-no-warning-override.sh
+Exit code: 0
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/warning-guard.txt
+Raw SHA-256: 060433ddc80def9c6eaafddd5894b53fcd9e76a2e69632eb4a987fc26223a434
+
+OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.

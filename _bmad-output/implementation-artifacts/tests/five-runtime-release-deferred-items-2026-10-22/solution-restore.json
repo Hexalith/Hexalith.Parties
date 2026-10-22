@@ -1,0 +1,6 @@
+{
+  "command": "dotnet restore Hexalith.Parties.slnx -p:MinVerVersionOverride=1.0.0",
+  "exit_code": 0,
+  "output": "solution-restore.txt",
+  "elapsed_seconds": 2.96
+}

@@ -1,0 +1,64 @@
+Evidence: whitespace-normalized; failure excerpt, complete failed-case inventory and summary; repetitive assertion tables/stacks omitted
+Command: dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests
+Exit code: 1
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/identity-debug-tests.txt
+Raw SHA-256: d9e9f544b6c0672fc64e1e9f3138f07b7f086d3806c926351c7ce095eea01056
+
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Tests
+  Discovered:  Hexalith.Parties.Tests
+  Starting:    Hexalith.Parties.Tests
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.SharedWorkCapacity_RejectsSaturationAndRecoversAfterWorkAndCallbacks(historical: True, callbackFinishesFirst: False) [FAIL]
+      Shouldly.ShouldAssertException : result.TenantId
+          should be
+      "tenant-a"
+          but was
+      ""
+          difference
+      Difference     |  |    |    |    |    |    |    |    |
+                     | \|/  \|/  \|/  \|/  \|/  \|/  \|/  \|/
+      Index          | 0    1    2    3    4    5    6    7
+      Expected Value | t    e    n    a    n    t    -    a
+      Actual Value   |
+      Expected Code  | 116  101  110  97   110  116  45   97
+      Actual Code    |
+      Stack Trace:
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(1202,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.AssertUnavailableAsync(PartyIdentityQueryService service, Boolean historical)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(2382,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.SharedWorkCapacity_RejectsSaturationAndRecoversAfterWorkAndCallbacks(Boolean historical, Boolean callbackFinishesFirst)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+        tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs(2394,0): at Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.SharedWorkCapacity_RejectsSaturationAndRecoversAfterWorkAndCallbacks(Boolean historical, Boolean callbackFinishesFirst)
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+
+All originally failing cases:
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.SharedWorkCapacity_RejectsSaturationAndRecoversAfterWorkAndCallbacks(historical: True, callbackFinishesFirst: False) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.SharedWorkCapacity_RejectsSaturationAndRecoversAfterWorkAndCallbacks(historical: True, callbackFinishesFirst: True) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.HistoricalEnvelopeParsing_ConsumesTheRemainingConfiguredBudget [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.HistoricalEnvelopeParsing_IsBoundedAndRecovers(cancelCaller: False, lateFault: False) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.HistoricalEnvelopeParsing_IsBoundedAndRecovers(cancelCaller: False, lateFault: True) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.HistoricalEnvelopeParsing_IsBoundedAndRecovers(cancelCaller: True, lateFault: False) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.HistoricalEnvelopeParsing_IsBoundedAndRecovers(cancelCaller: True, lateFault: True) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidQueryTimeout_DeniesBeforeAnyProvider(historical: True, ticks: 0) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidQueryTimeout_DeniesBeforeAnyProvider(historical: True, ticks: -1) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidQueryTimeout_DeniesBeforeAnyProvider(historical: True, ticks: 300000001) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.InvalidQueryTimeout_DeniesBeforeAnyProvider(historical: True, ticks: 9223372036854775807) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.OptionsAndPolicyProviders_AreBoundedAndRetainCapacity(historical: True, stalledCall: 5, cancelCaller: True) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.OptionsAndPolicyProviders_AreBoundedAndRetainCapacity(historical: True, stalledCall: 5, cancelCaller: False) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.OptionsAndPolicyProviders_AreBoundedAndRetainCapacity(historical: True, stalledCall: 4, cancelCaller: True) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.OptionsAndPolicyProviders_AreBoundedAndRetainCapacity(historical: True, stalledCall: 4, cancelCaller: False) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.OptionsAndPolicyProviders_AreBoundedAndRetainCapacity(historical: True, stalledCall: 3, cancelCaller: True) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.OptionsAndPolicyProviders_AreBoundedAndRetainCapacity(historical: True, stalledCall: 3, cancelCaller: False) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.OptionsAndPolicyProviders_AreBoundedAndRetainCapacity(historical: True, stalledCall: 2, cancelCaller: True) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.OptionsAndPolicyProviders_AreBoundedAndRetainCapacity(historical: True, stalledCall: 2, cancelCaller: False) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.OptionsAndPolicyProviders_AreBoundedAndRetainCapacity(historical: True, stalledCall: 1, cancelCaller: True) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.OptionsAndPolicyProviders_AreBoundedAndRetainCapacity(historical: True, stalledCall: 1, cancelCaller: False) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.OptionsAndPolicyProviders_AreBoundedAndRetainCapacity(historical: True, stalledCall: 6, cancelCaller: False) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.OptionsAndPolicyProviders_AreBoundedAndRetainCapacity(historical: True, stalledCall: 6, cancelCaller: True) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.ServiceIntervalSelection_IsBoundedAndRecovers(historical: True, cancelCaller: False) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.ServiceIntervalSelection_IsBoundedAndRecovers(historical: True, cancelCaller: True) [FAIL]
+    Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests.WholeQueryDeadline_SetupTimeConsumesOperationBudget(historical: True, exhausted: True) [FAIL]
+
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 310, Errors: 0, Failed: 26, Skipped: 0, Not Run: 0, Time: 2.790s

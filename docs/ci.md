@@ -83,11 +83,27 @@ rerunning those tests.
 
 ## Release
 
-Release is an explicit operator action through `workflow_dispatch`; pushes to `main` run CI but never publish. Before the protected release job is requested, the caller proves that the dispatch selected the current `main` tip and has a successful exact-source push run of `ci.yml`. That full-CI proof is fixed in the caller gate, shared preparation, and publication environment; the Parties publication wrapper accepts only `ci.yml`. The preparation action, its `builds-execution-sha` input, and nested publishing tools must resolve to the same reviewed immutable Hexalith.Builds commit.
+Release is an explicit operator action through `workflow_dispatch`; pushes to
+`main` run CI but never publish. Before requesting the protected release job,
+the caller proves that the dispatch selected the current `main` tip and has a
+successful exact-source push run of `ci.yml` plus independent completed
+successful `main` push proof from `rc-gate.yml`.
 
-If exact-source push CI is missing, failed, or canceled, find the original `main` push run for the intended commit under Actions → CI. Wait for a running attempt to finish, or use **Re-run all jobs** (or `gh run rerun RUN_ID`) on the failed or canceled original run. A rerun retains the original commit SHA and ref, as documented in [GitHub's rerun instructions](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs). Wait until that push run completes successfully, then dispatch Release again from current `main`. If `main` advanced, its new tip requires its own successful push CI. If no original push run exists, CI from a normal reviewed `main` push must establish the required evidence. Successful scheduled or `repository_dispatch` runs cannot substitute for push proof. EventStore 3.117.0 resolves the package API prerequisite described below; the selected Parties commit still requires its own successful full CI.
+The gate validates both fixed workflow identities through the GitHub API. Each
+run must bind its workflow ID, exact source SHA, `main` branch, `push` event,
+completed status and success conclusion. The RC proof covers the original
+main-push range. Missing, stale, pending, canceled, failed, manual, PR or tag
+runs cannot substitute. The release-floor gitlink signoff check remains
+required after preparation.
 
-The `production` environment must require human reviewers and allow deployments only from `main`. After approval, shared preparation:
+Full-CI proof stays fixed in the caller gate, shared preparation and publication
+environment; the Parties publication wrapper accepts only `ci.yml`. Preparation,
+its `builds-execution-sha` input and nested publishing tools must use the same
+reviewed immutable Hexalith.Builds commit.
+
+If either exact-source push proof is missing, failed, or canceled, find the original `main` push run for the intended commit under Actions → CI or Release Candidate Gate, respectively. Wait for a running attempt to finish, or use **Re-run all jobs** (or `gh run rerun RUN_ID`) on the failed or canceled original run. A rerun retains the original commit SHA and ref, as documented in [GitHub's rerun instructions](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs). Wait until that push run completes successfully, then dispatch Release again from current `main`. If `main` advanced, its new tip requires its own successful push CI and RC range proof. If no original push run exists, CI from a normal reviewed `main` push must establish the required evidence. Successful scheduled or `repository_dispatch` runs cannot substitute for push proof. EventStore 3.117.0 resolves the package API prerequisite described below; the selected Parties commit still requires its own successful full CI.
+
+Both `release` and `verify-publication` independently declare the `production` environment. That environment must require human reviewers and allow deployments only from `main`. Local fitness tests remove each job's declaration in isolation; they do not exercise GitHub's environment protection. After approval, shared preparation:
 
 - installs npm dependencies from `package-lock.json` and verifies their signatures;
 - restores and builds `Hexalith.Parties.slnx`;
@@ -102,6 +118,14 @@ The enabled job then prepares arm64 emulation and the shared container publisher
   - `registry.hexalith.com/parties`
   - `registry.hexalith.com/parties-mcp`
   - `registry.hexalith.com/parties-ui`
+
+The UI retains `InvariantGlobalization=false` and the ICU-capable
+`mcr.microsoft.com/dotnet/aspnet:10.0-alpine-extra` base. DW-105's
+[local qualification](../_bmad-output/implementation-artifacts/tests/five-runtime-release-deferred-items-2026-10-22/README.md)
+rebuilds and SDK-publishes a fresh local image, then reuses the shared smoke
+helpers in Development for bounded startup, `/alive`, `/health`, `/ready` and RCL
+stylesheet requests. It qualifies local `linux/amd64` startup only. Release must
+still pass the shared publisher's full smoke and publication verification.
 
 The active NuGet trusted publishing policy has package owner `Hexalith`, creator account `jpiquot`, GitHub repository `Hexalith/Hexalith.Parties`, workflow filename `release.yml`, and environment `production`. Set `NUGET_USER=jpiquot` as a repository variable; the creator account is distinct from the package owner and GitHub actor. Authentication stays in the Parties job because NuGet matches the caller workflow identity; [NuGet/login issue 6](https://github.com/NuGet/login/issues/6) records the reusable-workflow limitation. No long-lived NuGet secret or fallback is used. Local policy JSON records registration and does not create a policy in NuGet.
 
@@ -129,8 +153,13 @@ later sources) to `Username=<user>;Password=<token>`, following
 
 The publication preflight freezes the exact source, nine-package manifest, and complete three-container destination set. It rejects missing credentials, identity drift, or an existing package/container version before the first publication write; duplicate skipping is deliberately disabled.
 
-After publication, verification requires a published, non-draft GitHub Release
-whose validated tag resolves to the exact dispatched commit. A tag-ref lookup
+After publication, verification considers only published, non-draft GitHub Releases
+with canonical stable `vMAJOR.MINOR.PATCH` tags: exactly three numeric components,
+no leading zeros except `0`, no prerelease and no build metadata. It resolves every
+unique eligible tag, including annotated refs, and requires exactly one distinct
+version at the dispatched commit. Non-version tags are ignored and duplicate
+release entries for the same tag are deduplicated. Multiple distinct eligible
+versions at that SHA fail closed regardless of API list order. A tag-ref lookup
 returning HTTP 404 is logged and skipped because older releases can outlive
 their tags. Other API failures, invalid responses and invalid tag objects still
 fail verification. The matched tag is exposed as `verify-publication`'s

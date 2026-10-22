@@ -1,0 +1,262 @@
+{
+  "directory": "/tmp/parties-five-runtime-release-raw",
+  "note": "Tracked excerpts/redactions retain exact command shape, exit status and totals; complete original outputs and unredacted metadata remain local. Raw hashes identify those exact original bytes.",
+  "logs": [
+    {
+      "tracked": "actionlint.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/actionlint.txt",
+      "raw_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ci-debug-build.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ci-debug-build.txt",
+      "raw_sha256": "a04788e5ee04bd0af73c7f6bf77e661dd169a4c7ecfcf40847cdd1c6ead711df",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ci-final-build.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ci-final-build.txt",
+      "raw_sha256": "e7e7efd5553084484e79e202324c7fb190bb0c262f5fbce7fae43746f807063e",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ci-final-focused-tests.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ci-final-focused-tests.txt",
+      "raw_sha256": "d875c7101f6b5bf9d965f8b456165815715de3e6b069a34c74a6e94dfaa46e0c",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ci-final-tests.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ci-final-tests.txt",
+      "raw_sha256": "16d007f86831b2669b7ec79c42f47f19cac3763cd93e62786f764927e2a4868c",
+      "mode": "complete output; recovered original xUnit bytes match the original recorded hash; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ci-focused-debug-tests.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ci-focused-debug-tests.txt",
+      "raw_sha256": "decee67c4e5976b33c54c26f601bd75576528bfd722656ce7d828683c31d3b82",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ci-release-build.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ci-release-build.txt",
+      "raw_sha256": "4756a66aeacde1f6388f664bff42c8d8ca4ff0e0057b7d86542a38355626a3c9",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ci-release-focused-retry.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ci-release-focused-retry.txt",
+      "raw_sha256": "158749bb32c4ea76006469a19ec5a0b87c5da162e1659c7525b29e3e775504e1",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ci-release-focused-tests.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ci-release-focused-tests.txt",
+      "raw_sha256": "ee2c9d477779cca29fd8edec07737fb20876e983ed125c612f9d8f711a8add83",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ci-release-tests.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ci-release-tests.txt",
+      "raw_sha256": "e97dca88dd0684da0795960c6a0d74bec2e619c5fcffd8a8b932379e8326839a",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "final-whitespace.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/final-whitespace.txt",
+      "raw_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "identity-debug-final-tests.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/identity-debug-final-tests.txt",
+      "raw_sha256": "266e38a54cabf8f4061a32d926d65aa9976d36ad36885253e7c81c73933b9209",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "identity-debug-tests.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/identity-debug-tests.txt",
+      "raw_sha256": "d9e9f544b6c0672fc64e1e9f3138f07b7f086d3806c926351c7ce095eea01056",
+      "mode": "failure excerpt, complete failed-case inventory and summary; repetitive assertion tables/stacks omitted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "identity-release-tests.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/identity-release-tests.txt",
+      "raw_sha256": "82e2648d16079acb839d93e5e0ed6e5adb09826902b808c3199417686cde122f",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "service-debug-build.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/service-debug-build.txt",
+      "raw_sha256": "cc7668d67d7c935aa6cb58475edd56c368a1f293f57d6579f4887dbc2b3b97db",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "service-debug-final-build.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/service-debug-final-build.txt",
+      "raw_sha256": "06e3cb2b84711d80bc9ff443cb93a5f1171ee4b0457cdad3b1bf3688f5a7aa85",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "service-debug-rebuild.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/service-debug-rebuild.txt",
+      "raw_sha256": "c6b613f93a78fd6c750954905d883e156bd7ad4e1301fe5e6ca8b985f8c9505a",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "service-release-build.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/service-release-build.txt",
+      "raw_sha256": "0a881dd313c804f65fdd99656417b3aa121ed89776a9ed705ac5d6eb4c991fbe",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "service-release-tests.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/service-release-tests.txt",
+      "raw_sha256": "5109785c8e141366fd11c73ac3766b17bdefd78de0176d7486b24ec33cf6e972",
+      "mode": "summary excerpt; routine application logs omitted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "solution-restore.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/solution-restore.txt",
+      "raw_sha256": "3191a80ea70d602f014a270dd0b279869fab5420189d9cdaa5fce630ad25ea42",
+      "mode": "tail excerpt; repeated restore progress omitted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "source-debug.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/source-debug.txt",
+      "raw_sha256": "3b144191aa2e4634ec495df6e46863af521f053f967ec75c8fdcfd4a3a4dbb20",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ui-container-publish.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ui-container-publish.txt",
+      "raw_sha256": "883f4e6e7338ef72cc9cf2a5606b437812caf89a08ab0efbc3e000fc2c6b9ef9",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ui-container-runtime-final.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ui-container-runtime-final.txt",
+      "raw_sha256": "a64118b155ea2639cc7e981941ae9c54736f5640b13f0722f8e3ab51f2e18797",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ui-container-runtime-retry.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ui-container-runtime-retry.txt",
+      "raw_sha256": "069482b8f285984d1b590a43e80d4a84e51d4b92632f100779ed529461d58fe9",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ui-container-runtime.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ui-container-runtime.txt",
+      "raw_sha256": "1aa60b306983b895f6577245bab480867ecb926162f226007f00405a2e8f4136",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ui-debug-build.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ui-debug-build.txt",
+      "raw_sha256": "f7c160517802b75c37d611d6c15bf91453175f5fa38ca7534b039f536608e36b",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ui-release-build.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ui-release-build.txt",
+      "raw_sha256": "4bc0bc7a927db152750ab3e06c7efa8e35c2dfbf472fd2e1541fd5991bd6446e",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "warning-guard.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/warning-guard.txt",
+      "raw_sha256": "060433ddc80def9c6eaafddd5894b53fcd9e76a2e69632eb4a987fc26223a434",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "whitespace.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/whitespace.txt",
+      "raw_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "final-guards.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/final-guards.txt",
+      "raw_sha256": "060433ddc80def9c6eaafddd5894b53fcd9e76a2e69632eb4a987fc26223a434",
+      "mode": "complete output; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "ui-container-runtime-cleanup.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/ui-container-runtime-cleanup.txt",
+      "raw_sha256": "4161a283ada6e39cec07495b5e870a345a236b62f431cd26b014e8892ae328ff",
+      "mode": "complete output; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "review-driver-fixtures-binding.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/review-driver-fixtures-binding.txt",
+      "raw_sha256": "c968b488bddcd488e69b2af63f720ad918ec1bf13c0a02d3f63a87491b0e4b81",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "review-driver-fixtures-final.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/review-driver-fixtures-final.txt",
+      "raw_sha256": "50222fe4967344c869c2b0357e1e830840235c59dbbcc07609923914bb15df46",
+      "mode": "summary excerpt; intermediate fixture case details retained in raw output"
+    },
+    {
+      "tracked": "review-driver-fixtures.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/review-driver-fixtures.txt",
+      "raw_sha256": "a0c0eaa681a3ba7780488a83387fdc3a75688c91b80c17cfb439476fd48aa2a7",
+      "mode": "summary excerpt; intermediate fixture case details retained in raw output"
+    },
+    {
+      "tracked": "review-owned-image-cleanup.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/review-owned-image-cleanup.txt",
+      "raw_sha256": "4c971ad4c92e8d8d521d3ec34fe6dd825509908f231618f3fda8bdce10b50a2c",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "review-query-build.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/review-query-build.txt",
+      "raw_sha256": "dec7600f65af3c2fd44289566db03714e30edc4f62b7a3668ecd62936d92bf9e",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "review-query-tests.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/review-query-tests.txt",
+      "raw_sha256": "11cdb07d334808e1dbad1e15fcf17799e858fe54ba81d3ce6e1d2d23de7506b9",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "review-source-build.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/review-source-build.txt",
+      "raw_sha256": "6ff70d78a75927948284e435bf275272f80f3a6528ef200143bd9c5ff08fd0fb",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "review-source-tests.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/review-source-tests.txt",
+      "raw_sha256": "ee8df5c36b68f52a19c87a520a076dd1542c1be6b7d0206315dc07935af41571",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "review-ui-optimized-final.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/review-ui-optimized-final.txt",
+      "raw_sha256": "cd5248e3fa4ac87d3900f84b48264e3d762914bcc93292658b4a757421245f43",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    },
+    {
+      "tracked": "review-ui-optimized.txt",
+      "raw": "/tmp/parties-five-runtime-release-raw/review-ui-optimized.txt",
+      "raw_sha256": "c5b281367014af08694ee4bc6d26edf27a993e227ff3d7f9df3a997bcde5a09c",
+      "mode": "complete output; local workspace/home paths redacted; whitespace normalized in tracked view only"
+    }
+  ],
+  "repairs": [
+    {
+      "receipt": "ci-final-tests.txt",
+      "preserved_bytes_directory": "/tmp/parties-five-runtime-release-raw/receipt-repair-before-e8s6ljym",
+      "preserved_raw_sha256": "4151c418efc8a4e8dd646b95cc11b6fc84b34e5cff7fe0a9ecd3b5d9030e4bf3",
+      "preserved_tracked_sha256": "f464c476f12e2499caa82130ead6508bd066c6f87dbc08df482f4b3baa55d0a8",
+      "recovered_raw_sha256": "16d007f86831b2669b7ec79c42f47f19cac3763cd93e62786f764927e2a4868c",
+      "recovery": "Removed the receipt header only after recovered xUnit bytes exactly matched the original recorded 16d007... hash. Original wrapped raw/tracked bytes and index remain preserved separately."
+    }
+  ]
+}

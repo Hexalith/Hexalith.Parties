@@ -1,0 +1,8 @@
+{
+  "command": "npm ci --ignore-scripts",
+  "exit_code": 0,
+  "elapsed_seconds": 7.21,
+  "raw": "/tmp/parties-five-runtime-release-raw/parent-npm-restore.txt",
+  "raw_sha256": "9692ade8079c53593a433d67af115408fad3dd52f2baf794440ee20556eba6d3",
+  "summary": "Locked tool restore succeeded; package manifest and lockfile unchanged."
+}

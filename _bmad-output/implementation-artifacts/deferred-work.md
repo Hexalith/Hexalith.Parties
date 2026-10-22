@@ -787,7 +787,9 @@ origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferra
 location: parties-ui release container and shared OCI smoke workflow
 source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
 reason: Release run 33980524472 published NuGet 1.1.1 and passed parties/parties-mcp smoke, then failed parties-ui with image-start-failure; the GitHub Release for v1.1.1 has no nupkg assets because semantic-release never reached the GitHub plugin.
-status: open
+status: done 2026-10-22
+resolution: Preserved and regression-tested the ICU-capable alpine-extra UI base with non-invariant globalization. A fresh SDK Rebuild/PublishContainer archive passes local linux/amd64 Development startup through shared Builds smoke helpers, all three health routes and the RCL stylesheet (HTTP 200), and final running-state proof. Owned container/image cleanup passes. This closes current startup qualification only; it does not repair the historical v1.1.1 release, certify arm64 or replace required release smoke.
+verification: `tests/five-runtime-release-deferred-items-2026-10-22/ui-container-qualification.json` and `validation.json`; spec `spec-five-runtime-release-deferred-items.md`.
 
 ### DW-106: Execute the Release verify-source bash with a fake gh/GITHUB_OUTPUT harness the way EventStore does.
 
@@ -1747,15 +1749,23 @@ archived: 2026-10-21
   summary: Bind successful main-push range signoff proof to release publication.
   severity: medium
   evidence: Both the baseline and current publication workflow require successful exact-source ci.yml and a release-floor tip diff, but do not consume the independent RC workflow verdict. An unsigned intermediate pointer can fail a range check while the final signed tip passes the existing publication check. Qualify a governed exact-source range-proof integration separately; this batch preserves the approved full-CI and protected manual publication contract.
-  status: open
+  status: done 2026-10-22
+  resolution: The release caller now requires independent validated ci.yml and rc-gate.yml identities plus completed successful exact-SHA main push runs before protected publication. Executable fixtures accept both valid proofs and reject absent, stale, failed, pending, canceled, wrong-event, wrong-branch, wrong-workflow and malformed evidence. The release-floor signoff gate remains unchanged.
+  verification: `tests/five-runtime-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-runtime-release-deferred-items.md`.
 
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-five-query-release-deferred-items.md`
   summary: Historical identity reads still deserialize the query envelope before the deadline.
   evidence: ResolveAtAsync parses the envelope before PartyIdentityQueryDeadline exists. That order predates the options and selection budget. A bounded parse would need its own qualification.
+  status: done 2026-10-22
+  resolution: Historical deserialization now runs inside the configured cumulative deadline and existing shared work lease before authority admission. Gated tests prove timeout, caller-cancellation precedence, retained capacity through late completion/fault, saturation and recovery; malformed payloads fail closed and ordinary attribution outcomes remain covered. Failures before parsing return empty unparsed metadata with no evidence.
+  verification: `tests/five-runtime-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-runtime-release-deferred-items.md`.
 
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-five-query-release-deferred-items.md`
   summary: The first matching GitHub release tag becomes the publication version when several tags share the dispatched commit.
   evidence: maybe-false, medium if true. The selector breaks on the first non-draft tag whose peeled SHA matches. GitHub's list order for two tags on one SHA would settle whether a non-version tag can be proved.
+  status: done 2026-10-22
+  resolution: Publication inspects all unique non-draft canonical stable vMAJOR.MINOR.PATCH tags, skips non-version spellings and rejects multiple distinct exact-source versions. Executable fixtures prove both list orders, duplicate entries, annotated refs, deleted refs and safe outputs. Other API/object failures remain fatal.
+  verification: `tests/five-runtime-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-runtime-release-deferred-items.md`.
 
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-five-query-release-deferred-items.md`
   summary: Main-push workflow triggers and concurrency groups are not executed locally.
@@ -1764,3 +1774,6 @@ archived: 2026-10-21
 - source_spec: `/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-five-query-release-deferred-items.md`
   summary: The publication job's production environment is not isolated from the release job's environment assertion.
   evidence: The release job already contains environment production, so removing it from verify-publication still satisfies that assertion. GitHub is what enforces the environment rule.
+  status: done 2026-10-22
+  resolution: Both credential-bearing jobs are independently extracted and required to declare production. The negative control removes only verify-publication protection while release remains protected and must fail; the reciprocal mutation is also rejected. This checks declarations locally and does not claim execution of GitHub environment protection.
+  verification: `tests/five-runtime-release-deferred-items-2026-10-22/validation.json`; spec `spec-five-runtime-release-deferred-items.md`.

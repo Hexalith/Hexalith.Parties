@@ -1,0 +1,6 @@
+{
+  "command": "python3 _bmad-output/implementation-artifacts/tests/five-runtime-release-deferred-items-2026-10-22/qualify-local-ui.py",
+  "exit_code": 0,
+  "output": "ui-container-runtime-cleanup.txt",
+  "elapsed_seconds": 5.22
+}

@@ -1,0 +1,14 @@
+{
+  "checkout": "9a46682ad170ba70e395aa00012f86f09ef6b315",
+  "sha256": {
+    "src/Hexalith.Parties.Contracts/Models/HumanActorBindingResult.cs": "e41ebfdff50a734445280442a241aec46e42ac0146434f36fa614c56888bedf0",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs": "d4196790d202d78b342d71b990cacc3f6282180f2d6e7e13b252beb1d2b06b85",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "23fc316fc35ee99dfd82083ff76bdb6ab3d3effcc03fd63c514b5311ee9843e2",
+    "tests/Hexalith.Parties.Ci.Tests/ReleaseSourcePreflightTests.cs": "9e6a3b360a4ef97e2448f62ca2084d5a3ada073cd99fed15f39f177a657aa802",
+    "tests/Hexalith.Parties.Ci.Tests/ReleasePublicationVerificationTests.cs": "649c16044d5dab3ca5701814d794e4380f38c11326d7dda1d70732312cf4b04b",
+    "tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs": "db19c20318b9a557df92c1ef3970832e86e961a74b384708b989dbfd2e750861",
+    ".github/workflows/release.yml": "06d07dabdb61f796118646df9f9d01e4b7bc26173574710afe24aa80442b4c82",
+    "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll": "58891dbb0bebb58812d5255e85dfaaf80a8e05ce3b5e59553211110afbf97abc",
+    "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll": "935d072c2b1217d06e611983c48902a6dbe2a1b1f01247ffa0b06a88481e4b93"
+  }
+}

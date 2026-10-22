@@ -1,0 +1,11 @@
+Evidence: summary excerpt; intermediate fixture case details retained in raw output
+Command: python3 /tmp/parties-ui-driver-review-fixtures.py
+Exit code: 0
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/review-driver-fixtures-final.txt
+Raw SHA-256: 50222fe4967344c869c2b0357e1e830840235c59dbbcc07609923914bb15df46
+
+{
+  "driver_sha256": "16e3d8d481870236fea39f4da976574df43899da9542043eeaa055271d7440fe",
+  "cases": 15,
+  "passed": 15
+}

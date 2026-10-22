@@ -1,0 +1,395 @@
+{
+  "attempt_id": "35064c6510ab48b4ab2167c833c4205c",
+  "phase": "complete",
+  "result": "pass",
+  "scope": "Fresh local SDK Release/package image; linux/amd64 Development startup only. No registry publication, historical release repair, arm64, production authentication or GitHub approval execution.",
+  "archive": "/tmp/parties-dw105-20261022-ui.tar.gz",
+  "image": "parties-dw105-20261022-local:0.0.0-local",
+  "container": "parties-dw105-20261022-owned-ui-86e4330c84d349c2a182afc8fcf71c54",
+  "http": [
+    {
+      "route": "/alive",
+      "status": "200"
+    },
+    {
+      "route": "/health",
+      "status": "200"
+    },
+    {
+      "route": "/ready",
+      "status": "200"
+    },
+    {
+      "route": "/_content/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.bundle.scp.css",
+      "status": "200"
+    }
+  ],
+  "load_attempted": true,
+  "startup_attempted": true,
+  "commands": [
+    {
+      "command": [
+        "docker",
+        "container",
+        "inspect",
+        "parties-dw105-20261022-owned-ui-86e4330c84d349c2a182afc8fcf71c54"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 1,
+      "stdout": "[]\n",
+      "stderr": "Error response from daemon: No such container: parties-dw105-20261022-owned-ui-86e4330c84d349c2a182afc8fcf71c54\n",
+      "elapsed_seconds": 0.03
+    },
+    {
+      "command": [
+        "docker",
+        "image",
+        "inspect",
+        "parties-dw105-20261022-local:0.0.0-local"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 1,
+      "stdout": "[]\n",
+      "stderr": "Error response from daemon: No such image: parties-dw105-20261022-local:0.0.0-local\n",
+      "elapsed_seconds": 0.033
+    },
+    {
+      "command": [
+        "docker",
+        "image",
+        "inspect",
+        "sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 1,
+      "stdout": "[]\n",
+      "stderr": "Error response from daemon: No such image: sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\n",
+      "elapsed_seconds": 0.032
+    },
+    {
+      "command": [
+        "docker",
+        "load",
+        "--input",
+        "/tmp/parties-dw105-20261022-ui.tar.gz"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 0,
+      "stdout": "Loaded image: parties-dw105-20261022-local:0.0.0-local\n",
+      "stderr": "",
+      "elapsed_seconds": 2.187
+    },
+    {
+      "command": [
+        "docker",
+        "image",
+        "inspect",
+        "parties-dw105-20261022-local:0.0.0-local"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 0,
+      "stdout": "[\n    {\n        \"Id\": \"sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\",\n        \"RepoTags\": [\n            \"parties-dw105-20261022-local:0.0.0-local\"\n        ],\n        \"RepoDigests\": [\n            \"parties-dw105-20261022-local@sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\"\n        ],\n        \"Created\": \"2026-10-22T15:10:18.6618309Z\",\n        \"Config\": {\n            \"User\": \"app\",\n            \"ExposedPorts\": {\n                \"8080/tcp\": {}\n            },\n            \"Env\": [\n                \"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\",\n                \"APP_UID=1654\",\n                \"ASPNETCORE_HTTP_PORTS=8080\",\n                \"DOTNET_RUNNING_IN_CONTAINER=true\",\n                \"DOTNET_VERSION=10.0.13\",\n                \"ASPNET_VERSION=10.0.13\"\n            ],\n            \"Entrypoint\": [\n                \"dotnet\",\n                \"/app/Hexalith.Parties.UI.dll\"\n            ],\n            \"WorkingDir\": \"/app/\",\n            \"Labels\": {\n                \"net.dot.runtime.majorminor\": \"10.0\",\n                \"net.dot.sdk.version\": \"10.0.402\",\n                \"org.opencontainers.artifact.created\": \"2026-10-22T12:00:00Z\",\n                \"org.opencontainers.artifact.description\": \"DAPR-native party management microservice for .NET\",\n                \"org.opencontainers.image.authors\": \"Hexalith Contributors\",\n                \"org.opencontainers.image.base.digest\": \"sha256:7d9ff35e9a600e33419d5b84c745efcc1aa6847e5fb255b7fa746f9f83509e9c\",\n                \"org.opencontainers.image.base.name\": \"mcr.microsoft.com/dotnet/aspnet:10.0-alpine-extra\",\n                \"org.opencontainers.image.created\": \"2026-10-22T12:00:00Z\",\n                \"org.opencontainers.image.description\": \"DAPR-native party management microservice for .NET\",\n                \"org.opencontainers.image.documentation\": \"https://github.com/Hexalith/Hexalith.Parties/blob/9a46682ad170ba70e395aa00012f86f09ef6b315/README.md\",\n                \"org.opencontainers.image.licenses\": \"MIT\",\n                \"org.opencontainers.image.revision\": \"9a46682ad170ba70e395aa00012f86f09ef6b315\",\n                \"org.opencontainers.image.source\": \"https://github.com/Hexalith/Hexalith.Parties\",\n                \"org.opencontainers.image.url\": \"https://github.com/Hexalith/Hexalith.Parties/releases/tag/v0.0.0-local\",\n                \"org.opencontainers.image.vendor\": \"Hexalith\",\n                \"org.opencontainers.image.version\": \"0.0.0-local\"\n            }\n        },\n        \"Architecture\": \"amd64\",\n        \"Os\": \"linux\",\n        \"Size\": 308576127,\n        \"RootFS\": {\n            \"Type\": \"layers\",\n            \"Layers\": [\n                \"sha256:75c137aedfb2760f88629236cb7b797630aed0c3d91d626d1d1bb694878fc2ba\",\n                \"sha256:3cf33c21f77aec909715e4e28b42dea7d325e9b4327461bebb5c476af4e3db62\",\n                \"sha256:af035971f63616b41fe78050e57d04c2f8449e3d1c0dd58828e137681ebfaaa0\",\n                \"sha256:4b68f90b04e34095d684102595407d24a314dc98dd592014f004ef4eb69fdd8b\",\n                \"sha256:c05864602d225f638b7a07f191e71d481a979851aa1cb9c757fc044a979368c4\",\n                \"sha256:e7ae88155c6ab4c9962214984c70dddbdfaae916cd36bb81476624bdf2eca4dd\",\n                \"sha256:bbf2cdf8c87684cdace5e207f86f971c0af8a27a542a33048773a6d626a6d8a3\"\n            ]\n        },\n        \"Metadata\": {\n            \"LastTagTime\": \"2026-10-22T15:45:02.928508113Z\"\n        },\n        \"Descriptor\": {\n            \"mediaType\": \"application/vnd.docker.distribution.manifest.v2+json\",\n            \"digest\": \"sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\",\n            \"size\": 1408,\n            \"annotations\": {\n                \"io.containerd.image.name\": \"docker.io/library/parties-dw105-20261022-local:0.0.0-local\",\n                \"org.opencontainers.image.ref.name\": \"0.0.0-local\"\n            }\n        }\n    }\n]\n",
+      "stderr": "",
+      "elapsed_seconds": 0.077
+    },
+    {
+      "command": [
+        "docker",
+        "run",
+        "--detach",
+        "--platform",
+        "linux/amd64",
+        "--publish",
+        "127.0.0.1::8080",
+        "--env",
+        "ASPNETCORE_ENVIRONMENT=Development",
+        "--env",
+        "ASPNETCORE_URLS=http://+:8080",
+        "--env",
+        "Authentication__JwtBearer__Issuer=hexalith-container-smoke",
+        "--env",
+        "Authentication__JwtBearer__Audience=hexalith-eventstore",
+        "--env",
+        "Authentication__JwtBearer__SigningKey=hexalith-container-smoke-only-key-not-a-secret",
+        "--env",
+        "Authentication__JwtBearer__AllowInsecureSymmetricKey=true",
+        "--name",
+        "parties-dw105-20261022-owned-ui-86e4330c84d349c2a182afc8fcf71c54",
+        "sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 0,
+      "stdout": "d5a8293d1e620f4000f8f42fc3fddd2a5d25edaf951e86cc753c7b3c3996ee1e\n",
+      "stderr": "",
+      "elapsed_seconds": 0.489
+    },
+    {
+      "command": [
+        "docker",
+        "port",
+        "parties-dw105-20261022-owned-ui-86e4330c84d349c2a182afc8fcf71c54",
+        "8080/tcp"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 0,
+      "stdout": "127.0.0.1:57842\n",
+      "stderr": "",
+      "elapsed_seconds": 0.032
+    },
+    {
+      "command": [
+        "curl",
+        "--silent",
+        "--show-error",
+        "--max-time",
+        "5",
+        "--output",
+        "/dev/null",
+        "--write-out",
+        "%{http_code}",
+        "http://127.0.0.1:57842/alive"
+      ],
+      "timeout_seconds": 10,
+      "exit_code": 56,
+      "stdout": "000",
+      "stderr": "curl: (56) Recv failure: Connection reset by peer\n",
+      "elapsed_seconds": 0.007
+    },
+    {
+      "command": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Status}}|{{.State.ExitCode}}",
+        "parties-dw105-20261022-owned-ui-86e4330c84d349c2a182afc8fcf71c54"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 0,
+      "stdout": "running|0\n",
+      "stderr": "",
+      "elapsed_seconds": 0.031
+    },
+    {
+      "command": [
+        "curl",
+        "--silent",
+        "--show-error",
+        "--max-time",
+        "5",
+        "--output",
+        "/dev/null",
+        "--write-out",
+        "%{http_code}",
+        "http://127.0.0.1:57842/alive"
+      ],
+      "timeout_seconds": 10,
+      "exit_code": 0,
+      "stdout": "200",
+      "stderr": "",
+      "elapsed_seconds": 0.065
+    },
+    {
+      "command": [
+        "docker",
+        "port",
+        "parties-dw105-20261022-owned-ui-86e4330c84d349c2a182afc8fcf71c54",
+        "8080/tcp"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 0,
+      "stdout": "127.0.0.1:57842\n",
+      "stderr": "",
+      "elapsed_seconds": 0.035
+    },
+    {
+      "command": [
+        "curl",
+        "--silent",
+        "--show-error",
+        "--max-time",
+        "5",
+        "--output",
+        "/dev/null",
+        "--write-out",
+        "%{http_code}",
+        "http://127.0.0.1:57842/alive"
+      ],
+      "timeout_seconds": 10,
+      "exit_code": 0,
+      "stdout": "200",
+      "stderr": "",
+      "elapsed_seconds": 0.017
+    },
+    {
+      "command": [
+        "curl",
+        "--silent",
+        "--show-error",
+        "--max-time",
+        "5",
+        "--output",
+        "/dev/null",
+        "--write-out",
+        "%{http_code}",
+        "http://127.0.0.1:57842/health"
+      ],
+      "timeout_seconds": 10,
+      "exit_code": 0,
+      "stdout": "200",
+      "stderr": "",
+      "elapsed_seconds": 0.009
+    },
+    {
+      "command": [
+        "curl",
+        "--silent",
+        "--show-error",
+        "--max-time",
+        "5",
+        "--output",
+        "/dev/null",
+        "--write-out",
+        "%{http_code}",
+        "http://127.0.0.1:57842/ready"
+      ],
+      "timeout_seconds": 10,
+      "exit_code": 0,
+      "stdout": "200",
+      "stderr": "",
+      "elapsed_seconds": 0.006
+    },
+    {
+      "command": [
+        "curl",
+        "--silent",
+        "--show-error",
+        "--max-time",
+        "5",
+        "--output",
+        "/dev/null",
+        "--write-out",
+        "%{http_code}",
+        "http://127.0.0.1:57842/_content/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.bundle.scp.css"
+      ],
+      "timeout_seconds": 10,
+      "exit_code": 0,
+      "stdout": "200",
+      "stderr": "",
+      "elapsed_seconds": 0.015
+    },
+    {
+      "command": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.State.Status}}|{{.State.ExitCode}}",
+        "parties-dw105-20261022-owned-ui-86e4330c84d349c2a182afc8fcf71c54"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 0,
+      "stdout": "running|0\n",
+      "stderr": "",
+      "elapsed_seconds": 0.035
+    },
+    {
+      "command": [
+        "docker",
+        "container",
+        "inspect",
+        "parties-dw105-20261022-owned-ui-86e4330c84d349c2a182afc8fcf71c54"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 0,
+      "stdout": "[\n    {\n        \"Id\": \"d5a8293d1e620f4000f8f42fc3fddd2a5d25edaf951e86cc753c7b3c3996ee1e\",\n        \"Created\": \"2026-10-22T15:45:04.39609032Z\",\n        \"Path\": \"dotnet\",\n        \"Args\": [\n            \"/app/Hexalith.Parties.UI.dll\"\n        ],\n        \"State\": {\n            \"Status\": \"running\",\n            \"Running\": true,\n            \"Paused\": false,\n            \"Restarting\": false,\n            \"OOMKilled\": false,\n            \"Dead\": false,\n            \"Pid\": 75970,\n            \"ExitCode\": 0,\n            \"Error\": \"\",\n            \"StartedAt\": \"2026-10-22T15:45:04.621540288Z\",\n            \"FinishedAt\": \"0001-01-01T00:00:00Z\"\n        },\n        \"Image\": \"sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\",\n        \"ResolvConfPath\": \"/var/lib/docker/containers/d5a8293d1e620f4000f8f42fc3fddd2a5d25edaf951e86cc753c7b3c3996ee1e/resolv.conf\",\n        \"HostnamePath\": \"/var/lib/docker/containers/d5a8293d1e620f4000f8f42fc3fddd2a5d25edaf951e86cc753c7b3c3996ee1e/hostname\",\n        \"HostsPath\": \"/var/lib/docker/containers/d5a8293d1e620f4000f8f42fc3fddd2a5d25edaf951e86cc753c7b3c3996ee1e/hosts\",\n        \"LogPath\": \"\",\n        \"Name\": \"/parties-dw105-20261022-owned-ui-86e4330c84d349c2a182afc8fcf71c54\",\n        \"RestartCount\": 0,\n        \"Driver\": \"overlayfs\",\n        \"Platform\": \"linux\",\n        \"MountLabel\": \"\",\n        \"ProcessLabel\": \"\",\n        \"AppArmorProfile\": \"\",\n        \"ExecIDs\": null,\n        \"HostConfig\": {\n            \"Binds\": null,\n            \"ContainerIDFile\": \"\",\n            \"LogConfig\": {\n                \"Type\": \"local\",\n                \"Config\": {}\n            },\n            \"NetworkMode\": \"bridge\",\n            \"PortBindings\": {\n                \"8080/tcp\": [\n                    {\n                        \"HostIp\": \"127.0.0.1\",\n                        \"HostPort\": \"\"\n                    }\n                ]\n            },\n            \"RestartPolicy\": {\n                \"Name\": \"no\",\n                \"MaximumRetryCount\": 0\n            },\n            \"AutoRemove\": false,\n            \"VolumeDriver\": \"\",\n            \"VolumesFrom\": null,\n            \"ConsoleSize\": [\n                0,\n                0\n            ],\n            \"CapAdd\": null,\n            \"CapDrop\": null,\n            \"CgroupnsMode\": \"private\",\n            \"Dns\": null,\n            \"DnsOptions\": [],\n            \"DnsSearch\": [],\n            \"ExtraHosts\": null,\n            \"GroupAdd\": null,\n            \"IpcMode\": \"private\",\n            \"Cgroup\": \"\",\n            \"Links\": null,\n            \"OomScoreAdj\": 0,\n            \"PidMode\": \"\",\n            \"Privileged\": false,\n            \"PublishAllPorts\": false,\n            \"ReadonlyRootfs\": false,\n            \"SecurityOpt\": null,\n            \"UTSMode\": \"\",\n            \"UsernsMode\": \"\",\n            \"ShmSize\": 67108864,\n            \"Runtime\": \"runc\",\n            \"Isolation\": \"\",\n            \"CpuShares\": 0,\n            \"Memory\": 0,\n            \"NanoCpus\": 0,\n            \"CgroupParent\": \"\",\n            \"BlkioWeight\": 0,\n            \"BlkioWeightDevice\": [],\n            \"BlkioDeviceReadBps\": [],\n            \"BlkioDeviceWriteBps\": [],\n            \"BlkioDeviceReadIOps\": [],\n            \"BlkioDeviceWriteIOps\": [],\n            \"CpuPeriod\": 0,\n            \"CpuQuota\": 0,\n            \"CpuRealtimePeriod\": 0,\n            \"CpuRealtimeRuntime\": 0,\n            \"CpusetCpus\": \"\",\n            \"CpusetMems\": \"\",\n            \"Devices\": [],\n            \"DeviceCgroupRules\": null,\n            \"DeviceRequests\": null,\n            \"MemoryReservation\": 0,\n            \"MemorySwap\": 0,\n            \"MemorySwappiness\": null,\n            \"OomKillDisable\": null,\n            \"PidsLimit\": null,\n            \"Ulimits\": null,\n            \"CpuCount\": 0,\n            \"CpuPercent\": 0,\n            \"IOMaximumIOps\": 0,\n            \"IOMaximumBandwidth\": 0,\n            \"MaskedPaths\": [\n                \"/proc/acpi\",\n                \"/proc/asound\",\n                \"/proc/interrupts\",\n                \"/proc/kcore\",\n                \"/proc/keys\",\n                \"/proc/latency_stats\",\n                \"/proc/sched_debug\",\n                \"/proc/scsi\",\n                \"/proc/timer_list\",\n                \"/proc/timer_stats\",\n                \"/sys/devices/virtual/powercap\",\n                \"/sys/firmware\"\n            ],\n            \"ReadonlyPaths\": [\n                \"/proc/bus\",\n                \"/proc/fs\",\n                \"/proc/irq\",\n                \"/proc/sys\",\n                \"/proc/sysrq-trigger\"\n            ]\n        },\n        \"Storage\": {\n            \"RootFS\": {\n                \"Snapshot\": {\n                    \"Name\": \"overlayfs\"\n                }\n            }\n        },\n        \"Mounts\": [],\n        \"Config\": {\n            \"Hostname\": \"d5a8293d1e62\",\n            \"Domainname\": \"\",\n            \"User\": \"app\",\n            \"AttachStdin\": false,\n            \"AttachStdout\": false,\n            \"AttachStderr\": false,\n            \"ExposedPorts\": {\n                \"8080/tcp\": {}\n            },\n            \"Tty\": false,\n            \"OpenStdin\": false,\n            \"StdinOnce\": false,\n            \"Env\": [\n                \"ASPNETCORE_ENVIRONMENT=Development\",\n                \"ASPNETCORE_URLS=http://+:8080\",\n                \"Authentication__JwtBearer__Issuer=hexalith-container-smoke\",\n                \"Authentication__JwtBearer__Audience=hexalith-eventstore\",\n                \"Authentication__JwtBearer__SigningKey=hexalith-container-smoke-only-key-not-a-secret\",\n                \"Authentication__JwtBearer__AllowInsecureSymmetricKey=true\",\n                \"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\",\n                \"APP_UID=1654\",\n                \"ASPNETCORE_HTTP_PORTS=8080\",\n                \"DOTNET_RUNNING_IN_CONTAINER=true\",\n                \"DOTNET_VERSION=10.0.13\",\n                \"ASPNET_VERSION=10.0.13\"\n            ],\n            \"Cmd\": null,\n            \"Image\": \"sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\",\n            \"Volumes\": null,\n            \"WorkingDir\": \"/app/\",\n            \"Entrypoint\": [\n                \"dotnet\",\n                \"/app/Hexalith.Parties.UI.dll\"\n            ],\n            \"Labels\": {\n                \"desktop.docker.io/wsl-distro\": \"Ubuntu-26.04\",\n                \"net.dot.runtime.majorminor\": \"10.0\",\n                \"net.dot.sdk.version\": \"10.0.402\",\n                \"org.opencontainers.artifact.created\": \"2026-10-22T12:00:00Z\",\n                \"org.opencontainers.artifact.description\": \"DAPR-native party management microservice for .NET\",\n                \"org.opencontainers.image.authors\": \"Hexalith Contributors\",\n                \"org.opencontainers.image.base.digest\": \"sha256:7d9ff35e9a600e33419d5b84c745efcc1aa6847e5fb255b7fa746f9f83509e9c\",\n                \"org.opencontainers.image.base.name\": \"mcr.microsoft.com/dotnet/aspnet:10.0-alpine-extra\",\n                \"org.opencontainers.image.created\": \"2026-10-22T12:00:00Z\",\n                \"org.opencontainers.image.description\": \"DAPR-native party management microservice for .NET\",\n                \"org.opencontainers.image.documentation\": \"https://github.com/Hexalith/Hexalith.Parties/blob/9a46682ad170ba70e395aa00012f86f09ef6b315/README.md\",\n                \"org.opencontainers.image.licenses\": \"MIT\",\n                \"org.opencontainers.image.revision\": \"9a46682ad170ba70e395aa00012f86f09ef6b315\",\n                \"org.opencontainers.image.source\": \"https://github.com/Hexalith/Hexalith.Parties\",\n                \"org.opencontainers.image.url\": \"https://github.com/Hexalith/Hexalith.Parties/releases/tag/v0.0.0-local\",\n                \"org.opencontainers.image.vendor\": \"Hexalith\",\n                \"org.opencontainers.image.version\": \"0.0.0-local\"\n            }\n        },\n        \"NetworkSettings\": {\n            \"SandboxID\": \"29318b2c96741af6a9c30a06037e1657b32650affa4bb96fa50747da1449d9cb\",\n            \"SandboxKey\": \"/var/run/docker/netns/29318b2c9674\",\n            \"Ports\": {\n                \"8080/tcp\": [\n                    {\n                        \"HostIp\": \"127.0.0.1\",\n                        \"HostPort\": \"57842\"\n                    }\n                ]\n            },\n            \"Networks\": {\n                \"bridge\": {\n                    \"IPAMConfig\": null,\n                    \"Links\": null,\n                    \"Aliases\": null,\n                    \"DriverOpts\": null,\n                    \"GwPriority\": 0,\n                    \"NetworkID\": \"87046c04e8257b834d3574646fc0c5ebf1927a756fbb6317f05adf1dc0fbcf8a\",\n                    \"EndpointID\": \"c0006a19961f1f5de5e4dfe6b24795459243bcbb4d9db3c196492f6852d673d4\",\n                    \"Gateway\": \"172.17.0.1\",\n                    \"IPAddress\": \"172.17.0.9\",\n                    \"MacAddress\": \"aa:9e:23:6b:37:30\",\n                    \"IPPrefixLen\": 16,\n                    \"IPv6Gateway\": \"\",\n                    \"GlobalIPv6Address\": \"\",\n                    \"GlobalIPv6PrefixLen\": 0,\n                    \"DNSNames\": null\n                }\n            }\n        },\n        \"ImageManifestDescriptor\": {\n            \"mediaType\": \"application/vnd.docker.distribution.manifest.v2+json\",\n            \"digest\": \"sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\",\n            \"size\": 1408,\n            \"annotations\": {\n                \"io.containerd.image.name\": \"docker.io/library/parties-dw105-20261022-local:0.0.0-local\",\n                \"org.opencontainers.image.ref.name\": \"0.0.0-local\"\n            },\n            \"platform\": {\n                \"architecture\": \"amd64\",\n                \"os\": \"linux\"\n            }\n        }\n    }\n]\n",
+      "stderr": "",
+      "elapsed_seconds": 0.035
+    },
+    {
+      "command": [
+        "docker",
+        "rm",
+        "--force",
+        "parties-dw105-20261022-owned-ui-86e4330c84d349c2a182afc8fcf71c54"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 0,
+      "stdout": "parties-dw105-20261022-owned-ui-86e4330c84d349c2a182afc8fcf71c54\n",
+      "stderr": "",
+      "elapsed_seconds": 0.5
+    },
+    {
+      "command": [
+        "docker",
+        "image",
+        "inspect",
+        "parties-dw105-20261022-local:0.0.0-local"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 0,
+      "stdout": "[\n    {\n        \"Id\": \"sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\",\n        \"RepoTags\": [\n            \"parties-dw105-20261022-local:0.0.0-local\"\n        ],\n        \"RepoDigests\": [\n            \"parties-dw105-20261022-local@sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\"\n        ],\n        \"Created\": \"2026-10-22T15:10:18.6618309Z\",\n        \"Config\": {\n            \"User\": \"app\",\n            \"ExposedPorts\": {\n                \"8080/tcp\": {}\n            },\n            \"Env\": [\n                \"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\",\n                \"APP_UID=1654\",\n                \"ASPNETCORE_HTTP_PORTS=8080\",\n                \"DOTNET_RUNNING_IN_CONTAINER=true\",\n                \"DOTNET_VERSION=10.0.13\",\n                \"ASPNET_VERSION=10.0.13\"\n            ],\n            \"Entrypoint\": [\n                \"dotnet\",\n                \"/app/Hexalith.Parties.UI.dll\"\n            ],\n            \"WorkingDir\": \"/app/\",\n            \"Labels\": {\n                \"net.dot.runtime.majorminor\": \"10.0\",\n                \"net.dot.sdk.version\": \"10.0.402\",\n                \"org.opencontainers.artifact.created\": \"2026-10-22T12:00:00Z\",\n                \"org.opencontainers.artifact.description\": \"DAPR-native party management microservice for .NET\",\n                \"org.opencontainers.image.authors\": \"Hexalith Contributors\",\n                \"org.opencontainers.image.base.digest\": \"sha256:7d9ff35e9a600e33419d5b84c745efcc1aa6847e5fb255b7fa746f9f83509e9c\",\n                \"org.opencontainers.image.base.name\": \"mcr.microsoft.com/dotnet/aspnet:10.0-alpine-extra\",\n                \"org.opencontainers.image.created\": \"2026-10-22T12:00:00Z\",\n                \"org.opencontainers.image.description\": \"DAPR-native party management microservice for .NET\",\n                \"org.opencontainers.image.documentation\": \"https://github.com/Hexalith/Hexalith.Parties/blob/9a46682ad170ba70e395aa00012f86f09ef6b315/README.md\",\n                \"org.opencontainers.image.licenses\": \"MIT\",\n                \"org.opencontainers.image.revision\": \"9a46682ad170ba70e395aa00012f86f09ef6b315\",\n                \"org.opencontainers.image.source\": \"https://github.com/Hexalith/Hexalith.Parties\",\n                \"org.opencontainers.image.url\": \"https://github.com/Hexalith/Hexalith.Parties/releases/tag/v0.0.0-local\",\n                \"org.opencontainers.image.vendor\": \"Hexalith\",\n                \"org.opencontainers.image.version\": \"0.0.0-local\"\n            }\n        },\n        \"Architecture\": \"amd64\",\n        \"Os\": \"linux\",\n        \"Size\": 308576127,\n        \"RootFS\": {\n            \"Type\": \"layers\",\n            \"Layers\": [\n                \"sha256:75c137aedfb2760f88629236cb7b797630aed0c3d91d626d1d1bb694878fc2ba\",\n                \"sha256:3cf33c21f77aec909715e4e28b42dea7d325e9b4327461bebb5c476af4e3db62\",\n                \"sha256:af035971f63616b41fe78050e57d04c2f8449e3d1c0dd58828e137681ebfaaa0\",\n                \"sha256:4b68f90b04e34095d684102595407d24a314dc98dd592014f004ef4eb69fdd8b\",\n                \"sha256:c05864602d225f638b7a07f191e71d481a979851aa1cb9c757fc044a979368c4\",\n                \"sha256:e7ae88155c6ab4c9962214984c70dddbdfaae916cd36bb81476624bdf2eca4dd\",\n                \"sha256:bbf2cdf8c87684cdace5e207f86f971c0af8a27a542a33048773a6d626a6d8a3\"\n            ]\n        },\n        \"Metadata\": {\n            \"LastTagTime\": \"2026-10-22T15:45:02.928508113Z\"\n        },\n        \"Descriptor\": {\n            \"mediaType\": \"application/vnd.docker.distribution.manifest.v2+json\",\n            \"digest\": \"sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\",\n            \"size\": 1408,\n            \"annotations\": {\n                \"io.containerd.image.name\": \"docker.io/library/parties-dw105-20261022-local:0.0.0-local\",\n                \"org.opencontainers.image.ref.name\": \"0.0.0-local\"\n            }\n        }\n    }\n]\n",
+      "stderr": "",
+      "elapsed_seconds": 0.057
+    },
+    {
+      "command": [
+        "docker",
+        "image",
+        "inspect",
+        "sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 0,
+      "stdout": "[\n    {\n        \"Id\": \"sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\",\n        \"RepoTags\": [\n            \"parties-dw105-20261022-local:0.0.0-local\"\n        ],\n        \"RepoDigests\": [\n            \"parties-dw105-20261022-local@sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\"\n        ],\n        \"Created\": \"2026-10-22T15:10:18.6618309Z\",\n        \"Config\": {\n            \"User\": \"app\",\n            \"ExposedPorts\": {\n                \"8080/tcp\": {}\n            },\n            \"Env\": [\n                \"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\",\n                \"APP_UID=1654\",\n                \"ASPNETCORE_HTTP_PORTS=8080\",\n                \"DOTNET_RUNNING_IN_CONTAINER=true\",\n                \"DOTNET_VERSION=10.0.13\",\n                \"ASPNET_VERSION=10.0.13\"\n            ],\n            \"Entrypoint\": [\n                \"dotnet\",\n                \"/app/Hexalith.Parties.UI.dll\"\n            ],\n            \"WorkingDir\": \"/app/\",\n            \"Labels\": {\n                \"net.dot.runtime.majorminor\": \"10.0\",\n                \"net.dot.sdk.version\": \"10.0.402\",\n                \"org.opencontainers.artifact.created\": \"2026-10-22T12:00:00Z\",\n                \"org.opencontainers.artifact.description\": \"DAPR-native party management microservice for .NET\",\n                \"org.opencontainers.image.authors\": \"Hexalith Contributors\",\n                \"org.opencontainers.image.base.digest\": \"sha256:7d9ff35e9a600e33419d5b84c745efcc1aa6847e5fb255b7fa746f9f83509e9c\",\n                \"org.opencontainers.image.base.name\": \"mcr.microsoft.com/dotnet/aspnet:10.0-alpine-extra\",\n                \"org.opencontainers.image.created\": \"2026-10-22T12:00:00Z\",\n                \"org.opencontainers.image.description\": \"DAPR-native party management microservice for .NET\",\n                \"org.opencontainers.image.documentation\": \"https://github.com/Hexalith/Hexalith.Parties/blob/9a46682ad170ba70e395aa00012f86f09ef6b315/README.md\",\n                \"org.opencontainers.image.licenses\": \"MIT\",\n                \"org.opencontainers.image.revision\": \"9a46682ad170ba70e395aa00012f86f09ef6b315\",\n                \"org.opencontainers.image.source\": \"https://github.com/Hexalith/Hexalith.Parties\",\n                \"org.opencontainers.image.url\": \"https://github.com/Hexalith/Hexalith.Parties/releases/tag/v0.0.0-local\",\n                \"org.opencontainers.image.vendor\": \"Hexalith\",\n                \"org.opencontainers.image.version\": \"0.0.0-local\"\n            }\n        },\n        \"Architecture\": \"amd64\",\n        \"Os\": \"linux\",\n        \"Size\": 308576127,\n        \"RootFS\": {\n            \"Type\": \"layers\",\n            \"Layers\": [\n                \"sha256:75c137aedfb2760f88629236cb7b797630aed0c3d91d626d1d1bb694878fc2ba\",\n                \"sha256:3cf33c21f77aec909715e4e28b42dea7d325e9b4327461bebb5c476af4e3db62\",\n                \"sha256:af035971f63616b41fe78050e57d04c2f8449e3d1c0dd58828e137681ebfaaa0\",\n                \"sha256:4b68f90b04e34095d684102595407d24a314dc98dd592014f004ef4eb69fdd8b\",\n                \"sha256:c05864602d225f638b7a07f191e71d481a979851aa1cb9c757fc044a979368c4\",\n                \"sha256:e7ae88155c6ab4c9962214984c70dddbdfaae916cd36bb81476624bdf2eca4dd\",\n                \"sha256:bbf2cdf8c87684cdace5e207f86f971c0af8a27a542a33048773a6d626a6d8a3\"\n            ]\n        },\n        \"Metadata\": {\n            \"LastTagTime\": \"2026-10-22T15:45:02.928508113Z\"\n        },\n        \"Descriptor\": {\n            \"mediaType\": \"application/vnd.docker.distribution.manifest.v2+json\",\n            \"digest\": \"sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\",\n            \"size\": 1408,\n            \"annotations\": {\n                \"io.containerd.image.name\": \"docker.io/library/parties-dw105-20261022-local:0.0.0-local\",\n                \"org.opencontainers.image.ref.name\": \"0.0.0-local\"\n            }\n        }\n    }\n]\n",
+      "stderr": "",
+      "elapsed_seconds": 0.048
+    },
+    {
+      "command": [
+        "docker",
+        "image",
+        "rm",
+        "--no-prune",
+        "sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80"
+      ],
+      "timeout_seconds": 120,
+      "exit_code": 0,
+      "stdout": "Untagged: parties-dw105-20261022-local:0.0.0-local\nDeleted: sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80\n",
+      "stderr": "",
+      "elapsed_seconds": 0.138
+    }
+  ],
+  "source_sha": "9a46682ad170ba70e395aa00012f86f09ef6b315",
+  "shared_helper_sha256": "7f1161d6f477c77ddf6a1e2f381df03451168565dd8cabc28010ab23db443491",
+  "archive_sha256": "d478e22e1cdf206054ae747d25048995884825ce0984fea05420343ea8e93119",
+  "image_id": "sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80",
+  "architecture": "amd64",
+  "os": "linux",
+  "labels": {
+    "net.dot.runtime.majorminor": "10.0",
+    "net.dot.sdk.version": "10.0.402",
+    "org.opencontainers.artifact.created": "2026-10-22T12:00:00Z",
+    "org.opencontainers.artifact.description": "DAPR-native party management microservice for .NET",
+    "org.opencontainers.image.authors": "Hexalith Contributors",
+    "org.opencontainers.image.base.digest": "sha256:7d9ff35e9a600e33419d5b84c745efcc1aa6847e5fb255b7fa746f9f83509e9c",
+    "org.opencontainers.image.base.name": "mcr.microsoft.com/dotnet/aspnet:10.0-alpine-extra",
+    "org.opencontainers.image.created": "2026-10-22T12:00:00Z",
+    "org.opencontainers.image.description": "DAPR-native party management microservice for .NET",
+    "org.opencontainers.image.documentation": "https://github.com/Hexalith/Hexalith.Parties/blob/9a46682ad170ba70e395aa00012f86f09ef6b315/README.md",
+    "org.opencontainers.image.licenses": "MIT",
+    "org.opencontainers.image.revision": "9a46682ad170ba70e395aa00012f86f09ef6b315",
+    "org.opencontainers.image.source": "https://github.com/Hexalith/Hexalith.Parties",
+    "org.opencontainers.image.url": "https://github.com/Hexalith/Hexalith.Parties/releases/tag/v0.0.0-local",
+    "org.opencontainers.image.vendor": "Hexalith",
+    "org.opencontainers.image.version": "0.0.0-local"
+  },
+  "startup": {
+    "outcome": "pass",
+    "attempts": 2,
+    "log": [
+      "container_state=running|0"
+    ]
+  },
+  "final_state": "running|0",
+  "container_cleanup": "pass",
+  "image_cleanup": "pass"
+}

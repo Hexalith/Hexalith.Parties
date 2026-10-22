@@ -1,0 +1,6 @@
+{
+  "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -method '*HistoricalEnvelopeParsing*'",
+  "exit_code": 0,
+  "output": "review-query-tests.txt",
+  "elapsed_seconds": 1.21
+}

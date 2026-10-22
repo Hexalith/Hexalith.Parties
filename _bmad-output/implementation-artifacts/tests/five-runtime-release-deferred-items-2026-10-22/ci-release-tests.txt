@@ -1,0 +1,97 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll
+Exit code: 1
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/ci-release-tests.txt
+Raw SHA-256: e97dca88dd0684da0795960c6a0d74bec2e619c5fcffd8a8b932379e8326839a
+
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Ci.Tests
+  Discovered:  Hexalith.Parties.Ci.Tests
+  Starting:    Hexalith.Parties.Ci.Tests
+    Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(project: "Hexalith.Parties.Contracts.Tests") [FAIL]
+      Shouldly.ShouldAssertException : File.Exists(assetsPath)
+          should be
+      True
+          but was
+      False
+
+      Additional Info:
+          CI must restore the configured solution before executing its verification lane.
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs(20,0): at Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(String project)
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+    Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(project: "Hexalith.Parties.Client.Tests") [FAIL]
+      Shouldly.ShouldAssertException : File.Exists(assetsPath)
+          should be
+      True
+          but was
+      False
+
+      Additional Info:
+          CI must restore the configured solution before executing its verification lane.
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs(20,0): at Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(String project)
+           at InvokeStub_SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(project: "Hexalith.Parties.AdminPortal.Tests") [FAIL]
+      Shouldly.ShouldAssertException : File.Exists(assetsPath)
+          should be
+      True
+          but was
+      False
+
+      Additional Info:
+          CI must restore the configured solution before executing its verification lane.
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs(20,0): at Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(String project)
+           at InvokeStub_SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(project: "Hexalith.Parties.ConsumerPortal.Tests") [FAIL]
+      Shouldly.ShouldAssertException : File.Exists(assetsPath)
+          should be
+      True
+          but was
+      False
+
+      Additional Info:
+          CI must restore the configured solution before executing its verification lane.
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs(20,0): at Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(String project)
+           at InvokeStub_SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(project: "Hexalith.Parties.UI.Tests") [FAIL]
+      Shouldly.ShouldAssertException : File.Exists(assetsPath)
+          should be
+      True
+          but was
+      False
+
+      Additional Info:
+          CI must restore the configured solution before executing its verification lane.
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs(20,0): at Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(String project)
+           at InvokeStub_SignalRSecurityFloorTests.RestoredConsumerGraph_RequiresFixedSignalRAndActiveNuGetAudit(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.UiGeneratedAndPublishedRuntimeConfigurations_RequireFixedSharedFrameworks [FAIL]
+      Shouldly.ShouldAssertException : File.Exists(runtimeConfig)
+          should be
+      True
+          but was
+      False
+
+      Additional Info:
+          The UI must be built and published by the normal CI path.
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs(106,0): at Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.AssertRuntimeMinimums(String runtimeConfig)
+        tests/Hexalith.Parties.Ci.Tests/SignalRSecurityFloorTests.cs(54,0): at Hexalith.Parties.Ci.Tests.SignalRSecurityFloorTests.UiGeneratedAndPublishedRuntimeConfigurations_RequireFixedSharedFrameworks()
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+        --- End of stack trace from previous location ---
+           at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+           at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+           at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task, ConfigureAwaitOptions options)
+  Finished:    Hexalith.Parties.Ci.Tests (ID = 'e2ae03f1bfa16e52881bfe6142ad07fcf2cd34d86833309fc89c1c488a187e37')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Ci.Tests  Total: 427, Errors: 0, Failed: 6, Skipped: 0, Not Run: 0, Time: 122.623s

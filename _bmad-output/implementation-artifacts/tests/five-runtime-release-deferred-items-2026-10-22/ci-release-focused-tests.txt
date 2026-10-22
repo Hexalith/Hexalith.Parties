@@ -1,0 +1,23 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests
+Exit code: 1
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/ci-release-focused-tests.txt
+Raw SHA-256: ee2c9d477779cca29fd8edec07737fb20876e983ed125c612f9d8f711a8add83
+
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Ci.Tests
+  Discovered:  Hexalith.Parties.Ci.Tests
+  Starting:    Hexalith.Parties.Ci.Tests
+    Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRequiresIndependentRangeProofDespiteGreenCi(scenario: "boolean-rc-id") [FAIL]
+      Shouldly.ShouldAssertException : error
+          should contain (case insensitive comparison)
+      "No successful push rc-gate.yml range proof exists for the exact current main SHA."
+          but was actually
+      "bash: /tmp/hexalith-release-source-b9d24f6f75194048b90db013ec76541b/gh: /usr/bin/env: bad interprete..."
+      Stack Trace:
+        tests/Hexalith.Parties.Ci.Tests/ReleaseSourcePreflightTests.cs(134,0): at Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests.SourceGateRequiresIndependentRangeProofDespiteGreenCi(String scenario)
+           at InvokeStub_ReleaseSourcePreflightTests.SourceGateRequiresIndependentRangeProofDespiteGreenCi(Object, Span`1)
+           at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Finished:    Hexalith.Parties.Ci.Tests (ID = 'e2ae03f1bfa16e52881bfe6142ad07fcf2cd34d86833309fc89c1c488a187e37')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Ci.Tests  Total: 170, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 2.604s

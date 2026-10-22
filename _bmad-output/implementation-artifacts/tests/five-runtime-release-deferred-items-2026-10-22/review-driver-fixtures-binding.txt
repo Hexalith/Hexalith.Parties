@@ -1,0 +1,149 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: python3 /tmp/parties-ui-driver-review-fixtures.py
+Exit code: 0
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/review-driver-fixtures-binding.txt
+Raw SHA-256: c968b488bddcd488e69b2af63f720ad918ec1bf13c0a02d3f63a87491b0e4b81
+
+{
+  "driver_sha256": "431b1aa7145904e1777bce9b4f9236b13775e58ffee9bee6019fa28a348628bf",
+  "cases": 17,
+  "passed": 17,
+  "results": [
+    {
+      "case": "green",
+      "exit_code": 0,
+      "result": "pass",
+      "phase": "complete",
+      "container_cleanup": "pass",
+      "image_cleanup": "pass"
+    },
+    {
+      "case": "green-optimized",
+      "exit_code": 0,
+      "result": "pass",
+      "phase": "complete",
+      "container_cleanup": "pass",
+      "image_cleanup": "pass"
+    },
+    {
+      "case": "green-owned-digest",
+      "exit_code": 0,
+      "result": "pass",
+      "phase": "complete",
+      "container_cleanup": "pass",
+      "image_cleanup": "pass"
+    },
+    {
+      "case": "foreign-digest",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "cleanup-image",
+      "container_cleanup": "pass",
+      "image_cleanup": "failure"
+    },
+    {
+      "case": "http-404",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "http:/health",
+      "container_cleanup": "pass",
+      "image_cleanup": "pass"
+    },
+    {
+      "case": "exited",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "final-state",
+      "container_cleanup": "pass",
+      "image_cleanup": "pass"
+    },
+    {
+      "case": "inspect-failed",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "preflight",
+      "container_cleanup": null,
+      "image_cleanup": null
+    },
+    {
+      "case": "inspect-timeout",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "preflight",
+      "container_cleanup": null,
+      "image_cleanup": null
+    },
+    {
+      "case": "preexisting-tag",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "preflight",
+      "container_cleanup": null,
+      "image_cleanup": null
+    },
+    {
+      "case": "preexisting-id",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "preflight",
+      "container_cleanup": null,
+      "image_cleanup": null
+    },
+    {
+      "case": "load-failed",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "load",
+      "container_cleanup": null,
+      "image_cleanup": "pass"
+    },
+    {
+      "case": "load-timeout",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "load",
+      "container_cleanup": null,
+      "image_cleanup": "pass"
+    },
+    {
+      "case": "load-untagged-failed",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "load",
+      "container_cleanup": null,
+      "image_cleanup": "pass"
+    },
+    {
+      "case": "start-failed",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "startup",
+      "container_cleanup": "pass",
+      "image_cleanup": "pass"
+    },
+    {
+      "case": "rebound-tag",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "cleanup-image",
+      "container_cleanup": "pass",
+      "image_cleanup": "failure"
+    },
+    {
+      "case": "git-failed",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "initialization",
+      "container_cleanup": null,
+      "image_cleanup": null
+    },
+    {
+      "case": "missing-helper",
+      "exit_code": 1,
+      "result": "failure",
+      "phase": "initialization",
+      "container_cleanup": null,
+      "image_cleanup": null
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
+Exit code: 0
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/ci-debug-build.txt
+Raw SHA-256: a04788e5ee04bd0af73c7f6bf77e661dd169a4c7ecfcf40847cdd1c6ead711df
+
+  Determining projects to restore...
+  Restored <workspace>/tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj (in 484 ms).
+  Hexalith.Parties.Ci.Tests -> <workspace>/tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.60

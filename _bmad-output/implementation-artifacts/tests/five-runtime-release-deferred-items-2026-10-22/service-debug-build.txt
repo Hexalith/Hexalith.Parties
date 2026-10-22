@@ -1,0 +1,31 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:MinVerVersionOverride=1.0.0
+Exit code: 0
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/service-debug-build.txt
+Raw SHA-256: cc7668d67d7c935aa6cb58475edd56c368a1f293f57d6579f4887dbc2b3b97db
+
+  Determining projects to restore...
+  Restored <workspace>/src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj (in 327 ms).
+  Restored <workspace>/src/Hexalith.Parties.Authentication/Hexalith.Parties.Authentication.csproj (in 326 ms).
+  Restored <workspace>/tests/Hexalith.Parties.EventStoreGateway.TestHost/Hexalith.Parties.EventStoreGateway.TestHost.csproj (in 341 ms).
+  Restored <workspace>/src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj (in 352 ms).
+  Restored <workspace>/src/Hexalith.Parties.Contracts/Hexalith.Parties.Contracts.csproj (in 327 ms).
+  Restored <workspace>/src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj (in 327 ms).
+  Restored <workspace>/src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj (in 327 ms).
+  Restored <workspace>/src/Hexalith.Parties/Hexalith.Parties.csproj (in 394 ms).
+  Restored <workspace>/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj (in 452 ms).
+  Hexalith.Parties.Contracts -> <workspace>/src/Hexalith.Parties.Contracts/bin/Debug/net10.0/Hexalith.Parties.Contracts.dll
+  Hexalith.Parties.Authentication -> <workspace>/src/Hexalith.Parties.Authentication/bin/Debug/net10.0/Hexalith.Parties.Authentication.dll
+  Hexalith.Parties.Projections -> <workspace>/src/Hexalith.Parties.Projections/bin/Debug/net10.0/Hexalith.Parties.Projections.dll
+  Hexalith.Parties.Security -> <workspace>/src/Hexalith.Parties.Security/bin/Debug/net10.0/Hexalith.Parties.Security.dll
+  Hexalith.Parties -> <workspace>/src/Hexalith.Parties/bin/Debug/net10.0/Hexalith.Parties.dll
+  Hexalith.Parties.Client -> <workspace>/src/Hexalith.Parties.Client/bin/Debug/net10.0/Hexalith.Parties.Client.dll
+  Hexalith.Parties.Testing -> <workspace>/src/Hexalith.Parties.Testing/bin/Debug/net10.0/Hexalith.Parties.Testing.dll
+  Hexalith.Parties.EventStoreGateway.TestHost -> <workspace>/tests/Hexalith.Parties.EventStoreGateway.TestHost/bin/Debug/net10.0/Hexalith.Parties.EventStoreGateway.TestHost.dll
+  Hexalith.Parties.Tests -> <workspace>/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:13.66

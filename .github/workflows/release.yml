@@ -2,7 +2,7 @@ name: Release
 
 # Publication is an explicit operator action. The unprotected preflight proves the
 # dispatch selected the current main tip and that exact source already has a successful
-# push CI run before the protected release environment is entered. Ordinary
+# push CI run and independent main-push range signoff before approval. Ordinary
 # pushes and pull requests run CI only (see Hexalith.Builds ci-cd-standards.md, "Release Gates").
 on:
   workflow_dispatch:
@@ -24,7 +24,7 @@ jobs:
       actions: read
       contents: read
     steps:
-      - name: Require current main with successful exact-source CI
+      - name: Require current main with successful exact-source CI and range proof
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -52,6 +52,41 @@ jobs:
             exit 1
           fi
 
+          # Resolve both fixed workflow identities before accepting run evidence. A successful
+          # run from another workflow or event cannot substitute for either independent gate.
+          ci_workflow="$(gh api "repos/${REPOSITORY}/actions/workflows/ci.yml")"
+          rc_workflow="$(gh api "repos/${REPOSITORY}/actions/workflows/rc-gate.yml")"
+          workflow_identity() {
+            jq -er --arg path ".github/workflows/$1" '
+              if type == "object" and .path == $path and .state == "active"
+                and (.id | type == "number")
+              then .id | if . > 0 and . == floor then . else error("invalid workflow id") end
+              else error("invalid workflow identity") end'
+          }
+          if ! ci_id="$(printf '%s\n' "$ci_workflow" | workflow_identity ci.yml)" ||
+             ! rc_id="$(printf '%s\n' "$rc_workflow" | workflow_identity rc-gate.yml)" ||
+             [ "$ci_id" = "$rc_id" ]; then
+            echo "The independent CI and range-proof workflow identities could not be validated safely." >&2
+            exit 1
+          fi
+
+          require_push_run() {
+            jq -e --arg sha "$DISPATCH_SHA" --argjson workflow_id "$1" '
+              def positive_integer:
+                if type == "number" then . > 0 and . == floor else false end;
+              if type == "object" and (.workflow_runs | type == "array") then
+                [.workflow_runs[] | select(
+                  type == "object" and
+                  (.id | positive_integer) and
+                  .workflow_id == $workflow_id and
+                  .head_sha == $sha and
+                  .head_branch == "main" and
+                  .event == "push" and
+                  .status == "completed" and
+                  .conclusion == "success"
+                )] | length > 0
+              else false end'
+          }
           ci_runs="$(gh api --method GET \
             "repos/${REPOSITORY}/actions/workflows/ci.yml/runs" \
             -f branch=main \
@@ -59,22 +94,20 @@ jobs:
             -f head_sha="$DISPATCH_SHA" \
             -f status=success \
             -f per_page=100)"
-          if ! printf '%s\n' "$ci_runs" | jq -e --arg sha "$DISPATCH_SHA" '
-            def positive_integer:
-              if type == "number" then . > 0 and . == floor else false end;
-            if type == "object" and (.workflow_runs | type == "array") then
-              [.workflow_runs[] | select(
-                type == "object" and
-                (.id | positive_integer) and
-                .head_sha == $sha and
-                .head_branch == "main" and
-                .event == "push" and
-                .status == "completed" and
-                .conclusion == "success"
-              )] | length > 0
-            else false end
-          ' >/dev/null; then
+          if ! printf '%s\n' "$ci_runs" | require_push_run "$ci_id" >/dev/null; then
             echo "No successful push ci.yml run exists for the exact current main SHA." >&2
+            exit 1
+          fi
+
+          rc_runs="$(gh api --method GET \
+            "repos/${REPOSITORY}/actions/workflows/rc-gate.yml/runs" \
+            -f branch=main \
+            -f event=push \
+            -f head_sha="$DISPATCH_SHA" \
+            -f status=success \
+            -f per_page=100)"
+          if ! printf '%s\n' "$rc_runs" | require_push_run "$rc_id" >/dev/null; then
+            echo "No successful push rc-gate.yml range proof exists for the exact current main SHA." >&2
             exit 1
           fi
 
@@ -422,7 +455,12 @@ jobs:
             exit 1
           fi
 
-          published_tags="$(printf '%s\n' "$releases" | jq -r '.[][] | select(.draft == false) | .tag_name')"
+          # Only canonical stable tags from the configured v${version} release format
+          # may supply an artifact version. Inspect every unique eligible tag regardless of order.
+          published_tags="$(printf '%s\n' "$releases" | jq -r '
+            [.[][] | select(.draft == false) | .tag_name
+              | select(test("^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"))]
+            | unique | .[]')"
           matching_tag=''
           while IFS= read -r tag_name; do
             [ -n "$tag_name" ] || continue
@@ -495,8 +533,11 @@ jobs:
               exit 1
             fi
             if [ "$tag_sha" = "$DISPATCH_SHA" ]; then
+              if [ -n "$matching_tag" ] && [ "$matching_tag" != "$tag_name" ]; then
+                echo "Multiple canonical stable release versions resolve to the dispatched SHA; publication is ambiguous." >&2
+                exit 1
+              fi
               matching_tag="$tag_name"
-              break
             fi
           done <<< "$published_tags"
 

@@ -1,0 +1,6 @@
+{
+  "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests",
+  "exit_code": 0,
+  "output": "ci-release-focused-retry.txt",
+  "elapsed_seconds": 8.19
+}

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Xml.Linq;
 
 namespace Hexalith.Parties.Ci.Tests;
 
@@ -138,6 +139,35 @@ public sealed class PartiesContainerPublishWorkflowTests
         workflow.ShouldNotContain("|tenants");
         workflow.ShouldNotContain("|memories");
         workflow.ShouldNotContain(":latest");
+    }
+
+    /// <summary>The UI requires ICU-capable runtime assets rather than invariant globalization.</summary>
+    [Fact]
+    public void UiContainerPreservesGlobalizationAndAlpineExtraRuntime()
+    {
+        XDocument project = XDocument.Parse(CiTestPaths.ReadRepoFile("src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj"));
+
+        project.Descendants("InvariantGlobalization").Single().Value.ShouldBe("false");
+        project.Descendants("ContainerBaseImage").Single().Value.ShouldBe("mcr.microsoft.com/dotnet/aspnet:10.0-alpine-extra");
+        project.Descendants("ContainerFamily").Single().Value.ShouldBe("alpine-extra");
+    }
+
+    /// <summary>Each credential-bearing job independently declares its production environment.</summary>
+    /// <param name="job">The job whose environment is removed in the negative control.</param>
+    [Theory]
+    [InlineData("release")]
+    [InlineData("verify-publication")]
+    public void ProtectedJobsRequireTheirOwnProductionEnvironment(string job)
+    {
+        string workflow = CiTestPaths.ReadRepoFile(".github/workflows/release.yml").Replace("\r\n", "\n");
+        string original = ReadWorkflowJob(workflow, job);
+        RequireProductionEnvironment(original);
+        string mutated = workflow.Replace(original, original.Replace("    environment: production\n", string.Empty));
+        mutated.ShouldNotBe(workflow);
+
+        string other = job == "release" ? "verify-publication" : "release";
+        RequireProductionEnvironment(ReadWorkflowJob(mutated, other));
+        Assert.Throws<ShouldAssertException>(() => RequireProductionEnvironment(ReadWorkflowJob(mutated, job)));
     }
 
     [Fact]
@@ -623,6 +653,23 @@ public sealed class PartiesContainerPublishWorkflowTests
         start.ShouldBeGreaterThan(0);
         end.ShouldBeGreaterThan(start);
         workflow[start..end].Trim().ShouldBe("on:\n  workflow_dispatch:");
+    }
+
+    private static void RequireProductionEnvironment(string job)
+        => job.Split('\n').ShouldContain("    environment: production");
+
+    private static string ReadWorkflowJob(string workflow, string name)
+    {
+        string[] lines = workflow.Replace("\r\n", "\n").Split('\n');
+        int start = Array.IndexOf(lines, $"  {name}:");
+        start.ShouldBeGreaterThanOrEqualTo(0);
+        int end = start + 1;
+        while (end < lines.Length && !(lines[end].StartsWith("  ", StringComparison.Ordinal)
+            && lines[end].Length > 2 && lines[end][2] != ' ' && lines[end].EndsWith(':')))
+        {
+            end++;
+        }
+        return string.Join('\n', lines[start..end]);
     }
 
     private static string ReadReleaseJob(string? workflow = null)

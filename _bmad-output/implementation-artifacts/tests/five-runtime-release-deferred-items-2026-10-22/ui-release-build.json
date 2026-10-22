@@ -1,0 +1,6 @@
+{
+  "command": "dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release --no-restore -m:1 -p:MinVerVersionOverride=1.0.0",
+  "exit_code": 0,
+  "output": "ui-release-build.txt",
+  "elapsed_seconds": 3.41
+}

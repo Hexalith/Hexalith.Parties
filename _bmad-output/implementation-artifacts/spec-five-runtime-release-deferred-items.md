@@ -2,7 +2,7 @@
 title: 'Complete five runtime and release verification deferrals'
 type: 'bugfix'
 created: '2026-10-22'
-status: 'draft'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: 9daec2e4d6b8ec3855c4ebff1994a17613b8a815
@@ -48,12 +48,12 @@ context: ['AGENTS.md', 'docs/development-guide.md', 'tests/README.md']
 
 **Execution:**
 
-- [ ] `PartiesContainerPublishWorkflowTests.cs`, UI container evidence -- protect the required UI base/globalization configuration, freshly build/publish the UI container and execute bounded Development startup/HTTP checks. Retain source SHA, archive/image identity, exact commands and results. Clean only owned containers/images; do not claim historical release repair or both architectures.
-- [ ] `PartyIdentityQueryService.cs`, `PartyIdentityQueryHandlerTests.cs` -- move historical parsing into bounded work before admission; qualify stalled parsing, timeout, caller cancellation, retained capacity and recovery, malformed input, and ordinary historical outcomes.
-- [ ] `.github/workflows/release.yml`, `ReleasePublicationVerificationTests.cs` -- restrict eligible publication tags to canonical stable release versions, inspect all eligible exact-source matches, reject ambiguity, deduplicate identical tags, and test both list orders, annotated refs, deleted tags and output safety.
-- [ ] `.github/workflows/release.yml`, `ReleaseSourcePreflightTests.cs` -- require completed successful rc-gate.yml main push proof for the dispatched SHA alongside ci.yml, using validated API evidence. Execute successful and rejection fixtures; preserve exact current-main validation and existing publication gates.
-- [ ] `PartiesContainerPublishWorkflowTests.cs` -- independently extract and verify each protected job; show a verify-publication-only environment deletion is rejected even while release remains protected.
-- [ ] `docs/ci.md`, `RELEASE-CHECKLIST.md`, deferred-work ledger -- document the refined publication prerequisites and tag selection, close only the five verified entries, and retain exact commands/results under the batch evidence directory.
+- [x] `PartiesContainerPublishWorkflowTests.cs`, UI container evidence -- protect the required UI base/globalization configuration, freshly build/publish the UI container and execute bounded Development startup/HTTP checks. Retain source SHA, archive/image identity, exact commands and results. Clean only owned containers/images; do not claim historical release repair or both architectures.
+- [x] `PartyIdentityQueryService.cs`, `PartyIdentityQueryHandlerTests.cs` -- move historical parsing into bounded work before admission; qualify stalled parsing, timeout, caller cancellation, retained capacity and recovery, malformed input, and ordinary historical outcomes.
+- [x] `.github/workflows/release.yml`, `ReleasePublicationVerificationTests.cs` -- restrict eligible publication tags to canonical stable release versions, inspect all eligible exact-source matches, reject ambiguity, deduplicate identical tags, and test both list orders, annotated refs, deleted tags and output safety.
+- [x] `.github/workflows/release.yml`, `ReleaseSourcePreflightTests.cs` -- require completed successful rc-gate.yml main push proof for the dispatched SHA alongside ci.yml, using validated API evidence. Execute successful and rejection fixtures; preserve exact current-main validation and existing publication gates.
+- [x] `PartiesContainerPublishWorkflowTests.cs` -- independently extract and verify each protected job; show a verify-publication-only environment deletion is rejected even while release remains protected.
+- [x] `docs/ci.md`, `RELEASE-CHECKLIST.md`, deferred-work ledger -- document the refined publication prerequisites and tag selection, close only the five verified entries, and retain exact commands/results under the batch evidence directory.
 
 **Acceptance Criteria:**
 
@@ -65,11 +65,33 @@ context: ['AGENTS.md', 'docs/development-guide.md', 'tests/README.md']
 
 ## Implementation Notes
 
+Final parent verification after review: fresh Release builds have zero warnings/errors; full service 2464/2464 and CI 427/427 pass without skips. All 17 driver fault/ownership fixtures pass and optimized real container proof passes. Pinned commitlint 21.2.2 validates the exact message with zero problems/warnings. See the batch parent-verification.json.
+
+Parent audit: read the staged implementation, tests, documentation and evidence. All six tasks and five matrix rows have passing executed checks. Service 2464/2464, focused identity 310/310 and CI 427/427 pass without skips. Evidence hash consistency and owned-container cleanup were corrected and the narrow container qualification rerun passed.
+
+Approved by the user on 2026-10-22. Re-read the spec at approval; its frozen intent is unchanged. Main advanced externally to 9a46682a before implementation; the existing baseline identifier is preserved.
+
 Initial tree changes were authorized for preservation; by investigation they had been committed externally. The starting main tip is recorded above. Aspire startup succeeded, but resources waited on security readiness; the owned Parties AppHost was stopped. Upstream-dependent DW-107 and DW-126, and DW-116 source-mode qualification, remain open.
 
 ## Spec Change Log
 
 ## Review Triage Log
+
+Final disposition: all patch findings below are resolved and verified. B9 is rejected; no new follow-up was deferred. B6 now starts/removes by captured immutable identity with prior-absence and binding checks; B1/B3/B5 explicit failure controls pass even with Python optimization.
+
+- B1 — medium, patch: Python optimization removes every acceptance assert in the one-off driver; the reviewer reproduced a successful receipt for HTTP 404 and exited state. Use explicit failing checks.
+- B2 — low, patch: a load attempt can import an image before returning failure/timeout, while cleanup currently depends on a successful return. Reconcile the attempted owned import; preserve pre-existing resources.
+- B3 — medium, patch: failed/timed-out inspect is treated as absence. The edge reviewer demonstrated deletion of a pre-existing tag after daemon recovery. Require explicit missing-resource evidence before loading.
+- B4 — low, patch: a post-start HTTP failure with successful cleanup retains result=pending. Initialize failure and record the current phase so failed receipts are unambiguous.
+- B5 — medium, patch: archive/import/preflight exceptions precede receipt finalization, leaving a prior pass untouched. Initialize this attempt's receipt before those operations.
+- B6 — medium, patch: the recorded image ID is not the target passed to startup; tag mutation can select different bytes. Start the captured immutable ID and verify cleanup ownership before removing the batch tag.
+- B7 — low, patch: the new capacity-recovery polling task continues after its outer WaitAsync times out. Bound the loop itself with cancellation.
+- B8 — low, patch: pending RC evidence uses in_progress, duplicating the running case. Correct the pending fixture to queued while retaining strict completed-only admission.
+- B9 — low, rejected: pagination already requires the sole matching release on page two and ambiguity/deduplication are separately executed against the complete parsed response. The reviewer identified no reachable acceptance bug; adding combined scenario branches for this rare ordering adds fixture complexity without closing a demonstrated gap.
+- B10 — low, patch: result XML documentation describes exact request fields but the new pre-parse rejections cannot echo them. Document empty/default fields when parsing has not completed, without changing the wire contract.
+- E1 — medium, patch, grouped with B3: isolated AST execution proves inspect uncertainty can admit an existing image and later remove it. Require confirmed absence.
+- E2 — low, patch, grouped with B2: isolated AST execution proves an image imported before load timeout skips cleanup. Reconcile the owned import after any load attempt.
+- V0 — no findings: the independent verification-gap reviewer found no coverage gaps after tracing the source paths and CI inclusion.
 
 ## Verification
 

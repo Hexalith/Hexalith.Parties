@@ -43,12 +43,30 @@ Main source SHAs use separate concurrency groups. Declarations added later in a
 push still cover earlier gitlink advances, and unchanged first-parent pointers
 are preserved when merging branches.
 
+## Exact-source publication admission
+
+- [ ] Dispatch Release from the exact current `main` tip only after both `ci.yml`
+      and `rc-gate.yml` have completed successful `main` push runs at that SHA.
+      The caller validates their independent workflow IDs and each run's source,
+      branch, event, completed status and success verdict. Manual, PR, tag, stale,
+      pending, canceled or failed range proof does not authorize publication.
+- [ ] Retain the existing release-floor root-gitlink signoff gate before login
+      and publication; the main-push range proof is an additional prerequisite.
+- [ ] Both `release` and `verify-publication` declare the protected `production`
+      environment. Configure its reviewers and `main` restriction in GitHub;
+      local declaration tests do not exercise those external settings.
+
 ## Published artifact proof
 
 After the protected manual release completes:
 
-- [ ] `verify-publication` finds a non-draft release whose tag resolves to the
-      exact dispatched SHA and exposes that matched tag.
+- [ ] `verify-publication` resolves all unique non-draft canonical stable
+      `vMAJOR.MINOR.PATCH` tags and finds exactly one distinct version at the
+      dispatched SHA. No leading zeros, prerelease or build metadata is eligible.
+      Non-version tags are ignored; duplicate entries are deduplicated; ambiguity
+      fails in either list order. Missing refs (HTTP 404) may be skipped, while
+      other API or object-validation errors fail. The sole matched tag supplies
+      the artifact version.
 - [ ] All nine unique packages in `tools/release-packages.json` download and pass
       archive/boundary checks, with exact nuspec ID, version, repository URL,
       repository type `git` and source commit. Duplicate or malformed archive

@@ -1,0 +1,15 @@
+{
+  "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll",
+  "exit_code": 0,
+  "elapsed_seconds": 83.18,
+  "raw": "/tmp/parties-five-runtime-release-raw/parent-ci-tests.txt",
+  "raw_sha256": "74438a8e34cac3abc1aca39050904000c46bc57cffd618609be601e41b40bd73",
+  "summary": "=== TEST EXECUTION SUMMARY ===\n   Hexalith.Parties.Ci.Tests  Total: 427, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 82.989s",
+  "test_results": {
+    "total": 427,
+    "errors": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  }
+}

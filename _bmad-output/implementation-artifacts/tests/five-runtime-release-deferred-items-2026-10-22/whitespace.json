@@ -1,0 +1,6 @@
+{
+  "command": "git -c core.whitespace=trailing-space,space-before-tab,cr-at-eol diff --check",
+  "exit_code": 0,
+  "output": "whitespace.txt",
+  "elapsed_seconds": 0.12
+}

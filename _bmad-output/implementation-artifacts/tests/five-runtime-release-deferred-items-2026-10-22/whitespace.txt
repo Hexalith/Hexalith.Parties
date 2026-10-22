@@ -1,0 +1,5 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: git -c core.whitespace=trailing-space,space-before-tab,cr-at-eol diff --check
+Exit code: 0
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/whitespace.txt
+Raw SHA-256: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b

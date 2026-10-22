@@ -1,0 +1,22 @@
+{
+  "checkout_sha": "9a46682ad170ba70e395aa00012f86f09ef6b315",
+  "sha256": {
+    ".github/workflows/release.yml": "06d07dabdb61f796118646df9f9d01e4b7bc26173574710afe24aa80442b4c82",
+    "src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs": "d4196790d202d78b342d71b990cacc3f6282180f2d6e7e13b252beb1d2b06b85",
+    "tests/Hexalith.Parties.Ci.Tests/ReleaseSourcePreflightTests.cs": "cf925772cc5cd948a32bdea6ea4a9e8825ee0d9f37514e177cfbe977491a840d",
+    "tests/Hexalith.Parties.Ci.Tests/ReleasePublicationVerificationTests.cs": "649c16044d5dab3ca5701814d794e4380f38c11326d7dda1d70732312cf4b04b",
+    "tests/Hexalith.Parties.Ci.Tests/PartiesContainerPublishWorkflowTests.cs": "db19c20318b9a557df92c1ef3970832e86e961a74b384708b989dbfd2e750861",
+    "tests/Hexalith.Parties.Tests/Gateway/PartyIdentityQueryHandlerTests.cs": "b005d89365f8d42f20d435cb4b403114881abd934816c19c9f46d713bce0bd86",
+    "src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj": "372a3afc78428b0d4a678da109640b2b4ed49323cc84cb0928f5fc18fec0b481",
+    "Directory.Build.props": "bf62c34f8c128c9782cf04bc1e74cbcf60d792052cc41938e19472c2faf76ecb",
+    "Directory.Build.targets": "a9dd7be2cd742bdfcdf50e1dffec892c56909c0393620ff3cae9635da78e94df",
+    "Directory.Packages.props": "d186cc5eca06e7143756758ae233935a0ee2788760f1bfa990fcad140975b6d6",
+    "global.json": "4ec97d7c7e6bee864d2da2c965f18b94b0bd84e71058427f1f6fa69ee6824652",
+    "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll": "8527f8342e70127f32579bea9b87229eb65649a049e12b57f2baa428a6d194d5",
+    "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll": "7e0b4233dba670fd519b575634a983af3e90d9e65a820c723c798a08ff19c8bb",
+    "src/Hexalith.Parties.UI/bin/Release/net10.0/linux-x64/publish/Hexalith.Parties.UI.dll": "6c5fb0f1b84c9a4a85e224763374b727b2c2faaa6a3cb8c60ba6de7fc494f1b9"
+  },
+  "ui_tracked_changes_from_checkout": [],
+  "archive_retained_locally": "/tmp/parties-dw105-20261022-ui.tar.gz",
+  "ui_note": "Fresh UI build inputs and package selections are unchanged from checkout SHA; runtime source SHA labels refer to that checkout. Other batch source edits are recorded by SHA-256 above."
+}

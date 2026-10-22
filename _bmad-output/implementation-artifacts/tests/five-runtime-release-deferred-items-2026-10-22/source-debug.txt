@@ -1,0 +1,8 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: env HEXALITH_DAPR_HOME=<user-home>/.hexalith/dapr/1.18.2 dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json
+Exit code: 3
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/source-debug.txt
+Raw SHA-256: 3b144191aa2e4634ec495df6e46863af521f053f967ec75c8fdcfd4a3a4dbb20
+
+failed: TopologyOrLifecycle
+HXP020 Topology TopologyOrLifecycle field=platform: ../../../../../../../../projects/hexalith/parties/module/hexalith.module-manifest.v2.json: parties/domain: project: mapped source project is unavailable. deadline='600s' diagnostics='<user-home>/.local/share/hexalith-builds/g4-runs/diagnostics/e131a3d5228769351acd04b17fe63c2c'. (Supply the named owner input; no resources were started.)

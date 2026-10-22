@@ -1,0 +1,17 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: python3 _bmad-output/implementation-artifacts/tests/five-runtime-release-deferred-items-2026-10-22/qualify-local-ui.py
+Exit code: 1
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/ui-container-runtime.txt
+Raw SHA-256: 1aa60b306983b895f6577245bab480867ecb926162f226007f00405a2e8f4136
+
+Traceback (most recent call last):
+  File "<workspace>/_bmad-output/implementation-artifacts/tests/five-runtime-release-deferred-items-2026-10-22/qualify-local-ui.py", line 18, in <module>
+    spec.loader.exec_module(smoke)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 759, in exec_module
+  File "<frozen importlib._bootstrap>", line 491, in _call_with_frames_removed
+  File "<workspace>/references/Hexalith.Builds/Github/publish-containers/smoke_container_platforms.py", line 15, in <module>
+    from oci_registry_validator import (
+    ...<8 lines>...
+    )
+ModuleNotFoundError: No module named 'oci_registry_validator'

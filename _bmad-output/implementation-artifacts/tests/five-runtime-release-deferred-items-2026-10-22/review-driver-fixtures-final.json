@@ -1,0 +1,6 @@
+{
+  "command": "python3 /tmp/parties-ui-driver-review-fixtures.py",
+  "exit_code": 0,
+  "output": "review-driver-fixtures-final.txt",
+  "elapsed_seconds": 6.06
+}

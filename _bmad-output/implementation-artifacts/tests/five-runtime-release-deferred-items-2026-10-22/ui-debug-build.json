@@ -1,0 +1,6 @@
+{
+  "command": "dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Debug -m:1 -p:MinVerVersionOverride=1.0.0",
+  "exit_code": 0,
+  "output": "ui-debug-build.txt",
+  "elapsed_seconds": 9.35
+}

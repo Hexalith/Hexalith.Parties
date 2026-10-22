@@ -1,0 +1,15 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Release -m:1 -p:MinVerVersionOverride=1.0.0
+Exit code: 0
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/ci-final-build.txt
+Raw SHA-256: e7e7efd5553084484e79e202324c7fb190bb0c262f5fbce7fae43746f807063e
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Hexalith.Parties.Ci.Tests -> <workspace>/tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.18

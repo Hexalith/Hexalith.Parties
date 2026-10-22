@@ -1,0 +1,10 @@
+Evidence: whitespace-normalized; tail excerpt; repeated restore progress omitted
+Command: dotnet restore Hexalith.Parties.slnx -p:MinVerVersionOverride=1.0.0
+Exit code: 0
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/solution-restore.txt
+Raw SHA-256: 3191a80ea70d602f014a270dd0b279869fab5420189d9cdaa5fce630ad25ea42
+
+  Restored <workspace>/tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj (in 503 ms).
+  Restored <workspace>/tests/Hexalith.Parties.Sample.Tests/Hexalith.Parties.Sample.Tests.csproj (in 65 ms).
+  Restored <workspace>/tests/Hexalith.Parties.Server.Tests/Hexalith.Parties.Server.Tests.csproj (in 77 ms).
+  10 of 59 projects are up-to-date for restore.

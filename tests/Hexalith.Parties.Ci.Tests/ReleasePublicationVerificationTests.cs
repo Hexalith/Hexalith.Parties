@@ -21,7 +21,6 @@ public sealed class ReleasePublicationVerificationTests
     [InlineData("deleted-lf")]
     [InlineData("deleted-http11")]
     [InlineData("paginated")]
-    [InlineData("encoded")]
     [InlineData("unrelated-before-match")]
     public void PublicationRequiresAnExactSourceMatchDespiteDeletedHistoricalTags(string scenario)
     {
@@ -30,17 +29,17 @@ public sealed class ReleasePublicationVerificationTests
 
         exitCode.ShouldBe(0, error);
         output.ShouldContain($"resolves to dispatched SHA {SourceSha}.");
-        string tag = scenario == "encoded" ? "release/with space+#?" : "vcurrent";
+        const string tag = "v1.2.3";
         githubOutput.ShouldBe($"matching-tag={tag}\n");
         requests.ShouldContain($"{ApiPrefix}/git/ref/tags/{Uri.EscapeDataString(tag)}");
         if (scenario is not ("lightweight" or "annotated"))
         {
-            output.ShouldContain("Skipping published release tag 'refs/tags/vdeleted'");
-            Array.IndexOf(requests, $"{ApiPrefix}/git/ref/tags/vdeleted")
+            output.ShouldContain("Skipping published release tag 'refs/tags/v1.0.0'");
+            Array.IndexOf(requests, $"{ApiPrefix}/git/ref/tags/v1.0.0")
                 .ShouldBeLessThan(Array.IndexOf(requests, $"{ApiPrefix}/git/ref/tags/{Uri.EscapeDataString(tag)}"));
         }
 
-        requests.ShouldNotContain($"{ApiPrefix}/git/ref/tags/vdraft");
+        requests.ShouldNotContain($"{ApiPrefix}/git/ref/tags/v9.0.0");
         if (scenario.Contains("annotated", StringComparison.Ordinal))
         {
             requests.ShouldContain($"{ApiPrefix}/git/tags/{TagSha}");
@@ -63,7 +62,7 @@ public sealed class ReleasePublicationVerificationTests
         exitCode.ShouldNotBe(0);
         error.ShouldContain("no published GitHub Release tag resolves to dispatched SHA");
         output.ShouldNotContain("resolves to dispatched SHA");
-        requests.ShouldNotContain($"{ApiPrefix}/git/ref/tags/vdraft");
+        requests.ShouldNotContain($"{ApiPrefix}/git/ref/tags/v9.0.0");
     }
 
     /// <summary>Verifies only an explicit missing-ref HTTP status may be skipped.</summary>
@@ -85,7 +84,7 @@ public sealed class ReleasePublicationVerificationTests
         exitCode.ShouldNotBe(0);
         error.ShouldContain("could not be resolved");
         output.ShouldNotContain("Skipping published release tag");
-        requests.ShouldNotContain($"{ApiPrefix}/git/ref/tags/vcurrent");
+        requests.ShouldNotContain($"{ApiPrefix}/git/ref/tags/v1.2.3");
     }
 
     /// <summary>Verifies existing response validation and annotated peeling remain strict.</summary>
@@ -124,6 +123,66 @@ public sealed class ReleasePublicationVerificationTests
         {
             githubOutput.ShouldBeEmpty();
         }
+    }
+
+    /// <summary>Canonical release selection ignores non-version tags and deduplicates releases independently of list order.</summary>
+    /// <param name="scenario">The eligible/non-version ordering or repeated tag.</param>
+    [Theory]
+    [InlineData("nonversion-first")]
+    [InlineData("nonversion-last")]
+    [InlineData("duplicate-tag")]
+    [InlineData("duplicate-annotated")]
+    public void PublicationSelectsOneCanonicalStableVersion(string scenario)
+    {
+        (int exitCode, string output, string error, string[] requests, string githubOutput) = RunGate(scenario);
+
+        exitCode.ShouldBe(0, error);
+        output.ShouldContain($"resolves to dispatched SHA {SourceSha}.");
+        githubOutput.ShouldBe("matching-tag=v1.2.3\n");
+        requests.Count(request => request == $"{ApiPrefix}/git/ref/tags/v1.2.3").ShouldBe(1);
+        requests.ShouldNotContain($"{ApiPrefix}/git/ref/tags/release%2Fwith%20space%2B%23%3F");
+    }
+
+    /// <summary>Distinct eligible versions at the same source are ambiguous, including annotated tags in either list order.</summary>
+    /// <param name="scenario">The order and tag-object fixture.</param>
+    [Theory]
+    [InlineData("ambiguous-first")]
+    [InlineData("ambiguous-last")]
+    [InlineData("ambiguous-annotated")]
+    public void PublicationRejectsMultipleExactSourceStableVersions(string scenario)
+    {
+        (int exitCode, string output, string error, string[] requests, string githubOutput) = RunGate(scenario);
+
+        exitCode.ShouldNotBe(0);
+        error.ShouldContain("Multiple canonical stable release versions");
+        output.ShouldNotContain("resolves to dispatched SHA");
+        githubOutput.ShouldBeEmpty();
+        requests.ShouldContain($"{ApiPrefix}/git/ref/tags/v1.2.3");
+        requests.ShouldContain($"{ApiPrefix}/git/ref/tags/v2.0.0");
+    }
+
+    /// <summary>Ineligible tag spellings never become artifact versions or workflow output.</summary>
+    /// <param name="tag">A noncanonical or unsafe release tag.</param>
+    [Theory]
+    [InlineData("release/with space+#?")]
+    [InlineData("1.2.3")]
+    [InlineData("vv1.2.3")]
+    [InlineData("v01.2.3")]
+    [InlineData("v1.02.3")]
+    [InlineData("v1.2.03")]
+    [InlineData("v1.2.3.0")]
+    [InlineData("v1.2.3-rc.1")]
+    [InlineData("v1.2.3+build")]
+    [InlineData("v1.2.3\ninjected=value")]
+    [InlineData("v1.2.3\rinjected=value")]
+    public void PublicationRejectsIneligibleVersionsWithoutOutput(string tag)
+    {
+        (int exitCode, _, string error, string[] requests, string githubOutput) = RunGate("ineligible", tag);
+
+        exitCode.ShouldNotBe(0);
+        error.ShouldNotBeNullOrWhiteSpace();
+        githubOutput.ShouldBeEmpty();
+        requests.ShouldNotContain(request => request.Contains("/git/ref/tags/", StringComparison.Ordinal));
     }
 
     /// <summary>The artifact step removes one leading v and leaves a second v in place.</summary>
@@ -171,7 +230,7 @@ public sealed class ReleasePublicationVerificationTests
     /// <summary>Runs the tracked shell with local responses and bounded process lifetime.</summary>
     /// <param name="scenario">The API fixture scenario.</param>
     /// <returns>The exit code, stdout, stderr, GitHub API arguments and github-output file.</returns>
-    private static (int ExitCode, string Output, string Error, string[] Requests, string GithubOutput) RunGate(string scenario)
+    private static (int ExitCode, string Output, string Error, string[] Requests, string GithubOutput) RunGate(string scenario, string? releaseTag = null)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -217,7 +276,7 @@ public sealed class ReleasePublicationVerificationTests
                     fi
                     exit 0
                     ;;
-                  "$FAKE_API_PREFIX/git/ref/tags/vdeleted")
+                  "$FAKE_API_PREFIX/git/ref/tags/v1.0.0")
                     status=404
                     body='{"message":"Not Found"}'
                     case "$FAKE_SCENARIO" in
@@ -235,8 +294,11 @@ public sealed class ReleasePublicationVerificationTests
                     body="$FAKE_REF"
                     if [ "$FAKE_SCENARIO" = all-missing ]; then status=404; fi
                     ;;
-                  "$FAKE_API_PREFIX/git/ref/tags/vother")
-                    body="{\"ref\":\"refs/tags/vother\",\"object\":{\"type\":\"commit\",\"sha\":\"$FAKE_OTHER_SHA\"}}"
+                  "$FAKE_API_PREFIX/git/ref/tags/v2.0.0")
+                    body="{\"ref\":\"refs/tags/v2.0.0\",\"object\":{\"type\":\"commit\",\"sha\":\"$FAKE_SOURCE_SHA\"}}"
+                    ;;
+                  "$FAKE_API_PREFIX/git/ref/tags/v1.1.0")
+                    body="{\"ref\":\"refs/tags/v1.1.0\",\"object\":{\"type\":\"commit\",\"sha\":\"$FAKE_OTHER_SHA\"}}"
                     ;;
                   "$FAKE_API_PREFIX/git/tags/$FAKE_TAG_SHA")
                     body="$FAKE_TAG_OBJECT"
@@ -267,12 +329,11 @@ public sealed class ReleasePublicationVerificationTests
                 File.SetUnixFileMode(fakeGh, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             }
 
-            string tag = scenario switch
+            string tag = releaseTag ?? (scenario switch
             {
-                "encoded" => "release/with space+#?",
-                "tag-line-break" => "vcurrent\ninjected",
-                _ => "vcurrent",
-            };
+                "tag-line-break" => "v1.2.3\ninjected",
+                _ => "v1.2.3",
+            });
             bool annotated = scenario.Contains("annotated", StringComparison.Ordinal)
                 || scenario is "malformed-tag" or "tag-failure" or "invalid-peeled-sha" or "peeled-type";
             string tagRef = JsonSerializer.Serialize(new
@@ -294,15 +355,22 @@ public sealed class ReleasePublicationVerificationTests
                 },
             });
             // Misleading target_commitish must never substitute for the resolved tag SHA.
-            string draft = JsonSerializer.Serialize(new { draft = true, tag_name = "vdraft", target_commitish = SourceSha });
+            string draft = JsonSerializer.Serialize(new { draft = true, tag_name = "v9.0.0", target_commitish = SourceSha });
             string current = JsonSerializer.Serialize(new { draft = false, tag_name = tag, target_commitish = SourceSha });
-            string deleted = JsonSerializer.Serialize(new { draft = false, tag_name = "vdeleted", target_commitish = SourceSha });
-            string unrelated = JsonSerializer.Serialize(new { draft = false, tag_name = "vother", target_commitish = SourceSha });
+            string nonversion = JsonSerializer.Serialize(new { draft = false, tag_name = "release/with space+#?", target_commitish = SourceSha });
+            string second = JsonSerializer.Serialize(new { draft = false, tag_name = "v2.0.0", target_commitish = SourceSha });
+            string deleted = JsonSerializer.Serialize(new { draft = false, tag_name = "v1.0.0", target_commitish = SourceSha });
+            string unrelated = JsonSerializer.Serialize(new { draft = false, tag_name = "v1.1.0", target_commitish = SourceSha });
             bool historical = scenario.StartsWith("deleted-", StringComparison.Ordinal)
                 || scenario.StartsWith("historical-", StringComparison.Ordinal)
-                || scenario is "paginated" or "encoded" or "missing-only" or "all-missing" or "transport" or "spoofed-404" or "status-4040";
+                || scenario is "paginated" or "missing-only" or "all-missing" or "transport" or "spoofed-404" or "status-4040";
             string releases = scenario switch
             {
+                "nonversion-first" => $"[{nonversion},{current}]",
+                "nonversion-last" => $"[{current},{nonversion}]",
+                "duplicate-tag" or "duplicate-annotated" => $"[{current},{current}]",
+                "ambiguous-first" => $"[{second},{current}]",
+                "ambiguous-last" or "ambiguous-annotated" => $"[{current},{second}]",
                 "empty" => "[]",
                 "draft-only" => $"[{draft}]",
                 "malformed-releases" => "{}",
@@ -334,6 +402,7 @@ public sealed class ReleasePublicationVerificationTests
             start.Environment["FAKE_TAG_URI"] = Uri.EscapeDataString(tag);
             start.Environment["FAKE_TAG_SHA"] = TagSha;
             start.Environment["FAKE_OTHER_SHA"] = OtherSha;
+            start.Environment["FAKE_SOURCE_SHA"] = SourceSha;
             start.Environment["FAKE_RELEASES"] = releases;
             start.Environment["FAKE_REF"] = scenario == "malformed-ref" ? "{}" : tagRef;
             start.Environment["FAKE_TAG_OBJECT"] = scenario == "malformed-tag" ? "{}" : tagObject;

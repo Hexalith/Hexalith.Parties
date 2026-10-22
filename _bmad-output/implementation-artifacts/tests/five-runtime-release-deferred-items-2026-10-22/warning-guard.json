@@ -1,0 +1,6 @@
+{
+  "command": "bash scripts/check-no-warning-override.sh",
+  "exit_code": 0,
+  "output": "warning-guard.txt",
+  "elapsed_seconds": 2.21
+}

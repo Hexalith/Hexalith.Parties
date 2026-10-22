@@ -1,0 +1,7 @@
+{
+  "command": "env HEXALITH_DAPR_HOME=<user-home>/.hexalith/dapr/1.18.2 dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json",
+  "exit_code": 3,
+  "output": "source-debug.txt",
+  "elapsed_seconds": 29.61,
+  "path_redaction": "User-home/workspace paths redacted in tracked receipt; original exact metadata retained beside local raw logs."
+}

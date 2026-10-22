@@ -1,0 +1,405 @@
+{
+  "date": "2026-10-22",
+  "baseline_commit": "9a46682ad170ba70e395aa00012f86f09ef6b315",
+  "status": "All five scoped deferrals implemented, independently reviewed and verified. Parent final builds, full tests, driver fixtures and pinned commitlint passed.",
+  "mode": "Fresh Debug/package checks and Release/package fallback; normal NuGet audit and warnings-as-errors retained.",
+  "source_debug_blocker": "Pinned module debug command reports HXP020 mapped Parties source project unavailable; no resources started. No manual source mapping or dependency change is used.",
+  "final_results": {
+    "historical_query_debug": {
+      "total": 310,
+      "failed": 0,
+      "skipped": 0,
+      "output": "identity-debug-final-tests.txt"
+    },
+    "historical_query_release": {
+      "total": 310,
+      "failed": 0,
+      "skipped": 0,
+      "output": "identity-release-tests.txt"
+    },
+    "service_release": {
+      "total": 2464,
+      "failed": 0,
+      "skipped": 0,
+      "output": "service-release-tests.txt"
+    },
+    "focused_ci_release": {
+      "total": 170,
+      "failed": 0,
+      "skipped": 0,
+      "output": "ci-final-focused-tests.txt"
+    },
+    "ci_release": {
+      "total": 427,
+      "failed": 0,
+      "skipped": 0,
+      "output": "ci-final-tests.txt"
+    },
+    "ui_container": "ui-container-qualification.json"
+  },
+  "initial_failures": {
+    "identity-debug-tests.txt": "26 assertions assumed parsed query metadata during rejection before parsing. Updated only pre-parse cases; both final configurations pass.",
+    "ui-container-runtime.txt": "One-off driver needed shared helper directory in Python import path; final startup and cleanup pass.",
+    "ci-release-focused-tests.txt": "One fake-gh interpreter error, original suffix truncated by Shouldly. Complete stderr now included in source-fixture assertions. Subsequent focused and full runs do not reproduce.",
+    "ci-release-tests.txt": "Six missing normal CI restore/build prerequisites. Normal solution restore and non-RID UI Release build repair generated inputs; final full CI passes."
+  },
+  "matrix_coverage": [
+    {
+      "row": "UI startup/globalization",
+      "evidence": [
+        "UiContainerPreservesGlobalizationAndAlpineExtraRuntime",
+        "ui-container-publish.txt",
+        "ui-container-qualification.json"
+      ]
+    },
+    {
+      "row": "Bounded historical parsing",
+      "evidence": [
+        "HistoricalEnvelopeParsing_IsBoundedAndRecovers",
+        "HistoricalEnvelopeParsing_ConsumesTheRemainingConfiguredBudget",
+        "HistoricalEnvelopeParsing_RejectsMalformedPayloadBeforeAdmission",
+        "identity-release-tests.txt"
+      ]
+    },
+    {
+      "row": "Unambiguous canonical release tags",
+      "evidence": [
+        "ReleasePublicationVerificationTests",
+        "ci-final-focused-tests.txt"
+      ]
+    },
+    {
+      "row": "Independent exact-source main push range proof",
+      "evidence": [
+        "ReleaseSourcePreflightTests",
+        "ci-final-focused-tests.txt"
+      ]
+    },
+    {
+      "row": "Independent production declarations",
+      "evidence": [
+        "ProtectedJobsRequireTheirOwnProductionEnvironment",
+        "ci-final-focused-tests.txt"
+      ]
+    }
+  ],
+  "limits": [
+    "UI proof is local linux/amd64 Development only; no arm64, historical release repair, production authentication or external deployment qualification.",
+    "Local shell/API and declaration fixtures do not execute GitHub scheduling, concurrency or environment approvals.",
+    "No release was published for testing. Full shared release smoke, exact-source CI and RC range proof remain required before publication.",
+    "DW-107, DW-126, DW-116 source qualification and unrelated/upstream deferrals stay open."
+  ],
+  "checks": [
+    {
+      "command": "actionlint .github/workflows/release.yml .github/workflows/rc-gate.yml",
+      "exit_code": 0,
+      "output": "actionlint.txt",
+      "elapsed_seconds": 0.57
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+      "exit_code": 0,
+      "output": "ci-debug-build.txt",
+      "elapsed_seconds": 2.99
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Release -m:1 -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "ci-final-build.txt",
+      "elapsed_seconds": 1.46
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests",
+      "exit_code": 0,
+      "output": "ci-final-focused-tests.txt",
+      "elapsed_seconds": 2.47,
+      "total": 170,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll",
+      "exit_code": 0,
+      "output": "ci-final-tests.txt",
+      "elapsed_seconds": 134.48,
+      "total": 427,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests",
+      "exit_code": 0,
+      "output": "ci-focused-debug-tests.txt",
+      "elapsed_seconds": 3.48,
+      "total": 170,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Release -m:1 -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "ci-release-build.txt",
+      "elapsed_seconds": 2.7
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests",
+      "exit_code": 0,
+      "output": "ci-release-focused-retry.txt",
+      "elapsed_seconds": 8.19,
+      "total": 170,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests -class Hexalith.Parties.Ci.Tests.ReleasePublicationVerificationTests -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests",
+      "exit_code": 1,
+      "output": "ci-release-focused-tests.txt",
+      "elapsed_seconds": 2.83,
+      "total": 170,
+      "errors": 0,
+      "failed": 1,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll",
+      "exit_code": 1,
+      "output": "ci-release-tests.txt",
+      "elapsed_seconds": 122.96,
+      "total": 427,
+      "errors": 0,
+      "failed": 6,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "git -c core.whitespace=trailing-space,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0,
+      "output": "final-whitespace.txt",
+      "elapsed_seconds": 0.3
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests",
+      "exit_code": 0,
+      "output": "identity-debug-final-tests.txt",
+      "elapsed_seconds": 2.14,
+      "total": 310,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests",
+      "exit_code": 1,
+      "output": "identity-debug-tests.txt",
+      "elapsed_seconds": 3.17,
+      "total": 310,
+      "errors": 0,
+      "failed": 26,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Gateway.PartyIdentityQueryHandlerTests",
+      "exit_code": 0,
+      "output": "identity-release-tests.txt",
+      "elapsed_seconds": 1.69,
+      "total": 310,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "service-debug-build.txt",
+      "elapsed_seconds": 13.98
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "service-debug-final-build.txt",
+      "elapsed_seconds": 6.72
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "service-debug-rebuild.txt",
+      "elapsed_seconds": 7.29
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release -m:1 -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "service-release-build.txt",
+      "elapsed_seconds": 23.04
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+      "exit_code": 0,
+      "output": "service-release-tests.txt",
+      "elapsed_seconds": 96.05,
+      "total": 2464,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet restore Hexalith.Parties.slnx -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "solution-restore.txt",
+      "elapsed_seconds": 2.96
+    },
+    {
+      "command": "env HEXALITH_DAPR_HOME=<user-home>/.hexalith/dapr/1.18.2 dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json",
+      "exit_code": 3,
+      "output": "source-debug.txt",
+      "elapsed_seconds": 29.61,
+      "path_redaction": "User-home/workspace paths redacted in tracked receipt; original exact metadata retained beside local raw logs."
+    },
+    {
+      "command": "dotnet publish src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release -r linux-x64 --self-contained false -m:1 -t:Rebuild,PublishContainer -p:MinVerVersionOverride=1.0.0 -p:ContainerArchiveOutputPath=/tmp/parties-dw105-20261022-ui.tar.gz -p:ContainerRegistry= -p:ContainerRepository=parties-dw105-20261022-local -p:ContainerImageTag=0.0.0-local -p:ContainerProvenanceSourceSha=9a46682ad170ba70e395aa00012f86f09ef6b315 -p:ContainerProvenanceReleaseVersion=0.0.0-local -p:ContainerProvenanceCreated=2026-10-22T12:00:00Z",
+      "exit_code": 0,
+      "output": "ui-container-publish.txt",
+      "elapsed_seconds": 8.2
+    },
+    {
+      "command": "python3 _bmad-output/implementation-artifacts/tests/five-runtime-release-deferred-items-2026-10-22/qualify-local-ui.py",
+      "exit_code": 0,
+      "output": "ui-container-runtime-final.txt",
+      "elapsed_seconds": 7.65
+    },
+    {
+      "command": "python3 _bmad-output/implementation-artifacts/tests/five-runtime-release-deferred-items-2026-10-22/qualify-local-ui.py",
+      "exit_code": 0,
+      "output": "ui-container-runtime-retry.txt",
+      "elapsed_seconds": 6.37
+    },
+    {
+      "command": "python3 _bmad-output/implementation-artifacts/tests/five-runtime-release-deferred-items-2026-10-22/qualify-local-ui.py",
+      "exit_code": 1,
+      "output": "ui-container-runtime.txt",
+      "elapsed_seconds": 0.13
+    },
+    {
+      "command": "dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Debug -m:1 -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "ui-debug-build.txt",
+      "elapsed_seconds": 9.35
+    },
+    {
+      "command": "dotnet build src/Hexalith.Parties.UI/Hexalith.Parties.UI.csproj -c Release --no-restore -m:1 -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "ui-release-build.txt",
+      "elapsed_seconds": 3.41
+    },
+    {
+      "command": "bash scripts/check-no-warning-override.sh",
+      "exit_code": 0,
+      "output": "warning-guard.txt",
+      "elapsed_seconds": 2.21
+    },
+    {
+      "command": "git -c core.whitespace=trailing-space,space-before-tab,cr-at-eol diff --check",
+      "exit_code": 0,
+      "output": "whitespace.txt",
+      "elapsed_seconds": 0.12
+    },
+    {
+      "command": "bash -c 'actionlint .github/workflows/release.yml .github/workflows/rc-gate.yml && bash scripts/check-no-warning-override.sh && git -c core.whitespace=trailing-space,space-before-tab,cr-at-eol diff --check'",
+      "exit_code": 0,
+      "output": "final-guards.txt",
+      "elapsed_seconds": 1.28
+    },
+    {
+      "command": "python3 _bmad-output/implementation-artifacts/tests/five-runtime-release-deferred-items-2026-10-22/qualify-local-ui.py",
+      "exit_code": 0,
+      "output": "ui-container-runtime-cleanup.txt",
+      "elapsed_seconds": 5.22
+    },
+    {
+      "command": "python3 /tmp/parties-ui-driver-review-fixtures.py",
+      "exit_code": 0,
+      "output": "review-driver-fixtures-binding.txt",
+      "elapsed_seconds": 7.72
+    },
+    {
+      "command": "python3 /tmp/parties-ui-driver-review-fixtures.py",
+      "exit_code": 0,
+      "output": "review-driver-fixtures-final.txt",
+      "elapsed_seconds": 6.06
+    },
+    {
+      "command": "python3 /tmp/parties-ui-driver-review-fixtures.py",
+      "exit_code": 0,
+      "output": "review-driver-fixtures.txt",
+      "elapsed_seconds": 7.69
+    },
+    {
+      "command": "python3 /tmp/parties-ui-owned-review-cleanup.py",
+      "exit_code": 0,
+      "output": "review-owned-image-cleanup.txt",
+      "elapsed_seconds": 0.26
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release -m:1 -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "review-query-build.txt",
+      "elapsed_seconds": 5.34
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -method '*HistoricalEnvelopeParsing*'",
+      "exit_code": 0,
+      "output": "review-query-tests.txt",
+      "elapsed_seconds": 1.21,
+      "total": 10,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Release -m:1 -p:MinVerVersionOverride=1.0.0",
+      "exit_code": 0,
+      "output": "review-source-build.txt",
+      "elapsed_seconds": 1.49
+    },
+    {
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.ReleaseSourcePreflightTests",
+      "exit_code": 0,
+      "output": "review-source-tests.txt",
+      "elapsed_seconds": 5.51,
+      "total": 63,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    {
+      "command": "python3 -O _bmad-output/implementation-artifacts/tests/five-runtime-release-deferred-items-2026-10-22/qualify-local-ui.py",
+      "exit_code": 0,
+      "output": "review-ui-optimized-final.txt",
+      "elapsed_seconds": 5.16
+    },
+    {
+      "command": "python3 -O _bmad-output/implementation-artifacts/tests/five-runtime-release-deferred-items-2026-10-22/qualify-local-ui.py",
+      "exit_code": 1,
+      "output": "review-ui-optimized.txt",
+      "elapsed_seconds": 6.34
+    }
+  ],
+  "evidence_driver_audit": "review-fix-check.json",
+  "latest_ui_qualification_output": "review-ui-optimized-final.txt",
+  "review_fixes": "review-fix-check.json",
+  "parent_final_evidence": "parent-verification.json"
+}

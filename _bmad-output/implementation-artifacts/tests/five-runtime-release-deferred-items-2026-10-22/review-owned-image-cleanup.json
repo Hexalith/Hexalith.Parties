@@ -1,0 +1,6 @@
+{
+  "command": "python3 /tmp/parties-ui-owned-review-cleanup.py",
+  "exit_code": 0,
+  "output": "review-owned-image-cleanup.txt",
+  "elapsed_seconds": 0.26
+}

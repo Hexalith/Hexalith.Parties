@@ -1,0 +1,6 @@
+{
+  "command": "actionlint .github/workflows/release.yml .github/workflows/rc-gate.yml",
+  "exit_code": 0,
+  "output": "actionlint.txt",
+  "elapsed_seconds": 0.57
+}

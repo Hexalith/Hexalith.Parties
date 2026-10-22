@@ -1,0 +1,6 @@
+{
+  "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false",
+  "exit_code": 0,
+  "output": "ci-debug-build.txt",
+  "elapsed_seconds": 2.99
+}

@@ -1,0 +1,65 @@
+Evidence: whitespace-normalized; complete output; local workspace/home paths redacted
+Command: python3 _bmad-output/implementation-artifacts/tests/five-runtime-release-deferred-items-2026-10-22/qualify-local-ui.py
+Exit code: 0
+Raw output retained locally: /tmp/parties-five-runtime-release-raw/ui-container-runtime-final.txt
+Raw SHA-256: a64118b155ea2639cc7e981941ae9c54736f5640b13f0722f8e3ab51f2e18797
+
+{
+  "source_sha": "9a46682ad170ba70e395aa00012f86f09ef6b315",
+  "scope": "Fresh local SDK Release/package image; linux/amd64 Development startup only. No registry publication, historical release repair, arm64, production authentication or GitHub approval execution.",
+  "archive_sha256": "d478e22e1cdf206054ae747d25048995884825ce0984fea05420343ea8e93119",
+  "archive": "/tmp/parties-dw105-20261022-ui.tar.gz",
+  "shared_helper_sha256": "7f1161d6f477c77ddf6a1e2f381df03451168565dd8cabc28010ab23db443491",
+  "image": "parties-dw105-20261022-local:0.0.0-local",
+  "container": "parties-dw105-20261022-owned-ui-d7d975a4573a4c22a5f435e188fd153b",
+  "http": [
+    {
+      "route": "/alive",
+      "status": "200"
+    },
+    {
+      "route": "/health",
+      "status": "200"
+    },
+    {
+      "route": "/ready",
+      "status": "200"
+    },
+    {
+      "route": "/_content/Hexalith.Parties.AdminPortal/Hexalith.Parties.AdminPortal.bundle.scp.css",
+      "status": "200"
+    }
+  ],
+  "result": "pass",
+  "image_id": "sha256:e36065ef6aeb2f8d8fa1f8244f1d6eebc06f04f9c837dc9b4eb077b14b7cbf80",
+  "architecture": "amd64",
+  "os": "linux",
+  "labels": {
+    "net.dot.runtime.majorminor": "10.0",
+    "net.dot.sdk.version": "10.0.402",
+    "org.opencontainers.artifact.created": "2026-10-22T12:00:00Z",
+    "org.opencontainers.artifact.description": "DAPR-native party management microservice for .NET",
+    "org.opencontainers.image.authors": "Hexalith Contributors",
+    "org.opencontainers.image.base.digest": "sha256:7d9ff35e9a600e33419d5b84c745efcc1aa6847e5fb255b7fa746f9f83509e9c",
+    "org.opencontainers.image.base.name": "mcr.microsoft.com/dotnet/aspnet:10.0-alpine-extra",
+    "org.opencontainers.image.created": "2026-10-22T12:00:00Z",
+    "org.opencontainers.image.description": "DAPR-native party management microservice for .NET",
+    "org.opencontainers.image.documentation": "https://github.com/Hexalith/Hexalith.Parties/blob/9a46682ad170ba70e395aa00012f86f09ef6b315/README.md",
+    "org.opencontainers.image.licenses": "MIT",
+    "org.opencontainers.image.revision": "9a46682ad170ba70e395aa00012f86f09ef6b315",
+    "org.opencontainers.image.source": "https://github.com/Hexalith/Hexalith.Parties",
+    "org.opencontainers.image.url": "https://github.com/Hexalith/Hexalith.Parties/releases/tag/v0.0.0-local",
+    "org.opencontainers.image.vendor": "Hexalith",
+    "org.opencontainers.image.version": "0.0.0-local"
+  },
+  "startup": {
+    "outcome": "pass",
+    "attempts": 2,
+    "log": [
+      "container_state=running|0"
+    ]
+  },
+  "final_state": "running|0",
+  "container_cleanup": "pass",
+  "image_cleanup": "pass"
+}

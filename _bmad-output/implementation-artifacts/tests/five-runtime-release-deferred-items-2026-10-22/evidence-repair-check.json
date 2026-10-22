@@ -1,0 +1,18 @@
+{
+  "check": "all indexed raw hashes, unique tracked/raw rows and single matching tracked receipt header",
+  "indexed_logs": 31,
+  "raw_hash_mismatches": [],
+  "duplicate_tracked_rows": 0,
+  "duplicate_raw_rows": 0,
+  "nested_receipt_headers": 0,
+  "tracked_header_hash_mismatches": [],
+  "recovered_ci_original_sha256": "16d007f86831b2669b7ec79c42f47f19cac3763cd93e62786f764927e2a4868c",
+  "driver_sha256": "8fb2383e826a9837f4f9a62246987e3b80bfb23e9381d31a4f138bf92257d116",
+  "qualification_exit_code": 0,
+  "qualification_result": "pass",
+  "startup_attempted": true,
+  "container_cleanup": "pass",
+  "image_cleanup": "pass",
+  "qualification_command": "python3 _bmad-output/implementation-artifacts/tests/five-runtime-release-deferred-items-2026-10-22/qualify-local-ui.py",
+  "preserved_prior_bytes_directory": "/tmp/parties-five-runtime-release-raw/receipt-repair-before-e8s6ljym"
+}

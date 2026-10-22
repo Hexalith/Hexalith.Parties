@@ -1,0 +1,8 @@
+{
+  "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Release -m:1 -p:MinVerVersionOverride=1.0.0",
+  "exit_code": 0,
+  "elapsed_seconds": 0.97,
+  "raw": "/tmp/parties-five-runtime-release-raw/parent-ci-build.txt",
+  "raw_sha256": "31a930c78159d22eb05a2682afad7ad2e341eb3890270da1a1a16b42b0a0cc2d",
+  "summary": "  All projects are up-to-date for restore.\n  Hexalith.Parties.Ci.Tests -> <workspace>/tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll\n\nBuild succeeded.\n    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:00.73"
+}

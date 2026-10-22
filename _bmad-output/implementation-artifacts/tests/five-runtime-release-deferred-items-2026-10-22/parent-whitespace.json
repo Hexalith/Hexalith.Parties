@@ -1,0 +1,8 @@
+{
+  "command": "git -c core.whitespace=trailing-space,space-before-tab,cr-at-eol diff --check --cached",
+  "exit_code": 0,
+  "elapsed_seconds": 0.01,
+  "raw": "/tmp/parties-five-runtime-release-raw/parent-whitespace.txt",
+  "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "summary": ""
+}
