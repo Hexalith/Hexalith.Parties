@@ -26,9 +26,17 @@ public sealed class CommonsHttpRestoreRoutingTests
         props.Descendants("HexalithCommonsRoot").ShouldBeEmpty();
         props.Descendants("HexalithCommonsHttpPackageVersion").ShouldBeEmpty();
         string packages = CiTestPaths.ReadRepoFile("Directory.Packages.props");
+        XDocument packageProps = XDocument.Parse(packages);
+        packageProps.Descendants("PackageVersion").ShouldBeEmpty();
+        packageProps.Descendants("HexalithBuildsRoot").ShouldBeEmpty();
         packages.ShouldContain("$(Hexalith1BuildPackageProps)");
+        packages.ShouldContain("$(Hexalith2BuildPackageProps)");
         packages.ShouldContain("$(MSBuildThisFileDirectory)../Hexalith.Builds/Props/Directory.Packages.props");
         packages.ShouldContain("Exists('$(Hexalith1BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'");
+        packages.ShouldContain("Exists('$(Hexalith2BuildPackageProps)') And '$(HexalithVersionsLoaded)' != 'true'");
+        XElement buildsRoot = props.Descendants("HexalithBuildsRoot").Single();
+        buildsRoot.Attribute("Condition")!.Value.ShouldBe("'$(HexalithBuildsRoot)' == ''");
+        buildsRoot.Value.ShouldBe("$(MSBuildThisFileDirectory)references/Hexalith.Builds");
     }
 
     [Fact]
