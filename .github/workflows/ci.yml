@@ -61,6 +61,10 @@ jobs:
           global-json-file: global.json
       - name: Initialize owner publisher build dependencies
         run: git -c submodule.recurse=false submodule update --init references/Hexalith.EventStore references/Hexalith.Builds
+      - name: Install Dapr CLI for manifest publisher
+        uses: dapr/setup-dapr@8d980918fd43a2765c143ce7f687665b2d46a6b9 # v2
+        with:
+          version: '1.18.0'
       - name: Qualify actual owner manifests and rejection controls
         run: python3 -B -m unittest scripts.test_verify_eventstore_publish -v
 
