@@ -151,7 +151,7 @@ set `NuGetPackageSourceCredentials_additional-source-1` (adjust the number for
 later sources) to `Username=<user>;Password=<token>`, following
 [NuGet's authenticated-feed guidance](https://learn.microsoft.com/en-us/nuget/consume-packages/consuming-packages-authenticated-feeds).
 
-The publication preflight freezes the exact source, nine-package manifest, and complete three-container destination set. It rejects missing credentials, identity drift, or an existing package/container version before the first publication write; duplicate skipping is deliberately disabled.
+The publication preflight freezes the exact source, ten-package manifest, and complete three-container destination set. It rejects missing credentials, identity drift, or an existing package/container version before the first publication write; duplicate skipping is deliberately disabled.
 
 After publication, verification considers only published, non-draft GitHub Releases
 with canonical stable `vMAJOR.MINOR.PATCH` tags: exactly three numeric components,
@@ -170,7 +170,7 @@ and Builds `397c94a4e246c90b21cf408790fa0d55bf32d795`, with persisted checkout
 credentials disabled. It also initializes only the dispatched root Builds
 gitlink, without recursion, and installs the SDK from `global.json` to evaluate
 that source's package catalog. `scripts/verify-release-publication.py` requires
-all nine unique IDs in `tools/release-packages.json`, downloads each `.nupkg`,
+all ten unique IDs in `tools/release-packages.json`, downloads each `.nupkg`,
 and reuses archive, README/license and dependency-boundary validation. Nuspec
 ID, version, repository URL, repository type `git` and commit must match the
 release exactly. Existing required dependency and version checks use the evaluated
@@ -311,7 +311,7 @@ DependencyInjection.Abstractions floors aligned to `10.0.13`. NuGet audit stays
 active. The Web SDK prunes this package from the UI in favor of the shared ASP.NET
 runtime, so the UI alone requires runtime `10.0.13` through
 `RuntimeFrameworkVersion`. Local UI starts require that runtime to be installed.
-The UI ships as a container outside the unchanged nine-package NuGet manifest;
+The UI ships as a container outside the ten-package NuGet manifest;
 the existing container liveness gate remains required. The separately built
 EventStore diagnostic source project retains its own upstream catalog and can
 still report the older SignalR vulnerability; this is not the owned package graph.

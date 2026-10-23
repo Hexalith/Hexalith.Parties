@@ -29,6 +29,7 @@ EXPECTED_PACKAGE_IDS = frozenset(
         "Hexalith.Parties.Projections",
         "Hexalith.Parties.Security",
         "Hexalith.Parties.Testing",
+        "Hexalith.Parties.Aspire",
     }
 )
 
@@ -217,6 +218,11 @@ def get_metadata(package_path: Path) -> PackageMetadata:
 
 def validate_dependency_boundaries(package_path: Path, metadata: PackageMetadata) -> None:
     """Validate package dependency metadata against the intended package boundaries."""
+    if metadata.package_id == "Hexalith.Parties.Aspire":
+        unexpected = sorted(dependency.package_id for dependency in metadata.dependencies
+                            if dependency.package_id not in {"Aspire.Hosting", "Hexalith.EventStore.Aspire"})
+        if unexpected:
+            raise ValueError(f"{package_path.name}: Aspire helper has forbidden dependencies: {unexpected}")
     forbidden_ids = {package_id.casefold() for package_id in FORBIDDEN_DEPENDENCY_IDS}
     forbidden_fragments = tuple(fragment.casefold() for fragment in FORBIDDEN_DEPENDENCY_FRAGMENTS)
     forbidden_dependencies = sorted(
@@ -272,7 +278,10 @@ def validate_event_store_dependency_versions(
         DependencyGroupMetadata(None, tuple(metadata.dependencies)),
     )
     event_store_prefix = EVENT_STORE_DEPENDENCY_PREFIX.casefold()
-    required_id = REQUIRED_EVENT_STORE_DEPENDENCY_ID.casefold()
+    required_dependency_id = ("Hexalith.EventStore.Aspire"
+                              if metadata.package_id == "Hexalith.Parties.Aspire"
+                              else REQUIRED_EVENT_STORE_DEPENDENCY_ID)
+    required_id = required_dependency_id.casefold()
 
     for index, group in enumerate(groups, start=1):
         group_label = group.target_framework or f"unnamed group {index}"
@@ -293,7 +302,7 @@ def validate_event_store_dependency_versions(
         if len(required_dependencies) != 1 or required_dependencies[0].version != expected_version:
             raise ValueError(
                 f"{package_path.name}: dependency group '{group_label}' must contain exactly one required "
-                f"{REQUIRED_EVENT_STORE_DEPENDENCY_ID} dependency at version {expected_version}, "
+                f"{required_dependency_id} dependency at version {expected_version}, "
                 f"found {required_versions or '<missing>'}"
             )
 
@@ -327,7 +336,7 @@ def load_package_inventory(manifest: Path) -> tuple[str, ...]:
     if (any(not isinstance(package_id, str) for package_id in ids)
             or len({package_id.casefold() for package_id in ids}) != len(ids)
             or set(ids) != EXPECTED_PACKAGE_IDS):
-        raise ValueError("Release package inventory must declare exactly the nine unique Parties package IDs")
+        raise ValueError("Release package inventory must declare exactly the ten unique Parties package IDs")
     return tuple(ids)
 
 

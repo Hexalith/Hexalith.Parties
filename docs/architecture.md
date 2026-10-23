@@ -12,7 +12,7 @@ It is **not** an auth provider, CRM, or identity server — it is the party/cont
 
 | Attribute | Value |
 |-----------|-------|
-| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), exactly 13 projects under `src` plus one sample project + 15 runnable .NET test projects + 1 support host + Playwright e2e |
+| Repository type | Monolith — single cohesive .NET solution (`Hexalith.Parties.slnx`), exactly 14 projects under `src` plus one sample project + 16 runnable .NET test projects + 1 support host + Playwright e2e |
 | Primary language | C# / **.NET 10** (SDK pinned `10.0.402`) |
 | Architecture style | Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, gateway-fronted (EventStore) |
 | Orchestration | .NET Aspire 13.6.1 (`dotnet aspire run`) |
@@ -307,6 +307,7 @@ The annotated tree is in **[source-tree-analysis.md](source-tree-analysis.md)**;
 ```
 src/
   Hexalith.Parties.AppHost/        # Current Aspire dev/rollback entry point; retire after G8 platform-host parity
+  Hexalith.Parties.Aspire/         # platform composition helper; no server package dependency
   # Adopter-facing
   Hexalith.Parties.Client/         # typed EventStore gateway client
   Hexalith.Parties.Contracts/      # commands, events, value objects, read models (no infra deps)
@@ -330,7 +331,7 @@ scripts/  # local test runner, package validation, and Parties container publish
 
 ## 11. Testing & CI
 
-- Exactly **15 runnable .NET test projects plus one support host** (`Hexalith.Parties.EventStoreGateway.TestHost`) and the Playwright e2e workspace, uniformly **xUnit v3** for runnable .NET tests (Shouldly + NSubstitute; bunit for Blazor). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|ci|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.Ci.Tests` validates static GitHub Actions publication contracts and executes the release source-gate shell against mocked GitHub API fixtures. Architectural fitness tests pin contract/dependency boundaries.
+- Exactly **16 runnable .NET test projects plus one support host** (`Hexalith.Parties.EventStoreGateway.TestHost`) and the Playwright e2e workspace, uniformly **xUnit v3** for runnable .NET tests (Shouldly + NSubstitute; bunit for Blazor). Lanes via `scripts/test.ps1 -Lane {unit|integration|topology|ci|all|coverage}`. `Hexalith.Parties.IntegrationTests` spins up the **full Aspire topology** (`Aspire.Hosting.Testing`), gracefully skipping when Docker/DAPR is absent; `Hexalith.Parties.Ci.Tests` validates static GitHub Actions publication contracts and executes the release source-gate shell against mocked GitHub API fixtures. Architectural fitness tests pin contract/dependency boundaries.
 - **CI/CD:** `.github/workflows/ci.yml` delegates restore/build/package-consumer validation and test tiers to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@332b2c144defba546fe0a09626a4a72f2340e22f`; `.github/workflows/release.yml` is a manual caller that requires current `main` and successful exact-source push proof from `ci.yml` before protected approval. Shared preparation and the complete Parties-owned container publisher use one reviewed immutable Hexalith.Builds commit, with caller-owned NuGet trusted publishing. The publication wrapper enforces the same full-CI proof. Submodules are checked out as **root-repository submodules only, never recursive**. See [ci.md](ci.md), [build-gate.md](build-gate.md), [ci-secrets-checklist.md](ci-secrets-checklist.md).
 - **Package API prerequisite:** resolved by published EventStore 3.117.0. The actual DomainService assembly exposes `RequireEventStoreSidecarChannel<TBuilder>`, and the default package-mode Release solution build passes with zero warnings and errors. Security/rebuild calls, package-mode dependencies, and mandatory exact-source full-CI release proof remain intact. The earlier 3.115.0 CS1061 and 3.88.0 rebuild CS0246 failures are historical. See [ci.md](ci.md#required-eventstore-publication) for publication provenance, consumer verification, and the remaining integrated-topology prerequisites.
 

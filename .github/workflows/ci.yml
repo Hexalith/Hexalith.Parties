@@ -28,6 +28,7 @@ jobs:
       run-consumer-validation: true
       run-coverage-gate: false
       unit-test-projects: |
+        tests/Hexalith.Parties.Aspire.Tests
         tests/Hexalith.Parties.Contracts.Tests
         tests/Hexalith.Parties.Authentication.Tests
         tests/Hexalith.Parties.Client.Tests

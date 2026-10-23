@@ -17,6 +17,7 @@ public sealed class DocumentationFitnessTests
         "Hexalith.Parties",
         "Hexalith.Parties.AdminPortal",
         "Hexalith.Parties.AppHost",
+        "Hexalith.Parties.Aspire",
         "Hexalith.Parties.Authentication",
         "Hexalith.Parties.Client",
         "Hexalith.Parties.ConsumerPortal",
@@ -49,6 +50,7 @@ public sealed class DocumentationFitnessTests
     private static readonly string[] ExpectedRunnableProjects =
     [
         "Hexalith.Parties.AdminPortal.Tests",
+        "Hexalith.Parties.Aspire.Tests",
         "Hexalith.Parties.Authentication.Tests",
         "Hexalith.Parties.Ci.Tests",
         "Hexalith.Parties.Client.Tests",
@@ -116,9 +118,9 @@ public sealed class DocumentationFitnessTests
         {
             string documentation = Read(root, relativePath);
             string normalizedDocumentation = Regex.Replace(documentation, @"\s+", " ", RegexOptions.CultureInvariant);
-            normalizedDocumentation.ShouldContain("13 projects under `src`", Case.Insensitive, relativePath);
+            normalizedDocumentation.ShouldContain("14 projects under `src`", Case.Insensitive, relativePath);
             normalizedDocumentation.ShouldContain("one sample project", Case.Insensitive, relativePath);
-            documentation.ShouldContain("15 runnable", Case.Insensitive, relativePath);
+            documentation.ShouldContain("16 runnable", Case.Insensitive, relativePath);
             documentation.ShouldContain("support host", Case.Insensitive, relativePath);
         }
     }

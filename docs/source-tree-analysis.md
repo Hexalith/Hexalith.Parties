@@ -4,7 +4,7 @@
 
 ```
 Hexalith.Parties/
-├── Hexalith.Parties.slnx              # Solution (13 projects under `src` + one sample project + 15 runnable tests + 1 support host + e2e)
+├── Hexalith.Parties.slnx              # Solution (14 projects under `src` + one sample project + 16 runnable tests + 1 support host + e2e)
 ├── Directory.Build.props              # net10.0, Nullable, ImplicitUsings, TreatWarningsAsErrors=true, MinVer
 ├── Directory.Build.targets            # shared MSBuild targets
 ├── Directory.Packages.props           # central package versions (ManagePackageVersionsCentrally)
@@ -21,6 +21,7 @@ Hexalith.Parties/
 │   │   │                              #     subscription-parties, accesscontrol.*.yaml (deny-by-default except accesscontrol.eventstore-admin.yaml, defaultAction: allow)
 │   │   ├── KeycloakRealms/            #   hexalith-realm.json (local IdP realm import)
 │   │   └── Properties/launchSettings.json  # http profile :15100, OTLP :21100
+│   ├── Hexalith.Parties.Aspire/         # platform composition helper; no server package dependency
 │   │
 │   │   # ───────── Adopter-facing packages ─────────
 │   ├── Hexalith.Parties.Client/       # 📦 Typed EventStore gateway client
@@ -86,7 +87,7 @@ Hexalith.Parties/
 │   │   │                              #   erasure verification, key-op audit, PartyKeyRetryActor
 │   └── Hexalith.Parties.Testing/      # 🔒 shared test utilities
 │
-├── tests/                             # 15 runnable .NET test projects + 1 support host + Playwright e2e workspace
+├── tests/                             # 16 runnable .NET test projects + 1 support host + Playwright e2e workspace
 │   ├── Hexalith.Parties.Tests/                 # largest — health, rebuild, search, architectural fitness
 │   ├── Hexalith.Parties.IntegrationTests/      # full Aspire topology E2E (Aspire.Hosting.Testing)
 │   ├── Hexalith.Parties.Ci.Tests/              # GitHub Actions/Zot publication contract validation

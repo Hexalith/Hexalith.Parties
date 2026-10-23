@@ -21,7 +21,8 @@
     "Hexalith.Parties.Authentication",
     "Hexalith.Parties.Projections",
     "Hexalith.Parties.Security",
-    "Hexalith.Parties.Testing"
+    "Hexalith.Parties.Testing",
+    "Hexalith.Parties.Aspire"
   ],
   "setupUrl": "https://www.nuget.org/account/TrustedPublishing",
   "documentationUrl": "https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing",
