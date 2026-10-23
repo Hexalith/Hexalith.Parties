@@ -320,11 +320,11 @@ jobs:
           persist-credentials: false
       - name: Prepare domain release
         id: prepare
-        uses: Hexalith/Hexalith.Builds/Github/prepare-domain-release@e6d0cc245c43a109672b1b71e1768ef8e2cabbe0
+        uses: Hexalith/Hexalith.Builds/Github/prepare-domain-release@d9070aa0d43feb9e3359286bc797d2be65960727
         with:
           solution: Hexalith.Parties.slnx
           node-version: '24.22.1'
-          builds-execution-sha: e6d0cc245c43a109672b1b71e1768ef8e2cabbe0
+          builds-execution-sha: d9070aa0d43feb9e3359286bc797d2be65960727
           source-branch: main
           source-ci-workflow: ci.yml
           package-manifest: tools/release-packages.json
@@ -346,7 +346,7 @@ jobs:
         if: ${{ steps.prepare.outputs.publish-enabled == 'true' }}
         uses: ./.hexalith/builds-execution/Github/publish-containers
         with:
-          builds-execution-sha: e6d0cc245c43a109672b1b71e1768ef8e2cabbe0
+          builds-execution-sha: d9070aa0d43feb9e3359286bc797d2be65960727
           container-projects: |
             src/Hexalith.Parties/Hexalith.Parties.csproj|parties
             src/Hexalith.Parties.Mcp/Hexalith.Parties.Mcp.csproj|parties-mcp
@@ -369,7 +369,7 @@ jobs:
           HEXALITH_ZOT_REGISTRY: ${{ vars.HEXALITH_ZOT_REGISTRY || 'registry.hexalith.com' }}
           HEXALITH_ZOT_USERNAME: ${{ secrets.HEXALITH_ZOT_USERNAME }}
           HEXALITH_ZOT_API_KEY: ${{ secrets.HEXALITH_ZOT_API_KEY }}
-          HEXALITH_BUILDS_EXECUTION_SHA: e6d0cc245c43a109672b1b71e1768ef8e2cabbe0
+          HEXALITH_BUILDS_EXECUTION_SHA: d9070aa0d43feb9e3359286bc797d2be65960727
           HEXALITH_RELEASE_ENVIRONMENT: production
           HEXALITH_RELEASE_SOURCE_BRANCH: main
           HEXALITH_RELEASE_SOURCE_CI_WORKFLOW: ci.yml
@@ -412,7 +412,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: Hexalith/Hexalith.Builds
-          ref: e6d0cc245c43a109672b1b71e1768ef8e2cabbe0
+          ref: d9070aa0d43feb9e3359286bc797d2be65960727
           path: .hexalith/builds-verification
           submodules: false
           persist-credentials: false

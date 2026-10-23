@@ -17,7 +17,7 @@ from pathlib import Path
 
 SOURCE = "a" * 40
 VERSION = "1.2.3"
-BUILDS = "e6d0cc245c43a109672b1b71e1768ef8e2cabbe0"
+BUILDS = "d9070aa0d43feb9e3359286bc797d2be65960727"
 INDEX = "application/vnd.oci.image.index.v1+json"
 MANIFEST = "application/vnd.oci.image.manifest.v1+json"
 CONFIG = "application/vnd.oci.image.config.v1+json"

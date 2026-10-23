@@ -5,7 +5,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 ## Workflows
 
 - `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@332b2c144defba546fe0a09626a4a72f2340e22f`.
-- `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@e6d0cc245c43a109672b1b71e1768ef8e2cabbe0` and takes the nested publisher from that same immutable Builds checkout.
+- `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@d9070aa0d43feb9e3359286bc797d2be65960727` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the same immutable Builds validation revision as CI, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
 - `.github/workflows/codeql.yml` delegates C# CodeQL scanning to `Hexalith/Hexalith.Builds/.github/workflows/codeql.yml@332b2c144defba546fe0a09626a4a72f2340e22f`.
@@ -166,7 +166,7 @@ fail verification. The matched tag is exposed as `verify-publication`'s
 `matching-tag` output and supplies the release version to artifact verification.
 
 The read-only verification job checks out the exact dispatched Parties source
-and Builds `e6d0cc245c43a109672b1b71e1768ef8e2cabbe0`, with persisted checkout
+and Builds `d9070aa0d43feb9e3359286bc797d2be65960727`, with persisted checkout
 credentials disabled. It also initializes only the dispatched root Builds
 gitlink, without recursion, and installs the SDK from `global.json` to evaluate
 that source's package catalog. `scripts/verify-release-publication.py` requires
