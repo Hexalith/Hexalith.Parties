@@ -286,3 +286,11 @@ references/Hexalith.Tenants|25e3bf827a7963ec79b57b4918290b3fed728706|validated-a
 #     Source selection only; no historical parity or rollback authority.
 references/Hexalith.Builds|4c7f27f5458742e860100012ecd30253808421e7|validated-advance|v4.36.0-12-g4c7f27f5|jpiquot|2026-10-23
 references/Hexalith.FrontComposer|803b38116478466b5192d953f211ad37da402294|validated-advance|v4.7.0-65-g803b3811|jpiquot|2026-10-23
+
+# --- 2026-10-23 approved five-owner configuration/recovery task follow-ups.
+#     jpiquot requested implementation and push on main, then approved the spec.
+#     These exact owner main revisions contain the reviewed task fixes and
+#     preserve their incoming remote ancestry. Source selection only: no matching
+#     package publication, historical parity, release or rollback authority.
+references/Hexalith.EventStore|596de60e140da779f170279a822ded010070d774|validated-advance|v3.127.0-7-g596de60e|jpiquot|2026-10-23
+references/Hexalith.Memories|4190ec6549dd83bcaaf268e7bb723dcff8f7286b|validated-advance|v2.29.11-1-g4190ec65|jpiquot|2026-10-23
