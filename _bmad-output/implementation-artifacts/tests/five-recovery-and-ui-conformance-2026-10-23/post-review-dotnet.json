@@ -1,0 +1,275 @@
+{
+  "commands": [
+    {
+      "project": "Hexalith.Parties.Contracts.Tests",
+      "kind": "build",
+      "command": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exit_code": 0,
+      "seconds": 1.475,
+      "log": "post-review-Hexalith.Parties.Contracts.Tests-build.txt"
+    },
+    {
+      "project": "Hexalith.Parties.Contracts.Tests",
+      "kind": "tests",
+      "command": [
+        "dotnet",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.Contracts.Tests.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 7.011,
+      "log": "post-review-Hexalith.Parties.Contracts.Tests-tests.txt"
+    },
+    {
+      "project": "Hexalith.Parties.Tests",
+      "kind": "build",
+      "command": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exit_code": 0,
+      "seconds": 7.681,
+      "log": "post-review-Hexalith.Parties.Tests-build.txt"
+    },
+    {
+      "project": "Hexalith.Parties.Tests",
+      "kind": "tests",
+      "command": [
+        "dotnet",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.Tests.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 64.918,
+      "log": "post-review-Hexalith.Parties.Tests-tests.txt"
+    },
+    {
+      "project": "Hexalith.Parties.Projections.Tests",
+      "kind": "build",
+      "command": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exit_code": 0,
+      "seconds": 1.246,
+      "log": "post-review-Hexalith.Parties.Projections.Tests-build.txt"
+    },
+    {
+      "project": "Hexalith.Parties.Projections.Tests",
+      "kind": "tests",
+      "command": [
+        "dotnet",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.Projections.Tests.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 0.959,
+      "log": "post-review-Hexalith.Parties.Projections.Tests-tests.txt"
+    },
+    {
+      "project": "Hexalith.Parties.AdminPortal.Tests",
+      "kind": "build",
+      "command": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.AdminPortal.Tests/Hexalith.Parties.AdminPortal.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exit_code": 0,
+      "seconds": 1.501,
+      "log": "post-review-Hexalith.Parties.AdminPortal.Tests-build.txt"
+    },
+    {
+      "project": "Hexalith.Parties.AdminPortal.Tests",
+      "kind": "tests",
+      "command": [
+        "dotnet",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.AdminPortal.Tests.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 13.292,
+      "log": "post-review-Hexalith.Parties.AdminPortal.Tests-tests.txt"
+    },
+    {
+      "project": "Hexalith.Parties.ConsumerPortal.Tests",
+      "kind": "build",
+      "command": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.ConsumerPortal.Tests/Hexalith.Parties.ConsumerPortal.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exit_code": 0,
+      "seconds": 1.553,
+      "log": "post-review-Hexalith.Parties.ConsumerPortal.Tests-build.txt"
+    },
+    {
+      "project": "Hexalith.Parties.ConsumerPortal.Tests",
+      "kind": "tests",
+      "command": [
+        "dotnet",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.ConsumerPortal.Tests/bin/Release/net10.0/Hexalith.Parties.ConsumerPortal.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.ConsumerPortal.Tests.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 0.73,
+      "log": "post-review-Hexalith.Parties.ConsumerPortal.Tests-tests.txt"
+    },
+    {
+      "project": "Hexalith.Parties.Picker.Tests",
+      "kind": "build",
+      "command": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Picker.Tests/Hexalith.Parties.Picker.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exit_code": 0,
+      "seconds": 1.481,
+      "log": "post-review-Hexalith.Parties.Picker.Tests-build.txt"
+    },
+    {
+      "project": "Hexalith.Parties.Picker.Tests",
+      "kind": "tests",
+      "command": [
+        "dotnet",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Picker.Tests/bin/Release/net10.0/Hexalith.Parties.Picker.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.Picker.Tests.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 1.019,
+      "log": "post-review-Hexalith.Parties.Picker.Tests-tests.txt"
+    },
+    {
+      "project": "Hexalith.Parties.UI.Tests",
+      "kind": "build",
+      "command": [
+        "dotnet",
+        "build",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exit_code": 0,
+      "seconds": 4.469,
+      "log": "post-review-Hexalith.Parties.UI.Tests-build.txt"
+    },
+    {
+      "project": "Hexalith.Parties.UI.Tests",
+      "kind": "tests",
+      "command": [
+        "dotnet",
+        "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.UI.Tests.xml"
+      ],
+      "exit_code": 0,
+      "seconds": 3.427,
+      "log": "post-review-Hexalith.Parties.UI.Tests-tests.txt"
+    }
+  ],
+  "suites": [
+    {
+      "name": "Hexalith.Parties.AdminPortal.Tests",
+      "passed": 323,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.AdminPortal.Tests.xml"
+    },
+    {
+      "name": "Hexalith.Parties.ConsumerPortal.Tests",
+      "passed": 82,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.ConsumerPortal.Tests.xml"
+    },
+    {
+      "name": "Hexalith.Parties.Contracts.Tests",
+      "passed": 219,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.Contracts.Tests.xml"
+    },
+    {
+      "name": "Hexalith.Parties.Picker.Tests",
+      "passed": 171,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.Picker.Tests.xml"
+    },
+    {
+      "name": "Hexalith.Parties.Projections.Tests",
+      "passed": 458,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.Projections.Tests.xml"
+    },
+    {
+      "name": "Hexalith.Parties.Tests",
+      "passed": 2624,
+      "failed": 0,
+      "skipped": 3,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.Tests.xml"
+    },
+    {
+      "name": "Hexalith.Parties.UI.Tests",
+      "passed": 413,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.UI.Tests.xml"
+    }
+  ],
+  "passed": 4290,
+  "skipped": 3,
+  "failed": 0
+}

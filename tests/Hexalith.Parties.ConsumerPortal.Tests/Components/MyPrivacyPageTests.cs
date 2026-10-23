@@ -30,6 +30,9 @@ public sealed class MyPrivacyPageTests : BunitContext
 
         IRenderedComponent<MyPrivacyPage> cut = Render<MyPrivacyPage>();
 
+        cut.FindComponents<FluentAccordion>().Count.ShouldBe(1);
+        cut.FindComponents<FluentAccordionItem>().Count.ShouldBe(3);
+        cut.FindComponents<FluentAccordionItem>().All(static item => item.Instance.Expanded).ShouldBeTrue();
         cut.Markup.ShouldContain("Export my data");
         cut.Markup.ShouldContain("Delete my data");
         cut.Markup.ShouldContain("right to erasure");

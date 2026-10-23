@@ -5,6 +5,7 @@ using Hexalith.EventStore.DomainService;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Security;
 using Hexalith.Parties.Contracts.ValueObjects;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Models;
@@ -152,6 +153,7 @@ public sealed class PartyDetailSdkProjectionHandler(
         PartyProcessingSdkReadModel nextProcessing = PartyProcessingActivityFold.Fold(request, currentProcessing.Value, _processingFoldLogger);
         if (current.Value is not null
             && next.LastSequenceNumber == current.Value.LastSequenceNumber
+            && Equals(next.ErasureLifecycle, current.Value.ErasureLifecycle)
             && currentProcessing.Value is not null
             && nextProcessing.LastSequenceNumber == currentProcessing.Value.LastSequenceNumber)
         {
@@ -233,13 +235,28 @@ public sealed class PartyDetailSdkProjectionHandler(
     internal static PartyDetailSdkReadModel Fold(ProjectionRequest request, PartyDetailSdkReadModel? current)
     {
         PartyDetail? detail = current?.Detail;
+        PartyErasureStatusRecord? lifecycle = current?.ErasureLifecycle;
         long lastSequence = current?.LastSequenceNumber ?? long.MinValue;
         long? erasureSequence = current?.ErasureSequenceNumber;
         DateTimeOffset? erasedAt = current?.ErasedAt;
         DateTimeOffset projectedAt = current?.ProjectedAt ?? DateTimeOffset.UnixEpoch;
+        if (lifecycle is null && current is not null)
+        {
+            ProjectionEventDto[] prefix = [.. request.Events.Where(item => item.SequenceNumber <= lastSequence)];
+            if (prefix.Length > 0 && prefix.Max(static item => item.SequenceNumber) == lastSequence
+                && PartySdkProjectionFold.GetDeliveryFailureReason(prefix, long.MinValue) is null)
+            {
+                foreach ((_, IEventPayload? historical, _) in PartySdkProjectionFold.DeserializeNew(prefix, long.MinValue))
+                {
+                    lifecycle = ApplyLifecycle(request, historical, lifecycle);
+                }
+            }
+        }
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
             PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence))
         {
+            lifecycle = ApplyLifecycle(request, payload, lifecycle);
+
             if (payload is PartyErased erased)
             {
                 detail = PartyDetailProjectionHandler.ApplyErasure(request.AggregateId, detail) is { } redacted
@@ -273,12 +290,43 @@ public sealed class PartyDetailSdkProjectionHandler(
         return new PartyDetailSdkReadModel
         {
             Detail = detail,
+            ErasureLifecycle = lifecycle,
             LastSequenceNumber = lastSequence,
             ErasureSequenceNumber = erasureSequence,
             ErasedAt = erasedAt,
             ProjectedAt = projectedAt,
             ProjectionVersion = lastSequence == long.MinValue ? null : lastSequence.ToString(System.Globalization.CultureInfo.InvariantCulture),
         };
+    }
+
+    /// <summary>Derives lifecycle authority from a committed event, independently of cleanup fences.</summary>
+    private static PartyErasureStatusRecord? ApplyLifecycle(
+        ProjectionRequest request,
+        IEventPayload? payload,
+        PartyErasureStatusRecord? current)
+    {
+        if (current?.Status == ErasureStatus.Erased.ToString())
+        {
+            return current;
+        }
+
+        (ErasureStatus Status, DateTimeOffset At)? transition = payload switch
+        {
+            ErasePartyRequested requested => (ErasureStatus.ErasurePending, requested.RequestedAt),
+            PartyErasureCancelled cancelled => (ErasureStatus.Active, cancelled.CancelledAt),
+            PartyEncryptionKeyDeleted deleted => (ErasureStatus.KeyDestroyed, deleted.DeletedAt),
+            ErasureVerified verified => (ErasureStatus.Verified, verified.VerifiedAt),
+            PartyErased erased => (ErasureStatus.Erased, erased.ErasedAt),
+            _ => null,
+        };
+        return transition is { } committed ? new PartyErasureStatusRecord
+        {
+            PartyId = request.AggregateId,
+            TenantId = request.TenantId,
+            Status = committed.Status.ToString(),
+            UpdatedAt = committed.At,
+            ErasedAt = committed.Status == ErasureStatus.Erased ? committed.At : null,
+        } : current;
     }
 
     private string StoreName => options.Value.GetStoreName();

@@ -1,6 +1,9 @@
+using System.Text.Json.Serialization;
+
 using Hexalith.EventStore.Client.Projections;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Contracts.Security;
 
 namespace Hexalith.Parties.Projections.Models;
 
@@ -9,6 +12,10 @@ public sealed record PartyDetailSdkReadModel : IReadModelFreshness
 {
     /// <summary>Gets the projected party detail, or <see langword="null"/> when no detail is available.</summary>
     public PartyDetail? Detail { get; init; }
+
+    /// <summary>Gets the lifecycle derived only from committed events; absent in older read models.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public PartyErasureStatusRecord? ErasureLifecycle { get; init; }
 
     /// <summary>Gets the highest aggregate sequence durably incorporated by this projection.</summary>
     public long LastSequenceNumber { get; init; } = long.MinValue;

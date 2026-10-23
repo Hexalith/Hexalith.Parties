@@ -1,3 +1,6 @@
+import { expectNoBlockingAxeViolations } from '../helpers/a11y.js';
+import { expectAccordionFocusClearance } from '../helpers/accordion-focus.js';
+import { portalAction } from '../helpers/portal-actions.js';
 import { expect, test, type APIRequestContext, type BrowserContext, type Locator, type Page } from '@playwright/test';
 
 const ADMIN_COOKIE = 'parties-admin-e2e';
@@ -26,13 +29,48 @@ test.describe('Consumer portal route shells', () => {
     await page.setViewportSize({ width: 1280, height: 900 });
   });
 
+  for (const forcedColors of ['none', 'active'] as const) {
+    test(`section accordions preserve primary content and keyboard focus at narrow width with forced colors ${forcedColors}`, async ({ context, page }) => {
+      await enableConsumerFixture(context);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.emulateMedia({ forcedColors, reducedMotion: 'reduce' });
+      for (const route of CONSUMER_ROUTES) {
+        await page.goto(route.path);
+        const content = page.locator('section.hx-parties-profile');
+        await expect(content).toHaveCount(1);
+        const accordion = content.locator('fluent-accordion');
+        await expect(accordion).toHaveCount(1);
+        const firstSection = accordion.locator('fluent-accordion-item').first();
+        const header = firstSection.locator('[part="button"]');
+        await expect(header).toHaveAttribute('aria-expanded', 'true');
+        await header.focus();
+        await page.keyboard.press('Space');
+        await expect(header).toHaveAttribute('aria-expanded', 'false');
+        await expect(header).toBeFocused();
+        await page.keyboard.press('Enter');
+        await expect(header).toHaveAttribute('aria-expanded', 'true');
+        await expect(header).toBeFocused();
+        await expect(header).toBeInViewport();
+        expect(await content.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+        if (route.path === '/me/edit') {
+          await expectAccordionFocusClearance(page.getByRole('button', { name: 'Save changes', exact: true }));
+        } else if (route.path === '/me/consent') {
+          await expectAccordionFocusClearance(page.getByRole('switch', { name: 'Marketing emails', exact: true }));
+        } else if (route.path === '/me/privacy') {
+          await expectAccordionFocusClearance(portalAction(page, 'Export my data'));
+        }
+      }
+    });
+  }
+
   for (const route of CONSUMER_ROUTES) {
-    test(`bound Consumer can open ${route.path} without browser-visible gateway calls`, async ({ context, page }) => {
+    test(`bound Consumer can open ${route.path} without browser-visible gateway calls`, async ({ context, page }, testInfo) => {
       await enableConsumerFixture(context);
       const browserVisibleDataRequests = captureBrowserVisiblePartiesDataRequests(page);
 
       await page.goto(route.path);
 
+      await expect(page.locator('section.hx-parties-profile')).toHaveAccessibleName(route.heading);
       await expect(page.getByRole('heading', { name: route.heading })).toBeVisible();
       await expect(page.getByRole('status').filter({ hasText: route.status })).toBeVisible();
       if (route.path === '/me') {
@@ -54,10 +92,11 @@ test.describe('Consumer portal route shells', () => {
         await expect(page.getByText('right to erasure')).toBeVisible();
         await expect(page.getByText('Machine-readable JSON')).toBeVisible();
         await expect(page.getByRole('link', { name: 'Manage all consent' })).toHaveAttribute('href', '/me/consent');
-        await expect(page.getByRole('button', { name: 'Export my data' })).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Delete my data' })).toBeVisible();
+        await expect(portalAction(page, 'Export my data')).toBeVisible();
+        await expect(portalAction(page, 'Delete my data')).toBeVisible();
         await expect(page.getByText('under one minute')).toHaveCount(0);
       }
+      await expectNoBlockingAxeViolations(page, { route: route.path, artifactPath: testInfo.outputPath('axe-consumer-route.json') });
       expect(new URL(page.url()).pathname).toBe(route.path);
       expect(browserVisibleDataRequests).toEqual([]);
     });
@@ -104,8 +143,8 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByRole('heading', { name: 'Forbidden' })).toBeVisible();
     await expect(page.getByText('You are not authorized to view this area.')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Data privacy' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Export my data' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Delete my data' })).toHaveCount(0);
+    await expect(portalAction(page, 'Export my data')).toHaveCount(0);
+    await expect(portalAction(page, 'Delete my data')).toHaveCount(0);
     await expect.poll(async () => (await gdprRequestCounts(request)).exportData).toBe(0);
     await expect.poll(async () => (await gdprRequestCounts(request)).erasure).toBe(0);
     await expect.poll(async () => (await gdprRequestCounts(request)).cancelErasure).toBe(0);
@@ -227,7 +266,7 @@ test.describe('Consumer portal route shells', () => {
 
     await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
     await expect(page.getByText('Machine-readable JSON')).toBeVisible();
-    await page.getByRole('button', { name: 'Export my data' }).click();
+    await portalAction(page, 'Export my data').click();
 
     await expect(page.getByRole('status').filter({ hasText: 'Your JSON export is ready.' })).toContainText('Your JSON export is ready.');
     await expect.poll(async () => (await latestExportRequest(request))?.partyId ?? null).toBe('party-bound-001');
@@ -279,8 +318,8 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByText('Bounded GDPR operation record')).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Delete my data' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Export my data' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Delete my data' })).toBeVisible();
+    await expect(portalAction(page, 'Export my data')).toBeVisible();
+    await expect(portalAction(page, 'Delete my data')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Manage all consent' })).toHaveAttribute('href', '/me/consent');
     await expect.poll(async () => (await latestProcessingRecordRequest(request))?.partyId ?? null).toBe('party-bound-001');
     await expect(page.getByText('party-bound-001')).toHaveCount(0);
@@ -301,8 +340,8 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByRole('alert')).toContainText('Try again in a moment. Export and deletion tools remain available where possible.');
     await expect(page.getByRole('heading', { name: 'Export my data' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Delete my data' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Export my data' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Delete my data' })).toBeVisible();
+    await expect(portalAction(page, 'Export my data')).toBeVisible();
+    await expect(portalAction(page, 'Delete my data')).toBeVisible();
     await expect.poll(async () => (await latestProcessingRecordRequest(request))?.partyId ?? null).toBe('party-bound-001');
     await expect(page.getByText('Processing records fixture timeout.')).toHaveCount(0);
     await expect(page.getByText('party-bound-001')).toHaveCount(0);
@@ -322,7 +361,7 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByText('You can cancel until deletion begins')).toBeVisible();
     await expect(page.getByText("Once it's done, it's permanent - we can't undo it.")).toBeVisible();
 
-    await page.getByRole('button', { name: 'Delete my data' }).click();
+    await portalAction(page, 'Delete my data').click();
     await expect(page.getByRole('dialog', { name: 'Confirm deletion request' })).toBeVisible();
     await expect(page.getByRole('dialog')).toContainText('You can cancel until deletion begins');
     await expect(page.getByRole('textbox')).toHaveCount(0);
@@ -337,7 +376,7 @@ test.describe('Consumer portal route shells', () => {
 
     await expect.poll(async () => (await latestCancelErasureRequest(request))?.partyId ?? null).toBe('party-bound-001');
     await expect(page.getByRole('status').filter({ hasText: 'Deletion request cancelled.' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Delete my data' })).toBeEnabled();
+    await expect(portalAction(page, 'Delete my data')).toBeEnabled();
     await expect(page.getByRole('button', { name: 'Cancel deletion request' })).toHaveCount(0);
     await expect(page.getByText('within 30 days')).toHaveCount(0);
     await expect(page.getByText('successfully deleted')).toHaveCount(0);
@@ -359,7 +398,7 @@ test.describe('Consumer portal route shells', () => {
     );
     await expect(page.getByRole('button', { name: 'Cancel deletion request' })).toBeDisabled();
     await expect(page.getByText('Cancellation is unavailable after deletion begins.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Delete my data' })).toHaveCount(0);
+    await expect(portalAction(page, 'Delete my data')).toHaveCount(0);
     await expect(page.getByText('within 30 days')).toHaveCount(0);
     await expect(page.getByText('successfully deleted')).toHaveCount(0);
     await expect(page.getByText('party-bound-001')).toHaveCount(0);
@@ -385,7 +424,7 @@ test.describe('Consumer portal route shells', () => {
     await expect(page.getByRole('heading', { name: 'Delete my data' })).toBeVisible();
     await expect(page.getByRole('status').filter({ hasText: "Once it's done, it's permanent - we can't undo it." })).toContainText("Once it's done, it's permanent - we can't undo it.");
     await expect(page.getByRole('button', { name: 'Cancel deletion request' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Delete my data' })).toHaveCount(0);
+    await expect(portalAction(page, 'Delete my data')).toHaveCount(0);
     await expect(page.getByText('reversible')).toHaveCount(0);
     await expect(page.getByText('successfully deleted')).toHaveCount(0);
     await expect(page.getByText('party-bound-001')).toHaveCount(0);
@@ -413,7 +452,7 @@ test.describe('Consumer portal route shells', () => {
       };
     });
 
-    await page.getByRole('button', { name: 'Export my data' }).click();
+    await portalAction(page, 'Export my data').click();
     await expect(page.getByRole('status').filter({ hasText: 'Your JSON export is ready.' })).toContainText('Your JSON export is ready.');
     await expect.poll(async () => (await latestExportRequest(request))?.partyId ?? null).toBe('party-bound-001');
 

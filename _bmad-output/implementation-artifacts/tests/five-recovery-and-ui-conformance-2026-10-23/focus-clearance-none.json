@@ -1,0 +1,64 @@
+[
+  {
+    "testId": "parties-specimen-primary-action",
+    "focusVisible": true,
+    "paintVisible": true,
+    "clippedBy": [],
+    "outlineStyle": "solid",
+    "outlineWidth": "2px",
+    "outlineOffset": "4px",
+    "outlineColor": "rgb(0, 0, 0)",
+    "backgroundColor": "rgb(21, 115, 127)",
+    "color": "rgb(255, 255, 255)",
+    "expectedWidth": "2px",
+    "expectedOffset": "4px",
+    "expectedColor": "rgb(0, 0, 0)",
+    "expectedBackground": "rgb(255, 255, 255)",
+    "expectedText": "rgb(0, 0, 0)",
+    "surroundingPixel": [
+      255,
+      255,
+      255,
+      255
+    ],
+    "outlinePixel": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "outlineContrast": 21,
+    "backgroundImages": []
+  },
+  {
+    "testId": "parties-specimen-link",
+    "focusVisible": true,
+    "paintVisible": true,
+    "clippedBy": [],
+    "outlineStyle": "solid",
+    "outlineWidth": "2px",
+    "outlineOffset": "4px",
+    "outlineColor": "rgb(0, 0, 0)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "color": "rgb(24, 100, 110)",
+    "expectedWidth": "2px",
+    "expectedOffset": "4px",
+    "expectedColor": "rgb(0, 0, 0)",
+    "expectedBackground": "rgb(255, 255, 255)",
+    "expectedText": "rgb(0, 0, 0)",
+    "surroundingPixel": [
+      255,
+      255,
+      255,
+      255
+    ],
+    "outlinePixel": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "outlineContrast": 21,
+    "backgroundImages": []
+  }
+]

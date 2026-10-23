@@ -1,3 +1,4 @@
+import { expectAccordionFocusClearance } from '../helpers/accordion-focus.js';
 import { expect, test } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -117,6 +118,8 @@ test.describe('Parties UI accessibility specimen', () => {
     await page.keyboard.press('Enter');
     await expect(page.locator(':focus')).toHaveAttribute('id', 'fc-main-content');
     await page.keyboard.press('Tab');
+    await expect(page.getByRole('button', { name: 'Representative controls', exact: true })).toBeFocused();
+    await page.keyboard.press('Tab');
     await expect(page.getByTestId('parties-specimen-primary-action')).toBeFocused();
 
     await gotoSpecimen(page);
@@ -175,6 +178,69 @@ test.describe('Parties UI accessibility specimen', () => {
     for (const testId of ['parties-specimen-primary-action', 'parties-specimen-link']) {
       await tabUntilTestId(page, testId);
       await expect(page.locator(':focus')).toBeInViewport();
+    }
+  });
+
+  test('accordion focus check rejects suppressed actual focus paint', async ({ page }) => {
+    await gotoSpecimen(page);
+    const control = page.getByTestId('parties-specimen-primary-action');
+    await control.evaluate(element => {
+      const suppress = (node: Element) => {
+        if (node instanceof HTMLElement) {
+          node.style.setProperty('outline', 'none', 'important');
+          node.style.setProperty('box-shadow', 'none', 'important');
+          node.style.setProperty('border-color', 'transparent', 'important');
+        }
+        if (node.shadowRoot) {
+          const style = document.createElement('style');
+          style.textContent = '*:focus, *:focus-visible, *::before, *::after { outline: none !important; box-shadow: none !important; border-color: transparent !important; }';
+          node.shadowRoot.append(style);
+        }
+        for (const child of node.children) suppress(child);
+        if (node.shadowRoot) for (const child of node.shadowRoot.children) suppress(child);
+      };
+      suppress(element);
+    });
+    await expect(expectAccordionFocusClearance(control)).rejects.toThrow(/actual focused control must paint/);
+  });
+
+  test('accordion focus check rejects an intermediate clipping wrapper', async ({ page }) => {
+    await gotoSpecimen(page);
+    const control = page.getByTestId('parties-specimen-primary-action');
+    await control.evaluate(element => {
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'display: inline-block; overflow: hidden;';
+      element.replaceWith(wrapper);
+      wrapper.append(element);
+    });
+    await expect(expectAccordionFocusClearance(control)).rejects.toThrow(/clipping ancestor/);
+  });
+
+  test('disabled irreversible confirmation retains the Fluent disabled appearance', async ({ page }) => {
+    await gotoSpecimen(page);
+    const original = page.locator('.gdpr-destructive-button fluent-button');
+    await original.evaluate(element => {
+      const disabled = element.cloneNode(true) as HTMLElement;
+      disabled.id = 'disabled-irreversible-appearance-control';
+      disabled.setAttribute('appearance', 'primary');
+      disabled.setAttribute('disabled', '');
+      disabled.setAttribute('aria-disabled', 'true');
+      element.parentElement!.append(disabled);
+    });
+    const disabled = page.locator('#disabled-irreversible-appearance-control');
+    await expect(disabled).toBeDisabled();
+    const paint = () => disabled.evaluate(element => {
+      const style = getComputedStyle(element);
+      return { background: style.backgroundColor, color: style.color, border: style.borderColor };
+    });
+    for (const state of ['normal', 'hover', 'active']) {
+      if (state !== 'normal') await disabled.hover({ force: true });
+      if (state === 'active') await page.mouse.down();
+      const expected = await paint();
+      await disabled.evaluate(element => element.classList.add('gdpr-destructive-button__button--danger'));
+      expect(await paint(), `disabled ${state} appearance must remain component-owned`).toEqual(expected);
+      await disabled.evaluate(element => element.classList.remove('gdpr-destructive-button__button--danger'));
+      if (state === 'active') await page.mouse.up();
     }
   });
 
@@ -500,8 +566,12 @@ const collectVisualBaseline = async (page: import('@playwright/test').Page): Pro
     main: await page.locator('#fc-main-content').evaluate((element) => element.getAttribute('aria-label') ?? ''),
     navigation: await page.locator("[data-testid='fc-navigation-rail']:visible").evaluate((element) => element.getAttribute('aria-label') ?? ''),
   },
-  specimenSections: await page.locator('.parties-accessibility-specimen h1, .parties-accessibility-specimen h2').evaluateAll((headings) =>
-    headings.map((heading) => heading.textContent?.trim() ?? '')),
+  specimenSections: await page.locator('.parties-accessibility-specimen').getByRole('heading').evaluateAll((headings) =>
+    headings.map((heading) => {
+      const slot = heading.querySelector<HTMLSlotElement>('slot[name="heading"]');
+      return (slot ? slot.assignedNodes({ flatten: true }).map(node => node.textContent).join('')
+        : heading.textContent)?.trim() ?? '';
+    })),
   representativeControls: {
     primaryButtonVisible: await page.getByTestId('parties-specimen-primary-action').isVisible(),
     normalLinkVisible: await page.getByTestId('parties-specimen-link').isVisible(),

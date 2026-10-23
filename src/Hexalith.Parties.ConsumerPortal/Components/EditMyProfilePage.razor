@@ -12,10 +12,12 @@
 @inject IConsumerProfileEditClient ProfileEditClient
 @inject NavigationManager NavigationManager
 
+<PageTitle>@ConsumerPortalLabels.EditProfileTitle</PageTitle>
+
 <section class="hx-parties-profile hx-parties-edit-profile" aria-labelledby="@_titleId">
     <header class="hx-parties-profile__header">
-        <p class="hx-parties-profile__eyebrow">@ConsumerPortalLabels.AreaLabel</p>
-        <h1 id="@_titleId">@ConsumerPortalLabels.EditProfileTitle</h1>
+        <p class="hx-parties-profile__eyebrow"><FluentText Size="TextSize.Size200" Weight="TextWeight.Semibold">@ConsumerPortalLabels.AreaLabel</FluentText></p>
+        <FluentText As="TextTag.H1" Size="TextSize.Size800" Weight="TextWeight.Semibold" id="@_titleId">@ConsumerPortalLabels.EditProfileTitle</FluentText>
         <p class="hx-parties-profile__summary">@ConsumerPortalLabels.EditProfileSummary</p>
         @if (!string.IsNullOrWhiteSpace(_saveStatusMessage))
         {
@@ -36,7 +38,7 @@
     @if (_isLoading)
     {
         <section class="hx-parties-profile__section hx-parties-profile__skeleton" aria-labelledby="@_loadingId" aria-busy="true">
-            <h2 id="@_loadingId">@ConsumerPortalLabels.EditProfileLoadingHeading</h2>
+            <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" id="@_loadingId">@ConsumerPortalLabels.EditProfileLoadingHeading</FluentText>
             <span class="hx-parties-profile__loading-line hx-parties-profile__loading-line--long" aria-hidden="true"></span>
             <span class="hx-parties-profile__loading-line hx-parties-profile__loading-line--short" aria-hidden="true"></span>
         </section>
@@ -44,7 +46,7 @@
     else if (_loadFailed)
     {
         <section class="hx-parties-profile__section hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
-            <h2 id="@_failureId">@ConsumerPortalLabels.EditProfileFailureTitle</h2>
+            <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" id="@_failureId">@ConsumerPortalLabels.EditProfileFailureTitle</FluentText>
             <p>@ConsumerPortalLabels.EditProfileFailureMessage</p>
             <FluentButton role="button" Class="hx-parties-profile__retry"
                           Appearance="ButtonAppearance.Outline"
@@ -56,76 +58,80 @@
     else if (_profile is { IsErased: true })
     {
         <section class="hx-parties-profile__section hx-parties-profile__notice" aria-labelledby="@_deletedId">
-            <h2 id="@_deletedId">@ConsumerPortalLabels.EditProfileDeletedTitle</h2>
+            <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" id="@_deletedId">@ConsumerPortalLabels.EditProfileDeletedTitle</FluentText>
             <p>@ConsumerPortalLabels.EditProfileDeletedMessage</p>
         </section>
     }
     else if (_profile is { } profile && _editContext is not null)
     {
-        <div class="hx-parties-profile__content">
-            <section class="hx-parties-profile__section" aria-labelledby="@_detailsId">
-                <h2 id="@_detailsId">@ConsumerPortalLabels.EditProfileDetailsTitle</h2>
+        <FluentAccordion ExpandMode="AccordionExpandMode.Multi" HeadingLevel="2" Class="hx-parties-profile__content">
+            <FluentAccordionItem Header="@ConsumerPortalLabels.EditProfileDetailsTitle" Id="@_detailsId" Expanded="true" Class="hx-parties-profile__section">
                 <dl class="hx-parties-profile__field-list">
                     <ProfileField Label="@ConsumerPortalLabels.MyProfileDisplayName" Value="@profile.DisplayName" />
                     <ProfileField Label="@ConsumerPortalLabels.MyProfilePartyType" Value="@ConsumerPortalLabels.PartyTypeLabel(profile.Type)" />
                 </dl>
-            </section>
+            </FluentAccordionItem>
 
-            <EditForm EditContext="_editContext" FormName="@_formName" OnSubmit="SubmitAsync" class="hx-parties-edit-profile__form">
-                <fieldset class="hx-parties-profile__section hx-parties-edit-profile__fieldset" disabled="@_isSaving">
-                    <legend>@ConsumerPortalLabels.EditProfileEditableFieldsTitle</legend>
+            <FluentAccordionItem Header="@ConsumerPortalLabels.EditProfileEditableFieldsTitle" Expanded="true">
+                <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Stretch" Width="100%" VerticalGap="var(--spacingVerticalS)" Style="padding: var(--spacingVerticalS) var(--spacingHorizontalS); min-width: 0; box-sizing: border-box;">
+                    <div>
+                        <EditForm EditContext="_editContext" FormName="@_formName" OnSubmit="SubmitAsync" class="hx-parties-edit-profile__form">
+                            <fieldset class="hx-parties-profile__section hx-parties-edit-profile__fieldset" disabled="@_isSaving">
+                                <legend>@ConsumerPortalLabels.EditProfileEditableFieldsTitle</legend>
 
-                    @if (!string.IsNullOrWhiteSpace(_formAlert))
-                    {
-                        <div id="@_alertId" class="hx-parties-edit-profile__alert" role="alert" tabindex="-1" @ref="_alertRef">
-                            @_formAlert
-                        </div>
-                    }
+                                @if (!string.IsNullOrWhiteSpace(_formAlert))
+                                {
+                                    <div id="@_alertId" class="hx-parties-edit-profile__alert" role="alert" tabindex="-1" @ref="_alertRef">
+                                        @_formAlert
+                                    </div>
+                                }
 
-                    @if (profile.Type == PartyType.Person)
-                    {
-                        @TextField(nameof(EditProfileModel.PersonPrefix), ConsumerPortalLabels.MyProfilePrefix, _model.PersonPrefix, OnPersonPrefixChanged)
-                        @TextField(nameof(EditProfileModel.PersonFirstName), ConsumerPortalLabels.MyProfileFirstName, _model.PersonFirstName, OnPersonFirstNameChanged)
-                        @TextField(nameof(EditProfileModel.PersonLastName), ConsumerPortalLabels.MyProfileLastName, _model.PersonLastName, OnPersonLastNameChanged)
-                        @TextField(nameof(EditProfileModel.PersonDateOfBirth), ConsumerPortalLabels.MyProfileDateOfBirth, _model.PersonDateOfBirth, OnPersonDateOfBirthChanged)
-                        @TextField(nameof(EditProfileModel.PersonSuffix), ConsumerPortalLabels.MyProfileSuffix, _model.PersonSuffix, OnPersonSuffixChanged)
-                    }
-                    else if (profile.Type == PartyType.Organization)
-                    {
-                        @TextField(nameof(EditProfileModel.OrganizationLegalName), ConsumerPortalLabels.MyProfileLegalName, _model.OrganizationLegalName, OnOrganizationLegalNameChanged)
-                        @TextField(nameof(EditProfileModel.OrganizationTradingName), ConsumerPortalLabels.MyProfileTradingName, _model.OrganizationTradingName, OnOrganizationTradingNameChanged)
-                        @TextField(nameof(EditProfileModel.OrganizationLegalForm), ConsumerPortalLabels.MyProfileLegalForm, _model.OrganizationLegalForm, OnOrganizationLegalFormChanged)
-                        @TextField(nameof(EditProfileModel.OrganizationRegistrationNumber), ConsumerPortalLabels.MyProfileRegistrationNumber, _model.OrganizationRegistrationNumber, OnOrganizationRegistrationNumberChanged)
-                        <div class="hx-parties-edit-profile__field">
-                            <FluentCheckbox Value="@_model.OrganizationIsNaturalPerson"
-                                            ValueChanged="OnOrganizationIsNaturalPersonChanged"
-                                            Label="@ConsumerPortalLabels.MyProfileNaturalPerson"
-                                            AdditionalAttributes="FieldAttributes(nameof(EditProfileModel.OrganizationIsNaturalPerson))" />
-                            <p id="@HintId(nameof(EditProfileModel.OrganizationIsNaturalPerson))" class="hx-parties-edit-profile__hint">
-                                @ConsumerPortalLabels.EditProfileFieldHint
-                            </p>
-                            @FieldError(nameof(EditProfileModel.OrganizationIsNaturalPerson))
-                        </div>
-                    }
+                                @if (profile.Type == PartyType.Person)
+                                {
+                                    @TextField(nameof(EditProfileModel.PersonPrefix), ConsumerPortalLabels.MyProfilePrefix, _model.PersonPrefix, OnPersonPrefixChanged)
+                                    @TextField(nameof(EditProfileModel.PersonFirstName), ConsumerPortalLabels.MyProfileFirstName, _model.PersonFirstName, OnPersonFirstNameChanged)
+                                    @TextField(nameof(EditProfileModel.PersonLastName), ConsumerPortalLabels.MyProfileLastName, _model.PersonLastName, OnPersonLastNameChanged)
+                                    @TextField(nameof(EditProfileModel.PersonDateOfBirth), ConsumerPortalLabels.MyProfileDateOfBirth, _model.PersonDateOfBirth, OnPersonDateOfBirthChanged)
+                                    @TextField(nameof(EditProfileModel.PersonSuffix), ConsumerPortalLabels.MyProfileSuffix, _model.PersonSuffix, OnPersonSuffixChanged)
+                                }
+                                else if (profile.Type == PartyType.Organization)
+                                {
+                                    @TextField(nameof(EditProfileModel.OrganizationLegalName), ConsumerPortalLabels.MyProfileLegalName, _model.OrganizationLegalName, OnOrganizationLegalNameChanged)
+                                    @TextField(nameof(EditProfileModel.OrganizationTradingName), ConsumerPortalLabels.MyProfileTradingName, _model.OrganizationTradingName, OnOrganizationTradingNameChanged)
+                                    @TextField(nameof(EditProfileModel.OrganizationLegalForm), ConsumerPortalLabels.MyProfileLegalForm, _model.OrganizationLegalForm, OnOrganizationLegalFormChanged)
+                                    @TextField(nameof(EditProfileModel.OrganizationRegistrationNumber), ConsumerPortalLabels.MyProfileRegistrationNumber, _model.OrganizationRegistrationNumber, OnOrganizationRegistrationNumberChanged)
+                                    <div class="hx-parties-edit-profile__field">
+                                        <FluentCheckbox Value="@_model.OrganizationIsNaturalPerson"
+                                                        ValueChanged="OnOrganizationIsNaturalPersonChanged"
+                                                        Label="@ConsumerPortalLabels.MyProfileNaturalPerson"
+                                                        AdditionalAttributes="FieldAttributes(nameof(EditProfileModel.OrganizationIsNaturalPerson))" />
+                                        <p id="@HintId(nameof(EditProfileModel.OrganizationIsNaturalPerson))" class="hx-parties-edit-profile__hint">
+                                            @ConsumerPortalLabels.EditProfileFieldHint
+                                        </p>
+                                        @FieldError(nameof(EditProfileModel.OrganizationIsNaturalPerson))
+                                    </div>
+                                }
 
-                    <div class="hx-parties-edit-profile__actions">
-                        <FluentButton aria-disabled="@(_isSaving ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary"
-                                      Type="ButtonType.Submit"
-                                      Disabled="@_isSaving">
-                            @ConsumerPortalLabels.EditProfileSave
-                        </FluentButton>
-                        <FluentButton aria-disabled="@(_isSaving ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                                      Type="ButtonType.Button"
-                                      Disabled="@_isSaving"
-                                      OnClick="CancelAsync">
-                            @ConsumerPortalLabels.EditProfileCancel
-                        </FluentButton>
+                                <div class="hx-parties-edit-profile__actions">
+                                    <FluentButton aria-disabled="@(_isSaving ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary"
+                                                  Type="ButtonType.Submit"
+                                                  Disabled="@_isSaving">
+                                        @ConsumerPortalLabels.EditProfileSave
+                                    </FluentButton>
+                                    <FluentButton aria-disabled="@(_isSaving ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                                                  Type="ButtonType.Button"
+                                                  Disabled="@_isSaving"
+                                                  OnClick="CancelAsync">
+                                        @ConsumerPortalLabels.EditProfileCancel
+                                    </FluentButton>
+                                </div>
+                            </fieldset>
+                        </EditForm>
                     </div>
-                </fieldset>
-            </EditForm>
+                </FluentStack>
+            </FluentAccordionItem>
 
-            <section class="hx-parties-profile__section" aria-labelledby="@_contactId">
-                <h2 id="@_contactId">@ConsumerPortalLabels.EditProfileReadOnlyContactTitle</h2>
+            <FluentAccordionItem Header="@ConsumerPortalLabels.EditProfileReadOnlyContactTitle" Id="@_contactId" Expanded="true" Class="hx-parties-profile__section">
                 <p class="hx-parties-profile__empty">@ConsumerPortalLabels.EditProfileReadOnlyHelp</p>
                 @if (profile.ContactChannels.Count == 0)
                 {
@@ -141,16 +147,15 @@
                                 <span>@channel.Value</span>
                                 @if (channel.IsPreferred)
                                 {
-                                    <span class="hx-parties-profile__label">@ConsumerPortalLabels.MyProfileContactPreferred</span>
+                                    <span class="hx-parties-profile__label"><FluentText Size="TextSize.Size200" Weight="TextWeight.Semibold">@ConsumerPortalLabels.MyProfileContactPreferred</FluentText></span>
                                 }
                             </li>
                         }
                     </ul>
                 }
-            </section>
+            </FluentAccordionItem>
 
-            <section class="hx-parties-profile__section" aria-labelledby="@_identifierId">
-                <h2 id="@_identifierId">@ConsumerPortalLabels.EditProfileReadOnlyIdentifierTitle</h2>
+            <FluentAccordionItem Header="@ConsumerPortalLabels.EditProfileReadOnlyIdentifierTitle" Id="@_identifierId" Expanded="true" Class="hx-parties-profile__section">
                 <p class="hx-parties-profile__empty">@ConsumerPortalLabels.EditProfileReadOnlyHelp</p>
                 @if (profile.Identifiers.Count == 0)
                 {
@@ -166,15 +171,15 @@
                                 <span>@identifier.Value</span>
                                 @if (!string.IsNullOrWhiteSpace(identifier.Jurisdiction))
                                 {
-                                    <span class="hx-parties-profile__label">@ConsumerPortalLabels.MyProfileIdentifierJurisdiction</span>
+                                    <span class="hx-parties-profile__label"><FluentText Size="TextSize.Size200" Weight="TextWeight.Semibold">@ConsumerPortalLabels.MyProfileIdentifierJurisdiction</FluentText></span>
                                     <span>@identifier.Jurisdiction</span>
                                 }
                             </li>
                         }
                     </ul>
                 }
-            </section>
-        </div>
+            </FluentAccordionItem>
+        </FluentAccordion>
     }
 </section>
 

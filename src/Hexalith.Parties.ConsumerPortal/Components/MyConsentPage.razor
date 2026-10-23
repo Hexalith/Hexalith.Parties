@@ -8,10 +8,12 @@
 
 @inject IConsumerConsentClient ConsentClient
 
+<PageTitle>@ConsumerPortalLabels.ConsentTitle</PageTitle>
+
 <section class="hx-parties-profile hx-parties-consent" aria-labelledby="@_titleId">
     <header class="hx-parties-profile__header">
-        <p class="hx-parties-profile__eyebrow">@ConsumerPortalLabels.AreaLabel</p>
-        <h1 id="@_titleId">@ConsumerPortalLabels.ConsentTitle</h1>
+        <p class="hx-parties-profile__eyebrow"><FluentText Size="TextSize.Size200" Weight="TextWeight.Semibold">@ConsumerPortalLabels.AreaLabel</FluentText></p>
+        <FluentText As="TextTag.H1" Size="TextSize.Size800" Weight="TextWeight.Semibold" id="@_titleId">@ConsumerPortalLabels.ConsentTitle</FluentText>
         <p class="hx-parties-profile__summary">@ConsumerPortalLabels.ConsentSummary</p>
         @if (!string.IsNullOrWhiteSpace(_statusMessage))
         {
@@ -32,7 +34,7 @@
     @if (_isLoading)
     {
         <section class="hx-parties-profile__section hx-parties-profile__skeleton" aria-labelledby="@_loadingId" aria-busy="true">
-            <h2 id="@_loadingId">@ConsumerPortalLabels.ConsentLoadingHeading</h2>
+            <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" id="@_loadingId">@ConsumerPortalLabels.ConsentLoadingHeading</FluentText>
             <span class="hx-parties-profile__loading-line hx-parties-profile__loading-line--long" aria-hidden="true"></span>
             <span class="hx-parties-profile__loading-line hx-parties-profile__loading-line--short" aria-hidden="true"></span>
         </section>
@@ -40,7 +42,7 @@
     else if (_loadFailed)
     {
         <section class="hx-parties-profile__section hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
-            <h2 id="@_failureId">@ConsumerPortalLabels.ConsentFailureTitle</h2>
+            <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" id="@_failureId">@ConsumerPortalLabels.ConsentFailureTitle</FluentText>
             <p>@ConsumerPortalLabels.ConsentFailureMessage</p>
             <FluentButton role="button" Class="hx-parties-profile__retry"
                           Appearance="ButtonAppearance.Outline"
@@ -52,68 +54,74 @@
     else if (_overview is { IsErased: true })
     {
         <section class="hx-parties-profile__section hx-parties-profile__notice" aria-labelledby="@_deletedId">
-            <h2 id="@_deletedId">@ConsumerPortalLabels.ConsentDeletedTitle</h2>
+            <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" id="@_deletedId">@ConsumerPortalLabels.ConsentDeletedTitle</FluentText>
             <p>@ConsumerPortalLabels.ConsentDeletedMessage</p>
         </section>
     }
     else if (_overview is not null)
     {
-        <div class="hx-parties-profile__content">
-            <section class="hx-parties-profile__section hx-parties-consent__section" aria-labelledby="@_controlledId">
-                <h2 id="@_controlledId">@ConsumerPortalLabels.ConsentControlledTitle</h2>
-                <ul class="hx-parties-consent__list">
-                    @foreach (ConsentToggleState row in _toggles)
-                    {
-                        <li class="hx-parties-consent__choice">
-                            <div class="hx-parties-consent__switch-row">
-                                <FluentSwitch Label="@row.Purpose.Label"
-                                              Value="@row.CurrentValue"
-                                              ValueChanged="@(value => ToggleConsentAsync(row.Purpose.Key, value))"
-                                              Disabled="@row.IsDisabled"
-                                              AdditionalAttributes="@SwitchAttributes(row)" />
-                            </div>
-                            <p id="@PurposeId(row.Purpose.Key)" class="hx-parties-consent__description">@row.Purpose.Description</p>
-                            <p id="@BasisId(row.Purpose.Key)" class="hx-parties-consent__basis">@row.Purpose.Basis</p>
-                            @if (row.ChannelId is null)
+        <FluentAccordion ExpandMode="AccordionExpandMode.Multi" HeadingLevel="2" Class="hx-parties-profile__content">
+            <FluentAccordionItem Header="@ConsumerPortalLabels.ConsentControlledTitle" Id="@_controlledId" Expanded="true" Class="hx-parties-profile__section hx-parties-consent__section">
+                <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Stretch" Width="100%" VerticalGap="var(--spacingVerticalS)" Style="padding: var(--spacingVerticalS) var(--spacingHorizontalS); min-width: 0; box-sizing: border-box;">
+                    <div>
+                        <ul class="hx-parties-consent__list">
+                            @foreach (ConsentToggleState row in _toggles)
                             {
-                                <p class="hx-parties-consent__basis">@ConsumerPortalLabels.ConsentNoChannel</p>
+                                <li class="hx-parties-consent__choice">
+                                    <div class="hx-parties-consent__switch-row">
+                                        <FluentSwitch Label="@row.Purpose.Label"
+                                                      Value="@row.CurrentValue"
+                                                      ValueChanged="@(value => ToggleConsentAsync(row.Purpose.Key, value))"
+                                                      Disabled="@row.IsDisabled"
+                                                      AdditionalAttributes="@SwitchAttributes(row)" />
+                                    </div>
+                                    <p id="@PurposeId(row.Purpose.Key)" class="hx-parties-consent__description">@row.Purpose.Description</p>
+                                    <p id="@BasisId(row.Purpose.Key)" class="hx-parties-consent__basis">@row.Purpose.Basis</p>
+                                    @if (row.ChannelId is null)
+                                    {
+                                        <p class="hx-parties-consent__basis">@ConsumerPortalLabels.ConsentNoChannel</p>
+                                    }
+                                    @if (row.IsPendingConfirmation)
+                                    {
+                                        <p class="hx-parties-consent__basis">@ConsumerPortalLabels.ConsentPendingConfirmation</p>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(row.Alert))
+                                    {
+                                        <p class="hx-parties-consent__alert" role="alert">@row.Alert</p>
+                                    }
+                                </li>
                             }
-                            @if (row.IsPendingConfirmation)
-                            {
-                                <p class="hx-parties-consent__basis">@ConsumerPortalLabels.ConsentPendingConfirmation</p>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(row.Alert))
-                            {
-                                <p class="hx-parties-consent__alert" role="alert">@row.Alert</p>
-                            }
-                        </li>
-                    }
-                </ul>
-            </section>
+                        </ul>
+                    </div>
+                </FluentStack>
+            </FluentAccordionItem>
 
-            <section class="hx-parties-profile__section hx-parties-consent__section" aria-labelledby="@_keptId">
-                <h2 id="@_keptId">@ConsumerPortalLabels.ConsentKeptTitle</h2>
-                <ul class="hx-parties-consent__list">
-                    @foreach (ReadOnlyBasisRow row in ReadOnlyRows)
-                    {
-                        <li class="hx-parties-consent__readonly">
-                            <div>
-                                <h3>@row.Title</h3>
-                                <p class="hx-parties-consent__description">@row.Description</p>
-                                <p class="hx-parties-consent__basis">@row.Basis</p>
-                            </div>
-                            @if (row.ShowObjectAction)
+            <FluentAccordionItem Header="@ConsumerPortalLabels.ConsentKeptTitle" Id="@_keptId" Expanded="true" Class="hx-parties-profile__section hx-parties-consent__section">
+                <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Stretch" Width="100%" VerticalGap="var(--spacingVerticalS)" Style="padding: var(--spacingVerticalS) var(--spacingHorizontalS); min-width: 0; box-sizing: border-box;">
+                    <div>
+                        <ul class="hx-parties-consent__list">
+                            @foreach (ReadOnlyBasisRow row in ReadOnlyRows)
                             {
-                                <FluentButton aria-disabled="true" role="button" Appearance="ButtonAppearance.Outline"
-                                              Disabled="true">
-                                    @ConsumerPortalLabels.ConsentObjectAction
-                                </FluentButton>
+                                <li class="hx-parties-consent__readonly">
+                                    <div>
+                                        <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold">@row.Title</FluentText>
+                                        <p class="hx-parties-consent__description">@row.Description</p>
+                                        <p class="hx-parties-consent__basis">@row.Basis</p>
+                                    </div>
+                                    @if (row.ShowObjectAction)
+                                    {
+                                        <FluentButton aria-disabled="true" role="button" Appearance="ButtonAppearance.Outline"
+                                                      Disabled="true">
+                                            @ConsumerPortalLabels.ConsentObjectAction
+                                        </FluentButton>
+                                    }
+                                </li>
                             }
-                        </li>
-                    }
-                </ul>
-            </section>
-        </div>
+                        </ul>
+                    </div>
+                </FluentStack>
+            </FluentAccordionItem>
+        </FluentAccordion>
     }
 </section>
 

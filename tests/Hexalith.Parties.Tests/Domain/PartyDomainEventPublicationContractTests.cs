@@ -173,6 +173,32 @@ public sealed class PartyDomainEventPublicationContractTests
         (handlerPatterns + subscribing).ShouldContain("Restriction");
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task FailedOrCanceledErasureAppendRetainsCommittedEventsUntilRetryAsync(bool canceled)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        var identity = new AggregateIdentity("tenant-a", "party", "party-append");
+        CommandEnvelope envelope = CreateEnvelope(identity.TenantId, identity.AggregateId, "{}"u8.ToArray());
+        var persister = new FakeEventPersister();
+        var destroyed = new PartyEncryptionKeyDeleted { PartyId = identity.AggregateId, TenantId = identity.TenantId, DeletedAt = DateTimeOffset.UnixEpoch };
+        await persister.PersistEventsAsync(identity, "Party", envelope, DomainResult.Success([destroyed]), "v1", token);
+        DomainResult terminal = DomainResult.Success([
+            new ErasureVerified { PartyId = identity.AggregateId, TenantId = identity.TenantId, VerifiedAt = DateTimeOffset.UnixEpoch.AddMinutes(1), VerificationReportId = "report" },
+            new PartyErased { PartyId = identity.AggregateId, TenantId = identity.TenantId, ErasedAt = DateTimeOffset.UnixEpoch.AddMinutes(1) },
+        ]);
+        persister.SetupFailure(canceled ? new OperationCanceledException(token) : new InvalidOperationException("Append rejected."));
+        await Should.ThrowAsync<Exception>(() => persister.PersistEventsAsync(identity, "Party", envelope, terminal, "v1", token));
+        persister.PersistedEvents.ShouldHaveSingleItem().EventTypeName.ShouldBe(typeof(PartyEncryptionKeyDeleted).FullName);
+
+        EventPersistResult retried = await persister.PersistEventsAsync(identity, "Party", envelope, terminal, "v1", token);
+        retried.PersistedEnvelopes.Select(item => item.SequenceNumber).ShouldBe([2, 3]);
+        persister.PersistedEvents.Select(item => item.EventTypeName).ShouldBe([
+            typeof(PartyEncryptionKeyDeleted).FullName, typeof(ErasureVerified).FullName, typeof(PartyErased).FullName,
+        ]);
+    }
+
     [Fact]
     public async Task PartyErasedPublicationCarriesPrivacySafeStatusAndEnvelopeMetadataAsync()
     {

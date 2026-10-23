@@ -110,6 +110,7 @@ public sealed class PartySdkReadModelEraser(
             Detail = PartyDetailProjectionHandler.ApplyErasure(partyId, current?.Detail) is { } redacted
                 ? redacted with { ErasedAt = effectiveAt, LastModifiedAt = effectiveAt }
                 : null,
+            ErasureLifecycle = current?.ErasureLifecycle,
             LastSequenceNumber = current?.LastSequenceNumber ?? long.MinValue,
             ErasureSequenceNumber = retainedSequence,
             ErasedAt = effectiveAt,
@@ -162,6 +163,9 @@ public sealed class PartySdkReadModelEraser(
             current?.LastIndexedEvents ?? new Dictionary<string, PartyIndexEventMetadata>(StringComparer.Ordinal),
             StringComparer.Ordinal);
         _ = lastIndexedEvents.Remove(partyId);
+        var contentHashes = new Dictionary<string, string>(current?.SearchContentHashes
+            ?? new Dictionary<string, string>(StringComparer.Ordinal), StringComparer.Ordinal);
+        _ = contentHashes.Remove(partyId);
         var sequences = new Dictionary<string, long>(
             current?.LastSequenceNumbers ?? new Dictionary<string, long>(StringComparer.Ordinal),
             StringComparer.Ordinal);
@@ -177,6 +181,7 @@ public sealed class PartySdkReadModelEraser(
         {
             Entries = entries,
             LastIndexedEvents = lastIndexedEvents,
+            SearchContentHashes = contentHashes.Count == 0 ? null : contentHashes,
             LastSequenceNumbers = sequences,
             ErasureSequenceNumbers = erasureSequences,
             ProjectedAt = alreadyErased ? current?.ProjectedAt : Max(current?.ProjectedAt, requestedAt),

@@ -1,0 +1,198 @@
+{
+  "stage": "post-review final verification",
+  "baseline_commit": "08f43497b3f916efa0cdf9b110258f763d894bd9",
+  "suites": [
+    {
+      "name": "Hexalith.Parties.AdminPortal.Tests",
+      "passed": 323,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.AdminPortal.Tests.xml"
+    },
+    {
+      "name": "Hexalith.Parties.ConsumerPortal.Tests",
+      "passed": 82,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.ConsumerPortal.Tests.xml"
+    },
+    {
+      "name": "Hexalith.Parties.Contracts.Tests",
+      "passed": 219,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.Contracts.Tests.xml"
+    },
+    {
+      "name": "Hexalith.Parties.Picker.Tests",
+      "passed": 171,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.Picker.Tests.xml"
+    },
+    {
+      "name": "Hexalith.Parties.Projections.Tests",
+      "passed": 458,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.Projections.Tests.xml"
+    },
+    {
+      "name": "Hexalith.Parties.Tests",
+      "passed": 2624,
+      "failed": 0,
+      "skipped": 3,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.Tests.xml"
+    },
+    {
+      "name": "Hexalith.Parties.UI.Tests",
+      "passed": 413,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0,
+      "errors": 0,
+      "raw_result": "/tmp/parties-five-final-jincr6s0/post-review-Hexalith.Parties.UI.Tests.xml"
+    }
+  ],
+  "package_passed": 4290,
+  "package_skipped": 3,
+  "browser": {
+    "total": 68,
+    "passed": 66,
+    "skipped": 2,
+    "failed": 0,
+    "retries": 0,
+    "evidence": "post-review-browser.json"
+  },
+  "unqualified_skips": [
+    {
+      "suite": "Service",
+      "name": "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+      "result": "Skip"
+    },
+    {
+      "suite": "Service",
+      "name": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkRejectsTwoClientStaleEtagsAndCompetingAbsentKeyCreation",
+      "result": "Skip"
+    },
+    {
+      "suite": "Service",
+      "name": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkPersistencePreservesLegacyListsEtagsProbeDeletionAndCanonicalReceipts",
+      "result": "Skip"
+    },
+    {
+      "suite": "Browser",
+      "name": "Parties UI accessibility specimen \u203a route-heading announcement leaves skip links forward reachable and focuses their targets",
+      "class": "parties-accessibility.spec.ts",
+      "result": "Skip"
+    },
+    {
+      "suite": "Browser",
+      "name": "Parties UI accessibility specimen \u203a client-side route focus restores forward skip access",
+      "class": "parties-accessibility.spec.ts",
+      "result": "Skip"
+    }
+  ],
+  "consumer_root_name_guard": {
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "evidence": "consumer-region-label-targets.json; consumer-region-name-guard.txt",
+    "note": "Guard added to the four existing route cases after full run; focused rerun passes; no production change"
+  },
+  "source_debug": {
+    "qualified": false,
+    "result": "Corrected repository-relative evidence path writes successfully. Pinned source tool exits 3 at HXR020 Platform composition compile gate; exact owned down succeeds and removes failed workspace/run record. No source mapping survives.",
+    "evidence": "source-qualification.json"
+  },
+  "dependencies_and_gitlinks_unchanged": true,
+  "source_file_sha256": {
+    "src/Hexalith.Parties.AdminPortal/Components/ConsentManagementPanel.razor": "0f61d6d6cae3f09e1ee657e372115f9114362a85f306aabedd259b70ba0b0ea9",
+    "src/Hexalith.Parties.AdminPortal/Components/CreateEditPartyPage.razor.css": "78b3ab84b6ab9361a669979ac1a69a247a7e2626b4f57fdcafcffac52f7f1507",
+    "src/Hexalith.Parties.AdminPortal/Components/DpoOperationalSummaryPanel.razor": "90071ce5fd8523d5fc4bf3c07bb6c0041dfefc44f1bb888ab704a30cfdba988f",
+    "src/Hexalith.Parties.AdminPortal/Components/ErasureStatusPanel.razor": "cadc21e5a4689b9797b6248e49538aff67f4c4aba63b79b1d6f837aa4d626ad7",
+    "src/Hexalith.Parties.AdminPortal/Components/ErasureVerificationReportPanel.razor.css": "801a52843b64fddc31db671c56a407674daaa7399dc7bb3ef057c0793d59c93d",
+    "src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor": "c881c5a6f0481819b9a6a95a4b6312f3d284b4f56ae237503b8fbb5ffc26d23b",
+    "src/Hexalith.Parties.AdminPortal/Components/PartiesAdminPortal.razor.css": "42319fa3a52b27ab9add41671dd0e41aa3399ae13c75fa3d88b0409708ac339e",
+    "src/Hexalith.Parties.AdminPortal/Components/PartyGdprOperationsPanel.razor": "e47f3507851f897758c2d14b275ceccfe42ca4be4792573a17a02ab7965a25ab",
+    "src/Hexalith.Parties.AdminPortal/Components/PartyGdprOperationsPanel.razor.css": "8cb9f8400637252a408b190de17fea949c583569f3b077136ad3e6e22237f02c",
+    "src/Hexalith.Parties.AdminPortal/Components/PortabilityExportPanel.razor": "5228d894daf96337d7d148cf12060286fc4b0172da70d03bf71691b1bfed40b8",
+    "src/Hexalith.Parties.AdminPortal/Components/ProcessingRecordsPanel.razor": "0760c6929f8ef71a699d9dbaf37308270b3c35c866c09416b1b73c0c0bfcd4a2",
+    "src/Hexalith.Parties.AdminPortal/Components/RestrictionActionsPanel.razor": "4a5f661091b09257d86c32fc0e186be8698fb3bfeec2218997643fb2d82a0172",
+    "src/Hexalith.Parties.ConsumerPortal/Components/ConsumerRouteShell.razor": "47fb4832aeda614e81957de31a0a9bc1e41862f7f230b7abe30c7750a76433a6",
+    "src/Hexalith.Parties.ConsumerPortal/Components/ConsumerRouteShell.razor.css": "754119791f708a0b3cc4d85d4f01bf116e78b6875d84eda1d535f2e45a650930",
+    "src/Hexalith.Parties.ConsumerPortal/Components/EditMyProfilePage.razor": "66aba731018fa29d56c2285f379718ed17e278e223771651ae60232f3fc3fa9d",
+    "src/Hexalith.Parties.ConsumerPortal/Components/EditMyProfilePage.razor.css": "6c36a3e043c63f836936a836a60d313f8733eb146d1bcc65ee663ce53307cc92",
+    "src/Hexalith.Parties.ConsumerPortal/Components/MyConsentPage.razor": "7344b91e0d676139f354922e261c9b79f4c561a22449ded24bc6d4173c5effbf",
+    "src/Hexalith.Parties.ConsumerPortal/Components/MyConsentPage.razor.css": "b868b3b045beb239a2f67ba6995563f7334e0e690b11dc8e4da9e8ead52410d4",
+    "src/Hexalith.Parties.ConsumerPortal/Components/MyPrivacyPage.razor": "c92aa8fbf18fb00bc4225b5eff55587c554702d09b3bb7f4402bfdf51ae7f5e2",
+    "src/Hexalith.Parties.ConsumerPortal/Components/MyPrivacyPage.razor.css": "12f05452e6c410a7f523f4f8d6a76c09790a780338993dc902190f64cf21ebb9",
+    "src/Hexalith.Parties.ConsumerPortal/Components/MyProfilePage.razor": "55b5e7b80f1585008be30394c353427881d577e31ab1ef445f2658c5c258328a",
+    "src/Hexalith.Parties.ConsumerPortal/Components/MyProfilePage.razor.css": "3bc14ccc34ee4d41b940ff9a184fd3e8648ddec1145e52170062d4b9437c2e1e",
+    "src/Hexalith.Parties.ConsumerPortal/_Imports.razor": "ce3a0346cb02c16f9f760623455dcbcaf31be77ae239ac63db0551a549d8c8cf",
+    "src/Hexalith.Parties.Picker/Components/PartyPicker.razor.css": "c66fd75863dd51d211d5fba5d70abc22b98fd21dad4f1b8fc03e11afcf157b92",
+    "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs": "5eceaa162f8ce4baa48e39ef0b64a414f1966cdf52d728cd32c145444acaadea",
+    "src/Hexalith.Parties.Projections/Handlers/PartyIndexSdkProjectionHandler.cs": "8013bdd9ee5a94dd69666c7642bbda846b32fa43211359829dcaa379100aee9f",
+    "src/Hexalith.Parties.Projections/Models/PartyDetailSdkReadModel.cs": "b1ec7c0c47ea71eda20dd44dffbfb99504e06f07c70c65a955c99bc1ba4d0fc8",
+    "src/Hexalith.Parties.Projections/Models/PartyIndexSdkReadModel.cs": "676d7698b6cc7ef344891b9d0415408b83a81ea326b01fa1e8a1dd2d1383dcbf",
+    "src/Hexalith.Parties.Projections/Services/PartySdkReadModelEraser.cs": "b6ec68c460974ad12fc85f4d4ba8635e7f868fa8c739579ff6626817a22e91f8",
+    "src/Hexalith.Parties.UI/Components/Shared/GdprDestructiveButton.razor.css": "afe3ace8329b8a449e7a43eb4230ba95604780d19b81e8009558c44aaca6628c",
+    "src/Hexalith.Parties.UI/Components/Specimens/PartiesAccessibilitySpecimen.razor": "5cd5e727ce8406a9122eb43341a44092eb26843187561a4fecb2cd92c923f666",
+    "src/Hexalith.Parties.UI/Components/Specimens/PartiesAccessibilitySpecimen.razor.css": "4f89c4230e0f37cba4d9b1d12f09a509c4a0df5e565bd1b84f445e4f53d8da93",
+    "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs": "383966c995eb0c696d74ac45ea1ad48962b87dd7972b5595f63885d25de2a7c3",
+    "src/Hexalith.Parties/Queries/PartySdkQueryService.cs": "579a738f6ab464f2b5d4758355624f00155a93c76393c778d47fcbf64c8c622d",
+    "tests/Hexalith.Parties.AdminPortal.Tests/Components/ErasureVerificationReportPanelTests.cs": "982835d9c9b0978721c7b87241b394393051879607297fa1b1f77e86402c2d42",
+    "tests/Hexalith.Parties.AdminPortal.Tests/Components/PartiesAdminPortalComponentTests.cs": "94934a962086e3810fb263658cf4f095d9dd629569a737b0b26eb4a27c4009a1",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Components/EditMyProfilePageTests.cs": "161fe179bae28599268de5a3cea26b8cf0244ad061b22c489fb133f78a222708",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Components/MyConsentPageTests.cs": "bb1f87ff864c007b2781be6953e050c15e9772476e7c4c011b70a5979a94544f",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Components/MyPrivacyPageTests.cs": "fba3b7237b61b56a03e2ed56e8069f8acaddcdf71a16660745af9c2fa3316dd0",
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/Components/MyProfilePageTests.cs": "40810660c537c8203d5c9ef6d88549311dbcf3926ef2fb755099ae2e5422fe54",
+    "tests/Hexalith.Parties.Contracts.Tests/Package/PackageTestProcessTests.cs": "d9cbf59eaf4fde9299ef28438bd46b7f38c61c85b9b2ea33b0b0a78a758d0b76",
+    "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs": "ba6d38fa5970197f1d7cc198a6f77d7a82f01c4243cd3a404d2ce50e3e0da538",
+    "tests/Hexalith.Parties.Tests/Domain/PartyDomainEventPublicationContractTests.cs": "6d68886cdd9c55ba850fc7c92bf716a30d3b89ff5ca76b4d2079d4a66b29e4fe",
+    "tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs": "1eab31e0714645aaa79685d9a85788613b431c80b5c8ac03591003494bc68ed7",
+    "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs": "0af24a4c200b4a431b8cc6f849942b8cae19eb6c8a24abe7b55f6e3a462a5e45",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryCleanupServiceTests.cs": "4d7cb0fd3f5aa59a04f4afce009101bf10a31fb9294090ee6e5bc753e3268fc9",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryCoordinationTests.cs": "26a37b018cd8d65d2e58149176645da5c502ebb6703abec7e4fb25a224bd8c2f",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryIndexEntrySearchIndexerTests.cs": "a6a0a40479dc215bd081c1a505d9c0a7e2c207cdc2903cb66daec7ffec8069d7",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryRecoveryHandler.cs": "7c3223910c478ce7d7148f69c270b46f21e9297b9ff574f9d1949266831d8a4f",
+    "tests/Hexalith.Parties.Tests/Search/PartyMemoryRecoveryTests.cs": "5eec871a1626085b6052efbd0d6739979432289624157edd21bd082ec3ebdc31",
+    "tests/Hexalith.Parties.Tests/Search/PartySearchErasureFenceTests.cs": "aa42e6868b4e5cdc73dc878e8d97c2bd1cf7a367ff48f8a8fb1eed633167347c",
+    "tests/Hexalith.Parties.UI.Tests/AccessibilityStyleGuardTests.cs": "eda2a342f967828ad6d29184b1618874560236cae5dc12aa7e56101a09611dee",
+    "tests/Hexalith.Parties.UI.Tests/GdprDestructiveButtonTests.cs": "f76e78dfe5cf2a0b40f6577c81a1037d13b38b566ab618d10745181ddc95178c",
+    "tests/Hexalith.Parties.UI.Tests/PartiesAccessibilitySpecimenTests.cs": "b477dd5e3e9970dd90de844daf93e140ccf6757de974ca581b5a158e3bf782c0",
+    "tests/PackageTests.Shared/PackageTestProcess.cs": "1b8b347e9cdb785cdaa747cc6e7d8cad5e8113d82616dce546f55b97df563f89",
+    "tests/PackageTests.Shared/PackageTestProcessSupervisor.cs": "08d78d32b2c258d7fa16da07a5ceda2a661ffa47bd6f8006211f137b4a11cb5c",
+    "tests/e2e/helpers/accordion-focus.ts": "1790328b5217ddca58a0a0add8ec5aede08c165442c48baa0c1d473210a362e2",
+    "tests/e2e/helpers/portal-actions.ts": "74bb037edb8e8b62d044cac005cb1832fb8bdf9ff647d88f966a1188fa2b2003",
+    "tests/e2e/specs/admin-gdpr-erasure-verification.spec.ts": "49a5d7d24809951d19ffd0ee8c4a74c561637635417cf6a8828347bfc9484dc7",
+    "tests/e2e/specs/admin-parties-list.spec.ts": "ffbc0b855aff7add8ce48ab5276d128743d9b2a42a0b639805e7a25d6ecb71dc",
+    "tests/e2e/specs/consumer-portal-routes.spec.ts": "94d29002d69b93ed4d11c9e4001ce15244119f49c6122acd86f9c0475f6ca2d4",
+    "tests/e2e/specs/parties-accessibility.spec.ts": "8bbdd6a832e03c208d41308305eb69464b231ce517ba15a97f83f438f6cecd62",
+    "tests/e2e/specs/parties-accessibility.spec.ts-snapshots/parties-accessibility-shell-chromium-linux.png": "80f2c194e82e5b5dea8a1daa0bdd7bd9b9a1304d42f97eec1e6a004d0356e5f1"
+  },
+  "process_after_line_ending_normalization": {
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0,
+    "evidence": "formatted-process-tests.txt"
+  },
+  "post_review_evidence": {
+    "dotnet": "post-review-dotnet.json",
+    "browser": "post-review-browser.json",
+    "portal_axe": "portal-axe.json",
+    "triage": "../spec-five-recovery-and-ui-conformance-deferred-items.md#review-triage-log"
+  }
+}

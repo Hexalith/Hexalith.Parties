@@ -1,0 +1,12 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Tests
+  Discovered:  Hexalith.Parties.Tests
+  Starting:    Hexalith.Parties.Tests
+[bounded output: routine host logs omitted]
+{"EventId":0,"LogLevel":"Information","Category":"Microsoft.Hosting.Lifetime","Message":"Application is shutting down...","State":{"{OriginalFormat}":"Application is shutting down..."}}
+{"EventId":3,"LogLevel":"Debug","Category":"Microsoft.Extensions.Hosting.Internal.Host","Message":"Hosting stopping","State":{"{OriginalFormat}":"Hosting stopping"}}
+{"EventId":4,"LogLevel":"Debug","Category":"Microsoft.Extensions.Hosting.Internal.Host","Message":"Hosting stopped","State":{"{OriginalFormat}":"Hosting stopped"}}
+{"EventId":4,"LogLevel":"Debug","Category":"Microsoft.Extensions.Hosting.Internal.Host","Message":"Hosting stopped","State":{"{OriginalFormat}":"Hosting stopped"}}
+  Finished:    Hexalith.Parties.Tests (ID = '2bb5d4d40fa5e5c74ccb63f43e26ac34db7945db1c1453a699311dae6526e17b')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Tests  Total: 2627, Errors: 0, Failed: 0, Skipped: 3, Not Run: 0, Time: 78.289s

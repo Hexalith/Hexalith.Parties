@@ -170,44 +170,20 @@ public sealed partial class PartySdkQueryService(
 
         try
         {
-            PartyErasureStatusRecord? status = await erasureRecordStore
-                .GetStatusAsync(query.TenantId, partyId, cancellationToken)
-                .ConfigureAwait(false);
-            IReadModelFreshness freshness = s_unknownFreshness;
-            string? etag = null;
-            bool degraded = false;
-            if (status is null)
-            {
-                (ReadModelEntry<PartyDetailSdkReadModel> read, bool detailDegraded) = await ReadDetailModelAsync(
-                    query.TenantId,
-                    partyId,
-                    cancellationToken)
-                    .ConfigureAwait(false);
-                degraded = detailDegraded;
-                if (read.Value is not null)
-                {
-                    freshness = read.Value;
-                    etag = read.ETag;
-                }
-
-                PartyDetail? detail = read.Value?.Detail;
-                status = detail?.IsErased == true
-                    ? new PartyErasureStatusRecord
-                    {
-                        PartyId = detail.Id,
-                        TenantId = query.TenantId,
-                        Status = ErasureStatus.Erased.ToString(),
-                        UpdatedAt = detail.ErasedAt ?? detail.LastModifiedAt,
-                        ErasedAt = detail.ErasedAt,
-                    }
-                    : null;
-            }
+            // Legacy side records were written before append and cannot certify a lifecycle.
+            // The aggregate-owned SDK projection folds only committed events.
+            (ReadModelEntry<PartyDetailSdkReadModel> read, bool degraded) = await ReadDetailModelAsync(
+                query.TenantId, partyId, cancellationToken).ConfigureAwait(false);
+            PartyDetailSdkReadModel? model = read.Value;
+            // Privacy tombstones may be installed by cleanup before append. Legacy rows
+            // without committed lifecycle evidence remain unknown until event replay backfills it.
+            PartyErasureStatusRecord? status = model?.ErasureLifecycle;
 
             return Success(
                 status,
                 "party-erasure-status",
-                freshness,
-                etag,
+                model ?? s_unknownFreshness,
+                read.ETag,
                 timeProvider.GetUtcNow(),
                 degraded);
         }

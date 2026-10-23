@@ -9,10 +9,12 @@
 
 @inject IConsumerProfileDataClient ProfileDataClient
 
+<PageTitle>@ConsumerPortalLabels.MyProfileTitle</PageTitle>
+
 <section class="hx-parties-profile" aria-labelledby="@_titleId">
     <header class="hx-parties-profile__header">
-        <p class="hx-parties-profile__eyebrow">@ConsumerPortalLabels.AreaLabel</p>
-        <h1 id="@_titleId">@ConsumerPortalLabels.MyProfileTitle</h1>
+        <p class="hx-parties-profile__eyebrow"><FluentText Size="TextSize.Size200" Weight="TextWeight.Semibold">@ConsumerPortalLabels.AreaLabel</FluentText></p>
+        <FluentText As="TextTag.H1" Size="TextSize.Size800" Weight="TextWeight.Semibold" id="@_titleId">@ConsumerPortalLabels.MyProfileTitle</FluentText>
         <p class="hx-parties-profile__summary">@ConsumerPortalLabels.MyProfileSummary</p>
         @if (_profile is not null)
         {
@@ -29,7 +31,7 @@
     @if (_isLoading)
     {
         <section class="hx-parties-profile__section hx-parties-profile__skeleton" aria-labelledby="@_loadingId" aria-busy="true">
-            <h2 id="@_loadingId">@ConsumerPortalLabels.MyProfileLoadingHeading</h2>
+            <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" id="@_loadingId">@ConsumerPortalLabels.MyProfileLoadingHeading</FluentText>
             <span class="hx-parties-profile__loading-line hx-parties-profile__loading-line--long" aria-hidden="true"></span>
             <span class="hx-parties-profile__loading-line hx-parties-profile__loading-line--short" aria-hidden="true"></span>
         </section>
@@ -37,7 +39,7 @@
     else if (_loadFailed)
     {
         <section class="hx-parties-profile__section hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
-            <h2 id="@_failureId">@ConsumerPortalLabels.MyProfileFailureTitle</h2>
+            <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" id="@_failureId">@ConsumerPortalLabels.MyProfileFailureTitle</FluentText>
             <p>@ConsumerPortalLabels.MyProfileFailureMessage</p>
             <FluentButton role="button" Class="hx-parties-profile__retry"
                           Appearance="ButtonAppearance.Outline"
@@ -49,25 +51,23 @@
     else if (_profile is { IsErased: true })
     {
         <section class="hx-parties-profile__section hx-parties-profile__notice" aria-labelledby="@_deletedId">
-            <h2 id="@_deletedId">@ConsumerPortalLabels.MyProfileDeletedTitle</h2>
+            <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" id="@_deletedId">@ConsumerPortalLabels.MyProfileDeletedTitle</FluentText>
             <p>@ConsumerPortalLabels.MyProfileDeletedMessage</p>
         </section>
     }
     else if (_profile is { } profile)
     {
-        <div class="hx-parties-profile__content">
-            <section class="hx-parties-profile__section" aria-labelledby="@_detailsId">
-                <h2 id="@_detailsId">@ConsumerPortalLabels.MyProfileDetailsTitle</h2>
+        <FluentAccordion ExpandMode="AccordionExpandMode.Multi" HeadingLevel="2" Class="hx-parties-profile__content">
+            <FluentAccordionItem Header="@ConsumerPortalLabels.MyProfileDetailsTitle" Id="@_detailsId" Expanded="true" Class="hx-parties-profile__section">
                 <dl class="hx-parties-profile__field-list">
                     <ProfileField Label="@ConsumerPortalLabels.MyProfileDisplayName" Value="@profile.DisplayName" />
                     <ProfileField Label="@ConsumerPortalLabels.MyProfilePartyType" Value="@ConsumerPortalLabels.PartyTypeLabel(profile.Type)" />
                 </dl>
-            </section>
+            </FluentAccordionItem>
 
             @if (profile.Type == PartyType.Person && profile.PersonDetails is { } person)
             {
-                <section class="hx-parties-profile__section" aria-labelledby="@_personId">
-                    <h2 id="@_personId">@ConsumerPortalLabels.MyProfilePersonTitle</h2>
+                <FluentAccordionItem Header="@ConsumerPortalLabels.MyProfilePersonTitle" Id="@_personId" Expanded="true" Class="hx-parties-profile__section">
                     <dl class="hx-parties-profile__field-list">
                         <ProfileField Label="@ConsumerPortalLabels.MyProfileFirstName" Value="@person.FirstName" />
                         <ProfileField Label="@ConsumerPortalLabels.MyProfileLastName" Value="@person.LastName" />
@@ -75,13 +75,12 @@
                         <ProfileField Label="@ConsumerPortalLabels.MyProfilePrefix" Value="@person.Prefix" />
                         <ProfileField Label="@ConsumerPortalLabels.MyProfileSuffix" Value="@person.Suffix" />
                     </dl>
-                </section>
+                </FluentAccordionItem>
             }
 
             @if (profile.Type == PartyType.Organization && profile.OrganizationDetails is { } organization)
             {
-                <section class="hx-parties-profile__section" aria-labelledby="@_organizationId">
-                    <h2 id="@_organizationId">@ConsumerPortalLabels.MyProfileOrganizationTitle</h2>
+                <FluentAccordionItem Header="@ConsumerPortalLabels.MyProfileOrganizationTitle" Id="@_organizationId" Expanded="true" Class="hx-parties-profile__section">
                     <dl class="hx-parties-profile__field-list">
                         <ProfileField Label="@ConsumerPortalLabels.MyProfileLegalName" Value="@organization.LegalName" />
                         <ProfileField Label="@ConsumerPortalLabels.MyProfileTradingName" Value="@organization.TradingName" />
@@ -89,11 +88,10 @@
                         <ProfileField Label="@ConsumerPortalLabels.MyProfileRegistrationNumber" Value="@organization.RegistrationNumber" />
                         <ProfileField Label="@ConsumerPortalLabels.MyProfileNaturalPerson" Value="@FormatBoolean(organization.IsNaturalPerson)" />
                     </dl>
-                </section>
+                </FluentAccordionItem>
             }
 
-            <section class="hx-parties-profile__section" aria-labelledby="@_contactId">
-                <h2 id="@_contactId">@ConsumerPortalLabels.MyProfileContactTitle</h2>
+            <FluentAccordionItem Header="@ConsumerPortalLabels.MyProfileContactTitle" Id="@_contactId" Expanded="true" Class="hx-parties-profile__section">
                 @if (profile.ContactChannels.Count == 0)
                 {
                     <p class="hx-parties-profile__empty">@ConsumerPortalLabels.MyProfileEmptyContacts</p>
@@ -108,16 +106,15 @@
                                 <span>@channel.Value</span>
                                 @if (channel.IsPreferred)
                                 {
-                                    <span class="hx-parties-profile__label">@ConsumerPortalLabels.MyProfileContactPreferred</span>
+                                    <span class="hx-parties-profile__label"><FluentText Size="TextSize.Size200" Weight="TextWeight.Semibold">@ConsumerPortalLabels.MyProfileContactPreferred</FluentText></span>
                                 }
                             </li>
                         }
                     </ul>
                 }
-            </section>
+            </FluentAccordionItem>
 
-            <section class="hx-parties-profile__section" aria-labelledby="@_identifierId">
-                <h2 id="@_identifierId">@ConsumerPortalLabels.MyProfileIdentifiersTitle</h2>
+            <FluentAccordionItem Header="@ConsumerPortalLabels.MyProfileIdentifiersTitle" Id="@_identifierId" Expanded="true" Class="hx-parties-profile__section">
                 @if (profile.Identifiers.Count == 0)
                 {
                     <p class="hx-parties-profile__empty">@ConsumerPortalLabels.MyProfileEmptyIdentifiers</p>
@@ -132,31 +129,29 @@
                                 <span>@identifier.Value</span>
                                 @if (!string.IsNullOrWhiteSpace(identifier.Jurisdiction))
                                 {
-                                    <span class="hx-parties-profile__label">@ConsumerPortalLabels.MyProfileIdentifierJurisdiction</span>
+                                    <span class="hx-parties-profile__label"><FluentText Size="TextSize.Size200" Weight="TextWeight.Semibold">@ConsumerPortalLabels.MyProfileIdentifierJurisdiction</FluentText></span>
                                     <span>@identifier.Jurisdiction</span>
                                 }
                             </li>
                         }
                     </ul>
                 }
-            </section>
+            </FluentAccordionItem>
 
-            <section class="hx-parties-profile__section" aria-labelledby="@_stateId">
-                <h2 id="@_stateId">@ConsumerPortalLabels.MyProfileStateTitle</h2>
+            <FluentAccordionItem Header="@ConsumerPortalLabels.MyProfileStateTitle" Id="@_stateId" Expanded="true" Class="hx-parties-profile__section">
                 <dl class="hx-parties-profile__field-list">
                     <ProfileField Label="@ConsumerPortalLabels.MyProfileLifecycleState" Value="@FormatActive(profile.IsActive)" />
                     <ProfileField Label="@ConsumerPortalLabels.MyProfileRestrictionState" Value="@FormatRestricted(profile.IsRestricted)" />
                 </dl>
-            </section>
+            </FluentAccordionItem>
 
-            <section class="hx-parties-profile__section" aria-labelledby="@_datesId">
-                <h2 id="@_datesId">@ConsumerPortalLabels.MyProfileDatesTitle</h2>
+            <FluentAccordionItem Header="@ConsumerPortalLabels.MyProfileDatesTitle" Id="@_datesId" Expanded="true" Class="hx-parties-profile__section">
                 <dl class="hx-parties-profile__field-list">
                     <ProfileField Label="@ConsumerPortalLabels.MyProfileCreatedAt" Value="@FormatDate(profile.CreatedAt)" />
                     <ProfileField Label="@ConsumerPortalLabels.MyProfileLastModifiedAt" Value="@FormatDate(profile.LastModifiedAt)" />
                 </dl>
-            </section>
-        </div>
+            </FluentAccordionItem>
+        </FluentAccordion>
     }
 </section>
 

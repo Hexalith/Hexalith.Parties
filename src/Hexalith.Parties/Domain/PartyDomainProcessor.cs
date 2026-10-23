@@ -222,7 +222,6 @@ internal sealed partial class PartyDomainProcessor(
         }
 
         DomainResult result = await aggregate.ProcessAsync(command, unprotectedState, cancellationToken).ConfigureAwait(false);
-        await SaveErasureStatusUpdatesAsync(result, cancellationToken).ConfigureAwait(false);
         return result;
     }
 
@@ -295,24 +294,12 @@ internal sealed partial class PartyDomainProcessor(
             .ExecuteVerificationAsync(command.TenantId, command.PartyId, certificate, cancellationToken)
             .ConfigureAwait(false);
         await erasureRecordStore.SaveVerificationReportAsync(report, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
 
         // The certificate attests key destruction and must remain unchanged. Cleanup
-        // outcomes and timestamps belong to the report and status records.
+        // outcomes belong to the report. Lifecycle authority comes only from committed events.
         if (report.OverallStatus != ErasureVerificationOverallStatus.Complete)
         {
-            await erasureRecordStore
-                .SaveStatusAsync(
-                    new PartyErasureStatusRecord
-                    {
-                        PartyId = command.PartyId,
-                        TenantId = command.TenantId,
-                        Status = report.OverallStatus.ToString(),
-                        UpdatedAt = report.Timestamp,
-                        ErrorMessage = "Erasure verification did not complete.",
-                    },
-                    cancellationToken)
-                .ConfigureAwait(false);
-
             return DomainResult.NoOp();
         }
 
@@ -340,65 +327,7 @@ internal sealed partial class PartyDomainProcessor(
         });
 
         DomainResult result = DomainResult.Success(events);
-        await SaveErasureStatusUpdatesAsync(result, cancellationToken).ConfigureAwait(false);
         return result;
-    }
-
-    private async Task SaveErasureStatusUpdatesAsync(DomainResult result, CancellationToken cancellationToken)
-    {
-        if (erasureRecordStore is null || !result.IsSuccess)
-        {
-            return;
-        }
-
-        foreach (IEventPayload payload in result.Events)
-        {
-            PartyErasureStatusRecord? status = payload switch
-            {
-                ErasePartyRequested requested => new PartyErasureStatusRecord
-                {
-                    PartyId = requested.PartyId,
-                    TenantId = requested.TenantId,
-                    Status = ErasureStatus.ErasurePending.ToString(),
-                    UpdatedAt = requested.RequestedAt,
-                },
-                PartyErasureCancelled cancelled => new PartyErasureStatusRecord
-                {
-                    PartyId = cancelled.PartyId,
-                    TenantId = cancelled.TenantId,
-                    Status = ErasureStatus.Active.ToString(),
-                    UpdatedAt = cancelled.CancelledAt,
-                },
-                PartyEncryptionKeyDeleted deleted => new PartyErasureStatusRecord
-                {
-                    PartyId = deleted.PartyId,
-                    TenantId = deleted.TenantId,
-                    Status = ErasureStatus.KeyDestroyed.ToString(),
-                    UpdatedAt = deleted.DeletedAt,
-                },
-                ErasureVerified verified => new PartyErasureStatusRecord
-                {
-                    PartyId = verified.PartyId,
-                    TenantId = verified.TenantId,
-                    Status = ErasureStatus.Verified.ToString(),
-                    UpdatedAt = verified.VerifiedAt,
-                },
-                PartyErased erased => new PartyErasureStatusRecord
-                {
-                    PartyId = erased.PartyId,
-                    TenantId = erased.TenantId,
-                    Status = ErasureStatus.Erased.ToString(),
-                    UpdatedAt = erased.ErasedAt,
-                    ErasedAt = erased.ErasedAt,
-                },
-                _ => null,
-            };
-
-            if (status is not null)
-            {
-                await erasureRecordStore.SaveStatusAsync(status, cancellationToken).ConfigureAwait(false);
-            }
-        }
     }
 
     private static PartyState? RehydratePartyState(object? currentState)

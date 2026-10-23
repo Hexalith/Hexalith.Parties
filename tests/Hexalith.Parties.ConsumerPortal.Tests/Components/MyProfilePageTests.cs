@@ -44,6 +44,9 @@ public sealed class MyProfilePageTests : BunitContext
         cut.WaitForAssertion(() =>
         {
             cut.Find("h1").TextContent.ShouldBe("My profile");
+            cut.FindComponents<FluentAccordion>().Count.ShouldBe(1);
+            cut.FindComponents<FluentAccordionItem>().Count.ShouldBe(6);
+            cut.FindComponents<FluentAccordionItem>().All(static item => item.Instance.Expanded).ShouldBeTrue();
             cut.Markup.ShouldContain("Review the profile information linked to your signed-in account.");
             cut.Markup.ShouldNotContain("You will be able to review", Case.Sensitive);
             cut.Markup.ShouldContain("Ada Lovelace");

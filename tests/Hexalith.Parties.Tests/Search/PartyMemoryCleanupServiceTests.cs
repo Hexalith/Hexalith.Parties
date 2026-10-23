@@ -18,6 +18,53 @@ public sealed class PartyMemoryCleanupServiceTests
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
     [Theory]
+    [InlineData(404, "INGESTION_STATUS_NOT_FOUND")]
+    [InlineData(410, "INGESTION_STATUS_EXPIRED")]
+    [InlineData(503, "SERVICE_UNAVAILABLE")]
+    [InlineData(0, "transport")]
+    public async Task MissingExpiredOrUnavailableSupersededStatusRetainsOnlyItsUncertainObligation(int statusCode, string code)
+    {
+        var state = new PartyMemoryTestReadModelStore();
+        var remote = new PartyMemoryRecoveryHandler();
+        remote.Workflows["older"] = PartyMemoryRecoveryHandler.Completed("older", "older-unit") with
+        { RuntimeStatus = "Running", MemoryUnitId = null, MemoryUnitStatus = null };
+        remote.Workflows["newer"] = PartyMemoryRecoveryHandler.Completed("newer", "newer-unit");
+        remote.Units.UnionWith(["older-unit", "newer-unit"]);
+        using var http = PartyMemoryRecoveryTests.Http(remote);
+        (await PartyMemoryRecoveryTests.Indexer(state, new PartyMemoryRecoveryClient(http) { Submit = _ => Task.FromResult("older") })
+            .IndexAsync(PartyMemoryRecoveryTests.Entry(), PartyMemoryRecoveryTests.Context() with { SequenceNumber = 1 }, Token)).ShouldNotBeNull().Indexed.ShouldBeFalse();
+        (await PartyMemoryRecoveryTests.Indexer(state, new PartyMemoryRecoveryClient(http) { Submit = _ => Task.FromResult("newer") })
+            .IndexAsync(PartyMemoryRecoveryTests.Entry() with { DisplayName = "newer" }, PartyMemoryRecoveryTests.Context() with { SequenceNumber = 2 }, Token)).ShouldNotBeNull().Indexed.ShouldBeTrue();
+        PartyMemoryIngestionIntent original = (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token))
+            .Single(item => item.WorkflowInstanceId == "older");
+        remote.Workflows.Remove("older");
+        if (statusCode == 0)
+        {
+            remote.BeforeRequest = (request, _) => request.RequestUri!.AbsolutePath.EndsWith("/older", StringComparison.Ordinal)
+                ? Task.FromException(new HttpRequestException("Status unavailable.")) : Task.CompletedTask;
+        }
+        else
+        {
+            remote.WorkflowErrors["older"] = ((HttpStatusCode)statusCode, "{\"code\":\"" + code + "\"}");
+        }
+
+        for (int restart = 0; restart < 2; restart++)
+        {
+            (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", Token)).Cleaned.ShouldBeFalse();
+            (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldBe([original]);
+            (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldBeEmpty();
+            remote.Units.ShouldBe(["older-unit"]);
+        }
+
+        remote.BeforeRequest = null;
+        remote.WorkflowErrors.Clear();
+        remote.Workflows["older"] = PartyMemoryRecoveryHandler.Completed("older", "older-unit");
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", Token)).Cleaned.ShouldBeTrue();
+        remote.Units.ShouldBeEmpty();
+        (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldBeEmpty();
+    }
+
+    [Theory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData("case")]

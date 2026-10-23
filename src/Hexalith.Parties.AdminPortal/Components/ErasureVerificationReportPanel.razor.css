@@ -6,10 +6,6 @@
     max-inline-size: 100%;
 }
 
-.hx-parties-admin__erasure-report dt {
-    font-weight: 600;
-}
-
 .hx-parties-admin__erasure-report dd {
     margin-inline-start: 0;
     overflow-wrap: anywhere;

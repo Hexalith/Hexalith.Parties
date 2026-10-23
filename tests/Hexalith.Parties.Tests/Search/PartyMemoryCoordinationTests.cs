@@ -35,6 +35,46 @@ public sealed class PartyMemoryCoordinationTests
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
     [Fact]
+    public async Task FirstSuccessfulSubmissionAfterRestartIncludesAllContactAndIdentifierContent()
+    {
+        var state = new PartyMemoryTestReadModelStore();
+        var remote = new PartyMemoryRecoveryHandler();
+        remote.Workflows["workflow"] = PartyMemoryRecoveryHandler.Completed();
+        using var http = PartyMemoryRecoveryTests.Http(remote);
+        var options = new PartyMemoryTestOptionsMonitor(new PartyMemorySearchOptions { Enabled = true, CaseId = "case" });
+        var projectionOptions = Options.Create(new PartySdkReadModelOptions());
+        PartyIndexSdkProjectionHandler Projection(PartyMemoryRecoveryClient client) => new(state, projectionOptions,
+            new PartyMemoryIndexEntrySearchIndexer(PartyMemoryRecoveryTests.Indexer(state, client), PartyMemoryRecoveryTests.Cleanup(state, http),
+                options, NullLogger<PartyMemoryIndexEntrySearchIndexer>.Instance, state, projectionOptions));
+        ProjectionRequest replay = new("tenant", "party", "party",
+        [
+            Event(new PartyCreated { Type = PartyType.Person, PersonDetails = new PersonDetails { FirstName = "Synthetic", LastName = "Complete" } }, 1),
+            Event(new ContactChannelAdded { ContactChannelId = "email", Type = ContactChannelType.Email, Value = "complete@example.invalid" }, 2),
+            Event(new ContactChannelAdded { ContactChannelId = "phone", Type = ContactChannelType.Phone, Value = "+33123456789" }, 3),
+            Event(new IdentifierAdded { IdentifierId = "tax", Type = IdentifierType.Other, Value = "synthetic-tax-id" }, 4),
+        ]);
+        var rejected = new PartyMemoryRecoveryClient(http)
+        {
+            Submit = _ => Task.FromException<string>(new MemoriesRemoteException(HttpStatusCode.Forbidden,
+                new ErrorResponse("AUTHORIZATION_FAILED", "Rejected before scheduling.", "Repair credentials."))),
+        };
+        (await Projection(rejected).ProjectAsync(replay, "first-rejected", Token)).Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        PartyIndexSdkReadModel persisted = (await state.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant"), Token)).Value.ShouldNotBeNull();
+        persisted.Entries["party"].SearchableContactChannels.ShouldBeEmpty();
+        persisted.Entries["party"].SearchableIdentifiers.ShouldBeEmpty();
+        var recreated = new PartyMemoryRecoveryClient(http);
+        (await Projection(recreated).ProjectAsync(replay with { Events = replay.Events[1..] }, "partial", Token)).Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        recreated.Submissions.ShouldBe(0);
+        (await Projection(recreated).ProjectAsync(replay, "complete-retry", Token)).Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        recreated.Submissions.ShouldBe(1);
+        Encoding.UTF8.GetString(recreated.Content.ShouldNotBeNull()).ShouldContain("complete@example.invalid");
+        Encoding.UTF8.GetString(recreated.Content!).ShouldContain("+33123456789");
+        Encoding.UTF8.GetString(recreated.Content!).ShouldContain("synthetic-tax-id");
+        recreated.Token.ShouldBe(rejected.Token);
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe("canonical");
+    }
+
+    [Fact]
     public async Task ChangedRevisionAfterRestartRetainsDistinctCanonicalUnitsSharingOneSource()
     {
         var state = new PartyMemoryTestReadModelStore();
@@ -576,7 +616,7 @@ public sealed class PartyMemoryCoordinationTests
         (await Projection(redelivery).ProjectAsync(firstRequest, "first-restart", Token)).Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
         redelivery.Submissions.ShouldBe(0);
 
-        ProjectionRequest secondRequest = firstRequest with { Events = [Event(Change("two"), 3, timestamp)] };
+        ProjectionRequest secondRequest = firstRequest with { Events = [.. firstRequest.Events, Event(Change("two"), 3, timestamp)] };
         var second = new PartyMemoryRecoveryClient(http) { Submit = _ => Task.FromResult("workflow-two") };
         (await Projection(second).ProjectAsync(secondRequest, "second", Token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
         first.Submissions.ShouldBe(1);
@@ -810,7 +850,7 @@ public sealed class PartyMemoryCoordinationTests
         inventory.PermanentCleanup.ShouldBeFalse();
         inventory.Generation.ShouldBe(0);
         client.Submit = _ => Task.FromResult("next-workflow");
-        (await projection.ProjectAsync(request with { Events = [Event(new PartyDeactivated(), 2)] }, "next-live", Token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        (await projection.ProjectAsync(request with { Events = [.. request.Events, Event(new PartyDeactivated(), 2)] }, "next-live", Token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
         client.Submissions.ShouldBe(2);
         (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).Select(item => item.MemoryUnitId).ShouldBe(["canonical", "next-canonical"]);
         remote.Requests.ShouldAllBe(item => item.Method != HttpMethod.Delete);

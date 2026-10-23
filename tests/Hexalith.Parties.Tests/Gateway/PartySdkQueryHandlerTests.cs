@@ -366,8 +366,40 @@ public sealed class PartySdkQueryHandlerTests
         index.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
     }
 
+    [Theory]
+    [InlineData(null, "Verified")]
+    [InlineData(null, "Erased")]
+    [InlineData("KeyDestroyed", "Erased")]
+    [InlineData("Verified", "Active")]
+    [InlineData("Erased", "KeyDestroyed")]
+    public async Task ErasureStatusHandlerIgnoresLegacyStatusAuthorityAsync(string? committed, string legacy)
+    {
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel
+            {
+                Detail = Detail("party-1"),
+                LastSequenceNumber = 9,
+                ErasureLifecycle = committed is null ? null : new PartyErasureStatusRecord
+                {
+                    PartyId = "party-1", TenantId = "tenant-a", Status = committed, UpdatedAt = s_now,
+                },
+                ProjectedAt = s_now,
+            }, "committed-etag"));
+        IPartyErasureRecordStore legacyStore = Substitute.For<IPartyErasureRecordStore>();
+        legacyStore.GetStatusAsync("tenant-a", "party-1", Arg.Any<CancellationToken>())
+            .Returns(new PartyErasureStatusRecord { PartyId = "party-1", TenantId = "tenant-a", Status = legacy, UpdatedAt = s_now.AddMinutes(1) });
+        QueryResult result = await new GetErasureStatusQueryHandler(CreateService(store, recordStore: legacyStore))
+            .ExecuteAsync(CreateDetailEnvelope(PartyDetailQueryTypes.GetErasureStatusQueryType), TestContext.Current.CancellationToken);
+
+        result.Success.ShouldBeTrue();
+        PartyErasureStatusRecord? status = result.GetPayload().Deserialize<PartyErasureStatusRecord>(PartiesJsonOptions.Default);
+        status?.Status.ShouldBe(committed);
+        await legacyStore.DidNotReceiveWithAnyArgs().GetStatusAsync(default!, default!, default);
+    }
+
     [Fact]
-    public async Task ErasureStatusHandler_UsesDirectRedactedDetailFallbackAsync()
+    public async Task ErasureStatusHandler_LegacyPrivacyTombstoneCannotCertifyCommittedErasureAsync()
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
         store.GetAsync<PartyDetailSdkReadModel>(
@@ -398,9 +430,7 @@ public sealed class PartySdkQueryHandlerTests
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeTrue();
-        PartyErasureStatusRecord status = result.GetPayload().Deserialize<PartyErasureStatusRecord>(PartiesJsonOptions.Default)!;
-        status.Status.ShouldBe("Erased");
-        status.PartyId.ShouldBe("party-1");
+        result.GetPayload().Deserialize<PartyErasureStatusRecord>(PartiesJsonOptions.Default).ShouldBeNull();
     }
 
     [Fact]
@@ -679,6 +709,10 @@ public sealed class PartySdkQueryHandlerTests
             .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel
             {
                 Detail = Detail("party-1"),
+                ErasureLifecycle = new PartyErasureStatusRecord
+                {
+                    PartyId = "party-1", TenantId = "tenant-a", Status = "ErasurePending", UpdatedAt = s_now,
+                },
                 LastSequenceNumber = 3,
                 ProjectedAt = s_now,
                 ProjectionVersion = "3",
@@ -818,8 +852,8 @@ public sealed class PartySdkQueryHandlerTests
     {
         IReadModelStore store = Substitute.For<IReadModelStore>();
         IPartyErasureRecordStore erasure = Substitute.For<IPartyErasureRecordStore>();
-        erasure.GetStatusAsync("tenant-a", "party-1", Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<PartyErasureStatusRecord?>(new InvalidOperationException("store unavailable")));
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", PartySdkReadModelAddresses.Detail("tenant-a", "party-1"), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<ReadModelEntry<PartyDetailSdkReadModel>>(new InvalidOperationException("store unavailable")));
         var handler = new GetErasureStatusQueryHandler(CreateService(store, recordStore: erasure));
 
         QueryResult result = await handler.ExecuteAsync(
@@ -828,6 +862,8 @@ public sealed class PartySdkQueryHandlerTests
 
         result.Success.ShouldBeFalse();
         result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        await store.Received(1).GetAsync<PartyDetailSdkReadModel>("statestore", PartySdkReadModelAddresses.Detail("tenant-a", "party-1"), Arg.Any<CancellationToken>());
+        await erasure.DidNotReceiveWithAnyArgs().GetStatusAsync(default!, default!, default);
     }
 
     [Fact]
@@ -2318,11 +2354,7 @@ public sealed class PartySdkQueryHandlerTests
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeTrue();
-        if (queryType == PartyDetailQueryTypes.GetErasureStatusQueryType)
-        {
-            await erasure.Received(1).GetStatusAsync("tenant-a", partyId, Arg.Any<CancellationToken>());
-        }
-        else if (queryType == PartyDetailQueryTypes.GetErasureCertificateQueryType)
+        if (queryType == PartyDetailQueryTypes.GetErasureCertificateQueryType)
         {
             await erasure.Received(1).GetCertificateAsync("tenant-a", partyId, Arg.Any<CancellationToken>());
         }

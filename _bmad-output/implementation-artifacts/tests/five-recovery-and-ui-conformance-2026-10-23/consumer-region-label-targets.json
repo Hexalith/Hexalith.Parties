@@ -1,0 +1,33 @@
+{
+  "result": "4 passed; zero skips/retries; managed Release Chromium; 4.7 seconds",
+  "regions": [
+    {
+      "rootNode": "#document",
+      "root": "<section class=\"hx-parties-profile hx-parties-edit-profile\" aria-labelledby=\"hx-parties-edit-title-2\" b-yffdwcqdld=\"\">",
+      "target": "<fluent-text id=\"hx-parties-edit-title-2\" size=\"800\" weight=\"semibold\"><!--!--><h1 tabindex=\"-1\">Edit profile</h1></fluent-text>",
+      "h1": "<h1 tabindex=\"-1\">Edit profile</h1>",
+      "ariaSnapshotRoot": "- region \"Edit profile\":"
+    },
+    {
+      "rootNode": "#document",
+      "root": "<section class=\"hx-parties-profile\" aria-labelledby=\"hx-parties-profile-title-1\" b-rae9etxwbm=\"\">",
+      "target": "<fluent-text id=\"hx-parties-profile-title-1\" size=\"800\" weight=\"semibold\"><h1>My profile</h1></fluent-text>",
+      "h1": "<h1>My profile</h1>",
+      "ariaSnapshotRoot": "- region \"My profile\":"
+    },
+    {
+      "rootNode": "#document",
+      "root": "<section class=\"hx-parties-profile hx-parties-privacy\" aria-labelledby=\"hx-parties-privacy-title-2\" b-gr5pw7237o=\"\">",
+      "target": "<fluent-text id=\"hx-parties-privacy-title-2\" size=\"800\" weight=\"semibold\"><!--!--><h1 tabindex=\"-1\">Data privacy</h1></fluent-text>",
+      "h1": "<h1 tabindex=\"-1\">Data privacy</h1>",
+      "ariaSnapshotRoot": "- region \"Data privacy\":"
+    },
+    {
+      "rootNode": "#document",
+      "root": "<section class=\"hx-parties-profile hx-parties-consent\" aria-labelledby=\"hx-parties-consent-title-2\" b-r1alnd5w3c=\"\">",
+      "target": "<fluent-text id=\"hx-parties-consent-title-2\" size=\"800\" weight=\"semibold\"><!--!--><h1 tabindex=\"-1\">Consent</h1></fluent-text>",
+      "h1": "<h1 tabindex=\"-1\">Consent</h1>",
+      "ariaSnapshotRoot": "- region \"Consent\":"
+    }
+  ]
+}

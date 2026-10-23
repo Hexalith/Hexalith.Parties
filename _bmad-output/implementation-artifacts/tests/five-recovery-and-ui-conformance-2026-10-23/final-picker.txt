@@ -1,0 +1,12 @@
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Picker.Tests
+  Discovered:  Hexalith.Parties.Picker.Tests
+  Starting:    Hexalith.Parties.Picker.Tests
+[bounded output: routine host logs omitted]
+xUnit.net v3 In-Process Runner v4.0.2+0c7aa4991f (64-bit .NET 10.0.13)
+  Discovering: Hexalith.Parties.Picker.Tests
+  Discovered:  Hexalith.Parties.Picker.Tests
+  Starting:    Hexalith.Parties.Picker.Tests
+  Finished:    Hexalith.Parties.Picker.Tests (ID = 'b0dae18a343b192f76f9d672f44d7f632a229f6ab051c0ea70aacc38c9603bff')
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Picker.Tests  Total: 171, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.843s

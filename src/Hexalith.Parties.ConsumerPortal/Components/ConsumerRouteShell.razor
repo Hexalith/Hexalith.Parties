@@ -1,13 +1,13 @@
 <section class="hx-parties-consumer" aria-labelledby="@_titleId">
     <header class="hx-parties-consumer__header">
-        <p class="hx-parties-consumer__eyebrow">@ConsumerPortalLabels.AreaLabel</p>
-        <h1 id="@_titleId">@Title</h1>
+        <p class="hx-parties-consumer__eyebrow"><FluentText Size="TextSize.Size200" Weight="TextWeight.Semibold">@ConsumerPortalLabels.AreaLabel</FluentText></p>
+        <FluentText As="TextTag.H1" Size="TextSize.Size800" Weight="TextWeight.Semibold" id="@_titleId">@Title</FluentText>
         <p class="hx-parties-consumer__summary">@Summary</p>
         <p class="hx-parties-consumer__status" role="status" aria-live="polite">@Status</p>
     </header>
 
     <section class="hx-parties-consumer__panel" aria-labelledby="@_nextStepsId">
-        <h2 id="@_nextStepsId">@ConsumerPortalLabels.NextStepsTitle</h2>
+        <FluentText As="TextTag.H2" Size="TextSize.Size600" Weight="TextWeight.Semibold" id="@_nextStepsId">@ConsumerPortalLabels.NextStepsTitle</FluentText>
         <ul class="hx-parties-consumer__list">
             @foreach (string item in Items)
             {

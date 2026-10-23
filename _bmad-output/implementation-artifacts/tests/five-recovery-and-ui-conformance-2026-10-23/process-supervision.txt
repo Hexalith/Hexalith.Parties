@@ -1,0 +1,2 @@
+=== TEST EXECUTION SUMMARY ===
+   Hexalith.Parties.Contracts.Tests  Total: 18, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 7.289s

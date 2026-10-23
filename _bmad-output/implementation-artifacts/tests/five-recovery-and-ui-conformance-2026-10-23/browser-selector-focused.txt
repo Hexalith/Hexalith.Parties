@@ -1,0 +1,6 @@
+  ✓  1 [chromium] › specs/admin-parties-list.spec.ts:148:3 › Admin parties list › desktop row click and direct route render the existing party detail surface (2.7s)
+  ✓  2 [chromium] › specs/admin-parties-list.spec.ts:335:3 › Admin parties list › direct GDPR route for an erased party keeps export and records available without PII (2.3s)
+  ✓  3 [chromium] › specs/admin-parties-list.spec.ts:460:3 › Admin parties list › detail GDPR action navigates to the party-scoped operations route (1.0s)
+  ✓  4 [chromium] › specs/consumer-portal-routes.spec.ts:31:5 › Consumer portal route shells › section accordions preserve primary content and keyboard focus at narrow width with forced colors none (1.9s)
+  ✓  5 [chromium] › specs/consumer-portal-routes.spec.ts:31:5 › Consumer portal route shells › section accordions preserve primary content and keyboard focus at narrow width with forced colors active (1.8s)
+  5 passed (12.8s)

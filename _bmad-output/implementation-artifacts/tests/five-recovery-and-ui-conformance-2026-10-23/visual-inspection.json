@@ -1,0 +1,5 @@
+{
+  "snapshot": "tests/e2e/specs/parties-accessibility.spec.ts-snapshots/parties-accessibility-shell-chromium-linux.png",
+  "sha256": "80f2c194e82e5b5dea8a1daa0bdd7bd9b9a1304d42f97eec1e6a004d0356e5f1",
+  "inspection": "Viewed at original resolution: all three accordion sections expanded; titles, primary/link/destructive controls and status text readable; token spacing clears control edges; route focus outline and normalized footer visible. Intentional accordion and spacing changes accepted; maxDiffPixels remains zero."
+}

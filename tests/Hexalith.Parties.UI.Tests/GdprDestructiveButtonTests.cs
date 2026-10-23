@@ -43,6 +43,7 @@ public sealed class GdprDestructiveButtonTests : BunitContext
 
         FluentButton disabledButton = cut.FindComponent<FluentButton>().Instance;
         disabledButton.Disabled.ShouldBeTrue();
+        cut.Find("fluent-button").HasAttribute("disabled").ShouldBeTrue();
         await cut.InvokeAsync(() => disabledButton.OnClick.InvokeAsync());
         confirmed.ShouldBe(0);
 

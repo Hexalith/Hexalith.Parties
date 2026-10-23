@@ -1,0 +1,13 @@
+{
+  "command": [
+    "/tmp/parties-resume-20261023-c_009akj/tooling/node-v24.22.1-linux-x64/bin/node",
+    "node_modules/@commitlint/cli/cli.js",
+    "--edit",
+    "/tmp/parties-five-final-jincr6s0/commit-message.txt",
+    "--verbose"
+  ],
+  "exit_code": 0,
+  "message_sha256": "8b54d193777a5d33bae64c15d5892466b7d0480494e0abc65b210dff58fcc58a",
+  "stdout": "\u29d7   --- input ---\nfix: complete five recovery and UI deferred items\n\nDerive erasure lifecycle from committed events and preserve complete\nsearch replay across retries. Qualify retained workflow obligations,\ncontain owned Linux workers and align Fluent portal sections.\n\u2714   found 0 problems, 0 warnings\n",
+  "pinned_cli_version": "21.2.2"
+}

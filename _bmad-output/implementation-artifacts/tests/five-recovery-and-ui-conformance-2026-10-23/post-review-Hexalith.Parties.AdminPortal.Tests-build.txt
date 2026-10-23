@@ -1,0 +1,7 @@
+  Hexalith.Parties.AdminPortal.Tests -> /home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.AdminPortal.Tests/bin/Release/net10.0/Hexalith.Parties.AdminPortal.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.27

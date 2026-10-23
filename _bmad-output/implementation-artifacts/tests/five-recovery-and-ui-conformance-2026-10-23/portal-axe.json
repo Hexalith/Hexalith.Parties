@@ -1,0 +1,48 @@
+{
+  "all_rules_retained": true,
+  "exclusions": [],
+  "routes": [
+    {
+      "route": "/admin/parties/ada-lovelace",
+      "artifact": "axe-admin-parties-ada-lovelace.json",
+      "blocking": 0,
+      "unknown": 0,
+      "report_only": 0
+    },
+    {
+      "route": "/admin/parties/ada-lovelace/gdpr",
+      "artifact": "axe-admin-parties-ada-lovelace-gdpr.json",
+      "blocking": 0,
+      "unknown": 0,
+      "report_only": 0
+    },
+    {
+      "route": "/me",
+      "artifact": "axe-me.json",
+      "blocking": 0,
+      "unknown": 0,
+      "report_only": 0
+    },
+    {
+      "route": "/me/consent",
+      "artifact": "axe-me-consent.json",
+      "blocking": 0,
+      "unknown": 0,
+      "report_only": 0
+    },
+    {
+      "route": "/me/edit",
+      "artifact": "axe-me-edit.json",
+      "blocking": 0,
+      "unknown": 0,
+      "report_only": 0
+    },
+    {
+      "route": "/me/privacy",
+      "artifact": "axe-me-privacy.json",
+      "blocking": 0,
+      "unknown": 0,
+      "report_only": 0
+    }
+  ]
+}

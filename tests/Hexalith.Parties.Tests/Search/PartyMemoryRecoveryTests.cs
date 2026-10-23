@@ -17,6 +17,42 @@ public sealed class PartyMemoryRecoveryTests
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
     [Fact]
+    public async Task SupersededAcknowledgedAttemptSurvivesCurrentRevisionAndRestartUntilTerminalCleanup()
+    {
+        var state = new PartyMemoryTestReadModelStore();
+        var remote = new PartyMemoryRecoveryHandler();
+        remote.Workflows["older"] = PartyMemoryRecoveryHandler.Completed("older", "older-unit") with
+        { RuntimeStatus = "Running", MemoryUnitId = null, MemoryUnitStatus = null };
+        remote.Workflows["newer"] = PartyMemoryRecoveryHandler.Completed("newer", "newer-unit");
+        remote.Units.UnionWith(["older-unit", "newer-unit"]);
+        using var http = Http(remote);
+        var older = new PartyMemoryRecoveryClient(http) { Submit = _ => Task.FromResult("older") };
+        (await Indexer(state, older).IndexAsync(Entry(), Context() with { SequenceNumber = 1 }, Token)).ShouldNotBeNull().Indexed.ShouldBeFalse();
+        var newer = new PartyMemoryRecoveryClient(http) { Submit = _ => Task.FromResult("newer") };
+        PartyIndexEntry revision = Entry() with { DisplayName = "newer revision", LastModifiedAt = DateTimeOffset.UnixEpoch.AddMinutes(1) };
+        (await Indexer(state, newer).IndexAsync(revision, Context() with { SequenceNumber = 2 }, Token)).ShouldNotBeNull().Indexed.ShouldBeTrue();
+        PartyMemoryIngestionIntent original = (await Intents(state).GetAsync("tenant", "party", Token)).Single(item => item.WorkflowInstanceId == "older");
+        original.MemoryUnitId.ShouldBeNull();
+        remote.Requests.Clear();
+        var recreated = new PartyMemoryRecoveryClient(http);
+        (await Indexer(state, recreated).IndexAsync(revision, Context() with { SequenceNumber = 2 }, Token)).ShouldNotBeNull().Indexed.ShouldBeTrue();
+        recreated.Submissions.ShouldBe(0);
+        remote.Requests.ShouldAllBe(request => !request.Path.EndsWith("/older", StringComparison.Ordinal));
+        (await Intents(state).GetAsync("tenant", "party", Token)).ShouldContain(original);
+        (await Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", Token)).Cleaned.ShouldBeFalse();
+        (await Intents(state).GetAsync("tenant", "party", Token)).ShouldBe([original]);
+        (await Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldBeEmpty();
+        remote.Units.ShouldBe(["older-unit"]);
+
+        remote.Workflows["older"] = PartyMemoryRecoveryHandler.Completed("older", "older-unit");
+        (await Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", Token)).Cleaned.ShouldBeTrue();
+        remote.Units.ShouldBeEmpty();
+        (await Intents(state).GetAsync("tenant", "party", Token)).ShouldBeEmpty();
+        (await Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldBeEmpty();
+        state.SerializedValues.ShouldAllBe(json => !json.Contains("private-personal-name", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task IntentPersistenceFailurePreventsRemoteSubmission()
     {
         var state = new PartyMemoryTestReadModelStore { SaveFailure = new InvalidOperationException("unavailable") };

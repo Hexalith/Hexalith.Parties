@@ -11,7 +11,7 @@
 
 .hx-party-form__status,
 .hx-party-form__hint {
-    color: var(--neutral-foreground-hint, var(--neutral-foreground-rest));
+    color: var(--colorNeutralForeground3, var(--colorNeutralForeground1));
 }
 
 .hx-party-form__body {
@@ -22,8 +22,8 @@
 
 .hx-party-form__group {
     min-width: 0;
-    border: 1px solid var(--neutral-stroke-rest);
-    border-radius: var(--control-corner-radius, 4px);
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: var(--borderRadiusMedium, 4px);
     padding: var(--spacingVerticalM, .75rem) var(--spacingHorizontalM, .75rem);
 }
 
@@ -40,21 +40,20 @@
     gap: var(--spacingHorizontalS, .5rem);
 }
 
-.hx-party-form__actions fluent-button {
+.hx-party-form__actions ::deep fluent-button {
     min-block-size: 44px;
 }
 
 .hx-party-form__alert {
-    border: 1px solid var(--error-stroke-rest, var(--neutral-stroke-rest));
-    border-radius: var(--control-corner-radius, 4px);
+    border: 1px solid var(--colorStatusDangerForeground1, var(--colorNeutralStroke1));
+    border-radius: var(--borderRadiusMedium, 4px);
     padding: var(--spacingVerticalS, .5rem) var(--spacingHorizontalM, .75rem);
-    background: var(--error-fill-rest, var(--neutral-fill-rest));
+    background: var(--colorStatusDangerBackground1, var(--colorNeutralBackground1));
 }
 
 .hx-party-form__field-error {
     min-block-size: 1.25rem;
-    color: var(--error-foreground-rest, var(--neutral-foreground-rest));
-    font-size: var(--type-ramp-minus-1-font-size, .875rem);
+    color: var(--colorStatusDangerForeground1, var(--colorNeutralForeground1));
     overflow-wrap: anywhere;
 }
 

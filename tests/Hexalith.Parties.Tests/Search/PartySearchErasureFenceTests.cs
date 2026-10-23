@@ -345,6 +345,18 @@ public sealed class PartySearchErasureFenceTests
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
         await handler.ProjectAsync(Request("tenant-b"), "seed-b", TestContext.Current.CancellationToken);
         await handler.ProjectAsync(Request(party: "party-2"), "seed-a", TestContext.Current.CancellationToken);
+        ProjectionRequest currentReplay = Request() with
+        {
+            Events = [.. Request().Events,
+                new ProjectionEventDto(nameof(PartyDeactivated), JsonSerializer.SerializeToUtf8Bytes(new PartyDeactivated(), PartiesJsonOptions.Default),
+                    "json", 2, DateTimeOffset.UnixEpoch.AddMinutes(1), "correlation")],
+        };
+        string tenantBKey = PartySdkReadModelAddresses.Index("tenant-b");
+        string otherTenantBefore = JsonSerializer.Serialize(
+            (await store.GetAsync<PartyIndexSdkReadModel>(StoreName, tenantBKey, TestContext.Current.CancellationToken)).Value,
+            PartiesJsonOptions.Default);
+        PartyIndexEntry otherPartyBefore = remote[("tenant-a", "party-2")];
+        PartyIndexEntry otherTenantBeforeEntry = remote[("tenant-b", "party-1")];
         search.NotifyIndexedAsync("tenant-a", Arg.Is<PartyIndexEntry>(e => e.Id == "party-1"), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(async call =>
             {
@@ -352,9 +364,7 @@ public sealed class PartySearchErasureFenceTests
                 remote[("tenant-a", entry.Id)] = entry;
                 if (entry.IsActive)
                 {
-                    var update = new ProjectionRequest("tenant-a", "party", "party-1",
-                    [new ProjectionEventDto(nameof(PartyDeactivated), JsonSerializer.SerializeToUtf8Bytes(new PartyDeactivated(), PartiesJsonOptions.Default),
-                        "json", 2, DateTimeOffset.UnixEpoch.AddMinutes(1), "correlation")]);
+                    ProjectionRequest update = currentReplay with { Events = [currentReplay.Events[^1]] };
                     await new PartyIndexSdkProjectionHandler(store, s_options).ProjectAsync(update, "newer", call.Arg<CancellationToken>()).ConfigureAwait(false);
                 }
 
@@ -362,9 +372,33 @@ public sealed class PartySearchErasureFenceTests
             });
         DomainProjectionHandlerResult first = await handler.ProjectAsync(Request(), "live", TestContext.Current.CancellationToken);
         first.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        first.ReasonCode.ShouldBe("search-reconciliation-required");
+        string tenantAKey = PartySdkReadModelAddresses.Index("tenant-a");
+        string committed = JsonSerializer.Serialize(
+            (await store.GetAsync<PartyIndexSdkReadModel>(StoreName, tenantAKey, TestContext.Current.CancellationToken)).Value,
+            PartiesJsonOptions.Default);
         handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
-        (await handler.ProjectAsync(Request(), "retry", TestContext.Current.CancellationToken)).Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        DomainProjectionHandlerResult stale = await handler.ProjectAsync(Request(), "retry-older", TestContext.Current.CancellationToken);
+        stale.Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        stale.ReasonCode.ShouldBe("search-reconciliation-required");
+        remote[("tenant-a", "party-1")].IsActive.ShouldBeTrue();
+        await search.Received(1).NotifyIndexedAsync("tenant-a", Arg.Is<PartyIndexEntry>(entry => entry.Id == "party-1"),
+            Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>());
+        JsonSerializer.Serialize((await store.GetAsync<PartyIndexSdkReadModel>(StoreName, tenantAKey, TestContext.Current.CancellationToken)).Value,
+            PartiesJsonOptions.Default).ShouldBe(committed);
+
+        handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
+        (await handler.ProjectAsync(currentReplay, "retry-current-complete", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        await search.Received(1).NotifyIndexedAsync("tenant-a", Arg.Is<PartyIndexEntry>(entry => entry.Id == "party-1" && !entry.IsActive),
+            nameof(PartyDeactivated), currentReplay.Events[^1].Timestamp, 2, Arg.Any<CancellationToken>());
+        JsonSerializer.Serialize((await store.GetAsync<PartyIndexSdkReadModel>(StoreName, tenantAKey, TestContext.Current.CancellationToken)).Value,
+            PartiesJsonOptions.Default).ShouldBe(committed);
+        JsonSerializer.Serialize((await store.GetAsync<PartyIndexSdkReadModel>(StoreName, tenantBKey, TestContext.Current.CancellationToken)).Value,
+            PartiesJsonOptions.Default).ShouldBe(otherTenantBefore);
         remote[("tenant-a", "party-1")].IsActive.ShouldBeFalse();
+        remote[("tenant-a", "party-2")].ShouldBe(otherPartyBefore);
+        remote[("tenant-b", "party-1")].ShouldBe(otherTenantBeforeEntry);
         remote[("tenant-a", "party-2")].IsActive.ShouldBeTrue();
         remote[("tenant-b", "party-1")].IsActive.ShouldBeTrue();
         await search.DidNotReceiveWithAnyArgs().NotifyRemovedAsync(default!, default!, default);

@@ -64,7 +64,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.Find("table").GetAttribute("aria-label").ShouldBe("Parties");
             cut.Markup.ShouldContain("Ada Lovelace");
             cut.Markup.ShouldContain("Person");
-            cut.Find("td span.hx-parties-admin__badge").TextContent.Trim().ShouldBe("Active");
+            cut.Find("td .hx-parties-admin__badge").TextContent.Trim().ShouldBe("Active");
             cut.Markup.ShouldNotContain("hero");
         });
 
@@ -160,6 +160,10 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             navigation.Uri.ShouldNotContain("Route%20Party");
             api.DetailRequests.Single().ShouldBe("party-route-1");
             cut.Find("aside.hx-parties-admin__detail").TextContent.ShouldContain("Route Party");
+            cut.FindComponents<FluentAccordion>().Count.ShouldBe(2);
+            cut.FindComponents<FluentAccordionItem>().All(static item => item.Instance.Expanded).ShouldBeTrue();
+            cut.Find("table").Closest("fluent-accordion").ShouldBeNull();
+            cut.Find(".hx-parties-admin__toolbar").Closest("fluent-accordion").ShouldBeNull();
         });
     }
 
@@ -3796,7 +3800,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
             cut.WaitForAssertion(() =>
             {
                 cut.Markup.ShouldContain("Page 1 sur 3, 42 au total");
-                cut.Find("td span.hx-parties-admin__badge").TextContent.Trim().ShouldBe("Inactif");
+                cut.Find("td .hx-parties-admin__badge").TextContent.Trim().ShouldBe("Inactif");
                 cut.Markup.ShouldContain("01/05/2026");
             });
             ClickFluentButton(cut, "Jean Martin");
@@ -4035,9 +4039,9 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         Services.AddSingleton<IPartiesAdminPortalApiClient>(api);
 
         IRenderedComponent<PartiesAdminPortal> cut = RenderAuthorized("scope-a");
-        cut.WaitForAssertion(() => cut.FindAll("td span.hx-parties-admin__badge").Count.ShouldBe(2));
+        cut.WaitForAssertion(() => cut.FindAll("td .hx-parties-admin__badge").Count.ShouldBe(2));
 
-        var badges = cut.FindAll("td span.hx-parties-admin__badge").Select(b => b.TextContent.Trim()).ToList();
+        var badges = cut.FindAll("td .hx-parties-admin__badge").Select(b => b.TextContent.Trim()).ToList();
         badges.ShouldContain("Active");
         badges.ShouldContain("Inactive");
 
@@ -4047,7 +4051,7 @@ public sealed class PartiesAdminPortalComponentTests : BunitContext
         cut.Find($"#{inactiveDescription}").TextContent.Trim().ShouldBe("Inactive");
 
         // Each badge has aria-label matching its visible text — screen readers read the same content.
-        foreach (var badge in cut.FindAll("td span.hx-parties-admin__badge"))
+        foreach (var badge in cut.FindAll("td .hx-parties-admin__badge"))
         {
             badge.GetAttribute("aria-label").ShouldBe(badge.TextContent.Trim());
         }

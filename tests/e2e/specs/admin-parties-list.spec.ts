@@ -1,3 +1,6 @@
+import { expectNoBlockingAxeViolations } from '../helpers/a11y.js';
+import { expectAccordionFocusClearance } from '../helpers/accordion-focus.js';
+import { portalAction } from '../helpers/portal-actions.js';
 import { expect, test, type APIRequestContext, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -144,7 +147,19 @@ test.describe('Admin parties list', () => {
     await expect(page.getByRole('searchbox', { name: 'Search parties' })).toBeFocused();
   });
 
-  test('desktop row click and direct route render the existing party detail surface', async ({ page, request }) => {
+  for (const forcedColors of ['none', 'active'] as const) {
+    test(`GDPR operation focus rings clear nested accordion edges with forced colors ${forcedColors}`, async ({ page }) => {
+      await page.emulateMedia({ forcedColors, reducedMotion: 'reduce' });
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(`${ADMIN_ROUTE}/ada-lovelace/gdpr`);
+      const detail = page.getByLabel('Party detail');
+      await expect(detail.locator('h3[data-primary-destination="gdpr"]')).toBeFocused();
+      await expectAccordionFocusClearance(portalAction(detail, 'Request erasure'));
+      await expectAccordionFocusClearance(portalAction(detail, 'Processing records'));
+    });
+  }
+
+  test('desktop row click and direct route render the existing party detail surface', async ({ page, request }, testInfo) => {
     await gotoAdmin(page);
 
     await page.getByRole('button', { name: 'Ada Lovelace' }).click();
@@ -155,8 +170,10 @@ test.describe('Admin parties list', () => {
     await expect(detail.locator('.party-state-badge', { hasText: 'Active' })).toBeVisible();
     await expect(detail.locator('.data-freshness-indicator [role="status"]')).toHaveText('Up to date');
     await expect(detail.getByRole('button', { name: 'Edit' })).toBeEnabled();
-    await expect(detail.getByRole('heading', { name: 'GDPR operations', exact: true })).toBeVisible();
+    await expect(detail.locator('.hx-parties-admin__gdpr > h3')).toHaveText('GDPR operations');
+    await expect(detail.locator('.hx-parties-admin__gdpr > h3')).toBeVisible();
     await expect.poll(async () => (await latestDetailRequest(request))?.partyId).toBe('ada-lovelace');
+    await expectNoBlockingAxeViolations(page, { route: `${ADMIN_ROUTE}/ada-lovelace`, artifactPath: testInfo.outputPath('axe-admin-detail.json') });
 
     await page.goto(`${ADMIN_ROUTE}/grace-hopper`);
     await expect(detail.getByRole('heading', { name: 'Grace Hopper' })).toBeVisible();
@@ -181,14 +198,14 @@ test.describe('Admin parties list', () => {
     await page.goto(`${ADMIN_ROUTE}/grace-hopper/gdpr`);
 
     const detail = page.getByLabel('Party detail');
-    await expect(detail.getByRole('heading', { name: 'GDPR operations' })).toBeVisible();
-    await expect(detail.getByRole('heading', { name: 'GDPR operations' })).toBeFocused();
+    await expect(detail.locator('h3[data-primary-destination="gdpr"]')).toBeVisible();
+    await expect(detail.locator('h3[data-primary-destination="gdpr"]')).toBeFocused();
     await expect.poll(async () => (await latestDetailRequest(request))?.partyId).toBe('grace-hopper');
-    await expect(detail.getByRole('button', { name: 'Request erasure' })).toBeEnabled();
+    await expect(portalAction(detail, 'Request erasure')).toBeEnabled();
     await expect(detail.getByRole('button', { name: 'Refresh erasure status' })).toBeEnabled();
     await expect(detail.getByRole('button', { name: 'Restrict processing' })).toBeEnabled();
-    await expect(detail.getByRole('button', { name: 'Export party data' })).toBeEnabled();
-    await expect(detail.getByRole('button', { name: 'Processing records' })).toBeEnabled();
+    await expect(portalAction(detail, 'Export party data')).toBeEnabled();
+    await expect(portalAction(detail, 'Processing records')).toBeEnabled();
     await expect(detail.getByRole('button', { name: 'Retry verification' })).toHaveCount(0);
     await expect(detail.getByText('Certificate unavailable')).toBeVisible();
     await expect(detail.getByText('Blocked on accepted EventStore-fronted Parties client/gateway contract')).toBeVisible();
@@ -198,7 +215,7 @@ test.describe('Admin parties list', () => {
     await expect(detail.getByRole('button', { name: 'Add consent' })).toBeEnabled();
     await detail.getByRole('textbox', { name: 'Restriction reason', exact: true }).fill('contains-sensitive-operator-note');
 
-    await detail.getByRole('button', { name: 'Processing records' }).click();
+    await portalAction(detail, 'Processing records').click();
     await expect(detail.getByRole('status').filter({ hasText: 'Operation completed' })).toBeVisible();
     await expect(detail.getByRole('definition').filter({ hasText: /^GdprOperationRecorded$/ })).toBeVisible();
 
@@ -267,8 +284,8 @@ test.describe('Admin parties list', () => {
     await expect.poll(async () => (await latestRevokeConsentRequest(request))?.partyId).toBe('grace-hopper');
     await expect.poll(async () => (await gdprRequestCounts(request)).revokeConsent).toBe(1);
 
-    await expect(detail.getByRole('button', { name: 'Request erasure' })).toBeVisible();
-    await detail.getByRole('button', { name: 'Request erasure' }).click();
+    await expect(portalAction(detail, 'Request erasure')).toBeVisible();
+    await portalAction(detail, 'Request erasure').click();
 
     const eraseDialog = page.getByRole('dialog', { name: 'Erase party' });
     const eraseDialogContent = detail.locator('fluent-dialog').filter({ has: eraseDialog });
@@ -300,7 +317,7 @@ test.describe('Admin parties list', () => {
     await expect(page.getByText(/^Grace hopper$/)).toHaveCount(0);
     await expect.poll(async () => (await latestErasureRequest(request))?.partyId ?? null).toBe(null);
 
-    await detail.getByRole('button', { name: 'Request erasure' }).click();
+    await portalAction(detail, 'Request erasure').click();
     const reopenedEraseDialog = page.getByRole('dialog', { name: 'Erase party' });
     await expect(reopenedEraseDialog).toBeVisible();
     await eraseDialogContent.getByRole('textbox', { name: 'Type the selected party display name', exact: true }).fill('Grace Hopper');
@@ -346,12 +363,12 @@ test.describe('Admin parties list', () => {
     await page.goto(`${ADMIN_ROUTE}/erased-route/gdpr`);
 
     const detail = page.getByLabel('Party detail');
-    await expect(detail.getByRole('heading', { name: 'GDPR operations' })).toBeFocused();
+    await expect(detail.locator('h3[data-primary-destination="gdpr"]')).toBeFocused();
     await expect(detail.getByRole('status').filter({ hasText: 'The selected party is unavailable' })).toBeVisible();
     await expect(detail.getByText('Erased Route Secret')).toHaveCount(0);
     await expect(detail.getByText('erased-route@example.test')).toHaveCount(0);
     await expect(detail.getByText('ERASED-SECRET-ID')).toHaveCount(0);
-    await expect(detail.getByRole('button', { name: 'Request erasure' })).toBeDisabled();
+    await expect(portalAction(detail, 'Request erasure')).toBeDisabled();
     await expect(detail.getByRole('button', { name: 'Restrict processing' })).toBeDisabled();
 
     await page.evaluate(() => {
@@ -374,7 +391,7 @@ test.describe('Admin parties list', () => {
     });
     const exportStarted = Date.now();
     const downloadPending = page.waitForEvent('download');
-    await detail.getByRole('button', { name: 'Export party data' }).click();
+    await portalAction(detail, 'Export party data').click();
     const download = await downloadPending;
     expect(await download.failure()).toBeNull();
     const fileName = download.suggestedFilename();
@@ -412,8 +429,10 @@ test.describe('Admin parties list', () => {
     expect(page.url()).not.toContain('Erased');
     expect(page.url()).not.toContain('erased-route%40example.test');
 
-    await detail.getByRole('button', { name: 'Processing records' }).click();
-    const records = detail.getByRole('region', { name: 'Processing activity records', exact: true });
+    await portalAction(detail, 'Processing records').click();
+    const records = detail.locator('fluent-accordion-item[data-processing-records="true"]');
+    await expect(records).toHaveCount(1);
+    await expect(records.getByRole('region', { name: 'Processing activity records', exact: true })).toBeVisible();
     await expect(records.getByText('Party id')).toBeVisible();
     await expect(records.getByText('Tenant id')).toBeVisible();
     await expect(records.getByText('Sequence number')).toBeVisible();
@@ -453,17 +472,40 @@ test.describe('Admin parties list', () => {
     await expect(page.getByText('tenant-a:party:secret')).toHaveCount(0);
   });
 
-  test('detail GDPR action navigates to the party-scoped operations route', async ({ page }) => {
+  test('detail GDPR action navigates to the party-scoped operations route', async ({ page }, testInfo) => {
     await gotoAdmin(page);
 
     await page.getByRole('button', { name: 'Ada Lovelace' }).click();
     await page.waitForURL('**/admin/parties/ada-lovelace');
-    await page.getByLabel('Party detail').getByRole('button', { name: 'GDPR operations' }).click();
+    const detail = page.getByLabel('Party detail');
+    const header = detail.locator('fluent-accordion').first().getByRole('button', { name: 'GDPR operations', exact: true });
+    await header.click();
+    await expect(header).toHaveAttribute('aria-expanded', 'false');
+    await expect(detail.locator('.hx-parties-admin__gdpr > h3')).toBeHidden();
+    await portalAction(detail, 'GDPR operations').click();
+    await expect(header).toHaveAttribute('aria-expanded', 'true');
 
     await page.waitForURL('**/admin/parties/ada-lovelace/gdpr');
-    await expect(page.getByRole('heading', { name: 'GDPR operations' })).toBeFocused();
+    await expect(page.getByLabel('Party detail').locator('h3[data-primary-destination="gdpr"]')).toHaveText('GDPR operations');
+    await expect(page.getByLabel('Party detail').locator('h3[data-primary-destination="gdpr"]')).toBeFocused();
     expect(page.url()).not.toContain('scope');
     expect(page.url()).not.toContain('Ada');
+
+    await page.goBack();
+    await page.waitForURL('**/admin/parties/ada-lovelace');
+    await header.click();
+    await expect(header).toHaveAttribute('aria-expanded', 'false');
+    await page.goForward();
+    await page.waitForURL('**/admin/parties/ada-lovelace/gdpr');
+    await expect(header).toHaveAttribute('aria-expanded', 'true');
+    await expect(detail.locator('h3[data-primary-destination="gdpr"]')).toBeFocused();
+
+    await header.click();
+    await expect(header).toHaveAttribute('aria-expanded', 'false');
+    await portalAction(detail, 'GDPR operations').click();
+    await expect(header).toHaveAttribute('aria-expanded', 'true');
+    await expect(detail.locator('h3[data-primary-destination="gdpr"]')).toBeFocused();
+    await expectNoBlockingAxeViolations(page, { route: `${ADMIN_ROUTE}/ada-lovelace/gdpr`, artifactPath: testInfo.outputPath('axe-admin-gdpr.json') });
   });
 
   test('create form submits and navigates with optimistic status', async ({ page, request }) => {

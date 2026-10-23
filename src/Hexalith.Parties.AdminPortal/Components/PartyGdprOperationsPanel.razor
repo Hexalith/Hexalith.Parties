@@ -17,14 +17,16 @@
         @OperationMessage
     </p>
 
-    <DpoOperationalSummaryPanel Party="Party"
+    <FluentAccordion ExpandMode="AccordionExpandMode.Multi" HeadingLevel="4">
+    <DpoOperationalSummaryPanel InAccordion="true" Party="Party"
                                 Labels="Labels"
                                 InstanceId="@_instanceId"
                                 IsErasurePending="@IsErasurePending"
                                 ProcessingRecordCount="@_processingRecords.Count" />
 
-    <section aria-labelledby="@($"erasure-actions-heading-{_instanceId}")">
-        <h4 id="@($"erasure-actions-heading-{_instanceId}")">@Labels.RequestErasure</h4>
+    <FluentAccordionItem Header="@Labels.RequestErasure" Id="@($"erasure-actions-heading-{_instanceId}")" Expanded="true">
+            <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Stretch" Width="100%" VerticalGap="var(--spacingVerticalS)" Style="padding: var(--spacingVerticalS) var(--spacingHorizontalS); min-width: 0; box-sizing: border-box;">
+                <div>
         @if (_confirmErasure)
         {
             <FluentDialog @ref="_erasureDialog" Modal="true" Class="hx-parties-admin__erasure-modal"
@@ -112,14 +114,18 @@
                 </FluentButton>
             }
         }
-    </section>
 
-    <ErasureStatusPanel Status="_erasureStatus"
+
+                </div>
+            </FluentStack>
+</FluentAccordionItem>
+
+    <ErasureStatusPanel InAccordion="true" Status="_erasureStatus"
                         Certificate="_erasureCertificate"
                         Labels="Labels"
                         InstanceId="@_instanceId" />
 
-    <RestrictionActionsPanel Labels="Labels"
+    <RestrictionActionsPanel InAccordion="true" Labels="Labels"
                              InstanceId="@_instanceId"
                              ResetKey="@ConfirmationResetKey"
                              Reason="@_restrictionReason"
@@ -130,7 +136,7 @@
                              Restrict="RestrictAsync"
                              Lift="LiftRestrictionAsync" />
 
-    <ConsentManagementPanel Labels="Labels"
+    <ConsentManagementPanel InAccordion="true" Labels="Labels"
                             InstanceId="@_instanceId"
                             ResetKey="@ConfirmationResetKey"
                             ConsentRecords="@ConsentRecords"
@@ -147,19 +153,20 @@
                             Add="AddConsentAsync"
                             Revoke="RevokeConsentAsync" />
 
-    <PortabilityExportPanel Labels="Labels"
+    <PortabilityExportPanel InAccordion="true" Labels="Labels"
                             InstanceId="@_instanceId"
                             CanExport="@CanExport"
                             FileName="@_exportFileName"
                             DisabledReason="@ExportDisabledReason"
                             Export="ExportAsync" />
 
-    <ProcessingRecordsPanel Labels="Labels"
+    <ProcessingRecordsPanel InAccordion="true" Labels="Labels"
                             InstanceId="@_instanceId"
                             Records="@_processingRecords"
                             CanRefresh="@CanLoadProcessingRecords"
                             DisabledReason="@ProcessingRecordsDisabledReason"
                             Refresh="LoadProcessingRecordsAsync" />
+    </FluentAccordion>
 </section>
 
 @code {

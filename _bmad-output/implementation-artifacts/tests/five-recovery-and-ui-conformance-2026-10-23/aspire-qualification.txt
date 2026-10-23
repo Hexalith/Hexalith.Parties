@@ -1,0 +1,15 @@
+The required pre-code Aspire check was missed. This is current runtime observation only.
+
+aspire describe --non-interactive --format Json
+Exit 7: No running AppHost found.
+
+aspire start --project src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive
+Exit 0: AppHost started successfully.
+
+aspire describe --project src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive --format Json
+Exit 0: security container Running/Unhealthy; dependent services Waiting/NotStarted.
+The bounded JSON receipt contains resource metadata only; endpoint credentials and environment values are excluded.
+No healthy topology or browser/remote Memories proof is claimed.
+
+aspire stop --project src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive
+Exit 0: exact AppHost stopped successfully.

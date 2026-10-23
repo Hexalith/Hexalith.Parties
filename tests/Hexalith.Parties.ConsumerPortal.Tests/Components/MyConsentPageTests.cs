@@ -46,6 +46,9 @@ public sealed class MyConsentPageTests : BunitContext
         cut.WaitForAssertion(() =>
         {
             cut.Find("h1").TextContent.ShouldBe("Consent");
+            cut.FindComponents<FluentAccordion>().Count.ShouldBe(1);
+            cut.FindComponents<FluentAccordionItem>().Count.ShouldBe(2);
+            cut.FindComponents<FluentAccordionItem>().All(static item => item.Instance.Expanded).ShouldBeTrue();
             cut.Markup.ShouldContain("Things you control");
             cut.Markup.ShouldContain("Things we keep to run your account");
             cut.Markup.ShouldContain("Marketing emails");

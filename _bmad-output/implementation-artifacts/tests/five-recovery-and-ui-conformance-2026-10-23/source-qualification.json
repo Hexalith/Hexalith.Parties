@@ -1,0 +1,98 @@
+{
+  "tool_version": "4.34.0",
+  "scope": "Source Debug attempt; no source qualification claimed",
+  "launch": {
+    "command": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "debug",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--evidence",
+      "_bmad-output/implementation-artifacts/tests/five-recovery-and-ui-conformance-2026-10-23/source-debug.json",
+      "--output",
+      "json"
+    ],
+    "cwd": "/tmp/parties-five-final-jincr6s0/source-workspace/Hexalith.Parties",
+    "exit_code": 3,
+    "seconds": 16.778
+  },
+  "run_id": "94909f7970127349beaac623793712b2",
+  "outcome": {
+    "exitCode": "TopologyOrLifecycle",
+    "phase": "Topology",
+    "category": "TopologyOrLifecycle",
+    "ruleId": "HXR020"
+  },
+  "diagnostics": [
+    {
+      "ruleId": "HXR020",
+      "phase": "Topology",
+      "category": "TopologyOrLifecycle",
+      "message": "ng.ComposeNativeProbe(IDistributedApplicationBuilder builder)', validate parameter 'builder' is non-null before using it. If appropriate, throw an 'ArgumentNullException' when the argument is 'null'. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1062) [/tmp/parties-five-final-jincr6s0/source-workspace/Hexalith.Parties/references/Hexalith.Platform/src/Hexalith.Platform.Composition/Hexalith.Platform.Composition.csproj]     1 Warning(s)     7 Error(s)  Time Elapsed 00:00:13.61 deadline='600s' diagnostics='/home/administrator/.local/share/hexalith-builds/g4-runs/diagnostics/94909f7970127349beaac623793712b2'.",
+      "field": "/tmp/parties-five-final-jincr6s0/source-workspace/Hexalith.Parties/references/Hexalith.Platform/src/Hexalith.Platform.Composition/Hexalith.Platform.Composition.csproj",
+      "hint": "Correct the named model-build input; no resources were started.",
+      "source": null,
+      "location": null,
+      "row": null
+    }
+  ],
+  "evidence_written": true,
+  "evidence_sha256": "cf8a02a3a0c353e5a8aac291901ebfc7b05ed948a84b3020793c9f4f0e34638c",
+  "pre_cleanup": {
+    "status": "Failed",
+    "workspace": "/home/administrator/.local/share/hexalith-builds/g4-workspaces/94909f7970127349beaac623793712b2",
+    "appHostProcessId": null,
+    "projectProcessIds": []
+  },
+  "focused_available_evidence": "Default-package Release builds and affected unit/component/consumer tests pass separately. The failed source run removes its generated workspace, leaving no current mapping for focused mapped Debug builds; no hand-authored selectors or warning suppressions used.",
+  "cleanup_command": [
+    "dotnet",
+    "tool",
+    "run",
+    "hexalith-module",
+    "--",
+    "down",
+    "--manifest",
+    "module/hexalith.module-manifest.v2.json",
+    "--run-id",
+    "94909f7970127349beaac623793712b2",
+    "--output",
+    "json"
+  ],
+  "cleanup_exit_code": 0,
+  "cleanup_outcome": {
+    "exitCode": "Success",
+    "phase": "None",
+    "category": "None",
+    "ruleId": null
+  },
+  "cleanup_status": "completed",
+  "workspace_removed": true,
+  "run_record_removed": true,
+  "initial_attempt": {
+    "command": [
+      "dotnet",
+      "tool",
+      "run",
+      "hexalith-module",
+      "--",
+      "debug",
+      "--manifest",
+      "module/hexalith.module-manifest.v2.json",
+      "--evidence",
+      "/tmp/parties-five-final-jincr6s0/source-launch-evidence.json",
+      "--output",
+      "json"
+    ],
+    "exit_code": 3,
+    "diagnostic_ids": [
+      "HXR020",
+      "HXE160"
+    ],
+    "note": "The initial absolute evidence path was rejected by HXE160. Corrected to a canonical repository-relative path in the final attempt; HXR020 Platform compile failure remains independently."
+  }
+}

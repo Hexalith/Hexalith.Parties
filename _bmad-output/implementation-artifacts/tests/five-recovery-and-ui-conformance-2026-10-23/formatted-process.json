@@ -1,0 +1,31 @@
+[
+  {
+    "name": "formatted-process-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers"
+    ],
+    "exit_code": 0,
+    "seconds": 3.031,
+    "log": "formatted-process-build.txt"
+  },
+  {
+    "name": "formatted-process-tests",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll",
+      "-class",
+      "*PackageTestProcessTests",
+      "-result-xml",
+      "/tmp/parties-five-final-jincr6s0/formatted-process.xml"
+    ],
+    "exit_code": 0,
+    "seconds": 6.535,
+    "log": "formatted-process-tests.txt"
+  }
+]

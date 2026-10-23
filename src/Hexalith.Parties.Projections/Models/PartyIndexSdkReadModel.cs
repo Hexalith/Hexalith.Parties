@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using Hexalith.EventStore.Client.Projections;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Models;
@@ -17,6 +19,11 @@ public sealed record PartyIndexSdkReadModel : IReadModelFreshness
     /// </summary>
     public IReadOnlyDictionary<string, PartyIndexEventMetadata> LastIndexedEvents { get; init; }
         = new Dictionary<string, PartyIndexEventMetadata>(StringComparer.Ordinal);
+
+    /// <summary>Gets optional digests binding complete transient search content to canonical checkpoints.</summary>
+    /// <remarks>Historical rows lack this metadata. No contact or identifier values are retained here.</remarks>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyDictionary<string, string>? SearchContentHashes { get; init; }
 
     /// <summary>Gets the highest incorporated aggregate sequence for each active identifier.</summary>
     public IReadOnlyDictionary<string, long> LastSequenceNumbers { get; init; }

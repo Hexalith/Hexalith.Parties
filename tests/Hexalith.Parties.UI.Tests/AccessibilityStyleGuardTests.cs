@@ -9,6 +9,9 @@ public sealed partial class AccessibilityStyleGuardTests
     private static readonly string[] AppOwnedRoots =
     [
         "src/Hexalith.Parties.UI/Components",
+        "src/Hexalith.Parties.AdminPortal/Components",
+        "src/Hexalith.Parties.ConsumerPortal/Components",
+        "src/Hexalith.Parties.Picker/Components",
     ];
 
     private static readonly string[] ForbiddenColorLiterals =
@@ -51,6 +54,24 @@ public sealed partial class AccessibilityStyleGuardTests
             }
 
             file.Content.ShouldNotContain("#0097A7", Case.Insensitive, $"Raw brand teal found in {file.RelativePath}.");
+        }
+    }
+
+    [Fact]
+    public void AllUiComponentSourcesUseCurrentThemeTokensAndComponentTypography()
+    {
+        string repositoryRoot = FindRepositoryRoot();
+        foreach (string root in AppOwnedRoots)
+        {
+            foreach (string file in Directory.EnumerateFiles(Path.Combine(repositoryRoot, root), "*", SearchOption.AllDirectories)
+                .Where(static path => path.EndsWith(".razor", StringComparison.Ordinal) || path.EndsWith(".css", StringComparison.Ordinal)))
+            {
+                string relativePath = Path.GetRelativePath(repositoryRoot, file);
+                string content = File.ReadAllText(file);
+                LegacyTokenRegex().IsMatch(content).ShouldBeFalse($"Legacy theme token in {relativePath}.");
+                ColorLiteralRegex().IsMatch(content).ShouldBeFalse($"Raw theme color in {relativePath}.");
+                RawTypographyRegex().IsMatch(content).ShouldBeFalse($"Raw typography in {relativePath}; use FluentText or Fluent 2 tokens.");
+            }
         }
     }
 
@@ -127,6 +148,15 @@ public sealed partial class AccessibilityStyleGuardTests
 
         throw new InvalidOperationException("Could not locate repository root.");
     }
+
+    [GeneratedRegex(@"--(?:neutral-|type-ramp-|accent-|palette-|error-|warning-|success-|control-corner-radius)", RegexOptions.IgnoreCase)]
+    private static partial Regex LegacyTokenRegex();
+
+    [GeneratedRegex(@"#[0-9a-f]{3,8}\b|\b(?:rgb|rgba|hsl|hsla)\(", RegexOptions.IgnoreCase)]
+    private static partial Regex ColorLiteralRegex();
+
+    [GeneratedRegex(@"\b(?:font-size|font-weight|line-height)\s*:\s*(?!\s|var\(--)[^;]+;", RegexOptions.IgnoreCase)]
+    private static partial Regex RawTypographyRegex();
 
     [GeneratedRegex(@"(?:outline|box-shadow)\s*:\s*none", RegexOptions.IgnoreCase)]
     private static partial Regex FocusSuppressionRegex();

@@ -48,6 +48,9 @@ public sealed class EditMyProfilePageTests : BunitContext
 
         cut.WaitForAssertion(() =>
         {
+            cut.FindComponents<FluentAccordion>().Count.ShouldBe(1);
+            cut.FindComponents<FluentAccordionItem>().Count.ShouldBe(4);
+            cut.FindComponents<FluentAccordionItem>().All(static item => item.Instance.Expanded).ShouldBeTrue();
             FindTextInput(cut, "Prefix").Instance.Value.ShouldBe("Dr");
             FindTextInput(cut, "First name").Instance.Value.ShouldBe("Ada");
             FindTextInput(cut, "Last name").Instance.Value.ShouldBe("Lovelace");

@@ -9,10 +9,12 @@
 @inject IConsumerPrivacyProcessingClient ProcessingClient
 @inject IJSRuntime JsRuntime
 
+<PageTitle>@ConsumerPortalLabels.PrivacyTitle</PageTitle>
+
 <section class="hx-parties-profile hx-parties-privacy" aria-labelledby="@_titleId">
     <header class="hx-parties-profile__header">
-        <p class="hx-parties-profile__eyebrow">@ConsumerPortalLabels.AreaLabel</p>
-        <h1 id="@_titleId">@ConsumerPortalLabels.PrivacyTitle</h1>
+        <p class="hx-parties-profile__eyebrow"><FluentText Size="TextSize.Size200" Weight="TextWeight.Semibold">@ConsumerPortalLabels.AreaLabel</FluentText></p>
+        <FluentText As="TextTag.H1" Size="TextSize.Size800" Weight="TextWeight.Semibold" id="@_titleId">@ConsumerPortalLabels.PrivacyTitle</FluentText>
         <p class="hx-parties-profile__summary">@ConsumerPortalLabels.PrivacySummary</p>
         @if (!_failureVisible)
         {
@@ -20,151 +22,160 @@
         }
     </header>
 
-    <div class="hx-parties-profile__content">
-        <section class="hx-parties-profile__section hx-parties-privacy__export" aria-labelledby="@_exportId">
-            <div class="hx-parties-privacy__section-header">
-                <h2 id="@_exportId">@ConsumerPortalLabels.PrivacyExportTitle</h2>
-                <p class="hx-parties-privacy__format">@ConsumerPortalLabels.PrivacyExportFormat</p>
-            </div>
-            <p>@ConsumerPortalLabels.PrivacyExportDescription</p>
+    <FluentAccordion ExpandMode="AccordionExpandMode.Multi" HeadingLevel="2" Class="hx-parties-profile__content">
+        <FluentAccordionItem Header="@ConsumerPortalLabels.PrivacyExportTitle" Id="@_exportId" Expanded="true" Class="hx-parties-profile__section hx-parties-privacy__export">
+            <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Stretch" Width="100%" VerticalGap="var(--spacingVerticalS)" Style="padding: var(--spacingVerticalS) var(--spacingHorizontalS); min-width: 0; box-sizing: border-box;">
+                <div>
+                    <div class="hx-parties-privacy__section-header">
+                        <p class="hx-parties-privacy__format">@ConsumerPortalLabels.PrivacyExportFormat</p>
+                    </div>
+                    <p>@ConsumerPortalLabels.PrivacyExportDescription</p>
 
-            @if (_failureVisible)
-            {
-                <div class="hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
-                    <h3 id="@_failureId">@ConsumerPortalLabels.PrivacyExportFailureTitle</h3>
-                    <p>@ConsumerPortalLabels.PrivacyExportFailureMessage</p>
-                </div>
-            }
-
-            <div class="hx-parties-privacy__actions">
-                <FluentButton aria-disabled="@(_isPreparing ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary"
-                              Disabled="@_isPreparing"
-                              OnClick="PrepareExportAsync">
-                    @ConsumerPortalLabels.PrivacyExportAction
-                </FluentButton>
-
-                @if (CanDownload)
-                {
-                    <FluentButton aria-disabled="@(_isDownloading ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                                  Disabled="@_isDownloading"
-                                  OnClick="DownloadAsync">
-                        @ConsumerPortalLabels.PrivacyExportDownload
-                    </FluentButton>
-                }
-            </div>
-        </section>
-
-        <section class="hx-parties-profile__section hx-parties-privacy__processing" aria-labelledby="@_processingId">
-            <div class="hx-parties-privacy__section-header">
-                <h2 id="@_processingId">@ConsumerPortalLabels.PrivacyProcessingTitle</h2>
-            </div>
-            <p>@ConsumerPortalLabels.PrivacyProcessingDescription</p>
-            <p class="hx-parties-profile__freshness">@ConsumerPortalLabels.PrivacyProcessingBoundedMetadata</p>
-
-            @if (ShowProcessingAlert)
-            {
-                <div class="hx-parties-profile__notice" role="alert" aria-labelledby="@_processingFailureId">
-                    <h3 id="@_processingFailureId">@ConsumerPortalLabels.PrivacyProcessingFailureTitle</h3>
-                    <p>@ProcessingAlertMessage</p>
-                </div>
-            }
-            else
-            {
-                <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@ProcessingStatusMessage</p>
-            }
-
-            @if (!_isLoadingProcessing && _processing.Records.Count > 0)
-            {
-                <ul class="hx-parties-privacy__processing-list">
-                    @foreach (ConsumerPrivacyProcessingRecord record in _processing.Records)
+                    @if (_failureVisible)
                     {
-                        <li class="hx-parties-privacy__processing-item">
-                            <div class="hx-parties-privacy__processing-meta">
-                                <span>@ConsumerPortalLabels.PrivacyProcessingCategoryLabel(record.Category)</span>
-                                <span>@ConsumerPortalLabels.PrivacyProcessingOutcomeLabel(record.Outcome)</span>
-                            </div>
-                            <p>@SafeProcessingSummary(record)</p>
-                            <p class="hx-parties-profile__freshness">@ConsumerPortalLabels.FormatPrivacyProcessingTimestamp(record.Timestamp)</p>
-                        </li>
+                        <div class="hx-parties-profile__notice" role="alert" aria-labelledby="@_failureId">
+                            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" id="@_failureId">@ConsumerPortalLabels.PrivacyExportFailureTitle</FluentText>
+                            <p>@ConsumerPortalLabels.PrivacyExportFailureMessage</p>
+                        </div>
                     }
-                </ul>
-            }
 
-            <p>@ConsumerPortalLabels.PrivacyProcessingConsentSummary</p>
-            <a class="hx-parties-privacy__consent-link" href="/me/consent">@ConsumerPortalLabels.PrivacyProcessingManageConsent</a>
-        </section>
-
-        <section class="hx-parties-profile__section hx-parties-privacy__erasure" aria-labelledby="@_erasureId">
-            <h2 id="@_erasureId">@ConsumerPortalLabels.PrivacyErasureTitle</h2>
-            <p>@ConsumerPortalLabels.PrivacyErasureDescription</p>
-
-            @if (_erasureAlertVisible)
-            {
-                <div class="hx-parties-profile__notice" role="alert" aria-labelledby="@_erasureFailureId">
-                    <h3 id="@_erasureFailureId">@ConsumerPortalLabels.PrivacyErasureFailureTitle</h3>
-                    <p>@ErasureAlertMessage</p>
-                </div>
-            }
-            else if (ShowErasureStatus)
-            {
-                <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@ErasureStatusMessage</p>
-            }
-            else
-            {
-                <p class="hx-parties-profile__freshness">@ErasureStatusMessage</p>
-            }
-
-            @if (_confirmErasure)
-            {
-                <div class="hx-parties-profile__notice" role="dialog" aria-modal="true" aria-labelledby="@_erasureConfirmId">
-                    <h3 id="@_erasureConfirmId">@ConsumerPortalLabels.PrivacyErasureConfirmTitle</h3>
-                    <p>@ConsumerPortalLabels.PrivacyErasureConfirmMessage</p>
                     <div class="hx-parties-privacy__actions">
-                        <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                                      Disabled="@_erasureBusy"
-                                      OnClick="DismissErasureConfirmation">
-                            @ConsumerPortalLabels.PrivacyErasureKeepData
+                        <FluentButton aria-disabled="@(_isPreparing ? "true" : "false")" role="button" Appearance="ButtonAppearance.Primary"
+                                      Disabled="@_isPreparing"
+                                      OnClick="PrepareExportAsync">
+                            @ConsumerPortalLabels.PrivacyExportAction
                         </FluentButton>
-                        <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                                      class="hx-parties-privacy__danger-action"
-                                      Disabled="@_erasureBusy"
-                                      OnClick="RequestErasureAsync">
-                            @ConsumerPortalLabels.PrivacyErasureConfirmAction
-                        </FluentButton>
+
+                        @if (CanDownload)
+                        {
+                            <FluentButton aria-disabled="@(_isDownloading ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                                          Disabled="@_isDownloading"
+                                          OnClick="DownloadAsync">
+                                @ConsumerPortalLabels.PrivacyExportDownload
+                            </FluentButton>
+                        }
                     </div>
                 </div>
-            }
+            </FluentStack>
+        </FluentAccordionItem>
 
-            <div class="hx-parties-privacy__actions">
-                @if (CanRequestErasure)
-                {
-                    <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                                  class="hx-parties-privacy__danger-action"
-                                  Disabled="@_erasureBusy"
-                                  OnClick="BeginErasureConfirmation">
-                        @ConsumerPortalLabels.PrivacyErasureAction
-                    </FluentButton>
-                }
-                else if (CanCancelErasure)
-                {
-                    <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
-                                  Disabled="@_erasureBusy"
-                                  OnClick="CancelErasureAsync">
-                        @ConsumerPortalLabels.PrivacyErasureCancelAction
-                    </FluentButton>
-                }
-                else if (ShowDisabledCancel)
-                {
-                    <FluentButton role="button" Appearance="ButtonAppearance.Outline"
-                                  Disabled="true"
-                                  aria-disabled="true">
-                        @ConsumerPortalLabels.PrivacyErasureCancelAction
-                    </FluentButton>
-                    <p>@ConsumerPortalLabels.PrivacyErasureCancelUnavailable</p>
-                }
-            </div>
-        </section>
-    </div>
+        <FluentAccordionItem Header="@ConsumerPortalLabels.PrivacyProcessingTitle" Id="@_processingId" Expanded="true" Class="hx-parties-profile__section hx-parties-privacy__processing">
+            <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Stretch" Width="100%" VerticalGap="var(--spacingVerticalS)" Style="padding: var(--spacingVerticalS) var(--spacingHorizontalS); min-width: 0; box-sizing: border-box;">
+                <div>
+                    <div class="hx-parties-privacy__section-header">
+                    </div>
+                    <p>@ConsumerPortalLabels.PrivacyProcessingDescription</p>
+                    <p class="hx-parties-profile__freshness">@ConsumerPortalLabels.PrivacyProcessingBoundedMetadata</p>
+
+                    @if (ShowProcessingAlert)
+                    {
+                        <div class="hx-parties-profile__notice" role="alert" aria-labelledby="@_processingFailureId">
+                            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" id="@_processingFailureId">@ConsumerPortalLabels.PrivacyProcessingFailureTitle</FluentText>
+                            <p>@ProcessingAlertMessage</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@ProcessingStatusMessage</p>
+                    }
+
+                    @if (!_isLoadingProcessing && _processing.Records.Count > 0)
+                    {
+                        <ul class="hx-parties-privacy__processing-list">
+                            @foreach (ConsumerPrivacyProcessingRecord record in _processing.Records)
+                            {
+                                <li class="hx-parties-privacy__processing-item">
+                                    <div class="hx-parties-privacy__processing-meta">
+                                        <span>@ConsumerPortalLabels.PrivacyProcessingCategoryLabel(record.Category)</span>
+                                        <span>@ConsumerPortalLabels.PrivacyProcessingOutcomeLabel(record.Outcome)</span>
+                                    </div>
+                                    <p>@SafeProcessingSummary(record)</p>
+                                    <p class="hx-parties-profile__freshness">@ConsumerPortalLabels.FormatPrivacyProcessingTimestamp(record.Timestamp)</p>
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                    <p>@ConsumerPortalLabels.PrivacyProcessingConsentSummary</p>
+                    <a class="hx-parties-privacy__consent-link" href="/me/consent">@ConsumerPortalLabels.PrivacyProcessingManageConsent</a>
+                </div>
+            </FluentStack>
+        </FluentAccordionItem>
+
+        <FluentAccordionItem Header="@ConsumerPortalLabels.PrivacyErasureTitle" Id="@_erasureId" Expanded="true" Class="hx-parties-profile__section hx-parties-privacy__erasure">
+            <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Stretch" Width="100%" VerticalGap="var(--spacingVerticalS)" Style="padding: var(--spacingVerticalS) var(--spacingHorizontalS); min-width: 0; box-sizing: border-box;">
+                <div>
+                    <p>@ConsumerPortalLabels.PrivacyErasureDescription</p>
+
+                    @if (_erasureAlertVisible)
+                    {
+                        <div class="hx-parties-profile__notice" role="alert" aria-labelledby="@_erasureFailureId">
+                            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" id="@_erasureFailureId">@ConsumerPortalLabels.PrivacyErasureFailureTitle</FluentText>
+                            <p>@ErasureAlertMessage</p>
+                        </div>
+                    }
+                    else if (ShowErasureStatus)
+                    {
+                        <p class="hx-parties-profile__freshness" role="status" aria-live="polite">@ErasureStatusMessage</p>
+                    }
+                    else
+                    {
+                        <p class="hx-parties-profile__freshness">@ErasureStatusMessage</p>
+                    }
+
+                    @if (_confirmErasure)
+                    {
+                        <div class="hx-parties-profile__notice" role="dialog" aria-modal="true" aria-labelledby="@_erasureConfirmId">
+                            <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" id="@_erasureConfirmId">@ConsumerPortalLabels.PrivacyErasureConfirmTitle</FluentText>
+                            <p>@ConsumerPortalLabels.PrivacyErasureConfirmMessage</p>
+                            <div class="hx-parties-privacy__actions">
+                                <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                                              Disabled="@_erasureBusy"
+                                              OnClick="DismissErasureConfirmation">
+                                    @ConsumerPortalLabels.PrivacyErasureKeepData
+                                </FluentButton>
+                                <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                                              class="hx-parties-privacy__danger-action"
+                                              Disabled="@_erasureBusy"
+                                              OnClick="RequestErasureAsync">
+                                    @ConsumerPortalLabels.PrivacyErasureConfirmAction
+                                </FluentButton>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="hx-parties-privacy__actions">
+                        @if (CanRequestErasure)
+                        {
+                            <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                                          class="hx-parties-privacy__danger-action"
+                                          Disabled="@_erasureBusy"
+                                          OnClick="BeginErasureConfirmation">
+                                @ConsumerPortalLabels.PrivacyErasureAction
+                            </FluentButton>
+                        }
+                        else if (CanCancelErasure)
+                        {
+                            <FluentButton aria-disabled="@(_erasureBusy ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
+                                          Disabled="@_erasureBusy"
+                                          OnClick="CancelErasureAsync">
+                                @ConsumerPortalLabels.PrivacyErasureCancelAction
+                            </FluentButton>
+                        }
+                        else if (ShowDisabledCancel)
+                        {
+                            <FluentButton role="button" Appearance="ButtonAppearance.Outline"
+                                          Disabled="true"
+                                          aria-disabled="true">
+                                @ConsumerPortalLabels.PrivacyErasureCancelAction
+                            </FluentButton>
+                            <p>@ConsumerPortalLabels.PrivacyErasureCancelUnavailable</p>
+                        }
+                    </div>
+                </div>
+            </FluentStack>
+        </FluentAccordionItem>
+    </FluentAccordion>
 </section>
 
 @code {

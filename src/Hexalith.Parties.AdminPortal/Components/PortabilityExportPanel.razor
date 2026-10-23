@@ -1,5 +1,5 @@
-<section aria-labelledby="@($"portability-export-heading-{InstanceId}")">
-    <h4 id="@($"portability-export-heading-{InstanceId}")">@Labels.ExportPartyData</h4>
+@{
+    RenderFragment sectionContent = @<text>
     <FluentButton aria-disabled="@((!CanExport) ? "true" : "false")" role="button" Appearance="ButtonAppearance.Outline"
                   Disabled="@(!CanExport)"
                   OnClick="Export">
@@ -13,9 +13,34 @@
     {
         <p role="status" aria-live="polite">@Labels.GdprExportPrepared: @FileName</p>
     }
-</section>
+    </text>;
+}
+
+@if (InAccordion)
+{
+    <FluentAccordionItem Header="@Labels.ExportPartyData" Expanded="true">
+            <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Stretch" Width="100%" VerticalGap="var(--spacingVerticalS)" Style="padding: var(--spacingVerticalS) var(--spacingHorizontalS); min-width: 0; box-sizing: border-box;">
+                <div>
+        @sectionContent
+
+
+                </div>
+            </FluentStack>
+</FluentAccordionItem>
+}
+else
+{
+    <section aria-labelledby="@($"portability-export-heading-{InstanceId}")">
+        <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold" id="@($"portability-export-heading-{InstanceId}")">@Labels.ExportPartyData</FluentText>
+        @sectionContent
+    </section>
+}
 
 @code {
+    /// <summary>Gets or sets whether this section belongs to the operations accordion.</summary>
+    [Parameter]
+    public bool InAccordion { get; set; }
+
     [Parameter, EditorRequired]
     public AdminPortalLabels Labels { get; set; } = new();
 

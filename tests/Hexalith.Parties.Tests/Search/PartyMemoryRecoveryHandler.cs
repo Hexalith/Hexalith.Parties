@@ -12,6 +12,8 @@ internal sealed class PartyMemoryRecoveryHandler : HttpMessageHandler
 
     public HashSet<string> Units { get; } = new(StringComparer.Ordinal);
 
+    public Dictionary<string, (HttpStatusCode Status, string Body)> WorkflowErrors { get; } = new(StringComparer.Ordinal);
+
     public bool DelayDeletion { get; set; }
 
     public int DeleteStatus { get; set; } = 204;
@@ -34,6 +36,11 @@ internal sealed class PartyMemoryRecoveryHandler : HttpMessageHandler
         string id = Uri.UnescapeDataString(path.Split('/')[^1]);
         if (path.Contains("/ingest/", StringComparison.Ordinal))
         {
+            if (WorkflowErrors.TryGetValue(id, out (HttpStatusCode Status, string Body) error))
+            {
+                return new(error.Status) { Content = new StringContent(error.Body, System.Text.Encoding.UTF8, "application/json") };
+            }
+
             return Workflows.TryGetValue(id, out IngestionWorkflowStatus? status)
                 ? new(HttpStatusCode.OK) { Content = JsonContent.Create(status) }
                 : new(HttpStatusCode.NotFound);

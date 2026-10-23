@@ -7,6 +7,19 @@ using Dapr.Client;
 
 using FluentValidation;
 
+using Hexalith.EventStore.Client.Projections;
+using Hexalith.EventStore.Client.Queries;
+using Hexalith.EventStore.Contracts.Projections;
+using Hexalith.EventStore.Contracts.Queries;
+using Hexalith.EventStore.DomainService;
+using Hexalith.EventStore.Testing.Fakes;
+using Hexalith.Parties.Contracts.Search;
+using Hexalith.Parties.Projections.Configuration;
+using Hexalith.Parties.Projections.Handlers;
+using Hexalith.Parties.Projections.Models;
+using Hexalith.Parties.Queries;
+using Microsoft.Extensions.Options;
+
 using Hexalith.Commons.UniqueIds;
 using Hexalith.McpCli.Abstractions;
 using Hexalith.Parties.Contracts;
@@ -38,6 +51,98 @@ namespace Hexalith.Parties.Tests.Domain;
 
 public sealed class PartyDomainProcessorValidationTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RetryErasureAppendFailureOrCancellationCannotPromoteQueryUntilCommittedProjection(bool canceled)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        const string partyId = "party-append";
+        DateTimeOffset at = DateTimeOffset.UnixEpoch.AddHours(1);
+        IPartyErasureRecordStore records = Substitute.For<IPartyErasureRecordStore>();
+        PartyErasureStatusRecord legacy = new() { PartyId = partyId, TenantId = "tenant-a", Status = "KeyDestroyed", UpdatedAt = at };
+        PartyErasureStatusRecord expectedDestroyed = legacy;
+        PartyErasureStatusRecord expectedErased = legacy with { Status = "Erased", UpdatedAt = at.AddMinutes(1), ErasedAt = at.AddMinutes(1) };
+        records.GetStatusAsync("tenant-a", partyId, Arg.Any<CancellationToken>()).Returns(_ => legacy);
+        records.SaveStatusAsync(Arg.Any<PartyErasureStatusRecord>(), Arg.Any<CancellationToken>()).Returns(call =>
+        {
+            legacy = call.Arg<PartyErasureStatusRecord>();
+            return Task.CompletedTask;
+        });
+        records.GetCertificateAsync("tenant-a", partyId, Arg.Any<CancellationToken>()).Returns(new ErasureCertificate
+        { PartyId = partyId, TenantId = "tenant-a", Timestamp = at, KeyVersionsDestroyed = [1], VerificationStatus = ErasureVerificationStatus.Verified });
+        IErasureVerificationService verification = Substitute.For<IErasureVerificationService>();
+        verification.VerifyErasureAsync("tenant-a", partyId, Arg.Any<ErasureCertificate>(), Arg.Any<CancellationToken>())
+            .Returns(new ErasureVerificationReport { PartyId = partyId, TenantId = "tenant-a", Timestamp = at.AddMinutes(1), OverallStatus = ErasureVerificationOverallStatus.Complete, StoreResults = [] });
+        PartyDomainProcessor Processor() => CreateInvoker(Substitute.For<IEventPayloadProtectionService>(), records, CreateOrchestrator(verification));
+        CommandEnvelope command = CreateCommand(new RetryErasureVerification { PartyId = partyId, TenantId = "tenant-a" });
+        var identity = new AggregateIdentity("tenant-a", "party", partyId);
+        var persister = new FakeEventPersister();
+        await persister.PersistEventsAsync(identity, "Party", command, DomainResult.Success([
+            new PartyCreated { Type = PartyType.Person },
+            new ErasePartyRequested { PartyId = partyId, TenantId = "tenant-a", RequestedAt = at.AddMinutes(-1), RequestedBy = "operator" },
+            new PartyEncryptionKeyDeleted { PartyId = partyId, TenantId = "tenant-a", DeletedAt = at },
+        ]), "v1", token);
+        var persisted = new Dictionary<string, ReadOnlyMemory<byte>>(StringComparer.Ordinal);
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        IReadModelBatchStore batches = Substitute.For<IReadModelBatchStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call =>
+            new ReadModelEntry<PartyDetailSdkReadModel>(persisted.TryGetValue(call.ArgAt<string>(1), out ReadOnlyMemory<byte> bytes)
+                ? JsonSerializer.Deserialize<PartyDetailSdkReadModel>(bytes.Span, PartiesJsonOptions.Default) : null, "etag"));
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call =>
+            new ReadModelEntry<PartyProcessingSdkReadModel>(persisted.TryGetValue(call.ArgAt<string>(1), out ReadOnlyMemory<byte> bytes)
+                ? JsonSerializer.Deserialize<PartyProcessingSdkReadModel>(bytes.Span, PartiesJsonOptions.Default) : null, "etag"));
+        batches.ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>()).Returns(call =>
+        {
+            foreach (ReadModelBatchOperation operation in call.Arg<ReadModelBatch>().Operations)
+            {
+                persisted[operation.Key] = operation.CanonicalValue.ToArray();
+            }
+            return ReadModelBatchResult.Completed("persisted-test-batch");
+        });
+        var options = Options.Create(new PartySdkReadModelOptions());
+        ProjectionRequest Committed() => new("tenant-a", "party", partyId,
+            [.. persister.PersistedEvents.Select(item => new ProjectionEventDto(item.EventTypeName, item.Payload,
+                item.SerializationFormat, item.SequenceNumber, item.Timestamp, item.CorrelationId))]);
+        Task<DomainProjectionHandlerResult> Project(string dispatch) => new PartyDetailSdkProjectionHandler(store, batches, options)
+            .ProjectAsync(Committed(), dispatch, token);
+        async Task<PartyErasureStatusRecord?> Status()
+        {
+            // Recreate the query and its cache so every assertion rereads serialized canonical state.
+            var query = new PartySdkQueryService(store, options, TimeProvider.System, Substitute.For<IPartySearchProvider>(), records,
+                Substitute.For<IQueryCursorCodec>(), new PartySdkLastKnownReadModelCache(), NullLogger<PartySdkQueryService>.Instance);
+            QueryResult result = await query.GetErasureStatusAsync(new QueryEnvelope("tenant-a", "party", partyId,
+                PartyDetailQueryTypes.GetErasureStatusQueryType, "{}"u8.ToArray(), "correlation", "operator", entityId: partyId), token).ConfigureAwait(false);
+            result.Success.ShouldBeTrue();
+            return result.GetPayload().Deserialize<PartyErasureStatusRecord>(PartiesJsonOptions.Default);
+        }
+
+        PartyErasureStatusRecord? PersistedLifecycle() => JsonSerializer.Deserialize<PartyDetailSdkReadModel>(
+            persisted[PartySdkReadModelAddresses.Detail("tenant-a", partyId)].Span, PartiesJsonOptions.Default)!.ErasureLifecycle;
+
+        (await Project("seed")).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        (await Status()).ShouldBe(expectedDestroyed);
+        PersistedLifecycle().ShouldBe(expectedDestroyed);
+        DomainResult proposed = await Processor().ProcessAsync(command, PartyTestState(partyId, ErasureStatus.KeyDestroyed), token);
+        proposed.Events.OfType<PartyErased>().ShouldHaveSingleItem();
+        persister.SetupFailure(canceled ? new OperationCanceledException(token) : new InvalidOperationException("Append rejected."));
+        await Should.ThrowAsync<Exception>(() => persister.PersistEventsAsync(identity, "Party", command, proposed, "v1", token));
+        persister.PersistedEvents.Count.ShouldBe(3);
+        legacy.ShouldBe(expectedDestroyed);
+        (await Status()).ShouldBe(expectedDestroyed);
+        PersistedLifecycle().ShouldBe(expectedDestroyed);
+        DomainResult retry = await Processor().ProcessAsync(command, PartyTestState(partyId, ErasureStatus.KeyDestroyed), token);
+        await persister.PersistEventsAsync(identity, "Party", command, retry, "v1", token);
+        (await Status()).ShouldBe(expectedDestroyed);
+        PersistedLifecycle().ShouldBe(expectedDestroyed);
+        (await Project("committed-retry")).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        (await Status()).ShouldBe(expectedErased);
+        PersistedLifecycle().ShouldBe(expectedErased);
+        (await Project("duplicated")).Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        (await Status()).ShouldBe(expectedErased);
+        PersistedLifecycle().ShouldBe(expectedErased);
+    }
+
     [Fact]
     public async Task ProcessAsync_InvalidCreatePartyPayload_ReturnsRejectionResult()
     {
@@ -879,12 +984,7 @@ public sealed class PartyDomainProcessorValidationTests
             "tenant-a", partyId, TestContext.Current.CancellationToken)).ShouldNotBeNull();
         savedCertificate.Timestamp.ShouldBe(certificate.Timestamp);
         savedCertificate.VerificationStatus.ShouldBe(ErasureVerificationStatus.Verified);
-        await recordStore.Received(1).SaveStatusAsync(
-            Arg.Is<PartyErasureStatusRecord>(saved => saved != null && saved.Status == ErasureStatus.Verified.ToString() && saved.ErrorMessage == null),
-            Arg.Any<CancellationToken>());
-        await recordStore.Received(1).SaveStatusAsync(
-            Arg.Is<PartyErasureStatusRecord>(saved => saved != null && saved.Status == ErasureStatus.Erased.ToString() && saved.ErasedAt == DateTimeOffset.Parse("2026-05-21T20:50:00Z")),
-            Arg.Any<CancellationToken>());
+        await recordStore.DidNotReceiveWithAnyArgs().SaveStatusAsync(default!, default);
     }
 
     [Fact]
@@ -1004,10 +1104,7 @@ public sealed class PartyDomainProcessorValidationTests
             : incompleteStatus == ErasureStoreCleanupStatus.Pending
                 ? ErasureVerificationOverallStatus.Pending : ErasureVerificationOverallStatus.Failed);
         incomplete.Timestamp.ShouldBe(verificationAt);
-        PartyErasureStatusRecord pending = (await recordStore.GetStatusAsync("tenant-a", partyId, token)).ShouldNotBeNull();
-        pending.Status.ShouldBe(incomplete.OverallStatus.ToString());
-        pending.ErasedAt.ShouldBeNull();
-        pending.UpdatedAt.ShouldBe(verificationAt);
+        (await recordStore.GetStatusAsync("tenant-a", partyId, token)).ShouldBeNull();
         verificationAt = verificationAt.AddMinutes(5);
 
         DomainResult retry = await processor.ProcessAsync(command, state, token);
@@ -1022,11 +1119,7 @@ public sealed class PartyDomainProcessorValidationTests
         complete.Timestamp.ShouldBe(verificationAt);
         complete.StoreResults.Count.ShouldBe(mixedStores ? 2 : 1);
         complete.StoreResults.ShouldAllBe(store => store.Status == ErasureStoreCleanupStatus.Cleaned);
-        PartyErasureStatusRecord erased = (await recordStore.GetStatusAsync("tenant-a", partyId, token)).ShouldNotBeNull();
-        erased.Status.ShouldBe(nameof(ErasureStatus.Erased));
-        erased.UpdatedAt.ShouldBe(verificationAt);
-        erased.ErasedAt.ShouldBe(verificationAt);
-        erased.ErrorMessage.ShouldBeNull();
+        (await recordStore.GetStatusAsync("tenant-a", partyId, token)).ShouldBeNull();
     }
 
     [Theory]
@@ -1068,10 +1161,7 @@ public sealed class PartyDomainProcessorValidationTests
         await recordStore.Received(1).SaveVerificationReportAsync(
             Arg.Is<ErasureVerificationReport>(report => report.TenantId == "tenant-a" && report.PartyId == partyId
                 && report.OverallStatus == ErasureVerificationOverallStatus.Failed), Arg.Any<CancellationToken>());
-        await recordStore.Received(1).SaveStatusAsync(
-            Arg.Is<PartyErasureStatusRecord>(status => status.TenantId == "tenant-a" && status.PartyId == partyId
-                && status.Status == nameof(ErasureVerificationOverallStatus.Failed) && status.ErasedAt == null),
-            Arg.Any<CancellationToken>());
+        await recordStore.DidNotReceiveWithAnyArgs().SaveStatusAsync(default!, default);
     }
 
     [Fact]

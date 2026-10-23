@@ -1,0 +1,349 @@
+{
+  "rows": [
+    {
+      "matrix_row": "Failed append",
+      "tests": [
+        {
+          "suite": "Service",
+          "name": "Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.RetryErasureAppendFailureOrCancellationCannotPromoteQueryUntilCommittedProjection(canceled: False)",
+          "result": "Pass"
+        },
+        {
+          "suite": "Service",
+          "name": "Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.RetryErasureAppendFailureOrCancellationCannotPromoteQueryUntilCommittedProjection(canceled: True)",
+          "result": "Pass"
+        }
+      ],
+      "all_ran_and_passed": true,
+      "qualifying_skips": 0
+    },
+    {
+      "matrix_row": "Successful retry",
+      "tests": [
+        {
+          "suite": "Service",
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ErasureStatusHandlerIgnoresLegacyStatusAuthorityAsync(committed: null, legacy: \\\"Verified\\\")",
+          "result": "Pass"
+        },
+        {
+          "suite": "Service",
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ErasureStatusHandlerIgnoresLegacyStatusAuthorityAsync(committed: null, legacy: \\\"Erased\\\")",
+          "result": "Pass"
+        },
+        {
+          "suite": "Service",
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ErasureStatusHandlerIgnoresLegacyStatusAuthorityAsync(committed: \\\"KeyDestroyed\\\", legacy: \\\"Erased\\\")",
+          "result": "Pass"
+        },
+        {
+          "suite": "Service",
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ErasureStatusHandlerIgnoresLegacyStatusAuthorityAsync(committed: \\\"Verified\\\", legacy: \\\"Active\\\")",
+          "result": "Pass"
+        },
+        {
+          "suite": "Service",
+          "name": "Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests.ErasureStatusHandlerIgnoresLegacyStatusAuthorityAsync(committed: \\\"Erased\\\", legacy: \\\"KeyDestroyed\\\")",
+          "result": "Pass"
+        },
+        {
+          "suite": "Projections",
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.CleanupTombstonePreservesCommittedLifecycleAndReplayBackfillsHistoricalRowsAsync",
+          "result": "Pass"
+        }
+      ],
+      "all_ran_and_passed": true,
+      "qualifying_skips": 0
+    },
+    {
+      "matrix_row": "First ingestion retry",
+      "tests": [
+        {
+          "suite": "Service",
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryCoordinationTests.FirstSuccessfulSubmissionAfterRestartIncludesAllContactAndIdentifierContent",
+          "result": "Pass"
+        },
+        {
+          "suite": "Projections",
+          "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.SearchRetryRestoresAllIgnoredContentAndRejectsChangedOrPartialReplayAsync",
+          "result": "Pass"
+        }
+      ],
+      "all_ran_and_passed": true,
+      "qualifying_skips": 0
+    },
+    {
+      "matrix_row": "Superseded workflow",
+      "tests": [
+        {
+          "suite": "Service",
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryCleanupServiceTests.MissingExpiredOrUnavailableSupersededStatusRetainsOnlyItsUncertainObligation(statusCode: 404, code: \\\"INGESTION_STATUS_NOT_FOUND\\\")",
+          "result": "Pass"
+        },
+        {
+          "suite": "Service",
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryCleanupServiceTests.MissingExpiredOrUnavailableSupersededStatusRetainsOnlyItsUncertainObligation(statusCode: 410, code: \\\"INGESTION_STATUS_EXPIRED\\\")",
+          "result": "Pass"
+        },
+        {
+          "suite": "Service",
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryCleanupServiceTests.MissingExpiredOrUnavailableSupersededStatusRetainsOnlyItsUncertainObligation(statusCode: 503, code: \\\"SERVICE_UNAVAILABLE\\\")",
+          "result": "Pass"
+        },
+        {
+          "suite": "Service",
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryCleanupServiceTests.MissingExpiredOrUnavailableSupersededStatusRetainsOnlyItsUncertainObligation(statusCode: 0, code: \\\"transport\\\")",
+          "result": "Pass"
+        },
+        {
+          "suite": "Service",
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.SupersededAcknowledgedAttemptSurvivesCurrentRevisionAndRestartUntilTerminalCleanup",
+          "result": "Pass"
+        }
+      ],
+      "all_ran_and_passed": true,
+      "qualifying_skips": 0
+    },
+    {
+      "matrix_row": "Exited parent",
+      "tests": [
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunKillsTimedOutProcessWithinPostKillBound",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunPreservesLiteralArgumentBoundariesAndWhitespace",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunReapsTimedOutProcessWithOpenOrClosedStreams(closeStreams: False)",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunReapsTimedOutProcessWithOpenOrClosedStreams(closeStreams: True)",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunPreservesEarlyFailureAndReapsItsOwnedDescendants",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunUsesOneDeadlineWhenStreamsCloseBeforeExit",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunReportsStartFailure",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunRejectsUnboundedExecutionBeforeStarting(timeoutMilliseconds: 0)",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunRejectsUnboundedExecutionBeforeStarting(timeoutMilliseconds: -1)",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunReapsOwnedDescendantsAfterParentExit(closeStreams: False, separateSession: False)",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunReapsOwnedDescendantsAfterParentExit(closeStreams: True, separateSession: False)",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunReapsOwnedDescendantsAfterParentExit(closeStreams: False, separateSession: True)",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunReapsOwnedDescendantsAfterParentExit(closeStreams: True, separateSession: True)",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunDrainsLargeStandardOutputAndErrorStreams",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunStringArgumentsMatchRuntimeParsing(arguments: \\\"plain \\\\\\\"with spaces\\\\\\\" \\\\\\\"\\\\\\\" -option\\\")",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunStringArgumentsMatchRuntimeParsing(arguments: \\\"\\\\\\\"with \\\\\\\\\\\\\\\"quotes\\\\\\\\\\\\\\\"\\\\\\\" C:\\\\\\\\path\\\\\\\\file \\\\\\\"C:\\\\\\\\path with space\\\"\u00b7\u00b7\u00b7)",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunStringArgumentsMatchRuntimeParsing(arguments: \\\"\\\\\\\"two\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"slashes and quote\\\\\\\" tail\\\\\\\\\\\")",
+          "result": "Pass"
+        },
+        {
+          "suite": "Contracts",
+          "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.DiagnosticFallsBackToStandardOutput",
+          "result": "Pass"
+        }
+      ],
+      "all_ran_and_passed": true,
+      "qualifying_skips": 0
+    },
+    {
+      "matrix_row": "UI sections/theme",
+      "tests": [
+        {
+          "suite": "UI",
+          "name": "Hexalith.Parties.UI.Tests.AccessibilityStyleGuardTests.AllUiComponentSourcesUseCurrentThemeTokensAndComponentTypography",
+          "result": "Pass"
+        },
+        {
+          "suite": "Browser",
+          "name": "Consumer portal route shells \u203a section accordions preserve primary content and keyboard focus at narrow width with forced colors none",
+          "class": "consumer-portal-routes.spec.ts",
+          "result": "Pass"
+        },
+        {
+          "suite": "Browser",
+          "name": "Consumer portal route shells \u203a section accordions preserve primary content and keyboard focus at narrow width with forced colors active",
+          "class": "consumer-portal-routes.spec.ts",
+          "result": "Pass"
+        },
+        {
+          "suite": "Browser",
+          "name": "Parties UI accessibility specimen \u203a specimen is nonblank and passes the blocking axe gate",
+          "class": "parties-accessibility.spec.ts",
+          "result": "Pass"
+        },
+        {
+          "suite": "Browser",
+          "name": "Parties UI accessibility specimen \u203a content controls have visible keyboard focus with forced colors none",
+          "class": "parties-accessibility.spec.ts",
+          "result": "Pass"
+        },
+        {
+          "suite": "Browser",
+          "name": "Parties UI accessibility specimen \u203a content controls have visible keyboard focus with forced colors active",
+          "class": "parties-accessibility.spec.ts",
+          "result": "Pass"
+        },
+        {
+          "suite": "Browser",
+          "name": "Parties UI accessibility specimen \u203a semantic visual baseline for deterministic shell specimen",
+          "class": "parties-accessibility.spec.ts",
+          "result": "Pass"
+        },
+        {
+          "suite": "Browser",
+          "name": "Parties UI accessibility specimen \u203a visual baseline for deterministic shell specimen",
+          "class": "parties-accessibility.spec.ts",
+          "result": "Pass"
+        },
+        {
+          "suite": "Browser",
+          "name": "Party picker combobox \u203a keyboard selection keeps focus on the input and emits a bounded event",
+          "class": "party-picker.spec.ts",
+          "result": "Pass"
+        },
+        {
+          "suite": "Browser",
+          "name": "Admin parties list \u203a GDPR operation focus rings clear nested accordion edges with forced colors none",
+          "class": "admin-parties-list.spec.ts",
+          "result": "Pass"
+        },
+        {
+          "suite": "Browser",
+          "name": "Admin parties list \u203a GDPR operation focus rings clear nested accordion edges with forced colors active",
+          "class": "admin-parties-list.spec.ts",
+          "result": "Pass"
+        }
+      ],
+      "all_ran_and_passed": true,
+      "qualifying_skips": 0
+    }
+  ],
+  "all_rows_covered_and_passed": true,
+  "post_review": {
+    "all_previous_matrix_cases_reran_and_passed": true,
+    "qualifying_skips": 0,
+    "additional_regressions": [
+      {
+        "name": "Admin parties list \u203a detail GDPR action navigates to the party-scoped operations route",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests.RunReapsMultipleGenerationsThatCreateSeparateSessions",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.CompleteHistoricalReplayPersistsSearchWitnessBeforeRestartAsync",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \"ContactChannelAdded\", erasureFirst: False)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \"ContactChannelAdded\", erasureFirst: True)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \"ContactChannelRemoved\", erasureFirst: False)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \"ContactChannelRemoved\", erasureFirst: True)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \"ContactChannelUpdated\", erasureFirst: False)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \"ContactChannelUpdated\", erasureFirst: True)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \"IdentifierAdded\", erasureFirst: False)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \"IdentifierAdded\", erasureFirst: True)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \"IdentifierRemoved\", erasureFirst: False)",
+        "result": "Pass"
+      },
+      {
+        "name": "Hexalith.Parties.Projections.Tests.Handlers.PartySdkProjectionHandlerTests.IncompleteIgnoredContentMutationRetainsCheckpointAndWitnessUntilCompleteReplayAsync(mutation: \"IdentifierRemoved\", erasureFirst: True)",
+        "result": "Pass"
+      },
+      {
+        "name": "Parties UI accessibility specimen \u203a accordion focus check rejects an intermediate clipping wrapper",
+        "result": "Pass"
+      },
+      {
+        "name": "Parties UI accessibility specimen \u203a accordion focus check rejects suppressed actual focus paint",
+        "result": "Pass"
+      },
+      {
+        "name": "Parties UI accessibility specimen \u203a disabled irreversible confirmation retains the Fluent disabled appearance",
+        "result": "Pass"
+      }
+    ],
+    "dotnet_evidence": "post-review-dotnet.json",
+    "browser_evidence": "post-review-browser.json"
+  }
+}

@@ -2,9 +2,7 @@
     max-inline-size: 46rem;
     margin-inline: auto;
     padding: var(--spacingVerticalXXL, 2rem) var(--spacingHorizontalL, 1rem);
-    color: var(--neutral-foreground-rest, CanvasText);
-    font-size: 16px;
-    line-height: 1.5;
+    color: var(--colorNeutralForeground1, CanvasText);
 }
 
 .hx-parties-consumer__header {
@@ -15,9 +13,7 @@
 
 .hx-parties-consumer__eyebrow {
     margin: 0;
-    color: var(--neutral-foreground-hint, var(--neutral-foreground-rest));
-    font-size: var(--type-ramp-minus-1-font-size, .875rem);
-    font-weight: 600;
+    color: var(--colorNeutralForeground3, var(--colorNeutralForeground1));
 }
 
 .hx-parties-consumer h1,
@@ -26,29 +22,19 @@
     margin: 0;
 }
 
-.hx-parties-consumer h1 {
-    font-size: var(--type-ramp-plus-4-font-size, 2.5rem);
-    line-height: var(--type-ramp-plus-4-line-height, 3rem);
-}
-
-.hx-parties-consumer h2 {
-    font-size: var(--type-ramp-plus-1-font-size, 1.25rem);
-    line-height: var(--type-ramp-plus-1-line-height, 1.75rem);
-}
-
 .hx-parties-consumer__summary {
     max-inline-size: 38rem;
 }
 
 .hx-parties-consumer__status {
-    color: var(--neutral-foreground-hint, var(--neutral-foreground-rest));
+    color: var(--colorNeutralForeground3, var(--colorNeutralForeground1));
 }
 
 .hx-parties-consumer__panel {
     display: grid;
     gap: var(--spacingVerticalM, .75rem);
     padding-block-start: var(--spacingVerticalL, 1rem);
-    border-block-start: 1px solid var(--neutral-stroke-rest, CanvasText);
+    border-block-start: 1px solid var(--colorNeutralStroke1, CanvasText);
 }
 
 .hx-parties-consumer__list {

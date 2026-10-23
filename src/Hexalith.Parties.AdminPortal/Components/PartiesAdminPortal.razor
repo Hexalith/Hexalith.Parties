@@ -15,9 +15,11 @@
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
+<PageTitle>@EffectiveLabels.Title</PageTitle>
+
 <section @ref="_portalElement" class="hx-parties-admin" aria-labelledby="@($"hx-parties-admin-title-{_instanceId}")">
     <header class="hx-parties-admin__header">
-        <h1 id="@($"hx-parties-admin-title-{_instanceId}")">@EffectiveLabels.Title</h1>
+        <FluentText As="TextTag.H1" Size="TextSize.Size800" Weight="TextWeight.Semibold" id="@($"hx-parties-admin-title-{_instanceId}")">@EffectiveLabels.Title</FluentText>
         <p class="hx-parties-admin__status" role="status" aria-live="polite">@StatusText</p>
         @if (_acceptedCommand is not null)
         {
@@ -136,11 +138,9 @@
                     @EffectiveLabels.PartyTypeLabel(row.Type.ToString())
                 </TemplateColumn>
                 <TemplateColumn Title="@EffectiveLabels.StateColumn" Context="row">
-                    <span id="@RowStatusId(row)"
-                          class="@PartyStateBadgeClass(row.IsActive, false, row.IsErased)"
-                          aria-label="@StatusLabel(row)">
-                        @StatusLabel(row)
-                    </span>
+                    <FluentBadge id="@RowStatusId(row)"
+                          Class="@PartyStateBadgeClass(row.IsActive, false, row.IsErased)" Appearance="BadgeAppearance.Tint" Color="@(row.IsErased ? BadgeColor.Danger : row.IsActive ? BadgeColor.Success : BadgeColor.Subtle)"
+                          aria-label="@StatusLabel(row)">@StatusLabel(row)</FluentBadge>
                 </TemplateColumn>
                 <TemplateColumn Title="@EffectiveLabels.CreatedColumn" Context="row">
                     @FormatDate(row.CreatedAt)
@@ -213,49 +213,43 @@
                 {
                     @RenderFreshness()
 
-                    <section aria-labelledby="@($"party-summary-heading-{_instanceId}")">
-                    <h3 id="@($"party-summary-heading-{_instanceId}")">@EffectiveLabels.Summary</h3>
+                    <FluentAccordion ExpandMode="AccordionExpandMode.Multi" HeadingLevel="3">
+                    <FluentAccordionItem Header="@EffectiveLabels.Summary" Id="@($"party-summary-heading-{_instanceId}")" Expanded="true">
                     <dl>
                         <dt>@EffectiveLabels.TypeColumn</dt>
                         <dd>@EffectiveLabels.PartyTypeLabel(_detail.Type.ToString())</dd>
                         <dt>@EffectiveLabels.Status</dt>
                         <dd>
-                            <span class="@PartyStateBadgeClass(_detail.IsActive, _detail.IsRestricted, _detail.IsErased)"
-                                  aria-label="@DetailStatus(_detail)">
-                                @DetailStatus(_detail)
-                            </span>
+                            <FluentBadge Class="@PartyStateBadgeClass(_detail.IsActive, _detail.IsRestricted, _detail.IsErased)" Appearance="BadgeAppearance.Tint" Color="@(_detail.IsErased ? BadgeColor.Danger : _detail.IsRestricted ? BadgeColor.Warning : _detail.IsActive ? BadgeColor.Success : BadgeColor.Subtle)" aria-label="@DetailStatus(_detail)">@DetailStatus(_detail)</FluentBadge>
                         </dd>
                         <dt>@EffectiveLabels.CreatedColumn</dt>
                         <dd>@(IsPartialDetail ? EffectiveLabels.DetailSectionStillLoading : FormatDate(_detail.CreatedAt))</dd>
                         <dt>@EffectiveLabels.ModifiedColumn</dt>
                         <dd>@(IsPartialDetail ? EffectiveLabels.DetailSectionStillLoading : FormatDate(_detail.LastModifiedAt))</dd>
                     </dl>
-                </section>
+                </FluentAccordionItem>
 
                 @if (_detail.PersonDetails is not null)
                 {
-                    <section aria-labelledby="@($"person-details-heading-{_instanceId}")">
-                        <h3 id="@($"person-details-heading-{_instanceId}")">@EffectiveLabels.PersonDetails</h3>
+                    <FluentAccordionItem Header="@EffectiveLabels.PersonDetails" Id="@($"person-details-heading-{_instanceId}")" Expanded="true">
                         <dl>
                             <dt>@EffectiveLabels.FirstName</dt>
                             <dd>@_detail.PersonDetails.FirstName</dd>
                             <dt>@EffectiveLabels.LastName</dt>
                             <dd>@_detail.PersonDetails.LastName</dd>
                         </dl>
-                    </section>
+                    </FluentAccordionItem>
                 }
                 else if (IsPartialDetail && _detail.Type == PartyType.Person)
                 {
-                    <section aria-labelledby="@($"person-details-heading-{_instanceId}")">
-                        <h3 id="@($"person-details-heading-{_instanceId}")">@EffectiveLabels.PersonDetails</h3>
+                    <FluentAccordionItem Header="@EffectiveLabels.PersonDetails" Id="@($"person-details-heading-{_instanceId}")" Expanded="true">
                         <p>@EffectiveLabels.DetailSectionStillLoading</p>
-                    </section>
+                    </FluentAccordionItem>
                 }
 
                 @if (_detail.OrganizationDetails is not null)
                 {
-                    <section aria-labelledby="@($"organization-details-heading-{_instanceId}")">
-                        <h3 id="@($"organization-details-heading-{_instanceId}")">@EffectiveLabels.OrganizationDetails</h3>
+                    <FluentAccordionItem Header="@EffectiveLabels.OrganizationDetails" Id="@($"organization-details-heading-{_instanceId}")" Expanded="true">
                         <dl>
                             <dt>@EffectiveLabels.LegalName</dt>
                             <dd>@_detail.OrganizationDetails.LegalName</dd>
@@ -264,18 +258,16 @@
                             <dt>@EffectiveLabels.LegalForm</dt>
                             <dd>@_detail.OrganizationDetails.LegalForm</dd>
                         </dl>
-                    </section>
+                    </FluentAccordionItem>
                 }
                 else if (IsPartialDetail && _detail.Type == PartyType.Organization)
                 {
-                    <section aria-labelledby="@($"organization-details-heading-{_instanceId}")">
-                        <h3 id="@($"organization-details-heading-{_instanceId}")">@EffectiveLabels.OrganizationDetails</h3>
+                    <FluentAccordionItem Header="@EffectiveLabels.OrganizationDetails" Id="@($"organization-details-heading-{_instanceId}")" Expanded="true">
                         <p>@EffectiveLabels.DetailSectionStillLoading</p>
-                    </section>
+                    </FluentAccordionItem>
                 }
 
-                <section aria-labelledby="@($"contact-channels-heading-{_instanceId}")">
-                    <h3 id="@($"contact-channels-heading-{_instanceId}")">@EffectiveLabels.ContactChannels</h3>
+                <FluentAccordionItem Header="@EffectiveLabels.ContactChannels" Id="@($"contact-channels-heading-{_instanceId}")" Expanded="true">
                     @if (IsPartialDetail)
                     {
                         <p>@EffectiveLabels.DetailSectionStillLoading</p>
@@ -293,10 +285,9 @@
                             }
                         </ul>
                     }
-                </section>
+                </FluentAccordionItem>
 
-                <section aria-labelledby="@($"identifiers-heading-{_instanceId}")">
-                    <h3 id="@($"identifiers-heading-{_instanceId}")">@EffectiveLabels.Identifiers</h3>
+                <FluentAccordionItem Header="@EffectiveLabels.Identifiers" Id="@($"identifiers-heading-{_instanceId}")" Expanded="true">
                     @if (IsPartialDetail)
                     {
                         <p>@EffectiveLabels.DetailSectionStillLoading</p>
@@ -314,10 +305,9 @@
                             }
                         </ul>
                     }
-                </section>
+                </FluentAccordionItem>
 
-                <section aria-labelledby="@($"consents-heading-{_instanceId}")">
-                    <h3 id="@($"consents-heading-{_instanceId}")">@EffectiveLabels.ConsentRecords</h3>
+                <FluentAccordionItem Header="@EffectiveLabels.ConsentRecords" Id="@($"consents-heading-{_instanceId}")" Expanded="true">
                     @if (IsPartialDetail)
                     {
                         <p>@EffectiveLabels.DetailSectionStillLoading</p>
@@ -335,10 +325,9 @@
                             }
                         </ul>
                     }
-                </section>
+                </FluentAccordionItem>
 
-                <section aria-labelledby="@($"restrictions-heading-{_instanceId}")">
-                    <h3 id="@($"restrictions-heading-{_instanceId}")">@EffectiveLabels.Restrictions</h3>
+                <FluentAccordionItem Header="@EffectiveLabels.Restrictions" Id="@($"restrictions-heading-{_instanceId}")" Expanded="true">
                     @if (IsPartialDetail)
                     {
                         <p>@EffectiveLabels.DetailSectionStillLoading</p>
@@ -356,27 +345,11 @@
                             <dd>@FormatOptionalDate(_detail.ErasedAt)</dd>
                         </dl>
                     }
-                </section>
+                </FluentAccordionItem>
 
-                @if (IsPartialDetail)
-                {
-                    <section aria-labelledby="@($"gdpr-partial-heading-{_instanceId}")">
-                        <h3 id="@($"gdpr-partial-heading-{_instanceId}")">@EffectiveLabels.GdprOperations</h3>
-                        <p>@EffectiveLabels.DetailSectionStillLoading</p>
-                    </section>
-                }
-                else
-                {
-                    <PartyGdprOperationsPanel Party="_detail"
-                                              Labels="EffectiveLabels"
-                                              TenantContextSignature="_authorizationState.ContextSignature"
-                                              RefreshParty="RefreshSelectedPartyAsync"
-                                              RestrictionStateChanged="ApplyOptimisticRestrictionStateAsync"
-                                              AutoFocusOperations="@IsGdprRoute" />
-                }
-
-                    <section aria-labelledby="@($"eventstore-links-heading-{_instanceId}")">
-                    <h3 id="@($"eventstore-links-heading-{_instanceId}")">@EffectiveLabels.EventStoreLinks</h3>
+                    <FluentAccordionItem Header="@EffectiveLabels.EventStoreLinks" Id="@($"eventstore-links-heading-{_instanceId}")" Expanded="true">
+            <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Stretch" Width="100%" VerticalGap="var(--spacingVerticalS)" Style="padding: var(--spacingVerticalS) var(--spacingHorizontalS); min-width: 0; box-sizing: border-box;">
+                <div>
                     @if (EventStoreLinks.BuildStreamLink(_detail.Id) is { } streamLink)
                     {
                         <a href="@streamLink.AbsoluteUri" target="_blank" rel="noopener noreferrer">@EffectiveLabels.OpenEventStoreStream</a>
@@ -387,13 +360,16 @@
                             @EffectiveLabels.EventStoreAdminUnavailable
                         </FluentButton>
                     }
-                </section>
+
+
+                </div>
+            </FluentStack>
+</FluentAccordionItem>
 
                 @* P-pass-2 D3.1: scoped party id is intentionally not displayed as a user-facing
                     label per Story 10.1 task line 60 ("do not display tenant:domain:aggregateId
                     scoped ids as user-facing labels"). *@
-                    <section aria-labelledby="@($"system-metadata-heading-{_instanceId}")">
-                    <h3 id="@($"system-metadata-heading-{_instanceId}")">@EffectiveLabels.SystemMetadata</h3>
+                    <FluentAccordionItem Header="@EffectiveLabels.SystemMetadata" Id="@($"system-metadata-heading-{_instanceId}")" Expanded="true">
                     @if (IsPartialDetail)
                     {
                         <p>@EffectiveLabels.DetailSectionStillLoading</p>
@@ -405,10 +381,9 @@
                             <dd>@_detail.SortName</dd>
                         </dl>
                     }
-                </section>
+                </FluentAccordionItem>
 
-                    <section aria-labelledby="@($"name-history-heading-{_instanceId}")">
-                    <h3 id="@($"name-history-heading-{_instanceId}")">@EffectiveLabels.NameHistory</h3>
+                    <FluentAccordionItem Header="@EffectiveLabels.NameHistory" Id="@($"name-history-heading-{_instanceId}")" Expanded="true">
                     @if (IsPartialDetail)
                     {
                         <p>@EffectiveLabels.DetailSectionStillLoading</p>
@@ -439,7 +414,28 @@
                             }
                         </ul>
                     }
+                    </FluentAccordionItem>
+                    <FluentAccordionItem Header="@EffectiveLabels.GdprOperations" @bind-Expanded="_gdprExpanded">
+                @if (IsPartialDetail)
+                {
+                    <section aria-labelledby="@($"gdpr-partial-heading-{_instanceId}")">
+                        <FluentText As="TextTag.H3" Size="TextSize.Size500" Weight="TextWeight.Semibold" id="@($"gdpr-partial-heading-{_instanceId}")">@EffectiveLabels.GdprOperations</FluentText>
+                        <p>@EffectiveLabels.DetailSectionStillLoading</p>
                     </section>
+                }
+                else
+                {
+                    <PartyGdprOperationsPanel Party="_detail"
+                                              Labels="EffectiveLabels"
+                                              TenantContextSignature="_authorizationState.ContextSignature"
+                                              RefreshParty="RefreshSelectedPartyAsync"
+                                              RestrictionStateChanged="ApplyOptimisticRestrictionStateAsync"
+                                              AutoFocusOperations="@(_gdprExpanded && IsGdprRoute)" />
+                }
+
+                    </FluentAccordionItem>
+                    </FluentAccordion>
+
                 }
             }
         </aside>
@@ -475,6 +471,7 @@
     private bool _hasNextPage;
     private bool _isLoading;
     private bool _isDetailLoading;
+    private bool _gdprExpanded = true;
     private long _listVersion;
     private long _detailVersion;
     private int _disposed;
@@ -741,6 +738,11 @@
 
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs args)
     {
+        if (IsGdprRoute)
+        {
+            _gdprExpanded = true;
+        }
+
         if (_acceptedCommand is not null
             && !string.Equals(CurrentPath, BuildPartyRoute(PartiesAdminPortalManifest.DetailRoute, _acceptedCommand.PartyId), StringComparison.Ordinal))
         {
@@ -1331,6 +1333,7 @@
             return;
         }
 
+        _gdprExpanded = true;
         string target = BuildPartyRoute(PartiesAdminPortalManifest.GdprRoute, _detail.Id);
         NavigationManager.NavigateTo(target);
     }

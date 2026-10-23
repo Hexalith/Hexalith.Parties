@@ -1,0 +1,41 @@
+[
+  {
+    "name": "ui-latest-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "--disable-build-servers"
+    ],
+    "exit_code": 0,
+    "seconds": 2.085,
+    "log": "ui-latest-build.txt"
+  },
+  {
+    "name": "ui-latest-tests",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "-result-xml",
+      "/tmp/parties-five-final-jincr6s0/ui-latest.xml"
+    ],
+    "exit_code": 0,
+    "seconds": 3.382,
+    "log": "ui-latest-tests.txt"
+  },
+  {
+    "name": "projection-matrix-tests",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.Tests.dll",
+      "-result-xml",
+      "/tmp/parties-five-final-jincr6s0/projection-matrix.xml"
+    ],
+    "exit_code": 0,
+    "seconds": 0.989,
+    "log": "projection-matrix-tests.txt"
+  }
+]

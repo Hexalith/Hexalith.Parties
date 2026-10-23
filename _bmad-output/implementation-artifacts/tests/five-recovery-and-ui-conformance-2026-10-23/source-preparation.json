@@ -1,0 +1,68 @@
+{
+  "checkout": "/tmp/parties-five-final-jincr6s0/source-workspace/Hexalith.Parties",
+  "baseline": "08f43497b3f916efa0cdf9b110258f763d894bd9",
+  "patch_sha256": "49de9301bc9df91d62e5b6d548a4a6fe89eecd0ed16a562d9bfd1a075c5e9757",
+  "references": [
+    {
+      "path": "references/Hexalith.EventStore",
+      "selected_commit": "cd193902a52abb02572528958436d79a8ae25b9a",
+      "source_head": "cd193902a52abb02572528958436d79a8ae25b9a",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.Memories",
+      "selected_commit": "b55db82c060caf917a142fdb6585fa7340b01647",
+      "source_head": "b55db82c060caf917a142fdb6585fa7340b01647",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.FrontComposer",
+      "selected_commit": "8c61143ef4c6a983bfe1d25865857b9b4cd240c9",
+      "source_head": "8c61143ef4c6a983bfe1d25865857b9b4cd240c9",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.Tenants",
+      "selected_commit": "25e3bf827a7963ec79b57b4918290b3fed728706",
+      "source_head": "25e3bf827a7963ec79b57b4918290b3fed728706",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.AI.Tools",
+      "selected_commit": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "source_head": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.Commons",
+      "selected_commit": "1663028fb6d9f46a0bf17919edeb21bb99be1587",
+      "source_head": "1663028fb6d9f46a0bf17919edeb21bb99be1587",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.Builds",
+      "selected_commit": "70ead608ac01f66dfcd80c13bb71152dac6c128e",
+      "source_head": "70ead608ac01f66dfcd80c13bb71152dac6c128e",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.PolymorphicSerializations",
+      "selected_commit": "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
+      "source_head": "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.McpCli",
+      "selected_commit": "be89509d59bb6ba53a0382e26219edb0625b47f4",
+      "source_head": "be89509d59bb6ba53a0382e26219edb0625b47f4",
+      "nested_submodules_initialized": false
+    },
+    {
+      "path": "references/Hexalith.Platform",
+      "selected_commit": "1d646b232ad862f6da1d8dd0953fe96ccd273fee",
+      "source_head": "1d646b232ad862f6da1d8dd0953fe96ccd273fee",
+      "nested_submodules_initialized": false
+    }
+  ],
+  "method": "local shared-object clones at selected root gitlinks; original sources untouched; no nested initialization; no handwritten source selectors"
+}

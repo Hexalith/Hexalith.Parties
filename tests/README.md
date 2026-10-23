@@ -236,6 +236,17 @@ session are outside this qualification. Failure controls cover inherited pipes,
 publication, malformed JSON, validation and second-emission cleanup without
 retaining raw output or printing credential-bearing diagnostics.
 
+The shared `PackageTestProcess` runner independently qualifies descendant
+containment on Linux with Python 3 and procfs. A dedicated supervisor becomes a
+subreaper and owns a fresh command session. On normal or early parent exit and
+on timeout it terminates and reaps that command's descendants, including adopted
+children that created separate sessions; inherited output streams drain under
+the existing finite deadlines. No process-name lookup or runner-wide reaping is
+used. Literal argument lists and the legacy string overload retain .NET runtime
+argument parsing. Controls assert that an unrelated worker remains alive.
+Windows and macOS retain the prior bounded runner and its exited-parent
+containment limitation; this evidence does not qualify descendant reaping there.
+
 Add `-class Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests`
 and `-class Hexalith.Parties.IntegrationTests.Topology.PartiesAspireTopologyFixtureTests`
 to the explicit runtime command above for shutdown qualification. The live normal,
@@ -348,3 +359,52 @@ synthetic mapping, intent, probe and conflict keys with fresh ETags. Cleanup fai
 fails an otherwise successful qualification and preserves any original test failure.
 These additional checks do not establish producer content refresh, live reindexing
 under permanent source dedup or delayed physical erasure in the selected runtime.
+
+## Committed erasure and complete live search recovery
+
+Erasure lifecycle queries use the aggregate-owned SDK detail slot's additive
+`ErasureLifecycle` metadata, folded from committed events. Cleanup privacy fences
+and legacy status records cannot certify terminal lifecycle state. Older rows
+without lifecycle metadata remain unknown until a complete contiguous committed
+prefix backfills the metadata, including when its checkpoint does not advance.
+Failed or canceled append and successful retry are exercised through the real
+processor, committed projection and freshly created queries in
+`PartyDomainProcessorValidationTests`; projection tests also retain terminal
+lifecycle through duplicate delivery, cleanup and restart.
+
+Live search ingestion reconstructs ignored contact and identifier collections
+from an independent complete contiguous replay, matched to canonical content,
+sequence and available event provenance. New canonical entries retain only a
+SHA-256 digest of the ignored collections in the existing SDK index slot. This
+binds same-checkpoint replay without storing those personal values in recovery
+manifests; canonical erasure removes the digest. Historical rows lack that
+stronger digest witness and use their existing canonical content and sequence.
+Partial, older and mismatching replay remains retryable. Recreated projection,
+indexing and cleanup services qualify failed first submission followed by a
+complete replay in `PartyMemoryCoordinationTests`, while projection tests cover
+changed ignored values and concurrent updates/erasure. Shared rebuild completion
+still lacks a complete ignored-content replay source; these live/retry tests do
+not qualify that existing limitation or authorize retaining personal manifests.
+
+## Selected Memories workflow retention contract
+
+Selected Memories source `b55db82c060caf917a142fdb6585fa7340b01647` documents in
+[`pipeline-persistence.md`](../references/Hexalith.Memories/docs/operations/pipeline-persistence.md#dapr-workflow-retention-caveat)
+that completed Dapr workflow history remains in the actor state store until
+explicit purge. That source adds no automatic purge or status-expiry feature.
+This is the producer's documented persistence contract, not proof of the
+retention configuration or workflow availability in any deployed runtime.
+
+`PartyMemoryRecoveryTests` retains an older acknowledged running attempt across
+serialized SDK state, a newer successful revision and recreated services. Current
+revision redelivery does not poll superseded workflows. Cleanup opportunistically
+resolves every retained obligation when scoped successful terminal evidence is
+available. `PartyMemoryCleanupServiceTests` qualifies explicit 404
+`INGESTION_STATUS_NOT_FOUND`, hypothetical 410 `INGESTION_STATUS_EXPIRED`, 503 and
+transport outages across recreated cleanup services: the older obligation remains
+uncertain, newer known work can settle, and cleanup succeeds only after matching
+terminal evidence becomes available again. Expiry is fault injection, not a
+claim that the selected producer implements expiry. No scheduling or production
+reconciliation change was needed. Consumer doubles do not prove physical erasure,
+authoritative remote inventory, deployed workflow retention or owner signoffs;
+existing runtime gates, including DW-168, remain open.

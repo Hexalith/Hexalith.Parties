@@ -81,7 +81,11 @@ internal static class PackageTestProcess
         startInfo.UseShellExecute = false;
         startInfo.CreateNoWindow = true;
         string fileName = startInfo.FileName;
-        using Process process = new() { StartInfo = startInfo };
+        string arguments = startInfo.ArgumentList.Count == 0
+            ? startInfo.Arguments
+            : string.Join(' ', startInfo.ArgumentList);
+        using var supervisor = new PackageTestProcessSupervisor(startInfo, postKillExitTimeoutMilliseconds);
+        using Process process = new() { StartInfo = supervisor.StartInfo };
 
         bool started;
         try
@@ -110,24 +114,24 @@ internal static class PackageTestProcess
         }
         catch
         {
-            KillAndWaitForExit(process, postKillExitTimeoutMilliseconds);
+            KillAndWaitForExit(process, supervisor, postKillExitTimeoutMilliseconds);
             throw;
         }
 
         if (!exited)
         {
-            KillAndWaitForExit(process, postKillExitTimeoutMilliseconds);
+            KillAndWaitForExit(process, supervisor, postKillExitTimeoutMilliseconds);
+            supervisor.EnsureCleanupSucceeded(fileName);
             WaitForOutput(standardOutput, standardError, outputCaptureTimeoutMilliseconds, fileName);
             string diagnostic = string.IsNullOrWhiteSpace(standardError.Result)
                 ? standardOutput.Result
                 : standardError.Result;
-            string arguments = startInfo.ArgumentList.Count == 0
-                ? startInfo.Arguments
-                : string.Join(' ', startInfo.ArgumentList);
             throw new TimeoutException(
                 $"{fileName} exceeded the {processTimeoutMilliseconds} ms timeout.{Environment.NewLine}"
                     + $"Arguments: {arguments}{Environment.NewLine}{diagnostic}");
         }
+
+        supervisor.EnsureCleanupSucceeded(fileName);
 
         int remainingMilliseconds = (int)Math.Min(
             outputCaptureTimeoutMilliseconds,
@@ -137,11 +141,19 @@ internal static class PackageTestProcess
     }
 
     /// <summary>Requests termination and waits only for the configured cleanup interval.</summary>
-    private static void KillAndWaitForExit(Process process, int timeoutMilliseconds)
+    private static void KillAndWaitForExit(Process process, PackageTestProcessSupervisor supervisor, int timeoutMilliseconds)
     {
-        TryKill(process);
+        if (supervisor.IsContained)
+        {
+            supervisor.RequestTermination();
+        }
+        else
+        {
+            TryKill(process);
+        }
         if (!process.WaitForExit(timeoutMilliseconds))
         {
+            TryKill(process);
             throw new TimeoutException(
                 $"{process.StartInfo.FileName} did not exit within {timeoutMilliseconds} ms after termination was requested.");
         }

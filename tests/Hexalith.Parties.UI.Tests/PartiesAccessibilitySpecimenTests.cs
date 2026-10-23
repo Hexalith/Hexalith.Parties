@@ -55,6 +55,9 @@ public sealed class PartiesAccessibilitySpecimenTests : BunitContext
 
         cut.Find("[data-testid='parties-accessibility-specimen-ready']").TextContent.ShouldContain("ready");
         cut.Find("h1").TextContent.ShouldBe("Parties accessibility specimen");
+        cut.FindComponents<FluentAccordion>().Count.ShouldBe(1);
+        cut.FindComponents<FluentAccordionItem>().Count.ShouldBe(3);
+        cut.FindComponents<FluentAccordionItem>().All(static item => item.Instance.Expanded).ShouldBeTrue();
         cut.Find("[data-testid='parties-specimen-primary-action']").ShouldNotBeNull();
         cut.Find("[data-testid='parties-specimen-link']").ShouldNotBeNull();
         cut.Find("[role='status'][aria-live='polite']").TextContent.ShouldContain("Synthetic status update");

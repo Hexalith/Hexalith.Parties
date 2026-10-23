@@ -1,0 +1,5 @@
+git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check
+Exit 0, no output.
+The explicit CR-at-EOL setting honors .editorconfig while retaining all default whitespace checks.
+Existing tracked LF files retain LF; existing CRLF files retain CRLF.
+Plain git diff --check reports CR-at-EOL as trailing whitespace in CRLF additions under the current local Git configuration.

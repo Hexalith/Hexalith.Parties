@@ -249,7 +249,15 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         // A fresh handler redelivers the old event after a newer target has been committed.
         DomainProjectionHandlerResult repaired = await Handler().ProjectAsync(created, "repaired", TestContext.Current.CancellationToken);
 
-        repaired.Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        repaired.Status.ShouldBe(erasedBeforeRepair
+            ? ProjectionDispatchStatus.AlreadyCompleted : ProjectionDispatchStatus.Retryable);
+        if (!erasedBeforeRepair)
+        {
+            repaired.ReasonCode.ShouldBe("search-reconciliation-required");
+        }
+
+        client.IngestCount.ShouldBe(0);
+        (await mappings.GetMappingsAsync("tenant-a", "party-1", TestContext.Current.CancellationToken)).ShouldBeEmpty();
         writes.ShouldBe(erasedBeforeRepair ? 3 : 2);
         persisted.ShouldBe(committed);
         PartyIndexSdkReadModel canonical = JsonSerializer.Deserialize<PartyIndexSdkReadModel>(persisted, PartiesJsonOptions.Default)!;
@@ -263,6 +271,13 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         }
         canonical.LastSequenceNumbers["party-1"].ShouldBe(2);
         canonical.Entries["party-1"].IsActive.ShouldBeFalse();
+        // Repair can ingest the current target only when its complete matching history arrives.
+        ProjectionRequest currentReplay = created with { Events = [.. created.Events, .. newer.Events] };
+        DomainProjectionHandlerResult current = await Handler().ProjectAsync(
+            currentReplay, "repaired-current-replay", TestContext.Current.CancellationToken);
+        current.Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        writes.ShouldBe(2);
+        persisted.ShouldBe(committed);
         client.IngestCount.ShouldBe(1);
         client.LastCaseId.ShouldBe("repaired-case");
         client.LastMetadata.ShouldNotBeNull();

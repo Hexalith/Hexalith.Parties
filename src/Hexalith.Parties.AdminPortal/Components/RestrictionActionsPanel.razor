@@ -1,5 +1,5 @@
-<section aria-labelledby="@($"restriction-actions-heading-{InstanceId}")">
-    <h4 id="@($"restriction-actions-heading-{InstanceId}")">@Labels.Restrictions</h4>
+@{
+    RenderFragment sectionContent = @<text>
     <FluentTextInput Value="@Reason"
                      ValueChanged="ReasonChanged"
                      Label="@Labels.GdprRestrictionReason"
@@ -40,9 +40,34 @@
     {
         <p role="status" aria-live="polite">@DisabledReason</p>
     }
-</section>
+    </text>;
+}
+
+@if (InAccordion)
+{
+    <FluentAccordionItem Header="@Labels.Restrictions" Expanded="true">
+            <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Stretch" Width="100%" VerticalGap="var(--spacingVerticalS)" Style="padding: var(--spacingVerticalS) var(--spacingHorizontalS); min-width: 0; box-sizing: border-box;">
+                <div>
+        @sectionContent
+
+
+                </div>
+            </FluentStack>
+</FluentAccordionItem>
+}
+else
+{
+    <section aria-labelledby="@($"restriction-actions-heading-{InstanceId}")">
+        <FluentText As="TextTag.H4" Size="TextSize.Size400" Weight="TextWeight.Semibold" id="@($"restriction-actions-heading-{InstanceId}")">@Labels.Restrictions</FluentText>
+        @sectionContent
+    </section>
+}
 
 @code {
+    /// <summary>Gets or sets whether this section belongs to the operations accordion.</summary>
+    [Parameter]
+    public bool InAccordion { get; set; }
+
     private string? _previousResetKey;
     private RestrictionAction? _pendingAction;
 

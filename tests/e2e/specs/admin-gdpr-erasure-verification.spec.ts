@@ -1,3 +1,4 @@
+import { portalAction } from '../helpers/portal-actions.js';
 import { expect, test, type APIRequestContext, type BrowserContext } from '@playwright/test';
 
 const ADMIN_ROUTE = '/admin/parties';
@@ -31,7 +32,7 @@ test.describe('Admin GDPR erasure verification contract', () => {
     await page.goto(`${ADMIN_ROUTE}/erasure-retry/gdpr`);
 
     const detail = page.getByLabel('Party detail');
-    await expect(detail.getByRole('heading', { name: 'GDPR operations' })).toBeFocused();
+    await expect(detail.locator('h3[data-primary-destination="gdpr"]')).toBeFocused();
     await expect(detail.getByText('Verification not yet available')).toBeVisible();
     await expect(detail.getByRole('button', { name: 'Retry verification' })).toHaveCount(0);
 
@@ -79,14 +80,14 @@ test.describe('Admin GDPR erasure verification contract', () => {
     await page.goto(`${ADMIN_ROUTE}/erasure-retry/gdpr`);
 
     const detail = page.getByLabel('Party detail');
-    await expect(detail.getByRole('heading', { name: 'GDPR operations' })).toBeFocused();
+    await expect(detail.locator('h3[data-primary-destination="gdpr"]')).toBeFocused();
     const report = detail.locator('section[aria-labelledby^="erasure-report-heading-"]');
     await expect(report.getByRole('status')).toContainText('Verification not yet available');
     await expect(report.getByText('The erasure status remains available')).toBeVisible();
     await expect(detail.getByText('Blocked on accepted EventStore-fronted Parties client/gateway contract')).toBeVisible();
     await expect(detail.getByRole('button', { name: 'Refresh erasure status' })).toBeEnabled();
-    await expect(detail.getByRole('button', { name: 'Request erasure' })).toBeEnabled();
-    await expect(detail.getByRole('button', { name: 'Processing records' })).toBeEnabled();
+    await expect(portalAction(detail, 'Request erasure')).toBeEnabled();
+    await expect(portalAction(detail, 'Processing records')).toBeEnabled();
     await expect(detail.getByRole('button', { name: 'Retry verification' })).toHaveCount(0);
 
     await detail.getByRole('button', { name: 'Refresh erasure status' }).click();

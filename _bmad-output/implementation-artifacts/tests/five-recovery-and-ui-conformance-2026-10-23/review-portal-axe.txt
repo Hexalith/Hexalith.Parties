@@ -1,0 +1,17 @@
+
+> hexalith-parties-e2e@0.0.0 test
+> playwright test specs/admin-parties-list.spec.ts specs/consumer-portal-routes.spec.ts --grep detail GDPR action|desktop row click|bound Consumer can open --retries=0 --max-failures=6
+
+
+Running 6 tests using 1 worker
+
+(node:1236908) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › specs/admin-parties-list.spec.ts:162:3 › Admin parties list › desktop row click and direct route render the existing party detail surface (3.2s)
+  ✓  2 [chromium] › specs/admin-parties-list.spec.ts:475:3 › Admin parties list › detail GDPR action navigates to the party-scoped operations route (2.6s)
+  ✓  3 [chromium] › specs/consumer-portal-routes.spec.ts:67:5 › Consumer portal route shells › bound Consumer can open /me without browser-visible gateway calls (1.0s)
+  ✓  4 [chromium] › specs/consumer-portal-routes.spec.ts:67:5 › Consumer portal route shells › bound Consumer can open /me/edit without browser-visible gateway calls (1.1s)
+  ✓  5 [chromium] › specs/consumer-portal-routes.spec.ts:67:5 › Consumer portal route shells › bound Consumer can open /me/consent without browser-visible gateway calls (1.0s)
+  ✓  6 [chromium] › specs/consumer-portal-routes.spec.ts:67:5 › Consumer portal route shells › bound Consumer can open /me/privacy without browser-visible gateway calls (1.1s)
+
+  6 passed (12.9s)

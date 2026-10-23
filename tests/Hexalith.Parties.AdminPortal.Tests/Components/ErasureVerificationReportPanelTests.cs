@@ -7,12 +7,29 @@ using Hexalith.Parties.AdminPortal.Services;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Security;
 
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.FluentUI.AspNetCore.Components;
+
 using Shouldly;
 
 namespace Hexalith.Parties.AdminPortal.Tests.Components;
 
 public sealed class ErasureVerificationReportPanelTests : BunitContext
 {
+    [Fact]
+    public void StandaloneErasureStatusPanelKeepsItsPrimarySectionOutsideAccordion()
+    {
+        Services.AddFluentUIComponents();
+        IRenderedComponent<ErasureStatusPanel> cut = Render<ErasureStatusPanel>(parameters => parameters
+            .Add(p => p.Labels, new AdminPortalLabels())
+            .Add(p => p.Status, null)
+            .Add(p => p.Certificate, null));
+
+        cut.FindComponents<FluentAccordionItem>().ShouldBeEmpty();
+        cut.Find("section[aria-labelledby^='erasure-status-heading-']").ShouldNotBeNull();
+        cut.Find("h4").TextContent.ShouldBe(new AdminPortalLabels().GdprErasureStatus);
+    }
+
     [Theory]
     [InlineData(null, false)]
     [InlineData("", false)]

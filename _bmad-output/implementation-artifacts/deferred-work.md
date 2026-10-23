@@ -793,7 +793,9 @@ origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferra
 location: all Parties UI RCLs
 source_spec: `_bmad-output/implementation-artifacts/spec-8-9-ui-frontcomposer-and-fluent-consolidation.md`
 reason: This independently reviewable design-system conformance slice was split from Story 8.9 after its hardened draft exceeded the 1,600-token workflow limit.
-status: open
+status: done 2026-10-23
+resolution: All 52 UI component Razor/CSS files were audited. Admin and Consumer sibling sections use Fluent V5 accordions with primary content expanded; typography, status and focus styles use Fluent components and Fluent 2 tokens. Interactive content has token-based focus clearance. Standalone subpanels, form authority, exact-name erasure and Picker contracts are preserved. Full component suites, blocking axe, keyboard/forced-color/narrow browser controls and inspected zero-diff visual baseline pass in package mode; separate source Debug qualification is blocked at the selected Platform compile gate.
+verification: `spec-five-recovery-and-ui-conformance-deferred-items.md`; `tests/five-recovery-and-ui-conformance-2026-10-23/validation.json` and `matrix-audit.json`.
 
 ### DW-104: Delete the retained local crypto and key-management engine and reconcile published Parties security APIs after shared-provider adoption proves parity and rollback
 
@@ -1598,7 +1600,9 @@ location: n/a
 source_spec: `_bmad-output/implementation-artifacts/epic-8-retro-2026-10-09.md`
 severity: low
 reason: retrospective action item from sprint-status.yaml (epic 8; owner Amelia (Developer) + Winston (Architect) + Murat (Test Architect); sprint-status status open)
-status: open
+status: done 2026-10-23
+resolution: Lifecycle status queries now use metadata folded from committed events in the existing detail slot. Domain evaluation cannot publish premature lifecycle authority; legacy side records and cleanup tombstones cannot certify success. Complete committed replay backfills old rows without changing empty-v1 bytes. Connected failed/canceled append, retry, persisted projection and recreated-query controls pass.
+verification: `spec-five-recovery-and-ui-conformance-deferred-items.md`; `tests/five-recovery-and-ui-conformance-2026-10-23/validation.json` and `matrix-audit.json`.
 
 ### DW-193: Fence live and rebuild search notifications against concurrent erasure; test both interleavings and reconcile deferred-work DW-80 with D11.
 
@@ -1752,6 +1756,9 @@ archived: 2026-10-21
   summary: Contain test-process descendants that inherit output pipes after their direct parent has already exited.
   severity: medium
   evidence: Independent DW-90 review reproduced the same orphan in the baseline shared package runner and the consolidation candidate. Once the direct parent exits, Process.Kill(entireProcessTree: true) cannot identify that orphan; bounded output capture still fails promptly. The inherited-pipe regression explicitly owns and terminates its descendant. Qualify an appropriate process-group/job strategy separately before claiming orphan cleanup.
+  status: done 2026-10-23
+  resolution: Linux commands now run under a dedicated session/subreaper that terminates and reaps owned descendants through normal parent exit, inherited/closed streams, timeout and separate sessions. All 18 process controls pass, including unrelated-worker survival and runtime argument-parsing parity. Non-Linux platforms retain the prior bounded runner and its documented exited-parent cleanup limitation; no cross-platform containment claim is made.
+  verification: `spec-five-recovery-and-ui-conformance-deferred-items.md`; `tests/five-recovery-and-ui-conformance-2026-10-23/validation.json` and `matrix-audit.json`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-admin-deferred-items.md`
   summary: Bind accepted edit convergence to a command-specific projection witness or expected edited state.
@@ -1857,10 +1864,19 @@ archived: 2026-10-21
   summary: Qualify workflow-status retention and opportunistic reconciliation of superseded acknowledged ingestion attempts.
   severity: medium-unverified
   evidence: Older pending attempts remain durably discoverable and are reconciled by cleanup; current-revision delivery does not poll every older workflow. The selected source search found no automatic workflow purge or status-expiry policy. Demonstrate the producer retention/purge contract and an expiry-before-cleanup case before requiring additional scheduling; expired or unavailable status must continue to block uncertain cleanup.
-  status: open
+  status: done 2026-10-23
+  resolution: The selected Memories source contract retains completed workflow history until explicit purge and adds no automatic purge feature. Serialized restart tests retain superseded acknowledged attempts while newer work progresses, reconcile terminal output at cleanup, and retain uncertainty under missing, hypothetical expired and unavailable status. No scheduling defect was demonstrated under that contract and no production scheduler was added. This qualifies the contract/consumer boundary, not deployed retention or physical erasure.
+  verification: `spec-five-recovery-and-ui-conformance-deferred-items.md`; `tests/five-recovery-and-ui-conformance-2026-10-23/validation.json` and `matrix-audit.json`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
   summary: Reconstruct complete searchable contact and identifier content for a first successful ingestion after failed submission and canonical redelivery.
   severity: medium
   evidence: Baseline 6c83309d08a10f36a0da866521b9d0da6f8fc998 already marks SearchableContactChannels and SearchableIdentifiers JsonIgnore and BuildReconciliationFold returns serialized canonical state. A first rejected/failed submission followed by restart can therefore submit a summary without those transient collections. Reconstruct only from canonical-matching replay or another authorized complete source; never publish stale content from an older delivery. This pre-existing projection-content requirement is separate from durable ingestion identity and cleanup provenance.
-  status: open
+  status: done 2026-10-23
+  resolution: Live delivery and first-success retry reconstruct ignored contact/identifier content only from a complete, contiguous canonical-matching replay. Stale or partial sources remain retryable. New internal digests bind complete content and are removed at erasure; legacy rows have the documented weaker witness. Real adapters, serialized restart, rejected first submission, same-checkpoint altered content, newer writes and erasure controls pass. Existing shared-rebuild completion source limitations and unchanged-URI producer refresh remain separate.
+  verification: `spec-five-recovery-and-ui-conformance-deferred-items.md`; `tests/five-recovery-and-ui-conformance-2026-10-23/validation.json` and `matrix-audit.json`.
+
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-recovery-and-ui-conformance-deferred-items.md`
+  summary: Qualify package-runner cleanup after external interruption of the runner or its dedicated Linux supervisor.
+  evidence: Normal exit, early failure and timeout use owned cleanup; external SIGTERM can bypass Python finally and external caller termination also left descendants alive in the baseline runner. Add cancellation/signal and parent-disappearance controls before claiming interruption containment; SIGKILL remains outside cooperative cleanup.

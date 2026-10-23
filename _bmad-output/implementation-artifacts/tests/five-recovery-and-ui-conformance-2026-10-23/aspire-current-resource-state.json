@@ -1,0 +1,97 @@
+{
+  "resources": [
+    {
+      "name": "eventstore-admin-awuhphgb",
+      "displayName": "eventstore-admin",
+      "resourceType": "Project",
+      "state": "Waiting"
+    },
+    {
+      "name": "eventstore-admin-dapr-cli-anbxncwr",
+      "displayName": "eventstore-admin-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting"
+    },
+    {
+      "name": "eventstore-admin-ui-cueeuyre",
+      "displayName": "eventstore-admin-ui",
+      "resourceType": "Project",
+      "state": "NotStarted"
+    },
+    {
+      "name": "eventstore-admin-ui-dapr-cli-gxmmmgae",
+      "displayName": "eventstore-admin-ui-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting"
+    },
+    {
+      "name": "eventstore-dapr-cli-uavzgghu",
+      "displayName": "eventstore-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting"
+    },
+    {
+      "name": "eventstore-zaakzghb",
+      "displayName": "eventstore",
+      "resourceType": "Project",
+      "state": "Waiting"
+    },
+    {
+      "name": "parties-dapr-cli-zyscgvtj",
+      "displayName": "parties-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting"
+    },
+    {
+      "name": "parties-mcp-puxzspxz",
+      "displayName": "parties-mcp",
+      "resourceType": "Project",
+      "state": "NotStarted"
+    },
+    {
+      "name": "parties-ssyqmrme",
+      "displayName": "parties",
+      "resourceType": "Project",
+      "state": "Waiting"
+    },
+    {
+      "name": "parties-ui-zksmfzha",
+      "displayName": "parties-ui",
+      "resourceType": "Project",
+      "state": "Waiting"
+    },
+    {
+      "name": "security-eventstore-client-password",
+      "displayName": "security-eventstore-client-password",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "security-eventstore-client-username",
+      "displayName": "security-eventstore-client-username",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "name": "security-jcpufdct",
+      "displayName": "security",
+      "resourceType": "Container",
+      "state": "Running",
+      "healthStatus": "Unhealthy"
+    },
+    {
+      "name": "tenants-dapr-cli-zrqkkvsx",
+      "displayName": "tenants-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting"
+    },
+    {
+      "name": "tenants-uvwshmzs",
+      "displayName": "tenants",
+      "resourceType": "Project",
+      "state": "Waiting"
+    }
+  ]
+}

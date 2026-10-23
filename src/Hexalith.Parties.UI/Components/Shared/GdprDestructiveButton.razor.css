@@ -8,16 +8,16 @@
     margin-block: 0;
 }
 
-.gdpr-destructive-button__button--danger::part(control) {
+.gdpr-destructive-button ::deep .gdpr-destructive-button__button--danger:not([disabled]) {
     background: var(--colorStatusDangerBackground3);
     border-color: var(--colorStatusDangerForeground1);
     color: var(--colorStatusDangerForegroundInverted);
 }
 
-.gdpr-destructive-button__button--danger:hover::part(control) {
+.gdpr-destructive-button ::deep .gdpr-destructive-button__button--danger:not([disabled]):hover {
     background: var(--colorStatusDangerBackground3Hover);
 }
 
-.gdpr-destructive-button__button--danger:active::part(control) {
+.gdpr-destructive-button ::deep .gdpr-destructive-button__button--danger:not([disabled]):active {
     background: var(--colorStatusDangerBackground3Pressed);
 }

@@ -83,11 +83,42 @@ public sealed class PackageTestProcessTests
     }
 
     [Theory]
+    [InlineData("plain \"with spaces\" \"\" -option")]
+    [InlineData("\"with \\\"quotes\\\"\" C:\\path\\file \"C:\\path with spaces\\\\\"")]
+    [InlineData("\"two\\\\\\\\\\\"slashes and quote\" tail\\")]
+    public void RunStringArgumentsMatchRuntimeParsing(string arguments)
+    {
+        const string prefix = "-c \"import json, sys; print(json.dumps(sys.argv[1:]))\" ";
+        using var direct = new Process
+        {
+            StartInfo = new ProcessStartInfo("python3")
+            {
+                Arguments = prefix + arguments,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+            },
+        };
+        direct.Start().ShouldBeTrue();
+        string expected = direct.StandardOutput.ReadToEnd();
+        direct.WaitForExit(5_000).ShouldBeTrue();
+        direct.ExitCode.ShouldBe(0);
+
+        PackageTestProcessResult result = PackageTestProcess.Run("python3", prefix + arguments, Directory.GetCurrentDirectory());
+        result.ExitCode.ShouldBe(0);
+        result.StandardOutput.ShouldBe(expected);
+        result.StandardError.ShouldBeEmpty();
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public void RunReapsTimedOutProcessWithOpenOrClosedStreams(bool closeStreams)
     {
-        string script = "import os, sys, threading; print('pid=' + str(os.getpid()), file=sys.stderr, flush=True); "
+        string script = "import os, subprocess, sys, threading; "
+            + "child = subprocess.Popen([sys.executable, '-c', 'import threading; threading.Event().wait()']); "
+            + "print('childpid=' + str(child.pid), file=sys.stderr, flush=True); "
+            + "print('pid=' + str(os.getpid()), file=sys.stderr, flush=True); "
             + (closeStreams ? "os.close(1); os.close(2); " : string.Empty)
             + "threading.Event().wait()";
         Stopwatch stopwatch = Stopwatch.StartNew();
@@ -105,6 +136,13 @@ public sealed class PackageTestProcessTests
             .Single(static line => line.StartsWith("pid=", StringComparison.Ordinal))[4..].Trim();
         int processId = int.Parse(pidText, System.Globalization.CultureInfo.InvariantCulture);
         Should.Throw<ArgumentException>(() => Process.GetProcessById(processId));
+        if (OperatingSystem.IsLinux())
+        {
+            string childText = exception.Message.Split('\n')
+                .Single(static line => line.StartsWith("childpid=", StringComparison.Ordinal))[9..].Trim();
+            int childId = int.Parse(childText, System.Globalization.CultureInfo.InvariantCulture);
+            Should.Throw<ArgumentException>(() => Process.GetProcessById(childId));
+        }
     }
 
     [Theory]
@@ -135,47 +173,163 @@ public sealed class PackageTestProcessTests
         stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromMilliseconds(4_500));
     }
 
-    [Fact]
-    public void RunKeepsPostExitCaptureBoundForInheritedPipes()
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public void RunReapsOwnedDescendantsAfterParentExit(bool closeStreams, bool separateSession)
     {
         string pidFile = Path.GetTempFileName();
-        const string script = "import pathlib, subprocess, sys; "
-            + "child = subprocess.Popen([sys.executable, '-c', 'import threading; threading.Event().wait()']); "
+        string childScript = (closeStreams ? "import os; os.close(1); os.close(2); " : string.Empty)
+            + "import threading; threading.Event().wait()";
+        string script = "import pathlib, subprocess, sys; "
+            + "child = subprocess.Popen([sys.executable, '-c', sys.argv[2]], start_new_session=sys.argv[3] == 'True'); "
             + "pathlib.Path(sys.argv[1]).write_text(str(child.pid))";
+        using Process unrelated = Process.Start(new ProcessStartInfo("python3")
+        {
+            ArgumentList = { "-c", "import threading; threading.Event().wait()" },
+            UseShellExecute = false,
+        })!;
         Stopwatch stopwatch = Stopwatch.StartNew();
         try
         {
-            TimeoutException exception = Should.Throw<TimeoutException>(() =>
-                PackageTestProcess.Run("python3", ["-c", script, pidFile], Directory.GetCurrentDirectory(),
+            if (OperatingSystem.IsLinux() || closeStreams)
+            {
+                PackageTestProcessResult result = PackageTestProcess.Run(
+                    "python3", ["-c", script, pidFile, childScript, separateSession.ToString()], Directory.GetCurrentDirectory(),
                     processTimeoutMilliseconds: 10_000,
-                    postKillExitTimeoutMilliseconds: 500,
+                    postKillExitTimeoutMilliseconds: 1_000,
+                    outputCaptureTimeoutMilliseconds: 100);
+                result.ExitCode.ShouldBe(0);
+            }
+            else
+            {
+                // Other operating systems preserve their previous bounded capture behavior.
+                Should.Throw<TimeoutException>(() => PackageTestProcess.Run(
+                    "python3", ["-c", script, pidFile, childScript, separateSession.ToString()], Directory.GetCurrentDirectory(),
+                    processTimeoutMilliseconds: 10_000,
+                    postKillExitTimeoutMilliseconds: 1_000,
                     outputCaptureTimeoutMilliseconds: 100));
+            }
 
-            exception.Message.ShouldContain("output capture did not complete within 100 ms");
             stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(5));
+            int processId = int.Parse(File.ReadAllText(pidFile), System.Globalization.CultureInfo.InvariantCulture);
+            if (OperatingSystem.IsLinux())
+            {
+                // No fixture cleanup precedes this assertion: the production supervisor reaped it.
+                Should.Throw<ArgumentException>(() => Process.GetProcessById(processId));
+            }
+
+            unrelated.HasExited.ShouldBeFalse();
         }
         finally
         {
-            // The parent has already exited: the fixture owns cleanup of its orphaned child.
             if (int.TryParse(File.ReadAllText(pidFile), out int processId))
             {
-                try
-                {
-                    using Process child = Process.GetProcessById(processId);
-                    if (!child.HasExited)
-                    {
-                        child.Kill(entireProcessTree: true);
-                        child.WaitForExit(2_000).ShouldBeTrue();
-                    }
-                }
-                catch (ArgumentException)
-                {
-                    // The child was already reaped.
-                }
+                StopFixtureProcess(processId);
+            }
+
+            StopFixtureProcess(unrelated.Id);
+            File.Delete(pidFile);
+        }
+    }
+
+    [Fact]
+    public void RunPreservesEarlyFailureAndReapsItsOwnedDescendants()
+    {
+        string pidFile = Path.GetTempFileName();
+        const string script = "import pathlib, subprocess, sys; "
+            + "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); "
+            + "pathlib.Path(sys.argv[1]).write_text(str(child.pid)); print('early failure', file=sys.stderr); sys.exit(7)";
+        try
+        {
+            PackageTestProcessResult result = PackageTestProcess.Run("python3", ["-c", script, pidFile], Directory.GetCurrentDirectory());
+            result.ExitCode.ShouldBe(7);
+            result.Diagnostic.Trim().ShouldBe("early failure");
+            int processId = int.Parse(File.ReadAllText(pidFile), System.Globalization.CultureInfo.InvariantCulture);
+            if (OperatingSystem.IsLinux())
+            {
+                Should.Throw<ArgumentException>(() => Process.GetProcessById(processId));
+            }
+        }
+        finally
+        {
+            if (int.TryParse(File.ReadAllText(pidFile), out int processId))
+            {
+                StopFixtureProcess(processId);
             }
 
             File.Delete(pidFile);
         }
     }
 
+    [Fact]
+    public void RunReapsMultipleGenerationsThatCreateSeparateSessions()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"parties-process-family-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        const string script = """
+            import os, pathlib, subprocess, sys, threading, time
+            directory = pathlib.Path(sys.argv[1])
+            depth = int(sys.argv[2])
+            (directory / str(os.getpid())).write_text(str(depth))
+            if depth:
+                for _ in range(2):
+                    subprocess.Popen([sys.executable, '-c', sys.argv[3], str(directory), str(depth - 1), sys.argv[3]],
+                        start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if depth == 3:
+                while len(list(directory.iterdir())) < 15:
+                    time.sleep(0.005)
+            else:
+                threading.Event().wait()
+            """;
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        try
+        {
+            PackageTestProcessResult result = PackageTestProcess.Run(
+                "python3", ["-c", script, directory, "3", script], Directory.GetCurrentDirectory(),
+                processTimeoutMilliseconds: 10_000,
+                postKillExitTimeoutMilliseconds: 2_000);
+
+            result.ExitCode.ShouldBe(0);
+            string[] ownedProcessIds = Directory.GetFiles(directory);
+            ownedProcessIds.Length.ShouldBe(15);
+            stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(6));
+            if (OperatingSystem.IsLinux())
+            {
+                foreach (string file in ownedProcessIds)
+                {
+                    int processId = int.Parse(Path.GetFileName(file), System.Globalization.CultureInfo.InvariantCulture);
+                    Should.Throw<ArgumentException>(() => Process.GetProcessById(processId));
+                }
+            }
+        }
+        finally
+        {
+            foreach (string file in Directory.GetFiles(directory))
+            {
+                StopFixtureProcess(int.Parse(Path.GetFileName(file), System.Globalization.CultureInfo.InvariantCulture));
+            }
+
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    private static void StopFixtureProcess(int processId)
+    {
+        try
+        {
+            using Process process = Process.GetProcessById(processId);
+            if (!process.HasExited)
+            {
+                process.Kill(entireProcessTree: true);
+                process.WaitForExit(2_000).ShouldBeTrue();
+            }
+        }
+        catch (ArgumentException)
+        {
+            // The production helper already reaped this owned child.
+        }
+    }
 }

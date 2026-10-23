@@ -1,0 +1,29 @@
+
+> hexalith-parties-e2e@0.0.0 test
+> playwright test specs/parties-accessibility.spec.ts specs/admin-parties-list.spec.ts specs/consumer-portal-routes.spec.ts --grep detail GDPR action|desktop row click|bound Consumer can open|GDPR operation focus rings|section accordions preserve|accordion focus check|disabled irreversible confirmation|content controls have visible keyboard focus --retries=0 --max-failures=8
+[bounded output: routine lines omitted]
+    test-results/consumer-portal-routes-Con-1cf5e-owser-visible-gateway-calls-chromium/video-1.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/consumer-portal-routes-Con-1cf5e-owser-visible-gateway-calls-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/consumer-portal-routes-Con-1cf5e-owser-visible-gateway-calls-chromium/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/consumer-portal-routes-Con-1cf5e-owser-visible-gateway-calls-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/consumer-portal-routes-Con-1cf5e-owser-visible-gateway-calls-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6 failed
+    [chromium] › specs/admin-parties-list.spec.ts:162:3 › Admin parties list › desktop row click and direct route render the existing party detail surface
+    [chromium] › specs/admin-parties-list.spec.ts:475:3 › Admin parties list › detail GDPR action navigates to the party-scoped operations route
+    [chromium] › specs/consumer-portal-routes.spec.ts:67:5 › Consumer portal route shells › bound Consumer can open /me without browser-visible gateway calls
+    [chromium] › specs/consumer-portal-routes.spec.ts:67:5 › Consumer portal route shells › bound Consumer can open /me/edit without browser-visible gateway calls
+    [chromium] › specs/consumer-portal-routes.spec.ts:67:5 › Consumer portal route shells › bound Consumer can open /me/consent without browser-visible gateway calls
+    [chromium] › specs/consumer-portal-routes.spec.ts:67:5 › Consumer portal route shells › bound Consumer can open /me/privacy without browser-visible gateway calls
+  9 passed (23.8s)

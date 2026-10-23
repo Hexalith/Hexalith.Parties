@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 using System.Text.Json;
 
 using Hexalith.EventStore.Client.Projections;
@@ -164,7 +165,7 @@ public sealed partial class PartyIndexSdkProjectionHandler(
             removeIfAbsent: foldResult.Removed || foldResult.Model.Entries.ContainsKey(request.AggregateId),
             rebuilding: false,
             cancellationToken,
-            deliverySnapshot: foldResult.Model);
+            replayRequest: request);
 
     /// <summary>Reconciles one work item against canonical state before and after external work.</summary>
     /// <remarks>
@@ -179,7 +180,7 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         bool removeIfAbsent,
         bool rebuilding,
         CancellationToken cancellationToken,
-        PartyIndexSdkReadModel? deliverySnapshot = null)
+        ProjectionRequest? replayRequest = null)
     {
         try
         {
@@ -201,11 +202,17 @@ public sealed partial class PartyIndexSdkProjectionHandler(
             }
 
             PartyIndexEventMetadata? source = current.LastIndexedEvents.GetValueOrDefault(partyId);
-            if (deliverySnapshot is not null && MatchesSearchTarget(deliverySnapshot, current, partyId))
+            if (!rebuilding)
             {
-                // Contact/identifier collections are intentionally JsonIgnore. Preserve a
-                // freshly folded value only while its exact canonical target still matches.
-                entry = deliverySnapshot.Entries[partyId];
+                // Serialized canonical entries deliberately omit contact and identifier content.
+                // Recreate it only from a complete, independently folded matching replay. A tail,
+                // older delivery or changed source cannot authorize a first ingestion.
+                if (replayRequest is null || !TryReplaySearchTarget(replayRequest, current, out PartyIndexEntry? complete))
+                {
+                    return false;
+                }
+
+                entry = complete;
             }
 
             bool indexed = await _searchIndexer
@@ -273,8 +280,57 @@ public sealed partial class PartyIndexSdkProjectionHandler(
             && left.LastSequenceNumbers.GetValueOrDefault(partyId, long.MinValue)
                 == right.LastSequenceNumbers.GetValueOrDefault(partyId, long.MinValue)
             && Equals(left.LastIndexedEvents.GetValueOrDefault(partyId), right.LastIndexedEvents.GetValueOrDefault(partyId))
+            && string.Equals(left.SearchContentHashes?.GetValueOrDefault(partyId),
+                right.SearchContentHashes?.GetValueOrDefault(partyId), StringComparison.Ordinal)
             && string.Equals(JsonSerializer.Serialize(leftEntry, s_candidateJsonOptions),
                 JsonSerializer.Serialize(rightEntry, s_candidateJsonOptions), StringComparison.Ordinal);
+
+    /// <summary>Restores transient search content only from a complete canonical-matching replay.</summary>
+    private static bool TryReplaySearchTarget(
+        ProjectionRequest request,
+        PartyIndexSdkReadModel canonical,
+        [NotNullWhen(true)] out PartyIndexEntry? entry)
+    {
+        entry = null;
+        if (request.Events.Length == 0
+            || PartySdkProjectionFold.GetDeliveryFailureReason(request.Events, long.MinValue) is not null
+            || PartySdkProjectionFold.DeserializeNew(request.Events, long.MinValue).Any(static item => item.Payload is null))
+        {
+            return false;
+        }
+
+        PartyIndexSdkReadModel replayed = FoldCore(request, current: null).Model;
+        if (!canonical.LastIndexedEvents.ContainsKey(request.AggregateId))
+        {
+            // Historical canonical rows predate event descriptors. Content plus their exact
+            // checkpoint still proves the replay target without rewriting their provenance.
+            replayed = replayed with { LastIndexedEvents = canonical.LastIndexedEvents };
+        }
+
+        string? expected = canonical.SearchContentHashes?.GetValueOrDefault(request.AggregateId);
+        string actual = replayed.SearchContentHashes?.GetValueOrDefault(request.AggregateId) ?? string.Empty;
+        // Missing historical hashes cannot provide the stronger content witness.
+        replayed = replayed with { SearchContentHashes = canonical.SearchContentHashes };
+        if (!MatchesSearchTarget(replayed, canonical, request.AggregateId))
+        {
+            return false;
+        }
+
+        if (!TryGetSearchEntry(replayed, request.AggregateId, out entry))
+        {
+            return false;
+        }
+
+        return expected is null || string.Equals(expected, actual, StringComparison.Ordinal);
+    }
+
+    /// <summary>Binds ignored search collections without persisting their personal content.</summary>
+    private static string SearchContentHash(PartyIndexEntry entry)
+        => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            entry.SearchableContactChannels,
+            entry.SearchableIdentifiers,
+        }, s_candidateJsonOptions)));
 
     /// <summary>Detects a live re-add that races an awaited external removal.</summary>
     private async Task<bool> RemoveSearchEntryAsync(string tenantId, string partyId, CancellationToken cancellationToken)
@@ -492,12 +548,39 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         bool isErased = erasureSequences.ContainsKey(request.AggregateId);
         DateTimeOffset projectedAt = current?.ProjectedAt ?? DateTimeOffset.UnixEpoch;
         entries.TryGetValue(request.AggregateId, out PartyIndexEntry? entry);
+        bool completeSearchContent = lastSequence == long.MinValue
+            && !PartySdkProjectionFold.DeserializeNew(request.Events, long.MinValue).Any(static item => item.Payload is null);
+        if (!isErased && current is not null && entry is not null)
+        {
+            ProjectionRequest prefix = request with
+            {
+                Events = [.. request.Events.Where(item => item.SequenceNumber <= lastSequence)],
+            };
+            if (TryReplaySearchTarget(prefix, current, out PartyIndexEntry? complete))
+            {
+                // New updates/removals must see the complete prior ignored collections.
+                entry = complete;
+                completeSearchContent = true;
+            }
+            else if (prefix.Events.Length > 0
+                && prefix.Events.Max(static item => item.SequenceNumber) == lastSequence
+                && PartySdkProjectionFold.GetDeliveryFailureReason(prefix.Events, long.MinValue) is null
+                && !PartySdkProjectionFold.DeserializeNew(prefix.Events, long.MinValue).Any(static item => item.Payload is null))
+            {
+                return new PartyIndexFoldResult(current, null, false, SearchReconciliationReason);
+            }
+        }
+
+        bool searchContentChanged = false;
+        bool incompleteSearchMutation = false;
         bool removalObserved = isErased;
         PartyIndexEventMetadata? lastIndexedEvent = lastIndexedEvents.GetValueOrDefault(request.AggregateId);
 
         foreach ((ProjectionEventDto @event, IEventPayload? payload, bool advance) in
             PartySdkProjectionFold.DeserializeNew(request.Events, lastSequence, logger, diagnostics))
         {
+            searchContentChanged |= payload is null or ContactChannelAdded or ContactChannelUpdated
+                or ContactChannelRemoved or IdentifierAdded or IdentifierRemoved;
             if (payload is not null)
             {
                 if (payload is PartyErased)
@@ -514,6 +597,9 @@ public sealed partial class PartyIndexSdkProjectionHandler(
                 }
                 else if (!isErased)
                 {
+                    incompleteSearchMutation |= !completeSearchContent && payload is ContactChannelAdded or ContactChannelUpdated
+                        or ContactChannelRemoved or IdentifierAdded or IdentifierRemoved;
+
                     PartyIndexEntry? applied = PartyIndexProjectionHandler.Apply(request.AggregateId, payload, entry);
                     if (applied is not null)
                     {
@@ -543,6 +629,13 @@ public sealed partial class PartyIndexSdkProjectionHandler(
             }
         }
 
+        if (!isErased && incompleteSearchMutation)
+        {
+            // Serialized rows omit these collections. Keep the live checkpoint and witness
+            // until matching complete replay arrives; a later erasure may still remove them.
+            return new PartyIndexFoldResult(current ?? new PartyIndexSdkReadModel(), null, false, SearchReconciliationReason);
+        }
+
         if (lastSequence != long.MinValue)
         {
             sequences[request.AggregateId] = lastSequence;
@@ -560,10 +653,22 @@ public sealed partial class PartyIndexSdkProjectionHandler(
             : lastSequence == long.MinValue
                 ? current?.ProjectionVersion
                 : $"{request.AggregateId}:{lastSequence.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        var contentHashes = new Dictionary<string, string>(current?.SearchContentHashes
+            ?? new Dictionary<string, string>(StringComparer.Ordinal), StringComparer.Ordinal);
+        if (entry is not null && !isErased && completeSearchContent)
+        {
+            contentHashes[request.AggregateId] = SearchContentHash(entry);
+        }
+        else if (isErased || searchContentChanged)
+        {
+            contentHashes.Remove(request.AggregateId);
+        }
+
         var model = new PartyIndexSdkReadModel
         {
             Entries = entries,
             LastIndexedEvents = lastIndexedEvents,
+            SearchContentHashes = contentHashes.Count == 0 ? null : contentHashes,
             LastSequenceNumbers = sequences,
             ErasureSequenceNumbers = erasureSequences,
             ProjectedAt = projectedAt,
@@ -610,6 +715,12 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         long priorErasure = current.ErasureSequenceNumbers.GetValueOrDefault(aggregateId, long.MinValue);
         long nextErasure = folded.ErasureSequenceNumbers.GetValueOrDefault(aggregateId, long.MinValue);
         if (priorErasure != nextErasure)
+        {
+            return false;
+        }
+
+        if (!string.Equals(current.SearchContentHashes?.GetValueOrDefault(aggregateId),
+            folded.SearchContentHashes?.GetValueOrDefault(aggregateId), StringComparison.Ordinal))
         {
             return false;
         }
@@ -678,10 +789,13 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         var descriptors = new Dictionary<string, PartyIndexEventMetadata>(rebuilt.LastIndexedEvents, StringComparer.Ordinal);
         var sequences = new Dictionary<string, long>(rebuilt.LastSequenceNumbers, StringComparer.Ordinal);
         var fences = new Dictionary<string, long>(rebuilt.ErasureSequenceNumbers, StringComparer.Ordinal);
+        var contentHashes = new Dictionary<string, string>(rebuilt.SearchContentHashes
+            ?? new Dictionary<string, string>(StringComparer.Ordinal), StringComparer.Ordinal);
         foreach ((string partyId, long fence) in current.ErasureSequenceNumbers)
         {
             _ = entries.Remove(partyId);
             _ = descriptors.Remove(partyId);
+            _ = contentHashes.Remove(partyId);
             fences[partyId] = Math.Max(fences.GetValueOrDefault(partyId, long.MinValue), fence);
             sequences[partyId] = Math.Max(sequences.GetValueOrDefault(partyId, long.MinValue),
                 Math.Max(fences[partyId], current.LastSequenceNumbers?.GetValueOrDefault(partyId, long.MinValue) ?? long.MinValue));
@@ -691,6 +805,7 @@ public sealed partial class PartyIndexSdkProjectionHandler(
         {
             Entries = entries,
             LastIndexedEvents = descriptors,
+            SearchContentHashes = contentHashes.Count == 0 ? null : contentHashes,
             LastSequenceNumbers = sequences,
             ErasureSequenceNumbers = fences,
             ProjectedAt = current.ProjectedAt is { } cleanupAt && (rebuilt.ProjectedAt is null || cleanupAt > rebuilt.ProjectedAt)
