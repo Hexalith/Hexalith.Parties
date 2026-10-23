@@ -1,0 +1,1 @@
+Copy the three probe files to an empty temporary directory outside the repository, then run `dotnet run --project Probe.csproj --configuration Debug -p:NuGetAudit=false`. The probe uses actual 3.127.0 packages and reports the observed recovery result; it does not run production migration or cleanup.

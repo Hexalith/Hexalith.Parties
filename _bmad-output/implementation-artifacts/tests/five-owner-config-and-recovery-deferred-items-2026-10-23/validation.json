@@ -1,5 +1,5 @@
 {
-  "scope": "Candidate owner and consumer implementation; reviewed owner commits and parent adoption identities are finalized by the parent publication workflow.",
+  "scope": "Historical original-candidate verification at the recorded baseline/source graph; original version selections, commands and results are preserved. Current 3.127.0 adoption and reviewed graph qualification are recorded separately.",
   "baseline": {
     "parties": "08b9684f8464a2f9f8870be47e2a396e30e0cd99",
     "eventstore": "cd193902a52abb02572528958436d79a8ae25b9a",
@@ -246,5 +246,23 @@
   },
   "verificationSequence": "Full Client, Admin.UI and Sample suites precede a final removal of duplicate staging cleanup calls; the final serialized batch/transaction/expiry lane was rebuilt and passed 249/249 afterward. Source consumer/runtime results predate only that idempotent-call removal. Parent owns final review and clean-commit qualification.",
   "defaultPackageBatchRecovery": "Retained EventStore 3.126.1 does not contain the owner source fix. Default package-mode superseding-state recovery remains open pending matching package publication and consumer adoption.",
-  "ledgerDisposition": "The five selected entries remain open pending parent independent review/canonical adoption and any affected package gates. Source progress and qualified runtime controls are recorded separately."
+  "ledgerDisposition": "The five selected entries remain open pending parent independent review/canonical adoption and any affected package gates. Source progress and qualified runtime controls are recorded separately.",
+  "historicalEvidence": {
+    "status": "historical-original-candidate",
+    "notice": "All original versions, counts, source mapping and measurements in this receipt remain unchanged. They describe the original candidate graph, not the user-selected 3.127.0 graph or later review fixes.",
+    "laterEvidence": [
+      "eventstore-3.127.0-adoption.json",
+      "matrix-audit.json"
+    ],
+    "laterCandidateCounts": {
+      "PartiesFocused": 991,
+      "EventStoreBatchFocused": 251
+    },
+    "finalVerificationOwner": "parent"
+  },
+  "supersededCurrentSummaries": [
+    "eventstore-3.127.0-adoption.json",
+    "matrix-audit.json",
+    "final-verification.json"
+  ]
 }

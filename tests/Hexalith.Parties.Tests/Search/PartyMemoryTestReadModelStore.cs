@@ -5,10 +5,12 @@ using Hexalith.EventStore.Client.Projections;
 namespace Hexalith.Parties.Tests.Search;
 
 /// <summary>Serialized SDK state shared by fresh service instances in recovery tests.</summary>
-internal sealed class PartyMemoryTestReadModelStore : IReadModelStore, IReadModelConditionalEraser
+internal sealed class PartyMemoryTestReadModelStore : IReadModelStore, IReadModelConditionalEraser, IReadModelExpiringStore
 {
     private readonly Lock _gate = new();
     private readonly Dictionary<(string StoreName, string Key), (string Json, int Version)> _state = [];
+    private readonly Dictionary<(string StoreName, string Key), (DateTimeOffset Deadline, int Version)> _expirations = [];
+    internal DateTimeOffset UtcNow { get; set; } = DateTimeOffset.UnixEpoch;
     private Func<Task>? _beforeSave;
     private int _saveAttempts;
 
@@ -37,6 +39,11 @@ internal sealed class PartyMemoryTestReadModelStore : IReadModelStore, IReadMode
         cancellationToken.ThrowIfCancellationRequested();
         lock (_gate)
         {
+            if (_expirations.TryGetValue((storeName, key), out var expiry) && expiry.Deadline <= UtcNow)
+            {
+                if (_state.TryGetValue((storeName, key), out var expired) && expired.Version == expiry.Version) _state.Remove((storeName, key));
+                _expirations.Remove((storeName, key));
+            }
             return Task.FromResult(_state.TryGetValue((storeName, key), out (string Json, int Version) value)
                 ? new ReadModelEntry<TValue>(JsonSerializer.Deserialize<TValue>(value.Json), value.Version.ToString(System.Globalization.CultureInfo.InvariantCulture))
                 : new ReadModelEntry<TValue>(null, null));
@@ -76,9 +83,21 @@ internal sealed class PartyMemoryTestReadModelStore : IReadModelStore, IReadMode
                 return false;
             }
 
+            _expirations.Remove((storeName, key));
             _state[(storeName, key)] = (JsonSerializer.Serialize(value), version + 1);
             return true;
         }
+    }
+
+    public async Task<bool> TrySaveWithTimeToLiveAsync<TValue>(string storeName, string key, TValue value, string etag,
+        TimeSpan timeToLive, CancellationToken cancellationToken = default) where TValue : class
+    {
+        bool saved = await TrySaveAsync(storeName, key, value, etag, cancellationToken).ConfigureAwait(false);
+        if (saved)
+        {
+            lock (_gate) { _expirations[(storeName, key)] = (UtcNow + timeToLive, _state[(storeName, key)].Version); }
+        }
+        return saved;
     }
 
     public Task<bool> TryEraseAsync(string storeName, string key, string etag, CancellationToken cancellationToken = default)

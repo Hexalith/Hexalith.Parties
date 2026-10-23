@@ -25,6 +25,11 @@ internal sealed class PartyMemoryIngestionIntentStore(
     /// <inheritdoc/>
     public async Task ProbeAsync(CancellationToken cancellationToken)
     {
+        if (store is not IReadModelConditionalEraser eraser || store is not IReadModelExpiringStore expiring)
+        {
+            throw new InvalidOperationException("memory-ingestion-probe-capabilities-unavailable");
+        }
+
         const string tenant = "_health-probe";
         string party = $"_health-probe-{Guid.NewGuid():N}";
         string key = Key(tenant, party);
@@ -32,7 +37,9 @@ internal sealed class PartyMemoryIngestionIntentStore(
         bool primaryFailed = true;
         try
         {
-            _ = await RegisterAsync(tenant, party, intent, cancellationToken).ConfigureAwait(false);
+            var probeStore = new PartyMemoryProbeReadModelStore(store, expiring, _storeName, key);
+            var probe = new PartyMemoryIngestionIntentStore(probeStore, options, projectionOptions);
+            _ = await probe.RegisterAsync(tenant, party, intent, cancellationToken).ConfigureAwait(false);
             ReadModelEntry<PartyMemoryIngestionInventory> read = await store.GetAsync<PartyMemoryIngestionInventory>(
                 _storeName, key, cancellationToken).ConfigureAwait(false);
             if (!IsProbeInventory(read.Value, intent) || string.IsNullOrWhiteSpace(read.ETag))
@@ -54,7 +61,6 @@ internal sealed class PartyMemoryIngestionIntentStore(
                 if (current.Value is not null)
                 {
                     if (!IsProbeInventory(current.Value, intent) || string.IsNullOrWhiteSpace(current.ETag)
-                        || store is not IReadModelConditionalEraser eraser
                         || !await eraser.TryEraseAsync(_storeName, key, current.ETag, cleanupBudget.Token).ConfigureAwait(false))
                     {
                         throw new InvalidOperationException("memory-ingestion-probe-cleanup-failed");

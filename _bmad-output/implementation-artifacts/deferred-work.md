@@ -443,10 +443,10 @@ reason: PartySdkQueryService still returns actor-era failure reasons on the SDK 
 status: open
 decision: 2026-09-07 Compatible canonical aliases — Add semantic SDK and read-model aliases in EventStore.Contracts while preserving legacy wire values. Switch Parties source and tests to the aliases and retain old constants as obsolete compatible members.
 
-resolution: EventStore provides semantic QueryExecutionFailure, ReadModelUnavailable and ResponseMismatch constants with unchanged historical wire values; legacy members remain compatible and obsolete. Compiled owner consumers and qualified Parties source consumers adopt semantic names. A narrow Parties bridge keeps the retained 3.126.1 package graph buildable until matching package publication.
-verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/validation.json`; owner query-contract compatibility passes 115/115 and the mapped Parties focused suite passes 990/990. Canonical reviewed owner/adoption identities are finalized by the parent publication receipt.
+resolution: EventStore provides semantic QueryExecutionFailure, ReadModelUnavailable and ResponseMismatch constants with unchanged historical wire values; legacy members remain compatible and obsolete. Compiled owner consumers and qualified Parties source consumers adopt semantic names. A narrow Parties bridge keeps the user-selected 3.127.0 package graph buildable until matching package publication.
+verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/final-verification.json` records reviewed owner publication/adoption and current results. Original candidate and pre-review receipts remain historical; matching published aliases are still absent from the selected 3.127.0 package.
 remaining_gate: Matching published EventStore aliases and package consumer adoption are not established by source proof.
-closure_state_2026_10_23: Source implementation and focused qualification are complete; parent review, canonical source adoption and matching package adoption remain separate gates.
+closure_state_2026_10_23: Independent source review, owner main publication and root adoption are complete. EventStore owner 596de60e140da779f170279a822ded010070d774 supplies the aliases; user-selected package 3.127.0 still requires the legacy bridge, so matching package adoption stays open.
 
 ### DW-57: Move PartyEventTypeResolver out of the retired Actors folder
 
@@ -1708,10 +1708,10 @@ archived: 2026-10-21
   evidence: A real SDK InMemoryReadModelStore fault at BeforeReceipt after newer sequence-5 Detail/Processing erasure tombstones persist makes CompactAndCompleteAsync restore the older initialization candidate. The six-case candidate reproduction passed five cases and failed this interleaving; candidate source/logs/XML are retained in /tmp/dw-163-validation. EventStore owns this persistence guarantee; the Parties candidate was withdrawn and DW-163 stays open.
 
   status: open
-  resolution: Owner compaction and terminal verification preserve superseding ordinary writes, deletes and tombstones without retaining normal-batch manifests. Foreign-envelope and guarded-owner uncertainty remain failures. Producer raw-byte retries and four Parties erasure-tombstone interleavings pass; full Client suite has zero failures (2,102 total, two existing environment skips).
-  remaining_gate: Matching package publication/adoption is separate. The following legacy normal-batch compaction debt is unchanged.
-  verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/validation.json`.
-  implementation_2026_10_23: Source implementation and the stated focused/runtime checks are complete. The parent finalizes disposition after independent review and canonical adoption; publication/package gates remain distinct.
+  resolution: Published owner main 596de60e140da779f170279a822ded010070d774 preserves superseding ordinary state and finishes owned retained anchors before verification. Complete Client suite passes 2,116 cases with zero failures and two environment skips; mapped Parties source controls pass 999/999 including all four erasure-tombstone interleavings.
+  remaining_gate: User-selected package 3.127.0 does not contain the recovery fix; its package closure stays open pending matching publication/adoption. The following legacy normal-batch compaction debt is unchanged.
+  verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/final-verification.json`; earlier original-candidate and pre-review records remain historical.
+  implementation_2026_10_23: Source review, owner publication and root adoption are complete. User-selected published SDK 3.127.0 demonstrably still overwrites newer state; matching publication/adoption remains an open prerequisite.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-166-versioned-memories-cleanup.md`
   summary: Reconcile current dependency source observations and the unchanged release gitlink fitness constants with the already-committed Builds selection.
@@ -1868,11 +1868,11 @@ archived: 2026-10-21
   summary: Make the referenced EventStore admin/sample UI Dapr client target identities configurable before qualifying their application API flows in concurrent suffixed sessions.
   evidence: Upstream AdminUIServiceExtensions calls AddEventStoreDaprServiceInvocation("eventstore-admin") and Sample.BlazorUI Program calls it with "eventstore"; the current owner tests qualify Parties gateway/Tenants invocation and all eight sidecar metadata endpoints, not those reference UI API flows. The frozen intent forbids upstream edits; target configurability needs an upstream change and later adoption.
 
-  status: open
-  resolution: Owner UI registration uses validated EventStore:AdminServer:AppId and EventStore:GatewayAppId values with historical defaults. Parties supplies own-session IDs. Full Admin.UI/Sample suites pass; the actual dual-session page/client, UI-sidecar cross-denial and survivor runtime passes 1/1 with zero skips after separately recorded cold-start failure.
-  remaining_gate: Mapped Debug Integration is still blocked by the unchanged FrontComposer AssetsFile source gate. Runtime proof uses the separately built retained Release/package graph and candidate reference hosts, not a published owner-package claim.
-  verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/validation.json`.
-  implementation_2026_10_23: Source implementation and the stated focused/runtime checks are complete. The parent finalizes disposition after independent review and canonical adoption; publication/package gates remain distinct.
+  status: done 2026-10-23
+  resolution: Reviewed owner main 596de60e140da779f170279a822ded010070d774 supplies validated configured targets and historical defaults. Root adoption 79768d1f2b7071db6fa49bffbfe179a43a00baa7 records it. Final actual dual-session runtime passes 1/1 with zero skips (157.014s), asserting distinct persisted counter values, own Admin UI targets, cross-session denial and survivor operation. Full Admin.UI and Sample suites pass.
+  remaining_gate: Mapped Debug Integration is still blocked by the unchanged FrontComposer AssetsFile source gate. Runtime proof uses the separately built retained Release/package graph and reviewed reference hosts, not a published owner-package claim.
+  verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/final-verification.json`; earlier original-candidate and pre-review records remain historical.
+  implementation_2026_10_23: Review corrections, owner publication and root source adoption are complete. Runtime qualifies actual reference UI clients; matching packages and the separate mapped Integration build remain distinct boundaries.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-sdk-runtime-deferred-items.md`
   summary: Qualify descendant-process quiescence when a Dapr CLI wrapper exits before its runtime child.
@@ -1891,14 +1891,15 @@ archived: 2026-10-21
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
   summary: Qualify whether ingestion-inventory persistence needs a separate health capability probe.
-  severity: medium-unverified
-  evidence: Mapping and ingestion inventories use the same configured SDK backend, but only mapping sentinel persistence is probed. A real backend key-prefix permission or serializer configuration that permits mapping operations while rejecting ingestion-inventory writes would establish the claimed additional gap; no such supported deployment counterexample was demonstrated. Keep this claim unverified until that condition is reproduced.
+  severity: medium
+  evidence: Original unverified finding: mapping and ingestion inventories use the same configured SDK backend, but only mapping sentinel persistence is probed. A real backend key-prefix permission or serializer configuration that permits mapping operations while rejecting ingestion-inventory writes would establish the claimed additional gap; no such supported deployment counterexample was demonstrated. Keep this claim unverified until that condition is reproduced.
 
-  status: open
+  status: done 2026-10-23
   resolution: A password-authenticated non-default Redis ACL user with mapping-prefix permission and denied ingestion-prefix permission reproduces the gap through the actual C# Dapr SDK and health check. The new actual-shape inventory sentinel reports Degraded in enabled and disabled modes; granting the ingestion prefix repairs both. Exact conditional cleanup, independent cancellation budget, primary-failure retention and actual sentinel absence are qualified. Both owned runtime processes are removed.
   remaining_gate: This capability probe does not establish authoritative remote inventory, existing-workflow authorization or physical erasure.
-  verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/validation.json`.
-  implementation_2026_10_23: Source implementation and the stated focused/runtime checks are complete. The parent finalizes disposition after independent review and canonical adoption; publication/package gates remain distinct.
+  verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/final-verification.json`; earlier original-candidate and pre-review records remain historical.
+  implementation_2026_10_23: Review corrections, actual 3.127.0 SDK ACL health control, reserved-sentinel absence and owned cleanup pass. One-minute TTL, missing-capability preflight and lost-response/foreign-state tests pass; remote inventory and physical-erasure debts remain separate.
+  review_correction_2026_10_23: Probe writes now require both conditional erase and expiring-store capabilities before mutation and use one-minute SDK TTL through the actual registration CAS. Normal ingestion remains durable; foreign bytes and primary failures remain protected.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
   summary: Qualify workflow-status retention and opportunistic reconciliation of superseded acknowledged ingestion attempts.
@@ -1933,10 +1934,15 @@ archived: 2026-10-21
   status: open
   resolution: Owner registration replaces explicitly configured algorithm lists while retaining BindConfiguration reload notifications, absent defaults, programmatic initialization and the public init-only setter signature. Effective named JwtBearerOptions and real signed RS256/ES256 acceptance with HS256 rejection pass; blank and empty JSON lists fail startup.
   remaining_gate: Matching Memories package publication/adoption and the separate Dapr sidecar secret-token publisher gate remain open.
-  verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/validation.json`.
-  implementation_2026_10_23: Source implementation and the stated focused/runtime checks are complete. The parent finalizes disposition after independent review and canonical adoption; publication/package gates remain distinct.
+  verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/final-verification.json`; earlier original-candidate and pre-review records remain historical.
+  implementation_2026_10_23: Reviewed server source is published in Memories main 4190ec6549dd83bcaaf268e7bb723dcff8f7286b and adopted at root 79768d1f2b7071db6fa49bffbfe179a43a00baa7. Eight registered authentication controls pass; matching package and independent publisher gates remain open.
+  review_correction_2026_10_23: Domain-option reload notifications remain, but the named bearer policy retains its startup selection and requires restart for policy changes. Registered programmatic configuration is verified through public initialization and the registered options callbacks; MCP binding remains deferred separately.
 
 - source_spec: `spec-five-publish-and-process-safety-deferred-items.md`
   summary: Deliver supported Dapr sidecar secret-token emission through the selected SDK/target publisher before qualifying Memories publish authentication.
   status: open
   evidence: Actual SDK CLI manifests for docker/k8s/aca contain both Memories app secret references but no env/token bindings on memories-dapr. Selected Toolkit 13.6.1-beta.935 custom dapr.v0 callback and SDK 13.6.3 outer writer do not serialize these annotations. The omission predates the caller configuration and also affects existing generic helpers. App-only startup with an operator-configured sidecar is separate evidence; require owner-supported publisher delivery and full positive app/sidecar manifest proof.
+
+- source_spec: `spec-five-owner-config-and-recovery-deferred-items.md`
+  summary: Make Memories MCP explicit JWT algorithm lists replace initialized defaults through registered configuration.
+  evidence: The unchanged MCP composition root binds Authentication:JwtBearer while options initialize HS256/RS256/ES256. A reviewer probe of the actual source and registered binding produced HS256,RS256,ES256,RS256,ES256 for explicit RS256/ES256; deployment selects that asymmetric list. Existing MCP options tests bypass binding. Verify exact registered named JwtBearerOptions and signed-token rejection when fixing this separate ingress.

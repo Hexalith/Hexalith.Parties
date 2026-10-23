@@ -1,0 +1,281 @@
+{
+  "scope": "Parent named-case audit; selected owner-source and consumer package lanes remain distinct.",
+  "rows": [
+    {
+      "state": "SDK query failure",
+      "cases": [
+        {
+          "name": "Hexalith.EventStore.Contracts.Tests.Queries.ProjectionAdapterContractTests.SemanticFailureAliasesPreserveLegacyConstantsAndWireValues(legacy: \\\"ActorResponseMismatch\\\", semantic: \\\"ResponseMismatch\\\", wire: \\\"actor-response-mismatch\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Contracts.Tests.Queries.ProjectionAdapterContractTests.SemanticFailureAliasesPreserveLegacyConstantsAndWireValues(legacy: \\\"ActorException\\\", semantic: \\\"QueryExecutionFailure\\\", wire: \\\"actor-exception\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Contracts.Tests.Queries.ProjectionAdapterContractTests.SemanticFailureAliasesPreserveLegacyConstantsAndWireValues(legacy: \\\"ActorNotFoundInfrastructure\\\", semantic: \\\"ReadModelUnavailable\\\", wire: \\\"actor-not-found-infrastructure\\\")",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "state": "Batch committed; newer write/delete/tombstone; retry",
+      "cases": [
+        {
+          "name": "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.GuardedCommittedBatchCannotAuthorizeSupersedingOrdinaryState",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.NonRetainedCommittedBatchNeverReclaimsSupersedingOrdinaryState(phase: AfterCommit, batchDelete: False, newerDelete: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.NonRetainedCommittedBatchNeverReclaimsSupersedingOrdinaryState(phase: AfterCommit, batchDelete: False, newerDelete: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.NonRetainedCommittedBatchNeverReclaimsSupersedingOrdinaryState(phase: AfterCommit, batchDelete: True, newerDelete: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.NonRetainedCommittedBatchNeverReclaimsSupersedingOrdinaryState(phase: AfterCommit, batchDelete: True, newerDelete: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.NonRetainedCommittedBatchNeverReclaimsSupersedingOrdinaryState(phase: BeforeCompaction, batchDelete: False, newerDelete: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.NonRetainedCommittedBatchNeverReclaimsSupersedingOrdinaryState(phase: BeforeCompaction, batchDelete: False, newerDelete: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.NonRetainedCommittedBatchNeverReclaimsSupersedingOrdinaryState(phase: BeforeReceipt, batchDelete: False, newerDelete: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.NonRetainedCommittedBatchNeverReclaimsSupersedingOrdinaryState(phase: BeforeReceipt, batchDelete: False, newerDelete: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.OtherBatchPendingEnvelopeSurvivesNonRetainedRecovery",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: AfterCommit)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: BeforeCompaction)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: AfterCompaction)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: BeforeReceipt)",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "state": "Explicit RS256/ES256; absent/invalid configuration",
+      "cases": [
+        {
+          "name": "Hexalith.Memories.Server.Tests.Authentication.ServerRegisteredAlgorithmPolicyTests.RegisteredAbsentAlgorithmsRetainHistoricalDefaults",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Memories.Server.Tests.Authentication.ServerRegisteredAlgorithmPolicyTests.RegisteredExplicitEmptyJsonAlgorithmArrayFailsValidation",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Memories.Server.Tests.Authentication.ServerRegisteredAlgorithmPolicyTests.RegisteredExplicitAlgorithmsAcceptOnlySelectedAsymmetricTokens(algorithm: \\\"RS256\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Memories.Server.Tests.Authentication.ServerRegisteredAlgorithmPolicyTests.RegisteredExplicitAlgorithmsAcceptOnlySelectedAsymmetricTokens(algorithm: \\\"ES256\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Memories.Server.Tests.Authentication.ServerRegisteredAlgorithmPolicyTests.RegisteredAuthenticationOptionsRetainConfigurationReloadNotifications",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Memories.Server.Tests.Authentication.ServerRegisteredAlgorithmPolicyTests.RegisteredInvalidExplicitAlgorithmsFailValidation(invalid: \\\"\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Memories.Server.Tests.Authentication.ServerRegisteredAlgorithmPolicyTests.RegisteredInvalidExplicitAlgorithmsFailValidation(invalid: \\\" \\\")",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "state": "Default or suffixed UI targets",
+      "cases": [
+        {
+          "name": "Hexalith.EventStore.Admin.UI.Tests.Services.AdminUiDaprTargetTests.InvalidTargetFailsDuringRegistration(invalid: \\\"\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Admin.UI.Tests.Services.AdminUiDaprTargetTests.InvalidTargetFailsDuringRegistration(invalid: \\\" \\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Admin.UI.Tests.Services.AdminUiDaprTargetTests.InvalidTargetFailsDuringRegistration(invalid: \\\"eventstore admin\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Admin.UI.Tests.Services.AdminUiDaprTargetTests.InvalidTargetFailsDuringRegistration(invalid: \\\"eventstore/admin\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Admin.UI.Tests.Services.AdminUiDaprTargetTests.InvalidTargetFailsDuringRegistration(invalid: \\\"eventstore:admin\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Admin.UI.Tests.Services.AdminUiDaprTargetTests.RegisteredAdminClientUsesConfiguredTargetAndBearer(configured: null, expected: \\\"eventstore-admin\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Admin.UI.Tests.Services.AdminUiDaprTargetTests.RegisteredAdminClientUsesConfiguredTargetAndBearer(configured: \\\"eventstore-admin-session-a\\\", expected: \\\"eventstore-admin-session-a\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Sample.Tests.BlazorUI.SampleUiDaprTargetTests.RegisteredSampleClientUsesConfiguredTargetAndBearer(configured: null, expected: \\\"eventstore\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Sample.Tests.BlazorUI.SampleUiDaprTargetTests.RegisteredSampleClientUsesConfiguredTargetAndBearer(configured: \\\"eventstore-session-a\\\", expected: \\\"eventstore-session-a\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Sample.Tests.BlazorUI.SampleUiDaprTargetTests.InvalidTargetFailsDuringRegistration(invalid: \\\"\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Sample.Tests.BlazorUI.SampleUiDaprTargetTests.InvalidTargetFailsDuringRegistration(invalid: \\\" \\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Sample.Tests.BlazorUI.SampleUiDaprTargetTests.InvalidTargetFailsDuringRegistration(invalid: \\\"eventstore admin\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Sample.Tests.BlazorUI.SampleUiDaprTargetTests.InvalidTargetFailsDuringRegistration(invalid: \\\"eventstore/admin\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.EventStore.Sample.Tests.BlazorUI.SampleUiDaprTargetTests.InvalidTargetFailsDuringRegistration(invalid: \\\"eventstore:admin\\\")",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyIsolationTests.ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "state": "Mapping allowed, inventory denied",
+      "cases": [
+        {
+          "name": "Hexalith.Parties.Tests.HealthChecks.MemoriesSearchHealthCheckTests.MappingAllowedButInventoryDeniedDegradesHealthAndRepairRestoresBothModes(enabled: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.HealthChecks.MemoriesSearchHealthCheckTests.MappingAllowedButInventoryDeniedDegradesHealthAndRepairRestoresBothModes(enabled: True)",
+          "result": "Pass"
+        }
+      ]
+    },
+    {
+      "state": "Probe cancellation/read/erase failure",
+      "cases": [
+        {
+          "name": "Hexalith.Parties.Tests.HealthChecks.MemoriesSearchHealthCheckTests.InventoryProbeCleanupFailureDegradesAnOtherwiseSuccessfulProbe",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.HealthChecks.MemoriesSearchHealthCheckTests.InventoryProbePreservesReadFailureAndUsesBoundedIndependentCleanup(cleanupFails: False)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.HealthChecks.MemoriesSearchHealthCheckTests.InventoryProbePreservesReadFailureAndUsesBoundedIndependentCleanup(cleanupFails: True)",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.HealthChecks.MemoriesSearchHealthCheckTests.InventoryProbeCleanupDeadlineCompletesWhenStoreWaitsForCancellation",
+          "result": "Pass"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.HealthChecks.MemoriesSearchHealthCheckTests.InventoryProbeCancellationStillErasesOnlyItsOwnReservedSentinel",
+          "result": "Pass"
+        }
+      ]
+    }
+  ],
+  "lanes": {
+    "client": {
+      "sha256": "007edabb5f7fa5e4d0bc3bec65ad2c8166437ef4ae991413b7821efd205cb5c2",
+      "total": 251,
+      "passed": 251,
+      "skipped": 0,
+      "rawXmlLocation": "private parties-five-owner-matrix-client-final.xml"
+    },
+    "contracts": {
+      "sha256": "ef7b2410dd24cf593d608283e41ed92d685e42f2859d8f324ccc569b88f104b7",
+      "total": 3,
+      "passed": 3,
+      "skipped": 0,
+      "rawXmlLocation": "private parties-five-owner-matrix-contracts.xml"
+    },
+    "admin-ui": {
+      "sha256": "3acbd9e1569a9975eaa15507fd6694f1eeb03f62f03bf58e5e376519199c5b2a",
+      "total": 7,
+      "passed": 7,
+      "skipped": 0,
+      "rawXmlLocation": "private parties-five-owner-matrix-admin-ui.xml"
+    },
+    "sample-ui": {
+      "sha256": "5b9f64fcca23d17c05a426e11bb6b58c50c5b6c1586c204836d441d5cc3d566c",
+      "total": 7,
+      "passed": 7,
+      "skipped": 0,
+      "rawXmlLocation": "private parties-five-owner-matrix-sample-ui.xml"
+    },
+    "algorithms": {
+      "sha256": "34da9ccc95a76a1c55f6d1c000e71eb48dfe52bff8ab0ac9af7de15436d21606",
+      "total": 7,
+      "passed": 7,
+      "skipped": 0,
+      "rawXmlLocation": "private parties-five-owner-matrix-algorithms.xml"
+    },
+    "source": {
+      "sha256": "ceccbecaf23f5ddfb265821290d461b4332518b17c825305a32e18b0955a1005",
+      "total": 991,
+      "passed": 991,
+      "skipped": 0,
+      "rawXmlLocation": "private parties-five-owner-parent-focused.xml"
+    },
+    "package": {
+      "sha256": "3c424cf670fd1830b1bb7132b31546f1a52b117f29420ed85b579ac24d54d78d",
+      "total": 991,
+      "passed": 987,
+      "skipped": 4,
+      "rawXmlLocation": "private parties-five-owner-3.127.0-focused.xml"
+    },
+    "runtime": {
+      "sha256": "965909987745414ccd6a08e3368910cc3f85f673ab1d45db7aa37ad1d4ed5227",
+      "total": 1,
+      "passed": 1,
+      "skipped": 0,
+      "rawXmlLocation": "private parties-five-owner-3.127.0-runtime.xml"
+    }
+  },
+  "inventoryRuntime": "inventory-runtime.json",
+  "packageAdoption": "eventstore-3.127.0-adoption.json",
+  "allMatrixCasesPassed": true,
+  "qualification": "The published 3.127.0 recovery defect is reproduced separately and its adoption gate remains open; source cases do not certify the published fix."
+}

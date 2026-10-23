@@ -1,0 +1,38 @@
+{
+  "phase": "Pre-commit exact full candidate validation",
+  "node": "24.22.1",
+  "candidates": [
+    {
+      "owner": "references/Hexalith.EventStore",
+      "candidate": "eventstore",
+      "command": "node node_modules/@commitlint/cli/cli.js --edit /tmp/parties-five-owner-eventstore-message.txt --verbose",
+      "cliVersion": "21.1.0",
+      "exitCode": 0,
+      "output": "⧗   --- input ---\nfix: complete recovery and validate invocation targets\n✔   found 0 problems, 0 warnings\n"
+    },
+    {
+      "owner": "references/Hexalith.Memories",
+      "candidate": "memories",
+      "command": "node node_modules/@commitlint/cli/cli.js --edit /tmp/parties-five-owner-memories-message.txt --verbose",
+      "cliVersion": "21.2.2",
+      "exitCode": 0,
+      "output": "⧗   --- input ---\ntest: verify registered server algorithm policy\n\nStory-Key: spec-server-algorithm-review-verification\n✔   found 0 problems, 0 warnings\n"
+    },
+    {
+      "owner": ".",
+      "candidate": "pointers",
+      "command": "node node_modules/@commitlint/cli/cli.js --edit /tmp/parties-five-owner-pointers-message.txt --verbose",
+      "cliVersion": "21.2.2",
+      "exitCode": 0,
+      "output": "⧗   --- input ---\nbuild: select reviewed owner configuration sources\n✔   found 0 problems, 0 warnings\n"
+    },
+    {
+      "owner": ".",
+      "candidate": "parties",
+      "command": "node node_modules/@commitlint/cli/cli.js --edit /tmp/parties-five-owner-parties-message.txt --verbose",
+      "cliVersion": "21.2.2",
+      "exitCode": 0,
+      "output": "⧗   --- input ---\nfix: bound ingestion probes and verify UI routing\n✔   found 0 problems, 0 warnings\n"
+    }
+  ]
+}

@@ -300,8 +300,9 @@ must contain only ASCII letters, digits, hyphens, dots or underscores; blank or
 malformed values fail during SDK client registration. The retained AppHost injects
 its own suffixed identities into both UI hosts. Bearer acquisition and SDK-owned
 Dapr routing remain on the actual application-client paths. Dual-session coverage
-prerenders both UI pages, rejects cross-session calls from both UI sidecars and
-repeats the page requests after peer disposal. Consult the [current batch receipts](../_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/README.md)
+prerenders both UI pages, verifies distinct persisted counter values in their
+own sessions, rejects cross-session calls from both UI sidecars and repeats
+the page/value checks after peer disposal. Consult the [current batch receipts](../_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/README.md)
 for runtime results and source-build limitations.
 
 Admin forms independently observe authentication notifications and query-scope reset,
@@ -371,14 +372,14 @@ compilation. See the [source receipt](../_bmad-output/implementation-artifacts/t
 
 Source-mapped Parties builds consume EventStore's semantic `QueryExecutionFailure`
 and `ReadModelUnavailable` aliases through `PartySdkQueryFailureReason`, preserving
-the exact historical wire/HTTP values. The retained 3.126.1 package graph uses the
+the exact historical wire/HTTP values. The retained 3.127.0 package graph uses the
 same bridge with legacy constants until separately published aliases are adopted;
 source proof does not establish package publication.
 
 In the selected owner source, committed ordinary batches treat their receipt as a
 historical decision. Recovery and terminal verification preserve later ordinary
 writes, deletes and erasure tombstones; they retain foreign-envelope and
-guarded-owner uncertainty. The retained 3.126.1 package does not contain this fix;
+guarded-owner uncertainty. The retained 3.127.0 package does not contain this fix;
 its default package-mode recovery closure remains open pending matching owner
 publication and consumer adoption. Normal
 batches do not retain personal-data manifests. This does not close legacy normal

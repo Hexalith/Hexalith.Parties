@@ -58,35 +58,35 @@ public sealed class PlatformApiPrerequisitesTests
     ];
 
     // Release selection is separate from the historical migration/parity receipt constants.
-    private const string CurrentReleaseEventStoreSha = "cd193902a52abb02572528958436d79a8ae25b9a";
-    private const string CurrentReleaseEventStoreDescribe = "v3.126.0-100-gcd193902";
-    private const string CurrentSourceEventStoreDescribe = "v3.126.1-41-gcd193902";
-    private const string CurrentReleaseEventStoreTag = "v3.126.0";
+    private const string CurrentReleaseEventStoreSha = "596de60e140da779f170279a822ded010070d774";
+    private const string CurrentReleaseEventStoreDescribe = "v3.127.0-7-g596de60e";
+    private const string CurrentSourceEventStoreDescribe = "v3.127.0-7-g596de60e";
+    private const string CurrentReleaseEventStoreTag = "v3.127.0";
     private static readonly IReadOnlyDictionary<string, string> CurrentReleaseGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = AiToolsSha,
-        ["references/Hexalith.Builds"] = "4c7f27f5458742e860100012ecd30253808421e7",
+        ["references/Hexalith.Builds"] = "8c9caa77feb85a2dce03153519d81684128890a6",
         ["references/Hexalith.Commons"] = "1663028fb6d9f46a0bf17919edeb21bb99be1587",
         [EventStoreRelativePath] = CurrentReleaseEventStoreSha,
-        ["references/Hexalith.FrontComposer"] = "803b38116478466b5192d953f211ad37da402294",
-        ["references/Hexalith.Memories"] = "b55db82c060caf917a142fdb6585fa7340b01647",
+        ["references/Hexalith.FrontComposer"] = "05bba2e9c945e6d11a188928e6a4f2e9059551db",
+        ["references/Hexalith.Memories"] = "4190ec6549dd83bcaaf268e7bb723dcff8f7286b",
         ["references/Hexalith.PolymorphicSerializations"] = "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
-        ["references/Hexalith.Tenants"] = "25e3bf827a7963ec79b57b4918290b3fed728706",
-        ["references/Hexalith.McpCli"] = "be89509d59bb6ba53a0382e26219edb0625b47f4",
-        ["references/Hexalith.Platform"] = "1d646b232ad862f6da1d8dd0953fe96ccd273fee",
+        ["references/Hexalith.Tenants"] = "48b0cd98be5ff75402e1206e083e561552146454",
+        ["references/Hexalith.McpCli"] = "d9dc31a2920ef9daf31117c1a917cfffcad110ef",
+        ["references/Hexalith.Platform"] = "ae932d038a03846e1349fc550a3ae1a3a5d14ab0",
     };
 
     private static readonly IReadOnlyDictionary<string, string> CurrentSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["references/Hexalith.Builds"] = "v4.36.0-12-g4c7f27f5",
+        ["references/Hexalith.Builds"] = "v4.37.0-17-g8c9caa77",
         [EventStoreRelativePath] = CurrentSourceEventStoreDescribe,
-        ["references/Hexalith.FrontComposer"] = "v4.7.0-65-g803b3811",
-        ["references/Hexalith.Memories"] = "v2.29.8-17-gb55db82c",
-        ["references/Hexalith.Tenants"] = "v5.10.1-24-g25e3bf82",
+        ["references/Hexalith.FrontComposer"] = "v4.7.0-70-g05bba2e9",
+        ["references/Hexalith.Memories"] = "v2.29.11-1-g4190ec65",
+        ["references/Hexalith.Tenants"] = "v5.10.1-30-g48b0cd98",
         ["references/Hexalith.AI.Tools"] = "3f194e17",
         ["references/Hexalith.Commons"] = "v2.30.3-4-g1663028f",
-        ["references/Hexalith.McpCli"] = "v1.0.0-59-gbe89509d",
-        ["references/Hexalith.Platform"] = "1d646b23",
+        ["references/Hexalith.McpCli"] = "v1.0.0-63-gd9dc31a2",
+        ["references/Hexalith.Platform"] = "ae932d03",
         ["references/Hexalith.PolymorphicSerializations"] = "v1.19.5",
     };
 
@@ -131,7 +131,7 @@ public sealed class PlatformApiPrerequisitesTests
         "8-2-payload-protection-contracts-and-golden-vectors: done",
         "8-3-pdenc-v2-core-cryptographic-engine: done",
         "8-4-compatibility-readers-and-mixed-history-routing: done",
-        "8-5-policy-and-key-lifecycle-mechanics: backlog",
+        "8-5-policy-and-key-lifecycle-mechanics: in-progress",
         "8-6-azure-key-vault-production-adapter-conformance: backlog",
         "8-7-server-persistence-and-snapshot-integration: backlog",
         "8-8-package-and-release-integration: backlog",
@@ -834,7 +834,7 @@ public sealed class PlatformApiPrerequisitesTests
         catalog.ShouldContain("<HexalithFrontComposerVersion Condition=\"'$(HexalithFrontComposerVersion)' == ''\">4.7.0</HexalithFrontComposerVersion>");
         catalog.ShouldContain("<HexalithMemoriesVersion Condition=\"'$(HexalithMemoriesVersion)' == ''\">2.29.8</HexalithMemoriesVersion>");
         catalog.ShouldContain("<HexalithTenantsVersion Condition=\"'$(HexalithTenantsVersion)' == ''\">5.10.1</HexalithTenantsVersion>");
-        catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">1.5.2</HexalithPartiesVersion>");
+        catalog.ShouldContain("<HexalithPartiesVersion Condition=\"'$(HexalithPartiesVersion)' == ''\">1.6.0</HexalithPartiesVersion>");
         // The selected Builds catalog routes this version through a property whose unconditional value applies to
         // every Parties project (only Hexalith.Folders.Aspire overrides it), so pin both halves exactly.
         catalog.ShouldContain("<HexalithAspireHostingDaprVersion>13.6.1-beta.935</HexalithAspireHostingDaprVersion>");

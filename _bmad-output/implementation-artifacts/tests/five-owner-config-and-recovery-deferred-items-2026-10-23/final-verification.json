@@ -1,0 +1,577 @@
+{
+  "requestedEventStorePackage": "3.127.0",
+  "review": {
+    "layers": 3,
+    "individualReviewerFindings": 16,
+    "individualParentVerificationFindings": 3,
+    "correctedFindings": 18,
+    "preexistingDeferredFindings": 1,
+    "triage": "spec-five-owner-config-and-recovery-deferred-items.md#review-triage-log"
+  },
+  "remoteWorkPreserved": {
+    "partiesBeforeFinalPublication": "ec3d919c159aa87453910011618cb6d07f873baa",
+    "eventStoreFastForward": "2cade1d89aadc3385e4607397b184e02640d3b48",
+    "memoriesFastForward": "750ffdacee973f4615c2741f196509618b9f80e4"
+  },
+  "effectivePackageVersions": {
+    "EventStore": "3.127.0",
+    "Commons": "2.30.3",
+    "FrontComposer": "4.7.0",
+    "Memories": "2.29.8",
+    "Tenants": "5.10.1",
+    "Parties": "1.6.0"
+  },
+  "checks": {
+    "eventStoreClientFull": {
+      "command": "dotnet tests/Hexalith.EventStore.Client.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.Tests.dll -xml /tmp/parties-five-owner-final-client.xml",
+      "workingDirectory": "references/Hexalith.EventStore",
+      "exitCode": 0,
+      "result": {
+        "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "5235a657-c9bd-493e-95aa-22603a628e41",
+        "name": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/tests/Hexalith.EventStore.Client.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.Tests.dll",
+        "run-date": "2026-10-23",
+        "run-time": "19:04:09",
+        "start-rtf": "2026-10-23T19:04:09.7513842+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "0",
+        "finish-rtf": "2026-10-23T19:04:43.2246047+00:00",
+        "not-run": "0",
+        "passed": "2114",
+        "skipped": "2",
+        "time": "33.476",
+        "time-rtf": "00:00:33.4760000",
+        "total": "2116"
+      },
+      "logSha256": "6fd4031b9d3a0922b000fa126a9e4344de97d13d42292543ef8d71079ca31d07",
+      "xmlSha256": "dc2be8dd15ce6a20f24e47d02bcfd614b8f00f3b2ae31dc01fff85b1d72d9381"
+    },
+    "releaseRestore": {
+      "command": "dotnet restore Hexalith.Parties.slnx -p:NuGetAudit=false",
+      "exitCode": 0,
+      "logSha256": "ccd1024736106d8ddf4934db98830d801a6deb631f2769602064676030f6caab",
+      "summary": "61 projects restored/up-to-date"
+    },
+    "releaseBuild": {
+      "command": "dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exitCode": 0,
+      "logSha256": "6c66f1977bac56e5570f2dbf80ba2f10d440efe8b5795d3413684acab799540b",
+      "summary": "Pass; build has zero warnings/errors"
+    },
+    "eventStoreAdminUiFull": {
+      "exitCode": 0,
+      "result": {
+        "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "45e58d0d-6710-4a67-a739-5156edb129f8",
+        "name": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/tests/Hexalith.EventStore.Admin.UI.Tests/bin/Debug/net10.0/Hexalith.EventStore.Admin.UI.Tests.dll",
+        "run-date": "2026-10-23",
+        "run-time": "19:12:26",
+        "start-rtf": "2026-10-23T19:12:26.9081060+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "0",
+        "finish-rtf": "2026-10-23T19:12:38.4445946+00:00",
+        "not-run": "0",
+        "passed": "1121",
+        "skipped": "0",
+        "time": "11.542",
+        "time-rtf": "00:00:11.5420000",
+        "total": "1121"
+      },
+      "logSha256": "205b4f3ea2dca33a1421146e6a5acf0728bdc1503c3a28c2865aed5996eae657"
+    },
+    "eventStoreSampleFull": {
+      "exitCode": 0,
+      "result": {
+        "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "3186a577-87d8-4ea6-a8c3-37733f3133fd",
+        "name": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore/tests/Hexalith.EventStore.Sample.Tests/bin/Debug/net10.0/Hexalith.EventStore.Sample.Tests.dll",
+        "run-date": "2026-10-23",
+        "run-time": "19:12:42",
+        "start-rtf": "2026-10-23T19:12:42.4716280+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "0",
+        "finish-rtf": "2026-10-23T19:12:43.1622510+00:00",
+        "not-run": "0",
+        "passed": "194",
+        "skipped": "0",
+        "time": "0.691",
+        "time-rtf": "00:00:00.6909999",
+        "total": "194"
+      },
+      "logSha256": "2b911c395808c373f74bbbd53608a997d78363d0c28a5c80bd2e187cb2f27ff1"
+    },
+    "mappedSourceFocused": {
+      "exitCode": 0,
+      "result": {
+        "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "95573667-a73c-4640-bd09-66e8fcf9c411",
+        "name": "/tmp/parties-owner-config-20261023-dejhqq66/Hexalith.Parties/tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "run-date": "2026-10-23",
+        "run-time": "19:11:21",
+        "start-rtf": "2026-10-23T19:11:21.8455665+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "0",
+        "finish-rtf": "2026-10-23T19:11:27.2307237+00:00",
+        "not-run": "0",
+        "passed": "999",
+        "skipped": "0",
+        "time": "5.385",
+        "time-rtf": "00:00:05.3850000",
+        "total": "999"
+      },
+      "logSha256": "e51538be6a10fad8068dbd196f1ae86e0a815bc45329ef268273a3992c0a55ee",
+      "limit": "Exact original pinned-tool-generated mapping with current task source patches; historical candidate dependency graph, not qualification of unrelated externally advanced source references."
+    },
+    "inventoryAclRuntime": {
+      "status": "passed",
+      "authenticatedNonDefaultAclUser": true,
+      "inventoryPrefixGrantApplied": true,
+      "sdkHealthTestExitCode": 0,
+      "allReservedSentinelsAbsent": true,
+      "daprdVersion": "1.18.7",
+      "redisVersion": "7.4.11",
+      "ownedDaprStopped": true,
+      "ownedRedisRemoved": true,
+      "cleanupErrors": [],
+      "exitCode": 0
+    },
+    "runnerFailureTests": {
+      "command": "python3 -m unittest discover -s _bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23 -p test_inventory_runtime.py",
+      "exitCode": 0,
+      "passed": 7,
+      "logSha256": "6446b694d2b01d5e5e827dcf7317526e19ac1af447093b2b12d0d4572f0d2597"
+    },
+    "memoriesRegisteredAuthentication": {
+      "command": "dotnet tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll -class '*ServerRegisteredAlgorithmPolicyTests'",
+      "workingDirectory": "references/Hexalith.Memories",
+      "exitCode": 0,
+      "total": 8,
+      "failed": 0,
+      "skipped": 0,
+      "logSha256": "1f1c4c94866f26de14fcda4c4b98dd563a2296c62cce9ca4eb548bcad1c11f9b"
+    },
+    "memoriesGovernance": {
+      "fileScope": "pass; four exact paths",
+      "tenantIsolation": "no matched live surface; no-op",
+      "reviewReadiness": "pass; completed owner lifecycle ledger",
+      "commitMessage": "pinned CLI 21.2.2 before and after commit"
+    },
+    "dualSessionRuntime": {
+      "command": "PARTIES_MTLS_TOPOLOGY_TESTS=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method '*ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync' -xml /tmp/parties-five-owner-final-runtime-qualified.xml",
+      "exitCode": 0,
+      "result": {
+        "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "841c899e-da96-4e8f-9f61-d1243501e32f",
+        "name": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "run-date": "2026-10-23",
+        "run-time": "19:14:25",
+        "start-rtf": "2026-10-23T19:14:25.2063909+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "0",
+        "finish-rtf": "2026-10-23T19:17:02.2099440+00:00",
+        "not-run": "0",
+        "passed": "1",
+        "skipped": "0",
+        "time": "157.014",
+        "time-rtf": "00:02:37.0140000",
+        "total": "1"
+      },
+      "logSha256": "4090d5dde1ce6c6dce01d004b9b1ccc94f17b4beb81f06e8ee9704918ca710d0",
+      "assertions": [
+        "Counter commands seed and persist distinct own-session counts 2 and 5",
+        "Both actual Sample UI pages render their own count; the 404-empty fallback cannot satisfy the assertion",
+        "Both Admin UI pages render their own suffixed target identity",
+        "Both UI sidecars deny opposite-session targets",
+        "Same-party persisted streams remain isolated",
+        "Survivor gateway/Admin UI/Sample UI value operate after peer disposal",
+        "Both fixture roots absent and owned worker/listener teardown verified"
+      ],
+      "configuration": "Sample receives fixture-scoped signing contract/audience, independent app-channel token and only own-session gateway workload; no authentication/ACL bypass."
+    },
+    "currentPackageAssets": {
+      "eventStoreVersions": [
+        "3.127.0"
+      ],
+      "projectCount": 31,
+      "projects": {
+        "src/Hexalith.Parties.Testing/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "src/Hexalith.Parties.Projections/obj/project.assets.json": [
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0",
+          "Hexalith.EventStore.DomainService/3.127.0",
+          "Hexalith.EventStore.ServiceDefaults/3.127.0"
+        ],
+        "src/Hexalith.Parties.Authentication/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "src/Hexalith.Parties.AppHost/obj/project.assets.json": [
+          "Hexalith.EventStore.Aspire/3.127.0"
+        ],
+        "src/Hexalith.Parties.UI/obj/project.assets.json": [
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0",
+          "Hexalith.EventStore.SignalR/3.127.0"
+        ],
+        "src/Hexalith.Parties.Aspire/obj/project.assets.json": [
+          "Hexalith.EventStore.Aspire/3.127.0"
+        ],
+        "src/Hexalith.Parties.Mcp/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "src/Hexalith.Parties/obj/project.assets.json": [
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0",
+          "Hexalith.EventStore.DomainService/3.127.0",
+          "Hexalith.EventStore.ServiceDefaults/3.127.0"
+        ],
+        "src/Hexalith.Parties.AdminPortal/obj/project.assets.json": [
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "src/Hexalith.Parties.ConsumerPortal/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "src/Hexalith.Parties.Client/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "src/Hexalith.Parties.Picker/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "src/Hexalith.Parties.Security/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "src/Hexalith.Parties.Contracts/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "tests/Hexalith.Parties.Mcp.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "tests/Hexalith.Parties.Projections.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0",
+          "Hexalith.EventStore.DomainService/3.127.0",
+          "Hexalith.EventStore.ServiceDefaults/3.127.0"
+        ],
+        "tests/Hexalith.Parties.AdminPortal.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "tests/Hexalith.Parties.Sample.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0",
+          "Hexalith.EventStore.DomainService/3.127.0",
+          "Hexalith.EventStore.Server/3.127.0",
+          "Hexalith.EventStore.ServiceDefaults/3.127.0"
+        ],
+        "tests/Hexalith.Parties.Client.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "tests/Hexalith.Parties.Authentication.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "tests/Hexalith.Parties.Server.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0",
+          "Hexalith.EventStore.DomainService/3.127.0",
+          "Hexalith.EventStore.ServiceDefaults/3.127.0"
+        ],
+        "tests/Hexalith.Parties.ConsumerPortal.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "tests/Hexalith.Parties.UI.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0",
+          "Hexalith.EventStore.SignalR/3.127.0"
+        ],
+        "tests/Hexalith.Parties.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Admin.Abstractions/3.127.0",
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0",
+          "Hexalith.EventStore.DomainService/3.127.0",
+          "Hexalith.EventStore.Gateway/3.127.0",
+          "Hexalith.EventStore.Server/3.127.0",
+          "Hexalith.EventStore.ServiceDefaults/3.127.0",
+          "Hexalith.EventStore.Testing/3.127.0"
+        ],
+        "tests/Hexalith.Parties.EventStoreGateway.TestHost/obj/project.assets.json": [
+          "Hexalith.EventStore.Admin.Abstractions/3.127.0",
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0",
+          "Hexalith.EventStore.DomainService/3.127.0",
+          "Hexalith.EventStore.Gateway/3.127.0",
+          "Hexalith.EventStore.Server/3.127.0",
+          "Hexalith.EventStore.ServiceDefaults/3.127.0"
+        ],
+        "tests/Hexalith.Parties.Picker.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "tests/Hexalith.Parties.Security.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "tests/Hexalith.Parties.Aspire.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Aspire/3.127.0"
+        ],
+        "tests/Hexalith.Parties.Contracts.Tests/obj/project.assets.json": [
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ],
+        "tests/Hexalith.Parties.IntegrationTests/obj/project.assets.json": [
+          "Hexalith.EventStore.Aspire/3.127.0",
+          "Hexalith.EventStore.Client/3.127.0",
+          "Hexalith.EventStore.Contracts/3.127.0",
+          "Hexalith.EventStore.DomainService/3.127.0",
+          "Hexalith.EventStore.Server/3.127.0",
+          "Hexalith.EventStore.ServiceDefaults/3.127.0"
+        ],
+        "samples/Hexalith.Parties.Sample/obj/project.assets.json": [
+          "Hexalith.EventStore.Contracts/3.127.0"
+        ]
+      }
+    },
+    "partiesServiceFull": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -xml /tmp/parties-five-owner-final-service-qualified.xml",
+      "exitCode": 0,
+      "result": {
+        "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "f1e4b36a-6e38-4aaa-8257-482dfa43db19",
+        "name": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "run-date": "2026-10-23",
+        "run-time": "19:21:09",
+        "start-rtf": "2026-10-23T19:21:09.1011551+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "0",
+        "finish-rtf": "2026-10-23T19:22:15.8388216+00:00",
+        "not-run": "0",
+        "passed": "2639",
+        "skipped": "8",
+        "time": "66.740",
+        "time-rtf": "00:01:06.7400000",
+        "total": "2647"
+      },
+      "skips": [
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: AfterCommit)",
+          "reason": null
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: BeforeCompaction)",
+          "reason": null
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: AfterCompaction)",
+          "reason": null
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: BeforeReceipt)",
+          "reason": null
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+          "reason": null
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkRejectsTwoClientStaleEtagsAndCompetingAbsentKeyCreation",
+          "reason": null
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkPersistencePreservesLegacyListsEtagsProbeDeletionAndCanonicalReceipts",
+          "reason": null
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkHealthDetectsInventoryPrefixAclDenialAndRepairInBothModes",
+          "reason": null
+        }
+      ],
+      "logSha256": "a0cc0e96e6894435560779bc6d34debc2348d7b5a3d075cf952c7490e174ae4b"
+    },
+    "liveMatrixReceipt": {
+      "exitCode": 0,
+      "total": 1,
+      "failed": 0,
+      "logSha256": "eb26022866040d27a9a214424d38436cd6a31bb36b0b055cfda8a3d40089cf17"
+    },
+    "ownedRuntimeCleanup": {
+      "runtimeSessionIds": [
+        "3c8e11fa1a5d",
+        "50f07a5fd10e",
+        "59b3aa2c84e6",
+        "615895913f75",
+        "9799f8dc799d",
+        "cb3c21f609be"
+      ],
+      "remainingOwnedContainers": [],
+      "matchingOwnedProcesses": [],
+      "fixtureRootsAbsent": true
+    },
+    "warningAndNestedGuard": {
+      "exitCode": 0,
+      "output": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts.\n",
+      "logSha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604"
+    },
+    "pushRangeSignoff": {
+      "exitCode": 0,
+      "output": "  references/Hexalith.EventStore                BUMP ok \u2014 validated-advance @ 596de60e140d in 79768d1f2b70\n  references/Hexalith.Memories                  BUMP ok \u2014 validated-advance @ 4190ec6549dd in 79768d1f2b70\ngitlink-rc-gate: PASS \u2014 all root gitlinks validated or clean.\n",
+      "logSha256": "26c50c99e319587af5d4771b94683c83d67892682ba4c92ef846c7f4a030e589"
+    },
+    "integrationFinalRebuild": {
+      "command": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj -c Release --no-restore -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "exitCode": 0,
+      "logSha256": "43d059b46690f761a6f24298ffe5dc371228efdadd7e38588a0efa74a675f6bf"
+    },
+    "diffPolicy": {
+      "command": "git -c core.whitespace=cr-at-eol diff --cached --check",
+      "exitCode": 0,
+      "repositories": [
+        "Parties",
+        "EventStore",
+        "Memories"
+      ]
+    }
+  },
+  "limits": [
+    "Published EventStore 3.127.0 lacks the new aliases and superseding-write recovery fix; matching publication/adoption remains open.",
+    "The preexisting Memories MCP binding defect is deferred.",
+    "Original source mapping and validation receipts remain tied to their historical candidate graph; incoming source changes are not retrospectively qualified.",
+    "Earlier full Memories Server run has two unrelated catalog/nested-checkout failures; current authentication-focused 8/8 passes.",
+    "The original broad Contracts run was bounded/cancelled; focused compatibility 115/115 passes. No completed broad Contracts pass is claimed.",
+    "Source launcher/Integration qualification remains separate: original launcher HXR020 and mapped Integration MSB4044 are retained as historical blockers; later unrelated source changes are not recertified."
+  ],
+  "verificationCorrections": [
+    {
+      "finding": "P1",
+      "result": "Initial real inventory SDK/ACL assertions passed but runner failed after Docker emitted lowercase error: no such object:. Confirmed no owned inventory container remains; corrected absence diagnostic and added positive/negative parser controls.",
+      "receipt": {
+        "status": "failed",
+        "authenticatedNonDefaultAclUser": true,
+        "inventoryPrefixGrantApplied": true,
+        "sdkHealthTestExitCode": 0,
+        "allReservedSentinelsAbsent": true,
+        "daprdVersion": "1.18.7",
+        "redisVersion": "7.4.11",
+        "ownedDaprStopped": true,
+        "ownedRedisRemoved": false,
+        "cleanupErrors": [
+          "ContainerCleanupUnverified"
+        ],
+        "exitCode": 1
+      }
+    },
+    {
+      "finding": "P2",
+      "result": "Strengthened distinct-counter runtime failed at real counter submission (HTTP500). Sample receiver had no fixture signing contract and its default allowed caller did not match the suffixed gateway. Add the same test JWT contract used by domain peers and exactly this session gateway caller; keep workload authentication and ACLs enforced.",
+      "runtimeSummary": {
+        "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "320ed087-f1e9-4760-9a62-c1c7b0cca029",
+        "name": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "run-date": "2026-10-23",
+        "run-time": "19:07:09",
+        "start-rtf": "2026-10-23T19:07:09.6025775+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "1",
+        "finish-rtf": "2026-10-23T19:08:49.7939144+00:00",
+        "not-run": "0",
+        "passed": "0",
+        "skipped": "0",
+        "time": "100.199",
+        "time-rtf": "00:01:40.1990000",
+        "total": "1"
+      }
+    },
+    {
+      "finding": "P2",
+      "result": "First retry still failed because sample lacked Audience and APP_API_TOKEN. Added the explicit fixture audience and SDK-owned independent application-channel token. Final strengthened runtime passes 1/1 with zero skips.",
+      "runtimeSummary": {
+        "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "9311cda4-1542-4878-ba54-4be5f6040480",
+        "name": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "run-date": "2026-10-23",
+        "run-time": "19:10:20",
+        "start-rtf": "2026-10-23T19:10:20.7425248+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "1",
+        "finish-rtf": "2026-10-23T19:11:56.7507407+00:00",
+        "not-run": "0",
+        "passed": "0",
+        "skipped": "0",
+        "time": "96.015",
+        "time-rtf": "00:01:36.0150000",
+        "total": "1"
+      }
+    },
+    {
+      "finding": "P3",
+      "result": "Initial complete final service suite had one failure: the live 8.5 sprint-status search still expected backlog after the preserved incoming owner lifecycle work moved to in-progress. Current observation and expected token corrected without changing historical G5 constants/approvals.",
+      "summary": {
+        "environment": "64-bit (x64) .NET 10.0.13 [collection-per-class, parallel (collections, 14 threads)]",
+        "id": "cd06ac9c-52d9-482e-a085-5907a244bdb9",
+        "name": "/home/administrator/projects/hexalith/parties/tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "run-date": "2026-10-23",
+        "run-time": "19:17:02",
+        "start-rtf": "2026-10-23T19:17:02.6674247+00:00",
+        "test-framework": "xUnit.net v3 4.0.2+0c7aa4991f",
+        "target-framework": ".NETCoreApp,Version=v10.0",
+        "errors": "0",
+        "failed": "1",
+        "finish-rtf": "2026-10-23T19:18:10.6602696+00:00",
+        "not-run": "0",
+        "passed": "2638",
+        "skipped": "8",
+        "time": "67.997",
+        "time-rtf": "00:01:07.9970000",
+        "total": "2647"
+      }
+    }
+  ],
+  "publishedOwnerCommits": {
+    "references/Hexalith.EventStore": {
+      "commit": "596de60e140da779f170279a822ded010070d774",
+      "describe": "v3.127.0-7-g596de60e",
+      "branch": "main",
+      "pushed": true
+    },
+    "references/Hexalith.Memories": {
+      "commit": "4190ec6549dd83bcaaf268e7bb723dcff8f7286b",
+      "describe": "v2.29.11-1-g4190ec65",
+      "branch": "main",
+      "pushed": true
+    }
+  },
+  "publishedRootSourceSelection": {
+    "commit": "79768d1f2b7071db6fa49bffbfe179a43a00baa7",
+    "pushRangeGate": "Pass from ec3d919c159aa87453910011618cb6d07f873baa; exactly two owner pointers authorized"
+  },
+  "ledgerDispositions": {
+    "closed": [
+      "configured reference UI target/client runtime",
+      "ingestion inventory health capability"
+    ],
+    "openForPackageAdoption": [
+      "DW-56 semantic query aliases",
+      "superseding-state batch recovery",
+      "Memories explicit algorithm policy"
+    ],
+    "preexistingReviewDeferred": [
+      "Memories MCP explicit algorithm binding"
+    ]
+  },
+  "recordingPhase": "Checks and owner publication complete; this receipt is committed before the final authorized Parties main push. Remote push outcome is verified in terminal afterward."
+}

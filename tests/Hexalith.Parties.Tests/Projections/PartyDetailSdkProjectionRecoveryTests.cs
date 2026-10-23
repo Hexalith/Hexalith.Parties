@@ -1,4 +1,3 @@
-using Hexalith.EventStore.Contracts.Queries;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -620,8 +619,11 @@ public sealed class PartyDetailSdkProjectionRecoveryTests
     [InlineData(ReadModelBatchPhase.BeforeReceipt)]
     public async Task NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(ReadModelBatchPhase interruption)
     {
-        Assert.SkipUnless(typeof(QueryAdapterFailureReason).GetField("QueryExecutionFailure") is not null,
-            "Requires the qualified EventStore source fix or its matching published package; retained 3.126.1 recovery remains open.");
+        Assert.SkipUnless(typeof(PartyDetailSdkProjectionRecoveryTests).Assembly
+                .GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false)
+                .OfType<System.Reflection.AssemblyMetadataAttribute>()
+                .Any(attribute => attribute.Key == "HexalithSourceMappingMode" && attribute.Value == "source"),
+            "Requires a qualified pinned-tool-generated source-mode build. Published EventStore 3.127.0 lacks this recovery fix; its package gate remains open.");
         var store = new InMemoryReadModelStore();
         var batches = new List<ReadModelBatch>();
         PartyDetailSdkProjectionHandler handler = Handler(store, batches);

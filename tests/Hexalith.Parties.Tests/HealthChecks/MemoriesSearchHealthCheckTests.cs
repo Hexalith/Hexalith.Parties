@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 using Shouldly;
+using NSubstitute;
 
 namespace Hexalith.Parties.Tests.HealthChecks;
 
@@ -789,6 +790,103 @@ public class MemoriesSearchHealthCheckTests
         backend.EraseAttempts.ShouldBe(1);
         backend.EraseToken.ShouldNotBe(cancellation.Token);
         backend.Inner.SerializedValues.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task InventoryProbeMissingCapabilityDegradesWithoutAnyStoreAccess(bool missingExpiry)
+    {
+        Hexalith.EventStore.Client.Projections.IReadModelStore backend = missingExpiry
+            ? Substitute.For<Hexalith.EventStore.Client.Projections.IReadModelStore, Hexalith.EventStore.Client.Projections.IReadModelConditionalEraser>()
+            : Substitute.For<Hexalith.EventStore.Client.Projections.IReadModelStore, Hexalith.EventStore.Client.Projections.IReadModelExpiringStore>();
+        var intents = new PartyMemoryIngestionIntentStore(backend, Options.Create(new PartyMemoryUnitMappingStoreOptions()));
+        using ServiceProvider services = new ServiceCollection().AddSingleton<IPartyMemoryUnitMappingStore>(new RecordingMappingStore())
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(intents).BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(new PartyMemorySearchOptions()), services);
+        (await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken)).Status.ShouldBe(HealthStatus.Degraded);
+        backend.ReceivedCalls().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task FailedInventoryProbeEraseRetainsOnlyABoundedSentinel()
+    {
+        var backend = new InventoryProbeReadModelStore { RejectErase = true };
+        await AssertInventoryProbeDegradedAsync(backend);
+        backend.SavedRetention.ShouldBe(TimeSpan.FromMinutes(1));
+        backend.Inner.SerializedValues.ShouldHaveSingleItem();
+        backend.Inner.UtcNow += TimeSpan.FromMinutes(1) + TimeSpan.FromSeconds(1);
+        (await backend.GetAsync<PartyMemoryIngestionInventory>("statestore", backend.SentinelKey!, TestContext.Current.CancellationToken)).Value.ShouldBeNull();
+        backend.Inner.SerializedValues.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task LostInventoryProbeSaveResponsePreservesPrimaryFailureAndErasesCommittedSentinel()
+    {
+        var backend = new InventoryProbeReadModelStore { AfterSave = () => throw new IOException("private lost response") };
+        HealthCheckResult result = await AssertInventoryProbeDegradedAsync(backend);
+        result.Data["ingestionInventoryReason"].ToString()!.ShouldContain(nameof(IOException));
+        result.Data["ingestionInventoryReason"].ToString()!.ShouldNotContain("private");
+        backend.EraseAttempts.ShouldBe(1);
+        backend.Inner.SerializedValues.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task MissingInventoryProbeEtagDegradesWithoutUnconditionalErase()
+    {
+        var backend = new InventoryProbeReadModelStore { MissingETag = true };
+        await AssertInventoryProbeDegradedAsync(backend);
+        backend.EraseAttempts.ShouldBe(0);
+        backend.Inner.SerializedValues.ShouldHaveSingleItem();
+        backend.Inner.UtcNow += TimeSpan.FromMinutes(2);
+        (await backend.Inner.GetAsync<PartyMemoryIngestionInventory>("statestore", backend.SentinelKey!, TestContext.Current.CancellationToken)).Value.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AlteredOrConcurrentlyChangedProbePreservesExactForeignPersistedBytes(bool raceOnErase)
+    {
+        var backend = new InventoryProbeReadModelStore();
+        string? foreignBytes = null;
+        async Task ReplaceAsync()
+        {
+            var current = await backend.Inner.GetAsync<PartyMemoryIngestionInventory>("statestore", backend.SentinelKey!, TestContext.Current.CancellationToken).ConfigureAwait(false);
+            var foreign = new PartyMemoryIngestionInventory(true, [new("foreign-attempt", "foreign-case", "urn:foreign")], Generation: 9);
+            (await backend.Inner.TrySaveAsync("statestore", backend.SentinelKey!, foreign, current.ETag!, TestContext.Current.CancellationToken).ConfigureAwait(false)).ShouldBeTrue();
+            foreignBytes = backend.Inner.SerializedValues.ShouldHaveSingleItem();
+        }
+        if (raceOnErase) backend.BeforeErase = ReplaceAsync;
+        else backend.AfterSave = () => ReplaceAsync().GetAwaiter().GetResult();
+        await AssertInventoryProbeDegradedAsync(backend);
+        backend.Inner.SerializedValues.ShouldBe([foreignBytes!]);
+        backend.Inner.UtcNow += TimeSpan.FromMinutes(2);
+        (await backend.Inner.GetAsync<PartyMemoryIngestionInventory>("statestore", backend.SentinelKey!, TestContext.Current.CancellationToken)).Value!.Generation.ShouldBe(9);
+        backend.Inner.SerializedValues.ShouldBe([foreignBytes!]);
+    }
+
+    [Fact]
+    public async Task OrdinaryIngestionRegistrationRemainsDurable()
+    {
+        var backend = new InventoryProbeReadModelStore();
+        var intents = new PartyMemoryIngestionIntentStore(backend, Options.Create(new PartyMemoryUnitMappingStoreOptions()));
+        var intent = new PartyMemoryIngestionIntent("normal-attempt", "case", "urn:normal");
+        await intents.RegisterAsync("tenant", "party", intent, TestContext.Current.CancellationToken);
+        backend.SavedRetention.ShouldBeNull();
+        backend.Inner.UtcNow += TimeSpan.FromDays(1);
+        (await intents.GetAsync("tenant", "party", TestContext.Current.CancellationToken)).ShouldBe([intent]);
+    }
+
+    private static async Task<HealthCheckResult> AssertInventoryProbeDegradedAsync(InventoryProbeReadModelStore backend)
+    {
+        var intents = new PartyMemoryIngestionIntentStore(backend, Options.Create(new PartyMemoryUnitMappingStoreOptions()));
+        using ServiceProvider services = new ServiceCollection().AddSingleton<IPartyMemoryUnitMappingStore>(new RecordingMappingStore())
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(intents).BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(new PartyMemorySearchOptions()), services);
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken).ConfigureAwait(false);
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Data["ingestionInventoryReachable"].ShouldBe(false);
+        return result;
     }
 
     private sealed class StubOptionsMonitor(PartyMemorySearchOptions value) : IOptionsMonitor<PartyMemorySearchOptions>

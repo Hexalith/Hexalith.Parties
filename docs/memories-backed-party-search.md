@@ -170,8 +170,12 @@ until outstanding cleanup obligations have been reconciled. The cleanup DELETE p
 it establishes neither a complete remote inventory nor terminal erasure. This check contributes to `/health` and does not gate `/ready`.
 
 The inventory sentinel uses the reserved `_health-probe` tenant and a unique
-`_health-probe-<guid>` party. It writes the real ingestion-inventory shape and
-conditionally erases only that exact sentinel with its current ETag. Cleanup has
+`_health-probe-<guid>` party. The store must support SDK expiring writes and
+conditional erasure; missing capabilities degrade health before any probe write.
+Probe registration uses a one-minute TTL, so failed cleanup cannot retain a
+permanent row. Normal ingestion inventories remain durable. The probe writes
+the real ingestion-inventory shape and conditionally erases only that exact
+sentinel with its current ETag. Cleanup has
 an independent five-second budget even after request cancellation or a lost write
 response. An altered sentinel, missing ETag, cleanup conflict or unverifiable
 absence reports failure; normal inventories and erasure fences are retained.

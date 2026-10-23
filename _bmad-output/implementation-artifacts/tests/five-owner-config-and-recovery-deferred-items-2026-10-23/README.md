@@ -1,69 +1,62 @@
 # Five owner configuration and recovery items
 
-Candidate source verification is complete. The parent workflow owns independent
-review, canonical owner commits, parent gitlink adoption, clean-checkout fitness
-reruns and authorized publication. Final commit identities must be recorded before
-claiming that publication is complete.
+EventStore is pinned to **3.127.0**. The five source changes are implemented and
+reviewed. Configured reference UI routing and inventory health are qualified.
+Semantic query aliases, superseding-state batch recovery and the Memories server
+algorithm policy retain their matching package publication/adoption gates.
+The actual published EventStore 3.127.0 probe still overwrites superseding state;
+its four recovery tests explicitly skip in package mode and pass in source mode.
 
-| Proof | Result |
-| --- | --- |
-| EventStore Client full Debug suite | 2,102 total; zero failures; two existing environment skips |
-| EventStore Admin.UI full Debug suite | 1,121/1,121 |
-| EventStore Sample full Debug suite | 194/194 |
-| EventStore query-contract compatibility | 115/115 |
-| Final batch/transaction/expiry lane after staging cleanup removal | 249/249 |
-| Memories registered algorithm/options/token controls | 7/7, including RSA/ECDSA acceptance, HS256 rejection, defaults, invalid lists and reload |
-| Parties mapped Debug focused suite, including registered health endpoints | 990/990 |
-| Real Dapr/Redis inventory ACL health | Pass, zero skips; denied and repaired in both indexing modes |
-| Dual-session actual UI/gateway/ACL/survivor runtime | 1/1, zero skips, 196.862 seconds |
-| Retained Release/package Integration build | Pass, zero warnings/errors |
+Reviewed source is published on owner main:
 
-`validation.json` records the exact boundaries, baseline selections, commands,
-assembly/log digests and separate failures. Source Debug checks use the current
-pinned-tool-generated mapping. The launcher itself fails the untouched Platform
-model gate; mapped Integration remains blocked by FrontComposer `MSB4044`.
-No source selector or build gate was changed. The initial cold runtime attempt
-failed a child Release copy/build and sidecar readiness before UI assertions; the
-separately recorded retry passed after serial host builds.
+- EventStore: `596de60e140da779f170279a822ded010070d774`
+- Memories: `4190ec6549dd83bcaaf268e7bb723dcff8f7286b`
+- Parties source adoption: `79768d1f2b7071db6fa49bffbfe179a43a00baa7`
 
-The full Memories Server suite has two unrelated deployment assertions tied to
-an absent forbidden nested Builds checkout and the old 3.126.0 asset selection.
-The initial full Parties suite has two fixed health-fixture failures and two
-fitness checks requiring clean committed owner checkouts. The corrected focused
-health lane passes; the parent must rerun the full clean graph after commits.
+| Final proof | Result |
+|---|---|
+| Release solution build | Zero warnings/errors; final changed test projects rebuilt afterward |
+| Parties service suite | 2,647 total; 2,639 passed; eight documented prerequisite/environment skips |
+| EventStore Client suite | 2,116 total; zero failures; two existing environment skips |
+| EventStore Admin.UI / Sample suites | 1,121/1,121 and 194/194 |
+| Memories registered algorithm/token/policy controls | 8/8 |
+| Original generated source mapping with final task patches | 999/999; zero skips; historical dependency graph only |
+| Actual 3.127.0 SDK/Dapr/Redis ACL health | Pass; denied/repaired in both modes; no sentinels; owned cleanup verified |
+| Actual two-session UI/gateway/ACL/survivor runtime | 1/1; zero skips; 157.014 seconds |
+| Runtime runner failure/deadline controls | 7/7 |
+| Push-range gitlink signoff / warning guard | Pass |
 
-`inventory-runtime.json` records authenticated non-default Redis-user proof,
-prefix repair, the actual C# SDK/health result, sentinel absence and owned cleanup.
-The remote search/cleanup responses in that control are deterministic; it does
-not qualify live Memories search or existing-workflow authorization.
+The UI runtime seeds and verifies persisted counts 2 and 5, then requires each
+actual page to display its own count. A gateway 404 fallback cannot satisfy the
+assertion. Sample receives a fixture-only signing contract, audience, independent
+application-channel token and own-session gateway allow-list; authentication and
+ACLs remain enforced. Both fixture roots, owned workers and containers are absent.
+Probe writes require expiry/conditional-erasure capabilities before mutation and
+use a one-minute SDK TTL; ordinary ingestion remains durable. Authentication
+policy changes require server restart; configuration notifications are preserved.
 
-Package publication, Dapr sidecar secret emission, authoritative remote inventory,
-legacy normal-batch compaction and migration remain independent open gates.
-The retained EventStore 3.126.1 graph stays buildable through a narrow query
-vocabulary bridge; it is not reported as published semantic-alias adoption.
+`final-verification.json` records current commands, counts, canonical owner
+identities, log hashes, initial failures, corrections, skips and remaining gates.
+`commitlint.json` preserves exact message-validation evidence. The three review
+layers' 16 findings and three parent verification corrections are triaged in the
+spec. The separate, preexisting Memories MCP algorithm-binding defect is deferred.
 
-To reproduce the inventory control after the mapped Debug service test build:
+`validation.json` remains historical original-candidate evidence, preserving its
+3.126.1 graph and 990/249-case measurements. `eventstore-3.127.0-adoption.json` and
+`matrix-audit.json` record later pre-review observations. None retrospectively
+qualifies the externally advanced source graph. Original source-launcher and
+mapped Integration blockers, two unrelated broad Memories assertions and the
+cancelled broad Contracts run remain explicitly bounded in those receipts.
+
+Reproduce inventory health after building the current Release service assembly:
 
 ```bash
 python3 inventory-runtime.py --workspace "$QUALIFIED_WORKSPACE" \
-  --output-directory "$PRIVATE_RUNTIME_RECEIPTS" --daprd "$DAPR_RUNTIME_PATH"
+  --output-directory "$PRIVATE_RUNTIME_RECEIPTS" --daprd "$DAPR_RUNTIME_PATH" \
+  --configuration Release
 ```
 
-The retained runner exposes workspace/output/runtime paths as arguments; its
-owned backend, ACL-grant, C# invocation, absence and cleanup logic matches the
-executed control. Do not publish its private runtime configuration or raw logs.
-
-The broad Contracts runner was cancelled after about ten minutes in existing
-package/provenance fixtures and exited 58. Its cancellation summary reported
-2,404 tests, zero failures and two package-inventory skips; cancellation is not
-a completed full-suite pass. Its focused compatibility fallback passed 115/115.
-The runner and observed child processes exited. All three topology roots, all
-recorded owned containers and all processes matching those session identities
-were confirmed absent. The final Client rebuild and 249-case focused lane pass
-after removing duplicate completed-staging cleanup; transaction retries still
-require exact operation-key proof.
-
-The five ledger dispositions remain open for the parent to finalize after review
-and canonical adoption. In particular, the retained 3.126.1 default package does
-not contain the batch recovery source fix: its affected closure remains open
-pending matching publication and package adoption.
+Keep private configurations and raw runtime logs outside the repository. This
+control qualifies SDK persistence capability, not live Memories search, remote
+inventory completeness, existing-workflow authorization or physical erasure.
+No release dispatch, deployment, historical parity approval or migration occurs.

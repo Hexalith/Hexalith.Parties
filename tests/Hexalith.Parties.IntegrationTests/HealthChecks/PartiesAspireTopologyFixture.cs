@@ -185,12 +185,19 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 PartiesMtlsProfile.ConfigureOptionalDependencies(_builder);
                 IResourceBuilder<ParameterResource> token = _builder.AddParameter("fixture-parties-channel-token", _appChannelToken, secret: true);
                 _ = _builder.CreateResourceBuilder<ProjectResource>("parties").WithEventStoreAppChannelToken(token);
+                IResourceBuilder<ParameterResource> sampleToken = _builder.AddParameter("fixture-sample-channel-token",
+                    Convert.ToHexString(RandomNumberGenerator.GetBytes(32)), secret: true);
+                _ = _builder.CreateResourceBuilder<ProjectResource>("sample").WithEventStoreAppChannelToken(sampleToken);
             }
 
             // The normal AppHost clears symmetric keys for its OIDC topology. Override
             // the test resources after model construction when Keycloak is disabled.
-            foreach (string resourceName in new[] { "eventstore", "eventstore-admin", "parties", "parties-mcp", "tenants" })
+            foreach (string resourceName in new[] { "eventstore", "eventstore-admin", "parties", "parties-mcp", "tenants", "sample" })
             {
+                if (resourceName == "sample" && !_completeMtlsProfile)
+                {
+                    continue;
+                }
                 _ = _builder.CreateResourceBuilder<ProjectResource>(resourceName)
                     .WithEnvironment("Authentication__JwtBearer__Authority", string.Empty)
                     .WithEnvironment("Authentication__JwtBearer__SigningKey", JwtSigningKey)
@@ -200,6 +207,11 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
             if (_completeMtlsProfile)
             {
+                // Sample commands/queries use the same real workload verifier as the domain hosts.
+                // Accept only this fixture's gateway, whose workload id is session-suffixed.
+                _ = _builder.CreateResourceBuilder<ProjectResource>("sample")
+                    .WithEnvironment("Authentication__JwtBearer__Audience", "hexalith-eventstore")
+                    .WithEnvironment("Authentication__Workload__AllowedCallers__0", Session.AppId("eventstore"));
                 // Exercise the UI-owned bearer acquisition and SDK handlers against this
                 // fixture's real protected APIs; development keys remain scoped to test resources.
                 foreach (string ui in new[] { "eventstore-admin-ui", "sample-blazor-ui" })

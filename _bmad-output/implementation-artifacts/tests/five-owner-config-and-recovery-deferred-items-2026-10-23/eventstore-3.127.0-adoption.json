@@ -1,0 +1,190 @@
+{
+  "requestedVersion": "3.127.0",
+  "packageRepositoryCommit": "e1d8b17160202761ab5c9606cafbcf4d1a4b92c3",
+  "effectiveRootVersion": "3.127.0",
+  "diagnosticRecoveryProbe": {
+    "PackageVersion": "3.127.0",
+    "InitialStatus": "Indeterminate",
+    "RetryStatus": "Completed",
+    "SupersedingStatePreserved": false,
+    "LegacyFailureAliasesOnly": true
+  },
+  "probeKind": "Actual published Testing/Client/Contracts packages; unchanged newer state must remain an open gate because retry overwrites it.",
+  "commands": [
+    "dotnet restore Hexalith.Parties.slnx -p:NuGetAudit=false",
+    "dnx dotnet-inspect -y -- member QueryAdapterFailureReason --package Hexalith.EventStore.Contracts@3.127.0 --all --table -n 25",
+    "dotnet run --project Probe.csproj --configuration Debug -p:NuGetAudit=false"
+  ],
+  "packageHashes": {
+    "Hexalith.EventStore.client": {
+      "sha256": "7b70f3da61e55f1987160dbdcdbe151e80abd92201ede8c5e5613926d56e8684"
+    },
+    "Hexalith.EventStore.contracts": {
+      "sha256": "0c71fabfb8f1dad3acadb752f67c68138a347785e2203f77ed22dfa819dfc678"
+    },
+    "Hexalith.EventStore.testing": {
+      "sha256": "4129b05fa272863cc6ad0e20f55d53d9f3e26ff9414876e0be580d6e3b52ee54"
+    },
+    "Hexalith.EventStore.domainservice": {
+      "sha256": "d84ea5f5e3d78829c69ac271a876a9f2d21fbf55e9cdc7a74c62b2fff193c5ff"
+    }
+  },
+  "projectAssets": {
+    "src/Hexalith.Parties.Contracts/obj/project.assets.json": [
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "src/Hexalith.Parties.Security/obj/project.assets.json": [
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "src/Hexalith.Parties.Picker/obj/project.assets.json": [
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "src/Hexalith.Parties.Client/obj/project.assets.json": [
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "src/Hexalith.Parties.ConsumerPortal/obj/project.assets.json": [
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "src/Hexalith.Parties.AdminPortal/obj/project.assets.json": [
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "src/Hexalith.Parties/obj/project.assets.json": [
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0",
+      "Hexalith.EventStore.DomainService/3.127.0",
+      "Hexalith.EventStore.ServiceDefaults/3.127.0"
+    ],
+    "src/Hexalith.Parties.Mcp/obj/project.assets.json": [
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "src/Hexalith.Parties.Aspire/obj/project.assets.json": [
+      "Hexalith.EventStore.Aspire/3.127.0"
+    ],
+    "src/Hexalith.Parties.UI/obj/project.assets.json": [
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0",
+      "Hexalith.EventStore.SignalR/3.127.0"
+    ],
+    "src/Hexalith.Parties.AppHost/obj/project.assets.json": [
+      "Hexalith.EventStore.Aspire/3.127.0"
+    ],
+    "src/Hexalith.Parties.Authentication/obj/project.assets.json": [
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "src/Hexalith.Parties.Projections/obj/project.assets.json": [
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0",
+      "Hexalith.EventStore.DomainService/3.127.0",
+      "Hexalith.EventStore.ServiceDefaults/3.127.0"
+    ],
+    "src/Hexalith.Parties.Testing/obj/project.assets.json": [
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "tests/Hexalith.Parties.IntegrationTests/obj/project.assets.json": [
+      "Hexalith.EventStore.Aspire/3.127.0",
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0",
+      "Hexalith.EventStore.DomainService/3.127.0",
+      "Hexalith.EventStore.Server/3.127.0",
+      "Hexalith.EventStore.ServiceDefaults/3.127.0"
+    ],
+    "tests/Hexalith.Parties.Contracts.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "tests/Hexalith.Parties.Aspire.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Aspire/3.127.0"
+    ],
+    "tests/Hexalith.Parties.Security.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "tests/Hexalith.Parties.Picker.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "tests/Hexalith.Parties.EventStoreGateway.TestHost/obj/project.assets.json": [
+      "Hexalith.EventStore.Admin.Abstractions/3.127.0",
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0",
+      "Hexalith.EventStore.DomainService/3.127.0",
+      "Hexalith.EventStore.Gateway/3.127.0",
+      "Hexalith.EventStore.Server/3.127.0",
+      "Hexalith.EventStore.ServiceDefaults/3.127.0"
+    ],
+    "tests/Hexalith.Parties.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Admin.Abstractions/3.127.0",
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0",
+      "Hexalith.EventStore.DomainService/3.127.0",
+      "Hexalith.EventStore.Gateway/3.127.0",
+      "Hexalith.EventStore.Server/3.127.0",
+      "Hexalith.EventStore.ServiceDefaults/3.127.0",
+      "Hexalith.EventStore.Testing/3.127.0"
+    ],
+    "tests/Hexalith.Parties.UI.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0",
+      "Hexalith.EventStore.SignalR/3.127.0"
+    ],
+    "tests/Hexalith.Parties.ConsumerPortal.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "tests/Hexalith.Parties.Server.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0",
+      "Hexalith.EventStore.DomainService/3.127.0",
+      "Hexalith.EventStore.ServiceDefaults/3.127.0"
+    ],
+    "tests/Hexalith.Parties.Authentication.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "tests/Hexalith.Parties.Client.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "tests/Hexalith.Parties.Sample.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0",
+      "Hexalith.EventStore.DomainService/3.127.0",
+      "Hexalith.EventStore.Server/3.127.0",
+      "Hexalith.EventStore.ServiceDefaults/3.127.0"
+    ],
+    "tests/Hexalith.Parties.AdminPortal.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ],
+    "tests/Hexalith.Parties.Projections.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Client/3.127.0",
+      "Hexalith.EventStore.Contracts/3.127.0",
+      "Hexalith.EventStore.DomainService/3.127.0",
+      "Hexalith.EventStore.ServiceDefaults/3.127.0"
+    ],
+    "tests/Hexalith.Parties.Mcp.Tests/obj/project.assets.json": [
+      "Hexalith.EventStore.Contracts/3.127.0"
+    ]
+  },
+  "releaseSolutionBuild": {
+    "command": "dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1 --disable-build-servers",
+    "exitCode": 0,
+    "warnings": 0,
+    "errors": 0,
+    "rawLogSha256": "7aa26bdee284f50ba5a85a1a6af444a58a1ad36e643d68b3731a3d9a500eb0a8"
+  },
+  "packageFocused": {
+    "total": 991,
+    "passed": 987,
+    "failed": 0,
+    "skipped": 4,
+    "qualification": "The four unshipped recovery cases declare the updated owner SDK prerequisite; the actual published 3.127.0 diagnostic reproduces the retained defect.",
+    "rawXmlSha256": "3c424cf670fd1830b1bb7132b31546f1a52b117f29420ed85b579ac24d54d78d"
+  },
+  "runtime": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 195.895,
+    "command": "PARTIES_MTLS_TOPOLOGY_TESTS=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method '*ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync'",
+    "rawXmlSha256": "965909987745414ccd6a08e3368910cc3f85f673ab1d45db7aa37ad1d4ed5227"
+  }
+}

@@ -163,8 +163,9 @@ must contain only ASCII letters, digits, hyphens, dots or underscores; blank or
 malformed values fail during SDK client registration. The retained AppHost injects
 its own suffixed identities into both UI hosts. Bearer acquisition and SDK-owned
 Dapr routing remain on the actual application-client paths. Dual-session coverage
-prerenders both UI pages, rejects cross-session calls from both UI sidecars and
-repeats the page requests after peer disposal. Consult the [current batch receipts](../_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/README.md)
+prerenders both UI pages, verifies distinct persisted counter values in their
+own sessions, rejects cross-session calls from both UI sidecars and repeats
+the page/value checks after peer disposal. Consult the [current batch receipts](../_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/README.md)
 for runtime results and source-build limitations.
 
 For the Release/package consumer qualification:

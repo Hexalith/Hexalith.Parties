@@ -1,0 +1,1 @@
+<Project><PropertyGroup><ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally></PropertyGroup><ItemGroup><PackageVersion Include="Hexalith.EventStore.Testing" Version="3.127.0" /></ItemGroup></Project>
