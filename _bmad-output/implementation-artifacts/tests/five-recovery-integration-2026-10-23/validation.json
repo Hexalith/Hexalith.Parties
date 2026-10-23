@@ -1,0 +1,635 @@
+{
+  "schema": "hexalith.parties.five-recovery-integration.validation.v1",
+  "baselineCommit": "3f33e57432b301198770dc77bc0c240d22306fba",
+  "stage": "Historical implementation handoff before review fixes/publication; current results are in final-verification.json",
+  "source": "Exact pinned-tool-generated Debug mappings; no hand-written source selectors or validation bypass. See source-asset-qualification.json for complete mapping hashes and RCL byte proof.",
+  "package": "Release/package checks are separate from mapped source checks. The selected package catalog was not changed; package EventStore 3.127.0 lacks the new recovery capability.",
+  "runs": [
+    {
+      "id": "recovery-source-ui-prerequisite-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exitCode": 0,
+      "logSha256": "a9d7f38ed66bde70071538c360ca40a55c802ce6086bcff5f103a453dd22e876",
+      "rawLog": "private /tmp/recovery-source-ui-prerequisite-build.log",
+      "workingDirectory": ".",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "id": "recovery-frontcomposer-multitarget-build",
+      "command": [
+        "dotnet",
+        "build",
+        "src/Hexalith.FrontComposer.Schema/Hexalith.FrontComposer.Schema.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exitCode": 0,
+      "logSha256": "2497eeb835682779cc070e6787451bf33b67f69624421d94c87438b3bd0a2a66",
+      "rawLog": "private /tmp/recovery-frontcomposer-multitarget-build.log",
+      "workingDirectory": "references/Hexalith.FrontComposer",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "id": "recovery-source-ui-focused",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+        "-class",
+        "Hexalith.Parties.UI.Tests.PartiesUiHostCompositionTests"
+      ],
+      "exitCode": 0,
+      "logSha256": "c5117dc1a13fc6c9d7a6aff30c0348434d3b35aa66d222dbbffcd011b68e195a",
+      "rawLog": "private /tmp/recovery-source-ui-focused.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 39,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "passed": 39
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "id": "recovery-source-ui-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll"
+      ],
+      "exitCode": 0,
+      "logSha256": "94207f2f218b6481e56f94c20ba5d283d83e4136937732d556f4e367d62ba8c9",
+      "rawLog": "private /tmp/recovery-source-ui-full.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 415,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 1,
+        "notRun": 0,
+        "passed": 414
+      },
+      "failedTests": [],
+      "skippedTests": [
+        "Hexalith.Parties.UI.Tests.MainLayoutAccessibilityTests.MainLayout_navigation_skip_link_tracks_mounted_target_on_resize"
+      ]
+    },
+    {
+      "id": "recovery-eventstore-final-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.EventStore.Client.Tests/Hexalith.EventStore.Client.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exitCode": 0,
+      "logSha256": "7a70e72335f1a20507cc3015fc9046d09e6ebb734e80c0ec4b5c7a2c9a667a87",
+      "rawLog": "private /tmp/recovery-eventstore-final-build.log",
+      "workingDirectory": "references/Hexalith.EventStore",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "id": "recovery-eventstore-full",
+      "command": [
+        "dotnet",
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.Client.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.Tests.dll"
+      ],
+      "exitCode": 0,
+      "logSha256": "b9aaee93046a3219ffa9ae91bda73d36d81804a9fe224e5cb7ed059d6e4f025c",
+      "rawLog": "private /tmp/recovery-eventstore-full.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 2129,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 2,
+        "notRun": 0,
+        "passed": 2127
+      },
+      "failedTests": [],
+      "skippedTests": [
+        "Hexalith.EventStore.Client.Tests.Projections.PendingBatchRecoveryLiveTests.RestartRecoversInterruptedConditionalBatchAndPreservesLaterSharedIndex(committed: False)",
+        "Hexalith.EventStore.Client.Tests.Projections.PendingBatchRecoveryLiveTests.RestartRecoversInterruptedConditionalBatchAndPreservesLaterSharedIndex(committed: True)"
+      ]
+    },
+    {
+      "id": "recovery-source-contracts-final-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exitCode": 0,
+      "logSha256": "bd05167d60e337656868400052a96bf9b4c71c5279f2e9daa54bc26d50df6431",
+      "rawLog": "private /tmp/recovery-source-contracts-final-build.log",
+      "workingDirectory": ".",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "id": "recovery-source-contracts-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Contracts.Tests/bin/Debug/net10.0/Hexalith.Parties.Contracts.Tests.dll"
+      ],
+      "exitCode": 0,
+      "logSha256": "108678f01e099b13b8ae1768b87047bcc741654869f3431371d1e6203ff5acdc",
+      "rawLog": "private /tmp/recovery-source-contracts-full.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 226,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "passed": 226
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "id": "recovery-source-projections-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Projections.Tests/Hexalith.Parties.Projections.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exitCode": 0,
+      "logSha256": "65c0251d3578def79390e98306016facd2f80e8f4fe69fa18966dd539aa4343d",
+      "rawLog": "private /tmp/recovery-source-projections-build.log",
+      "workingDirectory": ".",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "id": "recovery-source-projections-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll"
+      ],
+      "exitCode": 0,
+      "logSha256": "78f9adc9a8d33f5420f03b76af1323bc7c84eb326b700043bbe8c2c922d0156f",
+      "rawLog": "private /tmp/recovery-source-projections-full.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 458,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "passed": 458
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "id": "recovery-source-security-final-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exitCode": 0,
+      "logSha256": "3c44cc5dc8a02b0f646a9b93e0a43a186cf4d5da52cd59c4365d62d4ba3df269",
+      "rawLog": "private /tmp/recovery-source-security-final-build.log",
+      "workingDirectory": ".",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "id": "recovery-source-security-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll"
+      ],
+      "exitCode": 0,
+      "logSha256": "506cc9ed21877201ff93c76376147250d5631451e75138bdd453bd36dd915f19",
+      "rawLog": "private /tmp/recovery-source-security-full.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 293,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "passed": 293
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "id": "recovery-source-service-final-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "--no-restore",
+        "--disable-build-servers"
+      ],
+      "exitCode": 0,
+      "logSha256": "845199820056d1b3d683414502591f386d50c9a240e6c97642c8ea1c39240bc9",
+      "rawLog": "private /tmp/recovery-source-service-final-build.log",
+      "workingDirectory": ".",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "id": "recovery-source-focused",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests",
+        "-class",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests"
+      ],
+      "exitCode": 0,
+      "logSha256": "e03395f082f3311cb05e96d4c6d94a823267ebfe97c4559057e160c51c5aa2de",
+      "rawLog": "private /tmp/recovery-source-focused.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 191,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "passed": 191
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "id": "recovery-source-service-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll"
+      ],
+      "exitCode": 1,
+      "logSha256": "8a7bfe837ade327e5c2ea8e143d05a6415bb5323b59d7257587fd08de863de7d",
+      "rawLog": "private /tmp/recovery-source-service-full.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 2662,
+        "errors": 0,
+        "failed": 2,
+        "skipped": 4,
+        "notRun": 0,
+        "passed": 2656
+      },
+      "failedTests": [
+        "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification",
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph"
+      ],
+      "skippedTests": [
+        "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+        "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkRejectsTwoClientStaleEtagsAndCompetingAbsentKeyCreation",
+        "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkHealthDetectsInventoryPrefixAclDenialAndRepairInBothModes",
+        "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkPersistencePreservesLegacyListsEtagsProbeDeletionAndCanonicalReceipts"
+      ]
+    },
+    {
+      "id": "recovery-release-solution-build",
+      "command": [
+        "dotnet",
+        "build",
+        "Hexalith.Parties.slnx",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exitCode": 0,
+      "logSha256": "afa2c494855ccff76a4ae7eba8423afa98533b46d82711e4b3bb7b4330425ff9",
+      "rawLog": "private /tmp/recovery-release-solution-build.log",
+      "workingDirectory": ".",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "id": "recovery-release-contracts-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll"
+      ],
+      "exitCode": 0,
+      "logSha256": "327d6fa4cba0b2777913abe37ab12945c60efe65b615dd25f33e27fe2ad3ba12",
+      "rawLog": "private /tmp/recovery-release-contracts-full.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 226,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "passed": 226
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "id": "recovery-release-ui-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll"
+      ],
+      "exitCode": 0,
+      "logSha256": "7dc2a64e9a054c3cc8fb60cb89cd393c3dae3a30b0967aad3f74c86b14dc66d8",
+      "rawLog": "private /tmp/recovery-release-ui-full.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 415,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 1,
+        "notRun": 0,
+        "passed": 414
+      },
+      "failedTests": [],
+      "skippedTests": [
+        "Hexalith.Parties.UI.Tests.MainLayoutAccessibilityTests.MainLayout_navigation_skip_link_tracks_mounted_target_on_resize"
+      ]
+    },
+    {
+      "id": "recovery-release-projections-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.Tests.dll"
+      ],
+      "exitCode": 0,
+      "logSha256": "9b1388fcfeb4ddc4f79854b395ce8064d34a3802a462bed176c4bac1287ebf44",
+      "rawLog": "private /tmp/recovery-release-projections-full.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 458,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "passed": 458
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "id": "recovery-release-service-final-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exitCode": 0,
+      "logSha256": "45faa23af1aab479f940e0e12f41afe96b7c0ea789c1ca3333b9418fab4dec65",
+      "rawLog": "private /tmp/recovery-release-service-final-build.log",
+      "workingDirectory": ".",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "id": "recovery-release-security-final-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exitCode": 0,
+      "logSha256": "1423be5eecb1054d5c7f7ef3f753280771de772faca80454662abd39fef5a1d3",
+      "rawLog": "private /tmp/recovery-release-security-final-build.log",
+      "workingDirectory": ".",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "id": "recovery-release-security-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Security.Tests/bin/Release/net10.0/Hexalith.Parties.Security.Tests.dll"
+      ],
+      "exitCode": 0,
+      "logSha256": "4bad8ce2f463cc79a26a3da392a261e697eb394fb24449a845f07b41dca49551",
+      "rawLog": "private /tmp/recovery-release-security-full.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 293,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "passed": 293
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "id": "recovery-release-focused",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests",
+        "-class",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests"
+      ],
+      "exitCode": 0,
+      "logSha256": "bd9b82192e1030eb761ba8bcdb9327c8ffdf16b8cf37e801efb9b4a9fa283841",
+      "rawLog": "private /tmp/recovery-release-focused.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 191,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 8,
+        "notRun": 0,
+        "passed": 183
+      },
+      "failedTests": [],
+      "skippedTests": [
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.CommittedLegacyDeliveryRecoversBeforeNextTailAndPreservesNewerErasureBytes(erased: False, interruptedRecovery: False)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.CommittedLegacyDeliveryRecoversBeforeNextTailAndPreservesNewerErasureBytes(erased: True, interruptedRecovery: False)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.CommittedLegacyDeliveryRecoversBeforeNextTailAndPreservesNewerErasureBytes(erased: False, interruptedRecovery: True)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.CommittedLegacyDeliveryRecoversBeforeNextTailAndPreservesNewerErasureBytes(erased: True, interruptedRecovery: True)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: AfterCommit)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: BeforeCompaction)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: AfterCompaction)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: BeforeReceipt)"
+      ]
+    },
+    {
+      "id": "recovery-release-service-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll"
+      ],
+      "exitCode": 1,
+      "logSha256": "3dc5b4a15c06555fbb56e5b025de00c0c6dbed7b44c72cc7da83a4cc4c3cf301",
+      "rawLog": "private /tmp/recovery-release-service-full.log",
+      "workingDirectory": ".",
+      "tests": {
+        "total": 2662,
+        "errors": 0,
+        "failed": 2,
+        "skipped": 12,
+        "notRun": 0,
+        "passed": 2648
+      },
+      "failedTests": [
+        "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification",
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph"
+      ],
+      "skippedTests": [
+        "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.CommittedLegacyDeliveryRecoversBeforeNextTailAndPreservesNewerErasureBytes(erased: False, interruptedRecovery: False)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.CommittedLegacyDeliveryRecoversBeforeNextTailAndPreservesNewerErasureBytes(erased: True, interruptedRecovery: False)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.CommittedLegacyDeliveryRecoversBeforeNextTailAndPreservesNewerErasureBytes(erased: False, interruptedRecovery: True)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.CommittedLegacyDeliveryRecoversBeforeNextTailAndPreservesNewerErasureBytes(erased: True, interruptedRecovery: True)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: AfterCommit)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: BeforeCompaction)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: AfterCompaction)",
+        "Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests.NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(interruption: BeforeReceipt)",
+        "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkRejectsTwoClientStaleEtagsAndCompetingAbsentKeyCreation",
+        "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkPersistencePreservesLegacyListsEtagsProbeDeletionAndCanonicalReceipts",
+        "Hexalith.Parties.Tests.Search.PartyMemoryPersistenceRuntimeTests.ActualSdkHealthDetectsInventoryPrefixAclDenialAndRepairInBothModes"
+      ]
+    },
+    {
+      "id": "recovery-mcp-release-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Memories.Mcp.Tests/Hexalith.Memories.Mcp.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "--disable-build-servers"
+      ],
+      "exitCode": 0,
+      "logSha256": "b6493cf3adb00948a764512973d3a6c40a50a2bec043d9470922f8d7f3615680",
+      "rawLog": "private /tmp/recovery-mcp-release-build.log",
+      "workingDirectory": "references/Hexalith.Memories",
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "id": "recovery-mcp-release-full",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Memories.Mcp.Tests/bin/Release/net10.0/Hexalith.Memories.Mcp.Tests.dll"
+      ],
+      "exitCode": 0,
+      "logSha256": "0658a508908d7c6721a22ae90a5f2a88b0720a5851bfe2879a8239186c76fe98",
+      "rawLog": "private /tmp/recovery-mcp-release-full.log",
+      "workingDirectory": "references/Hexalith.Memories",
+      "tests": {
+        "total": 120,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "passed": 120
+      },
+      "failedTests": [],
+      "skippedTests": []
+    }
+  ],
+  "functionalCoverage": [
+    "Actual selected FrontComposer RCL GET, JavaScript content type and exact selected bytes; canonical SDK assets-path fallback built for net10.0 and netstandard2.0.",
+    "Actual registered MCP options, public init semantics, absent defaults, explicit replacement, invalid lists, reload notifications and real HTTP RS256/ES256 acceptance plus HS256 rejection.",
+    "Real SDK Dapr batch protocol serialized state: interrupted committed legacy compaction/restart, next-tail writable ETags, scope/marker/envelope refusal and preserved superseding canonical/foreign bytes. Generic relative-TTL recovery refuses; the nonexpiring capability requires caller knowledge.",
+    "Explicit certificate recovery executes actual PartyKeyManagementService deletion/read-back/audit and persisted certificate read-back through recreated PartyErasureRecordStore instances. Remaining keys, read-back outage, cancellation, foreign evidence and certificate persistence failure cannot clean/complete; default retry remains unchanged.",
+    "Strict complete PartyState Web/Parties restoration with all modeled private setters and getter collections; recursive duplicate/unknown/lossy/partial/byte/depth controls. Actual SnapshotManager capture, persisted byte read-back/recreated storage, independent synthetic custody, profile erasure and post-restore command.",
+    "Persisted raw history with Legacy/Unprotected metadata or a forged history label is refused. Both metadata-aware adapter entry points require the original purpose wrapper for retained history; trusted post-SDK folded plaintext replay is preserved."
+  ],
+  "knownFailures": [
+    {
+      "tests": [
+        "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification",
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph"
+      ],
+      "result": "Both full source and package service suites fail these unchanged gates because task-owned root references are modified/staged before owner commits. Do not weaken the gates. Parent must publish reviewed owners, adopt exact gitlinks and rerun clean immutable-consumption proof."
+    }
+  ],
+  "externalGates": [
+    "Official source launcher still ends HXR020 in selected Platform composition; focused source builds do not certify full-topology health. Original pre-code Aspire baseline Parties wait timed out.",
+    "New EventStore source recovery and MCP owner changes require reviewed owner publication/root adoption; matching NuGet package publication/adoption remains separate and was not executed.",
+    "Synthetic custody and fake serialized state are functional evidence only, not production custody, retention/expiry, live key backend or deployment qualification.",
+    "Existing source UI compact-navigation opt-in skip, two EventStore live-Dapr skips, and service environment/source-only package skips remain explicit in per-run counts.",
+    "Parent owns final independent review, pinned commitlint, commits, clean-source adoption receipts, staged-diff inspection and non-force main pushes. No remote operation or deployed recovery was performed by implementation."
+  ],
+  "prerequisiteCorrection": {
+    "result": "Full Contracts suite initially found unchanged raw claim literals in PartiesTopologyIsolationTests.cs (HEAD/worktree SHA256 d3a552e1d7228612647736970aeb3157a59643d0cd06ba6b51392da80723202a). Reused PartiesClaimTypes.Subject/EventStoreTenant with identical wire values; unchanged guard and full Contracts suite pass."
+  },
+  "guards": {
+    "warningOverridePolicy": "bash scripts/check-no-warning-override.sh passed",
+    "diffWhitespace": "CRLF-aware cached and working diff checks passed for root and all three edited owners",
+    "generatedMapping": "All 12 captured generated-file SHA256 values verified unchanged; mapping/run retained for parent verification"
+  },
+  "codeSha256": {
+    "Directory.Build.targets": "b3704ba5aeb7e426343ac16eeb352580f0948a6541fe1bb10ad7ed9502d9ddb0",
+    "src/Hexalith.Parties.Contracts/Commands/RetryErasureVerification.cs": "da37d3ea92a09fddb24765ccbcf0279d3c9d752a33ef93b849fc9aac4ab8212c",
+    "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs": "372c4785758aa6f24de561f9cb0414f9ca28ff36e7c241b5d07280aaf02346ec",
+    "src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs": "caee039d1825c4611bfa3592654253a164cb3a8ebc9f89682f930af3e7c545be",
+    "src/Hexalith.Parties.Security/PartyErasureOrchestrator.cs": "6a15ce7fcaf6cbaed932c028e787bdeab7ab3404f1a5822cabaa6f73996e8e67",
+    "src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs": "624c9a321fe4a13363b001fe44417247646efb95c9ec82b74d641962f9718e79",
+    "src/Hexalith.Parties.Security/PartyStateSnapshotCodec.cs": "04cf6c02c65569c7480e1d0c71f7c3460c4817111120fa71319a95808bf07b1a",
+    "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs": "a29297de97c3f55d11e97434d3b62bb9e6f94604937c9d2c73b0b152456be30d",
+    "src/Hexalith.Parties/Validation/RetryErasureVerificationValidator.cs": "107e68c06144b5bdcc2bbc773fafe9946502b05e6cddff29d18e5f0849fd52cf",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesTopologyIsolationTests.cs": "6950b4a19e8f19b14f355a727577c1884bbfe0e962903d82c1dcbf5b2085bda2",
+    "tests/Hexalith.Parties.Security.Tests/IdentityHistoryProtectionTests.cs": "932cef2f74120cd55b8d8eb5d512628c1787444003c13ad22f9e78b190cee8ff",
+    "tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs": "02cd0679cdb9539812400b8f4022172146ac4095e59b74672f78011d04dac42f",
+    "tests/Hexalith.Parties.Tests/Projections/PartyDetailSdkProjectionRecoveryTests.cs": "e542c81c3140f06fcde1c171fb1c7cae2f767b97ed1dcd8138d086bea736c1ca",
+    "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj": "5efd212c76e4b9cc3001f7aa91530366c238c20308672d03700921abd9f7205c",
+    "tests/Hexalith.Parties.UI.Tests/PartiesUiHostCompositionTests.cs": "59dfe9132fcd616ea72f0a5d2db2ca9059bbe068cca2089137e67ab2430ee627",
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Client/Projections/DaprReadModelStore.PendingBatchRecovery.cs": "cdc8b2e7385619912364f7d3a6de9e1e1732990240cd4ccd3299107abfe52b82",
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Client/Projections/IReadModelPendingBatchRecoveryStore.cs": "f07635693e6664f0675814ca05b48eecba89abe60025d8691211ae0cc93d2736",
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Client/Projections/ReadModelPendingBatchRecovery.LegacyCommitted.cs": "e5981d91a25a8ec3a0828dd70cbdb47794c3910dc97291ae2bcc8ad7eb9e8a68",
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Client/Projections/ReadModelPendingBatchRecovery.cs": "dbf55689ee71b144376268c7a0fc85f0b69f3a32d7553f0b835c04de502da652",
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Testing/Fakes/InMemoryReadModelStore.cs": "49e77fa01cc2083e98c64bfa234c0efc916bbc1b688373f8b09ea6f8611dd1ff",
+    "references/Hexalith.EventStore/tests/Hexalith.EventStore.Client.Tests/Projections/DaprReadModelBatchTests.PendingRecovery.cs": "51f93aa6307d9abdd75f1f555df313b67da0176645a0a1a9e97cef1787860610",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Mcp/Authentication/MemoriesMcpAuthenticationOptions.cs": "13f23564cfbb05016e33d6931c6afd4f8c2cc1beae9d29dc0f34ca642eb7e292",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Mcp/Authentication/ValidateMcpAuthenticationOptions.cs": "0e9ab14f98fceb685d5185cc67bfdb37b592b909aa12f7bc0a812580872e2cb1",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Mcp/McpCompositionRoot.cs": "4e02d4481774d46e36349ab2d80ce16525654ba304ba525639f6742136e71a02",
+    "references/Hexalith.Memories/tests/Hexalith.Memories.Mcp.Tests/ConfigureJwtBearerOptionsTests.cs": "12e5ab5c314cbb350fa8e10673b8db23b5c42e3a2d2683383afc304446ad04a2",
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj": "d5b92476900986d1e9a0af004ea7a1a57110f892ae6a6d547a600dcd47443c98",
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/Hexalith.FrontComposer.Schema.csproj": "adbb89c69ac721597d9dbf7a4dc83fa9cb69e5f6043fdc9c5fe695e1ecede6f9"
+  },
+  "supersededBy": "final-verification.json"
+}

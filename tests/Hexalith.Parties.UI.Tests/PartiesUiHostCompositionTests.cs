@@ -284,6 +284,41 @@ public sealed class PartiesUiHostCompositionTests
         body.Length.ShouldBeGreaterThan(0, "A 0-byte blazor.web.js means the Test host fell back to SSR-only output.");
     }
 
+    /// <summary>The RCL script served by the actual host matches the build-selected producer bytes.</summary>
+    [Fact]
+    public async Task TestEnvironment_ServesSelectedFrontComposerScriptAsync()
+    {
+        Assembly assembly = typeof(PartiesUiHostCompositionTests).Assembly;
+        string Metadata(string key) => assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+            .Single(attribute => attribute.Key == key).Value ?? string.Empty;
+        bool fromSource = string.Equals(Metadata("HexalithFrontComposerFromSource"), "true", StringComparison.OrdinalIgnoreCase);
+        string selectedAsset;
+        if (fromSource)
+        {
+            Metadata("HexalithSourceMappingMode").ShouldNotBeNullOrWhiteSpace("Source delivery needs pinned-tool mapping metadata.");
+            string root = Metadata("HexalithFrontComposerRoot");
+            Path.IsPathFullyQualified(root).ShouldBeTrue("Source delivery needs the build-selected absolute producer root.");
+            selectedAsset = Path.Combine(root, "src", "Hexalith.FrontComposer.Shell", "wwwroot", "js", "fc-focus.js");
+        }
+        else
+        {
+            string stylesheet = RestoredFrontComposerAssets.ResolveShellStylesheet(assembly);
+            selectedAsset = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(stylesheet)!, "..", "js", "fc-focus.js"));
+        }
+
+        File.Exists(selectedAsset).ShouldBeTrue($"Selected producer script is missing: {selectedAsset}");
+        await using WebApplicationFactory<global::Program> factory = RoutingHost();
+        using HttpClient client = factory.CreateClient();
+        using HttpResponseMessage response = await client.GetAsync(
+            "/_content/Hexalith.FrontComposer.Shell/js/fc-focus.js", TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        response.Content.Headers.ContentType?.MediaType.ShouldBeOneOf("text/javascript", "application/javascript");
+        byte[] expected = await File.ReadAllBytesAsync(selectedAsset, TestContext.Current.CancellationToken);
+        expected.Length.ShouldBeGreaterThan(0);
+        (await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken)).ShouldBe(expected,
+            $"RCL delivery must match the selected {(fromSource ? "source" : "package")} script exactly.");
+    }
+
     /// <summary>Resolves fixture shell scope through the actual host registration for each browser principal.</summary>
     /// <param name="accessibilityEnabled">Whether to include Playwright's accessibility scope wrapper.</param>
     /// <param name="route">The browser route represented by the circuit navigation service.</param>

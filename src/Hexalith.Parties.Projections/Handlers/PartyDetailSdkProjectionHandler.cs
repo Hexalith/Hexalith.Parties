@@ -59,8 +59,9 @@ public sealed class PartyDetailSdkProjectionHandler(
         string storeName = StoreName;
         var scope = new ReadModelBatchScope(storeName, request.TenantId, Domain, request.AggregateId, ProjectionType, dispatchId);
         scope.Validate();
-        // Only empty initialization is recoverable across deliveries. Never retain a normal
-        // dispatch manifest: it can contain personal data outside the canonical erasure keys.
+        // Only empty initialization retains a manifest across deliveries. Normal committed
+        // nonexpiring envelopes compact through owner-supported recovery without retaining
+        // personal data outside the canonical erasure keys.
         ReadModelBatchScope initializationScope = scope with
         {
             ProjectionType = $"{ProjectionType}.initialization",
@@ -376,9 +377,13 @@ public sealed class PartyDetailSdkProjectionHandler(
                 && recovery.Reason is "recovery-scope-mismatch" or "invalid-recovery-evidence" or "recovery-manifest-unavailable")
             {
                 // Terminal anchors validate the projection namespace before returning a scope
-                // mismatch. Check the normal namespace too; legacy non-retained deliveries must
-                // still reach ExecuteAsync with their original manifest and dispatch identity.
+                // mismatch. Recover the normal delivery namespace before reading checkpoints.
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+                // Parties detail and processing writers have never used TTL/deadline retention.
+                recovery = await recoveryStore.RecoverNonExpiringPendingAsync(deliveryScope, key, cancellationToken).ConfigureAwait(false);
+#else
                 recovery = await recoveryStore.RecoverPendingAsync(deliveryScope, key, cancellationToken).ConfigureAwait(false);
+#endif
                 resolved &= recovery.IsResolved || recovery.Reason == "recovery-manifest-unavailable";
             }
             else

@@ -215,11 +215,12 @@ keys, finite expiry and restore-safe lifecycle enforcement; metadata and unit
 tests do not establish production custody qualification. The approved retention
 policy and the outstanding production qualification remain unchanged.
 
-This write guard accepts typed `PartyState` only. The current EventStore
-`SnapshotManager` supplies folded `JsonElement` state, which the existing history
-guard rejects. Full SDK retained-history snapshot capture therefore remains
-unavailable until the owner supplies a safe typed integration; the encrypted
-round-trip unit tests establish local validation and serialized restoration.
+The underlying write guard accepts typed `PartyState` only. EventStore's
+`SnapshotManager` supplies folded JSON; the adapter now restores complete modeled
+state through a strict codec before profile/history protection. Persisted reads
+require valid protection evidence, while trusted post-SDK replay preserves typed
+state and its collections. Actual SDK capture/read-back tests qualify this local
+integration with synthetic custody; production custody and expiry remain separate.
 
 Business-rule highlights: state-driven idempotency (`DomainResult.NoOp`), the erasure state machine (`ErasurePending → KeyDestroyed → Verified → Erased`), Art.18 restriction guards (with an Art.18(3) carve-out for consent ops), deterministic `ConsentId`, and the composite two-phase (validate-all-then-emit) with a `MaxSubOperations` cap.
 
@@ -366,3 +367,36 @@ Runtime deployment orchestration is externally owned and must consume immutable 
 - **SDK rebuild/live agreement is pinned:** shared and detail read-model key formulas are guarded by projection/rebuild regression coverage.
 - **AdminPortal erasure verification is implemented through existing gateway seams:** `GetErasureCertificateAsync` posts the `GetErasureCertificate` SDK domain query; `RetryErasureVerificationAsync` posts the additive `RetryErasureVerification` command and reuses the Parties erasure orchestrator. No public `parties` API was added; the internal `/query` route remains EventStore-only.
 - **CI `contract-test` (Pact) job is unenforced** — the root Pact scripts don't exist, so it self-reports "CONCERNS" and is skipped; the quality gate passes it as `skipped`.
+
+
+Recovery integration boundaries (2026-10-23): the source-selected EventStore SDK exposes an
+explicit nonexpiring legacy recovery capability. Parties uses it only for its detail and
+processing projections, whose original normal batches have no TTL/deadline. Generic recovery
+continues to refuse missing-manifest v1 batches because their original relative TTL cannot be
+reconstructed. Committed owned envelopes are compacted with CAS; a content-free final anchor
+survives interrupted recovery, and superseding erasure values are preserved. Package 3.127.0
+continues to use the existing consumer path pending publication/adoption of this additive API.
+
+`RetryErasureVerification.RecoverKeyDestructionEvidence` defaults to false. Explicit recovery
+of missing or ambiguous matching evidence reruns the existing authoritative key deletion,
+read-back and audit, validates a fresh scoped Verified certificate, and persists it before
+cleanup. Cancellation and certificate persistence failures cannot certify completion. Valid
+certificates remain unchanged by ordinary cleanup retries.
+
+SDK snapshot capture supplies Web JSON to `EventStorePartyPayloadProtectionAdapter`, which
+uses `PartyStateSnapshotCodec` to restore every modeled private-set field and getter
+collection before independent profile/history protection. The codec rejects duplicate,
+unknown, partial, oversized or lossy shapes; Web numeric enums and Parties string enums are
+accepted only through complete round-trip agreement (allowing null omission). The underlying
+serialized-history protection guard remains active. Synthetic custody tests qualify serialized
+capture, recreated-store restore and command behavior, with production custody/expiry gates
+remaining external.
+
+Persisted raw retained-history snapshots are unreadable under Legacy/Unprotected metadata;
+independent history requires its purpose wrapper and custody. Codec hydration of plain folded
+state is reserved for the trusted post-SDK domain replay handoff after that persisted-read gate.
+
+Protected profile reads validate the complete personal-data policy before any profile key read.
+A detached preview removes encrypted markers and restores modeled state; the existing writer
+inspector rejects personal values left in plaintext, including collection values and natural-person
+organization strings. A ciphertext marker elsewhere cannot authorize an unencrypted sensitive leaf.

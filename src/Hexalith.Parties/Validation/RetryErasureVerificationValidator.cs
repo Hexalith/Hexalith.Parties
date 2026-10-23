@@ -10,6 +10,8 @@ public sealed class RetryErasureVerificationValidator : AbstractValidator<RetryE
 {
     public RetryErasureVerificationValidator()
     {
+        // Explicit evidence recovery retains the same tenant/party boundary as a normal retry.
+        // The boolean opt-in is false when omitted; JSON rejects non-boolean wire values.
         RuleFor(x => x.PartyId)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()

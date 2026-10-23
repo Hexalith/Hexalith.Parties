@@ -1,4 +1,8 @@
 using System.Reflection;
+using System.Security.Cryptography;
+using Hexalith.EventStore.Server.Configuration;
+using SnapshotManager = Hexalith.EventStore.Server.Events.SnapshotManager;
+using SnapshotRecord = Hexalith.EventStore.Server.Events.SnapshotRecord;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -141,6 +145,351 @@ public sealed class PartyDomainProcessorValidationTests
         (await Project("duplicated")).Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
         (await Status()).ShouldBe(expectedErased);
         PersistedLifecycle().ShouldBe(expectedErased);
+    }
+
+    [Theory]
+    [InlineData("success")]
+    [InlineData("missing")]
+    [InlineData("existing-null")]
+    [InlineData("existing-nonpositive")]
+    [InlineData("existing-foreign-tenant")]
+    [InlineData("existing-foreign-party")]
+    [InlineData("remaining")]
+    [InlineData("outage")]
+    [InlineData("audit")]
+    [InlineData("cancellation")]
+    [InlineData("post-persistence-cancellation")]
+    [InlineData("foreign")]
+    [InlineData("stale")]
+    [InlineData("future")]
+    [InlineData("null-versions")]
+    [InlineData("nonpositive-versions")]
+    [InlineData("persistence")]
+    public async Task ExplicitCertificateRecoveryRequiresFreshVerifiedDurableEvidence(string fault)
+    {
+        string partyId = UniqueIdHelper.GenerateSortableUniqueStringId();
+        using var transport = new InMemoryDaprStateClient();
+        var records = new PartyErasureRecordStore(transport);
+        var legacy = new ErasureCertificate
+        {
+            TenantId = fault == "existing-foreign-tenant" ? "foreign" : "tenant-a",
+            PartyId = fault == "existing-foreign-party" ? "foreign" : partyId, Timestamp = DateTimeOffset.UnixEpoch,
+            VerificationStatus = fault is "existing-null" or "existing-nonpositive" ? ErasureVerificationStatus.Verified : ErasureVerificationStatus.Pending,
+            KeyVersionsDestroyed = fault == "existing-null" ? null! : fault == "existing-nonpositive" ? [0] : [1],
+        };
+        if (fault is "existing-foreign-tenant" or "existing-foreign-party")
+            await ((DaprClient)transport).SaveStateAsync("statestore", $"tenant-a:erasure:{partyId}", legacy, cancellationToken: TestContext.Current.CancellationToken);
+        else if (fault != "missing") await records.SaveCertificateAsync(legacy, TestContext.Current.CancellationToken);
+        var backend = Substitute.For<IKeyStorageBackend>();
+        var audit = Substitute.For<IKeyOperationAuditService>();
+        var correlation = Substitute.For<ICorrelationContextAccessor>();
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        bool deleted = false;
+        int readBacks = 0;
+        backend.ListKeyVersionsAsync("tenant-a", partyId, Arg.Any<CancellationToken>()).Returns(_ =>
+        {
+            if (deleted) readBacks++;
+            if (deleted && fault == "outage") throw new IOException("authoritative read unavailable");
+            return Task.FromResult<IReadOnlyList<int>>(deleted && fault != "remaining" ? [] : [1]);
+        });
+        backend.DeleteAllVersionsAsync("tenant-a", partyId, Arg.Any<CancellationToken>()).Returns(_ =>
+        {
+            deleted = true;
+            if (fault == "cancellation") cancellation.Cancel();
+            return Task.CompletedTask;
+        });
+        if (fault == "audit")
+            audit.RecordOperationAsync(Arg.Any<KeyOperationAuditEntry>(), Arg.Any<CancellationToken>()).Returns(_ =>
+            {
+                deleted.ShouldBeTrue(); readBacks.ShouldBe(1);
+                throw new IOException("audit unavailable after authoritative read-back");
+            });
+        IPartyKeyManagementService keys = new PartyKeyManagementService(backend, audit, correlation);
+        if (fault is "foreign" or "stale" or "future" or "null-versions" or "nonpositive-versions")
+        {
+            keys = Substitute.For<IPartyKeyManagementService>();
+            keys.DeleteKeyAsync("tenant-a", partyId, Arg.Any<CancellationToken>()).Returns(_ => legacy with
+            {
+                PartyId = fault == "foreign" ? "foreign" : partyId,
+                Timestamp = fault == "stale" ? DateTimeOffset.UnixEpoch : fault == "future" ? DateTimeOffset.UtcNow.AddHours(1) : DateTimeOffset.UtcNow,
+                KeyVersionsDestroyed = fault == "null-versions" ? null! : fault == "nonpositive-versions" ? [-1] : [1],
+                VerificationStatus = ErasureVerificationStatus.Verified,
+            });
+        }
+        bool cleanupCalled = false;
+        ErasureStoreCleanupDelegate cleanup = async (_, _, token) =>
+        {
+            ErasureCertificate stored = (await new PartyErasureRecordStore(transport).GetCertificateAsync("tenant-a", partyId, token).ConfigureAwait(false))!;
+            stored.VerificationStatus.ShouldBe(ErasureVerificationStatus.Verified);
+            stored.Timestamp.ShouldBeGreaterThan(legacy.Timestamp);
+            stored.KeyVersionsDestroyed.ShouldBe([1]);
+            cleanupCalled = true;
+            return new ErasureVerificationStoreResult { StoreName = "detail", Status = ErasureStoreCleanupStatus.Cleaned, Timestamp = DateTimeOffset.UtcNow };
+        };
+        var verification = new ErasureVerificationService([cleanup], NullLogger<ErasureVerificationService>.Instance);
+        var orchestrator = new PartyErasureOrchestrator(keys, verification, NullLogger<PartyErasureOrchestrator>.Instance) { MaxRetries = 1 };
+        if (fault == "persistence") transport.BeforeWrite = _ => throw new IOException("certificate write unavailable");
+        IPartyErasureRecordStore effectiveRecords = records;
+        if (fault == "post-persistence-cancellation")
+        {
+            effectiveRecords = Substitute.For<IPartyErasureRecordStore>();
+            effectiveRecords.GetCertificateAsync("tenant-a", partyId, Arg.Any<CancellationToken>())
+                .Returns(call => records.GetCertificateAsync("tenant-a", partyId, call.Arg<CancellationToken>()));
+            effectiveRecords.SaveCertificateAsync(Arg.Any<ErasureCertificate>(), Arg.Any<CancellationToken>()).Returns(async call =>
+            {
+                await records.SaveCertificateAsync(call.Arg<ErasureCertificate>(), call.Arg<CancellationToken>()).ConfigureAwait(false);
+                cancellation.Cancel();
+            });
+        }
+        var processor = CreateInvoker(Substitute.For<IEventPayloadProtectionService>(), effectiveRecords, orchestrator);
+        var command = CreateCommand(new RetryErasureVerification { PartyId = partyId, TenantId = "tenant-a", RecoverKeyDestructionEvidence = true });
+        bool success = fault is "success" or "missing" or "existing-null" or "existing-nonpositive";
+        if (fault is "cancellation" or "post-persistence-cancellation")
+            await Should.ThrowAsync<OperationCanceledException>(() => processor.ProcessAsync(command, PartyTestState(partyId, ErasureStatus.KeyDestroyed), cancellation.Token));
+        else if (fault == "persistence")
+            await Should.ThrowAsync<IOException>(() => processor.ProcessAsync(command, PartyTestState(partyId, ErasureStatus.KeyDestroyed), cancellation.Token));
+        else
+        {
+            DomainResult result = await processor.ProcessAsync(command, PartyTestState(partyId, ErasureStatus.KeyDestroyed), cancellation.Token);
+            result.Events.OfType<PartyErased>().Count().ShouldBe(success ? 1 : 0);
+            result.Events.OfType<ErasureVerified>().Count().ShouldBe(success ? 1 : 0);
+        }
+        cleanupCalled.ShouldBe(success);
+        ErasureCertificate persisted = (await new PartyErasureRecordStore(transport).GetCertificateAsync("tenant-a", partyId, TestContext.Current.CancellationToken))!;
+        bool freshPersisted = success || fault == "post-persistence-cancellation";
+        if (freshPersisted)
+        {
+            persisted.VerificationStatus.ShouldBe(ErasureVerificationStatus.Verified);
+            persisted.Timestamp.ShouldBeGreaterThan(legacy.Timestamp);
+            persisted.KeyVersionsDestroyed.ShouldBe([1]);
+        }
+        else JsonSerializer.Serialize(persisted).ShouldBe(JsonSerializer.Serialize(legacy));
+        if (!success)
+            (await new PartyErasureRecordStore(transport).GetVerificationReportAsync("tenant-a", partyId, TestContext.Current.CancellationToken)).ShouldBeNull();
+        if (fault is "existing-foreign-tenant" or "existing-foreign-party")
+            await backend.DidNotReceiveWithAnyArgs().DeleteAllVersionsAsync(default!, default!, default);
+        if (fault == "audit")
+        {
+            await backend.Received(1).DeleteAllVersionsAsync("tenant-a", partyId, Arg.Any<CancellationToken>());
+            readBacks.ShouldBe(1);
+            await audit.Received(1).RecordOperationAsync(Arg.Any<KeyOperationAuditEntry>(), Arg.Any<CancellationToken>());
+        }
+        if (freshPersisted)
+        {
+            await audit.Received(1).RecordOperationAsync(Arg.Is<KeyOperationAuditEntry>(entry => entry.OperationType == KeyOperationType.Delete), Arg.Any<CancellationToken>());
+            DomainResult retry = await CreateInvoker(Substitute.For<IEventPayloadProtectionService>(), new PartyErasureRecordStore(transport), orchestrator)
+                .ProcessAsync(CreateCommand(new RetryErasureVerification { PartyId = partyId, TenantId = "tenant-a" }),
+                    PartyTestState(partyId, ErasureStatus.KeyDestroyed), TestContext.Current.CancellationToken);
+            retry.Events.OfType<PartyErased>().ShouldHaveSingleItem();
+            await backend.Received(1).DeleteAllVersionsAsync("tenant-a", partyId, Arg.Any<CancellationToken>());
+        }
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task SdkSnapshotManagerPersistsCompleteRetainedPartyStateAndRestoredCommand(bool profileErased, bool retainedHistory)
+    {
+        const string partyId = "party-snapshot";
+        var identity = new AggregateIdentity("tenant-a", "party", partyId);
+        PartyState original = new();
+        DateTimeOffset at = DateTimeOffset.UnixEpoch;
+        original.Apply(new PartyCreated { Type = PartyType.Person, CreatedAt = at,
+            PersonDetails = new PersonDetails { FirstName = "Private", LastName = "Snapshot" } });
+        original.Apply(new PartyDisplayNameDerived { DisplayName = "Private Snapshot", SortName = "Snapshot Private" });
+        original.Apply(new ContactChannelAdded { ContactChannelId = "email", Type = ContactChannelType.Email, Value = "private@example.test", IsPreferred = true });
+        original.Apply(new IdentifierAdded { IdentifierId = "national", Type = IdentifierType.NationalId, Value = "private-national-id" });
+        original.Apply(new ConsentRecorded { PartyId = partyId, TenantId = "tenant-a", ConsentId = "consent", ChannelId = "email", Purpose = "marketing",
+            LawfulBasis = LawfulBasis.Consent, GrantedAt = at, GrantedBy = "operator" });
+        if (retainedHistory) original.Apply(new HumanActorBindingEstablished(new(new("tenant-a", partyId, "actor-1", 1, 1, at, at.AddDays(1), "writer", "provenance",
+            new("synthetic", "party-actor-history-v1", at.AddDays(1), 1, "custody", true, true, true)), "binding", "intent"), at, 0));
+        var keys = Substitute.For<IPartyKeyManagementService>();
+        var backend = Substitute.For<IKeyStorageBackend>();
+        backend.ListKeyVersionsAsync("tenant-a", partyId, Arg.Any<CancellationToken>()).Returns([1]);
+        keys.GetKeyVersionAsync("tenant-a", partyId, 1, Arg.Any<CancellationToken>()).Returns(_ => Enumerable.Repeat((byte)7, 32).ToArray());
+        byte[] custodyKey = RandomNumberGenerator.GetBytes(32);
+        var custody = Substitute.For<IIdentityHistoryCustody>();
+        custody.ProtectSnapshotAsync(Arg.Any<AggregateIdentity>(), Arg.Any<object>(), Arg.Any<CancellationToken>()).Returns(call =>
+        {
+            byte[] plaintext = JsonSerializer.SerializeToUtf8Bytes(call.Arg<object>(), PartiesJsonOptions.Default);
+            byte[] ciphertext = new byte[28 + plaintext.Length];
+            RandomNumberGenerator.Fill(ciphertext.AsSpan(0, 12));
+            using var aes = new AesGcm(custodyKey, 16);
+            aes.Encrypt(ciphertext.AsSpan(0, 12), plaintext, ciphertext.AsSpan(28), ciphertext.AsSpan(12, 16));
+            CryptographicOperations.ZeroMemory(plaintext);
+            return new SnapshotProtectionResult(ciphertext, new(PayloadProtectionState.Protected, 1, "party-actor-history-v1", null, "application/octet-stream", null));
+        });
+        custody.UnprotectSnapshotAsync(Arg.Any<AggregateIdentity>(), Arg.Any<object>(), Arg.Any<CancellationToken>()).Returns(call =>
+        {
+            byte[] ciphertext = call.Arg<byte[]>();
+            byte[] plaintext = new byte[ciphertext.Length - 28];
+            using var aes = new AesGcm(custodyKey, 16);
+            aes.Decrypt(ciphertext.AsSpan(0, 12), ciphertext.AsSpan(28), ciphertext.AsSpan(12, 16), plaintext);
+            JsonElement restored = JsonSerializer.Deserialize<JsonElement>(plaintext);
+            CryptographicOperations.ZeroMemory(plaintext);
+            return restored;
+        });
+        var options = Substitute.For<IOptionsMonitor<CryptoShreddingOptions>>();
+        options.CurrentValue.Returns(new CryptoShreddingOptions());
+        EventStorePartyPayloadProtectionAdapter Adapter() => new(new PartyPayloadProtectionService(keys, backend,
+            new PartyKeyLifecycleService(keys, Substitute.For<IPartyKeyRetryScheduler>(), NullLogger<PartyKeyLifecycleService>.Instance), new DecryptionCircuitBreaker(NullLogger<DecryptionCircuitBreaker>.Instance), options,
+            NullLogger<PartyPayloadProtectionService>.Instance, custody), Substitute.For<IPartyErasureRecordStore>());
+        var storage = new InMemoryStateManager();
+        var manager = new SnapshotManager(Options.Create(new SnapshotOptions()), NullLogger<SnapshotManager>.Instance, Adapter());
+        await manager.CreateSnapshotAsync(identity, 6, original, storage, cancellationToken: TestContext.Current.CancellationToken, throwOnFailure: true);
+        await storage.SaveStateAsync(TestContext.Current.CancellationToken);
+        byte[] persisted = JsonSerializer.SerializeToUtf8Bytes(storage.CommittedState[identity.SnapshotKey], JsonSerializerOptions.Web);
+        Encoding.UTF8.GetString(persisted).ShouldNotContain("Private");
+        Encoding.UTF8.GetString(persisted).ShouldNotContain("actor-1");
+        // Recreate storage, manager and protection adapter; retain only serialized durable bytes and synthetic custody.
+        var restartedStorage = new InMemoryStateManager();
+        await restartedStorage.SetStateAsync<object>(identity.SnapshotKey, JsonSerializer.Deserialize<JsonElement>(persisted), TestContext.Current.CancellationToken);
+        await restartedStorage.SaveStateAsync(TestContext.Current.CancellationToken);
+        if (profileErased) keys.GetKeyVersionAsync("tenant-a", partyId, 1, Arg.Any<CancellationToken>())
+            .Returns<byte[]>(_ => throw new PartyEncryptionKeyDestroyedException("tenant-a", partyId));
+        EventStorePartyPayloadProtectionAdapter adapter = Adapter();
+        var restartedManager = new SnapshotManager(Options.Create(new SnapshotOptions()), NullLogger<SnapshotManager>.Instance, adapter);
+        SnapshotRecord restoredSnapshot = (await restartedManager.LoadSnapshotAsync(identity, restartedStorage, cancellationToken: TestContext.Current.CancellationToken))!;
+        restoredSnapshot.ShouldNotBeNull();
+        PartyState restoredState = (await adapter.UnprotectSnapshotStateAsync(identity, restoredSnapshot.State, TestContext.Current.CancellationToken)).ShouldBeOfType<PartyState>();
+        restoredState.ContactChannels.ShouldHaveSingleItem(); restoredState.Identifiers.ShouldHaveSingleItem(); restoredState.ConsentRecords.ShouldHaveSingleItem();
+        restoredState.HumanActorBindings.Count.ShouldBe(retainedHistory ? 1 : 0); restoredState.HumanActorTransitions.Count.ShouldBe(retainedHistory ? 1 : 0);
+        restoredState.Person!.FirstName.ShouldBe(profileErased ? null : "Private");
+        if (!profileErased) JsonElement.DeepEquals(JsonSerializer.SerializeToElement(original, PartiesJsonOptions.Default),
+            JsonSerializer.SerializeToElement(restoredState, PartiesJsonOptions.Default)).ShouldBeTrue();
+        CommandEnvelope command = CreateCommand(new DeactivateParty { PartyId = partyId }) with { AggregateId = partyId };
+        DomainResult result = await CreateInvoker(adapter).ProcessAsync(command,
+            new DomainServiceCurrentState(restoredSnapshot.State, [], 6, 6), TestContext.Current.CancellationToken);
+        result.Events.OfType<PartyDeactivated>().ShouldHaveSingleItem();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SdkRefusesUnprovenPersistedHistoryBeforeDomainReplay(bool legacy)
+    {
+        const string partyId = "unproven-snapshot";
+        DateTimeOffset at = DateTimeOffset.UnixEpoch;
+        var state = new PartyState();
+        state.Apply(new PartyCreated { Type = PartyType.Person, CreatedAt = at, PersonDetails = new PersonDetails { FirstName = "Private", LastName = "History" } });
+        state.Apply(new HumanActorBindingEstablished(new(new("tenant-a", partyId, "actor-1", 1, 1, at, at.AddDays(1), "writer", "provenance",
+            new("synthetic", "party-actor-history-v1", at.AddDays(1), 1, "custody", true, true, true)), "binding", "intent"), at, 0));
+        var custody = Substitute.For<IIdentityHistoryCustody>();
+        var keys = Substitute.For<IPartyKeyManagementService>();
+        var settings = Substitute.For<IOptionsMonitor<CryptoShreddingOptions>>();
+        settings.CurrentValue.Returns(new CryptoShreddingOptions());
+        var inner = new PartyPayloadProtectionService(keys, Substitute.For<IKeyStorageBackend>(),
+            new PartyKeyLifecycleService(keys, Substitute.For<IPartyKeyRetryScheduler>(), NullLogger<PartyKeyLifecycleService>.Instance),
+            new DecryptionCircuitBreaker(NullLogger<DecryptionCircuitBreaker>.Instance), settings, NullLogger<PartyPayloadProtectionService>.Instance, custody);
+        var adapter = new EventStorePartyPayloadProtectionAdapter(inner, Substitute.For<IPartyErasureRecordStore>());
+        var identity = new AggregateIdentity("tenant-a", "party", partyId);
+        var persisted = new SnapshotRecord(6, JsonSerializer.SerializeToElement(state, JsonSerializerOptions.Web), at, "party", partyId, "tenant-a",
+            legacy ? null : EventStorePayloadProtectionMetadata.Unprotected()) { SnapshotEnvelopeVersion = 1 };
+        var storage = new InMemoryStateManager();
+        await storage.SetStateAsync<object>(identity.SnapshotKey, JsonSerializer.SerializeToElement(persisted, JsonSerializerOptions.Web), TestContext.Current.CancellationToken);
+        await storage.SaveStateAsync(TestContext.Current.CancellationToken);
+        var manager = new SnapshotManager(Options.Create(new SnapshotOptions()), NullLogger<SnapshotManager>.Instance, adapter);
+        SnapshotRecord? loaded = await manager.LoadSnapshotAsync(identity, storage, cancellationToken: TestContext.Current.CancellationToken);
+        loaded.ShouldBeNull();
+        CommandEnvelope command = CreateCommand(new DeactivateParty { PartyId = partyId }) with { AggregateId = partyId };
+        await Should.ThrowAsync<InvalidOperationException>(() => CreateInvoker(adapter).ProcessAsync(command,
+            new DomainServiceCurrentState(loaded?.State, [], 6, 6), TestContext.Current.CancellationToken));
+        await custody.DidNotReceiveWithAnyArgs().UnprotectSnapshotAsync(default!, default!, default);
+    }
+
+    [Theory]
+    [InlineData("format")]
+    [InlineData("plaintext")]
+    [InlineData("malformed")]
+    public async Task SdkRefusesInvalidPersistedProtectedProfileWrapper(string fault)
+    {
+        const string partyId = "invalid-profile-snapshot";
+        var keys = Substitute.For<IPartyKeyManagementService>();
+        var settings = Substitute.For<IOptionsMonitor<CryptoShreddingOptions>>();
+        settings.CurrentValue.Returns(new CryptoShreddingOptions());
+        var inner = new PartyPayloadProtectionService(keys, Substitute.For<IKeyStorageBackend>(),
+            new PartyKeyLifecycleService(keys, Substitute.For<IPartyKeyRetryScheduler>(), NullLogger<PartyKeyLifecycleService>.Instance),
+            new DecryptionCircuitBreaker(NullLogger<DecryptionCircuitBreaker>.Instance), settings, NullLogger<PartyPayloadProtectionService>.Instance);
+        var adapter = new EventStorePartyPayloadProtectionAdapter(inner, Substitute.For<IPartyErasureRecordStore>());
+        var identity = new AggregateIdentity("tenant-a", "party", partyId);
+        var plaintext = new PartyState();
+        plaintext.Apply(new PartyCreated { Type = PartyType.Person, CreatedAt = DateTimeOffset.UnixEpoch,
+            PersonDetails = new PersonDetails { FirstName = "Private", LastName = "Snapshot" } });
+        var wrapper = new
+        {
+            Marker = "$protectedSnapshot", TypeName = typeof(PartyState).FullName!,
+            SerializationFormat = fault == "format" ? "unsupported" : "json+pdenc-v1",
+            Payload = Convert.ToBase64String(fault switch
+            {
+                "format" => "{\"person\":{\"firstName\":{\"$enc\":true,\"alg\":\"AES256GCM\",\"kv\":1,\"n\":\"AQ==\",\"t\":\"Ag==\",\"c\":\"Aw==\"}}}"u8.ToArray(),
+                "malformed" => "{"u8.ToArray(),
+                _ => JsonSerializer.SerializeToUtf8Bytes(plaintext, JsonSerializerOptions.Web),
+            }),
+        };
+        var metadata = new EventStorePayloadProtectionMetadata(PayloadProtectionState.Protected, 1, "parties-aes-gcm-json-fields", null, "application/json", null);
+        var persisted = new SnapshotRecord(6, JsonSerializer.SerializeToElement(wrapper, JsonSerializerOptions.Web), DateTimeOffset.UtcNow,
+            "party", partyId, "tenant-a", metadata) { SnapshotEnvelopeVersion = 1 };
+        var storage = new InMemoryStateManager();
+        await storage.SetStateAsync<object>(identity.SnapshotKey, JsonSerializer.SerializeToElement(persisted, JsonSerializerOptions.Web), TestContext.Current.CancellationToken);
+        await storage.SaveStateAsync(TestContext.Current.CancellationToken);
+        var manager = new SnapshotManager(Options.Create(new SnapshotOptions()), NullLogger<SnapshotManager>.Instance, adapter);
+        (await manager.LoadSnapshotAsync(identity, storage, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeNull();
+        await keys.DidNotReceiveWithAnyArgs().GetKeyVersionAsync(default!, default!, default, default);
+    }
+
+    [Theory]
+    [InlineData("person", true)]
+    [InlineData("contactChannels", true)]
+    [InlineData("identifiers", true)]
+    [InlineData("organization", true)]
+    [InlineData("organization", false)]
+    public async Task SdkPersistedProfileReadEnforcesWriterPersonalDataPolicyBeforeKeyAccess(string field, bool naturalPerson)
+    {
+        ArgumentNullException.ThrowIfNull(field);
+        const string partyId = "mixed-profile-snapshot";
+        bool organization = field == "organization";
+        var state = new PartyState();
+        state.Apply(new PartyCreated { Type = organization ? PartyType.Organization : PartyType.Person, CreatedAt = DateTimeOffset.UnixEpoch,
+            PersonDetails = organization ? null : new PersonDetails { FirstName = "Private", LastName = "Snapshot" },
+            OrganizationDetails = organization ? new OrganizationDetails { LegalName = "Private legal", TradingName = "Private trade", IsNaturalPerson = naturalPerson } : null });
+        state.Apply(new PartyDisplayNameDerived { DisplayName = "Private display", SortName = "Private sort" });
+        state.Apply(new ContactChannelAdded { ContactChannelId = "email", Type = ContactChannelType.Email, Value = "private@example.test" });
+        state.Apply(new IdentifierAdded { IdentifierId = "external", Type = IdentifierType.Other, Value = "private-identifier" });
+        var identity = new AggregateIdentity("tenant-a", "party", partyId);
+        var keys = Substitute.For<IPartyKeyManagementService>();
+        var backend = Substitute.For<IKeyStorageBackend>();
+        backend.ListKeyVersionsAsync("tenant-a", partyId, Arg.Any<CancellationToken>()).Returns([1]);
+        keys.GetKeyVersionAsync("tenant-a", partyId, 1, Arg.Any<CancellationToken>()).Returns(_ => Enumerable.Repeat((byte)7, 32).ToArray());
+        var settings = Substitute.For<IOptionsMonitor<CryptoShreddingOptions>>();
+        settings.CurrentValue.Returns(new CryptoShreddingOptions());
+        EventStorePartyPayloadProtectionAdapter Adapter() => new(new PartyPayloadProtectionService(keys, backend,
+            new PartyKeyLifecycleService(keys, Substitute.For<IPartyKeyRetryScheduler>(), NullLogger<PartyKeyLifecycleService>.Instance),
+            new DecryptionCircuitBreaker(NullLogger<DecryptionCircuitBreaker>.Instance), settings, NullLogger<PartyPayloadProtectionService>.Instance),
+            Substitute.For<IPartyErasureRecordStore>());
+        var storage = new InMemoryStateManager();
+        var manager = new SnapshotManager(Options.Create(new SnapshotOptions()), NullLogger<SnapshotManager>.Instance, Adapter());
+        await manager.CreateSnapshotAsync(identity, 6, state, storage, cancellationToken: TestContext.Current.CancellationToken, throwOnFailure: true);
+        await storage.SaveStateAsync(TestContext.Current.CancellationToken);
+        JsonNode persisted = JsonSerializer.SerializeToNode(storage.CommittedState[identity.SnapshotKey], JsonSerializerOptions.Web)!;
+        JsonNode payload = JsonNode.Parse(Convert.FromBase64String(persisted["state"]!["payload"]!.GetValue<string>()))!;
+        payload["displayName"]!["$enc"]!.GetValue<bool>().ShouldBeTrue();
+        if (field is "contactChannels" or "identifiers") payload[field]![0]!["value"] = "private replacement";
+        else payload[field]![organization ? "legalName" : "firstName"] = "private replacement";
+        persisted["state"]!["payload"] = Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(payload, PartiesJsonOptions.Default));
+        // Preserve the writer's envelope and remaining authenticated ciphertext across a storage restart.
+        var restartedStorage = new InMemoryStateManager();
+        await restartedStorage.SetStateAsync<object>(identity.SnapshotKey, JsonSerializer.SerializeToElement(persisted), TestContext.Current.CancellationToken);
+        await restartedStorage.SaveStateAsync(TestContext.Current.CancellationToken);
+        keys.ClearReceivedCalls();
+        var restartedManager = new SnapshotManager(Options.Create(new SnapshotOptions()), NullLogger<SnapshotManager>.Instance, Adapter());
+        SnapshotRecord? loaded = await restartedManager.LoadSnapshotAsync(identity, restartedStorage, cancellationToken: TestContext.Current.CancellationToken);
+        if (organization && !naturalPerson) loaded.ShouldNotBeNull();
+        else
+        {
+            loaded.ShouldBeNull();
+            await keys.DidNotReceiveWithAnyArgs().GetKeyVersionAsync(default!, default!, default, default);
+        }
     }
 
     [Fact]
@@ -1127,6 +1476,8 @@ public sealed class PartyDomainProcessorValidationTests
     [InlineData("party")]
     [InlineData("pending")]
     [InlineData("failed")]
+    [InlineData("null-versions")]
+    [InlineData("nonpositive-versions")]
     public async Task ProcessAsync_RetryErasureVerification_InvalidCertificateCannotCleanOrEmitErasure(string invalidField)
     {
         string partyId = UniqueIdHelper.GenerateSortableUniqueStringId();
@@ -1135,7 +1486,7 @@ public sealed class PartyDomainProcessorValidationTests
             PartyId = invalidField == "party" ? "other-party" : partyId,
             TenantId = invalidField == "tenant" ? "other-tenant" : "tenant-a",
             Timestamp = DateTimeOffset.UnixEpoch,
-            KeyVersionsDestroyed = [1],
+            KeyVersionsDestroyed = invalidField == "null-versions" ? null! : invalidField == "nonpositive-versions" ? [0] : [1],
             VerificationStatus = invalidField == "pending" ? ErasureVerificationStatus.Pending
                 : invalidField == "failed" ? ErasureVerificationStatus.Failed : ErasureVerificationStatus.Verified,
         };

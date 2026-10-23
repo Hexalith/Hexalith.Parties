@@ -12,6 +12,7 @@ using Aspire.Hosting.Testing;
 using Hexalith.Commons.UniqueIds;
 using Hexalith.EventStore.Contracts.Identity;
 using Microsoft.IdentityModel.Tokens;
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.IntegrationTests.Gateway;
 using Hexalith.Parties.IntegrationTests.HealthChecks;
 
@@ -124,8 +125,8 @@ public sealed class PartiesTopologyIsolationTests
         var identity = new AggregateIdentity(PartiesTenantBootstrapHost.TenantId, "counter", "counter-1");
         var token = new JwtSecurityTokenHandler().CreateEncodedJwt(new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity([new Claim("sub", PartiesTenantBootstrapHost.UserId),
-                new Claim("eventstore:tenant", identity.TenantId), new Claim("tenants", JsonSerializer.Serialize(new[] { identity.TenantId })),
+            Subject = new ClaimsIdentity([new Claim(PartiesClaimTypes.Subject, PartiesTenantBootstrapHost.UserId),
+                new Claim(PartiesClaimTypes.EventStoreTenant, identity.TenantId), new Claim("tenants", JsonSerializer.Serialize(new[] { identity.TenantId })),
                 new Claim("domains", "[\"counter\"]"), new Claim("permissions", "[\"commands:*\",\"command:submit\",\"query:read\"]")]),
             Issuer = PartiesAspireTopologyFixture.JwtIssuer, Audience = "hexalith-eventstore", Expires = DateTime.UtcNow.AddMinutes(10),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(PartiesAspireTopologyFixture.JwtSigningKey)), SecurityAlgorithms.HmacSha256),

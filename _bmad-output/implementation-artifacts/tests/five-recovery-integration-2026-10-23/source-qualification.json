@@ -1,0 +1,10 @@
+{
+  "sourceCommand": "HEXALITH_DAPR_HOME=<prepared-Dapr-1.18.2-home> dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json --evidence _bmad-output/implementation-artifacts/tests/five-recovery-integration-2026-10-23/source-debug.json --output json",
+  "sourceExitCode": 3,
+  "ruleId": "HXR020",
+  "result": "Selected Platform composition build reports eight errors and one warning, including CA1062; no healthy source runtime claim. The runner removed its generated workspace on failure.",
+  "runId": "03a0ca4d8cc425bd9f3ec30894a7c65c",
+  "cleanupCommand": "dotnet tool run hexalith-module -- down --manifest module/hexalith.module-manifest.v2.json --run-id 03a0ca4d8cc425bd9f3ec30894a7c65c --output json",
+  "cleanupExitCode": 0,
+  "qualification": "Broad source gate remains separate from focused and package evidence."
+}

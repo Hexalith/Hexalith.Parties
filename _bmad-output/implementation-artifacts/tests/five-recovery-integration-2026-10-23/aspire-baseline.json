@@ -1,0 +1,110 @@
+{
+  "start": {
+    "command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --format Json --non-interactive",
+    "exitCode": 0
+  },
+  "wait": [
+    {
+      "resource": "parties",
+      "timeoutSeconds": 30,
+      "exitCode": 17
+    },
+    {
+      "resource": "security",
+      "timeoutSeconds": 30,
+      "exitCode": 0
+    }
+  ],
+  "resources": [
+    {
+      "displayName": "eventstore-admin-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting"
+    },
+    {
+      "displayName": "eventstore-admin",
+      "resourceType": "Project",
+      "state": "Waiting"
+    },
+    {
+      "displayName": "eventstore-admin-ui",
+      "resourceType": "Project",
+      "state": "NotStarted"
+    },
+    {
+      "displayName": "eventstore-admin-ui-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting"
+    },
+    {
+      "displayName": "eventstore-app-api-token",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "eventstore-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting"
+    },
+    {
+      "displayName": "eventstore",
+      "resourceType": "Project",
+      "state": "Waiting"
+    },
+    {
+      "displayName": "parties-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting"
+    },
+    {
+      "displayName": "parties",
+      "resourceType": "Project",
+      "state": "Waiting"
+    },
+    {
+      "displayName": "parties-mcp",
+      "resourceType": "Project",
+      "state": "NotStarted"
+    },
+    {
+      "displayName": "parties-ui",
+      "resourceType": "Project",
+      "state": "Waiting"
+    },
+    {
+      "displayName": "security",
+      "resourceType": "Container",
+      "state": "Running",
+      "healthStatus": "Unhealthy"
+    },
+    {
+      "displayName": "security-eventstore-client-password",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "security-eventstore-client-username",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "tenants-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Waiting"
+    },
+    {
+      "displayName": "tenants",
+      "resourceType": "Project",
+      "state": "Waiting"
+    }
+  ],
+  "qualification": "Pre-code baseline only; Parties wait timed out. No full-topology health claim.",
+  "stop": {
+    "command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "exitCode": 0
+  },
+  "snapshotTiming": "Resource snapshot preceded the successful security wait; no final post-wait full-topology snapshot was taken."
+}

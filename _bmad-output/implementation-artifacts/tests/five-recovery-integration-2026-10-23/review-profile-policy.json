@@ -1,0 +1,91 @@
+{
+  "scope": "B2R shared profile policy validation only; parent owns full verification and staging/publication.",
+  "checks": [
+    {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj",
+        "--nologo",
+        "-v:minimal",
+        "-m:1"
+      ],
+      "exitCode": 0,
+      "log": "/tmp/recovery-b2r-security-build.log",
+      "rawLog": "/tmp/recovery-b2r-security-build.log",
+      "logSha256": "e3654ef4780a0fa871373fa52c777256f2e91f3e1144631dede6806b0a6cb205"
+    },
+    {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll",
+        "-method",
+        "Hexalith.Parties.Security.Tests.IdentityHistoryProtectionTests.*",
+        "-method",
+        "Hexalith.Parties.Security.Tests.PartyPayloadProtectionServiceTests.ProtectSnapshotState_PartyState_EncryptsPersonalDataFields",
+        "-method",
+        "Hexalith.Parties.Security.Tests.PartyPayloadProtectionServiceTests.UnprotectSnapshotState_ProtectedSnapshot_RestoresOriginalState",
+        "-method",
+        "Hexalith.Parties.Security.Tests.PartyPayloadProtectionServiceTests.ProtectSnapshotState_TypeNameSurvivesVersionChange",
+        "-method",
+        "Hexalith.Parties.Security.Tests.PartyPayloadProtectionServiceTests.UnprotectSnapshotState_EncryptedWithOldKeyVersion_DecryptsCorrectly",
+        "-method",
+        "Hexalith.Parties.Security.Tests.CryptoKeyManagementCompatibilityHarnessTests.ProtectedSnapshot_RoundTripsThroughEventStoreContractWithProtectedMetadataAsync",
+        "-method",
+        "Hexalith.Parties.Security.Tests.CryptoKeyManagementCompatibilityHarnessTests.ProtectedSnapshot_AfterDestroyedKey_BecomesTypedUnreadableWithoutRestoringPersonalFieldsAsync",
+        "-method",
+        "Hexalith.Parties.Security.Tests.CryptoKeyManagementCompatibilityHarnessTests.ProtectedSnapshotMetadata_WithPlainState_IsConsistencyMismatchAsync",
+        "-method",
+        "Hexalith.Parties.Security.Tests.CryptoKeyManagementCompatibilityHarnessTests.ProviderOpaqueSnapshotMetadata_IsSafeUnreadableWithoutProviderPrivateReasonAsync"
+      ],
+      "exitCode": 0,
+      "logSha256": "281c7d2c993f8b9af03a167d589182276279552e56a9664ff00a695162bf4445",
+      "summary": [
+        "   Hexalith.Parties.Security.Tests  Total: 109, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.538s"
+      ],
+      "rawLog": "/tmp/recovery-b2r-security-tests-final.log"
+    },
+    {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "--nologo",
+        "-v:minimal",
+        "-m:1"
+      ],
+      "exitCode": 0,
+      "log": "/tmp/recovery-b2r-domain-build.log",
+      "rawLog": "/tmp/recovery-b2r-domain-build.log",
+      "logSha256": "e67290b70ec35873c9c45822a267e989d55e6d29a58038ca16f10b5f5b4635fb"
+    },
+    {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-method",
+        "Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests.Sdk*"
+      ],
+      "exitCode": 0,
+      "logSha256": "d2fbdba9ea1315aae06618a86e8a2b0189c24584c6ae6044d8c961bc190b88cf",
+      "summary": [
+        "   Hexalith.Parties.Tests  Total: 13, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.478s"
+      ],
+      "rawLog": "/tmp/recovery-b2r-sdk-tests.log"
+    }
+  ],
+  "files": {
+    "src/Hexalith.Parties.Security/PartyPayloadProtectionService.cs": "aff078913a6a9b4025574d3a01813f8916ad9d2e567c221ad330e8adb8e6232e",
+    "tests/Hexalith.Parties.Security.Tests/IdentityHistoryProtectionTests.cs": "4ffba8a910092e1dda6e49f17a79a83ef515dd5a1a4d7854a823b9b8286c4a29",
+    "tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs": "b26e43d15706ead7ab2edb2c3acf68698fd66e490a547b3e02c87ea290f82252"
+  },
+  "diffCheck": 0,
+  "coverage": [
+    "actual writer output with encrypted displayName/sortName and plaintext personal leaves",
+    "both metadata-aware APIs and legacy service entry point refuse mixed person, nested collection and natural-person organization fields before profile key reads",
+    "legal entity organization strings remain readable",
+    "generic PartyCreated snapshot compatibility and mixed-data refusal",
+    "persisted SnapshotManager read with recreated storage and actual writer envelope",
+    "existing retained-history and erased-profile compatibility"
+  ]
+}

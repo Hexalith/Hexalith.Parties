@@ -924,8 +924,13 @@ archived: 2026-10-13
 origin: migrated from legacy ledger ("Deferred from: code review of spec-8-10-final-readiness-documentation-and-retirement-gate.md (2026-09-06)"), 2026-09-07
 location: tests/Hexalith.Parties.UI.Tests/PartiesUiHostCompositionTests.cs
 source_spec: `_bmad-output/implementation-artifacts/spec-update-all-packages-and-submodules.md`
-reason: The source-mode static-asset test requests only `_framework/blazor.web.js`, so it does not prove that a selected FrontComposer source asset is available through the UI host.
-status: open
+reason: The historical framework-only request did not prove selected FrontComposer RCL delivery. The source-mode RCL delivery assertion now passes with the owning restore prerequisite fixed.
+status: done 2026-10-23
+
+implementation_2026_10_23: Actual RCL script request, JavaScript content type and exact selected-byte comparison pass in pinned-tool-mapped source mode with evaluated source root/mode metadata. Conditional canonical SDK assets-file defaults in FrontComposer Contracts/Schema resolve the outer multi-target restore prerequisite without bypassing source validation. Release/package evidence and full-topology launcher HXR020 remain separate. See tests/five-recovery-integration-2026-10-23/validation.json.
+
+resolution_2026_10_23: Reviewed FrontComposer owner aee73e5841b4004803dafa851f060e143550716a is published and adopted in Parties a9f4edb5a8a769e36499063b5b88413af01a7bd0. The rebased mapped UI suite passes; package delivery and full-topology proof remain separate.
+verification_2026_10_23: `tests/five-recovery-integration-2026-10-23/final-verification.json`.
 
 ### DW-117: Resolve the Fluent UI package root through NuGet and MSBuild configuration.
 
@@ -1700,8 +1705,14 @@ archived: 2026-10-21
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-129-identity-history-snapshot-protection.md`
   summary: Qualify retained-history snapshot capture through the EventStore SDK's folded-state input.
+  status: done 2026-10-23
+  implementation_2026_10_23: Strict modeled PartyState codec bridges SDK folded JSON to typed profile/history protection and restores all modeled state. Actual SnapshotManager capture, persisted storage recreation and post-restore command controls use synthetic custody; production custody/retention/expiry qualification remains external.
+  verification_2026_10_23: tests/five-recovery-integration-2026-10-23/validation.json; independent review and final publication are parent-owned.
   severity: medium
   evidence: SnapshotManager serializes state to JsonElement before calling protection, while the pre-existing Parties guard requires typed PartyState for independent profile/history protection. Retain that fail-closed guard; a safe owner-supported typed integration and persisted SDK capture/read-back test are needed. The DW-129 encrypted unit round trip proves local validation and serialized restore only; no production custody qualification or SDK capture availability is claimed.
+
+  resolution_2026_10_23: Strict codec and shared writer-policy validation pass actual SDK capture, serialized restart, restored command and malformed/mixed-profile controls. Local integration debt closes; production custody and expiry remain unqualified.
+  final_verification: `tests/five-recovery-integration-2026-10-23/final-verification.json`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-163-coordinated-unresolved-projection.md`
   summary: Make EventStore unguarded batch reconciliation preserve newer canonical writes, including erasure tombstones.
@@ -1721,7 +1732,13 @@ archived: 2026-10-21
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-163-coordinated-unresolved-projection.md`
   summary: Complete legacy non-retained normal-batch compaction before a subsequent projection tail needs writable ETags.
+  status: open
+  implementation_2026_10_23: EventStore adds a caller-attested nonexpiring legacy recovery capability using original committed marker/envelopes, conditional writes and content-free final anchors. Generic callers still refuse unknown v1 retention. Parties source selection uses it only for known nonexpiring detail/processing writers; package 3.127.0 publication/adoption and source qualification remain distinct gates.
+  verification_2026_10_23: tests/five-recovery-integration-2026-10-23/validation.json; independent review and final publication are parent-owned.
   evidence: The baseline PartyDetailSdkProjectionHandler from 6b0641829b68d22656fb173eec6578c65e8e91f0, compiled against the actual 3.125.1 package graph, returns Indeterminate after an injected AfterCommit failure, AlreadyCompleted on original redelivery, then Retryable/projection_partial_retry for a subsequent supported tail while its committed envelopes remain uncompacted. Replaying the exact original SDK batch compacts them. This predates DW-163 and the approved fix preserves normal batching; do not repair it by retaining payload-bearing manifests without owner-supported erasure/recovery guarantees. Reproduction uses that tracked baseline handler with ReadModelBatchPhase.AfterCommit fault injection in the existing SDK fake.
+
+  resolution_2026_10_23: Reviewed EventStore da50f853b6c2c37193e9b1a8819858778d48d0f3 is published and adopted at a9f4edb5a8a769e36499063b5b88413af01a7bd0. Source recovery, mixed deletes, conditional races and next-tail writes pass. Matching published SDK adoption remains open because package 3.127.0 is unchanged.
+  final_verification: `tests/five-recovery-integration-2026-10-23/final-verification.json`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-67-central-consumer-support-versions.md`
   summary: Normalize NuGet versions consistently before validating support artifact filenames and nuspec versions.
@@ -1773,8 +1790,14 @@ archived: 2026-10-21
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-86-erasure-certificate-validation.md`
   summary: Provide an owner-supported recovery path for legacy erasure certificates.
+  status: done 2026-10-23
+  implementation_2026_10_23: Additive explicit RecoverKeyDestructionEvidence opt-in reuses key destruction/read-back/audit, validates scoped fresh Verified evidence and persists it before cleanup. Default retry behavior continues to refuse ambiguous evidence. No deployed recovery was executed.
+  verification_2026_10_23: tests/five-recovery-integration-2026-10-23/validation.json; independent review and final publication are parent-owned.
   severity: medium
   evidence: Earlier cleanup retries overwrote key-destruction certificate status with Pending/Failed, indistinguishable from genuine key deletion failures. DW-86 must reject that ambiguous evidence; the current Parties gateway exposes no supported reissuance/persistence command. Key-management owners must qualify authoritative read-back and auditable certificate replacement before legacy retries can be certified. Never manually promote status or accept failed evidence.
+
+  resolution_2026_10_23: Explicit opt-in regenerates fresh scoped Verified evidence through deletion/read-back/audit and persists it before cleanup; default refusal remains. Fault, malformed evidence and post-persistence cancellation/restart controls pass. No deployed recovery was executed.
+  final_verification: `tests/five-recovery-integration-2026-10-23/final-verification.json`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-90-bounded-test-processes.md`
   summary: Contain test-process descendants that inherit output pipes after their direct parent has already exited.
@@ -1945,4 +1968,10 @@ archived: 2026-10-21
 
 - source_spec: `spec-five-owner-config-and-recovery-deferred-items.md`
   summary: Make Memories MCP explicit JWT algorithm lists replace initialized defaults through registered configuration.
+  status: done 2026-10-23
+  implementation_2026_10_23: Registered configuration now replaces explicit algorithm lists while preserving the public init setter, absent defaults and configuration notifications. Registered token/HTTP controls cover asymmetric acceptance, HS256 refusal and invalid lists; publication/adoption and deployment remain separate.
+  verification_2026_10_23: tests/five-recovery-integration-2026-10-23/validation.json; independent review and final publication are parent-owned.
   evidence: The unchanged MCP composition root binds Authentication:JwtBearer while options initialize HS256/RS256/ES256. A reviewer probe of the actual source and registered binding produced HS256,RS256,ES256,RS256,ES256 for explicit RS256/ES256; deployment selects that asymmetric list. Existing MCP options tests bypass binding. Verify exact registered named JwtBearerOptions and signed-token rejection when fixing this separate ingress.
+
+  resolution_2026_10_23: Reviewed Memories 5a852389327bf45df7d59b2c2e29c7adbe353f19 is published and adopted at a9f4edb5a8a769e36499063b5b88413af01a7bd0. Registered HTTP/token/default/invalid/reload controls pass in the full 120-case suite; deployment remains external.
+  final_verification: `tests/five-recovery-integration-2026-10-23/final-verification.json`.

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Hexalith.EventStore.Contracts.Identity;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Parties.Contracts;
@@ -18,6 +19,316 @@ namespace Hexalith.Parties.Security.Tests;
 
 public sealed class IdentityHistoryProtectionTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PersistedRawHistoryWithoutPurposeEvidenceIsUnreadable(bool legacy)
+    {
+        var custody = Substitute.For<IIdentityHistoryCustody>();
+        var service = Service(Substitute.For<IPartyKeyManagementService>(), Substitute.For<IKeyStorageBackend>(), custody);
+        var adapter = new EventStorePartyPayloadProtectionAdapter(service, Substitute.For<IPartyErasureRecordStore>());
+        JsonElement raw = JsonSerializer.SerializeToElement(State(), JsonSerializerOptions.Web);
+        SnapshotUnprotectionOutcome result = await adapter.TryUnprotectSnapshotAsync(new("tenant-a", "party", "party-1"), raw,
+            legacy ? null : EventStorePayloadProtectionMetadata.Unprotected(), TestContext.Current.CancellationToken);
+        result.IsReadable.ShouldBeFalse();
+        await Should.ThrowAsync<InvalidOperationException>(() => adapter.UnprotectSnapshotAsync(new("tenant-a", "party", "party-1"), raw,
+            legacy ? null : EventStorePayloadProtectionMetadata.Unprotected(), TestContext.Current.CancellationToken));
+        await custody.DidNotReceiveWithAnyArgs().UnprotectSnapshotAsync(default!, default!, default);
+    }
+
+    [Fact]
+    public async Task HistoryMetadataLabelWithoutPurposeWrapperCannotAuthorizeRawHistory()
+    {
+        var custody = Substitute.For<IIdentityHistoryCustody>();
+        var adapter = new EventStorePartyPayloadProtectionAdapter(
+            Service(Substitute.For<IPartyKeyManagementService>(), Substitute.For<IKeyStorageBackend>(), custody), Substitute.For<IPartyErasureRecordStore>());
+        JsonElement raw = JsonSerializer.SerializeToElement(State(), JsonSerializerOptions.Web);
+        (await adapter.TryUnprotectSnapshotAsync(new("tenant-a", "party", "party-1"), raw, HistoryMetadata(), TestContext.Current.CancellationToken))
+            .IsReadable.ShouldBeFalse();
+        await Should.ThrowAsync<InvalidOperationException>(() => adapter.UnprotectSnapshotAsync(new("tenant-a", "party", "party-1"), raw,
+            HistoryMetadata(), TestContext.Current.CancellationToken));
+        await custody.DidNotReceiveWithAnyArgs().UnprotectSnapshotAsync(default!, default!, default);
+    }
+
+    [Fact]
+    public void SnapshotCodec_RestoresProvisioningAndLifecycleFields()
+    {
+        var state = new PartyState();
+        DateTimeOffset at = DateTimeOffset.UnixEpoch.AddDays(1);
+        state.Apply(new PartyCreated { Type = PartyType.Organization, CreatedAt = at,
+            OrganizationDetails = new OrganizationDetails { LegalName = "Organization", TradingName = "Trade", IsNaturalPerson = true } });
+        state.Apply(new AgentPartyProvisioned(new(new("tenant-a", "agent", "party-1", 1, "logical", "fingerprint", at), 2, "source")));
+        state.Apply(new ProcessingRestricted { PartyId = "party-1", TenantId = "tenant-a", RestrictedAt = at, Reason = "privacy", RestrictedBy = "operator" });
+        state.Apply(new PartyErased { PartyId = "party-1", TenantId = "tenant-a", ErasedAt = at, ErasureStatus = "Erased", VerificationStatus = "Complete" });
+        state.Apply(new PartyDeactivated());
+        foreach (JsonSerializerOptions options in new[] { JsonSerializerOptions.Web, PartiesJsonOptions.Default })
+        {
+            JsonElement json = JsonSerializer.SerializeToElement(state, options);
+            JsonElement.DeepEquals(json, JsonSerializer.SerializeToElement(PartyStateSnapshotCodec.Restore(json), options)).ShouldBeTrue();
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SnapshotCodec_RestoresAllModeledFieldsAndCollections(bool web)
+    {
+        PartyState state = State();
+        state.Apply(new PartyDisplayNameDerived { DisplayName = "Private Name", SortName = "Name Private" });
+        state.Apply(new ContactChannelAdded { ContactChannelId = "email", Type = ContactChannelType.Email, Value = "private@example.test", IsPreferred = true });
+        state.Apply(new IdentifierAdded { IdentifierId = "external", Type = IdentifierType.Other, Value = "private-identifier" });
+        JsonSerializerOptions options = web ? JsonSerializerOptions.Web : PartiesJsonOptions.Default;
+        JsonElement original = JsonSerializer.SerializeToElement(state, options);
+        PartyState restored = PartyStateSnapshotCodec.Restore(original);
+        JsonElement.DeepEquals(original, JsonSerializer.SerializeToElement(restored, options)).ShouldBeTrue();
+        restored.ContactChannels.ShouldHaveSingleItem();
+        restored.Identifiers.ShouldHaveSingleItem();
+        restored.Apply(new PartyDeactivated());
+        restored.IsActive.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("unknown")]
+    [InlineData("partial")]
+    [InlineData("duplicate")]
+    [InlineData("nested-duplicate")]
+    [InlineData("lost")]
+    [InlineData("bytes")]
+    [InlineData("depth")]
+    public void SnapshotCodec_RejectsMalformedOrLossyState(string fault)
+    {
+        string json = JsonSerializer.Serialize(State(), JsonSerializerOptions.Web);
+        json = fault switch
+        {
+            "unknown" => json.Insert(1, "\"futureField\":true,"),
+            "partial" => json.Replace("\"hasBeenCreated\":true,", "", StringComparison.Ordinal),
+            "duplicate" => json.Insert(1, "\"HASBEENCREATED\":true,"),
+            "nested-duplicate" => json.Replace("\"firstName\":\"Private\"", "\"firstName\":\"Private\",\"FIRSTNAME\":\"Other\"", StringComparison.Ordinal),
+            "lost" => json.Replace("\"humanBindingVersion\":1", "\"humanBindingVersion\":\"1\"", StringComparison.Ordinal),
+            "bytes" => json.Replace("Private", new string('x', PartyStateSnapshotCodec.MaximumBytes), StringComparison.Ordinal),
+            "depth" => json.Insert(1, "\"nested\":" + new string('[', 70) + "0" + new string(']', 70) + ","),
+            _ => json,
+        };
+        using JsonDocument document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 100 });
+        Should.Throw<JsonException>(() => PartyStateSnapshotCodec.Restore(document.RootElement));
+    }
+
+    [Theory]
+    [InlineData("bindings-null")]
+    [InlineData("transitions-null")]
+    [InlineData("binding-null")]
+    [InlineData("transition-null")]
+    [InlineData("evidence-null")]
+    [InlineData("evidence-missing")]
+    [InlineData("custody-null")]
+    [InlineData("custody-missing")]
+    [InlineData("actor-missing")]
+    [InlineData("logical-null")]
+    [InlineData("transition-intent-missing")]
+    [InlineData("original-custody-missing")]
+    [InlineData("custody-evidence-null")]
+    [InlineData("provisioning-identity-null")]
+    [InlineData("provisioning-source-missing")]
+    [InlineData("provisioning-fingerprint-null")]
+    [InlineData("type-enum")]
+    [InlineData("erasure-enum")]
+    [InlineData("channel-enum")]
+    [InlineData("identifier-enum")]
+    [InlineData("consent-enum")]
+    public async Task SnapshotCodec_RejectsInvalidModeledHistoryAndEnumsAtCaptureAndRestore(string fault)
+    {
+        PartyState state = State();
+        state.Apply(new ContactChannelAdded { ContactChannelId = "email", Type = ContactChannelType.Email, Value = "private@example.test" });
+        state.Apply(new IdentifierAdded { IdentifierId = "external", Type = IdentifierType.Other, Value = "private-identifier" });
+        state.Apply(new ConsentRecorded { PartyId = "party-1", TenantId = "tenant-a", ConsentId = "consent", ChannelId = "email", Purpose = "contact", LawfulBasis = LawfulBasis.Consent,
+            GrantedAt = DateTimeOffset.UnixEpoch, GrantedBy = "operator" });
+        JsonObject json = JsonSerializer.SerializeToNode(state, JsonSerializerOptions.Web)!.AsObject();
+        JsonObject binding = json["humanActorBindings"]![0]!.AsObject();
+        JsonObject transition = json["humanActorTransitions"]![0]!.AsObject();
+        switch (fault)
+        {
+            case "bindings-null": json["humanActorBindings"] = null; break;
+            case "transitions-null": json["humanActorTransitions"] = null; break;
+            case "binding-null": json["humanActorBindings"]![0] = null; break;
+            case "transition-null": json["humanActorTransitions"]![0] = null; break;
+            case "evidence-null": binding["evidence"] = null; break;
+            case "evidence-missing": binding.Remove("evidence"); break;
+            case "custody-null": binding["evidence"]!["custody"] = null; break;
+            case "custody-missing": binding["evidence"]!.AsObject().Remove("custody"); break;
+            case "actor-missing": binding["evidence"]!.AsObject().Remove("actorId"); break;
+            case "logical-null": binding["logicalId"] = null; break;
+            case "transition-intent-missing": transition.Remove("intentDigest"); break;
+            case "original-custody-missing": transition["originalEvidence"]!.AsObject().Remove("custody"); break;
+            case "custody-evidence-null": binding["evidence"]!["custody"]!["evidenceId"] = null; break;
+            case "provisioning-identity-null":
+                json["agentProvisioning"] = new JsonObject { ["identity"] = null, ["provisioningRevision"] = 1, ["sourceId"] = "source" }; break;
+            case "provisioning-source-missing":
+            case "provisioning-fingerprint-null":
+                json["agentProvisioning"] = JsonSerializer.SerializeToNode(new Hexalith.Parties.Contracts.Models.AgentPartyProvisioningResult(
+                    new("tenant-a", "agent", "party-1", 1, "logical", "fingerprint", DateTimeOffset.UnixEpoch), 1, "source"), JsonSerializerOptions.Web);
+                if (fault == "provisioning-source-missing") json["agentProvisioning"]!.AsObject().Remove("sourceId");
+                else json["agentProvisioning"]!["identity"]!["creationFingerprint"] = null;
+                break;
+            case "type-enum": json["type"] = 999; break;
+            case "erasure-enum": json["erasureStatus"] = 999; break;
+            case "channel-enum": json["contactChannels"]![0]!["type"] = 999; break;
+            case "identifier-enum": json["identifiers"]![0]!["type"] = 999; break;
+            case "consent-enum": json["consentRecords"]![0]!["lawfulBasis"] = 999; break;
+        }
+        JsonElement malformed = JsonSerializer.SerializeToElement(json);
+        Should.Throw<JsonException>(() => PartyStateSnapshotCodec.Restore(malformed));
+        var keys = Substitute.For<IPartyKeyManagementService>();
+        var custody = Substitute.For<IIdentityHistoryCustody>();
+        var service = Service(keys, Substitute.For<IKeyStorageBackend>(), custody);
+        var adapter = new EventStorePartyPayloadProtectionAdapter(service, Substitute.For<IPartyErasureRecordStore>());
+        var identity = new AggregateIdentity("tenant-a", "party", "party-1");
+        await Should.ThrowAsync<JsonException>(() => adapter.ProtectSnapshotAsync(identity, malformed, TestContext.Current.CancellationToken));
+        // This is the post-SDK plaintext hydration seam; persisted reads also enforce custody metadata.
+        await Should.ThrowAsync<JsonException>(() => service.UnprotectSnapshotStateAsync(identity, malformed, TestContext.Current.CancellationToken));
+        await custody.DidNotReceiveWithAnyArgs().ProtectSnapshotAsync(default!, default!, default);
+        await keys.DidNotReceiveWithAnyArgs().GetKeyVersionAsync(default!, default!, default, default);
+    }
+
+    [Theory]
+    [InlineData("format")]
+    [InlineData("plaintext")]
+    [InlineData("malformed-json")]
+    [InlineData("malformed-marker")]
+    [InlineData("malformed-base64")]
+    public async Task InvalidProfileWrapperIsDeniedByBothMetadataAwareApisBeforeKeyAccess(string fault)
+    {
+        var keys = Substitute.For<IPartyKeyManagementService>();
+        var adapter = new EventStorePartyPayloadProtectionAdapter(Service(keys, Substitute.For<IKeyStorageBackend>(), null), Substitute.For<IPartyErasureRecordStore>());
+        var plaintext = new PartyState();
+        plaintext.Apply(new PartyCreated { Type = PartyType.Person, CreatedAt = DateTimeOffset.UnixEpoch,
+            PersonDetails = new PersonDetails { FirstName = "Private", LastName = "Snapshot" } });
+        byte[] bytes = fault switch
+        {
+            "format" => "{\"person\":{\"firstName\":{\"$enc\":true,\"alg\":\"AES256GCM\",\"kv\":1,\"n\":\"AQ==\",\"t\":\"Ag==\",\"c\":\"Aw==\"}}}"u8.ToArray(),
+            "malformed-json" => "{"u8.ToArray(),
+            "malformed-marker" => "{\"person\":{\"firstName\":{\"$enc\":true,\"alg\":\"AES256GCM\",\"kv\":1}}}"u8.ToArray(),
+            _ => JsonSerializer.SerializeToUtf8Bytes(plaintext, JsonSerializerOptions.Web),
+        };
+        var wrapper = new PartyPayloadProtectionService.ProtectedSnapshotState
+        {
+            Marker = "$protectedSnapshot", TypeName = typeof(PartyState).FullName!,
+            Payload = fault == "malformed-base64" ? "!invalid" : Convert.ToBase64String(bytes),
+            SerializationFormat = fault == "format" ? "unsupported" : PartyPayloadProtectionService.ProtectedSerializationFormat,
+        };
+        var metadata = new EventStorePayloadProtectionMetadata(PayloadProtectionState.Protected, 1, "parties-aes-gcm-json-fields", null, "application/json", null);
+        foreach (object input in new object[] { wrapper, JsonSerializer.SerializeToElement(wrapper, JsonSerializerOptions.Web) })
+        {
+            (await adapter.TryUnprotectSnapshotAsync(new("tenant-a", "party", "party-1"), input, metadata, TestContext.Current.CancellationToken)).IsReadable.ShouldBeFalse();
+            await Should.ThrowAsync<InvalidOperationException>(() => adapter.UnprotectSnapshotAsync(new("tenant-a", "party", "party-1"), input, metadata, TestContext.Current.CancellationToken));
+        }
+        await keys.DidNotReceiveWithAnyArgs().GetKeyVersionAsync(default!, default!, default, default);
+    }
+
+    [Theory]
+    [InlineData("displayName", true)]
+    [InlineData("person.firstName", true)]
+    [InlineData("person.lastName", true)]
+    [InlineData("person.dateOfBirth", true)]
+    [InlineData("person.prefix", true)]
+    [InlineData("person.suffix", true)]
+    [InlineData("contactChannels", true)]
+    [InlineData("identifiers", true)]
+    [InlineData("organization.legalName", true)]
+    [InlineData("organization.tradingName", true)]
+    [InlineData("organization.legalForm", true)]
+    [InlineData("organization.registrationNumber", true)]
+    [InlineData("organization.legalName", false)]
+    public async Task ProfileSnapshotPolicyRejectsMixedWriterOutputBeforeAnyKeyRead(string field, bool naturalPerson)
+    {
+        ArgumentNullException.ThrowIfNull(field);
+        bool organization = field.StartsWith("organization.", StringComparison.Ordinal);
+        var state = new PartyState();
+        state.Apply(new PartyCreated { Type = organization ? PartyType.Organization : PartyType.Person, CreatedAt = DateTimeOffset.UnixEpoch,
+            PersonDetails = organization ? null : new PersonDetails { FirstName = "Private", LastName = "Name", DateOfBirth = DateTimeOffset.UnixEpoch,
+                Prefix = "Private prefix", Suffix = "Private suffix" },
+            OrganizationDetails = organization ? new OrganizationDetails { LegalName = "Private legal", TradingName = "Private trade", LegalForm = "Private form",
+                RegistrationNumber = "Private registration", IsNaturalPerson = naturalPerson } : null });
+        state.Apply(new PartyDisplayNameDerived { DisplayName = "Private display", SortName = "Private sort" });
+        state.Apply(new ContactChannelAdded { ContactChannelId = "email", Type = ContactChannelType.Email, Value = "private@example.test" });
+        state.Apply(new IdentifierAdded { IdentifierId = "external", Type = IdentifierType.Other, Value = "private-identifier" });
+        var identity = new AggregateIdentity("tenant-a", "party", "party-1");
+        var keys = Substitute.For<IPartyKeyManagementService>();
+        var backend = Substitute.For<IKeyStorageBackend>();
+        backend.ListKeyVersionsAsync("tenant-a", "party-1", Arg.Any<CancellationToken>()).Returns([1]);
+        keys.GetKeyVersionAsync("tenant-a", "party-1", 1, Arg.Any<CancellationToken>()).Returns(_ => Enumerable.Repeat((byte)7, 32).ToArray());
+        var service = Service(keys, backend, null);
+        var adapter = new EventStorePartyPayloadProtectionAdapter(service, Substitute.For<IPartyErasureRecordStore>());
+        SnapshotProtectionResult written = await adapter.ProtectSnapshotAsync(identity, state, TestContext.Current.CancellationToken);
+        var wrapper = written.State.ShouldBeOfType<PartyPayloadProtectionService.ProtectedSnapshotState>();
+        JsonNode protectedJson = JsonNode.Parse(Convert.FromBase64String(wrapper.Payload))!;
+        JsonNode originalJson = JsonSerializer.SerializeToNode(state, PartiesJsonOptions.Default)!;
+        protectedJson["displayName"]!["$enc"]!.GetValue<bool>().ShouldBeTrue();
+        if (field is "contactChannels" or "identifiers")
+        {
+            protectedJson[field]![0]!["value"]!["$enc"]!.GetValue<bool>().ShouldBeTrue();
+            protectedJson[field]![0]!["value"] = originalJson[field]![0]!["value"]!.DeepClone();
+        }
+        else
+        {
+            string[] path = field.Split('.');
+            JsonNode parent = path.Length == 1 ? protectedJson : protectedJson[path[0]]!;
+            JsonNode originalParent = path.Length == 1 ? originalJson : originalJson[path[0]]!;
+            if (!organization || naturalPerson) parent[path[^1]]!["$enc"]!.GetValue<bool>().ShouldBeTrue();
+            else parent[path[^1]]!.GetValue<string>().ShouldBe(originalParent[path[^1]]!.GetValue<string>());
+            parent[path[^1]] = originalParent[path[^1]]!.DeepClone();
+        }
+        // A genuine encrypted field remains, so marker-presence validation alone would accept this.
+        protectedJson["sortName"]!["$enc"]!.GetValue<bool>().ShouldBeTrue();
+        wrapper = wrapper with { Payload = Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(protectedJson, PartiesJsonOptions.Default)) };
+        keys.ClearReceivedCalls();
+        bool readable = organization && !naturalPerson;
+        foreach (object candidate in new object[] { wrapper, JsonSerializer.SerializeToElement(wrapper, JsonSerializerOptions.Web) })
+        {
+            (await adapter.TryUnprotectSnapshotAsync(identity, candidate, written.Metadata, TestContext.Current.CancellationToken)).IsReadable.ShouldBe(readable);
+            if (readable)
+                (await adapter.UnprotectSnapshotAsync(identity, candidate, written.Metadata, TestContext.Current.CancellationToken)).ShouldBeOfType<PartyState>()
+                    .Organization!.LegalName.ShouldBe("Private legal");
+            else await Should.ThrowAsync<InvalidOperationException>(() => adapter.UnprotectSnapshotAsync(identity, candidate, written.Metadata, TestContext.Current.CancellationToken));
+        }
+        if (!readable)
+        {
+            await Should.ThrowAsync<InvalidOperationException>(() => service.UnprotectSnapshotStateAsync(identity, wrapper, TestContext.Current.CancellationToken));
+            await keys.DidNotReceiveWithAnyArgs().GetKeyVersionAsync(default!, default!, default, default);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GenericProfileSnapshotKeepsWriterCompatibilityAndRejectsMixedPersonalData(bool mixed)
+    {
+        var identity = new AggregateIdentity("tenant-a", "party", "party-1");
+        var keys = Substitute.For<IPartyKeyManagementService>();
+        var backend = Substitute.For<IKeyStorageBackend>();
+        backend.ListKeyVersionsAsync("tenant-a", "party-1", Arg.Any<CancellationToken>()).Returns([1]);
+        keys.GetKeyVersionAsync("tenant-a", "party-1", 1, Arg.Any<CancellationToken>()).Returns(_ => Enumerable.Repeat((byte)7, 32).ToArray());
+        var adapter = new EventStorePartyPayloadProtectionAdapter(Service(keys, backend, null), Substitute.For<IPartyErasureRecordStore>());
+        SnapshotProtectionResult written = await adapter.ProtectSnapshotAsync(identity, new PartyCreated { Type = PartyType.Person,
+            PersonDetails = new PersonDetails { FirstName = "Private", LastName = "Name" } }, TestContext.Current.CancellationToken);
+        var wrapper = written.State.ShouldBeOfType<PartyPayloadProtectionService.ProtectedSnapshotState>();
+        if (mixed)
+        {
+            JsonNode json = JsonNode.Parse(Convert.FromBase64String(wrapper.Payload))!;
+            json["personDetails"]!["firstName"] = "Private";
+            wrapper = wrapper with { Payload = Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(json, PartiesJsonOptions.Default)) };
+        }
+        keys.ClearReceivedCalls();
+        (await adapter.TryUnprotectSnapshotAsync(identity, JsonSerializer.SerializeToElement(wrapper, JsonSerializerOptions.Web), written.Metadata,
+            TestContext.Current.CancellationToken)).IsReadable.ShouldBe(!mixed);
+        if (mixed)
+        {
+            await Should.ThrowAsync<InvalidOperationException>(() => adapter.UnprotectSnapshotAsync(identity, wrapper, written.Metadata, TestContext.Current.CancellationToken));
+            await keys.DidNotReceiveWithAnyArgs().GetKeyVersionAsync(default!, default!, default, default);
+        }
+        else (await adapter.UnprotectSnapshotAsync(identity, wrapper, written.Metadata, TestContext.Current.CancellationToken)).ShouldBeOfType<PartyCreated>()
+            .PersonDetails!.FirstName.ShouldBe("Private");
+    }
+
     [Fact]
     public async Task SerializedHistorySnapshot_IsDeniedInsteadOfProfileOnlyProtection()
     {
@@ -70,7 +381,8 @@ public sealed class IdentityHistoryProtectionTests
         SnapshotUnprotectionOutcome restored = await adapter.TryUnprotectSnapshotAsync(new("tenant-a", "party", "party-1"),
             persist ? persisted : result.State, result.Metadata, TestContext.Current.CancellationToken);
         restored.IsReadable.ShouldBeTrue();
-        JsonElement json = restored.State.ShouldBeOfType<JsonElement>();
+        PartyState typed = restored.State.ShouldBeOfType<PartyState>();
+        JsonElement json = JsonSerializer.SerializeToElement(typed, JsonSerializerOptions.Web);
         json.GetProperty("humanActorBindings").GetArrayLength().ShouldBe(1);
         json.GetProperty("humanBindingVersion").GetInt64().ShouldBe(1);
         json.GetProperty("humanActorBindings")[0].GetProperty("evidence").GetProperty("bindingVersion").GetInt64().ShouldBe(1);

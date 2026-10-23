@@ -1,0 +1,47 @@
+[
+  {
+    "repository": "references/Hexalith.EventStore",
+    "messageFile": "/tmp/parties-recovery-integration-h68202ln/eventstore-message.txt",
+    "message": "fix: recover nonexpiring legacy projection batches",
+    "command": "node_modules/.bin/commitlint --edit <exact-message-file>",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "repository": "references/Hexalith.Memories",
+    "messageFile": "/tmp/parties-recovery-integration-h68202ln/memories-message.txt",
+    "message": "fix: replace explicit MCP signing algorithms",
+    "command": "node_modules/.bin/commitlint --edit <exact-message-file>",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "repository": "references/Hexalith.FrontComposer",
+    "messageFile": "/tmp/parties-recovery-integration-h68202ln/frontcomposer-message.txt",
+    "message": "build: validate mapped multi-target restores",
+    "command": "node_modules/.bin/commitlint --edit <exact-message-file>",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "repository": ".",
+    "messageFile": "/tmp/parties-recovery-integration-h68202ln/adoption-message.txt",
+    "message": "build: select reviewed recovery integration sources",
+    "command": "node_modules/.bin/commitlint --edit <exact-message-file>",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "repository": ".",
+    "messageFile": "/tmp/parties-recovery-integration-h68202ln/parties-message.txt",
+    "message": "fix: complete five recovery integration safeguards",
+    "command": "node_modules/.bin/commitlint --edit <exact-message-file>",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

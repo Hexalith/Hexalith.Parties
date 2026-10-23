@@ -22,6 +22,9 @@
     <!-- Capture NuGet's restored location rather than guessing from the test process environment. -->
     <AssemblyMetadata Include="NuGetPackageFolders" Value="$(NuGetPackageFolders)" />
     <AssemblyMetadata Include="HexalithFrontComposerVersion" Value="$(HexalithFrontComposerVersion)" />
+    <AssemblyMetadata Include="HexalithFrontComposerFromSource" Value="$(HexalithFrontComposerFromSource)" />
+    <AssemblyMetadata Include="HexalithFrontComposerRoot" Value="$(HexalithFrontComposerRoot)" />
+    <AssemblyMetadata Include="HexalithSourceMappingMode" Value="$(HexalithSourceMappingMode)" />
   </ItemGroup>
 
   <ItemGroup>

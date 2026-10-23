@@ -411,7 +411,11 @@ public sealed partial class PartyPayloadProtectionService(
             cancellationToken.ThrowIfCancellationRequested();
         }
 
-        return await UnprotectProfileSnapshotStateAsync(identity, state, history is not null, cancellationToken).ConfigureAwait(false);
+        object restored = await UnprotectProfileSnapshotStateAsync(identity, state, history is not null, cancellationToken).ConfigureAwait(false);
+        return identity.Domain == "party" && restored is JsonElement { ValueKind: JsonValueKind.Object } json
+            && json.EnumerateObject().Any(property => property.Name.Equals("hasBeenCreated", StringComparison.OrdinalIgnoreCase)
+                || property.Name.Equals("humanActorTransitions", StringComparison.OrdinalIgnoreCase))
+            ? PartyStateSnapshotCodec.Restore(json) : restored;
     }
 
     private async Task<object> ProtectProfileSnapshotStateAsync(
@@ -495,6 +499,15 @@ public sealed partial class PartyPayloadProtectionService(
             throw new InvalidOperationException("Protected snapshot payload is empty.");
         }
 
+        // Remove ciphertext before rehydrating the model, then apply the same policy used
+        // by the writer to every remaining leaf. A marker elsewhere cannot authorize plaintext.
+        JsonElement remainingJson = JsonSerializer.SerializeToElement(RebuildWithoutEncryptedMarkers(protectedRoot), s_jsonOptions);
+        object? remaining = RestoreSnapshotState(remainingJson, targetType);
+        if (remaining is null || PersonalDataGraphInspector.ContainsProtectedData(remaining))
+        {
+            throw new InvalidOperationException("Protected snapshot contains unencrypted personal data.");
+        }
+
         JsonNode? unprotected;
         try
         {
@@ -508,11 +521,13 @@ public sealed partial class PartyPayloadProtectionService(
         }
 
         byte[] unprotectedBytes = JsonSerializer.SerializeToUtf8Bytes(unprotected, s_jsonOptions);
-        object? restored = retainedHistory && targetType == typeof(PartyState)
-            ? JsonSerializer.Deserialize<JsonElement>(unprotectedBytes)
-            : JsonSerializer.Deserialize(unprotectedBytes, targetType, s_jsonOptions);
-        return restored ?? state;
+        return RestoreSnapshotState(JsonSerializer.Deserialize<JsonElement>(unprotectedBytes), targetType) ?? state;
     }
+
+    private static object? RestoreSnapshotState(JsonElement state, Type targetType)
+        => targetType == typeof(PartyState)
+            ? PartyStateSnapshotCodec.Restore(state)
+            : state.Deserialize(targetType, s_jsonOptions);
 
     private static bool TryReadSnapshotMarker(JsonElement element, out string? marker)
     {
@@ -531,7 +546,10 @@ public sealed partial class PartyPayloadProtectionService(
         return true;
     }
 
-    private static bool ContainsSerializedHistory(object state)
+    /// <summary>Identifies retained history that needs independent purpose-custody evidence.</summary>
+    /// <param name="state">The typed or serialized snapshot state.</param>
+    /// <returns>Whether the snapshot carries history or a retained-purpose wrapper.</returns>
+    internal static bool ContainsSerializedHistory(object state)
     {
         JsonElement element = state is JsonElement json ? json : JsonSerializer.SerializeToElement(state, s_jsonOptions);
         if (element.ValueKind != JsonValueKind.Object)

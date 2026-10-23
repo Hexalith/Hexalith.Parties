@@ -145,6 +145,7 @@ type class Hexalith.Parties.Contracts.Commands.RestrictProcessing interfaces:Sys
 type class Hexalith.Parties.Contracts.Commands.RetryErasureVerification interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RetryErasureVerification>
   ctor ()
   property System.String PartyId required getset
+  property System.Boolean RecoverKeyDestructionEvidence getset
   property System.String TenantId required getset
 type class Hexalith.Parties.Contracts.Commands.RevokeConsent interfaces:System.IEquatable<Hexalith.Parties.Contracts.Commands.RevokeConsent>
   ctor ()

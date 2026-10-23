@@ -87,7 +87,19 @@ public sealed class EventStorePartyPayloadProtectionAdapter(
         object state,
         CancellationToken cancellationToken = default)
     {
-        object protectedState = await inner.ProtectSnapshotStateAsync(identity, state, cancellationToken).ConfigureAwait(false);
+        ArgumentNullException.ThrowIfNull(identity);
+        ArgumentNullException.ThrowIfNull(state);
+        cancellationToken.ThrowIfCancellationRequested();
+        // SnapshotManager supplies folded Web JSON. Reconstruct the complete domain graph
+        // before profile/history protection; the raw service guard remains fail-closed.
+        if (identity.Domain == "party" && state is JsonElement { ValueKind: JsonValueKind.Object } candidate
+            && candidate.EnumerateObject().Any(property => property.Name.Equals("marker", StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException("Snapshot capture requires complete modeled Party state, not an existing purpose wrapper.");
+        }
+        object typed = identity.Domain == "party" && state is JsonElement serialized
+            ? PartyStateSnapshotCodec.Restore(serialized) : state;
+        object protectedState = await inner.ProtectSnapshotStateAsync(identity, typed, cancellationToken).ConfigureAwait(false);
         EventStorePayloadProtectionMetadata metadata = protectedState is PartyPayloadProtectionService.ProtectedSnapshotState
             ? s_protectedMetadata
             : protectedState is IdentityHistorySnapshot
@@ -98,12 +110,30 @@ public sealed class EventStorePartyPayloadProtectionAdapter(
         return new SnapshotProtectionResult(protectedState, metadata);
     }
 
-    public Task<object> UnprotectSnapshotAsync(
+    public async Task<object> UnprotectSnapshotAsync(
         AggregateIdentity identity,
         object state,
         EventStorePayloadProtectionMetadata? metadata,
         CancellationToken cancellationToken = default)
-        => ((IEventPayloadProtectionService)inner).UnprotectSnapshotAsync(identity, state, metadata, cancellationToken);
+    {
+        ArgumentNullException.ThrowIfNull(identity);
+        ArgumentNullException.ThrowIfNull(state);
+        cancellationToken.ThrowIfCancellationRequested();
+        ValidateProfileSnapshot(state);
+        if (metadata?.State != PayloadProtectionState.Protected && PartyPayloadProtectionService.ContainsSerializedHistory(state))
+            throw new InvalidOperationException("Retained snapshot history requires independent purpose-custody evidence.");
+        bool retainedWrapper = state is IdentityHistorySnapshot
+            || state is JsonElement { ValueKind: JsonValueKind.Object } serialized
+                && serialized.EnumerateObject().Any(property => property.Name.Equals("marker", StringComparison.OrdinalIgnoreCase)
+                    && property.Value.ValueKind == JsonValueKind.String && property.Value.GetString() == "identity-history-snapshot-v1");
+        object unprotected = await ((IEventPayloadProtectionService)inner)
+            .UnprotectSnapshotAsync(identity, state, metadata, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (PartyPayloadProtectionService.ContainsSerializedHistory(unprotected)
+            && (metadata?.Scheme != "party-actor-history-v1" || !retainedWrapper))
+            throw new InvalidOperationException("Retained snapshot history requires independent purpose-custody evidence.");
+        return unprotected;
+    }
 
     public async Task<PayloadUnprotectionOutcome> TryUnprotectEventPayloadAsync(
         AggregateIdentity identity,
@@ -197,8 +227,18 @@ public sealed class EventStorePartyPayloadProtectionAdapter(
             return SnapshotUnprotectionOutcome.Unreadable(metadataFailure.Value, resolvedMetadata);
         }
 
+        if (resolvedMetadata.State != PayloadProtectionState.Protected
+            && PartyPayloadProtectionService.ContainsSerializedHistory(state))
+        {
+            return SnapshotUnprotectionOutcome.Unreadable(UnreadableProtectedDataReason.ConsistencyMismatch, resolvedMetadata);
+        }
+
         if (resolvedMetadata.State == PayloadProtectionState.Protected
             && state is not PartyPayloadProtectionService.ProtectedSnapshotState
+            && !(resolvedMetadata.Scheme == s_protectedMetadata.Scheme
+                && state is JsonElement { ValueKind: JsonValueKind.Object } profile
+                && profile.TryGetProperty("marker", out JsonElement profileMarker) && profileMarker.ValueKind == JsonValueKind.String
+                && profileMarker.GetString() == "$protectedSnapshot")
             && !(resolvedMetadata.Scheme == "party-actor-history-v1" && (state is IdentityHistorySnapshot
                 || state is JsonElement { ValueKind: JsonValueKind.Object } json
                     && json.TryGetProperty("marker", out JsonElement marker) && marker.ValueKind == JsonValueKind.String
@@ -209,9 +249,7 @@ public sealed class EventStorePartyPayloadProtectionAdapter(
 
         try
         {
-            object unprotected = await ((IEventPayloadProtectionService)inner)
-                .UnprotectSnapshotAsync(identity, state, resolvedMetadata, cancellationToken)
-                .ConfigureAwait(false);
+            object unprotected = await UnprotectSnapshotAsync(identity, state, resolvedMetadata, cancellationToken).ConfigureAwait(false);
             return SnapshotUnprotectionOutcome.Readable(unprotected, resolvedMetadata);
         }
         catch (OperationCanceledException)
@@ -223,6 +261,24 @@ public sealed class EventStorePartyPayloadProtectionAdapter(
             UnreadableProtectedDataReason reason = await ClassifyFailureAsync(identity, ex, cancellationToken).ConfigureAwait(false);
             return SnapshotUnprotectionOutcome.Unreadable(reason, resolvedMetadata);
         }
+    }
+
+    private static void ValidateProfileSnapshot(object state)
+    {
+        PartyPayloadProtectionService.ProtectedSnapshotState? profile = state switch
+        {
+            PartyPayloadProtectionService.ProtectedSnapshotState direct => direct,
+            JsonElement { ValueKind: JsonValueKind.Object } json
+                when json.EnumerateObject().Any(property => property.Name.Equals("marker", StringComparison.OrdinalIgnoreCase)
+                    && property.Value.ValueKind == JsonValueKind.String && property.Value.GetString() == "$protectedSnapshot")
+                => json.Deserialize<PartyPayloadProtectionService.ProtectedSnapshotState>(JsonSerializerOptions.Web),
+            _ => null,
+        };
+        if (profile is null) return;
+        if (profile.Marker != "$protectedSnapshot" || !IsProtectedFormat(profile.SerializationFormat)
+            || string.IsNullOrWhiteSpace(profile.Payload) || !Base64.IsValid(profile.Payload.AsSpan())
+            || InspectPayloadShape(Convert.FromBase64String(profile.Payload)) != ProtectedPayloadShape.ContainsEncryptedMarker)
+            throw new InvalidOperationException("Invalid protected profile snapshot format or encrypted payload.");
     }
 
     private static UnreadableProtectedDataReason? ValidateMetadata(EventStorePayloadProtectionMetadata metadata)

@@ -1,0 +1,49 @@
+{
+  "rows": [
+    {
+      "matrixRow": "source RCL delivery",
+      "coveringTest": "PartiesUiHostCompositionTests.TestEnvironment_ServesSelectedFrontComposerScriptAsync",
+      "runId": "recovery-source-ui-focused",
+      "failed": 0,
+      "skipped": 0,
+      "result": "passed; public xUnit test registered in the executed class/full suite"
+    },
+    {
+      "matrixRow": "MCP asymmetric policy",
+      "coveringTest": "ConfigureJwtBearerOptionsTests.RegisteredBearerPipelineRejectsHs256WhenOnlyAsymmetricAlgorithmIsConfigured",
+      "runId": "recovery-mcp-release-full",
+      "failed": 0,
+      "skipped": 0,
+      "result": "passed; public xUnit test registered in the executed class/full suite"
+    },
+    {
+      "matrixRow": "legacy batch recovery",
+      "coveringTest": "PartyDetailSdkProjectionRecoveryTests.CommittedLegacyDeliveryRecoversBeforeNextTailAndPreservesNewerErasureBytes",
+      "runId": "recovery-source-focused",
+      "failed": 0,
+      "skipped": 0,
+      "result": "passed; public xUnit test registered in the executed class/full suite"
+    },
+    {
+      "matrixRow": "legacy certificate recovery",
+      "coveringTest": "PartyDomainProcessorValidationTests.ExplicitCertificateRecoveryRequiresFreshVerifiedDurableEvidence",
+      "runId": "recovery-source-focused",
+      "failed": 0,
+      "skipped": 0,
+      "result": "passed; public xUnit test registered in the executed class/full suite"
+    },
+    {
+      "matrixRow": "typed SDK snapshots",
+      "coveringTest": "PartyDomainProcessorValidationTests.SdkSnapshotManagerPersistsCompleteRetainedPartyStateAndRestoredCommand",
+      "runId": "recovery-source-focused",
+      "failed": 0,
+      "skipped": 0,
+      "result": "passed; public xUnit test registered in the executed class/full suite"
+    }
+  ],
+  "codeHashesVerified": 27,
+  "pendingPublicationGates": [],
+  "reviewFindingsResolved": 16,
+  "finalProof": "final-verification.json",
+  "cleanOwnerGates": "Both originally failing provenance tests pass in the post-adoption full Release service suite."
+}

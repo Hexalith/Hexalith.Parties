@@ -21,6 +21,7 @@ public sealed partial class PartyErasureOrchestrator(
         int attempt = 0;
         while (attempt < MaxRetries)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             attempt++;
             try
             {
@@ -28,8 +29,13 @@ public sealed partial class PartyErasureOrchestrator(
                     .DeleteKeyAsync(tenantId, partyId, cancellationToken)
                     .ConfigureAwait(false);
 
+                cancellationToken.ThrowIfCancellationRequested();
                 LogKeyDestructionSucceeded(tenantId, partyId, certificate.KeyVersionsDestroyed.Count);
                 return certificate;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex) when (attempt < MaxRetries)
             {

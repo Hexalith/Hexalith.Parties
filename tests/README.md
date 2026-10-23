@@ -489,3 +489,39 @@ Its remote search/cleanup responses are deterministic: this control qualifies
 persistence capability, not live Memories search, tenant authorization, complete
 inventory or physical erasure. An omitted runtime configuration skips and cannot
 close the runtime gate.
+
+
+## Recovery integration qualification (2026-10-23)
+
+`PartiesUiHostCompositionTests.TestEnvironment_ServesSelectedFrontComposerScriptAsync`
+requests `/_content/Hexalith.FrontComposer.Shell/js/fc-focus.js`, checks JavaScript content type,
+and compares exact build-selected producer bytes. Evaluated metadata records source mode,
+root and mapping mode. The fully mapped Debug source run now passes after FrontComposer
+Contracts/Schema supply the canonical SDK assets path during outer evaluation; all validation
+stays active. A passing Release/package run qualifies package delivery only.
+
+Memories MCP's registered bearer tests exercise replacement of explicit algorithms, default
+selection, invalid lists, configuration reload notifications and actual HTTP acceptance of
+RS256/ES256 while rejecting HS256. Domain-option reload remains supported; changing an
+already-selected bearer policy requires host restart.
+
+EventStore's pending-batch controls test committed nonexpiring legacy compaction, recovery
+interruption/restart, writable next-tail ETags, superseding bytes and refusal of unsupported
+metadata. Generic recovery refuses relative-TTL v1 candidates; only the explicit caller
+capability can attest nonexpiring originals. Parties' corresponding source-only integration
+controls remain skipped in package mode until a matching SDK is published and adopted.
+
+`IdentityHistoryProtectionTests` checks strict modeled snapshot restoration and preserves the
+raw serialized-history guard. `PartyDomainProcessorValidationTests` exercises actual
+SnapshotManager capture/read-back with serialized storage recreation and a post-restore
+command, plus fresh audited certificate recovery with unavailable keys, read-back outages,
+cancellation, foreign evidence and certificate-write failure. Synthetic history custody is
+functional evidence; production retention and expiry qualification remain separate.
+
+Exact current results and source prerequisites are recorded in
+[the bounded batch receipt](../_bmad-output/implementation-artifacts/tests/five-recovery-integration-2026-10-23/validation.json).
+
+Review controls additionally cover all modeled history null/required-member and enum failures,
+mixed ciphertext/plaintext profiles using actual writer output, audit failure, malformed Verified
+certificate recovery, post-save cancellation/restart, mixed deletes and eight mid-compaction races.
+Current final results are in the batch `final-verification.json`; its `validation.json` is historical.

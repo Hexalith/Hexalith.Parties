@@ -1,0 +1,129 @@
+{
+  "scope": "Review fixes only; parent owns full verification and staging/publication. Source generated mapping unchanged.",
+  "checks": [
+    {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "--no-restore",
+        "--nologo",
+        "-v:minimal",
+        "-m:1"
+      ],
+      "exitCode": 0,
+      "log": "/tmp/recovery-review-domain-build-final.log",
+      "rawLog": "/tmp/recovery-review-domain-build-final.log",
+      "logSha256": "bbc6e7590491216fbbcb48d1f3131623438993f3ad1d59ccb1fd09999c740383"
+    },
+    {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Tests.Domain.PartyDomainProcessorValidationTests"
+      ],
+      "exitCode": 0,
+      "logSha256": "9df0937b9b6217790db4a2e1e6f151b8ad92229714f3eefc2724fcb22975a403",
+      "summary": [
+        "   Hexalith.Parties.Tests  Total: 162, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.894s"
+      ],
+      "rawLog": "/tmp/recovery-review-domain-tests.log"
+    },
+    {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.EventStore.Client.Tests/Hexalith.EventStore.Client.Tests.csproj",
+        "--nologo",
+        "-v:minimal",
+        "-m:1"
+      ],
+      "exitCode": 0,
+      "log": "/tmp/recovery-review-eventstore-build.log",
+      "rawLog": "/tmp/recovery-review-eventstore-build.log",
+      "logSha256": "329f26537cefeb93f9bedf12750bccf5ea920aebf64fc56f4a57338a46d09552"
+    },
+    {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.Client.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.Tests.dll",
+        "-method",
+        "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.GenericRecoveryRefusesLegacyRelativeTtlWithoutMutatingBytes",
+        "-method",
+        "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.LegacyCommittedRecoverySurvivesRestartAndLeavesWritableEtags",
+        "-method",
+        "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.LegacyMixedDeleteRecoverySurvivesInterruptionAndPersistsAbsence",
+        "-method",
+        "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.LegacyCompactionCasRacePreservesExactReplacementAcrossRestart",
+        "-method",
+        "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.LegacyCommittedRecoveryRefusesUnsupportedEvidenceWithoutWrites",
+        "-method",
+        "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.LegacyCommittedRecoveryNeverReplaysOverSupersedingErasureOrForeignEnvelope",
+        "-method",
+        "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.LegacyRecoveryPreservesForeignPendingEnvelopeBytes",
+        "-method",
+        "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.PendingConditionalManifestIsRecoveredAcrossAdapterRestartThenFreshConflictRetry",
+        "-method",
+        "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.CommittedRecoveryFinishesOwnEnvelopeWithoutRollingBackNewerSharedIndex",
+        "-method",
+        "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.PendingKeyRecoveryRequiresSingleOwnerAndStillRejectsCoordinatedOwnerMode",
+        "-method",
+        "Hexalith.EventStore.Client.Tests.Projections.DaprReadModelBatchTests.PendingRecoveryRefusesMismatchedScopeAndCorruptEvidenceWithoutWrites"
+      ],
+      "exitCode": 0,
+      "logSha256": "ef579a407bd95e2ae04ec92d5b61c1a8c09e4c4bdef0b4f8e532488f8cee8d4a",
+      "summary": [
+        "   Hexalith.EventStore.Client.Tests  Total: 39, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.331s"
+      ],
+      "rawLog": "/tmp/recovery-review-eventstore-tests.log"
+    },
+    {
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Security.Tests/Hexalith.Parties.Security.Tests.csproj",
+        "--no-restore",
+        "--nologo",
+        "-v:minimal",
+        "-m:1"
+      ],
+      "exitCode": 0,
+      "log": "/tmp/recovery-review-security-build-final.log",
+      "rawLog": "/tmp/recovery-review-security-build-final.log",
+      "logSha256": "e3f1670839efb64afe5137079a60c502ac273b363400db8b06aebdd60a91c574"
+    },
+    {
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Security.Tests/bin/Debug/net10.0/Hexalith.Parties.Security.Tests.dll",
+        "-class",
+        "Hexalith.Parties.Security.Tests.IdentityHistoryProtectionTests"
+      ],
+      "exitCode": 0,
+      "logSha256": "90d846399d7da051a22fdc02638f00912ad43e2a30190d025cc27a0184c76582",
+      "summary": [
+        "   Hexalith.Parties.Security.Tests  Total: 86, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.494s"
+      ],
+      "rawLog": "/tmp/recovery-review-security-tests-final.log"
+    }
+  ],
+  "files": {
+    "src/Hexalith.Parties.Security/EventStorePartyPayloadProtectionAdapter.cs": "0e0d890f498efa9b92c6206747ddc119eb0901642e2c644ae7e014b725ad7e49",
+    "src/Hexalith.Parties.Security/PartyStateSnapshotCodec.cs": "6526e3dd309cc7c6d1d78499cd80f90fd24ddcaca83eae9b738472931a0abfd6",
+    "src/Hexalith.Parties/Domain/PartyDomainProcessor.cs": "e2aff22686ee3dc74780b50eb941a48ead1f5c881726ec3f7df8b4fc7ec7d9ff",
+    "tests/Hexalith.Parties.Security.Tests/IdentityHistoryProtectionTests.cs": "33571db528c672f2f035c1eb941512b2f0761753888a1aebc8d5cb9aa09820a8",
+    "tests/Hexalith.Parties.Tests/Domain/PartyDomainProcessorValidationTests.cs": "03032980f54d3be1299c8e9abf99cf86fb4878d4a403842ad1af49159dfb6709",
+    "references/Hexalith.EventStore/tests/Hexalith.EventStore.Client.Tests/Projections/DaprReadModelBatchTests.PendingRecovery.cs": "0f4dc947c96750cd68ee932c2a65c3da67cb60a2a21c1896df6742a4731c6c36"
+  },
+  "diffCheck": {
+    "root": 0,
+    "EventStore": 0
+  },
+  "behaviorNotes": [
+    "Final-anchor replacement by a foreign pending envelope remains safely unresolved; exact foreign bytes survive first recovery and restart.",
+    "Null replacement version evidence continues to be refused upstream by orchestrator; no orchestrator change in this patch.",
+    "Actual key audit failure test uses one bounded attempt after successful authoritative deletion/read-back."
+  ],
+  "transientDiagnostic": "/tmp/recovery-review-domain-parallel-diagnostic.json"
+}

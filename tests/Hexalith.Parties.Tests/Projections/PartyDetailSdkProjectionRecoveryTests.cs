@@ -162,10 +162,15 @@ public sealed class PartyDetailSdkProjectionRecoveryTests
         result.Status.ShouldBeOneOf(ProjectionDispatchStatus.Completed, ProjectionDispatchStatus.AlreadyCompleted);
         if (result.Status == ProjectionDispatchStatus.AlreadyCompleted)
         {
-            // Preserve legacy committed visibility and its empty ETags. The original SDK batch
-            // can still compact the envelopes without a retained manifest or a changed payload.
             (await store.GetAsync<PartyDetailSdkReadModel>(StoreName, s_detailKey, TestContext.Current.CancellationToken)).Value!.LastSequenceNumber.ShouldBe(1);
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+            // Source recovery has already compacted the original decision before checkpoint reads.
+            await AssertCompactedAsync(store);
+            (await store.ExecuteAsync(original, TestContext.Current.CancellationToken)).Status.ShouldBe(ReadModelBatchStatus.AlreadyCompleted);
+#else
+            // Published SDKs still require replay of the exact original batch to compact.
             (await store.ExecuteAsync(original, TestContext.Current.CancellationToken)).Status.ShouldBe(ReadModelBatchStatus.Completed);
+#endif
         }
         batches.ShouldAllBe(batch => !batch.RetainManifestForRecovery);
         if (batches.Count > 1)
@@ -203,6 +208,61 @@ public sealed class PartyDetailSdkProjectionRecoveryTests
         store.Snapshot<JsonObject>(StoreName, normal.Scope.ComputeMarkerKey()).ShouldNotBeNull();
         store.Snapshot<JsonObject>(StoreName, initializationMarkerKey)!.ToJsonString().ShouldBe(receipt.ToJsonString());
         await AssertSupportedAsync(store);
+    }
+
+    /// <summary>Recover a committed normal v1 delivery before reading checkpoints for the next event tail.</summary>
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task CommittedLegacyDeliveryRecoversBeforeNextTailAndPreservesNewerErasureBytes(bool erased, bool interruptedRecovery)
+    {
+        Assert.SkipUnless(typeof(PartyDetailSdkProjectionRecoveryTests).Assembly
+            .GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false)
+            .OfType<System.Reflection.AssemblyMetadataAttribute>()
+            .Any(attribute => attribute.Key == "HexalithSourceMappingMode" && attribute.Value == "source"),
+            "Requires pinned-tool source qualification; EventStore 3.127.0 has no nonexpiring legacy recovery capability.");
+        var store = new InMemoryReadModelStore();
+        var batches = new List<ReadModelBatch>();
+        PartyDetailSdkProjectionHandler handler = Handler(store, batches);
+        store.BatchFaultHook = (phase, _, _) => phase is ReadModelBatchPhase.AfterCommit or ReadModelBatchPhase.Reconcile
+            ? throw new IOException("legacy normal dispatch interrupted") : Task.CompletedTask;
+        (await handler.ProjectAsync(Request(supported: true), "original", TestContext.Current.CancellationToken)).Status.ShouldBe(ProjectionDispatchStatus.Indeterminate);
+        ReadModelBatch original = batches.ShouldHaveSingleItem();
+        original.RetainManifestForRecovery.ShouldBeFalse();
+        store.BatchFaultHook = null;
+        byte[]? erasedBytes = null;
+        if (erased)
+        {
+            PartyDetailSdkReadModel current = (await store.GetAsync<PartyDetailSdkReadModel>(StoreName, s_detailKey, TestContext.Current.CancellationToken)).Value!;
+            store.SeedRaw(StoreName, s_detailKey, PartySdkReadModelEraser.RedactDetail(current, "party-1", DateTimeOffset.UnixEpoch.AddDays(1)));
+            erasedBytes = store.SnapshotRaw(StoreName, s_detailKey);
+        }
+        if (interruptedRecovery)
+        {
+            store.BatchFaultHook = (phase, _, _) => phase == ReadModelBatchPhase.RecoveryReceiptWritten
+                ? throw new IOException("legacy recovery interrupted after content-free receipt") : Task.CompletedTask;
+            (await Handler(store).ProjectAsync(Request(supported: true), "changed", TestContext.Current.CancellationToken))
+                .ReasonCode.ShouldBe("projection-recovery-incomplete");
+            store.BatchFaultHook = null;
+        }
+        // Lose all handler state while retaining the serialized protocol rows.
+        DomainProjectionHandlerResult result = await Handler(store).ProjectAsync(Request(supported: true), "changed", TestContext.Current.CancellationToken);
+        result.Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        store.HasPendingEnvelope(StoreName, s_detailKey).ShouldBeFalse();
+        store.HasPendingEnvelope(StoreName, s_processingKey).ShouldBeFalse();
+        (await store.GetAsync<PartyDetailSdkReadModel>(StoreName, s_detailKey, TestContext.Current.CancellationToken)).ETag.ShouldNotBeNullOrEmpty();
+        if (erased) store.SnapshotRaw(StoreName, s_detailKey).ShouldBe(erasedBytes);
+        else
+        {
+            await AssertSupportedAsync(store);
+            ProjectionRequest tail = new("tenant-a", "party", "party-1", [Event(new PartyDeactivated(), 2)]);
+            (await Handler(store).ProjectAsync(tail, "tail", TestContext.Current.CancellationToken)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+            store.Snapshot<PartyDetailSdkReadModel>(StoreName, s_detailKey)!.LastSequenceNumber.ShouldBe(2);
+            store.Snapshot<PartyProcessingSdkReadModel>(StoreName, s_processingKey)!.LastSequenceNumber.ShouldBe(2);
+            await AssertCompactedAsync(store);
+        }
     }
 
     /// <summary>Pins the persisted empty-v1 payload format across future model changes.</summary>
@@ -670,6 +730,10 @@ public sealed class PartyDetailSdkProjectionRecoveryTests
         });
         ((IReadModelPendingBatchRecoveryStore)recorder).RecoverPendingAsync(Arg.Any<ReadModelBatchScope>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(call => store.RecoverPendingAsync(call.Arg<ReadModelBatchScope>(), call.Arg<string>(), call.Arg<CancellationToken>()));
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+        ((IReadModelPendingBatchRecoveryStore)recorder).RecoverNonExpiringPendingAsync(Arg.Any<ReadModelBatchScope>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(call => store.RecoverNonExpiringPendingAsync(call.Arg<ReadModelBatchScope>(), call.Arg<string>(), call.Arg<CancellationToken>()));
+#endif
         return new PartyDetailSdkProjectionHandler(store, recorder, s_options);
     }
 

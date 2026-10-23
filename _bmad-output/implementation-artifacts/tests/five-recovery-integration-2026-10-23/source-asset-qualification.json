@@ -1,0 +1,81 @@
+{
+  "negative": {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "--disable-build-servers"
+    ],
+    "exitCode": 1,
+    "result": "MSB4044: SourceMappingValidationTask required AssetsFile missing in outer FrontComposer.Contracts evaluation",
+    "logSha256": "9fd447911759c80c3dc5791d715988f8858eea9744922a9a92f986e669e7431a"
+  },
+  "initialUiNegative": {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "--disable-build-servers"
+    ],
+    "result": "MSB4044 at FrontComposer.Contracts and Schema outer restore; inner dotnet exit was not separately preserved by the initial tail wrapper",
+    "logSha256": "1850477c85b2d72f481a4caccf0453e3bbacd44b9dda309d6aac0263ba811bee"
+  },
+  "ownerFix": {
+    "files": [
+      "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj",
+      "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/Hexalith.FrontComposer.Schema.csproj"
+    ],
+    "change": "Supply only the ordinary canonical SDK ProjectAssetsFile path when empty during outer multi-target evaluation; no source validation or warning gate modified"
+  },
+  "positive": {
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+      "-c",
+      "Debug",
+      "-m:1",
+      "--disable-build-servers"
+    ],
+    "exitCode": 0,
+    "warnings": 0,
+    "errors": 0,
+    "logSha256": "a9d7f38ed66bde70071538c360ca40a55c802ce6086bcff5f103a453dd22e876"
+  },
+  "mapping": {
+    "tool": "hexalith.builds.module.cli/4.34.0",
+    "runId": "031924252c892579feebf3eff56663d2",
+    "contentHash": "f623f72993733202fb9611a108e00c366ef69c79693717daeb1f1fe090b64e99",
+    "filesSha256": {
+      "SourceMapping.final.targets": "a3eb6947a3b61a87a234f01398060ce4f1c3ab46b66a3c0c2c88ea23c8aef986",
+      "SourceMapping.before-targets.props": "f1f9019a2b7edcc9c1d1172fbf8fa3565dab2c2f9ffd342a9e89a49aa6eeba45",
+      "mapping.json": "d89c9cc9fab00c60071e5575e801d7f66e292676d05e7d9110a122d3625d448c",
+      "SourceMapping.values.props": "95515fbf2c0afae947d3e32382bb28f18cb33a6df2c81af6a4f6cb32eb840d05",
+      "SourceMapping.late.props": "b4bdd2c156d55dd24fa4d70c2e4d52edeb7ebd50aab0b878cee82e9e020ac972",
+      "catalog-versions.json": "5c3765c5c11207e58851cd6918ff204c5272d5ae779c5c1dd84dfdaac0ef74e9",
+      "SourceMapping.targets": "2003f8e38ea72f43549502cda1191d1272eea5a84bbebb534d84ee97c97618ff",
+      "SourceMapping.values.targets": "73c0f82a7841351660db73f349f317915fa5a52aac717ebcf519f2caf166b90e",
+      "__HXW_DefaultCatalog__.proj": "ab6116709b1eee0b0de224e449ab3574f4bae6d86dd92f5d05087f5b9c3e62d0",
+      "Hexalith.Folders.Aspire.proj": "ab6116709b1eee0b0de224e449ab3574f4bae6d86dd92f5d05087f5b9c3e62d0",
+      "SourceMapping.props": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82",
+      "pinned-tree/Props/Directory.Packages.props": "48b3abca2eb67bc09bde33f3f0203e10fbca810614d0582852be4ab54294dc9d"
+    },
+    "preservation": "Captured unchanged during failed official source launch and restored byte-for-byte at its generated absolute path for focused validation; full launcher HXR020 remains separate"
+  },
+  "asset": {
+    "url": "/_content/Hexalith.FrontComposer.Shell/js/fc-focus.js",
+    "selectedRoot": "references/Hexalith.FrontComposer",
+    "sourceMode": true,
+    "mappingMode": "source",
+    "bytesSha256": "2e543495e97f3942791fd8abc3084d44c6feb0aeb5f488d064768ae74b75c391",
+    "test": "PartiesUiHostCompositionTests.TestEnvironment_ServesSelectedFrontComposerScriptAsync",
+    "evidence": "recovery-source-ui-focused: 39 total, 0 failed, 0 skipped"
+  },
+  "qualification": "Actual selected source RCL bytes and JavaScript media type verified through the real Test host. This is not full topology/runtime or package publication qualification."
+}

@@ -285,6 +285,34 @@ internal sealed partial class PartyDomainProcessor(
         ErasureCertificate? certificate = await erasureRecordStore
             .GetCertificateAsync(command.TenantId, command.PartyId, cancellationToken)
             .ConfigureAwait(false);
+        if (command.RecoverKeyDestructionEvidence && (certificate is null
+            || certificate.TenantId != command.TenantId || certificate.PartyId != command.PartyId
+            || certificate.VerificationStatus != ErasureVerificationStatus.Verified
+            || certificate.KeyVersionsDestroyed is null || certificate.KeyVersionsDestroyed.Any(version => version <= 0)))
+        {
+            // Foreign records are not ambiguous evidence for this party and cannot authorize recovery.
+            if (certificate is not null && (certificate.TenantId != command.TenantId || certificate.PartyId != command.PartyId))
+            {
+                return RejectionFor(envelope.CommandType, "Certificate", "CertificateUnavailable");
+            }
+
+            DateTimeOffset recoveryStartedAt = DateTimeOffset.UtcNow;
+            ErasureCertificate? fresh = await erasureOrchestrator.ExecuteKeyDestructionAsync(
+                command.TenantId, command.PartyId, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (fresh is null || fresh.TenantId != command.TenantId || fresh.PartyId != command.PartyId
+                || fresh.VerificationStatus != ErasureVerificationStatus.Verified
+                || fresh.KeyVersionsDestroyed is null || fresh.KeyVersionsDestroyed.Any(version => version <= 0)
+                || fresh.Timestamp < recoveryStartedAt || fresh.Timestamp > DateTimeOffset.UtcNow)
+            {
+                return RejectionFor(envelope.CommandType, "Certificate", "CertificateUnavailable");
+            }
+
+            await erasureRecordStore.SaveCertificateAsync(fresh, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            certificate = fresh;
+        }
+
         if (certificate is null)
         {
             return RejectionFor(envelope.CommandType, "Certificate", "CertificateUnavailable");
