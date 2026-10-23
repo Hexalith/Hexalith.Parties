@@ -130,13 +130,19 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
         result.Status.ShouldBe(Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Healthy);
         result.Data["enabled"].ShouldBe(false);
         result.Data["cleanupRouteReachable"].ShouldBe(true);
+        result.Data["cleanupRouteStatus"].ShouldBe(204);
+        result.Data["ingestionStatusRouteReachable"].ShouldBe(true);
+        result.Data["ingestionStatusRouteStatus"].ShouldBe(404);
+        result.Data["ingestionStatusAuthorizationVerified"].ShouldBe(false);
         result.Data["mappingStoreReachable"].ShouldBe(true);
         factory.Services.GetService<MemoriesClient>().ShouldBeNull();
-        handler.RequestCount.ShouldBe(1);
-        handler.LastMethod.ShouldBe(HttpMethod.Delete);
-        handler.LastUri.ShouldNotBeNull().ToString().ShouldStartWith(
+        handler.Requests.Count.ShouldBe(2);
+        var cleanup = handler.Requests.Where(request => request.Method == HttpMethod.Delete).ShouldHaveSingleItem();
+        cleanup.Uri.ToString().ShouldStartWith(
             "https://memories.example/retained/api/v1/tenants/retained-tenant/cases/retained-case/memory-units/health-probe-");
-        handler.LastAuthorization.ShouldBe("Bearer synthetic-cleanup-token");
+        var statusRead = handler.Requests.Where(request => request.Method == HttpMethod.Get).ShouldHaveSingleItem();
+        statusRead.Uri.ToString().ShouldStartWith("https://memories.example/retained/api/v1/ingest/health-probe-");
+        handler.Requests.ShouldAllBe(request => request.Authorization == "Bearer synthetic-cleanup-token");
         factory.MappingState.KeyExists.ShouldBeFalse();
     }
 

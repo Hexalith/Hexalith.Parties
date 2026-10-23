@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Aspire composition helper for the Hexalith Parties domain service. The server is launched from root workspace source and is not a package dependency.</Description>
+    <!-- Keep platform transitive pins in the platform package, not this helper's direct API. -->
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+    <PackageTags>parties;dapr;aspire;eventsourcing;dotnet</PackageTags>
+    <!-- EventStore.Aspire uses the Aspire-aligned prerelease Dapr integration. -->
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="Hexalith.EventStore.Aspire" />
+    <InternalsVisibleTo Include="Hexalith.Parties.Aspire.Tests" />
+  </ItemGroup>
+</Project>

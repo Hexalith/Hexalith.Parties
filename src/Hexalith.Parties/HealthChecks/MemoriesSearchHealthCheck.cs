@@ -8,20 +8,10 @@ using Microsoft.Extensions.Options;
 namespace Hexalith.Parties.HealthChecks;
 
 /// <summary>
-/// Health check for Hexalith.Memories search integration. Distinguishes local Parties
-/// availability from Memories-backed rich search availability so /health can answer the
-/// AC6 question: "is rich search up, and can erasure cleanup actually run?"
-/// <para>
-/// AC6 requires deployment validation to check Memories endpoint configuration, tenant /
-/// case provisioning, auth, search health, <b>and cleanup capability</b>. The probes below
-/// cover all five — search reachability via <see cref="MemoriesClient.HybridSearchAsync"/>,
-/// cleanup-route reachability via <see cref="PartyMemoryCleanupService.ProbeCleanupRouteAsync"/>,
-/// and mapping-store reachability via a sentinel record/get/clear cycle. Operators inspecting
-/// <c>/health</c> see each probe's outcome in the result data, so a deployment that has the
-/// search endpoint up but a misconfigured DELETE route or unreachable Dapr state store cannot
-/// silently ship — the GDPR cleanup path AC5 depends on either works at deployment time, or
-/// the readiness signal flags it.
-/// </para>
+/// Health check for Memories search, cleanup routing, ingestion-status routing and SDK mapping storage.
+/// Synthetic probes report explicit authorization rejection but cannot verify access to an
+/// existing tenant-scoped workflow or qualify physical erasure. Operators must retain that
+/// separate capability evidence before deployment qualification.
 /// </summary>
 internal sealed class MemoriesSearchHealthCheck(
     IOptionsMonitor<PartyMemorySearchOptions> options,
@@ -68,12 +58,13 @@ internal sealed class MemoriesSearchHealthCheck(
             return HealthCheckResult.Unhealthy("MemoriesClient is not registered in DI even though Memories search is enabled.");
         }
 
-        // Run the three AC6 probes (search, cleanup route, mapping store) and aggregate results.
+        // Aggregate search, cleanup route, ingestion-status route and SDK mapping-store probes.
         // Each probe surfaces its own status in the result data so operators can pinpoint
         // exactly which capability is degraded — e.g., search reachable but cleanup route 405
         // means erasure cleanup will silently fail until the Memories server is fixed.
         SearchProbeOutcome searchOutcome = await ProbeSearchAsync(client, current, cancellationToken).ConfigureAwait(false);
         CleanupProbeOutcome cleanupOutcome = await ProbeCleanupAsync(current, cancellationToken).ConfigureAwait(false);
+        CleanupProbeOutcome statusOutcome = await ProbeIngestionStatusAsync(cancellationToken).ConfigureAwait(false);
         MappingStoreProbeOutcome mappingStoreOutcome = await ProbeMappingStoreAsync(cancellationToken).ConfigureAwait(false);
 
         Dictionary<string, object> data = new()
@@ -85,6 +76,9 @@ internal sealed class MemoriesSearchHealthCheck(
             ["searchReachable"] = searchOutcome.Reachable,
             ["cleanupRouteReachable"] = cleanupOutcome.Reachable,
             ["mappingStoreReachable"] = mappingStoreOutcome.Reachable,
+            ["ingestionStatusRouteReachable"] = statusOutcome.Reachable,
+            ["ingestionStatusAuthorizationVerified"] = false,
+            ["ingestionStatusAuthorizationEvidence"] = "Synthetic workflow misses cannot verify tenant-scoped status access; validate an existing owned workflow before deployment qualification.",
         };
 
         if (searchOutcome.Reachable)
@@ -108,11 +102,21 @@ internal sealed class MemoriesSearchHealthCheck(
             data["mappingStoreReason"] = mappingStoreOutcome.Reason;
         }
 
-        bool allReachable = searchOutcome.Reachable && cleanupOutcome.Reachable && mappingStoreOutcome.Reachable;
+        if (statusOutcome.StatusCode is { } statusReadCode)
+        {
+            data["ingestionStatusRouteStatus"] = statusReadCode;
+        }
+
+        if (statusOutcome.Reason is not null)
+        {
+            data["ingestionStatusRouteReason"] = statusOutcome.Reason;
+        }
+
+        bool allReachable = searchOutcome.Reachable && cleanupOutcome.Reachable && mappingStoreOutcome.Reachable && statusOutcome.Reachable;
         if (allReachable && !searchOutcome.DegradedReportedByMemories)
         {
             return HealthCheckResult.Healthy(
-                "Memories rich search, cleanup route, and mapping store are all reachable.",
+                "Memories rich search, cleanup and ingestion-status routes, and mapping store are all reachable.",
                 data);
         }
 
@@ -126,8 +130,12 @@ internal sealed class MemoriesSearchHealthCheck(
         // Degraded (not unhealthy) so /ready does not flap when Memories is briefly unreachable;
         // local fallback search remains operational. Search outage degrades reads only;
         // cleanup-route outage blocks AC5 GDPR cleanup; mapping-store outage prevents new
-        // indexings from recording mappings. Any of the three failing surfaces here as Degraded.
+        // indexings from recording mappings. A failed capability surfaces here as Degraded.
         string description = BuildDegradedDescription(searchOutcome, cleanupOutcome, mappingStoreOutcome);
+        if (!statusOutcome.Reachable)
+        {
+            description += $" Ingestion status-read unavailable ({statusOutcome.Reason}).";
+        }
         return HealthCheckResult.Degraded(description, searchOutcome.Exception, data);
     }
 
@@ -156,8 +164,14 @@ internal sealed class MemoriesSearchHealthCheck(
             : new CleanupProbeOutcome(false, null, configurationPresent
                 ? "Memories cleanup configuration is incomplete or invalid; remote cleanup was not verified."
                 : "Memories cleanup is not configured; remote cleanup was not verified.");
+        CleanupProbeOutcome statusRead = configured
+            ? await ProbeIngestionStatusAsync(cancellationToken).ConfigureAwait(false)
+            : new(false, null, "Memories ingestion status-read was not configured or verified.");
         Dictionary<string, object> data = new()
         {
+            ["ingestionStatusRouteReachable"] = statusRead.Reachable,
+            ["ingestionStatusAuthorizationVerified"] = false,
+            ["ingestionStatusRouteReason"] = statusRead.Reason ?? "Synthetic status miss; validate authorization using an existing owned workflow.",
             ["enabled"] = false,
             ["mode"] = "local-only",
             ["cleanupConfigured"] = configured,
@@ -165,6 +179,11 @@ internal sealed class MemoriesSearchHealthCheck(
             ["cleanupRouteReachable"] = cleanup.Reachable,
             ["mappingStoreReachable"] = mapping.Reachable,
         };
+        if (statusRead.StatusCode is { } statusReadCode)
+        {
+            data["ingestionStatusRouteStatus"] = statusReadCode;
+        }
+
         if (cleanup.StatusCode is { } statusCode)
         {
             data["cleanupRouteStatus"] = statusCode;
@@ -180,15 +199,16 @@ internal sealed class MemoriesSearchHealthCheck(
             data["mappingStoreReason"] = mapping.Reason;
         }
 
-        if (!mapping.Reachable || (configurationPresent && !cleanup.Reachable))
+        if (!mapping.Reachable || (configurationPresent && (!cleanup.Reachable || !statusRead.Reachable)))
         {
             return HealthCheckResult.Degraded(
-                BuildDegradedDescription(new SearchProbeOutcome(true, false, null, null), cleanup, mapping),
+                BuildDegradedDescription(new SearchProbeOutcome(true, false, null, null), cleanup, mapping)
+                    + (!statusRead.Reachable && configured ? $" Ingestion status-read unavailable ({statusRead.Reason})." : string.Empty),
                 data: data);
         }
 
         return HealthCheckResult.Healthy(configured
-            ? "Memories indexing is disabled; cleanup route and mapping store are reachable."
+            ? "Memories indexing is disabled; cleanup and ingestion-status routes and mapping store are reachable."
             : "Memories indexing is disabled; local search and mapping storage are available. Remote cleanup is not configured or verified.",
             data);
     }
@@ -234,6 +254,17 @@ internal sealed class MemoriesSearchHealthCheck(
             .ProbeCleanupRouteAsync(current.TenantId!, current.CaseId!, cancellationToken)
             .ConfigureAwait(false);
         return new CleanupProbeOutcome(probe.Reachable, probe.StatusCode, probe.Reason);
+    }
+
+    private async Task<CleanupProbeOutcome> ProbeIngestionStatusAsync(CancellationToken cancellationToken)
+    {
+        if (serviceProvider.GetService(typeof(PartyMemoryCleanupService)) is not PartyMemoryCleanupService cleanupService)
+        {
+            return new(false, null, "PartyMemoryCleanupService is not registered in DI.");
+        }
+
+        PartyMemoryCleanupProbeResult probe = await cleanupService.ProbeIngestionStatusRouteAsync(cancellationToken).ConfigureAwait(false);
+        return new(probe.Reachable, probe.StatusCode, probe.Reason);
     }
 
     private async Task<MappingStoreProbeOutcome> ProbeMappingStoreAsync(CancellationToken cancellationToken)

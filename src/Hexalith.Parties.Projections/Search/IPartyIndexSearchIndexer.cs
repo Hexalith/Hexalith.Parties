@@ -18,6 +18,17 @@ public interface IPartyIndexSearchIndexer
         DateTimeOffset timestamp,
         CancellationToken cancellationToken);
 
+    /// <summary>Notifies the indexer of the retained canonical application sequence.</summary>
+    /// <remarks>Existing indexers retain their original behavior through this default implementation.</remarks>
+    Task<bool> NotifyIndexedAsync(
+        string tenantId,
+        PartyIndexEntry entry,
+        string eventType,
+        DateTimeOffset timestamp,
+        long? sequenceNumber,
+        CancellationToken cancellationToken)
+        => NotifyIndexedAsync(tenantId, entry, eventType, timestamp, cancellationToken);
+
     /// <summary>Notifies the indexer that <paramref name="partyId"/> was removed from the index.</summary>
     Task<bool> NotifyRemovedAsync(
         string tenantId,

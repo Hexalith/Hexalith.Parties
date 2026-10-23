@@ -325,7 +325,7 @@ public sealed class PartySdkProjectionHandlerTests
         candidate = await handler.AccumulateAsync(identity, candidate, History("party", whole: 2), TestContext.Current.CancellationToken);
         DomainProjectionRebuildPlan plan = await CommitAsync(store, handler, identity, candidate);
         using CancellationTokenSource cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(_ =>
             {
                 if (outcome != "retry")
@@ -350,7 +350,7 @@ public sealed class PartySdkProjectionHandlerTests
         }
 
         logger.ReceivedCalls().ShouldBeEmpty();
-        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(true);
         handler = new PartyIndexSdkProjectionHandler(store, s_options, search, logger);
         (await handler.CompleteRebuildAsync(identity, candidate, plan.CompletionState, TestContext.Current.CancellationToken))
@@ -599,7 +599,7 @@ public sealed class PartySdkProjectionHandlerTests
         await store.SaveAsync("statestore", key, NullIndexDictionary(CreateIndex("private-obsolete"), dictionary), TestContext.Current.CancellationToken);
         string? etag = (await store.GetAsync<PartyIndexSdkReadModel>("statestore", key, TestContext.Current.CancellationToken)).ETag;
         IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
-        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(true);
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>()).Returns(true);
         search.NotifyRemovedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
         DomainSharedProjectionRebuildIdentity identity = CreateSharedRebuildIdentity();
@@ -618,7 +618,7 @@ public sealed class PartySdkProjectionHandlerTests
         persisted.LastSequenceNumbers["party-1"].ShouldBe(2);
         persisted.ErasureSequenceNumbers["party-1"].ShouldBe(2);
         (await handler.CompleteRebuildAsync(identity, candidate, plan.CompletionState, TestContext.Current.CancellationToken)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
-        await search.Received(1).NotifyIndexedAsync("tenant-a", Arg.Is<PartyIndexEntry>(entry => entry.Id == "party-2"), "PartyProjectionRebuilt", Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
+        await search.Received(1).NotifyIndexedAsync("tenant-a", Arg.Is<PartyIndexEntry>(entry => entry.Id == "party-2"), "PartyProjectionRebuilt", Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>());
         await search.DidNotReceive().NotifyRemovedAsync("tenant-a", "party-1", Arg.Any<CancellationToken>());
         await search.Received(dictionary == "Entries" ? 0 : 1).NotifyRemovedAsync("tenant-a", "private-obsolete", Arg.Any<CancellationToken>());
         (await handler.ProjectAsync(CreateRequest(), "delayed", TestContext.Current.CancellationToken)).Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
@@ -1119,6 +1119,7 @@ public sealed class PartySdkProjectionHandlerTests
                 Arg.Any<PartyIndexEntry>(),
                 Arg.Any<string>(),
                 Arg.Any<DateTimeOffset>(),
+                Arg.Any<long?>(),
                 Arg.Any<CancellationToken>())
             .Returns(true);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
@@ -1134,6 +1135,7 @@ public sealed class PartySdkProjectionHandlerTests
             Arg.Is<PartyIndexEntry>(entry => entry != null && entry.Id == "party-1"),
             "PartyDeactivated",
             DateTimeOffset.UnixEpoch.AddSeconds(1),
+            2L,
             Arg.Any<CancellationToken>());
     }
 
@@ -1154,7 +1156,7 @@ public sealed class PartySdkProjectionHandlerTests
 
         result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
         await searchIndexer.DidNotReceive().NotifyIndexedAsync(
-            Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
+            Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>());
         await searchIndexer.Received(1).NotifyRemovedAsync(
             "tenant-a",
             "party-1",
@@ -1195,6 +1197,7 @@ public sealed class PartySdkProjectionHandlerTests
                 Arg.Any<PartyIndexEntry>(),
                 Arg.Any<string>(),
                 Arg.Any<DateTimeOffset>(),
+                Arg.Any<long?>(),
                 Arg.Any<CancellationToken>())
             .Returns<Task<bool>>(_ => throw new InvalidOperationException("memories down"));
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
@@ -1215,7 +1218,7 @@ public sealed class PartySdkProjectionHandlerTests
         string indexKey = PartySdkReadModelAddresses.Index("tenant-a");
         IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
         searchIndexer.NotifyIndexedAsync(
-                Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(false, true);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
         ProjectionRequest request = CreateRequest() with
@@ -1247,6 +1250,7 @@ public sealed class PartySdkProjectionHandlerTests
             Arg.Is<PartyIndexEntry>(entry => entry != null && entry.Id == "party-1"),
             "PartyDeactivated",
             DateTimeOffset.UnixEpoch.AddSeconds(1),
+            2L,
             Arg.Any<CancellationToken>());
     }
 
@@ -1311,7 +1315,7 @@ public sealed class PartySdkProjectionHandlerTests
         };
         IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
         search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
-            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(false, true);
+            Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>()).Returns(false, true);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
 
         (await handler.ProjectAsync(request, "first", TestContext.Current.CancellationToken))
@@ -1338,7 +1342,7 @@ public sealed class PartySdkProjectionHandlerTests
             .ETag.ShouldBe(persisted.ETag);
         await search.Received(2).NotifyIndexedAsync("tenant-a",
             Arg.Is<PartyIndexEntry>(entry => entry.Id == request.AggregateId && !entry.IsActive),
-            expectedType, expectedTimestamp, Arg.Any<CancellationToken>());
+            expectedType, expectedTimestamp, Arg.Any<long?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -1356,7 +1360,7 @@ public sealed class PartySdkProjectionHandlerTests
 
         IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
         search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
-            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(false, true);
+            Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>()).Returns(false, true);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
         ProjectionRequest checkpointOnly = original with
         {
@@ -1384,6 +1388,7 @@ public sealed class PartySdkProjectionHandlerTests
             .ETag.ShouldBe(persisted.ETag);
         await search.Received(2).NotifyIndexedAsync("tenant-a",
             Arg.Is<PartyIndexEntry>(entry => entry.IsActive), nameof(PartyReactivated), reactivation.Timestamp,
+            Arg.Any<long?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -1409,7 +1414,7 @@ public sealed class PartySdkProjectionHandlerTests
         before.Value.LastIndexedEvents.ShouldBeEmpty();
         IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
         search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
-            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(false, true);
+            Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>()).Returns(false, true);
 
         for (int attempt = 0; attempt < 2; attempt++)
         {
@@ -1423,7 +1428,7 @@ public sealed class PartySdkProjectionHandlerTests
         after.ETag.ShouldBe(before.ETag);
         after.Value!.LastIndexedEvents.ShouldBeEmpty();
         await search.Received(2).NotifyIndexedAsync("tenant-a", Arg.Any<PartyIndexEntry>(),
-            "PartyProjectionReconciled", legacy.Entries[request.AggregateId].LastModifiedAt, Arg.Any<CancellationToken>());
+            "PartyProjectionReconciled", legacy.Entries[request.AggregateId].LastModifiedAt, Arg.Any<long?>(), Arg.Any<CancellationToken>());
 
         var checkpointHandler = new PartyIndexSdkProjectionHandler(store, s_options, search);
         ProjectionRequest checkpointOnly = request with
@@ -1436,7 +1441,7 @@ public sealed class PartySdkProjectionHandlerTests
         checkpointed.LastSequenceNumbers[request.AggregateId].ShouldBe(3);
         checkpointed.LastIndexedEvents.ShouldBeEmpty();
         await search.Received(3).NotifyIndexedAsync("tenant-a", Arg.Any<PartyIndexEntry>(),
-            "PartyProjectionReconciled", legacy.Entries[request.AggregateId].LastModifiedAt, Arg.Any<CancellationToken>());
+            "PartyProjectionReconciled", legacy.Entries[request.AggregateId].LastModifiedAt, Arg.Any<long?>(), Arg.Any<CancellationToken>());
 
         ProjectionEventDto canonicalEvent = Event(new PartyReactivated(), 4, DateTimeOffset.UnixEpoch.AddSeconds(3));
         var mutationHandler = new PartyIndexSdkProjectionHandler(store, s_options, search);
@@ -1454,6 +1459,7 @@ public sealed class PartySdkProjectionHandlerTests
             .ETag.ShouldBe(installed.ETag);
         await search.Received(2).NotifyIndexedAsync("tenant-a",
             Arg.Is<PartyIndexEntry>(entry => entry.IsActive), nameof(PartyReactivated), canonicalEvent.Timestamp,
+            Arg.Any<long?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -1469,7 +1475,7 @@ public sealed class PartySdkProjectionHandlerTests
         _ = await seedHandler.ProjectAsync(request, "seed", TestContext.Current.CancellationToken);
         IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
         search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
-            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(false, true);
+            Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>()).Returns(false, true);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
         ProjectionRequest checkpointOnly = request with
         {
@@ -1492,7 +1498,7 @@ public sealed class PartySdkProjectionHandlerTests
         (await store.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, TestContext.Current.CancellationToken))
             .ETag.ShouldBe(persisted.ETag);
         await search.Received(2).NotifyIndexedAsync("tenant-a", Arg.Any<PartyIndexEntry>(),
-            nameof(PartyDeactivated), request.Events[1].Timestamp, Arg.Any<CancellationToken>());
+            nameof(PartyDeactivated), request.Events[1].Timestamp, 2L, Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -1567,7 +1573,7 @@ public sealed class PartySdkProjectionHandlerTests
 
         IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
         search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
-            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(true);
+            Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>()).Returns(true);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
         (await handler.ProjectAsync(request, "retry", TestContext.Current.CancellationToken))
             .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
@@ -1576,7 +1582,7 @@ public sealed class PartySdkProjectionHandlerTests
         string expectedTimestamp = historical ? timestamp.ToUniversalTime().ToString("O") : timestamp.ToString("O");
         await search.Received(1).NotifyIndexedAsync("tenant-a", Arg.Any<PartyIndexEntry>(),
             historical ? "PartyProjectionReconciled" : typeof(PartyDeactivated).FullName!,
-            Arg.Is<DateTimeOffset>(value => value.ToString("O") == expectedTimestamp), Arg.Any<CancellationToken>());
+            Arg.Is<DateTimeOffset>(value => value.ToString("O") == expectedTimestamp), Arg.Any<long?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -1595,7 +1601,7 @@ public sealed class PartySdkProjectionHandlerTests
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
         search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
-            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(_ =>
+            Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>()).Returns(_ =>
             {
                 cancellation.Cancel();
                 return Task.FromCanceled<bool>(cancellation.Token);
@@ -1729,7 +1735,7 @@ public sealed class PartySdkProjectionHandlerTests
             });
         IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
         search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
-            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(true);
+            Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>()).Returns(true);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
 
         (await handler.ProjectAsync(request, "contended", TestContext.Current.CancellationToken))
@@ -1746,7 +1752,7 @@ public sealed class PartySdkProjectionHandlerTests
         persisted.Entries[request.AggregateId].IsActive.ShouldBeTrue();
         await search.Received(1).NotifyIndexedAsync("tenant-a",
             Arg.Is<PartyIndexEntry>(entry => entry.Id == request.AggregateId && entry.IsActive),
-            nameof(PartyReactivated), newer.Events[2].Timestamp, Arg.Any<CancellationToken>());
+            nameof(PartyReactivated), newer.Events[2].Timestamp, Arg.Any<long?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -1801,7 +1807,7 @@ public sealed class PartySdkProjectionHandlerTests
         after.LastIndexedEvents.ShouldBe(erased.LastIndexedEvents);
         after.ErasureSequenceNumbers.ShouldBe(erased.ErasureSequenceNumbers);
         await search.Received(3).NotifyRemovedAsync(request.TenantId, request.AggregateId, Arg.Any<CancellationToken>());
-        await search.DidNotReceiveWithAnyArgs().NotifyIndexedAsync(default!, default!, default!, default, default);
+        await search.DidNotReceiveWithAnyArgs().NotifyIndexedAsync(default!, default!, default!, default, Arg.Any<long?>(), default);
     }
 
     [Fact]
@@ -2680,7 +2686,7 @@ public sealed class PartySdkProjectionHandlerTests
         var rebuiltStore = new InMemoryReadModelBatchStore();
         IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
         search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
-            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>()).Returns(true);
+            Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>()).Returns(true);
         var rebuildHandler = new PartyIndexSdkProjectionHandler(rebuiltStore, s_options, search);
         DomainSharedProjectionRebuildIdentity identity = CreateSharedRebuildIdentity();
         DomainSharedProjectionRebuildCandidate candidate = await rebuildHandler.CreateEmptyCandidateAsync(
@@ -2709,10 +2715,10 @@ public sealed class PartySdkProjectionHandlerTests
             .Status.ShouldBe(ProjectionDispatchStatus.Completed);
         await search.Received(1).NotifyIndexedAsync(identity.TenantId,
             Arg.Is<PartyIndexEntry>(entry => entry.Id == first.AggregateId), "PartyProjectionRebuilt",
-            first.Events[1].Timestamp, Arg.Any<CancellationToken>());
+            first.Events[1].Timestamp, Arg.Any<long?>(), Arg.Any<CancellationToken>());
         await search.Received(1).NotifyIndexedAsync(identity.TenantId,
             Arg.Is<PartyIndexEntry>(entry => entry.Id == second.AggregateId), "PartyProjectionRebuilt",
-            second.Events[0].Timestamp, Arg.Any<CancellationToken>());
+            second.Events[0].Timestamp, Arg.Any<long?>(), Arg.Any<CancellationToken>());
 
         var retryHandler = new PartyIndexSdkProjectionHandler(rebuiltStore, s_options, search);
         ReadModelEntry<PartyIndexSdkReadModel> before = await rebuiltStore.GetAsync<PartyIndexSdkReadModel>(
@@ -2723,7 +2729,7 @@ public sealed class PartySdkProjectionHandlerTests
             .ETag.ShouldBe(before.ETag);
         await search.Received(1).NotifyIndexedAsync(identity.TenantId,
             Arg.Is<PartyIndexEntry>(entry => entry.Id == first.AggregateId), nameof(PartyCreated),
-            first.Events[4].Timestamp, Arg.Any<CancellationToken>());
+            first.Events[4].Timestamp, Arg.Any<long?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -2771,7 +2777,7 @@ public sealed class PartySdkProjectionHandlerTests
             TestContext.Current.CancellationToken);
 
         plan.Operations.ShouldHaveSingleItem();
-        await searchIndexer.DidNotReceiveWithAnyArgs().NotifyIndexedAsync(default!, default!, default!, default, default);
+        await searchIndexer.DidNotReceiveWithAnyArgs().NotifyIndexedAsync(default!, default!, default!, default, Arg.Any<long?>(), default);
         await searchIndexer.DidNotReceiveWithAnyArgs().NotifyRemovedAsync(default!, default!, default);
     }
 
@@ -2788,7 +2794,7 @@ public sealed class PartySdkProjectionHandlerTests
                 new ReadModelEntry<PartyIndexSdkReadModel>(PartyIndexSdkProjectionHandler.Fold(CreateRequest(), current: null), "etag-2"));
         IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
         searchIndexer.NotifyIndexedAsync(
-                Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(true);
         searchIndexer.NotifyRemovedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(true);
@@ -2813,6 +2819,7 @@ public sealed class PartySdkProjectionHandlerTests
             Arg.Is<PartyIndexEntry>(entry => entry != null && entry.Id == "party-1"),
             "PartyProjectionRebuilt",
             DateTimeOffset.UnixEpoch.AddSeconds(1),
+            Arg.Any<long?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -2830,7 +2837,7 @@ public sealed class PartySdkProjectionHandlerTests
                 new ReadModelEntry<PartyIndexSdkReadModel>(CreateIndex("stale-party"), "etag-2"));
         IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
         searchIndexer.NotifyIndexedAsync(
-                Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(true);
         searchIndexer.NotifyRemovedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(true);
@@ -2851,7 +2858,7 @@ public sealed class PartySdkProjectionHandlerTests
         result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
         await searchIndexer.DidNotReceive().NotifyRemovedAsync("tenant-a", "stale-party", Arg.Any<CancellationToken>());
         await searchIndexer.Received(1).NotifyIndexedAsync("tenant-a", Arg.Is<PartyIndexEntry>(entry => entry.Id == "stale-party"),
-            "PartyProjectionRebuilt", Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
+            "PartyProjectionRebuilt", Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -2878,7 +2885,7 @@ public sealed class PartySdkProjectionHandlerTests
                 new ReadModelEntry<PartyIndexSdkReadModel>(latest, "etag-live"));
         IPartyIndexSearchIndexer searchIndexer = Substitute.For<IPartyIndexSearchIndexer>();
         searchIndexer.NotifyIndexedAsync(
-                Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(true);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, searchIndexer);
         DomainSharedProjectionRebuildIdentity identity = CreateSharedRebuildIdentity();
@@ -2900,6 +2907,7 @@ public sealed class PartySdkProjectionHandlerTests
             Arg.Is<PartyIndexEntry>(entry => entry != null && entry.DisplayName == "Updated after rebuild commit"),
             "PartyProjectionRebuilt",
             DateTimeOffset.UnixEpoch.AddHours(2),
+            Arg.Any<long?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -2928,7 +2936,7 @@ public sealed class PartySdkProjectionHandlerTests
             TestContext.Current.CancellationToken);
 
         result.Status.ShouldBe(ProjectionDispatchStatus.Completed);
-        await searchIndexer.DidNotReceiveWithAnyArgs().NotifyIndexedAsync(default!, default!, default!, default, default);
+        await searchIndexer.DidNotReceiveWithAnyArgs().NotifyIndexedAsync(default!, default!, default!, default, Arg.Any<long?>(), default);
     }
 
     [Fact]

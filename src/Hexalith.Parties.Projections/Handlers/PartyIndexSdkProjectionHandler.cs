@@ -214,6 +214,7 @@ public sealed partial class PartyIndexSdkProjectionHandler(
                     entry,
                     rebuilding ? RebuildEventType : source?.EventTypeName ?? ReconciledEventType,
                     rebuilding ? entry.LastModifiedAt : source?.Timestamp ?? entry.LastModifiedAt,
+                    source?.SequenceNumber,
                     cancellationToken)
                 .ConfigureAwait(false);
 

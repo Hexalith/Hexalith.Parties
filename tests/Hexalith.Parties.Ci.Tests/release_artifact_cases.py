@@ -88,6 +88,8 @@ def run(repository, scenario):
             fields += f"<id>{package_id}</id>"
         dependency_values = [("Hexalith.EventStore.Contracts", event_store_version),
                              ("Hexalith.Commons.Http", commons_version), ("Hexalith.Commons.UniqueIds", commons_version)]
+        if package_id == "Hexalith.Parties.Aspire":
+            dependency_values = [("Aspire.Hosting", "13.6.1"), ("Hexalith.EventStore.Aspire", event_store_version)]
         if affected and scenario == "forbidden-dependency":
             dependency_values.append(("Hexalith.Parties", "1.2.3"))
         if affected and scenario == "no-dependencies":
@@ -263,7 +265,7 @@ def run(repository, scenario):
         assert (result.returncode == 0) == expected, (scenario, result.stdout, result.stderr, receipt)
         assert receipt["result"] == ("pass" if expected else "fail")
         if expected:
-            assert len(receipt["packages"]) == 9 and len(receipt["images"]) == 3
+            assert len(receipt["packages"]) == len(package_ids) and len(receipt["images"]) == 3
             for package in receipt["packages"]:
                 downloaded = (evidence / package["file"]).read_bytes()
                 assert package["sha256"] == hashlib.sha256(downloaded).hexdigest()

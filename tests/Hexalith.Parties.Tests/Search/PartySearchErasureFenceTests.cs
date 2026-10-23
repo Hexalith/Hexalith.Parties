@@ -103,7 +103,7 @@ public sealed class PartySearchErasureFenceTests
         (await pending.ConfigureAwait(true)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
         remote.ContainsKey(("tenant-a", "party-1")).ShouldBeFalse();
         await search.DidNotReceive().NotifyIndexedAsync("tenant-a", Arg.Is<PartyIndexEntry>(e => e.Id == "party-1"),
-            Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
+            Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>());
         await AssertTombstoneAsync(store);
     }
 
@@ -126,7 +126,7 @@ public sealed class PartySearchErasureFenceTests
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         bool rejectCleanup = false;
-        search.NotifyIndexedAsync("tenant-a", Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+        search.NotifyIndexedAsync("tenant-a", Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(async call =>
             {
                 entered.TrySetResult();
@@ -181,7 +181,7 @@ public sealed class PartySearchErasureFenceTests
         result.Status.ShouldBe(rebuild || !cleanupFails ? ProjectionDispatchStatus.Completed : ProjectionDispatchStatus.AlreadyCompleted);
         remote.ContainsKey(("tenant-a", "party-1")).ShouldBeFalse();
         await search.Received(1).NotifyIndexedAsync("tenant-a", Arg.Any<PartyIndexEntry>(), Arg.Any<string>(),
-            Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>());
+            Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>());
         await AssertTombstoneAsync(store);
     }
 
@@ -193,7 +193,7 @@ public sealed class PartySearchErasureFenceTests
         var reads = new PartySdkFaultingReadModelStore(store);
         var remote = new ConcurrentDictionary<(string Tenant, string Party), PartyIndexEntry>();
         IPartyIndexSearchIndexer search = Search(remote);
-        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
                 remote[(call.ArgAt<string>(0), call.Arg<PartyIndexEntry>().Id)] = call.Arg<PartyIndexEntry>();
@@ -215,7 +215,7 @@ public sealed class PartySearchErasureFenceTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task RealAdapterCleansMappingPersistedAfterIndependentErasureAsync(bool rebuild)
+    public async Task RealAdapterCleansAcceptedProducerWithoutPublishingAfterIndependentErasureAsync(bool rebuild)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         deadline.CancelAfter(TimeSpan.FromSeconds(15));
@@ -225,6 +225,7 @@ public sealed class PartySearchErasureFenceTests
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var remote = new Dictionary<string, string>(StringComparer.Ordinal);
         var mappingStore = new PartySearchErasureMappingStore();
+        IPartyMemoryIngestionIntentStore intentStore = PartyMemoryTestServices.CreateIntentStore();
         using var httpHandler = new PartySearchErasureHttpHandler(async (request, requestToken) =>
         {
             if (request.Method == HttpMethod.Post)
@@ -238,6 +239,19 @@ public sealed class PartySearchErasureFenceTests
                 await release.Task.WaitAsync(requestToken).ConfigureAwait(false);
                 remote["unit-1"] = content;
                 return new HttpResponseMessage(HttpStatusCode.Accepted) { Content = JsonContent.Create(new { instanceId = "unit-1" }) };
+            }
+
+            if (request.RequestUri!.AbsolutePath.Contains("/ingest/", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                { Content = JsonContent.Create(PartyMemoryRecoveryHandler.Completed("unit-1", "unit-1", "tenant-a", "case-a")) };
+            }
+
+            if (request.Method == HttpMethod.Get)
+            {
+                remote.ShouldBeEmpty();
+                return new HttpResponseMessage(HttpStatusCode.NotFound)
+                { Content = JsonContent.Create(new { code = "MEMORY_UNIT_NOT_FOUND" }) };
             }
 
             request.Method.ShouldBe(HttpMethod.Delete);
@@ -254,8 +268,8 @@ public sealed class PartySearchErasureFenceTests
         using var options = new OptionsMonitor<PartyMemorySearchOptions>(new OptionsFactory<PartyMemorySearchOptions>([], []), [], cache);
         PartyMemoryIndexEntrySearchIndexer Adapter() => new(
             new PartyMemoryIndexingService(new MemoriesClient(http, Options.Create(new MemoriesClientOptions()), NullLogger<MemoriesClient>.Instance),
-                mappingStore, options, NullLogger<PartyMemoryIndexingService>.Instance),
-            new PartyMemoryCleanupService(http, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance),
+                mappingStore, options, NullLogger<PartyMemoryIndexingService>.Instance, intentStore),
+            new PartyMemoryCleanupService(http, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance, intentStore),
             options, NullLogger<PartyMemoryIndexEntrySearchIndexer>.Instance);
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, Adapter());
         var identity = Identity();
@@ -282,8 +296,10 @@ public sealed class PartySearchErasureFenceTests
         (await pending.ConfigureAwait(true)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
         remote.ShouldBeEmpty();
         (await mappingStore.GetMappingsAsync("tenant-a", "party-1", token)).ShouldBeEmpty();
-        mappingStore.RecordCount.ShouldBe(1);
-        mappingStore.RemovalCount.ShouldBe(1);
+        // Admission closed during the awaited acceptance; canonical provenance in the
+        // durable intent allows cleanup without publishing a stale mapping.
+        mappingStore.RecordCount.ShouldBe(0);
+        mappingStore.RemovalCount.ShouldBe(0);
         await AssertTombstoneAsync(store);
     }
 
@@ -329,7 +345,7 @@ public sealed class PartySearchErasureFenceTests
         var handler = new PartyIndexSdkProjectionHandler(store, s_options, search);
         await handler.ProjectAsync(Request("tenant-b"), "seed-b", TestContext.Current.CancellationToken);
         await handler.ProjectAsync(Request(party: "party-2"), "seed-a", TestContext.Current.CancellationToken);
-        search.NotifyIndexedAsync("tenant-a", Arg.Is<PartyIndexEntry>(e => e.Id == "party-1"), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+        search.NotifyIndexedAsync("tenant-a", Arg.Is<PartyIndexEntry>(e => e.Id == "party-1"), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(async call =>
             {
                 PartyIndexEntry entry = call.Arg<PartyIndexEntry>();
@@ -391,7 +407,7 @@ public sealed class PartySearchErasureFenceTests
         var store = new InMemoryReadModelStore();
         var remote = new ConcurrentDictionary<(string Tenant, string Party), PartyIndexEntry>();
         IPartyIndexSearchIndexer search = Search(remote);
-        search.NotifyIndexedAsync("tenant-a", Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+        search.NotifyIndexedAsync("tenant-a", Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(async call =>
             {
                 remote[("tenant-a", call.Arg<PartyIndexEntry>().Id)] = call.Arg<PartyIndexEntry>();
@@ -512,7 +528,7 @@ public sealed class PartySearchErasureFenceTests
         var identity = Identity();
         DomainSharedProjectionRebuildCandidate candidate = await CandidateAsync(handler, identity);
         DomainProjectionRebuildPlan? plan = rebuild ? await CommitAsync(store, handler, identity, candidate) : null;
-        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(async call =>
             {
                 remote[("tenant-a", "party-1")] = call.Arg<PartyIndexEntry>();
@@ -555,7 +571,7 @@ public sealed class PartySearchErasureFenceTests
         var store = new InMemoryReadModelStore();
         IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(_ =>
             {
                 cancellation.Cancel();
@@ -571,7 +587,7 @@ public sealed class PartySearchErasureFenceTests
     private static IPartyIndexSearchIndexer Search(ConcurrentDictionary<(string Tenant, string Party), PartyIndexEntry> remote)
     {
         IPartyIndexSearchIndexer search = Substitute.For<IPartyIndexSearchIndexer>();
-        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
+        search.NotifyIndexedAsync(Arg.Any<string>(), Arg.Any<PartyIndexEntry>(), Arg.Any<string>(), Arg.Any<DateTimeOffset>(), Arg.Any<long?>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
                 remote[(call.ArgAt<string>(0), call.Arg<PartyIndexEntry>().Id)] = call.Arg<PartyIndexEntry>();

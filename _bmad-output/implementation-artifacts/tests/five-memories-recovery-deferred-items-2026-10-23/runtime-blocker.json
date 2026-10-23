@@ -1,0 +1,60 @@
+{
+  "status": "blocked",
+  "qualified": false,
+  "ledgerEntry": "DW-168",
+  "selectedMemories": "2.27.1",
+  "eventStore": "3.126.1",
+  "moduleTool": "4.34.0",
+  "runId": "7403cc31a8f59aa0b89696197996bfd5",
+  "command": [
+    "dotnet",
+    "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+    "-class",
+    "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests",
+    "-result-xml",
+    "<private-runtime-results.xml>"
+  ],
+  "environment": {
+    "PARTIES_MEMORIES_RUNTIME_CONFIG": "<private-json-file>"
+  },
+  "result": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "elapsedSeconds": 60.904
+  },
+  "observation": [
+    "20 owned resources reported healthy before execution.",
+    "Tenant provisioning POST was accepted; workflow remained RUNNING and registry read remained absent. No ingestion/deletion qualification phase was reached.",
+    "Registry initialization awaits EventStore command acceptance.",
+    "Memories reads EventStoreIntegration:CommandGateway:BaseAddress; the platform injects EventStore:CommandGateway:BaseAddress. Correcting the URI alone is insufficient.",
+    "Producer gateway registration configures only BaseAddress; it does not install Dapr/authenticated workload transport handlers.",
+    "Default plain sidecar request returns HTTP 401. Dapr token alone reaches HTTP 403 ACL denial. Plain request to actual direct gateway returns HTTP 401.",
+    "No supported producer authentication setting was found; no command-store substitution or authentication bypass was used."
+  ],
+  "testOverlay": {
+    "privateCanonicalCloneOnly": true,
+    "setting": "Memories:Testing:UseFakeEmbedding=true",
+    "restored": true,
+    "productionSourceOrGitlinksChanged": false,
+    "embeddingProviderExercised": false
+  },
+  "cleanup": {
+    "exactRunDownExitCode": 0,
+    "privateProducerConfigurationClean": true
+  },
+  "limitations": [
+    "The attempted fixture waits for terminal ingestion before cleanup and does not force delayed ingestion/deletion. Additional selected-producer overlap/delay proof is required.",
+    "No terminal physical erasure, authoritative complete inventory, production migration or deployment is claimed."
+  ],
+  "privateEvidenceHashes": {
+    "runtime-debug.xml": "a42ed7d465e3b7098e77e63ddb4553e25dda4a65bd82fab05f1d94173c7c97ad",
+    "producer-default-no-routing-handler-private.json": "d9c83249f799579d9d72218d93fa838a311f38f525337b5452a911a7282a7d9e",
+    "dapr-token-only-private.json": "ffd8ca5d32a5757ec446ae7c87c82ab393921c1cd5d8cfdfc6b9cb233d56f725",
+    "gateway-direct-no-credentials-private.txt": "ea8a417281bc44123471994d03426822a966d3c94934389d4c23418963deeb89",
+    "workflow-probe-private.json": "489f5b0f1c91db35df9f7ac5d962f83290691b39650d1a15839ee60ce746936c",
+    "runtime-test-overlay.json": "5764951d3eca9574f8bda0ce08e1b3102d438b9a18f0dc727002d770584644da",
+    "persistent-down.stdout": "a5c3c1b003c4bbe7f90268d5f69526ef88e06580933381048e1737c8310d0986"
+  }
+}

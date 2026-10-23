@@ -35,6 +35,10 @@
     {
       "id": "Hexalith.Parties.Testing",
       "project": "src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj"
+    },
+    {
+      "id": "Hexalith.Parties.Aspire",
+      "project": "src/Hexalith.Parties.Aspire/Hexalith.Parties.Aspire.csproj"
     }
   ]
 }

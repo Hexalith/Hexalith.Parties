@@ -4,6 +4,18 @@ Hexalith.Parties is a ready-to-deploy party management domain service for people
 
 > **GDPR Notice:** Some GDPR infrastructure exists, and crypto-shredding is enabled by default, but the default key store is `LocalDevKeyStorageBackend` (in-memory, dev-only). **Do not store regulated EU personal data** until a production KMS or secret-store-backed key provider is provisioned. The MVP warning switch is separate from the crypto feature; see [deployment-guide.md](docs/deployment-guide.md) for the current runtime ownership boundary.
 
+## Consuming the Parties Aspire helper
+
+`Hexalith.Parties.Aspire` adds the separately built Parties server to a consuming
+AppHost with `AddHexalithPartiesServer(eventStore, daprConfigPath)`. It delegates
+state-store, pub/sub, health and sidecar wiring to `Hexalith.EventStore.Aspire`;
+the package does not depend on the Parties server. The consumer supplies
+Gateway routing, JWT validation and the app-channel token through platform helpers.
+Source is resolved only in the owning repository or its direct
+`references/Hexalith.Parties` checkout, and must be built before launch.
+The helper is included in the normal protected release; adding source does not
+mean a version is published or approved for downstream enrollment.
+
 ## Key Features
 
 - **EventStore gateway** -- Public command/query ingress uses `POST /api/v1/commands` and `POST /api/v1/queries` with `Domain="party"`.
@@ -94,8 +106,8 @@ See the [Getting Started Guide](docs/getting-started.md) for the full EventStore
 
 ## Project Structure
 
-The repository contains exactly **13 projects under `src` plus one sample
-project**, **15 runnable .NET test projects plus one support host**
+The repository contains exactly **14 projects under `src` plus one sample
+project**, **16 runnable .NET test projects plus one support host**
 (`Hexalith.Parties.EventStoreGateway.TestHost`), with Playwright e2e coverage
 alongside them. Adopter-facing packages (left column) are the only modules
 consumers normally reference directly. Modules under
@@ -106,6 +118,7 @@ dependencies — do not reference them from consumer applications.
 Hexalith.Parties/
   src/
     Hexalith.Parties.AppHost/        # Aspire orchestration (entry point, dev-only)
+    Hexalith.Parties.Aspire/         # platform composition helper; no server package dependency
     # Adopter-facing
     Hexalith.Parties.Client/         # Typed EventStore gateway client (IPartiesCommandClient / IPartiesQueryClient)
     Hexalith.Parties.Contracts/      # Shared DTOs, commands, events, value objects

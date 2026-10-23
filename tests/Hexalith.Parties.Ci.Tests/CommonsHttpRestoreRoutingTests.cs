@@ -467,6 +467,9 @@ with tempfile.TemporaryDirectory() as temporary_root:
             )
         if package_id in validator.REQUIRED_COMMONS_HTTP_DEPENDENCY_PACKAGES:
             dependencies.append(validator.DependencyMetadata("Hexalith.Commons.Http", commons_version))
+        if package_id == "Hexalith.Parties.Aspire":
+            dependencies = [validator.DependencyMetadata("Aspire.Hosting", "13.6.1"),
+                            validator.DependencyMetadata("Hexalith.EventStore.Aspire", contracts_version)]
         return validator.PackageMetadata(
             package_id,
             "1.2.3",
@@ -1252,6 +1255,53 @@ with tempfile.TemporaryDirectory() as temporary_root:
             standardOutput.ShouldContain($"{packageId}|wrong-family-id|rejected");
             standardOutput.ShouldContain($"{packageId}|duplicate-family-package|rejected");
         }
+    }
+
+    /// <summary>Validates the helper platform dependency and rejects implementation packages.</summary>
+    [Fact]
+    public void AspireHelperRequiresPlatformAndRejectsEveryImplementationDependency()
+    {
+        const string probe = """
+import dataclasses
+import importlib.util
+import sys
+from pathlib import Path
+scripts = Path(sys.argv[1])
+sys.path.insert(0, str(scripts))
+spec = importlib.util.spec_from_file_location("aspire_validator_probe", scripts / "validate-nuget-packages.py")
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+path = Path("Hexalith.Parties.Aspire.1.6.0.nupkg")
+dependencies = frozenset([module.DependencyMetadata("Aspire.Hosting", "13.6.1"),
+                          module.DependencyMetadata("Hexalith.EventStore.Aspire", "3.126.1")])
+metadata = module.PackageMetadata("Hexalith.Parties.Aspire", "1.6.0", "README.md", True, dependencies)
+module.validate_dependency_boundaries(path, metadata)
+module.validate_event_store_dependency_versions(path, metadata, "3.126.1")
+for package_id in ["Hexalith.Parties", "Hexalith.Parties.Client", "Hexalith.Parties.Projections",
+                   "Hexalith.EventStore.Server", "Hexalith.EventStore.Client", "Unexpected.Package"]:
+    invalid = dataclasses.replace(metadata, dependencies=dependencies | {module.DependencyMetadata(package_id, "1.0.0")})
+    try:
+        module.validate_dependency_boundaries(path, invalid)
+    except ValueError as error:
+        if package_id not in str(error):
+            raise
+    else:
+        raise SystemExit(f"Helper admitted forbidden dependency {package_id}")
+for replacement in [frozenset(), frozenset([module.DependencyMetadata("Hexalith.EventStore.Contracts", "3.126.1")]),
+                    frozenset([module.DependencyMetadata("Hexalith.EventStore.Aspire", "0.0.1")])]:
+    try:
+        module.validate_event_store_dependency_versions(path, dataclasses.replace(metadata, dependencies=replacement), "3.126.1")
+    except ValueError as error:
+        if "Hexalith.EventStore.Aspire" not in str(error):
+            raise
+    else:
+        raise SystemExit("Helper admitted a missing or mismatched platform dependency")
+print("aspire-boundary|verified")
+""";
+        (int exitCode, string output, string error) = RunPython("-c", probe, CiTestPaths.RepoFile("scripts"));
+        exitCode.ShouldBe(0, error);
+        output.ShouldContain("aspire-boundary|verified");
     }
 
     [Fact]

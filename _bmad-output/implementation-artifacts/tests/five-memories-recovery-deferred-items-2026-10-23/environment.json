@@ -1,0 +1,66 @@
+{
+  "baselineCommit": "6c83309d08a10f36a0da866521b9d0da6f8fc998",
+  "owningRepository": "Hexalith.Parties",
+  "sourceValidation": "isolated canonical checkout containing only batch-owned changes",
+  "sdk": {
+    "version": "10.0.402",
+    "rollForward": "latestPatch"
+  },
+  "moduleTool": "4.34.0",
+  "packages": {},
+  "rootGitlinks": [
+    {
+      "path": "references/Hexalith.EventStore",
+      "baselineGitlink": "1748b16b11fb63b885dfa2fd4a9c7a420ea103a9",
+      "currentHead": "1748b16b11fb63b885dfa2fd4a9c7a420ea103a9"
+    },
+    {
+      "path": "references/Hexalith.Memories",
+      "baselineGitlink": "0af009c20c97038b685f3d4b62c0c8e757982d14",
+      "currentHead": "0af009c20c97038b685f3d4b62c0c8e757982d14"
+    },
+    {
+      "path": "references/Hexalith.FrontComposer",
+      "baselineGitlink": "a258b992d08e73e2d3251c865ef01a982eba31ac",
+      "currentHead": "a258b992d08e73e2d3251c865ef01a982eba31ac"
+    },
+    {
+      "path": "references/Hexalith.Tenants",
+      "baselineGitlink": "66def172379f37d12e746fe6eb9195801929c572",
+      "currentHead": "66def172379f37d12e746fe6eb9195801929c572"
+    },
+    {
+      "path": "references/Hexalith.AI.Tools",
+      "baselineGitlink": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "currentHead": "3f194e17174994d308ec84af9ee2b5aa68674d0d"
+    },
+    {
+      "path": "references/Hexalith.Commons",
+      "baselineGitlink": "5c23c818f639c5bb3175f964c5549440bd5b876d",
+      "currentHead": "5c23c818f639c5bb3175f964c5549440bd5b876d"
+    },
+    {
+      "path": "references/Hexalith.Builds",
+      "baselineGitlink": "3fcb8f38919bb0961b06a19b57aa45623b35a33e",
+      "currentHead": "3fcb8f38919bb0961b06a19b57aa45623b35a33e"
+    },
+    {
+      "path": "references/Hexalith.PolymorphicSerializations",
+      "baselineGitlink": "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
+      "currentHead": "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0"
+    },
+    {
+      "path": "references/Hexalith.McpCli",
+      "baselineGitlink": "7f4a08cb4b7ff9402d1dcf0826ad45ab0256ba65",
+      "currentHead": "7f4a08cb4b7ff9402d1dcf0826ad45ab0256ba65"
+    },
+    {
+      "path": "references/Hexalith.Platform",
+      "baselineGitlink": "d189c7de74293e1a718e5e78b1b3b7c0e47b48b5",
+      "currentHead": "d189c7de74293e1a718e5e78b1b3b7c0e47b48b5"
+    }
+  ],
+  "nestedSubmodulesInitialized": false,
+  "dependenciesChanged": false,
+  "concurrentUnownedWorktreeChanges": "CI, publication, Aspire package and documentation changes excluded from batch validation and staging"
+}

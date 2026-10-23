@@ -25,6 +25,13 @@ internal static class PartyMemoryCleanupResponse
             return true;
         }
 
+        return await IsAbsentAsync(response, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Requires a structured missing-unit response from the scoped per-unit route.</summary>
+    internal static async Task<bool> IsAbsentAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+
         if (response.StatusCode != HttpStatusCode.NotFound)
         {
             return false;

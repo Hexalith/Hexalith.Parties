@@ -1,4 +1,6 @@
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 using Hexalith.Memories.Contracts.V1;
 
@@ -6,256 +8,346 @@ using Microsoft.Extensions.Logging;
 
 namespace Hexalith.Parties.Search;
 
-/// <summary>
-/// Deletes mapped Memories units and probes the versioned per-unit cleanup route.
-/// </summary>
+/// <summary>Reconciles durable ingestion obligations and observes scoped unit absence before cleanup.</summary>
 internal sealed partial class PartyMemoryCleanupService(
     HttpClient httpClient,
     IPartyMemoryUnitMappingStore mappingStore,
-    ILogger<PartyMemoryCleanupService> logger)
+    ILogger<PartyMemoryCleanupService> logger,
+    IPartyMemoryIngestionIntentStore intentStore)
 {
+    /// <summary>Reconciles a legacy workflow identity before deleting its canonical terminal output.</summary>
     public async Task<PartyMemoryCleanupResult> DeleteMemoryUnitAsync(
-        string tenantId,
-        string caseId,
-        string partyId,
-        string memoryUnitId,
-        CancellationToken cancellationToken)
+        string tenantId, string caseId, string partyId, string memoryUnitId, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
         ArgumentException.ThrowIfNullOrWhiteSpace(caseId);
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
         ArgumentException.ThrowIfNullOrWhiteSpace(memoryUnitId);
-
-        string sourceUri = PartyMemoryUrn.Build(tenantId, partyId);
-
-        if (httpClient.BaseAddress is null)
-        {
-            return new PartyMemoryCleanupResult(
-                partyId,
-                memoryUnitId,
-                sourceUri,
-                Cleaned: false,
-                BlockedReason: "Memories cleanup blocked: HttpClient has no BaseAddress (Parties:MemoriesSearch:Endpoint missing).");
-        }
-
-        // The shared route builder returns an escaped relative V1 path, preserving
-        // any configured endpoint prefix as well as the captured tenant/case scope.
-        string path = MemoriesRoutes.CaseMemoryUnitPath(tenantId, caseId, memoryUnitId);
-
         try
         {
-            using HttpResponseMessage response = await httpClient.DeleteAsync(path, cancellationToken).ConfigureAwait(false);
-            return await PartyMemoryCleanupResponse.IsAcceptedAsync(response, cancellationToken).ConfigureAwait(false)
-                ? new PartyMemoryCleanupResult(partyId, memoryUnitId, sourceUri, Cleaned: true, BlockedReason: null)
-                : new PartyMemoryCleanupResult(
-                    partyId,
-                    memoryUnitId,
-                    sourceUri,
-                    Cleaned: false,
-                    BlockedReason: $"Memories cleanup failed with HTTP {(int)response.StatusCode} {response.ReasonPhrase}.");
+            IReadOnlyList<PartyMemoryIngestionIntent> snapshot = await intentStore.BeginCleanupAsync(
+                tenantId, partyId, cancellationToken).ConfigureAwait(false);
+            PartyMemoryIngestionIntent? intent = snapshot.FirstOrDefault(item => item.CaseId == caseId
+                && (item.WorkflowInstanceId == memoryUnitId || item.MemoryUnitId == memoryUnitId));
+            if (intent?.CleanupSettled == true)
+            {
+                return Result(tenantId, partyId, intent.MemoryUnitId ?? memoryUnitId, true, null);
+            }
+
+            string? canonical = intent?.MemoryUnitId
+                ?? await ResolveAsync(tenantId, caseId, memoryUnitId, cancellationToken).ConfigureAwait(false);
+            if (canonical is null)
+            {
+                return Result(tenantId, partyId, memoryUnitId, false, "Memories cleanup requires validated terminal ingestion evidence.");
+            }
+
+            if (intent is null)
+            {
+                intent = await intentStore.RetainLegacyAsync(tenantId, partyId,
+                    new(memoryUnitId, PartyMemoryUrn.Build(tenantId, partyId), caseId), caseId, canonical, cancellationToken).ConfigureAwait(false);
+            }
+            else if (intent.MemoryUnitId is null)
+            {
+                intent = intent with { MemoryUnitId = canonical };
+                await intentStore.UpdateAsync(tenantId, partyId, intent, cancellationToken).ConfigureAwait(false);
+            }
+            PartyMemoryCleanupResult result = intent.CleanupSettled
+                ? Result(tenantId, partyId, canonical, true, null)
+                : await DeleteTerminalUnitAsync(tenantId, caseId, partyId, canonical, cancellationToken).ConfigureAwait(false);
+            if (result.Cleaned && !intent.CleanupSettled)
+            {
+                _ = await intentStore.RemoveAsync(tenantId, partyId, [intent], cancellationToken).ConfigureAwait(false);
+            }
+
+            return result;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
         {
-            logger.LogWarning(ex, "Memories cleanup transport failure for {TenantId}/{PartyId}.", tenantId, partyId);
-            return new PartyMemoryCleanupResult(
-                partyId,
-                memoryUnitId,
-                sourceUri,
-                Cleaned: false,
-                BlockedReason: $"Memories cleanup transport error: {ex.GetType().Name}");
-        }
-        catch (TaskCanceledException ex)
-        {
-            logger.LogWarning(ex, "Memories cleanup timed out for {TenantId}/{PartyId}.", tenantId, partyId);
-            return new PartyMemoryCleanupResult(
-                partyId,
-                memoryUnitId,
-                sourceUri,
-                Cleaned: false,
-                BlockedReason: $"Memories cleanup timed out: {ex.GetType().Name}");
+            LogObservationFailure(logger, ex.GetType().Name);
+            return Result(tenantId, partyId, memoryUnitId, false, "Memories cleanup could not verify terminal ingestion.");
         }
     }
 
-    /// <summary>
-    /// Erase every memory unit indexed for a party. AC5 (resolved decision #2): Memories does
-    /// not expose a batch <c>?sourceUri=</c> DELETE, so we read the per-party →
-    /// memory-unit-id mapping that the indexing service records, then iterate per-unit
-    /// DELETEs against the existing <c>DELETE /api/v1/tenants/{t}/cases/{c}/memory-units/{id}</c>
-    /// endpoint. The CaseId stored with each mapping is authoritative; <paramref name="caseId"/>
-    /// is used only for legacy mappings written before CaseId persistence was introduced.
-    /// <para>
-    /// <b>Inventory progress (P17 / P25).</b> Successfully cleaned exact snapshot entries
-    /// are removed in the final mapping update using optimistic concurrency. Failed entries,
-    /// concurrent additions and changed case/source identities remain available for a retry.
-    /// Progress persistence has a five-second cancellation budget independent of the caller;
-    /// caller cancellation propagates after that attempt. A recovery failure during caller
-    /// cancellation is logged without masking cancellation; other persistence failures propagate.
-    /// Deletion counts describe this call's snapshot, not terminal physical-erasure proof.
-    /// </para>
-    /// <para>
-    /// <b>Reporting (P36).</b> The aggregate <c>BlockedReason</c> includes the deleted-count
-    /// even on success so audit trails record per-erasure throughput; <c>MemoryUnitId</c>
-    /// carries the single-unit id when only one unit was mapped (otherwise the per-unit
-    /// detail lives in the per-unit results which the orchestrator can iterate).
-    /// </para>
-    /// <para>
-    /// <b>Empty-mapping invariant (P38).</b> Reporting <c>Cleaned=true</c> on
-    /// <c>mappings.Count == 0</c> assumes the mapping store and the indexing service share
-    /// the same view of "what was indexed". A misconfiguration where indexing wrote to a
-    /// different state store than cleanup reads from would silently report success here.
-    /// The validator pins the state-store name at startup (see
-    /// <see cref="PartyMemoryUnitMappingStoreOptions"/>); deployment validation should also
-    /// probe the mapping store round-trip (AC6 follow-up).
-    /// </para>
-    /// </summary>
+    /// <summary>Fences new submissions, reconciles every known intent and subtracts exact verified obligations.</summary>
     public async Task<PartyMemoryCleanupResult> DeleteByPartyAsync(
-        string tenantId,
-        string caseId,
-        string partyId,
-        CancellationToken cancellationToken)
+        string tenantId, string caseId, string partyId, CancellationToken cancellationToken, bool permanent = true)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
-
-        string sourceUri = PartyMemoryUrn.Build(tenantId, partyId);
-
         IReadOnlyList<PartyMemoryUnitMappingEntry> mappings;
+        IReadOnlyList<PartyMemoryIngestionIntent> intents;
         try
         {
-            mappings = await mappingStore
-                .GetMappingsAsync(tenantId, partyId, cancellationToken)
-                .ConfigureAwait(false);
+            // Close admission first: a racing registration either appears in this snapshot
+            // or conflicts and observes the enduring fence before any remote submission.
+            intents = await intentStore.BeginCleanupAsync(tenantId, partyId, cancellationToken, permanent).ConfigureAwait(false);
+            mappings = await mappingStore.GetMappingsAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
             throw;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
         {
-            logger.LogWarning(
-                "Memories cleanup could not read its mapping inventory because of {ExceptionType}.",
-                ex.GetType().Name);
-            return new PartyMemoryCleanupResult(
-                partyId,
-                MemoryUnitId: string.Empty,
-                sourceUri,
-                Cleaned: false,
-                BlockedReason: "Memories cleanup could not verify its mapping inventory.");
+            LogObservationFailure(logger, ex.GetType().Name);
+            return Result(tenantId, partyId, string.Empty, false, "Memories cleanup could not verify its mapping inventory.");
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-
-        if (mappings.Count == 0)
-        {
-            return new PartyMemoryCleanupResult(
-                partyId,
-                MemoryUnitId: string.Empty,
-                sourceUri,
-                Cleaned: true,
-                BlockedReason: null);
-        }
-
-        if (httpClient.BaseAddress is null)
-        {
-            return new PartyMemoryCleanupResult(
-                partyId,
-                MemoryUnitId: string.Empty,
-                sourceUri,
-                Cleaned: false,
-                BlockedReason: "Memories cleanup blocked: HttpClient has no BaseAddress (Parties:MemoriesSearch:Endpoint missing).");
-        }
-
-        int initialCount = mappings.Count;
-        List<PartyMemoryUnitMappingEntry> cleanedEntries = [];
-        int retainedCount = initialCount;
-        string? firstBlockedReason = null;
-        string? firstBlockedUnitId = null;
-        int deleted = 0;
+        List<PartyMemoryUnitMappingEntry> cleanedMappings = [];
+        List<PartyMemoryIngestionIntent> cleanedIntents = [];
+        Dictionary<string, PartyMemoryIngestionIntent> resolvedIntents = new(StringComparer.Ordinal);
+        HashSet<(string CaseId, string UnitId)> absentUnits = [];
+        string? blocked = null;
+        string blockedUnit = string.Empty;
+        int remainingMappings = mappings.Count;
+        int remainingIntents = intents.Count;
         try
         {
+            foreach (PartyMemoryIngestionIntent snapshot in intents)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                PartyMemoryIngestionIntent intent = snapshot;
+                try
+                {
+                    if (intent.CleanupSettled)
+                    {
+                        // Historical receipts carry already verified absence, not remote work.
+                        // They can settle a late mapping even if credentials or the case disappear.
+                        resolvedIntents[intent.AttemptId] = intent;
+                        if (intent.MemoryUnitId is not null)
+                        {
+                            absentUnits.Add((intent.CaseId, intent.MemoryUnitId));
+                        }
+
+                        continue;
+                    }
+
+                    if (intent.SubmissionRejected)
+                    {
+                        cleanedIntents.Add(intent);
+                        continue;
+                    }
+
+                    if (intent.MemoryUnitId is null && !string.IsNullOrWhiteSpace(intent.WorkflowInstanceId))
+                    {
+                        string? canonical = await ResolveAsync(tenantId, intent.CaseId, intent.WorkflowInstanceId, cancellationToken).ConfigureAwait(false);
+                        if (canonical is not null)
+                        {
+                            intent = intent with { MemoryUnitId = canonical };
+                            await intentStore.UpdateAsync(tenantId, partyId, intent, cancellationToken).ConfigureAwait(false);
+                        }
+                    }
+
+                    resolvedIntents[intent.AttemptId] = intent;
+                    if (intent.MemoryUnitId is null)
+                    {
+                        blocked ??= "Memories cleanup retained an unresolved ingestion obligation.";
+                        continue;
+                    }
+
+                    PartyMemoryCleanupResult result = await DeleteTerminalUnitAsync(tenantId, intent.CaseId, partyId, intent.MemoryUnitId, cancellationToken).ConfigureAwait(false);
+                    if (result.Cleaned)
+                    {
+                        absentUnits.Add((intent.CaseId, intent.MemoryUnitId));
+                        cleanedIntents.Add(intent);
+                    }
+                    else
+                    {
+                        blocked ??= result.BlockedReason;
+                        blockedUnit = intent.MemoryUnitId;
+                    }
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+                {
+                    LogObservationFailure(logger, ex.GetType().Name);
+                    blocked ??= "Memories cleanup could not reconcile an ingestion obligation.";
+                }
+            }
+
             foreach (PartyMemoryUnitMappingEntry mapping in mappings)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                string resolvedCaseId = string.IsNullOrWhiteSpace(mapping.CaseId) ? caseId : mapping.CaseId;
-                if (string.IsNullOrWhiteSpace(resolvedCaseId))
+                string resolvedCase = string.IsNullOrWhiteSpace(mapping.CaseId) ? caseId : mapping.CaseId;
+                if (string.IsNullOrWhiteSpace(resolvedCase))
                 {
-                    firstBlockedReason ??= "Memories cleanup blocked: the indexed unit has no persisted CaseId and no fallback CaseId is configured.";
-                    firstBlockedUnitId ??= mapping.MemoryUnitId;
+                    blocked ??= "Memories cleanup blocked: the indexed unit has no persisted CaseId and no fallback CaseId is configured.";
+                    blockedUnit = mapping.MemoryUnitId;
                     continue;
                 }
 
-                PartyMemoryCleanupResult perUnit = await DeleteMemoryUnitAsync(
-                    tenantId,
-                    resolvedCaseId,
-                    partyId,
-                    mapping.MemoryUnitId,
-                    cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    PartyMemoryIngestionIntent? known = resolvedIntents.Values.FirstOrDefault(intent => intent.CaseId == resolvedCase
+                        && (intent.MemoryUnitId == mapping.MemoryUnitId || intent.WorkflowInstanceId == mapping.MemoryUnitId));
+                    if (known?.MemoryUnitId is null)
+                    {
+                        string? canonical = await ResolveAsync(tenantId, resolvedCase, mapping.MemoryUnitId, cancellationToken).ConfigureAwait(false);
+                        if (canonical is null)
+                        {
+                            blocked ??= "Memories cleanup requires validated terminal ingestion evidence.";
+                            blockedUnit = mapping.MemoryUnitId;
+                            continue;
+                        }
 
-                if (perUnit.Cleaned)
-                {
-                    deleted++;
-                    cleanedEntries.Add(mapping);
+                        // Persist legacy workflow/canonical provenance before the first DELETE.
+                        // A failed subtraction or expired workflow must not lose this association.
+                        if (known is null)
+                        {
+                            known = await intentStore.RetainLegacyAsync(tenantId, partyId, mapping,
+                                resolvedCase, canonical, cancellationToken).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            known = known with { MemoryUnitId = canonical };
+                            await intentStore.UpdateAsync(tenantId, partyId, known, cancellationToken).ConfigureAwait(false);
+                        }
+
+                        resolvedIntents[known.AttemptId] = known;
+                    }
+
+                    PartyMemoryCleanupResult result = known.CleanupSettled || absentUnits.Contains((resolvedCase, known.MemoryUnitId!))
+                        ? Result(tenantId, partyId, known.MemoryUnitId!, true, null)
+                        : await DeleteTerminalUnitAsync(tenantId, resolvedCase, partyId, known.MemoryUnitId!, cancellationToken).ConfigureAwait(false);
+                    if (result.Cleaned)
+                    {
+                        cleanedMappings.Add(mapping);
+                        absentUnits.Add((resolvedCase, known.MemoryUnitId!));
+                        if (!known.CleanupSettled && !cleanedIntents.Contains(known))
+                        {
+                            cleanedIntents.Add(known);
+                        }
+                    }
+                    else
+                    {
+                        blocked ??= result.BlockedReason;
+                        blockedUnit = result.MemoryUnitId;
+                    }
                 }
-                else if (firstBlockedReason is null)
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    firstBlockedReason = perUnit.BlockedReason;
-                    firstBlockedUnitId = perUnit.MemoryUnitId;
+                    throw;
+                }
+                catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+                {
+                    LogObservationFailure(logger, ex.GetType().Name);
+                    blocked ??= "Memories cleanup could not durably retain legacy ingestion evidence.";
+                    blockedUnit = mapping.MemoryUnitId;
                 }
             }
         }
         finally
         {
-            // Preserve confirmed progress even when the caller cancels during a DELETE
-            // or this write. The independent budget bounds cooperative store recovery.
-            if (cleanedEntries.Count > 0)
+            // Confirmed progress survives caller cancellation without expanding either snapshot.
+            using var recovery = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            try
             {
-                using var recovery = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                try
+                if (cleanedMappings.Count > 0)
                 {
-                    retainedCount = await mappingStore
-                        .RemoveMappingsAsync(tenantId, partyId, cleanedEntries, recovery.Token)
-                        .ConfigureAwait(false);
+                    remainingMappings = await mappingStore.RemoveMappingsAsync(tenantId, partyId, cleanedMappings, recovery.Token).ConfigureAwait(false);
                 }
-                catch (Exception ex) when (cancellationToken.IsCancellationRequested)
+
+                if (cleanedIntents.Count > 0)
                 {
-                    LogCancelledProgressPersistenceFailure(logger, ex.GetType().Name);
+                    // A changed or concurrent mapping may still need this canonical
+                    // evidence. Re-read after conditional subtraction before removing it.
+                    IReadOnlyList<PartyMemoryUnitMappingEntry> retained = await mappingStore
+                        .GetMappingsAsync(tenantId, partyId, recovery.Token).ConfigureAwait(false);
+                    List<PartyMemoryIngestionIntent> removable = [.. cleanedIntents.Where(intent => !retained.Any(mapping =>
+                        (mapping.MemoryUnitId == intent.MemoryUnitId || mapping.MemoryUnitId == intent.WorkflowInstanceId)
+                        && (string.IsNullOrWhiteSpace(mapping.CaseId) ? caseId : mapping.CaseId) == intent.CaseId))];
+                    remainingIntents = await intentStore.RemoveAsync(tenantId, partyId, removable, recovery.Token).ConfigureAwait(false);
                 }
+            }
+            catch (Exception ex) when (cancellationToken.IsCancellationRequested)
+            {
+                LogCancelledProgressPersistenceFailure(logger, ex.GetType().Name);
             }
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-
-        if (firstBlockedReason is not null)
+        // Include concurrent legacy mapping arrivals; the intent fence prevents new submissions.
+        remainingMappings = (await mappingStore.GetMappingsAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false)).Count;
+        remainingIntents = (await intentStore.GetAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false)).Count;
+        if (blocked is not null)
         {
-            return new PartyMemoryCleanupResult(
-                partyId,
-                MemoryUnitId: firstBlockedUnitId ?? string.Empty,
-                sourceUri,
-                Cleaned: false,
-                BlockedReason: $"Memories cleanup partially failed ({deleted} of {initialCount} units deleted): {firstBlockedReason}");
+            return Result(tenantId, partyId, blockedUnit, false,
+                $"Memories cleanup partially failed ({cleanedMappings.Count} of {mappings.Count} units deleted): {blocked}");
         }
 
-        if (retainedCount > 0)
+        if (remainingMappings > 0 || remainingIntents > 0)
         {
-            return new PartyMemoryCleanupResult(
-                partyId,
-                MemoryUnitId: string.Empty,
-                sourceUri,
-                Cleaned: false,
-                BlockedReason: "Memories cleanup retained additional mappings; another cleanup pass is required.");
+            return Result(tenantId, partyId, string.Empty, false, "Memories cleanup retained additional obligations; another cleanup pass is required.");
         }
 
-        return new PartyMemoryCleanupResult(
-            partyId,
-            MemoryUnitId: initialCount == 1 ? mappings[0].MemoryUnitId : string.Empty,
-            sourceUri,
-            Cleaned: true,
-            BlockedReason: deleted > 1 ? $"Memories cleanup deleted {deleted} of {initialCount} units." : null);
+        return Result(tenantId, partyId, mappings.Count == 1 ? mappings[0].MemoryUnitId : string.Empty, true,
+            cleanedMappings.Count > 1 ? $"Memories cleanup deleted {cleanedMappings.Count} of {mappings.Count} units." : null);
     }
+
+    private async Task<string?> ResolveAsync(string tenantId, string caseId, string workflowId, CancellationToken cancellationToken)
+    {
+        if (httpClient.BaseAddress is null)
+        {
+            return null;
+        }
+
+        using HttpResponseMessage response = await httpClient.GetAsync(MemoriesRoutes.IngestStatusPath(workflowId), cancellationToken).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        IngestionWorkflowStatus? status = await response.Content.ReadFromJsonAsync<IngestionWorkflowStatus>(cancellationToken).ConfigureAwait(false);
+        return PartyMemoryIngestionEvidence.Resolve(status, workflowId, tenantId, caseId);
+    }
+
+    private async Task<PartyMemoryCleanupResult> DeleteTerminalUnitAsync(string tenantId, string caseId, string partyId, string memoryUnitId, CancellationToken cancellationToken)
+    {
+        if (httpClient.BaseAddress is null)
+        {
+            return Result(tenantId, partyId, memoryUnitId, false, "Memories cleanup blocked: HttpClient has no BaseAddress (Parties:MemoriesSearch:Endpoint missing).");
+        }
+
+        string path = MemoriesRoutes.CaseMemoryUnitPath(tenantId, caseId, memoryUnitId);
+        try
+        {
+            using HttpResponseMessage deleted = await httpClient.DeleteAsync(path, cancellationToken).ConfigureAwait(false);
+            if (!await PartyMemoryCleanupResponse.IsAcceptedAsync(deleted, cancellationToken).ConfigureAwait(false))
+            {
+                return Result(tenantId, partyId, memoryUnitId, false, $"Memories cleanup failed with HTTP {(int)deleted.StatusCode} {deleted.ReasonPhrase}.");
+            }
+
+            // DELETE is asynchronous. Observe the exact scoped resource after known terminal
+            // ingestion; a successful DELETE or arbitrary 404 cannot discharge an obligation.
+            using HttpResponseMessage observed = await httpClient.GetAsync(path, cancellationToken).ConfigureAwait(false);
+            bool absent = await PartyMemoryCleanupResponse.IsAbsentAsync(observed, cancellationToken).ConfigureAwait(false);
+            return Result(tenantId, partyId, memoryUnitId, absent,
+                absent ? null : "Memories cleanup awaits qualified unit absence after terminal ingestion.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or TimeoutException or JsonException)
+        {
+            LogObservationFailure(logger, ex.GetType().Name);
+            return Result(tenantId, partyId, memoryUnitId, false, $"Memories cleanup transport error: {ex.GetType().Name}");
+        }
+    }
+
+    private static PartyMemoryCleanupResult Result(string tenantId, string partyId, string memoryUnitId, bool cleaned, string? reason)
+        => new(partyId, memoryUnitId, PartyMemoryUrn.Build(tenantId, partyId), cleaned, reason);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Memories cleanup evidence was unavailable with {ExceptionType}; obligations must be retried.")]
+    private static partial void LogObservationFailure(ILogger logger, string exceptionType);
 
     /// <summary>
     /// Lightweight health probe of the per-unit cleanup route. Issues a <c>DELETE</c> against a
@@ -311,6 +403,54 @@ internal sealed partial class PartyMemoryCleanupService(
         {
             logger.LogWarning(ex, "Memories cleanup probe failed for tenant {TenantId}/case {CaseId}.", tenantId, caseId);
             return new PartyMemoryCleanupProbeResult(false, null, $"Memories cleanup endpoint unreachable: {ex.GetType().Name}.");
+        }
+    }
+
+    /// <summary>Probes status-read routing and explicit authorization rejection without claiming terminal evidence.</summary>
+    /// <remarks>A synthetic status miss exercises routing but cannot establish access to an existing tenant workflow.</remarks>
+    internal async Task<PartyMemoryCleanupProbeResult> ProbeIngestionStatusRouteAsync(CancellationToken cancellationToken)
+    {
+        if (httpClient.BaseAddress is null)
+        {
+            return new(false, null, "HttpClient has no BaseAddress.");
+        }
+
+        try
+        {
+            string instanceId = $"health-probe-{Guid.NewGuid():N}";
+            using HttpResponseMessage response = await httpClient.GetAsync(
+                MemoriesRoutes.IngestStatusPath(instanceId), cancellationToken).ConfigureAwait(false);
+            bool routed = false;
+            if (response.IsSuccessStatusCode)
+            {
+                IngestionWorkflowStatus? status = await response.Content.ReadFromJsonAsync<IngestionWorkflowStatus>(cancellationToken).ConfigureAwait(false);
+                routed = status is not null
+                    && string.Equals(status.InstanceId, instanceId, StringComparison.Ordinal)
+                    && !string.IsNullOrWhiteSpace(status.TenantId)
+                    && !string.IsNullOrWhiteSpace(status.CaseId)
+                    && status.RuntimeStatus is "Pending" or "Running" or "Completed" or "Failed" or "Canceled" or "Terminated" or "Suspended" or "ContinuedAsNew"
+                    && status.CreatedAt != default
+                    && status.LastUpdatedAt != default;
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(cancellationToken).ConfigureAwait(false);
+                routed = string.Equals(error?.Code, "INGESTION_STATUS_NOT_FOUND", StringComparison.Ordinal);
+            }
+
+            int code = (int)response.StatusCode;
+            return new(routed, code, routed ? null : code is 401 or 403
+                ? $"Memories ingestion status-read authorization rejected (HTTP {code})."
+                : $"Memories ingestion status-read route returned unqualified HTTP {code}.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or TimeoutException or JsonException or NotSupportedException or InvalidOperationException)
+        {
+            return new(false, null, $"Memories ingestion status-read probe failed: {ex.GetType().Name}.");
         }
     }
 

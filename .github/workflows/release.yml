@@ -237,7 +237,7 @@ jobs:
           while IFS= read -r package_id; do
             [ -n "$package_id" ] || continue
             index_url="https://api.nuget.org/v3-flatcontainer/$(printf '%s' "$package_id" | tr '[:upper:]' '[:lower:]')/index.json"
-            # Retry transient transport faults: a single CDN blip across nine serial probes would
+            # Retry transient transport faults: a single CDN blip across ten serial probes would
             # otherwise abort an operator-initiated release and read as permanent drift.
             if ! index_status="$(curl --silent --show-error --location --max-time 30 \
               --retry 3 --retry-connrefused --retry-all-errors \
@@ -328,7 +328,7 @@ jobs:
           source-branch: main
           source-ci-workflow: ci.yml
           package-manifest: tools/release-packages.json
-          expected-package-count: 9
+          expected-package-count: 10
           publication-flag: ${{ vars.HEXALITH_RELEASE_PUBLISH_ENABLED }}
           nuget-user: ${{ vars.NUGET_USER }}
       - name: Validate changed root gitlinks before publication
@@ -374,7 +374,7 @@ jobs:
           HEXALITH_RELEASE_SOURCE_BRANCH: main
           HEXALITH_RELEASE_SOURCE_CI_WORKFLOW: ci.yml
           HEXALITH_RELEASE_PACKAGE_MANIFEST: tools/release-packages.json
-          HEXALITH_RELEASE_EXPECTED_PACKAGE_COUNT: '9'
+          HEXALITH_RELEASE_EXPECTED_PACKAGE_COUNT: '10'
           HEXALITH_RELEASE_RESERVED_VERSION: ''
           HEXALITH_RELEASE_AUTHORITY_ISSUE_URL: ''
           HEXALITH_RELEASE_AUTHORITY_OWNER: ''

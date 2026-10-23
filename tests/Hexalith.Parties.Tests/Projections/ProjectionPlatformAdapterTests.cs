@@ -184,7 +184,9 @@ public sealed class ProjectionPlatformAdapterTests
             "statestore", PartySdkReadModelAddresses.Detail(tenantId, partyId), Arg.Any<CancellationToken>());
         await readModelStore.Received(1).GetAsync<PartyProcessingSdkReadModel>(
             "statestore", PartySdkReadModelAddresses.Processing(tenantId, partyId), Arg.Any<CancellationToken>());
-        await readModelStore.Received(1).GetAsync<PartyIndexSdkReadModel>(
+        // The eraser reads its snapshot and the real search adapter reads the canonical
+        // erasure checkpoint before selecting permanent rather than transient cleanup.
+        await readModelStore.Received(2).GetAsync<PartyIndexSdkReadModel>(
             "statestore", PartySdkReadModelAddresses.Index(tenantId), Arg.Any<CancellationToken>());
         await batchStore.Received(1).ExecuteAsync(Arg.Any<ReadModelBatch>(), Arg.Any<CancellationToken>());
     }
@@ -338,6 +340,8 @@ public sealed class ProjectionPlatformAdapterTests
         }
 
         services.AddParties(configuration);
+        services.RemoveAll<IPartyMemoryIngestionIntentStore>();
+        services.AddSingleton(Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore());
         return services;
     }
 

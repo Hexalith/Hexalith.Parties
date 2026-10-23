@@ -345,6 +345,7 @@ public static class PartiesServiceCollectionExtensions {
             .AddOptions<PartyMemoryUnitMappingStoreOptions>()
             .Bind(configuration.GetSection(PartyMemoryUnitMappingStoreOptions.SectionName));
         _ = services.AddSingleton<IPartyMemoryUnitMappingStore, PartyMemoryUnitMappingStore>();
+        _ = services.AddSingleton<IPartyMemoryIngestionIntentStore, PartyMemoryIngestionIntentStore>();
         // Endpoint and ApiToken are captured from the boot configuration snapshot (same posture
         // as MemoriesClient below). Typed HttpClient BaseAddress/default headers are not safe
         // hot-reload knobs; changing them requires a process restart. CaseId alone is read live
@@ -396,7 +397,9 @@ public static class PartiesServiceCollectionExtensions {
             sp.GetService<PartyMemoryIndexingService>(),
             sp.GetRequiredService<PartyMemoryCleanupService>(),
             sp.GetRequiredService<IOptionsMonitor<PartyMemorySearchOptions>>(),
-            sp.GetRequiredService<ILogger<PartyMemoryIndexEntrySearchIndexer>>()));
+            sp.GetRequiredService<ILogger<PartyMemoryIndexEntrySearchIndexer>>(),
+            sp.GetRequiredService<Hexalith.EventStore.Client.Projections.IReadModelStore>(),
+            sp.GetRequiredService<IOptions<Hexalith.Parties.Projections.Configuration.PartySdkReadModelOptions>>()));
 
         // FluentValidation (assembly scanning — no explicit validator registration)
         _ = services.AddValidatorsFromAssemblyContaining<CreatePartyValidator>();

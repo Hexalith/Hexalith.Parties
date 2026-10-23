@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-using Dapr.Client;
+using Hexalith.EventStore.Client.Projections;
 
 using Hexalith.Parties.Search;
 
@@ -21,9 +21,9 @@ internal sealed class PartyMemoryMappingState
     public PartyMemoryMappingState(params PartyMemoryUnitMappingEntry[] entries)
     {
         SetEntries(entries);
-        Client = Substitute.For<DaprClient>();
-        Client.GetStateAndETagAsync<List<PartyMemoryUnitMappingEntry>>(
-                "statestore", Arg.Any<string>(), cancellationToken: Arg.Any<CancellationToken>())
+        Client = Substitute.For<IReadModelStore, IReadModelConditionalEraser>();
+        Client.GetAsync<List<PartyMemoryUnitMappingEntry>>(
+                "statestore", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
                 ReadCount++;
@@ -33,12 +33,12 @@ internal sealed class PartyMemoryMappingState
                 }
 
                 (string Json, int Version)? state = GetState(call.ArgAt<string>(1));
-                return (Decode(state).ToList(), MissingETag ? string.Empty : ETag(state));
+                return new ReadModelEntry<List<PartyMemoryUnitMappingEntry>>(Decode(state).ToList(), MissingETag ? string.Empty : ETag(state));
             });
-        _ = Client.TrySaveStateAsync(
+        _ = Client.TrySaveAsync(
                 "statestore", Arg.Any<string>(), Arg.Any<List<PartyMemoryUnitMappingEntry>>(),
-                Arg.Any<string>(), Arg.Any<StateOptions?>(),
-                Arg.Any<IReadOnlyDictionary<string, string>?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
             .Returns(async call =>
             {
                 SaveAttempts++;
@@ -50,7 +50,7 @@ internal sealed class PartyMemoryMappingState
                     await hook().ConfigureAwait(false);
                 }
 
-                LastConcurrency = call.ArgAt<StateOptions?>(4)?.Concurrency;
+                LastConcurrency = Dapr.Client.ConcurrencyMode.FirstWrite;
                 string key = call.ArgAt<string>(1);
                 (string Json, int Version)? state = GetState(key);
                 if (RejectWrites || (state is not null && call.ArgAt<string>(3) != ETag(state)))
@@ -61,9 +61,9 @@ internal sealed class PartyMemoryMappingState
                 SetEntries(key, call.ArgAt<List<PartyMemoryUnitMappingEntry>>(2));
                 return true;
             });
-        _ = Client.TryDeleteStateAsync(
-                "statestore", Arg.Any<string>(), Arg.Any<string>(), Arg.Any<StateOptions?>(),
-                Arg.Any<IReadOnlyDictionary<string, string>?>(), Arg.Any<CancellationToken>())
+        _ = ((IReadModelConditionalEraser)Client).TryEraseAsync(
+                "statestore", Arg.Any<string>(), Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
             .Returns(async call =>
             {
                 DeleteAttempts++;
@@ -75,7 +75,7 @@ internal sealed class PartyMemoryMappingState
                     await hook().ConfigureAwait(false);
                 }
 
-                LastConcurrency = call.ArgAt<StateOptions?>(3)?.Concurrency;
+                LastConcurrency = Dapr.Client.ConcurrencyMode.FirstWrite;
                 string key = call.ArgAt<string>(1);
                 (string Json, int Version)? state = GetState(key);
                 if (RejectWrites || (state is not null && call.ArgAt<string>(2) != ETag(state)))
@@ -88,7 +88,7 @@ internal sealed class PartyMemoryMappingState
             });
     }
 
-    public DaprClient Client { get; }
+    public IReadModelStore Client { get; }
 
     public IReadOnlyList<PartyMemoryUnitMappingEntry> Entries => Decode(PrimaryState);
 
@@ -106,7 +106,7 @@ internal sealed class PartyMemoryMappingState
 
     public int DeleteAttempts { get; private set; }
 
-    public ConcurrencyMode? LastConcurrency { get; private set; }
+    public Dapr.Client.ConcurrencyMode? LastConcurrency { get; private set; }
 
     public Func<Task>? BeforeSave { get; set; }
 

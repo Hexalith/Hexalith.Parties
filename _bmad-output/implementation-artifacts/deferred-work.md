@@ -1830,3 +1830,27 @@ archived: 2026-10-21
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-sdk-runtime-deferred-items.md`
   summary: Qualify descendant-process quiescence when a Dapr CLI wrapper exits before its runtime child.
   evidence: Unverified medium: the current fixture observes DCP executable PID/start identities and qualified listener cleanup, but the reviewer could not establish that an escaped daprd child is impossible before backing removal. A controlled producer-owned wrapper/orphan case or exact CLI/DCP descendant-stop contract would settle the claim; normal 22/22 live results alone do not establish this broader guarantee.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
+  summary: Provide and adopt producer support for refreshing changed Parties content under an unchanged canonical Memories source URI.
+  severity: medium
+  evidence: Selected reference CheckIdempotencyActivity falls back from a new token to the permanent source-URI record, and SaveDedupKeyActivity stores that record without expiry. Baseline indexing already used the same canonical URI. A new token cannot establish refreshed content or recreate a deleted source. This batch retains canonical provenance and rejects known-cleaned IDs; producer update/reindex support and consumer adoption need separate qualification.
+  status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
+  summary: Qualify whether ingestion-inventory persistence needs a separate health capability probe.
+  severity: medium-unverified
+  evidence: Mapping and ingestion inventories use the same configured SDK backend, but only mapping sentinel persistence is probed. A real backend key-prefix permission or serializer configuration that permits mapping operations while rejecting ingestion-inventory writes would establish the claimed additional gap; no such supported deployment counterexample was demonstrated. Keep this claim unverified until that condition is reproduced.
+  status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
+  summary: Qualify workflow-status retention and opportunistic reconciliation of superseded acknowledged ingestion attempts.
+  severity: medium-unverified
+  evidence: Older pending attempts remain durably discoverable and are reconciled by cleanup; current-revision delivery does not poll every older workflow. The selected source search found no automatic workflow purge or status-expiry policy. Demonstrate the producer retention/purge contract and an expiry-before-cleanup case before requiring additional scheduling; expired or unavailable status must continue to block uncertain cleanup.
+  status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
+  summary: Reconstruct complete searchable contact and identifier content for a first successful ingestion after failed submission and canonical redelivery.
+  severity: medium
+  evidence: Baseline 6c83309d08a10f36a0da866521b9d0da6f8fc998 already marks SearchableContactChannels and SearchableIdentifiers JsonIgnore and BuildReconciliationFold returns serialized canonical state. A first rejected/failed submission followed by restart can therefore submit a summary without those transient collections. Reconstruct only from canonical-matching replay or another authorized complete source; never publish stale content from an older delivery. This pre-existing projection-content requirement is separate from durable ingestion identity and cleanup provenance.
+  status: open

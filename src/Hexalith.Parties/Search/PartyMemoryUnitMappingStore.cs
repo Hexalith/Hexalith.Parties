@@ -2,7 +2,7 @@ using System.Buffers.Text;
 using System.Security.Cryptography;
 using System.Text;
 
-using Dapr.Client;
+using Hexalith.EventStore.Client.Projections;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,19 +10,7 @@ using Microsoft.Extensions.Options;
 namespace Hexalith.Parties.Search;
 
 /// <summary>
-/// Dapr-state-store backed mapping. Storage shape: a single state key per (tenant, party)
-/// holding a list of <see cref="PartyMemoryUnitMappingEntry"/>.
-/// <para>
-/// <b>Memory-unit-id contract (P40 / resolved decision D1).</b> The Memories server uses the
-/// DAPR workflow instance id returned by <c>POST /api/ingest</c> as the canonical
-/// <c>memoryUnitId</c> for the resulting memory unit (verified against
-/// <c>Hexalith.Memories.Server.Workflows.IngestionWorkflow.ResolveMemoryUnitId</c>). The
-/// per-unit cleanup endpoint <c>DELETE /api/v1/tenants/{t}/cases/{c}/memory-units/{memoryUnitId}</c>
-/// is keyed by that same id, so recording the workflow instance id as <c>memoryUnitId</c>
-/// here is correct by design. The only divergence path is <c>SourceType.Event</c> with the
-/// dedup-instance prefix, but the Memories SDK's <c>IngestAsync</c> hard-codes
-/// <c>SourceType.File</c>, so the simple mapping always holds for Parties.
-/// </para>
+/// SDK-backed legacy-compatible mapping inventory, keyed by tenant and party.
 /// <para>
 /// <b>Concurrency (P3).</b> Updates use ETag-based optimistic concurrency with bounded retry
 /// so indexing and cleanup preserve concurrent mappings. Cleanup subtracts exact snapshot
@@ -36,7 +24,7 @@ namespace Hexalith.Parties.Search;
 /// </para>
 /// </summary>
 internal sealed partial class PartyMemoryUnitMappingStore(
-    DaprClient daprClient,
+    IReadModelStore readModelStore,
     IOptions<PartyMemoryUnitMappingStoreOptions> options,
     ILogger<PartyMemoryUnitMappingStore> logger) : IPartyMemoryUnitMappingStore
 {
@@ -67,27 +55,15 @@ internal sealed partial class PartyMemoryUnitMappingStore(
             (IReadOnlyList<PartyMemoryUnitMappingEntry> current, string etag) =
                 await ReadWithETagAsync(key, cancellationToken).ConfigureAwait(false);
 
-            // Prefer MemoryUnitId matches over SourceUri-only matches inside the same case.
-            // If different rows match each identity, the source-only row still represents a
-            // distinct unit that cleanup must retain. Use historical source replacement only
-            // when no eligible unit match exists. A source may be
-            // reindexed into a new case after configuration changes; retaining the prior-case
-            // entry is essential because cleanup must still discover and erase that old unit.
-            // Legacy entries without CaseId are eligible for replacement and case adoption;
-            // a retained source-only legacy row keeps its original fallback-case behavior.
-            bool hasMatchingUnit = current.Any(existing =>
-                string.Equals(existing.MemoryUnitId, memoryUnitId, StringComparison.Ordinal)
-                && (string.IsNullOrWhiteSpace(existing.CaseId)
-                    || string.Equals(existing.CaseId, caseId, StringComparison.Ordinal)));
+            // A shared source URI never replaces a distinct unit's cleanup obligation.
             List<PartyMemoryUnitMappingEntry> updated = [];
             bool replaced = false;
             foreach (PartyMemoryUnitMappingEntry existing in current)
             {
                 bool sameMemoryUnit = string.Equals(existing.MemoryUnitId, memoryUnitId, StringComparison.Ordinal);
-                bool sameSource = string.Equals(existing.SourceUri, sourceUri, StringComparison.Ordinal);
                 bool sameCase = string.IsNullOrWhiteSpace(existing.CaseId)
                     || string.Equals(existing.CaseId, caseId, StringComparison.Ordinal);
-                if (sameCase && (sameMemoryUnit || (!hasMatchingUnit && sameSource)))
+                if (sameCase && sameMemoryUnit)
                 {
                     if (!replaced)
                     {
@@ -114,8 +90,8 @@ internal sealed partial class PartyMemoryUnitMappingStore(
             bool success;
             try
             {
-                success = await daprClient
-                    .TrySaveStateAsync(_stateStoreName, key, updated, etag, cancellationToken: cancellationToken)
+                success = await readModelStore
+                    .TrySaveAsync(_stateStoreName, key, updated, etag, cancellationToken)
                     .ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -149,10 +125,8 @@ internal sealed partial class PartyMemoryUnitMappingStore(
                 MaxConcurrencyRetries);
         }
 
-        // All retries exhausted — propagate so the indexing service can compensate by
-        // deleting the just-ingested memory unit and reporting a blocked indexing result.
-        // Swallowing here would silently orphan a memory unit in Memories with no Parties-side
-        // record, breaking AC5 GDPR cleanup.
+        // Keep projection delivery retryable. The independent durable ingestion intent
+        // retains the canonical producer until mapping persistence or verified cleanup converges.
         throw new InvalidOperationException("memory-unit-mapping-record-conflict");
     }
 
@@ -232,15 +206,14 @@ internal sealed partial class PartyMemoryUnitMappingStore(
             bool success;
             try
             {
-                var stateOptions = new StateOptions { Concurrency = ConcurrencyMode.FirstWrite };
                 // Redis restarts a physically deleted key's ETag sequence. Keeping [] for
                 // domain ledgers prevents a delayed cleanup from matching a recreated key.
                 // Probe keys are unique per invocation and are never domain inventories.
                 success = deleteEmptyProbeKey && updated.Count == 0
-                    ? await daprClient.TryDeleteStateAsync(
-                        _stateStoreName, key, etag, stateOptions, cancellationToken: cancellationToken).ConfigureAwait(false)
-                    : await daprClient.TrySaveStateAsync(
-                        _stateStoreName, key, updated, etag, stateOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
+                    ? await ((IReadModelConditionalEraser)readModelStore).TryEraseAsync(
+                        _stateStoreName, key, etag, cancellationToken).ConfigureAwait(false)
+                    : await readModelStore.TrySaveAsync(
+                        _stateStoreName, key, updated, etag, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -285,13 +258,10 @@ internal sealed partial class PartyMemoryUnitMappingStore(
     {
         try
         {
-            (List<PartyMemoryUnitMappingEntry> state, string etag) = await daprClient
-                .GetStateAndETagAsync<List<PartyMemoryUnitMappingEntry>>(
-                    _stateStoreName,
-                    key,
-                    cancellationToken: cancellationToken)
+            ReadModelEntry<List<PartyMemoryUnitMappingEntry>> state = await readModelStore
+                .GetAsync<List<PartyMemoryUnitMappingEntry>>(_stateStoreName, key, cancellationToken)
                 .ConfigureAwait(false);
-            return (state ?? (IReadOnlyList<PartyMemoryUnitMappingEntry>)[], etag ?? string.Empty);
+            return (state.Value ?? (IReadOnlyList<PartyMemoryUnitMappingEntry>)[], state.ETag ?? string.Empty);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -314,9 +284,8 @@ internal sealed partial class PartyMemoryUnitMappingStore(
     /// for SHA-256 — a 64-bit truncation would suffice but the full 256-bit prefix is cheap
     /// and makes accidental collisions essentially impossible.
     /// </summary>
-    private static string BuildKey(string tenantId, string partyId)
+    internal static string BuildKey(string tenantId, string partyId)
     {
-        Span<byte> input = stackalloc byte[1];
         ReadOnlySpan<byte> tenantBytes = Encoding.UTF8.GetBytes(tenantId);
         ReadOnlySpan<byte> partyBytes = Encoding.UTF8.GetBytes(partyId);
         Span<byte> separator = stackalloc byte[] { 0x1F };
@@ -349,7 +318,6 @@ internal sealed partial class PartyMemoryUnitMappingStore(
             trimmed = trimmed[..^1];
         }
 
-        _ = input;
         return $"parties:memory-mapping:{Encoding.ASCII.GetString(trimmed)}";
     }
 }

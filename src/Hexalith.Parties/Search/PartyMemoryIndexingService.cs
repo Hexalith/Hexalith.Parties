@@ -1,4 +1,6 @@
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 using Hexalith.Memories.Client.Rest;
 using Hexalith.Memories.Contracts.V1;
@@ -9,31 +11,23 @@ using Microsoft.Extensions.Options;
 
 namespace Hexalith.Parties.Search;
 
-/// <remarks>
-/// <b>Memory-unit-id contract (P40 / resolved decision D1).</b>
-/// <see cref="MemoriesClient.IngestAsync"/> returns the DAPR workflow instance id, and the
-/// Memories server reuses that id as the canonical <c>memoryUnitId</c> for the resulting
-/// memory unit (verified against
-/// <c>Hexalith.Memories.Server.Workflows.IngestionWorkflow.ResolveMemoryUnitId</c>). Recording
-/// the workflow instance id as <c>memoryUnitId</c> in <see cref="IPartyMemoryUnitMappingStore"/>
-/// is therefore correct by design — the per-unit cleanup endpoint uses the same id. The only
-/// divergence path (<c>SourceType.Event</c> with the dedup-instance prefix) does not apply
-/// because the SDK hard-codes <c>SourceType.File</c>.
-/// </remarks>
-internal sealed class PartyMemoryIndexingService(
+/// <summary>Reserves durable ingestion obligations and records only validated terminal unit identities.</summary>
+internal sealed partial class PartyMemoryIndexingService(
     MemoriesClient memoriesClient,
     IPartyMemoryUnitMappingStore mappingStore,
     IOptionsMonitor<PartyMemorySearchOptions> options,
-    ILogger<PartyMemoryIndexingService> logger)
+    ILogger<PartyMemoryIndexingService> logger,
+    IPartyMemoryIngestionIntentStore intentStore)
 {
+    /// <summary>Submits a new revision or reconciles its previously acknowledged workflow on redelivery.</summary>
     public async Task<PartyMemoryIndexingResult?> IndexAsync(
         PartyIndexEntry entry,
         PartyMemoryUnitMappingContext context,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(entry);
         ArgumentNullException.ThrowIfNull(context);
-
         PartyMemoryUnit? unit = PartyMemoryUnitMapper.Map(entry, context);
         if (unit is null)
         {
@@ -41,169 +35,160 @@ internal sealed class PartyMemoryIndexingService(
         }
 
         byte[] content = Encoding.UTF8.GetBytes(unit.Content);
-
-        string? workflowInstanceId = null;
+        // Canonical redelivery deserializes the projection and loses its JsonIgnore search
+        // collections. Derive the revision only from the durable entry and envelope context,
+        // including the retained canonical application sequence for equal-timestamp events,
+        // so an acknowledged producer is reconciled even when transient content differs.
+        string identity = Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { Entry = entry, Context = context })));
+        var intent = new PartyMemoryIngestionIntent(identity, unit.CaseId, unit.SourceUri);
+        bool reserved = false;
         try
         {
-            // HXL001 marks `IngestAsync` obsolete on the Memories SDK. The replacement
-            // (`IndexAsync` family) is not yet available for the per-party flow Parties
-            // requires here. Suppress until the SDK exposes a non-deprecated equivalent.
-#pragma warning disable HXL001
-            workflowInstanceId = await memoriesClient
-                .IngestAsync(
-                    unit.TenantId,
-                    unit.CaseId,
-                    unit.SourceUri,
-                    content,
-                    "text/plain",
-                    "Hexalith.Parties",
-                    unit.Metadata,
-                    cancellationToken)
-                .ConfigureAwait(false);
-#pragma warning restore HXL001
+            PartyMemoryIngestionRegistration registration = await intentStore.RegisterAsync(
+                unit.TenantId, unit.PartyId, intent, cancellationToken).ConfigureAwait(false);
+            reserved = true;
+            intent = registration.Intent;
+            if (registration.Created)
+            {
+                string workflow;
+                try
+                {
+                    workflow = await memoriesClient.IngestAsync(unit.TenantId, unit.CaseId, unit.SourceUri,
+                        content, "text/plain", "Hexalith.Parties", unit.Metadata, intent.AttemptId, cancellationToken).ConfigureAwait(false);
+                }
+                catch (MemoriesRemoteException ex) when (PartyMemoryIngestionEvidence.IsDefiniteSubmissionRejection(ex))
+                {
+                    // Only verified submission preflight rejections prove that no producer
+                    // was admitted. Status-read failures never reopen submission.
+                    intent = intent with { SubmissionRejected = true };
+                    using var rejectedBudget = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    await intentStore.UpdateAsync(unit.TenantId, unit.PartyId, intent, rejectedBudget.Token).ConfigureAwait(false);
+                    throw;
+                }
+                if (string.IsNullOrWhiteSpace(workflow))
+                {
+                    LogFailure(logger, "empty-workflow");
+                    return Failed(unit, intent, "Memories returned no workflow identity; durable obligation retained.");
+                }
+
+                intent = intent with { WorkflowInstanceId = workflow };
+                await intentStore.UpdateAsync(unit.TenantId, unit.PartyId, intent, cancellationToken).ConfigureAwait(false);
+            }
+
+            if (string.IsNullOrWhiteSpace(intent.WorkflowInstanceId))
+            {
+                // A previous request may have reached Memories without an acknowledgement.
+                // Neither source lookup nor resubmission proves that this producer has finished.
+                return Failed(unit, intent, "Ingestion acceptance is unresolved; durable obligation retained.");
+            }
+
+            intent = await ResolveAsync(unit, intent, cancellationToken).ConfigureAwait(false);
+            if (intent.MemoryUnitId is null)
+            {
+                return Failed(unit, intent, "Ingestion has no validated terminal output; retry projection delivery.");
+            }
+
+            if (!await PublishAsync(unit, intent, cancellationToken).ConfigureAwait(false))
+            {
+                return Failed(unit, intent, "Cleanup closed this ingestion generation; retry canonical projection reconciliation.");
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            return new(unit.PartyId, unit.SourceUri, intent.WorkflowInstanceId, Indexed: true, FailureReason: null);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            throw;
-        }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or TimeoutException)
-        {
-            // Indexing must be best-effort for genuine transient failures (transport
-            // errors, timeouts) so a Memories outage cannot abort the projection delivery
-            // pipeline. Programming-bug indicators like InvalidOperationException are NOT
-            // caught here — they should surface as 500 so the underlying defect is fixed
-            // rather than masked as transient outage.
-            logger.LogWarning(
-                "Memories indexing failed with {ExceptionType}; search may be stale until repair runs.",
-                ex.GetType().Name);
-            return new PartyMemoryIndexingResult(
-                unit.PartyId,
-                unit.SourceUri,
-                WorkflowInstanceId: null,
-                Indexed: false,
-                FailureReason: ex.GetType().Name);
-        }
+            if (reserved)
+            {
+                // The caller's budget cannot abandon an acknowledged remote producer. Attempt
+                // bounded persistence/reconciliation independently, then preserve cancellation.
+                using var recovery = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                await RecoverAsync(unit, intent, recovery.Token).ConfigureAwait(false);
+            }
 
-        // P18: A misbehaving server returning a 2xx with empty/whitespace instanceId would
-        // otherwise crash the mapping store's ArgumentException guard and surface as 500 to
-        // the projection pipeline. Treat as a non-transient indexing failure with a clear
-        // reason so the operator can investigate the Memories upgrade rather than chasing
-        // a generic 500.
-        if (string.IsNullOrWhiteSpace(workflowInstanceId))
-        {
-            logger.LogWarning(
-                "Memories returned a successful response with no workflow/memory-unit id. Mapping was not recorded; search may be stale.");
-            return new PartyMemoryIndexingResult(
-                unit.PartyId,
-                unit.SourceUri,
-                WorkflowInstanceId: null,
-                Indexed: false,
-                FailureReason: "Memories returned an empty workflowInstanceId for a successful ingest.");
-        }
-
-        // P2: Record the per-party → memory-unit-id mapping so erasure cleanup can iterate
-        // per-unit DELETEs against the existing per-unit Memories endpoint. If the mapping
-        // write fails (state-store outage, ETag retry-budget exhausted), compensate by
-        // deleting the just-ingested memory unit so we do not leak an orphan that AC5
-        // erasure would later miss.
-        try
-        {
-            await mappingStore
-                .RecordMappingAsync(
-                    unit.TenantId,
-                    unit.PartyId,
-                    workflowInstanceId,
-                    unit.SourceUri,
-                    unit.CaseId,
-                    cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch (OperationCanceledException ex) when (cancellationToken.IsCancellationRequested)
-        {
-            // Ingestion has already been acknowledged. Caller cancellation must not skip
-            // compensation, and recovery failure must not replace the original cancellation.
-            using var recovery = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            await TryCompensatingDeleteAsync(
-                    unit,
-                    workflowInstanceId,
-                    ex.GetType().Name,
-                    recovery.Token,
-                    propagateCancellation: false)
-                .ConfigureAwait(false);
             throw;
         }
         catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
         {
-            await TryCompensatingDeleteAsync(
-                    unit,
-                    workflowInstanceId,
-                    ex.GetType().Name,
-                    cancellationToken)
-                .ConfigureAwait(false);
-            return new PartyMemoryIndexingResult(
-                unit.PartyId,
-                unit.SourceUri,
-                WorkflowInstanceId: workflowInstanceId,
-                Indexed: false,
-                FailureReason: $"Mapping record failed ({ex.GetType().Name}). Compensating delete attempted.");
-        }
+            LogFailure(logger, ex.GetType().Name);
+            if (reserved && intent.WorkflowInstanceId is not null)
+            {
+                using var recovery = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                await RecoverAsync(unit, intent, recovery.Token).ConfigureAwait(false);
+            }
 
-        return new PartyMemoryIndexingResult(
-            unit.PartyId,
-            unit.SourceUri,
-            workflowInstanceId,
-            Indexed: true,
-            FailureReason: null);
+            cancellationToken.ThrowIfCancellationRequested();
+            return Failed(unit, intent, $"Indexing failed ({ex.GetType().Name}); durable recovery is required.");
+        }
     }
 
-    private async Task TryCompensatingDeleteAsync(
-        PartyMemoryUnit unit,
-        string workflowInstanceId,
-        string originalFailureType,
-        CancellationToken cancellationToken,
-        bool propagateCancellation = true)
+    private async Task<PartyMemoryIngestionIntent> ResolveAsync(PartyMemoryUnit unit, PartyMemoryIngestionIntent intent, CancellationToken cancellationToken)
+    {
+        if (intent.MemoryUnitId is not null)
+        {
+            return intent;
+        }
+
+        IngestionWorkflowStatus status = await memoriesClient.GetIngestionWorkflowStatusAsync(intent.WorkflowInstanceId!, cancellationToken).ConfigureAwait(false);
+        string? canonical = PartyMemoryIngestionEvidence.Resolve(status, intent.WorkflowInstanceId!, unit.TenantId, intent.CaseId);
+        if (canonical is null)
+        {
+            return intent;
+        }
+
+        intent = intent with { MemoryUnitId = canonical };
+        await intentStore.UpdateAsync(unit.TenantId, unit.PartyId, intent, cancellationToken).ConfigureAwait(false);
+        return intent;
+    }
+
+    private async Task RecoverAsync(PartyMemoryUnit unit, PartyMemoryIngestionIntent intent, CancellationToken cancellationToken)
     {
         try
         {
-            PartyMemorySearchOptions current = options.CurrentValue;
-            if (current.Endpoint is null || string.IsNullOrWhiteSpace(unit.CaseId))
+            await intentStore.UpdateAsync(unit.TenantId, unit.PartyId, intent, cancellationToken).ConfigureAwait(false);
+            if (intent.WorkflowInstanceId is null)
             {
-                logger.LogError(
-                    "Compensating delete was skipped because the Memories endpoint or captured case id is unavailable after {OriginalFailureType}. Operator reconciliation is required.",
-                    originalFailureType);
                 return;
             }
 
-            using HttpClient httpClient = new() { BaseAddress = current.Endpoint };
-            // ConfigureAuthorization can optionally log its caught FormatException. Compensation
-            // diagnostics deliberately retain no raw exceptions, so let the helper ignore a
-            // malformed token and report only the bounded HTTP/exception outcome below.
-            PartyMemoryCleanupService.ConfigureAuthorization(httpClient, current.ApiToken);
-            string path = MemoriesRoutes.CaseMemoryUnitPath(unit.TenantId, unit.CaseId, workflowInstanceId);
-            using HttpResponseMessage response = await httpClient.DeleteAsync(path, cancellationToken).ConfigureAwait(false);
-            if (await PartyMemoryCleanupResponse.IsAcceptedAsync(response, cancellationToken).ConfigureAwait(false))
+            intent = await ResolveAsync(unit, intent, cancellationToken).ConfigureAwait(false);
+            if (intent.MemoryUnitId is null)
             {
-                logger.LogWarning(
-                    "Compensating delete succeeded after mapping write failed with {OriginalFailureType}.",
-                    originalFailureType);
                 return;
             }
 
-            logger.LogError(
-                "Compensating delete returned HTTP {StatusCode} after mapping write failed with {OriginalFailureType}. Operator reconciliation is required.",
-                (int)response.StatusCode,
-                originalFailureType);
+            _ = await PublishAsync(unit, intent, cancellationToken).ConfigureAwait(false);
         }
-        catch (OperationCanceledException) when (propagateCancellation && cancellationToken.IsCancellationRequested)
+        catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
         {
-            throw;
-        }
-        catch (Exception compensateFailure) when (compensateFailure is not OutOfMemoryException and not StackOverflowException)
-        {
-            logger.LogError(
-                "Compensating delete failed with {CompensationFailureType} after mapping write failed with {OriginalFailureType}. Operator reconciliation is required.",
-                compensateFailure.GetType().Name,
-                originalFailureType);
+            LogRecoveryFailure(logger, ex.GetType().Name);
         }
     }
+
+    /// <summary>Resumes live projection delivery only after canonical evidence authorizes a new generation.</summary>
+    internal Task<bool> TryResumeLiveProjectionAsync(string tenantId, string partyId, CancellationToken cancellationToken)
+        => intentStore.TryReopenAsync(tenantId, partyId, cancellationToken);
+
+    private async Task<bool> PublishAsync(PartyMemoryUnit unit, PartyMemoryIngestionIntent intent, CancellationToken cancellationToken)
+    {
+        if (!await intentStore.CanPublishAsync(unit.TenantId, unit.PartyId, intent, cancellationToken).ConfigureAwait(false))
+        {
+            return false;
+        }
+
+        await mappingStore.RecordMappingAsync(unit.TenantId, unit.PartyId, intent.MemoryUnitId!,
+            intent.SourceUri, intent.CaseId, cancellationToken).ConfigureAwait(false);
+        // Cleanup may finish while mapping persistence is suspended. Its durable receipt keeps
+        // canonical provenance even across process death, and this writer cannot claim indexed.
+        return await intentStore.CanPublishAsync(unit.TenantId, unit.PartyId, intent, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static PartyMemoryIndexingResult Failed(PartyMemoryUnit unit, PartyMemoryIngestionIntent intent, string reason)
+        => new(unit.PartyId, unit.SourceUri, intent.WorkflowInstanceId, Indexed: false, FailureReason: reason);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Memories indexing failed with {ExceptionType}; the delivery remains retryable.")]
+    private static partial void LogFailure(ILogger logger, string exceptionType);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Memories independent recovery failed with {ExceptionType}; durable obligations must be retried.")]
+    private static partial void LogRecoveryFailure(ILogger logger, string exceptionType);
 }

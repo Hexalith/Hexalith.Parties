@@ -80,7 +80,7 @@ public class PartyMemoryUnitMapperTests
             TenantId = "tenant-a",
             RequireApiToken = false,
         });
-        var service = new PartyMemoryIndexingService(client, mappingStore, optionsMonitor, NullLogger<PartyMemoryIndexingService>.Instance);
+        var service = new PartyMemoryIndexingService(client, mappingStore, optionsMonitor, NullLogger<PartyMemoryIndexingService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore());
         PartyIndexEntry entry = CreateEntry();
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
@@ -126,7 +126,7 @@ public class PartyMemoryUnitMapperTests
             TenantId = "tenant-a",
             RequireApiToken = false,
         });
-        var service = new PartyMemoryIndexingService(client, mappingStore, optionsMonitor, NullLogger<PartyMemoryIndexingService>.Instance);
+        var service = new PartyMemoryIndexingService(client, mappingStore, optionsMonitor, NullLogger<PartyMemoryIndexingService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore());
         PartyIndexEntry entry = CreateEntry();
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
@@ -154,7 +154,7 @@ public class PartyMemoryUnitMapperTests
             client,
             new RecordingMappingStore(),
             CreateMonitor(new PartyMemorySearchOptions()),
-            logger);
+            logger, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore());
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
             CreateEntry() with { Id = partyId },
@@ -178,7 +178,7 @@ public class PartyMemoryUnitMapperTests
             client,
             new RecordingMappingStore(),
             CreateMonitor(new PartyMemorySearchOptions()),
-            logger);
+            logger, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore());
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
             CreateEntry() with { Id = partyId },
@@ -187,11 +187,11 @@ public class PartyMemoryUnitMapperTests
 
         result.ShouldNotBeNull().Indexed.ShouldBeFalse();
         AssertSanitizedDiagnostics(logger, tenantId, partyId, caseId);
-        logger.Records.ShouldHaveSingleItem().Message.ShouldContain("no workflow/memory-unit id");
+        logger.Records.ShouldHaveSingleItem().Message.ShouldContain("empty-workflow");
     }
 
     [Fact]
-    public async Task PartyMemoryIndexingServiceCompensationUsesCapturedCaseAndLogsOnlyBoundedMetadata()
+    public async Task PartyMemoryIndexingServiceMappingRecoveryLogsOnlyBoundedMetadata()
     {
         const string tenantId = "tenant-secret";
         const string partyId = "party-secret";
@@ -206,12 +206,11 @@ public class PartyMemoryUnitMapperTests
             CreateMonitor(new PartyMemorySearchOptions
             {
                 Endpoint = new Uri("http://127.0.0.1:1/"),
-                // Deliberately differs from the ingest snapshot. Compensation must use the
-                // captured unit CaseId, not this mutable live option.
+                // Mutable live configuration cannot change the retained ingestion scope.
                 CaseId = null,
                 ApiToken = "invalid\r\nmemory-unit-secret",
             }),
-            logger);
+            logger, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore());
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
@@ -221,119 +220,8 @@ public class PartyMemoryUnitMapperTests
 
         result.ShouldNotBeNull().Indexed.ShouldBeFalse();
         AssertSanitizedDiagnostics(logger, tenantId, partyId, caseId, memoryUnitId, providerFailure);
-        (LogLevel level, string message, Exception? loggedException) = logger.Records.ShouldHaveSingleItem();
-        level.ShouldBe(LogLevel.Error);
-        message.ShouldContain(nameof(HttpRequestException));
-        message.ShouldContain(nameof(InvalidOperationException));
-        message.ShouldNotContain("skipped");
-        loggedException.ShouldBeNull();
-    }
-
-    [Theory]
-    [InlineData(204, "", true)]
-    [InlineData(404, "{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}", true)]
-    [InlineData(404, "", false)]
-    [InlineData(404, "<html>Not Found</html>", false)]
-    [InlineData(404, "{\"code\":\"CASE_NOT_FOUND\"}", false)]
-    [InlineData(404, "{\"code\":\"TENANT_NOT_FOUND\"}", false)]
-    [InlineData(503, "{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}", false)]
-    public async Task CompensationUsesVersionedRouteAndQualifiesMissingUnitResponse(int status, string body, bool accepted)
-    {
-        WebApplicationBuilder builder = WebApplication.CreateSlimBuilder();
-        builder.Logging.ClearProviders();
-        await using WebApplication app = builder.Build();
-        app.Urls.Add("http://127.0.0.1:0");
-        string? requestPath = null;
-        string? requestMethod = null;
-        string? authorization = null;
-        app.Run(async context =>
-        {
-            requestPath = context.Request.Path.Value;
-            requestMethod = context.Request.Method;
-            authorization = context.Request.Headers.Authorization;
-            context.Response.StatusCode = status;
-            context.Response.ContentType = "application/json";
-            if (body.Length > 0)
-            {
-                await context.Response.WriteAsync(body, context.RequestAborted).ConfigureAwait(false);
-            }
-        });
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-        timeout.CancelAfter(TimeSpan.FromSeconds(15));
-        await app.StartAsync(timeout.Token);
-        var logger = new RecordingLogger<PartyMemoryIndexingService>();
-        var service = new PartyMemoryIndexingService(
-            new RecordingMemoriesClient { WorkflowInstanceId = "memory-unit-secret" },
-            new ThrowingMappingStore(new InvalidOperationException("provider sensitive details")),
-            CreateMonitor(new PartyMemorySearchOptions
-            {
-                Endpoint = new Uri(app.Urls.Single() + "/gateway/"),
-                CaseId = "case-current",
-                ApiToken = "test-token",
-            }),
-            logger);
-
-        PartyMemoryIndexingResult? result = await service.IndexAsync(
-            CreateEntry() with { Id = "party-secret" },
-            new PartyMemoryUnitMappingContext("tenant-secret", "case-at-ingestion", "PartyCreated", AggregateId: "party-secret"),
-            timeout.Token);
-
-        result.ShouldNotBeNull().Indexed.ShouldBeFalse();
-        requestMethod.ShouldBe("DELETE");
-        requestPath.ShouldBe("/gateway/api/v1/tenants/tenant-secret/cases/case-at-ingestion/memory-units/memory-unit-secret");
-        authorization.ShouldBe("Bearer test-token");
-        AssertSanitizedDiagnostics(logger, "provider sensitive details", "tenant-secret", "party-secret", "case-at-ingestion", "memory-unit-secret");
-        var record = logger.Records.ShouldHaveSingleItem();
-        record.Level.ShouldBe(accepted ? LogLevel.Warning : LogLevel.Error);
-        record.Message.ShouldContain(accepted ? "Compensating delete succeeded" : "Operator reconciliation is required");
-        await app.StopAsync(timeout.Token);
-    }
-
-    [Fact]
-    public async Task CompensationPropagatesCancellationDuringResponseBodyRead()
-    {
-        WebApplicationBuilder builder = WebApplication.CreateSlimBuilder();
-        builder.Logging.ClearProviders();
-        await using WebApplication app = builder.Build();
-        app.Urls.Add("http://127.0.0.1:0");
-        var responseStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var releaseBody = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        app.Run(async context =>
-        {
-            context.Response.StatusCode = 404;
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync("{", context.RequestAborted).ConfigureAwait(false);
-            await context.Response.Body.FlushAsync(context.RequestAborted).ConfigureAwait(false);
-            responseStarted.TrySetResult();
-            await releaseBody.Task.ConfigureAwait(false);
-        });
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-        timeout.CancelAfter(TimeSpan.FromSeconds(15));
-        using var caller = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token);
-        await app.StartAsync(timeout.Token);
-        var logger = new RecordingLogger<PartyMemoryIndexingService>();
-        var service = new PartyMemoryIndexingService(
-            new RecordingMemoriesClient(),
-            new ThrowingMappingStore(new InvalidOperationException("mapping failure")),
-            CreateMonitor(new PartyMemorySearchOptions { Endpoint = new Uri(app.Urls.Single() + "/") }),
-            logger);
-        try
-        {
-            Task<PartyMemoryIndexingResult?> indexing = service.IndexAsync(
-                CreateEntry(),
-                new PartyMemoryUnitMappingContext("tenant-a", "case-a", "PartyCreated"),
-                caller.Token);
-            await responseStarted.Task.WaitAsync(timeout.Token);
-            caller.Cancel();
-
-            await Should.ThrowAsync<OperationCanceledException>(() => indexing);
-            logger.Records.ShouldBeEmpty();
-        }
-        finally
-        {
-            releaseBody.TrySetResult();
-            await app.StopAsync(timeout.Token);
-        }
+        logger.Records.ShouldContain(record => record.Message.Contains(nameof(InvalidOperationException), StringComparison.Ordinal));
+        logger.Records.ShouldAllBe(record => record.Exception == null);
     }
 
     [Fact]
@@ -464,14 +352,13 @@ public class PartyMemoryUnitMapperTests
                 _mappings[key] = list;
             }
 
-            // Match production: replace matching identities only within the same case.
-            // Legacy entries without a CaseId are adopted by the current case, while
-            // cross-case entries remain available for later cleanup.
+            // Match production: a shared source never replaces a distinct unit.
+            // Legacy entries without a CaseId are adopted only for the same unit,
+            // while cross-case entries remain available for later cleanup.
             int idx = list.FindIndex(e =>
                 (string.IsNullOrWhiteSpace(e.CaseId)
                     || string.Equals(e.CaseId, caseId, StringComparison.Ordinal))
-                && (string.Equals(e.MemoryUnitId, memoryUnitId, StringComparison.Ordinal)
-                    || string.Equals(e.SourceUri, sourceUri, StringComparison.Ordinal)));
+                && string.Equals(e.MemoryUnitId, memoryUnitId, StringComparison.Ordinal));
             if (idx >= 0)
             {
                 list[idx] = new PartyMemoryUnitMappingEntry(memoryUnitId, sourceUri, caseId);
@@ -568,6 +455,7 @@ public class PartyMemoryUnitMapperTests
             string contentType,
             string ingestedBy,
             IReadOnlyDictionary<string, MetadataField>? metadata,
+            string? idempotencyToken,
             CancellationToken ct)
         {
             LastTenantId = tenantId;
@@ -577,6 +465,8 @@ public class PartyMemoryUnitMapperTests
             LastMetadata = metadata ?? new Dictionary<string, MetadataField>(StringComparer.Ordinal);
             return Task.FromResult(WorkflowInstanceId);
         }
+        public override Task<IngestionWorkflowStatus> GetIngestionWorkflowStatusAsync(string instanceId, CancellationToken ct)
+            => Task.FromResult(PartyMemoryRecoveryHandler.Completed(instanceId, WorkflowInstanceId, LastTenantId!, LastCaseId!));
 #pragma warning restore HXL001
     }
 
@@ -595,6 +485,7 @@ public class PartyMemoryUnitMapperTests
             string contentType,
             string ingestedBy,
             IReadOnlyDictionary<string, MetadataField>? metadata,
+            string? idempotencyToken,
             CancellationToken ct)
             => Task.FromException<string>(ex);
 #pragma warning restore HXL001

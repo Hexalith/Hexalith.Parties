@@ -6,7 +6,7 @@ namespace Hexalith.Parties.Ci.Tests;
 
 public sealed class PartiesContainerPublishWorkflowTests
 {
-    private const int ExpectedPackageCount = 9;
+    private const int ExpectedPackageCount = 10;
     private const string BuildsValidationSha = "332b2c144defba546fe0a09626a4a72f2340e22f";
     private const string BuildsExecutionSha = "397c94a4e246c90b21cf408790fa0d55bf32d795";
     private static readonly TimeSpan WorkflowReadTimeout = TimeSpan.FromSeconds(10);
@@ -134,7 +134,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         preparation.ShouldContain("source-branch: main\n");
         preparation.ShouldContain("source-ci-workflow: ci.yml\n");
         preparation.ShouldContain("package-manifest: tools/release-packages.json\n");
-        preparation.ShouldContain("expected-package-count: 9\n");
+        preparation.ShouldContain("expected-package-count: 10\n");
         publisher.ShouldContain("uses: ./.hexalith/builds-execution/Github/publish-containers\n");
         publisher.ShouldContain($"builds-execution-sha: {BuildsExecutionSha}\n");
         workflow.ShouldContain("actions/workflows/ci.yml/runs");
@@ -329,7 +329,7 @@ public sealed class PartiesContainerPublishWorkflowTests
             "HEXALITH_RELEASE_SOURCE_BRANCH: main",
             "HEXALITH_RELEASE_SOURCE_CI_WORKFLOW: ci.yml",
             "HEXALITH_RELEASE_PACKAGE_MANIFEST: tools/release-packages.json",
-            "HEXALITH_RELEASE_EXPECTED_PACKAGE_COUNT: '9'",
+            "HEXALITH_RELEASE_EXPECTED_PACKAGE_COUNT: '10'",
             "HEXALITH_RELEASE_RESERVED_VERSION: ''",
             "HEXALITH_RELEASE_AUTHORITY_ISSUE_URL: ''",
             "HEXALITH_RELEASE_AUTHORITY_OWNER: ''",
@@ -452,7 +452,7 @@ public sealed class PartiesContainerPublishWorkflowTests
         containerTargets.ShouldContain("<ContainerGenerateLabelsImageSource>false</ContainerGenerateLabelsImageSource>");
         containerTargets.ShouldNotContain("Hexalith.EventStore");
 
-        publicationPreflight.ShouldContain("readonly expected_package_count=9");
+        publicationPreflight.ShouldContain("readonly expected_package_count=10");
         publicationPreflight.ShouldContain(
             "HEXALITH_RELEASE_SOURCE_CI_WORKFLOW must be exactly ci.yml.");
         publicationPreflight.ShouldNotContain("commitlint.yml");
@@ -466,12 +466,15 @@ public sealed class PartiesContainerPublishWorkflowTests
     }
 
     [Fact]
-    public void ReleasePackageManifestDeclaresExactNinePackageInventory()
+    public void ReleasePackageManifestDeclaresExactTenPackageInventory()
     {
         using JsonDocument manifest = JsonDocument.Parse(CiTestPaths.ReadRepoFile("tools/release-packages.json"));
         JsonElement[] packages = manifest.RootElement.GetProperty("packages").EnumerateArray().ToArray();
 
         packages.Length.ShouldBe(ExpectedPackageCount);
+        using JsonDocument policy = JsonDocument.Parse(CiTestPaths.ReadRepoFile("tools/nuget-trusted-publishing-policy.json"));
+        policy.RootElement.GetProperty("packageIds").EnumerateArray().Select(package => package.GetString())
+            .ShouldBe(packages.Select(package => package.GetProperty("id").GetString()));
         packages.Select(package => package.GetProperty("id").GetString()).ShouldBe(
         [
             "Hexalith.Parties.Contracts",
@@ -483,6 +486,7 @@ public sealed class PartiesContainerPublishWorkflowTests
             "Hexalith.Parties.Projections",
             "Hexalith.Parties.Security",
             "Hexalith.Parties.Testing",
+            "Hexalith.Parties.Aspire",
         ]);
         packages.Select(package => package.GetProperty("project").GetString()).ShouldBe(
         [
@@ -495,6 +499,7 @@ public sealed class PartiesContainerPublishWorkflowTests
             "src/Hexalith.Parties.Projections/Hexalith.Parties.Projections.csproj",
             "src/Hexalith.Parties.Security/Hexalith.Parties.Security.csproj",
             "src/Hexalith.Parties.Testing/Hexalith.Parties.Testing.csproj",
+            "src/Hexalith.Parties.Aspire/Hexalith.Parties.Aspire.csproj",
         ]);
     }
 
@@ -564,15 +569,15 @@ public sealed class PartiesContainerPublishWorkflowTests
             "registry.hexalith.com/parties-mcp",
             "registry.hexalith.com/parties-ui",
         ]);
-        ArgumentValues(arguments, "--expected-package-count").ShouldBe(["9"]);
+        ArgumentValues(arguments, "--expected-package-count").ShouldBe(["10"]);
         ArgumentValues(arguments, "--phase").ShouldBe([phase]);
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    [InlineData("8")]
-    [InlineData("10")]
+    [InlineData("9")]
+    [InlineData("11")]
     public void PublicationPreflightWrapperRejectsPackageCountDriftBeforeSharedPreflight(string? packageCount)
     {
         if (OperatingSystem.IsWindows())
@@ -584,7 +589,7 @@ public sealed class PartiesContainerPublishWorkflowTests
             RunPublicationPreflightWrapper("verify", packageCount);
 
         exitCode.ShouldNotBe(0);
-        error.ShouldContain("expected-package-count input must be exactly 9");
+        error.ShouldContain("expected-package-count input must be exactly 10");
         preflightInvoked.ShouldBeFalse();
     }
 

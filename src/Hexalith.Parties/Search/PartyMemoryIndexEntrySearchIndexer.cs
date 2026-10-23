@@ -1,4 +1,7 @@
+using Hexalith.EventStore.Client.Projections;
 using Hexalith.Parties.Contracts.Models;
+using Hexalith.Parties.Projections.Configuration;
+using Hexalith.Parties.Projections.Models;
 using Hexalith.Parties.Projections.Search;
 
 using Microsoft.Extensions.Logging;
@@ -17,7 +20,9 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
     PartyMemoryIndexingService? indexingService,
     PartyMemoryCleanupService cleanupService,
     IOptionsMonitor<PartyMemorySearchOptions> options,
-    ILogger<PartyMemoryIndexEntrySearchIndexer> logger) : IPartyIndexSearchIndexer
+    ILogger<PartyMemoryIndexEntrySearchIndexer> logger,
+    IReadModelStore? readModelStore = null,
+    IOptions<PartySdkReadModelOptions>? projectionOptions = null) : IPartyIndexSearchIndexer
 {
     // Suppress retained pairs for this singleton's lifetime. Evicted pairs may warn again.
     // Both collections are bounded, and duplicates never add eviction bookkeeping.
@@ -27,11 +32,21 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
     private readonly HashSet<(string TenantId, string PartyId)> _caseIdMissingWarned = [];
     private readonly Queue<(string TenantId, string PartyId)> _caseIdMissingWarningOrder = new();
 
+    public Task<bool> NotifyIndexedAsync(
+        string tenantId,
+        PartyIndexEntry entry,
+        string eventType,
+        DateTimeOffset timestamp,
+        CancellationToken cancellationToken)
+        => NotifyIndexedAsync(tenantId, entry, eventType, timestamp, null, cancellationToken);
+
+    /// <summary>Retains the canonical application sequence in the durable ingestion identity.</summary>
     public async Task<bool> NotifyIndexedAsync(
         string tenantId,
         PartyIndexEntry entry,
         string eventType,
         DateTimeOffset timestamp,
+        long? sequenceNumber,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(entry);
@@ -62,6 +77,18 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
                 return false;
             }
 
+            if (!await indexingService.TryResumeLiveProjectionAsync(tenantId, entry.Id, cancellationToken).ConfigureAwait(false))
+            {
+                // A supported live re-add must finish transient removal before opening a new
+                // ingestion generation. Permanent erasure and unreadable canonical state stay fenced.
+                _ = await cleanupService.DeleteByPartyAsync(tenantId, current.CaseId, entry.Id,
+                    cancellationToken, permanent: false).ConfigureAwait(false);
+                if (!await indexingService.TryResumeLiveProjectionAsync(tenantId, entry.Id, cancellationToken).ConfigureAwait(false))
+                {
+                    return false;
+                }
+            }
+
             PartyMemoryIndexingResult? result = await indexingService
                 .IndexAsync(
                     entry,
@@ -70,7 +97,8 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
                         current.CaseId,
                         string.IsNullOrWhiteSpace(eventType) ? "PartyProjectionChanged" : eventType,
                         aggregateId: entry.Id,
-                        timestamp: timestamp),
+                        timestamp: timestamp,
+                        sequenceNumber: sequenceNumber),
                     cancellationToken)
                 .ConfigureAwait(false);
 
@@ -110,8 +138,22 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
         try
         {
             PartyMemorySearchOptions current = options.CurrentValue;
+            bool permanent = true;
+            if (readModelStore is not null)
+            {
+                string storeName = projectionOptions?.Value.ReadModelStateStoreName ?? "statestore";
+                PartyIndexSdkReadModel? canonical = (await readModelStore.GetAsync<PartyIndexSdkReadModel>(storeName,
+                    PartySdkReadModelAddresses.Index(tenantId), cancellationToken).ConfigureAwait(false)).Value;
+                if (canonical is not { Entries: not null, ErasureSequenceNumbers: not null, LastSequenceNumbers: not null, LastIndexedEvents: not null })
+                {
+                    return false;
+                }
+
+                permanent = canonical.ErasureSequenceNumbers.ContainsKey(partyId);
+            }
+
             PartyMemoryCleanupResult result = await cleanupService
-                .DeleteByPartyAsync(tenantId, current.CaseId ?? string.Empty, partyId, cancellationToken)
+                .DeleteByPartyAsync(tenantId, current.CaseId ?? string.Empty, partyId, cancellationToken, permanent)
                 .ConfigureAwait(false);
 
             if (!result.Cleaned)

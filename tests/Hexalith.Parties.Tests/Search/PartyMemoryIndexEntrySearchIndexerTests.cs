@@ -119,6 +119,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         using ServiceProvider provider = services.BuildServiceProvider();
         JsonSerializerOptions serializerOptions = provider.GetRequiredService<DaprClient>().JsonSerializerOptions;
         var client = new RecordingMemoriesClient { FailNextIngest = true };
+        var intentState = new PartyMemoryTestReadModelStore();
         var mappingStore = new RecordingMappingStore();
         var searchOptions = new PartyMemorySearchOptions
         {
@@ -156,7 +157,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             Delivery(new PartyNotFound(), 3, timestamp.AddMinutes(1)),
         ]);
         var handler = new PartyIndexSdkProjectionHandler(store, projectionOptions,
-            CreateIndexer(client, mappingStore, searchOptions));
+            CreateIndexer(client, mappingStore, searchOptions, intentState: intentState));
 
         DomainProjectionHandlerResult first = await handler.ProjectAsync(request, "first", TestContext.Current.CancellationToken);
 
@@ -171,7 +172,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         byte[] committed = persisted.ToArray();
 
         handler = new PartyIndexSdkProjectionHandler(store, projectionOptions,
-            CreateIndexer(client, mappingStore, searchOptions));
+            CreateIndexer(client, mappingStore, searchOptions, intentState: intentState));
         DomainProjectionHandlerResult retry = await handler.ProjectAsync(request, "retry", TestContext.Current.CancellationToken);
 
         retry.Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
@@ -323,11 +324,11 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
                 client,
                 mappingStore,
                 monitor,
-                NullLogger<PartyMemoryIndexingService>.Instance),
+                NullLogger<PartyMemoryIndexingService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()),
             new PartyMemoryCleanupService(
                 new HttpClient { BaseAddress = new Uri("https://memories.example/") },
                 mappingStore,
-                NullLogger<PartyMemoryCleanupService>.Instance),
+                NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()),
             monitor,
             logger);
 
@@ -341,7 +342,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         (Microsoft.Extensions.Logging.LogLevel level, string message, Exception? exception) =
             logger.Records.ShouldHaveSingleItem();
         level.ShouldBe(Microsoft.Extensions.Logging.LogLevel.Warning);
-        message.ShouldContain(nameof(InvalidOperationException));
+        message.ShouldContain("indexing failed");
         message.ShouldNotContain("tenant-a");
         message.ShouldNotContain("party-1");
         message.ShouldNotContain("readmodel:key");
@@ -363,7 +364,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         var cleanup = new PartyMemoryCleanupService(
             new HttpClient(handler) { BaseAddress = new Uri("https://memories.example/") },
             mappingStore,
-            NullLogger<PartyMemoryCleanupService>.Instance);
+            NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore());
         var indexer = new PartyMemoryIndexEntrySearchIndexer(
             new PartyMemoryIndexingService(
                 new RecordingMemoriesClient(),
@@ -375,7 +376,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
                     CaseId = "case-a",
                     RequireApiToken = false,
                 }),
-                NullLogger<PartyMemoryIndexingService>.Instance),
+                NullLogger<PartyMemoryIndexingService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()),
             cleanup,
             CreateMonitor(new PartyMemorySearchOptions
             {
@@ -404,13 +405,13 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             "urn:hexalith:parties:tenant-a:party:party-1",
             "case-at-ingestion",
             CancellationToken.None);
-        var handler = new CapturingHandler(new HttpResponseMessage(System.Net.HttpStatusCode.NoContent));
+        var handler = new CapturingHandler(new HttpResponseMessage(System.Net.HttpStatusCode.NoContent)) { CaseId = "case-at-ingestion" };
         var indexer = new PartyMemoryIndexEntrySearchIndexer(
             indexingService: null,
             new PartyMemoryCleanupService(
                 new HttpClient(handler) { BaseAddress = new Uri("https://memories.example/") },
                 mappingStore,
-                NullLogger<PartyMemoryCleanupService>.Instance),
+                NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()),
             CreateMonitor(new PartyMemorySearchOptions { Enabled = false, CaseId = "case-current" }),
             NullLogger<PartyMemoryIndexEntrySearchIndexer>.Instance);
 
@@ -634,13 +635,13 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         var logger = new PartyMemoryIndexEntryWarningLogger();
         var mappingStore = new RecordingMappingStore();
         await mappingStore.RecordMappingAsync("cleanup-tenant", "cleanup-party", "memory-1", "urn:cleanup", "persisted-case", TestContext.Current.CancellationToken);
-        var handler = new CapturingHandler(new HttpResponseMessage(System.Net.HttpStatusCode.NoContent));
+        var handler = new CapturingHandler(new HttpResponseMessage(System.Net.HttpStatusCode.NoContent)) { TenantId = "cleanup-tenant", CaseId = "persisted-case" };
         var indexer = new PartyMemoryIndexEntrySearchIndexer(
             indexingService: null,
             new PartyMemoryCleanupService(
                 new HttpClient(handler) { BaseAddress = new Uri("https://memories.example/") },
                 mappingStore,
-                NullLogger<PartyMemoryCleanupService>.Instance),
+                NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()),
             CreateMonitor(MissingCaseOptions()),
             logger);
         (await NotifyMissingCaseAsync(indexer, "cleanup-tenant", "cleanup-party")).ShouldBeFalse();
@@ -698,19 +699,21 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         IPartyMemoryUnitMappingStore mappingStore,
         PartyMemorySearchOptions options,
         ILogger<PartyMemoryIndexEntrySearchIndexer>? logger = null,
-        IOptionsMonitor<PartyMemorySearchOptions>? optionsMonitor = null)
+        IOptionsMonitor<PartyMemorySearchOptions>? optionsMonitor = null,
+        PartyMemoryTestReadModelStore? intentState = null)
     {
         IOptionsMonitor<PartyMemorySearchOptions> monitor = optionsMonitor ?? CreateMonitor(options);
+        var intentStore = PartyMemoryRecoveryTests.Intents(intentState ?? new PartyMemoryTestReadModelStore());
         return new PartyMemoryIndexEntrySearchIndexer(
             new PartyMemoryIndexingService(
                 client,
                 mappingStore,
                 monitor,
-                NullLogger<PartyMemoryIndexingService>.Instance),
+                NullLogger<PartyMemoryIndexingService>.Instance, intentStore),
             new PartyMemoryCleanupService(
                 new HttpClient { BaseAddress = new Uri("https://memories.example/") },
                 mappingStore,
-                NullLogger<PartyMemoryCleanupService>.Instance),
+                NullLogger<PartyMemoryCleanupService>.Instance, intentStore),
             monitor,
             logger ?? NullLogger<PartyMemoryIndexEntrySearchIndexer>.Instance);
     }
@@ -839,6 +842,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             string contentType,
             string ingestedBy,
             IReadOnlyDictionary<string, MetadataField>? metadata,
+            string? idempotencyToken,
             CancellationToken ct)
         {
             IngestCount++;
@@ -848,11 +852,14 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             if (FailNextIngest)
             {
                 FailNextIngest = false;
-                return Task.FromException<string>(new HttpRequestException("Simulated ingestion failure."));
+                return Task.FromException<string>(new MemoriesRemoteException(System.Net.HttpStatusCode.Unauthorized,
+                    new ErrorResponse("UNAUTHORIZED", "Submission rejected.", "Repair credentials.")));
             }
 
             return Task.FromResult("workflow-1");
         }
+        public override Task<IngestionWorkflowStatus> GetIngestionWorkflowStatusAsync(string instanceId, CancellationToken ct)
+            => Task.FromResult(PartyMemoryRecoveryHandler.Completed(instanceId, "workflow-1", LastTenantId!, LastCaseId!));
 #pragma warning restore HXL001
     }
 
@@ -871,6 +878,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             string contentType,
             string ingestedBy,
             IReadOnlyDictionary<string, MetadataField>? metadata,
+            string? idempotencyToken,
             CancellationToken ct)
             => Task.FromException<string>(ex);
 #pragma warning restore HXL001
@@ -879,13 +887,27 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
     private sealed class CapturingHandler(HttpResponseMessage response) : HttpMessageHandler
     {
         public int RequestCount { get; private set; }
-
         public Uri? LastUri { get; private set; }
-
-        protected override Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken)
+        public string TenantId { get; set; } = "tenant-a";
+        public string CaseId { get; set; } = "case-a";
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            if (request.RequestUri!.AbsolutePath.Contains("/ingest/", StringComparison.Ordinal))
+            {
+                return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+                {
+                    Content = System.Net.Http.Json.JsonContent.Create(PartyMemoryRecoveryHandler.Completed("memory-1", "memory-1", TenantId, CaseId)),
+                });
+            }
+
+            if (request.Method == HttpMethod.Get)
+            {
+                return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound)
+                {
+                    Content = System.Net.Http.Json.JsonContent.Create(new { code = "MEMORY_UNIT_NOT_FOUND" }),
+                });
+            }
+
             RequestCount++;
             LastUri = request.RequestUri;
             return Task.FromResult(response);
