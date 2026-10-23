@@ -294,3 +294,11 @@ references/Hexalith.FrontComposer|803b38116478466b5192d953f211ad37da402294|valid
 #     package publication, historical parity, release or rollback authority.
 references/Hexalith.EventStore|596de60e140da779f170279a822ded010070d774|validated-advance|v3.127.0-7-g596de60e|jpiquot|2026-10-23
 references/Hexalith.Memories|4190ec6549dd83bcaaf268e7bb723dcff8f7286b|validated-advance|v2.29.11-1-g4190ec65|jpiquot|2026-10-23
+
+# --- Approved five-item recovery integration task, 2026-10-23.
+#     Authenticated owner jpiquot approved the frozen spec and requested main pushes.
+#     Reviewed task commits are published on owner main; incoming ancestry is kept.
+#     Source selection only: no package, deployment, historical parity or rollback approval.
+references/Hexalith.EventStore|da50f853b6c2c37193e9b1a8819858778d48d0f3|validated-advance|v3.127.0-8-gda50f853|jpiquot|2026-10-23
+references/Hexalith.Memories|5a852389327bf45df7d59b2c2e29c7adbe353f19|validated-advance|v2.29.11-4-g5a852389|jpiquot|2026-10-23
+references/Hexalith.FrontComposer|aee73e5841b4004803dafa851f060e143550716a|validated-advance|v4.7.0-76-gaee73e58|jpiquot|2026-10-23

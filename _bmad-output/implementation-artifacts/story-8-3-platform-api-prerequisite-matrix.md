@@ -50,17 +50,19 @@ not the G5 runtime engine.
 
 ### Current source observation — 2026-10-23
 
-An external `/pushall` advanced the root source selections in Parties
-`ec3d919c159aa87453910011618cb6d07f873baa` during the approved five-item task.
+An earlier external `/pushall` advanced the root source selections in Parties
+`ec3d919c159aa87453910011618cb6d07f873baa` during the prior five-item task.
 The following identities are observed selection facts, without extending owner
 approval, historical parity, custody, migration or release authority. Selection does not revalidate historical parity receipts.
 
 
-The task follow-ups are EventStore `596de60e140da779f170279a822ded010070d774`
-and Memories `4190ec6549dd83bcaaf268e7bb723dcff8f7286b`.
-Both owner checkouts are clean, and their main branches contain these commits.
-The root adoption commit records their exact pointers. Their source selection is
-approved by this task; the other externally advanced rows remain observations.
+The reviewed recovery-integration task selects EventStore `da50f853b6c2c37193e9b1a8819858778d48d0f3`,
+Memories `5a852389327bf45df7d59b2c2e29c7adbe353f19` and FrontComposer
+`aee73e5841b4004803dafa851f060e143550716a`. All three owner checkouts are clean
+and these commits are published on their main branches. The operator approved the
+frozen five-item spec and instructed publication on main; source selection is
+limited to this reviewed work and preserved incoming owner ancestry. Other
+externally advanced rows remain observations, and historical parity is unchanged.
 
 The user selected EventStore package `3.127.0`. The effective catalog selects
 Commons `2.30.3`, FrontComposer `4.7.0`, Memories `2.29.8`, Tenants `5.10.1` and
@@ -78,7 +80,7 @@ extend its approvals.
 Reproduce observations with `git ls-tree HEAD references/Hexalith.<dependency>`,
 `git -C references/Hexalith.<dependency> rev-parse HEAD`, `git -C references/Hexalith.<dependency> describe --tags --always --abbrev=8 HEAD`
 and `git -C references/Hexalith.<dependency> status --porcelain`. A dirty source
-checkout is not clean-commit qualification. The two reviewed owner follow-ups
+checkout is not clean-commit qualification. The three reviewed owner follow-ups
 are committed and pushed; no historical receipt below is recertified.
 
 Default package mode and the explicit source graph remain distinct; ordinary Release builds
@@ -100,9 +102,9 @@ dotnet msbuild src/Hexalith.Parties/Hexalith.Parties.csproj -p:Configuration=Rel
 
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
-| EventStore | `596de60e140da779f170279a822ded010070d774` (`v3.127.0-7-g596de60e`) | Package `3.127.0`; source recovery/alias work has separate qualification. |
-| Memories | `4190ec6549dd83bcaaf268e7bb723dcff8f7286b` (`v2.29.11-1-g4190ec65`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
-| FrontComposer | `05bba2e9c945e6d11a188928e6a4f2e9059551db` (`v4.7.0-70-g05bba2e9`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
+| EventStore | `da50f853b6c2c37193e9b1a8819858778d48d0f3` (`v3.127.0-8-gda50f853`) | Package `3.127.0`; local source recovery is qualified; matching package adoption stays open. |
+| Memories | `5a852389327bf45df7d59b2c2e29c7adbe353f19` (`v2.29.11-4-g5a852389`) | Approved task source selection; MCP policy tested; package/deployment gates remain separate. |
+| FrontComposer | `aee73e5841b4004803dafa851f060e143550716a` (`v4.7.0-76-gaee73e58`) | Approved task source selection; mapped UI asset delivery tested; package/parity gates remain separate. |
 | Tenants | `48b0cd98be5ff75402e1206e083e561552146454` (`v5.10.1-30-g48b0cd98`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
 | AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` (`3f194e17`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |
 | Commons | `1663028fb6d9f46a0bf17919edeb21bb99be1587` (`v2.30.3-4-g1663028f`) | Observed source selection only; package/runtime/owner gates retain their own evidence. |

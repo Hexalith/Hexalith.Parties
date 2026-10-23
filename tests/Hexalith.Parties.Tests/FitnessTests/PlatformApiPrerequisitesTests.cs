@@ -58,9 +58,9 @@ public sealed class PlatformApiPrerequisitesTests
     ];
 
     // Release selection is separate from the historical migration/parity receipt constants.
-    private const string CurrentReleaseEventStoreSha = "596de60e140da779f170279a822ded010070d774";
-    private const string CurrentReleaseEventStoreDescribe = "v3.127.0-7-g596de60e";
-    private const string CurrentSourceEventStoreDescribe = "v3.127.0-7-g596de60e";
+    private const string CurrentReleaseEventStoreSha = "da50f853b6c2c37193e9b1a8819858778d48d0f3";
+    private const string CurrentReleaseEventStoreDescribe = "v3.127.0-8-gda50f853";
+    private const string CurrentSourceEventStoreDescribe = "v3.127.0-8-gda50f853";
     private const string CurrentReleaseEventStoreTag = "v3.127.0";
     private static readonly IReadOnlyDictionary<string, string> CurrentReleaseGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
@@ -68,8 +68,8 @@ public sealed class PlatformApiPrerequisitesTests
         ["references/Hexalith.Builds"] = "8c9caa77feb85a2dce03153519d81684128890a6",
         ["references/Hexalith.Commons"] = "1663028fb6d9f46a0bf17919edeb21bb99be1587",
         [EventStoreRelativePath] = CurrentReleaseEventStoreSha,
-        ["references/Hexalith.FrontComposer"] = "05bba2e9c945e6d11a188928e6a4f2e9059551db",
-        ["references/Hexalith.Memories"] = "4190ec6549dd83bcaaf268e7bb723dcff8f7286b",
+        ["references/Hexalith.FrontComposer"] = "aee73e5841b4004803dafa851f060e143550716a",
+        ["references/Hexalith.Memories"] = "5a852389327bf45df7d59b2c2e29c7adbe353f19",
         ["references/Hexalith.PolymorphicSerializations"] = "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
         ["references/Hexalith.Tenants"] = "48b0cd98be5ff75402e1206e083e561552146454",
         ["references/Hexalith.McpCli"] = "d9dc31a2920ef9daf31117c1a917cfffcad110ef",
@@ -80,8 +80,8 @@ public sealed class PlatformApiPrerequisitesTests
     {
         ["references/Hexalith.Builds"] = "v4.37.0-17-g8c9caa77",
         [EventStoreRelativePath] = CurrentSourceEventStoreDescribe,
-        ["references/Hexalith.FrontComposer"] = "v4.7.0-70-g05bba2e9",
-        ["references/Hexalith.Memories"] = "v2.29.11-1-g4190ec65",
+        ["references/Hexalith.FrontComposer"] = "v4.7.0-76-gaee73e58",
+        ["references/Hexalith.Memories"] = "v2.29.11-4-g5a852389",
         ["references/Hexalith.Tenants"] = "v5.10.1-30-g48b0cd98",
         ["references/Hexalith.AI.Tools"] = "3f194e17",
         ["references/Hexalith.Commons"] = "v2.30.3-4-g1663028f",
