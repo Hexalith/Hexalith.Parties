@@ -23,6 +23,65 @@ internal sealed class PartyMemoryIngestionIntentStore(
     private readonly string _storeName = options.Value.StateStoreName;
 
     /// <inheritdoc/>
+    public async Task ProbeAsync(CancellationToken cancellationToken)
+    {
+        const string tenant = "_health-probe";
+        string party = $"_health-probe-{Guid.NewGuid():N}";
+        string key = Key(tenant, party);
+        var intent = new PartyMemoryIngestionIntent("_probe-attempt", "_probe-case", "urn:_probe");
+        bool primaryFailed = true;
+        try
+        {
+            _ = await RegisterAsync(tenant, party, intent, cancellationToken).ConfigureAwait(false);
+            ReadModelEntry<PartyMemoryIngestionInventory> read = await store.GetAsync<PartyMemoryIngestionInventory>(
+                _storeName, key, cancellationToken).ConfigureAwait(false);
+            if (!IsProbeInventory(read.Value, intent) || string.IsNullOrWhiteSpace(read.ETag))
+            {
+                throw new InvalidOperationException("memory-ingestion-probe-roundtrip-failed");
+            }
+
+            primaryFailed = false;
+        }
+        finally
+        {
+            try
+            {
+                // A failed/cancelled write can have committed. Always read back and dispose only
+                // this invocation's exact reserved sentinel under an independent bounded budget.
+                using var cleanupBudget = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                ReadModelEntry<PartyMemoryIngestionInventory> current = await store.GetAsync<PartyMemoryIngestionInventory>(
+                    _storeName, key, cleanupBudget.Token).ConfigureAwait(false);
+                if (current.Value is not null)
+                {
+                    if (!IsProbeInventory(current.Value, intent) || string.IsNullOrWhiteSpace(current.ETag)
+                        || store is not IReadModelConditionalEraser eraser
+                        || !await eraser.TryEraseAsync(_storeName, key, current.ETag, cleanupBudget.Token).ConfigureAwait(false))
+                    {
+                        throw new InvalidOperationException("memory-ingestion-probe-cleanup-failed");
+                    }
+                }
+
+                ReadModelEntry<PartyMemoryIngestionInventory> absent = await store.GetAsync<PartyMemoryIngestionInventory>(
+                    _storeName, key, cleanupBudget.Token).ConfigureAwait(false);
+                if (absent.Value is not null || !string.IsNullOrEmpty(absent.ETag))
+                {
+                    throw new InvalidOperationException("memory-ingestion-probe-cleanup-unverified");
+                }
+            }
+            catch (Exception) when (primaryFailed)
+            {
+                // Preserve the primary read/write/cancellation failure, including its stack.
+            }
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+    }
+
+    private static bool IsProbeInventory(PartyMemoryIngestionInventory? inventory, PartyMemoryIngestionIntent intent)
+        => inventory is { CleanupRequested: false, PermanentCleanup: false, Generation: 0 }
+            && inventory.Intents.SequenceEqual([intent]) && (inventory.CleanupReceipts?.Count ?? 0) == 0;
+
+    /// <inheritdoc/>
     public async Task<PartyMemoryIngestionRegistration> RegisterAsync(string tenantId, string partyId, PartyMemoryIngestionIntent intent, CancellationToken cancellationToken)
     {
         bool created = false;

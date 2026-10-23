@@ -33,6 +33,7 @@ public class MemoriesSearchHealthCheckTests
         using ServiceProvider provider = new ServiceCollection()
             .AddSingleton(new PartyMemoryCleanupService(http, new RecordingMappingStore(),
                 NullLogger<PartyMemoryCleanupService>.Instance, PartyMemoryTestServices.CreateIntentStore()))
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(new RecordingMappingStore())
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), provider);
@@ -86,6 +87,7 @@ public class MemoriesSearchHealthCheckTests
         var services = new ServiceCollection()
             .AddSingleton<MemoriesClient>(memoriesClient)
             .AddSingleton(cleanupService)
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
@@ -159,6 +161,7 @@ public class MemoriesSearchHealthCheckTests
                 new HttpClient(new RecordingCleanupHandler(HttpStatusCode.NotFound)) { BaseAddress = options.Endpoint },
                 new RecordingMappingStore(),
                 NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()))
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
@@ -198,6 +201,7 @@ public class MemoriesSearchHealthCheckTests
                 new HttpClient(new RecordingCleanupHandler(HttpStatusCode.NotFound)) { BaseAddress = options.Endpoint },
                 new RecordingMappingStore(),
                 NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()))
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
@@ -236,6 +240,7 @@ public class MemoriesSearchHealthCheckTests
                 new HttpClient(new RecordingCleanupHandler(HttpStatusCode.NotFound)) { BaseAddress = options.Endpoint },
                 new RecordingMappingStore(),
                 NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()))
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
@@ -259,6 +264,7 @@ public class MemoriesSearchHealthCheckTests
         PartyMemorySearchOptions options = new() { Enabled = false };
         var mappingStore = new RecordingMappingStore();
         using var services = new ServiceCollection()
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
@@ -302,6 +308,7 @@ public class MemoriesSearchHealthCheckTests
         using var services = new ServiceCollection()
             .AddSingleton<MemoriesClient>(searchClient)
             .AddSingleton(new PartyMemoryCleanupService(httpClient, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()))
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
@@ -349,6 +356,7 @@ public class MemoriesSearchHealthCheckTests
         };
         var mappingStore = new RecordingMappingStore();
         using var services = new ServiceCollection()
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
@@ -386,6 +394,7 @@ public class MemoriesSearchHealthCheckTests
         using var httpClient = new HttpClient(new RecordingCleanupHandler(HttpStatusCode.NoContent)) { BaseAddress = options.Endpoint };
         using var services = new ServiceCollection()
             .AddSingleton(new PartyMemoryCleanupService(httpClient, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()))
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
@@ -412,6 +421,7 @@ public class MemoriesSearchHealthCheckTests
             ReadFailure = new OperationCanceledException(cancellation.Token),
         };
         using var services = new ServiceCollection()
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(new PartyMemorySearchOptions()), services);
@@ -436,6 +446,7 @@ public class MemoriesSearchHealthCheckTests
         using var httpClient = new HttpClient(new RecordingCleanupHandler(HttpStatusCode.NoContent)) { BaseAddress = options.Endpoint };
         using var services = new ServiceCollection()
             .AddSingleton(new PartyMemoryCleanupService(httpClient, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()))
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
@@ -457,6 +468,7 @@ public class MemoriesSearchHealthCheckTests
         CancellationToken token = TestContext.Current.CancellationToken;
         await store.RecordMappingAsync("tenant-a", "party-a", "existing-unit", "urn:existing", "old-case", token);
         using var services = new ServiceCollection()
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(store)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(new PartyMemorySearchOptions()), services);
@@ -479,6 +491,7 @@ public class MemoriesSearchHealthCheckTests
     {
         var mappingStore = new RecordingMappingStore { ReadOverride = [new PartyMemoryUnitMappingEntry(unit, source, caseId)] };
         using var services = new ServiceCollection()
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(new PartyMemorySearchOptions()), services);
@@ -509,6 +522,7 @@ public class MemoriesSearchHealthCheckTests
         var mappingStore = new RecordingMappingStore();
         using var services = new ServiceCollection()
             .AddSingleton(new PartyMemoryCleanupService(httpClient, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()))
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
@@ -553,6 +567,7 @@ public class MemoriesSearchHealthCheckTests
                 new HttpClient(cleanupHandler) { BaseAddress = options.Endpoint },
                 new RecordingMappingStore(),
                 NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()))
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(new RecordingMappingStore())
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
@@ -594,6 +609,7 @@ public class MemoriesSearchHealthCheckTests
                 new HttpClient(cleanupHandler) { BaseAddress = options.Endpoint },
                 new RecordingMappingStore(),
                 NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()))
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(new RecordingMappingStore())
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
@@ -632,6 +648,7 @@ public class MemoriesSearchHealthCheckTests
         using var services = new ServiceCollection()
             .AddSingleton<MemoriesClient>(new ProbingMemoriesClient())
             .AddSingleton(new PartyMemoryCleanupService(client, mappingStore, NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()))
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(PartyMemoryTestServices.CreateIntentStore())
             .AddSingleton<IPartyMemoryUnitMappingStore>(mappingStore)
             .BuildServiceProvider();
         var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
@@ -666,6 +683,112 @@ public class MemoriesSearchHealthCheckTests
 
         result.Status.ShouldBe(HealthStatus.Unhealthy);
         result.Data["caseConfigured"].ShouldBe(false);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MappingAllowedButInventoryDeniedDegradesHealthAndRepairRestoresBothModes(bool enabled)
+    {
+        var backend = new InventoryProbeReadModelStore { DenyInventoryWrites = true };
+        var mappings = new PartyMemoryUnitMappingStore(backend, Options.Create(new PartyMemoryUnitMappingStoreOptions()), NullLogger<PartyMemoryUnitMappingStore>.Instance);
+        var intents = new PartyMemoryIngestionIntentStore(backend, Options.Create(new PartyMemoryUnitMappingStoreOptions()));
+        var options = new PartyMemorySearchOptions
+        {
+            Enabled = enabled, Endpoint = new Uri("https://memories.example/"), TenantId = "tenant-a", CaseId = "case-a", RequireApiToken = false,
+        };
+        using var http = new HttpClient(new RecordingCleanupHandler(HttpStatusCode.NotFound)) { BaseAddress = options.Endpoint };
+        using ServiceProvider services = new ServiceCollection()
+            .AddSingleton<MemoriesClient>(new ProbingMemoriesClient())
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappings)
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(intents)
+            .AddSingleton(new PartyMemoryCleanupService(http, mappings, NullLogger<PartyMemoryCleanupService>.Instance, intents))
+            .BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(options), services);
+        HealthCheckResult denied = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+        denied.Status.ShouldBe(HealthStatus.Degraded);
+        denied.Data["mappingStoreReachable"].ShouldBe(true);
+        denied.Data["ingestionInventoryReachable"].ShouldBe(false);
+        denied.Data["ingestionInventoryReason"].ToString()!.ShouldNotContain("private backend");
+        backend.DenyInventoryWrites = false;
+        HealthCheckResult repaired = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+        repaired.Status.ShouldBe(HealthStatus.Healthy);
+        repaired.Data["ingestionInventoryReachable"].ShouldBe(true);
+        backend.Inner.SerializedValues.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task InventoryProbePreservesReadFailureAndUsesBoundedIndependentCleanup(bool cleanupFails)
+    {
+        var backend = new InventoryProbeReadModelStore
+        {
+            ReadFailure = new InvalidDataException("private primary failure"),
+            EraseFailure = cleanupFails ? new HttpRequestException("private secondary failure") : null,
+        };
+        var intents = new PartyMemoryIngestionIntentStore(backend, Options.Create(new PartyMemoryUnitMappingStoreOptions()));
+        using ServiceProvider services = new ServiceCollection()
+            .AddSingleton<IPartyMemoryUnitMappingStore>(new RecordingMappingStore())
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(intents).BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(new PartyMemorySearchOptions()), services);
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Data["ingestionInventoryReason"].ToString()!.ShouldContain(nameof(InvalidDataException));
+        result.Data["ingestionInventoryReason"].ToString()!.ShouldNotContain("private");
+        backend.EraseAttempts.ShouldBe(1);
+        backend.EraseToken.CanBeCanceled.ShouldBeTrue();
+        if (!cleanupFails) backend.Inner.SerializedValues.ShouldBeEmpty();
+    }
+
+    [Fact(Timeout = 15000)]
+    public async Task InventoryProbeCleanupDeadlineCompletesWhenStoreWaitsForCancellation()
+    {
+        var backend = new InventoryProbeReadModelStore { WaitForEraseCancellation = true };
+        var intents = new PartyMemoryIngestionIntentStore(backend, Options.Create(new PartyMemoryUnitMappingStoreOptions()));
+        using ServiceProvider services = new ServiceCollection().AddSingleton<IPartyMemoryUnitMappingStore>(new RecordingMappingStore())
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(intents).BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(new PartyMemorySearchOptions()), services);
+        CancellationToken caller = TestContext.Current.CancellationToken;
+
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), caller)
+            .WaitAsync(TimeSpan.FromSeconds(10), caller);
+
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Data["ingestionInventoryReachable"].ShouldBe(false);
+        caller.IsCancellationRequested.ShouldBeFalse();
+        backend.EraseToken.IsCancellationRequested.ShouldBeTrue();
+        backend.EraseAttempts.ShouldBe(1);
+        backend.Inner.SerializedValues.ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public async Task InventoryProbeCleanupFailureDegradesAnOtherwiseSuccessfulProbe()
+    {
+        var backend = new InventoryProbeReadModelStore { RejectErase = true };
+        var intents = new PartyMemoryIngestionIntentStore(backend, Options.Create(new PartyMemoryUnitMappingStoreOptions()));
+        using ServiceProvider services = new ServiceCollection().AddSingleton<IPartyMemoryUnitMappingStore>(new RecordingMappingStore())
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(intents).BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(new PartyMemorySearchOptions()), services);
+        HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+        result.Status.ShouldBe(HealthStatus.Degraded);
+        result.Data["ingestionInventoryReachable"].ShouldBe(false);
+        backend.Inner.SerializedValues.ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public async Task InventoryProbeCancellationStillErasesOnlyItsOwnReservedSentinel()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var backend = new InventoryProbeReadModelStore { AfterSave = cancellation.Cancel };
+        var intents = new PartyMemoryIngestionIntentStore(backend, Options.Create(new PartyMemoryUnitMappingStoreOptions()));
+        using ServiceProvider services = new ServiceCollection().AddSingleton<IPartyMemoryUnitMappingStore>(new RecordingMappingStore())
+            .AddSingleton<IPartyMemoryIngestionIntentStore>(intents).BuildServiceProvider();
+        var check = new MemoriesSearchHealthCheck(new StubOptionsMonitor(new PartyMemorySearchOptions()), services);
+        await Should.ThrowAsync<OperationCanceledException>(() => check.CheckHealthAsync(new HealthCheckContext(), cancellation.Token));
+        backend.EraseAttempts.ShouldBe(1);
+        backend.EraseToken.ShouldNotBe(cancellation.Token);
+        backend.Inner.SerializedValues.ShouldBeEmpty();
     }
 
     private sealed class StubOptionsMonitor(PartyMemorySearchOptions value) : IOptionsMonitor<PartyMemorySearchOptions>

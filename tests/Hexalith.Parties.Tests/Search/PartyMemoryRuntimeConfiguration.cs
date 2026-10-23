@@ -13,5 +13,6 @@ internal sealed record PartyMemoryRuntimeConfiguration
     public string JwtSigningKey { get; init; } = string.Empty;
     public string TenantClaimName { get; init; } = "tenant";
     public string StateStoreName { get; init; } = "statestore";
+    public string InventoryAclRepairEndpoint { get; init; } = string.Empty;
     public bool FakeEmbeddingEnabled { get; init; }
 }

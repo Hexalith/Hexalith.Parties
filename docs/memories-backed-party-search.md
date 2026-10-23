@@ -155,18 +155,31 @@ remote units after state loss or configuration drift.
 
 `Parties:MemoriesSearch:Enabled=false` stops rich-search indexing, but existing
 Memories units can still require erasure. The `memories-search` health check always
-runs a unique mapping-store sentinel through record, read and cleanup. With retained
+runs separate unique mapping-store and ingestion-inventory sentinels through the
+actual SDK serializers, conditional writes, read-back and cleanup. With retained
 endpoint, tenant, case and required credentials, it also probes the cleanup DELETE
 route and the ingestion-status GET route without requiring a rich-search client. Failed probes or incomplete retained
 configuration report `Degraded`; local display-name search remains available.
 
-For a wholly unconfigured local-only installation, a successful mapping probe
-retains `Healthy`. Its data explicitly reports `cleanupConfigured=false`,
+For a wholly unconfigured local-only installation, successful mapping and inventory
+probes retain `Healthy`. Its data explicitly reports `cleanupConfigured=false`,
 `cleanupProbeSkipped=true`, and `cleanupRouteReachable=false`, with a reason that
 remote cleanup was not verified. This is not evidence that historical mappings or
 remote units are absent. Retain cleanup configuration after disabling indexing
 until outstanding cleanup obligations have been reconciled. The cleanup DELETE probe establishes route capability in the configured tenant/case;
 it establishes neither a complete remote inventory nor terminal erasure. This check contributes to `/health` and does not gate `/ready`.
+
+The inventory sentinel uses the reserved `_health-probe` tenant and a unique
+`_health-probe-<guid>` party. It writes the real ingestion-inventory shape and
+conditionally erases only that exact sentinel with its current ETag. Cleanup has
+an independent five-second budget even after request cancellation or a lost write
+response. An altered sentinel, missing ETag, cleanup conflict or unverifiable
+absence reports failure; normal inventories and erasure fences are retained.
+A cleanup failure does not replace an earlier read/write/cancellation failure.
+Both indexing modes expose `ingestionInventoryReachable` and a sanitized
+`ingestionInventoryReason` alongside the separate mapping capability. A Redis ACL
+that permits the mapping prefix but denies the ingestion prefix therefore reports
+`Degraded`; granting that prefix repairs the health result.
 
 The status-read probe accepts only a matching structurally valid workflow status
 envelope or the structured synthetic `INGESTION_STATUS_NOT_FOUND` response. Empty,
@@ -227,3 +240,14 @@ Its two independent SDK clients also reject a stale ETag after a competing updat
 and permit exactly one competing absent-key creation, inspecting persisted winner
 bytes independently. Mapping and projection stores may have distinct configured
 names; ingestion inventories always follow the mapping-store configuration.
+
+## Explicit JWT algorithm policy
+
+The selected Memories owner source replaces initialized JWT algorithms when
+`Authentication:JwtBearer:ValidAlgorithms` is explicitly configured. An RS256-only
+or ES256-only list remains exact; absent configuration retains the historical
+HS256/RS256/ES256 defaults. Invalid empty or blank lists fail startup validation.
+The public init-only options setter and existing options-monitor notifications
+are preserved. Signed-token and named bearer-options checks qualify source;
+matching package publication and the separate Dapr publisher secret-binding gate
+remain independent requirements. See the [owner configuration batch receipts](../_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/README.md).

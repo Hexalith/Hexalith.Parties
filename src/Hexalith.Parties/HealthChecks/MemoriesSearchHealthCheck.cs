@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 namespace Hexalith.Parties.HealthChecks;
 
 /// <summary>
-/// Health check for Memories search, cleanup routing, ingestion-status routing and SDK mapping storage.
+/// Health check for Memories search, cleanup routing, ingestion-status routing and SDK mapping and ingestion-inventory storage.
 /// Synthetic probes report explicit authorization rejection but cannot verify access to an
 /// existing tenant-scoped workflow or qualify physical erasure. Operators must retain that
 /// separate capability evidence before deployment qualification.
@@ -66,6 +66,7 @@ internal sealed class MemoriesSearchHealthCheck(
         CleanupProbeOutcome cleanupOutcome = await ProbeCleanupAsync(current, cancellationToken).ConfigureAwait(false);
         CleanupProbeOutcome statusOutcome = await ProbeIngestionStatusAsync(cancellationToken).ConfigureAwait(false);
         MappingStoreProbeOutcome mappingStoreOutcome = await ProbeMappingStoreAsync(cancellationToken).ConfigureAwait(false);
+        MappingStoreProbeOutcome inventoryOutcome = await ProbeIngestionInventoryAsync(cancellationToken).ConfigureAwait(false);
 
         Dictionary<string, object> data = new()
         {
@@ -76,6 +77,7 @@ internal sealed class MemoriesSearchHealthCheck(
             ["searchReachable"] = searchOutcome.Reachable,
             ["cleanupRouteReachable"] = cleanupOutcome.Reachable,
             ["mappingStoreReachable"] = mappingStoreOutcome.Reachable,
+            ["ingestionInventoryReachable"] = inventoryOutcome.Reachable,
             ["ingestionStatusRouteReachable"] = statusOutcome.Reachable,
             ["ingestionStatusAuthorizationVerified"] = false,
             ["ingestionStatusAuthorizationEvidence"] = "Synthetic workflow misses cannot verify tenant-scoped status access; validate an existing owned workflow before deployment qualification.",
@@ -112,11 +114,16 @@ internal sealed class MemoriesSearchHealthCheck(
             data["ingestionStatusRouteReason"] = statusOutcome.Reason;
         }
 
-        bool allReachable = searchOutcome.Reachable && cleanupOutcome.Reachable && mappingStoreOutcome.Reachable && statusOutcome.Reachable;
+        if (inventoryOutcome.Reason is not null)
+        {
+            data["ingestionInventoryReason"] = inventoryOutcome.Reason;
+        }
+
+        bool allReachable = inventoryOutcome.Reachable && searchOutcome.Reachable && cleanupOutcome.Reachable && mappingStoreOutcome.Reachable && statusOutcome.Reachable;
         if (allReachable && !searchOutcome.DegradedReportedByMemories)
         {
             return HealthCheckResult.Healthy(
-                "Memories rich search, cleanup and ingestion-status routes, and mapping store are all reachable.",
+                "Memories rich search, cleanup and ingestion-status routes, and mapping and ingestion-inventory stores are all reachable.",
                 data);
         }
 
@@ -132,6 +139,10 @@ internal sealed class MemoriesSearchHealthCheck(
         // cleanup-route outage blocks AC5 GDPR cleanup; mapping-store outage prevents new
         // indexings from recording mappings. A failed capability surfaces here as Degraded.
         string description = BuildDegradedDescription(searchOutcome, cleanupOutcome, mappingStoreOutcome);
+        if (!inventoryOutcome.Reachable)
+        {
+            description += $" Ingestion inventory unavailable ({inventoryOutcome.Reason}).";
+        }
         if (!statusOutcome.Reachable)
         {
             description += $" Ingestion status-read unavailable ({statusOutcome.Reason}).";
@@ -146,6 +157,7 @@ internal sealed class MemoriesSearchHealthCheck(
         // Disabling ingestion does not remove previously indexed units or their ledger.
         // A sentinel probes storage capability; it cannot inventory historical obligations.
         MappingStoreProbeOutcome mapping = await ProbeMappingStoreAsync(cancellationToken).ConfigureAwait(false);
+        MappingStoreProbeOutcome inventory = await ProbeIngestionInventoryAsync(cancellationToken).ConfigureAwait(false);
         bool configurationPresent = current.Endpoint is not null
             || !string.IsNullOrWhiteSpace(current.TenantId)
             || !string.IsNullOrWhiteSpace(current.CaseId)
@@ -178,6 +190,7 @@ internal sealed class MemoriesSearchHealthCheck(
             ["cleanupProbeSkipped"] = !configured,
             ["cleanupRouteReachable"] = cleanup.Reachable,
             ["mappingStoreReachable"] = mapping.Reachable,
+            ["ingestionInventoryReachable"] = inventory.Reachable,
         };
         if (statusRead.StatusCode is { } statusReadCode)
         {
@@ -199,17 +212,23 @@ internal sealed class MemoriesSearchHealthCheck(
             data["mappingStoreReason"] = mapping.Reason;
         }
 
-        if (!mapping.Reachable || (configurationPresent && (!cleanup.Reachable || !statusRead.Reachable)))
+        if (inventory.Reason is not null)
+        {
+            data["ingestionInventoryReason"] = inventory.Reason;
+        }
+
+        if (!inventory.Reachable || !mapping.Reachable || (configurationPresent && (!cleanup.Reachable || !statusRead.Reachable)))
         {
             return HealthCheckResult.Degraded(
                 BuildDegradedDescription(new SearchProbeOutcome(true, false, null, null), cleanup, mapping)
+                    + (!inventory.Reachable ? $" Ingestion inventory unavailable ({inventory.Reason})." : string.Empty)
                     + (!statusRead.Reachable && configured ? $" Ingestion status-read unavailable ({statusRead.Reason})." : string.Empty),
                 data: data);
         }
 
         return HealthCheckResult.Healthy(configured
-            ? "Memories indexing is disabled; cleanup and ingestion-status routes and mapping store are reachable."
-            : "Memories indexing is disabled; local search and mapping storage are available. Remote cleanup is not configured or verified.",
+            ? "Memories indexing is disabled; cleanup and ingestion-status routes and mapping and ingestion-inventory stores are reachable."
+            : "Memories indexing is disabled; local search, mapping and ingestion-inventory storage are available. Remote cleanup is not configured or verified.",
             data);
     }
 
@@ -265,6 +284,28 @@ internal sealed class MemoriesSearchHealthCheck(
 
         PartyMemoryCleanupProbeResult probe = await cleanupService.ProbeIngestionStatusRouteAsync(cancellationToken).ConfigureAwait(false);
         return new(probe.Reachable, probe.StatusCode, probe.Reason);
+    }
+
+    private async Task<MappingStoreProbeOutcome> ProbeIngestionInventoryAsync(CancellationToken cancellationToken)
+    {
+        if (serviceProvider.GetService(typeof(IPartyMemoryIngestionIntentStore)) is not IPartyMemoryIngestionIntentStore store)
+        {
+            return new(false, "IPartyMemoryIngestionIntentStore is not registered in DI.");
+        }
+
+        try
+        {
+            await store.ProbeAsync(cancellationToken).ConfigureAwait(false);
+            return new(true, null);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            return new(false, $"Ingestion inventory probe failed: {ex.GetType().Name}.");
+        }
     }
 
     private async Task<MappingStoreProbeOutcome> ProbeMappingStoreAsync(CancellationToken cancellationToken)

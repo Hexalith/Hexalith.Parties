@@ -1,0 +1,39 @@
+{
+  "authenticated_prefix_user": true,
+  "mapping_save": [
+    204,
+    ""
+  ],
+  "mapping_read": [
+    200,
+    "[{\"MemoryUnitId\":\"_probe-unit\",\"SourceUri\":\"urn:_probe\",\"CaseId\":\"_probe-case\"}]"
+  ],
+  "inventory_save_denied": [
+    500,
+    "{\"errorCode\":\"ERR_STATE_SAVE\",\"message\":\"failed saving state in state store statestore: failed to set key parties-inventory-acl-probe-773bf2cef878||parties:memory-ingestion:synthetic-probe: NOPERM No permissions to access a key\"}"
+  ],
+  "inventory_read_denied": [
+    500,
+    "{\"errorCode\":\"ERR_STATE_GET\",\"message\":\"fail to get parties:memory-ingestion:synthetic-probe from state store statestore: NOPERM No permissions to access a key\"}"
+  ],
+  "inventory_save_allowed": [
+    204,
+    ""
+  ],
+  "inventory_read_allowed": [
+    200,
+    "{\"Intents\":[],\"CleanupRequested\":false}"
+  ],
+  "mapping_delete": [
+    204,
+    ""
+  ],
+  "mapping_absent": [
+    204,
+    ""
+  ],
+  "daprd_version": "1.18.7",
+  "redis_version": "7.4.11",
+  "daprd_stopped": true,
+  "owned_container_removed": true
+}

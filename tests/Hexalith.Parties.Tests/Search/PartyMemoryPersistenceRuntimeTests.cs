@@ -4,6 +4,10 @@ using System.Text.Json;
 using Dapr.Client;
 
 using Hexalith.EventStore.Client.Projections;
+using Hexalith.Memories.Client.Rest;
+using Hexalith.Parties.HealthChecks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Hexalith.Parties.Search;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -183,6 +187,50 @@ public sealed class PartyMemoryPersistenceRuntimeTests
         finally
         {
             await CleanupOwnedKeysAsync(config, [key, absentKey], primaryFailed);
+        }
+    }
+
+    [Fact(Timeout = 60000)]
+    public async Task ActualSdkHealthDetectsInventoryPrefixAclDenialAndRepairInBothModes()
+    {
+        string? path = Environment.GetEnvironmentVariable("PARTIES_MEMORIES_INVENTORY_ACL_CONFIG");
+        Assert.SkipUnless(!string.IsNullOrWhiteSpace(path), "Set PARTIES_MEMORIES_INVENTORY_ACL_CONFIG to an owned authenticated ACL runtime and loopback repair controller.");
+        CancellationToken token = TestContext.Current.CancellationToken;
+        PartyMemoryRuntimeConfiguration config = JsonSerializer.Deserialize<PartyMemoryRuntimeConfiguration>(
+            await File.ReadAllTextAsync(path!, token), new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        var repair = new Uri(config.InventoryAclRepairEndpoint);
+        repair.IsLoopback.ShouldBeTrue();
+        using DaprClient dapr = Dapr(config);
+        var sdk = new DaprReadModelStore(dapr);
+        IOptions<PartyMemoryUnitMappingStoreOptions> options = Options.Create(new PartyMemoryUnitMappingStoreOptions { StateStoreName = config.StateStoreName });
+        var mappings = Mappings(sdk, options);
+        var intents = new PartyMemoryIngestionIntentStore(sdk, options);
+        using var handler = new MemoriesHealthRuntimeHandler();
+        using var remote = new HttpClient(handler) { BaseAddress = new Uri("https://synthetic-memories.example/") };
+        var memories = new MemoriesClient(remote, Options.Create(new MemoriesClientOptions()), NullLogger<MemoriesClient>.Instance);
+        using ServiceProvider services = new ServiceCollection().AddSingleton(memories)
+            .AddSingleton<IPartyMemoryUnitMappingStore>(mappings).AddSingleton<IPartyMemoryIngestionIntentStore>(intents)
+            .AddSingleton(new PartyMemoryCleanupService(remote, mappings, NullLogger<PartyMemoryCleanupService>.Instance, intents))
+            .BuildServiceProvider();
+        foreach (bool enabled in new[] { false, true })
+        {
+            var search = new PartyMemorySearchOptions { Enabled = enabled, Endpoint = remote.BaseAddress, TenantId = "synthetic-tenant", CaseId = "synthetic-case", RequireApiToken = false };
+            var check = new MemoriesSearchHealthCheck(new MemorySearchRuntimeOptionsMonitor(search), services);
+            HealthCheckResult denied = await check.CheckHealthAsync(new HealthCheckContext(), token);
+            denied.Status.ShouldBe(HealthStatus.Degraded);
+            denied.Data["mappingStoreReachable"].ShouldBe(true);
+            denied.Data["ingestionInventoryReachable"].ShouldBe(false);
+        }
+        using var control = new HttpClient();
+        (await control.GetAsync(repair, token)).EnsureSuccessStatusCode();
+        foreach (bool enabled in new[] { false, true })
+        {
+            var search = new PartyMemorySearchOptions { Enabled = enabled, Endpoint = remote.BaseAddress, TenantId = "synthetic-tenant", CaseId = "synthetic-case", RequireApiToken = false };
+            var check = new MemoriesSearchHealthCheck(new MemorySearchRuntimeOptionsMonitor(search), services);
+            HealthCheckResult repaired = await check.CheckHealthAsync(new HealthCheckContext(), token);
+            repaired.Status.ShouldBe(HealthStatus.Healthy, JsonSerializer.Serialize(new { enabled, repaired.Description, repaired.Data }));
+            repaired.Data["mappingStoreReachable"].ShouldBe(true);
+            repaired.Data["ingestionInventoryReachable"].ShouldBe(true);
         }
     }
 

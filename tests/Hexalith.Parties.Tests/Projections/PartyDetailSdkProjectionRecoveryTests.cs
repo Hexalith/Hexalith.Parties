@@ -1,3 +1,4 @@
+using Hexalith.EventStore.Contracts.Queries;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -610,6 +611,44 @@ public sealed class PartyDetailSdkProjectionRecoveryTests
         (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, TestContext.Current.CancellationToken)).ETag.ShouldBe(processingEtag);
         store.HasPendingEnvelope(StoreName, s_detailKey).ShouldBeFalse();
         store.HasPendingEnvelope(StoreName, s_processingKey).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(ReadModelBatchPhase.AfterCommit)]
+    [InlineData(ReadModelBatchPhase.BeforeCompaction)]
+    [InlineData(ReadModelBatchPhase.AfterCompaction)]
+    [InlineData(ReadModelBatchPhase.BeforeReceipt)]
+    public async Task NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(ReadModelBatchPhase interruption)
+    {
+        Assert.SkipUnless(typeof(QueryAdapterFailureReason).GetField("QueryExecutionFailure") is not null,
+            "Requires the qualified EventStore source fix or its matching published package; retained 3.126.1 recovery remains open.");
+        var store = new InMemoryReadModelStore();
+        var batches = new List<ReadModelBatch>();
+        PartyDetailSdkProjectionHandler handler = Handler(store, batches);
+        ProjectionRequest request = Request(supported: true);
+        store.BatchFaultHook = (phase, _, _) => phase == interruption || phase == ReadModelBatchPhase.Reconcile
+            ? throw new IOException("projection interrupted after commit") : Task.CompletedTask;
+        (await handler.ProjectAsync(request, "original", TestContext.Current.CancellationToken)).Status.ShouldBe(ProjectionDispatchStatus.Indeterminate);
+        ReadModelBatch original = batches.ShouldHaveSingleItem();
+        original.RetainManifestForRecovery.ShouldBeFalse();
+        store.BatchFaultHook = null;
+        // Produce canonical tombstones through the actual eraser on a fully compacted
+        // projection, then model the later ordinary SDK writer on the interrupted store.
+        // A separate batch correctly refuses to replace another batch's pending envelopes.
+        var newerStore = new InMemoryReadModelStore();
+        (await Handler(newerStore).ProjectAsync(request, "newer", TestContext.Current.CancellationToken)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        await new PartySdkReadModelEraser(newerStore, newerStore, s_options).EraseAsync("tenant-a", "party-1", TestContext.Current.CancellationToken);
+        await store.SaveAsync(StoreName, s_detailKey, newerStore.Snapshot<PartyDetailSdkReadModel>(StoreName, s_detailKey)!, TestContext.Current.CancellationToken);
+        await store.SaveAsync(StoreName, s_processingKey, newerStore.Snapshot<PartyProcessingSdkReadModel>(StoreName, s_processingKey)!, TestContext.Current.CancellationToken);
+        byte[] detail = store.SnapshotRaw(StoreName, s_detailKey)!;
+        byte[] processing = store.SnapshotRaw(StoreName, s_processingKey)!;
+        store.Snapshot<PartyDetailSdkReadModel>(StoreName, s_detailKey)!.ErasureSequenceNumber.ShouldBe(1);
+        (await store.ExecuteAsync(original, TestContext.Current.CancellationToken)).IsSuccess.ShouldBeTrue();
+        (await store.ExecuteAsync(original, TestContext.Current.CancellationToken)).Status.ShouldBe(ReadModelBatchStatus.AlreadyCompleted);
+        store.SnapshotRaw(StoreName, s_detailKey).ShouldBe(detail);
+        store.SnapshotRaw(StoreName, s_processingKey).ShouldBe(processing);
+        JsonObject receipt = store.Snapshot<JsonObject>(StoreName, original.Scope.ComputeMarkerKey())!;
+        receipt.ContainsKey("manifest").ShouldBeFalse(); receipt.ContainsKey("manifestKey").ShouldBeFalse();
     }
 
     private static PartyDetailSdkProjectionHandler Handler(InMemoryReadModelStore store, List<ReadModelBatch>? batches = null)

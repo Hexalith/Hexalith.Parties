@@ -1,0 +1,250 @@
+{
+  "scope": "Candidate owner and consumer implementation; reviewed owner commits and parent adoption identities are finalized by the parent publication workflow.",
+  "baseline": {
+    "parties": "08b9684f8464a2f9f8870be47e2a396e30e0cd99",
+    "eventstore": "cd193902a52abb02572528958436d79a8ae25b9a",
+    "memories": "b55db82c060caf917a142fdb6585fa7340b01647"
+  },
+  "sourceMapping": {
+    "launcher": "HEXALITH_DAPR_HOME=${ISOLATED_DAPR_HOME} dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json --output json",
+    "runId": "00b5f77ac5579344f15d07f9d5ae2927",
+    "result": "HXR020 before resources: untouched Platform.Composition model build failed, 7 errors and 1 warning. Generated mapping retained byte-for-byte at its original path for narrow Debug checks; no selectors or gates overridden.",
+    "contentHash": "d1fdf9ae4db0a1c593221ab974b290d5a3eacf6916ce68b82e8560df7cdbc44a",
+    "fileSha256": {
+      "SourceMapping.final.targets": "cdf7e7f6963b0dcf2c5473423b53376e7dfb43a44f338578fcd014c1c98f976e",
+      "SourceMapping.before-targets.props": "8d89625e6b35a76f2bbd7752782cc46d688a7609507f10c384d0ff21744cf047",
+      "mapping.json": "8d6f6123bb7e3fc0b9bb6d22c349fa715551926f172118e8f35d73552136dcf1",
+      "SourceMapping.values.props": "6e32b5de0dbd26780daa9f57c76a8dec7d401fc307761600878244aba5e70b20",
+      "SourceMapping.late.props": "d3179743be9bf1904364b8f2daf376b0a81545684134da0acb4b043dd957a3c6",
+      "catalog-versions.json": "3b6e334397d8eac0b93b38f22ff3754eee25fe9f7a84282e1ec307ca1e0384ce",
+      "SourceMapping.targets": "2003f8e38ea72f43549502cda1191d1272eea5a84bbebb534d84ee97c97618ff",
+      "SourceMapping.values.targets": "cacfc4bfb17b82977186a1aef9aa84bf28a7dbe8e50fa19608b67fdb58b86f96",
+      "__HXW_DefaultCatalog__.proj": "661b806e731738db98c5eda9f6ebf4cab8189c50c6d35227cbb76f140ceed0c5",
+      "Hexalith.Folders.Aspire.proj": "661b806e731738db98c5eda9f6ebf4cab8189c50c6d35227cbb76f140ceed0c5",
+      "SourceMapping.props": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82"
+    },
+    "identityFindings": [
+      {
+        "ruleId": "HXW011",
+        "message": "Platform identity 1d646b232ad862f6da1d8dd0953fe96ccd273fee has no local v<SemVer> release tag."
+      },
+      {
+        "ruleId": "HXW009",
+        "message": "Builds catalog '${QUALIFIED_WORKSPACE}/references/Hexalith.Builds' is staged 4c7f27f5458742e860100012ecd30253808421e7, checked out 4c7f27f5458742e860100012ecd30253808421e7; Platform 1d646b232ad862f6da1d8dd0953fe96ccd273fee pins 70ead608ac01f66dfcd80c13bb71152dac6c128e."
+      },
+      {
+        "ruleId": "HXW010",
+        "message": "Tool version 4.34.0 is outside Platform range [4.35.2, 5.0.0-0) at '${QUALIFIED_WORKSPACE}/references/Hexalith.Platform/hexalith-platform.json'."
+      }
+    ],
+    "hooks": {
+      "CustomBeforeDirectoryBuildProps": "${SOURCE_MAPPING}/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${SOURCE_MAPPING}/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${SOURCE_MAPPING}/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${SOURCE_MAPPING}/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${SOURCE_MAPPING}/SourceMapping.final.targets"
+    }
+  },
+  "buildCommand": "dotnet build <individual-project> -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+  "sourceConsumerBuild": "Pass: tests/Hexalith.Parties.Tests with exact pinned-tool generated hooks; no handwritten source selectors.",
+  "packageConsumerBuild": "Pass: tests/Hexalith.Parties.IntegrationTests -c Release -m:1 with retained EventStore 3.126.1 package graph. Source aliases use an explicit compatibility bridge until matching package publication.",
+  "sourceIntegrationBuild": "Blocked: generated SourceMappingValidationTask requires missing AssetsFile for FrontComposer.Contracts and FrontComposer.Schema (MSB4044); no consumer compilation in this lane.",
+  "suites": {
+    "eventstoreClient": {
+      "total": 2102,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 2,
+      "rawLogSha256": "6573827f9ae3e60bb36eb0d7925f3ed284a142602c0f626f5b9df8dd619a12ac",
+      "workingDirectory": "references/Hexalith.EventStore",
+      "command": "dotnet tests/Hexalith.EventStore.Client.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.Tests.dll",
+      "buildCommand": "dotnet build tests/Hexalith.EventStore.Client.Tests/Hexalith.EventStore.Client.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0"
+    },
+    "eventstoreAdminUi": {
+      "total": 1121,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "rawLogSha256": "15c74854f53053f62790eb0dc35afa1b8877e23578f43d79d83ec9bdf412b33e",
+      "workingDirectory": "references/Hexalith.EventStore",
+      "command": "dotnet tests/Hexalith.EventStore.Admin.UI.Tests/bin/Debug/net10.0/Hexalith.EventStore.Admin.UI.Tests.dll",
+      "buildCommand": "dotnet build tests/Hexalith.EventStore.Admin.UI.Tests/Hexalith.EventStore.Admin.UI.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0"
+    },
+    "eventstoreSample": {
+      "total": 194,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "rawLogSha256": "925f58d6ca9a94f712621b49d76e14ce57e09e334c9e3afdf46176b0f4a40f1a",
+      "workingDirectory": "references/Hexalith.EventStore",
+      "command": "dotnet tests/Hexalith.EventStore.Sample.Tests/bin/Debug/net10.0/Hexalith.EventStore.Sample.Tests.dll",
+      "buildCommand": "dotnet build tests/Hexalith.EventStore.Sample.Tests/Hexalith.EventStore.Sample.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0"
+    },
+    "eventstoreContractsFocused": {
+      "total": 115,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "rawLogSha256": "4643ea55eb57fffe789bfb911858f32dc0cb577868ba809fd68103c965f3ddb4",
+      "workingDirectory": "references/Hexalith.EventStore",
+      "command": "dotnet tests/Hexalith.EventStore.Contracts.Tests/bin/Debug/net10.0/Hexalith.EventStore.Contracts.Tests.dll -class '*ProjectionAdapterContractTests'",
+      "buildCommand": "dotnet build tests/Hexalith.EventStore.Contracts.Tests/Hexalith.EventStore.Contracts.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0"
+    },
+    "memoriesAlgorithms": {
+      "total": 7,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "rawLogSha256": "08184e59b5547e149b3358633451171567a8ff94e3ca97c349c7e253beb02392",
+      "workingDirectory": "references/Hexalith.Memories",
+      "command": "dotnet tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll -class '*ServerRegisteredAlgorithmPolicyTests'",
+      "buildCommand": "dotnet build tests/Hexalith.Memories.Server.Tests/Hexalith.Memories.Server.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0"
+    },
+    "memoriesServerFull": {
+      "total": 3016,
+      "errors": 0,
+      "failed": 2,
+      "skipped": 1,
+      "rawLogSha256": "e280336a862bf64243b5d55264d42a3483869fb99717af637eadbeb0f7f59c54",
+      "blockers": [
+        "BuildsCatalog_PinsEventStoreFamilyAt31000 requires absent forbidden nested references/Hexalith.Builds/Props/Directory.Packages.props",
+        "ProjectAssets_RestoreEventStorePackagesAtCatalogVersion expects 3.126.0 instead of the actual root-selected restore graph"
+      ],
+      "workingDirectory": "references/Hexalith.Memories",
+      "command": "dotnet tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll",
+      "buildCommand": "dotnet build tests/Hexalith.Memories.Server.Tests/Hexalith.Memories.Server.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0"
+    },
+    "partiesFocused": {
+      "total": 990,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "rawLogSha256": "b1b3790615290cc825d10ae13cbb0eae5312e1a2155e8ca604d9027036422d43",
+      "workingDirectory": "${QUALIFIED_WORKSPACE}",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class '*MemoriesSearchHealthCheckTests' -class '*HealthEndpointIntegrationTests' -class '*PartyDetailSdkProjectionRecoveryTests' -class '*PartySdkQueryHandlerTests' -class '*PartySdkCrossInstanceErasureTests'",
+      "buildCommand": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0"
+    },
+    "partiesFullBeforeHealthFixtureRepair": {
+      "total": 2638,
+      "errors": 0,
+      "failed": 4,
+      "skipped": 4,
+      "rawLogSha256": "d8d05c233b4e7f34b42c16e373de4fc845cfa746d05007ce1bc6a06e8accc607",
+      "note": "Two failing health fixtures were repaired and focused lane rerun passes. Two remaining fitness checks require clean committed owner checkouts and current canonical adoption receipts; parent must rerun after publication.",
+      "workingDirectory": "${QUALIFIED_WORKSPACE}",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+      "buildCommand": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0"
+    },
+    "eventstoreClientFinalFocused": {
+      "workingDirectory": "references/Hexalith.EventStore",
+      "command": "dotnet tests/Hexalith.EventStore.Client.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.Tests.dll -class '*ReadModelBatchStoreTests' -class '*DaprReadModelBatchTests' -class '*ReadModelReviewTwoRegressionTests'",
+      "total": 249,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "note": "Final source after removing redundant completed-staging cleanup calls. Transaction-qualified retry verification remains exact.",
+      "rawLogSha256": "f4f3d5efb421eced23c684b3ccba6a3d490a0bd62b2944a29ca57ca9363397e0"
+    },
+    "eventstoreContractsFullBounded": {
+      "workingDirectory": "references/Hexalith.EventStore",
+      "command": "dotnet tests/Hexalith.EventStore.Contracts.Tests/bin/Debug/net10.0/Hexalith.EventStore.Contracts.Tests.dll",
+      "result": "Cancelled after approximately ten minutes in existing package/provenance fixtures; runner exited 58. Not a completed full-suite pass.",
+      "exitCode": 58,
+      "reportedTotal": 2404,
+      "reportedFailed": 0,
+      "reportedSkipped": 2,
+      "reportedNotRun": 0,
+      "reportedSeconds": 631.487,
+      "focusedFallback": "ProjectionAdapterContractTests: 115/115, zero skips.",
+      "ownedProcessCleanup": "SIGINT led to runner and observed child-process exit; no forced termination was needed.",
+      "rawLogSha256": "18ea910a1cefb3e7f08712314b01b60f233f8928cb738062c9a4084902d29f43"
+    }
+  },
+  "inventoryRuntime": {
+    "authenticatedNonDefaultAclUser": true,
+    "inventoryPrefixGrantApplied": true,
+    "sdkHealthTestExitCode": 0,
+    "allReservedSentinelsAbsent": true,
+    "daprdVersion": "1.18.7",
+    "redisVersion": "7.4.11",
+    "ownedDaprStopped": true,
+    "ownedRedisRemoved": true,
+    "command": "PARTIES_MEMORIES_INVENTORY_ACL_CONFIG=${PRIVATE_OWNED_RUNTIME_CONFIG} dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method '*ActualSdkHealthDetectsInventoryPrefixAclDenialAndRepairInBothModes'"
+  },
+  "dualSessionColdStart": {
+    "result": "Failed before UI assertions: cold child build MSB3030 could not copy EventStore.Contracts Release DLL; first fixture sidecar health remained 500 and timed out at 2 minutes. Owned fixture teardown completed.",
+    "testTotal": 1,
+    "failed": 1,
+    "skipped": 0
+  },
+  "remainingGates": [
+    "Parent independent review and canonical owner/source adoption identities",
+    "Matching EventStore/Memories package publication and package consumer qualification",
+    "Platform.Composition source launcher and FrontComposer source Integration build gates",
+    "Existing unrelated full Memories deployment assertions and clean-owner Parties fitness gates",
+    "Dapr publisher sidecar secret-token emission, authoritative remote inventory, legacy normal-batch compaction, and migration remain separate debts"
+  ],
+  "noRemoteOperations": true,
+  "dualSessionRuntime": {
+    "command": "PARTIES_MTLS_TOPOLOGY_TESTS=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method '*ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync'",
+    "total": 1,
+    "errors": 0,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 196.862,
+    "assertions": [
+      "Both sessions prerender /dapr through the actual Admin.UI API client and display their own suffixed admin sidecar ID",
+      "Both sessions prerender /pattern-silent-reload through the actual Sample.UI query client and protected EventStore gateway",
+      "Both UI sidecars reject opposite-session targets with ERR_DIRECT_INVOKE",
+      "Same-party persisted streams remain isolated",
+      "Survivor gateway and both UI-client pages operate after peer disposal",
+      "Both fixture roots are absent after explicit disposal; existing owned-worker/port cleanup checks completed"
+    ],
+    "rawLogSha256": "2c75b5b95164db7410500acacf99af4a5ed393228dc4062b4a03714b9e6a4cc8"
+  },
+  "postRuntimeAssemblyObservationsSha256": {
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/bin/Release/net10.0/Hexalith.EventStore.Admin.UI.dll": "ff329c646c074ba261657499f538ebdfeecfc59c3a102ae49dfb693ec5c63c05",
+    "references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.BlazorUI/bin/Release/net10.0/Hexalith.EventStore.Sample.BlazorUI.dll": "47e117e4102fb2eed71ff10b9dff514efd21f630bffe049709f33db752d7849d",
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Client/bin/Release/net10.0/Hexalith.EventStore.Client.dll": "a388700449a49e12082a31c374f468e3dbd2d61e6b58ec4994088a2c5baf40a4",
+    "references/Hexalith.EventStore/src/Hexalith.EventStore.Contracts/bin/Release/net10.0/Hexalith.EventStore.Contracts.dll": "bfba90fbc9725f147efd09bc84efa049e1ee72cd8f2df1d9bc7bfb0d9886b85f",
+    "src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll": "9b2cfbc369c0682db5a1ac9f9437f3749eb352072cc25df85592808bad2e1854",
+    "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll": "3c393c1113b67d69d0beaa07a71194b384b5c59692ddf5ab46d7b29836815642"
+  },
+  "postRuntimeAssemblyObservationLimit": "Observed after the runtime completed; the parent Release rebuild had been authorized. These hashes are not retained proof of the exact running binaries.",
+  "sourceIntegrationCommand": "With the recorded generated hooks: dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+  "packageIntegrationCommand": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+  "warningGuard": {
+    "command": "bash scripts/check-no-warning-override.sh",
+    "exitCode": 0,
+    "result": "OK: no warning-override or nested-submodule regressions detected in active CI/build scripts."
+  },
+  "diffChecks": {
+    "command": "git -c core.whitespace=cr-at-eol diff --check",
+    "repositories": [
+      "Parties",
+      "EventStore",
+      "Memories"
+    ],
+    "exitCodes": [
+      0,
+      0,
+      0
+    ]
+  },
+  "ownedCleanup": {
+    "sessionIds": [
+      "d3119964f7a4",
+      "a8300de2ad16",
+      "8c0e0a36f2b7"
+    ],
+    "fixtureRootsAbsent": true,
+    "recordedOwnedContainersRemaining": 0,
+    "liveProcessesMatchingSessionIds": 0,
+    "inventoryControlDaprStopped": true,
+    "inventoryControlRedisRemoved": true,
+    "notes": "Live-process scan excludes its own check process and shell; fixture teardown also independently verifies captured worker identities and listener release."
+  },
+  "verificationSequence": "Full Client, Admin.UI and Sample suites precede a final removal of duplicate staging cleanup calls; the final serialized batch/transaction/expiry lane was rebuilt and passed 249/249 afterward. Source consumer/runtime results predate only that idempotent-call removal. Parent owns final review and clean-commit qualification.",
+  "defaultPackageBatchRecovery": "Retained EventStore 3.126.1 does not contain the owner source fix. Default package-mode superseding-state recovery remains open pending matching package publication and consumer adoption.",
+  "ledgerDisposition": "The five selected entries remain open pending parent independent review/canonical adoption and any affected package gates. Source progress and qualified runtime controls are recorded separately."
+}

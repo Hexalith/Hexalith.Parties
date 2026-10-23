@@ -157,7 +157,15 @@ namespace, remapped generated ACL/routing/workload identities and its own Sentry
 It verifies distinct persisted streams for the same party ID, rejects cross-session
 calls and creates/queries another party after disposing the other session.
 
-Concurrent routing qualification covers the exercised Parties gateway and Tenants flows. Reference admin/sample UI application clients still hardcode upstream target app IDs and are not concurrently qualified; their source remains unchanged.
+The reference UI clients accept `EventStore:AdminServer:AppId` (default
+`eventstore-admin`) and `EventStore:GatewayAppId` (default `eventstore`). Targets
+must contain only ASCII letters, digits, hyphens, dots or underscores; blank or
+malformed values fail during SDK client registration. The retained AppHost injects
+its own suffixed identities into both UI hosts. Bearer acquisition and SDK-owned
+Dapr routing remain on the actual application-client paths. Dual-session coverage
+prerenders both UI pages, rejects cross-session calls from both UI sidecars and
+repeats the page requests after peer disposal. Consult the [current batch receipts](../_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/README.md)
+for runtime results and source-build limitations.
 
 For the Release/package consumer qualification:
 
@@ -461,3 +469,22 @@ SIGKILL remains outside cooperative guarantees.
 
 See `_bmad-output/implementation-artifacts/tests/five-publish-and-process-safety-2026-10-23/`
 for exact commands, matrix mappings, sanitized results and remaining gates.
+
+## Owner configuration and ingestion-inventory health qualification
+
+The [2026-10-23 batch receipts](../_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/README.md)
+separate owner Debug suites, the qualified source consumer build, the retained
+Release/package graph and actual runtime controls. The Parties focused lane covers
+semantic wire compatibility, superseding erasure bytes, health registration,
+independent inventory ACL failure/repair, cancellation and cleanup conflicts.
+
+`ActualSdkHealthDetectsInventoryPrefixAclDenialAndRepairInBothModes` requires
+`PARTIES_MEMORIES_INVENTORY_ACL_CONFIG` containing owned Dapr HTTP/gRPC endpoints,
+a Dapr API token, state-store name and a loopback `inventoryAclRepairEndpoint`.
+The receipt's runtime runner provisions a disposable authenticated Redis ACL user
+and Dapr process, invokes the C# SDK/health test, grants the ingestion prefix,
+asserts sentinel absence in actual Redis and removes its owned infrastructure.
+Its remote search/cleanup responses are deterministic: this control qualifies
+persistence capability, not live Memories search, tenant authorization, complete
+inventory or physical erasure. An omitted runtime configuration skips and cannot
+close the runtime gate.

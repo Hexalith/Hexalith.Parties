@@ -65,6 +65,7 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
         _factory.MappingState.KeyExists.ShouldBeFalse();
         _factory.MappingState.SaveAttempts.ShouldBe(1);
         _factory.MappingState.DeleteAttempts.ShouldBe(1);
+        _factory.InventoryState.SerializedValues.ShouldBeEmpty();
     }
 
     [Fact]
@@ -135,6 +136,8 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
         result.Data["ingestionStatusRouteStatus"].ShouldBe(404);
         result.Data["ingestionStatusAuthorizationVerified"].ShouldBe(false);
         result.Data["mappingStoreReachable"].ShouldBe(true);
+        result.Data["ingestionInventoryReachable"].ShouldBe(true);
+        factory.InventoryState.SerializedValues.ShouldBeEmpty();
         factory.Services.GetService<MemoriesClient>().ShouldBeNull();
         handler.Requests.Count.ShouldBe(2);
         var cleanup = handler.Requests.Where(request => request.Method == HttpMethod.Delete).ShouldHaveSingleItem();
@@ -344,6 +347,7 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
         internal ICommandRouter CommandRouter { get; } = Substitute.For<ICommandRouter>();
         internal SwitchableTenantsReadinessProbe TenantsReadinessProbe { get; } = new();
         internal PartyMemoryMappingState MappingState { get; } = new();
+        internal PartyMemoryTestReadModelStore InventoryState { get; } = new();
         internal HttpMessageHandler? CleanupHandler { get; init; }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -385,6 +389,9 @@ public sealed class HealthEndpointIntegrationTests : IDisposable
                     MappingState.Client,
                     Options.Create(new PartyMemoryUnitMappingStoreOptions()),
                     NullLogger<PartyMemoryUnitMappingStore>.Instance));
+                services.RemoveAll<IPartyMemoryIngestionIntentStore>();
+                services.AddSingleton<IPartyMemoryIngestionIntentStore>(new PartyMemoryIngestionIntentStore(
+                    InventoryState, Options.Create(new PartyMemoryUnitMappingStoreOptions())));
                 services.RemoveAll<ICommandRouter>();
                 services.AddSingleton(CommandRouter);
                 services.RemoveAll<ITenantsReadinessProbe>();

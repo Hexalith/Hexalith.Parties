@@ -68,7 +68,7 @@ public sealed partial class PartySdkQueryService(
                 .ConfigureAwait(false);
             if (read.Value?.Detail is not { } stored)
             {
-                return QueryResult.Failure(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+                return QueryResult.Failure(PartySdkQueryFailureReason.ReadModelUnavailable);
             }
 
             (ReadModelEntry<PartyProcessingSdkReadModel> processing, bool processingDegraded) = await ReadProcessingModelAsync(
@@ -112,7 +112,7 @@ public sealed partial class PartySdkQueryService(
         catch (Exception exception)
         {
             LogQueryFailed(query.QueryType, exception.GetType().Name);
-            return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
+            return QueryResult.Failure(PartySdkQueryFailureReason.QueryExecutionFailure);
         }
     }
 
@@ -132,7 +132,7 @@ public sealed partial class PartySdkQueryService(
                 cancellationToken).ConfigureAwait(false);
             if (detail.Value?.Detail is null)
             {
-                return QueryResult.Failure(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+                return QueryResult.Failure(PartySdkQueryFailureReason.ReadModelUnavailable);
             }
 
             (ReadModelEntry<PartyProcessingSdkReadModel> read, bool degraded) = await ReadProcessingModelAsync(
@@ -156,7 +156,7 @@ public sealed partial class PartySdkQueryService(
         catch (Exception exception)
         {
             LogQueryFailed(query.QueryType, exception.GetType().Name);
-            return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
+            return QueryResult.Failure(PartySdkQueryFailureReason.QueryExecutionFailure);
         }
     }
 
@@ -194,7 +194,7 @@ public sealed partial class PartySdkQueryService(
         catch (Exception exception)
         {
             LogQueryFailed(query.QueryType, exception.GetType().Name);
-            return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
+            return QueryResult.Failure(PartySdkQueryFailureReason.QueryExecutionFailure);
         }
     }
 
@@ -225,7 +225,7 @@ public sealed partial class PartySdkQueryService(
         catch (Exception exception)
         {
             LogQueryFailed(query.QueryType, exception.GetType().Name);
-            return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
+            return QueryResult.Failure(PartySdkQueryFailureReason.QueryExecutionFailure);
         }
     }
 
@@ -319,7 +319,7 @@ public sealed partial class PartySdkQueryService(
                 .ConfigureAwait(false);
             if (read.Value?.Detail is not { IsErased: false } stored)
             {
-                return QueryResult.Failure(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+                return QueryResult.Failure(PartySdkQueryFailureReason.ReadModelUnavailable);
             }
 
             DateTimeOffset now = timeProvider.GetUtcNow();
@@ -333,7 +333,7 @@ public sealed partial class PartySdkQueryService(
         catch (Exception exception)
         {
             LogQueryFailed(query.QueryType, exception.GetType().Name);
-            return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
+            return QueryResult.Failure(PartySdkQueryFailureReason.QueryExecutionFailure);
         }
     }
 
@@ -359,7 +359,7 @@ public sealed partial class PartySdkQueryService(
                     // A successful read of corrupt canonical data cannot use an older empty
                     // cache to conceal the need for a rebuild or cache the malformed row.
                     lastKnownCache.EvictIndex(query.TenantId);
-                    return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
+                    return QueryResult.Failure(PartySdkQueryFailureReason.QueryExecutionFailure);
                 }
 
                 if (read.Value is null)
@@ -400,7 +400,7 @@ public sealed partial class PartySdkQueryService(
 
             if (read.Value is not { } model)
             {
-                return QueryResult.Failure(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+                return QueryResult.Failure(PartySdkQueryFailureReason.ReadModelUnavailable);
             }
 
             DateTimeOffset now = timeProvider.GetUtcNow();
@@ -414,7 +414,7 @@ public sealed partial class PartySdkQueryService(
         catch (Exception exception)
         {
             LogQueryFailed(query.QueryType, exception.GetType().Name);
-            return QueryResult.Failure(QueryAdapterFailureReason.ActorException);
+            return QueryResult.Failure(PartySdkQueryFailureReason.QueryExecutionFailure);
         }
     }
 

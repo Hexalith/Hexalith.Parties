@@ -97,7 +97,7 @@ public sealed class PartySdkCrossInstanceErasureTests
         if (queryType is "GetParty" or "PartyDetail")
         {
             recovered.Success.ShouldBeFalse();
-            recovered.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+            recovered.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.ReadModelUnavailable);
             recovered.PayloadBytes.ShouldBeNull();
             recovered.Metadata.ShouldBeNull();
         }
@@ -175,7 +175,7 @@ public sealed class PartySdkCrossInstanceErasureTests
         if (queryType != "ExportPartyData")
         {
             result.Success.ShouldBeFalse();
-            result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+            result.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.ReadModelUnavailable);
             result.PayloadBytes.ShouldBeNull();
             result.Metadata.ShouldBeNull();
         }
@@ -347,9 +347,9 @@ public sealed class PartySdkCrossInstanceErasureTests
         var reads = new PartySdkFaultingReadModelStore(store);
         var cache = new PartySdkLastKnownReadModelCache();
         PartySdkQueryService service = Service(reads, cache);
-        (await ExecuteAsync(service, "GetParty")).ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        (await ExecuteAsync(service, "GetParty")).ErrorMessage.ShouldBe(PartySdkQueryFailureReason.ReadModelUnavailable);
         reads.UnavailableKeys.Add(key);
-        (await ExecuteAsync(service, "GetParty")).ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        (await ExecuteAsync(service, "GetParty")).ErrorMessage.ShouldBe(PartySdkQueryFailureReason.ReadModelUnavailable);
         cache.TryGetDetail("tenant-a", "party-1", out _).ShouldBeTrue();
     }
 
@@ -611,7 +611,7 @@ public sealed class PartySdkCrossInstanceErasureTests
     private static void AssertBoundedFailure(QueryResult result)
     {
         result.Success.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        result.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
         result.Metadata.ShouldBeNull();
         result.PayloadBytes.ShouldBeNull();
         AssertNoPersonalData(result);

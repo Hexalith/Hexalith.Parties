@@ -443,6 +443,11 @@ reason: PartySdkQueryService still returns actor-era failure reasons on the SDK 
 status: open
 decision: 2026-09-07 Compatible canonical aliases — Add semantic SDK and read-model aliases in EventStore.Contracts while preserving legacy wire values. Switch Parties source and tests to the aliases and retain old constants as obsolete compatible members.
 
+resolution: EventStore provides semantic QueryExecutionFailure, ReadModelUnavailable and ResponseMismatch constants with unchanged historical wire values; legacy members remain compatible and obsolete. Compiled owner consumers and qualified Parties source consumers adopt semantic names. A narrow Parties bridge keeps the retained 3.126.1 package graph buildable until matching package publication.
+verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/validation.json`; owner query-contract compatibility passes 115/115 and the mapped Parties focused suite passes 990/990. Canonical reviewed owner/adoption identities are finalized by the parent publication receipt.
+remaining_gate: Matching published EventStore aliases and package consumer adoption are not established by source proof.
+closure_state_2026_10_23: Source implementation and focused qualification are complete; parent review, canonical source adoption and matching package adoption remain separate gates.
+
 ### DW-57: Move PartyEventTypeResolver out of the retired Actors folder
 
 origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projection-and-query-sdk-migration.md (2026-08-05)"), 2026-09-06
@@ -1702,6 +1707,12 @@ archived: 2026-10-21
   summary: Make EventStore unguarded batch reconciliation preserve newer canonical writes, including erasure tombstones.
   evidence: A real SDK InMemoryReadModelStore fault at BeforeReceipt after newer sequence-5 Detail/Processing erasure tombstones persist makes CompactAndCompleteAsync restore the older initialization candidate. The six-case candidate reproduction passed five cases and failed this interleaving; candidate source/logs/XML are retained in /tmp/dw-163-validation. EventStore owns this persistence guarantee; the Parties candidate was withdrawn and DW-163 stays open.
 
+  status: open
+  resolution: Owner compaction and terminal verification preserve superseding ordinary writes, deletes and tombstones without retaining normal-batch manifests. Foreign-envelope and guarded-owner uncertainty remain failures. Producer raw-byte retries and four Parties erasure-tombstone interleavings pass; full Client suite has zero failures (2,102 total, two existing environment skips).
+  remaining_gate: Matching package publication/adoption is separate. The following legacy normal-batch compaction debt is unchanged.
+  verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/validation.json`.
+  implementation_2026_10_23: Source implementation and the stated focused/runtime checks are complete. The parent finalizes disposition after independent review and canonical adoption; publication/package gates remain distinct.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-166-versioned-memories-cleanup.md`
   summary: Reconcile current dependency source observations and the unchanged release gitlink fitness constants with the already-committed Builds selection.
   evidence: FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph fails in the final full service suite and its focused invocation: expected Builds 4f53d9f37c5b86cfd43fbcc8fa5dd4df19b84c77, actual 544fd2e907d62ccdc4b8f24168b8ab5dfcc13eb9. The starting Parties commit d2ec85c9e2b85e2b0c7a50d92ffaf197590ea053 already selects the latter, and the fitness test's baseline/current Git blob identities are identical. Restore accurate current-source observations through owning work without weakening the gate, fabricating owner signoff or recertifying historical parity receipts. Exact failing command, exits and proof are recorded in tests/dw-166-versioned-memories-cleanup-2026-10-18/validation.json.
@@ -1857,6 +1868,12 @@ archived: 2026-10-21
   summary: Make the referenced EventStore admin/sample UI Dapr client target identities configurable before qualifying their application API flows in concurrent suffixed sessions.
   evidence: Upstream AdminUIServiceExtensions calls AddEventStoreDaprServiceInvocation("eventstore-admin") and Sample.BlazorUI Program calls it with "eventstore"; the current owner tests qualify Parties gateway/Tenants invocation and all eight sidecar metadata endpoints, not those reference UI API flows. The frozen intent forbids upstream edits; target configurability needs an upstream change and later adoption.
 
+  status: open
+  resolution: Owner UI registration uses validated EventStore:AdminServer:AppId and EventStore:GatewayAppId values with historical defaults. Parties supplies own-session IDs. Full Admin.UI/Sample suites pass; the actual dual-session page/client, UI-sidecar cross-denial and survivor runtime passes 1/1 with zero skips after separately recorded cold-start failure.
+  remaining_gate: Mapped Debug Integration is still blocked by the unchanged FrontComposer AssetsFile source gate. Runtime proof uses the separately built retained Release/package graph and candidate reference hosts, not a published owner-package claim.
+  verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/validation.json`.
+  implementation_2026_10_23: Source implementation and the stated focused/runtime checks are complete. The parent finalizes disposition after independent review and canonical adoption; publication/package gates remain distinct.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-sdk-runtime-deferred-items.md`
   summary: Qualify descendant-process quiescence when a Dapr CLI wrapper exits before its runtime child.
   evidence: Unverified medium: the current fixture observes DCP executable PID/start identities and qualified listener cleanup, but the reviewer could not establish that an escaped daprd child is impossible before backing removal. A controlled producer-owned wrapper/orphan case or exact CLI/DCP descendant-stop contract would settle the claim; normal 22/22 live results alone do not establish this broader guarantee.
@@ -1876,7 +1893,12 @@ archived: 2026-10-21
   summary: Qualify whether ingestion-inventory persistence needs a separate health capability probe.
   severity: medium-unverified
   evidence: Mapping and ingestion inventories use the same configured SDK backend, but only mapping sentinel persistence is probed. A real backend key-prefix permission or serializer configuration that permits mapping operations while rejecting ingestion-inventory writes would establish the claimed additional gap; no such supported deployment counterexample was demonstrated. Keep this claim unverified until that condition is reproduced.
+
   status: open
+  resolution: A password-authenticated non-default Redis ACL user with mapping-prefix permission and denied ingestion-prefix permission reproduces the gap through the actual C# Dapr SDK and health check. The new actual-shape inventory sentinel reports Degraded in enabled and disabled modes; granting the ingestion prefix repairs both. Exact conditional cleanup, independent cancellation budget, primary-failure retention and actual sentinel absence are qualified. Both owned runtime processes are removed.
+  remaining_gate: This capability probe does not establish authoritative remote inventory, existing-workflow authorization or physical erasure.
+  verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/validation.json`.
+  implementation_2026_10_23: Source implementation and the stated focused/runtime checks are complete. The parent finalizes disposition after independent review and canonical adoption; publication/package gates remain distinct.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
   summary: Qualify workflow-status retention and opportunistic reconciliation of superseded acknowledged ingestion attempts.
@@ -1906,8 +1928,13 @@ archived: 2026-10-21
 
 - source_spec: `spec-five-publish-and-process-safety-deferred-items.md`
   summary: Replace initialized Memories algorithm defaults when explicit JWT algorithms are configured before qualifying an asymmetric-only policy.
-  status: open
   evidence: Independent blind and edge review probes against the selected producer options with the .NET 10 binder produce HS256,RS256,ES256,RS256,ES256 after RS256/ES256 configuration. The initialized collection and binding contract predate this caller change; app environment entries do not establish effective options. Require owner-supported replacement semantics and effective JwtBearerOptions verification; the Memories publication entry remains open.
+
+  status: open
+  resolution: Owner registration replaces explicitly configured algorithm lists while retaining BindConfiguration reload notifications, absent defaults, programmatic initialization and the public init-only setter signature. Effective named JwtBearerOptions and real signed RS256/ES256 acceptance with HS256 rejection pass; blank and empty JSON lists fail startup.
+  remaining_gate: Matching Memories package publication/adoption and the separate Dapr sidecar secret-token publisher gate remain open.
+  verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/validation.json`.
+  implementation_2026_10_23: Source implementation and the stated focused/runtime checks are complete. The parent finalizes disposition after independent review and canonical adoption; publication/package gates remain distinct.
 
 - source_spec: `spec-five-publish-and-process-safety-deferred-items.md`
   summary: Deliver supported Dapr sidecar secret-token emission through the selected SDK/target publisher before qualifying Memories publish authentication.

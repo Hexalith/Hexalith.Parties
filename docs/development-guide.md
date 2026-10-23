@@ -294,7 +294,15 @@ and supplies independent namespaces, workload issuers, Sentry endpoints and inte
 gRPC listeners. It proves isolated persisted state, rejected cross-session calls and
 survivor operation after peer disposal. Cleanup failures retain ownership for retry.
 
-Concurrent routing qualification covers the exercised Parties gateway and Tenants flows. Reference admin/sample UI application clients still hardcode upstream target app IDs and are not concurrently qualified; their source remains unchanged.
+The reference UI clients accept `EventStore:AdminServer:AppId` (default
+`eventstore-admin`) and `EventStore:GatewayAppId` (default `eventstore`). Targets
+must contain only ASCII letters, digits, hyphens, dots or underscores; blank or
+malformed values fail during SDK client registration. The retained AppHost injects
+its own suffixed identities into both UI hosts. Bearer acquisition and SDK-owned
+Dapr routing remain on the actual application-client paths. Dual-session coverage
+prerenders both UI pages, rejects cross-session calls from both UI sidecars and
+repeats the page requests after peer disposal. Consult the [current batch receipts](../_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/README.md)
+for runtime results and source-build limitations.
 
 Admin forms independently observe authentication notifications and query-scope reset,
 clear values and fence pending work by generation. Create/update snapshots require a
@@ -358,3 +366,20 @@ The fresh pinned-tool source run also qualifies the service Debug build and all
 2,534 service tests. Integration Debug still stops in FrontComposer outer
 multi-target mapping validation (`MSB4044`, missing `AssetsFile`) before fixture
 compilation. See the [source receipt](../_bmad-output/implementation-artifacts/tests/five-sdk-runtime-deferred-items-2026-10-22/source-qualification.json); no source selector or validation gate was bypassed.
+
+### Query vocabulary and historical batch receipts
+
+Source-mapped Parties builds consume EventStore's semantic `QueryExecutionFailure`
+and `ReadModelUnavailable` aliases through `PartySdkQueryFailureReason`, preserving
+the exact historical wire/HTTP values. The retained 3.126.1 package graph uses the
+same bridge with legacy constants until separately published aliases are adopted;
+source proof does not establish package publication.
+
+In the selected owner source, committed ordinary batches treat their receipt as a
+historical decision. Recovery and terminal verification preserve later ordinary
+writes, deletes and erasure tombstones; they retain foreign-envelope and
+guarded-owner uncertainty. The retained 3.126.1 package does not contain this fix;
+its default package-mode recovery closure remains open pending matching owner
+publication and consumer adoption. Normal
+batches do not retain personal-data manifests. This does not close legacy normal
+batch compaction, migration or authoritative inventory debts.

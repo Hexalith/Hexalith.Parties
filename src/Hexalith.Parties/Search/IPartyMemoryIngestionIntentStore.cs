@@ -3,6 +3,9 @@ namespace Hexalith.Parties.Search;
 /// <summary>Persists content-free recovery obligations independently of the mapping inventory.</summary>
 internal interface IPartyMemoryIngestionIntentStore
 {
+    /// <summary>Round-trips and conditionally erases a unique reserved inventory sentinel.</summary>
+    Task ProbeAsync(CancellationToken cancellationToken);
+
     /// <summary>Atomically reserves an attempt before submission, rejecting fenced or full inventories.</summary>
     Task<PartyMemoryIngestionRegistration> RegisterAsync(string tenantId, string partyId, PartyMemoryIngestionIntent intent, CancellationToken cancellationToken);
 

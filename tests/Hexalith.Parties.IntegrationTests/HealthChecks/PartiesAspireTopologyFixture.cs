@@ -198,6 +198,26 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                     .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "false");
             }
 
+            if (_completeMtlsProfile)
+            {
+                // Exercise the UI-owned bearer acquisition and SDK handlers against this
+                // fixture's real protected APIs; development keys remain scoped to test resources.
+                foreach (string ui in new[] { "eventstore-admin-ui", "sample-blazor-ui" })
+                {
+                    _ = _builder.CreateResourceBuilder<ProjectResource>(ui)
+                        .WithEnvironment("EventStore__Authentication__Authority", string.Empty)
+                        .WithEnvironment("EventStore__Authentication__SigningKey", JwtSigningKey)
+                        .WithEnvironment("EventStore__Authentication__Issuer", JwtIssuer)
+                        .WithEnvironment("EventStore__Authentication__Audience", "hexalith-eventstore")
+                        .WithEnvironment("EventStore__Authentication__Subject", PartiesTenantBootstrapHost.UserId)
+                        .WithEnvironment("EventStore__Authentication__Tenants__0", PartiesTenantBootstrapHost.TenantId)
+                        .WithEnvironment("EventStore__Counter__TenantId", PartiesTenantBootstrapHost.TenantId)
+                        .WithEnvironment("EventStore__Authentication__Domains__0", "counter")
+                        .WithEnvironment("EventStore__Authentication__Permissions__0", "admin:read")
+                        .WithEnvironment("EventStore__Authentication__Permissions__1", "query:read");
+                }
+            }
+
             _ = _builder.CreateResourceBuilder<ProjectResource>("eventstore")
                 .WithEnvironment("EventStore__Actors__AggregateActorTypeName", "AggregateActor");
             foreach (ProjectResource project in _builder.Resources.OfType<ProjectResource>())

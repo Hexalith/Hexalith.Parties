@@ -1,0 +1,22 @@
+{
+  "baselineCommit": "08b9684f8464a2f9f8870be47e2a396e30e0cd99",
+  "workingTreeDirty": true,
+  "configuration": "Release/package",
+  "restore": {
+    "command": "dotnet restore Hexalith.Parties.slnx -p:NuGetAudit=false",
+    "exitCode": 0,
+    "rawLogSha256": "f3e83fd0eb7cb9e69eadc01d3487ed7c9f56f046f2a78382c79065b77044ee98"
+  },
+  "build": {
+    "command": "dotnet build Hexalith.Parties.slnx --configuration Release --no-restore -m:1 --disable-build-servers",
+    "exitCode": 0,
+    "warnings": 0,
+    "errors": 0,
+    "rawLogSha256": "b83f668fba84ed2bba49a99dc43312f945e27fcfc8cba658e7a78cdc5f51ba51"
+  },
+  "buildGuard": {
+    "command": "bash scripts/check-no-warning-override.sh",
+    "exitCode": 0
+  },
+  "qualification": "Parent gate against current working-tree changes, before independent review and owner source adoption commits."
+}

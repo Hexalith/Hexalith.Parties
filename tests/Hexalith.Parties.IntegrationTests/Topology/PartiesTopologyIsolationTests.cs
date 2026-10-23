@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
+using Aspire.Hosting.Testing;
+
 using Hexalith.Commons.UniqueIds;
 using Hexalith.Parties.IntegrationTests.Gateway;
 using Hexalith.Parties.IntegrationTests.HealthChecks;
@@ -56,6 +58,8 @@ public sealed class PartiesTopologyIsolationTests
         first.IsAvailable.ShouldBeTrue(first.UnavailableReason);
         await second.InitializeAsync(TestContext.Current.CancellationToken);
         second.IsAvailable.ShouldBeTrue(second.UnavailableReason);
+        await AssertAuthenticatedUiRoutingAsync(first, TestContext.Current.CancellationToken);
+        await AssertAuthenticatedUiRoutingAsync(second, TestContext.Current.CancellationToken);
         const string markerKey = "fixture-runtime-isolation-marker";
         foreach (PartiesAspireTopologyFixture fixture in new[] { first, second })
         {
@@ -78,6 +82,14 @@ public sealed class PartiesTopologyIsolationTests
             cross.IsSuccessStatusCode.ShouldBeFalse();
             string denial = await cross.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             denial.ShouldContain("ERR_DIRECT_INVOKE");
+            foreach ((string ui, string destination) in new[] { ("eventstore-admin-ui", "eventstore-admin"), ("sample-blazor-ui", "eventstore") })
+            {
+                using HttpClient uiSidecar = caller.CreateSidecarClient(ui);
+                using HttpResponseMessage uiCross = await uiSidecar.GetAsync(
+                    $"/v1.0/invoke/{target.Session.AppId(destination)}/method/ready", TestContext.Current.CancellationToken);
+                uiCross.IsSuccessStatusCode.ShouldBeFalse();
+                (await uiCross.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).ShouldContain("ERR_DIRECT_INVOKE");
+            }
         }
         string samePartyId = UniqueIdHelper.GenerateSortableUniqueStringId();
         await EventStoreGatewayE2ETests.CreateAndVerifyAsync(first, samePartyId, "First session", TestContext.Current.CancellationToken);
@@ -90,7 +102,22 @@ public sealed class PartiesTopologyIsolationTests
             $"/v1.0/invoke/{second.Session.AppId("tenants")}/method/ready", TestContext.Current.CancellationToken);
         survivorReady.StatusCode.ShouldBe(HttpStatusCode.OK);
         await EventStoreGatewayE2ETests.CreateAndVerifyAsync(second, UniqueIdHelper.GenerateSortableUniqueStringId(), "Survivor session", TestContext.Current.CancellationToken);
+        await AssertAuthenticatedUiRoutingAsync(second, TestContext.Current.CancellationToken);
         await second.DisposeAsync();
         Directory.Exists(second.Session.Root).ShouldBeFalse();
+    }
+
+    /// <summary>Prerendering executes the real UI clients, bearer handlers and configured SDK Dapr routing.</summary>
+    private static async Task AssertAuthenticatedUiRoutingAsync(PartiesAspireTopologyFixture fixture, CancellationToken cancellationToken)
+    {
+        using HttpClient admin = fixture.App.CreateHttpClient("eventstore-admin-ui", "http");
+        string dashboard = await admin.GetStringAsync("/dapr", cancellationToken).ConfigureAwait(false);
+        dashboard.ShouldContain(fixture.Session.AppId("eventstore-admin"));
+        dashboard.ShouldNotContain("Unable to load DAPR infrastructure");
+        using HttpClient sample = fixture.App.CreateHttpClient("sample-blazor-ui", "http");
+        string counter = await sample.GetStringAsync("/pattern-silent-reload", cancellationToken).ConfigureAwait(false);
+        counter.ShouldContain("Last updated:");
+        counter.ShouldNotContain("Failed to load counter:");
+        counter.ShouldNotContain("Loading...</p>");
     }
 }

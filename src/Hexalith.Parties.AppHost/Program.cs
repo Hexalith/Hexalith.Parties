@@ -153,6 +153,7 @@ if (daprMtls is not null && daprMtls.AppId("eventstore") != "eventstore")
     {
         _ = tenants.WithEnvironment($"EventStore__DomainServices__Registrations__{registration}__AppId", daprMtls.AppId("tenants"));
     }
+    _ = adminUI.WithEnvironment("EventStore__AdminServer__AppId", daprMtls.AppId("eventstore-admin"));
     _ = adminServer.WithEnvironment("AdminServer__EventStoreAppId", daprMtls.AppId("eventstore"))
         .WithEnvironment("AdminServer__TenantServiceAppId", daprMtls.AppId("tenants"));
     _ = eventStore.WithEnvironment("Authentication__WorkloadIssuer__Workload", daprMtls.AppId("eventstore"));
@@ -333,6 +334,7 @@ if (builder.ExecutionContext.IsPublishMode
         .WithEnvironment("EventStore__Authentication__Authority", PublishModeJwtAuthority)
         .WithEnvironment("EventStore__Authentication__ClientId", "hexalith-eventstore")
         .WithEnvironment("EventStore__Authentication__ClientCredentialsClientId", "hexalith-eventstore-ui")
+        .WithEnvironment("EventStore__GatewayAppId", daprMtls?.AppId("eventstore") ?? "eventstore")
         .WithEnvironment("EventStore__Authentication__Subject", "sample-blazor-ui")
         .WithEnvironment("EventStore__Authentication__Issuer", PublishModeJwtIssuer)
         .WithEnvironment("EventStore__Authentication__Audience", "hexalith-eventstore")

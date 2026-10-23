@@ -210,7 +210,7 @@ public sealed class PartySdkQueryHandlerTests
 
         getParty.Success.ShouldBeFalse();
         partyDetail.Success.ShouldBeFalse();
-        getParty.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        getParty.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.ReadModelUnavailable);
         partyDetail.ErrorMessage.ShouldBe(getParty.ErrorMessage);
         getParty.PayloadBytes.ShouldBeNull();
         partyDetail.PayloadBytes.ShouldBeNull();
@@ -361,9 +361,9 @@ public sealed class PartySdkQueryHandlerTests
         detail.Success.ShouldBeFalse();
         export.Success.ShouldBeFalse();
         index.Success.ShouldBeFalse();
-        detail.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
-        export.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
-        index.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        detail.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.ReadModelUnavailable);
+        export.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.ReadModelUnavailable);
+        index.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.ReadModelUnavailable);
     }
 
     [Theory]
@@ -654,7 +654,7 @@ public sealed class PartySdkQueryHandlerTests
 
         current.Success.ShouldBeTrue();
         degraded.Success.ShouldBeFalse();
-        degraded.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        degraded.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
         degraded.Metadata.ShouldBeNull();
         cache.TryGetDetail("tenant-a", "party-1", out _).ShouldBeFalse();
     }
@@ -693,7 +693,7 @@ public sealed class PartySdkQueryHandlerTests
 
         current.Success.ShouldBeTrue();
         degraded.Success.ShouldBeFalse();
-        degraded.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        degraded.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
         degraded.Metadata.ShouldBeNull();
         cache.TryGetIndex("tenant-a", out _).ShouldBeFalse();
     }
@@ -861,7 +861,7 @@ public sealed class PartySdkQueryHandlerTests
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        result.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
         await store.Received(1).GetAsync<PartyDetailSdkReadModel>("statestore", PartySdkReadModelAddresses.Detail("tenant-a", "party-1"), Arg.Any<CancellationToken>());
         await erasure.DidNotReceiveWithAnyArgs().GetStatusAsync(default!, default!, default);
     }
@@ -880,7 +880,7 @@ public sealed class PartySdkQueryHandlerTests
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        result.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
     }
 
     [Fact]
@@ -989,7 +989,7 @@ public sealed class PartySdkQueryHandlerTests
         QueryResult result = await pending.ConfigureAwait(true);
 
         result.Success.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        result.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
         cache.TryGetDetail("tenant-a", "party-1", out _).ShouldBeFalse();
     }
 
@@ -1045,7 +1045,7 @@ public sealed class PartySdkQueryHandlerTests
         // to fall back to, so the store failure propagates to ReadDetailAsync's outer catch as a
         // bounded ActorException failure rather than ever returning the stale pre-erasure PII.
         degradedResult.Success.ShouldBeFalse();
-        degradedResult.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        degradedResult.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
     }
 
     [Fact]
@@ -1078,9 +1078,9 @@ public sealed class PartySdkQueryHandlerTests
             TestContext.Current.CancellationToken);
 
         missing.Success.ShouldBeFalse();
-        missing.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        missing.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.ReadModelUnavailable);
         outage.Success.ShouldBeFalse();
-        outage.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        outage.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
         cache.TryGetDetail("tenant-a", "party-1", out _).ShouldBeFalse();
     }
 
@@ -1116,9 +1116,9 @@ public sealed class PartySdkQueryHandlerTests
             TestContext.Current.CancellationToken);
 
         missing.Success.ShouldBeFalse();
-        missing.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        missing.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.ReadModelUnavailable);
         outage.Success.ShouldBeFalse();
-        outage.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        outage.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
         cache.TryGetIndex("tenant-a", out _).ShouldBeFalse();
     }
 
@@ -1411,7 +1411,7 @@ public sealed class PartySdkQueryHandlerTests
         }
         else
         {
-            saturated.ErrorMessage.ShouldBe(slot == "detail" && seeded ? QueryAdapterFailureReason.ActorNotFoundInfrastructure : QueryAdapterFailureReason.ActorException);
+            saturated.ErrorMessage.ShouldBe(slot == "detail" && seeded ? PartySdkQueryFailureReason.ReadModelUnavailable : PartySdkQueryFailureReason.QueryExecutionFailure);
         }
 
         string? cachedVersion = slot switch
@@ -1978,7 +1978,7 @@ public sealed class PartySdkQueryHandlerTests
             TestContext.Current.CancellationToken);
 
         result.Success.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        result.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.ReadModelUnavailable);
         await store.DidNotReceive().GetAsync<PartyProcessingSdkReadModel>(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -2078,7 +2078,7 @@ public sealed class PartySdkQueryHandlerTests
 
         tenantA.Success.ShouldBeTrue();
         tenantB.Success.ShouldBeFalse();
-        tenantB.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        tenantB.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
         JsonSerializer.Serialize(tenantB, PartiesJsonOptions.Default).ShouldNotContain("Tenant A Secret");
     }
 
@@ -2154,7 +2154,7 @@ public sealed class PartySdkQueryHandlerTests
 
         wrongTenant.Success.ShouldBeFalse();
         absent.Success.ShouldBeFalse();
-        wrongTenant.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorNotFoundInfrastructure);
+        wrongTenant.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.ReadModelUnavailable);
         absent.ErrorMessage.ShouldBe(wrongTenant.ErrorMessage);
         wrongTenant.Metadata.ShouldBeNull();
         absent.Metadata.ShouldBeNull();
@@ -2206,8 +2206,8 @@ public sealed class PartySdkQueryHandlerTests
         tenantA.Success.ShouldBeTrue();
         tenantBIndex.Success.ShouldBeFalse();
         tenantBSearch.Success.ShouldBeFalse();
-        tenantBIndex.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
-        tenantBSearch.ErrorMessage.ShouldBe(QueryAdapterFailureReason.ActorException);
+        tenantBIndex.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
+        tenantBSearch.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
         JsonSerializer.Serialize(new[] { tenantBIndex, tenantBSearch }, PartiesJsonOptions.Default)
             .ShouldNotContain("Tenant A Secret");
     }
