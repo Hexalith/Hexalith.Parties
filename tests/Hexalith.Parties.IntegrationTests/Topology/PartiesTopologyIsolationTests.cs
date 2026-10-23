@@ -50,9 +50,11 @@ public sealed class PartiesTopologyIsolationTests
         var second = new PartiesAspireTopologyFixture(completeMtlsProfile: true, isolatedIdentities: true);
         await using var firstLifetime = first.ConfigureAwait(true);
         await using var secondLifetime = second.ConfigureAwait(true);
-        await Task.WhenAll(first.InitializeAsync(TestContext.Current.CancellationToken).AsTask(),
-            second.InitializeAsync(TestContext.Current.CancellationToken).AsTask());
+        // Qualify each cold startup within its existing readiness budget. Both sessions
+        // remain live for every routing, state, cross-call and peer-disposal assertion.
+        await first.InitializeAsync(TestContext.Current.CancellationToken);
         first.IsAvailable.ShouldBeTrue(first.UnavailableReason);
+        await second.InitializeAsync(TestContext.Current.CancellationToken);
         second.IsAvailable.ShouldBeTrue(second.UnavailableReason);
         const string markerKey = "fixture-runtime-isolation-marker";
         foreach (PartiesAspireTopologyFixture fixture in new[] { first, second })
