@@ -16,7 +16,7 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 | **Style** | Event sourcing + CQRS + EventStore SDK domain/projection/query handlers, fronted by the EventStore gateway |
 | **Repository** | Monolith - exactly 14 projects under `src` plus one sample project, 16 runnable .NET test projects plus one support host, and Playwright e2e |
 | **Language / runtime** | C# / **.NET 10** (SDK `10.0.402`) |
-| **Orchestration** | .NET Aspire 13.6.1 (`dotnet aspire run`) |
+| **Orchestration** | .NET Aspire 13.6.3 (`dotnet aspire run`) |
 | **Eventing** | DAPR pub/sub — CloudEvents 1.0 on `{tenant}.parties.events` (Redis local; Kafka/RabbitMQ/Service Bus in prod) |
 | **Integration** | Typed .NET client · `parties-ui` Blazor Server BFF · `parties-mcp` (AI tools, 5) · DAPR event subscription · Blazor Picker, AdminPortal & ConsumerPortal |
 | **License** | MIT |
@@ -39,15 +39,15 @@ Public command and query traffic goes through **Hexalith.EventStore**; the `part
 | Category | Technology | Version |
 |----------|-----------|---------|
 | Runtime | .NET | net10.0 (SDK 10.0.402) |
-| Orchestration | .NET Aspire | 13.6.1 |
+| Orchestration | .NET Aspire | 13.6.3 |
 | Actors / pub-sub | DAPR | 1.18.10 |
 | Validation | FluentValidation | 12.2.0 |
 | Mediation | MediatR | 14.2.0 |
 | AuthN | JWT Bearer | 10.0.13 |
-| MCP | ModelContextProtocol | 2.2.0 |
+| MCP | ModelContextProtocol | 2.3.0 |
 | UI | FluentUI Blazor + CustomElements | 5.0.1 / 10.0.13 |
-| Rich search (opt) | Hexalith.Memories.Client.Rest | 2.27.1 |
-| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | 4.0.2 / 4.3.0 / 6.2.0 / 2.11.3 / 4.16.0 |
+| Rich search (opt) | Hexalith.Memories.Client.Rest | 2.29.8 |
+| Testing | xUnit v3 / Shouldly / NSubstitute / bunit / Testcontainers | 4.0.2 / 4.3.0 / 6.2.0 / 2.12.5 / 4.16.0 |
 
 Full table with all packages: [architecture.md §3](architecture.md). Versioning is git-tag SemVer via MinVer (prefix `v`).
 

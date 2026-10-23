@@ -48,7 +48,73 @@ retention action, and does not change Story 8.7's `blocked` status: the
 release adds Story 8.6's shared-projection rebuild completion mechanics only,
 not the G5 runtime engine.
 
-### Current source observation — 2026-10-21
+### Current source observation — 2026-10-23
+
+Deferred-work validation reconciles the independently committed
+source graph at Parties `287aa8e0bc5a68d7845cd0eb0927519f7889b6b4`. Every root checkout below
+matches its committed gitlink and has an empty `git status --porcelain` result.
+This records present-tense selection facts only; it does not extend dated owner
+approvals, parity/runtime/custody qualification or migration authority. The
+2026-10-21 observation and earlier receipts remain historical below.
+
+The imported Builds catalog and evaluated default Release graph select EventStore package `3.126.1`, Commons `2.30.3`, FrontComposer `4.7.0`,
+Memories `2.29.8`, Tenants `5.10.1`, and Parties `1.5.2`.
+CommunityToolkit.Aspire.Hosting.Dapr remains `13.6.1-beta.935`. Default package
+mode and the explicit source graph remain distinct; ordinary Release builds
+consume Commons HTTP from its package. The pinned `hexalith-module` tool is the
+sole source-root/mode authority. Repository-local autodetection is absent;
+`UseHexalithProjectReferences=true` alone does not supply roots or select source.
+Catalog selection is separate from the
+immutable validation/release workflow pins and their approval receipts.
+
+Reproduce the committed source selection with:
+
+```bash
+git ls-tree 287aa8e0bc5a68d7845cd0eb0927519f7889b6b4 references/Hexalith.<dependency>
+git -C references/Hexalith.<dependency> rev-parse HEAD
+git -C references/Hexalith.<dependency> describe --tags --always --abbrev=8 HEAD
+git -C references/Hexalith.<dependency> status --porcelain
+dotnet msbuild src/Hexalith.Parties/Hexalith.Parties.csproj -p:Configuration=Release -getProperty:HexalithEventStoreVersion,HexalithCommonsVersion,HexalithFrontComposerVersion,HexalithMemoriesVersion,HexalithTenantsVersion,HexalithPartiesVersion
+```
+
+| Root dependency | Current source identity | Release use |
+| --- | --- | --- |
+| AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` (`3f194e17`) | Instruction baseline. |
+| Builds | `70ead608ac01f66dfcd80c13bb71152dac6c128e` (`v4.36.0-11-g70ead608`) | Imported package catalog and build tooling; EventStore 3.126.1 selected. |
+| Commons | `1663028fb6d9f46a0bf17919edeb21bb99be1587` (`v2.30.3-4-g1663028f`) | Default Release package is `2.30.3`; source requires explicit tool mapping. |
+| EventStore | `cd193902a52abb02572528958436d79a8ae25b9a` (`v3.126.1-41-gcd193902`) | Source inspection; runtime consumers restore package `3.126.1`. |
+| FrontComposer | `8c61143ef4c6a983bfe1d25865857b9b4cd240c9` (`v4.7.0-64-g8c61143e`) | Selected package is `4.7.0`. |
+| McpCli | `be89509d59bb6ba53a0382e26219edb0625b47f4` (`v1.0.0-59-gbe89509d`) | Committed root pointer; not used for G5 proof. |
+| Memories | `b55db82c060caf917a142fdb6585fa7340b01647` (`v2.29.8-17-gb55db82c`) | Selected package is `2.29.8`. |
+| Platform | `1d646b232ad862f6da1d8dd0953fe96ccd273fee` (`1d646b23`) | Committed root pointer; not used for G5 proof. |
+| PolymorphicSerializations | `221ac4592ba908ae7661ba1fa9e2d1fcc23baee0` (`v1.19.5`) | Existing source dependency. |
+| Tenants | `25e3bf827a7963ec79b57b4918290b3fed728706` (`v5.10.1-24-g25e3bf82`) | Selected package is `5.10.1`. |
+
+Source-mode consumer property fixtures use Debug and explicit inputs, for
+example:
+
+```bash
+dotnet msbuild src/Hexalith.Parties.Client/Hexalith.Parties.Client.csproj -p:Configuration=Debug -p:UseHexalithProjectReferences=true -p:HexalithEventStoreRoot="$PWD/references/Hexalith.EventStore" -p:HexalithEventStoreFromSource=true -p:HexalithCommonsRoot="$PWD/references/Hexalith.Commons" -p:HexalithCommonsHttpFromSource=true -getItem:PackageReference,ProjectReference
+```
+
+The fitness gate evaluates default Release, explicit package mode, Debug with
+only the bare source switch, and explicit source property fixtures. Consumer
+discovery uses package/project identities independently of selector conditions.
+Effective versions include VersionOverride and centrally evaluated PackageVersion
+metadata; selected project paths must exist. It retains negative sibling-layout coverage without mapping and positive
+coverage with explicit `HexalithMcpCliRoot`/`HexalithMcpCliFromSource=true` property fixtures
+for both supported McpCli layouts; only Abstractions may be a source reference.
+These consumer property fixtures do not run generated imports, mapping-hash
+checks, or tool validation targets and therefore do not verify actual module-tool
+mapping. They prove consumer branch selection only, not tool composition, source
+compilation, package release or historical parity. Current describe values identify these exact checkouts; they do not change
+the selected package versions or extend historical qualification.
+
+Selection does not revalidate historical parity receipts or authorize deletion
+of migration rollback paths. Historical owner approvals remain attached to their
+recorded identities; G5 remains `needs-additive-api`.
+
+### Historical source observation — 2026-10-21
 
 Deferred-work validation reconciles the independently committed
 source graph at Parties `63cd1279a82df47af3d16dd0ff9f002f3e4c86eb`. Every root checkout below

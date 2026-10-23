@@ -10,6 +10,7 @@ using Dapr.Client;
 using Hexalith.EventStore.Client.Projections;
 using Hexalith.Memories.Client.Rest;
 using Hexalith.Memories.Contracts.V1;
+using Hexalith.Parties.Contracts.Authorization;
 using Hexalith.Parties.Search;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -294,7 +295,7 @@ public sealed class PartyMemoryRuntimeTests
 
         var signing = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.JwtSigningKey)), SecurityAlgorithms.HmacSha256);
         var jwt = new JwtSecurityToken(config.JwtIssuer, config.JwtAudience,
-            [new Claim("sub", "synthetic-recovery-qualification"), new Claim(config.TenantClaimName, tenant)],
+            [new Claim(PartiesClaimTypes.Subject, "synthetic-recovery-qualification"), new Claim(config.TenantClaimName, tenant)],
             DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow.AddMinutes(10), signing);
         return new JwtSecurityTokenHandler().WriteToken(jwt);
     }
