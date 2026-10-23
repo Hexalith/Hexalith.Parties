@@ -150,6 +150,18 @@ class OwnerPublishTests(unittest.TestCase):
 
 @unittest.skipUnless(sys.platform == "linux", "Owned command supervision is qualified on Linux only")
 class OwnedCommandTests(unittest.TestCase):
+    def test_failed_command_reports_only_allowlisted_exception_identity(self):
+        marker = "synthetic-private-exception-message"
+        with tempfile.TemporaryDirectory() as private:
+            code = ("import sys; "
+                    "print('Unhandled exception. System.IO.FileNotFoundException: ' + sys.argv[1]); "
+                    "sys.exit(7)")
+            with self.assertRaises(publisher.QualificationError) as failure:
+                publisher.run_private([sys.executable, "-c", code, marker], private, os.environ.copy(), 2)
+            self.assertIn("System.IO.FileNotFoundException", str(failure.exception))
+            self.assertNotIn(marker, str(failure.exception))
+            self.assertIn("output withheld", str(failure.exception))
+
     def test_timeout_reaps_an_inherited_pipe_descendant_after_parent_exit(self):
         with tempfile.TemporaryDirectory() as private:
             child_pid = Path(private) / "child.pid"

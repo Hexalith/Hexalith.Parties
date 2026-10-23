@@ -507,7 +507,7 @@ test.describe('Admin parties list', () => {
     // case checks that status; this case proves accepted routing, not edited-state convergence.
     await expect.poll(async () => (await latestUpdateRequest(request))?.partyId).toBe('ada-lovelace');
     await page.waitForURL('**/admin/parties/ada-lovelace');
-    await expect(page.getByLabel('Party detail')).toBeVisible();
+    await expect(page.getByLabel('Party detail', { exact: true })).toBeVisible();
   });
 
   test('validation alert is assertive and preserves entered values', async ({ page }) => {

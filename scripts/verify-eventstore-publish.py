@@ -234,8 +234,18 @@ def run_private(command, directory, environment, timeout):
         try:
             process = subprocess.Popen(command, cwd=directory, env=environment, stdout=subprocess.PIPE,
                                        stderr=subprocess.STDOUT, start_new_session=True)
-            process.communicate(timeout=timeout)
-            require(process.returncode == 0, f"owner publisher command failed (exit {process.returncode}); output withheld")
+            output, _ = process.communicate(timeout=timeout)
+            # Report only fixed exception identities, never command output or exception
+            # messages: publisher diagnostics can contain credential-bearing values.
+            failure_types = [name for name in (
+                "System.IO.FileNotFoundException", "System.IO.DirectoryNotFoundException",
+                "System.InvalidOperationException", "System.ArgumentException",
+                "Aspire.Hosting.DistributedApplicationException",
+                "Microsoft.Extensions.Options.OptionsValidationException",
+            ) if name.encode() in output]
+            failure_kind = "; " + ", ".join(failure_types) if failure_types else ""
+            require(process.returncode == 0,
+                    f"owner publisher command failed (exit {process.returncode}{failure_kind}); output withheld")
         except (OSError, subprocess.TimeoutExpired) as error:
             raise QualificationError("owner publisher could not complete within its observation deadline") from error
         finally:
