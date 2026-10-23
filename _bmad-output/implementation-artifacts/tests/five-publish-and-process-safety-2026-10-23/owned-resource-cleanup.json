@@ -1,0 +1,53 @@
+{
+  "sessions": [
+    "113b0c677b6c",
+    "1a34930a747a",
+    "3171be3c748b",
+    "38f49c57f847",
+    "6bda120bb794",
+    "793c2b916ff0",
+    "7b9d982b9899",
+    "88ef9f201a07",
+    "94bea01d0677",
+    "b13d0b357b99",
+    "bea9a37ed430",
+    "f03c38d0de99"
+  ],
+  "osWorkersMatchingOwnedSessionPaths": [],
+  "ownedContainers": [],
+  "remainingFixtureContainers": [],
+  "ownedNetworks": [],
+  "productionStoresRemoved": true,
+  "proofScope": "Final live tests separately assert every captured PID/start identity has exited and every owned listener can be rebound before successful disposal; all four matrix modes executed with zero skips.",
+  "manualRecovery": {
+    "session": "94bea01d0677",
+    "command": "DAPR_MTLS_SESSION_ID=94bea01d0677 DAPR_MTLS_CERTIFICATE_DIRECTORY=${TMPDIR}/hexalith-parties-topology-94bea01d0677/certificates bash scripts/aspire-start-mtls.sh --cleanup-only",
+    "result": "success; only ownership-matching control-plane containers remained after failed runner exit; removed before final quiet rerun"
+  },
+  "finalPostReviewAttempt": {
+    "sessions": [
+      "50733d6df9aa",
+      "56fe25cb716b",
+      "73b5fe9578a5",
+      "b7b121db78eb"
+    ],
+    "ownedContainers": [],
+    "ownedWorkers": []
+  },
+  "finalPostReviewRetry": {
+    "sessions": [
+      "4c8eb1c3e2dc",
+      "75f37fa82d7f",
+      "87ba211bf385",
+      "a70bdd63d794"
+    ],
+    "ownedContainers": [],
+    "ownedWorkers": [],
+    "counts": {
+      "total": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "seconds": 140.588
+  }
+}

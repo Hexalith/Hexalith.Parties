@@ -316,6 +316,268 @@ public sealed class PackageTestProcessTests
         }
     }
 
+    /// <summary>Cooperative interruption cannot abandon inherited pipes or adopted descendants.</summary>
+    /// <param name="signal">The cooperative Unix signal.</param>
+    /// <param name="duringCleanup">Whether interruption is delivered after cleanup begins.</param>
+    [Theory]
+    [InlineData("TERM", false)]
+    [InlineData("INT", false)]
+    [InlineData("TERM", true)]
+    [InlineData("INT", true)]
+    public async Task SupervisorSignals_ReapOwnedFamilyAndLeaveUnrelatedWorker(string signal, bool duringCleanup)
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux exclusive subreaper controls."); }
+        string directory = Path.Combine(Path.GetTempPath(), $"parties-signal-control-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        const string script = "import os,pathlib,subprocess,sys,threading; child=subprocess.Popen([sys.executable,'-c','import threading; threading.Event().wait()'],start_new_session=True); pathlib.Path(sys.argv[1]).write_text(str(os.getpid())+' '+str(child.pid)); threading.Event().wait()";
+        var command = new ProcessStartInfo("python3") { WorkingDirectory = Directory.GetCurrentDirectory(), ArgumentList = { "-c", script, Path.Combine(directory, "ready") } };
+        using var supervisor = new PackageTestProcessSupervisor(command, 2_000);
+        if (duringCleanup)
+        {
+            // Test-only instrumentation delivers the signal synchronously after
+            // the real cleanup killed its first owned group, before reaping.
+            // The shipped supervisor has no handshake or cleanup wait state.
+            const string injection = "os.killpg(child.pid, signal.SIGKILL)";
+            supervisor.StartInfo.ArgumentList[1].ShouldContain(injection);
+            supervisor.StartInfo.ArgumentList[1] = supervisor.StartInfo.ArgumentList[1].Replace(injection,
+                injection + "\n        os.kill(os.getpid(), signal.SIG" + signal + ")\n        (directory / 'cleanup-signal-delivered').touch()", StringComparison.Ordinal);
+        }
+        using Process process = Process.Start(supervisor.StartInfo).ShouldNotBeNull();
+        Task<string> output = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+        Task<string> error = process.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
+        using Process unrelated = Process.Start(new ProcessStartInfo("sleep") { ArgumentList = { "3600" }, UseShellExecute = false }).ShouldNotBeNull();
+        string stateDirectory = supervisor.StartInfo.ArgumentList[2];
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+        Process? signaler = null;
+        await WithFixtureCleanupAsync(async () =>
+        {
+            while (!File.Exists(Path.Combine(directory, "ready"))) { await Task.Delay(5, deadline.Token).ConfigureAwait(true); }
+            int[] ids = File.ReadAllText(Path.Combine(directory, "ready")).Split(' ').Select(value => int.Parse(value, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+            if (duringCleanup) { supervisor.RequestTermination(); }
+            else
+            {
+                var send = new ProcessStartInfo("python3") { UseShellExecute = false };
+                foreach (string argument in new[] { "-c", "import os,signal,sys; os.kill(int(sys.argv[1]),getattr(signal,'SIG'+sys.argv[2]))", process.Id.ToString(System.Globalization.CultureInfo.InvariantCulture), signal }) { send.ArgumentList.Add(argument); }
+                signaler = Process.Start(send).ShouldNotBeNull();
+                await signaler.WaitForExitAsync(deadline.Token).ConfigureAwait(true);
+                signaler.ExitCode.ShouldBe(0);
+            }
+            await process.WaitForExitAsync(deadline.Token).ConfigureAwait(true);
+            await Task.WhenAll(output, error).WaitAsync(deadline.Token).ConfigureAwait(true);
+            supervisor.EnsureCleanupSucceeded("python3");
+            if (duringCleanup) { File.Exists(Path.Combine(stateDirectory, "cleanup-signal-delivered")).ShouldBeTrue(); }
+            process.ExitCode.ShouldBe(signal == "TERM" ? 143 : 130);
+            foreach (int id in ids) { Should.Throw<ArgumentException>(() => Process.GetProcessById(id)); }
+            unrelated.HasExited.ShouldBeFalse();
+        },
+        async () =>
+        {
+            if (signaler is not null)
+            {
+                using (signaler) { await ReapFixtureProcessAsync(signaler).ConfigureAwait(true); }
+            }
+        },
+        () => ReapFixtureProcessAsync(process, supervisor.RequestTermination),
+        () => ObserveFixtureOutputAsync(output, error),
+        () => ReapFixtureProcessAsync(unrelated),
+        () => { Directory.Delete(directory, recursive: true); return Task.CompletedTask; }).ConfigureAwait(true);
+    }
+
+    /// <summary>Missing bookkeeping storage cannot bypass cleanup, including when recording a launch-loop failure.</summary>
+    [Fact]
+    public async Task SupervisorMissingStateDirectory_StillReapsOwnedFamily()
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux exclusive subreaper control."); }
+        string directory = Path.Combine(Path.GetTempPath(), $"parties-missing-state-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        const string script = "import os,pathlib,subprocess,sys,threading; child=subprocess.Popen(['sleep','3600'],start_new_session=True); pathlib.Path(sys.argv[1]).write_text(str(os.getpid())+' '+str(child.pid)); threading.Event().wait()";
+        var command = new ProcessStartInfo("python3") { WorkingDirectory = Directory.GetCurrentDirectory(), ArgumentList = { "-c", script, Path.Combine(directory, "ready") } };
+        using var supervisor = new PackageTestProcessSupervisor(command, 2_000);
+        using Process process = Process.Start(supervisor.StartInfo).ShouldNotBeNull();
+        Task<string> output = process.StandardOutput.ReadToEndAsync();
+        Task<string> error = process.StandardError.ReadToEndAsync();
+        await WithFixtureCleanupAsync(async () =>
+        {
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            while (!File.Exists(Path.Combine(directory, "ready"))) { await Task.Delay(5, deadline.Token).ConfigureAwait(true); }
+            int[] ids = File.ReadAllText(Path.Combine(directory, "ready")).Split(' ').Select(value => int.Parse(value, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+            Directory.Delete(supervisor.StartInfo.ArgumentList[2], recursive: true);
+            await process.WaitForExitAsync(deadline.Token).ConfigureAwait(true);
+            await Task.WhenAll(output, error).WaitAsync(deadline.Token).ConfigureAwait(true);
+            process.ExitCode.ShouldBe(125);
+            (await error.ConfigureAwait(true)).ShouldBeEmpty("A failed diagnostic write must not escape cleanup.");
+            foreach (int id in ids) { Should.Throw<ArgumentException>(() => Process.GetProcessById(id)); }
+        },
+        () => ReapFixtureProcessAsync(process),
+        () => ObserveFixtureOutputAsync(output, error),
+        () => { Directory.Delete(directory, recursive: true); return Task.CompletedTask; }).ConfigureAwait(true);
+    }
+
+    /// <summary>The monitor survives loss of an isolated caller without touching another worker.</summary>
+    [Fact]
+    public async Task SupervisorCallerLoss_UsesExplicitStartIdentityAndReapsInheritedPipes()
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux caller identity and exclusive subreaper control."); }
+        string directory = Path.Combine(Path.GetTempPath(), $"parties-caller-control-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        const string work = "import os,pathlib,subprocess,sys,threading; child=subprocess.Popen([sys.executable,'-c','import threading; threading.Event().wait()'],start_new_session=True); pathlib.Path(sys.argv[1]).write_text(str(os.getpid())+' '+str(child.pid)); threading.Event().wait()";
+        var command = new ProcessStartInfo("python3") { WorkingDirectory = Directory.GetCurrentDirectory(), ArgumentList = { "-c", work, Path.Combine(directory, "ready") } };
+        using var supervisor = new PackageTestProcessSupervisor(command, 2_000);
+        const string caller = "import json,os,pathlib,subprocess,sys,threading; args=json.loads(sys.argv[1]); stat=pathlib.Path('/proc/self/stat').read_text(); args[4]=str(os.getpid()); args[5]=stat[stat.rfind(')')+2:].split()[19]; child=subprocess.Popen(['python3']+args); pathlib.Path(sys.argv[2]).write_text(str(os.getpid())+' '+str(child.pid)); threading.Event().wait()";
+        const string controller = """
+            import ctypes, os, subprocess, sys, threading
+            ctypes.CDLL(None).prctl(36, 1, 0, 0, 0)
+            child_ready = threading.Event()
+            def stop_caller():
+                sys.stdin.readline()
+                child_ready.wait()
+                if child.poll() is None:
+                    try:
+                        child.kill()
+                    except ProcessLookupError:
+                        pass
+            threading.Thread(target=stop_caller, daemon=True).start()
+            child = subprocess.Popen([sys.executable, '-c', sys.argv[1], sys.argv[2], sys.argv[3]], stdin=subprocess.DEVNULL)
+            child_ready.set()
+            child.wait()
+            while True:
+                try:
+                    os.waitpid(-1, 0)
+                except ChildProcessError:
+                    break
+            """;
+        var start = new ProcessStartInfo("python3") { RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+        foreach (string argument in new[] { "-c", controller, caller, JsonSerializer.Serialize(supervisor.StartInfo.ArgumentList), Path.Combine(directory, "caller") }) { start.ArgumentList.Add(argument); }
+        using Process process = Process.Start(start).ShouldNotBeNull();
+        Task<string> output = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+        Task<string> error = process.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
+        using Process unrelated = Process.Start(new ProcessStartInfo("sleep") { ArgumentList = { "3600" }, UseShellExecute = false }).ShouldNotBeNull();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+        await WithFixtureCleanupAsync(async () =>
+        {
+            while (!File.Exists(Path.Combine(directory, "ready"))) { await Task.Delay(5, deadline.Token).ConfigureAwait(true); }
+            int[] family = File.ReadAllText(Path.Combine(directory, "ready")).Split(' ').Select(value => int.Parse(value, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+            int[] callers = File.ReadAllText(Path.Combine(directory, "caller")).Split(' ').Select(value => int.Parse(value, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+            using Process callerProcess = Process.GetProcessById(callers[0]);
+            callerProcess.Kill();
+            await process.WaitForExitAsync(deadline.Token).ConfigureAwait(true);
+            await Task.WhenAll(output, error).WaitAsync(deadline.Token).ConfigureAwait(true);
+            process.ExitCode.ShouldBe(0);
+            supervisor.EnsureCleanupSucceeded("python3");
+            foreach (int id in family.Concat(callers)) { Should.Throw<ArgumentException>(() => Process.GetProcessById(id)); }
+            unrelated.HasExited.ShouldBeFalse();
+        },
+        () => ReapFixtureProcessAsync(process, () => process.StandardInput.Close()),
+        () => ObserveFixtureOutputAsync(output, error),
+        () => ReapFixtureProcessAsync(unrelated),
+        () => { Directory.Delete(directory, recursive: true); return Task.CompletedTask; }).ConfigureAwait(true);
+    }
+
+    /// <summary>An expired observation and a cleanup failure cannot abandon later owned resources.</summary>
+    [Fact]
+    public async Task SupervisorFixtureCleanup_AfterExpiredObservationPreservesFailureAndReapsEveryOwnedProcess()
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux exclusive subreaper control."); }
+        string directory = Path.Combine(Path.GetTempPath(), $"parties-expired-control-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        string ready = Path.Combine(directory, "ready");
+        var command = new ProcessStartInfo("python3")
+        {
+            WorkingDirectory = Directory.GetCurrentDirectory(),
+            ArgumentList = { "-c", "import os,pathlib,sys,threading; pathlib.Path(sys.argv[1]).write_text(str(os.getpid())); threading.Event().wait()", ready },
+        };
+        using var supervisor = new PackageTestProcessSupervisor(command, 2_000);
+        using Process process = Process.Start(supervisor.StartInfo).ShouldNotBeNull();
+        Task<string> output = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+        Task<string> error = process.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
+        using Process unrelated = Process.Start(new ProcessStartInfo("sleep") { ArgumentList = { "3600" }, UseShellExecute = false }).ShouldNotBeNull();
+        using var observation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        InvalidOperationException? original = null;
+        int child = 0;
+        var cleanupFailure = new IOException("controlled cleanup failure");
+        InvalidOperationException failure = await Should.ThrowAsync<InvalidOperationException>(() => WithFixtureCleanupAsync(async () =>
+        {
+            while (!File.Exists(ready)) { await Task.Delay(5, observation.Token).ConfigureAwait(true); }
+            child = int.Parse(File.ReadAllText(ready), System.Globalization.CultureInfo.InvariantCulture);
+            observation.Cancel();
+            try { await process.WaitForExitAsync(observation.Token).ConfigureAwait(true); }
+            catch (OperationCanceledException exception)
+            {
+                original = new InvalidOperationException("The controlled observation deadline expired.", exception);
+                throw original;
+            }
+        },
+        () => ReapFixtureProcessAsync(process, supervisor.RequestTermination),
+        () => Task.FromException(cleanupFailure),
+        () => ObserveFixtureOutputAsync(output, error),
+        () => ReapFixtureProcessAsync(unrelated),
+        () => { Directory.Delete(directory, recursive: true); return Task.CompletedTask; })).ConfigureAwait(true);
+        failure.ShouldBeSameAs(original);
+        failure.InnerException.ShouldBeAssignableTo<OperationCanceledException>();
+        ((OperationCanceledException)failure.InnerException!).CancellationToken.ShouldBe(observation.Token);
+        failure.Data["FixtureCleanupFailures"].ShouldBeOfType<AggregateException>().InnerExceptions.ShouldBe([cleanupFailure]);
+        process.HasExited.ShouldBeTrue();
+        unrelated.HasExited.ShouldBeTrue();
+        child.ShouldBeGreaterThan(0);
+        Should.Throw<ArgumentException>(() => Process.GetProcessById(child));
+        Directory.Exists(directory).ShouldBeFalse();
+        supervisor.EnsureCleanupSucceeded("python3");
+    }
+
+    private static async Task WithFixtureCleanupAsync(Func<Task> body, params Func<Task>[] cleanupSteps)
+    {
+        Exception? original = null;
+        try { await body().ConfigureAwait(false); }
+        catch (Exception exception) { original = exception; throw; }
+        finally
+        {
+            var failures = new List<Exception>();
+            foreach (Func<Task> step in cleanupSteps)
+            {
+                try { await step().ConfigureAwait(false); }
+                catch (Exception exception) { failures.Add(exception); }
+            }
+            if (failures.Count > 0)
+            {
+                var aggregate = new AggregateException("Fixture cleanup failed after independently attempting every owned resource.", failures);
+                if (original is null) { throw aggregate; }
+                original.Data["FixtureCleanupFailures"] = aggregate;
+            }
+        }
+    }
+
+    private static async Task ReapFixtureProcessAsync(Process process, Action? requestTermination = null)
+    {
+        if (process.HasExited) { return; }
+        Exception? cooperativeFailure = null;
+        if (requestTermination is not null)
+        {
+            using var graceful = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            try
+            {
+                requestTermination();
+                await process.WaitForExitAsync(graceful.Token).ConfigureAwait(false);
+                return;
+            }
+            catch (OperationCanceledException) when (graceful.IsCancellationRequested) { }
+            catch (Exception exception) { cooperativeFailure = exception; }
+        }
+        try { if (!process.HasExited) { process.Kill(entireProcessTree: true); } }
+        catch (InvalidOperationException) when (process.HasExited) { }
+        using var forced = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        await process.WaitForExitAsync(forced.Token).ConfigureAwait(false);
+        if (cooperativeFailure is not null)
+        {
+            throw new InvalidOperationException("Cooperative fixture cleanup failed; the owned process was forcibly reaped.", cooperativeFailure);
+        }
+    }
+
+    private static async Task ObserveFixtureOutputAsync(Task<string> output, Task<string> error)
+    {
+        using var capture = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        await Task.WhenAll(output, error).WaitAsync(capture.Token).ConfigureAwait(false);
+    }
+
     private static void StopFixtureProcess(int processId)
     {
         try

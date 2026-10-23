@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-23",
+  "authorization": "User invoked bmad-build, approved its frozen five-item spec, and explicitly requested main pushes. Authenticated repository owner: jpiquot. Source selection only; separate release/runtime approvals are unchanged.",
+  "strategy": "Retain the tested task-only owner commits as Parties gitlinks. Merge each fix into its current remote main to preserve existing upstream work and make the selected source reachable without upgrading the Parties package catalog.",
+  "owners": [
+    {
+      "repository": "Hexalith/Hexalith.Builds",
+      "remoteMainBefore": "38de8cc6c8dc7f14bec94781e050a2721f4e2c1c",
+      "selectedSourceCommit": "4c7f27f5458742e860100012ecd30253808421e7",
+      "publishedMainCommit": "11a3a79cfac4bba9548c6364a17a01ee9b561370",
+      "selectedSourceIsAncestorOfPublishedMain": true,
+      "pushCommand": "git push origin HEAD:refs/heads/main",
+      "pushExitCode": 0,
+      "remoteMainVerified": "11a3a79cfac4bba9548c6364a17a01ee9b561370",
+      "selectedCheckoutClean": true,
+      "nestedSubmodulesInitialized": false
+    },
+    {
+      "repository": "Hexalith/Hexalith.FrontComposer",
+      "remoteMainBefore": "3fd62e497ed9e1ae13811af813487fb97e4adc16",
+      "selectedSourceCommit": "803b38116478466b5192d953f211ad37da402294",
+      "publishedMainCommit": "d73c99c58832a56ed3a34e62724ca664ddbfe669",
+      "selectedSourceIsAncestorOfPublishedMain": true,
+      "pushCommand": "git push origin HEAD:refs/heads/main",
+      "pushExitCode": 0,
+      "remoteMainVerified": "d73c99c58832a56ed3a34e62724ca664ddbfe669",
+      "selectedCheckoutClean": true,
+      "nestedSubmodulesInitialized": false
+    }
+  ],
+  "parentSourceAdoptionCommit": "ad9c72af5b029a438557f5899f1580ca6d482aef",
+  "parentMainBefore": "664b99c67e90a14c8a1cc4d9663a25fa44c47c9a",
+  "parentGitlinkRangeGate": {
+    "command": "bash scripts/gitlink-rc-gate.sh --push-range 664b99c67e90a14c8a1cc4d9663a25fa44c47c9a",
+    "exitCode": 0,
+    "allAdvancedGitlinksSigned": true
+  },
+  "qualification": "No immutable release-executor changes or matching FrontComposer package adoption. Four original gates stay open. Historical parity/runtime receipts retain their original identities."
+}

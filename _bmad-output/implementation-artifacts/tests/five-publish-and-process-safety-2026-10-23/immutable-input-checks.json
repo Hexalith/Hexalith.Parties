@@ -1,0 +1,78 @@
+[
+  {
+    "sha": "d9070aa0d43feb9e3359286bc797d2be65960727",
+    "path": "Github/publish-containers/oci_registry_validator.py",
+    "commands": [
+      {
+        "command": "git -C references/Hexalith.Builds cat-file -t d9070aa0d43feb9e3359286bc797d2be65960727",
+        "exitCode": 128,
+        "diagnostic": "fatal: git cat-file: could not get object info",
+        "type": ""
+      },
+      {
+        "command": "git -C references/Hexalith.Builds show d9070aa0d43feb9e3359286bc797d2be65960727:Github/publish-containers/oci_registry_validator.py",
+        "exitCode": 128,
+        "diagnostic": "fatal: path 'Github/publish-containers/oci_registry_validator.py' exists on disk, but not in 'd9070aa0d43feb9e3359286bc797d2be65960727'",
+        "type": null
+      }
+    ],
+    "classification": "object unavailable"
+  },
+  {
+    "sha": "360a2b9c4e96809365a7de785be9a68152d5ac28",
+    "path": "Github/prepare-domain-release/action.yml",
+    "commands": [
+      {
+        "command": "git -C references/Hexalith.Builds cat-file -t 360a2b9c4e96809365a7de785be9a68152d5ac28",
+        "exitCode": 0,
+        "diagnostic": "",
+        "type": "commit"
+      },
+      {
+        "command": "git -C references/Hexalith.Builds show 360a2b9c4e96809365a7de785be9a68152d5ac28:Github/prepare-domain-release/action.yml",
+        "exitCode": 0,
+        "diagnostic": "",
+        "type": null
+      }
+    ],
+    "classification": "available"
+  },
+  {
+    "sha": "bb226831fa2129f0191e7f6492f60725f3d85ce9",
+    "path": "Props/Directory.Packages.props",
+    "commands": [
+      {
+        "command": "git -C references/Hexalith.Builds cat-file -t bb226831fa2129f0191e7f6492f60725f3d85ce9",
+        "exitCode": 128,
+        "diagnostic": "fatal: git cat-file: could not get object info",
+        "type": ""
+      },
+      {
+        "command": "git -C references/Hexalith.Builds show bb226831fa2129f0191e7f6492f60725f3d85ce9:Props/Directory.Packages.props",
+        "exitCode": 128,
+        "diagnostic": "fatal: path 'Props/Directory.Packages.props' exists on disk, but not in 'bb226831fa2129f0191e7f6492f60725f3d85ce9'",
+        "type": null
+      }
+    ],
+    "classification": "object unavailable"
+  },
+  {
+    "sha": "2601de1a654d9646a40e1baa64d8a85516e58e47",
+    "path": "Props/Directory.Packages.props",
+    "commands": [
+      {
+        "command": "git -C references/Hexalith.Builds cat-file -t 2601de1a654d9646a40e1baa64d8a85516e58e47",
+        "exitCode": 128,
+        "diagnostic": "fatal: git cat-file: could not get object info",
+        "type": ""
+      },
+      {
+        "command": "git -C references/Hexalith.Builds show 2601de1a654d9646a40e1baa64d8a85516e58e47:Props/Directory.Packages.props",
+        "exitCode": 128,
+        "diagnostic": "fatal: path 'Props/Directory.Packages.props' exists on disk, but not in '2601de1a654d9646a40e1baa64d8a85516e58e47'",
+        "type": null
+      }
+    ],
+    "classification": "object unavailable"
+  }
+]

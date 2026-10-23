@@ -1,0 +1,520 @@
+{
+  "date": "2026-10-23",
+  "scope": "Final parent verification after independent-review fixes; supersedes initial counts and the recovered historical-object CI blocker without removing failed attempts.",
+  "selectedSourceCommits": {
+    "Builds": "4c7f27f5458742e860100012ecd30253808421e7",
+    "FrontComposer": "803b38116478466b5192d953f211ad37da402294"
+  },
+  "runs": [
+    {
+      "name": "builds-python",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "Github/publish-containers/tests",
+        "-p",
+        "test_*.py"
+      ],
+      "workingDirectory": "${WORKSPACE}/references/Hexalith.Builds",
+      "exitCode": 0,
+      "seconds": 9.691,
+      "counts": {
+        "total": 147,
+        "failed": 0,
+        "skipped": 0
+      },
+      "rawLogSha256": "4ec3405e6a77748f7060862fb8b80aa3b47dbd8c2bd35f93c36b664b50f9361a"
+    },
+    {
+      "name": "ci-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "-c",
+        "Debug",
+        "--no-restore",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 0,
+      "seconds": 0.774,
+      "counts": null,
+      "rawLogSha256": "8bdf10d035b060a995f6c8fa1ddb92fbc460592a26ca559a7d5350f410665d86"
+    },
+    {
+      "name": "ci",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 0,
+      "seconds": 76.661,
+      "counts": {
+        "total": 449,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "rawLogSha256": "04cf695539499ee99c0ef98a2f999650a8960b6c306b7be852550ea4c917f5fd"
+    },
+    {
+      "name": "contracts-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj",
+        "-c",
+        "Release",
+        "--no-restore",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 0,
+      "seconds": 1.217,
+      "counts": null,
+      "rawLogSha256": "c69a12bd85411fcb7b5a4b7b9cedaf20a95df03aa0fac5c636de21db46406661"
+    },
+    {
+      "name": "contracts",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 0,
+      "seconds": 7.939,
+      "counts": {
+        "total": 226,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "rawLogSha256": "e2fab0c23ae90d3172740db4d4b5f367ca14d6eeddf3850ac4f0f24e1d13fe17"
+    },
+    {
+      "name": "client-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj",
+        "-c",
+        "Release",
+        "--no-restore",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 0,
+      "seconds": 1.422,
+      "counts": null,
+      "rawLogSha256": "eabf59c6d847e0eda4ba5f95ab8e2b565f30953f87c2475603ba6fa2ec12f01e"
+    },
+    {
+      "name": "client",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Client.Tests/bin/Release/net10.0/Hexalith.Parties.Client.Tests.dll"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 0,
+      "seconds": 18.114,
+      "counts": {
+        "total": 332,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "rawLogSha256": "6c7deac2c77c5f7448b531a8d8cc0f5bf4d6fa0cc35f7130016c4d7b24381d5d"
+    },
+    {
+      "name": "integration-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Release",
+        "--no-restore",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 0,
+      "seconds": 2.27,
+      "counts": null,
+      "rawLogSha256": "d6e3fcc97d597a9833340ab44657742c7445018810ce243992af310fd8af9bef"
+    },
+    {
+      "name": "integration",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 0,
+      "seconds": 4.679,
+      "counts": {
+        "total": 148,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 20,
+        "notRun": 0
+      },
+      "rawLogSha256": "0a40376421feab5de94dea1251171f36fdbabacae8d10acfb124b40302a68e14"
+    },
+    {
+      "name": "ui",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 0,
+      "seconds": 3.623,
+      "counts": {
+        "total": 414,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 1,
+        "notRun": 0
+      },
+      "rawLogSha256": "71ec26103831a5b74fd97aec3b324317d29613bd48f91b556ff08d4fc4579bc3"
+    },
+    {
+      "name": "shell-layout",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.FrontComposer.Shell.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.Tests.dll",
+        "-class",
+        "Hexalith.FrontComposer.Shell.Tests.Components.Layout.FrontComposerShellTests"
+      ],
+      "workingDirectory": "${WORKSPACE}/references/Hexalith.FrontComposer",
+      "exitCode": 0,
+      "seconds": 3.974,
+      "counts": {
+        "total": 48,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "rawLogSha256": "76e089410b8d2c628f3f8d4c66e21220a6d364d95bcb8fa5a582882ac87465ae"
+    },
+    {
+      "name": "service-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Release",
+        "--no-restore",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 0,
+      "seconds": 3.383,
+      "counts": null,
+      "rawLogSha256": "b7975d95dd25d469126a9fc0aff7781e736cfa87ad4433fc12a0eaaa0ae0fd35"
+    },
+    {
+      "name": "service",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 1,
+      "seconds": 39.027,
+      "counts": {
+        "total": 2627,
+        "errors": 0,
+        "failed": 2,
+        "skipped": 3,
+        "notRun": 0
+      },
+      "rawLogSha256": "96c457d8d07e9225caedcb38d33257e2f2d68bd4568bdc2b432824347865bc32",
+      "disposition": "Two clean/committed-gitlink fitness preconditions failed while task owner checkouts were modified; service-final supersedes this attempt after exact owner publication and parent source adoption. No assertion bypass."
+    },
+    {
+      "name": "live-shutdown",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 1,
+      "seconds": 345.828,
+      "counts": {
+        "total": 4,
+        "errors": 0,
+        "failed": 1,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "rawLogSha256": "e181064e4194ccc9facab3e51a23308db0fc20270b7628071be6ed5c608853e6",
+      "disposition": "Normal startup failed after sample-blazor-ui Dapr internal gRPC bind failure; remaining three cases passed. All session resources removed; live-shutdown-retry passed all four. Retain failed precondition attempt."
+    },
+    {
+      "name": "live-shutdown-retry",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-method",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 0,
+      "seconds": 140.588,
+      "counts": {
+        "total": 4,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "rawLogSha256": "e3a3a7c17f858dd0914d32f1b013b67863cd05cb0655e2e3b4fa7a316001a2f0"
+    },
+    {
+      "name": "builds-main-python",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "Github/publish-containers/tests",
+        "-p",
+        "test_*.py"
+      ],
+      "workingDirectory": "${OWNER_INTEGRATION_ROOT}/Hexalith.Builds",
+      "exitCode": 0,
+      "seconds": 9.542,
+      "counts": {
+        "total": 150,
+        "failed": 0,
+        "skipped": 0
+      },
+      "rawLogSha256": "643b61cc51c7349b2fadbcb93ad21ee5c5d4869e044827920e6cd5fb29e57892"
+    },
+    {
+      "name": "frontcomposer-main-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.FrontComposer.Shell.Tests/Hexalith.FrontComposer.Shell.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "workingDirectory": "${OWNER_INTEGRATION_ROOT}/Hexalith.FrontComposer",
+      "exitCode": 0,
+      "seconds": 13.527,
+      "counts": null,
+      "rawLogSha256": "8eba055be5746ed7585d8428003cddfcb166b6ad962bb614f7429dcd1f96b222"
+    },
+    {
+      "name": "frontcomposer-main-shell",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.FrontComposer.Shell.Tests/bin/Release/net10.0/Hexalith.FrontComposer.Shell.Tests.dll",
+        "-class",
+        "Hexalith.FrontComposer.Shell.Tests.Components.Layout.FrontComposerShellTests"
+      ],
+      "workingDirectory": "${OWNER_INTEGRATION_ROOT}/Hexalith.FrontComposer",
+      "exitCode": 0,
+      "seconds": 3.574,
+      "counts": {
+        "total": 47,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "rawLogSha256": "3b92d53229b74218dee051b97844132e5f03586936df44e68f4521927b355c65"
+    },
+    {
+      "name": "service-final-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Release",
+        "--no-restore",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 0,
+      "seconds": 4.809,
+      "counts": null,
+      "rawLogSha256": "88135cf46f955fd9c97d528794cb1ddac44fe19c252cc366d823a54e0cca13cd"
+    },
+    {
+      "name": "service-final",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll"
+      ],
+      "workingDirectory": "${WORKSPACE}",
+      "exitCode": 0,
+      "seconds": 67.215,
+      "counts": {
+        "total": 2627,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 3,
+        "notRun": 0
+      },
+      "rawLogSha256": "dc75395e6e564be1db8da5cf3ae3085cbaf010fbce7a497af5a90931a4d8498b"
+    }
+  ],
+  "production": {
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "-class",
+      "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests"
+    ],
+    "environment": {
+      "PARTIES_MEMORIES_PRODUCTION_TESTS": "true",
+      "PARTIES_MEMORIES_TEST_REDIS": "<owned Redis endpoint>",
+      "PARTIES_MEMORIES_TEST_FALKORDB": "<owned FalkorDB endpoint>",
+      "PARTIES_MEMORIES_TEST_SERVER": "${WORKSPACE}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Release/net10.0/Hexalith.Memories.Server.dll",
+      "PARTIES_MEMORIES_TEST_DAPRD": "<selected daprd1.18.2>"
+    },
+    "exitCode": 0,
+    "nonOwnedListener": {
+      "pid": 933592,
+      "ports": [
+        50002,
+        9090
+      ]
+    },
+    "nonOwnedListenerSurvived": true,
+    "daprdObservations": [
+      {
+        "pid": 933968,
+        "startIdentity": 21206957,
+        "internalGrpcPort": 36541,
+        "metricsDisabled": true,
+        "observedListeningPorts": [
+          33955,
+          36541,
+          38991
+        ]
+      },
+      {
+        "pid": 934511,
+        "startIdentity": 21207090,
+        "internalGrpcPort": 35471,
+        "metricsDisabled": true,
+        "observedListeningPorts": [
+          35471,
+          41925,
+          42157
+        ]
+      },
+      {
+        "pid": 934626,
+        "startIdentity": 21207146,
+        "internalGrpcPort": 37379,
+        "metricsDisabled": true,
+        "observedListeningPorts": [
+          37379,
+          37481,
+          45261
+        ]
+      },
+      {
+        "pid": 934850,
+        "startIdentity": 21207200,
+        "internalGrpcPort": 43433,
+        "metricsDisabled": true,
+        "observedListeningPorts": [
+          36667,
+          38859,
+          43433
+        ]
+      },
+      {
+        "pid": 935078,
+        "startIdentity": 21207256,
+        "internalGrpcPort": 42145,
+        "metricsDisabled": true,
+        "observedListeningPorts": [
+          39071,
+          42145,
+          44827
+        ]
+      },
+      {
+        "pid": 935305,
+        "startIdentity": 21207318,
+        "internalGrpcPort": 39827,
+        "metricsDisabled": true,
+        "observedListeningPorts": [
+          39537,
+          39827,
+          44277
+        ]
+      },
+      {
+        "pid": 935828,
+        "startIdentity": 21207382,
+        "internalGrpcPort": 40427,
+        "metricsDisabled": true,
+        "observedListeningPorts": [
+          38751,
+          40427,
+          41255
+        ]
+      }
+    ],
+    "scope": "App configuration/startup only, with an explicitly synthesized operator sidecar; this does not qualify sidecar secret emission.",
+    "counts": {
+      "total": 20,
+      "failed": 0,
+      "skipped": 0
+    },
+    "rawLogSha256": "bdc1d08dcdb59725455ce6b5ff9c2ac1d1c5748ce309596b5959933c4bb2846f"
+  },
+  "remainingGates": [
+    "DW-107 immutable executor adoption/publication; its historical object is now available and full CI passed.",
+    "DW-112 matching package publication/adoption plus positive source component/browser qualification.",
+    "Memories effective algorithm replacement and SDK sidecar token publication; app startup is bounded separate evidence.",
+    "Ordinary Dapr CLI launch-to-first-observation custody race."
+  ],
+  "review": {
+    "layers": [
+      "blind",
+      "edge-case",
+      "verification-gap"
+    ],
+    "findings": 12,
+    "upstreamDeferred": 2,
+    "parentFollowupCorrections": 2,
+    "allCurrentChangePatchesVerified": true
+  },
+  "buildGuard": {
+    "command": "bash scripts/check-no-warning-override.sh",
+    "exitCode": 0,
+    "rawLogSha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604"
+  },
+  "finalResult": "All final affected assembly runs and post-review live/Production controls pass within their documented scope. Optional skips and four original upstream/runtime gates remain explicit. Initial failures are retained and superseding runs identified."
+}

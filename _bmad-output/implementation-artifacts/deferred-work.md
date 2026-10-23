@@ -834,6 +834,10 @@ source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-
 reason: RebindContainerProvenanceLabels is only string-checked; the shared OCI validator ignores org.opencontainers.image.created, and the regex accepts dates such as 2026-02-31.
 status: open
 decision: 2026-09-06 Authorize cross-repo hardening — Add real calendar validation, executable publish and rebind proof, and required created-label validation in the owning repositories.
+implementation_2026_10_23: Parties and shared Builds targets reject impossible calendar dates; the publisher binds both mandatory created labels to its exact instant. The existing three-argument publication reader remains compatible while graph validation requires canonical equal image/artifact labels and equality across platforms. Executable MSBuild, producer Python, real consumer-reader and SDK dual-RID archive checks pass locally.
+remaining_gate_2026_10_23: Shared immutable publisher/validator adoption and publication remain required. The current release execution pin is unchanged; fetching the exact historical object restored full CI (449 passed). Published working-source hardening and its parent gitlink do not qualify that unchanged immutable executor.
+verification_2026_10_23: `tests/five-publish-and-process-safety-2026-10-23/`; spec `spec-five-publish-and-process-safety-deferred-items.md`.
+
 
 ### DW-108: Align diagnostic source gitlinks to the published nuget.org tags selected by the Builds catalog.
 
@@ -878,6 +882,10 @@ source_spec: `_bmad-output/implementation-artifacts/spec-8-10-final-readiness-do
 reason: The skip-to-navigation link renders whenever `HasNavigation` is true, but `#fc-nav` mounts only when `HasNavigation && !IsSubCompactDesktopViewport`. On Tablet/Phone the href has no focus target. Parties consumes the shell and does not edit this submodule; route to FrontComposer shell owners.
 status: open
 decision: 2026-09-07 Hide compact link — Render Skip to navigation only when #fc-nav is mounted, preserve Skip to content, and add producer plus Parties viewport coverage.
+implementation_2026_10_23: The owning FrontComposer shell now uses the identical link/target viewport condition. Producer desktop/compact/resize cases pass. Parties component/browser compact checks are explicitly opt-in; the published-package negative control fails as expected, while its existing desktop keyboard flow passes.
+remaining_gate_2026_10_23: Matching FrontComposer publication/adoption and positive Parties compact browser/component source qualification remain open. Pinned source Debug reaches Platform HXR020; focused consumer mapping fails MSB4044 (AssetsFile), including explicit net10 fallback. No warning/source gate was bypassed.
+verification_2026_10_23: `tests/five-publish-and-process-safety-2026-10-23/`; spec `spec-five-publish-and-process-safety-deferred-items.md`.
+
 
 ### DW-113: Parse only the first complete JSON object from MSBuild `-getProperty/-getItem` stdout.
 
@@ -1739,6 +1747,11 @@ archived: 2026-10-21
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-72-production-publish-environments.md`
   summary: Qualify production authentication configuration for optional Memories in retained AppHost publish output.
   evidence: The unchanged Memories publish branch supplies Redis/FalkorDB connection strings but no JWT authority/signing key, issuer or audience. Memories appsettings.Production.json supplies none, and ValidateServerAuthenticationOptions rejects their absence at startup. Pinned Aspire 13.6.1 adds launch-profile environment variables only in run mode, so baseline publish already defaults this optional service to Production; DW-72 makes that default explicit without changing its authentication configuration. Provide owner-supported configuration and production startup proof separately.
+  status: open
+  implementation_2026_10_23: The publish model configures external HTTPS OIDC authority/issuer, audience, asymmetric algorithms and tenant claim. App env emission contains secret parameter references; matching sidecar annotations are model-only proof. Actual app startup/liveness and missing-input controls pass with real Dapr/Redis/FalkorDB and an explicitly operator-configured sidecar; producer validators remain intact. All 20 final controls pass while an unrelated listener occupies 50002/9090; internal gRPC is allocated and unused metrics disabled. Authenticated Dapr outbound health and app-id metadata pass, missing/wrong sidecar tokens return 401, and a stopped-sidecar control fails readiness.
+  remaining_gate_2026_10_23: Actual Aspire.Hosting 13.6.3 SDK manifest emission for docker/k8s/aca produces memories-dapr as dapr.v0 without APP_API_TOKEN or DAPR_API_TOKEN bindings. Selected CommunityToolkit.Aspire.Hosting.Dapr 13.6.1-beta.935 drops sidecar environment annotations. Positive sidecar token publication is an upstream publisher/adaptor gate; no generic publisher plumbing or dependency change was added. Effective algorithm replacement also remains gated: actual producer binding retains initialized HS256 alongside configured RS256/ES256. Deployment, Parties bearer forwarding and search remain unqualified.
+  verification_2026_10_23: `tests/five-publish-and-process-safety-2026-10-23/`.
+
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-72-production-publish-environments.md`
   summary: Reconcile current dependency package documentation and source-selection receipts after the concurrent root-gitlink sync.
@@ -1847,6 +1860,11 @@ archived: 2026-10-21
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-sdk-runtime-deferred-items.md`
   summary: Qualify descendant-process quiescence when a Dapr CLI wrapper exits before its runtime child.
   evidence: Unverified medium: the current fixture observes DCP executable PID/start identities and qualified listener cleanup, but the reviewer could not establish that an escaped daprd child is impossible before backing removal. A controlled producer-owned wrapper/orphan case or exact CLI/DCP descendant-stop contract would settle the claim; normal 22/22 live results alone do not establish this broader guarantee.
+  status: open
+  implementation_2026_10_23: Both generated mTLS launchers have executed PID-continuity proof. Early descendant observation retains exact PID/start identities across wrapper exit; controlled captured-child, separate-session, retry and unrelated-worker cases pass. An already-lost ordinary CLI wrapper now fails closed and retains backing resources.
+  remaining_gate_2026_10_23: Polling cannot prove the ordinary CLI launch-to-first-observation race. Do not infer blanket orphan containment from a handshake-delayed control. Live direct-exec matrix results and any blocked modes are recorded separately from this unqualified ordinary CLI path.
+  verification_2026_10_23: `tests/five-publish-and-process-safety-2026-10-23/`.
+
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
   summary: Provide and adopt producer support for refreshing changed Parties content under an unchanged canonical Memories source URI.
@@ -1880,3 +1898,18 @@ archived: 2026-10-21
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-recovery-and-ui-conformance-deferred-items.md`
   summary: Qualify package-runner cleanup after external interruption of the runner or its dedicated Linux supervisor.
   evidence: Normal exit, early failure and timeout use owned cleanup; external SIGTERM can bypass Python finally and external caller termination also left descendants alive in the baseline runner. Add cancellation/signal and parent-disappearance controls before claiming interruption containment; SIGKILL remains outside cooperative cleanup.
+  status: done 2026-10-23
+  implementation_2026_10_23: Cooperative SIGTERM/SIGINT handlers are installed before launch; explicit caller PID/start identity is captured before Python starts and checked before/during work. Signal-during-work/cleanup, isolated caller death, inherited pipes, descendant reaping and unrelated-worker controls pass within bounds. The supervisor retains one cleanup deadline.
+  resolution_2026_10_23: Independent review fixes remove filesystem bookkeeping from cleanup correctness and inject a deterministic signal during actual cleanup. All 26 process controls pass, including caller loss, missing state directory, inherited pipes and unrelated-worker survival. Changes are committed and published on main. Direct supervisor SIGKILL remains outside cooperative cleanup.
+  verification_2026_10_23: `tests/five-publish-and-process-safety-2026-10-23/`.
+
+
+- source_spec: `spec-five-publish-and-process-safety-deferred-items.md`
+  summary: Replace initialized Memories algorithm defaults when explicit JWT algorithms are configured before qualifying an asymmetric-only policy.
+  status: open
+  evidence: Independent blind and edge review probes against the selected producer options with the .NET 10 binder produce HS256,RS256,ES256,RS256,ES256 after RS256/ES256 configuration. The initialized collection and binding contract predate this caller change; app environment entries do not establish effective options. Require owner-supported replacement semantics and effective JwtBearerOptions verification; the Memories publication entry remains open.
+
+- source_spec: `spec-five-publish-and-process-safety-deferred-items.md`
+  summary: Deliver supported Dapr sidecar secret-token emission through the selected SDK/target publisher before qualifying Memories publish authentication.
+  status: open
+  evidence: Actual SDK CLI manifests for docker/k8s/aca contain both Memories app secret references but no env/token bindings on memories-dapr. Selected Toolkit 13.6.1-beta.935 custom dapr.v0 callback and SDK 13.6.3 outer writer do not serialize these annotations. The omission predates the caller configuration and also affects existing generic helpers. App-only startup with an operator-configured sidecar is separate evidence; require owner-supported publisher delivery and full positive app/sidecar manifest proof.

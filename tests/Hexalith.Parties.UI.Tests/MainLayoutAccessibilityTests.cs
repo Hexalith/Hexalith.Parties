@@ -4,6 +4,10 @@ using AngleSharp.Dom;
 
 using Bunit;
 
+using Fluxor;
+
+using Hexalith.FrontComposer.Shell.State.Navigation;
+
 using Hexalith.FrontComposer.Contracts.Rendering;
 using Hexalith.FrontComposer.Shell.Extensions;
 using Hexalith.Parties.UI.Authentication;
@@ -98,6 +102,30 @@ public sealed class MainLayoutAccessibilityTests : BunitContext
         content.GetAttribute("role").ShouldBe("main");
         content.GetAttribute("aria-label").ShouldBe("Main content");
         content.TextContent.ShouldContain("Sample content");
+    }
+
+    /// <summary>Consumer navigation skips disappear with the rail and recover on resize.</summary>
+    [Fact]
+    public async Task MainLayout_navigation_skip_link_tracks_mounted_target_on_resize()
+    {
+        if (Environment.GetEnvironmentVariable("PARTIES_E2E_COMPACT_SKIP_LINKS") != "1")
+        {
+            Assert.Skip("DW-112 compact source qualification requires the fixed FrontComposer; matching package adoption is pending.");
+        }
+        IRenderedComponent<CascadingAuthenticationState> cut = RenderMainLayout();
+        foreach (ViewportTier tier in new[] { ViewportTier.Desktop, ViewportTier.Phone, ViewportTier.Tablet, ViewportTier.Desktop })
+        {
+            await cut.InvokeAsync(() => Services.GetRequiredService<IDispatcher>().Dispatch(new ViewportTierChangedAction(tier)));
+            bool mounted = tier == ViewportTier.Desktop;
+            cut.WaitForAssertion(() =>
+            {
+                cut.FindAll("#fc-nav").Count.ShouldBe(mounted ? 1 : 0);
+                cut.FindAll(".fc-skip-link[href$='#fc-nav']").Count.ShouldBe(mounted ? 1 : 0);
+                cut.FindAll(".fc-skip-link[href$='#fc-main-content']").Count.ShouldBe(1);
+                cut.Find("#fc-main-content").GetAttribute("tabindex").ShouldBe("-1");
+                cut.Find("[data-testid='fc-route-navigation-status']").GetAttribute("aria-live").ShouldBe("polite");
+            });
+        }
     }
 
     private IRenderedComponent<CascadingAuthenticationState> RenderMainLayout()

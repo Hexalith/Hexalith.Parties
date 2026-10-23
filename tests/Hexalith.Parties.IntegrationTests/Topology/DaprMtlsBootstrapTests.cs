@@ -280,8 +280,10 @@ public sealed class DaprMtlsBootstrapTests
         finally { Directory.Delete(directory, recursive: true); }
     }
 
-    [Fact]
-    public async Task SessionLauncher_PreservesArgumentsAndUsesOwnedSentryWithoutCliDefault()
+    [Theory]
+    [InlineData("127.0.0.1:50001")]
+    [InlineData("127.0.0.1:42001")]
+    public async Task SessionLauncher_PreservesArgumentsAndUsesOwnedSentryWithoutCliDefault(string sentry)
     {
         if (!OperatingSystem.IsLinux()) { Assert.Skip("The session mTLS launcher requires Linux bash."); return; }
         string directory = CreateCertificateDirectory(includePrivateKey: true);
@@ -289,12 +291,12 @@ public sealed class DaprMtlsBootstrapTests
         {
             string capture = Path.Combine(directory, "arguments");
             string runtime = Path.Combine(directory, "daprd");
-            File.WriteAllText(runtime, "#!/usr/bin/env bash\nprintf '%s\\n' \"$@\" > '" + capture + "'\n");
+            File.WriteAllText(runtime, "#!/usr/bin/env bash\nprintf '%s\\n' \"$@\" > '" + capture + "'\n" + "printf '%s' \"$$\" > '" + capture + ".pid'\n");
             File.SetUnixFileMode(runtime, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Dapr:Mtls:Enabled"] = "true", ["Dapr:Mtls:CertificateDirectory"] = directory,
-                ["Dapr:Mtls:ConfigurationDirectory"] = directory, ["Dapr:Mtls:SentryHostAddress"] = "127.0.0.1:42001",
+                ["Dapr:Mtls:ConfigurationDirectory"] = directory, ["Dapr:Mtls:SentryHostAddress"] = sentry,
                 ["Dapr:Mtls:DaprdPath"] = runtime, ["Dapr:Mtls:SessionId"] = "session123",
             }).Build();
             IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
@@ -309,7 +311,9 @@ public sealed class DaprMtlsBootstrapTests
             using Process process = Process.Start(start)!;
             await process.WaitForExitAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
             process.ExitCode.ShouldBe(0);
-            File.ReadAllLines(capture).ShouldBe(new[] { "--app-id", "parties-session123", "--config", "configuration with spaces.yaml", "--enable-mtls", "--sentry-address", "127.0.0.1:42001" });
+            int.Parse(File.ReadAllText(capture + ".pid"), System.Globalization.CultureInfo.InvariantCulture).ShouldBe(process.Id,
+                "The generated launcher must exec daprd with the same PID for both mTLS profiles.");
+            File.ReadAllLines(capture).ShouldBe(new[] { "--app-id", "parties-session123", "--config", "configuration with spaces.yaml", "--enable-mtls", "--sentry-address", sentry });
             File.ReadAllText(launcher).ShouldNotContain(CertificatePem);
             File.ReadAllText(launcher).ShouldNotContain(PrivateKeyPem);
         }

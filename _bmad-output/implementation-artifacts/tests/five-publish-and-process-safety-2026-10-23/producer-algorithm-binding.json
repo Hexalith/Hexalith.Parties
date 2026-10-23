@@ -1,0 +1,11 @@
+{
+  "command": "dotnet run --project ${EVIDENCE_ROOT}/algorithm-probe/Binding.csproj -v:q",
+  "source": "references/Hexalith.Memories/src/Hexalith.Memories.Server/Authentication/MemoriesServerAuthenticationOptions.cs",
+  "sourceRevision": "b55db82c060caf917a142fdb6585fa7340b01647",
+  "sourceSha256": "a8af9af0d63c6136cdd6979681eeffed0ecaac93b8e3d8c1432a8a96f200fb37",
+  "probeProgram": "using Microsoft.Extensions.Configuration;\nusing Hexalith.Memories.Server.Authentication;\nvar config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?> { [\"Authentication:JwtBearer:ValidAlgorithms:0\"]=\"RS256\", [\"Authentication:JwtBearer:ValidAlgorithms:1\"]=\"ES256\" }).Build();\nvar options = new MemoriesServerAuthenticationOptions();\nconfig.GetSection(\"Authentication:JwtBearer\").Bind(options);\nConsole.WriteLine(string.Join(\",\", options.ValidAlgorithms));\n",
+  "exitCode": 0,
+  "stdout": "HS256,RS256,ES256,RS256,ES256",
+  "stderr": "",
+  "disposition": "Existing producer initialized-list binding appends caller entries; an asymmetric-only effective policy is not qualified. No producer code/dependency change was made."
+}

@@ -1,0 +1,45 @@
+{
+  "sdk": "10.0.402",
+  "archiveSha256": "777a75b11c270ff0ffebbf8e5ff2da542590dd992cc574e240ad20d165b6148d",
+  "publication": "local archive only",
+  "configs": [
+    {
+      "platform": "linux/amd64",
+      "labels": {
+        "org.opencontainers.image.version": "1.2.3",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.vendor": "Hexalith",
+        "org.opencontainers.image.authors": "archive",
+        "org.opencontainers.image.base.name": "mcr.microsoft.com/dotnet/runtime",
+        "net.dot.runtime.majorminor": "10.0",
+        "net.dot.sdk.version": "10.0.402",
+        "org.opencontainers.image.source": "https://github.com/Hexalith/Hexalith.Parties",
+        "org.opencontainers.image.url": "https://github.com/Hexalith/Hexalith.Parties/releases/tag/v1.2.3",
+        "org.opencontainers.image.documentation": "https://github.com/Hexalith/Hexalith.Parties/blob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/README.md",
+        "org.opencontainers.image.revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "org.opencontainers.image.created": "2024-02-29T23:59:59Z",
+        "org.opencontainers.artifact.created": "2024-02-29T23:59:59Z",
+        "org.opencontainers.image.base.digest": "sha256:1bac183f0f5e1b7dd58cf1083fa79e6310d47afe3ca5c9130c910ebba7720929"
+      }
+    },
+    {
+      "platform": "linux/arm64",
+      "labels": {
+        "org.opencontainers.image.version": "1.2.3",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.vendor": "Hexalith",
+        "org.opencontainers.image.authors": "archive",
+        "org.opencontainers.image.base.name": "mcr.microsoft.com/dotnet/runtime",
+        "net.dot.runtime.majorminor": "10.0",
+        "net.dot.sdk.version": "10.0.402",
+        "org.opencontainers.image.source": "https://github.com/Hexalith/Hexalith.Parties",
+        "org.opencontainers.image.url": "https://github.com/Hexalith/Hexalith.Parties/releases/tag/v1.2.3",
+        "org.opencontainers.image.documentation": "https://github.com/Hexalith/Hexalith.Parties/blob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/README.md",
+        "org.opencontainers.image.revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "org.opencontainers.image.created": "2024-02-29T23:59:59Z",
+        "org.opencontainers.artifact.created": "2024-02-29T23:59:59Z",
+        "org.opencontainers.image.base.digest": "sha256:9aaf1ab716a4e15a7c8cf773bcf7638ae1b5114bccee5611ce371e1a043d2033"
+      }
+    }
+  ]
+}

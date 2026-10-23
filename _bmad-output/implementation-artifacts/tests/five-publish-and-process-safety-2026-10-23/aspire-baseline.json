@@ -1,0 +1,100 @@
+{
+  "command": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json --non-interactive",
+  "resources": [
+    {
+      "displayName": "eventstore-admin-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running"
+    },
+    {
+      "displayName": "eventstore-admin",
+      "resourceType": "Project",
+      "state": "Running"
+    },
+    {
+      "displayName": "eventstore-admin-ui-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running"
+    },
+    {
+      "displayName": "eventstore-admin-ui",
+      "resourceType": "Project",
+      "state": "NotStarted"
+    },
+    {
+      "displayName": "eventstore-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running"
+    },
+    {
+      "displayName": "eventstore",
+      "resourceType": "Project",
+      "state": "Running"
+    },
+    {
+      "displayName": "parties",
+      "resourceType": "Project",
+      "state": "Running"
+    },
+    {
+      "displayName": "parties-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running"
+    },
+    {
+      "displayName": "parties-mcp",
+      "resourceType": "Project",
+      "state": "NotStarted"
+    },
+    {
+      "displayName": "parties-ui",
+      "resourceType": "Project",
+      "state": "Running"
+    },
+    {
+      "displayName": "security-eventstore-client-password",
+      "resourceType": "Parameter",
+      "state": "Running"
+    },
+    {
+      "displayName": "security-eventstore-client-username",
+      "resourceType": "Parameter",
+      "state": "Running"
+    },
+    {
+      "displayName": "security",
+      "resourceType": "Container",
+      "state": "Running"
+    },
+    {
+      "displayName": "tenants-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running"
+    },
+    {
+      "displayName": "tenants",
+      "resourceType": "Project",
+      "state": "Running"
+    }
+  ],
+  "start": {
+    "command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --format Json --non-interactive",
+    "exitCode": 0
+  },
+  "wait": [
+    {
+      "resource": "security",
+      "timeoutSeconds": 10,
+      "exitCode": 0
+    },
+    {
+      "resource": "parties",
+      "timeoutSeconds": 20,
+      "exitCode": 0
+    }
+  ],
+  "stop": {
+    "command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "exitCode": 0
+  }
+}

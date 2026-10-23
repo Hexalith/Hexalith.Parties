@@ -1,0 +1,68 @@
+[
+  {
+    "owner": "Builds",
+    "phase": "commit",
+    "message": "fix: validate container provenance calendar instants",
+    "cliVersion": "21.2.4",
+    "nodeVersion": "v24.22.1",
+    "command": "${NODE_HOME}/bin/node node_modules/@commitlint/cli/cli.js --edit ${PRIVATE_MESSAGE_FILE} --verbose",
+    "exitCode": 0,
+    "output": "\u29d7   --- input ---\nfix: validate container provenance calendar instants\n\u2714   found 0 problems, 0 warnings\n",
+    "rawLogSha256": "5105794bdb36a34359ec26f32bc0ad1fcbda1d8b36cb69c8bb1290fe9ef2d38e"
+  },
+  {
+    "owner": "FrontComposer",
+    "phase": "commit",
+    "message": "fix: hide compact navigation skip links",
+    "cliVersion": "21.2.2",
+    "nodeVersion": "v24.22.1",
+    "command": "${NODE_HOME}/bin/node node_modules/@commitlint/cli/cli.js --edit ${PRIVATE_MESSAGE_FILE} --verbose",
+    "exitCode": 0,
+    "output": "\u29d7   --- input ---\nfix: hide compact navigation skip links\n\u2714   found 0 problems, 0 warnings\n",
+    "rawLogSha256": "3cc0c5aba11ca1b196c6ea0e0e73ee44c79faa2143d7674b42a12fcc80386041"
+  },
+  {
+    "owner": "Builds",
+    "phase": "merge",
+    "message": "build: integrate container provenance fixes on main",
+    "cliVersion": "21.2.4",
+    "nodeVersion": "v24.22.1",
+    "command": "${NODE_HOME}/bin/node node_modules/@commitlint/cli/cli.js --edit ${PRIVATE_MESSAGE_FILE} --verbose",
+    "exitCode": 0,
+    "output": "\u29d7   --- input ---\nbuild: integrate container provenance fixes on main\n\u2714   found 0 problems, 0 warnings\n",
+    "rawLogSha256": "23253ede2fa3c196fd621a4dd42d2fc60b10035b55baa6f4943465a0ba7d9a49"
+  },
+  {
+    "owner": "FrontComposer",
+    "phase": "merge",
+    "message": "build: integrate compact navigation fix on main",
+    "cliVersion": "21.2.2",
+    "nodeVersion": "v24.22.1",
+    "command": "${NODE_HOME}/bin/node node_modules/@commitlint/cli/cli.js --edit ${PRIVATE_MESSAGE_FILE} --verbose",
+    "exitCode": 0,
+    "output": "\u29d7   --- input ---\nbuild: integrate compact navigation fix on main\n\u2714   found 0 problems, 0 warnings\n",
+    "rawLogSha256": "2c1464bb19a8664bb946148f85570957903a75885a61ddbb49e1cf4d3f5c04a9"
+  },
+  {
+    "owner": "Parties",
+    "phase": "source-adoption",
+    "message": "build: select tested publish safety source commits",
+    "cliVersion": "21.2.2",
+    "nodeVersion": "v24.22.1",
+    "command": "${NODE_HOME}/bin/node node_modules/@commitlint/cli/cli.js --edit ${PRIVATE_MESSAGE_FILE} --verbose",
+    "exitCode": 0,
+    "output": "\u29d7   --- input ---\nbuild: select tested publish safety source commits\n\u2714   found 0 problems, 0 warnings\n",
+    "rawLogSha256": "b8042d0a030610c39806615c17c0f50d88e47b0500897a8d7f2cf99cba811198"
+  },
+  {
+    "owner": "Parties",
+    "phase": "implementation",
+    "message": "fix: harden five publish and process safety paths",
+    "cliVersion": "21.2.2",
+    "nodeVersion": "v24.22.1",
+    "command": "${NODE_HOME}/bin/node node_modules/@commitlint/cli/cli.js --edit ${PRIVATE_MESSAGE_FILE} --verbose",
+    "exitCode": 0,
+    "output": "\u29d7   --- input ---\nfix: harden five publish and process safety paths\n\u2714   found 0 problems, 0 warnings\n",
+    "rawLogSha256": "ffe28dd85374c36bffc38b1de707d80402df2dda640fcdde4782c7b34f44ccb3"
+  }
+]

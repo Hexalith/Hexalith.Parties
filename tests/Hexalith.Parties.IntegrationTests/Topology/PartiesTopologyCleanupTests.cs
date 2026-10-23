@@ -1,6 +1,8 @@
 extern alias apphost;
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Reflection;
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
@@ -8,6 +10,8 @@ using System.Net.Sockets;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
+
+using CommunityToolkit.Aspire.Hosting.Dapr;
 
 using Hexalith.Parties.IntegrationTests.Gateway;
 using Hexalith.Parties.IntegrationTests.HealthChecks;
@@ -168,13 +172,14 @@ public sealed class PartiesTopologyCleanupTests
         PartiesAspireTopologyFixture.IsWorkerRunning(workerId, started).ShouldBeFalse();
     }
 
-    private static async Task WithControlledWorkerAsync(Func<Process, Task> action)
+    private static async Task WithControlledWorkerAsync(Func<Process, Task> action, PartiesAspireTopologyFixture? owner = null)
     {
         if (!OperatingSystem.IsLinux()) { Assert.Skip("The controlled worker uses the Linux topology prerequisite bash."); }
         var start = new ProcessStartInfo("bash")
         {
             RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false,
         };
+        if (owner is not null) { start.Environment[PartiesAspireTopologyFixture.WorkerOwnershipVariable] = owner.WorkerOwnershipMarker; }
         start.ArgumentList.Add("-c");
         start.ArgumentList.Add("""sleep 3600 & worker=$!; echo "$worker" >&2; read -r; kill "$worker"; wait "$worker" 2>/dev/null || true""");
         using Process child = Process.Start(start) ?? throw new InvalidOperationException("The controlled worker parent could not start.");
@@ -246,6 +251,8 @@ public sealed class PartiesTopologyCleanupTests
     [InlineData(true)]
     public async Task StoppedUnknownWorker_ObserverFailureRetainsStopProofAcrossAutomaticAndExplicitRetriesAsync(bool siblingFails)
     {
+        var fixture = new PartiesAspireTopologyFixture();
+        await using var fixtureLifetime = fixture.ConfigureAwait(true);
         await WithControlledWorkerAsync(async child =>
         {
             int workerId = int.Parse((await child.StandardError.ReadLineAsync(TestContext.Current.CancellationToken).ConfigureAwait(true))!, CultureInfo.InvariantCulture);
@@ -300,8 +307,6 @@ public sealed class PartiesTopologyCleanupTests
                     Commands = [new ResourceCommandSnapshot(KnownResourceCommands.StopCommand, ResourceCommandState.Enabled, "Stop", null, null, null, null, null, false)],
                 }).ConfigureAwait(true);
             }
-            var fixture = new PartiesAspireTopologyFixture();
-            await using var fixtureLifetime = fixture.ConfigureAwait(true);
             int observations = 0;
             bool backingRemoved = false;
             fixture.ObserveQuiescenceAsync = (_, _) =>
@@ -337,7 +342,198 @@ public sealed class PartiesTopologyCleanupTests
             stops.ShouldBe(1);
             siblingStops.ShouldBe(siblingFails ? 2 : 0);
             PartiesAspireTopologyFixture.IsWorkerRunning(workerId, started).ShouldBeFalse();
-        });
+        }, fixture);
+    }
+
+    /// <summary>A proven current worker replaces an older cached PID generation before direct-exec fallback cleanup.</summary>
+    [Fact]
+    public async Task DirectRuntime_ProvenCurrentLifetimeReplacesStaleSlotAndIsTerminated()
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux inherited ownership and fallback termination control."); }
+        var fixture = new PartiesAspireTopologyFixture();
+        await using var fixtureLifetime = fixture.ConfigureAwait(true);
+        await WithControlledWorkerAsync(async child =>
+        {
+            int workerId = int.Parse((await child.StandardError.ReadLineAsync(TestContext.Current.CancellationToken).ConfigureAwait(true))!, CultureInfo.InvariantCulture);
+            long started = PartiesAspireTopologyFixture.ReadWorkerStartIdentity(workerId)!.Value;
+            // Inject only the stale cache slot; custody and termination still
+            // exercise the real marked worker and the fixture's actual path.
+            var captured = typeof(PartiesAspireTopologyFixture).GetField("_ownedWorkers", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(fixture).ShouldBeOfType<ConcurrentDictionary<int, long>>();
+            captured[workerId] = started - 1;
+            using Process unrelated = Process.Start(new ProcessStartInfo("sleep") { ArgumentList = { "3600" }, UseShellExecute = false }).ShouldNotBeNull();
+            try
+            {
+                IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(new DistributedApplicationOptions { DisableDashboard = true });
+                builder.Services.Configure<DaprOptions>(options => options.DaprPath = "dapr-session");
+                IResourceBuilder<ExecutableResource> host = builder.AddExecutable("generation-app", "unused", ".").WithDaprSidecar();
+                string cliName = host.Resource.Annotations.OfType<DaprSidecarAnnotation>().Single().Sidecar.Name + "-cli";
+                IResourceBuilder<ExecutableResource> cli = builder.AddResource(new ExecutableResource(cliName, "unused", "."));
+                DistributedApplication? application = null;
+                _ = cli.WithCommand(KnownResourceCommands.StopCommand, "Stop", async _ =>
+                {
+                    await application!.ResourceNotifications.PublishUpdateAsync(cli.Resource, snapshot => snapshot with
+                    {
+                        State = new ResourceStateSnapshot(KnownResourceStates.Exited, null), Commands = [],
+                    }).ConfigureAwait(false);
+                    // Leave the actual worker live to require fallback termination.
+                    return CommandResults.Success();
+                });
+                application = builder.Build();
+                await using var applicationLifetime = application.ConfigureAwait(true);
+                await application.ResourceNotifications.PublishUpdateAsync(host.Resource, snapshot => snapshot with
+                { State = new ResourceStateSnapshot(KnownResourceStates.NotStarted, null) }).ConfigureAwait(true);
+                await application.ResourceNotifications.PublishUpdateAsync(cli.Resource, snapshot => snapshot with
+                {
+                    State = new ResourceStateSnapshot(KnownResourceStates.Running, null),
+                    Properties = [new ResourcePropertySnapshot("executable.pid", workerId)],
+                    Commands = [new ResourceCommandSnapshot(KnownResourceCommands.StopCommand, ResourceCommandState.Enabled, "Stop", null, null, null, null, null, false)],
+                }).ConfigureAwait(true);
+                fixture.CaptureOwnedWorkers(application);
+                captured[workerId].ShouldBe(started);
+                PartiesAspireTopologyFixture.IsWorkerRunning(workerId, started).ShouldBeTrue();
+                using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+                await fixture.QuiesceStartedWorkersAsync(application, deadline.Token).ConfigureAwait(true);
+                PartiesAspireTopologyFixture.IsWorkerRunning(workerId, started).ShouldBeFalse();
+                unrelated.HasExited.ShouldBeFalse();
+            }
+            finally { await ReapOwnedProcessAsync(unrelated, terminate: !unrelated.HasExited).ConfigureAwait(true); }
+        }, fixture);
+    }
+
+    /// <summary>A lost ordinary CLI cannot authorize backing removal from an exited snapshot alone.</summary>
+    [Fact]
+    public void OrdinaryCliWrapper_WithoutLiveCustodyFailsClosed()
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux inherited ownership guard."); }
+        var snapshot = new CustomResourceSnapshot { ResourceType = "Executable", State = new ResourceStateSnapshot(KnownResourceStates.Exited, null),
+            Properties = [new ResourcePropertySnapshot("executable.pid", int.MaxValue)] };
+        Should.Throw<InvalidOperationException>(() => new PartiesAspireTopologyFixture().EnsureCliWrapperOwnership(snapshot))
+            .Message.ShouldContain("backing resources were retained");
+    }
+
+    /// <summary>A stale sidecar PID cannot acquire an unrelated lifetime, even after observation retries.</summary>
+    /// <param name="otherFixtureMarker">Whether the stale PID belongs to another fixture lifetime.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task OrdinarySidecar_StaleSnapshotCannotEstablishCustodyOfUnrelatedWorker(bool otherFixtureMarker)
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux inherited ownership control."); }
+        var unrelatedStart = new ProcessStartInfo("sleep") { ArgumentList = { "3600" }, UseShellExecute = false };
+        if (otherFixtureMarker) { unrelatedStart.Environment[PartiesAspireTopologyFixture.WorkerOwnershipVariable] = Guid.NewGuid().ToString("N"); }
+        using Process unrelated = Process.Start(unrelatedStart).ShouldNotBeNull();
+        var fixture = new PartiesAspireTopologyFixture();
+        await using var fixtureLifetime = fixture.ConfigureAwait(true);
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(new DistributedApplicationOptions { DisableDashboard = true });
+        IResourceBuilder<ExecutableResource> host = builder.AddExecutable("stale-app", "unused", ".").WithDaprSidecar();
+        string cliName = host.Resource.Annotations.OfType<DaprSidecarAnnotation>().Single().Sidecar.Name + "-cli";
+        IResourceBuilder<ExecutableResource> cli = builder.AddResource(new ExecutableResource(cliName, "unused", "."));
+        await using DistributedApplication application = builder.Build();
+        try
+        {
+            await application.ResourceNotifications.PublishUpdateAsync(host.Resource, snapshot => snapshot with
+            { State = new ResourceStateSnapshot(KnownResourceStates.NotStarted, null) }).ConfigureAwait(true);
+            await application.ResourceNotifications.PublishUpdateAsync(cli.Resource, snapshot => snapshot with
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.Running, null),
+                Properties = [new ResourcePropertySnapshot("executable.pid", unrelated.Id)],
+                Commands = [new ResourceCommandSnapshot(KnownResourceCommands.StopCommand, ResourceCommandState.Enabled, "Stop", null, null, null, null, null, false)],
+            }).ConfigureAwait(true);
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                fixture.CaptureOwnedWorkers(application);
+                (await Should.ThrowAsync<InvalidOperationException>(() => fixture.QuiesceStartedWorkersAsync(application, deadline.Token)).ConfigureAwait(true))
+                    .Message.ShouldContain("backing resources were retained");
+                unrelated.HasExited.ShouldBeFalse();
+            }
+        }
+        finally { await ReapOwnedProcessAsync(unrelated, terminate: !unrelated.HasExited).ConfigureAwait(true); }
+    }
+
+    /// <summary>A previously captured runtime remains owned after its CLI wrapper exits first.</summary>
+    /// <param name="separateSession">Whether the runtime escapes its wrapper's process group.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task WrapperFirstExit_RetainsRuntimeOwnershipAcrossCleanupRetryAndProtectsUnrelatedWorker(bool separateSession)
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux process identity control."); }
+        string directory = Path.Combine(Path.GetTempPath(), $"parties-wrapper-control-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        const string wrapperScript = "import os,pathlib,subprocess,sys; child=subprocess.Popen(['sleep','3600'],start_new_session=sys.argv[2]=='True'); pathlib.Path(sys.argv[1]).write_text(str(os.getpid())+' '+str(child.pid)); sys.stdin.readline()";
+        const string controllerScript = "import ctypes,os,subprocess,sys; ctypes.CDLL(None).prctl(36,1,0,0,0); wrapper=subprocess.Popen([sys.executable,'-c',sys.argv[1],sys.argv[2],sys.argv[3]]); wrapper.wait(); os.waitpid(-1,0)";
+        var fixture = new PartiesAspireTopologyFixture();
+        await using var fixtureLifetime = fixture.ConfigureAwait(true);
+        var start = new ProcessStartInfo("python3") { RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+        start.Environment[PartiesAspireTopologyFixture.WorkerOwnershipVariable] = fixture.WorkerOwnershipMarker;
+        foreach (string argument in new[] { "-c", controllerScript, wrapperScript, Path.Combine(directory, "ready"), separateSession.ToString() }) { start.ArgumentList.Add(argument); }
+        using Process controller = Process.Start(start).ShouldNotBeNull();
+        using Process unrelated = Process.Start(new ProcessStartInfo("sleep") { ArgumentList = { "3600" }, UseShellExecute = false }).ShouldNotBeNull();
+        int runtimeId = 0;
+        long runtimeStarted = 0;
+        try
+        {
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            while (!File.Exists(Path.Combine(directory, "ready"))) { await Task.Delay(10, deadline.Token).ConfigureAwait(true); }
+            int[] ids = File.ReadAllText(Path.Combine(directory, "ready")).Split(' ').Select(value => int.Parse(value, CultureInfo.InvariantCulture)).ToArray();
+            int wrapperId = ids[0];
+            runtimeId = ids[1];
+            long wrapperStarted = PartiesAspireTopologyFixture.ReadWorkerStartIdentity(wrapperId)!.Value;
+            runtimeStarted = PartiesAspireTopologyFixture.ReadWorkerStartIdentity(runtimeId)!.Value;
+            IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(new DistributedApplicationOptions { DisableDashboard = true });
+            IResourceBuilder<ExecutableResource> host = builder.AddExecutable("owned-app", "unused", ".").WithDaprSidecar();
+            string cliName = host.Resource.Annotations.OfType<DaprSidecarAnnotation>().Single().Sidecar.Name + "-cli";
+            IResourceBuilder<ExecutableResource> resource = builder.AddResource(new ExecutableResource(cliName, "unused", "."));
+            await using DistributedApplication application = builder.Build();
+            await application.ResourceNotifications.PublishUpdateAsync(host.Resource, snapshot => snapshot with
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.NotStarted, null),
+            }).ConfigureAwait(true);
+            await application.ResourceNotifications.PublishUpdateAsync(resource.Resource, snapshot => snapshot with
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.Running, null),
+                Properties = [new ResourcePropertySnapshot("executable.pid", wrapperId)],
+            }).ConfigureAwait(true);
+            // Establish the descendant's exact identity while its wrapper still owns it.
+            fixture.CaptureOwnedWorkers(application);
+            await controller.StandardInput.WriteLineAsync("exit-wrapper").ConfigureAwait(true);
+            while (PartiesAspireTopologyFixture.IsWorkerRunning(wrapperId, wrapperStarted)) { await Task.Delay(10, deadline.Token).ConfigureAwait(true); }
+            PartiesAspireTopologyFixture.IsWorkerRunning(runtimeId, runtimeStarted).ShouldBeTrue();
+            await application.ResourceNotifications.PublishUpdateAsync(resource.Resource, snapshot => snapshot with
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.Exited, null),
+                Commands = [],
+            }).ConfigureAwait(true);
+            bool backingRemoved = false;
+            (await Should.ThrowAsync<InvalidOperationException>(() => PartiesTopologyCleanup.RunAsync(
+                () => fixture.QuiesceStartedWorkersAsync(application, deadline.Token),
+                () => fixture.QuiesceStartedWorkersAsync(application, deadline.Token),
+                () => Task.CompletedTask,
+                () => { backingRemoved = true; return Task.CompletedTask; })).ConfigureAwait(true))
+                .Message.ShouldContain("backing resources were retained");
+            backingRemoved.ShouldBeFalse();
+            PartiesAspireTopologyFixture.IsWorkerRunning(runtimeId, runtimeStarted).ShouldBeFalse();
+            unrelated.HasExited.ShouldBeFalse();
+            (await Should.ThrowAsync<InvalidOperationException>(() => fixture.QuiesceStartedWorkersAsync(application, deadline.Token)).ConfigureAwait(true))
+                .Message.ShouldContain("backing resources were retained");
+            await controller.WaitForExitAsync(deadline.Token).ConfigureAwait(true);
+            controller.ExitCode.ShouldBe(0);
+            unrelated.HasExited.ShouldBeFalse();
+        }
+        finally
+        {
+            if (runtimeId > 0 && PartiesAspireTopologyFixture.IsWorkerRunning(runtimeId, runtimeStarted))
+            {
+                using Process runtime = Process.GetProcessById(runtimeId);
+                runtime.Kill();
+            }
+            controller.StandardInput.Close();
+            await ReapOwnedProcessAsync(controller, terminate: !controller.HasExited).ConfigureAwait(true);
+            await ReapOwnedProcessAsync(unrelated, terminate: !unrelated.HasExited).ConfigureAwait(true);
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     [Theory]

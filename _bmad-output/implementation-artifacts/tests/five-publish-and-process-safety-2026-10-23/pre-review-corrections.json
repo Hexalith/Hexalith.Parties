@@ -1,0 +1,35 @@
+{
+  "scope": "Pre-review corrections; implementation signal behavior and argument contract unchanged.",
+  "files": [
+    "tests/Hexalith.Parties.IntegrationTests/Topology/MemoriesProductionSidecar.cs",
+    "tests/Hexalith.Parties.Contracts.Tests/Package/PackageTestProcessTests.cs",
+    "tests/Hexalith.Parties.IntegrationTests/Topology/PartiesPublishEnvironmentTests.cs"
+  ],
+  "builds": [
+    {
+      "command": "dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Release --no-restore -m:1 -p:MinVerVersionOverride=1.0.0",
+      "result": "passed, zero warnings/errors"
+    },
+    {
+      "command": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj -c Release --no-restore -m:1 -p:MinVerVersionOverride=1.0.0",
+      "result": "passed, zero warnings/errors"
+    }
+  ],
+  "processTests": {
+    "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll -class Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests",
+    "total": 25,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 8.113,
+    "rawLogSha256": "06755e38461b2885ee054b9f59b52f0c4cf47721cd37a73d6aca2090a7525e34",
+    "newControl": "SupervisorFixtureCleanup_AfterExpiredObservationPreservesFailureAndReapsEveryOwnedProcess",
+    "controlBehavior": "A real canceled Process.WaitForExitAsync observation causes the original test failure. Cleanup reaps the supervisor/child, records an injected cleanup-step failure, still reaps the other worker and deletes the directory; the original failure and cancellation cause survive."
+  },
+  "productionTests": "production-listener-isolation.json",
+  "sdkEmission": "sdk-sidecar-emission.json",
+  "cleanup": {
+    "proofContainersRemoved": true,
+    "nonOwnedSentinelSurvivedDuringTestsAndWasStoppedOnlyByProbeOwner": true
+  },
+  "pendingGate": "Positive app-plus-sidecar secret bindings in full SDK/target publication remain unmet; app-only configuration/startup with an operator-synthesized sidecar is separate proof."
+}

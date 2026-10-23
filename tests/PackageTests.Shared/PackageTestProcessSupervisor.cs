@@ -30,6 +30,12 @@ internal sealed class PackageTestProcessSupervisor : IDisposable
         StartInfo.ArgumentList.Add(Script);
         StartInfo.ArgumentList.Add(_directory);
         StartInfo.ArgumentList.Add(Math.Max(1, cleanupMilliseconds - 100).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        // Capture the caller before Python starts; getppid() can already be PID 1
+        // if the caller disappears during supervisor launch.
+        StartInfo.ArgumentList.Add(Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        string callerStat = File.ReadAllText($"/proc/{Environment.ProcessId}/stat");
+        string callerIdentity = callerStat[(callerStat.LastIndexOf(')') + 2)..].Split(' ', StringSplitOptions.RemoveEmptyEntries)[19];
+        StartInfo.ArgumentList.Add(callerIdentity);
         StartInfo.ArgumentList.Add(command.FileName);
         if (command.ArgumentList.Count > 0)
         {
@@ -54,7 +60,11 @@ internal sealed class PackageTestProcessSupervisor : IDisposable
     internal bool IsContained { get; } = OperatingSystem.IsLinux();
 
     /// <summary>Requests bounded cleanup, including after the command's direct parent exited.</summary>
-    internal void RequestTermination() => File.WriteAllText(Path.Combine(_directory, "stop"), string.Empty);
+    internal void RequestTermination()
+    {
+        try { File.WriteAllText(Path.Combine(_directory, "stop"), string.Empty); }
+        catch (DirectoryNotFoundException) { /* The monitor independently treats lost state storage as a cleanup request. */ }
+    }
 
     /// <summary>Reports command launch or containment failures independently of its exit code.</summary>
     internal void EnsureCleanupSucceeded(string fileName)
@@ -106,8 +116,37 @@ internal sealed class PackageTestProcessSupervisor : IDisposable
 
         directory = pathlib.Path(sys.argv[1])
         cleanup_seconds = int(sys.argv[2]) / 1000
+        caller_pid = int(sys.argv[3])
+        caller_identity = sys.argv[4]
         child = None
         exit_code = 125
+        termination_signal = None
+
+        def request_termination(signum, frame):
+            global termination_signal
+            # Never raise from a handler: repeated interruption during cleanup
+            # must not abandon adopted children or reset its one deadline.
+            if termination_signal is None:
+                termination_signal = signum
+
+        signal.signal(signal.SIGTERM, request_termination)
+        signal.signal(signal.SIGINT, request_termination)
+
+        def caller_alive():
+            try:
+                stat = pathlib.Path('/proc/' + str(caller_pid) + '/stat').read_text()
+                fields = stat[stat.rfind(')') + 2:].split()
+                return fields[0] not in ('Z', 'X') and fields[19] == caller_identity
+            except (FileNotFoundError, ProcessLookupError):
+                return False
+
+        def record_failure(error):
+            # Diagnostics must never prevent termination or reaping, including
+            # when a caller already removed the private state directory.
+            try:
+                (directory / 'failure').write_text(str(error))
+            except OSError:
+                pass
 
         def cleanup():
             deadline = time.monotonic() + cleanup_seconds
@@ -137,19 +176,26 @@ internal sealed class PackageTestProcessSupervisor : IDisposable
             libc = ctypes.CDLL(None, use_errno=True)
             if libc.prctl(36, 1, 0, 0, 0) != 0:
                 raise OSError(ctypes.get_errno(), 'subreaper initialization failed')
-            child = subprocess.Popen(sys.argv[3:], start_new_session=True)
-            while child.poll() is None and not (directory / 'stop').exists():
+            # Registration and caller-identity monitoring precede every launch.
+            if termination_signal is not None or not caller_alive():
+                sys.exit(128 + termination_signal if termination_signal is not None else 124)
+            child = subprocess.Popen(sys.argv[5:], start_new_session=True)
+            while child.poll() is None and not (directory / 'stop').exists() and termination_signal is None and caller_alive():
+                if not directory.is_dir():
+                    raise OSError('supervisor state directory disappeared')
                 time.sleep(0.005)
             exit_code = child.returncode if child.returncode is not None else 124
         except Exception as error:
-            (directory / 'failure').write_text(str(error))
+            record_failure(error)
         finally:
             if child is not None:
                 try:
                     cleanup()
                 except Exception as error:
-                    (directory / 'failure').write_text(str(error))
+                    record_failure(error)
                     exit_code = 125
+        if termination_signal is not None and exit_code != 125:
+            exit_code = 128 + termination_signal
         sys.exit(exit_code if exit_code >= 0 else 128 - exit_code)
         """;
 }

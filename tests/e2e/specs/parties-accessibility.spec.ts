@@ -107,6 +107,33 @@ test.describe('Parties UI accessibility specimen', () => {
     await expect(page.locator(':focus')).toHaveAttribute('id', 'fc-nav');
   });
 
+  test('compact and resized layouts expose only mounted skip targets and preserve keyboard content access', async ({ page }) => {
+    test.skip(process.env.PARTIES_E2E_COMPACT_SKIP_LINKS !== '1',
+      'DW-112 requires the fixed FrontComposer source; matching package publication/adoption is pending');
+    await gotoSpecimen(page);
+    for (const width of [1280, 390, 800, 1280, 390, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      const mounted = width >= 1024;
+      await expect(page.locator('#fc-nav')).toHaveCount(mounted ? 1 : 0);
+      await expect(page.locator(".fc-skip-link[href$='#fc-nav']")).toHaveCount(mounted ? 1 : 0);
+      await expect(page.locator(".fc-skip-link[href$='#fc-main-content']")).toHaveCount(1);
+      await expect(page.locator('[data-testid="fc-route-navigation-status"]')).toHaveAttribute('aria-live', 'polite');
+      await page.locator('.fc-shell-root').focus();
+      await page.keyboard.press('Tab');
+      await expect(page.getByRole('link', { name: 'Skip to content', exact: true })).toBeFocused();
+      await page.keyboard.press('Enter');
+      await expect(page.locator('#fc-main-content')).toBeFocused();
+      if (mounted) {
+        await page.locator('.fc-shell-root').focus();
+        await page.keyboard.press('Tab');
+        await page.keyboard.press('Tab');
+        await expect(page.getByRole('link', { name: 'Skip to navigation', exact: true })).toBeFocused();
+        await page.keyboard.press('Enter');
+        await expect(page.locator('#fc-nav')).toBeFocused();
+      }
+    }
+  });
+
   test('route-heading announcement leaves skip links forward reachable and focuses their targets', async ({ page }) => {
     test.skip(process.env.PARTIES_E2E_FORWARD_SKIP_LINKS !== '1',
       'DW-91 source qualification requires the fixed FrontComposer shell; package adoption is pending');

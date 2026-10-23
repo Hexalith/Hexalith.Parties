@@ -223,6 +223,10 @@ if (builder.ExecutionContext.IsPublishMode
     // Memories.Server is optional for the default one-command local Parties run, but publish
     // mode always composes it as a first-class topology participant. Resolve the HTTP
     // endpoint from that resource for both local execution and published connectivity.
+    IResourceBuilder<ParameterResource>? memoriesAppToken = builder.ExecutionContext.IsPublishMode
+        ? builder.AddParameter("memories-app-api-token", secret: true) : null;
+    IResourceBuilder<ParameterResource>? memoriesDaprToken = builder.ExecutionContext.IsPublishMode
+        ? builder.AddParameter("memories-dapr-api-token", secret: true) : null;
     IResourceBuilder<ProjectResource> memories = builder.AddProject("memories", memoriesProjectPath)
         .WithDaprSidecar(sidecar =>
         {
@@ -234,13 +238,43 @@ if (builder.ExecutionContext.IsPublishMode
             .WithReference(eventStoreResources.StateStore)
             .WithReference(eventStoreResources.PubSub);
             daprMtls?.ConfigureSidecar(sidecar);
+            if (memoriesAppToken is not null && memoriesDaprToken is not null)
+            {
+                sidecar.Resource.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
+                {
+                    context.EnvironmentVariables["APP_API_TOKEN"] = memoriesAppToken.Resource;
+                    context.EnvironmentVariables["DAPR_API_TOKEN"] = memoriesDaprToken.Resource;
+                }));
+            }
         })
         .WaitFor(eventStoreResources.StateStore)
         .WaitFor(eventStoreResources.PubSub);
 
     if (builder.ExecutionContext.IsPublishMode)
     {
-        _ = memories
+        string memoriesAuthority = builder.Configuration["Memories:Authentication:Authority"] ?? PublishModeJwtAuthority;
+        string memoriesIssuer = builder.Configuration["Memories:Authentication:Issuer"] ?? memoriesAuthority;
+        foreach (string address in new[] { memoriesAuthority, memoriesIssuer })
+        {
+            if (!Uri.TryCreate(address, UriKind.Absolute, out Uri? uri) || uri.Scheme != Uri.UriSchemeHttps
+                || !string.IsNullOrEmpty(uri.UserInfo) || !string.IsNullOrEmpty(uri.Fragment))
+            {
+                throw new InvalidOperationException("Memories production OIDC authority and issuer must be absolute HTTPS URLs without credentials or fragments.");
+            }
+        }
+        string memoriesAudience = builder.Configuration["Memories:Authentication:Audience"] ?? "hexalith-memories";
+        string memoriesTenantClaim = builder.Configuration["Memories:Authentication:TenantClaimName"] ?? "tenant_id";
+        ArgumentException.ThrowIfNullOrWhiteSpace(memoriesAudience);
+        ArgumentException.ThrowIfNullOrWhiteSpace(memoriesTenantClaim);
+        _ = WithJwtAuthentication(memories, null, memoriesAuthority, memoriesIssuer)
+            .WithEnvironment("Authentication__JwtBearer__Audience", memoriesAudience)
+            .WithEnvironment("Authentication__JwtBearer__RequireHttpsMetadata", "true")
+            .WithEnvironment("Authentication__JwtBearer__SigningKey", "")
+            .WithEnvironment("Authentication__JwtBearer__ValidAlgorithms__0", "RS256")
+            .WithEnvironment("Authentication__JwtBearer__ValidAlgorithms__1", "ES256")
+            .WithEnvironment("Authentication__JwtBearer__TenantClaimName", memoriesTenantClaim)
+            .WithEnvironment("APP_API_TOKEN", memoriesAppToken!)
+            .WithEnvironment("DAPR_API_TOKEN", memoriesDaprToken!)
             .WithEnvironment("ConnectionStrings__redis", "redis:6379")
             .WithEnvironment("ConnectionStrings__falkordb", "falkordb:6379");
     }

@@ -1,0 +1,106 @@
+{
+  "OCI": {
+    "inputs": [
+      "2024/2000 leap days",
+      "2023/1900 impossible leap days",
+      "April31",
+      "year0000",
+      "missing created label",
+      "missing artifact-created label",
+      "truncated values",
+      "different per-child pairs",
+      "colon-bearing URLs/timestamps",
+      "valid consistent child instant differs from publisher instant",
+      "requested provenance without created never enters image-write target"
+    ],
+    "executed": [
+      "ContainerProvenanceTargetsValidateCalendarAndPreserveExactLabels (9 theory rows)",
+      "Builds 147 Python tests",
+      "real three-argument verify_images consumer 6 cases",
+      "SDK dual-RID archive + invalid-calendar rejection"
+    ],
+    "gate": "immutable release executor adoption remains open"
+  },
+  "Navigation": {
+    "inputs": [
+      "Desktop",
+      "CompactDesktop",
+      "Phone",
+      "Tablet",
+      "repeated resize",
+      "custom navigation slot",
+      "keyboard content/nav focus",
+      "polite announcement region"
+    ],
+    "executed": [
+      "FrontComposerShellTests 48/48 including two resize variants",
+      "MainLayoutAccessibilityTests 3 pass + compact opt-in skip",
+      "locked Node 24.22.1/npm 11.19.1 managed Release browser 1 desktop pass/2 source skips",
+      "forced compact flag rejects old published shell"
+    ],
+    "gate": "positive Parties compact source component/browser and matching package publication/adoption remain open; source Debug HXR020 / focused mapping MSB4044"
+  },
+  "Memories": {
+    "inputs": [
+      "docker/k8s/aca emitted manifests",
+      "external HTTPS authority/issuer",
+      "audience",
+      "RS256/ES256",
+      "tenant claim",
+      "paired secret app/sidecar tokens",
+      "actual Production producer with real Dapr/Redis/FalkorDB",
+      "missing authority/issuer/audience/app-token/sidecar-token",
+      "insecure metadata authority/issuer"
+    ],
+    "executed": [
+      "MemoriesPublishModel_ConfiguresExternalOidcAndSecretTokenAnnotations (3 model/app-env cases; sidecar annotations are not emission)",
+      "MemoriesProductionStartup_ValidatesAppConfigurationAndMissingInputs (6 controls; explicitly operator-configured sidecar)",
+      "20/20 final cases rerun with unrelated 50002/9090 listeners; all zero skips",
+      "Full SDK manifest CLI emission for docker/k8s/aca: app references retained, sidecar bindings absent; positive sidecar qualification unmet",
+      "MemoriesPublishModel_RejectsInsecureOidcMetadata (2 cases in final 20)",
+      "Authenticated outbound-health plus app-id metadata; missing/wrong tokens 401; stopped sidecar readiness negative",
+      "Real producer options binder retains HS256 initialized defaults after RS256/ES256 configuration"
+    ],
+    "gate": "Toolkit dapr.v0 publisher drops sidecar secret bindings; producer binder appends initialized algorithms. App startup does not qualify either upstream contract, deployment, bearer forwarding or search."
+  },
+  "Dapr": {
+    "inputs": [
+      "default/custom Sentry direct exec PID continuity",
+      "observedCLI wrapper-first exit",
+      "same/separate processgroup",
+      "retained ownership retry",
+      "unrelated worker",
+      "lost ordinary CLI custody",
+      "normal/canceled/failed/cleanup-failed live shutdown",
+      "stale snapshot and unrelated marker controls",
+      "stale cached PID generation replaced only after owned lifetime proof",
+      "actual annotated Dapr wrapper lost custody retains backing fence"
+    ],
+    "executed": [
+      "SessionLauncher_PreservesArgumentsAndUsesOwnedSentryWithoutCliDefault (2 profiles)",
+      "WrapperFirstExit_RetainsRuntimeOwnershipAcrossCleanupRetryAndProtectsUnrelatedWorker (2 cases)",
+      "OrdinaryCliWrapper_WithoutLiveCustodyFailsClosed",
+      "final quiet combined4-mode matrix 4/4 zero skips",
+      "each mode also passed in fresh process"
+    ],
+    "gate": "ordinary CLI launch-to-first-observation race unqualified; captured-child handshake proof does not establish blanket orphan containment"
+  },
+  "Runner": {
+    "inputs": [
+      "SIGTERM/SIGINT during work",
+      "SIGTERM/SIGINT during cleanup",
+      "isolated caller SIGKILL",
+      "inherited pipes",
+      "separate sessions/multiple generations",
+      "unrelated worker",
+      "literal/string arguments",
+      "bounded cleanup and reaping"
+    ],
+    "executed": [
+      "Final PackageTestProcessTests26/26 including deterministic signals during actual cleanup, missing state directory and expired-observation/failure preservation",
+      "Final full Contracts226/226",
+      "Final full Client332/332; service assembly separately recorded in final-verification.json"
+    ],
+    "gate": "direct supervisor SIGKILL excluded from cooperative guarantees"
+  }
+}

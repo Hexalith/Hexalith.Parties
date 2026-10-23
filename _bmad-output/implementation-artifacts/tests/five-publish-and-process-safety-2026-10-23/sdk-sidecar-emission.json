@@ -1,0 +1,91 @@
+{
+  "status": "blocked-upstream-sidecar-publisher",
+  "sdk": "Aspire.Hosting 13.6.3",
+  "toolkit": "CommunityToolkit.Aspire.Hosting.Dapr 13.6.1-beta.935",
+  "records": [
+    {
+      "target": "docker",
+      "command": [
+        "dotnet",
+        "src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll",
+        "--operation=publish",
+        "--publisher=manifest",
+        "--output-path=${EVIDENCE_ROOT}/five-publish-sdk-sidecar-docker.json",
+        "--PUBLISH_TARGET=docker",
+        "--PartiesUi:OidcClientSecret=model-only-secret"
+      ],
+      "publisherExitCode": 0,
+      "rawManifestSha256": "15d776951bd19719e36aed1a93311d9b1e2264bf0e3d5c55a30d71e4a494c76b",
+      "appType": "project.v1",
+      "appSecretReferences": {
+        "APP_API_TOKEN": "{memories-app-api-token.value}",
+        "DAPR_API_TOKEN": "{memories-dapr-api-token.value}"
+      },
+      "sidecarType": "dapr.v0",
+      "sidecarEnvironmentPresent": false,
+      "sidecarSecretBindings": {
+        "APP_API_TOKEN": null,
+        "DAPR_API_TOKEN": null
+      },
+      "positivePairingRequirementSatisfied": false
+    },
+    {
+      "target": "k8s",
+      "command": [
+        "dotnet",
+        "src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll",
+        "--operation=publish",
+        "--publisher=manifest",
+        "--output-path=${EVIDENCE_ROOT}/five-publish-sdk-sidecar-k8s.json",
+        "--PUBLISH_TARGET=k8s",
+        "--PartiesUi:OidcClientSecret=model-only-secret"
+      ],
+      "publisherExitCode": 0,
+      "rawManifestSha256": "8b35403d417f8b8c4fe32c61612b2bbd33153c4c2d23c745e83b7fe062e0385a",
+      "appType": "project.v1",
+      "appSecretReferences": {
+        "APP_API_TOKEN": "{memories-app-api-token.value}",
+        "DAPR_API_TOKEN": "{memories-dapr-api-token.value}"
+      },
+      "sidecarType": "dapr.v0",
+      "sidecarEnvironmentPresent": false,
+      "sidecarSecretBindings": {
+        "APP_API_TOKEN": null,
+        "DAPR_API_TOKEN": null
+      },
+      "positivePairingRequirementSatisfied": false
+    },
+    {
+      "target": "aca",
+      "command": [
+        "dotnet",
+        "src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll",
+        "--operation=publish",
+        "--publisher=manifest",
+        "--output-path=${EVIDENCE_ROOT}/five-publish-sdk-sidecar-aca.json",
+        "--PUBLISH_TARGET=aca",
+        "--PartiesUi:OidcClientSecret=model-only-secret"
+      ],
+      "publisherExitCode": 0,
+      "rawManifestSha256": "81f9127db65ce8ab153fd8983d010c8ead82848515c41b7a9431e770d0b5182c",
+      "appType": "project.v1",
+      "appSecretReferences": {
+        "APP_API_TOKEN": "{memories-app-api-token.value}",
+        "DAPR_API_TOKEN": "{memories-dapr-api-token.value}"
+      },
+      "sidecarType": "dapr.v0",
+      "sidecarEnvironmentPresent": false,
+      "sidecarSecretBindings": {
+        "APP_API_TOKEN": null,
+        "DAPR_API_TOKEN": null
+      },
+      "positivePairingRequirementSatisfied": false
+    }
+  ],
+  "scope": "Actual SDK manifest CLI emission, including custom sidecar callback and SDK outer writer; positive app-plus-sidecar secret binding qualification remains unmet. No generic publisher implementation added.",
+  "supportedCustomizationInspection": {
+    "property": "DaprOptions.PublishingConfigurationAction",
+    "signature": "Action<IResource,DaprSidecarOptions?>",
+    "scope": "Application resource and sidecar options; options expose listener/runtime properties but no token/environment values. No generic publisher wrapper or dependency change was added."
+  }
+}

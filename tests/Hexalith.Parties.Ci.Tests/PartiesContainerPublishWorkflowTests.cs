@@ -465,6 +465,110 @@ public sealed class PartiesContainerPublishWorkflowTests
         secretCheck.ShouldNotContain("ZOT_REGISTRY_PASSWORD");
     }
 
+    /// <summary>The existing publication reader rejects missing/invalid created labels with current shared source.</summary>
+    [Fact]
+    public async Task CurrentSharedValidatorPreservesThePublicationReaderContract()
+    {
+        var start = new ProcessStartInfo("python3")
+        {
+            WorkingDirectory = CiTestPaths.RepositoryRoot,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            ArgumentList = { CiTestPaths.RepoFile("tests/Hexalith.Parties.Ci.Tests/oci_validator_consumer_cases.py") },
+        };
+        using Process process = Process.Start(start).ShouldNotBeNull();
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(30));
+        Task<string> output = process.StandardOutput.ReadToEndAsync(timeout.Token);
+        Task<string> error = process.StandardError.ReadToEndAsync(timeout.Token);
+        try
+        {
+            await process.WaitForExitAsync(timeout.Token).ConfigureAwait(true);
+            process.ExitCode.ShouldBe(0, await output.ConfigureAwait(true) + await error.ConfigureAwait(true));
+        }
+        finally
+        {
+            if (!process.HasExited) { process.Kill(entireProcessTree: true); }
+        }
+    }
+
+    /// <summary>Executes the actual provenance targets at the image-creation boundary.</summary>
+    /// <param name="created">The publisher-owned created instant.</param>
+    /// <param name="valid">Whether the Gregorian calendar instant is valid.</param>
+    [Theory]
+    [InlineData("2024-02-29T23:59:59Z", true)]
+    [InlineData("2000-02-29T00:00:00Z", true)]
+    [InlineData("2026-04-30T12:34:56Z", true)]
+    [InlineData("2023-02-29T00:00:00Z", false)]
+    [InlineData("1900-02-29T00:00:00Z", false)]
+    [InlineData("2024-04-31T00:00:00Z", false)]
+    [InlineData("0000-01-01T00:00:00Z", false)]
+    [InlineData("2026-01-01T24:00:00Z", false)]
+    [InlineData("", false)]
+    public async Task ContainerProvenanceTargetsValidateCalendarAndPreserveExactLabels(string created, bool valid)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"parties-provenance-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string labelsPath = Path.Combine(directory, "labels.txt");
+            string projectPath = Path.Combine(directory, "fixture.proj");
+            new XDocument(new XElement("Project",
+                new XElement("PropertyGroup",
+                    new XElement("EnableContainer", "true"),
+                    new XElement("_IsSingleRIDBuild", "true"),
+                    new XElement("ContainerProvenanceSourceSha", new string('a', 40)),
+                    new XElement("ContainerProvenanceReleaseVersion", "1.2.3"),
+                    new XElement("ContainerProvenanceCreated", created)),
+                new XElement("Import", new XAttribute("Project", CiTestPaths.RepoFile("Directory.Build.targets"))),
+                new XElement("Target", new XAttribute("Name", "_ParseItemsForPublishingSingleContainer"),
+                    new XElement("ItemGroup", new XElement("ContainerLabel", new XAttribute("Include", "org.opencontainers.image.source"), new XAttribute("Value", "https")))),
+                new XElement("Target", new XAttribute("Name", "_PublishSingleContainer"),
+                    new XAttribute("DependsOnTargets", "_ParseItemsForPublishingSingleContainer"),
+                    new XElement("WriteLinesToFile", new XAttribute("File", labelsPath),
+                        new XAttribute("Lines", "@(ContainerLabel->'%(Identity)=%(Value)')"), new XAttribute("Overwrite", "true"))))).Save(projectPath);
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo("dotnet")
+                {
+                    ArgumentList = { "msbuild", projectPath, "-nologo", "-v:q", "-t:_PublishSingleContainer" },
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                },
+            };
+            process.Start().ShouldBeTrue();
+            Task<string> stdout = process.StandardOutput.ReadToEndAsync();
+            Task<string> stderr = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit(30_000))
+            {
+                process.Kill(entireProcessTree: true);
+                throw new TimeoutException("Provenance target fixture exceeded its deadline.");
+            }
+            string diagnostic = await stdout.ConfigureAwait(true) + await stderr.ConfigureAwait(true);
+            if (valid)
+            {
+                process.ExitCode.ShouldBe(0, diagnostic);
+                string[] labels = File.ReadAllLines(labelsPath);
+                labels.Count(line => line.StartsWith("org.opencontainers.image.source=", StringComparison.Ordinal)).ShouldBe(1);
+                labels.ShouldContain("org.opencontainers.image.source=https://github.com/Hexalith/Hexalith.Parties");
+                labels.ShouldContain("org.opencontainers.image.created=" + created);
+                labels.ShouldContain("org.opencontainers.artifact.created=" + created);
+            }
+            else
+            {
+                process.ExitCode.ShouldNotBe(0);
+                diagnostic.ShouldContain("ContainerProvenanceCreated");
+                File.Exists(labelsPath).ShouldBeFalse();
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     [Fact]
     public void ReleasePackageManifestDeclaresExactTenPackageInventory()
     {

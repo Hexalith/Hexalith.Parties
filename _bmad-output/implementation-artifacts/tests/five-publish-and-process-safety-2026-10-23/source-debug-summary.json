@@ -1,0 +1,37 @@
+{
+  "schema": "hexalith.module-run-evidence.v1",
+  "runId": "e47fa76d460518d36fb9b399eb780d7a",
+  "environment": {
+    "repositoryRevision": "664b99c67e90a14c8a1cc4d9663a25fa44c47c9a",
+    "repositoryDirtyMarker": "dirty",
+    "sdkVersion": "10.0.402",
+    "operatingSystem": "Ubuntu 26.04 LTS",
+    "toolVersion": "4.34.0+5d03f1db9c38db34ecac7fe6048937478ffb82cc"
+  },
+  "invocation": {
+    "command": "hexalith-module debug --manifest module/hexalith.module-manifest.v2.json",
+    "manifestPath": "module/hexalith.module-manifest.v2.json",
+    "manifestHash": "0FD4457A1801FA13053EF8821EB16A0CFCC6A5EDAC94B6CE89E8F220E8A30511",
+    "profile": null,
+    "fixturePath": null,
+    "fixtureHash": null,
+    "filterHash": null
+  },
+  "phaseOutcomes": [
+    {
+      "phase": "Topology",
+      "category": "TopologyOrLifecycle",
+      "ruleId": "HXR020"
+    }
+  ],
+  "finalStatus": "failed",
+  "outcome": {
+    "exitCode": 3,
+    "phase": "Topology",
+    "category": "TopologyOrLifecycle",
+    "ruleId": "HXR020"
+  },
+  "rawEvidenceSha256": "3e37122cebeb37fb7c9b0cdc990fd42a1e010993e370f2bf92aed83d8a0568b6",
+  "rawEvidenceLocation": "private ${EVIDENCE_ROOT}/source-debug.raw.json",
+  "note": "Bounded summary; raw official evidence is retained privately and is not normalized or represented by a changed hash."
+}

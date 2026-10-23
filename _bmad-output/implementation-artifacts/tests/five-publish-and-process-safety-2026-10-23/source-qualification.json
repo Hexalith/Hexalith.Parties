@@ -1,0 +1,51 @@
+{
+  "source-debug": {
+    "rawSha256": "4601df33f6057c4b8483525ca7ea03b1e0d9d2488118b8a2e3d2905ba7348f2f",
+    "diagnostic": "{\"status\":\"failed\",\"outcome\":{\"exitCode\":\"TopologyOrLifecycle\",\"phase\":\"Topology\",\"category\":\"TopologyOrLifecycle\",\"ruleId\":\"HXR020\"},\"diagnostics\":[{\"ruleId\":\"HXR020\",\"phase\":\"Topology\",\"category\":\"TopologyOrLifecycle\",\"message\":\"latformHostedPublishing.ComposeNativeProbe(IDistributedApplicationBuilder builder)\\u0027, validate parameter \\u0027builder\\u0027 is non-null before using it. If appropriate, throw an \\u0027ArgumentNullException\\u0027 when the argument is \\u0027null\\u0027. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1062) [${WORKSPACE}/references/Hexalith.Platform/src/Hexalith.Platform.Composition/Hexalith.Platform.Composition.csproj]     1 Warning(s)     7 Error(s)  Time Elapsed 00:00:17.66 deadline=\\u0027600s\\u0027 diagnostics=\\u0027${BUILD_RUN_ROOT}/g4-runs/diagnostics/e47fa76d460518d36fb9b399eb780d7a\\u0027.\",\"field\":\"${WORKSPACE}/references/Hexalith.Platform/src/Hexalith.Platform.Composition/Hexalith.Platform.Composition.csproj\",\"hint\":\"Correct the named model-build input; no resources were started.\",\"source\":null,\"location\":null,\"row\":null}],\"runId\":\"e47fa76d460518d36fb9b399eb780d7a\"}\n"
+  },
+  "focused-ui-source": {
+    "rawSha256": "1a48e049e5fd62b35965eb984ad5e9714f90f80b37bcd219afdee26b9d823c67",
+    "diagnostic": "  Determining projects to restore...\n${BUILD_RUN_ROOT}/g4-workspaces/e47fa76d460518d36fb9b399eb780d7a/source-mapping/SourceMapping.values.targets(234,1): error MSB4044: The \"SourceMappingValidationTask\" task was not given a value for the required parameter \"AssetsFile\". [${WORKSPACE}/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj]\n${BUILD_RUN_ROOT}/g4-workspaces/e47fa76d460518d36fb9b399eb780d7a/source-mapping/SourceMapping.values.targets(234,1): error MSB4044: The \"SourceMappingValidationTask\" task was not given a value for the required parameter \"AssetsFile\". [${WORKSPACE}/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/Hexalith.FrontComposer.Schema.csproj]\n\nBuild FAILED.\n\n${BUILD_RUN_ROOT}/g4-workspaces/e47fa76d460518d36fb9b399eb780d7a/source-mapping/SourceMapping.values.targets(234,1): error MSB4044: The \"SourceMappingValidationTask\" task was not given a value for the required parameter \"AssetsFile\". [${WORKSPACE}/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj]\n${BUILD_RUN_ROOT}/g4-workspaces/e47fa76d460518d36fb9b399eb780d7a/source-mapping/SourceMapping.values.targets(234,1): error MSB4044: The \"SourceMappingValidationTask\" task was not given a value for the required parameter \"AssetsFile\". [${WORKSPACE}/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/Hexalith.FrontComposer.Schema.csproj]\n    0 Warning(s)\n    2 Error(s)\n\nTime Elapsed 00:00:00.91\n"
+  },
+  "focused-ui-net10-source": {
+    "rawSha256": "b17d2a6a9792354691cbfe4e54e4976d3974db18074fc7ec6a82f67181c9dff5",
+    "diagnostic": "  Determining projects to restore...\n${BUILD_RUN_ROOT}/g4-workspaces/e47fa76d460518d36fb9b399eb780d7a/source-mapping/SourceMapping.values.targets(234,1): error MSB4044: The \"SourceMappingValidationTask\" task was not given a value for the required parameter \"AssetsFile\". [${WORKSPACE}/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Contracts/Hexalith.FrontComposer.Contracts.csproj]\n${BUILD_RUN_ROOT}/g4-workspaces/e47fa76d460518d36fb9b399eb780d7a/source-mapping/SourceMapping.values.targets(234,1): error MSB4044: The \"SourceMappingValidationTask\" task was not given a value for the required parameter \"AssetsFile\". [${WORKSPACE}/references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Schema/Hexalith.FrontComposer.Schema.csproj]\n"
+  },
+  "source-down": {
+    "rawSha256": "9d48cb05d6637f32f5eb67a4b0a5faf11aaf4f332cc5ccef40526e208cb43cc6",
+    "diagnostic": "{\"status\":\"completed\",\"outcome\":{\"exitCode\":\"Success\",\"phase\":\"None\",\"category\":\"None\",\"ruleId\":null},\"diagnostics\":[{\"ruleId\":\"HXI001\",\"phase\":\"Cleanup\",\"category\":\"None\",\"message\":\"Runner-owned invocation cleanup completed.\",\"field\":\"down\",\"hint\":null,\"source\":null,\"location\":null,\"row\":null}],\"runId\":\"e47fa76d460518d36fb9b399eb780d7a\"}\n"
+  },
+  "mapping": {
+    "generatedBy": "hexalith.builds.module.cli/4.34.0",
+    "files": {
+      "SourceMapping.final.targets": "7eaf9b2f9b8cda57c3a0d490684d135c9e4c864a2a7b018dab9938fd38f4fa53",
+      "SourceMapping.before-targets.props": "5d4f776e580cfe831dd1d95ec66050102a2fef533aaa49b7bfdeeffa8aec08d2",
+      "mapping.json": "28fc5f22332d570f4ef1ccae792c12fde10dcd44205abe1b56cf95b3704f3c73",
+      "SourceMapping.values.props": "ebfad3a73eafaf10eb69e47f28f01707ec3561d0ad07a8470e94d887367f4207",
+      "SourceMapping.late.props": "41ce82a70b466563dfb49ededc7e900bc9ce02ca064a36c16f541943214f3877",
+      "catalog-versions.json": "5b4fbfdbedf8386597cd266ef654abab2d16af6df8de3db4108bffe47ca98c97",
+      "SourceMapping.targets": "2003f8e38ea72f43549502cda1191d1272eea5a84bbebb534d84ee97c97618ff",
+      "SourceMapping.values.targets": "90b2a09b954de5782d4790cf0a64a16e9faef06b0e32583516e1a6045e0393fe",
+      "__HXW_DefaultCatalog__.proj": "dea98eb9e948aba47789e45ebcde7b4a162549b16e003dbbefd90eb77341875b",
+      "Hexalith.Folders.Aspire.proj": "dea98eb9e948aba47789e45ebcde7b4a162549b16e003dbbefd90eb77341875b",
+      "SourceMapping.props": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82",
+      "pinned-tree/Props/Directory.Packages.props": "8275ec854280d12a55602f487c6196352e5fcdd47609c7b0e23bb66a5556ee66"
+    },
+    "handling": "Generated hooks and hash were preserved byte-for-byte and restored at their original absolute paths; no handwritten selectors."
+  },
+  "commands": {
+    "sourceDebug": "HEXALITH_DAPR_HOME=<prepared-Dapr-1.18.2-home> dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json --evidence _bmad-output/implementation-artifacts/tests/five-publish-and-process-safety-2026-10-23/source-debug.json --output json",
+    "focusedUi": "dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+    "focusedUiNet10": "dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0 --framework net10.0",
+    "focusedEnvironment": {
+      "CustomBeforeDirectoryBuildProps": "${BUILD_RUN_ROOT}/g4-workspaces/e47fa76d460518d36fb9b399eb780d7a/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "${BUILD_RUN_ROOT}/g4-workspaces/e47fa76d460518d36fb9b399eb780d7a/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "${BUILD_RUN_ROOT}/g4-workspaces/e47fa76d460518d36fb9b399eb780d7a/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "${BUILD_RUN_ROOT}/g4-workspaces/e47fa76d460518d36fb9b399eb780d7a/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "${BUILD_RUN_ROOT}/g4-workspaces/e47fa76d460518d36fb9b399eb780d7a/source-mapping/SourceMapping.final.targets",
+      "HEXALITH_SOURCE_MAPPING_HASH": "9b7a93a1ef1de0939c62c454ff4ffc9df3537935e8222db17e005ecd3c32cc3c",
+      "Configuration": "Debug"
+    },
+    "down": "dotnet tool run hexalith-module -- down --manifest module/hexalith.module-manifest.v2.json --run-id e47fa76d460518d36fb9b399eb780d7a --output json"
+  }
+}

@@ -408,3 +408,56 @@ claim that the selected producer implements expiry. No scheduling or production
 reconciliation change was needed. Consumer doubles do not prove physical erasure,
 authoritative remote inventory, deployed workflow retention or owner signoffs;
 existing runtime gates, including DW-168, remain open.
+
+## Publish and process safety qualification (2026-10-23)
+
+The provenance CI class executes the actual MSBuild targets, and
+`oci_validator_consumer_cases.py` executes the real publication image reader
+against the current Builds validator. The shared three-argument reader API
+continues to require both created labels, calendar validation and one identical
+instant across platforms. The publisher additionally supplies its exact instant.
+The evidence packet includes an SDK-generated dual-platform archive label receipt;
+it does not establish adoption by the separately pinned release executor.
+
+FrontComposer's compact navigation change has producer component coverage.
+`PARTIES_E2E_COMPACT_SKIP_LINKS=1` enables the matching Parties component and
+browser resize checks explicitly. Leave it disabled in Release/package CI until
+a matching producer package is published and adopted. A forced package run must
+fail against the current older shell. The pinned tool's source Debug and focused
+consumer fallbacks remain subject to their recorded Platform/mapping blockers.
+
+The optional actual Memories Production startup controls require real owned
+Redis/FalkorDB instances, the built selected producer, and the selected daprd:
+
+```bash
+PARTIES_MEMORIES_PRODUCTION_TESTS=true \
+PARTIES_MEMORIES_TEST_REDIS=127.0.0.1:<owned-redis-port> \
+PARTIES_MEMORIES_TEST_FALKORDB=127.0.0.1:<owned-graph-port> \
+PARTIES_MEMORIES_TEST_SERVER=<built-Memories.Server.dll> \
+PARTIES_MEMORIES_TEST_DAPRD=<selected-daprd> \
+dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests
+```
+
+The app startup test owns and reaps an operator-configured Dapr sidecar, supplies
+its internal gRPC listener explicitly, disables unused metrics and retains the
+producer startup validators. App authentication/secret-reference assertions,
+operator-supplied sidecar startup and actual sidecar publication are separate
+proofs. The selected Toolkit's full SDK manifest emits `memories-dapr` as `dapr.v0`
+without either token binding on all three target graphs. Positive sidecar secret
+emission remains an upstream qualification gate. The selected producer binder
+also appends initialized algorithms, so caller RS256/ES256 entries do not prove
+an asymmetric-only policy. Actual controls check authenticated Dapr outbound
+health, app-id metadata, missing/wrong-token 401s and stopped-sidecar rejection.
+Startup does not qualify publication, deployment, Parties bearer forwarding or search.
+
+The live cleanup matrix is enabled by `PARTIES_MTLS_TOPOLOGY_TESTS=true`.
+Direct generated mTLS launchers use `exec` and retain the runtime PID in both
+profiles. Captured descendants remain owned across wrapper exit and cleanup
+retry. An already-lost ordinary CLI wrapper cannot authorize backing removal;
+the race before any descendant observation remains unqualified and open.
+The dedicated Linux package supervisor handles SIGTERM/SIGINT, tracks its caller's
+explicit PID/start identity and reaps owned descendants. Direct supervisor
+SIGKILL remains outside cooperative guarantees.
+
+See `_bmad-output/implementation-artifacts/tests/five-publish-and-process-safety-2026-10-23/`
+for exact commands, matrix mappings, sanitized results and remaining gates.

@@ -1,0 +1,102 @@
+{
+  "command": [
+    "dotnet",
+    "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+    "-class",
+    "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests",
+    "-method-",
+    "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.MemoriesPublishModel_RejectsInsecureOidcMetadata"
+  ],
+  "environment": {
+    "PARTIES_MEMORIES_PRODUCTION_TESTS": "true",
+    "PARTIES_MEMORIES_TEST_REDIS": "<owned Redis endpoint>",
+    "PARTIES_MEMORIES_TEST_FALKORDB": "<owned FalkorDB endpoint>",
+    "PARTIES_MEMORIES_TEST_SERVER": "${WORKSPACE}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Release/net10.0/Hexalith.Memories.Server.dll",
+    "PARTIES_MEMORIES_TEST_DAPRD": "<selected daprd 1.18.2>"
+  },
+  "exitCode": 0,
+  "nonOwnedListener": {
+    "pid": 4044624,
+    "ports": [
+      50002,
+      9090
+    ]
+  },
+  "nonOwnedListenerSurvived": true,
+  "daprdObservations": [
+    {
+      "pid": 4044995,
+      "startIdentity": 20891830,
+      "internalGrpcPort": 46657,
+      "metricsDisabled": true,
+      "observedListeningPorts": [
+        34969,
+        39067,
+        46657
+      ]
+    },
+    {
+      "pid": 4045597,
+      "startIdentity": 20891985,
+      "internalGrpcPort": 37955,
+      "metricsDisabled": true,
+      "observedListeningPorts": [
+        37955,
+        44545,
+        46367
+      ]
+    },
+    {
+      "pid": 4046044,
+      "startIdentity": 20892056,
+      "internalGrpcPort": 37403,
+      "metricsDisabled": true,
+      "observedListeningPorts": [
+        37403,
+        38269,
+        45493
+      ]
+    },
+    {
+      "pid": 4046099,
+      "startIdentity": 20892119,
+      "internalGrpcPort": 43809,
+      "metricsDisabled": true,
+      "observedListeningPorts": [
+        37127,
+        37459,
+        43809
+      ]
+    },
+    {
+      "pid": 4046237,
+      "startIdentity": 20892181,
+      "internalGrpcPort": 33207,
+      "metricsDisabled": true,
+      "observedListeningPorts": [
+        33207,
+        40119,
+        46117
+      ]
+    },
+    {
+      "pid": 4046427,
+      "startIdentity": 20892257,
+      "internalGrpcPort": 34597,
+      "metricsDisabled": true,
+      "observedListeningPorts": [
+        34597,
+        36615,
+        46095
+      ]
+    }
+  ],
+  "scope": "App configuration/startup only, with an explicitly synthesized operator sidecar; this does not qualify sidecar secret emission.",
+  "rawLogSha256": "ec19405d23050ddf57f6267295e343c4739fa6ac3aca248cf353e9cbdc06eefc",
+  "counts": {
+    "total": 17,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 5.373
+  }
+}

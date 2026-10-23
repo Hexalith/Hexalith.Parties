@@ -1,5 +1,6 @@
 extern alias apphost;
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
@@ -23,6 +24,7 @@ using StackExchange.Redis;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Hexalith.Parties.IntegrationTests.HealthChecks;
@@ -59,7 +61,15 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     private HttpClient? _partiesClient;
     private HttpClient? _eventStoreClient;
     private IResourceBuilder<ContainerResource>? _redis;
-    private readonly Dictionary<int, long> _ownedWorkers = [];
+    /// <summary>The inherited marker used only by this fixture's worker lifetimes.</summary>
+    internal const string WorkerOwnershipVariable = "PARTIES_TEST_TOPOLOGY_OWNER";
+
+    /// <summary>Gets this fixture lifetime's unguessable inherited ownership marker.</summary>
+    internal string WorkerOwnershipMarker { get; } = Guid.NewGuid().ToString("N");
+
+    private readonly ConcurrentDictionary<int, long> _ownedWorkers = [];
+    private CancellationTokenSource? _workerObservationCancellation;
+    private Task? _workerObservation;
     private readonly HashSet<string> _stoppedWorkerNames = new(StringComparer.Ordinal);
     private bool _workersQuiesced;
     private bool _startupScheduled;
@@ -197,6 +207,17 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                     .WithEnvironment("DOTNET_ENVIRONMENT", "Development");
             }
 
+            foreach (IResource resource in _builder.Resources.Cast<IResource>().Concat(
+                _builder.Resources.SelectMany(resource => resource.Annotations.OfType<DaprSidecarAnnotation>())
+                    .Select(annotation => (IResource)annotation.Sidecar)))
+            {
+                if (resource is ProjectResource or ExecutableResource or IDaprSidecarResource)
+                {
+                    resource.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
+                        context.EnvironmentVariables[WorkerOwnershipVariable] = WorkerOwnershipMarker));
+                }
+            }
+
             _builder.Services.AddLogging(logging =>
             {
                 logging.SetMinimumLevel(LogLevel.Debug);
@@ -207,6 +228,11 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             _builder.Eventing.Subscribe<BeforeStartEvent>((_, _) =>
             {
                 _startupScheduled = true;
+                if (_app is not null && !_workersQuiesced && _workerObservation is null)
+                {
+                    _workerObservationCancellation = new CancellationTokenSource();
+                    _workerObservation = ObserveOwnedWorkersAsync(_app, _workerObservationCancellation.Token);
+                }
                 return Task.CompletedTask;
             });
             _app = await _builder.BuildAsync(cts.Token).ConfigureAwait(false);
@@ -426,6 +452,14 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 // Retain the final check for retry after any SDK stop/disposal failure.
                 await ConfirmOwnedWorkersStoppedAsync(quiescence.Token).ConfigureAwait(false);
                 await CleanupCiDaprMtlsAsync().ConfigureAwait(false);
+                if (_workerObservationCancellation is not null)
+                {
+                    await _workerObservationCancellation.CancelAsync().ConfigureAwait(false);
+                    if (_workerObservation is not null) { await _workerObservation.ConfigureAwait(false); }
+                    _workerObservationCancellation.Dispose();
+                    _workerObservationCancellation = null;
+                    _workerObservation = null;
+                }
                 _ownedWorkers.Clear();
             },
             async () =>
@@ -438,7 +472,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             }).ConfigureAwait(false);
     }
 
-    private void CaptureOwnedWorkers(DistributedApplication application)
+    internal void CaptureOwnedWorkers(DistributedApplication application)
     {
         DistributedApplicationModel model = application.Services.GetRequiredService<DistributedApplicationModel>();
         string[] names = model.Resources.Select(resource => resource.Name)
@@ -450,8 +484,106 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             if (!application.ResourceNotifications.TryGetCurrentState(name, out ResourceEvent? state)) { continue; }
             object? value = state.Snapshot.Properties.FirstOrDefault(property => property.Name == "executable.pid")?.Value;
             if (value is null || !int.TryParse(Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture), out int id)) { continue; }
-            if (ReadWorkerStartIdentity(id) is long started) { _ownedWorkers[id] = started; }
+            if (OperatingSystem.IsLinux() && (state.Snapshot.State?.Text == KnownResourceStates.Exited || state.Snapshot.State?.Text == KnownResourceStates.Finished
+                || state.Snapshot.State?.Text == KnownResourceStates.FailedToStart || state.Snapshot.State?.Text == KnownResourceStates.NotStarted)) { continue; }
+            if (ReadWorkerStartIdentity(id) is long started) { CaptureOwnedProcessTree(id, started); }
         }
+        foreach ((int id, long started) in _ownedWorkers.ToArray()) { CaptureOwnedProcessTree(id, started); }
+    }
+
+    /// <summary>Retains runtime identities observed while a CLI wrapper is still alive.</summary>
+    private async Task ObserveOwnedWorkersAsync(DistributedApplication application, CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(10));
+        try
+        {
+            do { CaptureOwnedWorkers(application); }
+            while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false));
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+    }
+
+    /// <summary>Captures only descendants of the exact previously observed OS lifetime.</summary>
+    private void CaptureOwnedProcessTree(int id, long started)
+    {
+        bool linux = OperatingSystem.IsLinux();
+        // Other platforms retain the existing root exit/SDK-stop observation;
+        // only Linux establishes inherited custody and follows descendants.
+        if (linux ? !IsOwnedLifetime(id, started) : !IsWorkerRunning(id, started)) { return; }
+        _ownedWorkers.AddOrUpdate(id, started, (_, previous) =>
+        {
+            if (previous == started) { return previous; }
+            return (linux ? IsOwnedLifetime(id, started) : IsWorkerRunning(id, started)) ? started : previous;
+        });
+        if (!linux) { return; }
+        try
+        {
+            foreach (string task in Directory.EnumerateDirectories($"/proc/{id}/task"))
+            {
+                foreach (string child in File.ReadAllText(Path.Combine(task, "children")).Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    int childId = int.Parse(child, System.Globalization.CultureInfo.InvariantCulture);
+                    if (ReadLinuxWorkerIdentity(childId) is { } childIdentity && childIdentity.Parent == id
+                        && childIdentity.Started >= started && IsOwnedLifetime(id, started)
+                        && IsOwnedLifetime(childId, childIdentity.Started, id))
+                    {
+                        CaptureOwnedProcessTree(childId, childIdentity.Started);
+                    }
+                }
+            }
+        }
+        catch (FileNotFoundException) { }
+        catch (DirectoryNotFoundException) { }
+    }
+
+    private void TerminateOwnedWorkers()
+    {
+        if (!OperatingSystem.IsLinux()) { return; }
+        foreach ((int id, long started) in _ownedWorkers.ToArray())
+        {
+            if (!IsOwnedLifetime(id, started)) { continue; }
+            try
+            {
+                using Process process = Process.GetProcessById(id);
+                // Do not name-match or sweep a process group after its leader exits.
+                // Every target was observed before loss and still has its captured identity.
+                if (IsOwnedLifetime(id, started)) { process.Kill(); }
+            }
+            catch (ArgumentException) { }
+            catch (InvalidOperationException) when (!IsWorkerRunning(id, started)) { }
+            catch (System.ComponentModel.Win32Exception) when (!IsWorkerRunning(id, started)) { }
+        }
+    }
+
+    // A snapshot/children PID is only a hint. Require the fixture's launch marker,
+    // coherent kernel lifetime and (during descendant discovery) the same parent.
+    private bool IsOwnedLifetime(int id, long started, int? expectedParent = null)
+    {
+        if (!OperatingSystem.IsLinux()) { return false; }
+        try
+        {
+            if (ReadLinuxWorkerIdentity(id) is not { } before || before.Started != started
+                || (expectedParent is int expected && before.Parent != expected)) { return false; }
+            string marker = WorkerOwnershipVariable + "=" + WorkerOwnershipMarker;
+            bool owned = File.ReadAllText($"/proc/{id}/environ").Split('\0').Contains(marker, StringComparer.Ordinal);
+            return owned && ReadLinuxWorkerIdentity(id) == before;
+        }
+        catch (IOException) { return false; }
+        catch (UnauthorizedAccessException) { return false; }
+    }
+
+    private static (long Started, int Parent)? ReadLinuxWorkerIdentity(int id)
+    {
+        try
+        {
+            string stat = File.ReadAllText($"/proc/{id}/stat");
+            string[] fields = stat[(stat.LastIndexOf(')') + 2)..].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            return fields[0] is "Z" or "X" ? null
+                : (long.Parse(fields[19], System.Globalization.CultureInfo.InvariantCulture),
+                   int.Parse(fields[1], System.Globalization.CultureInfo.InvariantCulture));
+        }
+        catch (IOException) { return null; }
+        catch (UnauthorizedAccessException) { return null; }
     }
 
     private Task QuiesceOwnedWorkersAsync(DistributedApplication application, CancellationToken cancellationToken)
@@ -468,12 +600,15 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     internal async Task QuiesceStartedWorkersAsync(DistributedApplication application, CancellationToken cancellationToken)
     {
         _workersQuiesced = false;
+        if (_workerObservation is { IsFaulted: true }) { await _workerObservation.ConfigureAwait(false); }
         ResourceCommandService commands = application.Services.GetRequiredService<ResourceCommandService>();
         DistributedApplicationModel model = application.Services.GetRequiredService<DistributedApplicationModel>();
         string[] hosts = model.Resources.OfType<ProjectResource>().Select(resource => resource.Name).ToArray();
+        HashSet<string> sidecarNames = model.Resources.SelectMany(resource => resource.Annotations.OfType<DaprSidecarAnnotation>())
+            .Select(sidecar => sidecar.Sidecar.Name + "-cli").ToHashSet(StringComparer.Ordinal);
+        bool directRuntimeLauncher = Path.GetFileName(application.Services.GetService<IOptions<DaprOptions>>()?.Value.DaprPath) == "dapr-session";
         string[] executables = model.Resources.OfType<ExecutableResource>().Select(resource => resource.Name)
-            .Concat(model.Resources.SelectMany(resource => resource.Annotations.OfType<DaprSidecarAnnotation>())
-                .Select(sidecar => sidecar.Sidecar.Name + "-cli"))
+            .Concat(sidecarNames)
             .Distinct(StringComparer.Ordinal).ToArray();
         // An SDK stop can leave an exited worker Unknown with stop disabled. Keep
         // its completed stop across observer failures until this app is disposed.
@@ -488,11 +623,28 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             await WaitForPendingStartsAsync(application.ResourceNotifications,
                 hosts.Concat(executables).Where(name => !stoppedNames.Contains(name)), cancellationToken).ConfigureAwait(false);
             CaptureOwnedWorkers(application);
+            if (!directRuntimeLauncher)
+            {
+                foreach (string name in sidecarNames.Where(name => !_stoppedWorkerNames.Contains(name)))
+                {
+                    if (application.ResourceNotifications.TryGetCurrentState(name, out ResourceEvent? sidecarState))
+                    {
+                        try { EnsureCliWrapperOwnership(sidecarState.Snapshot); }
+                        catch (InvalidOperationException)
+                        {
+                            TerminateOwnedWorkers();
+                            await ConfirmOwnedWorkersStoppedAsync(cancellationToken).ConfigureAwait(false);
+                            throw;
+                        }
+                    }
+                }
+            }
             // Hosts drain while their sidecars and backing services remain available.
             // Re-observe partial startup: a worker can become stoppable during this pass.
             await StopGroupAsync(hosts).ConfigureAwait(false);
             await StopGroupAsync(executables).ConfigureAwait(false);
             CaptureOwnedWorkers(application);
+            TerminateOwnedWorkers();
             if (!_ownedWorkers.Any(worker => IsWorkerRunning(worker.Key, worker.Value))) { break; }
             await observations.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -521,9 +673,19 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             if (!application.ResourceNotifications.TryGetCurrentState(name, out ResourceEvent? state)
                 || !state.Snapshot.Commands.Any(command => command.Name == KnownResourceCommands.StopCommand
                     && command.State == ResourceCommandState.Enabled)) { return null; }
+            if (sidecarNames.Contains(name) && !directRuntimeLauncher)
+            {
+                try { EnsureCliWrapperOwnership(state.Snapshot); }
+                catch (InvalidOperationException)
+                {
+                    TerminateOwnedWorkers();
+                    await ConfirmOwnedWorkersStoppedAsync(cancellationToken).ConfigureAwait(false);
+                    throw;
+                }
+            }
             object? pid = state.Snapshot.Properties.FirstOrDefault(property => property.Name == "executable.pid")?.Value;
             int.TryParse(Convert.ToString(pid, System.Globalization.CultureInfo.InvariantCulture), out int processId);
-            long? started = ReadWorkerStartIdentity(processId);
+            long? started = _ownedWorkers.TryGetValue(processId, out long captured) ? captured : null;
             ExecuteCommandResult stopped = await commands.ExecuteCommandAsync(state.ResourceId, KnownResourceCommands.StopCommand, cancellationToken)
                 .ConfigureAwait(false);
             // DCP can report an unsuccessful stop after an already exited executable's
@@ -541,7 +703,30 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         await ConfirmOwnedWorkersStoppedAsync(cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         if (ObserveQuiescenceAsync is not null) { await ObserveQuiescenceAsync(application, cancellationToken).ConfigureAwait(false); }
+        if (_workerObservationCancellation is not null)
+        {
+            await _workerObservationCancellation.CancelAsync().ConfigureAwait(false);
+            if (_workerObservation is not null) { await _workerObservation.ConfigureAwait(false); }
+        }
         _workersQuiesced = true;
+    }
+
+    /// <summary>On Linux, fails closed when the ordinary CLI disappears before SDK-owned stop can prove custody.</summary>
+    /// <param name="snapshot">The current ordinary CLI snapshot.</param>
+    internal void EnsureCliWrapperOwnership(CustomResourceSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        // Preserve SDK stop and root-exit observations elsewhere. This guard
+        // and fallback containment qualify only Linux process ownership.
+        if (!OperatingSystem.IsLinux()) { return; }
+        if (snapshot.State?.Text == KnownResourceStates.NotStarted || snapshot.State?.Text == KnownResourceStates.FailedToStart) { return; }
+        object? value = snapshot.Properties.FirstOrDefault(property => property.Name == "executable.pid")?.Value;
+        if (value is null || !int.TryParse(Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture), out int pid)
+            || !_ownedWorkers.TryGetValue(pid, out long started) || !IsOwnedLifetime(pid, started)
+            || snapshot.State?.Text == KnownResourceStates.Exited || snapshot.State?.Text == KnownResourceStates.Finished)
+        {
+            throw new InvalidOperationException("An ordinary Dapr CLI wrapper exited before runtime custody could be proved; backing resources were retained. Polling does not qualify unobserved descendants.");
+        }
     }
 
     /// <summary>Fences scheduled launches before their dependencies can be drained.</summary>

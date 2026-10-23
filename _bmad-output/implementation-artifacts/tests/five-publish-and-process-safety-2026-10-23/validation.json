@@ -1,0 +1,575 @@
+{
+  "date": "2026-10-23",
+  "revisions": {
+    "Parties": "664b99c67e90a14c8a1cc4d9663a25fa44c47c9a",
+    "Builds": "70ead608ac01f66dfcd80c13bb71152dac6c128e",
+    "FrontComposer": "8c61143ef4c6a983bfe1d25865857b9b4cd240c9",
+    "Memories": "b55db82c060caf917a142fdb6585fa7340b01647"
+  },
+  "workingDiffSha256": {
+    "Parties": "c0c83faed4b5f7b47cd11566a90521fe622dd437d4b2ca34c5d390ad78e5fec5",
+    "Builds": "1c4010cf25e4daa0337400ac7f4765655258e04e4bf00afa96da56659a5d5055",
+    "FrontComposer": "d36cf203854fa122d9d07574cc14a9bfda6d6fd6062134f6e892280508396592"
+  },
+  "publication": "No owner commits, pushes, release-pin changes or gitlink adoption performed by delegate; parent owns review and final publication.",
+  "builds": {
+    "CI": {
+      "command": "dotnet build tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj -c Debug --no-restore -m:1",
+      "result": "passed",
+      "rawLogSha256": "706c094a7bb50d92449e1ff12cc58862b08598dbb79ba769f121b602d8c54180"
+    },
+    "Integration": {
+      "command": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj -c Release --no-restore -m:1 -p:MinVerVersionOverride=1.0.0",
+      "result": "passed",
+      "rawLogSha256": "7ddc02b13aa14b3e4a6698798d36a9c58df155db364507eed9b431edc19133be"
+    },
+    "producer shell": {
+      "command": "dotnet build references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/Hexalith.FrontComposer.Shell.Tests.csproj -c Debug -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "result": "passed",
+      "rawLogSha256": "695734720df9d35036cdcef4cf1191c2638a380438d6bc1a9953063d819d6990"
+    },
+    "Memories producer": {
+      "command": "dotnet build references/Hexalith.Memories/src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "result": "passed",
+      "rawLogSha256": "a1747a00102895859c27fdbaf695543ce9a16421b4a6de95366c5e8e4c6bdd7d"
+    },
+    "UI package": {
+      "command": "dotnet build tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "result": "passed",
+      "rawLogSha256": "72fbdfbd38717bdd86fd31df8b708e99e99e4e5df01b834340c0b9274ff9c325"
+    },
+    "Contracts": {
+      "command": "dotnet build tests/Hexalith.Parties.Contracts.Tests/Hexalith.Parties.Contracts.Tests.csproj -c Release -m:1 -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "result": "passed",
+      "rawLogSha256": "20d6258d9c9fc68df58cf8e89503c3f31002e8bdfe04f07d0956ad26d99156be"
+    },
+    "Client": {
+      "command": "dotnet build tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -c Release -m:1 -p:MinVerVersionOverride=1.0.0",
+      "result": "passed",
+      "rawLogSha256": "61027738dd89588c33adfde3e8c8ca29e5dabc6a287b4b9456cedb47d4eea512"
+    },
+    "Client pack prerequisite": {
+      "command": "dotnet build references/Hexalith.Commons/src/libraries/Hexalith.Commons.Http/Hexalith.Commons.Http.csproj -c Release -m:1 -p:MinVerVersionOverride=2.27.0 -p:PackageVersion=2.27.0",
+      "result": "passed",
+      "rawLogSha256": "06189d852ee74b9c432ba910094e9c81092a7c8648c710e15f9f85b8bef7f226"
+    }
+  },
+  "testRuns": [
+    {
+      "name": "Builds Python publisher suite",
+      "command": "python3 -m unittest discover -s references/Hexalith.Builds/Github/publish-containers/tests -p test_*.py",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "146 tests passed; MSBuild, OCI, publisher, preflight and smoke suites",
+      "rawLogSha256": "307fb3f5729ee296e233abaced37495527f2241f2f94750eebf0e642f0bd92b3",
+      "counts": null,
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "name": "Real Parties three-argument OCI consumer",
+      "command": "python3 tests/Hexalith.Parties.Ci.Tests/oci_validator_consumer_cases.py",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "1 test / 6 subcases; real verify_images consumer against current validator source, never substitutes the immutable release executor",
+      "rawLogSha256": "a146ffbdf9b07bb226ef66ce59c2a411149b39de43ba5ad86bc5ec9e95a7fb61",
+      "counts": null,
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "name": "Focused Parties provenance/publication CI",
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll -class Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "actual target execution and current producer/reader contract",
+      "rawLogSha256": "103272c102e02f8978ccaa48c29d1b732056e93518c8179235b007aed80a8061",
+      "counts": {
+        "total": 64,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "seconds": 3.205
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "name": "Full Parties CI",
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Debug/net10.0/Hexalith.Parties.Ci.Tests.dll",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "blocked: 63 artifact cases require unavailable d9070aa0d43feb9e3359286bc797d2be65960727 Git object",
+      "rawLogSha256": "e350f689a58c9bf5ba0089c969cd24a3a7c75636c7cbc056de1504dcf59b4e49",
+      "counts": {
+        "total": 449,
+        "errors": 0,
+        "failed": 63,
+        "skipped": 0,
+        "notRun": 0,
+        "seconds": 29.726
+      },
+      "failedTests": [
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"valid\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"missing-file-license\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"valid-file-license\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"nested-id\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"nested-metadata\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"unpinned-validator\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"total-budget\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"request-timeout\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"retry-exhaustion\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"oci-authentication\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"forbidden\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"authentication\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"wrong-provenance\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"wrong-config-digest\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"wrong-child-digest\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"wrong-config-platform\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"valid-legacy-file-license\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"missing-legacy-file-license\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"no-dependencies\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"missing-eventstore-dependency\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"duplicate-platform\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"wrong-extra-eventstore-version\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"missing-required-commons-http\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"wrong-commons-version\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"wrong-eventstore-version\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"missing-platform\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"wrong-index-digest\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"missing-readme\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"missing-license\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"wrong-commit\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"wrong-repository-type\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"wrong-repository\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"wrong-version\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"wrong-id\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"missing-image-parties-ui\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"missing-image-parties-mcp\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"missing-image-parties\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"missing-package\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"transport-recovery\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"transient-recovery\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"propagation-image\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"propagation-package\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"forbidden-dependency\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"malformed-package\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"corrupt-package-crc\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"duplicate-nuspec\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"oversized-index\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"malformed-index\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"duplicate-json-inventory\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"ambiguous-inventory\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"duplicate-inventory\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"partial-inventory\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"ambiguous-metadata\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"immutable-mismatch\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"duplicate-member\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"uppercase-file-license\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"non-package-root\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"duplicate-repository\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"nuspec-size-bound\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"archive-size-bound\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"member-count-bound\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"nested-nuspec\")",
+        "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \"nuspec-doctype\")"
+      ],
+      "skippedTests": []
+    },
+    {
+      "name": "Focused producer shell",
+      "command": "dotnet references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.Tests.dll -class Hexalith.FrontComposer.Shell.Tests.Components.Layout.FrontComposerShellTests",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "Debug producer component coverage; mounted link/target and resize",
+      "rawLogSha256": "f12df1dc70f1fe2815ea32807b3d49571ef19ffd3ab03583fe6e1ddaa44630df",
+      "counts": {
+        "total": 48,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "seconds": 3.525
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "name": "Full producer shell",
+      "command": "dotnet references/Hexalith.FrontComposer/tests/Hexalith.FrontComposer.Shell.Tests/bin/Debug/net10.0/Hexalith.FrontComposer.Shell.Tests.dll",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "15 governance failures; includes unavailable historical objects, uninitialized nested-layout expectations, existing workflow/analyzer policy assertions; no nested initialization or gate bypass",
+      "rawLogSha256": "b4577448708bd0e9a7b023975f1b95cf87a054266f246982fe61d7ee17c3bff8",
+      "counts": {
+        "total": 3768,
+        "errors": 0,
+        "failed": 15,
+        "skipped": 1,
+        "notRun": 0,
+        "seconds": 159.964
+      },
+      "failedTests": [
+        "Hexalith.FrontComposer.Shell.Tests.Governance.InfrastructureGovernanceTests.CentralPackageVersions_WhenCatalogIsCentralized_AreInheritedFromPinnedBuilds",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.ReleaseModelGovernanceTests.PrepublishPublisher_VersionAuditMismatch_FailsClosedBeforePush",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.ReleaseModelGovernanceTests.PrepublishPublisher_PostSealArtifactMutation_FailsClosedBeforePush",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.ReleaseModelGovernanceTests.ClassifyRelease_HealthyDryRunEvidence_CleanExitGate_ReturnsExit0",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.ReleaseWorkflow_PinsTrustedPublisherAndPublicationFreezeContract",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.ReleaseEvidenceScript_SealAndVerifyManifest_RoundTripsCleanly",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.ReleaseEvidenceScript_DetectsPostSealArtifactMutationFromRealFiles",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.StoryArtifactValidatorGate_IsBlockingAndExact",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.HexalithDependencyMode_DefaultsToProjectReferencesForDebugAndPackagesForRelease",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.EventStoreRuntimeIdentitySeparatesCurrentCompatibilityFromHistoricalApproval",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.ReleaseEvidenceScript_DetectsReleaseDefinitionDriftFromRealFiles",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.CiGovernanceTests.ToolchainPins_MatchApprovedDotnetAndAspireVersions",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.AnalyzerPolicyGovernanceTests.AnalyzerPolicy_Story1122HiddenControlNegativeProbes_RemainClean",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.AnalyzerPolicyGovernanceTests.AnalyzerPolicy_Story1122RecordedProjects_RemainRecommendedClean",
+        "Hexalith.FrontComposer.Shell.Tests.Governance.AnalyzerPolicyGovernanceTests.AnalyzerPolicy_ActivatedReleaseBuild_MatchesForcedRecommendedCandidate"
+      ],
+      "skippedTests": [
+        "Hexalith.FrontComposer.Shell.Tests.Infrastructure.EventStore.LiveTwoTenantProductionAdapterTests.ProvisionedTenants_QueryCountAndSubscribe_StayIsolated"
+      ]
+    },
+    {
+      "name": "Focused package supervisor",
+      "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll -class Hexalith.Parties.Contracts.Tests.Package.PackageTestProcessTests",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "Linux work/cleanup SIGTERM/SIGINT, explicit caller death, inherited pipes, bounded reaping, unrelated worker survival",
+      "rawLogSha256": "d1829f014bc8b2a9e57f23b01ce403cef400042e22689f6678bc26e9e044d44d",
+      "counts": {
+        "total": 24,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "seconds": 7.958
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "name": "Full Contracts",
+      "command": "dotnet tests/Hexalith.Parties.Contracts.Tests/bin/Release/net10.0/Hexalith.Parties.Contracts.Tests.dll",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "Release/package",
+      "rawLogSha256": "5e2f8e78ef5bebfce16b5b7e68a9d581fdf1d8b4dd263513ee34950d682e570f",
+      "counts": {
+        "total": 224,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "seconds": 8.44
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "name": "Full Client",
+      "command": "dotnet tests/Hexalith.Parties.Client.Tests/bin/Release/net10.0/Hexalith.Parties.Client.Tests.dll",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "Release/package; shared runner compiled here too; prerebuilt exact Commons.Http package prerequisite",
+      "rawLogSha256": "20cc36fdd586c37da324f3e793a66a3ed0e95d37cc8b4046353dd0c720f1f184",
+      "counts": {
+        "total": 332,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "seconds": 18.53
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "name": "Focused published UI layout",
+      "command": "dotnet tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll -class Hexalith.Parties.UI.Tests.MainLayoutAccessibilityTests",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "published package; compact source opt-in skip is unqualified",
+      "rawLogSha256": "1b0c7bcc60a99b6c35aab01278e38f01e5802ad524ed59b1b7cce4c04b1c253a",
+      "counts": {
+        "total": 4,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 1,
+        "notRun": 0,
+        "seconds": 1.147
+      },
+      "failedTests": [],
+      "skippedTests": [
+        "Hexalith.Parties.UI.Tests.MainLayoutAccessibilityTests.MainLayout_navigation_skip_link_tracks_mounted_target_on_resize"
+      ]
+    },
+    {
+      "name": "Full published UI",
+      "command": "dotnet tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "Release/package; compact source opt-in skip is unqualified",
+      "rawLogSha256": "2be572c2da13c3136d10c01407f53894eda731b8f05ae94b655d780e963ed989",
+      "counts": {
+        "total": 414,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 1,
+        "notRun": 0,
+        "seconds": 5.106
+      },
+      "failedTests": [],
+      "skippedTests": [
+        "Hexalith.Parties.UI.Tests.MainLayoutAccessibilityTests.MainLayout_navigation_skip_link_tracks_mounted_target_on_resize"
+      ]
+    },
+    {
+      "name": "Focused Dapr and cleanup",
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests -class Hexalith.Parties.IntegrationTests.Topology.DaprMtlsBootstrapTests",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "direct PID continuity, already-captured wrapper-first descendants, retry, lost ordinary custody rejection; live cases qualified separately",
+      "rawLogSha256": "d1aad94ecd24332214e988ed37a8ffa88a2d5b088c558f7890602ff7d83c0367",
+      "counts": {
+        "total": 38,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 4,
+        "notRun": 0,
+        "seconds": 2.09
+      },
+      "failedTests": [],
+      "skippedTests": [
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"normal\")",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"canceled\")",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"failed\")",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"cleanup-failed\")"
+      ]
+    },
+    {
+      "name": "Actual Memories Production",
+      "command": "PARTIES_MEMORIES_PRODUCTION_TESTS=true PARTIES_MEMORIES_TEST_REDIS=127.0.0.1:<owned-port> PARTIES_MEMORIES_TEST_FALKORDB=127.0.0.1:<owned-port> PARTIES_MEMORIES_TEST_SERVER=${WORKSPACE}/references/Hexalith.Memories/src/Hexalith.Memories.Server/bin/Release/net10.0/Hexalith.Memories.Server.dll PARTIES_MEMORIES_TEST_DAPRD=<selected-daprd-1.18.2> dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "Historical app-only startup proof with an operator-synthesized sidecar; actual full SDK sidecar emission was not proved by this invocation. See pre-review-corrections.json and sdk-sidecar-emission.json for the superseding scope and upstream blocker.",
+      "rawLogSha256": "377ca790af6b4983b596a9529484aa2445a74d3ceee1afaa91b6a44eba01c343",
+      "counts": {
+        "total": 17,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "seconds": 5.962
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "name": "Full Integration",
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "Release/package; 19 explicit optional/runtime skips are unqualified by this invocation",
+      "rawLogSha256": "99f998e8aeb09275e19f9009024279ec387a9f1d2d59eda75441f163d271dda7",
+      "counts": {
+        "total": 144,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 19,
+        "notRun": 0,
+        "seconds": 4.483
+      },
+      "failedTests": [],
+      "skippedTests": [
+        "Hexalith.Parties.IntegrationTests.HealthChecks.HealthEndpointE2ETests.QueryEndpoints_WithPubSubUnavailable_ReturnCachedDataWithDegradationHeaders",
+        "Hexalith.Parties.IntegrationTests.HealthChecks.HealthEndpointE2ETests.ReadyEndpoint_WithAllDaprComponentsRunning_Returns200Async",
+        "Hexalith.Parties.IntegrationTests.HealthChecks.HealthEndpointE2ETests.HealthEndpoint_WithAllDaprComponentsRunning_Returns200Async",
+        "Hexalith.Parties.IntegrationTests.HealthChecks.HealthEndpointE2ETests.AliveEndpoint_WithAllDaprComponentsRunning_Returns200Async",
+        "Hexalith.Parties.IntegrationTests.HealthChecks.HealthEndpointE2ETests.HealthAndReadyEndpoints_WithDaprSidecarStopped_Return503ThenRecoverAsync",
+        "Hexalith.Parties.IntegrationTests.HealthChecks.HealthEndpointE2ETests.HealthEndpoint_WithAllDaprComponentsRunning_DoesNotIncludeDegradationHeadersAsync",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyIsolationTests.ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync",
+        "Hexalith.Parties.IntegrationTests.Gateway.EventStoreGatewayE2ETests.AuthenticatedCreate_ProjectsDetailsAndPersistsMatchingEventEnvelopesAsync",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"normal\")",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"canceled\")",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"failed\")",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"cleanup-failed\")",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests.CompleteProfile_AllEightSidecarsRespondAndPartiesInvokesTenantsReadiness",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.MemoriesProductionStartup_ValidatesEmittedConfigurationAndMissingInputs(invalid: \"\")",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.MemoriesProductionStartup_ValidatesEmittedConfigurationAndMissingInputs(invalid: \"Authentication__JwtBearer__Authority\")",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.MemoriesProductionStartup_ValidatesEmittedConfigurationAndMissingInputs(invalid: \"Authentication__JwtBearer__Issuer\")",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.MemoriesProductionStartup_ValidatesEmittedConfigurationAndMissingInputs(invalid: \"Authentication__JwtBearer__Audience\")",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.MemoriesProductionStartup_ValidatesEmittedConfigurationAndMissingInputs(invalid: \"APP_API_TOKEN\")",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesPublishEnvironmentTests.MemoriesProductionStartup_ValidatesEmittedConfigurationAndMissingInputs(invalid: \"DAPR_API_TOKEN\")"
+      ]
+    },
+    {
+      "name": "Quiet combined live shutdown matrix",
+      "command": "PARTIES_MTLS_TOPOLOGY_TESTS=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "final intended combined gate; no concurrent builds/runtime work; zero skips",
+      "rawLogSha256": "57ea24d54c881800b01b8df3cccd64498a98adfc2f6c2fd51d89ea258a9f2f80",
+      "counts": {
+        "total": 4,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "seconds": 139.537
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "name": "Initial combined live shutdown attempt",
+      "command": "PARTIES_MTLS_TOPOLOGY_TESTS=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync",
+      "workingDirectory": "${WORKSPACE}",
+      "scope": "2 passes/2 failures under concurrent verification; graph readiness and sidecar health failed before controlled startup path; retained as failed evidence, cause not asserted",
+      "rawLogSha256": "271c7516739b4e08881d272cc58c16c2424884d046e4fabf1dca49bf18228e94",
+      "counts": {
+        "total": 4,
+        "errors": 0,
+        "failed": 2,
+        "skipped": 0,
+        "notRun": 0,
+        "seconds": 604.674
+      },
+      "failedTests": [
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"failed\")",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyCleanupTests.LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"cleanup-failed\")"
+      ],
+      "skippedTests": []
+    }
+  ],
+  "isolatedLiveRuns": [
+    {
+      "mode": "normal",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-preEnumerateTheories",
+        "-displayName",
+        "*LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"normal\")"
+      ],
+      "exitCode": 0,
+      "seconds": 49.005,
+      "rawLogSha256": "568fe6f2ae14101f232879acf8ac1404471bf2fcc8a92483f24e1ae25be7f118",
+      "counts": {
+        "total": 1,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "seconds": 48.742
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "mode": "canceled",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-preEnumerateTheories",
+        "-displayName",
+        "*LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"canceled\")"
+      ],
+      "exitCode": 0,
+      "seconds": 22.698,
+      "rawLogSha256": "e0a88dd16811ee80f7f76bfe9a423eed838101f936e362871c42a469d43c107b",
+      "counts": {
+        "total": 1,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "seconds": 22.439
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "mode": "failed",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-preEnumerateTheories",
+        "-displayName",
+        "*LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"failed\")"
+      ],
+      "exitCode": 0,
+      "seconds": 23.294,
+      "rawLogSha256": "b1dc1f89d4703fa5fe5ec8381873554bc5cba79dd674bdf8664531c89dcb6100",
+      "counts": {
+        "total": 1,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "seconds": 23.029
+      },
+      "failedTests": [],
+      "skippedTests": []
+    },
+    {
+      "mode": "cleanup-failed",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-preEnumerateTheories",
+        "-displayName",
+        "*LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(mode: \"cleanup-failed\")"
+      ],
+      "exitCode": 0,
+      "seconds": 49.003,
+      "rawLogSha256": "e3451d2f74cdbca81077d0ef6a69e9f6a31ee83155631222195017dae42b060c",
+      "counts": {
+        "total": 1,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0,
+        "seconds": 48.714
+      },
+      "failedTests": [],
+      "skippedTests": []
+    }
+  ],
+  "browser": [
+    {
+      "name": "Package desktop keyboard baseline",
+      "command": "PATH=${NODE_HOME}/bin:$PATH CI=true npm run test:a11y -- --grep 'skip links are the first|compact and resized|route-heading announcement'",
+      "workingDirectory": "${WORKSPACE}/tests/e2e",
+      "rawLogSha256": "896793385a6788a060874caba1070fea057f053c8fbe8130480378fb1bc7e23b",
+      "result": "passed; 1 desktop check, 2 explicit source-only skips"
+    },
+    {
+      "name": "Package compact rejection control",
+      "command": "PATH=${NODE_HOME}/bin:$PATH CI=true PARTIES_E2E_COMPACT_SKIP_LINKS=1 npm run test:a11y -- --grep 'compact and resized' --retries=0",
+      "workingDirectory": "${WORKSPACE}/tests/e2e",
+      "rawLogSha256": "c369ad9db49a1ea4f9561ec0cfc1228507461c983e4d65cd5a86378bf58fc1b4",
+      "result": "expected rejection: old published shell retains compact orphan link"
+    },
+    {
+      "name": "Browser typecheck",
+      "command": "PATH=${NODE_HOME}/bin:$PATH npm run typecheck",
+      "workingDirectory": "${WORKSPACE}/tests/e2e",
+      "rawLogSha256": "9b5e7f499d4a7b0ba86c88c063ef897e384db99bc9cd1385f318d1a77104bbf5",
+      "result": "passed"
+    }
+  ],
+  "runtimeImageDigests": {
+    "redis/redis-stack": "sha256:5d5154123426693540ea6c1d9e638eae2bf2024879c839db6fcfdd7717e817c7",
+    "falkordb/falkordb": "sha256:d61be0c43eb7556c476efedd3e3f4f7c668d2bf0df9d05f6c95a2f3d1255c559"
+  },
+  "audit": "Initial narrow builds used execution-only NuGetAudit=false. Final UI/Contracts/Client restore re-enabled audit; all six SignalRSecurityFloorTests passed. No tracked gate/restore policy changed.",
+  "remainingGates": [
+    "DW-107 immutable shared publisher/validator adoption; working-source reader proof does not qualify old release execution pin.",
+    "DW-112 positive consumer source compact checks and matching producer package publication/adoption remain open.",
+    "Ordinary CLI launch-to-first-observation race remains unqualified; already-lost custody fails closed.",
+    "Full CI artifact and producer Shell governance blockers remain recorded.",
+    "Memories full sidecar secret publication: actual SDK dapr.v0 output omits both token references. App model annotations, app env emission and synthesized-sidecar startup are separate scopes."
+  ],
+  "guards": [
+    "bash scripts/check-no-warning-override.sh: passed",
+    "git -c core.whitespace=cr-at-eol diff --check: passed in root and both edited owners (CRLF repository convention)"
+  ],
+  "rawLogs": "Private ${EVIDENCE_ROOT}; only bounded summaries/hashes published.",
+  "sdkArchive": {
+    "command": "dotnet publish ${EVIDENCE_ROOT}/archive.csproj -c Debug -t:PublishContainer -p:ContainerArchiveOutputPath=${EVIDENCE_ROOT}/multi-image.tar.gz -p:NuGetAudit=false",
+    "fixtureSha256": "111f0dc0057e5599e154465755557b75f0864c24a35c17289675c08ffeaed9c9",
+    "fixture": "net10.0 console fixture imports the actual Parties Directory.Build.targets; RuntimeIdentifiers and ContainerRuntimeIdentifiers both linux-x64;linux-arm64; source aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, version 1.2.3, created 2024-02-29T23:59:59Z; base mcr.microsoft.com/dotnet/runtime:10.0",
+    "validResult": "local SDK OCI archive created; both child configs independently inspected; see sdk-archive-labels.json",
+    "invalidCalendarCommand": "dotnet publish ${EVIDENCE_ROOT}/archive.csproj -c Debug -t:PublishContainer -p:ContainerProvenanceCreated=2023-02-29T23:59:59Z -p:ContainerArchiveOutputPath=${EVIDENCE_ROOT}/invalid-image.tar.gz -p:NuGetAudit=false",
+    "invalidResult": "exit1: ContainerProvenanceCreated must contain a real calendar date; no invalid-image.tar.gz created",
+    "invalidOutputAbsent": true
+  },
+  "preReviewCorrections": "pre-review-corrections.json"
+}
