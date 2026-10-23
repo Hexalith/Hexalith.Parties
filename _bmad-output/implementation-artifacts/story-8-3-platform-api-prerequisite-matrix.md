@@ -50,8 +50,9 @@ not the G5 runtime engine.
 
 ### Current source observation — 2026-10-23
 
-Deferred-work validation reconciles the independently committed
-source graph at Parties `287aa8e0bc5a68d7845cd0eb0927519f7889b6b4`. Every root checkout below
+The approved five-item publish/process task selects the two task-only owner
+commits below while retaining the tested dependency catalog. Both source commits
+are published ancestors of their owner main branches. Every root checkout below
 matches its committed gitlink and has an empty `git status --porcelain` result.
 This records present-tense selection facts only; it does not extend dated owner
 approvals, parity/runtime/custody qualification or migration authority. The
@@ -70,7 +71,7 @@ immutable validation/release workflow pins and their approval receipts.
 Reproduce the committed source selection with:
 
 ```bash
-git ls-tree 287aa8e0bc5a68d7845cd0eb0927519f7889b6b4 references/Hexalith.<dependency>
+git ls-tree HEAD references/Hexalith.<dependency>
 git -C references/Hexalith.<dependency> rev-parse HEAD
 git -C references/Hexalith.<dependency> describe --tags --always --abbrev=8 HEAD
 git -C references/Hexalith.<dependency> status --porcelain
@@ -80,10 +81,10 @@ dotnet msbuild src/Hexalith.Parties/Hexalith.Parties.csproj -p:Configuration=Rel
 | Root dependency | Current source identity | Release use |
 | --- | --- | --- |
 | AI.Tools | `3f194e17174994d308ec84af9ee2b5aa68674d0d` (`3f194e17`) | Instruction baseline. |
-| Builds | `70ead608ac01f66dfcd80c13bb71152dac6c128e` (`v4.36.0-11-g70ead608`) | Imported package catalog and build tooling; EventStore 3.126.1 selected. |
+| Builds | `4c7f27f5458742e860100012ecd30253808421e7` (`v4.36.0-12-g4c7f27f5`) | Calendar/OCI hardening source; retained catalog selects EventStore 3.126.1. Immutable release executor is unchanged. |
 | Commons | `1663028fb6d9f46a0bf17919edeb21bb99be1587` (`v2.30.3-4-g1663028f`) | Default Release package is `2.30.3`; source requires explicit tool mapping. |
 | EventStore | `cd193902a52abb02572528958436d79a8ae25b9a` (`v3.126.1-41-gcd193902`) | Source inspection; runtime consumers restore package `3.126.1`. |
-| FrontComposer | `8c61143ef4c6a983bfe1d25865857b9b4cd240c9` (`v4.7.0-64-g8c61143e`) | Selected package is `4.7.0`. |
+| FrontComposer | `803b38116478466b5192d953f211ad37da402294` (`v4.7.0-65-g803b3811`) | Compact skip-link fix source; selected package remains `4.7.0`, so compact consumer qualification remains gated. |
 | McpCli | `be89509d59bb6ba53a0382e26219edb0625b47f4` (`v1.0.0-59-gbe89509d`) | Committed root pointer; not used for G5 proof. |
 | Memories | `b55db82c060caf917a142fdb6585fa7340b01647` (`v2.29.8-17-gb55db82c`) | Selected package is `2.29.8`. |
 | Platform | `1d646b232ad862f6da1d8dd0953fe96ccd273fee` (`1d646b23`) | Committed root pointer; not used for G5 proof. |

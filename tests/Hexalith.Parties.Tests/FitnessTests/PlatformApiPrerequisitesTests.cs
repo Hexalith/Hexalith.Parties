@@ -65,10 +65,10 @@ public sealed class PlatformApiPrerequisitesTests
     private static readonly IReadOnlyDictionary<string, string> CurrentReleaseGitlinks = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["references/Hexalith.AI.Tools"] = AiToolsSha,
-        ["references/Hexalith.Builds"] = "70ead608ac01f66dfcd80c13bb71152dac6c128e",
+        ["references/Hexalith.Builds"] = "4c7f27f5458742e860100012ecd30253808421e7",
         ["references/Hexalith.Commons"] = "1663028fb6d9f46a0bf17919edeb21bb99be1587",
         [EventStoreRelativePath] = CurrentReleaseEventStoreSha,
-        ["references/Hexalith.FrontComposer"] = "8c61143ef4c6a983bfe1d25865857b9b4cd240c9",
+        ["references/Hexalith.FrontComposer"] = "803b38116478466b5192d953f211ad37da402294",
         ["references/Hexalith.Memories"] = "b55db82c060caf917a142fdb6585fa7340b01647",
         ["references/Hexalith.PolymorphicSerializations"] = "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
         ["references/Hexalith.Tenants"] = "25e3bf827a7963ec79b57b4918290b3fed728706",
@@ -78,9 +78,9 @@ public sealed class PlatformApiPrerequisitesTests
 
     private static readonly IReadOnlyDictionary<string, string> CurrentSourceDescribes = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["references/Hexalith.Builds"] = "v4.36.0-11-g70ead608",
+        ["references/Hexalith.Builds"] = "v4.36.0-12-g4c7f27f5",
         [EventStoreRelativePath] = CurrentSourceEventStoreDescribe,
-        ["references/Hexalith.FrontComposer"] = "v4.7.0-64-g8c61143e",
+        ["references/Hexalith.FrontComposer"] = "v4.7.0-65-g803b3811",
         ["references/Hexalith.Memories"] = "v2.29.8-17-gb55db82c",
         ["references/Hexalith.Tenants"] = "v5.10.1-24-g25e3bf82",
         ["references/Hexalith.AI.Tools"] = "3f194e17",

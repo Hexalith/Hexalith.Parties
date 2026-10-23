@@ -277,3 +277,12 @@ references/Hexalith.McpCli|be89509d59bb6ba53a0382e26219edb0625b47f4|validated-ad
 references/Hexalith.Memories|b55db82c060caf917a142fdb6585fa7340b01647|validated-advance|v2.29.8-17-gb55db82c|jpiquot|2026-10-23
 references/Hexalith.Platform|1d646b232ad862f6da1d8dd0953fe96ccd273fee|validated-advance|1d646b2|jpiquot|2026-10-23
 references/Hexalith.Tenants|25e3bf827a7963ec79b57b4918290b3fed728706|validated-advance|v5.10.1-24-g25e3bf82|jpiquot|2026-10-23
+
+# --- 2026-10-23 five-item publish/process task. The operator approved
+#     the frozen spec and instructed publication on main in this session;
+#     authenticated repository owner is jpiquot. These task-only source
+#     commits are published ancestors of owner main. Retain the tested
+#     catalog and all separate package, immutable executor and runtime gates.
+#     Source selection only; no historical parity or rollback authority.
+references/Hexalith.Builds|4c7f27f5458742e860100012ecd30253808421e7|validated-advance|v4.36.0-12-g4c7f27f5|jpiquot|2026-10-23
+references/Hexalith.FrontComposer|803b38116478466b5192d953f211ad37da402294|validated-advance|v4.7.0-65-g803b3811|jpiquot|2026-10-23
