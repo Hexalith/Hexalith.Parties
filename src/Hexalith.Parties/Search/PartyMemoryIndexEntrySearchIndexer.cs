@@ -150,6 +150,20 @@ internal sealed partial class PartyMemoryIndexEntrySearchIndexer(
                 }
 
                 permanent = canonical.ErasureSequenceNumbers.ContainsKey(partyId);
+                if (canonical.Entries.TryGetValue(partyId, out PartyIndexEntry? target))
+                {
+                    if (target is null || !string.Equals(target.Id, partyId, StringComparison.Ordinal))
+                    {
+                        return false;
+                    }
+
+                    // A delayed transient removal cannot fence or delete an already live target.
+                    // A retained erasure checkpoint still takes precedence over a live entry.
+                    if (!permanent && !target.IsErased)
+                    {
+                        return false;
+                    }
+                }
             }
 
             PartyMemoryCleanupResult result = await cleanupService

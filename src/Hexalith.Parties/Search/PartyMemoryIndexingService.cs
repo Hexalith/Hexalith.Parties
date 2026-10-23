@@ -36,10 +36,13 @@ internal sealed partial class PartyMemoryIndexingService(
 
         byte[] content = Encoding.UTF8.GetBytes(unit.Content);
         // Canonical redelivery deserializes the projection and loses its JsonIgnore search
-        // collections. Derive the revision only from the durable entry and envelope context,
-        // including the retained canonical application sequence for equal-timestamp events,
-        // so an acknowledged producer is reconciled even when transient content differs.
-        string identity = Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { Entry = entry, Context = context })));
+        // collections. A retained canonical sequence identifies the application independently
+        // of delivery-only rebuild/reconciliation markers and timestamps. Preserve the legacy
+        // context identity for callers without a canonical sequence.
+        byte[] revision = context.SequenceNumber is { } sequence
+            ? JsonSerializer.SerializeToUtf8Bytes(new { Entry = entry, unit.TenantId, unit.CaseId, unit.PartyId, SequenceNumber = sequence })
+            : JsonSerializer.SerializeToUtf8Bytes(new { Entry = entry, Context = context });
+        string identity = Convert.ToHexStringLower(SHA256.HashData(revision));
         var intent = new PartyMemoryIngestionIntent(identity, unit.CaseId, unit.SourceUri);
         bool reserved = false;
         try

@@ -270,6 +270,7 @@ public sealed class PartyMemoryRecoveryTests
         handler.Workflows["workflow"] = PartyMemoryRecoveryHandler.Completed();
         using var http = Http(handler);
         await Indexer(state, new PartyMemoryRecoveryClient(http)).IndexAsync(Entry(), Context(), Token);
+        PartyMemoryIngestionIntent accepted = (await Intents(state).GetAsync("tenant", "party", Token)).ShouldHaveSingleItem();
         bool changed = false;
         handler.BeforeRequest = async (request, token) =>
         {
@@ -281,7 +282,9 @@ public sealed class PartyMemoryRecoveryTests
         };
 
         (await Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", Token)).Cleaned.ShouldBeFalse();
-        (await Intents(state).GetAsync("tenant", "party", Token)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe("canonical");
+        (await Intents(state).GetAsync("tenant", "party", Token)).ShouldBeEmpty();
+        PartyMemoryIngestionIntent receipt = (await Intents(state).BeginCleanupAsync("tenant", "party", Token)).ShouldHaveSingleItem();
+        receipt.ShouldBe(accepted with { CleanupSettled = true });
         handler.Workflows.Clear();
         (await Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", Token)).Cleaned.ShouldBeTrue();
         (await Intents(state).GetAsync("tenant", "party", Token)).ShouldBeEmpty();

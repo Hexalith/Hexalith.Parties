@@ -4,6 +4,7 @@ using System.Text.Json;
 
 using Hexalith.EventStore.Client.Projections;
 using Hexalith.EventStore.Contracts.Projections;
+using Hexalith.EventStore.DomainService;
 using Hexalith.Memories.Client.Rest;
 using Hexalith.Memories.Contracts.V1;
 using Hexalith.Parties.Contracts;
@@ -426,7 +427,10 @@ public sealed class PartyMemoryCoordinationTests
         await Should.ThrowAsync<InvalidOperationException>(() => new PartyMemoryCleanupService(http, failed,
             NullLogger<PartyMemoryCleanupService>.Instance, PartyMemoryRecoveryTests.Intents(state)).DeleteByPartyAsync("tenant", "case", "party", Token));
         handler.Units.ShouldBeEmpty();
-        (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe("legacy-canonical");
+        (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldBeEmpty();
+        PartyMemoryIngestionIntent settled = (await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync("tenant", "party", Token)).ShouldHaveSingleItem();
+        settled.ShouldBe(new PartyMemoryIngestionIntent(settled.AttemptId, "case", "urn:legacy",
+            "legacy-workflow", "legacy-canonical", CleanupSettled: true));
         (await mappings.GetMappingsAsync("tenant", "party", Token)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe("legacy-workflow");
         handler.Workflows.Clear();
         handler.Requests.Clear();
@@ -730,6 +734,93 @@ public sealed class PartyMemoryCoordinationTests
         PartyMemoryCleanupProbeResult result = await PartyMemoryRecoveryTests.Cleanup(new PartyMemoryTestReadModelStore(), http).ProbeIngestionStatusRouteAsync(Token);
         result.Reachable.ShouldBeTrue();
         result.StatusCode.ShouldBe(code);
+    }
+
+    [Fact]
+    public async Task PendingCanonicalSequenceReconcilesAcrossRebuildAndReconciledDeliveryMarkers()
+    {
+        var state = new PartyMemoryTestReadModelStore();
+        var remote = new PartyMemoryRecoveryHandler();
+        remote.Workflows["workflow"] = PartyMemoryRecoveryHandler.Completed() with
+        {
+            RuntimeStatus = "Running", MemoryUnitId = null, MemoryUnitStatus = null,
+        };
+        using var http = PartyMemoryRecoveryTests.Http(remote);
+        var options = new PartyMemoryTestOptionsMonitor(new PartyMemorySearchOptions { Enabled = true, CaseId = "case" });
+        var projectionOptions = Options.Create(new PartySdkReadModelOptions());
+        PartyMemoryIndexEntrySearchIndexer Adapter(PartyMemoryRecoveryClient client) => new(PartyMemoryRecoveryTests.Indexer(state, client),
+            PartyMemoryRecoveryTests.Cleanup(state, http), options, NullLogger<PartyMemoryIndexEntrySearchIndexer>.Instance, state, projectionOptions);
+        PartyIndexSdkProjectionHandler Projection(PartyMemoryRecoveryClient client) => new(state, projectionOptions, Adapter(client));
+        ProjectionRequest request = new("tenant", "party", "party", [Event(new PartyCreated
+        {
+            Type = PartyType.Person, PersonDetails = new PersonDetails { FirstName = "Synthetic", LastName = "Markers" },
+        }, 1, new DateTimeOffset(2026, 10, 23, 14, 0, 0, TimeSpan.FromHours(2)))]);
+        var initial = new PartyMemoryRecoveryClient(http);
+        (await Projection(initial).ProjectAsync(request, "incremental", Token)).Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        string attempt = (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldHaveSingleItem().AttemptId;
+        var restarted = new PartyMemoryRecoveryClient(http);
+        var rebuild = Projection(restarted);
+        var identity = new DomainSharedProjectionRebuildIdentity("tenant", "party", PartyProjectionNames.Index, "rebuild", "catalog");
+        var candidate = await rebuild.CreateEmptyCandidateAsync(identity, Token);
+        candidate = await rebuild.AccumulateAsync(identity, candidate, request, Token);
+        var plan = await rebuild.FinalizeAsync(identity, candidate, Token);
+        // The canonical target is already persisted by the incremental application.
+        (await rebuild.CompleteRebuildAsync(identity, candidate, plan.CompletionState, Token)).Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        PartyIndexEntry persisted = (await state.GetAsync<PartyIndexSdkReadModel>("statestore", PartySdkReadModelAddresses.Index("tenant"), Token)).Value.ShouldNotBeNull().Entries["party"];
+        (await Adapter(restarted).NotifyIndexedAsync("tenant", persisted, "PartyProjectionReconciled", DateTimeOffset.UnixEpoch, 1, Token)).ShouldBeFalse();
+        restarted.Submissions.ShouldBe(0);
+        (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldHaveSingleItem().AttemptId.ShouldBe(attempt);
+
+        remote.Workflows["workflow"] = PartyMemoryRecoveryHandler.Completed();
+        var terminal = new PartyMemoryRecoveryClient(http);
+        (await Projection(terminal).ProjectAsync(request, "terminal-replay", Token)).Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        initial.Submissions.ShouldBe(1);
+        terminal.Submissions.ShouldBe(0);
+        (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldHaveSingleItem().AttemptId.ShouldBe(attempt);
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe("canonical");
+    }
+
+    [Fact]
+    public async Task DelayedTransientRemovalSkipsLiveTargetWithoutFencingOrDeletingItsProducer()
+    {
+        var state = new PartyMemoryTestReadModelStore();
+        var remote = new PartyMemoryRecoveryHandler();
+        remote.Workflows["workflow"] = PartyMemoryRecoveryHandler.Completed();
+        remote.Workflows["next-workflow"] = PartyMemoryRecoveryHandler.Completed("next-workflow", "next-canonical");
+        remote.Units.UnionWith(["canonical", "next-canonical"]);
+        using var http = PartyMemoryRecoveryTests.Http(remote);
+        var client = new PartyMemoryRecoveryClient(http);
+        var options = new PartyMemoryTestOptionsMonitor(new PartyMemorySearchOptions { Enabled = true, CaseId = "case" });
+        var projectionOptions = Options.Create(new PartySdkReadModelOptions());
+        var adapter = new PartyMemoryIndexEntrySearchIndexer(PartyMemoryRecoveryTests.Indexer(state, client),
+            PartyMemoryRecoveryTests.Cleanup(state, http), options, NullLogger<PartyMemoryIndexEntrySearchIndexer>.Instance, state, projectionOptions);
+        var projection = new PartyIndexSdkProjectionHandler(state, projectionOptions, adapter);
+        ProjectionRequest request = new("tenant", "party", "party", [Event(new PartyCreated
+        {
+            Type = PartyType.Person, PersonDetails = new PersonDetails { FirstName = "Synthetic", LastName = "StaleRemoval" },
+        }, 1)]);
+        (await projection.ProjectAsync(request, "live", Token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        remote.Requests.Clear();
+        (await adapter.NotifyRemovedAsync("tenant", "party", Token)).ShouldBeFalse();
+        remote.Requests.ShouldBeEmpty();
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe("canonical");
+        string inventoryKey = PartyMemoryUnitMappingStore.BuildKey("tenant", "party").Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal);
+        var inventory = (await state.GetAsync<PartyMemoryIngestionInventory>("statestore", inventoryKey, Token)).Value.ShouldNotBeNull();
+        inventory.CleanupRequested.ShouldBeFalse();
+        inventory.PermanentCleanup.ShouldBeFalse();
+        inventory.Generation.ShouldBe(0);
+        client.Submit = _ => Task.FromResult("next-workflow");
+        (await projection.ProjectAsync(request with { Events = [Event(new PartyDeactivated(), 2)] }, "next-live", Token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        client.Submissions.ShouldBe(2);
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).Select(item => item.MemoryUnitId).ShouldBe(["canonical", "next-canonical"]);
+        remote.Requests.ShouldAllBe(item => item.Method != HttpMethod.Delete);
+
+        string indexKey = PartySdkReadModelAddresses.Index("tenant");
+        var current = await state.GetAsync<PartyIndexSdkReadModel>("statestore", indexKey, Token);
+        (await state.TrySaveAsync("statestore", indexKey, current.Value! with { ErasureSequenceNumbers = new Dictionary<string, long> { ["party"] = 3 } }, current.ETag!, Token)).ShouldBeTrue();
+        (await adapter.NotifyRemovedAsync("tenant", "party", Token)).ShouldBeTrue();
+        remote.Units.ShouldBeEmpty();
+        (await state.GetAsync<PartyMemoryIngestionInventory>("statestore", inventoryKey, Token)).Value.ShouldNotBeNull().PermanentCleanup.ShouldBeTrue();
     }
 
     private static ProjectionEventDto Event(object payload, long sequence, DateTimeOffset? timestamp = null)

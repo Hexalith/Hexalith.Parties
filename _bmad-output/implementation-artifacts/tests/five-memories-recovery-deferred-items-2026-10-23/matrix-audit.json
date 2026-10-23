@@ -1,0 +1,78 @@
+[
+  {
+    "matrixRow": "Intent persistence fails before ingest",
+    "tests": [
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.IntentPersistenceFailurePreventsRemoteSubmission"
+    ],
+    "result": "Pass",
+    "evidenceLane": "qualified-focused"
+  },
+  {
+    "matrixRow": "Acceptance or workflow identity cannot be recorded",
+    "tests": [
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.LostWorkflowAcknowledgementOrPersistenceNeverCertifiesCleanup(lostPersistence: False)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.LostWorkflowAcknowledgementOrPersistenceNeverCertifiesCleanup(lostPersistence: True)"
+    ],
+    "result": "Pass",
+    "evidenceLane": "qualified-focused"
+  },
+  {
+    "matrixRow": "Completed duplicate returns canonical identity",
+    "tests": [
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.CanonicalDuplicateIdentitySurvivesDoubleFailureAndRestartedCleanup",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 0)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 1)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 2)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 3)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 4)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 5)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 6)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 7)"
+    ],
+    "result": "Pass",
+    "evidenceLane": "qualified-focused"
+  },
+  {
+    "matrixRow": "Pending failed expired or malformed evidence",
+    "tests": [
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.MalformedWorkflowJsonCannotCertifyIndexingOrCleanup",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 0)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 1)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 2)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 3)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 4)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 5)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 6)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.InvalidOrNonterminalWorkflowEvidenceRetainsObligations(variant: 7)"
+    ],
+    "result": "Pass",
+    "evidenceLane": "qualified-focused"
+  },
+  {
+    "matrixRow": "DELETE accepted while unit readable",
+    "tests": [
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.AcceptedDeleteRetainsObligationsUntilUnitIsObservablyAbsent"
+    ],
+    "result": "Pass",
+    "evidenceLane": "qualified-focused"
+  },
+  {
+    "matrixRow": "Terminal ingestion and qualified absence with exact subtraction",
+    "tests": [
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.ConditionalIntentRemovalPreservesChangedAndConcurrentAttempts",
+      "Hexalith.Parties.Tests.Search.PartyMemoryRecoveryTests.ChangedMappingRetainsCanonicalWorkflowEvidenceForCleanupRetry"
+    ],
+    "result": "Pass",
+    "evidenceLane": "qualified-focused"
+  },
+  {
+    "matrixRow": "Caller cancels after acceptance",
+    "tests": [
+      "Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CancellationAfterAcceptanceRecoversWorkflowAndRethrowsCallerCancellation(persistenceFails: False)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CancellationAfterAcceptanceRecoversWorkflowAndRethrowsCallerCancellation(persistenceFails: True)",
+      "Hexalith.Parties.Tests.Search.PartyMemoryIndexingCancellationTests.CancellationDuringMappingRetainsCanonicalEvidenceEvenWhenRecoveryAlsoFails"
+    ],
+    "result": "Pass",
+    "evidenceLane": "qualified-focused"
+  }
+]

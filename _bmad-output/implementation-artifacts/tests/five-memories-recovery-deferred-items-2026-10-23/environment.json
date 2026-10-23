@@ -62,5 +62,6 @@
   ],
   "nestedSubmodulesInitialized": false,
   "dependenciesChanged": false,
-  "concurrentUnownedWorktreeChanges": "CI, publication, Aspire package and documentation changes excluded from batch validation and staging"
+  "concurrentUnownedWorktreeChanges": "CI, publication, Aspire package and documentation changes excluded from batch validation and staging",
+  "evidencePhase": "Historical before independent main/reference advancement; see validation.json for final selection and results."
 }

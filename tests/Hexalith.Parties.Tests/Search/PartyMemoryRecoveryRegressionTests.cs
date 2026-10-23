@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Net;
+using System.Text;
 
 using Hexalith.Parties.Search;
 using Hexalith.Parties.Testing;
@@ -203,6 +205,63 @@ public sealed class PartyMemoryRecoveryRegressionTests
         (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", Token)).Cleaned.ShouldBeFalse();
 
         (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldBe([new("workflow", "urn:source", "other-case")]);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task EquivalentTerminalOutputsReuseScopedAbsenceBeforeTransportDenial(bool previouslySettled, bool directSecond)
+    {
+        var state = new PartyMemoryTestReadModelStore();
+        var first = new PartyMemoryIngestionIntent("first", "case", "urn:first", "workflow-first", "canonical");
+        var second = new PartyMemoryIngestionIntent("second", "case", "urn:second", "workflow-second", "canonical");
+        foreach (PartyMemoryIngestionIntent intent in new[] { first, second })
+        {
+            await PartyMemoryRecoveryTests.Intents(state).RegisterAsync("tenant", "party", intent, Token);
+        }
+
+        await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync("tenant", "party", "canonical", "urn:first", "case", Token);
+        await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync("tenant", "party", "workflow-second", "urn:second", "case", Token);
+        List<HttpMethod> requests = [];
+        using var transport = new PartySearchErasureHttpHandler((request, _) =>
+        {
+            requests.Add(request.Method);
+            return Task.FromResult(requests.Count switch
+            {
+                1 => new HttpResponseMessage(HttpStatusCode.NoContent),
+                2 => new HttpResponseMessage(HttpStatusCode.NotFound)
+                {
+                    Content = new StringContent("{\"code\":\"MEMORY_UNIT_NOT_FOUND\"}", Encoding.UTF8, "application/json"),
+                },
+                _ => new HttpResponseMessage(HttpStatusCode.Unauthorized),
+            });
+        });
+        using var http = PartyMemoryRecoveryTests.Http(transport);
+        if (previouslySettled)
+        {
+            (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync("tenant", "case", "party", "workflow-first", Token)).Cleaned.ShouldBeTrue();
+            (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldHaveSingleItem().ShouldBe(second);
+        }
+
+        if (directSecond)
+        {
+            (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteMemoryUnitAsync("tenant", "case", "party", "workflow-second", Token)).Cleaned.ShouldBeTrue();
+        }
+
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", Token)).Cleaned.ShouldBeTrue();
+        requests.ShouldBe([HttpMethod.Delete, HttpMethod.Get]);
+        (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldBeEmpty();
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldBeEmpty();
+        IReadOnlyList<PartyMemoryIngestionIntent> receipts = await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync("tenant", "party", Token);
+        receipts.Count.ShouldBe(2);
+        receipts.ShouldAllBe(item => item.CleanupSettled && item.MemoryUnitId == "canonical");
+        receipts.Select(item => item.WorkflowInstanceId).Order().ShouldBe(["workflow-first", "workflow-second"]);
+        var denied = new ProbeHandler(401, "{}");
+        using var deniedHttp = PartyMemoryRecoveryTests.Http(denied);
+        (await PartyMemoryRecoveryTests.Cleanup(state, deniedHttp).DeleteByPartyAsync("tenant", "case", "party", Token)).Cleaned.ShouldBeTrue();
+        denied.Requests.ShouldBe(0);
+        (await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync("tenant", "party", Token)).ShouldBe(receipts);
     }
 
     private static PartyMemoryRecoveryHandler Ready()

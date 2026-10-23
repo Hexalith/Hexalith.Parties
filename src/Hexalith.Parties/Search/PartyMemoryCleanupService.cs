@@ -51,7 +51,9 @@ internal sealed partial class PartyMemoryCleanupService(
                 intent = intent with { MemoryUnitId = canonical };
                 await intentStore.UpdateAsync(tenantId, partyId, intent, cancellationToken).ConfigureAwait(false);
             }
-            PartyMemoryCleanupResult result = intent.CleanupSettled
+            bool alreadyAbsent = snapshot.Any(receipt => receipt.CleanupSettled && !receipt.SubmissionRejected
+                && receipt.CaseId == caseId && receipt.MemoryUnitId == canonical);
+            PartyMemoryCleanupResult result = intent.CleanupSettled || alreadyAbsent
                 ? Result(tenantId, partyId, canonical, true, null)
                 : await DeleteTerminalUnitAsync(tenantId, caseId, partyId, canonical, cancellationToken).ConfigureAwait(false);
             if (result.Cleaned && !intent.CleanupSettled)
@@ -101,7 +103,12 @@ internal sealed partial class PartyMemoryCleanupService(
         List<PartyMemoryUnitMappingEntry> cleanedMappings = [];
         List<PartyMemoryIngestionIntent> cleanedIntents = [];
         Dictionary<string, PartyMemoryIngestionIntent> resolvedIntents = new(StringComparer.Ordinal);
-        HashSet<(string CaseId, string UnitId)> absentUnits = [];
+        // Active intents precede receipts in the snapshot, so seed qualified settled scope
+        // before visiting any terminal producer that may name the same canonical unit.
+        HashSet<(string CaseId, string UnitId)> absentUnits = [.. intents
+            .Where(intent => intent.CleanupSettled && !intent.SubmissionRejected
+                && !string.IsNullOrWhiteSpace(intent.CaseId) && !string.IsNullOrWhiteSpace(intent.MemoryUnitId))
+            .Select(intent => (intent.CaseId, intent.MemoryUnitId!))];
         string? blocked = null;
         string blockedUnit = string.Empty;
         int remainingMappings = mappings.Count;
@@ -119,11 +126,6 @@ internal sealed partial class PartyMemoryCleanupService(
                         // Historical receipts carry already verified absence, not remote work.
                         // They can settle a late mapping even if credentials or the case disappear.
                         resolvedIntents[intent.AttemptId] = intent;
-                        if (intent.MemoryUnitId is not null)
-                        {
-                            absentUnits.Add((intent.CaseId, intent.MemoryUnitId));
-                        }
-
                         continue;
                     }
 
@@ -150,7 +152,9 @@ internal sealed partial class PartyMemoryCleanupService(
                         continue;
                     }
 
-                    PartyMemoryCleanupResult result = await DeleteTerminalUnitAsync(tenantId, intent.CaseId, partyId, intent.MemoryUnitId, cancellationToken).ConfigureAwait(false);
+                    PartyMemoryCleanupResult result = absentUnits.Contains((intent.CaseId, intent.MemoryUnitId))
+                        ? Result(tenantId, partyId, intent.MemoryUnitId, true, null)
+                        : await DeleteTerminalUnitAsync(tenantId, intent.CaseId, partyId, intent.MemoryUnitId, cancellationToken).ConfigureAwait(false);
                     if (result.Cleaned)
                     {
                         absentUnits.Add((intent.CaseId, intent.MemoryUnitId));
@@ -250,21 +254,16 @@ internal sealed partial class PartyMemoryCleanupService(
             using var recovery = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             try
             {
+                if (cleanedIntents.Count > 0)
+                {
+                    // Exact settled receipts preserve provenance for every surviving or late
+                    // mapping even when cancellation prevents mapping subtraction altogether.
+                    remainingIntents = await intentStore.RemoveAsync(tenantId, partyId, cleanedIntents, recovery.Token).ConfigureAwait(false);
+                }
+
                 if (cleanedMappings.Count > 0)
                 {
                     remainingMappings = await mappingStore.RemoveMappingsAsync(tenantId, partyId, cleanedMappings, recovery.Token).ConfigureAwait(false);
-                }
-
-                if (cleanedIntents.Count > 0)
-                {
-                    // A changed or concurrent mapping may still need this canonical
-                    // evidence. Re-read after conditional subtraction before removing it.
-                    IReadOnlyList<PartyMemoryUnitMappingEntry> retained = await mappingStore
-                        .GetMappingsAsync(tenantId, partyId, recovery.Token).ConfigureAwait(false);
-                    List<PartyMemoryIngestionIntent> removable = [.. cleanedIntents.Where(intent => !retained.Any(mapping =>
-                        (mapping.MemoryUnitId == intent.MemoryUnitId || mapping.MemoryUnitId == intent.WorkflowInstanceId)
-                        && (string.IsNullOrWhiteSpace(mapping.CaseId) ? caseId : mapping.CaseId) == intent.CaseId))];
-                    remainingIntents = await intentStore.RemoveAsync(tenantId, partyId, removable, recovery.Token).ConfigureAwait(false);
                 }
             }
             catch (Exception ex) when (cancellationToken.IsCancellationRequested)

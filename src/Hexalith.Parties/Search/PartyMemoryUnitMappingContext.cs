@@ -9,6 +9,15 @@ namespace Hexalith.Parties.Search;
 /// Parameter order on the record matches <see cref="ForProjection"/> so positional argument
 /// usage cannot silently miswire fields between the two signatures (P38).
 /// </summary>
+/// <param name="TenantId">The owning tenant.</param>
+/// <param name="CaseId">The captured Memories case.</param>
+/// <param name="EventType">The originating event or delivery marker.</param>
+/// <param name="AggregateId">The originating aggregate, when supplied.</param>
+/// <param name="CorrelationId">The optional correlation identity.</param>
+/// <param name="CausationId">The optional causation identity.</param>
+/// <param name="SourceService">The originating service.</param>
+/// <param name="Timestamp">The captured event or delivery timestamp.</param>
+/// <param name="SequenceNumber">The retained canonical application sequence, when known.</param>
 internal sealed record PartyMemoryUnitMappingContext(
     string TenantId,
     string CaseId,
@@ -20,6 +29,16 @@ internal sealed record PartyMemoryUnitMappingContext(
     DateTimeOffset? Timestamp = null,
     long? SequenceNumber = null)
 {
+    /// <summary>Captures the context of one canonical index application.</summary>
+    /// <param name="tenantId">The owning tenant.</param>
+    /// <param name="caseId">The captured Memories case.</param>
+    /// <param name="eventType">The originating event or delivery marker.</param>
+    /// <param name="aggregateId">The originating aggregate, when supplied.</param>
+    /// <param name="correlationId">The optional correlation identity.</param>
+    /// <param name="causationId">The optional causation identity.</param>
+    /// <param name="timestamp">The captured event or delivery timestamp.</param>
+    /// <param name="sequenceNumber">The retained canonical application sequence, when known.</param>
+    /// <returns>The immutable indexing context.</returns>
     public static PartyMemoryUnitMappingContext ForProjection(
         string tenantId,
         string caseId,

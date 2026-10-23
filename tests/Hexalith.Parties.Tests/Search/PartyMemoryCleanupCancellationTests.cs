@@ -1,3 +1,5 @@
+using System.Net;
+
 using Hexalith.Parties.Search;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -70,7 +72,11 @@ public sealed class PartyMemoryCleanupCancellationTests
 
         await Should.ThrowAsync<OperationCanceledException>(() => PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", caller.Token));
 
-        (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", token)).Count.ShouldBe(2);
+        (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", token)).ShouldHaveSingleItem().ShouldBe(second);
+        IReadOnlyList<PartyMemoryIngestionIntent> retained = await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync("tenant", "party", token);
+        retained.Count.ShouldBe(2);
+        retained.ShouldContain(first with { CleanupSettled = true });
+        retained.ShouldContain(second);
         handler.BeforeRequest = null;
         (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", token)).Cleaned.ShouldBeTrue();
         (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", token)).ShouldBeEmpty();
@@ -102,6 +108,42 @@ public sealed class PartyMemoryCleanupCancellationTests
         await Should.ThrowAsync<OperationCanceledException>(() => PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", caller.Token));
 
         (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", token)).ShouldBe([new("second", "urn:second", "case")]);
+    }
+
+    [Fact]
+    public async Task CancellationAfterVerifiedAbsencePersistsReceiptBeforeUnvisitedMappingSubtraction()
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        using var caller = CancellationTokenSource.CreateLinkedTokenSource(token);
+        var state = new PartyMemoryTestReadModelStore();
+        var intent = new PartyMemoryIngestionIntent("attempt", "case", "urn:source", "workflow", "canonical");
+        await PartyMemoryRecoveryTests.Intents(state).RegisterAsync("tenant", "party", intent, token);
+        await PartyMemoryRecoveryTests.Mappings(state).RecordMappingAsync("tenant", "party", "canonical", intent.SourceUri, "case", token);
+        var mapping = (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", token)).ShouldHaveSingleItem();
+        List<HttpMethod> requests = [];
+        using var transport = new PartySearchErasureHttpHandler((request, _) =>
+        {
+            requests.Add(request.Method);
+            return Task.FromResult(request.Method == HttpMethod.Delete
+                ? new HttpResponseMessage(HttpStatusCode.NoContent)
+                : new HttpResponseMessage(HttpStatusCode.NotFound) { Content = new PartyMemoryCancellationContent(caller.Cancel) });
+        });
+        using var http = PartyMemoryRecoveryTests.Http(transport);
+        (await Should.ThrowAsync<OperationCanceledException>(() => PartyMemoryRecoveryTests.Cleanup(state, http)
+            .DeleteByPartyAsync("tenant", "case", "party", caller.Token))).CancellationToken.ShouldBe(caller.Token);
+        requests.ShouldBe([HttpMethod.Delete, HttpMethod.Get]);
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", token)).ShouldBe([mapping]);
+        (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", token)).ShouldBeEmpty();
+        (await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync("tenant", "party", token)).ShouldHaveSingleItem()
+            .ShouldBe(intent with { CleanupSettled = true });
+
+        var denied = new ProbeHandler(401, "{}");
+        using var deniedHttp = PartyMemoryRecoveryTests.Http(denied);
+        (await PartyMemoryRecoveryTests.Cleanup(state, deniedHttp).DeleteByPartyAsync("tenant", "case", "party", token)).Cleaned.ShouldBeTrue();
+        denied.Requests.ShouldBe(0);
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", token)).ShouldBeEmpty();
+        (await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync("tenant", "party", token)).ShouldHaveSingleItem()
+            .ShouldBe(intent with { CleanupSettled = true });
     }
 
     [Fact]

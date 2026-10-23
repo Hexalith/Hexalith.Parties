@@ -1,13 +1,14 @@
 {
   "command": [
-    "node",
+    "/tmp/parties-resume-20261023-c_009akj/tooling/node-v24.22.1-linux-x64/bin/node",
     "node_modules/@commitlint/cli/cli.js",
     "--edit",
-    "<message-file>",
+    "/tmp/parties-resume-20261023-c_009akj/commit-message.txt",
     "--verbose"
   ],
-  "node": "24.22.1",
+  "node": "v24.22.1",
   "commitlint": "21.2.2",
   "message": "fix: retain durable memories recovery obligations\n",
-  "exitCode": 0
+  "exitCode": 0,
+  "configurationSha256": "7d7a89db3a7e3a78567ce79408fad48f414e1d487e93a39990e82822f850666b"
 }

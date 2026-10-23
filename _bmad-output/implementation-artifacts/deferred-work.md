@@ -622,7 +622,9 @@ origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review
 location: PartyMemoryUnitMappingStore
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `PartyMemoryUnitMappingStore` persists operational state directly through `DaprClient`, outside the EventStore read-model and write-policy abstractions required for domain-module persistence.
-status: open
+status: done 2026-10-23
+resolution: Replaced direct Dapr mapping persistence with SDK conditional read/write/erase APIs, preserving hashed keys, legacy list/CaseId compatibility, exact subtraction, empty-list ETags and reserved probe deletion. Both real SDK/Dapr compatibility and two-client conflict tests pass.
+verification: `spec-five-memories-recovery-deferred-items.md`; `tests/five-memories-recovery-deferred-items-2026-10-23/validation.json` and `matrix-audit.json`. Full Debug and Release affected assemblies pass after the separate upstream qualification fix; live erasure qualification remains separately unclaimed.
 
 ### DW-82: Verify empty Memories mappings against an authoritative inventory
 
@@ -639,7 +641,9 @@ origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review
 location: PartyMemoryIndexingService
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: `PartyMemoryIndexingService` records a double failure only in logs, so later erasure has no durable way to discover the orphaned Memories unit.
-status: open
+status: done 2026-10-23
+resolution: Content-free durable intents precede remote submission and preserve acknowledged workflow/canonical provenance through mapping failures, lost acknowledgements, cancellation and recreation. Recovery retains the producer rather than deleting it and later trusting a stale cached ID.
+verification: `spec-five-memories-recovery-deferred-items.md`; `tests/five-memories-recovery-deferred-items-2026-10-23/validation.json` and `matrix-audit.json`. Full Debug and Release affected assemblies pass after the separate upstream qualification fix; live erasure qualification remains separately unclaimed.
 
 ### DW-84: Schedule retry or backfill when Memories indexing lacks a CaseId
 
@@ -1364,7 +1368,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: Memories indexing workflow duplicate branch and party memory-unit source mappings
 source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
 reason: Indexing stores accepted workflow ID, but the duplicate workflow branch can return a different ExistingMemoryUnitId after the preflight TTL expires or fails open; source mapping replacement then loses the deletable ID; verified high, pre-existing.
-status: open
+status: done 2026-10-23
+resolution: Validated terminal output identity is durably retained with workflow/tenant/case agreement, including duplicate canonical outputs and legacy workflow aliases. Distinct units sharing a source remain retained; settled receipts keep canonical provenance for late mappings.
+verification: `spec-five-memories-recovery-deferred-items.md`; `tests/five-memories-recovery-deferred-items-2026-10-23/validation.json` and `matrix-audit.json`. Full Debug and Release affected assemblies pass after the separate upstream qualification fix; live erasure qualification remains separately unclaimed.
 
 ### DW-168: D6 — Retain Memories cleanup reconciliation until ingestion and deletion have reached their terminal states.
 
@@ -1373,6 +1379,8 @@ location: Memories cleanup mappings; CaseService asynchronous ingestion/deletion
 source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
 reason: Cleanup discards mappings on HTTP success/404 although CaseService schedules deletion asynchronously and accepted ingestion may not yet have materialized a unit; verified high, pre-existing.
 status: open
+progress: 2026-10-23 Consumer terminal reconciliation, durable settled absence, cancellation recovery and canonical publication fences are implemented and independently reviewed. Focused source/current-package/2.27.1-floor checks and actual SDK/Dapr persistence pass. Keep this entry open: selected-producer delayed-ingestion/deletion and physical-erasure qualification are not established. The original 2.27.1 runtime attempt was blocked by authenticated gateway routing; the independently selected 2.29.8 runtime has not been live-qualified.
+verification: `spec-five-memories-recovery-deferred-items.md`; `tests/five-memories-recovery-deferred-items-2026-10-23/validation.json` and historical `runtime-blocker.json`.
 
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 
@@ -1387,7 +1395,9 @@ origin: migrated from legacy ledger (flat source_spec "_bmad-output/implementati
 location: src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs (mapping-write cancellation boundary)
 source_spec: `_bmad-output/implementation-artifacts/spec-run-all-tests-and-fix-issues-2.md`
 reason: Indexing rethrows caller cancellation at the mapping-write boundary without compensation, while the server workflow can continue producing a unit; verified high, pre-existing.
-status: open
+status: done 2026-10-23
+resolution: Caller cancellation after acceptance triggers independent bounded recovery, retains unresolved or canonical provenance across restart, and rethrows the original cancellation. Verified cleanup progress is persisted independently of interrupted exact mapping subtraction.
+verification: `spec-five-memories-recovery-deferred-items.md`; `tests/five-memories-recovery-deferred-items-2026-10-23/validation.json` and `matrix-audit.json`. Full Debug and Release affected assemblies pass after the separate upstream qualification fix; live erasure qualification remains separately unclaimed.
 
 ### DW-171: D9 — Bound last-known-cache generation bookkeeping while retaining in-flight read invalidation.
 

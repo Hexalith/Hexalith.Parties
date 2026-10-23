@@ -50,9 +50,18 @@ public sealed class PartyMemoryRuntimeTests
         var memories = new MemoriesClient(http, Options.Create(new MemoriesClientOptions()), NullLogger<MemoriesClient>.Instance);
         string provisioningWorkflow;
         string? caseId = null;
+        string mappingKey = PartyMemoryUnitMappingStore.BuildKey(tenant, party);
+        string intentKey = mappingKey.Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal);
+        bool terminalUnitAbsenceObserved = false;
         string diagnosticPath = Path.ChangeExtension(Path.GetFullPath(path!), ".provisioning.json");
         try
         {
+        // Record exact synthetic state handles before the first remote side effect.
+        await File.WriteAllTextAsync(diagnosticPath, JsonSerializer.Serialize(new
+        {
+            Phase = "qualification-started", TenantId = tenant, PartyId = party,
+            config.StateStoreName, MappingKey = mappingKey, IngestionKey = intentKey,
+        }), token);
         using (HttpResponseMessage provision = await http.PostAsJsonAsync(MemoriesRoutes.TenantsPath(),
             new { tenantId = tenant, displayName = "Synthetic Parties recovery qualification", vectorDimensions = 768 }, token))
         {
@@ -69,7 +78,8 @@ public sealed class PartyMemoryRuntimeTests
         // Workflow handles stay beside the private configuration, outside repository receipts.
         await File.WriteAllTextAsync(diagnosticPath, JsonSerializer.Serialize(new
         {
-            Phase = "provisioning-accepted", TenantId = tenant, WorkflowInstanceId = provisioningWorkflow,
+            Phase = "provisioning-accepted", TenantId = tenant, PartyId = party, WorkflowInstanceId = provisioningWorkflow,
+            config.StateStoreName, MappingKey = mappingKey, IngestionKey = intentKey,
         }), token);
         bool active = false;
         TenantStatus? observedTenantStatus = null;
@@ -92,7 +102,7 @@ public sealed class PartyMemoryRuntimeTests
 
         if (!active)
         {
-            string observation = await CaptureProvisioningDiagnosticsAsync(config, diagnosticPath, tenant,
+            string observation = await CaptureProvisioningDiagnosticsAsync(config, diagnosticPath, tenant, party, mappingKey, intentKey,
                 provisioningWorkflow, observedTenantStatus).ConfigureAwait(true);
             active.ShouldBeTrue($"the selected Memories implementation must finish provisioning; {observation}");
         }
@@ -138,7 +148,6 @@ public sealed class PartyMemoryRuntimeTests
         persisted.MemoryUnitId.ShouldBe(canonical);
         persisted.WorkflowInstanceId.ShouldBe(indexed.WorkflowInstanceId);
         (await mappings.GetMappingsAsync(tenant, party, token)).ShouldBe([new(canonical!, PartyMemoryUrn.Build(tenant, party), caseId)]);
-        string mappingKey = PartyMemoryUnitMappingStore.BuildKey(tenant, party);
         (ReadOnlyMemory<byte> before, string previousEtag) = await restarted.GetByteStateAndETagAsync(config.StateStoreName, mappingKey, cancellationToken: token);
         previousEtag.ShouldNotBeNullOrWhiteSpace();
         using (JsonDocument mappingJson = JsonDocument.Parse(before))
@@ -163,6 +172,7 @@ public sealed class PartyMemoryRuntimeTests
         cleanup.ShouldNotBeNull().Cleaned.ShouldBeTrue("terminal ingestion and qualified remote unit absence are required");
         using HttpResponseMessage absence = await http.GetAsync(MemoriesRoutes.CaseMemoryUnitPath(tenant, caseId, canonical!), token);
         (await PartyMemoryCleanupResponse.IsAbsentAsync(absence, token)).ShouldBeTrue();
+        terminalUnitAbsenceObserved = true;
         (await intents.GetAsync(tenant, party, token)).ShouldBeEmpty();
         (await mappings.GetMappingsAsync(tenant, party, token)).ShouldBeEmpty();
         (ReadOnlyMemory<byte> empty, string finalEtag) = await restarted.GetByteStateAndETagAsync(config.StateStoreName, mappingKey, cancellationToken: token);
@@ -170,7 +180,6 @@ public sealed class PartyMemoryRuntimeTests
         finalEtag.ShouldNotBe(previousEtag);
         using JsonDocument emptyJson = JsonDocument.Parse(empty);
         emptyJson.RootElement.GetArrayLength().ShouldBe(0);
-        string intentKey = mappingKey.Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal);
         PartyMemoryIngestionInventory? fenced = (await restartedSdk.GetAsync<PartyMemoryIngestionInventory>(config.StateStoreName, intentKey, token)).Value;
         fenced.ShouldNotBeNull().CleanupRequested.ShouldBeTrue();
         fenced.Intents.ShouldBeEmpty();
@@ -178,22 +187,97 @@ public sealed class PartyMemoryRuntimeTests
         finally
         {
             // Qualification owns these synthetic resources even when provisioning or assertions fail.
-            await TeardownAsync(http, tenant, caseId, diagnosticPath).ConfigureAwait(true);
+            await TeardownAsync(config, http, tenant, party, caseId, mappingKey, intentKey,
+                terminalUnitAbsenceObserved, diagnosticPath).ConfigureAwait(true);
         }
     }
 
-    private static async Task TeardownAsync(HttpClient http, string tenant, string? caseId, string diagnosticPath)
+    /// <summary>Private handles survive incomplete teardown; only proven safe synthetic state is erased.</summary>
+    /// <param name="terminalAbsence">Whether qualified terminal unit absence was observed.</param>
+    /// <param name="remoteAbsent">Whether remote teardown safely finishes.</param>
+    /// <param name="unresolvedProducer">Whether the durable inventory still has an active obligation.</param>
+    [Theory]
+    [InlineData(true, true, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, true)]
+    [InlineData(false, false, true)]
+    public async Task PrivateTeardownRetainsExactKeysAndErasesOnlyAfterSafeTerminalCleanup(bool terminalAbsence, bool remoteAbsent, bool unresolvedProducer)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        var state = new PartyMemoryTestReadModelStore();
+        var config = new PartyMemoryRuntimeConfiguration { StateStoreName = "synthetic-store" };
+        string tenant = "synthetic-" + Guid.NewGuid().ToString("N");
+        string party = "synthetic-party";
+        string mappingKey = PartyMemoryUnitMappingStore.BuildKey(tenant, party);
+        string intentKey = mappingKey.Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal);
+        var inventory = new PartyMemoryIngestionInventory(true, unresolvedProducer
+            ? [new("unresolved", "case", "urn:synthetic", "pending-workflow")] : [], PermanentCleanup: true);
+        (await state.TrySaveAsync(config.StateStoreName, mappingKey, new List<PartyMemoryUnitMappingEntry>(), string.Empty, token)).ShouldBeTrue();
+        (await state.TrySaveAsync(config.StateStoreName, intentKey, inventory, string.Empty, token)).ShouldBeTrue();
+        using var transport = new PartySearchErasureHttpHandler((request, _) => Task.FromResult(request.Method == HttpMethod.Delete
+            ? new HttpResponseMessage(System.Net.HttpStatusCode.NoContent)
+            : remoteAbsent
+                ? new HttpResponseMessage(System.Net.HttpStatusCode.NotFound) { Content = JsonContent.Create(new { code = "TENANT_NOT_FOUND" }) }
+                : new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized)));
+        using var http = PartyMemoryRecoveryTests.Http(transport);
+        string diagnosticPath = Path.Combine(Path.GetTempPath(), "parties-teardown-" + Guid.NewGuid().ToString("N") + ".json");
+        string receiptPath = Path.ChangeExtension(diagnosticPath, ".teardown.json");
+        try
+        {
+            await TeardownAsync(config, http, tenant, party, "case", mappingKey, intentKey, terminalAbsence, diagnosticPath, state);
+            using JsonDocument receipt = JsonDocument.Parse(await File.ReadAllTextAsync(receiptPath, token));
+            receipt.RootElement.GetProperty("MappingKey").GetString().ShouldBe(mappingKey);
+            receipt.RootElement.GetProperty("IngestionKey").GetString().ShouldBe(intentKey);
+            receipt.RootElement.GetProperty("StateStoreName").GetString().ShouldBe(config.StateStoreName);
+            receipt.RootElement.GetProperty("TenantId").GetString().ShouldBe(tenant);
+            receipt.RootElement.GetProperty("PartyId").GetString().ShouldBe(party);
+            receipt.RootElement.GetProperty("CaseId").GetString().ShouldBe("case");
+            bool expectedRemoval = terminalAbsence && remoteAbsent && !unresolvedProducer;
+            receipt.RootElement.GetProperty("StateKeysRemoved").GetBoolean().ShouldBe(expectedRemoval);
+            receipt.RootElement.GetProperty("OperatorCleanupRequired").GetBoolean().ShouldBe(!expectedRemoval);
+            var retainedMapping = await state.GetAsync<List<PartyMemoryUnitMappingEntry>>(config.StateStoreName, mappingKey, token);
+            var retainedInventory = await state.GetAsync<PartyMemoryIngestionInventory>(config.StateStoreName, intentKey, token);
+            if (expectedRemoval)
+            {
+                retainedMapping.Value.ShouldBeNull();
+                retainedInventory.Value.ShouldBeNull();
+            }
+            else
+            {
+                retainedMapping.Value.ShouldNotBeNull().ShouldBeEmpty();
+                retainedInventory.Value.ShouldNotBeNull().Intents.ShouldBe(inventory.Intents);
+            }
+        }
+        finally
+        {
+            File.Delete(receiptPath);
+        }
+    }
+
+    private static async Task TeardownAsync(PartyMemoryRuntimeConfiguration config, HttpClient http,
+        string tenant, string party, string? caseId, string mappingKey, string intentKey,
+        bool terminalUnitAbsenceObserved, string diagnosticPath, IReadModelStore? testState = null)
     {
         using var budget = new CancellationTokenSource(TimeSpan.FromSeconds(8));
         List<object> evidence = [];
         bool tenantAbsent = false;
+        bool caseTeardownAccepted = caseId is null;
+        bool stateKeysRemoved = false;
         try
         {
             if (caseId is not null)
             {
                 using HttpResponseMessage removedCase = await http.DeleteAsync(MemoriesRoutes.CasePath(tenant, caseId), budget.Token).ConfigureAwait(false);
-                evidence.Add(new { Phase = "case-delete", HttpStatus = (int)removedCase.StatusCode,
-                    PrivateResponse = await removedCase.Content.ReadAsStringAsync(budget.Token).ConfigureAwait(false) });
+                string body = await removedCase.Content.ReadAsStringAsync(budget.Token).ConfigureAwait(false);
+                caseTeardownAccepted = removedCase.IsSuccessStatusCode;
+                if (removedCase.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    ErrorResponse? error = JsonSerializer.Deserialize<ErrorResponse>(body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                    caseTeardownAccepted = error?.Code is "CASE_NOT_FOUND" or "TENANT_NOT_FOUND";
+                }
+
+                evidence.Add(new { Phase = "case-delete", HttpStatus = (int)removedCase.StatusCode, PrivateResponse = body });
             }
 
             using HttpResponseMessage removedTenant = await http.DeleteAsync(MemoriesRoutes.TenantPath(tenant), budget.Token).ConfigureAwait(false);
@@ -212,6 +296,11 @@ public sealed class PartyMemoryRuntimeTests
                     }
                 }
 
+                if (observed.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
+                {
+                    break;
+                }
+
                 await Task.Delay(TimeSpan.FromMilliseconds(500), budget.Token).ConfigureAwait(false);
             }
         }
@@ -220,20 +309,86 @@ public sealed class PartyMemoryRuntimeTests
             evidence.Add(new { Phase = "teardown-incomplete", ExceptionType = ex.GetType().Name });
         }
 
-        // Preserve handles privately for operator teardown; never replace the primary test failure.
+        bool remoteTeardownSafe = tenantAbsent && caseTeardownAccepted;
+        if (terminalUnitAbsenceObserved && remoteTeardownSafe)
+        {
+            try
+            {
+                using var stateBudget = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                using DaprClient? dapr = testState is null ? Dapr(config) : null;
+                IReadModelStore state = testState ?? new DaprReadModelStore(dapr!);
+                PartyMemoryIngestionInventory? inventory = (await state.GetAsync<PartyMemoryIngestionInventory>(
+                    config.StateStoreName, intentKey, stateBudget.Token).ConfigureAwait(false)).Value;
+                bool noActiveProducers = inventory is null || (inventory.CleanupRequested && inventory.PermanentCleanup
+                    && inventory.Intents is { Count: 0 });
+                if (noActiveProducers && state is IReadModelConditionalEraser eraser)
+                {
+                    // Fresh conditional snapshots prevent deleting new or unresolved obligations.
+                    bool mappingsRemoved = await EraseSyntheticKeyAsync<List<PartyMemoryUnitMappingEntry>>(state, eraser,
+                        config.StateStoreName, mappingKey, value => value is null || value.Count == 0, stateBudget.Token).ConfigureAwait(false);
+                    if (mappingsRemoved)
+                    {
+                        stateKeysRemoved = await EraseSyntheticKeyAsync<PartyMemoryIngestionInventory>(state, eraser,
+                            config.StateStoreName, intentKey, value => value is null || (value.CleanupRequested && value.PermanentCleanup
+                                && value.Intents is { Count: 0 }), stateBudget.Token).ConfigureAwait(false);
+                    }
+                }
+
+                evidence.Add(new { Phase = "synthetic-state-cleanup", StateKeysRemoved = stateKeysRemoved });
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            {
+                evidence.Add(new { Phase = "synthetic-state-cleanup-incomplete", ExceptionType = ex.GetType().Name });
+            }
+        }
+
+        // Preserve exact handles privately on every outcome; teardown must not replace the primary failure.
+        bool operatorCleanupRequired = !remoteTeardownSafe || !stateKeysRemoved;
         try
         {
             using var receiptBudget = new CancellationTokenSource(TimeSpan.FromSeconds(2));
             await File.WriteAllTextAsync(Path.ChangeExtension(diagnosticPath, ".teardown.json"), JsonSerializer.Serialize(new
             {
-                TenantId = tenant, CaseId = caseId, TenantAbsenceObserved = tenantAbsent,
-                OperatorCleanupRequired = !tenantAbsent, Observations = evidence,
+                TenantId = tenant, PartyId = party, CaseId = caseId, config.StateStoreName,
+                MappingKey = mappingKey, IngestionKey = intentKey, TenantAbsenceObserved = tenantAbsent,
+                TerminalUnitAbsenceObserved = terminalUnitAbsenceObserved, RemoteTeardownSafe = remoteTeardownSafe,
+                StateKeysRemoved = stateKeysRemoved, OperatorCleanupRequired = operatorCleanupRequired, Observations = evidence,
             }), receiptBudget.Token).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
         {
-            // The earlier private provisioning receipt still retains the synthetic tenant handle.
+            operatorCleanupRequired = true;
         }
+
+        if (operatorCleanupRequired)
+        {
+            TestContext.Current.TestOutputHelper?.WriteLine("Synthetic runtime cleanup is incomplete; operator cleanup is required using the private provisioning/teardown handles.");
+        }
+    }
+
+    private static async Task<bool> EraseSyntheticKeyAsync<TValue>(IReadModelStore state, IReadModelConditionalEraser eraser,
+        string storeName, string key, Func<TValue?, bool> safeToErase, CancellationToken cancellationToken) where TValue : class
+    {
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            ReadModelEntry<TValue> current = await state.GetAsync<TValue>(storeName, key, cancellationToken).ConfigureAwait(false);
+            if (!safeToErase(current.Value))
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(current.ETag))
+            {
+                return current.Value is null;
+            }
+
+            if (await eraser.TryEraseAsync(storeName, key, current.ETag, cancellationToken).ConfigureAwait(false))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static DaprClient Dapr(PartyMemoryRuntimeConfiguration config)
@@ -241,7 +396,7 @@ public sealed class PartyMemoryRuntimeTests
             .UseDaprApiToken(config.DaprApiToken).Build();
 
     private static async Task<string> CaptureProvisioningDiagnosticsAsync(PartyMemoryRuntimeConfiguration config,
-        string diagnosticPath, string tenant, string workflow, TenantStatus? tenantStatus)
+        string diagnosticPath, string tenant, string party, string mappingKey, string intentKey, string workflow, TenantStatus? tenantStatus)
     {
         using var budget = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         try
@@ -273,7 +428,8 @@ public sealed class PartyMemoryRuntimeTests
 
             await File.WriteAllTextAsync(diagnosticPath, JsonSerializer.Serialize(new
             {
-                Phase = "provisioning-not-active", TenantId = tenant, WorkflowInstanceId = workflow,
+                Phase = "provisioning-not-active", TenantId = tenant, PartyId = party, WorkflowInstanceId = workflow,
+                config.StateStoreName, MappingKey = mappingKey, IngestionKey = intentKey,
                 TenantStatus = tenantStatus?.ToString() ?? "missing", HttpStatus = (int)status.StatusCode,
                 RuntimeStatus = runtimeStatus, PrivateWorkflowResponse = body,
             }), budget.Token).ConfigureAwait(false);
