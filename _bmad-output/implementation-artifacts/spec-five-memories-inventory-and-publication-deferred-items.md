@@ -2,7 +2,7 @@
 title: 'Five Memories inventory and publication deferred items'
 type: 'bugfix'
 created: '2026-10-24'
-status: 'in-progress'
+status: 'in-review'
 route: 'dispatch'
 review_loop_iteration: 3
 baseline_commit: '5eca98e9725aeb528c90d058eb2e08a64700b49f'
