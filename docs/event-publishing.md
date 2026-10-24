@@ -151,8 +151,10 @@ Local development uses Redis-backed pub/sub configured in [src/Hexalith.Parties.
   top level and the policy level, and permits only the `eventstore` app ID on the
   exact SDK POST routes; subscribers receive pub/sub delivery without broad
   service-invocation access. `accesscontrol.yaml`, `accesscontrol.tenants.yaml`,
-  `accesscontrol.memories.yaml`, and `accesscontrol.sample.yaml` are likewise
-  deny-by-default.
+  `accesscontrol.memories.yaml`, `accesscontrol.memories-domain-service.yaml`, and
+  `accesscontrol.sample.yaml` are likewise
+  deny-by-default. The optional dedicated Memories domain-service policy permits
+  only EventStore on the SDK command, replay and metadata POST routes.
   **One documented exception:** `accesscontrol.eventstore-admin.yaml` is
   `defaultAction: allow` at the top level. Local self-hosted DAPR does not reliably
   expose caller identity without mTLS, so the Admin UI to Admin Server hop would

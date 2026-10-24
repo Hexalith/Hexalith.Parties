@@ -1,0 +1,364 @@
+{
+  "date": "2026-10-24",
+  "status": "implementation handoff; parent review and immutable owner adoption pending",
+  "private_evidence_root": "/tmp/parties-five-inventory-20261024",
+  "builds": {
+    "source": "dotnet build <project.csproj> -c Debug -m:1 -p:MinVerVersionOverride=1.0.0 plus all five unchanged generated source-hook properties",
+    "package": "dotnet build <project.csproj> -c Release -m:1 -p:MinVerVersionOverride=1.0.0 with all source hooks absent",
+    "warning_policy": "No suppression or source-gate bypass added; final build logs contain zero warnings/errors. Source and package builds were serialized by lane.",
+    "source_mapping_mode": "pinned module-tool 4.34.0 generated five-file imports; actual runtime children inherit all five environment variables",
+    "source_hook_names": [
+      "CustomBeforeDirectoryBuildProps",
+      "CustomAfterMicrosoftCommonProps",
+      "CustomBeforeDirectoryBuildTargets",
+      "CustomAfterDirectoryBuildTargets",
+      "AfterMicrosoftNETSdkTargets"
+    ],
+    "source_hooks_sha256": "b131b2e0caf483501cfb6564216f0e7ae5a4dc25164b9f52b94f3d03bfbe43a3",
+    "selected_catalog_unchanged": true
+  },
+  "results": [
+    {
+      "evidence": "parties-source-final",
+      "mode": "source",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -method- '*FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph' -method- '*CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification'",
+      "passed": 2692,
+      "failed": 0,
+      "skipped": 4,
+      "total": 2696,
+      "xml_sha256": "b5ab739a51ea23172830e1d9c79710aad220ac525e44f30bcdbd6da5f2f176ad",
+      "skip_reasons": [
+        "Set PARTIES_MEMORIES_INVENTORY_ACL_CONFIG to an owned authenticated ACL runtime and loopback repair controller.",
+        "Set PARTIES_MEMORIES_RUNTIME_CONFIG to an owned local runtime's private JSON configuration.",
+        "Set PARTIES_MEMORIES_STATE_RUNTIME_CONFIG to private owned Dapr endpoints and credentials."
+      ]
+    },
+    {
+      "evidence": "memories-source-final",
+      "mode": "source",
+      "command": "dotnet references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll -method- '*ProjectAssets_RestoreEventStorePackagesAtCatalogVersion'",
+      "passed": 3030,
+      "failed": 0,
+      "skipped": 1,
+      "total": 3031,
+      "xml_sha256": "a398709485f24e2d6cc03db2a4fda0d0f9c19ae1a1b80ca0896cea8e112e461e",
+      "skip_reasons": [
+        "Story 15.6 AC #7 behavioral guard \u2014 invokes `dotnet msbuild` against a workspace with a renamed submodule .git marker. Disabled by default because it mutates the shared worktree and depends on `dotnet` being on PATH; unskip manually or in the dedicated regression lane."
+      ]
+    },
+    {
+      "evidence": "memories-client-final",
+      "mode": "source",
+      "command": "dotnet references/Hexalith.Memories/tests/Hexalith.Memories.Cli.Tests/bin/Debug/net10.0/Hexalith.Memories.Cli.Tests.dll",
+      "passed": 505,
+      "failed": 0,
+      "skipped": 0,
+      "total": 505,
+      "xml_sha256": "04393607dbd52eb9f92d53402d445afd9586329b0a0ac521ca1101291c0aa256",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "memories-contracts-final",
+      "mode": "source",
+      "command": "dotnet references/Hexalith.Memories/tests/Hexalith.Memories.Contracts.Tests/bin/Debug/net10.0/Hexalith.Memories.Contracts.Tests.dll",
+      "passed": 596,
+      "failed": 0,
+      "skipped": 0,
+      "total": 596,
+      "xml_sha256": "35771470867b2ee2eaa34680a489c28c915e1122e611a5cf703ee2aa23cb3679",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "memories-domain-alias-final",
+      "mode": "source",
+      "command": "dotnet references/Hexalith.Memories/tests/Hexalith.Memories.DomainService.Tests/bin/Debug/net10.0/Hexalith.Memories.DomainService.Tests.dll",
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "total": 12,
+      "xml_sha256": "97bed4ac98e6221947f48a97daba8e2a2f9e4de179dfb9601676374daa61b75a",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "memories-auth-final",
+      "mode": "source",
+      "command": "dotnet references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll -class '*IngestionStatusEndpointAuthorizationTests' -class '*MemoriesGatewayCompositionTests'",
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0,
+      "total": 19,
+      "xml_sha256": "7f9072c4f137a1fffc0055f58c8e5622efb5524129e83f9864c3980deff9d530",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "sdk-client-current",
+      "mode": "source",
+      "command": "dotnet references/Hexalith.EventStore/tests/Hexalith.EventStore.Client.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.Tests.dll",
+      "passed": 2140,
+      "failed": 0,
+      "skipped": 2,
+      "total": 2142,
+      "xml_sha256": "950f63ef67a2ba1796156f7389d1b9939a0aeff2f946ab4c11dff02e08ea5713",
+      "skip_reasons": [
+        "Requires isolated Dapr endpoints."
+      ]
+    },
+    {
+      "evidence": "sdk-domain-current",
+      "mode": "source",
+      "command": "dotnet references/Hexalith.EventStore/tests/Hexalith.EventStore.DomainService.Tests/bin/Debug/net10.0/Hexalith.EventStore.DomainService.Tests.dll -class '*EventStoreGatewayWorkloadTransportTests'",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "total": 8,
+      "xml_sha256": "22a492c9b03fa2bc955dd933196ed0128d5bc9dda332f7f6b1c56628e5b040ac",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "sdk-bound-receiver-current",
+      "mode": "source",
+      "command": "dotnet references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll -class '*WorkloadGatewayControllerTests'",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "total": 7,
+      "xml_sha256": "8bc9baff8f43fcb43c179f1fabe90dfeda35816e0cdf04fd51b724670af88408",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "ui-source-all",
+      "mode": "source",
+      "command": "dotnet tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "passed": 415,
+      "failed": 0,
+      "skipped": 0,
+      "total": 415,
+      "xml_sha256": "9aeb2ca764d4c3581fd295384fec3653f4ae1368ed984db21e56f889f8103281",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "memories-package-final",
+      "mode": "package",
+      "command": "dotnet references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/bin/Release/net10.0/Hexalith.Memories.Server.Tests.dll",
+      "passed": 3029,
+      "failed": 0,
+      "skipped": 1,
+      "total": 3030,
+      "xml_sha256": "46599fa3a6f1306fa3c8ce739d3c69daf6812e7cacb8ef65d27125a81047cdf4",
+      "skip_reasons": [
+        "Story 15.6 AC #7 behavioral guard \u2014 invokes `dotnet msbuild` against a workspace with a renamed submodule .git marker. Disabled by default because it mutates the shared worktree and depends on `dotnet` being on PATH; unskip manually or in the dedicated regression lane."
+      ]
+    },
+    {
+      "evidence": "memories-client-package-final",
+      "mode": "package",
+      "command": "dotnet references/Hexalith.Memories/tests/Hexalith.Memories.Cli.Tests/bin/Release/net10.0/Hexalith.Memories.Cli.Tests.dll",
+      "passed": 505,
+      "failed": 0,
+      "skipped": 0,
+      "total": 505,
+      "xml_sha256": "6b36b03230bb8bae92b55dfe9d719827f68e1a615818951b467bfb0c0fb29439",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "memories-domain-package-final",
+      "mode": "package",
+      "command": "dotnet references/Hexalith.Memories/tests/Hexalith.Memories.DomainService.Tests/bin/Release/net10.0/Hexalith.Memories.DomainService.Tests.dll",
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "total": 12,
+      "xml_sha256": "680be8aa47b68a1543321ced5dd53790dad862587de28060e992bd1435302a27",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "parties-package-final",
+      "mode": "package",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -method- '*FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph' -method- '*CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification'",
+      "passed": 2682,
+      "failed": 0,
+      "skipped": 12,
+      "total": 2694,
+      "xml_sha256": "105d85a2e82e8179fce367877d4f7ceaa2ae08d887969d566d25ca9d6ce16134",
+      "skip_reasons": [
+        "Requires a qualified pinned-tool-generated source-mode build. Published EventStore 3.127.0 lacks this recovery fix; its package gate remains open.",
+        "Requires pinned-tool source qualification; EventStore 3.127.0 has no nonexpiring legacy recovery capability.",
+        "Set PARTIES_MEMORIES_INVENTORY_ACL_CONFIG to an owned authenticated ACL runtime and loopback repair controller.",
+        "Set PARTIES_MEMORIES_RUNTIME_CONFIG to an owned local runtime's private JSON configuration.",
+        "Set PARTIES_MEMORIES_STATE_RUNTIME_CONFIG to private owned Dapr endpoints and credentials."
+      ]
+    },
+    {
+      "evidence": "ui-package-final",
+      "mode": "package",
+      "command": "dotnet tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+      "passed": 414,
+      "failed": 0,
+      "skipped": 1,
+      "total": 415,
+      "xml_sha256": "1a13cbcee0fe13781fa42b142f675ffbac6b8dfb5782e51dcbd4a4d0d7676bfe",
+      "skip_reasons": [
+        "DW-112 compact source qualification requires the fixed FrontComposer; matching package adoption is pending."
+      ]
+    },
+    {
+      "evidence": "ci-package-final",
+      "mode": "package",
+      "command": "dotnet tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll",
+      "passed": 455,
+      "failed": 0,
+      "skipped": 0,
+      "total": 455,
+      "xml_sha256": "3a437f000870bcb42c9fed782580ceaa20c215ff86181338591d83877aadf920",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "sdk-domain-package-final",
+      "mode": "package",
+      "command": "dotnet references/Hexalith.EventStore/tests/Hexalith.EventStore.DomainService.Tests/bin/Release/net10.0/Hexalith.EventStore.DomainService.Tests.dll -class '*EventStoreGatewayWorkloadTransportTests'",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "total": 8,
+      "xml_sha256": "55eb951be59b2f02a21a5a9fc3f300886d3a75c22db4dbdde190088d335ea291",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "memories-package-catalog-gates",
+      "mode": "package",
+      "command": "dotnet references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/bin/Release/net10.0/Hexalith.Memories.Server.Tests.dll -method '*BuildsCatalog_PinsEventStoreFamilyAt31270' -method '*ProjectAssets_RestoreEventStorePackagesAtCatalogVersion'",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "total": 2,
+      "xml_sha256": "3187e767e4246884b2afed562c96c3fd1186643a4e8e3e1bd92fab211a8203ab",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "owned-fixture-controls-current",
+      "mode": "source",
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll -class '*PartiesAspireTopologyFixtureTests' -class '*PartiesTopologyCleanupTests' -class '*PartiesOptionalResourceTests' -class '*PartiesTestRedisTests' -class '*PartiesMtlsProfileTests'",
+      "passed": 36,
+      "failed": 0,
+      "skipped": 4,
+      "total": 40,
+      "xml_sha256": "3e563b6429b9e626fa467d63134df879b37355e07feeef5321e2730e0905947b",
+      "skip_reasons": [
+        "Set PARTIES_MTLS_TOPOLOGY_TESTS=true to require seeded complete mTLS runtime proof."
+      ]
+    },
+    {
+      "evidence": "memories-owned-domain-host8",
+      "mode": "owned-source-runtime",
+      "command": "dotnet tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll -method '*ActualSelectedMemoriesRunsTheRecoveryAndPhysicalErasureControl'",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "total": 1,
+      "xml_sha256": "16799d499cd921e781a17f1a6d659fd7e9f974898e5d6e42f17e23185e961761",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "memories-adapters-reopen-final",
+      "mode": "source-real-backends",
+      "command": "dotnet references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll -class '*SourceInventoryIntegrationTests' -class '*RefreshPublicationIntegrationTests'",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "total": 9,
+      "xml_sha256": "3da11857c67cc4837bc6a1885b392bdfe38e6aa5f25815841004d46f681ca22e",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "ui-package-negative-final",
+      "mode": "expected-package-rejection",
+      "command": "dotnet tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll -class '*MainLayoutAccessibilityTests'",
+      "passed": 3,
+      "failed": 1,
+      "skipped": 0,
+      "total": 4,
+      "xml_sha256": "5c1cd9efaabbe1886db2584f59c9beb6061af7d0acbea29b566b91a2f130ee22",
+      "skip_reasons": []
+    }
+  ],
+  "browser": {
+    "node": "24.22.1",
+    "npm": "11.19.1",
+    "official_node_archive_sha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+    "source_keyboard_passed": 4,
+    "source_keyboard_skipped": 0,
+    "source_log_sha256": "c23c7d1de13a0a9b36508c11e14c4f08392351e959fd373543f154755559d90e",
+    "package_compact_expected_failures": 1,
+    "package_attempts": 3,
+    "package_failure": "Duplicate fc-nav targets (expected1, received2); forced negative executes without a qualification skip.",
+    "package_log_sha256": "47069b61e162c543e485abb11a08c486882019072ba3aeab72f7cbc1d1003c92",
+    "typecheck_exit": 0,
+    "config_tests_passed": 8,
+    "source_served_assets_compared_to_owner_bytes": true
+  },
+  "publisher": {
+    "executor": "11a3a79cfac4bba9548c6364a17a01ee9b561370",
+    "validator_sha256": "1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c",
+    "python_passed": 150,
+    "python_log_sha256": "8d39b85d8f1f48ea87414430c515c4d9dcbfdfb0b64800dbf0804a70a30f63fd",
+    "release_dispatch": false,
+    "reproduction_command": "python3 -m unittest discover -s references/Hexalith.Builds/Github/publish-containers/tests -p test_*.py"
+  },
+  "runtime": {
+    "scope": "EventStore gateway, native Memories Server, separate real Memories domain-service host; actual backing stores and authenticated mTLS sidecars",
+    "whole_parties_topology_qualified": false,
+    "test_only_fake_embeddings": true,
+    "loaded_source_capability_and_refresh_ack_required": true,
+    "observed_refresh_revisions": [
+      0,
+      1,
+      2
+    ],
+    "all_observed_ingest_requests_explicit_refresh": false,
+    "survivors_verified": true,
+    "independent_native_stream_domains": [
+      "memories-cases",
+      "memories-memory-units",
+      "memories-tenants"
+    ],
+    "real_domain_replay_observations": 5,
+    "negative_credential_statuses": [
+      401,
+      401,
+      401
+    ],
+    "http_grpc_app_sidecar_allocation_equal": true,
+    "owned_disposed": true,
+    "session_directory_exists": false,
+    "primary_failure": null,
+    "cleanup_failure": null,
+    "ownership_sha256": "fe6d710acb826a28240d9683e87df0d123cf245f3165974b920debc04bb0961a",
+    "authoritative_proof_sha256": "92f3c166f12ff0643796bf2ebf8eb0197eafd67dc60287779de0f00e7d3ef0fd",
+    "private_cleanup_inventory_sha256": "d961d5a0ed8f464f3ecb564abfee526d120b6aa9af8e0b5f5501579edc41ab31",
+    "remaining_owned_workers": 0,
+    "remaining_owned_containers": 0,
+    "all_current_fixture_marked_workers": 0
+  },
+  "hashes": {
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot/js/fc-focus.js": "2e543495e97f3942791fd8abc3084d44c6feb0aeb5f488d064768ae74b75c391",
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot/css/fc-shell.css": "dceb51b05c81b0b5f1a90b5318ede9366dfdb9c2d10b6b1d9f89f4389a35d3a3",
+    "references/Hexalith.Builds/Github/publish-containers/oci_registry_validator.py": "1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c"
+  },
+  "mode_boundaries": {
+    "source_package_assets_exclusion": "Hexalith.Memories.Server.Tests.Deployment.AppHostSecurityConfigurationTests.ProjectAssets_RestoreEventStorePackagesAtCatalogVersion; genuine package selection is proved in the full Release lane and dedicated2/2 control",
+    "catalog_control": "BuildsCatalog_PinsEventStoreFamilyAt31270 now follows the real three-location import wrapper and passes source plus Release; no catalog/package version changed.",
+    "dirty_owner_exclusions": [
+      "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+      "Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests.CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification"
+    ],
+    "dirty_owner_next_step": "Parent reruns immutable provenance checks after owner commits/adoption; functional passing rows are not immutable closure receipts.",
+    "remaining": [
+      "Publish/adopt matching Memories, EventStore and FrontComposer owner capabilities without changing versions in this task.",
+      "Provision the new domain-service workload, exact routing/key/trust/ACL configuration through deployment owners.",
+      "Drain older writers and perform qualified legacy source/tenant reconciliation; an absent key never establishes complete coverage.",
+      "Broad module composition remains Platform HXR020; focused component qualification leaves normal full-topology gates unchanged.",
+      "No production restore/migration/deployment or release dispatch was performed."
+    ]
+  },
+  "historical_failures_retained": "Earlier full/focused failures, native startup/authorization/missing-host/serialization/replay investigations and source/package asset collisions remain in private logs. Only the named final rows above qualify their stated boundaries."
+}

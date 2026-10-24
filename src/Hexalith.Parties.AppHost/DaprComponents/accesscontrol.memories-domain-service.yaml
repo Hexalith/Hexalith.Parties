@@ -1,0 +1,24 @@
+# Receiving policy for the separate authoritative Memories SDK domain host.
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: accesscontrol-memories-domain-service
+spec:
+  accessControl:
+    defaultAction: deny
+    trustDomain: hexalith.io
+    policies:
+      - appId: eventstore
+        defaultAction: deny
+        trustDomain: hexalith.io
+        namespace: hexalith-parties
+        operations:
+          - name: /process
+            httpVerb: ['POST']
+            action: allow
+          - name: /replay-state
+            httpVerb: ['POST']
+            action: allow
+          - name: /admin/operational-index-metadata
+            httpVerb: ['POST']
+            action: allow

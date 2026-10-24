@@ -70,29 +70,102 @@ same sequence reuse its producer. Checkpoint-only events retain the prior applic
 sequence. The projection notification seam forwards this sequence through an additive
 default interface overload, preserving existing indexer implementations. Transient
 `JsonIgnore` contact/identifier collections cannot create a second producer after
-canonical deserialization. A source URI never replaces another
-distinct unit in the mapping inventory. These guarantees concern producer recovery
-and identity: the selected Memories source-URI deduplication can return an existing
-canonical unit for changed content, so a new revision token does not prove content
-refresh. Producer revision/update support remains an upstream prerequisite.
+canonical deserialization. A source URI never replaces another distinct unit in the
+mapping inventory. In a validated mapped-source build, Parties uses Memories'
+explicit refresh API with the canonical application sequence as its monotonic source
+revision and the observed canonical predecessor. An exact retry binds content bytes,
+content type and metadata to the same token. Publication atomically changes Redis
+visibility and dedup pointers; graph selection mirrors the current source revision.
+A missing canonical sequence blocks before local reservation or remote submission; canonical redelivery can then proceed. A lost acceptance acknowledgement is recovered by bounded, scope-checked source inventory and the exact persisted retry-token digest. The recovered handle still requires an independent successful workflow status before mapping publication.
+
+The Redis publication transaction also retains a graph repair journal and advances a graph-read epoch. Graph traversal and graph-scoped search repair pending work before reading and reject a snapshot that overlaps a newer publication. Graph write failure or exhausted workflow retries therefore retain durable repair authority; retired traversal neighbors cannot appear in edge metadata.
+
+Superseded candidates remain in the inventory and are physically compensated. A newer
+revision that loses a predecessor race remains retryable through a durably linked
+successor attempt; an older revision cannot rebase over it. Ordinary ingestion keeps
+its existing dedup behavior. Package builds retain the published ingest API until the
+new Memories and multi-domain EventStore owner capabilities are published/adopted;
+a new token alone does not qualify refresh in that mode. Explicit refresh also requires
+the authenticated `X-Hexalith-Source-Refresh: source-refresh-v1` acknowledgement. A legacy
+producer that ignores the new fields leaves an unresolved durable obligation and cannot
+return qualified indexing success.
+
+Mapped-source Memories sends actor/source metadata through the SDK's signed
+`api/v1/commands/bound/workload` channel. The ordinary unsigned workload channel
+rejects those metadata fields. The additional resource proof binds the exact command,
+tenant, domain, represented actor and metadata; an independent workload assertion and
+Dapr credentials remain required. Provision an RSA key of at least 2048 bits through
+`EventStore:CommandGateway:BoundCommand:PrivateKeyPkcs8Base64` (the legacy
+`EventStoreIntegration` prefix is also read). The receiving gateway must trust its SPKI
+public key at `Authentication:BoundStreamRead:PublicKeys:<exact-workload>` and authorize
+only `memories-tenants,memories-cases,memories-memory-units` at
+`Authentication:BoundCommand:AllowedDomains:<exact-workload>`. The workload name must
+match `Authentication:WorkloadIssuer:Workload`; the receiving Dapr ACL must allow the
+exact bound-command POST. Missing proof configuration fails closed before submission.
+The owned Development fixture generates ephemeral test keys; this change provisions no
+production keys. Matching SDK/Memories package publication and deployment configuration
+remain separate prerequisites.
+
+Authoritative commands require the separate `Hexalith.Memories.DomainService` host.
+The optional local AppHost flag `EnableMemoriesDomainService=true` registers its real
+SDK processor for exactly `memories-tenants`, `memories-cases` and
+`memories-memory-units`, version `v1`, with the native `/process` method. The native
+Memories Server retains its REST/pub/sub routes and exposes no `/process` route.
+The dedicated host executes existing decisions and folds, including snapshot/tail and
+administrative replay, using unchanged event identities. Publish/configure that workload
+and its exact EventStore caller, audience, app-channel token and deny-default Dapr ACL
+before enabling this source capability in a deployment. Existing installations acquire
+neither a new host nor domain registrations unless explicitly configured.
+
+Both the `EventStore` and legacy `EventStoreIntegration` gateway prefixes are supported.
+An explicit legacy `/v1.0/invoke/<app>/method/` base address is normalized to one SDK
+header-routing mode, retaining any preceding path and exact target. A conflicting
+configured AppId is rejected; direct configured prefixes retain their path semantics.
 
 Cleanup first persists an admission fence for the tenant/party. A concurrent
 registration either enters the cleanup snapshot or fails before submission.
 Permanent erasure fences survive restart and never reopen. Projection removals
 without an erasure checkpoint are transient: after their obligations settle, a
 readable canonical index containing the live party and no erasure checkpoint can
-open a new generation. That generation uses new idempotency identities even for
-unchanged content. A terminal canonical ID already covered by a settled cleanup
-receipt cannot be published as indexed again. The selected producer can permanently
-deduplicate by source URI and return the deleted ID despite a new token; this path
-retains its new obligation and stays retryable. Live producer reindexing therefore
-requires upstream recreation/update support and is not supplied by this consumer
-change. Missing or malformed canonical state cannot authorize reopening.
-Each known ingestion must reach validated terminal success before its output is
-deleted. Cleanup then reads the exact scoped unit and requires HTTP 404 with JSON
-error code `MEMORY_UNIT_NOT_FOUND`. DELETE acceptance while the unit remains readable,
-arbitrary 404s, missing/failed/expired status, and malformed scope retain obligations.
-The endpoint prefix, escaped route segments and captured case remain authoritative.
+open a new generation. Memories independently requires the exact observed version
+of a complete, settled, transient source fence before reopening. Permanent source
+fences reject every new producer path, including ordinary ingest, and unit tombstones
+prevent delayed modern writers from recreating erased Redis, graph or source artifacts.
+
+Cleanup fences the exact remote tenant/source and reads bounded inventory pages even
+when local mappings are empty. Every discovered workflow/canonical output is persisted
+before the next page is requested. Protected SDK cursors bind tenant, source and snapshot
+version; concurrent admission or terminal/deletion updates invalidate the continuation
+and require a fresh delivery. Coverage defaults to incomplete, including new inventory
+keys over legacy tenants. Dedup pointers, search results and the lossy maintenance
+in-flight registry never establish historical coverage. Only explicit owner
+reconciliation of the fenced historical scope can establish the coverage marker.
+Missing, corrupt, interrupted, unauthorized or incomplete inventories retain obligations
+and block completion. No production reconciliation/migration is executed by this change.
+
+A canonical output or producer deletion marker does not prove workflow completion.
+Cleanup independently validates terminal evidence while output-known producers are
+still running. It then deletes every exact captured-case output and requires a scoped
+HTTP 404 with JSON code `MEMORY_UNIT_NOT_FOUND`. DELETE acceptance while a unit remains
+readable, arbitrary 404s, missing/failed/expired status and malformed scope retain work.
+Legacy restore writes invalidate the exact source's coverage before their first memory-unit
+write, retain canonical output identities, and report `restore-reconciliation-required`.
+The existing restore contract does not provide per-output terminal workflow proof; owner
+reconciliation must drain it before certifying coverage again. Raw ordinary/restore
+Redis writes atomically consult unit tombstones/source fences and recompute managed
+visibility from the current canonical pointer. Restored raw visibility flags cannot
+reveal superseded units. No production restore is executed by this qualification.
+
+A final complete, terminal source snapshot under the admission fence is required before
+persisting permanent source-closure evidence. Exact canonical receipts can settle late
+local mappings after credentials disappear; those receipts alone cannot certify unknown
+remote work. Global closure and canonical absence receipts bind the normalized effective
+producer endpoint; moving to another server or route prefix revalidates that authority,
+even when case/workflow/unit IDs coincide. New admissions capture the typed client's
+actual target, independently of later options changes. Missing legacy authority remains
+explicit and cannot provide a cached absence proof. The endpoint prefix, escaped route
+segments and captured case remain
+authoritative.
 
 Intent registration and updates use the SDK write policy with five concurrency
 attempts. The legacy mapping adapter retains its five-attempt no-op-aware merge
@@ -120,22 +193,24 @@ receipts issue no HTTP requests, and matching mappings can settle after remote
 credentials or case access disappear. A distinct legacy workflow resolving to the
 same cleaned canonical ID retains its own workflow association before subtraction.
 
-An intent with uncertain acceptance and no durably captured workflow ID remains
-blocked. It is not resubmitted automatically: the old request may still be a live
-producer. Source lookup finds one identity in one known case and cannot prove a
-complete inventory or settle an unknown acceptance. Pending workflows are polled
-once per indexing/cleanup delivery, with later canonical projection redelivery or
-erasure verification supplying retries; no unbounded polling worker is introduced.
-Each party inventory retains at most 1,024 attempts and cleanup receipts together.
-Exhaustion blocks new submissions without evicting obligations or provenance.
-Verified submission preflight rejection permits another submission after repair:
-HTTP 401/403; HTTP 400 `INVALID_INPUT`; HTTP 404 `TENANT_NOT_FOUND`; HTTP 429
-`RATE_LIMIT_EXCEEDED`; or HTTP 409 `TENANT_PROVISIONING`, `TENANT_DELETING`,
-`TENANT_FAILED`, `TENANT_UNAVAILABLE`.
-The selected Memories implementation emits these before dedup reservation/scheduling.
-Other status/code combinations remain uncertain. A status-read authorization failure, connection
-failure, timeout or ambiguous acknowledgement preserves the same unresolved
-reservation and never authorizes resubmission.
+An intent with uncertain acceptance is never blindly resubmitted. The complete source
+inventory can recover the admitted workflow by its persisted token digest after a lost
+HTTP acknowledgement. Source lookup alone finds one identity in one known case and
+cannot clear unknown acceptance. Pending workflows are observed once per delivery;
+canonical projection redelivery or erasure verification supplies retries. Each source
+inventory and consumer ledger retains at most 1,024 obligations/receipts without eviction;
+pages contain at most 100 entries, and malformed or oversized responses fail closed.
+
+Verified preflight rejection permits retry after repair: existing authentication,
+validation, tenant-state and rate-limit errors plus explicit source revision conflict,
+stale revision, retry-body mismatch and admission-closed errors. Other response/code
+pairs and connection failures preserve uncertain acceptance. Source publication stages
+tracked Redis writes before pointer publication. Native Redis predicates and graph
+selection run before TopK/paging, so superseded candidates cannot starve current content;
+ordinary deployed index schemas gain the optional visibility field idempotently when
+refresh is first enabled. Unchanged tenants retain their existing query path and paging.
+A detected publication race returns retryable `SOURCE_PUBLICATION_CHANGED`, preserving
+honest counts rather than returning a partially filtered page.
 
 Legacy mapping IDs are only candidate workflow handles. Cleanup must validate their
 terminal status and can resolve a different canonical output ID. Under the cleanup
@@ -147,9 +222,12 @@ workflow status expired before its provenance was durably captured, the legacy m
 a source lookup miss is insufficient to clear it. No production migration runs.
 Drain older Parties writers before relying on the new guarantees, and do not expire
 or delete empty ledgers or fences while operations may be in flight. This forward
-fix cannot reconstruct obligations lost before its installation. DW-82 remains open:
-a locally empty inventory does not establish authoritative absence of historical
-remote units after state loss or configuration drift.
+fix cannot reconstruct obligations lost before installation. Legacy tenant/source
+coverage therefore remains incomplete until a qualified owner reconciliation drains
+older writers and enumerates historical cases/units. The synthetic runtime protocol is
+explicitly limited to newly created owned test tenants and does not initialize legacy
+production coverage. Source adapter/component evidence, package publication and actual
+live erasure qualification are recorded independently in the batch receipts.
 
 ## Health when indexing is disabled
 
@@ -231,15 +309,22 @@ DELETE probe success alone does not qualify cleanup or physical erasure.
 
 The optional owned-runtime fixture attempts bounded case/tenant teardown on both
 success and failure, retaining private handles and teardown outcomes beside its
-private runtime configuration when completion cannot be observed. It does not
-force delayed ingestion/deletion. The selected runtime qualification remains blocked
-by Memories' authenticated EventStore gateway prerequisite, so DW-168 stays open
-and this batch makes no physical-erasure qualification claim.
+private runtime configuration when completion cannot be observed. The selected-source harness requires bounded controlled pauses before first materialization,
+after output persistence but before terminal acknowledgement, and during physical deletion.
+The owned selected-source qualification executes the separate real domain-service host,
+authenticated gateway and native workflows. It verifies changed current content, restart,
+lost acknowledgement, all three pauses, physical absence across derived stores and
+unrelated tenant/case survival. Independent actor bytes match authenticated SDK native
+stream reads, and the actual domain host reconstructs first/final state through the
+gateway's administrative replay route. This is disposable component qualification with
+fake embeddings; it supplies no production coverage reconciliation, package publication
+or deployed whole-topology claim. Exact final counts and owned cleanup are recorded in
+the batch receipt.
 
 The independent `PARTIES_MEMORIES_STATE_RUNTIME_CONFIG` opt-in test exercises the
 actual EventStore SDK/Dapr serialization and conditional persistence without tenant
 provisioning or a Memories producer. It can qualify mapping/intent wire compatibility
-while the remote workflow prerequisite remains blocked; it does not qualify erasure.
+independently of the full producer workflow control; it does not by itself qualify erasure.
 Its two independent SDK clients also reject a stale ETag after a competing update
 and permit exactly one competing absent-key creation, inspecting persisted winner
 bytes independently. Mapping and projection stores may have distinct configured
@@ -255,3 +340,22 @@ The public init-only options setter and existing options-monitor notifications
 are preserved. Signed-token and named bearer-options checks qualify source;
 matching package publication and the separate Dapr publisher secret-binding gate
 remain independent requirements. See the [owner configuration batch receipts](../_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/README.md).
+
+Review-loop lifecycle correction (2026-10-24): admission retains source claim-check identity before preparation, then distinguishes proven pre-scheduling failure from an ambiguous scheduling call. Missing workflow state and terminated work remain unresolved. After a source fence, independently scoped failed workflows and proven unscheduled producers physically reconcile failed-unit hashes, case indexes, source payloads and derived stores before terminal proof is retained. Durable deletion receipts repair historical output/reverse-alias interruption on later inventory reads. The earlier receipt remains historical; the review-loop receipt records the executed final controls separately.
+
+Producer payload retention also records a bounded per-write token before each Dapr save. Only an affirmative Dapr acknowledgement settles it. Unit purge installs a permanent writer fence and refuses completion while any save may still materialize; restart and elapsed time cannot discard that authority. Ambiguous save completion therefore remains an explicit unresolved obligation until independently resolved. Failure-record persistence checks the same permanent unit tombstone atomically with its hash/index write, preventing delayed failure metadata from reappearing after cleanup.
+
+Review-loop 2 retains each original explicit-refresh body digest and canonical sequence in the SDK consumer reservation before submission. Canonical redelivery can omit ignored search collections or change delivery context while recovering that exact admitted identity. A never-submitted supersession successor receives its own body binding before admission; submitted or ambiguous attempts keep their original binding. Legacy acknowledged intents without exact authority and refresh proof remain unresolved.
+
+Source terminal proof also covers a distinct discarded post-index dedup candidate: its derived rows, failed-unit metadata and claim-checked payloads must be physically reconciled before the canonical winner's producer can settle. Lost output acknowledgements retain the winner obligation even when the producer fails. Annotation graph failure may record Unscheduled only from durable execution history proving no child call was attempted; ambiguous child calls and lost Preparing executions remain fenced.
+
+SDK source inventory reads use headers-only completion, a one-MiB streamed byte limit, bounded entries/cursors, caller cancellation and the existing total HTTP timeout through body decoding. Inventory deletion receipt repair uses one exact batched read and a bounded CAS repair. Modern refreshes use retained publication-key provenance; unsealed legacy sets use a bounded exact-unit native vector-index lookup and receive a completion marker only after every discovered key is retained. Missing or incompatible native discovery requires owner reconciliation. No refresh scans the Redis keyspace.
+
+Final executed evidence: [review-loop 2 receipt](../_bmad-output/implementation-artifacts/tests/five-memories-inventory-and-publication-2026-10-24/review2-verification.json).
+
+
+Review-loop 3 (2026-10-24): every late materialization of a publication-managed unit joins its exact bounded key set, including untracked NL and chunk maintenance writes. Source, alias, refresh/publication and claim-check authority keys have a bounded tenant ownership ledger. Tenant teardown installs a permanent content-free fence and reconciles actual claim-checked bytes before backend deletion; unresolved payload or graph write acknowledgements block success across restart. Each graph invocation has independent authority. An explicit graph-command ACL denial proves non-execution; timeouts and lost acknowledgements do not. The native registry's absent-tenant path also drains this technical ownership.
+
+Admission uses the existing authorization bound of 128 tenant characters, 4096 source characters, and 512 case/workflow/candidate/predecessor characters, rejecting control characters before preparation or durable admission. Accepted boundary identities are read through the actual public SDK. Superseded refresh compensation records its deleted output for independent terminal proof; mutation receipt reads use one bounded multi-get. Graph publication overlap returns retryable 503 with error telemetry, and raw cleanup inventory reads retain the configured total HTTP deadline through body completion. The original public constructor signatures remain available, with production DI choosing the tenant-aware adapters.
+
+Unknown historic coverage remains incomplete. DW-196, DW-197 and DW-198 retain the pre-existing legacy NL migration, queued NL retry erasure and sparse-keyspace deletion-discovery follow-ups. Matching package publication/adoption, deployment of the workload topology and production qualification remain separate gates. Earlier receipts are historical after these corrections; final loop3 results are recorded in the bounded batch receipt.

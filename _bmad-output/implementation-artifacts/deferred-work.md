@@ -640,6 +640,13 @@ reason: `PartyMemoryCleanupService.DeleteByPartyAsync` treats zero local mapping
 status: open
 decision: 2026-09-07 Query Memories — Add or adopt a bounded Memories API that inventories units by canonical Parties source identity, reconcile local mappings from it, and require zero remote units before reporting cleanup complete.
 
+implementation_2026_10_24: Memories now durably inventories bounded tenant/source admissions, historical canonical units, aliases, output-known state, independently observed workflow terminality and physical deletion. Parties fences and reconciles that inventory even with empty local state, retains partial discoveries and requires complete terminal source closure. SDK-protected version-bound cursors invalidate after admission/mutation; incomplete legacy coverage never becomes complete through dedup/search or maintenance registry cleanup.
+remaining_gate_2026_10_24: Source capability and consumer controls are implemented; unchanged catalog packages still require owner publication/adoption. Legacy coverage requires explicit qualified owner reconciliation after older writers drain. No production migration or inferred historical completeness is supplied.
+verification_2026_10_24: `spec-five-memories-inventory-and-publication-deferred-items.md`; `tests/five-memories-inventory-and-publication-2026-10-24/` separates actual Redis/FalkorDB adapters, consumer state/HTTP controls and live prerequisites.
+
+review_loop_1_2026_10_24: Source inventory now retains independently verifiable scheduling, candidate/claim-check and terminal provenance. Proven unscheduled and independently failed work is physically reconciled; missing/terminated workflows and ambiguous payload writes remain fenced. Durable payload write tokens prevent deletion from certifying absence while a save can still materialize. The final real-backend lane passes 21/21; parent review/publication and legacy reconciliation remain open. Evidence: `tests/five-memories-inventory-and-publication-2026-10-24/review1-verification.json`; prior same-day counts above remain historical.
+  review_loop_2_2026_10_24: Source inventory now batches exact deletion receipts and withholds terminal proof until every retained discarded candidate, failed-unit record and claim-checked payload is reconciled. Unknown legacy completeness stays open; final loop2 receipt is separate from earlier evidence.
+
 ### DW-83: Persist recovery when mapping and compensating deletion both fail
 
 origin: migrated from legacy ledger ("Deferred from: bmad-build Story 8.6 review (2026-08-16)"), 2026-09-06
@@ -844,6 +851,13 @@ remaining_gate_2026_10_23: Shared immutable publisher/validator adoption and pub
 verification_2026_10_23: `tests/five-publish-and-process-safety-2026-10-23/`; spec `spec-five-publish-and-process-safety-deferred-items.md`.
 
 
+implementation_2026_10_24: The release workflow and publication reader now select published Builds integration `11a3a79cfac4bba9548c6364a17a01ee9b561370`; validator bytes are pinned to SHA-256 `1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c`. Valid OCI fixtures contain canonical matching image/artifact created labels. Executable missing, malformed, impossible-calendar, unequal-pair and cross-platform created mutations reject. The authoritative NuGet-404 behavior remains intact. Full CI passes 455/455 and the unchanged owner publisher suite passes 150/150.
+remaining_gate_2026_10_24: Parent review and immutable adoption records/commit remain final workflow steps. No release dispatch, deployment or production publication was performed.
+verification_2026_10_24: `tests/five-memories-inventory-and-publication-2026-10-24/`; historical 2026-10-23 observations remain preserved.
+
+review_loop_1_2026_10_24: Re-executed the unchanged immutable publisher controls (150/150), Parties CI/OCI readers (455/455), and canonical-created positive/negative controls. Exact executor/validator pins and authoritative NuGet-404 behavior remain preserved; no release was dispatched. Evidence: `tests/five-memories-inventory-and-publication-2026-10-24/review1-verification.json`; prior same-day counts above remain historical.
+  review_loop_2_2026_10_24: The immutable published executor and validator pins, canonical created-label fixtures and executable negative mutations are preserved. The loop2 receipt reruns the reader/CI/publisher controls without releasing or deploying.
+
 ### DW-108: Align diagnostic source gitlinks to the published nuget.org tags selected by the Builds catalog.
 
 status: done 2026-09-07
@@ -891,6 +905,13 @@ implementation_2026_10_23: The owning FrontComposer shell now uses the identical
 remaining_gate_2026_10_23: Matching FrontComposer publication/adoption and positive Parties compact browser/component source qualification remain open. Pinned source Debug reaches Platform HXR020; focused consumer mapping fails MSB4044 (AssetsFile), including explicit net10 fallback. No warning/source gate was bypassed.
 verification_2026_10_23: `tests/five-publish-and-process-safety-2026-10-23/`; spec `spec-five-publish-and-process-safety-deferred-items.md`.
 
+
+implementation_2026_10_24: Compact tests automatically execute for validated source selections and compare actual served owner focus/CSS bytes. Actual desktop/phone/tablet/resized browser coverage revealed a duplicated `fc-nav` inside FluentLayout's hidden drawer; the owner now places the unique focus target on the owning navigation item outside copied ChildContent. Source bUnit and actual browser controls pass. Forced package negative controls still execute and fail behaviorally.
+remaining_gate_2026_10_24: Matching FrontComposer package publication/adoption remains separate. Positive mapped source qualification closes the former source-assets blocker, not package qualification.
+verification_2026_10_24: `tests/five-memories-inventory-and-publication-2026-10-24/`; pinned Node 24.22.1 browser and warning-free mapped source builds are recorded independently from package controls.
+
+review_loop_1_2026_10_24: Re-executed mapped source bUnit (415/415) and actual source browser (4/4, zero skips) with owner asset comparison. Forced package bUnit and actual-browser controls fail for duplicate navigation targets as expected; matching package adoption remains deferred. Evidence: `tests/five-memories-inventory-and-publication-2026-10-24/review1-verification.json`; prior same-day counts above remain historical.
+  review_loop_2_2026_10_24: The preserved mapped compact/browser and package-negative controls are rerun in the loop2 receipt; owner package publication/adoption and deployed qualification remain open.
 
 ### DW-113: Parse only the first complete JSON object from MSBuild `-getProperty/-getItem` stdout.
 
@@ -1402,6 +1423,13 @@ status: open
 progress: 2026-10-23 Consumer terminal reconciliation, durable settled absence, cancellation recovery and canonical publication fences are implemented and independently reviewed. Focused source/current-package/2.27.1-floor checks and actual SDK/Dapr persistence pass. Keep this entry open: selected-producer delayed-ingestion/deletion and physical-erasure qualification are not established. The original 2.27.1 runtime attempt was blocked by authenticated gateway routing; the independently selected 2.29.8 runtime has not been live-qualified.
 verification: `spec-five-memories-recovery-deferred-items.md`; `tests/five-memories-recovery-deferred-items-2026-10-23/validation.json` and historical `runtime-blocker.json`.
 
+implementation_2026_10_24: Output-known inventory no longer certifies workflow terminality. Consumer imports require independent terminal proof before deletion/retirement. Actual Redis/FalkorDB tests establish positive backend contents before physical deletion, unrelated-source survival and permanent replay fences. The owned nonproduction runtime protocol explicitly reconciles only a fresh controlled tenant/source, then forces pre-materialization, post-output/pre-terminal and asynchronous deletion delays, lost acknowledgement and adapter restart. The actual authenticated three-target run now completes tenant/case provisioning, current-content refresh, restart/erasure and unrelated tenant/case controls. SDK native stream reads match independent persisted actor bytes; real gateway administrative replay reconstructs first/final domain states.
+remaining_gate_2026_10_24: The owned selected-source live boundary is qualified with a real separate Memories domain-service host executing existing decisions/folds and unchanged events. Matching EventStore/Memories owner publication/adoption, production workload/key/trust configuration, legacy reconciliation and deployed qualification remain separate. Broad module composition still fails Platform HXR020; the retained focused component graph does not claim whole-topology health. Parent review and immutable adoption records remain pending.
+verification_2026_10_24: `tests/five-memories-inventory-and-publication-2026-10-24/`; private runtime configurations/cleanup handles are retained outside the repository.
+
+review_loop_1_2026_10_24: The enhanced authenticated three-host wrapper and child pass 1/1 each, zero skips, with normal lost-ack indexing recovery, real extraction-failure/Dapr-payload absence, native persisted stream/replay comparison, delayed producer/deletion controls and unrelated survivors. Payload/save and failed-metadata fences close the delayed-writer boundaries. Deployed/workload configuration and legacy gates remain separate. Evidence: `tests/five-memories-inventory-and-publication-2026-10-24/review1-verification.json`; prior same-day counts above remain historical.
+  review_loop_2_2026_10_24: Discarded post-index losers and lost output acknowledgements retain independent cleanup obligations across restart. Annotation graph failure records non-scheduling only from the actual pre-child workflow history; ambiguous calls and lost Preparing work stay fenced. Source/package/runtime/deployed evidence remains separate.
+
 ### DW-169: D7 — Use concurrency-aware removal when cleaning a party memory-unit mapping inventory.
 
 status: done 2026-10-18
@@ -1912,6 +1940,12 @@ archived: 2026-10-21
   evidence: Selected reference CheckIdempotencyActivity falls back from a new token to the permanent source-URI record, and SaveDedupKeyActivity stores that record without expiry. Baseline indexing already used the same canonical URI. A new token cannot establish refreshed content or recreate a deleted source. This batch retains canonical provenance and rejects known-cleaned IDs; producer update/reindex support and consumer adoption need separate qualification.
   status: open
 
+  implementation_2026_10_24: Mapped-source Parties calls explicit revision-aware Memories refresh. Native Redis visibility predicates precede TopK/paging, existing schemas gain an idempotent optional field, and graph source pointers remain monotonic. Both same-predecessor completion orders, stable retry/body binding, predecessor conflict, delayed superseded compensation, restart, exact-predecessor recreation and erasure replay fences are exercised through real adapters. Superseded consumer attempts retain canonical provenance and a durable successor link.
+  remaining_gate_2026_10_24: The owned authenticated selected-source runtime now verifies a different canonical output and current changed content at the same URI. Explicit producer acknowledgement rejects older servers that ignore refresh fields, retaining uncertain admission across recreation. Unchanged catalog packages retain ordinary ingest defaults; matching Memories/EventStore publication/adoption and deployed qualification remain separate. No claim of refreshed content is made from a new token alone.
+  verification_2026_10_24: `tests/five-memories-inventory-and-publication-2026-10-24/`.
+  review_loop_1_2026_10_24: Canonical revision is required before reservation/submission. Lost-ack recovery requires exact tenant/source/authority/token plus durable explicit-refresh protocol/revision/body binding and independent terminal success. Redis publication retains durable graph repair authority; graph reads reject overlapping publication, and retired neighbor metadata is filtered. Both revision orders, actual semantic caller, graph denial/restart repair and alias/deletion convergence pass; source/package/deployed boundaries remain separate. Final evidence: `tests/five-memories-inventory-and-publication-2026-10-24/review1-verification.json`.
+  review_loop_2_2026_10_24: Consumer reservations retain the original protocol/revision/body digest before admission. Canonical JSON redelivery recovers that persisted identity without resubmission or unproved legacy adoption; a proven unsubmitted successor binds its own actual body. Modern refresh uses bounded key provenance, incomplete legacy registration is rediscovered natively before sealing, and actual NL TopK/current publication controls remain required. Final evidence is retained separately in the loop2 receipt.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-recovery-deferred-items.md`
   summary: Qualify whether ingestion-inventory persistence needs a separate health capability probe.
   severity: medium
@@ -1975,3 +2009,36 @@ archived: 2026-10-21
 
   resolution_2026_10_23: Reviewed Memories 5a852389327bf45df7d59b2c2e29c7adbe353f19 is published and adopted at a9f4edb5a8a769e36499063b5b88413af01a7bd0. Registered HTTP/token/default/invalid/reload controls pass in the full 120-case suite; deployment remains external.
   final_verification: `tests/five-recovery-integration-2026-10-23/final-verification.json`.
+
+
+### DW-196: Fence legacy natural-language migration and erase both NL namespaces
+
+status: open
+origin: review-loop-3
+severity: medium
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-inventory-and-publication-deferred-items.md`
+  summary: Fence legacy natural-language migration and erase both NL namespaces.
+  evidence: Pre-existing canonical-only deletion and the unfenced RedisNaturalLanguageNamespaceMigrator can retain or recreate legacy NL rows; verify the actual migrator, both namespaces, deletion races, restart and unrelated survivors. No production legacy migration is authorized by this batch.
+
+
+### DW-197: Qualify erasure of natural-language retry payloads and delayed retry work
+
+status: open
+origin: review-loop-3
+severity: medium
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-inventory-and-publication-deferred-items.md`
+  summary: Qualify erasure of natural-language retry payloads and delayed retry work.
+  evidence: Pre-existing live/dead NL retry registries retain queued raw JSON outside the workflow claim-check ledger; qualify actual registry/worker payload erasure and delayed retries across restart. No production legacy migration is authorized by this batch.
+
+
+### DW-198: Bound legacy semantic deletion discovery without full Redis keyspace scans
+
+status: open
+origin: review-loop-3
+severity: medium
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-inventory-and-publication-deferred-items.md`
+  summary: Bound legacy semantic deletion discovery without full Redis keyspace scans.
+  evidence: FindSemanticKeysAsync retains its pre-existing complete KeysAsync scan; verify bounded exact-unit discovery or explicit owner reconciliation with sparse databases, exact scope and cancellation. No production legacy migration is authorized by this batch.

@@ -76,4 +76,11 @@
                       PrivateAssets="all" />
   </ItemGroup>
 
+  <!-- Generated from the evaluated pinned-tool mapping; browser qualification verifies
+       the corresponding actually served assets before accepting source coverage. -->
+  <Target Name="WriteBrowserSourceQualificationMetadata" AfterTargets="Build">
+    <WriteLinesToFile File="$(TargetDir)Hexalith.Parties.UI.source-metadata.txt"
+                      Lines="$(HexalithFrontComposerFromSource);$(HexalithSourceMappingMode);$(HexalithFrontComposerRoot)"
+                      Overwrite="true" />
+  </Target>
 </Project>

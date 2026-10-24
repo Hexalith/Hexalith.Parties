@@ -470,7 +470,8 @@ public sealed class PartyMemoryCoordinationTests
         (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", Token)).ShouldBeEmpty();
         PartyMemoryIngestionIntent settled = (await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync("tenant", "party", Token)).ShouldHaveSingleItem();
         settled.ShouldBe(new PartyMemoryIngestionIntent(settled.AttemptId, "case", "urn:legacy",
-            "legacy-workflow", "legacy-canonical", CleanupSettled: true));
+            "legacy-workflow", "legacy-canonical", CleanupSettled: true, ProducerAuthority: PartyMemoryCleanupService.BuildProducerAuthority(http.BaseAddress),
+            AbsenceAuthority: PartyMemoryCleanupService.BuildProducerAuthority(http.BaseAddress)));
         (await mappings.GetMappingsAsync("tenant", "party", Token)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe("legacy-workflow");
         handler.Workflows.Clear();
         handler.Requests.Clear();
@@ -535,7 +536,7 @@ public sealed class PartyMemoryCoordinationTests
         await intents.BeginCleanupAsync("tenant", "party", Token, permanent: false);
         (await intents.TryReopenAsync("tenant", "party", Token)).ShouldBeFalse();
         (await state.TrySaveAsync("projection-store", key, live, string.Empty, Token)).ShouldBeTrue();
-        (await adapter.NotifyIndexedAsync("tenant", PartyMemoryRecoveryTests.Entry(), "PartyCreated", DateTimeOffset.UnixEpoch, Token)).ShouldBeTrue();
+        (await adapter.NotifyIndexedAsync("tenant", PartyMemoryRecoveryTests.Entry(), "PartyCreated", DateTimeOffset.UnixEpoch, 1, Token)).ShouldBeTrue();
         (await mappings.GetMappingsAsync("tenant", "party", Token)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe("canonical");
         string mappingKey = PartyMemoryUnitMappingStore.BuildKey("tenant", "party");
         (await state.GetAsync<List<PartyMemoryUnitMappingEntry>>("statestore", mappingKey, Token)).Value.ShouldBeNull();
@@ -555,7 +556,8 @@ public sealed class PartyMemoryCoordinationTests
         var old = new PartyMemoryIngestionIntent("old", "case", "urn:old", "old-workflow", "canonical");
         await intents.RegisterAsync("tenant", "party", old, Token);
         await intents.BeginCleanupAsync("tenant", "party", Token);
-        (await intents.RemoveAsync("tenant", "party", [old], Token)).ShouldBe(0);
+        (await intents.RemoveAsync("tenant", "party", [old], Token,
+            PartyMemoryCleanupService.BuildProducerAuthority(new Uri("http://127.0.0.1:1/gateway/")))).ShouldBe(0);
         var mappings = PartyMemoryRecoveryTests.Mappings(state);
         await mappings.RecordMappingAsync("tenant", "party", "new-legacy-workflow", "urn:legacy", "case", Token);
         var handler = new PartyMemoryRecoveryHandler();

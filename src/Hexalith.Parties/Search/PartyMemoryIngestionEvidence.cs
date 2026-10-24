@@ -15,7 +15,14 @@ internal static class PartyMemoryIngestionEvidence
             || (exception.StatusCode == HttpStatusCode.NotFound && exception.Error.Code == "TENANT_NOT_FOUND")
             || (exception.StatusCode == HttpStatusCode.TooManyRequests && exception.Error.Code == "RATE_LIMIT_EXCEEDED")
             || (exception.StatusCode == HttpStatusCode.Conflict && exception.Error.Code is
-                "TENANT_PROVISIONING" or "TENANT_DELETING" or "TENANT_FAILED" or "TENANT_UNAVAILABLE");
+                "TENANT_PROVISIONING" or "TENANT_DELETING" or "TENANT_FAILED" or "TENANT_UNAVAILABLE"
+                or "SOURCE_REOPEN_CONFLICT" or "SOURCE_ADMISSION_CLOSED" or "SOURCE_REVISION_CONFLICT" or "SOURCE_REVISION_STALE" or "SOURCE_REVISION_IDENTITY_MISMATCH");
+
+    /// <summary>Recognizes the selected producer's scoped terminal no-publication outcome for a compensated revision.</summary>
+    internal static bool IsSuperseded(IngestionWorkflowStatus status, string instanceId, string tenantId, string caseId)
+        => status.InstanceId == instanceId && status.TenantId == tenantId && status.CaseId == caseId
+            && status.RuntimeStatus == "Completed" && status.MemoryUnitStatus == MemoryUnitStatus.Failed
+            && status.FailureSummary == "source-refresh-superseded" && !string.IsNullOrWhiteSpace(status.MemoryUnitId);
 
     /// <summary>Returns only a scoped, successful terminal identity; all uncertain evidence remains unresolved.</summary>
     internal static string? Resolve(IngestionWorkflowStatus? status, string instanceId, string tenantId, string caseId)

@@ -100,6 +100,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             CreateEntry(),
             "PartyCreated",
             eventTimestamp,
+            1,
             TestContext.Current.CancellationToken);
 
         result.ShouldBeTrue();
@@ -341,7 +342,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
                 monitor,
                 NullLogger<PartyMemoryIndexingService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()),
             new PartyMemoryCleanupService(
-                new HttpClient { BaseAddress = new Uri("https://memories.example/") },
+                new HttpClient(new PartyMemoryRecoveryHandler()) { BaseAddress = new Uri("https://memories.example/") },
                 mappingStore,
                 NullLogger<PartyMemoryCleanupService>.Instance, Hexalith.Parties.Tests.Search.PartyMemoryTestServices.CreateIntentStore()),
             monitor,
@@ -685,7 +686,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
     }
 
     private static Task<bool> NotifyMissingCaseAsync(PartyMemoryIndexEntrySearchIndexer indexer, string tenantId, string partyId)
-        => indexer.NotifyIndexedAsync(tenantId, CreateEntry() with { Id = partyId }, "PartyCreated", DateTimeOffset.UnixEpoch, TestContext.Current.CancellationToken);
+        => indexer.NotifyIndexedAsync(tenantId, CreateEntry() with { Id = partyId }, "PartyCreated", DateTimeOffset.UnixEpoch, 1, TestContext.Current.CancellationToken);
 
     private static PartyMemorySearchOptions MissingCaseOptions(string? caseId = null)
         => new() { Enabled = true, Endpoint = new Uri("https://memories.example/"), CaseId = caseId };
@@ -726,7 +727,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
                 monitor,
                 NullLogger<PartyMemoryIndexingService>.Instance, intentStore),
             new PartyMemoryCleanupService(
-                new HttpClient { BaseAddress = new Uri("https://memories.example/") },
+                new HttpClient(new PartyMemoryRecoveryHandler()) { BaseAddress = new Uri("https://memories.example/") },
                 mappingStore,
                 NullLogger<PartyMemoryCleanupService>.Instance, intentStore),
             monitor,
@@ -849,6 +850,20 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         public bool FailNextIngest { get; set; }
 
 #pragma warning disable HXL001
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+        public override Task<string?> LookupMemoryUnitIdBySourceUriAsync(string tenantId, string caseId, string sourceUri, CancellationToken ct)
+            => Task.FromResult<string?>(null);
+
+        public override Task<SourceInventoryPage> GetSourceInventoryAsync(string tenantId, string sourceUri, string? cursor = null,
+            int pageSize = 100, CancellationToken ct = default)
+            => Task.FromResult(new SourceInventoryPage(tenantId, sourceUri, "controlled-source", true, false, false, [], null));
+
+        public override Task<string> RefreshAsync(string tenantId, string caseId, string sourceUri, byte[] content, string contentType,
+            string ingestedBy, IReadOnlyDictionary<string, MetadataField>? metadata, string idempotencyToken,
+            string? expectedMemoryUnitId, long sourceRevisionNumber, CancellationToken ct, string? reopenSourceVersion = null)
+            => IngestAsync(tenantId, caseId, sourceUri, content, contentType, ingestedBy, metadata, idempotencyToken, ct);
+#endif
+
         public override Task<string> IngestAsync(
             string tenantId,
             string caseId,
@@ -885,6 +900,20 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
             NullLogger<MemoriesClient>.Instance)
     {
 #pragma warning disable HXL001
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+        public override Task<string?> LookupMemoryUnitIdBySourceUriAsync(string tenantId, string caseId, string sourceUri, CancellationToken ct)
+            => Task.FromResult<string?>(null);
+
+        public override Task<SourceInventoryPage> GetSourceInventoryAsync(string tenantId, string sourceUri, string? cursor = null,
+            int pageSize = 100, CancellationToken ct = default)
+            => Task.FromResult(new SourceInventoryPage(tenantId, sourceUri, "controlled-source", true, false, false, [], null));
+
+        public override Task<string> RefreshAsync(string tenantId, string caseId, string sourceUri, byte[] content, string contentType,
+            string ingestedBy, IReadOnlyDictionary<string, MetadataField>? metadata, string idempotencyToken,
+            string? expectedMemoryUnitId, long sourceRevisionNumber, CancellationToken ct, string? reopenSourceVersion = null)
+            => IngestAsync(tenantId, caseId, sourceUri, content, contentType, ingestedBy, metadata, idempotencyToken, ct);
+#endif
+
         public override Task<string> IngestAsync(
             string tenantId,
             string caseId,
@@ -907,6 +936,7 @@ public sealed class PartyMemoryIndexEntrySearchIndexerTests
         public string CaseId { get; set; } = "case-a";
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            if (PartyMemoryInventoryTestWire.TryResponse(request, out HttpResponseMessage inventory)) { return Task.FromResult(inventory); }
             if (request.RequestUri!.AbsolutePath.Contains("/ingest/", StringComparison.Ordinal))
             {
                 return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)

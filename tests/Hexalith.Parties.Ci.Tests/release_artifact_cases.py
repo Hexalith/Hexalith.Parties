@@ -17,7 +17,7 @@ from pathlib import Path
 
 SOURCE = "a" * 40
 VERSION = "1.2.3"
-BUILDS = "d9070aa0d43feb9e3359286bc797d2be65960727"
+BUILDS = "11a3a79cfac4bba9548c6364a17a01ee9b561370"
 INDEX = "application/vnd.oci.image.index.v1+json"
 MANIFEST = "application/vnd.oci.image.manifest.v1+json"
 CONFIG = "application/vnd.oci.image.config.v1+json"
@@ -149,13 +149,28 @@ def run(repository, scenario):
     labels = {"org.opencontainers.image.source": "https://github.com/Hexalith/Hexalith.Parties",
               "org.opencontainers.image.url": f"https://github.com/Hexalith/Hexalith.Parties/releases/tag/v{VERSION}",
               "org.opencontainers.image.documentation": f"https://github.com/Hexalith/Hexalith.Parties/blob/{SOURCE}/README.md",
-              "org.opencontainers.image.revision": SOURCE, "org.opencontainers.image.version": VERSION}
+              "org.opencontainers.image.revision": SOURCE, "org.opencontainers.image.version": VERSION,
+              "org.opencontainers.image.created": "2024-02-29T23:59:59Z",
+              "org.opencontainers.artifact.created": "2024-02-29T23:59:59Z"}
     for image in ("parties", "parties-mcp", "parties-ui"):
         descriptors = []
         for architecture in ("amd64", "arm64"):
             child_labels = dict(labels)
             if image == "parties-ui" and architecture == "arm64" and scenario == "wrong-provenance":
                 child_labels["org.opencontainers.image.revision"] = "b" * 40
+            if image == "parties" and architecture == "amd64":
+                if scenario == "missing-created-label":
+                    child_labels.pop("org.opencontainers.image.created")
+                elif scenario == "missing-artifact-created-label":
+                    child_labels.pop("org.opencontainers.artifact.created")
+                elif scenario == "truncated-created-label":
+                    child_labels["org.opencontainers.image.created"] = "2024-02-29T23"
+                elif scenario == "invalid-created-date":
+                    child_labels["org.opencontainers.image.created"] = child_labels["org.opencontainers.artifact.created"] = "2023-02-29T00:00:00Z"
+                elif scenario == "inconsistent-created-pair":
+                    child_labels["org.opencontainers.artifact.created"] = "2024-03-01T00:00:00Z"
+            if image == "parties" and architecture == "arm64" and scenario == "different-child-created-pair":
+                child_labels["org.opencontainers.image.created"] = child_labels["org.opencontainers.artifact.created"] = "2024-03-01T00:00:00Z"
             platform = "s390x" if image == "parties" and architecture == "arm64" and scenario == "wrong-config-platform" else architecture
             config = data({"os": "linux", "architecture": platform, "config": {"Labels": child_labels}})
             config_digest = digest(config)
@@ -276,6 +291,8 @@ def run(repository, scenario):
                 oci = json.loads((directory / "oci-validation.json").read_text())
                 assert oci["index_digest"] == digest((directory / "index.raw").read_bytes())
                 for child in oci["children"]:
+                    assert child["provenance_labels"]["org.opencontainers.image.created"] == "2024-02-29T23:59:59Z"
+                    assert child["provenance_labels"]["org.opencontainers.artifact.created"] == "2024-02-29T23:59:59Z"
                     for kind in ("manifest", "config"):
                         assert child[f"{kind}_raw_sha256"] == hashlib.sha256((directory / child[f"{kind}_raw_file"]).read_bytes()).hexdigest()
             if scenario in {"propagation-package", "propagation-image", "transient-recovery", "transport-recovery"}:

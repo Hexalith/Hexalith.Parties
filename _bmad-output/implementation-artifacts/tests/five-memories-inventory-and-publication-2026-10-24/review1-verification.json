@@ -1,0 +1,1192 @@
+{
+  "date_utc": "2026-10-24T08:07:05.672033+00:00",
+  "status": "implementation verified; parent independent review and owner-first Git publication pending",
+  "prior_verification": "verification.json and matrix.json are retained historical evidence after the review-loop lifecycle changes",
+  "frozen_intent_sha256": "86e50673e679f07bb66072e6695f8027d7a54b2e56e2430bb53358ba10744281",
+  "baseline_heads": {
+    ".": "5eca98e9725aeb528c90d058eb2e08a64700b49f",
+    "references/Hexalith.Memories": "5a852389327bf45df7d59b2c2e29c7adbe353f19",
+    "references/Hexalith.EventStore": "da50f853b6c2c37193e9b1a8819858778d48d0f3",
+    "references/Hexalith.FrontComposer": "aee73e5841b4004803dafa851f060e143550716a",
+    "references/Hexalith.Builds": "8c9caa77feb85a2dce03153519d81684128890a6"
+  },
+  "results": [
+    {
+      "evidence": "review1-ledger-server",
+      "mode": "source",
+      "counts": {
+        "total": 3031,
+        "passed": 3030,
+        "failed": 0,
+        "skipped": 1
+      },
+      "xml_sha256": "139739b0fd496dd4372f98b3cecd6176f3360c4ae6fa7ac88082013f2a4f5a4d",
+      "skip_reasons": [
+        "Story 15.6 AC #7 behavioral guard \u2014 invokes `dotnet msbuild` against a workspace with a renamed submodule .git marker. Disabled by default because it mutates the shared worktree and depends on `dotnet` being on PATH; unskip manually or in the dedicated regression lane."
+      ],
+      "command": [
+        "dotnet",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll",
+        "-method-",
+        "*ProjectAssets_RestoreEventStorePackagesAtCatalogVersion",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-ledger-server.xml"
+      ]
+    },
+    {
+      "evidence": "review1-ledger-parties",
+      "mode": "source",
+      "counts": {
+        "total": 2701,
+        "passed": 2697,
+        "failed": 0,
+        "skipped": 4
+      },
+      "xml_sha256": "697879a5cd4c97203d13252e2ffbe119f684522c147b134326522f835d914dfb",
+      "skip_reasons": [
+        "Set PARTIES_MEMORIES_INVENTORY_ACL_CONFIG to an owned authenticated ACL runtime and loopback repair controller.",
+        "Set PARTIES_MEMORIES_RUNTIME_CONFIG to an owned local runtime's private JSON configuration.",
+        "Set PARTIES_MEMORIES_STATE_RUNTIME_CONFIG to private owned Dapr endpoints and credentials."
+      ],
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-method-",
+        "*FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+        "-method-",
+        "*CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-ledger-parties.xml"
+      ]
+    },
+    {
+      "evidence": "review1-domain-source",
+      "mode": "source",
+      "counts": {
+        "total": 12,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "9fa1c014954f627a2ea8fc5059c2a48ddbae5e17acf38a445054a8b1a0b1a610",
+      "skip_reasons": [],
+      "command": [
+        "dotnet",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.DomainService.Tests/bin/Debug/net10.0/Hexalith.Memories.DomainService.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-domain-source.xml"
+      ]
+    },
+    {
+      "evidence": "review1-client-source",
+      "mode": "source",
+      "counts": {
+        "total": 505,
+        "passed": 505,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "5d4023005921d8abdab8dfe93006fbb096730473904f062198776ed5a38e3792",
+      "skip_reasons": [],
+      "command": [
+        "dotnet",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.Cli.Tests/bin/Debug/net10.0/Hexalith.Memories.Cli.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-client-source.xml"
+      ]
+    },
+    {
+      "evidence": "review1-contracts-source",
+      "mode": "source",
+      "counts": {
+        "total": 596,
+        "passed": 596,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "3193acf030dab3b96634399ca073076d26322345c06f27089a5de814236b9e16",
+      "skip_reasons": [],
+      "command": [
+        "dotnet",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.Contracts.Tests/bin/Debug/net10.0/Hexalith.Memories.Contracts.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-contracts-source.xml"
+      ]
+    },
+    {
+      "evidence": "review1-ui-source",
+      "mode": "source",
+      "counts": {
+        "total": 415,
+        "passed": 415,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "ddf5d00d178be8b342e06c31444e251ec94eabb49c26121ff74728190eb5c90c",
+      "skip_reasons": [],
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.UI.Tests/bin/Debug/net10.0/Hexalith.Parties.UI.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-ui-source.xml"
+      ]
+    },
+    {
+      "evidence": "review1-sdk-client",
+      "mode": "source",
+      "counts": {
+        "total": 2142,
+        "passed": 2140,
+        "failed": 0,
+        "skipped": 2
+      },
+      "xml_sha256": "c3e6dd651f675cc8bf67ed32cf7188c06b7005cb566bd8df4525a53f2dcde1ee",
+      "skip_reasons": [
+        "Requires isolated Dapr endpoints."
+      ],
+      "command": [
+        "dotnet",
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.Client.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-sdk-client.xml"
+      ]
+    },
+    {
+      "evidence": "review1-sdk-domain",
+      "mode": "source",
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "17e4034382d884046287bc77085b0505b4d255cb4f4e4cdc5929bcfcfc0cc148",
+      "skip_reasons": [],
+      "command": [
+        "dotnet",
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.DomainService.Tests/bin/Debug/net10.0/Hexalith.EventStore.DomainService.Tests.dll",
+        "-class",
+        "*EventStoreGatewayWorkloadTransportTests",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-sdk-domain.xml"
+      ]
+    },
+    {
+      "evidence": "review1-sdk-receiver",
+      "mode": "source",
+      "counts": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "f13233de8afb7c4f44bb51ba8a5e403a60e4cd3f03928c8bcc7cbafb97c1a487",
+      "skip_reasons": [],
+      "command": [
+        "dotnet",
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/bin/Debug/net10.0/Hexalith.EventStore.Server.Tests.dll",
+        "-class",
+        "*WorkloadGatewayControllerTests",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-sdk-receiver.xml"
+      ]
+    },
+    {
+      "evidence": "review1-ledger-adapters2",
+      "mode": "source-real-backends",
+      "counts": {
+        "total": 21,
+        "passed": 21,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "cbcc4f82e72e7a19cd457cebbab6b550a6bc3b5f4bf2b2002ee90d07efb1f5de",
+      "skip_reasons": [],
+      "command": [
+        "dotnet",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "-class",
+        "*SourceInventoryIntegrationTests",
+        "-class",
+        "*RefreshPublicationIntegrationTests",
+        "-class",
+        "*SourceInventoryProducerIntegrationTests",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-ledger-adapters2.xml"
+      ]
+    },
+    {
+      "evidence": "review1-ledger-owned-runtime",
+      "mode": "owned-source-runtime",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "cb8f850c1a3c73fa7811efc2e86a93741139d99da323900c1540fc59a0fc8e3a",
+      "skip_reasons": [],
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll",
+        "-method",
+        "*ActualSelectedMemoriesRunsTheRecoveryAndPhysicalErasureControl",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-ledger-owned-runtime.xml"
+      ]
+    },
+    {
+      "evidence": "review1-server-package",
+      "mode": "package",
+      "counts": {
+        "total": 3030,
+        "passed": 3029,
+        "failed": 0,
+        "skipped": 1
+      },
+      "xml_sha256": "e265bbf6bdb0419f9edd211481be330da9bcd1b72d290c66602121578075c4ba",
+      "skip_reasons": [
+        "Story 15.6 AC #7 behavioral guard \u2014 invokes `dotnet msbuild` against a workspace with a renamed submodule .git marker. Disabled by default because it mutates the shared worktree and depends on `dotnet` being on PATH; unskip manually or in the dedicated regression lane."
+      ],
+      "command": [
+        "dotnet",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/bin/Release/net10.0/Hexalith.Memories.Server.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-server-package.xml"
+      ]
+    },
+    {
+      "evidence": "review1-client-package",
+      "mode": "package",
+      "counts": {
+        "total": 505,
+        "passed": 505,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "536899bbecc87145eb05f45c544ce6ca3da7c9898e97dba1188eadbcc313baea",
+      "skip_reasons": [],
+      "command": [
+        "dotnet",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.Cli.Tests/bin/Release/net10.0/Hexalith.Memories.Cli.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-client-package.xml"
+      ]
+    },
+    {
+      "evidence": "review1-domain-package",
+      "mode": "package",
+      "counts": {
+        "total": 12,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "9bad60a35aebeabf3b2ef7056dac928fa30f15a1abab23d0ebfd4ac23906bbf0",
+      "skip_reasons": [],
+      "command": [
+        "dotnet",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.DomainService.Tests/bin/Release/net10.0/Hexalith.Memories.DomainService.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-domain-package.xml"
+      ]
+    },
+    {
+      "evidence": "review1-parties-package",
+      "mode": "package",
+      "counts": {
+        "total": 2696,
+        "passed": 2684,
+        "failed": 0,
+        "skipped": 12
+      },
+      "xml_sha256": "53c753398cb3fd3a92ce02e0ed59797018dcf87643eb7223fc376a7ccf0c772e",
+      "skip_reasons": [
+        "Requires a qualified pinned-tool-generated source-mode build. Published EventStore 3.127.0 lacks this recovery fix; its package gate remains open.",
+        "Requires pinned-tool source qualification; EventStore 3.127.0 has no nonexpiring legacy recovery capability.",
+        "Set PARTIES_MEMORIES_INVENTORY_ACL_CONFIG to an owned authenticated ACL runtime and loopback repair controller.",
+        "Set PARTIES_MEMORIES_RUNTIME_CONFIG to an owned local runtime's private JSON configuration.",
+        "Set PARTIES_MEMORIES_STATE_RUNTIME_CONFIG to private owned Dapr endpoints and credentials."
+      ],
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-method-",
+        "*FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+        "-method-",
+        "*CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-parties-package.xml"
+      ]
+    },
+    {
+      "evidence": "review1-ui-package",
+      "mode": "package",
+      "counts": {
+        "total": 415,
+        "passed": 414,
+        "failed": 0,
+        "skipped": 1
+      },
+      "xml_sha256": "db3caaa131bd8e565bd3740d535ab484bc56058b077b266d9a6dbb44cb78f671",
+      "skip_reasons": [
+        "DW-112 compact source qualification requires the fixed FrontComposer; matching package adoption is pending."
+      ],
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.UI.Tests/bin/Release/net10.0/Hexalith.Parties.UI.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-ui-package.xml"
+      ]
+    },
+    {
+      "evidence": "review1-ci-package",
+      "mode": "package",
+      "counts": {
+        "total": 455,
+        "passed": 455,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "ca8269e2fcd1d2299e39bb152f4bd8554a5ef62051686297fafa341f4397a495",
+      "skip_reasons": [],
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-ci-package.xml"
+      ]
+    },
+    {
+      "evidence": "review1-package-catalog",
+      "mode": "package",
+      "counts": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "4cfa4e140200f821af709e03afcbaef95c4aa0e0d3fe1f3e0e0a8dd068bb205c",
+      "skip_reasons": [],
+      "command": [
+        "dotnet",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/bin/Release/net10.0/Hexalith.Memories.Server.Tests.dll",
+        "-method",
+        "*BuildsCatalog_PinsEventStoreFamilyAt31270",
+        "-method",
+        "*ProjectAssets_RestoreEventStorePackagesAtCatalogVersion",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-package-catalog.xml"
+      ]
+    },
+    {
+      "evidence": "review1-sdk-domain-package",
+      "mode": "package",
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "d102d51489f086bc6af2e93f45ee0fd1e7747a6c2fd2a6d20327477cee0e9bce",
+      "skip_reasons": [],
+      "command": [
+        "dotnet",
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.DomainService.Tests/bin/Release/net10.0/Hexalith.EventStore.DomainService.Tests.dll",
+        "-class",
+        "*EventStoreGatewayWorkloadTransportTests",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/review1-sdk-domain-package.xml"
+      ]
+    },
+    {
+      "evidence": "review1-ledger-owned-child",
+      "mode": "owned-source-runtime",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "xml_sha256": "d310d313825796a8e807e6b1c29d4571cad548fdd8d8f200ff970469c17c204b",
+      "skip_reasons": []
+    },
+    {
+      "evidence": "parent-final-parties",
+      "mode": "source",
+      "counts": {
+        "total": 2701,
+        "passed": 2697,
+        "failed": 0,
+        "skipped": 4
+      },
+      "xml_sha256": "d05d25c17e15ae863fb7bd5467aca7a0bf05c76df82ca7ade25174462c8bfab6",
+      "skip_reasons": [
+        "Set PARTIES_MEMORIES_INVENTORY_ACL_CONFIG to an owned authenticated ACL runtime and loopback repair controller.",
+        "Set PARTIES_MEMORIES_RUNTIME_CONFIG to an owned local runtime's private JSON configuration.",
+        "Set PARTIES_MEMORIES_STATE_RUNTIME_CONFIG to private owned Dapr endpoints and credentials."
+      ],
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-method-",
+        "*FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph",
+        "-method-",
+        "*CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification",
+        "-result-xml",
+        "/tmp/parties-five-inventory-20261024/parent-final-parties.xml"
+      ]
+    }
+  ],
+  "matrix": [
+    {
+      "frozen_row": 1,
+      "executed_passing_controls": [
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests.EmptyLocalStateRequiresExplicitCompleteRemoteCoverage(complete: False)",
+          "evidence": "review1-ledger-parties"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests.EmptyLocalStateRequiresExplicitCompleteRemoteCoverage(complete: True)",
+          "evidence": "review1-ledger-parties"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryIntegrationTests.HistoricalCasesAndPendingOutputsRemainDurableAcrossRestart",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests.EmptyLocalStateRequiresExplicitCompleteRemoteCoverage(complete: False)",
+          "evidence": "review1-parties-package"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests.EmptyLocalStateRequiresExplicitCompleteRemoteCoverage(complete: True)",
+          "evidence": "review1-parties-package"
+        }
+      ]
+    },
+    {
+      "frozen_row": 2,
+      "executed_passing_controls": [
+        {
+          "name": "Hexalith.Memories.Server.Tests.Authentication.IngestionStatusEndpointAuthorizationTests.SourceInventoryRejectsOtherTenantBeforeReadingOrFencing(fence: False)",
+          "evidence": "review1-ledger-server"
+        },
+        {
+          "name": "Hexalith.Memories.Server.Tests.Authentication.IngestionStatusEndpointAuthorizationTests.SourceInventoryRejectsOtherTenantBeforeReadingOrFencing(fence: True)",
+          "evidence": "review1-ledger-server"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.ActualDaprPayloadAdapterRetainsEveryAcknowledgedArtifactAcrossRestartAndDeletionFence",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.FailedProducerArtifactsAreReconciledButTerminatedWorkRetainsItsFence(status: Failed, materialized: False)",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.FailedProducerArtifactsAreReconciledButTerminatedWorkRetainsItsFence(status: Failed, materialized: True)",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.FailedProducerArtifactsAreReconciledButTerminatedWorkRetainsItsFence(status: Terminated, materialized: True)",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.OnlyProvenPreSchedulingFailuresCanSettleAfterSerializedRecreation(stage: \\\"prepare\\\")",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.OnlyProvenPreSchedulingFailuresCanSettleAfterSerializedRecreation(stage: \\\"track\\\")",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.OnlyProvenPreSchedulingFailuresCanSettleAfterSerializedRecreation(stage: \\\"schedule\\\")",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.PausedOrAmbiguousDaprSaveCannotBeForgottenByPurgeAcrossRestart(loseAcknowledgement: False)",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryProducerIntegrationTests.PausedOrAmbiguousDaprSaveCannotBeForgottenByPurgeAcrossRestart(loseAcknowledgement: True)",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.SourceInventoryIntegrationTests.CursorsAreProtectedAndInvalidatedByConcurrentAdmission",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Memories.Server.Tests.Authentication.IngestionStatusEndpointAuthorizationTests.SourceInventoryRejectsOtherTenantBeforeReadingOrFencing(fence: False)",
+          "evidence": "review1-server-package"
+        },
+        {
+          "name": "Hexalith.Memories.Server.Tests.Authentication.IngestionStatusEndpointAuthorizationTests.SourceInventoryRejectsOtherTenantBeforeReadingOrFencing(fence: True)",
+          "evidence": "review1-server-package"
+        }
+      ]
+    },
+    {
+      "frozen_row": 3,
+      "executed_passing_controls": [
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests.MissingRevisionFailsBeforeReservationThenCanonicalRedeliverySucceeds",
+          "evidence": "review1-ledger-parties"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.RefreshPublicationIntegrationTests.BothCompletionOrdersPreserveCurrentContentAndRetryableNewerRevision(newerFirst: False)",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.RefreshPublicationIntegrationTests.BothCompletionOrdersPreserveCurrentContentAndRetryableNewerRevision(newerFirst: True)",
+          "evidence": "review1-ledger-adapters2"
+        }
+      ]
+    },
+    {
+      "frozen_row": 4,
+      "executed_passing_controls": [
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests.CanonicalMappingCannotBypassRunningProducerTerminalEvidence",
+          "evidence": "review1-ledger-parties"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests.LostAcknowledgementRequiresExactExplicitRefreshAdmissionAcrossSerializedRestart(supported: True)",
+          "evidence": "review1-ledger-parties"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryRestClientRecoveryTests.LostAcknowledgementRequiresExactExplicitRefreshAdmissionAcrossSerializedRestart(supported: False)",
+          "evidence": "review1-ledger-parties"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.RefreshPublicationIntegrationTests.GraphFailureRetainsDurableRepairAndAllGraphCallersFailClosedUntilRestartRepair",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Memories.IntegrationTests.Ingestion.RefreshPublicationIntegrationTests.DirectDeletionBeforeReverseAliasRecoveryRepairsEveryOutputAfterSerializedRestart",
+          "evidence": "review1-ledger-adapters2"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemorySourceInventoryTests.CanonicalMappingCannotBypassRunningProducerTerminalEvidence",
+          "evidence": "review1-parties-package"
+        }
+      ]
+    },
+    {
+      "frozen_row": 5,
+      "executed_passing_controls": [
+        {
+          "name": "Hexalith.Parties.IntegrationTests.Topology.PartyMemoryOwnedRuntimeTests.ActualSelectedMemoriesRunsTheRecoveryAndPhysicalErasureControl",
+          "evidence": "review1-ledger-owned-runtime"
+        },
+        {
+          "name": "Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+          "evidence": "review1-ledger-owned-child"
+        }
+      ]
+    },
+    {
+      "frozen_row": 6,
+      "executed_passing_controls": [
+        {
+          "name": "Hexalith.Parties.UI.Tests.MainLayoutAccessibilityTests.MainLayout_navigation_skip_link_tracks_mounted_target_on_resize",
+          "evidence": "review1-ui-source"
+        },
+        {
+          "name": "Parties UI accessibility specimen \u203a skip links are the first two focusable elements in the shell and focus their targets",
+          "evidence": "review1-browser-source"
+        },
+        {
+          "name": "Parties UI accessibility specimen \u203a compact and resized layouts expose only mounted skip targets and preserve keyboard content access",
+          "evidence": "review1-browser-source"
+        },
+        {
+          "name": "Parties UI accessibility specimen \u203a route-heading announcement leaves skip links forward reachable and focuses their targets",
+          "evidence": "review1-browser-source"
+        },
+        {
+          "name": "Parties UI accessibility specimen \u203a client-side route focus restores forward skip access",
+          "evidence": "review1-browser-source"
+        }
+      ]
+    },
+    {
+      "frozen_row": 7,
+      "executed_passing_controls": [
+        {
+          "name": "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \\\"different-child-created-pair\\\")",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \\\"inconsistent-created-pair\\\")",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \\\"invalid-created-date\\\")",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \\\"truncated-created-label\\\")",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \\\"missing-artifact-created-label\\\")",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.ReleaseArtifactVerificationTests.PublishedArtifactsRequireTheCompleteExactSourceSet(scenario: \\\"missing-created-label\\\")",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ContainerProvenanceTargetsValidateCalendarAndPreserveExactLabels(created: \\\"2024-02-29T23:59:59Z\\\", valid: True)",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ContainerProvenanceTargetsValidateCalendarAndPreserveExactLabels(created: \\\"2000-02-29T00:00:00Z\\\", valid: True)",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ContainerProvenanceTargetsValidateCalendarAndPreserveExactLabels(created: \\\"2026-04-30T12:34:56Z\\\", valid: True)",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ContainerProvenanceTargetsValidateCalendarAndPreserveExactLabels(created: \\\"2023-02-29T00:00:00Z\\\", valid: False)",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ContainerProvenanceTargetsValidateCalendarAndPreserveExactLabels(created: \\\"1900-02-29T00:00:00Z\\\", valid: False)",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ContainerProvenanceTargetsValidateCalendarAndPreserveExactLabels(created: \\\"2024-04-31T00:00:00Z\\\", valid: False)",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ContainerProvenanceTargetsValidateCalendarAndPreserveExactLabels(created: \\\"0000-01-01T00:00:00Z\\\", valid: False)",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ContainerProvenanceTargetsValidateCalendarAndPreserveExactLabels(created: \\\"2026-01-01T24:00:00Z\\\", valid: False)",
+          "evidence": "review1-ci-package"
+        },
+        {
+          "name": "Hexalith.Parties.Ci.Tests.PartiesContainerPublishWorkflowTests.ContainerProvenanceTargetsValidateCalendarAndPreserveExactLabels(created: \\\"\\\", valid: False)",
+          "evidence": "review1-ci-package"
+        }
+      ]
+    }
+  ],
+  "browser": {
+    "source_passed": 4,
+    "source_skipped": 0,
+    "source_xml_sha256": "710c0dca4ad25ef03ec64191fceec4efe5feb92edbe9ece6dd070be636031af9",
+    "source_log_sha256": "f5b2adcea2956561c1b0fcaa05004dab1258f95fee1fdaed2dc846b3827ce85e",
+    "node": "24.22.1",
+    "npm": "11.19.1",
+    "typecheck_exit": 0,
+    "server_ownership_config_tests_passed": 8,
+    "package_negative_expected_bunit_counts": {
+      "passed": 3,
+      "failed": 1,
+      "skipped": 0
+    },
+    "package_negative_bunit_xml_sha256": "55418fc2bafdc7897237550aff90d54f5f9d20420865b04c864c9c03767baa44",
+    "package_negative_browser_xml_sha256": "e6cd9a1a4f28056cc4304cca12ca7a8180add437ed55fc6c1687b7af247c37fe",
+    "package_negative_browser_log_sha256": "7b853be668f271e3a97a17a2a1e9065014ca8dce818e3d4704a38da45bc8a4c6",
+    "package_negative_reason": "Duplicate fc-nav targets: expected one, received two; forced negative runs without qualification skip."
+  },
+  "publisher": {
+    "executor": "11a3a79cfac4bba9548c6364a17a01ee9b561370",
+    "validator_sha256": "1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c",
+    "tests_passed": 150,
+    "command": "python3 -m unittest discover -s references/Hexalith.Builds/Github/publish-containers/tests -p 'test_*.py'",
+    "log_sha256": "b9d21b99e887f3b99873c7989bdcc8418e803ead2bae4eaaa71b314d38e10073",
+    "release_dispatch": false
+  },
+  "mapping": {
+    "tool": "4.34.0+5d03f1db9c38db34ecac7fe6048937478ffb82cc",
+    "preserved_tool_run": "363e66f0192058520644bfbb7c8c0a9c",
+    "five_hooks": {
+      "CustomBeforeDirectoryBuildProps": "/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.targets",
+      "CustomAfterMicrosoftCommonProps": "/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.props",
+      "CustomBeforeDirectoryBuildTargets": "/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.before-targets.props",
+      "CustomAfterDirectoryBuildTargets": "/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.late.props",
+      "AfterMicrosoftNETSdkTargets": "/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.final.targets"
+    },
+    "generated_file_hashes": {
+      "SourceMapping.final.targets": "64c5a28e219fe2dc1a9526a6ea494e3f1540f16a51a34b7d04f468bd3cc83ed6",
+      "SourceMapping.before-targets.props": "6d08277977c7e5a147e838bbf037b5844b9623f4ee97a553086d910c333eb246",
+      "mapping.json": "d89c9cc9fab00c60071e5575e801d7f66e292676d05e7d9110a122d3625d448c",
+      "SourceMapping.values.props": "74e6116430f322a486d03201589aa1795dd17a09a4b4c718bafbc63ec3660f87",
+      "SourceMapping.late.props": "2155ed00d0be463b47d7a712ce5778645c8ec5c2e20a7813e13e2b052dc56999",
+      "catalog-versions.json": "5c3765c5c11207e58851cd6918ff204c5272d5ae779c5c1dd84dfdaac0ef74e9",
+      "SourceMapping.targets": "2003f8e38ea72f43549502cda1191d1272eea5a84bbebb534d84ee97c97618ff",
+      "SourceMapping.values.targets": "4b52b5ba38271a77eb1037a880e91e6806d6ab2aa3a488efd36d04fb2905c1ba",
+      "SourceMapping.props": "0363694f252736cdfd0bcf6a567bb077940df16cc966e410153718a552769e82"
+    },
+    "regeneration_current_outcome": "HXR012: available CLI 1.18.2/runtime 1.18.7 does not match selected CLI 1.18.0/runtime 1.18.2",
+    "regeneration_command": "HEXALITH_DAPR_HOME=/tmp/platform-2-3-dapr-1-18-7-nijrvhbh dotnet tool run hexalith-module -- debug --manifest module/hexalith.module-manifest.v2.json --evidence _bmad-output/implementation-artifacts/tests/five-memories-inventory-and-publication-2026-10-24/source-debug-review1.json --output json",
+    "regeneration_evidence_sha256": "1ee25b6ea1dfad137d3310d773bd90a1dce30a6b1db7a6fce55965b17b1bc658",
+    "historical_broad_topology_gate": "HXR020 in source-debug.json; no new whole-topology qualification claimed"
+  },
+  "runtime": {
+    "private_evidence_root": "/tmp/parties-five-memory-runtime-e658bdf584ad",
+    "owned_receipt": {
+      "Id": "e658bdf584ad",
+      "Root": "/tmp/hexalith-parties-topology-e658bdf584ad",
+      "PrivateEvidence": "/tmp/parties-five-memory-runtime-e658bdf584ad",
+      "OwnedTopologyDisposed": true,
+      "SessionDirectoryExists": false,
+      "IsAvailable": true,
+      "UnavailableReason": null,
+      "Phase": "authoritative-stream-and-domain-replay",
+      "PrimaryFailure": null,
+      "CleanupFailure": null
+    },
+    "ownership_sha256": "187e575be8d73ff2cfde1a73adb254769aa25d4d617ea340ddfafa751a2d043d",
+    "authoritative_persistence_sha256": "dc90b0d2567cac1ab256766d4e8a81707db3ee4716734d19eb88709965137733",
+    "authentication_negative_controls_sha256": "faee449dea64192e904f9b0c5551255021f8981a0c999d0d5901c77666cc9602",
+    "remaining_owned_workers": 0,
+    "remaining_owned_containers": 0,
+    "scope": "real EventStore gateway + native Memories Server + separate real domain-service host, actual Dapr/Redis/FalkorDB, signed workload proofs and mTLS/API credentials; deterministic fake embeddings in a fresh explicitly reconciled synthetic source",
+    "ambiguous_payload_write_control": "Durable pending-write tokens survive restart; purge cannot settle while a save may still materialize. The ambiguous-save negative retains its obligation and bytes; no timeout forgets it."
+  },
+  "critical_source_hashes": {
+    "src/Hexalith.Parties/Search/PartyMemoryIndexingService.cs": "3d2b9f99788a1670d22c5e0a1a9592b38f75df89df3999f61fa23684d5dea1f7",
+    "src/Hexalith.Parties/Search/PartyMemoryCleanupService.cs": "2646dfc817a7d140b113d546d4adc48014414a0f51f465c7738abb5b8e6840b2",
+    "src/Hexalith.Parties/Search/PartyMemoryCleanupService.Inventory.cs": "4861922e4b815572efd63c02c2d61698a802930170a28f4d97b73aeb9f9db147",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SourceInventoryStore.cs": "bbe05c2e881966ce09eff4d7decc56011e13b1a9c77eacc34cae1e670268123b",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/SourceInventoryFailureReconciler.cs": "cbe93accc35452cdefd92c33ad6be6d10b911b21b11f6e23704a054b515cfb6f",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/WorkflowPayloadLedger.cs": "1f07b78b91d03f65ccd1c9067e3bf24df0b70b91e30f26473fe5c1e28b2f73dc",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/DaprWorkflowPayloadStore.cs": "9512ca22189bd5361d15368cb87c39b6254febf1bb78b414bd166ea876116828",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/RefreshPublicationStore.cs": "05c3386c049b92dbb5acdefb71ebd610fa0e75b9af4eb482948d110a1cc0230f",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Ingestion/GraphPublicationReadGate.cs": "54e5619acedf5b88a5dbe37bf40785b28e2a1b7da0ec1c4eecf7724f74c5362e",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Activities/Ingestion/PersistFailedUnitActivity.cs": "eba773048f18411120cf2581f0cbc51a1b182d6d8f28909f4e5ff2303817b19c",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Server/Activities/Cases/DeleteMemoryUnitProjectionActivity.cs": "aaa48014456eebb4200ec202b4c679448a8abffa354f641d87849f97f665f806",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Contracts/V1/SourceRefreshProtocol.cs": "c14fafce2a0c43adbe11ace4a4405cbb46010fcd534ea9cfffd4bad2d1ca38bc",
+    "references/Hexalith.Memories/src/Hexalith.Memories.Contracts/V1/SourceInventoryEntry.cs": "2dc1bfe058880860012993167dda1ed3dede80af23fe882e041a54cc595db456",
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/Components/Layout/FrontComposerShell.razor": "8c176b683bc4c7d672bc90f0fc47535491f29724c0b78830883bbe1c765f9a41",
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot/js/fc-focus.js": "2e543495e97f3942791fd8abc3084d44c6feb0aeb5f488d064768ae74b75c391",
+    "references/Hexalith.FrontComposer/src/Hexalith.FrontComposer.Shell/wwwroot/css/fc-shell.css": "dceb51b05c81b0b5f1a90b5318ede9366dfdb9c2d10b6b1d9f89f4389a35d3a3",
+    "references/Hexalith.Builds/Github/publish-containers/oci_registry_validator.py": "1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c",
+    "scripts/verify-release-publication.py": "f307f9b7751c5efd0ed7db0d40062daa10b7c7abfdd26069ffbc8377423dd7a3"
+  },
+  "boundaries": [
+    "No package/catalog/version edits or production deployment, migration or release dispatch.",
+    "Source package-assets-only assertion runs in full Release and dedicated package catalog controls; source excludes only that package assertion.",
+    "Two dirty-owner immutable provenance methods remain excluded until parent owner commits/adoption: FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph and CurrentClosureIdentityCanBeDerivedWithoutClaimingQualification.",
+    "Published UI package still fails the explicit compact-navigation negative; matching owner package publication/adoption remains deferred.",
+    "New domain-service workload/trust/routing deployment, explicit legacy reconciliation after older writers drain, and deployed qualification remain separate gates.",
+    "Ambiguous scheduling, missing/terminated workflows, and unresolved payload write completion remain fenced until independently resolved."
+  ],
+  "private_raw_evidence_root": "/tmp/parties-five-inventory-20261024",
+  "all_final_builds_zero_warnings_errors": true,
+  "final_builds": [
+    {
+      "evidence": "review1-ledger-server-build",
+      "log_sha256": "e648dd610c8e5c6d845d8c3d8fe52fddd46637e42ae280541bf1d834feb1b842",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/Hexalith.Memories.Server.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:CustomBeforeDirectoryBuildProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.targets",
+        "-p:CustomAfterMicrosoftCommonProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.props",
+        "-p:CustomBeforeDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.before-targets.props",
+        "-p:CustomAfterDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.late.props",
+        "-p:AfterMicrosoftNETSdkTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.final.targets"
+      ]
+    },
+    {
+      "evidence": "review1-ledger-parties-build",
+      "log_sha256": "dd0ac6b98b72760f481b8c04500b883274bd09c48514fa08bd39412e01b6c0a9",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:CustomBeforeDirectoryBuildProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.targets",
+        "-p:CustomAfterMicrosoftCommonProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.props",
+        "-p:CustomBeforeDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.before-targets.props",
+        "-p:CustomAfterDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.late.props",
+        "-p:AfterMicrosoftNETSdkTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.final.targets"
+      ]
+    },
+    {
+      "evidence": "review1-sdk-client-build",
+      "log_sha256": "feab67620d8f9574906a21a2f52a0af9ac0b6849e298fa94b1302dc1b9008a80",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.Client.Tests/Hexalith.EventStore.Client.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:CustomBeforeDirectoryBuildProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.targets",
+        "-p:CustomAfterMicrosoftCommonProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.props",
+        "-p:CustomBeforeDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.before-targets.props",
+        "-p:CustomAfterDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.late.props",
+        "-p:AfterMicrosoftNETSdkTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.final.targets"
+      ]
+    },
+    {
+      "evidence": "review1-sdk-domain-build",
+      "log_sha256": "e2b16c094f91cc2619a75e4bfb4ba4ce94d1d692ad0ecbea1ea122b192e585f1",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.DomainService.Tests/Hexalith.EventStore.DomainService.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:CustomBeforeDirectoryBuildProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.targets",
+        "-p:CustomAfterMicrosoftCommonProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.props",
+        "-p:CustomBeforeDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.before-targets.props",
+        "-p:CustomAfterDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.late.props",
+        "-p:AfterMicrosoftNETSdkTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.final.targets"
+      ]
+    },
+    {
+      "evidence": "review1-sdk-server-build",
+      "log_sha256": "127f9746aa75d077d2721dde8f679bfaf690282a8c6928d4158e1e03c13a02fe",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.Server.Tests/Hexalith.EventStore.Server.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:CustomBeforeDirectoryBuildProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.targets",
+        "-p:CustomAfterMicrosoftCommonProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.props",
+        "-p:CustomBeforeDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.before-targets.props",
+        "-p:CustomAfterDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.late.props",
+        "-p:AfterMicrosoftNETSdkTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.final.targets"
+      ]
+    },
+    {
+      "evidence": "review1-ledger-owned-build",
+      "log_sha256": "0531f2799682565759f201f09e77b753298a4b4f11587e6d6c95199ce9f4a78d",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:CustomBeforeDirectoryBuildProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.targets",
+        "-p:CustomAfterMicrosoftCommonProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.props",
+        "-p:CustomBeforeDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.before-targets.props",
+        "-p:CustomAfterDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.late.props",
+        "-p:AfterMicrosoftNETSdkTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.final.targets"
+      ]
+    },
+    {
+      "evidence": "review1-domain-source-build",
+      "log_sha256": "accb67da2df8361c62c0a56d29845e9d9b90f5f22a1f15077946ef1c955d4ee8",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.DomainService.Tests/Hexalith.Memories.DomainService.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:CustomBeforeDirectoryBuildProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.targets",
+        "-p:CustomAfterMicrosoftCommonProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.props",
+        "-p:CustomBeforeDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.before-targets.props",
+        "-p:CustomAfterDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.late.props",
+        "-p:AfterMicrosoftNETSdkTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.final.targets"
+      ]
+    },
+    {
+      "evidence": "review1-client-source-build",
+      "log_sha256": "e38db88e3ee7f6c6eb13a15017f8b9fe819b7320bc8a101fce98a2ad238f9998",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.Cli.Tests/Hexalith.Memories.Cli.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:CustomBeforeDirectoryBuildProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.targets",
+        "-p:CustomAfterMicrosoftCommonProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.props",
+        "-p:CustomBeforeDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.before-targets.props",
+        "-p:CustomAfterDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.late.props",
+        "-p:AfterMicrosoftNETSdkTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.final.targets"
+      ]
+    },
+    {
+      "evidence": "review1-contracts-source-build",
+      "log_sha256": "b1383e3d67010f856394af65155b5190cc4a7a4b2709cddfa8c125e7cfc45ba1",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.Contracts.Tests/Hexalith.Memories.Contracts.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:CustomBeforeDirectoryBuildProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.targets",
+        "-p:CustomAfterMicrosoftCommonProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.props",
+        "-p:CustomBeforeDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.before-targets.props",
+        "-p:CustomAfterDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.late.props",
+        "-p:AfterMicrosoftNETSdkTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.final.targets"
+      ]
+    },
+    {
+      "evidence": "review1-ui-source-build",
+      "log_sha256": "8e48434aa5f2dc925527af68c3f2679ae7b773ade362ab7e2d71129b42388418",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:CustomBeforeDirectoryBuildProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.targets",
+        "-p:CustomAfterMicrosoftCommonProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.props",
+        "-p:CustomBeforeDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.before-targets.props",
+        "-p:CustomAfterDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.late.props",
+        "-p:AfterMicrosoftNETSdkTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.final.targets"
+      ]
+    },
+    {
+      "evidence": "review1-ledger-final-build2",
+      "log_sha256": "6847993fbac62deb61665c6b2a8bad58c92a4eb78f61778815d93d8b53e7b3fc",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:CustomBeforeDirectoryBuildProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.targets",
+        "-p:CustomAfterMicrosoftCommonProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.props",
+        "-p:CustomBeforeDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.before-targets.props",
+        "-p:CustomAfterDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.late.props",
+        "-p:AfterMicrosoftNETSdkTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.final.targets"
+      ]
+    },
+    {
+      "evidence": "review1-server-package-build",
+      "log_sha256": "53fde7f17940fa4150e3d3123430153cad5a0cacfad539888deca23a2c99c354",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests/Hexalith.Memories.Server.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ]
+    },
+    {
+      "evidence": "review1-client-package-build",
+      "log_sha256": "331037bbb42c1366a022000a8e61591db2f6b3d7736113770164c4951ca86b71",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.Cli.Tests/Hexalith.Memories.Cli.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ]
+    },
+    {
+      "evidence": "review1-domain-package-build",
+      "log_sha256": "53989d94be48d8fb3bc893e84fd99921ffc40c678221656b4fc841f0b7c724b6",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "references/Hexalith.Memories/tests/Hexalith.Memories.DomainService.Tests/Hexalith.Memories.DomainService.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ]
+    },
+    {
+      "evidence": "review1-parties-package-build",
+      "log_sha256": "cb9a4f3948c45917da2786b493db719fb1ef629c78e38bdd50213b23c6056749",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ]
+    },
+    {
+      "evidence": "review1-ui-package-build",
+      "log_sha256": "c1c1656218c2d29253911e839da139aa8f7a35cf38f4127e32b08fbfc6fb71b0",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.UI.Tests/Hexalith.Parties.UI.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ]
+    },
+    {
+      "evidence": "review1-ci-package-build",
+      "log_sha256": "36c3857003d28a12ca6c26108b85291444ad3a183c330a9e630f5b7d4054a967",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ]
+    },
+    {
+      "evidence": "review1-sdk-domain-package-build",
+      "log_sha256": "41fc2784c10fe4b038ff20dd30b09fa371ee7f634f7a5cde72ecfc59b3d9143a",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "references/Hexalith.EventStore/tests/Hexalith.EventStore.DomainService.Tests/Hexalith.EventStore.DomainService.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0"
+      ]
+    },
+    {
+      "evidence": "parent-final-build",
+      "log_sha256": "c3a934e172ace7d5bfb909cb86defcb7ac55301c01a7b0a27da3699ad7ac1b49",
+      "warnings": 0,
+      "errors": 0,
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:MinVerVersionOverride=1.0.0",
+        "-p:CustomBeforeDirectoryBuildProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.targets",
+        "-p:CustomAfterMicrosoftCommonProps=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.props",
+        "-p:CustomBeforeDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.before-targets.props",
+        "-p:CustomAfterDirectoryBuildTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.late.props",
+        "-p:AfterMicrosoftNETSdkTargets=/home/administrator/.local/share/hexalith-builds/g4-workspaces/363e66f0192058520644bfbb7c8c0a9c/source-mapping/SourceMapping.final.targets"
+      ]
+    }
+  ],
+  "crlf_aware_diff_checks": {
+    ".": {
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "HEAD",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output": ""
+    },
+    "references/Hexalith.Memories": {
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "HEAD",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output": ""
+    },
+    "references/Hexalith.EventStore": {
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "HEAD",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output": ""
+    },
+    "references/Hexalith.FrontComposer": {
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+        "diff",
+        "HEAD",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output": ""
+    }
+  },
+  "parent_audit": {
+    "all_20_xml_hashes_counts_verified": true,
+    "all_50_named_matrix_references_verified": true,
+    "all_18_build_log_hashes_verified": true,
+    "critical_source_browser_publisher_runtime_hashes_verified": true,
+    "skip_reasons_read_from_actual_xml": true
+  },
+  "parent_final_patch": {
+    "description": "Resolve the admitted producer workflow, rather than an older canonical output workflow, while independent terminal evidence is required. Regression includes older completed canonical output and actual running producer.",
+    "prior_cleanup_sha256": "b7437aa318d3f94a0c58f892c8f84f2cd90afdabecac790c919c48cf6886b2bf",
+    "verification": "parent-final-parties: 2697 passed, 4 prerequisite skips; zero failures; 0 build warnings/errors. Earlier owner/backend/browser/package evidence is unchanged; earlier Parties rows precede this final private operand/test correction."
+  }
+}

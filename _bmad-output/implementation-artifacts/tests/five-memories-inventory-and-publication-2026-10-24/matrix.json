@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-24",
+  "scope": "Executed implementation evidence; parent formal review pending",
+  "rows": [
+    {
+      "boundary": "Complete source inventory with empty local state and historical cases",
+      "controls": [
+        "SourceInventoryIntegrationTests.HistoricalCasesAndPendingOutputsRemainDurableAcrossRestart",
+        "SourceInventoryIntegrationTests.CanonicalAliasesAndReconciledHistoricalOutputsRetainIndependentDeletionAndTerminalEvidence",
+        "PartyMemorySourceInventoryTests.PartialHistoricalPagesAndPendingProducersSurviveRestartUntilTerminalAbsence",
+        "PartyMemorySourceInventoryTests.EmptyLocalStateRequiresExplicitCompleteRemoteCoverage"
+      ],
+      "proof": "Durable admissions/canonical aliases survive serialized recreation; incomplete legacy coverage stays explicit; deletion requires exact source closure plus qualified terminal absence."
+    },
+    {
+      "boundary": "Concurrent admission, invalid cursors, corrupt/unauthorized inventory and authority changes",
+      "controls": [
+        "SourceInventoryIntegrationTests.CursorsAreProtectedAndInvalidatedByConcurrentAdmission",
+        "SourceInventoryIntegrationTests.CorruptionAndCancellationFailClosedWithoutDiscardingObligations",
+        "IngestionStatusEndpointAuthorizationTests.SourceInventoryRejectsOtherTenantBeforeReadingOrFencing",
+        "PartyMemorySourceInventoryTests.PermanentClosureFromOneProducerDoesNotCertifyAnotherEndpointOrLegacyUnknownAuthority",
+        "PartyMemorySourceInventoryTests.DirectUnitCleanupDoesNotReuseAnotherProducerAbsenceForIdenticalIdentifiers"
+      ],
+      "proof": "SDK protected scope/version cursors reject mutation/cross-scope/tampering; partial obligations survive failures; A absence receipts cannot certify B even with identical case/workflow/unit IDs."
+    },
+    {
+      "boundary": "Current content under unchanged URI, both revision completion orders and old-producer refusal",
+      "controls": [
+        "RefreshPublicationIntegrationTests.BothCompletionOrdersPreserveCurrentContentAndRetryableNewerRevision",
+        "PartyMemorySourceInventoryTests.CompensatedPublicationConflictRetainsAStableSuccessorAcrossRestartAndCleanupFence",
+        "MemoriesClientTests.OlderProducerIgnoringRefreshFieldsCannotReturnQualifiedRefreshSuccess",
+        "PartyMemoryRestClientRecoveryTests.OlderProducerIgnoringExplicitRefreshCannotPublishOrLoseItsUncertainAdmissionAcrossRestart"
+      ],
+      "proof": "Actual Redis/FalkorDB contents are current before TopK/paging/counts; existing pre-feature schemas and >1000 ordinary results remain valid; superseded candidates are physically compensated; producer acknowledgement is mandatory."
+    },
+    {
+      "boundary": "Lost acknowledgement, reopen retries, restore and permanent erasure",
+      "controls": [
+        "RefreshPublicationIntegrationTests.LostAdmissionAcknowledgementReplaysTheSameReopenButCannotCrossANewFence",
+        "SourceInventoryIntegrationTests.TransientReopenRequiresIndependentTerminalProofAfterOutputDeletion",
+        "SourceInventoryIntegrationTests.RestoreInvalidatesPriorCoverageBeforeWritingAndCannotCrossASourceFence",
+        "PartyMemorySourceInventoryTests.AdmissionAuthorityUsesActualTypedClientAfterConfiguredEndpointChanges"
+      ],
+      "proof": "Same retry reopens only the same prior transient fence; new/permanent fences reject stale retries. Restore invalidates coverage before writes and cannot reveal tombstoned/superseded content. Producer authority is captured from the immutable actual typed target."
+    },
+    {
+      "boundary": "Actual authenticated delayed ingestion/deletion, restart and authoritative persistence/replay",
+      "controls": [
+        "PartyMemoryOwnedRuntimeTests.ActualSelectedMemoriesRunsTheRecoveryAndPhysicalErasureControl",
+        "PartyMemoryRuntimeTests.SelectedMemoriesIngestionAndCleanupPersistAcrossRestart",
+        "MemoriesAggregateAdapterTests.ReplayRouterOwnsOnlyItsExactPersistedDomainFallbackAndSdkType"
+      ],
+      "proof": "Owned three-target runtime passes without skips: pre-materialization404 stays incomplete; output-known remains nonterminal; delayed deletion is reconciled across fresh clients. All four derived backends are populated before absence; unrelated tenant/case survive. Actual native gateway stream bytes match actor storage and real first/final domain replay. All owned workers/containers are gone."
+    },
+    {
+      "boundary": "Compact navigation source positive and package negative",
+      "controls": [
+        "MainLayoutAccessibilityTests.MainLayout_navigation_skip_link_tracks_mounted_target_on_resize",
+        "parties-accessibility.spec.ts: compact and resized layouts expose only mounted skip targets and preserve keyboard content access",
+        "parties-accessibility.spec.ts: route-heading announcement leaves skip links forward reachable and focuses their targets",
+        "parties-accessibility.spec.ts: client-side route focus restores forward skip access"
+      ],
+      "proof": "Source bUnit415/415 and actual keyboard browser4/4 without skips; served assets match owner bytes. Forced package compact controls fail behaviorally; matching publication/adoption remains open."
+    },
+    {
+      "boundary": "Immutable OCI executor/reader created-label validation",
+      "controls": [
+        "Hexalith.Parties.Ci.Tests full455/455",
+        "Hexalith.Builds publish-containers Python150/150"
+      ],
+      "proof": "Published executor11a3a79cfac4bba9548c6364a17a01ee9b561370 and exact validator digest selected. Canonical matching pairs pass; missing/malformed/impossible/unequal/cross-platform mutations reject, preserving authoritative NuGet404 handling."
+    }
+  ]
+}

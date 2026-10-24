@@ -174,7 +174,7 @@ public sealed class ProjectionPlatformAdapterTests
         statuses["projection-cache"].ShouldBe(ErasureStoreCleanupStatus.Cleaned);
         statuses["aggregate-readable-state"].ShouldBe(ErasureStoreCleanupStatus.NotApplicable);
         statuses["snapshots"].ShouldBe(ErasureStoreCleanupStatus.NotApplicable);
-        statuses["memories-search"].ShouldBe(ErasureStoreCleanupStatus.Cleaned);
+        statuses["memories-search"].ShouldBe(ErasureStoreCleanupStatus.Failed, "Empty local mappings cannot certify missing remote source inventory configuration.");
 
         cache.TryGetDetail(tenantId, partyId, out _).ShouldBeFalse();
         cache.TryGetProcessing(tenantId, partyId, out _).ShouldBeFalse();
@@ -315,7 +315,7 @@ public sealed class ProjectionPlatformAdapterTests
         ErasureVerificationStoreResult result = await cleanup.ConfigureAwait(true);
 
         result.StoreName.ShouldBe("memories-search");
-        result.Status.ShouldBe(outcome == "cleaned" ? ErasureStoreCleanupStatus.Cleaned : ErasureStoreCleanupStatus.Failed);
+        result.Status.ShouldBe(ErasureStoreCleanupStatus.Failed, "A successful empty local read still requires authoritative remote coverage.");
         result.Timestamp.ShouldBe(now);
     }
 

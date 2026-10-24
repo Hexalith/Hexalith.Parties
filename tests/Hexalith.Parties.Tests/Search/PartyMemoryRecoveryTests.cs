@@ -320,7 +320,7 @@ public sealed class PartyMemoryRecoveryTests
         (await Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", Token)).Cleaned.ShouldBeFalse();
         (await Intents(state).GetAsync("tenant", "party", Token)).ShouldBeEmpty();
         PartyMemoryIngestionIntent receipt = (await Intents(state).BeginCleanupAsync("tenant", "party", Token)).ShouldHaveSingleItem();
-        receipt.ShouldBe(accepted with { CleanupSettled = true });
+        receipt.ShouldBe(accepted with { CleanupSettled = true, AbsenceAuthority = PartyMemoryCleanupService.BuildProducerAuthority(http.BaseAddress) });
         handler.Workflows.Clear();
         (await Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", Token)).Cleaned.ShouldBeTrue();
         (await Intents(state).GetAsync("tenant", "party", Token)).ShouldBeEmpty();
@@ -331,7 +331,7 @@ public sealed class PartyMemoryRecoveryTests
 
     internal static PartyIndexEntry Entry() => new() { Id = "party", Type = Hexalith.Parties.Contracts.ValueObjects.PartyType.Person, DisplayName = "private-personal-name", IsActive = true };
 
-    internal static PartyMemoryUnitMappingContext Context() => new("tenant", "case", "PartyCreated");
+    internal static PartyMemoryUnitMappingContext Context() => new("tenant", "case", "PartyCreated", SequenceNumber: 0);
 
     internal static PartyMemoryIngestionIntentStore Intents(PartyMemoryTestReadModelStore state) => new(state, Options.Create(new PartyMemoryUnitMappingStoreOptions()));
 

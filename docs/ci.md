@@ -5,7 +5,7 @@ Hexalith.Parties uses GitHub Actions with shared Hexalith.Builds workflows and a
 ## Workflows
 
 - `.github/workflows/ci.yml` delegates to `Hexalith/Hexalith.Builds/.github/workflows/domain-ci.yml@332b2c144defba546fe0a09626a4a72f2340e22f`.
-- `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@d9070aa0d43feb9e3359286bc797d2be65960727` and takes the nested publisher from that same immutable Builds checkout.
+- `.github/workflows/release.yml` is a manual `workflow_dispatch` workflow with a protected, caller-owned release job. It uses `Hexalith/Hexalith.Builds/Github/prepare-domain-release@11a3a79cfac4bba9548c6364a17a01ee9b561370` and takes the nested publisher from that same immutable Builds checkout.
 - `.github/workflows/commitlint.yml` delegates Conventional Commit validation to the same immutable Builds validation revision as CI, for pull requests and main pushes.
 - `.github/workflows/dependency-review.yml` delegates dependency review for pull requests.
 - `.github/workflows/codeql.yml` delegates C# CodeQL scanning to `Hexalith/Hexalith.Builds/.github/workflows/codeql.yml@332b2c144defba546fe0a09626a4a72f2340e22f`.
@@ -166,7 +166,7 @@ fail verification. The matched tag is exposed as `verify-publication`'s
 `matching-tag` output and supplies the release version to artifact verification.
 
 The read-only verification job checks out the exact dispatched Parties source
-and Builds `d9070aa0d43feb9e3359286bc797d2be65960727`, with persisted checkout
+and Builds `11a3a79cfac4bba9548c6364a17a01ee9b561370`, with persisted checkout
 credentials disabled. It also initializes only the dispatched root Builds
 gitlink, without recursion, and installs the SDK from `global.json` to evaluate
 that source's package catalog. `scripts/verify-release-publication.py` requires
@@ -179,8 +179,16 @@ files must exist. Malformed archives, duplicate members/nuspecs and ambiguous or
 partial inventories fail closed.
 
 All three Zot images (`parties`, `parties-mcp`, `parties-ui`) must also pass the
-immutable Builds OCI validator; its file hash is checked before loading. It
-checks tag and immutable index bytes, every child manifest/config digest and
+immutable Builds OCI validator; its file hash is checked before loading.
+The immutable selection is Builds `11a3a79cfac4bba9548c6364a17a01ee9b561370`,
+with validator SHA-256
+`1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c`.
+Graph controls require canonical, equal image/artifact created instants across all
+platform children. Executable fixtures reject missing labels, malformed values,
+impossible calendar dates, unequal pairs and cross-platform disagreement; the
+publisher's authoritative NuGet-404 distinction is preserved.
+
+The validator checks tag and immutable index bytes, every child manifest/config digest and
 size, exactly `linux/amd64` and `linux/arm64`, and each child's source,
 revision, release version, release URL and documentation provenance. Verification
 uses registry read requests and the existing protected production credentials;
@@ -371,3 +379,12 @@ The accepted local module tool is pinned to 4.34.0 alongside aspirate; package C
 continues to restore packages and build Release. Source mode is selected only
 by the tool's persisted mapping, with no file-existence fallback. Legacy hosting
 projects and package publication gates remain in their existing scope.
+
+The five-item review-loop proof keeps its previous source/package/browser results as historical evidence. Review-loop source checks use the unchanged five imports produced by pinned module tool 4.34.0. Regenerating them in the current environment must still pass the module-tool prerequisites: absent isolated Dapr configuration produces HXR011, and the available CLI 1.18.2/runtime 1.18.7 home fails HXR012 against the selected CLI 1.18.0/runtime 1.18.2 tuple. These diagnostics do not qualify the broad Platform topology and do not authorize a tuple, package or gate change. The separate owned component runtime retains its declared tool environment and authenticated three-host boundary.
+
+The five-item review-loop 2 receipt separates executed source, package, owned-runtime and browser controls. SDK inventory byte/cursor/entry/timeout controls and actual semantic/NL TopK caller tests qualify the selected source. Enabling `EnableMemoriesDomainService=true` independently selects its host and all three existing EventStore domain routes. Neither that model test nor the optional local host changes production deployment or release gates; matching owner publication/adoption and deployed trust configuration remain separate. Historical receipts remain historical after the second lifecycle correction.
+
+Final executed evidence: [review-loop 2 receipt](../_bmad-output/implementation-artifacts/tests/five-memories-inventory-and-publication-2026-10-24/review2-verification.json).
+
+
+The 2026-10-24 Memories inventory batch retains immutable Builds publisher `11a3a79cfac4bba9548c6364a17a01ee9b561370` and validator SHA-256 `1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c`. Loop3 rechecks source admission, maintenance publication, tenant teardown, total HTTP deadlines and privileged-route denials separately from package behavior. An existing submodule-mutating guard skip cannot establish runtime acceptance. Source browser, real backend, authenticated owned runtime and OCI negative controls retain their own receipts; owner publication and committed adoption remain parent-owned gates.

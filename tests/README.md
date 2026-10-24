@@ -300,10 +300,17 @@ For the owned local runtime qualification, set `PARTIES_MEMORIES_RUNTIME_CONFIG`
 private JSON file and invoke `-class Hexalith.Parties.Tests.Search.PartyMemoryRuntimeTests`.
 The file supplies `endpoint`, `daprHttpEndpoint`, `daprGrpcEndpoint`, `daprApiToken`,
 `appApiToken`, `jwtIssuer`, `jwtAudience`, `jwtSigningKey`, `tenantClaimName` (default
-`tenant`), `stateStoreName` and `fakeEmbeddingEnabled=true`. Keep credentials outside
+`tenant`), `stateStoreName`, `fakeEmbeddingEnabled=true` and `ownedSourceInventoryQualificationEnabled=true`. Keep credentials outside
 the repository. Set `Memories:Testing:UseFakeEmbedding=true` in the isolated selected
-Memories Development configuration; Platform does not forward arbitrary host
-environment variables. The test creates a unique synthetic tenant/case, exercises
+Memories Development configuration together with
+`Memories:Testing:EnableSourceInventoryQualification=true`,
+`Memories:Testing:SourceInventoryAdmissionDelayMilliseconds=5000`,
+`Memories:Testing:SourceInventoryOutputDelayMilliseconds=5000` and
+`Memories:Testing:SourceInventoryDeletionDelayMilliseconds=5000`. Platform does not
+forward arbitrary host environment variables. These owner routes require the extra
+`owned_source_inventory_test=true` JWT claim, a fresh owned tenant created after server
+startup, a bounded empty-store check and fenced owner reconciliation; they are absent
+in Production and cannot certify legacy inventory. The test creates a unique synthetic tenant/case, exercises
 real ingestion/status/unit routes, recreates the Dapr SDK adapter, and verifies remote
 absence plus persisted empty inventories, retained ETags and the admission fence.
 Without the configuration path this test explicitly skips and supplies no runtime proof.
@@ -318,8 +325,15 @@ never deletes the producer and that redelivery can index the retained canonical 
 Health coverage distinguishes status-read authorization rejection from a synthetic
 missing-workflow route; synthetic probes cannot prove access to an existing workflow.
 The opt-in runtime fixture performs bounded teardown and retains private cleanup
-handles when teardown remains pending; it does not force delayed producer/deletion
-states and cannot substitute for the still-open DW-168 physical-erasure gate.
+handles when teardown remains pending. Its required controlled pauses expose an admitted
+producer before its first content write (including a structured unit-lookup 404), output
+persistence before workflow terminal acknowledgement and asynchronous physical deletion.
+A real forwarded POST then loses its acknowledgement; recreated consumer adapters recover
+the admitted producer through remote inventory and refuse cleanup while it runs in either
+pre-materialization or output-known phase.
+Actual syntactic/vector/chunk/source-artifact/graph contents must be positive before
+deletion and absent afterward, with another source surviving. An unexecuted or skipped
+runtime remains an open DW-168 gate, independently of adapter success.
 
 `PartyMemoryPersistenceRuntimeTests` is a separate opt-in SDK persistence qualification.
 Set `PARTIES_MEMORIES_STATE_RUNTIME_CONFIG` to private `daprHttpEndpoint`,
@@ -525,3 +539,59 @@ Review controls additionally cover all modeled history null/required-member and 
 mixed ciphertext/plaintext profiles using actual writer output, audit failure, malformed Verified
 certificate recovery, post-save cancellation/restart, mixed deletes and eight mid-compaction races.
 Current final results are in the batch `final-verification.json`; its `validation.json` is historical.
+
+## Source inventory, refresh and compact navigation batch
+
+The 2026-10-24 batch uses pinned module-tool source mappings for Debug. Run the actual
+Memories `SourceInventoryIntegrationTests` and `RefreshPublicationIntegrationTests`
+against disposable RedisStack/FalkorDB. They cover original deployed schemas, native
+current filtering before TopK, >1,000 ordinary legacy results, both same-predecessor
+revision orders, aliases, terminal evidence, restart and permanent erasure. Consumer
+`PartyMemorySourceInventoryTests` exercises bounded HTTP inventory reconciliation,
+partial progress and fail-closed scope/authorization/terminal controls.
+
+Compact bUnit and browser coverage automatically executes when validated build metadata
+selects FrontComposer source. The browser compares actual served focus/CSS bytes with
+the selected owner files before qualification. `PARTIES_E2E_COMPACT_SKIP_LINKS=1` forces
+the package negative control to execute its behavioral assertions; it never grants a
+qualification skip. Matching package publication/adoption remains separate. Source
+browser commands must own their server and preserve its Test specimen configuration.
+
+The explicitly named owned focus harness is
+`PARTIES_MEMORIES_OWNED_RUNTIME=1 dotnet tests/Hexalith.Parties.IntegrationTests/bin/Debug/net10.0/Hexalith.Parties.IntegrationTests.dll -method '*ActualSelectedMemoriesRunsTheRecoveryAndPhysicalErasureControl'`.
+Export the five generated source-hook paths into that process; its child project builds
+must use the same mapping. This scope reuses the existing owned bootstrap, backing
+containers, worker observation and cleanup, but waits for EventStore, Memories and the separate Memories domain-service host with
+their exact authenticated sidecars. This component graph leaves unrelated projects explicit-start, removes their app-less
+sidecars, and empties only the five unused Party/sample/system domain AppIds. It retains
+the actual three target apps, sidecars, state/pubsub, Redis/FalkorDB and mTLS control
+plane. No unrelated domain processing or whole-topology health is qualified. The ordinary
+fixture retains its full Parties/Tenants gates. Private phase and ownership receipts
+retain readiness responses and both primary/cleanup failures. Target readiness or
+accepted commands alone do not prove authoritative domain persistence. The driver
+asserts the actual loaded Parties source capability and outgoing refresh/revision
+fields. After physical erasure, the harness reads actual actor-owned events through
+the authenticated SDK gateway, compares independent stored bytes and requests
+canonical domain replay at the first and final sequence. The ordinary native Server
+still exposes no `/process` route; this optional graph enables its separate real host.
+
+The source workload lane also exercises the actual Memories command-store adapter,
+including signed actor/source metadata across all three domains. The owned harness
+requires exact receiving bound-command public-key/domain trust and an independent RSA
+proof key, generated only for its disposable Development session. Missing or incorrect
+Dapr API credentials and an unsigned bound command must return401 before any valid
+command submission. The generic SDK retains its original constructor signatures and
+adds a default-interface bound submission method plus an exact-domain proof-source seam.
+
+The five-item review-loop regression lane adds `SourceInventoryProducerIntegrationTests` to the real adapter filters. Its prepare-save, tracking and ambiguous-scheduling controls execute the scheduler and authenticated inventory endpoint across serialized Redis recreation; failed-unit/source-payload deletion uses actual activities and real Redis/FalkorDB. `RefreshPublicationIntegrationTests` also exercises a real graph ACL write denial, both graph callers, durable repair after restart, retired neighbor metadata, direct deletion with missing reverse aliases, and the actual semantic TopK caller. The owned runtime child additionally verifies normal lost-ack projection redelivery without a second submission and real extraction-failure cleanup including Dapr source-payload absence. Mocked payload controls establish adapter behavior only; the owned child provides the separate live Dapr evidence.
+
+Review-loop 2 extends the actual producer lane with discarded post-index dedup candidates after exhausted compensation, output-record acknowledgement loss, and annotation graph/child/Preparing boundaries across Redis recreation. Both ordinary source/token `IngestionWorkflow.RunAsync` dedup callers assert candidate and output provenance. The actual NL service TopK control places a retired closer vector ahead of current content. Public SDK reader controls reject oversized bodies with missing or lying Content-Length, bound entries/cursors, and cancel stalled bodies under both caller cancellation and the total HTTP timeout. Consumer REST tests cover canonical JSON redelivery with ignored contacts and changed context, unsupported/legacy proof negatives, and stable supersession successor submission across recreation. Final executed counts belong to the bounded batch receipt.
+
+Final executed evidence: [review-loop 2 receipt](../_bmad-output/implementation-artifacts/tests/five-memories-inventory-and-publication-2026-10-24/review2-verification.json).
+
+
+Review-loop 3 (2026-10-24): every late materialization of a publication-managed unit joins its exact bounded key set, including untracked NL and chunk maintenance writes. Source, alias, refresh/publication and claim-check authority keys have a bounded tenant ownership ledger. Tenant teardown installs a permanent content-free fence and reconciles actual claim-checked bytes before backend deletion; unresolved payload or graph write acknowledgements block success across restart. Each graph invocation has independent authority. An explicit graph-command ACL denial proves non-execution; timeouts and lost acknowledgements do not. The native registry's absent-tenant path also drains this technical ownership.
+
+Admission uses the existing authorization bound of 128 tenant characters, 4096 source characters, and 512 case/workflow/candidate/predecessor characters, rejecting control characters before preparation or durable admission. Accepted boundary identities are read through the actual public SDK. Superseded refresh compensation records its deleted output for independent terminal proof; mutation receipt reads use one bounded multi-get. Graph publication overlap returns retryable 503 with error telemetry, and raw cleanup inventory reads retain the configured total HTTP deadline through body completion. The original public constructor signatures remain available, with production DI choosing the tenant-aware adapters.
+
+Unknown historic coverage remains incomplete. DW-196, DW-197 and DW-198 retain the pre-existing legacy NL migration, queued NL retry erasure and sparse-keyspace deletion-discovery follow-ups. Matching package publication/adoption, deployment of the workload topology and production qualification remain separate gates. Earlier receipts are historical after these corrections; final loop3 results are recorded in the bounded batch receipt.

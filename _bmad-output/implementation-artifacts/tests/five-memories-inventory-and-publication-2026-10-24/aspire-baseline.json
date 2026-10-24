@@ -1,0 +1,117 @@
+{
+  "start": {
+    "command": "aspire start --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --isolated --format Json --non-interactive",
+    "exitCode": 0
+  },
+  "wait": [
+    {
+      "resource": "parties",
+      "timeoutSeconds": 30,
+      "exitCode": 0
+    },
+    {
+      "resource": "security",
+      "timeoutSeconds": 30,
+      "exitCode": 0
+    }
+  ],
+  "resources": [
+    {
+      "displayName": "eventstore-admin-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "eventstore-admin",
+      "resourceType": "Project",
+      "state": "Finished"
+    },
+    {
+      "displayName": "eventstore-admin-ui-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "eventstore-admin-ui",
+      "resourceType": "Project",
+      "state": "NotStarted"
+    },
+    {
+      "displayName": "eventstore-app-api-token",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "eventstore-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "eventstore",
+      "resourceType": "Project",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "parties",
+      "resourceType": "Project",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "parties-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "parties-mcp",
+      "resourceType": "Project",
+      "state": "NotStarted"
+    },
+    {
+      "displayName": "parties-ui",
+      "resourceType": "Project",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "security-eventstore-client-password",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "security-eventstore-client-username",
+      "resourceType": "Parameter",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "security",
+      "resourceType": "Container",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "tenants-dapr-cli",
+      "resourceType": "Executable",
+      "state": "Running",
+      "healthStatus": "Healthy"
+    },
+    {
+      "displayName": "tenants",
+      "resourceType": "Project",
+      "state": "Finished"
+    }
+  ],
+  "stop": {
+    "command": "aspire stop --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --non-interactive",
+    "exitCode": 0
+  },
+  "qualification": "Pre-code isolated baseline only; no Memories refresh/inventory or end-to-end erasure qualification."
+}

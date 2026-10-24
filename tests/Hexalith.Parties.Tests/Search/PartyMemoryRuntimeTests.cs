@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -25,22 +26,28 @@ namespace Hexalith.Parties.Tests.Search;
 public sealed class PartyMemoryRuntimeTests
 {
     /// <summary>Observes durable canonical identities and terminal remote absence across fresh clients.</summary>
-    [Fact(Timeout = 240000)]
+    [Fact(Timeout = 360000)]
     public async Task SelectedMemoriesIngestionAndCleanupPersistAcrossRestart()
     {
         string? path = Environment.GetEnvironmentVariable("PARTIES_MEMORIES_RUNTIME_CONFIG");
         Assert.SkipUnless(!string.IsNullOrWhiteSpace(path), "Set PARTIES_MEMORIES_RUNTIME_CONFIG to an owned local runtime's private JSON configuration.");
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-        deadline.CancelAfter(TimeSpan.FromMinutes(3));
+        deadline.CancelAfter(TimeSpan.FromMinutes(5));
         CancellationToken token = deadline.Token;
         PartyMemoryRuntimeConfiguration config = JsonSerializer.Deserialize<PartyMemoryRuntimeConfiguration>(
             await File.ReadAllTextAsync(path!, token), new JsonSerializerOptions(JsonSerializerDefaults.Web))
             ?? throw new InvalidOperationException("Runtime configuration is empty.");
+        config.OwnedSourceInventoryQualificationEnabled.ShouldBeTrue("Enable the explicit non-Production owned source-inventory protocol and both controlled delays.");
+        PartyMemoryIndexingService.SupportsExplicitSourceRefresh.ShouldBeTrue("The actual loaded Parties assembly must support revision-aware source refresh.");
+        typeof(PartyMemoryIndexingService).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>()
+            .Single(attribute => attribute.Key == "HexalithMemoriesSourceRefresh").Value.ShouldBe("true");
+        new Uri(config.Endpoint).IsLoopback.ShouldBeTrue("This qualification owns only the explicitly selected local runtime.");
         config.FakeEmbeddingEnabled.ShouldBeTrue("the owned runtime must explicitly enable its local fake embedding provider");
         string tenant = $"parties-recovery-{Guid.NewGuid():N}";
         string party = $"party-{Guid.NewGuid():N}";
         string bearer = Bearer(config, tenant);
-        using var http = new HttpClient { BaseAddress = new Uri(config.Endpoint), Timeout = TimeSpan.FromSeconds(15) };
+        using var ingestionRequests = new PartyMemoryRuntimeIngestionObserver(new HttpClientHandler());
+        using var http = new HttpClient(ingestionRequests) { BaseAddress = new Uri(config.Endpoint), Timeout = TimeSpan.FromSeconds(15) };
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearer);
         if (!string.IsNullOrWhiteSpace(config.AppApiToken))
         {
@@ -50,6 +57,14 @@ public sealed class PartyMemoryRuntimeTests
         var memories = new MemoriesClient(http, Options.Create(new MemoriesClientOptions()), NullLogger<MemoriesClient>.Instance);
         string provisioningWorkflow;
         string? caseId = null;
+        string? survivorCaseId = null;
+        string otherTenant = "survivor-" + Guid.NewGuid().ToString("N");
+        string? otherCaseId = null;
+        using var otherHttp = new HttpClient { BaseAddress = http.BaseAddress, Timeout = http.Timeout };
+        otherHttp.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Bearer(config, otherTenant));
+        if (!string.IsNullOrWhiteSpace(config.AppApiToken)) { otherHttp.DefaultRequestHeaders.Add("dapr-api-token", config.AppApiToken); }
+        var otherMemories = new MemoriesClient(otherHttp, Options.Create(new MemoriesClientOptions()), NullLogger<MemoriesClient>.Instance);
+        List<string> authorityUnitIds = [];
         string mappingKey = PartyMemoryUnitMappingStore.BuildKey(tenant, party);
         string intentKey = mappingKey.Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal);
         bool terminalUnitAbsenceObserved = false;
@@ -110,8 +125,23 @@ public sealed class PartyMemoryRuntimeTests
         var created = await memories.CreateCaseAsync(tenant, "Synthetic recovery qualification", null, token);
 #pragma warning restore HXL001
         caseId = created.Id;
-        var entry = PartyMemoryRecoveryTests.Entry() with { Id = party, DisplayName = "Synthetic recovery record" };
-        var context = new PartyMemoryUnitMappingContext(tenant, caseId, "PartyCreated", Timestamp: DateTimeOffset.UnixEpoch);
+#pragma warning disable HXL001 // Explicitly owned survivor cases use the published provisioning API.
+        survivorCaseId = (await memories.CreateCaseAsync(tenant, "Unrelated surviving case", null, token)).Id;
+        using (HttpResponseMessage otherProvision = await otherHttp.PostAsJsonAsync(MemoriesRoutes.TenantsPath(),
+            new { tenantId = otherTenant, displayName = "Unrelated surviving tenant", vectorDimensions = 768 }, token))
+        { otherProvision.EnsureSuccessStatusCode(); }
+        bool otherActive = false;
+        for (int attempt = 0; attempt < 120; attempt++)
+        {
+            if ((await otherMemories.GetTenantAsync(otherTenant, token))?.Status == TenantStatus.Active) { otherActive = true; break; }
+            await Task.Delay(500, token);
+        }
+        otherActive.ShouldBeTrue();
+        otherCaseId = (await otherMemories.CreateCaseAsync(otherTenant, "Unrelated tenant case", null, token)).Id;
+#pragma warning restore HXL001
+        var entry = PartyMemoryRecoveryTests.Entry() with { Id = party, DisplayName = "oldamber synthetic recovery record" };
+        var context = new PartyMemoryUnitMappingContext(tenant, caseId, "PartyCreated", Timestamp: DateTimeOffset.UnixEpoch, SequenceNumber: 1);
+        await InitializeOwnedSourceAsync(http, tenant, party, token);
         IOptions<PartyMemoryUnitMappingStoreOptions> stateOptions = Options.Create(new PartyMemoryUnitMappingStoreOptions { StateStoreName = config.StateStoreName });
         var searchOptions = new PartyMemoryTestOptionsMonitor(new PartyMemorySearchOptions { Endpoint = http.BaseAddress, ApiToken = bearer, CaseId = caseId });
         PartyMemoryIndexingResult? indexed = null;
@@ -136,24 +166,60 @@ public sealed class PartyMemoryRuntimeTests
         indexed.ShouldNotBeNull().Indexed.ShouldBeTrue("the real ingestion workflow must return validated terminal output");
         IngestionWorkflowStatus terminal = await memories.GetIngestionWorkflowStatusAsync(indexed.WorkflowInstanceId!, token);
         string? canonical = PartyMemoryIngestionEvidence.Resolve(terminal, indexed.WorkflowInstanceId!, tenant, caseId);
+        authorityUnitIds.Add(canonical!);
+        ingestionRequests.Observations.ShouldContain(observation => observation.RefreshExistingSource && observation.SourceRevisionNumber == 1);
         canonical.ShouldNotBeNullOrWhiteSpace();
         (await memories.GetMemoryUnitAsync(tenant, caseId, canonical!, token)).Id.ShouldBe(canonical);
+
+        string firstCanonical = canonical!;
+        await AssertDerivedStateAsync(http, tenant, party, populated: true, token);
+        // A new canonical projection revision must refresh the same source URI.
+        using (DaprClient refreshDapr = Dapr(config))
+        {
+            var refreshSdk = new DaprReadModelStore(refreshDapr);
+            for (int attempt = 0; attempt < 120; attempt++)
+            {
+                var refresh = new PartyMemoryIndexingService(memories,
+                    new PartyMemoryUnitMappingStore(refreshSdk, stateOptions, NullLogger<PartyMemoryUnitMappingStore>.Instance),
+                    searchOptions, NullLogger<PartyMemoryIndexingService>.Instance, new PartyMemoryIngestionIntentStore(refreshSdk, stateOptions));
+                indexed = await refresh.IndexAsync(entry with { DisplayName = "newcobalt synthetic recovery record" }, context with { SequenceNumber = 2 }, token);
+                if (indexed?.Indexed == true) { break; }
+                await Task.Delay(500, token);
+            }
+        }
+        indexed.ShouldNotBeNull().Indexed.ShouldBeTrue();
+        terminal = await memories.GetIngestionWorkflowStatusAsync(indexed.WorkflowInstanceId!, token);
+        canonical = PartyMemoryIngestionEvidence.Resolve(terminal, indexed.WorkflowInstanceId!, tenant, caseId);
+        authorityUnitIds.Add(canonical!);
+        ingestionRequests.Observations.ShouldContain(observation => observation.RefreshExistingSource && observation.SourceRevisionNumber == 2);
+        canonical.ShouldNotBeNullOrWhiteSpace();
+        canonical.ShouldNotBe(firstCanonical);
+        (await memories.GetMemoryUnitAsync(tenant, caseId, canonical!, token)).Content.ShouldContain("newcobalt");
+        SearchResult currentSearch = await http.GetFromJsonAsync<SearchResult>("api/v1/search?tenantId=" + Uri.EscapeDataString(tenant)
+            + "&caseId=" + Uri.EscapeDataString(caseId) + "&query=newcobalt&axis=syntactic&maxResults=1", token)
+            ?? throw new InvalidOperationException("Missing current-content search response.");
+        currentSearch.Results.ShouldHaveSingleItem().MemoryUnitId.ShouldBe(canonical);
 
         // Recreate both the Dapr client and SDK adapter: no process-local dictionary supplies this proof.
         using DaprClient restarted = Dapr(config);
         var restartedSdk = new DaprReadModelStore(restarted);
         var mappings = new PartyMemoryUnitMappingStore(restartedSdk, stateOptions, NullLogger<PartyMemoryUnitMappingStore>.Instance);
         var intents = new PartyMemoryIngestionIntentStore(restartedSdk, stateOptions);
-        PartyMemoryIngestionIntent persisted = (await intents.GetAsync(tenant, party, token)).ShouldHaveSingleItem();
+        PartyMemoryIngestionIntent persisted = (await intents.GetAsync(tenant, party, token)).Single(item => item.WorkflowInstanceId == indexed.WorkflowInstanceId);
         persisted.MemoryUnitId.ShouldBe(canonical);
         persisted.WorkflowInstanceId.ShouldBe(indexed.WorkflowInstanceId);
-        (await mappings.GetMappingsAsync(tenant, party, token)).ShouldBe([new(canonical!, PartyMemoryUrn.Build(tenant, party), caseId)]);
+        (await mappings.GetMappingsAsync(tenant, party, token)).Select(item => item.MemoryUnitId).ShouldBe([firstCanonical, canonical!], ignoreOrder: true);
         (ReadOnlyMemory<byte> before, string previousEtag) = await restarted.GetByteStateAndETagAsync(config.StateStoreName, mappingKey, cancellationToken: token);
         previousEtag.ShouldNotBeNullOrWhiteSpace();
         using (JsonDocument mappingJson = JsonDocument.Parse(before))
         {
             mappingJson.RootElement.ValueKind.ShouldBe(JsonValueKind.Array);
         }
+
+        await QualifyCanonicalLostAcknowledgementAsync(config, http, tenant, caseId, stateOptions, searchOptions, token);
+        await QualifyFailedProducerCleanupAsync(config, http, memories, tenant, caseId, stateOptions, token);
+        await QualifyLostAcknowledgementAndDelayedCleanupAsync(config, http, tenant, caseId, stateOptions, searchOptions, token);
+        await AssertDerivedStateAsync(http, tenant, party, populated: true, token);
 
         PartyMemoryCleanupResult? cleanup = null;
         for (int attempt = 0; attempt < 120; attempt++)
@@ -172,7 +238,12 @@ public sealed class PartyMemoryRuntimeTests
         cleanup.ShouldNotBeNull().Cleaned.ShouldBeTrue("terminal ingestion and qualified remote unit absence are required");
         using HttpResponseMessage absence = await http.GetAsync(MemoriesRoutes.CaseMemoryUnitPath(tenant, caseId, canonical!), token);
         (await PartyMemoryCleanupResponse.IsAbsentAsync(absence, token)).ShouldBeTrue();
+        await AssertDerivedStateAsync(http, tenant, party, populated: false, token);
         terminalUnitAbsenceObserved = true;
+        (await memories.GetCaseAsync(tenant, survivorCaseId!, token)).Id.ShouldBe(survivorCaseId);
+        (await memories.GetTenantAsync(tenant, token))!.Status.ShouldBe(TenantStatus.Active);
+        (await otherMemories.GetCaseAsync(otherTenant, otherCaseId!, token)).Id.ShouldBe(otherCaseId);
+        (await otherMemories.GetTenantAsync(otherTenant, token))!.Status.ShouldBe(TenantStatus.Active);
         (await intents.GetAsync(tenant, party, token)).ShouldBeEmpty();
         (await mappings.GetMappingsAsync(tenant, party, token)).ShouldBeEmpty();
         (ReadOnlyMemory<byte> empty, string finalEtag) = await restarted.GetByteStateAndETagAsync(config.StateStoreName, mappingKey, cancellationToken: token);
@@ -186,10 +257,211 @@ public sealed class PartyMemoryRuntimeTests
         }
         finally
         {
+            await File.WriteAllTextAsync(Path.ChangeExtension(path!, ".authority.json"), JsonSerializer.Serialize(new
+            { TenantId = tenant, CaseId = caseId, UnitIds = authorityUnitIds.Distinct().ToArray(), SurvivorCaseId = survivorCaseId, OtherTenantId = otherTenant, OtherCaseId = otherCaseId, SurvivorsVerified = terminalUnitAbsenceObserved, Requests = ingestionRequests.Observations }), CancellationToken.None).ConfigureAwait(true);
             // Qualification owns these synthetic resources even when provisioning or assertions fail.
             await TeardownAsync(config, http, tenant, party, caseId, mappingKey, intentKey,
                 terminalUnitAbsenceObserved, diagnosticPath).ConfigureAwait(true);
+            string otherMapping = PartyMemoryUnitMappingStore.BuildKey(otherTenant, "survivor");
+            await TeardownAsync(config, otherHttp, otherTenant, "survivor", otherCaseId, otherMapping,
+                otherMapping.Replace("memory-mapping", "memory-ingestion", StringComparison.Ordinal), true,
+                Path.ChangeExtension(diagnosticPath, ".survivor.json")).ConfigureAwait(true);
         }
+    }
+
+    private static async Task QualifyCanonicalLostAcknowledgementAsync(PartyMemoryRuntimeConfiguration config, HttpClient owner,
+        string tenant, string caseId, IOptions<PartyMemoryUnitMappingStoreOptions> stateOptions,
+        IOptionsMonitor<PartyMemorySearchOptions> searchOptions, CancellationToken token)
+    {
+        string party = "lost-index-" + Guid.NewGuid().ToString("N");
+        await InitializeOwnedSourceAsync(owner, tenant, party, token).ConfigureAwait(true);
+        var lostHandler = new PartyMemoryLostAcknowledgementHandler(new HttpClientHandler());
+        using var lost = new HttpClient(lostHandler) { BaseAddress = new Uri(config.Endpoint), Timeout = TimeSpan.FromSeconds(15) };
+        lost.DefaultRequestHeaders.Authorization = owner.DefaultRequestHeaders.Authorization;
+        if (!string.IsNullOrWhiteSpace(config.AppApiToken)) { lost.DefaultRequestHeaders.Add("dapr-api-token", config.AppApiToken); }
+        var client = new MemoriesClient(lost, Options.Create(new MemoriesClientOptions()), NullLogger<MemoriesClient>.Instance);
+        var context = new PartyMemoryUnitMappingContext(tenant, caseId, "PartyCreated", SequenceNumber: 1);
+        var entry = PartyMemoryRecoveryTests.Entry() with { Id = party, DisplayName = "synthetic normal lost acknowledgement" };
+        PartyMemoryIndexingResult? result = null;
+        for (int attempt = 0; attempt < 120; attempt++)
+        {
+            using DaprClient dapr = Dapr(config);
+            var sdk = new DaprReadModelStore(dapr);
+            result = await new PartyMemoryIndexingService(client, new PartyMemoryUnitMappingStore(sdk, stateOptions, NullLogger<PartyMemoryUnitMappingStore>.Instance),
+                searchOptions, NullLogger<PartyMemoryIndexingService>.Instance, new PartyMemoryIngestionIntentStore(sdk, stateOptions)).IndexAsync(entry, context, token).ConfigureAwait(true);
+            if (result?.Indexed == true) { break; }
+            await Task.Delay(250, token).ConfigureAwait(true);
+        }
+        result.ShouldNotBeNull().Indexed.ShouldBeTrue("Canonical redelivery must recover the exact persisted admission through source inventory.");
+        lostHandler.Submissions.ShouldBe(1);
+        using DaprClient restarted = Dapr(config);
+        var restartedSdk = new DaprReadModelStore(restarted);
+        var mappings = new PartyMemoryUnitMappingStore(restartedSdk, stateOptions, NullLogger<PartyMemoryUnitMappingStore>.Instance);
+        var intents = new PartyMemoryIngestionIntentStore(restartedSdk, stateOptions);
+        PartyMemoryCleanupResult? cleanup = null;
+        for (int attempt = 0; attempt < 120; attempt++)
+        {
+            cleanup = await new PartyMemoryCleanupService(owner, mappings, NullLogger<PartyMemoryCleanupService>.Instance, intents)
+                .DeleteByPartyAsync(tenant, caseId, party, token).ConfigureAwait(true);
+            if (cleanup.Cleaned) { break; }
+            await Task.Delay(250, token).ConfigureAwait(true);
+        }
+        cleanup.ShouldNotBeNull().Cleaned.ShouldBeTrue();
+        await AssertDerivedStateAsync(owner, tenant, party, populated: false, token).ConfigureAwait(true);
+    }
+
+    private static async Task QualifyFailedProducerCleanupAsync(PartyMemoryRuntimeConfiguration config, HttpClient owner, MemoriesClient client,
+        string tenant, string caseId, IOptions<PartyMemoryUnitMappingStoreOptions> stateOptions, CancellationToken token)
+    {
+        string party = "failed-" + Guid.NewGuid().ToString("N");
+        string source = PartyMemoryUrn.Build(tenant, party);
+        await InitializeOwnedSourceAsync(owner, tenant, party, token).ConfigureAwait(true);
+        string workflow = await client.IngestAsync(tenant, caseId, source, Encoding.UTF8.GetBytes("this is not a PDF document"),
+            "application/pdf", "synthetic-failure-control", metadata: null, idempotencyToken: "failed-extraction-" + party, ct: token).ConfigureAwait(true);
+        IngestionWorkflowStatus? status = null;
+        for (int attempt = 0; attempt < 240; attempt++)
+        {
+            status = await client.GetIngestionWorkflowStatusAsync(workflow, token).ConfigureAwait(true);
+            if (status.RuntimeStatus == "Failed") { break; }
+            await Task.Delay(250, token).ConfigureAwait(true);
+        }
+        status.ShouldNotBeNull().RuntimeStatus.ShouldBe("Failed");
+        string route = "api/v1/tenants/" + Uri.EscapeDataString(tenant) + "/source-inventory/owned-derived-state?sourceUri=" + Uri.EscapeDataString(source);
+        JsonElement before = await owner.GetFromJsonAsync<JsonElement>(route, token).ConfigureAwait(true);
+        before.GetProperty("failedUnits").GetInt32().ShouldBe(1);
+        before.GetProperty("sourcePayloads").GetInt32().ShouldBe(1);
+        before.GetProperty("retainedPayloadReferences").GetInt64().ShouldBeGreaterThan(0);
+        using DaprClient restarted = Dapr(config);
+        var sdk = new DaprReadModelStore(restarted);
+        var mappings = new PartyMemoryUnitMappingStore(sdk, stateOptions, NullLogger<PartyMemoryUnitMappingStore>.Instance);
+        var intents = new PartyMemoryIngestionIntentStore(sdk, stateOptions);
+        PartyMemoryCleanupResult? cleanup = null;
+        for (int attempt = 0; attempt < 120; attempt++)
+        {
+            cleanup = await new PartyMemoryCleanupService(owner, mappings, NullLogger<PartyMemoryCleanupService>.Instance, intents)
+                .DeleteByPartyAsync(tenant, caseId, party, token).ConfigureAwait(true);
+            if (cleanup.Cleaned) { break; }
+            await Task.Delay(250, token).ConfigureAwait(true);
+        }
+        cleanup.ShouldNotBeNull().Cleaned.ShouldBeTrue();
+        JsonElement after = await owner.GetFromJsonAsync<JsonElement>(route, token).ConfigureAwait(true);
+        after.GetProperty("failedUnits").GetInt32().ShouldBe(0);
+        after.GetProperty("sourcePayloads").GetInt32().ShouldBe(0);
+        after.GetProperty("retainedPayloadReferences").GetInt64().ShouldBe(0);
+        await AssertDerivedStateAsync(owner, tenant, party, populated: false, token).ConfigureAwait(true);
+    }
+
+    private static async Task QualifyLostAcknowledgementAndDelayedCleanupAsync(PartyMemoryRuntimeConfiguration config, HttpClient owner,
+        string tenant, string caseId, IOptions<PartyMemoryUnitMappingStoreOptions> stateOptions,
+        IOptionsMonitor<PartyMemorySearchOptions> searchOptions, CancellationToken token)
+    {
+        string party = "race-" + Guid.NewGuid().ToString("N");
+        string source = PartyMemoryUrn.Build(tenant, party);
+        await InitializeOwnedSourceAsync(owner, tenant, party, token).ConfigureAwait(true);
+        using var lost = new HttpClient(new PartyMemoryLostAcknowledgementHandler(new HttpClientHandler()))
+        { BaseAddress = new Uri(config.Endpoint), Timeout = TimeSpan.FromSeconds(15) };
+        lost.DefaultRequestHeaders.Authorization = owner.DefaultRequestHeaders.Authorization;
+        if (!string.IsNullOrWhiteSpace(config.AppApiToken)) { lost.DefaultRequestHeaders.Add("dapr-api-token", config.AppApiToken); }
+        var client = new MemoriesClient(lost, Options.Create(new MemoriesClientOptions()), NullLogger<MemoriesClient>.Instance);
+        using (DaprClient first = Dapr(config))
+        {
+            var sdk = new DaprReadModelStore(first);
+            var intents = new PartyMemoryIngestionIntentStore(sdk, stateOptions);
+            var indexer = new PartyMemoryIndexingService(client,
+                new PartyMemoryUnitMappingStore(sdk, stateOptions, NullLogger<PartyMemoryUnitMappingStore>.Instance),
+                searchOptions, NullLogger<PartyMemoryIndexingService>.Instance, intents);
+            (await indexer.IndexAsync(PartyMemoryRecoveryTests.Entry() with { Id = party, DisplayName = "synthetic delayed producer" },
+                new(tenant, caseId, "PartyCreated", Timestamp: DateTimeOffset.UnixEpoch, SequenceNumber: 1), token).ConfigureAwait(true)).ShouldNotBeNull().Indexed.ShouldBeFalse();
+            (await intents.GetAsync(tenant, party, token).ConfigureAwait(true)).ShouldHaveSingleItem().WorkflowInstanceId.ShouldBeNull("The actual accepted HTTP acknowledgement was deliberately lost.");
+        }
+        string inventoryRoute = "api/v1/tenants/" + Uri.EscapeDataString(tenant) + "/source-inventory?sourceUri=" + Uri.EscapeDataString(source);
+        using DaprClient restarted = Dapr(config);
+        var restartedSdk = new DaprReadModelStore(restarted);
+        var mappings = new PartyMemoryUnitMappingStore(restartedSdk, stateOptions, NullLogger<PartyMemoryUnitMappingStore>.Instance);
+        var intentsAfterRestart = new PartyMemoryIngestionIntentStore(restartedSdk, stateOptions);
+        var cleanup = new PartyMemoryCleanupService(owner, mappings, NullLogger<PartyMemoryCleanupService>.Instance, intentsAfterRestart);
+        string? admittedWorkflow = null;
+        for (int attempt = 0; attempt < 50; attempt++)
+        {
+            JsonElement admitted = await owner.GetFromJsonAsync<JsonElement>(inventoryRoute, token).ConfigureAwait(true);
+            JsonElement[] entries = admitted.GetProperty("entries").EnumerateArray().ToArray();
+            JsonElement? pending = entries.Cast<JsonElement?>().FirstOrDefault(entry => entry!.Value.GetProperty("state").GetString() == "Admitted"
+                && (!entry.Value.TryGetProperty("memoryUnitId", out JsonElement output) || output.ValueKind == JsonValueKind.Null));
+            if (pending is not null) { admittedWorkflow = pending.Value.GetProperty("workflowInstanceId").GetString(); break; }
+            await Task.Delay(100, token).ConfigureAwait(true);
+        }
+        admittedWorkflow.ShouldNotBeNullOrWhiteSpace("Observe actual admitted work before any unit materializes.");
+        using (HttpResponseMessage absent = await owner.GetAsync(MemoriesRoutes.CaseMemoryUnitPath(tenant, caseId, admittedWorkflow!), token).ConfigureAwait(true))
+        {
+            absent.StatusCode.ShouldBe(System.Net.HttpStatusCode.NotFound);
+            (await absent.Content.ReadFromJsonAsync<JsonElement>(token).ConfigureAwait(true)).GetProperty("code").GetString().ShouldBe("MEMORY_UNIT_NOT_FOUND");
+        }
+        (await cleanup.DeleteByPartyAsync(tenant, caseId, party, token).ConfigureAwait(true)).Cleaned.ShouldBeFalse("A scoped 404 cannot retire an admitted producer that has not materialized its output.");
+        (await intentsAfterRestart.GetAsync(tenant, party, token).ConfigureAwait(true)).ShouldHaveSingleItem().WorkflowInstanceId.ShouldBe(admittedWorkflow);
+        (await mappings.GetMappingsAsync(tenant, party, token).ConfigureAwait(true)).ShouldBeEmpty();
+        bool pausedOutputObserved = false;
+        for (int attempt = 0; attempt < 120; attempt++)
+        {
+            JsonElement inventory = await owner.GetFromJsonAsync<JsonElement>(inventoryRoute, token).ConfigureAwait(true);
+            JsonElement[] entries = inventory.GetProperty("entries").EnumerateArray().ToArray();
+            pausedOutputObserved = entries.Any(entry => entry.TryGetProperty("memoryUnitId", out JsonElement unit) && unit.ValueKind == JsonValueKind.String
+                && (!entry.TryGetProperty("terminalVerified", out JsonElement proof) || !proof.GetBoolean()));
+            if (pausedOutputObserved) { break; }
+            await Task.Delay(100, token).ConfigureAwait(true);
+        }
+        pausedOutputObserved.ShouldBeTrue("The real producer must pause after output persistence and before terminal workflow acknowledgement.");
+        await AssertDerivedStateAsync(owner, tenant, party, populated: true, token).ConfigureAwait(true);
+        (await cleanup.DeleteByPartyAsync(tenant, caseId, party, token).ConfigureAwait(true)).Cleaned.ShouldBeFalse("Output-known evidence cannot retire a still-running producer.");
+        (await mappings.GetMappingsAsync(tenant, party, token).ConfigureAwait(true)).ShouldBeEmpty();
+        (await intentsAfterRestart.GetAsync(tenant, party, token).ConfigureAwait(true)).ShouldHaveSingleItem().WorkflowInstanceId.ShouldNotBeNullOrWhiteSpace();
+        using (HttpResponseMessage rejected = await owner.PostAsJsonAsync("api/v1/ingest", new
+        {
+            tenantId = tenant, caseId, sourceUri = source, contentBytes = Convert.ToBase64String(Encoding.UTF8.GetBytes("must remain rejected")),
+            contentType = "text/plain", sourceType = "file", ingestedBy = "synthetic-negative-control", idempotencyToken = Guid.NewGuid().ToString("N"),
+        }, token).ConfigureAwait(true))
+        {
+            rejected.StatusCode.ShouldBe(System.Net.HttpStatusCode.Conflict);
+        }
+        PartyMemoryCleanupResult? final = null;
+        bool delayedDeletionObserved = false;
+        for (int attempt = 0; attempt < 120; attempt++)
+        {
+            final = await new PartyMemoryCleanupService(owner, mappings, NullLogger<PartyMemoryCleanupService>.Instance, intentsAfterRestart)
+                .DeleteByPartyAsync(tenant, caseId, party, token).ConfigureAwait(true);
+            if (final.Cleaned) { break; }
+            delayedDeletionObserved |= (await intentsAfterRestart.GetAsync(tenant, party, token).ConfigureAwait(true)).Any(intent => intent.MemoryUnitId is not null && !intent.RequiresTerminalEvidence);
+            await Task.Delay(250, token).ConfigureAwait(true);
+        }
+        delayedDeletionObserved.ShouldBeTrue("DELETE acceptance must remain incomplete while the actual derived-store deletion is delayed.");
+        final.ShouldNotBeNull().Cleaned.ShouldBeTrue();
+        await AssertDerivedStateAsync(owner, tenant, party, populated: false, token).ConfigureAwait(true);
+        (await intentsAfterRestart.GetAsync(tenant, party, token).ConfigureAwait(true)).ShouldBeEmpty();
+    }
+
+    private static async Task InitializeOwnedSourceAsync(HttpClient http, string tenant, string party, CancellationToken token)
+    {
+        string route = "api/v1/tenants/" + Uri.EscapeDataString(tenant) + "/source-inventory/qualify-owned-test-scope?sourceUri="
+            + Uri.EscapeDataString(PartyMemoryUrn.Build(tenant, party));
+        using HttpResponseMessage response = await http.PostAsync(route, null, token).ConfigureAwait(true);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private static async Task AssertDerivedStateAsync(HttpClient http, string tenant, string party, bool populated, CancellationToken token)
+    {
+        string route = "api/v1/tenants/" + Uri.EscapeDataString(tenant) + "/source-inventory/owned-derived-state?sourceUri="
+            + Uri.EscapeDataString(PartyMemoryUrn.Build(tenant, party));
+        JsonElement state = await http.GetFromJsonAsync<JsonElement>(route, token).ConfigureAwait(true);
+        state.GetProperty("admissionDelayMilliseconds").GetInt32().ShouldBeGreaterThan(0);
+        state.GetProperty("outputDelayMilliseconds").GetInt32().ShouldBeGreaterThan(0);
+        state.GetProperty("deletionDelayMilliseconds").GetInt32().ShouldBeGreaterThan(0);
+        state.GetProperty("unitCount").GetInt32().ShouldBeGreaterThan(0);
+        foreach (string backend in new[] { "syntactic", "semantic", "sourceArtifacts", "graph" })
+        {
+            long count = state.GetProperty(backend).GetInt64();
+            if (populated) { count.ShouldBeGreaterThan(0, backend + " must have positive source data before absence can qualify"); }
+            else { count.ShouldBe(0, backend + " must have persisted/derived end-state absence"); }
+        }
+        if (!populated) { state.GetProperty("naturalLanguage").GetInt32().ShouldBe(0); }
     }
 
     /// <summary>Private handles survive incomplete teardown; only proven safe synthetic state is erased.</summary>
@@ -451,7 +723,7 @@ public sealed class PartyMemoryRuntimeTests
 
         var signing = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.JwtSigningKey)), SecurityAlgorithms.HmacSha256);
         var jwt = new JwtSecurityToken(config.JwtIssuer, config.JwtAudience,
-            [new Claim(PartiesClaimTypes.Subject, "synthetic-recovery-qualification"), new Claim(config.TenantClaimName, tenant)],
+            [new Claim(PartiesClaimTypes.Subject, "synthetic-recovery-qualification"), new Claim(config.TenantClaimName, tenant), new Claim("owned_source_inventory_test", "true")],
             DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow.AddMinutes(10), signing);
         return new JwtSecurityTokenHandler().WriteToken(jwt);
     }

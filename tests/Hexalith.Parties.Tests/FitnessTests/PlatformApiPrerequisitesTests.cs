@@ -905,6 +905,7 @@ public sealed class PlatformApiPrerequisitesTests
             "references/Hexalith.EventStore/src/Hexalith.EventStore.Admin.UI/Hexalith.EventStore.Admin.UI.csproj",
             "references/Hexalith.Tenants/src/Hexalith.Tenants/Hexalith.Tenants.csproj",
             "references/Hexalith.Memories/src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj",
+            "references/Hexalith.Memories/src/Hexalith.Memories.DomainService/Hexalith.Memories.DomainService.csproj",
             "references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample/Hexalith.EventStore.Sample.csproj",
             "references/Hexalith.EventStore/samples/Hexalith.EventStore.Sample.BlazorUI/Hexalith.EventStore.Sample.BlazorUI.csproj",
         ];
@@ -921,7 +922,7 @@ public sealed class PlatformApiPrerequisitesTests
         string expectedVersion = EffectivePackageVersions.ReadProperty(root, "HexalithEventStoreVersion", configuration: configuration);
         IReadOnlyDictionary<string, EvaluatedProjectGraph> graphs = ReadExternalRuntimeGraphs(root, ReadExternalRuntimeProjects(root), expectedVersion, configuration);
 
-        graphs.Count.ShouldBeGreaterThan(7, "The runtime preflight must inspect transitive projects as well as the seven roots.");
+        graphs.Count.ShouldBeGreaterThan(7, "The runtime preflight must inspect transitive projects as well as the eight roots.");
         graphs.Keys.ShouldContain(path => path.EndsWith("Hexalith.Tenants.csproj", StringComparison.Ordinal));
         graphs.Keys.ShouldContain(path => path.EndsWith("Hexalith.Memories.Server.csproj", StringComparison.Ordinal));
         graphs.Values.SelectMany(static graph => graph.PackageReferences)

@@ -19,6 +19,13 @@ internal sealed partial class PartyMemoryIndexingService(
     ILogger<PartyMemoryIndexingService> logger,
     IPartyMemoryIngestionIntentStore intentStore)
 {
+    internal static bool SupportsExplicitSourceRefresh =>
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+        true;
+#else
+        false;
+#endif
+
     /// <summary>Submits a new revision or reconciles its previously acknowledged workflow on redelivery.</summary>
     public async Task<PartyMemoryIndexingResult?> IndexAsync(
         PartyIndexEntry entry,
@@ -34,6 +41,13 @@ internal sealed partial class PartyMemoryIndexingService(
             return null;
         }
 
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+        if (context.SequenceNumber is null or < 0)
+        {
+            return new(unit.PartyId, unit.SourceUri, null, Indexed: false,
+                FailureReason: "Canonical projection revision is unavailable; retry canonical redelivery before refresh admission.");
+        }
+#endif
         byte[] content = Encoding.UTF8.GetBytes(unit.Content);
         // Canonical redelivery deserializes the projection and loses its JsonIgnore search
         // collections. A retained canonical sequence identifies the application independently
@@ -44,6 +58,15 @@ internal sealed partial class PartyMemoryIndexingService(
             : JsonSerializer.SerializeToUtf8Bytes(new { Entry = entry, Context = context });
         string identity = Convert.ToHexStringLower(SHA256.HashData(revision));
         var intent = new PartyMemoryIngestionIntent(identity, unit.CaseId, unit.SourceUri);
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+        intent = intent with
+        {
+            ProducerAuthority = PartyMemoryCleanupService.BuildProducerAuthority(memoriesClient.BaseAddress),
+            RefreshProtocolVersion = SourceRefreshProtocol.Version,
+            SourceRevisionNumber = context.SequenceNumber.Value,
+            RefreshIdentityDigest = SourceRefreshProtocol.CreateIdentityDigest(unit.SourceUri, "text/plain", context.SequenceNumber.Value, unit.Metadata, content),
+        };
+#endif
         bool reserved = false;
         try
         {
@@ -56,8 +79,24 @@ internal sealed partial class PartyMemoryIndexingService(
                 string workflow;
                 try
                 {
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+                    if (intent.RefreshIdentityDigest != SourceRefreshProtocol.CreateIdentityDigest(unit.SourceUri, "text/plain", context.SequenceNumber!.Value, unit.Metadata, content))
+                    {
+                        throw new InvalidOperationException("memory-ingestion-original-refresh-body-unavailable");
+                    }
+                    string? predecessor = await memoriesClient.LookupMemoryUnitIdBySourceUriAsync(unit.TenantId, intent.CaseId, intent.SourceUri, cancellationToken).ConfigureAwait(false);
+                    string? reopenVersion = null;
+                    if (intent.Generation > 0)
+                    {
+                        SourceInventoryPage inventory = await memoriesClient.GetSourceInventoryAsync(unit.TenantId, intent.SourceUri, ct: cancellationToken).ConfigureAwait(false);
+                        if (inventory.AdmissionClosed && !inventory.Permanent) { reopenVersion = inventory.Version; }
+                    }
+                    workflow = await memoriesClient.RefreshAsync(unit.TenantId, intent.CaseId, intent.SourceUri, content, "text/plain", "Hexalith.Parties",
+                        unit.Metadata, intent.AttemptId, predecessor, context.SequenceNumber!.Value, cancellationToken, reopenVersion).ConfigureAwait(false);
+#else
                     workflow = await memoriesClient.IngestAsync(unit.TenantId, unit.CaseId, unit.SourceUri,
                         content, "text/plain", "Hexalith.Parties", unit.Metadata, intent.AttemptId, cancellationToken).ConfigureAwait(false);
+#endif
                 }
                 catch (MemoriesRemoteException ex) when (PartyMemoryIngestionEvidence.IsDefiniteSubmissionRejection(ex))
                 {
@@ -80,9 +119,13 @@ internal sealed partial class PartyMemoryIndexingService(
 
             if (string.IsNullOrWhiteSpace(intent.WorkflowInstanceId))
             {
-                // A previous request may have reached Memories without an acknowledgement.
-                // Neither source lookup nor resubmission proves that this producer has finished.
-                return Failed(unit, intent, "Ingestion acceptance is unresolved; durable obligation retained.");
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+                intent = await RecoverAdmissionAsync(unit, intent, context.SequenceNumber!.Value, cancellationToken).ConfigureAwait(false);
+#endif
+                if (string.IsNullOrWhiteSpace(intent.WorkflowInstanceId))
+                {
+                    return Failed(unit, intent, "Ingestion acceptance is unresolved; durable obligation retained.");
+                }
             }
 
             intent = await ResolveAsync(unit, intent, cancellationToken).ConfigureAwait(false);
@@ -125,6 +168,65 @@ internal sealed partial class PartyMemoryIndexingService(
         }
     }
 
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+    /// <summary>Recovers only the exact persisted retry identity from bounded authoritative source inventory.</summary>
+    private async Task<PartyMemoryIngestionIntent> RecoverAdmissionAsync(PartyMemoryUnit unit, PartyMemoryIngestionIntent intent, long revision, CancellationToken cancellationToken)
+    {
+        if (intent.ProducerAuthority != PartyMemoryCleanupService.BuildProducerAuthority(memoriesClient.BaseAddress))
+        {
+            throw new InvalidOperationException("memory-ingestion-producer-authority-mismatch");
+        }
+        string digest = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(intent.AttemptId)));
+        if (intent.RefreshProtocolVersion != SourceRefreshProtocol.Version || intent.SourceRevisionNumber != revision
+            || string.IsNullOrWhiteSpace(intent.RefreshIdentityDigest))
+        {
+            throw new InvalidOperationException("memory-ingestion-original-refresh-proof-unavailable");
+        }
+        string bodyBinding = intent.RefreshIdentityDigest;
+        string? cursor = null;
+        string? version = null;
+        SourceInventoryEntry? match = null;
+        int count = 0;
+        HashSet<string> cursors = new(StringComparer.Ordinal);
+        for (int pageNumber = 0; pageNumber < 11; pageNumber++)
+        {
+            SourceInventoryPage page = await memoriesClient.GetSourceInventoryAsync(unit.TenantId, intent.SourceUri, cursor, 100, cancellationToken).ConfigureAwait(false);
+            if (page.TenantId != unit.TenantId || page.SourceUri != intent.SourceUri || string.IsNullOrWhiteSpace(page.Version)
+                || (version is not null && version != page.Version) || page.Entries.Count > 100
+                || (count += page.Entries.Count) > PartyMemoryIngestionIntentStore.Capacity)
+            {
+                throw new InvalidOperationException("memory-ingestion-inventory-scope-or-bound-mismatch");
+            }
+            version = page.Version;
+            foreach (SourceInventoryEntry entry in page.Entries.Where(item => item.IdempotencyTokenHash == digest))
+            {
+                if (entry.CaseId != intent.CaseId || string.IsNullOrWhiteSpace(entry.WorkflowInstanceId) || match is not null
+                    || entry.RefreshProtocolVersion != SourceRefreshProtocol.Version || entry.SourceRevisionNumber != revision
+                    || entry.RefreshIdentityDigest != bodyBinding)
+                {
+                    throw new InvalidOperationException("memory-ingestion-inventory-retry-identity-mismatch");
+                }
+                match = entry;
+            }
+            cursor = page.NextCursor;
+            if (cursor is null)
+            {
+                if (match is not null)
+                {
+                    intent = intent with { WorkflowInstanceId = match.WorkflowInstanceId };
+                    await intentStore.UpdateAsync(unit.TenantId, unit.PartyId, intent, cancellationToken).ConfigureAwait(false);
+                }
+                return intent;
+            }
+            if (cursor.Length > 8192 || page.Entries.Count == 0 || !cursors.Add(cursor))
+            {
+                throw new InvalidOperationException("memory-ingestion-inventory-continuation-invalid");
+            }
+        }
+        throw new InvalidOperationException("memory-ingestion-inventory-page-limit");
+    }
+#endif
+
     private async Task<PartyMemoryIngestionIntent> ResolveAsync(PartyMemoryUnit unit, PartyMemoryIngestionIntent intent, CancellationToken cancellationToken)
     {
         if (intent.MemoryUnitId is not null)
@@ -136,6 +238,13 @@ internal sealed partial class PartyMemoryIndexingService(
         string? canonical = PartyMemoryIngestionEvidence.Resolve(status, intent.WorkflowInstanceId!, unit.TenantId, intent.CaseId);
         if (canonical is null)
         {
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+            if (PartyMemoryIngestionEvidence.IsSuperseded(status, intent.WorkflowInstanceId!, unit.TenantId, intent.CaseId))
+            {
+                string? predecessor = await memoriesClient.LookupMemoryUnitIdBySourceUriAsync(unit.TenantId, intent.CaseId, intent.SourceUri, cancellationToken).ConfigureAwait(false);
+                await intentStore.RegisterSupersededSuccessorAsync(unit.TenantId, unit.PartyId, intent, status.MemoryUnitId!, predecessor, cancellationToken).ConfigureAwait(false);
+            }
+#endif
             return intent;
         }
 

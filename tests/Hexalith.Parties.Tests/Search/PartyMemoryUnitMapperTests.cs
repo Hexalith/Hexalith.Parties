@@ -89,7 +89,7 @@ public class PartyMemoryUnitMapperTests
                 TenantId: "tenant-a",
                 CaseId: "case-a",
                 EventType: "PartyCreated",
-                AggregateId: "party-1"),
+                AggregateId: "party-1", SequenceNumber: 1),
             CancellationToken.None);
 
         result.ShouldNotBeNull();
@@ -131,7 +131,7 @@ public class PartyMemoryUnitMapperTests
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
             entry,
-            new PartyMemoryUnitMappingContext("tenant-a", "case-a", "PartyCreated", AggregateId: "party-1"),
+            new PartyMemoryUnitMappingContext("tenant-a", "case-a", "PartyCreated", AggregateId: "party-1", SequenceNumber: 1),
             CancellationToken.None);
 
         result.ShouldNotBeNull();
@@ -158,7 +158,7 @@ public class PartyMemoryUnitMapperTests
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
             CreateEntry() with { Id = partyId },
-            new PartyMemoryUnitMappingContext(tenantId, caseId, "PartyCreated", AggregateId: partyId),
+            new PartyMemoryUnitMappingContext(tenantId, caseId, "PartyCreated", AggregateId: partyId, SequenceNumber: 1),
             CancellationToken.None);
 
         result.ShouldNotBeNull().Indexed.ShouldBeFalse();
@@ -182,7 +182,7 @@ public class PartyMemoryUnitMapperTests
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
             CreateEntry() with { Id = partyId },
-            new PartyMemoryUnitMappingContext(tenantId, caseId, "PartyCreated", AggregateId: partyId),
+            new PartyMemoryUnitMappingContext(tenantId, caseId, "PartyCreated", AggregateId: partyId, SequenceNumber: 1),
             CancellationToken.None);
 
         result.ShouldNotBeNull().Indexed.ShouldBeFalse();
@@ -215,7 +215,7 @@ public class PartyMemoryUnitMapperTests
 
         PartyMemoryIndexingResult? result = await service.IndexAsync(
             CreateEntry() with { Id = partyId },
-            new PartyMemoryUnitMappingContext(tenantId, caseId, "PartyCreated", AggregateId: partyId),
+            new PartyMemoryUnitMappingContext(tenantId, caseId, "PartyCreated", AggregateId: partyId, SequenceNumber: 1),
             timeout.Token);
 
         result.ShouldNotBeNull().Indexed.ShouldBeFalse();
@@ -447,6 +447,20 @@ public class PartyMemoryUnitMapperTests
         public string WorkflowInstanceId { get; init; } = "workflow-1";
 
 #pragma warning disable HXL001
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+        public override Task<string?> LookupMemoryUnitIdBySourceUriAsync(string tenantId, string caseId, string sourceUri, CancellationToken ct)
+            => Task.FromResult<string?>(null);
+
+        public override Task<SourceInventoryPage> GetSourceInventoryAsync(string tenantId, string sourceUri, string? cursor = null,
+            int pageSize = 100, CancellationToken ct = default)
+            => Task.FromResult(new SourceInventoryPage(tenantId, sourceUri, "controlled-source", true, false, false, [], null));
+
+        public override Task<string> RefreshAsync(string tenantId, string caseId, string sourceUri, byte[] content, string contentType,
+            string ingestedBy, IReadOnlyDictionary<string, MetadataField>? metadata, string idempotencyToken,
+            string? expectedMemoryUnitId, long sourceRevisionNumber, CancellationToken ct, string? reopenSourceVersion = null)
+            => IngestAsync(tenantId, caseId, sourceUri, content, contentType, ingestedBy, metadata, idempotencyToken, ct);
+#endif
+
         public override Task<string> IngestAsync(
             string tenantId,
             string caseId,
@@ -477,6 +491,20 @@ public class PartyMemoryUnitMapperTests
             NullLogger<MemoriesClient>.Instance)
     {
 #pragma warning disable HXL001
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+        public override Task<string?> LookupMemoryUnitIdBySourceUriAsync(string tenantId, string caseId, string sourceUri, CancellationToken ct)
+            => Task.FromResult<string?>(null);
+
+        public override Task<SourceInventoryPage> GetSourceInventoryAsync(string tenantId, string sourceUri, string? cursor = null,
+            int pageSize = 100, CancellationToken ct = default)
+            => Task.FromResult(new SourceInventoryPage(tenantId, sourceUri, "controlled-source", true, false, false, [], null));
+
+        public override Task<string> RefreshAsync(string tenantId, string caseId, string sourceUri, byte[] content, string contentType,
+            string ingestedBy, IReadOnlyDictionary<string, MetadataField>? metadata, string idempotencyToken,
+            string? expectedMemoryUnitId, long sourceRevisionNumber, CancellationToken ct, string? reopenSourceVersion = null)
+            => IngestAsync(tenantId, caseId, sourceUri, content, contentType, ingestedBy, metadata, idempotencyToken, ct);
+#endif
+
         public override Task<string> IngestAsync(
             string tenantId,
             string caseId,

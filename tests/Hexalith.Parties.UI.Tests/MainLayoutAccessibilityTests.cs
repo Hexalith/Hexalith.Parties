@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Security.Claims;
 
 using AngleSharp.Dom;
@@ -108,9 +109,18 @@ public sealed class MainLayoutAccessibilityTests : BunitContext
     [Fact]
     public async Task MainLayout_navigation_skip_link_tracks_mounted_target_on_resize()
     {
-        if (Environment.GetEnvironmentVariable("PARTIES_E2E_COMPACT_SKIP_LINKS") != "1")
+        Assembly assembly = typeof(MainLayoutAccessibilityTests).Assembly;
+        string? Metadata(string key) => assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+            .SingleOrDefault(attribute => attribute.Key == key)?.Value;
+        bool fromSource = string.Equals(Metadata("HexalithFrontComposerFromSource"), "true", StringComparison.OrdinalIgnoreCase);
+        if (!fromSource && Environment.GetEnvironmentVariable("PARTIES_E2E_COMPACT_SKIP_LINKS") != "1")
         {
             Assert.Skip("DW-112 compact source qualification requires the fixed FrontComposer; matching package adoption is pending.");
+        }
+        if (fromSource)
+        {
+            Metadata("HexalithSourceMappingMode").ShouldBe("source", "Compact source coverage requires the validated pinned-tool mapping.");
+            Path.IsPathFullyQualified(Metadata("HexalithFrontComposerRoot") ?? string.Empty).ShouldBeTrue();
         }
         IRenderedComponent<CascadingAuthenticationState> cut = RenderMainLayout();
         foreach (ViewportTier tier in new[] { ViewportTier.Desktop, ViewportTier.Phone, ViewportTier.Tablet, ViewportTier.Desktop })

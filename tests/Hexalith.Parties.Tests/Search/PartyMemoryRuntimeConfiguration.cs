@@ -15,4 +15,5 @@ internal sealed record PartyMemoryRuntimeConfiguration
     public string StateStoreName { get; init; } = "statestore";
     public string InventoryAclRepairEndpoint { get; init; } = string.Empty;
     public bool FakeEmbeddingEnabled { get; init; }
+    public bool OwnedSourceInventoryQualificationEnabled { get; init; }
 }

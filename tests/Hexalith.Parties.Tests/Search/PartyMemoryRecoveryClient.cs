@@ -17,6 +17,20 @@ internal sealed class PartyMemoryRecoveryClient(HttpClient http) : MemoriesClien
 
     public Func<CancellationToken, Task<string>> Submit { get; set; } = _ => Task.FromResult("workflow");
 
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+    public override Task<string?> LookupMemoryUnitIdBySourceUriAsync(string tenantId, string caseId, string sourceUri, CancellationToken ct)
+        => Task.FromResult<string?>(null);
+
+    public override Task<SourceInventoryPage> GetSourceInventoryAsync(string tenantId, string sourceUri, string? cursor = null,
+        int pageSize = 100, CancellationToken ct = default)
+        => Task.FromResult(new SourceInventoryPage(tenantId, sourceUri, "controlled-source", true, false, false, [], null));
+
+    public override Task<string> RefreshAsync(string tenantId, string caseId, string sourceUri, byte[] content, string contentType,
+        string ingestedBy, IReadOnlyDictionary<string, MetadataField>? metadata, string idempotencyToken,
+        string? expectedMemoryUnitId, long sourceRevisionNumber, CancellationToken ct, string? reopenSourceVersion = null)
+        => IngestAsync(tenantId, caseId, sourceUri, content, contentType, ingestedBy, metadata, idempotencyToken, ct);
+#endif
+
     public override Task<string> IngestAsync(string tenantId, string caseId, string sourceUri, byte[] content, string contentType,
         string ingestedBy, IReadOnlyDictionary<string, MetadataField>? metadata, string? idempotencyToken, CancellationToken ct)
     {

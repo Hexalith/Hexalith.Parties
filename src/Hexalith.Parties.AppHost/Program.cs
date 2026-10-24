@@ -214,7 +214,8 @@ IResourceBuilder<ProjectResource> partiesUi = builder.AddProject<Projects.Hexali
 // Hexalith.Memories submodule to be initialized. The project is resolved by path (not a compile-time
 // Projects.* reference) so the AppHost csproj carries no hard Memories dependency.
 if (builder.ExecutionContext.IsPublishMode
-    || string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringComparison.OrdinalIgnoreCase))
+    || string.Equals(builder.Configuration["EnableMemoriesSearch"], "true", StringComparison.OrdinalIgnoreCase)
+    || string.Equals(builder.Configuration["EnableMemoriesDomainService"], "true", StringComparison.OrdinalIgnoreCase))
 {
     string memoriesProjectPath = ResolveOptionalReferenceProjectPath(
         "Hexalith.Memories",
@@ -250,6 +251,35 @@ if (builder.ExecutionContext.IsPublishMode
         })
         .WaitFor(eventStoreResources.StateStore)
         .WaitFor(eventStoreResources.PubSub);
+
+    if (string.Equals(builder.Configuration["EnableMemoriesDomainService"], "true", StringComparison.OrdinalIgnoreCase))
+    {
+        string domainProjectPath = ResolveOptionalReferenceProjectPath("Hexalith.Memories",
+            Path.Combine("src", "Hexalith.Memories.DomainService", "Hexalith.Memories.DomainService.csproj"), "EnableMemoriesDomainService");
+        string domainConfig = ResolveDaprConfigPath("accesscontrol.memories-domain-service.yaml");
+        if (daprMtls is not null) { domainConfig = daprMtls.CreateConfiguration(domainConfig); }
+        IResourceBuilder<ProjectResource> domainService = builder.AddProject("memories-domain-service", domainProjectPath)
+            .WithEnvironment("EventStore__DomainService__AppId", daprMtls?.AppId("memories-domain-service") ?? "memories-domain-service")
+            .WithEnvironment("Authentication__Workload__Audience", daprMtls?.AppId("memories-domain-service") ?? "memories-domain-service")
+            .WithEnvironment("Authentication__Workload__AllowedCallers__0", daprMtls?.AppId("eventstore") ?? "eventstore")
+            .WithDaprSidecar(sidecar =>
+            {
+                _ = sidecar.WithOptions(new DaprSidecarOptions { AppId = "memories-domain-service", Config = domainConfig })
+                    .WithReference(eventStoreResources.StateStore).WithReference(eventStoreResources.PubSub);
+                daprMtls?.ConfigureSidecar(sidecar);
+            }).WaitFor(eventStoreResources.StateStore).WaitFor(eventStoreResources.PubSub);
+        if (builder.ExecutionContext.IsPublishMode)
+        {
+            _ = domainService.WithEventStoreAppChannelToken(builder.AddParameter("memories-domain-service-app-token", secret: true));
+        }
+        foreach (string domain in new[] { "memories-tenants", "memories-cases", "memories-memory-units" })
+        {
+            string registration = "EventStore__DomainServices__Registrations__wildcard_" + domain + "_v1__";
+            _ = eventStore.WithEnvironment(registration + "AppId", daprMtls?.AppId("memories-domain-service") ?? "memories-domain-service")
+                .WithEnvironment(registration + "MethodName", "process").WithEnvironment(registration + "TenantId", "*")
+                .WithEnvironment(registration + "Domain", domain).WithEnvironment(registration + "Version", "v1");
+        }
+    }
 
     if (builder.ExecutionContext.IsPublishMode)
     {

@@ -49,6 +49,8 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
     private readonly Func<PartiesTopologySession, CancellationToken, Task<IDistributedApplicationTestingBuilder>> _createBuilder;
     private readonly bool _completeMtlsProfile;
+    private readonly bool _memoriesReadinessScope;
+    private readonly IReadOnlyDictionary<string, string>? _sidecarApiTokens;
 
     private readonly string _appChannelToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
 
@@ -77,6 +79,12 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     /// <summary>Observes worker exit while backing containers and control-plane ownership still exist.</summary>
     internal Func<DistributedApplication, CancellationToken, Task>? ObserveQuiescenceAsync { get; set; }
 
+    /// <summary>Captures private startup evidence before owned partial-startup teardown.</summary>
+    internal Func<Exception, Task>? ObserveInitializationFailureAsync { get; set; }
+
+    /// <summary>Gets the exact bounded initialization step for private failure evidence.</summary>
+    internal string InitializationPhase { get; private set; } = "not-started";
+
     /// <summary>Initializes the ordinary health-check topology.</summary>
     public PartiesAspireTopologyFixture() : this(completeMtlsProfile: false)
     {
@@ -103,13 +111,17 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         Func<DistributedApplication, CancellationToken, Task> startApplication,
         bool prepareCiBootstrap = false,
         bool completeMtlsProfile = false,
-        PartiesTopologySession? session = null)
+        PartiesTopologySession? session = null,
+        bool memoriesReadinessScope = false,
+        IReadOnlyDictionary<string, string>? sidecarApiTokens = null)
     {
         Session = session ?? PartiesTopologySession.Create();
         _createBuilder = createBuilder;
         _startApplication = startApplication;
         _prepareCiBootstrap = prepareCiBootstrap;
         _completeMtlsProfile = completeMtlsProfile;
+        _memoriesReadinessScope = memoriesReadinessScope;
+        _sidecarApiTokens = sidecarApiTokens;
     }
 
     /// <summary>
@@ -174,9 +186,11 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
             if (_prepareCiBootstrap)
             {
+                InitializationPhase = "owned-control-plane-bootstrap";
                 await PrepareCiDaprMtlsAsync(cts.Token).ConfigureAwait(false);
             }
 
+            InitializationPhase = "create-builder";
             _builder = await _createBuilder(Session, cts.Token).ConfigureAwait(false);
 
             _redis = PartiesTestRedis.Configure(_builder);
@@ -267,9 +281,11 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                 }
                 return Task.CompletedTask;
             });
+            InitializationPhase = "build-application";
             _app = await _builder.BuildAsync(cts.Token).ConfigureAwait(false);
+            InitializationPhase = "start-application";
             await _startApplication(_app, cts.Token).ConfigureAwait(false);
-            if (_completeMtlsProfile)
+            if (_completeMtlsProfile && !_memoriesReadinessScope)
             {
                 // Keep the AppHost's explicit-start semantics and start the optional UI through Aspire.
                 await _app.ResourceNotifications.WaitForResourceAsync("eventstore-admin-ui", KnownResourceStates.NotStarted, cts.Token)
@@ -281,6 +297,37 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                     throw new InvalidOperationException("The explicit EventStore admin UI start command failed.");
                 }
                 await WaitForAllSidecarsAsync(cts.Token).ConfigureAwait(false);
+            }
+
+            if (_memoriesReadinessScope)
+            {
+                // This explicitly named scope qualifies Memories workflow/persistence only.
+                // The ordinary and complete topology paths retain their Parties/Tenants gates.
+                InitializationPhase = "target-sidecars";
+                await WaitForSidecarsAsync(["eventstore", "memories", "memories-domain-service"], cts.Token).ConfigureAwait(false);
+                InitializationPhase = "eventstore-alive";
+                _eventStoreClient = _app.CreateHttpClient("eventstore");
+                _eventStoreClient.Timeout = TimeSpan.FromSeconds(60);
+                await WaitForEndpointAsync(_eventStoreClient, "/alive", [HttpStatusCode.OK], TimeSpan.FromMinutes(2), TimeSpan.FromSeconds(3), cts.Token).ConfigureAwait(false);
+                InitializationPhase = "writer-protocol-activation";
+                string selectedCommit = await ProjectionDeliveryWriterProtocolTestLease.ReadExactSourceCommitAsync(cts.Token).ConfigureAwait(false);
+                await ProjectionDeliveryWriterProtocolTestLease.ActivateAsync(
+                    $"{_redis.GetEndpoint("tcp").Host}:{_redis.GetEndpoint("tcp").Port}", _eventStoreClient, CreateAdministratorToken(),
+                    selectedCommit, "disposable-memories-workflow-fixture-backup", cts.Token).ConfigureAwait(false);
+                InitializationPhase = "eventstore-resource-health";
+                await _app.ResourceNotifications.WaitForResourceHealthyAsync("eventstore", cts.Token).ConfigureAwait(false);
+                InitializationPhase = "memories-resource-health";
+                await _app.ResourceNotifications.WaitForResourceHealthyAsync("memories", cts.Token).ConfigureAwait(false);
+                InitializationPhase = "memories-domain-service-resource-health";
+                await _app.ResourceNotifications.WaitForResourceHealthyAsync("memories-domain-service", cts.Token).ConfigureAwait(false);
+                using HttpClient domainService = _app.CreateHttpClient("memories-domain-service");
+                using HttpClient memories = _app.CreateHttpClient("memories");
+                InitializationPhase = "target-ready-endpoints";
+                await WaitForEndpointAsync(_eventStoreClient, "/ready", [HttpStatusCode.OK], TimeSpan.FromMinutes(2), TimeSpan.FromSeconds(3), cts.Token).ConfigureAwait(false);
+                await WaitForEndpointAsync(memories, "/ready", [HttpStatusCode.OK], TimeSpan.FromMinutes(2), TimeSpan.FromSeconds(3), cts.Token).ConfigureAwait(false);
+                await WaitForEndpointAsync(domainService, "/ready", [HttpStatusCode.OK], TimeSpan.FromMinutes(2), TimeSpan.FromSeconds(3), cts.Token).ConfigureAwait(false);
+                IsAvailable = true;
+                return;
             }
 
             // Wait for parties to be healthy. This includes the DAPR health checks
@@ -339,6 +386,10 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         {
             IsAvailable = false;
             UnavailableReason = $"{ex.GetType().Name}: {ex.Message}";
+            if (ObserveInitializationFailureAsync is not null)
+            {
+                await ObserveInitializationFailureAsync(ex).ConfigureAwait(false);
+            }
             // Tear down partial startup immediately; no test can use an unavailable fixture.
             try
             {
@@ -417,9 +468,18 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         {
             throw new InvalidOperationException("The complete mTLS model does not contain the exact eight expected sidecars.");
         }
-        foreach (string appId in CompleteSidecarIds)
+        await WaitForSidecarsAsync(CompleteSidecarIds, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task WaitForSidecarsAsync(IReadOnlyList<string> appIds, CancellationToken cancellationToken)
+    {
+        foreach (string appId in appIds)
         {
             using HttpClient client = CreateSidecarClient(appId);
+            if (_sidecarApiTokens?.TryGetValue(appId, out string? apiToken) == true)
+            {
+                client.DefaultRequestHeaders.Add("dapr-api-token", apiToken);
+            }
             await WaitForEndpointAsync(client, "/v1.0/healthz", [HttpStatusCode.NoContent],
                 TimeSpan.FromMinutes(2), TimeSpan.FromMilliseconds(250), cancellationToken).ConfigureAwait(false);
             using JsonDocument metadata = await client.GetFromJsonAsync<JsonDocument>("/v1.0/metadata", cancellationToken).ConfigureAwait(false)
@@ -838,7 +898,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
         catch (System.ComponentModel.Win32Exception exception) when (exception.NativeErrorCode == 3) { return null; }
     }
 
-    private static string CreateAdministratorToken()
+    internal static string CreateAdministratorToken()
     {
         var descriptor = new SecurityTokenDescriptor
         {
@@ -859,7 +919,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
 
     private async Task PrepareCiDaprMtlsAsync(CancellationToken cancellationToken)
     {
-        if (!_completeMtlsProfile && (!OperatingSystem.IsLinux()
+        if (!_completeMtlsProfile && !_memoriesReadinessScope && (!OperatingSystem.IsLinux()
                 || !string.Equals(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase)))
         {
             return;

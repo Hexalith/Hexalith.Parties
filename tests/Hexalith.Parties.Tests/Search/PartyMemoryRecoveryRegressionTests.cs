@@ -214,8 +214,10 @@ public sealed class PartyMemoryRecoveryRegressionTests
     public async Task EquivalentTerminalOutputsReuseScopedAbsenceBeforeTransportDenial(bool previouslySettled, bool directSecond)
     {
         var state = new PartyMemoryTestReadModelStore();
-        var first = new PartyMemoryIngestionIntent("first", "case", "urn:first", "workflow-first", "canonical");
-        var second = new PartyMemoryIngestionIntent("second", "case", "urn:second", "workflow-second", "canonical");
+        var first = new PartyMemoryIngestionIntent("first", "case", "urn:first", "workflow-first", "canonical")
+        { ProducerAuthority = PartyMemoryCleanupService.BuildProducerAuthority(new Uri("http://127.0.0.1:1/gateway/")) };
+        var second = new PartyMemoryIngestionIntent("second", "case", "urn:second", "workflow-second", "canonical")
+        { ProducerAuthority = first.ProducerAuthority };
         foreach (PartyMemoryIngestionIntent intent in new[] { first, second })
         {
             await PartyMemoryRecoveryTests.Intents(state).RegisterAsync("tenant", "party", intent, Token);

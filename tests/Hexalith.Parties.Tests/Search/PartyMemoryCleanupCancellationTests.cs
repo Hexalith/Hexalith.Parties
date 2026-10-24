@@ -75,7 +75,7 @@ public sealed class PartyMemoryCleanupCancellationTests
         (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", token)).ShouldHaveSingleItem().ShouldBe(second);
         IReadOnlyList<PartyMemoryIngestionIntent> retained = await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync("tenant", "party", token);
         retained.Count.ShouldBe(2);
-        retained.ShouldContain(first with { CleanupSettled = true });
+        retained.ShouldContain(first with { CleanupSettled = true, AbsenceAuthority = PartyMemoryCleanupService.BuildProducerAuthority(http.BaseAddress) });
         retained.ShouldContain(second);
         handler.BeforeRequest = null;
         (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", token)).Cleaned.ShouldBeTrue();
@@ -135,15 +135,16 @@ public sealed class PartyMemoryCleanupCancellationTests
         (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", token)).ShouldBe([mapping]);
         (await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", token)).ShouldBeEmpty();
         (await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync("tenant", "party", token)).ShouldHaveSingleItem()
-            .ShouldBe(intent with { CleanupSettled = true });
+            .ShouldBe(intent with { CleanupSettled = true, AbsenceAuthority = PartyMemoryCleanupService.BuildProducerAuthority(http.BaseAddress) });
 
         var denied = new ProbeHandler(401, "{}");
         using var deniedHttp = PartyMemoryRecoveryTests.Http(denied);
-        (await PartyMemoryRecoveryTests.Cleanup(state, deniedHttp).DeleteByPartyAsync("tenant", "case", "party", token)).Cleaned.ShouldBeTrue();
-        denied.Requests.ShouldBe(0);
+        (await PartyMemoryRecoveryTests.Cleanup(state, deniedHttp).DeleteByPartyAsync("tenant", "case", "party", token)).Cleaned.ShouldBeFalse();
+        denied.Requests.ShouldBeGreaterThan(0);
+        (await PartyMemoryRecoveryTests.Intents(state).GetSourceClosureVersionAsync("tenant", "party", token)).ShouldBeNull();
         (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", token)).ShouldBeEmpty();
         (await PartyMemoryRecoveryTests.Intents(state).BeginCleanupAsync("tenant", "party", token)).ShouldHaveSingleItem()
-            .ShouldBe(intent with { CleanupSettled = true });
+            .ShouldBe(intent with { CleanupSettled = true, AbsenceAuthority = PartyMemoryCleanupService.BuildProducerAuthority(http.BaseAddress) });
     }
 
     [Fact]

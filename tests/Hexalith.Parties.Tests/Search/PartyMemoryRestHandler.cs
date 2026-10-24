@@ -20,6 +20,8 @@ internal sealed class PartyMemoryRestHandler : HttpMessageHandler
 
     public HttpStatusCode SubmissionStatus { get; set; } = HttpStatusCode.Accepted;
 
+    public bool AcknowledgeRefresh { get; set; } = true;
+
     public string SubmissionBody { get; set; } = "{\"instanceId\":\"workflow\"}";
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -28,10 +30,18 @@ internal sealed class PartyMemoryRestHandler : HttpMessageHandler
         {
             using JsonDocument payload = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
             Submissions.Add(payload.RootElement.Clone());
-            return new HttpResponseMessage(SubmissionStatus)
+            var response = new HttpResponseMessage(SubmissionStatus)
             {
                 Content = new StringContent(SubmissionBody, Encoding.UTF8, "application/json"),
             };
+#if HEXALITH_MEMORIES_SOURCE_REFRESH
+            if (AcknowledgeRefresh && payload.RootElement.TryGetProperty("refreshExistingSource", out JsonElement refresh) && refresh.GetBoolean())
+            {
+                response.Headers.Add(Hexalith.Memories.Contracts.V1.SourceRefreshProtocol.AcknowledgementHeader,
+                    Hexalith.Memories.Contracts.V1.SourceRefreshProtocol.Version);
+            }
+#endif
+            return response;
         }
 
         return await _recovery.SendAsync(request, cancellationToken).ConfigureAwait(false);

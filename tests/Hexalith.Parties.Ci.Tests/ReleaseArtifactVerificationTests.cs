@@ -52,6 +52,12 @@ public sealed class ReleaseArtifactVerificationTests
     [InlineData("wrong-child-digest")]
     [InlineData("wrong-config-digest")]
     [InlineData("wrong-provenance")]
+    [InlineData("missing-created-label")]
+    [InlineData("missing-artifact-created-label")]
+    [InlineData("truncated-created-label")]
+    [InlineData("invalid-created-date")]
+    [InlineData("inconsistent-created-pair")]
+    [InlineData("different-child-created-pair")]
     [InlineData("authentication")]
     [InlineData("forbidden")]
     [InlineData("oci-authentication")]
@@ -116,7 +122,7 @@ public sealed class ReleaseArtifactVerificationTests
         string verification = workflow.Split("  verify-publication:", StringSplitOptions.None)[1];
         verification.ShouldContain("matching-tag: ${{ steps.published.outputs.matching-tag }}");
         verification.ShouldContain("ref: ${{ github.sha }}");
-        verification.ShouldContain("ref: d9070aa0d43feb9e3359286bc797d2be65960727");
+        verification.ShouldContain("ref: 11a3a79cfac4bba9548c6364a17a01ee9b561370");
         verification.ShouldContain("submodules: false");
         verification.ShouldContain("contents: read");
         verification.ShouldContain("run: git -c submodule.recurse=false submodule update --init references/Hexalith.Builds");

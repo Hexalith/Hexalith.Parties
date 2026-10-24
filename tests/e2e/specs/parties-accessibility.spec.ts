@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { expectAccordionFocusClearance } from '../helpers/accordion-focus.js';
 import { expect, test } from '@playwright/test';
 import { createHash } from 'node:crypto';
@@ -108,8 +110,7 @@ test.describe('Parties UI accessibility specimen', () => {
   });
 
   test('compact and resized layouts expose only mounted skip targets and preserve keyboard content access', async ({ page }) => {
-    test.skip(process.env.PARTIES_E2E_COMPACT_SKIP_LINKS !== '1',
-      'DW-112 requires the fixed FrontComposer source; matching package publication/adoption is pending');
+    await qualifyCompactSource(page);
     await gotoSpecimen(page);
     for (const width of [1280, 390, 800, 1280, 390, 1280]) {
       await page.setViewportSize({ width, height: 900 });
@@ -118,13 +119,19 @@ test.describe('Parties UI accessibility specimen', () => {
       await expect(page.locator(".fc-skip-link[href$='#fc-nav']")).toHaveCount(mounted ? 1 : 0);
       await expect(page.locator(".fc-skip-link[href$='#fc-main-content']")).toHaveCount(1);
       await expect(page.locator('[data-testid="fc-route-navigation-status"]')).toHaveAttribute('aria-live', 'polite');
+      // The responsive framework completes its layout callbacks on the browser frame.
+      await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
       await page.locator('.fc-shell-root').focus();
+      await expect(page.locator('.fc-shell-root')).toBeFocused();
       await page.keyboard.press('Tab');
       await expect(page.getByRole('link', { name: 'Skip to content', exact: true })).toBeFocused();
       await page.keyboard.press('Enter');
       await expect(page.locator('#fc-main-content')).toBeFocused();
       if (mounted) {
+        // The responsive framework completes its layout callbacks on the browser frame.
+        await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
         await page.locator('.fc-shell-root').focus();
+        await expect(page.locator('.fc-shell-root')).toBeFocused();
         await page.keyboard.press('Tab');
         await page.keyboard.press('Tab');
         await expect(page.getByRole('link', { name: 'Skip to navigation', exact: true })).toBeFocused();
@@ -195,6 +202,8 @@ test.describe('Parties UI accessibility specimen', () => {
     await page.keyboard.press('Enter');
     await expect(page.locator('#fc-main-content')).toBeFocused();
     await expect(page).toHaveURL(/\?dw91=client-navigation$/);
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('button', { name: 'Representative controls', exact: true })).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(page.getByTestId('parties-specimen-primary-action')).toBeFocused();
   });
@@ -615,3 +624,26 @@ const collectVisualBaseline = async (page: import('@playwright/test').Page): Pro
       .evaluate((element) => getComputedStyle(element).backgroundColor !== 'rgb(0, 151, 167)'),
   },
 });
+
+// Resolve the same validated module-tool selection as the build, and compare the actual
+// browser asset bytes before letting source-only coverage qualify. An opt-in variable
+// cannot turn a package or a stale/unrelated server into source evidence.
+async function qualifyCompactSource(page: import('@playwright/test').Page): Promise<void> {
+  const configuration = process.env.CI ? 'Release' : 'Debug';
+  const metadataPath = fileURLToPath(new URL(
+    `../../../src/Hexalith.Parties.UI/bin/${configuration}/net10.0/Hexalith.Parties.UI.source-metadata.txt`, import.meta.url));
+  const [fromSource, mode, root] = (await readFile(metadataPath, 'utf8')).trim().split(/\r?\n/);
+  test.skip(fromSource !== 'true' && process.env.PARTIES_E2E_COMPACT_SKIP_LINKS !== '1',
+    'DW-112 source qualification; matching compact-navigation package publication/adoption is pending');
+  if (fromSource !== 'true') return; // An explicitly forced package negative control must execute and fail its behavioral assertions.
+  expect(mode).toBe('source');
+  expect(path.isAbsolute(root)).toBe(true);
+  for (const asset of ['js/fc-focus.js', 'css/fc-shell.css']) {
+    const selected = await readFile(path.join(root,
+      'src/Hexalith.FrontComposer.Shell/wwwroot', asset));
+    const served = await page.request.get(`/_content/Hexalith.FrontComposer.Shell/${asset}`);
+    expect(served.ok()).toBe(true);
+    expect(createHash('sha256').update(await served.body()).digest('hex')).toBe(
+      createHash('sha256').update(selected).digest('hex'));
+  }
+}

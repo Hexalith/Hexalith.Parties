@@ -6,9 +6,13 @@ namespace Hexalith.Parties.Search;
 /// <param name="Generation">Generation used to distinguish ingestion after a transient removal.</param>
 /// <param name="PermanentCleanup">Whether an erasure permanently closed admission.</param>
 /// <param name="CleanupReceipts">Canonical provenance retained for writers that can resume after cleanup.</param>
+/// <param name="SourceClosureAuthority">Hashed normalized producer endpoint for the closure; missing legacy authority never qualifies a cache hit.</param>
+/// <param name="SourceClosureVersion">Complete terminal remote inventory observed under the permanent source fence, if any.</param>
 internal sealed record PartyMemoryIngestionInventory(
     bool CleanupRequested,
     List<PartyMemoryIngestionIntent> Intents,
     long Generation = 0,
     bool PermanentCleanup = false,
-    List<PartyMemoryIngestionIntent>? CleanupReceipts = null);
+    List<PartyMemoryIngestionIntent>? CleanupReceipts = null,
+    string? SourceClosureVersion = null,
+    string? SourceClosureAuthority = null);

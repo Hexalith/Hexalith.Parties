@@ -27,15 +27,25 @@ internal sealed partial class PartyMemoryCleanupService(
         {
             IReadOnlyList<PartyMemoryIngestionIntent> snapshot = await intentStore.BeginCleanupAsync(
                 tenantId, partyId, cancellationToken).ConfigureAwait(false);
+            string? producerAuthority = BuildProducerAuthority(httpClient.BaseAddress);
             PartyMemoryIngestionIntent? intent = snapshot.FirstOrDefault(item => item.CaseId == caseId
-                && (item.WorkflowInstanceId == memoryUnitId || item.MemoryUnitId == memoryUnitId));
+                && (item.WorkflowInstanceId == memoryUnitId || item.MemoryUnitId == memoryUnitId)
+                && producerAuthority is not null
+                && (item.CleanupSettled ? item.AbsenceAuthority == producerAuthority : item.ProducerAuthority == producerAuthority));
             if (intent?.CleanupSettled == true)
             {
                 return Result(tenantId, partyId, intent.MemoryUnitId ?? memoryUnitId, true, null);
             }
 
-            string? canonical = intent?.MemoryUnitId
-                ?? await ResolveAsync(tenantId, caseId, memoryUnitId, cancellationToken).ConfigureAwait(false);
+            string? canonical = intent?.MemoryUnitId;
+            if (canonical is null || intent?.RequiresTerminalEvidence == true)
+            {
+                canonical = await ResolveAsync(tenantId, caseId, intent?.WorkflowInstanceId ?? memoryUnitId, cancellationToken).ConfigureAwait(false);
+                if (intent?.MemoryUnitId is not null && canonical is not null && intent.MemoryUnitId != canonical)
+                {
+                    throw new InvalidOperationException("memory-source-inventory-output-mismatch");
+                }
+            }
             if (canonical is null)
             {
                 return Result(tenantId, partyId, memoryUnitId, false, "Memories cleanup requires validated terminal ingestion evidence.");
@@ -44,21 +54,22 @@ internal sealed partial class PartyMemoryCleanupService(
             if (intent is null)
             {
                 intent = await intentStore.RetainLegacyAsync(tenantId, partyId,
-                    new(memoryUnitId, PartyMemoryUrn.Build(tenantId, partyId), caseId), caseId, canonical, cancellationToken).ConfigureAwait(false);
+                    new(memoryUnitId, PartyMemoryUrn.Build(tenantId, partyId), caseId), caseId, canonical, cancellationToken, producerAuthority).ConfigureAwait(false);
             }
-            else if (intent.MemoryUnitId is null)
+            else if (intent.MemoryUnitId is null || intent.RequiresTerminalEvidence)
             {
-                intent = intent with { MemoryUnitId = canonical };
+                intent = intent with { MemoryUnitId = canonical, RequiresTerminalEvidence = false };
                 await intentStore.UpdateAsync(tenantId, partyId, intent, cancellationToken).ConfigureAwait(false);
             }
             bool alreadyAbsent = snapshot.Any(receipt => receipt.CleanupSettled && !receipt.SubmissionRejected
+                && producerAuthority is not null && receipt.AbsenceAuthority == producerAuthority
                 && receipt.CaseId == caseId && receipt.MemoryUnitId == canonical);
             PartyMemoryCleanupResult result = intent.CleanupSettled || alreadyAbsent
                 ? Result(tenantId, partyId, canonical, true, null)
                 : await DeleteTerminalUnitAsync(tenantId, caseId, partyId, canonical, cancellationToken).ConfigureAwait(false);
             if (result.Cleaned && !intent.CleanupSettled)
             {
-                _ = await intentStore.RemoveAsync(tenantId, partyId, [intent], cancellationToken).ConfigureAwait(false);
+                _ = await intentStore.RemoveAsync(tenantId, partyId, [intent], cancellationToken, BuildProducerAuthority(httpClient.BaseAddress)).ConfigureAwait(false);
             }
 
             return result;
@@ -82,11 +93,16 @@ internal sealed partial class PartyMemoryCleanupService(
         ArgumentException.ThrowIfNullOrWhiteSpace(partyId);
         IReadOnlyList<PartyMemoryUnitMappingEntry> mappings;
         IReadOnlyList<PartyMemoryIngestionIntent> intents;
+        bool remoteComplete;
+        string? sourceClosureVersion;
+        string? verifiedRemoteVersion = null;
         try
         {
             // Close admission first: a racing registration either appears in this snapshot
             // or conflicts and observes the enduring fence before any remote submission.
             intents = await intentStore.BeginCleanupAsync(tenantId, partyId, cancellationToken, permanent).ConfigureAwait(false);
+            sourceClosureVersion = await intentStore.GetSourceClosureVersionAsync(tenantId, partyId, cancellationToken, BuildProducerAuthority(httpClient.BaseAddress)).ConfigureAwait(false);
+            remoteComplete = sourceClosureVersion is not null;
             mappings = await mappingStore.GetMappingsAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
@@ -99,17 +115,34 @@ internal sealed partial class PartyMemoryCleanupService(
             return Result(tenantId, partyId, string.Empty, false, "Memories cleanup could not verify its mapping inventory.");
         }
 
+        string? remoteBlock = null;
+        if (!remoteComplete)
+        {
+            try
+            {
+                (remoteComplete, _, _) = await ReconcileSourceInventoryAsync(tenantId, partyId, permanent, fence: true, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            {
+                LogObservationFailure(logger, ex.GetType().Name);
+                remoteBlock = "Memories cleanup retained incomplete remote source inventory.";
+            }
+            // Partial discoveries remain durable and can make verified local progress.
+            intents = await intentStore.BeginCleanupAsync(tenantId, partyId, cancellationToken, permanent).ConfigureAwait(false);
+        }
         cancellationToken.ThrowIfCancellationRequested();
+        string? producerAuthority = BuildProducerAuthority(httpClient.BaseAddress);
         List<PartyMemoryUnitMappingEntry> cleanedMappings = [];
         List<PartyMemoryIngestionIntent> cleanedIntents = [];
         Dictionary<string, PartyMemoryIngestionIntent> resolvedIntents = new(StringComparer.Ordinal);
         // Active intents precede receipts in the snapshot, so seed qualified settled scope
         // before visiting any terminal producer that may name the same canonical unit.
         HashSet<(string CaseId, string UnitId)> absentUnits = [.. intents
-            .Where(intent => intent.CleanupSettled && !intent.SubmissionRejected
+            .Where(intent => intent.CleanupSettled && intent.AbsenceAuthority == producerAuthority && producerAuthority is not null && !intent.SubmissionRejected
                 && !string.IsNullOrWhiteSpace(intent.CaseId) && !string.IsNullOrWhiteSpace(intent.MemoryUnitId))
             .Select(intent => (intent.CaseId, intent.MemoryUnitId!))];
-        string? blocked = null;
+        string? blocked = remoteComplete ? null : remoteBlock ?? "Memories source inventory requires owner reconciliation.";
         string blockedUnit = string.Empty;
         int remainingMappings = mappings.Count;
         int remainingIntents = intents.Count;
@@ -125,7 +158,13 @@ internal sealed partial class PartyMemoryCleanupService(
                     {
                         // Historical receipts carry already verified absence, not remote work.
                         // They can settle a late mapping even if credentials or the case disappear.
-                        resolvedIntents[intent.AttemptId] = intent;
+                        if (producerAuthority is not null && intent.AbsenceAuthority == producerAuthority) { resolvedIntents[intent.AttemptId] = intent; }
+                        continue;
+                    }
+
+                    if (intent.ProducerAuthority is not null && intent.ProducerAuthority != producerAuthority)
+                    {
+                        blocked ??= "Memories cleanup retains an obligation from a different producer authority.";
                         continue;
                     }
 
@@ -135,18 +174,22 @@ internal sealed partial class PartyMemoryCleanupService(
                         continue;
                     }
 
-                    if (intent.MemoryUnitId is null && !string.IsNullOrWhiteSpace(intent.WorkflowInstanceId))
+                    if ((intent.MemoryUnitId is null || intent.RequiresTerminalEvidence) && !string.IsNullOrWhiteSpace(intent.WorkflowInstanceId))
                     {
                         string? canonical = await ResolveAsync(tenantId, intent.CaseId, intent.WorkflowInstanceId, cancellationToken).ConfigureAwait(false);
                         if (canonical is not null)
                         {
-                            intent = intent with { MemoryUnitId = canonical };
+                            if (intent.MemoryUnitId is not null && intent.MemoryUnitId != canonical)
+                            {
+                                throw new InvalidOperationException("memory-source-inventory-output-mismatch");
+                            }
+                            intent = intent with { MemoryUnitId = canonical, RequiresTerminalEvidence = false };
                             await intentStore.UpdateAsync(tenantId, partyId, intent, cancellationToken).ConfigureAwait(false);
                         }
                     }
 
                     resolvedIntents[intent.AttemptId] = intent;
-                    if (intent.MemoryUnitId is null)
+                    if (intent.MemoryUnitId is null || intent.RequiresTerminalEvidence)
                     {
                         blocked ??= "Memories cleanup retained an unresolved ingestion obligation.";
                         continue;
@@ -192,9 +235,11 @@ internal sealed partial class PartyMemoryCleanupService(
                 {
                     PartyMemoryIngestionIntent? known = resolvedIntents.Values.FirstOrDefault(intent => intent.CaseId == resolvedCase
                         && (intent.MemoryUnitId == mapping.MemoryUnitId || intent.WorkflowInstanceId == mapping.MemoryUnitId));
-                    if (known?.MemoryUnitId is null)
+                    if (known?.MemoryUnitId is null || known.RequiresTerminalEvidence)
                     {
-                        string? canonical = await ResolveAsync(tenantId, resolvedCase, mapping.MemoryUnitId, cancellationToken).ConfigureAwait(false);
+                        string? producerWorkflow = known?.RequiresTerminalEvidence == true ? known.WorkflowInstanceId : mapping.MemoryUnitId;
+                        string? canonical = string.IsNullOrWhiteSpace(producerWorkflow) ? null
+                            : await ResolveAsync(tenantId, resolvedCase, producerWorkflow, cancellationToken).ConfigureAwait(false);
                         if (canonical is null)
                         {
                             blocked ??= "Memories cleanup requires validated terminal ingestion evidence.";
@@ -202,16 +247,21 @@ internal sealed partial class PartyMemoryCleanupService(
                             continue;
                         }
 
+                        if (known?.MemoryUnitId is not null && known.MemoryUnitId != canonical)
+                        {
+                            throw new InvalidOperationException("memory-source-inventory-output-mismatch");
+                        }
+
                         // Persist legacy workflow/canonical provenance before the first DELETE.
                         // A failed subtraction or expired workflow must not lose this association.
                         if (known is null)
                         {
                             known = await intentStore.RetainLegacyAsync(tenantId, partyId, mapping,
-                                resolvedCase, canonical, cancellationToken).ConfigureAwait(false);
+                                resolvedCase, canonical, cancellationToken, producerAuthority).ConfigureAwait(false);
                         }
                         else
                         {
-                            known = known with { MemoryUnitId = canonical };
+                            known = known with { MemoryUnitId = canonical, RequiresTerminalEvidence = false };
                             await intentStore.UpdateAsync(tenantId, partyId, known, cancellationToken).ConfigureAwait(false);
                         }
 
@@ -258,7 +308,7 @@ internal sealed partial class PartyMemoryCleanupService(
                 {
                     // Exact settled receipts preserve provenance for every surviving or late
                     // mapping even when cancellation prevents mapping subtraction altogether.
-                    remainingIntents = await intentStore.RemoveAsync(tenantId, partyId, cleanedIntents, recovery.Token).ConfigureAwait(false);
+                    remainingIntents = await intentStore.RemoveAsync(tenantId, partyId, cleanedIntents, recovery.Token, producerAuthority).ConfigureAwait(false);
                 }
 
                 if (cleanedMappings.Count > 0)
@@ -273,6 +323,23 @@ internal sealed partial class PartyMemoryCleanupService(
         }
 
         cancellationToken.ThrowIfCancellationRequested();
+        // Re-read the fenced remote source after deletion. Pending completion, partial
+        // pages and unavailable inventory cannot be discharged by empty local lists.
+        try
+        {
+            if (sourceClosureVersion is null)
+            {
+                (bool complete, bool terminal, string version) = await ReconcileSourceInventoryAsync(tenantId, partyId, permanent, fence: false, cancellationToken).ConfigureAwait(false);
+                if (!complete || !terminal) { blocked ??= "Memories source inventory has not established complete terminal absence."; }
+                else { verifiedRemoteVersion = version; }
+            }
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+        {
+            LogObservationFailure(logger, ex.GetType().Name);
+            blocked ??= "Memories cleanup could not verify its final source inventory.";
+        }
         // Include concurrent legacy mapping arrivals; the intent fence prevents new submissions.
         remainingMappings = (await mappingStore.GetMappingsAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false)).Count;
         remainingIntents = (await intentStore.GetAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false)).Count;
@@ -287,6 +354,16 @@ internal sealed partial class PartyMemoryCleanupService(
             return Result(tenantId, partyId, string.Empty, false, "Memories cleanup retained additional obligations; another cleanup pass is required.");
         }
 
+        if (permanent && sourceClosureVersion is null && verifiedRemoteVersion is not null)
+        {
+            try { await intentStore.RetainSourceClosureVersionAsync(tenantId, partyId, verifiedRemoteVersion, cancellationToken, BuildProducerAuthority(httpClient.BaseAddress)).ConfigureAwait(false); }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            {
+                LogObservationFailure(logger, ex.GetType().Name);
+                return Result(tenantId, partyId, string.Empty, false, "Memories cleanup could not retain complete source-closure evidence.");
+            }
+        }
         return Result(tenantId, partyId, mappings.Count == 1 ? mappings[0].MemoryUnitId : string.Empty, true,
             cleanedMappings.Count > 1 ? $"Memories cleanup deleted {cleanedMappings.Count} of {mappings.Count} units." : null);
     }

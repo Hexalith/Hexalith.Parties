@@ -24,8 +24,31 @@ internal sealed class PartyMemoryRecoveryHandler : HttpMessageHandler
 
     public Func<HttpRequestMessage, CancellationToken, Task>? BeforeRequest { get; set; }
 
+    public List<(HttpMethod Method, string Path)> InventoryRequests { get; } = [];
+
+    public Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>? InventoryRequest { get; set; }
+
+    public bool InventoryComplete { get; set; } = true;
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        if (request.RequestUri!.AbsolutePath.EndsWith("/memory-units/by-source-uri", StringComparison.Ordinal))
+        {
+            return new(HttpStatusCode.NotFound) { Content = JsonContent.Create(new { code = "MEMORY_UNIT_NOT_FOUND" }) };
+        }
+        if (request.RequestUri!.AbsolutePath.Contains("/source-inventory", StringComparison.Ordinal))
+        {
+            InventoryRequests.Add((request.Method, request.RequestUri.PathAndQuery));
+            if (InventoryRequest is not null) { return await InventoryRequest(request, cancellationToken).ConfigureAwait(false); }
+            if (request.Method == HttpMethod.Post) { return new(HttpStatusCode.NoContent); }
+            string tenant = Uri.UnescapeDataString(request.RequestUri.AbsolutePath.Split("/tenants/", StringSplitOptions.None)[1].Split('/')[0]);
+            string source = Uri.UnescapeDataString(request.RequestUri.Query.Split("sourceUri=", StringSplitOptions.None)[1].Split('&')[0]);
+            return new(HttpStatusCode.OK) { Content = JsonContent.Create(new
+            {
+                tenantId = tenant, sourceUri = source, version = "synthetic-complete-inventory", coverageComplete = InventoryComplete,
+                admissionClosed = true, permanent = true, entries = Array.Empty<object>(), nextCursor = (string?)null,
+            }) };
+        }
         if (BeforeRequest is not null)
         {
             await BeforeRequest(request, cancellationToken).ConfigureAwait(false);

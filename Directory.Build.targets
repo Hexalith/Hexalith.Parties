@@ -1,4 +1,18 @@
 <Project>
+  <Target Name="ConfigureMemoriesSourceCompilation" BeforeTargets="PrepareForBuild;GetAssemblyAttributes;GenerateCompileDependencyCache;CoreCompile"
+          Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties' or '$(MSBuildProjectName)' == 'Hexalith.Parties.Tests'">
+    <!-- Evaluate after the generated final source imports, before compile inputs and assembly metadata are captured. -->
+    <PropertyGroup>
+      <MemoriesSourceRefreshSupported>false</MemoriesSourceRefreshSupported>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(HexalithMemoriesFromSource)' == 'true'">
+      <DefineConstants>$(DefineConstants);HEXALITH_MEMORIES_SOURCE_REFRESH</DefineConstants>
+      <MemoriesSourceRefreshSupported>true</MemoriesSourceRefreshSupported>
+    </PropertyGroup>
+    <ItemGroup>
+      <AssemblyMetadata Include="HexalithMemoriesSourceRefresh" Value="$(MemoriesSourceRefreshSupported)" />
+    </ItemGroup>
+  </Target>
   <ItemGroup Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties.Tests'">
     <AssemblyMetadata Include="HexalithSourceMappingMode" Value="$(HexalithSourceMappingMode)" />
   </ItemGroup>

@@ -26,7 +26,7 @@ internal sealed class PartiesTopologySession
             var listeners = new List<TcpListener>();
             try
             {
-                while (listeners.Count < 7 + SidecarNames.Length)
+                while (listeners.Count < 8 + SidecarNames.Length)
                 {
                     var listener = new TcpListener(IPAddress.Loopback, 0);
                     listener.Start();
@@ -44,6 +44,7 @@ internal sealed class PartiesTopologySession
                 PlacementPort = ports[2]; PlacementHealthPort = ports[3];
                 SchedulerPort = ports[4]; SchedulerHealthPort = ports[5];
                 EventStoreHttpPort = ports[6];
+                MemoriesDomainInternalGrpcPort = ports[^1];
                 InternalGrpcPorts = SidecarNames.Select((name, index) => new KeyValuePair<string, int>(name, ports[index + 7]))
                     .ToFrozenDictionary(StringComparer.Ordinal);
             }
@@ -84,6 +85,9 @@ internal sealed class PartiesTopologySession
     /// <summary>Gets the gateway's sidecar HTTP listener.</summary>
     internal int EventStoreHttpPort { get; }
 
+    /// <summary>Gets an optional listener reserved only for the three-target Memories component profile.</summary>
+    internal int MemoriesDomainInternalGrpcPort { get; }
+
     /// <summary>Gets explicitly allocated internal listeners, avoiding Dapr's colliding app-id hash defaults.</summary>
     internal IReadOnlyDictionary<string, int> InternalGrpcPorts { get; }
 
@@ -94,7 +98,7 @@ internal sealed class PartiesTopologySession
     internal string AppId(string name) => AppIdSuffix.Length == 0 ? name : name + "-" + AppIdSuffix;
 
     /// <summary>Returns model-construction settings before the AppHost executes.</summary>
-    internal string[] Arguments(bool complete, bool mtls) =>
+    internal string[] Arguments(bool complete, bool mtls, bool includeMemoriesDomainService = false) =>
     [
         "--EnableKeycloak=false", "--environment=Development",
         $"--EnableMemoriesSearch={complete}", $"--EnableEventStoreSampleUi={complete}",
@@ -105,6 +109,7 @@ internal sealed class PartiesTopologySession
         $"--Dapr:Mtls:PlacementHostAddress=127.0.0.1:{PlacementPort}",
         $"--Dapr:Mtls:SchedulerHostAddress=127.0.0.1:{SchedulerPort}",
         $"--Dapr:EventStoreHttpPort={EventStoreHttpPort}",
+        .. includeMemoriesDomainService ? new[] { "--EnableMemoriesDomainService=true", $"--Dapr:Mtls:InternalGrpcPorts:memories-domain-service={MemoriesDomainInternalGrpcPort}" } : Array.Empty<string>(),
         .. InternalGrpcPorts.Select(pair => $"--Dapr:Mtls:InternalGrpcPorts:{pair.Key}={pair.Value}"),
     ];
 

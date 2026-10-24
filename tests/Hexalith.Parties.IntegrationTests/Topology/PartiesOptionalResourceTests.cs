@@ -74,6 +74,25 @@ public sealed class PartiesOptionalResourceTests
         }
     }
 
+    [Fact]
+    public async Task DomainServiceFlagAloneSelectsTheActualDomainHostAndRoutesAllThreeDomains()
+    {
+        IDistributedApplicationTestingBuilder builder = await DistributedApplicationTestingBuilder
+            .CreateAsync<apphost::Projects.Hexalith_Parties_AppHost>(
+                ["--operation=run", "--PUBLISH_TARGET=", "--EnableMemoriesSearch=false", "--EnableMemoriesDomainService=true",
+                    "--EnableEventStoreSampleUi=false", "--EnableKeycloak=false"], TestContext.Current.CancellationToken).ConfigureAwait(true);
+        await using (builder.ConfigureAwait(true))
+        {
+            builder.Resources.OfType<ProjectResource>().ShouldContain(resource => resource.Name == "memories-domain-service");
+            ProjectResource gateway = builder.Resources.OfType<ProjectResource>().Single(resource => resource.Name == "eventstore");
+            IDictionary<string, object> environment = await EvaluateEnvironmentAsync(builder, gateway).ConfigureAwait(true);
+            foreach (string domain in new[] { "memories-tenants", "memories-cases", "memories-memory-units" })
+            {
+                environment["EventStore__DomainServices__Registrations__wildcard_" + domain + "_v1__AppId"].ShouldBe("memories-domain-service");
+            }
+        }
+    }
+
     /// <summary>Evaluates callbacks without starting containers or workloads.</summary>
     private static async Task<IDictionary<string, object>> EvaluateEnvironmentAsync(
         IDistributedApplicationTestingBuilder builder, ProjectResource resource)
