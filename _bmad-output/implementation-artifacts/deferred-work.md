@@ -1871,3 +1871,11 @@ review1_2026_10_25: Review-1 native TAG queries retain discovered obligations wi
 
 resolution_2026_10_25_final: Memories 7b0c8b5692600e293346eea7a84652eb87e4c346 publishes bounded exact-key discovery and ownership checks. Missing TAG/unknown coverage remains an explicit reconciliation requirement; no production completeness or attestation is inferred.
 verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; spec `spec-five-processing-and-memories-erasure-deferred-items.md`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-ext-parties-1-owner-delivery.md`
+  summary: Retain the EXT-PARTIES-1 review-triage record outside the owner-delivery spec.
+  evidence: Token split from the stopped owner-delivery spec. Findings BH-01–BH-10, EC-01, VG-01, and VG-02 stay in `_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/review-triage.json`. This split does not authorize Identity test edits, a custody backend, or Live.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-ext-parties-1-owner-delivery.md`
+  summary: Retain the EXT-PARTIES-1 Local and Live verification history outside the owner-delivery spec.
+  evidence: Token split from the stopped owner-delivery spec. Command results, source snapshots, and hashes stay in `_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/`. The historical Local exit 1 is not Available. This split does not execute Live.
