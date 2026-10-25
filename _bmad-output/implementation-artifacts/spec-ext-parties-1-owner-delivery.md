@@ -2,7 +2,7 @@
 title: 'EXT-PARTIES-1 owner delivery'
 type: 'feature'
 created: '2026-10-25'
-status: 'draft'
+status: 'in-progress'
 route: 'dispatch'
 review_loop_iteration: 1
 baseline_commit: 'e523b06551ebdc69657ee78c045123dac19de6c8'

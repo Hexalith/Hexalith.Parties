@@ -1,0 +1,85 @@
+{
+  "status": "review-source-manifest-not-qualification",
+  "sources": [
+    {
+      "id": "direction",
+      "path": "../../../../platform/docs/implementation/ext-parties-1-custody-direction-2026-10-25.md",
+      "sha256": "e733c85418706644372312f37640e9df2310fe05f5d7e7a53154892c7a60db3a"
+    },
+    {
+      "id": "research",
+      "path": "../../planning-artifacts/research/technical-custody-backend-feasibility-2026-10-25/research.md",
+      "sha256": "d7cba48e46f1281c44dbdc64caa199fd841450f8a78cde2173a190e86ebe4233"
+    },
+    {
+      "id": "comparison",
+      "path": "../../planning-artifacts/research/technical-custody-backend-feasibility-2026-10-25/deepening-pragmatic-options/research.md",
+      "sha256": "9c87d94325f3de47964e09ae27c6a0437c9ca6da30a590a4ab2938dd86ba88b5"
+    },
+    {
+      "id": "register",
+      "path": "../../../../agents/_bmad-output/planning-artifacts/external-dependency-register.md",
+      "sha256": "5bf35ac2857664c0589966a10944cd66278af85242c7c1f08e31ae29aa40e8a2"
+    },
+    {
+      "id": "identity",
+      "path": "../../../../agents/_bmad-output/specs/spec-story-5-4-dependency-unblock/parties-identity-contract.md",
+      "sha256": "59699c8318d2ced61dd994fce5c20055fe87f48365415c65969b69b37790d0cd"
+    },
+    {
+      "id": "acceptance",
+      "path": "../../../../agents/_bmad-output/specs/spec-story-5-4-dependency-unblock/evidence-and-acceptance.md",
+      "sha256": "9d6a1288a611f6902e90e22c31fac9589a5a18d2d1692d9641d1ada57a91fc76"
+    },
+    {
+      "id": "retention",
+      "path": "../../../../agents/_bmad-output/implementation-artifacts/story-5-4-retention-custody-proposal-2026-10-06.md",
+      "sha256": "a46f6b5d9e9574f1553b9e735f27d072e4b013a6fe07f9b2eb99d48348f8d6c7"
+    },
+    {
+      "id": "reconciliation",
+      "path": "../../../../agents/_bmad-output/implementation-artifacts/story-5-4-dependency-reconciliation-2026-10-25.md",
+      "sha256": "509c32f6111a0b9e454ed9cac0ba990be79e35476e3acc8f7f15f568b5dede9a"
+    },
+    {
+      "id": "identity_audit",
+      "path": "../../../../agents/_bmad-output/implementation-artifacts/tests/story-5-4-reconciliation-2026-10-25/identity-owner-packets.md",
+      "sha256": "d122c2e6d29d356f830eada844d0819e7de1b7b4918f22c9f408fb98bf182449"
+    },
+    {
+      "id": "lifecycle",
+      "path": "../../../../platform/_bmad-output/specs/spec-production-actor-history-custody/lifecycle-contract.md",
+      "sha256": "b027373de02776d38bb80a6bd5e9c135fbdfd171667196f7287dd1467df0f479"
+    },
+    {
+      "id": "custody_spec",
+      "path": "../../../../platform/_bmad-output/specs/spec-production-actor-history-custody/SPEC.md",
+      "sha256": "b5eb9132d00bf582d2dbab2f051d411d9106b2aecedf30d36a2576de0f177b0c"
+    },
+    {
+      "id": "implementation",
+      "path": "../../../../platform/_bmad-output/specs/spec-production-actor-history-custody/implementation-plan.md",
+      "sha256": "54ff435a10ecfb67dea00e54489546fabac95e11f9b976a8d4831a4334389928"
+    },
+    {
+      "id": "tests",
+      "path": "../../../../platform/_bmad-output/specs/spec-production-actor-history-custody/test-plan.md",
+      "sha256": "49c86a648bfb87e719f0a018019db3da70a5d1035947f71dab928bced7e19e7f"
+    },
+    {
+      "id": "proposal",
+      "path": "../../../../platform/docs/implementation/ext-parties-1-custody-proposal-2026-10-25/PROPOSAL.md",
+      "sha256": "e4ac6f6c72a3dd5f73e5e6dd971b6fe27505d1dd10280742db7717cb82f39037"
+    },
+    {
+      "id": "commands",
+      "path": "../../../../platform/docs/implementation/ext-parties-1-custody-proposal-2026-10-25/COMMANDS.md",
+      "sha256": "4dd6740ad39c474f0d3352d69a8b73e122d6d846e47b363a508621a36eccff43"
+    },
+    {
+      "id": "ledger",
+      "path": "../../../../platform/docs/implementation/ext-parties-1-custody-proposal-2026-10-25/decision-and-binding-ledger.json",
+      "sha256": "a8496d20f44b0c0511de4e17a988db4f3ec9dc7330b5e8e37380b5c2277e42ad"
+    }
+  ]
+}
