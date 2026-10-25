@@ -6,6 +6,7 @@ status: 'in-progress'
 route: 'dispatch'
 review_loop_iteration: 4
 baseline_commit: '5eca98e9725aeb528c90d058eb2e08a64700b49f'
+integration_commit: '7ca130c415ae2a5e02ee45ad8e6a602d55ae4028'
 context: []
 ---
 
@@ -211,3 +212,12 @@ Preserve frozen intent and all positive behavior. Correct these coherent contrac
 KEEP the complete stable reviewed implementation at `/tmp/parties-five-review4-vz26i1jn/rederive-4/`. Restore every positive source/package/live/browser control, tenant ownership/pending-write fencing, maintenance retention, byte/identifier limits, signed transport and real domain host, immutable publisher pins, exact constructor metadata and owner governance. Prior final receipts remain historical after code changes; rerun affected matrix/caller/runtime lanes against the final tree. Parent owns formal reviews, workflow rendering and Git operations. Preserve LF for baseline docs/ci.md and CRLF for the existing deferred ledger. Existing DW-196/197/198 records remain pre-existing follow-ups and must not be appended again.
 
 2026-10-24 review loop4 change log: R4-B2/B4 require coherent claim-check ownership normalization and producer/consumer wire-sized pagination. Added the requirements above to prevent valid re-ingestion from becoming unreconcilable, original-owner payload erasure and accepted-but-unreadable inventory pages. KEEP all loop3 positives from the named snapshot; direct line-level corrections and new receiver verification are incorporated. No frozen intent or package/catalog version changes, production operations or release dispatch are authorized.
+
+
+## Shared-worktree integration discovered during loop4
+
+A separate user-owned process committed and merged the shared task work while the parent was triaging review4. Current root main is `7ca130c415ae2a5e02ee45ad8e6a602d55ae4028`; EventStore `749767072b8c2ea2abc8a23540ca65471d078c49`; Memories `20107f2ce423c6cb210bb725845a061220dcfe2a`; FrontComposer `cabb1e00a799ddf99d19f900feb22ba59dd11c0b`; Builds `857558036530a389ccb4ba16fa9777416af9b12e`. All four task worktrees were clean and main matched their cached origin/main. The original baseline_commit and frozen intent remain unchanged.
+
+Preserve every incoming commit and current source file. The mandated reversion was stopped before any mutation because its baseline assertion detected these newer user commits; no code was reverted. Higher-priority user-change preservation applies. Implement the loop4 requirements incrementally from this integrated current worktree; do not restore an older KEEP seed over incoming work. The rederive-4 snapshot is preservation/reference material for this current integration. Parent owns reviews and all Git operations.
+
+The incoming Builds integration independently changes the Memories catalog from2.29.8 to2.29.9; this build must preserve that incoming selection and make no package/catalog/version edits. Earlier generated source mappings were produced against the earlier catalog and cannot silently qualify the new graph. Parent is restoring the isolated pinned module-tool/Dapr prerequisites and generating a fresh mapping; wait for its supplied generated imports before source qualification, and never hand-edit generated mappings or bypass the gate. You may implement and perform current package checks independently. Record any incoming compatibility change and exact mode/count evidence separately. The final immutable provenance checks must use all current root-declared selections; incoming user pointer changes must not be relabelled as this build's own content.

@@ -12,6 +12,32 @@ namespace Hexalith.Parties.Tests.Search;
 /// <summary>Consumer source-inventory reconciliation with serialized SDK state and explicit remote negative controls.</summary>
 public sealed class PartyMemorySourceInventoryTests
 {
+    [Fact]
+    public async Task VariableSizeProgressPagesRetainAllCapacityObligationsAcrossSerializedRestart()
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        var state = new PartyMemoryTestReadModelStore();
+        var remote = new PartyMemoryRecoveryHandler();
+        remote.InventoryRequest = (request, _) =>
+        {
+            if (request.Method == HttpMethod.Post) { return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NoContent)); }
+            string? cursor = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(request.RequestUri!.Query).TryGetValue("cursor", out var position) ? position.ToString() : null;
+            int offset = cursor is null ? 0 : int.Parse(cursor, System.Globalization.CultureInfo.InvariantCulture);
+            int count = Math.Min(32, PartyMemoryIngestionIntentStore.Capacity - offset);
+            object[] entries = Enumerable.Range(offset, count).Select(index => (object)new
+            { caseId = new string('漢', 512), workflowInstanceId = new string('漢', 500) + index, state = "Admitted" }).ToArray();
+            return Task.FromResult(Page(entries, offset + count < PartyMemoryIngestionIntentStore.Capacity
+                ? (offset + count).ToString(System.Globalization.CultureInfo.InvariantCulture) : null));
+        };
+        using var http = PartyMemoryRecoveryTests.Http(remote);
+        (await PartyMemoryRecoveryTests.Cleanup(state, http).DeleteByPartyAsync("tenant", "case", "party", token)).Cleaned.ShouldBeFalse();
+        var retained = await PartyMemoryRecoveryTests.Intents(state).GetAsync("tenant", "party", token);
+        retained.Count.ShouldBe(PartyMemoryIngestionIntentStore.Capacity);
+        retained.Select(item => item.WorkflowInstanceId).Distinct().Count().ShouldBe(PartyMemoryIngestionIntentStore.Capacity);
+        remote.InventoryRequests.Count(item => item.Method == HttpMethod.Get).ShouldBeGreaterThan(11);
+        retained.ShouldAllBe(item => item.CaseId.Length == 512 && item.WorkflowInstanceId!.StartsWith(new string('漢', 500), StringComparison.Ordinal));
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

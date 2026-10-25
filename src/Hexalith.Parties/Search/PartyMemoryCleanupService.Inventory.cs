@@ -21,8 +21,9 @@ internal sealed partial class PartyMemoryCleanupService
         string? version = null;
         bool complete = true;
         bool terminal = true;
-        HashSet<string> seen = new(StringComparer.Ordinal);
-        for (int pageNumber = 0; pageNumber < 11; pageNumber++)
+        HashSet<(string Kind, string? Case, string? Id)> seen = [];
+        HashSet<string> cursors = new(StringComparer.Ordinal);
+        for (int pageNumber = 0; pageNumber < PartyMemoryIngestionIntentStore.Capacity; pageNumber++)
         {
             string path = route + query + "&pageSize=100" + (cursor is null ? string.Empty : "&cursor=" + Uri.EscapeDataString(cursor));
             using CancellationTokenSource deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -53,7 +54,7 @@ internal sealed partial class PartyMemoryCleanupService
                 string? retryHash = entry.TryGetProperty("idempotencyTokenHash", out JsonElement retry) ? retry.GetString() : null;
                 string? state = entry.GetProperty("state").GetString();
                 bool terminalVerified = entry.TryGetProperty("terminalVerified", out JsonElement proof) && proof.GetBoolean();
-                string identity = workflow is not null ? "workflow:" + workflow : "unit:" + capturedCase + ":" + canonical;
+                var identity = workflow is not null ? ("workflow", (string?)null, workflow) : ("unit", capturedCase, canonical);
                 if ((workflow is null && canonical is null) || (workflow is not null && !ValidHandle(workflow, 512))
                     || (canonical is not null && !ValidHandle(canonical, 512)) || !ValidHandle(capturedCase, 512)
                     || (retryHash is not null && (retryHash.Length != 64 || retryHash.Any(character => !char.IsAsciiHexDigit(character)))) || !seen.Add(identity)
@@ -70,7 +71,7 @@ internal sealed partial class PartyMemoryCleanupService
             }
             cursor = page.TryGetProperty("nextCursor", out JsonElement next) ? next.GetString() : null;
             if (cursor is null) { return (complete, terminal, version!); }
-            if (!ValidHandle(cursor, 8192) || entries.GetArrayLength() == 0)
+            if (!ValidHandle(cursor, 8192) || entries.GetArrayLength() == 0 || !cursors.Add(cursor))
             {
                 throw new InvalidOperationException("memory-source-inventory-continuation-invalid");
             }

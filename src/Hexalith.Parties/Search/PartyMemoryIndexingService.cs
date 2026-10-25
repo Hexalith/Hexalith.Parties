@@ -188,7 +188,8 @@ internal sealed partial class PartyMemoryIndexingService(
         SourceInventoryEntry? match = null;
         int count = 0;
         HashSet<string> cursors = new(StringComparer.Ordinal);
-        for (int pageNumber = 0; pageNumber < 11; pageNumber++)
+        HashSet<(string Kind, string? Case, string? Id)> entries = [];
+        for (int pageNumber = 0; pageNumber < PartyMemoryIngestionIntentStore.Capacity; pageNumber++)
         {
             SourceInventoryPage page = await memoriesClient.GetSourceInventoryAsync(unit.TenantId, intent.SourceUri, cursor, 100, cancellationToken).ConfigureAwait(false);
             if (page.TenantId != unit.TenantId || page.SourceUri != intent.SourceUri || string.IsNullOrWhiteSpace(page.Version)
@@ -198,8 +199,11 @@ internal sealed partial class PartyMemoryIndexingService(
                 throw new InvalidOperationException("memory-ingestion-inventory-scope-or-bound-mismatch");
             }
             version = page.Version;
-            foreach (SourceInventoryEntry entry in page.Entries.Where(item => item.IdempotencyTokenHash == digest))
+            foreach (SourceInventoryEntry entry in page.Entries)
             {
+                if (!entries.Add(entry.WorkflowInstanceId is { } workflow ? ("workflow", null, workflow) : ("unit", entry.CaseId, entry.MemoryUnitId)))
+                { throw new InvalidOperationException("memory-ingestion-inventory-duplicate-entry"); }
+                if (entry.IdempotencyTokenHash != digest) { continue; }
                 if (entry.CaseId != intent.CaseId || string.IsNullOrWhiteSpace(entry.WorkflowInstanceId) || match is not null
                     || entry.RefreshProtocolVersion != SourceRefreshProtocol.Version || entry.SourceRevisionNumber != revision
                     || entry.RefreshIdentityDigest != bodyBinding)

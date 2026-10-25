@@ -155,6 +155,7 @@ public sealed class PartyMemoryOwnedRuntimeTests
             await File.WriteAllTextAsync(Path.Combine(privateRoot, "endpoint-binding.json"), JsonSerializer.Serialize(new
             { session.Id, SidecarHttp = sidecarHttp.ToString(), SidecarGrpc = sidecarGrpc.ToString(), AppHttpPort = appHttpPort, AppGrpcPort = appGrpcPort }), token).ConfigureAwait(true);
             await AssertCredentialNegativesAsync(sidecarHttp, apiToken, session.AppId("eventstore"), privateRoot, token).ConfigureAwait(true);
+            await AssertDomainServiceAclDenialsAsync(fixture, session, apiToken, privateRoot, token).ConfigureAwait(true);
             string configPath = Path.Combine(privateRoot, "runtime.json");
             await File.WriteAllTextAsync(configPath, JsonSerializer.Serialize(new
             {
@@ -186,27 +187,66 @@ public sealed class PartyMemoryOwnedRuntimeTests
         }
         finally
         {
-            await CaptureTargetFailureAsync(fixture, privateRoot, phase, primaryFailure).ConfigureAwait(true);
-            bool disposed = false;
-            Exception? cleanupFailure = null;
-            try { await fixture.DisposeAsync().ConfigureAwait(true); disposed = true; }
-            catch (Exception exception)
-            {
-                cleanupFailure = exception;
-                if (primaryFailure is not null)
-                {
-                    throw new AggregateException("Owned Memories qualification and cleanup failed; exact private evidence: " + privateRoot,
-                        primaryFailure, exception);
-                }
-                throw;
-            }
+            await CompleteOwnedRunAsync(
+                () => CaptureTargetFailureAsync(fixture, privateRoot, phase, primaryFailure),
+                () => fixture.DisposeAsync().AsTask(),
+                (disposed, cleanupFailure) => File.WriteAllTextAsync(Path.Combine(privateRoot, "ownership.json"), JsonSerializer.Serialize(new
+                { session.Id, session.Root, PrivateEvidence = privateRoot, OwnedTopologyDisposed = disposed, SessionDirectoryExists = Directory.Exists(session.Root),
+                    fixture.IsAvailable, fixture.UnavailableReason, Phase = phase, PrimaryFailure = primaryFailure?.ToString(), CleanupFailure = cleanupFailure?.ToString() }), CancellationToken.None),
+                primaryFailure).ConfigureAwait(true);
+        }
+    }
+
+    /// <summary>Always disposes owned resources, retaining primary, capture, disposal and receipt failures.</summary>
+    internal static async Task CompleteOwnedRunAsync(Func<Task> capture, Func<Task> dispose,
+        Func<bool, Exception?, Task> receipt, Exception? primaryFailure)
+    {
+        List<Exception> failures = [];
+        bool disposed = false;
+        try { await capture().ConfigureAwait(true); }
+        catch (Exception exception) { failures.Add(exception); }
+        finally
+        {
+            try { await dispose().ConfigureAwait(true); disposed = true; }
+            catch (Exception exception) { failures.Add(exception); }
             finally
             {
-                await File.WriteAllTextAsync(Path.Combine(privateRoot, "ownership.json"), JsonSerializer.Serialize(new
-                { session.Id, session.Root, PrivateEvidence = privateRoot, OwnedTopologyDisposed = disposed, SessionDirectoryExists = Directory.Exists(session.Root),
-                    fixture.IsAvailable, fixture.UnavailableReason, Phase = phase, PrimaryFailure = primaryFailure?.ToString(), CleanupFailure = cleanupFailure?.ToString() }), CancellationToken.None).ConfigureAwait(true);
+                try { await receipt(disposed, failures.Count == 0 ? null : new AggregateException(failures)).ConfigureAwait(true); }
+                catch (Exception exception) { failures.Add(exception); }
             }
         }
+        if (failures.Count != 0)
+        {
+            if (primaryFailure is not null) { failures.Insert(0, primaryFailure); }
+            throw new AggregateException("Owned qualification evidence or cleanup failed.", failures);
+        }
+    }
+
+    private static async Task AssertDomainServiceAclDenialsAsync(PartiesAspireTopologyFixture fixture, PartiesTopologySession session,
+        string apiToken, string privateRoot, CancellationToken token)
+    {
+        List<object> observations = [];
+        foreach ((string caller, HttpMethod verb, string path) in new[]
+        {
+            ("memories", HttpMethod.Post, "process"),
+            ("eventstore", HttpMethod.Get, "process"),
+            ("eventstore", HttpMethod.Post, "health"),
+        })
+        {
+            using HttpClient client = fixture.CreateSidecarClient(caller);
+            if (caller == "memories") { client.DefaultRequestHeaders.Add("dapr-api-token", apiToken); }
+            using var request = new HttpRequestMessage(verb, "/v1.0/invoke/" + session.AppId("memories-domain-service") + "/method/" + path);
+            using HttpResponseMessage denied = await client.SendAsync(request, token).ConfigureAwait(false);
+            string body = await denied.Content.ReadAsStringAsync(token).ConfigureAwait(false);
+            denied.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+            using JsonDocument evidence = JsonDocument.Parse(body);
+            evidence.RootElement.GetProperty("errorCode").GetString().ShouldBe("ERR_DIRECT_INVOKE");
+            string diagnostic = evidence.RootElement.GetProperty("message").GetString()!;
+            diagnostic.ShouldContain("PermissionDenied");
+            diagnostic.ShouldContain("access control policy has denied access");
+            observations.Add(new { Caller = caller, Verb = verb.Method, Path = path, Status = (int)denied.StatusCode, Diagnostic = diagnostic });
+        }
+        await File.WriteAllTextAsync(Path.Combine(privateRoot, "domain-service-acl-negative-controls.json"), JsonSerializer.Serialize(observations), token).ConfigureAwait(false);
     }
 
     private static async Task AssertCredentialNegativesAsync(Uri sidecar, string apiToken, string gateway, string privateRoot, CancellationToken token)

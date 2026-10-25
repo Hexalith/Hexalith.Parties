@@ -18,6 +18,36 @@ public sealed class PartyMemoryRestClientRecoveryTests
 
 #if HEXALITH_MEMORIES_SOURCE_REFRESH
     [Fact]
+    public async Task ActualRestRecoveryAcceptsVariablePagesThroughFullInventoryCapacity()
+    {
+        var state = new PartyMemoryTestReadModelStore();
+        var handler = new PartyMemoryRestHandler { SubmissionBody = "{}" };
+        using var http = PartyMemoryRecoveryTests.Http(handler);
+        var context = PartyMemoryRecoveryTests.Context();
+        (await PartyMemoryRecoveryTests.Indexer(state, Client(http)).IndexAsync(PartyMemoryRecoveryTests.Entry(), context, Token)).ShouldNotBeNull().Indexed.ShouldBeFalse();
+        handler.Recovery.InventoryRequest = (request, _) =>
+        {
+            int offset = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(request.RequestUri!.Query).TryGetValue("cursor", out var cursor)
+                ? int.Parse(cursor.ToString(), System.Globalization.CultureInfo.InvariantCulture) : 0;
+            int count = Math.Min(32, PartyMemoryIngestionIntentStore.Capacity - offset);
+            var submitted = handler.Submissions.Single();
+            string hash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(submitted.GetProperty("idempotencyToken").GetString()!)));
+            object[] entries = Enumerable.Range(offset, count).Select(index => index == PartyMemoryIngestionIntentStore.Capacity - 1
+                ? (object)new { caseId = "case", workflowInstanceId = "workflow", idempotencyTokenHash = hash, state = "Admitted",
+                    refreshProtocolVersion = Hexalith.Memories.Contracts.V1.SourceRefreshProtocol.Version,
+                    sourceRevisionNumber = context.SequenceNumber!.Value, refreshIdentityDigest = SubmittedBinding(submitted) }
+                : new { caseId = new string('漢', 512), workflowInstanceId = new string('漢', 500) + index, state = "Admitted" }).ToArray();
+            return Task.FromResult(PartyMemorySourceInventoryTests.Page(entries, offset + count < PartyMemoryIngestionIntentStore.Capacity
+                ? (offset + count).ToString(System.Globalization.CultureInfo.InvariantCulture) : null));
+        };
+        handler.Recovery.Workflows["workflow"] = PartyMemoryRecoveryHandler.Completed();
+        (await PartyMemoryRecoveryTests.Indexer(state, Client(http)).IndexAsync(PartyMemoryRecoveryTests.Entry(), context, Token)).ShouldNotBeNull().Indexed.ShouldBeTrue();
+        handler.Submissions.ShouldHaveSingleItem();
+        handler.Recovery.InventoryRequests.Count.ShouldBeGreaterThan(11);
+        (await PartyMemoryRecoveryTests.Mappings(state).GetMappingsAsync("tenant", "party", Token)).ShouldHaveSingleItem().MemoryUnitId.ShouldBe("canonical");
+    }
+
+    [Fact]
     public async Task OriginalRefreshBindingSurvivesCanonicalSerializationAndChangedDeliveryContext()
     {
         var state = new PartyMemoryTestReadModelStore();
