@@ -63,8 +63,11 @@ erasure staging resumes from the observed legacy ETag after an application resta
 
 Legacy conversion and full rebuilds prepare disjoint immutable generations.
 Preparation performs no writes. The EventStore SDK stages create-only values in
-resumable groups of at most 32 operations and a conservative 512-KiB group
-budget, below the unchanged 100-operation/1-MiB batch gate. Only a successful
+resumable groups of at most 32 operations. Generic callers retain a conservative
+512-KiB canonical-manifest budget; Parties explicitly permits up to the unchanged
+1-MiB SDK hard ceiling for individual values so previously accepted large audit
+metadata can migrate without truncation. Existing conservative group partitions
+remain stable across retries. Every group must also fit the owning store's actual limits. Only a successful
 coordinated Detail/metadata commit selects that generation. Optimistic ETags,
 newer checkpoints and retained erasure fences prevent stale promotion. Abandoned
 generations never become authoritative.
@@ -102,7 +105,7 @@ bounded deterministic identities. A later resolved delivery replaces failed
 facts and advances Detail and Processing together.
 
 Generation staging measures complete canonical manifests, including base64 values
-and scope overhead, within the 512-KiB/32-operation group budget. Before any group
+and scope overhead, within the explicit byte budget and 32-operation group bound. Before any group
 is written, `IReadModelBatchStore.ValidateBatch` preflights every group against the
 owning store's effective execution limits. Dapr and in-memory SDK stores apply
 those same limits during execution; custom stores with lower configured limits
@@ -129,3 +132,12 @@ mutation. It defaults to false. Only an operator who has qualified the selected
 store's older private recovery history and drained older writers may enable
 that attestation. Tests explicitly attest only their complete synthetic stores;
 the application never derives this authority from an empty recovery directory.
+
+Before acknowledging a live redelivery, Parties asks the SDK to settle the exact
+aggregate's registered committed attempts, including recovery anchors in older
+untouched buckets. SDK enrollment also performs this bounded settlement before
+consuming another active directory slot. Terminal registrations are released only
+with matching participant counts, a content-free terminal receipt and a durable
+manifest barrier. Prepared work is preserved; normal settlement never retires or
+commits a guarded rebuild. Conditional bucket publication identities bind the
+observed Detail and Processing ETags, allowing a losing append to replan safely.

@@ -312,3 +312,11 @@ references/Hexalith.FrontComposer|c7f1666508e6582cfe168b12efb4a71638abc328|valid
 references/Hexalith.Memories|e06c7bc9ebf77a10cf8dcc02a6eba7ee6812b559|validated-advance|v2.29.15-3-ge06c7bc9|jpiquot|2026-10-25
 references/Hexalith.Memories|cdd73d7361f67781a523f63f04853491a687f426|validated-advance|v2.29.15-12-gcdd73d73|jpiquot|2026-10-25
 references/Hexalith.Tenants|09a545ff0323f5f16d13934fba01bfea4f1db9fa|validated-advance|v5.10.1-39-g09a545ff|jpiquot|2026-10-25
+
+# --- Approved five-item processing and Memories erasure task, 2026-10-25.
+#     jpiquot approved the frozen spec and requested main pushes. These exact
+#     reviewed task commits are published on owner main and retain incoming
+#     source-authority/telemetry ancestry. Source selection only: no matching
+#     package publication, historical parity, deployment or rollback authority.
+references/Hexalith.Memories|7b0c8b5692600e293346eea7a84652eb87e4c346|validated-advance|v2.29.15-28-g7b0c8b56|jpiquot|2026-10-25
+references/Hexalith.EventStore|694e37bad3e667931fbafc6a1ed9f85e4a0b4912|validated-advance|v3.127.0-41-g694e37bad|jpiquot|2026-10-25

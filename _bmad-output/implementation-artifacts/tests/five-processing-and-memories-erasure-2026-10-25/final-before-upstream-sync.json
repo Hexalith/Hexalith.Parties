@@ -1,0 +1,200 @@
+{
+  "lanes": [
+    {
+      "name": "source-build",
+      "command": [
+        "bash",
+        "-c",
+        "source /tmp/parties-five-processing-20261025/source-env.sh\nexec dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --no-restore -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "seconds": 43.472,
+      "log": "/tmp/parties-five-processing-20261025/parent-final-source-build.log",
+      "sha256": "c05dc85a5d33aafac334cb2d2457df0e4c1b64c644ca258c42a183e537804bb1",
+      "counts": []
+    },
+    {
+      "name": "parties-source",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "*PartyProcessingGenerationRecoveryTests",
+        "-class",
+        "*PartyGuardedRebuildErasureTests",
+        "-class",
+        "*PartySdkQueryHandlerTests",
+        "-class",
+        "*PartyDetailSdkProjectionRecoveryTests",
+        "-class",
+        "*PartySdkCrossInstanceErasureTests",
+        "-class",
+        "*PartySearchErasureFenceTests"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "seconds": 4.572,
+      "log": "/tmp/parties-five-processing-20261025/parent-final-parties-source.log",
+      "sha256": "20773b147b9690004e4ff6baca552b75ca25e85cdf55e387b77aad8be2845d57",
+      "counts": [
+        [
+          1023,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "sdk-all",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.Client.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.Tests.dll"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "seconds": 33.527,
+      "log": "/tmp/parties-five-processing-20261025/parent-final-sdk-all.log",
+      "sha256": "93f7cbef7bc440d744fb0961cd8a5cd6d6d7625c4018fbe616edfc68fe3212ce",
+      "counts": [
+        [
+          2167,
+          0,
+          0,
+          2,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "dispatcher",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.DomainService.Tests/bin/Debug/net10.0/Hexalith.EventStore.DomainService.Tests.dll",
+        "-class",
+        "*DomainProjectionDispatcherV2Tests",
+        "-class",
+        "*MixedProjectionCatalogTests"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "seconds": 0.712,
+      "log": "/tmp/parties-five-processing-20261025/parent-final-dispatcher.log",
+      "sha256": "bf068231b9ffa5bd2aa3b76f85ae6dd83614fa6fcd3ee3a7746da4521ad82622",
+      "counts": [
+        [
+          72,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "replay",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.DomainService.Tests/bin/Debug/net10.0/Hexalith.EventStore.DomainService.Tests.dll",
+        "-method",
+        "*RecoveryBoundReplay_ActualSdkMappingsReuseOnePersistentManifestAcrossRetryAndFreshHosts"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "seconds": 1.878,
+      "log": "/tmp/parties-five-processing-20261025/parent-final-replay.log",
+      "sha256": "bd03fa06ed67f25709890a9ef9bc1c234bb3c3b9f37e9d1e984de55f247ce91f",
+      "counts": [
+        [
+          3,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "memories-containers",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "-class",
+        "*NaturalLanguageErasureIntegrationTests",
+        "-class",
+        "*RetryWorkflowErasureIntegrationTests",
+        "-class",
+        "*RefreshPublicationIntegrationTests",
+        "-class",
+        "*InventoryWirePaginationIntegrationTests",
+        "-class",
+        "*ReferencedSourceProducerIntegrationTests",
+        "-class",
+        "*SourceInventoryProducerIntegrationTests",
+        "-class",
+        "*SourceInventoryIntegrationTests",
+        "-class",
+        "*TenantIngestionLifecycleIntegrationTests"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+      "exit_code": 0,
+      "seconds": 33.411,
+      "log": "/tmp/parties-five-processing-20261025/parent-final-memories-containers.log",
+      "sha256": "798b65eada0e4860fde48e3071021ff6fdf611ecc431f7c6497d2a26174529a4",
+      "counts": [
+        [
+          90,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "parties-package-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj",
+        "-c",
+        "Release",
+        "-m:1",
+        "-p:UseHexalithProjectReferences=false",
+        "-p:UseNuGetDeps=true"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "seconds": 14.392,
+      "log": "/tmp/parties-five-processing-20261025/parent-final-parties-package-build.log",
+      "sha256": "c5fd2b68f5d067cbc65f334c3132ff6cf4888b748056dfbc178fc0c3cea98959",
+      "counts": []
+    },
+    {
+      "name": "parties-package-queries",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "*PartySdkQueryHandlerTests"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "seconds": 1.035,
+      "log": "/tmp/parties-five-processing-20261025/parent-final-parties-package-queries.log",
+      "sha256": "b7bbaa9f3aead6b69296763fd7a96a23a99149596328cad92afdfa8584df64d2",
+      "counts": [
+        [
+          875,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    }
+  ],
+  "all_completed": true
+}

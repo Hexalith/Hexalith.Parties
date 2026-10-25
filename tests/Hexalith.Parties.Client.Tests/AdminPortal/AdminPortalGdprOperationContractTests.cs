@@ -491,6 +491,19 @@ public sealed class AdminPortalGdprOperationContractTests
         body.RootElement.GetProperty("queryType").GetString().ShouldBe("GetProcessingRecords");
     }
 
+    [Fact]
+    public async Task GetProcessingRecordsPageAsyncAcceptsTerminalContinuationWithTheFullHistoryTotal()
+    {
+        var records = Enumerable.Range(79, 2).Select(sequence => new ProcessingActivityRecord
+            { TenantId = "tenant-a", PartyId = "party-1", SequenceNumber = sequence, Timestamp = DateTimeOffset.UnixEpoch, EventType = "PartyUpdated", Summary = "Party updated." }).ToArray();
+        var handler = new RecordingHandler(HttpStatusCode.OK,
+            JsonSerializer.Serialize(new { payload = records, metadata = new { paging = new { pageSize = 2, nextCursor = (string?)null, totalCount = 80, hasMore = false } } }, s_jsonOptions), "application/json");
+        var page = await CreateHttpClient(handler).GetProcessingRecordsPageAsync("party-1", 2, "protected-continuation", CancellationToken.None);
+        page.Items.ShouldBe(records);
+        page.TotalCount.ShouldBe(80);
+        page.NextCursor.ShouldBeNull();
+    }
+
     [Theory]
     [InlineData("oversized")]
     [InlineData("unknown-has-more")]
@@ -499,18 +512,23 @@ public sealed class AdminPortalGdprOperationContractTests
     [InlineData("missing-cursor")]
     [InlineData("repeated-cursor")]
     [InlineData("unordered")]
+    [InlineData("initial-terminal-empty")]
+    [InlineData("initial-terminal-empty-cursor")]
+    [InlineData("initial-terminal-whitespace-cursor")]
+    [InlineData("initial-terminal-partial")]
     public async Task GetProcessingRecordsPageAsyncRejectsMalformedSuccessEnvelopes(string defect)
     {
+        ArgumentNullException.ThrowIfNull(defect);
         var records = Enumerable.Range(1, defect == "oversized" ? 3 : 2).Select(sequence => new ProcessingActivityRecord
             { TenantId = "tenant-a", PartyId = "party-1", SequenceNumber = sequence, Timestamp = DateTimeOffset.UnixEpoch, EventType = "PartyUpdated", Summary = "Party updated." }).ToArray();
-        if (defect == "empty-continuation") records = [];
+        if (defect == "empty-continuation" || defect.StartsWith("initial-terminal", StringComparison.Ordinal) && defect != "initial-terminal-partial") records = [];
         if (defect == "unordered") Array.Reverse(records);
-        bool? more = defect == "unknown-has-more" ? null : defect != "terminal-cursor";
-        string? next = defect == "missing-cursor" ? null : defect == "repeated-cursor" ? "prior" : "next";
+        bool? more = defect == "unknown-has-more" ? null : defect != "terminal-cursor" && !defect.StartsWith("initial-terminal", StringComparison.Ordinal);
+        string? next = defect.StartsWith("initial-terminal", StringComparison.Ordinal) || defect == "missing-cursor" ? null : defect == "repeated-cursor" ? "prior" : "next";
         var handler = new RecordingHandler(HttpStatusCode.OK,
             JsonSerializer.Serialize(new { payload = records, metadata = new { paging = new { pageSize = 2, nextCursor = next, totalCount = 80, hasMore = more } } }, s_jsonOptions), "application/json");
         await Should.ThrowAsync<InvalidOperationException>(() => CreateHttpClient(handler)
-            .GetProcessingRecordsPageAsync("party-1", 2, "prior", CancellationToken.None));
+            .GetProcessingRecordsPageAsync("party-1", 2, defect == "initial-terminal-empty-cursor" ? "" : defect == "initial-terminal-whitespace-cursor" ? " " : defect.StartsWith("initial-", StringComparison.Ordinal) ? null : "prior", CancellationToken.None));
     }
 
     [Fact]

@@ -1,0 +1,6 @@
+{
+  "published_executor": "11a3a79cfac4bba9548c6364a17a01ee9b561370",
+  "validator_sha256": "1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c",
+  "source": "https://raw.githubusercontent.com/Hexalith/Hexalith.Builds/11a3a79cfac4bba9548c6364a17a01ee9b561370/Github/publish-containers/oci_registry_validator.py",
+  "published_and_local_bytes_match": true
+}

@@ -8,7 +8,15 @@ public static class PartyProcessingBucketValidation
     public static void ValidateCoverage(PartyProcessingSdkReadModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        if (model.BucketGeneration is null) return;
+        if (model.BucketGeneration is null)
+        {
+            if (model.Records is null || model.Records.Any(record => record is null || record.SequenceNumber < 0)
+                || !model.Records.Select(record => record.SequenceNumber).SequenceEqual(
+                    model.Records.Select(record => record.SequenceNumber).Distinct().Order())
+                || model.Records.Count > 0 && model.Records[^1].SequenceNumber - model.Records[0].SequenceNumber != model.Records.Count - 1)
+                throw new InvalidOperationException("processing-history-incomplete");
+            return;
+        }
         bool empty = model.RecordCount == 0 && model.FirstBucket is null && model.LastBucket is null
             && model.FirstRecordSequenceNumber is null && model.LastRecordSequenceNumber is null;
         bool complete = model.RecordCount > 0 && model.FirstRecordSequenceNumber is >= 0

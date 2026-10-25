@@ -345,6 +345,9 @@ verification_2026_10_25: `tests/five-processing-and-memories-erasure-2026-10-25/
 
 review1_2026_10_25: Review-1 corrections add SDK-recoverable bounded audit manifests, no-op repeated unresolved delivery, coordinated checkpoint repair, bounded chunk IDs, retained sequence coverage and final revision revalidation. Parties query/recovery source lane passes 879 controls; full source client restore retains the FrontComposer HXW006 blocker. Matching generation SDK publication/adoption remains separate. Final executed evidence: `tests/five-processing-and-memories-erasure-2026-10-25/review1-verification.json`.
 
+resolution_2026_10_25_final: Source bucket/paging/recovery implementation is reviewed and published in EventStore 694e37bad3e667931fbafc6a1ed9f85e4a0b4912 and Memories 7b0c8b5692600e293346eea7a84652eb87e4c346; matching SDK package publication/adoption and writer drain remain required. Status stays open; source proof does not close this gate.
+verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; spec `spec-five-processing-and-memories-erasure-deferred-items.md`.
+
 
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
@@ -756,7 +759,7 @@ origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferra
 location: RebindContainerProvenanceLabels and shared OCI validation
 source_spec: `_bmad-output/implementation-artifacts/spec-update-latest-hexalith-packages.md`
 reason: RebindContainerProvenanceLabels is only string-checked; the shared OCI validator ignores org.opencontainers.image.created, and the regex accepts dates such as 2026-02-31.
-status: open
+status: done 2026-10-25
 decision: 2026-09-06 Authorize cross-repo hardening — Add real calendar validation, executable publish and rebind proof, and required created-label validation in the owning repositories.
 implementation_2026_10_23: Parties and shared Builds targets reject impossible calendar dates; the publisher binds both mandatory created labels to its exact instant. The existing three-argument publication reader remains compatible while graph validation requires canonical equal image/artifact labels and equality across platforms. Executable MSBuild, producer Python, real consumer-reader and SDK dual-RID archive checks pass locally.
 remaining_gate_2026_10_23: Shared immutable publisher/validator adoption and publication remain required. The current release execution pin is unchanged; fetching the exact historical object restored full CI (449 passed). Published working-source hardening and its parent gitlink do not qualify that unchanged immutable executor.
@@ -775,6 +778,9 @@ verification_2026_10_25: `tests/five-processing-and-memories-erasure-2026-10-25/
 
 
 review1_2026_10_25: Review-1 reruns pass 455 CI and 150 publisher controls. A new actual dual-RID SDK local archive passes the published executor/validator identities above with matching canonical created labels. Parent owns final closure/adoption review; no release was dispatched. Final executed evidence: `tests/five-processing-and-memories-erasure-2026-10-25/review1-verification.json`.
+
+resolution_2026_10_25_final: The published immutable executor/validator pin and actual dual-RID archive pass the executable created-label controls. This closes the requested local MSBuild/OCI proof and immutable adoption debt; no release dispatch or deployment was performed.
+verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; spec `spec-five-processing-and-memories-erasure-deferred-items.md`.
 
 
 ### DW-108: Align diagnostic source gitlinks to the published nuget.org tags selected by the Builds catalog.
@@ -1774,7 +1780,7 @@ archived: 2026-10-21
 
 ### DW-196: Fence legacy natural-language migration and erase both NL namespaces
 
-status: open
+status: done 2026-10-25
 origin: review-loop-3
 severity: medium
 
@@ -1788,10 +1794,13 @@ verification_2026_10_25: `tests/five-processing-and-memories-erasure-2026-10-25/
 
 review1_2026_10_25: Review-1 migration rejects incomplete canonical targets with an explicit owner-reconciliation result while retaining valid legacy content. The real adapter lane passes 69 controls with no skips; production migration remains unexecuted. Final executed evidence: `tests/five-processing-and-memories-erasure-2026-10-25/review1-verification.json`.
 
+resolution_2026_10_25_final: Memories 7b0c8b5692600e293346eea7a84652eb87e4c346 publishes the reviewed atomic legacy migration and both-namespace erasure fixes. Actual persisted-state race/restart/survivor controls pass. Historical orphan qualification and production migration remain external.
+verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; spec `spec-five-processing-and-memories-erasure-deferred-items.md`.
+
 
 ### DW-197: Qualify erasure of natural-language retry payloads and delayed retry work
 
-status: open
+status: done 2026-10-25
 origin: review-loop-3
 severity: medium
 
@@ -1805,10 +1814,13 @@ verification_2026_10_25: `tests/five-processing-and-memories-erasure-2026-10-25/
 
 review1_2026_10_25: Review-1 restores atomically fenced JSON-only live retry processing, canonical-unit guards before work/publication, valid-overflow dead caps and persisted successful NL output. Maintained IntegrationSlow controls execute actual content-bearing legacy activity history, purge, late completion and recreation without endpoint skips. Default legacy scheduler-quiescence refusal remains enforced. Final executed evidence: `tests/five-processing-and-memories-erasure-2026-10-25/review1-verification.json`.
 
+resolution_2026_10_25_final: Memories 7b0c8b5692600e293346eea7a84652eb87e4c346 publishes scoped live/dead payload erasure and content-free retry execution. Real unit/case workflow-history, late completion, derived-output and replacement controls pass. Legacy scheduler qualification, tenant-wide cleanup and separately recorded stale retry races remain external.
+verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; spec `spec-five-processing-and-memories-erasure-deferred-items.md`.
+
 
 ### DW-198: Bound legacy semantic deletion discovery without full Redis keyspace scans
 
-status: open
+status: done 2026-10-25
 origin: review-loop-3
 severity: medium
 
@@ -1840,3 +1852,22 @@ review1_2026_10_25: Review-1 native TAG queries retain discovered obligations wi
 - source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
   summary: Correct named-argument casing in the concurrent identity-history test helper (medium, external work).
   evidence: Review R3-E4; The untracked tests/Hexalith.Parties.IntegrationTests/Identity/TestOnlyIdentityHistoryCustody.cs uses pending/destroyed/acknowledged against UnitStatus Pending/Destroyed/Acknowledged. Excluded from this build and preserved for its active owner.
+
+- source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
+  summary: Make corrupt retry pruning and backlog trimming conditional on the selected payload or score (medium, pre-existing).
+  evidence: Review R4-B10; baseline cdd73d7 removes selected queue members/hash fields without checking the observed bytes or score, so a concurrently replaced valid payload can be deleted. Qualify interleaved replacement through both pruning and trim paths; atomic type preflight does not settle selection freshness.
+
+- source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
+  summary: Retire obsolete legacy retry aliases after modern-first completion using qualified lineage (medium, pre-existing).
+  evidence: Review R5-B1; baseline cdd73d7 Complete removes the unit and exact completed JSON, leaving a different legacy JSON alias available to the old raw-input workflow. Qualify equal-score modern-first ordering and preserve genuinely newer work; current erasure fences still refuse erased units.
+
+- source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
+  summary: Bind final natural-language retry publication atomically to the current retry payload or version (medium, pre-existing).
+  evidence: Review R5-B3; baseline cdd73d7 publishes generated input after asynchronous checks without a retry-version publication fence. Current exact-record checks protect generation boundaries but leave a final check/write race. Qualify replacement during index readiness and preserve newer output and queued work.
+
+- source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
+  summary: Preserve retained failed audit facts beyond the processing checkpoint during shorter rebuilds (high, pre-existing).
+  evidence: Review R5-B4; baseline 1ef274e PrepareRebuildAsync replaces Processing using the requested replay without checking either checkpoint or retained audit boundaries. Qualify unresolved retained facts through sequence 100 followed by a resolved rebuild through 50, for both inline and bucket storage, without losing retained facts or inventing replay completeness.
+
+resolution_2026_10_25_final: Memories 7b0c8b5692600e293346eea7a84652eb87e4c346 publishes bounded exact-key discovery and ownership checks. Missing TAG/unknown coverage remains an explicit reconciliation requirement; no production completeness or attestation is inferred.
+verification_final: `tests/five-processing-and-memories-erasure-2026-10-25/`; spec `spec-five-processing-and-memories-erasure-deferred-items.md`.

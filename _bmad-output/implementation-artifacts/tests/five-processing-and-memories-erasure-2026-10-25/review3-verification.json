@@ -1,0 +1,350 @@
+{
+  "lanes": {
+    "parties-source": {
+      "total": 889,
+      "failed": 0,
+      "skipped": 0,
+      "log": "rederive3-parties-tests.log"
+    },
+    "projections-source": {
+      "total": 463,
+      "failed": 0,
+      "skipped": 1,
+      "log": "rederive3-rebuild-projections-tests.log"
+    },
+    "projections-package": {
+      "total": 461,
+      "failed": 0,
+      "skipped": 2,
+      "log": "rederive3-rebuild-package-tests.log"
+    },
+    "client-package": {
+      "total": 340,
+      "failed": 0,
+      "skipped": 0,
+      "log": "rederive3-client-release-tests.log"
+    },
+    "eventstore-client": {
+      "total": 2156,
+      "failed": 0,
+      "skipped": 2,
+      "log": "rederive3-rebuild-sdk-tests.log"
+    },
+    "eventstore-dispatcher": {
+      "total": 66,
+      "failed": 0,
+      "skipped": 0,
+      "log": "rederive3-rebuild-domain-tests.log"
+    },
+    "eventstore-replay": {
+      "total": 3,
+      "failed": 0,
+      "skipped": 0,
+      "log": "rederive3-rebuild-replay-tests.log"
+    },
+    "memories-native": {
+      "total": 81,
+      "failed": 0,
+      "skipped": 0,
+      "log": "rederive3-memories-native-tests.log"
+    },
+    "memories-server-package": {
+      "total": 38,
+      "failed": 0,
+      "skipped": 0,
+      "log": "rederive3-overflow-package-tests.log"
+    },
+    "ci": {
+      "total": 455,
+      "failed": 0,
+      "skipped": 0,
+      "log": "rederive3-ci-final-tests.log"
+    },
+    "publisher": {
+      "total": 150,
+      "failed": 0,
+      "skipped": 0,
+      "log": "rederive3-publisher-tests.log"
+    },
+    "oci-consumer": {
+      "total": 1,
+      "failed": 0,
+      "skipped": 0,
+      "log": "rederive3-oci-consumer-tests.log"
+    },
+    "parties-rebuild-erasure-and-options": {
+      "total": 148,
+      "failed": 0,
+      "skipped": 0,
+      "log": "rederive3-rebuild-parties-tests.log"
+    },
+    "memories-overflow-and-deletion-native": {
+      "total": 24,
+      "failed": 0,
+      "skipped": 0,
+      "log": "rederive3-overflow-native-tests.log"
+    }
+  },
+  "artifacts": {
+    "rederive3-ci-build.log": {
+      "sha256": "67672390dcc84ba4d9cf208c2ed6d9c135e39928f22614ed70ed5f820b1adc22",
+      "bytes": 315
+    },
+    "rederive3-ci-final-tests.log": {
+      "sha256": "5f3cab64bf8b51073556a0ac2f0d4fae72b6388c96b05026d9da2ad6b684a01b",
+      "bytes": 442
+    },
+    "rederive3-ci-tests.log": {
+      "sha256": "453dd8c521a8fbfdca4b222daa2f93ea9e2739d8ee83467381be36d2a8f70746",
+      "bytes": 442
+    },
+    "rederive3-client-release-build.log": {
+      "sha256": "b4f1a412fa36cfd9cee1893784e4eea24986c8e95320a574b764d50be7ef18f5",
+      "bytes": 1495
+    },
+    "rederive3-client-release-tests.log": {
+      "sha256": "ba9981993db7c895b055e9318a43c4e67c1ba79859181088ea3174aaf51ea45e",
+      "bytes": 462
+    },
+    "rederive3-domain-build.log": {
+      "sha256": "eaff4df3a6c19076a3486c0fa75f6aa3623cbe312aa3a7f989a0faf0f07422b9",
+      "bytes": 2173
+    },
+    "rederive3-domain-tests.log": {
+      "sha256": "a16efe7ade44558329ac49fac18dfcdcb351fb560dcfc7ac768fd5f085f2101e",
+      "bytes": 510
+    },
+    "rederive3-eol-normalization-final.json": {
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "bytes": 3
+    },
+    "rederive3-eol-normalization.json": {
+      "sha256": "c8960e9081e984e10f1e3774efd43dfb2bbdaf8b693670583a1456cfe1f064d6",
+      "bytes": 4090
+    },
+    "rederive3-eventstore-whitespace.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "rederive3-gate-package-build.log": {
+      "sha256": "807e3895fadeaea319e2b528cd6724ac9619953ad74bcdd117cc977770362379",
+      "bytes": 742
+    },
+    "rederive3-gate-package-restore.log": {
+      "sha256": "0afd299391ba9c80be7748af4b9ff5ab2e0aa12ab146b643a571540155e39ce3",
+      "bytes": 595
+    },
+    "rederive3-gate-package-tests.log": {
+      "sha256": "f68119eb639381492e84e4eb00c491e44572e47e527da190b366591bef9b24f5",
+      "bytes": 1008
+    },
+    "rederive3-gate-parties-build.log": {
+      "sha256": "6a46b89c71af81ffc15ddc7601b0b69c1470b919d78ae9cdde1f4c2e5e5b55e7",
+      "bytes": 837
+    },
+    "rederive3-gate-parties-tests.log": {
+      "sha256": "4b090203ceac2a9e6e492ca1e91b20166b4ac95626b48d5025ba571c50465217",
+      "bytes": 426
+    },
+    "rederive3-gate-projections-build.log": {
+      "sha256": "daa82e0e6251fadd5ed62e990b2ed39d4dc4cf407b992ea6545ac6d75d249de8",
+      "bytes": 498
+    },
+    "rederive3-gate-projections-tests.log": {
+      "sha256": "3a5f3ea3d199b7f08d4ad48d330444799e12bec0243a50510090be7472a07828",
+      "bytes": 746
+    },
+    "rederive3-gate-source-runtime-build.log": {
+      "sha256": "027a61aec31c0057f900987fcf9d5ba523f85d489344bb015793cd0939b0981a",
+      "bytes": 2144
+    },
+    "rederive3-guarded-parties-tests.log": {
+      "sha256": "a972f8e9c63d4492a26443a5c8bab5297169360a76f03b8c0b1088dc928b52a8",
+      "bytes": 1817
+    },
+    "rederive3-memories-build.log": {
+      "sha256": "236b8ea076f64a215a472dfe910c2fba6ea945cd4e5686894e9d03333bd5ed90",
+      "bytes": 4123
+    },
+    "rederive3-memories-native-tests.log": {
+      "sha256": "c5311307d4dda871a6198024938f6e82e95ae7a8544a23ebe9954d03484f6086",
+      "bytes": 22657
+    },
+    "rederive3-memories-release-build.log": {
+      "sha256": "51cbcdd0a47ddb6e37fcb3c80f734234e9c9297060d2211d9aa3ffd414b3073a",
+      "bytes": 2468
+    },
+    "rederive3-memories-unit-tests.log": {
+      "sha256": "bcb56350012318baa3730952130451e39ec7fb4a0cf8dc204f5c81a3602af12a",
+      "bytes": 465
+    },
+    "rederive3-memories-whitespace.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "rederive3-no-warning-overrides.log": {
+      "sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604",
+      "bytes": 93
+    },
+    "rederive3-oci-archive-proof.json": {
+      "sha256": "03a3e9726a8b1390263c8d39cdbdb740e1d2994822d6e0b64181501b007d986c",
+      "bytes": 2670
+    },
+    "rederive3-oci-consumer-tests.log": {
+      "sha256": "a146ffbdf9b07bb226ef66ce59c2a411149b39de43ba5ad86bc5ec9e95a7fb61",
+      "bytes": 98
+    },
+    "rederive3-oci-publish.log": {
+      "sha256": "62039985f2e132299dac5e00ffa6b29938a5fbf5f5578b062eb663a1394427ab",
+      "bytes": 1557
+    },
+    "rederive3-overflow-memories-build.log": {
+      "sha256": "9ac5858b2a34a2655e3b0658c77285044ff48ec411030ccdb2405364124e31fc",
+      "bytes": 4456
+    },
+    "rederive3-overflow-native-tests.log": {
+      "sha256": "d3592c2150db9990bf009f71b999b179715d08f0ffeebbe24ee0ab6de2b47b67",
+      "bytes": 485
+    },
+    "rederive3-overflow-package-build.log": {
+      "sha256": "1ba2d81b0e3325fd325e8f165d696d4f0032f1fbc0204d85236e2cbfec03b091",
+      "bytes": 2056
+    },
+    "rederive3-overflow-package-restore.log": {
+      "sha256": "99d8d4f33b3f99727ac709e9b7be9031c997401ade32f0608b0f8a42774867b4",
+      "bytes": 1737
+    },
+    "rederive3-overflow-package-tests.log": {
+      "sha256": "606d84f7db0953ef013982329231367d1bd3ebf51705f7a5c8d8eaa3d8509f4f",
+      "bytes": 465
+    },
+    "rederive3-owned-files.json": {
+      "sha256": "40f535cf3a121fbe072e1a413d8ceb35efd3855aeb409d8babe5fbe60903bcfd",
+      "bytes": 16812
+    },
+    "rederive3-parties-build.log": {
+      "sha256": "405efa4eb08eb3f639869c8bb3f680934b2240228c862d9b9ef48246234c616d",
+      "bytes": 224
+    },
+    "rederive3-parties-tests.log": {
+      "sha256": "fa9e669f79fcd4aada59526abec686e26241353772b13ab6f987d22e15873e99",
+      "bytes": 426
+    },
+    "rederive3-parties-whitespace.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "rederive3-projections-build.log": {
+      "sha256": "729dcadd12b427ffbb13f4c3bd12a40d640f010108f4716f52816d55f813706f",
+      "bytes": 260
+    },
+    "rederive3-projections-release-build.log": {
+      "sha256": "b0fc437e8c72008193902dd953d3fd4290aa296c2bdfaf07aed2acab7e660586",
+      "bytes": 960
+    },
+    "rederive3-projections-release-tests.log": {
+      "sha256": "e71c1af09bb86d9d859a0f958837bc575d7bf819e7f44a2eddbc878efd383bef",
+      "bytes": 1008
+    },
+    "rederive3-projections-tests.log": {
+      "sha256": "9b24d2be0056cafa90e360e459ac023ad6ce1f0402bd0c85089e711306e444a3",
+      "bytes": 746
+    },
+    "rederive3-published-pin.json": {
+      "sha256": "b3803371ec362f18f13b6159593bb568f821f1078d68dcb0751d321a8cbf8f83",
+      "bytes": 371
+    },
+    "rederive3-publisher-tests.log": {
+      "sha256": "e445eecf2666c76f0fd3427e3db232fee1f237bf64906d0ce9d01fba1e3602b0",
+      "bytes": 1900
+    },
+    "rederive3-rebuild-domain-build.log": {
+      "sha256": "9060afadddc656ed4fe6533e387d1f2fb5835963503ee3fb07d0c66dc82dd238",
+      "bytes": 1776
+    },
+    "rederive3-rebuild-domain-tests.log": {
+      "sha256": "d018bc6f0ef3c16350a8b940652eb1977793286543e049e2d5c057418edf85d9",
+      "bytes": 510
+    },
+    "rederive3-rebuild-package-build.log": {
+      "sha256": "bc2c371d5430a77fd946de9dbccf508f44da7115f81b84be93ef5bde4392ae13",
+      "bytes": 742
+    },
+    "rederive3-rebuild-package-restore.log": {
+      "sha256": "9cb9d6c6e4b67b6ba832e2a96ef4886a7116de5ae687a7cad24343f151fde2b3",
+      "bytes": 595
+    },
+    "rederive3-rebuild-package-tests.log": {
+      "sha256": "7b07cb6ec68283ba2e5ae6c92cffb0880d848bacacb506bb570fd438bf039095",
+      "bytes": 1008
+    },
+    "rederive3-rebuild-parties-build.log": {
+      "sha256": "b8b515e29879f043aa789bc190dba4ab96e6be85b4ca67b0de3e175fef38ee6d",
+      "bytes": 1111
+    },
+    "rederive3-rebuild-parties-tests.log": {
+      "sha256": "57a8ee6b1ccbda2afd09a428e1c1b788ad2681b8ad93c3d4bed4235255fd9fad",
+      "bytes": 426
+    },
+    "rederive3-rebuild-projections-build.log": {
+      "sha256": "c0acb25050bc16c9a93451d091f188f574631ec149236cd82a7d342d9b8324e7",
+      "bytes": 340
+    },
+    "rederive3-rebuild-projections-tests.log": {
+      "sha256": "c4be5d49585847ed684ad26fcd1b380c5ff742c6f1ea8d4d76637d69cc9b470d",
+      "bytes": 746
+    },
+    "rederive3-rebuild-replay-tests.log": {
+      "sha256": "28bf42308c51ec8b458a3bc10caffee7f2b1b713278afe28067247af0ca5f694",
+      "bytes": 37779
+    },
+    "rederive3-rebuild-sdk-build.log": {
+      "sha256": "5f310001a686d0068b7265fe7e14c3fa9c9668d38155d5537dfa87cf4866a10d",
+      "bytes": 2573
+    },
+    "rederive3-rebuild-sdk-tests.log": {
+      "sha256": "7042ac68e31dfafb752b7865251a7f85a7fd379f03ec1ab305ac3b0d81447a97",
+      "bytes": 35252
+    },
+    "rederive3-rebuild-source-runtime-build.log": {
+      "sha256": "8e78e27e70ce81a711ec019c67d8483e7a6630618a4f6daccfc8d6717081d9ee",
+      "bytes": 1867
+    },
+    "rederive3-rebuild-testing-build.log": {
+      "sha256": "4f1763842daaff6258ba81b7e7937def3940564a719a4929aa184ed21cb8e8c8",
+      "bytes": 1546
+    },
+    "rederive3-replay-tests.log": {
+      "sha256": "934547c03b3a1ba6c29750fae622f3cf710c571aad39bc0ee02cbb738444b278",
+      "bytes": 37779
+    },
+    "rederive3-sdk-all-tests.log": {
+      "sha256": "b9a0b36376e3f466d54c07aa3e119d48a2cdffb7d11788d5177045a2ec8a8dfd",
+      "bytes": 35266
+    },
+    "rederive3-sdk-build.log": {
+      "sha256": "3510950f4d631d2cce16e83be30cc5b0e2de2c6a90387e84b4bc49b5524e5279",
+      "bytes": 2573
+    },
+    "rederive3-sdk-discovery-tests.log": {
+      "sha256": "24d4bf8cae790090bd7caac4e9e7bec960793be152df1c97883eebd39f007426",
+      "bytes": 474
+    },
+    "rederive3-ui-restore.log": {
+      "sha256": "f17f7a6869a19e7a09331d0f83352e6f5d88ea4e09c57fbe2748deb2bb63af77",
+      "bytes": 980
+    }
+  },
+  "owned_code": "rederive3-owned-files.json",
+  "notes": [
+    "HistoricalPrivateRecoveryReconciliationAttested defaults false; source erasure refuses before any mutation without explicit store-wide owner attestation. Only known synthetic fixture inventories enable it.",
+    "Discoverable PII-bearing live and ordinary/streamed rebuild preparations use SDK registration, closure, terminal fences and payload-free barriers. Guarded v3 replay keeps one SDK private manifest plus a content-free pointer; cold adapters verify current owner selection and terminal evidence after reclamation.",
+    "Fixed recoverable empty-v1 initialization bytes/fingerprint are unchanged and independently resumed in two old-manifest controls. Existing v1/v2 generic owners retain their default policy.",
+    "SDK owner-proof reading was factored unchanged into a shared serialized-state reader so the testing adapter exercises the same current-owner checks as Dapr.",
+    "The original full source/query lane (889), full native lane (81), Client package (340), OCI/publisher/CI proofs remain preserved; final corrections were followed by the affected source (148), SDK (2156), dispatcher (66), replay (3), native class (24), and package lanes.",
+    "Cold guarded controls serialize all physical bytes and import them into a new SDK adapter between preparation, commit, verification, erasure and stale replay.",
+    "Source/package/catalog selections and constructor signatures are unchanged. No production attestation, migration/deletion, deployment or release dispatch was executed.",
+    "Parent/user owner publication advanced EventStore to fd083a91b and Memories to d9826761 during implementation. Child made no Git mutations; final task-owned raw and LF-normalized code hashes are independent of those moving heads.",
+    "Known prior broad workspace blockers and pre-existing skipped controls remain explicit; focused results do not certify matching package publication."
+  ]
+}

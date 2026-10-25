@@ -1,0 +1,19 @@
+{
+  "authenticated_owner": "jpiquot",
+  "published": [
+    {
+      "owner": "memories",
+      "path": "references/Hexalith.Memories",
+      "head": "7b0c8b5692600e293346eea7a84652eb87e4c346",
+      "remote_main": "7b0c8b5692600e293346eea7a84652eb87e4c346",
+      "ref": "v2.29.15-28-g7b0c8b56"
+    },
+    {
+      "owner": "eventstore",
+      "path": "references/Hexalith.EventStore",
+      "head": "694e37bad3e667931fbafc6a1ed9f85e4a0b4912",
+      "remote_main": "694e37bad3e667931fbafc6a1ed9f85e4a0b4912",
+      "ref": "v3.127.0-41-g694e37bad"
+    }
+  ]
+}

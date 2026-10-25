@@ -1,0 +1,218 @@
+[
+  {
+    "owner": "parties",
+    "repo": "/home/administrator/projects/hexalith/parties",
+    "path": "docs/gdpr-processing-activity-records.md",
+    "sha256": "6a7809497eefe21ba49582a866792a5481f968c23b6f65eb42c93260fc68ab77",
+    "keep_sha256": "9c1e15a1f47ffa978180fa15d3ad96efc017114642a4d994935820709e5e1768",
+    "head": "559b91c812a422f9890e448f7942e645f3739b2b"
+  },
+  {
+    "owner": "parties",
+    "repo": "/home/administrator/projects/hexalith/parties",
+    "path": "src/Hexalith.Parties.Client/AdminPortal/HttpAdminPortalGdprClient.cs",
+    "sha256": "76c5e16ee8f30f41547168adaa5bc89c7b7725b007f7174de58aec68610b8060",
+    "keep_sha256": "805a3c88eff08f666b9e94eefb22d6130334e44df79f8579056e313122c8fa71",
+    "head": "559b91c812a422f9890e448f7942e645f3739b2b"
+  },
+  {
+    "owner": "parties",
+    "repo": "/home/administrator/projects/hexalith/parties",
+    "path": "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.ProcessingBuckets.cs",
+    "sha256": "fd11fffcfec3609b5b0cc56a9c9fc36f89a5821d89600ec883f583f9f5b34a70",
+    "keep_sha256": "f03bebecab9245acf18b3acbc917650a62fd3d6af1bc3dfd6ba1b419d3004871",
+    "head": "559b91c812a422f9890e448f7942e645f3739b2b"
+  },
+  {
+    "owner": "parties",
+    "repo": "/home/administrator/projects/hexalith/parties",
+    "path": "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs",
+    "sha256": "382cfedf30cafb178b3cdd11686f7c8ad7c602b152543548b4aaec7cf949e5f7",
+    "keep_sha256": "0727f8e03c81485205cdf6c3ebf0f50557d866df75c3fee5f68e572db35743cc",
+    "head": "559b91c812a422f9890e448f7942e645f3739b2b"
+  },
+  {
+    "owner": "parties",
+    "repo": "/home/administrator/projects/hexalith/parties",
+    "path": "src/Hexalith.Parties.Projections/Models/PartyProcessingBucketValidation.cs",
+    "sha256": "b871ac8c590f5111598bbd23c396f692e46bc2cffec9737c5f0c14746a1e3afc",
+    "keep_sha256": "7dea677b915d72242318ba82c6c863ec2549b87e6a62e6c97f204ed3921d58c2",
+    "head": "559b91c812a422f9890e448f7942e645f3739b2b"
+  },
+  {
+    "owner": "parties",
+    "repo": "/home/administrator/projects/hexalith/parties",
+    "path": "src/Hexalith.Parties.Projections/Services/PartySdkReadModelEraser.cs",
+    "sha256": "ce831c888c6f25b760f3ac9c683b0c0ae0a80a49041d36ef02511a968fc81cc4",
+    "keep_sha256": "55c28ce15863cbef8d8b4f7bac1f007febf6416f9c49e21f76034023e068b2f9",
+    "head": "559b91c812a422f9890e448f7942e645f3739b2b"
+  },
+  {
+    "owner": "parties",
+    "repo": "/home/administrator/projects/hexalith/parties",
+    "path": "tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalGdprOperationContractTests.cs",
+    "sha256": "565d9159372d46110508433305834280126d70176fd26cda54f1300c72026ca7",
+    "keep_sha256": "2e287e9dda8d177e20721dafffdaabe1d9ae1a72f0fabd5fd3857dd3c6a74d57",
+    "head": "559b91c812a422f9890e448f7942e645f3739b2b"
+  },
+  {
+    "owner": "parties",
+    "repo": "/home/administrator/projects/hexalith/parties",
+    "path": "tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs",
+    "sha256": "57a9bee2bc6db49bc658157e41c653066d4c60afda5707b38d0c56f127d4ade0",
+    "keep_sha256": "d45029f04f31c3b8a32261643c3b2345d25ddf9ffd65fedcdad6c644afc78104",
+    "head": "559b91c812a422f9890e448f7942e645f3739b2b"
+  },
+  {
+    "owner": "parties",
+    "repo": "/home/administrator/projects/hexalith/parties",
+    "path": "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs",
+    "sha256": "bc98736c92fe25cb619631fdb378fbad129e44fd3f5d236b482782417c537558",
+    "keep_sha256": "dec7d53f9000f4981d5b710501786c3577ebfba9cf82752e4d95689da4dcf01e",
+    "head": "559b91c812a422f9890e448f7942e645f3739b2b"
+  },
+  {
+    "owner": "parties",
+    "repo": "/home/administrator/projects/hexalith/parties",
+    "path": "tests/Hexalith.Parties.Tests/Projections/PartyGuardedRebuildErasureTests.cs",
+    "sha256": "5b9f18bf39d4d0e2def803a7d98044e8d6328d151f143557d142e90e036246b6",
+    "keep_sha256": "5b9f18bf39d4d0e2def803a7d98044e8d6328d151f143557d142e90e036246b6",
+    "head": "559b91c812a422f9890e448f7942e645f3739b2b"
+  },
+  {
+    "owner": "parties",
+    "repo": "/home/administrator/projects/hexalith/parties",
+    "path": "tests/Hexalith.Parties.Tests/Projections/PartyProcessingGenerationRecoveryTests.cs",
+    "sha256": "5cf1cbb1f28781eb74e0b90d46c3a58ed0ee732c31b767dfc1ef4ea46587f422",
+    "keep_sha256": "dac07ec532d9f2f1edcfa9ee4ed97a12aaf16db4f71dc0cb3355500b57aa5db4",
+    "head": "559b91c812a422f9890e448f7942e645f3739b2b"
+  },
+  {
+    "owner": "eventstore",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "README.md",
+    "sha256": "afdb10a707277e696e0f39b2ce25bc43dc0a4f3fb632d2729f837527ba212b2f",
+    "keep_sha256": "e9b0a661eebac87e3086f388ac900c77ea7ce695c92ee58d0707345dadc5685b",
+    "head": "fd083a91b67a3bca10016f1f645da913c7ef526e"
+  },
+  {
+    "owner": "eventstore",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "src/Hexalith.EventStore.Client/Projections/DaprReadModelStore.RecoveryScope.cs",
+    "sha256": "275cd2c5a15eff142409b8ecac05eb38da8ecf258ca5adb204da6829d88b3a33",
+    "keep_sha256": "ce230e2063464e69f99247ec3f327f1f83474297c2acdb725f6b1b4bd38029d0",
+    "head": "fd083a91b67a3bca10016f1f645da913c7ef526e"
+  },
+  {
+    "owner": "eventstore",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "src/Hexalith.EventStore.Client/Projections/IReadModelRecoveryScopeStore.cs",
+    "sha256": "eca2117c6790f3a52bdb7479cc270429cb536920ea5355ccd8cda420a7074ebc",
+    "keep_sha256": "2d263ffe16bae05702a2d56bb03ac2b1146bcdaa21fc2e263a7cc7bef16729a3",
+    "head": "fd083a91b67a3bca10016f1f645da913c7ef526e"
+  },
+  {
+    "owner": "eventstore",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "src/Hexalith.EventStore.Client/Projections/ReadModelBatchProtocol.Completion.cs",
+    "sha256": "f2a73b2c48b1b546d423e33ef97544ba03e1b0d0b87c5d02a6d97a6c19d7e4d4",
+    "keep_sha256": "f2a73b2c48b1b546d423e33ef97544ba03e1b0d0b87c5d02a6d97a6c19d7e4d4",
+    "head": "fd083a91b67a3bca10016f1f645da913c7ef526e"
+  },
+  {
+    "owner": "eventstore",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "src/Hexalith.EventStore.Client/Projections/ReadModelBatchProtocol.Discovery.cs",
+    "sha256": "b311fee994d436912445f003554e3a78bf4b042575b9968baa1811753ed0f4d3",
+    "keep_sha256": "c5eb50f242e42cc991a9257e6b3b780d118d09b7dcadc98a42a5c378fc6eda64",
+    "head": "fd083a91b67a3bca10016f1f645da913c7ef526e"
+  },
+  {
+    "owner": "eventstore",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "src/Hexalith.EventStore.Client/Projections/ReadModelBatchProtocol.cs",
+    "sha256": "99fd5463718fcebe79854d5668b9d610028ccd3fc1079b39752a7866b4bd438a",
+    "keep_sha256": "96590f15ec5643d1212ac795d55f29c2e8149c28666ddab2b671aabc85cd8d9c",
+    "head": "fd083a91b67a3bca10016f1f645da913c7ef526e"
+  },
+  {
+    "owner": "eventstore",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "src/Hexalith.EventStore.Client/Projections/ReadModelBatchValidation.cs",
+    "sha256": "33deb495c7d3aa93f68374727f83d7ab49ba9773c03589b1ee7a0495f0b249b7",
+    "keep_sha256": "916a8192752bf68e4bd8c12f5fc1b6ade2aa8dcf51af85a9668a47baa2ae78df",
+    "head": "fd083a91b67a3bca10016f1f645da913c7ef526e"
+  },
+  {
+    "owner": "eventstore",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "src/Hexalith.EventStore.Client/Projections/ReadModelGenerationStaging.cs",
+    "sha256": "e057d095043289ce1097e485e58a066a781ebdecc6e07762e02ff1bf02790c6a",
+    "keep_sha256": "23d27e15ac6e8e2b930a991ed34da894aeff3974f1abba670d45386b96c0c04b",
+    "head": "fd083a91b67a3bca10016f1f645da913c7ef526e"
+  },
+  {
+    "owner": "eventstore",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "src/Hexalith.EventStore.Client/Projections/ReadModelRecoveryDiscovery.cs",
+    "sha256": "2fdfea17cd92dd90dcc2c7b04a0e98a99dcdaf8cbc602d46be246354e1296355",
+    "keep_sha256": "50394764acba3c2c1ab6fb15ae9a34751b311884a45d8c723afc33e27c567aba",
+    "head": "fd083a91b67a3bca10016f1f645da913c7ef526e"
+  },
+  {
+    "owner": "eventstore",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "src/Hexalith.EventStore.DomainService/DomainProjectionDispatcher.cs",
+    "sha256": "879edd7b0c81ee4003d9ceb89abada42f7c291235e4deb4149754353adde7997",
+    "keep_sha256": "8f7954343212fc2c3c8fd95845c669d5a8ef00bc9175164adef7375b6cd7f92a",
+    "head": "fd083a91b67a3bca10016f1f645da913c7ef526e"
+  },
+  {
+    "owner": "eventstore",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "src/Hexalith.EventStore.DomainService/DomainProjectionRebuildPlan.cs",
+    "sha256": "26e8967d88979ff080c7da5d12c21663b5ba8bb29f9c59a903b5ac7da9f50c2e",
+    "keep_sha256": "23cd677767b30426fe36a2ad1342bc3b4aabd3126f835f984f18d38242513870",
+    "head": "fd083a91b67a3bca10016f1f645da913c7ef526e"
+  },
+  {
+    "owner": "eventstore",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "src/Hexalith.EventStore.Testing/Fakes/InMemoryReadModelStore.cs",
+    "sha256": "d8750bd4f8fcb93eda4833c7844b60a801ac4691711203c59e85ad04e19feb72",
+    "keep_sha256": "3be345b20317b5b1a28f3546c34754125f47e8ace0cd3569e2694900150a2269",
+    "head": "fd083a91b67a3bca10016f1f645da913c7ef526e"
+  },
+  {
+    "owner": "eventstore",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "tests/Hexalith.EventStore.Client.Tests/Projections/DaprReadModelBatchTests.RecoveryDiscovery.cs",
+    "sha256": "9a9e393d8f8ca65b351410b7be58f80bad152b86735bba32e161284ec297b4ad",
+    "keep_sha256": "029b6727afa93c71ff11e82546eb98558cda4886b15d6dce0e98577acc01adb2",
+    "head": "fd083a91b67a3bca10016f1f645da913c7ef526e"
+  },
+  {
+    "owner": "memories",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+    "path": "src/Hexalith.Memories.Server/Ingestion/SemanticKeyDiscovery.cs",
+    "sha256": "877a7b778995661d7a2ff9550f602a629c2d9f27607ffcfc588690276c74cda8",
+    "keep_sha256": "8d7d059559486b27a0692aa260e764b8dcb062e9aa9c07ba70c873d6722628ab",
+    "head": "d9826761def835880ee352b9df3517fdf4ac41e0"
+  },
+  {
+    "owner": "memories",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+    "path": "tests/Hexalith.Memories.IntegrationTests/Fixtures/RedisStackFixture.cs",
+    "sha256": "c49dba728551b9b3498457ccf850b3f2240852eab2a2087a9c56fb9366795592",
+    "keep_sha256": "486d829ae7838d99c1527513f6917a13bb6f6e6dc443529e8d48da108f0214f7",
+    "head": "d9826761def835880ee352b9df3517fdf4ac41e0"
+  },
+  {
+    "owner": "memories",
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+    "path": "tests/Hexalith.Memories.IntegrationTests/Ingestion/NaturalLanguageErasureIntegrationTests.cs",
+    "sha256": "29470c98eaede5939a5c389695ac2aebf6607d9596303410a7debc54a9534c4b",
+    "keep_sha256": "48dad285c5887375fa8a2260b5c65c3929346597a4472aca378383a1fdafb9ed",
+    "head": "d9826761def835880ee352b9df3517fdf4ac41e0"
+  }
+]

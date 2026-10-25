@@ -1,0 +1,8 @@
+[
+  {
+    "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+    "path": "tests/Hexalith.EventStore.Client.Tests/Projections/DaprReadModelBatchTests.RecoveryDiscovery.cs",
+    "sha256": "6764b4da1f5d79e352c154e880b5cea99d4b917e73a7177d7b44046cb76cafd8",
+    "reason": "Preserve incoming random-secret fixture strengthening and assertions; no task runtime code changed by rebase."
+  }
+]

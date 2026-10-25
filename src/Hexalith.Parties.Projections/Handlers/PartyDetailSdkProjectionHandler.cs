@@ -95,6 +95,16 @@ public sealed partial class PartyDetailSdkProjectionHandler(
         if (currentProcessing.Value?.BucketGeneration is not null)
             return DeliveryFailure("processing-bucket-writer-requires-published-sdk-generation-support");
 #else
+        if (currentProcessing.Value is { } storedProcessing)
+        {
+            try
+            {
+                PartyProcessingBucketValidation.ValidateCoverage(storedProcessing);
+                if (storedProcessing.BucketGeneration is null && storedProcessing.Records.Any(record => record.TenantId != request.TenantId || record.PartyId != request.AggregateId))
+                    throw new InvalidOperationException("processing-bucket-invalid");
+            }
+            catch (InvalidOperationException error) { return DeliveryFailure(error.Message); }
+        }
         if (currentProcessing.Value?.BucketGeneration is not null
             || (currentProcessing.Value?.Records.Count ?? 0) + request.Events.Length > PartyProcessingBucket.Capacity)
             return await ProjectBucketsAsync(request, dispatchId, cancellationToken).ConfigureAwait(false);
@@ -232,9 +242,11 @@ public sealed partial class PartyDetailSdkProjectionHandler(
             string generation = Generation(operationId);
             ReadModelBatchOperation[] staged = BucketOperations(request, generation, processingCandidate.Records);
             PartyProcessingSdkReadModel metadata = ToBucketMetadata(processingCandidate, generation, processingCandidate.Records, processingCandidate.Records.Count);
+            ValidateGeneration(request, metadata, processingCandidate.Records);
             return new DomainProjectionRebuildPlan(storeName,
                 [ReadModelBatchOperation.Write(key, candidate, concurrency), ReadModelBatchOperation.Write(processingKey, metadata, processingConcurrency)])
-            { StagedOperations = staged, DiscoverableRecovery = true };
+            { StagedOperations = staged, DiscoverableRecovery = true,
+                GenerationStagingMaxCanonicalManifestBytes = ReadModelBatchOptions.DefaultMaxCanonicalManifestBytes };
         }
 #endif
         return new DomainProjectionRebuildPlan(
@@ -395,6 +407,11 @@ public sealed partial class PartyDetailSdkProjectionHandler(
         string processingKey,
         CancellationToken cancellationToken)
     {
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+        if (batchStore is IReadModelRecoveryScopeStore scopedRecovery
+            && !(await scopedRecovery.SettleRecoveryScopeAsync(deliveryScope, cancellationToken).ConfigureAwait(false)).IsResolved)
+            return false;
+#endif
         if (batchStore is not IReadModelPendingBatchRecoveryStore recoveryStore)
         {
             return true;

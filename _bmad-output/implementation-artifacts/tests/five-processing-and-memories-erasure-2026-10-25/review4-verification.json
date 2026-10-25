@@ -1,0 +1,711 @@
+{
+  "status": "implementation-complete-review-publication-parent-owned",
+  "keep_snapshot": "/tmp/parties-five-processing-20261025/rederive-4",
+  "owned_file_manifest": "/tmp/parties-five-processing-20261025/rederive4-owned-files.json",
+  "owned_file_manifest_sha256": "33bbe10dd587f9ea76a1410e5bcb6a002107a8d68a553b99d6a36f299a9fd901",
+  "owned_file_count": 27,
+  "unmodified_keep_code_files_verified": [
+    "parties:src/Hexalith.Parties.Client/AdminPortal/IAdminPortalGdprClient.cs",
+    "parties:src/Hexalith.Parties.Contracts/Models/ProcessingActivityPage.cs",
+    "parties:src/Hexalith.Parties.Contracts/Queries/GetProcessingRecords.cs",
+    "parties:src/Hexalith.Parties.Projections/Configuration/PartySdkReadModelOptions.cs",
+    "parties:src/Hexalith.Parties.Projections/Handlers/PartyProcessingActivityFold.cs",
+    "parties:src/Hexalith.Parties.Projections/Models/PartyProcessingBucket.cs",
+    "parties:src/Hexalith.Parties.Projections/Models/PartyProcessingSdkReadModel.cs",
+    "parties:src/Hexalith.Parties.Projections/Models/PartySdkReadModelAddresses.cs",
+    "parties:src/Hexalith.Parties/Queries/PartySdkQueryService.ProcessingBuckets.cs",
+    "parties:src/Hexalith.Parties/Queries/PartySdkQueryService.cs",
+    "parties:tests/Hexalith.Parties.Tests/Gateway/PartySdkCrossInstanceErasureTests.cs",
+    "parties:tests/Hexalith.Parties.Tests/Projections/PartyDetailSdkProjectionRecoveryTests.cs",
+    "parties:tests/Hexalith.Parties.Tests/Search/PartySearchErasureFenceTests.cs",
+    "eventstore:src/Hexalith.EventStore.Client/Projections/DaprReadModelStore.OwnerProof.cs",
+    "eventstore:src/Hexalith.EventStore.Client/Projections/DaprReadModelStore.cs",
+    "eventstore:src/Hexalith.EventStore.Client/Projections/IReadModelBatchStore.cs",
+    "eventstore:src/Hexalith.EventStore.Client/Projections/ReadModelBatch.cs",
+    "eventstore:src/Hexalith.EventStore.Client/Projections/ReadModelBatchFingerprint.cs",
+    "eventstore:src/Hexalith.EventStore.Client/Projections/ReadModelBatchManifestCodec.cs",
+    "eventstore:src/Hexalith.EventStore.Client/Projections/ReadModelBatchPhase.cs",
+    "eventstore:src/Hexalith.EventStore.Client/Projections/ReadModelBatchSnapshotConflictException.cs",
+    "eventstore:src/Hexalith.EventStore.Client/Projections/ReadModelGenerationStagingException.cs",
+    "eventstore:src/Hexalith.EventStore.Client/Projections/ReadModelOwnerProofReader.cs",
+    "eventstore:src/Hexalith.EventStore.Client/Projections/ReadModelRecoveryDirectory.cs",
+    "eventstore:src/Hexalith.EventStore.Client/Projections/ReadModelRecoveryRegistration.cs",
+    "eventstore:src/Hexalith.EventStore.DomainService/DomainProjectionGuardedReplay.cs",
+    "eventstore:src/Hexalith.EventStore.DomainService/DomainProjectionOwnerProof.cs",
+    "eventstore:src/Hexalith.EventStore.DomainService/DomainProjectionRebuildTransport.cs",
+    "eventstore:tests/Hexalith.EventStore.Client.Tests/Projections/ReadModelBatchStoreTests.cs",
+    "eventstore:tests/Hexalith.EventStore.DomainService.Tests/DomainProjectionDispatcherV2Tests.cs",
+    "eventstore:tests/Hexalith.EventStore.DomainService.Tests/MixedProjectionCatalogTests.cs",
+    "memories:src/Hexalith.Memories.Server/Activities/Cases/DeleteCaseProjectionActivity.cs",
+    "memories:src/Hexalith.Memories.Server/Activities/Cases/DeleteMemoryUnitProjectionActivity.cs",
+    "memories:src/Hexalith.Memories.Server/Activities/Tenants/ProvisionRediSearchActivity.cs",
+    "memories:src/Hexalith.Memories.Server/Hosting/MemoriesServerServiceCollectionExtensions.cs",
+    "memories:src/Hexalith.Memories.Server/Ingestion/RefreshPublicationStore.cs",
+    "memories:src/Hexalith.Memories.Server/Ingestion/SourceInventoryFailureReconciler.cs",
+    "memories:src/Hexalith.Memories.Server/Ingestion/SourceInventoryStore.cs",
+    "memories:src/Hexalith.Memories.Server/Migration/RedisNaturalLanguageNamespaceMigrator.cs",
+    "memories:src/Hexalith.Memories.Server/NaturalLanguage/FailedNaturalLanguageEmbeddingRegistry.cs",
+    "memories:src/Hexalith.Memories.Server/NaturalLanguage/NaturalLanguageDescriptionOptions.cs",
+    "memories:src/Hexalith.Memories.Server/NaturalLanguage/NaturalLanguageEmbeddingRetryHostedService.cs",
+    "memories:src/Hexalith.Memories.Server/NaturalLanguage/RetryNaturalLanguageEmbeddingActivity.cs",
+    "memories:src/Hexalith.Memories.Server/NaturalLanguage/RetryWorkflowErasure.cs",
+    "memories:src/Hexalith.Memories.Server/Workflows/NaturalLanguageEmbeddingRetryWorkflow.cs",
+    "memories:tests/Hexalith.Memories.IntegrationTests/Fixtures/DaprStateSidecarFixture.cs",
+    "memories:tests/Hexalith.Memories.IntegrationTests/Fixtures/FalkorDbFixture.cs",
+    "memories:tests/Hexalith.Memories.IntegrationTests/Fixtures/OwnedSemanticInventory.cs",
+    "memories:tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj",
+    "memories:tests/Hexalith.Memories.IntegrationTests/Ingestion/ContentBearingLegacyRetryWorkflow.cs",
+    "memories:tests/Hexalith.Memories.IntegrationTests/Ingestion/InventoryWirePaginationIntegrationTests.cs",
+    "memories:tests/Hexalith.Memories.IntegrationTests/Ingestion/LegacyRetryErasureQualificationWorkflow.cs",
+    "memories:tests/Hexalith.Memories.IntegrationTests/Ingestion/ReferencedSourceProducerIntegrationTests.cs",
+    "memories:tests/Hexalith.Memories.IntegrationTests/Ingestion/RefreshPublicationIntegrationTests.cs",
+    "memories:tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryWorkflowErasureIntegrationTests.cs",
+    "memories:tests/Hexalith.Memories.IntegrationTests/Ingestion/SourceInventoryProducerIntegrationTests.cs",
+    "memories:tests/Hexalith.Memories.IntegrationTests/Ingestion/TenantIngestionLifecycleIntegrationTests.cs",
+    "memories:tests/Hexalith.Memories.Server.Tests/Activities/Cases/DeleteMemoryUnitProjectionActivityTests.cs",
+    "memories:tests/Hexalith.Memories.Server.Tests/Activities/Restore/RestoreDataPlaneActivityTests.cs",
+    "memories:tests/Hexalith.Memories.Server.Tests/Architecture/IngestionWorkflowDeterminismGuardTests.cs",
+    "memories:tests/Hexalith.Memories.Server.Tests/Endpoints/IngestionEndpointE2ETests.cs",
+    "memories:tests/Hexalith.Memories.Server.Tests/Migration/RedisEmbeddingMigrationStoreTests.cs",
+    "memories:tests/Hexalith.Memories.Server.Tests/Migration/RedisNaturalLanguageNamespaceMigratorTests.cs",
+    "memories:tests/Hexalith.Memories.Server.Tests/NaturalLanguage/FailedNaturalLanguageEmbeddingRegistryTests.cs",
+    "memories:tests/Hexalith.Memories.Server.Tests/NaturalLanguage/NaturalLanguageEmbeddingRetryHostedServiceTests.cs",
+    "memories:tests/Hexalith.Memories.Server.Tests/Workflows/NaturalLanguageEmbeddingRetryWorkflowTests.cs"
+  ],
+  "lanes": [
+    {
+      "name": "rederive4-parties-qualified-tests",
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "*PartyProcessingGenerationRecoveryTests",
+        "-class",
+        "*PartyGuardedRebuildErasureTests",
+        "-class",
+        "*PartySdkQueryHandlerTests",
+        "-class",
+        "*PartyDetailSdkProjectionRecoveryTests",
+        "-class",
+        "*PartySdkCrossInstanceErasureTests",
+        "-class",
+        "*PartySearchErasureFenceTests"
+      ],
+      "mode": "parties-source",
+      "exit_code": 0,
+      "elapsed_seconds": 5.092,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-parties-qualified-tests.log",
+      "sha256": "b8964bd2dd058d74c8347a5c624fb1ca1bb5996002cd7aee52e9f08aceed3ad4",
+      "xunit_counts": [
+        1014,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "rederive4-sdk-qualified-all-tests",
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.Client.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.Tests.dll"
+      ],
+      "mode": "sdk-source",
+      "exit_code": 0,
+      "elapsed_seconds": 34.781,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-sdk-qualified-all-tests.log",
+      "sha256": "c397a06028f415c49acfe5e87b9a87f23c11b69eb9a1a7f9829c604fafcad263",
+      "xunit_counts": [
+        2167,
+        0,
+        0,
+        2,
+        0
+      ]
+    },
+    {
+      "name": "rederive4-projections-qualified-tests",
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Projections.Tests/bin/Debug/net10.0/Hexalith.Parties.Projections.Tests.dll"
+      ],
+      "mode": "projections-source",
+      "exit_code": 0,
+      "elapsed_seconds": 1.24,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-projections-qualified-tests.log",
+      "sha256": "ed5715b22bf9b8b7693b77296a735164fb7917801bef94feca64f6985974fee7",
+      "xunit_counts": [
+        463,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "rederive4-projections-qualified-release-tests",
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Projections.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.Tests.dll"
+      ],
+      "mode": "projections-package",
+      "exit_code": 0,
+      "elapsed_seconds": 1.562,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-projections-qualified-release-tests.log",
+      "sha256": "f7c87e29ac9cf617a6b4d556f2374c6dce8c6245e2cbbea7e07285f9858bc3de",
+      "xunit_counts": [
+        461,
+        0,
+        0,
+        2,
+        0
+      ]
+    },
+    {
+      "name": "rederive4-client-release-tests",
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Client.Tests/bin/Release/net10.0/Hexalith.Parties.Client.Tests.dll"
+      ],
+      "mode": "packages",
+      "exit_code": 0,
+      "elapsed_seconds": 27.664,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-client-release-tests.log",
+      "sha256": "d5d90add29ea2794379f117599c198c326f20520d448ab10febdab39b821d8c4",
+      "xunit_counts": [
+        345,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "rederive4-domain-qualified-tests",
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.DomainService.Tests/bin/Debug/net10.0/Hexalith.EventStore.DomainService.Tests.dll",
+        "-class",
+        "*DomainProjectionDispatcherV2Tests",
+        "-class",
+        "*MixedProjectionCatalogTests"
+      ],
+      "mode": "domain-source",
+      "exit_code": 0,
+      "elapsed_seconds": 1.012,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-domain-qualified-tests.log",
+      "sha256": "0c635cc3f40ab1407d5bfdbf0bd61beb872fb48baef8b61997fb4c439d704eab",
+      "xunit_counts": [
+        66,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "rederive4-replay-qualified-tests",
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.DomainService.Tests/bin/Debug/net10.0/Hexalith.EventStore.DomainService.Tests.dll",
+        "-method",
+        "*RecoveryBoundReplay_ActualSdkMappingsReuseOnePersistentManifestAcrossRetryAndFreshHosts"
+      ],
+      "mode": "domain-source",
+      "exit_code": 0,
+      "elapsed_seconds": 2.437,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-replay-qualified-tests.log",
+      "sha256": "43c64c91ec2758b52e8d0bd34ceafc29fdc7d2cc8ae51f08036000a317499259",
+      "xunit_counts": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "rederive4-memories-package-focused-tests",
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Memories.Server.Tests/bin/Release/net10.0/Hexalith.Memories.Server.Tests.dll",
+        "-class",
+        "*NaturalLanguageEmbeddingRetryWorkflowTests",
+        "-class",
+        "*NaturalLanguageEmbeddingRetryHostedServiceTests",
+        "-class",
+        "*FailedNaturalLanguageEmbeddingRegistryTests",
+        "-class",
+        "*RedisNaturalLanguageNamespaceMigratorTests",
+        "-class",
+        "*DeleteMemoryUnitProjectionActivityTests"
+      ],
+      "mode": "memories-package",
+      "exit_code": 0,
+      "elapsed_seconds": 3.052,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-memories-package-focused-tests.log",
+      "sha256": "8580cd8d3ff8ffb2053dec01acabc860a1f1c4871118c5eb4f365f83200f1750",
+      "xunit_counts": [
+        38,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "rederive4-native-qualified-tests",
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "-class",
+        "*NaturalLanguageErasureIntegrationTests",
+        "-class",
+        "*RetryWorkflowErasureIntegrationTests",
+        "-class",
+        "*RefreshPublicationIntegrationTests",
+        "-class",
+        "*InventoryWirePaginationIntegrationTests",
+        "-class",
+        "*ReferencedSourceProducerIntegrationTests",
+        "-class",
+        "*SourceInventoryProducerIntegrationTests",
+        "-class",
+        "*SourceInventoryIntegrationTests",
+        "-class",
+        "*TenantIngestionLifecycleIntegrationTests"
+      ],
+      "mode": "native",
+      "exit_code": 0,
+      "elapsed_seconds": 24.795,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-native-qualified-tests.log",
+      "sha256": "a507e819a324d70e7efdbd21a782a2120e0a859b0ca059d0051ee2e0a139556b",
+      "xunit_counts": [
+        84,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "rederive4-container-qualified-tests",
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "-class",
+        "*RetryWorkflowErasureIntegrationTests"
+      ],
+      "mode": "container",
+      "exit_code": 0,
+      "elapsed_seconds": 16.207,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-container-qualified-tests.log",
+      "sha256": "2ac1f9d9bd8cd1c0d24cb478b1218666f51dc2b68d5789f3023cd7bd64478506",
+      "xunit_counts": [
+        7,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "rederive4-ci-tests",
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll"
+      ],
+      "mode": "ci",
+      "exit_code": 0,
+      "elapsed_seconds": 136.179,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-ci-tests.log",
+      "sha256": "9176e733c691fb33319dd4fb18f14036096ccebee6ddb18ec12653b74effe2cd",
+      "xunit_counts": [
+        464,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "rederive4-publisher-tests",
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "references/Hexalith.Builds/Github/publish-containers/tests",
+        "-p",
+        "test_*.py"
+      ],
+      "mode": "ci",
+      "exit_code": 0,
+      "elapsed_seconds": 15.866,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-publisher-tests.log",
+      "sha256": "1bf6ebe09bfa7e9d469a32a6ae930ae9b647498fc0f019b92c5c1905d090b88a",
+      "xunit_counts": null
+    },
+    {
+      "name": "rederive4-oci-revalidation",
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "command": [
+        "python3",
+        "/tmp/parties-five-processing-20261025/rederive3-validate-archive.py",
+        "/tmp/parties-five-processing-20261025/rederive3-oci.tar.gz",
+        "/tmp/parties-five-processing-20261025/rederive4-oci-archive-proof.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.258,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-oci-revalidation.log",
+      "sha256": "bf836ed1cfa275b7dd951c9a8ee49a18a8ab4aee6522a522ae807ed6ad79efcc",
+      "archive_origin": "preserved loop-3 actual dual-RID .NET SDK container archive; revalidated with unchanged pinned validator"
+    },
+    {
+      "name": "rederive4-no-warning-overrides",
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "command": [
+        "bash",
+        "scripts/check-no-warning-override.sh"
+      ],
+      "mode": "ci",
+      "exit_code": 0,
+      "elapsed_seconds": 0.259,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-no-warning-overrides.log",
+      "sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604",
+      "xunit_counts": null
+    },
+    {
+      "name": "rederive4-eventstore-whitespace",
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "mode": "static",
+      "exit_code": 0,
+      "elapsed_seconds": 0.008,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-eventstore-whitespace.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xunit_counts": null
+    },
+    {
+      "name": "rederive4-memories-whitespace",
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "mode": "static",
+      "exit_code": 0,
+      "elapsed_seconds": 0.006,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-memories-whitespace.log",
+      "sha256": "fec9541eed6f60296670fb9b582039689577915b93c0361ecbb370aa105097ae",
+      "xunit_counts": null
+    },
+    {
+      "name": "rederive4-parties-whitespace",
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "command": [
+        "git",
+        "-c",
+        "core.whitespace=cr-at-eol",
+        "diff",
+        "--check",
+        "--",
+        "src",
+        "tests",
+        "docs/gdpr-processing-activity-records.md"
+      ],
+      "mode": "static",
+      "exit_code": 0,
+      "elapsed_seconds": 0.008,
+      "log": "/tmp/parties-five-processing-20261025/rederive4-parties-whitespace.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xunit_counts": null
+    }
+  ],
+  "all_loop4_raw_logs": [
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-ci-tests.log",
+      "sha256": "9176e733c691fb33319dd4fb18f14036096ccebee6ddb18ec12653b74effe2cd"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-client-blank-cursor-initial-build-failure.log",
+      "sha256": "83c2428178a5d92dbad1973f139044326999804a143b41126b0d3e1cc2c53a9e"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-client-release-tests.log",
+      "sha256": "d5d90add29ea2794379f117599c198c326f20520d448ab10febdab39b821d8c4"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-container-qualified-tests.log",
+      "sha256": "2ac1f9d9bd8cd1c0d24cb478b1218666f51dc2b68d5789f3023cd7bd64478506"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-container-workflow-tests.log",
+      "sha256": "af8287b11f6816ebba13d74b37f85d16cf9e193c6cd4e9ce7fdc86fc2b349aa6"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-docker-info.log",
+      "sha256": "c007c7e1712540ee77c9ce8e454890d905ff0193ec24907cb08ffd9d00b25d98"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-domain-build.log",
+      "sha256": "adec12a825235b2c121153814698ed26df29c3cc3fb1b896d48ce7ff56726aec"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-domain-qualified-build.log",
+      "sha256": "be241198d1d4a099552d2db6024a444fd879446944811cebc0fd7c2eb385d2bd"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-domain-qualified-tests.log",
+      "sha256": "0c635cc3f40ab1407d5bfdbf0bd61beb872fb48baef8b61997fb4c439d704eab"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-domain-tests.log",
+      "sha256": "a05b059caeb84eed9eef81f1b740d1f5b8545ad8f22799f245cd17681ff3dd13"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-eventstore-whitespace.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-hexalith.memories.server.tests-release-build.log",
+      "sha256": "28937a5663abf925883c71cae032d2484494dad97618030aa0ccfabb659988eb"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-hexalith.parties.ci.tests-release-build.log",
+      "sha256": "a2bc06ea78d83be1f6fbbb2bc696f068eff77ad48af3a37d48caf748160dc498"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-hexalith.parties.client.tests-release-build.log",
+      "sha256": "a3f01206eb680304c5c370e2c6df772e7b84ad43d5c1e713531bf05dcd6d6cb6"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-hexalith.parties.projections.tests-release-build.log",
+      "sha256": "2815ab7da0b2f73cf1c7f0f5fea0b808244522e35929a34c8606945f7b9a4353"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-memories-build.log",
+      "sha256": "c58ed66a44bb143f3139d3f331be902b843b838bf3ac1d0714fc30b0fe425481"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-memories-package-all-tests.log",
+      "sha256": "c6bde7a95a789eb2ee53862ca6a00e26337f6d5bbfd46b18ad4ecf22e8ded353"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-memories-package-focused-tests.log",
+      "sha256": "8580cd8d3ff8ffb2053dec01acabc860a1f1c4871118c5eb4f365f83200f1750"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-memories-whitespace.log",
+      "sha256": "fec9541eed6f60296670fb9b582039689577915b93c0361ecbb370aa105097ae"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-native-all-tests.log",
+      "sha256": "fdf6b8d711d4ce6eb7dda35219dd8953334d228d2c351009d671528cd09a57fc"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-native-focused-tests.log",
+      "sha256": "23fb0903921eb602c40ba853d63fce4f33c16033118b02e7b7943f105aad7d44"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-native-fresh-all-tests.log",
+      "sha256": "fdbd9ddd7ef39266b9a1ca742bc35a13584a265d85bc84153e55a241899df1da"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-native-qualified-tests.log",
+      "sha256": "a507e819a324d70e7efdbd21a782a2120e0a859b0ca059d0051ee2e0a139556b"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-native-readiness-retry.log",
+      "sha256": "2f1f8dc1a0369ee792ade0661eb28ff9db28585e5cee2eed218095d5b23b9e16"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-no-warning-overrides.log",
+      "sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-oci-revalidation.log",
+      "sha256": "bf836ed1cfa275b7dd951c9a8ee49a18a8ab4aee6522a522ae807ed6ad79efcc"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-parties-all-affected-tests.log",
+      "sha256": "46f3caee0061c057eebac60da7018fd22ca24dbafc42f0aa13874977982e0127"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-parties-anchor-build.log",
+      "sha256": "cdfc336023397ab9bf073e3fa08a6f590ae164ceac46d9b741c567f64dde5ed3"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-parties-build.log",
+      "sha256": "2c9d6cf8dd41050acda1c6c685aea425d56eab3123d25f3ec1f7ff8de565183a"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-parties-final-build.log",
+      "sha256": "f1856e37b61e1618482eb94c93f294812792355aa20c635434b65082dffd00fd"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-parties-final-tests.log",
+      "sha256": "a3ddf30e921fcf3dbec3f98e13399f9cf7503ab983dadf6b9e49265446227aed"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-parties-focused-tests.log",
+      "sha256": "03d13b155d00f23ef39f6d964ce223ca697c28fe95721140fbf623971684f2ef"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-parties-qualified-tests.log",
+      "sha256": "b8964bd2dd058d74c8347a5c624fb1ca1bb5996002cd7aee52e9f08aceed3ad4"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-parties-staging-final-build.log",
+      "sha256": "375dfb049cc8911021d6fe681213644051f91b686fa13153571028f09b829ab1"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-parties-whitespace.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-projections-build.log",
+      "sha256": "498644cf990bfe39b3fdf05fb0d0d061a1a9dafa30555e39b3f150596d25d513"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-projections-final-build.log",
+      "sha256": "3ef1ec81dbbb50ed0fdd4d128cf61972246dc1642241a28ded0627ddee02df96"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-projections-final-tests.log",
+      "sha256": "3c2094422b1c579b6e2a4544660c0f64692ebbe3c4521b5eb8758f2b45264740"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-projections-qualified-build.log",
+      "sha256": "cc36ca8c256cd9d22f34b487e8e706391c5794f017fca77dc62d83ad79c03c52"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-projections-qualified-release-build.log",
+      "sha256": "1635af5584c57a4c693baa416205f7f16d1f6faf83b6459517b5ad43d74b7ed3"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-projections-qualified-release-tests.log",
+      "sha256": "f7c87e29ac9cf617a6b4d556f2374c6dce8c6245e2cbbea7e07285f9858bc3de"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-projections-qualified-tests.log",
+      "sha256": "ed5715b22bf9b8b7693b77296a735164fb7917801bef94feca64f6985974fee7"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-projections-release-tests.log",
+      "sha256": "74b0bb947acb2efc51b0700033a4d3f6752dbaa290081c292ec597a6a093b90f"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-projections-tests.log",
+      "sha256": "de4a88551ac8bbe88ab0f1d6adf4a861584ec9d418ba554dbd9713b8fa333727"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-publisher-tests.log",
+      "sha256": "1bf6ebe09bfa7e9d469a32a6ae930ae9b647498fc0f019b92c5c1905d090b88a"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-replay-qualified-tests.log",
+      "sha256": "43c64c91ec2758b52e8d0bd34ceafc29fdc7d2cc8ae51f08036000a317499259"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-replay-tests.log",
+      "sha256": "e7d98dad248c5351155673c26466be351a943a49914c32d8ce3f334b624cc215"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-sdk-all-tests.log",
+      "sha256": "5130b4856ecc44658246a967d88ba756677b0d4b77c35d32db6930fe7f16c03e"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-sdk-anchor-build.log",
+      "sha256": "d108fad7ab911a51bed07cc94feb21f83937f1ed41880b00ba708d480b691c51"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-sdk-build.log",
+      "sha256": "02a0bca6ad9a8f3e28c65e3f960d8e1cb66c10ede9b1336e0775e4a0b149cae9"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-sdk-final-all-tests.log",
+      "sha256": "b5ab9e92c8570e9c84af566131604c7461eeea8853243dee960543db995dcc88"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-sdk-final-build.log",
+      "sha256": "6a45f5110c3007c63baac79d623fe01fa5bc021987db37b735fd4f764c8ed564"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-sdk-focused-tests.log",
+      "sha256": "b626377cb830f78b140a1d924ead4ee4e836b417feb239fd55c9ecccfacbcb19"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-sdk-qualified-all-tests.log",
+      "sha256": "c397a06028f415c49acfe5e87b9a87f23c11b69eb9a1a7f9829c604fafcad263"
+    },
+    {
+      "path": "/tmp/parties-five-processing-20261025/rederive4-sdk-staging-final-build.log",
+      "sha256": "864a7f344b05a07906708a94856d8edfae9f200f2c88a0549056c1fb52e8a55c"
+    }
+  ],
+  "fresh_native_ownership": "/tmp/parties-five-processing-20261025/rederive4-native-fresh/owned-process-identities.json",
+  "immutable_publisher_check": "/tmp/parties-five-processing-20261025/rederive4-immutable-pin-check.json",
+  "oci_revalidated_preserved_actual_dual_rid_archive": "/tmp/parties-five-processing-20261025/rederive4-oci-archive-proof.json",
+  "docker": "Available: server 29.8.2; exact pinned fixture images cached. Default owned-container workflow controls executed, containers auto-disposed.",
+  "preserved_failures": [
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive4-native-all-tests.log",
+      "cause": "Reused owned Redis fixture accumulated 651 indexes and 78,604 keys; unchanged 10-second index-readiness gate cancelled. Fresh fixtures passed all 84 controls."
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive4-native-readiness-retry.log",
+      "cause": "Same accumulated-fixture readiness cancellation on isolated retry; no production behavior or gate changed."
+    }
+  ],
+  "broad_memories_server_verification": {
+    "name": "rederive4-memories-package-all-tests",
+    "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Memories.Server.Tests/bin/Release/net10.0/Hexalith.Memories.Server.Tests.dll"
+    ],
+    "mode": "memories-all-package",
+    "exit_code": 1,
+    "elapsed_seconds": 20.642,
+    "log": "/tmp/parties-five-processing-20261025/rederive4-memories-package-all-tests.log",
+    "sha256": "c6bde7a95a789eb2ee53862ca6a00e26337f6d5bbfd46b18ad4ecf22e8ded353",
+    "xunit_counts": [
+      3056,
+      0,
+      2,
+      1,
+      0
+    ]
+  },
+  "broad_memories_server_failures": [
+    "Pre-existing Server_ReferencesEventStoreClientWithoutInlineVersion expects an unconditional PackageReference, but unchanged tracked HEAD has the existing source/package condition.",
+    "Pre-existing AccessTelemetryA41CloseOutTests wording mismatch expects No target was queried."
+  ],
+  "limits": [
+    "Unchanged EventStore package versions: source generation/recovery qualification does not close package-publication debt.",
+    "Historical private-recovery reconciliation defaults false; no production attestation, migration/deletion, deployment or release dispatch.",
+    "Prior broader workspace/test blockers remain recorded in review3 receipts; narrow affected passes do not grant a release floor.",
+    "Parent owns independent review, deferred R4-B10 debt, cleanup of task-owned native resources and Git publication."
+  ],
+  "no_git_mutations": true,
+  "no_delegation": true
+}

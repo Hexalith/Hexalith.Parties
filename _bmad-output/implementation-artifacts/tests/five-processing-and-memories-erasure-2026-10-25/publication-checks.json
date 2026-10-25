@@ -1,0 +1,95 @@
+[
+  {
+    "name": "ci-build",
+    "command": [
+      "dotnet",
+      "build",
+      "tests/Hexalith.Parties.Ci.Tests/Hexalith.Parties.Ci.Tests.csproj",
+      "-c",
+      "Release",
+      "-m:1",
+      "-p:UseHexalithProjectReferences=false",
+      "-p:UseNuGetDeps=true"
+    ],
+    "exit_code": 0,
+    "seconds": 3.041,
+    "log": "/tmp/parties-five-processing-20261025/parent-publication-ci-build.log",
+    "sha256": "3f9bc7afa675f2ac8171fe61d27c2c7ac5746242979b114ec9eb46536b9e889f",
+    "counts": []
+  },
+  {
+    "name": "ci-tests",
+    "command": [
+      "dotnet",
+      "tests/Hexalith.Parties.Ci.Tests/bin/Release/net10.0/Hexalith.Parties.Ci.Tests.dll"
+    ],
+    "exit_code": 0,
+    "seconds": 93.102,
+    "log": "/tmp/parties-five-processing-20261025/parent-publication-ci-tests.log",
+    "sha256": "2d4fbd283d4dc86135cdc4fc27795dcbc32b495e311118400da2b4729fa0521b",
+    "counts": [
+      [
+        464,
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "name": "warning-guard",
+    "command": [
+      "bash",
+      "scripts/check-no-warning-override.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 0.439,
+    "log": "/tmp/parties-five-processing-20261025/parent-publication-warning-guard.log",
+    "sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604",
+    "counts": []
+  },
+  {
+    "name": "root-whitespace",
+    "command": [
+      "git",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "diff",
+      "--check",
+      "--",
+      "src",
+      "tests",
+      "docs/gdpr-processing-activity-records.md",
+      ".gitlink-signoff.tsv",
+      "_bmad-output/implementation-artifacts/spec-five-processing-and-memories-erasure-deferred-items.md",
+      "_bmad-output/implementation-artifacts/deferred-work.md",
+      "_bmad-output/implementation-artifacts/tests/five-processing-and-memories-erasure-2026-10-25"
+    ],
+    "exit_code": 2,
+    "seconds": 0.015,
+    "log": "/tmp/parties-five-processing-20261025/parent-publication-root-whitespace.log",
+    "sha256": "9f0d90949c8ac59196616d22e06218aa8042c5865c632dd309d760b63c61e18a",
+    "counts": []
+  },
+  {
+    "name": "root-whitespace-corrected",
+    "command": [
+      "git",
+      "-c",
+      "core.whitespace=cr-at-eol",
+      "diff",
+      "--check",
+      "--",
+      "src",
+      "tests",
+      "docs/gdpr-processing-activity-records.md",
+      ".gitlink-signoff.tsv",
+      "_bmad-output/implementation-artifacts/spec-five-processing-and-memories-erasure-deferred-items.md",
+      "_bmad-output/implementation-artifacts/deferred-work.md",
+      "_bmad-output/implementation-artifacts/tests/five-processing-and-memories-erasure-2026-10-25"
+    ],
+    "exit_code": 0,
+    "output": ""
+  }
+]

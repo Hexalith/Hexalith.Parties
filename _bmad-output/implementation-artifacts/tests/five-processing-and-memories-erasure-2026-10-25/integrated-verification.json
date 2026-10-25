@@ -1,0 +1,248 @@
+{
+  "lanes": [
+    {
+      "name": "source-build",
+      "command": [
+        "bash",
+        "-c",
+        "source /tmp/parties-five-processing-20261025/source-env.sh\nexec dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "seconds": 85.491,
+      "log": "/tmp/parties-five-processing-20261025/parent-integrated-source-build.log",
+      "sha256": "5d438429c09528971627237a10c1523e6cc883e3470b2df8e253ca14ba49c17d",
+      "counts": []
+    },
+    {
+      "name": "parties-source",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-class",
+        "*PartyProcessingGenerationRecoveryTests",
+        "-class",
+        "*PartyGuardedRebuildErasureTests",
+        "-class",
+        "*PartySdkQueryHandlerTests",
+        "-class",
+        "*PartyDetailSdkProjectionRecoveryTests",
+        "-class",
+        "*PartySdkCrossInstanceErasureTests",
+        "-class",
+        "*PartySearchErasureFenceTests"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "seconds": 4.889,
+      "log": "/tmp/parties-five-processing-20261025/parent-integrated-parties-source.log",
+      "sha256": "f0406d47a28c2e9b0a360e2de7004e2fa4c15c39099c53edb5a21f105f0945fa",
+      "counts": [
+        [
+          1023,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "sdk-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.EventStore.Client.Tests/Hexalith.EventStore.Client.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "seconds": 32.188,
+      "log": "/tmp/parties-five-processing-20261025/parent-integrated-sdk-build.log",
+      "sha256": "98c0f55fdbb30bcd5a1efb066ed97090d114c939bc2ec2311941dfcef6125365",
+      "counts": []
+    },
+    {
+      "name": "sdk-all",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.Client.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.Tests.dll"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "seconds": 33.772,
+      "log": "/tmp/parties-five-processing-20261025/parent-integrated-sdk-all.log",
+      "sha256": "20de100f3e2a5301a65f1f0a15877ce6663073b2da03af09aabb3082cf2c1e90",
+      "counts": [
+        [
+          2167,
+          0,
+          0,
+          2,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "dispatcher-build",
+      "command": [
+        "dotnet",
+        "build",
+        "tests/Hexalith.EventStore.DomainService.Tests/Hexalith.EventStore.DomainService.Tests.csproj",
+        "-c",
+        "Debug",
+        "-m:1",
+        "-p:UseHexalithProjectReferences=true",
+        "-p:UseNuGetDeps=false"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "seconds": 5.518,
+      "log": "/tmp/parties-five-processing-20261025/parent-integrated-dispatcher-build.log",
+      "sha256": "5139486aa5453274023f5fd8a7f61dccdf484748c5c27b554b50eef89613c61e",
+      "counts": []
+    },
+    {
+      "name": "dispatcher",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.DomainService.Tests/bin/Debug/net10.0/Hexalith.EventStore.DomainService.Tests.dll",
+        "-class",
+        "*DomainProjectionDispatcherV2Tests",
+        "-class",
+        "*MixedProjectionCatalogTests"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "seconds": 0.786,
+      "log": "/tmp/parties-five-processing-20261025/parent-integrated-dispatcher.log",
+      "sha256": "c1f493617ec598f059fd34dd6cf93e27fd29e684e2634c6dc793a1a83e6bc0fb",
+      "counts": [
+        [
+          72,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "replay",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.DomainService.Tests/bin/Debug/net10.0/Hexalith.EventStore.DomainService.Tests.dll",
+        "-method",
+        "*RecoveryBoundReplay_ActualSdkMappingsReuseOnePersistentManifestAcrossRetryAndFreshHosts"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "seconds": 1.932,
+      "log": "/tmp/parties-five-processing-20261025/parent-integrated-replay.log",
+      "sha256": "0f1ad057ce94beed060f6f00b2a2f60ae780613395b717601bcbefb4b8a9aae1",
+      "counts": [
+        [
+          3,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "memories-build",
+      "command": [
+        "bash",
+        "-c",
+        "source /tmp/parties-five-processing-20261025/source-env.sh\nexec dotnet build references/Hexalith.Memories/tests/Hexalith.Memories.IntegrationTests/Hexalith.Memories.IntegrationTests.csproj -c Debug -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "seconds": 28.32,
+      "log": "/tmp/parties-five-processing-20261025/parent-integrated-memories-build.log",
+      "sha256": "dde28e381e1913ca369fed08fe75c71bf2e3b19ca6c9f301f9e152755e0ab305",
+      "counts": []
+    },
+    {
+      "name": "memories-containers",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "-class",
+        "*NaturalLanguageErasureIntegrationTests",
+        "-class",
+        "*RetryWorkflowErasureIntegrationTests",
+        "-class",
+        "*RefreshPublicationIntegrationTests",
+        "-class",
+        "*InventoryWirePaginationIntegrationTests",
+        "-class",
+        "*ReferencedSourceProducerIntegrationTests",
+        "-class",
+        "*SourceInventoryProducerIntegrationTests",
+        "-class",
+        "*SourceInventoryIntegrationTests",
+        "-class",
+        "*TenantIngestionLifecycleIntegrationTests"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+      "exit_code": 1,
+      "seconds": 36.246,
+      "log": "/tmp/parties-five-processing-20261025/parent-integrated-memories-containers.log",
+      "sha256": "190a2a3936ae64a5c28970e8d3303fdf72943e489515281a3249a3b60ac51395",
+      "counts": [
+        [
+          88,
+          0,
+          10,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "memories-containers-retry",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "-class",
+        "*NaturalLanguageErasureIntegrationTests",
+        "-class",
+        "*RetryWorkflowErasureIntegrationTests",
+        "-class",
+        "*RefreshPublicationIntegrationTests",
+        "-class",
+        "*InventoryWirePaginationIntegrationTests",
+        "-class",
+        "*ReferencedSourceProducerIntegrationTests",
+        "-class",
+        "*SourceInventoryProducerIntegrationTests",
+        "-class",
+        "*SourceInventoryIntegrationTests",
+        "-class",
+        "*TenantIngestionLifecycleIntegrationTests"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+      "exit_code": 0,
+      "seconds": 40.086,
+      "log": "/tmp/parties-five-processing-20261025/parent-integrated-memories-containers-retry.log",
+      "sha256": "2587972433a3451daa70b1221332daf41a7bef022328030afed39705c25a117e",
+      "counts": [
+        [
+          90,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    }
+  ],
+  "all_completed": true,
+  "preserved_fixture_failure": "First post-rebase container run could not initialize one Falkor fixture; unchanged isolated class passed 12 tests. Full unchanged retry recorded separately."
+}

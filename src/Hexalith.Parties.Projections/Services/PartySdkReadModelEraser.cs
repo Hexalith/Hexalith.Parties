@@ -84,11 +84,13 @@ public sealed class PartySdkReadModelEraser(
                     BatchId = "legacy-audit-" + generation
                 };
                 var request = new ProjectionRequest(tenantId, "party", partyId, []);
+                var metadata = PartyDetailSdkProjectionHandler.ToBucketMetadata(retainedProcessing, generation,
+                    retainedProcessing.Records, retainedProcessing.Records.Count);
+                PartyDetailSdkProjectionHandler.ValidateGeneration(request, metadata, retainedProcessing.Records);
                 await ReadModelGenerationStaging.StageAsync(batchStore, generationScope,
                     PartyDetailSdkProjectionHandler.BucketOperations(request, generation, retainedProcessing.Records),
-                    cancellationToken).ConfigureAwait(false);
-                retainedProcessing = PartyDetailSdkProjectionHandler.ToBucketMetadata(retainedProcessing, generation,
-                    retainedProcessing.Records, retainedProcessing.Records.Count);
+                    ReadModelBatchOptions.DefaultMaxCanonicalManifestBytes, cancellationToken).ConfigureAwait(false);
+                retainedProcessing = metadata;
             }
 #endif
             var batch = new ReadModelBatch(

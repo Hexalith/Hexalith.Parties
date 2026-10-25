@@ -1,0 +1,23 @@
+{
+  "approved_baselines": {
+    "parties": "1ef274ea0471643d83f924147e85ac8326cf6a47",
+    "eventstore": "749767072b8c2ea2abc8a23540ca65471d078c49",
+    "memories": "cdd73d7361f67781a523f63f04853491a687f426"
+  },
+  "verified_artifact_hashes": 62,
+  "verified_code_hashes": 56,
+  "parent_source_check": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class '*PartyProcessingGenerationRecoveryTests' -class '*PartySdkQueryHandlerTests' -class '*PartyGuardedRebuildErasureTests'",
+    "total": 892,
+    "failed": 0,
+    "skipped": 0,
+    "log": "/tmp/parties-five-processing-20261025/parent-final-source-tests.log",
+    "sha256": "4be340ab40ae58186e87090fba29bdbaaa29c09d12c6ac715ef9b66d976026e8"
+  },
+  "observed_heads": {
+    "parties": "13a6247aff26a77c80d0308b6c69af2bc3e20279",
+    "eventstore": "fd083a91b67a3bca10016f1f645da913c7ef526e",
+    "memories": "d9826761def835880ee352b9df3517fdf4ac41e0"
+  },
+  "publication": "Independent review and final remaining commits/pushes pending; concurrent user commits are preserved."
+}

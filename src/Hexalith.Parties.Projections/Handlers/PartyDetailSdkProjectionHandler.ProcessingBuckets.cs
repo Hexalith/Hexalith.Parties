@@ -90,13 +90,14 @@ public sealed partial class PartyDetailSdkProjectionHandler
         bool migrating = prior.BucketGeneration is null;
         // Both staging and canonical publication bind the same immutable observed snapshot.
         // A competing inline append therefore selects a new manifest identity on retry.
-        if (migrating || failure is not null)
-            scope = scope with { BatchId = (failure is null ? "migration-" : "audit-")
+        scope = scope with { BatchId = (failure is not null ? "audit-" : migrating ? "migration-" : "append-")
                 + Generation(System.Text.Json.JsonSerializer.Serialize(new[] { dispatchId, detail.ETag, processing.ETag })) };
         string generation = prior.BucketGeneration ?? Generation(scope.BatchId);
         try
         {
             PartyProcessingBucketValidation.ValidateCoverage(prior);
+            if (prior.BucketGeneration is null && prior.Records.Any(record => record.TenantId != request.TenantId || record.PartyId != request.AggregateId))
+                throw new InvalidOperationException("processing-bucket-invalid");
         }
         catch (InvalidOperationException error)
         {
@@ -152,10 +153,15 @@ public sealed partial class PartyDetailSdkProjectionHandler
         [ReadModelBatchOperation.Write(detailKey, nextDetail, Concurrency(detail.ETag)),
             ReadModelBatchOperation.Write(processingKey, metadata, Concurrency(processing.ETag))];
         var buckets = BucketOperations(request, generation, folded.Records);
+        try
+        {
+            ValidateGeneration(request, metadata, folded.Records);
+        }
+        catch (InvalidOperationException error) { return DeliveryFailure(error.Message); }
         if (migrating)
         {
 #if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
-            await ReadModelGenerationStaging.StageAsync(batchStore, scope, buckets, token).ConfigureAwait(false);
+            await ReadModelGenerationStaging.StageAsync(batchStore, scope, buckets, ReadModelBatchOptions.DefaultMaxCanonicalManifestBytes, token).ConfigureAwait(false);
 #else
             return DeliveryFailure("processing-bucket-migration-requires-published-sdk-generation-support");
 #endif
@@ -197,6 +203,14 @@ public sealed partial class PartyDetailSdkProjectionHandler
         => records.GroupBy(record => PartyProcessingBucket.Number(record.SequenceNumber)).OrderBy(group => group.Key)
             .Select(group => ReadModelBatchOperation.Write(PartySdkReadModelAddresses.ProcessingBucket(request.TenantId, request.AggregateId, generation, group.Key),
                 new PartyProcessingBucket { Records = group.OrderBy(record => record.SequenceNumber).ToArray() }, ReadModelBatchConcurrency.CreateOnly)).ToArray();
+
+    internal static void ValidateGeneration(ProjectionRequest request, PartyProcessingSdkReadModel metadata, IReadOnlyList<ProcessingActivityRecord> records)
+    {
+        PartyProcessingBucketValidation.ValidateCoverage(metadata);
+        foreach (var bucket in records.GroupBy(record => PartyProcessingBucket.Number(record.SequenceNumber)))
+            PartyProcessingBucketValidation.ValidateBucket(new PartyProcessingBucket { Records = bucket.ToArray() }, metadata,
+                request.TenantId, request.AggregateId, bucket.Key);
+    }
 
     internal static PartyProcessingSdkReadModel ToBucketMetadata(PartyProcessingSdkReadModel model, string generation, IReadOnlyList<ProcessingActivityRecord> records, long total)
     {

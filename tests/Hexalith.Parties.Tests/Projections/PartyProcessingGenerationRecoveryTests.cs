@@ -541,6 +541,172 @@ public sealed class PartyProcessingGenerationRecoveryTests
         store.SnapshotRaw(StoreName, key).ShouldBe(beforeBucket);
     }
 
+    [Theory]
+    [InlineData(ReadModelBatchPhase.RecoveryManifestReclaimed)]
+    [InlineData(ReadModelBatchPhase.RecoveryAnchorCompacted)]
+    public async Task TerminalAnchorCrashAfterManifestReclamationAllowsColdRedeliveryAndNewDeliveryAsync(ReadModelBatchPhase crash)
+    {
+        var token = TestContext.Current.CancellationToken;
+        var store = new InMemoryReadModelStore();
+        var history = History() with { Events = History().Events.Take(104).ToArray() };
+        (await new PartyDetailSdkProjectionHandler(store, store, s_options).ProjectAsync(history with { Events = history.Events.Take(40).ToArray() }, "seed", token))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        var interrupted = history with { Events = history.Events.Skip(40).Take(32).ToArray() };
+        store.BatchFaultHook = (phase, _, _) => phase == crash || phase == ReadModelBatchPhase.Reconcile
+            ? throw new IOException("crash during terminal private cleanup") : Task.CompletedTask;
+        (await new PartyDetailSdkProjectionHandler(store, store, s_options).ProjectAsync(interrupted, "same-delivery", token))
+            .Status.ShouldBe(ProjectionDispatchStatus.Indeterminate);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(store.SnapshotRawEntries(StoreName));
+        store = new InMemoryReadModelStore();
+        store.ImportRawSnapshot(StoreName, JsonSerializer.Deserialize<Dictionary<string, byte[]>>(bytes)!);
+        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        (await handler.ProjectAsync(interrupted, "same-delivery", token)).Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        (await handler.ProjectAsync(history with { Events = history.Events.Skip(72).ToArray() }, "next-delivery", token))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        var metadata = (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token)).Value!;
+        await AssertCompleteGenerationAsync(store, metadata.BucketGeneration!, history, token);
+        foreach (var row in store.SnapshotRawEntries(StoreName).Where(pair => pair.Key.StartsWith("hxrmb:v1:recovery-scope:", StringComparison.Ordinal)))
+        {
+            using var json = JsonDocument.Parse(row.Value);
+            json.RootElement.GetProperty("entries").GetArrayLength().ShouldBe(0);
+        }
+    }
+
+    [Fact]
+    public async Task CommittedLiveRegistrationsSettleAcrossColdRestartsBeforeRedeliveryAndDifferentBucketAppendsAsync()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var store = new InMemoryReadModelStore();
+        var history = History() with { Events = History().Events.Take(40).ToArray() };
+        (await new PartyDetailSdkProjectionHandler(store, store, s_options).ProjectAsync(history, "seed", token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        for (int delivery = 0; delivery < 36; delivery++)
+        {
+            int count = 40 + (delivery + 1) * 32;
+            var next = History() with { Events = History().Events.Take(count).ToArray() };
+            var tail = next with { Events = next.Events.Skip(history.Events.Length).ToArray() };
+            store.BatchFaultHook = (phase, _, _) => phase is ReadModelBatchPhase.BeforeReceipt or ReadModelBatchPhase.Reconcile
+                ? throw new IOException("crash before receipt after committed compaction") : Task.CompletedTask;
+            (await new PartyDetailSdkProjectionHandler(store, store, s_options).ProjectAsync(tail, "delivery-" + delivery, token))
+                .Status.ShouldBe(ProjectionDispatchStatus.Indeterminate);
+            var snapshot = JsonSerializer.Deserialize<Dictionary<string, byte[]>>(JsonSerializer.SerializeToUtf8Bytes(store.SnapshotRawEntries(StoreName)))!;
+            store = new InMemoryReadModelStore();
+            store.ImportRawSnapshot(StoreName, snapshot);
+            var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+            // Alternate redelivery and the next delivery: both must recover the old anchor,
+            // including anchors in buckets outside the next delivery's touched interval.
+            if (delivery % 2 == 0)
+                for (int retry = 0; retry < 2; retry++)
+                    (await handler.ProjectAsync(tail, "delivery-" + delivery, token)).Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+            var directory = store.SnapshotRawEntries(StoreName).Where(pair => pair.Key.StartsWith("hxrmb:v1:recovery-scope:", StringComparison.Ordinal)).Single();
+            using var document = JsonDocument.Parse(directory.Value);
+            document.RootElement.GetProperty("entries").GetArrayLength().ShouldBeLessThanOrEqualTo(1);
+            history = next;
+        }
+        var scope = new ReadModelBatchScope(StoreName, "tenant-a", "party", "party-1", "detail", "settle");
+        (await store.SettleRecoveryScopeAsync(scope, token)).IsResolved.ShouldBeTrue();
+        foreach (var row in store.SnapshotRawEntries(StoreName).Where(pair => pair.Key.StartsWith("hxrmb:v1:recovery-scope:", StringComparison.Ordinal)))
+        {
+            using var json = JsonDocument.Parse(row.Value);
+            json.RootElement.GetProperty("entries").GetArrayLength().ShouldBe(0);
+        }
+        var metadata = (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token)).Value!;
+        await AssertCompleteGenerationAsync(store, metadata.BucketGeneration!, history, token);
+    }
+
+    [Fact]
+    public async Task CompetingSelectedBucketAppendRetriesSameDispatchAgainstItsNewSnapshotAsync()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var store = new InMemoryReadModelStore();
+        var history = History() with { Events = History().Events.Take(42).ToArray() };
+        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        (await handler.ProjectAsync(history with { Events = history.Events.Take(40).ToArray() }, "seed", token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        bool competed = false;
+        var batches = new List<ReadModelBatch>();
+        var recorder = Recorder(store, batches, async (_, cancellation) =>
+        {
+            if (competed) return;
+            competed = true;
+            (await new PartyDetailSdkProjectionHandler(store, store, s_options).ProjectAsync(history with { Events = [history.Events[40]] }, "winner", cancellation).ConfigureAwait(false))
+                .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        });
+        var tail = history with { Events = history.Events.Skip(40).ToArray() };
+        handler = new PartyDetailSdkProjectionHandler(store, recorder, s_options);
+        (await handler.ProjectAsync(tail, "same-append", token)).Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        byte[] winning = store.SnapshotRaw(StoreName, s_processingKey)!;
+        (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token)).Value!.LastSequenceNumber.ShouldBe(41);
+        (await handler.ProjectAsync(tail, "same-append", token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        batches.Select(batch => batch.Scope.BatchId).Distinct().Count().ShouldBe(2);
+        var selected = (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token)).Value!;
+        await AssertCompleteGenerationAsync(store, selected.BucketGeneration!, history, token);
+        store.SnapshotRaw(StoreName, s_processingKey).ShouldNotBe(winning);
+    }
+
+    [Theory]
+    [InlineData("hole")]
+    [InlineData("duplicate")]
+    [InlineData("scope")]
+    public async Task InvalidInlineHistoryCannotStageOrSelectMigrationAsync(string defect)
+    {
+        var token = TestContext.Current.CancellationToken;
+        var store = new InMemoryReadModelStore();
+        var history = History() with { Events = History().Events.Take(33).ToArray() };
+        await SeedLegacyAsync(store, history with { Events = history.Events.Take(32).ToArray() }, token);
+        var prior = (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token)).Value!;
+        var records = prior.Records.ToArray();
+        records = defect switch { "hole" => records.Where(record => record.SequenceNumber != 16).ToArray(),
+            "duplicate" => [records[0], .. records.Skip(1).Select(_ => records[0])],
+            _ => records.Select(record => record with { TenantId = "foreign" }).ToArray() };
+        await store.SaveAsync(StoreName, s_processingKey, prior with { Records = records }, token);
+        var before = store.SnapshotRawEntries(StoreName);
+        (await new PartyDetailSdkProjectionHandler(store, store, s_options).ProjectAsync(history with { Events = [history.Events[^1]] }, "invalid-migration", token))
+            .Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        store.SnapshotRawEntries(StoreName).Keys.ShouldBe(before.Keys, ignoreOrder: true);
+        foreach (var row in before) store.SnapshotRaw(StoreName, row.Key).ShouldBe(row.Value);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AcceptedLargeLegacyActorMetadataMigratesAndRebuildPreparationRemainsPureAsync(bool rebuild)
+    {
+        var token = TestContext.Current.CancellationToken;
+        var store = new InMemoryReadModelStore();
+        var history = History() with { Events = History().Events.Take(33).Select(item => item with { UserId = new string('a', 20_000) }).ToArray() };
+        await SeedLegacyAsync(store, history with { Events = history.Events.Take(32).ToArray() }, token);
+        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        if (rebuild)
+        {
+            var before = store.SnapshotRawEntries(StoreName);
+            var plan = await handler.PrepareRebuildAsync(history, "large-rebuild", token);
+            plan.GenerationStagingMaxCanonicalManifestBytes.ShouldBe(1_048_576);
+            foreach (var row in before) store.SnapshotRaw(StoreName, row.Key).ShouldBe(row.Value);
+            store.SnapshotRawEntries(StoreName).Keys.ShouldBe(before.Keys, ignoreOrder: true);
+        }
+        (await ExecuteAsync(handler, store, rebuild ? history : history with { Events = [history.Events[^1]] }, "large-metadata", rebuild, token))
+            .ShouldBe(ProjectionDispatchStatus.Completed);
+        var metadata = (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token)).Value!;
+        await AssertCompleteGenerationAsync(store, metadata.BucketGeneration!, history, token);
+    }
+
+    [Fact]
+    public async Task AcceptedLargeLegacyAuditMetadataSurvivesErasureConversionWithoutTruncationAsync()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var store = new InMemoryReadModelStore();
+        var history = History() with { Events = History().Events.Take(40).Select(item => item with { UserId = new string('a', 15_000) }).ToArray() };
+        await SeedLegacyAsync(store, history, token);
+        var original = (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token)).Value!;
+        // Qualify that this complete old canonical value fitted the original hard batch gate.
+        store.ValidateBatch(new ReadModelBatch(new(StoreName, "tenant-a", "party", "party-1", "legacy", "accepted"),
+            [ReadModelBatchOperation.Write(s_processingKey, original, ReadModelBatchConcurrency.LastWrite)]));
+        await new PartySdkReadModelEraser(store, store, s_options).EraseAsync("tenant-a", "party-1", token);
+        var erased = (await store.GetAsync<PartyProcessingSdkReadModel>(StoreName, s_processingKey, token)).Value!;
+        erased.ErasureSequenceNumber.ShouldBe(40);
+        await AssertCompleteGenerationAsync(store, erased.BucketGeneration!, history, token);
+        (await store.GetAsync<PartyDetailSdkReadModel>(StoreName, s_detailKey, token)).Value!.Detail!.PersonDetails.ShouldBeNull();
+    }
+
     private static async Task SeedLegacyAsync(InMemoryReadModelStore store, ProjectionRequest history, CancellationToken token)
     {
         await store.SaveAsync(StoreName, s_detailKey, PartyDetailSdkProjectionHandler.Fold(history, null), token).ConfigureAwait(false);

@@ -1,0 +1,51 @@
+[
+  {
+    "pid": 25030,
+    "exe": "/home/administrator/.dapr/bin/daprd",
+    "identity": "verified",
+    "signal": "SIGTERM",
+    "after": "absent"
+  },
+  {
+    "pid": 24858,
+    "exe": "/tmp/parties-five-processing-20261025/dapr/scheduler",
+    "identity": "verified",
+    "signal": "SIGTERM",
+    "after": "absent"
+  },
+  {
+    "pid": 24748,
+    "exe": "/tmp/parties-five-processing-20261025/dapr/placement",
+    "identity": "verified",
+    "signal": "SIGTERM",
+    "after": "absent"
+  },
+  {
+    "pid": 9544,
+    "exe": "/tmp/parties-five-processing-20261025/native-redis/redis-server",
+    "identity": "verified",
+    "signal": "SIGTERM",
+    "after": "absent"
+  },
+  {
+    "pid": 9551,
+    "exe": "/tmp/parties-five-processing-20261025/native-falkor/redis-server",
+    "identity": "verified",
+    "signal": "SIGTERM",
+    "after": "absent"
+  },
+  {
+    "pid": 76955,
+    "exe": "/tmp/parties-five-processing-20261025/native-redis/redis-server",
+    "identity": "verified",
+    "signal": "SIGTERM",
+    "after": "absent"
+  },
+  {
+    "pid": 77074,
+    "exe": "/tmp/parties-five-processing-20261025/native-falkor/redis-server",
+    "identity": "verified",
+    "signal": "SIGTERM",
+    "after": "absent"
+  }
+]

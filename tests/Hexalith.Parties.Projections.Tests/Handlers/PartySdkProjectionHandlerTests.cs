@@ -5150,6 +5150,8 @@ public sealed class PartySdkProjectionHandlerTests
             => Task.FromResult<ReadModelBatch?>(null);
         public Task<ReadModelBatchStagingResult> ReadRecoveryDecisionAsync(ReadModelBatchScope scope, string fingerprint, CancellationToken cancellationToken = default)
             => throw new NotSupportedException("This simple test adapter has no private preparation protocol.");
+        public Task<ReadModelPendingBatchRecoveryResult> SettleRecoveryScopeAsync(ReadModelBatchScope scope, CancellationToken cancellationToken = default)
+            => Task.FromResult(new ReadModelPendingBatchRecoveryResult(true));
         public Task<ReadModelPendingBatchRecoveryResult> RetireRecoveryScopeAsync(ReadModelBatchScope scope, CancellationToken cancellationToken = default)
             => Task.FromResult(new ReadModelPendingBatchRecoveryResult(true));
         public Task ReleaseRecoveryScopeAsync(ReadModelBatchScope scope, CancellationToken cancellationToken = default)

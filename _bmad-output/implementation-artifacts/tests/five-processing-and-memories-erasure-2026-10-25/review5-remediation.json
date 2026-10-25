@@ -1,0 +1,173 @@
+{
+  "status": "all-eight-review-corrections-implemented",
+  "changed_files": [
+    {
+      "repo": "/home/administrator/projects/hexalith/parties",
+      "path": "src/Hexalith.Parties/Queries/PartySdkQueryService.ProcessingBuckets.cs",
+      "sha256": "405e44b780dd9d772e74f7c0710ec1fa73087bab5ccbad2b783696d9a904f7c8"
+    },
+    {
+      "repo": "/home/administrator/projects/hexalith/parties",
+      "path": "tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs",
+      "sha256": "3d2a6142ab4e576e9982597ad194f63a3ef60b48887627721ca7a189e9c0d9d5"
+    },
+    {
+      "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "path": "src/Hexalith.EventStore.Client/Projections/ReadModelBatchProtocol.Discovery.cs",
+      "sha256": "eb41004aaae3b738ad7632ff8797d3dcc5b88dfb59a69d1df9bb646e5ddf23a0"
+    },
+    {
+      "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "path": "src/Hexalith.EventStore.DomainService/DomainProjectionDispatcher.cs",
+      "sha256": "e349fd39755ab533181375471df16ba8d72702fa535451adb487962be889975c"
+    },
+    {
+      "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "path": "tests/Hexalith.EventStore.Client.Tests/Projections/DaprReadModelBatchTests.RecoveryDiscovery.cs",
+      "sha256": "f52067635d5718989a4e70e35830bca70911c69e94c094998b8b86896f8bad6d"
+    },
+    {
+      "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "path": "tests/Hexalith.EventStore.DomainService.Tests/DomainProjectionDispatcherV2Tests.cs",
+      "sha256": "a20b3467c7ce81d0fa7eb33db712aaf2ea65d41f4e5c93dc9ed4b1e05d7ded7d"
+    },
+    {
+      "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+      "path": "src/Hexalith.Memories.Server/NaturalLanguage/FailedNaturalLanguageEmbeddingRegistry.cs",
+      "sha256": "c69b96c48c1f33992264ee4df2c0e14713a1249b23753225bec27e23ed5735ad"
+    },
+    {
+      "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+      "path": "src/Hexalith.Memories.Server/Ingestion/SourceInventoryFailureReconciler.cs",
+      "sha256": "40de16d075bd0b484aa58ccdad78750ca3554f98c4749ec3293720308993cb4b"
+    },
+    {
+      "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+      "path": "tests/Hexalith.Memories.IntegrationTests/Ingestion/NaturalLanguageErasureIntegrationTests.cs",
+      "sha256": "e51324acc61975d29636b6213926c6a6fa489312ec8f2d3dd3e778ef86f55d92"
+    },
+    {
+      "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+      "path": "tests/Hexalith.Memories.IntegrationTests/Ingestion/ReferencedSourceProducerIntegrationTests.cs",
+      "sha256": "b789d91b69fd2d796f2843c09da5ad2d84e0dd05d658e97abea2209a561310e9"
+    },
+    {
+      "repo": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+      "path": "tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryWorkflowErasureIntegrationTests.cs",
+      "sha256": "b9aaf096bfb836065a806f933336a3555074fc78ad4f99d6a09bdbde330dd208"
+    }
+  ],
+  "focused_verification": [
+    {
+      "name": "sdk-tests",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.Client.Tests/bin/Debug/net10.0/Hexalith.EventStore.Client.Tests.dll",
+        "-method",
+        "*SettlementCannotCertifyOrReclaim*",
+        "-method",
+        "*DiscoverableTerminalDecision*",
+        "-method",
+        "*FreshSettlementFinishesTerminalAnchor*",
+        "-method",
+        "*FreshSdkSettlementCompacts*",
+        "-method",
+        "*AggregateDiscoveryRetiresPrivate*"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "elapsed_seconds": 0.54,
+      "log": "/tmp/parties-five-processing-20261025/review4-followup-sdk-tests.log",
+      "sha256": "b75d750946b00b5a1563dd3661898ab557d0bdf3085b77f26fc8046258deb511",
+      "counts": [
+        11,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "dispatcher-tests",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.EventStore.DomainService.Tests/bin/Debug/net10.0/Hexalith.EventStore.DomainService.Tests.dll",
+        "-method",
+        "*OrdinaryAndStreamedRebuildHonorOnly*",
+        "-method",
+        "*OrdinaryAndStreamedRebuildPreflightEveryGeneration*"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.EventStore",
+      "exit_code": 0,
+      "elapsed_seconds": 0.65,
+      "log": "/tmp/parties-five-processing-20261025/review4-followup-dispatcher-tests.log",
+      "sha256": "1450f27e0d995d70cadb5a002991febea88f893045cfa8006c09dda118019196",
+      "counts": [
+        16,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "parties-tests",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll",
+        "-method",
+        "*ProcessingFirstPageWithoutRevisionAuthority*",
+        "-method",
+        "*InlineProcessingReadsRefuseMisplaced*",
+        "-method",
+        "*InlineProcessingPagesTraverse*",
+        "-method",
+        "*ProcessingBucketPagesProtectScope*"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties",
+      "exit_code": 0,
+      "elapsed_seconds": 0.54,
+      "log": "/tmp/parties-five-processing-20261025/review4-followup-parties-tests.log",
+      "sha256": "facbf99f42b0eb633b16d6348a28927c6041fbd3b1ae86eed715960b09f9c83a",
+      "counts": [
+        17,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "memories-tests",
+      "command": [
+        "dotnet",
+        "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+        "-method",
+        "*LargeAccumulatedDeadQueueTrim*",
+        "-method",
+        "*ExactRetryAdmissionRejectsRecordReplacement*",
+        "-method",
+        "*FailedReingestionCopiesPriorSource*",
+        "-method",
+        "*WorkerSchedulesContentFreeDurableHistory*"
+      ],
+      "cwd": "/home/administrator/projects/hexalith/parties/references/Hexalith.Memories",
+      "exit_code": 0,
+      "elapsed_seconds": 5.38,
+      "log": "/tmp/parties-five-processing-20261025/review4-followup-memories-tests.log",
+      "sha256": "7cfd1bd168ebca44632b6202c10f7878ce60cdf4bbb52125770be7785936c143",
+      "counts": [
+        9,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "focused_test_count": 53,
+  "broad_verification": "Not run; reserved for parent as requested.",
+  "native_fixture_identity": "/tmp/parties-five-processing-20261025/rederive4-native-fresh/owned-process-identities.json",
+  "no_git_mutations": true,
+  "no_package_changes": true
+}

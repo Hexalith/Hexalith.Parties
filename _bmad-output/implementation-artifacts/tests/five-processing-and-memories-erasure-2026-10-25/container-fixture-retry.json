@@ -1,0 +1,12 @@
+{
+  "command": [
+    "dotnet",
+    "tests/Hexalith.Memories.IntegrationTests/bin/Debug/net10.0/Hexalith.Memories.IntegrationTests.dll",
+    "-class",
+    "*SourceInventoryIntegrationTests"
+  ],
+  "exit_code": 0,
+  "seconds": 4.738459657994099,
+  "log": "/tmp/parties-five-processing-20261025/parent-integrated-memory-fixture-retry.log",
+  "sha256": "4b9c86af3ee2ac003604c68664f553dba77c95b3d588ef504590628777429aa5"
+}

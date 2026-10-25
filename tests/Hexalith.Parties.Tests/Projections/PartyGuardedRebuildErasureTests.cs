@@ -64,9 +64,11 @@ public sealed class PartyGuardedRebuildErasureTests
         (await new PartyDetailSdkProjectionHandler(store, store, s_options).ProjectAsync(history, "seed", token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
         store.SeedRaw(Store, "foreign-survivor", new { Value = "unchanged" });
         byte[] foreign = store.SnapshotRaw(Store, "foreign-survivor")!;
+        var guardedScope = new ReadModelBatchScope(Store, "tenant-a", "party", "party-1", "rebuild", Operation);
         if (crashBeforeParticipant)
-            store.BatchFaultHook = (phase, _, _) => phase == ReadModelBatchPhase.ManifestPrepared
-                ? throw new IOException("crash after registered private manifest") : Task.CompletedTask;
+            store.BatchFaultHook = (phase, _, _) => phase == ReadModelBatchPhase.BeforeInstallOperation
+                && store.SnapshotRaw(Store, guardedScope.ComputeMarkerKey()) is not null
+                ? throw new IOException("crash after registered private preparation before participant") : Task.CompletedTask;
         using (var first = Provider())
         {
             try
@@ -74,17 +76,19 @@ public sealed class PartyGuardedRebuildErasureTests
                 var staged = await DomainProjectionDispatcher.StageRebuildAsync(first, request, dispatchOptions, identity, token);
                 staged.Outcomes.ShouldHaveSingleItem().Status.ShouldBe(crashBeforeParticipant ? ProjectionDispatchStatus.Indeterminate : ProjectionDispatchStatus.Completed);
             }
-            catch (ProjectionDispatchValidationException) when (crashBeforeParticipant) { }
+            catch (Exception error) when (crashBeforeParticipant && error.GetType().Name == "ProjectionDispatchValidationException") { }
         }
         store.SnapshotRawEntries(Store).Where(pair => pair.Key != s_detail).ShouldContain(pair => ContainsSecret(pair.Value));
         if (crashBeforeParticipant) store.HasPendingEnvelope(Store, s_detail).ShouldBeFalse();
         store.BatchFaultHook = null;
+        Restart();
         if (!crashBeforeParticipant)
         {
             using (var freshCommit = Provider())
                 (await DomainProjectionDispatcher.CommitRebuildAsync(freshCommit, request, dispatchOptions, identity, token))
                     .Outcomes.ShouldHaveSingleItem().Status.ShouldBe(ProjectionDispatchStatus.Completed);
-            // New service instances verify current ownership through content-free SDK completion evidence.
+            // Rehydrate a fresh SDK adapter from persisted bytes after all private manifest reclamation.
+            Restart();
             using (var freshVerify = Provider())
             {
                 (await DomainProjectionDispatcher.VerifyRebuildAsync(freshVerify, request, dispatchOptions, identity, token))
@@ -94,16 +98,27 @@ public sealed class PartyGuardedRebuildErasureTests
             }
             store.SnapshotRawEntries(Store).Where(pair => pair.Key != s_detail).ShouldNotContain(pair => ContainsSecret(pair.Value));
         }
+        Restart();
         await new PartySdkReadModelEraser(store, store, s_options).EraseAsync("tenant-a", "party-1", token);
         store.SnapshotRawEntries(Store).ShouldNotContain(pair => ContainsSecret(pair.Value));
         store.SnapshotRaw(Store, "foreign-survivor").ShouldBe(foreign);
         (await store.GetAsync<PartyDetailSdkReadModel>(Store, s_detail, token)).Value!.Detail!.PersonDetails.ShouldBeNull();
+        Restart();
         using var stale = Provider();
         await RefusesAsync(() => DomainProjectionDispatcher.StageRebuildAsync(stale, request, dispatchOptions, identity, token));
         await RefusesAsync(() => DomainProjectionDispatcher.VerifyRebuildAsync(stale, request, dispatchOptions, identity, token));
         await RefusesAsync(() => DomainProjectionDispatcher.CommitRebuildAsync(stale, request, dispatchOptions, identity, token));
         store.SnapshotRawEntries(Store).ShouldNotContain(pair => ContainsSecret(pair.Value));
         store.SnapshotRaw(Store, "foreign-survivor").ShouldBe(foreign);
+
+        void Restart()
+        {
+            byte[] persisted = JsonSerializer.SerializeToUtf8Bytes(store.SnapshotRawEntries(Store), JsonSerializerOptions.Web);
+            var snapshot = JsonSerializer.Deserialize<Dictionary<string, byte[]>>(persisted, JsonSerializerOptions.Web)!;
+            var restarted = new InMemoryReadModelStore();
+            restarted.ImportRawSnapshot(Store, snapshot);
+            store = restarted;
+        }
 
         void SetContext(string property, object value)
             => typeof(ProjectionRequest).GetProperty(property, BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(history, value);
@@ -118,7 +133,7 @@ public sealed class PartyGuardedRebuildErasureTests
             wrapped.RebuildSemantics.Returns(DomainProjectionRebuildSemantics.FullReplay);
             wrapped.PrepareRebuildAsync(Arg.Any<ProjectionRequest>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(async call =>
             {
-                var plan = await actual.PrepareRebuildAsync(call.Arg<ProjectionRequest>(), call.Arg<string>(), call.Arg<CancellationToken>());
+                var plan = await actual.PrepareRebuildAsync(call.Arg<ProjectionRequest>(), call.Arg<string>(), call.Arg<CancellationToken>()).ConfigureAwait(false);
                 plan.DiscoverableRecovery.ShouldBeTrue();
                 var owner = new ProjectionOwnerSelection(1, "tenant-a", "party", "party-1", PartyProjectionNames.Detail,
                     "owner-1", "generation-1", 40, Operation, Operation, "40") { ReceiptProjectionName = ReadModelRebuildCompletion.ReceiptProjectionName };
@@ -140,8 +155,8 @@ public sealed class PartyGuardedRebuildErasureTests
 
     private static async Task RefusesAsync(Func<Task<ProjectionDispatchResponse>> action)
     {
-        try { (await action()).Outcomes.ShouldAllBe(outcome => outcome.Status is not (ProjectionDispatchStatus.Completed or ProjectionDispatchStatus.AlreadyCompleted)); }
-        catch (ProjectionDispatchValidationException) { }
+        try { (await action().ConfigureAwait(false)).Outcomes.ShouldAllBe(outcome => outcome.Status != ProjectionDispatchStatus.Completed && outcome.Status != ProjectionDispatchStatus.AlreadyCompleted); }
+        catch (Exception error) when (error.GetType().Name == "ProjectionDispatchValidationException") { }
     }
 
     private static bool ContainsSecret(byte[] bytes)

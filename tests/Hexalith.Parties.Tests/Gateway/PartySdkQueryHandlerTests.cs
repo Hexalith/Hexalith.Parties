@@ -34,6 +34,98 @@ public sealed class PartySdkQueryHandlerTests
     private static readonly DateTimeOffset s_now = new(2026, 8, 1, 12, 0, 0, TimeSpan.Zero);
 
     [Theory]
+    [InlineData("missing")]
+    [InlineData("outage")]
+    [InlineData("cache")]
+    public async Task ProcessingFirstPageWithoutRevisionAuthorityReturnsReadModelUnavailableAsync(string scenario)
+    {
+        var token = TestContext.Current.CancellationToken;
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail"));
+        bool unavailable = scenario != "cache";
+        var model = new PartyProcessingSdkReadModel { Records = [new ProcessingActivityRecord { TenantId = "tenant-a", PartyId = "party-1", SequenceNumber = 1, EventType = "PartyUpdated", Timestamp = s_now, Summary = "Retained fact." }] };
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token).Returns(_ => !unavailable
+            ? Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(model, "revision"))
+            : scenario == "missing" ? Task.FromResult(new ReadModelEntry<PartyProcessingSdkReadModel>(null, null))
+            : Task.FromException<ReadModelEntry<PartyProcessingSdkReadModel>>(new IOException("store unavailable")));
+        var service = CreateService(store);
+        var envelope = CreateDetailEnvelope("GetProcessingRecords");
+        if (scenario == "cache") (await service.GetProcessingRecordsAsync(envelope, token)).Success.ShouldBeTrue();
+        unavailable = true;
+        var result = await service.GetProcessingRecordsAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 10) }, token);
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.ReadModelUnavailable);
+        result.PayloadBytes.ShouldBeNull();
+        unavailable = false;
+        var invalid = await service.GetProcessingRecordsAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 10, Cursor: "invalid-cursor") }, token);
+        invalid.ErrorMessage.ShouldBe(QueryAdapterFailureReason.InvalidPage);
+    }
+
+    [Theory]
+    [InlineData("tenant", "page")]
+    [InlineData("party", "page")]
+    [InlineData("tenant", "complete")]
+    [InlineData("party", "complete")]
+    [InlineData("tenant", "export")]
+    [InlineData("party", "export")]
+    public async Task InlineProcessingReadsRefuseMisplacedForeignFactsWithoutPayloadAsync(string foreign, string mode)
+    {
+        var token = TestContext.Current.CancellationToken;
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail"));
+        var fact = new ProcessingActivityRecord { SequenceNumber = 1, TenantId = foreign == "tenant" ? "foreign" : "tenant-a",
+            PartyId = foreign == "party" ? "foreign" : "party-1", EventType = "PartyUpdated", Timestamp = s_now, Summary = "foreign-private-fact" };
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel { Records = [fact] }, "revision"));
+        var service = CreateService(store);
+        var query = CreateDetailEnvelope(mode == "export" ? "ExportPartyData" : "GetProcessingRecords");
+        var result = mode == "export" ? await service.ExportPartyDataAsync(query, token)
+            : await service.GetProcessingRecordsAsync(query with { Paging = mode == "page" ? new QueryPagingOptions(PageSize: 10) : null }, token);
+        result.Success.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe(PartySdkQueryFailureReason.QueryExecutionFailure);
+        result.PayloadBytes.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task InlineProcessingPagesTraverseProtectedFirstContinuationAndTerminalMetadataAsync()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var records = Enumerable.Range(1, 32).Select(sequence => new ProcessingActivityRecord { SequenceNumber = sequence,
+            PartyId = "party-1", TenantId = "tenant-a", EventType = "PartyDeactivated", Timestamp = s_now, Summary = "Party deactivated." }).ToArray();
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail"));
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyProcessingSdkReadModel>(new PartyProcessingSdkReadModel
+                { Records = records, LastSequenceNumber = 32, ProjectionVersion = "32", ProjectedAt = s_now }, "inline-revision"));
+        var service = CreateService(store);
+        var envelope = CreateDetailEnvelope("GetProcessingRecords");
+        string? cursor = null;
+        var all = new List<ProcessingActivityRecord>();
+        int pages = 0;
+        do
+        {
+            var page = await service.GetProcessingRecordsAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 11, Cursor: cursor) }, token);
+            page.Success.ShouldBeTrue();
+            var paging = page.Metadata!.Paging!;
+            paging.TotalCount.ShouldBe(32);
+            paging.PageSize.ShouldBe(11);
+            var items = page.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!;
+            items.Length.ShouldBe(pages == 2 ? 10 : 11);
+            all.AddRange(items);
+            pages++;
+            cursor = paging.NextCursor;
+            paging.HasMore.ShouldBe(pages != 3);
+            if (pages != 3) cursor.ShouldNotBeNullOrWhiteSpace();
+            else cursor.ShouldBeNull();
+        } while (cursor is not null);
+        pages.ShouldBe(3);
+        JsonSerializer.Serialize(all, PartiesJsonOptions.Default).ShouldBe(JsonSerializer.Serialize(records, PartiesJsonOptions.Default));
+    }
+
+    [Theory]
     [InlineData("continue")]
     [InlineData("long-user")]
     [InlineData("tenant")]

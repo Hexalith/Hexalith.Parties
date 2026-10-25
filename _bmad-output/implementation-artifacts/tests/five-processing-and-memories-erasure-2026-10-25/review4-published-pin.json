@@ -1,0 +1,9 @@
+{
+  "published_executor": "11a3a79cfac4bba9548c6364a17a01ee9b561370",
+  "validator_sha256": "1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c",
+  "workflow_uses_exact_pin": true,
+  "current_local_validator_matches_expected": true,
+  "retained_published_proof": "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-processing-and-memories-erasure-2026-10-25/review3-published-pin.json",
+  "retained_proof_sha256": "b3803371ec362f18f13b6159593bb568f821f1078d68dcb0751d321a8cbf8f83",
+  "remote_refetched_in_loop4": false
+}

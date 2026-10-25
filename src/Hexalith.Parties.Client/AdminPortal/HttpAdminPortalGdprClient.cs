@@ -215,6 +215,7 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
             || paging.HasMore == true && (records.Length == 0 || string.IsNullOrWhiteSpace(paging.NextCursor) || paging.NextCursor == cursor)
             || paging.HasMore == false && paging.NextCursor is not null
             || paging.TotalCount is < 0 || paging.TotalCount < records.Length
+            || string.IsNullOrWhiteSpace(cursor) && paging.HasMore == false && paging.TotalCount is { } total && total != records.Length
             || records.Any(record => record is null || record.SequenceNumber < 0 || record.PartyId != partyId || record.TenantId != _options.Tenant)
             || !records.Select(record => record.SequenceNumber).SequenceEqual(records.Select(record => record.SequenceNumber).Distinct().Order()))
             throw new InvalidOperationException("Processing-history paging metadata is incomplete.");

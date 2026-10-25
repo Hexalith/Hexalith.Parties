@@ -41,7 +41,7 @@ parties-source)
     source_mode
     run affected-parties-restore dotnet restore tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj --force -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
     run affected-parties-build dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Debug --no-restore -m:1 -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false
-    run affected-parties-focused-tests dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class '*PartyProcessingGenerationRecoveryTests' -class '*PartySdkQueryHandlerTests'
+    run affected-parties-focused-tests dotnet tests/Hexalith.Parties.Tests/bin/Debug/net10.0/Hexalith.Parties.Tests.dll -class '*PartyProcessingGenerationRecoveryTests' -class '*PartyGuardedRebuildErasureTests' -class '*PartySdkQueryHandlerTests' -class '*PartyDetailSdkProjectionRecoveryTests' -class '*PartySdkCrossInstanceErasureTests' -class '*PartySearchErasureFenceTests'
     ;;
 projections-source)
     source_mode

@@ -20,7 +20,9 @@ public sealed partial class PartySdkQueryService
         string scope = QueryCursorScope.Create().Add("tenant", query.TenantId).Add("party", party).Add("user", query.UserId)
                     .Add("page-size", size.ToString(CultureInfo.InvariantCulture)).Add("revision", etag)
                     .Add("generation", model.BucketGeneration).Build();
-        if (string.IsNullOrEmpty(etag) || !TryDecodeCursor(query, scope, out string? position, out _))
+        if (string.IsNullOrEmpty(etag))
+            return QueryResult.Failure(PartySdkQueryFailureReason.ReadModelUnavailable);
+        if (!TryDecodeCursor(query, scope, out string? position, out _))
         {
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidPage);
         }
@@ -32,6 +34,7 @@ public sealed partial class PartySdkQueryService
         var records = new List<ProcessingActivityRecord>(size + 1);
         if (model.BucketGeneration is null)
         {
+            ValidateInlineProcessingScope(model, query.TenantId, party);
             records.AddRange(model.Records.OrderBy(record => record.SequenceNumber).Where(record => record.SequenceNumber > after).Take(size + 1));
         }
         else if (model.FirstBucket is { } first && model.LastBucket is { } last)
@@ -56,6 +59,7 @@ public sealed partial class PartySdkQueryService
     {
         if (model.BucketGeneration is null)
         {
+            ValidateInlineProcessingScope(model, tenant, party);
             return model.Records;
         }
         PartyProcessingBucketValidation.ValidateCoverage(model);
@@ -73,6 +77,12 @@ public sealed partial class PartySdkQueryService
         }
         await VerifyProcessingRevisionAsync(tenant, party, model, etag, token).ConfigureAwait(false);
         return records;
+    }
+
+    private static void ValidateInlineProcessingScope(PartyProcessingSdkReadModel model, string tenant, string party)
+    {
+        if (model.Records is null || model.Records.Any(record => record is null || record.TenantId != tenant || record.PartyId != party))
+            throw new InvalidOperationException("processing-history-scope-mismatch");
     }
 
     private async Task<PartyProcessingBucket> ReadProcessingBucketAsync(string tenant, string party, PartyProcessingSdkReadModel model, long bucket, CancellationToken token)

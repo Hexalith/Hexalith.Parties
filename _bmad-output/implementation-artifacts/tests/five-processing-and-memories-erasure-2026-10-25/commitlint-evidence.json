@@ -1,0 +1,26 @@
+[
+  {
+    "owner": "parties",
+    "pinned_cli": "21.2.2",
+    "exact_message": "fix: bound processing history and fence erasure\n\nAdd scoped paging and recoverable history generations. Adopt the\nreviewed owner changes and retain source qualification boundaries.\n",
+    "message_sha256": "06cea08a5a94ac7b6d52afa80c8a4707d64d2f32baaa328334650c49281a2111",
+    "exit_code": 0,
+    "output": "\u29d7   --- input ---\nfix: bound processing history and fence erasure\n\nAdd scoped paging and recoverable history generations. Adopt the\nreviewed owner changes and retain source qualification boundaries.\n\u2714   found 0 problems, 0 warnings\n"
+  },
+  {
+    "owner": "eventstore",
+    "pinned_cli": "21.1.0",
+    "exact_message": "fix: retire and recover scoped private batches\n\nBound generation staging and settle discoverable recovery state.\nPreserve guarded ownership and compatibility for existing callers.\n\n",
+    "message_sha256": "afcd2665d2051f6e5f047165143f10f6a7d36ef2e6c23ee6a372f10d93508928",
+    "exit_code": 0,
+    "output": "\u29d7   --- input ---\nfix: retire and recover scoped private batches\n\nBound generation staging and settle discoverable recovery state.\nPreserve guarded ownership and compatibility for existing callers.\n\u2714   found 0 problems, 0 warnings\n"
+  },
+  {
+    "owner": "memories",
+    "pinned_cli": "21.2.2",
+    "exact_message": "fix: fence retry payloads and scoped erasure\n\nProtect legacy namespace migration, exact-key discovery and retry\nqueues against erasure races while preserving unrelated owners.\n\n",
+    "message_sha256": "e5b94a280540fcc620a1d484d420f2bb7a56e9f04ed88e6c935a3d7141a625d2",
+    "exit_code": 0,
+    "output": "\u29d7   --- input ---\nfix: fence retry payloads and scoped erasure\n\nProtect legacy namespace migration, exact-key discovery and retry\nqueues against erasure races while preserving unrelated owners.\n\u2714   found 0 problems, 0 warnings\n"
+  }
+]
