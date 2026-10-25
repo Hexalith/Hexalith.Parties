@@ -64,15 +64,18 @@ Both answers are absent. Stop before Live. Do not correct the reviewed local-pro
 - Given reviewed canonical source, when the packet is submitted, then it names the target set, new owner date, exact command, and installed hashes. Local evidence leaves the register unchanged.
 
 **Remaining execution:**
-- [ ] Stopped. Installation is `none — stop before Live`. Integration date is `unresolved — do not invent one`. Live and the Identity lane stay untouched until an approved B01–B15 path, an accepted target, installed hashes, and a new owner date exist.
+- [x] Stopped. Installation is `none — stop before Live`. Integration date is `unresolved — do not invent one`. Live and the Identity lane stay untouched until an approved B01–B15 path, an accepted target, installed hashes, and a new owner date exist.
 
 ## Implementation Notes
 
 Recorded the absent owner answers and stopped. No Identity, Live, register, custody, trust, credential, or production-DI change.
 
+Implementation confirmed the stop against current source. `eng/verify-ext-parties-1.ps1` Live still writes `live-gate.txt` and exits 1 before any endpoint. `AddParties` still resolves custody with `GetService` and registers no provider. The replacement packet stays `proposed` with `TargetIntegrationDate` null and target `56cb4401c4179d431385ad3d931fefa402e4fc5a`. The Live acceptance criteria stay unmet because the frozen decisions forbid inventing the installation, date, hashes, or target.
+
 ## Spec Change Log
 
 - 2026-10-25 token split: review and verification history moved to deferred work. Evidence stays in `resume-recovery/`. KEEP Branch B, immutable identity, and 365-day exclusive expiry. Status stays `draft`.
+- 2026-10-25 implementation: approved spec executed as a stop. No product code changed. Live acceptance criteria remain blocked by the frozen installation and date decisions. Status is `in-progress`.
 
 ## Review Triage Log
 
@@ -80,4 +83,4 @@ BH-01–BH-10, EC-01, VG-01, and VG-02 stay in `resume-recovery/review-triage.js
 
 ## Verification
 
-No new command. Prior results stay in `resume-recovery/`.
+No new command. Prior results stay in `resume-recovery/`. Source check: Live in `eng/verify-ext-parties-1.ps1` still exits 1 before effects.

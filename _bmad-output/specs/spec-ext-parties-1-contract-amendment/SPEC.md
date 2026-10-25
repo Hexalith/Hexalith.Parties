@@ -40,7 +40,7 @@ The October 25 direction stops the unverified Luna/FM path under the strict cust
   - **success:** Five numbered decisions and an exhaustive crosswalk preserve Q1–Q7, D01–D04, F1/F2 and B01–B15 with unresolved owners/bindings and date.
 - **CAP-3**
   - **intent:** Reviewers can check preservation and future qualification requirements.
-  - **success:** Protected sources/evidence remain unchanged and the coverage plan retains full identity, F1/F2 and Level 4/5 gates.
+  - **success:** Named governing contract, direction, research and reconciliation sources retain their captured bytes; concurrent workspace drift is separately reported; the coverage plan retains full identity, F1/F2 and Level 4/5 gates.
 
 ## Constraints
 

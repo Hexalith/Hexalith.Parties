@@ -1,0 +1,206 @@
+{
+  "status": "failed",
+  "purpose": "Static review-artifact validation only; no runtime/installed qualification",
+  "checks": [
+    {
+      "name": "protected_file_bytes",
+      "passed": false,
+      "detail": {
+        "count": 7204,
+        "changed": [
+          "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-ext-parties-1-owner-delivery.md",
+          "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/eventstore-3.127.0-probe/Directory.Packages.props",
+          "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/eventstore-3.127.0-probe/Probe.csproj",
+          "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/eventstore-3.127.0-probe/Program.cs",
+          "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/eventstore-3.127.0-probe/README.md"
+        ],
+        "scope": "All pre-existing Parties cached/untracked nonignored regular files outside references; both research trees; retained Platform proposal and custody spec; October 25 Agents reconciliation evidence; explicitly named governing contract/direction/retention sources. Excludes unlisted sibling files, ignored build outputs, symlinks and remote installations."
+      }
+    },
+    {
+      "name": "git_index_unchanged",
+      "passed": false,
+      "detail": "No staging, commits or Git mutation performed."
+    },
+    {
+      "name": "working_tree_delta_scope",
+      "passed": false,
+      "detail": {
+        "added_status": [],
+        "removed_status": [
+          " M _bmad-output/implementation-artifacts/deferred-work.md"
+        ]
+      }
+    },
+    {
+      "name": "exact_before_quotes",
+      "passed": true,
+      "detail": {
+        "verified": 10,
+        "bad": [],
+        "comparison": "Exact text with line-ending normalization only; source bytes independently preserved."
+      }
+    },
+    {
+      "name": "six_unique_clause_pairs",
+      "passed": true,
+      "detail": [
+        "A-01",
+        "A-02",
+        "A-03",
+        "A-04",
+        "A-05",
+        "A-06"
+      ]
+    },
+    {
+      "name": "five_owner_decisions",
+      "passed": true,
+      "detail": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "name": "exhaustive_unique_original_id_mapping",
+      "passed": true,
+      "detail": {
+        "required": [
+          "D01",
+          "D02",
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4",
+          "Q5",
+          "Q6",
+          "Q7",
+          "F1",
+          "D03",
+          "D04",
+          "F2",
+          "B01",
+          "B02",
+          "B03",
+          "B04",
+          "B05",
+          "B06",
+          "B07",
+          "B08",
+          "B09",
+          "B10",
+          "B11",
+          "B12",
+          "B13",
+          "B14",
+          "B15"
+        ],
+        "mapped": [
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4",
+          "Q5",
+          "Q6",
+          "Q7",
+          "D01",
+          "D02",
+          "D03",
+          "D04",
+          "F1",
+          "F2",
+          "B01",
+          "B02",
+          "B03",
+          "B04",
+          "B05",
+          "B06",
+          "B07",
+          "B08",
+          "B09",
+          "B10",
+          "B11",
+          "B12",
+          "B13",
+          "B14",
+          "B15"
+        ]
+      }
+    },
+    {
+      "name": "unresolved_ledger_preserved",
+      "passed": true,
+      "detail": {
+        "decision_null_paths": 661,
+        "binding_null_paths": 165,
+        "ownerAccepted": false,
+        "available": false,
+        "acceptedReplacementIntegrationDate": null
+      }
+    },
+    {
+      "name": "kernel_shape_and_capabilities",
+      "passed": true,
+      "detail": [
+        "CAP-1",
+        "CAP-2",
+        "CAP-3"
+      ]
+    },
+    {
+      "name": "adopted_and_authored_companions_exist",
+      "passed": true,
+      "detail": {
+        "count": 16,
+        "missing": []
+      }
+    },
+    {
+      "name": "rendered_local_links",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "source_manifest_current",
+      "passed": true,
+      "detail": {
+        "count": 16,
+        "drift": []
+      }
+    },
+    {
+      "name": "fixed_day_arithmetic",
+      "passed": true,
+      "detail": "365 fixed days; 15 minutes; 30 fixed days; 395 fixed days; separate 900-second evidence window."
+    },
+    {
+      "name": "scope_and_status_labels",
+      "passed": true,
+      "detail": "Review-only; finite durable scope and non-finite holder exposure explicit; no accepted mutation or qualification claim."
+    },
+    {
+      "name": "new_markdown_whitespace",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "scoped_git_diff_check",
+      "passed": true,
+      "detail": {
+        "command": "git diff --check -- _bmad-output/specs/spec-ext-parties-1-contract-amendment",
+        "exit": 0,
+        "output": "",
+        "note": "New untracked Markdown is additionally checked directly above."
+      }
+    }
+  ],
+  "runtime_tests_run": 0,
+  "owner_commands_run": 0,
+  "deployments": 0,
+  "approvals_created": 0,
+  "protected_file_manifest_sha256": "4771205868c20209525541f6c5ccbe45f5e18184273ed44c7ef40c60de61a818",
+  "source_evidence_altered": true
+}

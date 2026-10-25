@@ -1,0 +1,229 @@
+{
+  "status": "passed_with_concurrent_workspace_drift",
+  "content_validation_passed": true,
+  "global_workspace_preservation_passed": false,
+  "purpose": "Static review-artifact validation only; no runtime/installed qualification",
+  "checks": [
+    {
+      "name": "protected_file_bytes",
+      "passed": false,
+      "detail": {
+        "count": 7204,
+        "changed": [
+          "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/spec-ext-parties-1-owner-delivery.md",
+          "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/eventstore-3.127.0-probe/Directory.Packages.props",
+          "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/eventstore-3.127.0-probe/Probe.csproj",
+          "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/eventstore-3.127.0-probe/Program.cs",
+          "/home/administrator/projects/hexalith/parties/_bmad-output/implementation-artifacts/tests/five-owner-config-and-recovery-deferred-items-2026-10-23/eventstore-3.127.0-probe/README.md"
+        ],
+        "scope": "All pre-existing Parties cached/untracked nonignored regular files outside references; both research trees; retained Platform proposal and custody spec; October 25 Agents reconciliation evidence; explicitly named governing contract/direction/retention sources. Excludes unlisted sibling files, ignored build outputs, symlinks and remote installations."
+      }
+    },
+    {
+      "name": "git_index_unchanged",
+      "passed": false,
+      "detail": "No staging, commits or Git mutation performed."
+    },
+    {
+      "name": "working_tree_delta_scope",
+      "passed": false,
+      "detail": {
+        "added_status": [
+          " M _bmad-output/implementation-artifacts/spec-ext-parties-1-owner-delivery.md",
+          " M _bmad-output/specs/spec-ext-parties-1-contract-amendment/.memlog.md",
+          " M _bmad-output/specs/spec-ext-parties-1-contract-amendment/SPEC.md",
+          " M _bmad-output/specs/spec-ext-parties-1-contract-amendment/clause-diff.md",
+          " M _bmad-output/specs/spec-ext-parties-1-contract-amendment/verification-plan.md",
+          "?? _bmad-output/specs/spec-ext-parties-1-contract-amendment/validation-final.json",
+          "?? _bmad-output/specs/spec-ext-parties-1-contract-amendment/validation.json"
+        ],
+        "removed_status": [
+          " M _bmad-output/implementation-artifacts/deferred-work.md"
+        ]
+      }
+    },
+    {
+      "name": "exact_before_quotes",
+      "passed": true,
+      "detail": {
+        "verified": 10,
+        "bad": [],
+        "comparison": "Exact text with line-ending normalization only; source bytes independently preserved."
+      }
+    },
+    {
+      "name": "six_unique_clause_pairs",
+      "passed": true,
+      "detail": [
+        "A-01",
+        "A-02",
+        "A-03",
+        "A-04",
+        "A-05",
+        "A-06"
+      ]
+    },
+    {
+      "name": "five_owner_decisions",
+      "passed": true,
+      "detail": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "name": "exhaustive_unique_original_id_mapping",
+      "passed": true,
+      "detail": {
+        "required": [
+          "D01",
+          "D02",
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4",
+          "Q5",
+          "Q6",
+          "Q7",
+          "F1",
+          "D03",
+          "D04",
+          "F2",
+          "B01",
+          "B02",
+          "B03",
+          "B04",
+          "B05",
+          "B06",
+          "B07",
+          "B08",
+          "B09",
+          "B10",
+          "B11",
+          "B12",
+          "B13",
+          "B14",
+          "B15"
+        ],
+        "mapped": [
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4",
+          "Q5",
+          "Q6",
+          "Q7",
+          "D01",
+          "D02",
+          "D03",
+          "D04",
+          "F1",
+          "F2",
+          "B01",
+          "B02",
+          "B03",
+          "B04",
+          "B05",
+          "B06",
+          "B07",
+          "B08",
+          "B09",
+          "B10",
+          "B11",
+          "B12",
+          "B13",
+          "B14",
+          "B15"
+        ]
+      }
+    },
+    {
+      "name": "unresolved_ledger_preserved",
+      "passed": true,
+      "detail": {
+        "decision_null_paths": 661,
+        "binding_null_paths": 165,
+        "ownerAccepted": false,
+        "available": false,
+        "acceptedReplacementIntegrationDate": null
+      }
+    },
+    {
+      "name": "kernel_shape_and_capabilities",
+      "passed": true,
+      "detail": [
+        "CAP-1",
+        "CAP-2",
+        "CAP-3"
+      ]
+    },
+    {
+      "name": "adopted_and_authored_companions_exist",
+      "passed": true,
+      "detail": {
+        "count": 16,
+        "missing": []
+      }
+    },
+    {
+      "name": "rendered_local_links",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "source_manifest_current",
+      "passed": true,
+      "detail": {
+        "count": 16,
+        "drift": []
+      }
+    },
+    {
+      "name": "named_governing_inputs_preserved",
+      "passed": true,
+      "detail": {
+        "count": 16,
+        "changed_from_original_baseline": []
+      }
+    },
+    {
+      "name": "fixed_day_arithmetic",
+      "passed": true,
+      "detail": "365 fixed days; 15 minutes; 30 fixed days; 395 fixed days; separate 900-second evidence window."
+    },
+    {
+      "name": "scope_and_status_labels",
+      "passed": true,
+      "detail": "Review-only; finite durable scope and non-finite holder exposure explicit; no accepted mutation or qualification claim."
+    },
+    {
+      "name": "new_markdown_whitespace",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "scoped_git_diff_check",
+      "passed": true,
+      "detail": {
+        "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check -- _bmad-output/specs/spec-ext-parties-1-contract-amendment",
+        "exit": 0,
+        "output": "",
+        "note": "Command-local whitespace setting recognizes repository-required CRLF; no repository configuration changed. New/untracked Markdown is also checked directly above.",
+        "unconfigured_command": "git diff --check -- _bmad-output/specs/spec-ext-parties-1-contract-amendment",
+        "unconfigured_exit": 2,
+        "unconfigured_output": "_bmad-output/specs/spec-ext-parties-1-contract-amendment/SPEC.md:43: trailing whitespace.\n+  - **success:** Named governing contract, direction, research and reconciliation sources retain their captured bytes; concurrent workspace drift is separately reported; the coverage plan retains full identity, F1/F2 and Level 4/5 gates.\n_bmad-output/specs/spec-ext-parties-1-contract-amendment/clause-diff.md:88: trailing whitespace.\n+Every controlled holder must be enumerated before admission, with an owner, unit/deadline metadata, cleanup path and boundary of control. Only recipients already permitted by the complete identity contract may receive data; this limitation authorizes no new recipient, export or disclosure. Use payload crypto without exporting DEKs where the eventually selected backend supports the accepted design; where DEKs are released, inventory them as separate holders under the same rules. This is not backend selection. Prefer bounded mutable buffers; neither zeroing one buffer nor avoiding DEK export proves removal of all plaintext/runtime/serializer/transport copies.\n_bmad-output/specs/spec-ext-parties-1-contract-amendment/verification-plan.md:23: trailing whitespace.\n+Static validation for this draft checks exact Before quotations, local companion links, unique CAP IDs with intent/success, full Q1\u2013Q7/D01\u2013D04/F1/F2/B01\u2013B15 mapping, unapproved labels and protected file/index bytes. Results and precise scope are in validation-final.json; validation.json preserves the initial drift-detecting result. All named governing sources match their captured hashes. Concurrent Git activity changed the index and five pre-existing files (including removal of three probe files); it also committed draft files while this task was in progress. This task issued no Git mutation and did not restore or overwrite that concurrent work. Global workspace preservation is therefore not claimed. This is document validation, not backend or installed qualification.\n"
+      }
+    }
+  ],
+  "runtime_tests_run": 0,
+  "owner_commands_run": 0,
+  "deployments": 0,
+  "approvals_created": 0,
+  "git_mutations_by_this_task": 0,
+  "protected_file_manifest_sha256": "4771205868c20209525541f6c5ccbe45f5e18184273ed44c7ef40c60de61a818",
+  "observed_preexisting_file_drift": true,
+  "concurrent_activity": "Concurrent commits changed the index/status and pre-existing files and picked up draft artifacts. No undo or overwrite of that activity was attempted."
+}
