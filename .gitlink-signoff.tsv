@@ -302,3 +302,13 @@ references/Hexalith.Memories|4190ec6549dd83bcaaf268e7bb723dcff8f7286b|validated-
 references/Hexalith.EventStore|da50f853b6c2c37193e9b1a8819858778d48d0f3|validated-advance|v3.127.0-8-gda50f853|jpiquot|2026-10-23
 references/Hexalith.Memories|5a852389327bf45df7d59b2c2e29c7adbe353f19|validated-advance|v2.29.11-4-g5a852389|jpiquot|2026-10-23
 references/Hexalith.FrontComposer|aee73e5841b4004803dafa851f060e143550716a|validated-advance|v4.7.0-76-gaee73e58|jpiquot|2026-10-23
+
+# --- 2026-10-25 /pushall sync. Operator requested the sync and the follow-up
+#     merge after Memories diverged, then asked to fix the failed main-push
+#     RC gate. Source selection only: no package publication or rollback approval.
+#     The intermediate Memories SHA stays signed because the push-range gate
+#     requires every advanced pointer, including ones a later commit replaces.
+references/Hexalith.FrontComposer|c7f1666508e6582cfe168b12efb4a71638abc328|validated-advance|v4.7.0-94-gc7f16665|jpiquot|2026-10-25
+references/Hexalith.Memories|e06c7bc9ebf77a10cf8dcc02a6eba7ee6812b559|validated-advance|v2.29.15-3-ge06c7bc9|jpiquot|2026-10-25
+references/Hexalith.Memories|cdd73d7361f67781a523f63f04853491a687f426|validated-advance|v2.29.15-12-gcdd73d73|jpiquot|2026-10-25
+references/Hexalith.Tenants|09a545ff0323f5f16d13934fba01bfea4f1db9fa|validated-advance|v5.10.1-39-g09a545ff|jpiquot|2026-10-25
