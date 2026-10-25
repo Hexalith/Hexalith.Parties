@@ -36,11 +36,23 @@ public sealed class PartySdkReadModelEraser(
     {
         string storeName = options.Value.ReadModelStateStoreName;
         ArgumentException.ThrowIfNullOrWhiteSpace(storeName);
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+        if (!options.Value.HistoricalPrivateRecoveryReconciliationAttested)
+            throw new InvalidOperationException("sdk-historical-private-recovery-reconciliation-required");
+#endif
         string detailKey = PartySdkReadModelAddresses.Detail(tenantId, partyId);
         string processingKey = PartySdkReadModelAddresses.Processing(tenantId, partyId);
         string indexKey = PartySdkReadModelAddresses.Index(tenantId);
         DateTimeOffset cleanupAt = _timeProvider.GetUtcNow();
         string invocationId = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
+
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+        if (readModelStore is not IReadModelRecoveryScopeStore recovery)
+            throw new InvalidOperationException("sdk-prepared-recovery-capability-required");
+        ReadModelPendingBatchRecoveryResult settled = await recovery.RetireRecoveryScopeAsync(
+            new(storeName, tenantId, "party", partyId, "erasure", "recovery"), cancellationToken).ConfigureAwait(false);
+        if (!settled.IsResolved) throw new InvalidOperationException("sdk-prepared-recovery-incomplete");
+#endif
 
         for (int attempt = 0; attempt < MaxOptimisticAttempts; attempt++)
         {
@@ -99,6 +111,9 @@ public sealed class PartySdkReadModelEraser(
             ReadModelBatchResult result = await ExecuteWithResumeAsync(batch, cancellationToken).ConfigureAwait(false);
             if (result.IsSuccess)
             {
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+                await recovery.ReleaseRecoveryScopeAsync(new(storeName, tenantId, "party", partyId, "erasure", "recovery"), cancellationToken).ConfigureAwait(false);
+#endif
                 await NotifySearchRemovalAsync(tenantId, partyId, cancellationToken).ConfigureAwait(false);
                 return;
             }

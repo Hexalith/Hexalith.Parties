@@ -12,6 +12,12 @@ public sealed record PartySdkReadModelOptions
     /// <summary>The state component holding the SDK read models.</summary>
     public string ReadModelStateStoreName { get; init; } = "statestore";
 
+    /// <summary>Operator attestation that historical private SDK recovery material in the selected
+    /// read-model store has been reconciled after older writers were drained. Defaults to false;
+    /// source-capable physical erasure refuses unknown historical coverage before any mutation.
+    /// An empty new recovery directory never supplies this authority.</summary>
+    public bool HistoricalPrivateRecoveryReconciliationAttested { get; init; }
+
     /// <summary>The age in seconds at which a read model starts aging.</summary>
     public int FreshnessAgingSeconds { get; init; } = 30;
 

@@ -1,0 +1,109 @@
+{
+  "observedAtUtc": "2026-10-25T11:22:30.131920+00:00",
+  "qualification": false,
+  "originalsModified": false,
+  "files": [
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Client.Tests-build.log",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Client.Tests-build.log",
+      "sha256": "b25638adaba99a5701721c076ac0fd54ed4c331208caba90789c00d4ea6f3a24",
+      "bytes": 2880
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Client.Tests-tests.log",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Client.Tests-tests.log",
+      "sha256": "1386e79cf26c597aeb4f22fa1185eb4a27861e73df0166212c8a49427c82111e",
+      "bytes": 476
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Client.Tests-tests.xml",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Client.Tests-tests.xml",
+      "sha256": "3aa43900ce8c5cc89e84247e9b4c119d2496fc8da39e7b00859e26ad15a8a45b",
+      "bytes": 261082
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Contracts.Tests-build.log",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Contracts.Tests-build.log",
+      "sha256": "38aa468cfafb813256f5ebf08397b0066486d7c2efec37cd25a286bc7890281a",
+      "bytes": 2904
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Contracts.Tests-tests.log",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Contracts.Tests-tests.log",
+      "sha256": "d9381214e9a40db251694a0769a136a6a323d3b29b129e62b39f998314ba1068",
+      "bytes": 490
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Contracts.Tests-tests.xml",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+      "sha256": "6bddb5a0b40915e202a5be0af8cbec3e7fdf2a79ced5a6fecb67c7a368bb2b26",
+      "bytes": 26196
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Server.Tests-build.log",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Server.Tests-build.log",
+      "sha256": "ad161cb4de2c9199a3a5d148b20cb386c3d665e0a0010cbb82e5fd8e8fa3586d",
+      "bytes": 4601
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Server.Tests-tests.log",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Server.Tests-tests.log",
+      "sha256": "dac1a210f3eeeda70cf5635104943559860a5ac898a2344f76d3086f766ad0be",
+      "bytes": 6850
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Server.Tests-tests.xml",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Server.Tests-tests.xml",
+      "sha256": "1e14eabe65f1dc5c80941ea678d5e9b992f8a03ac934bc7cbc66c75777fcf868",
+      "bytes": 314040
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.Parties.IntegrationTests-build.log",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.Parties.IntegrationTests-build.log",
+      "sha256": "098e3fbb6dcfa169db3e41537e3e12d2a4cc7cc4a6d7dde3c2dcd21720e656b1",
+      "bytes": 4082
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.Parties.IntegrationTests-tests.log",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.Parties.IntegrationTests-tests.log",
+      "sha256": "8b2a1fb6074e20ba353486331dac1d8bde261d2b5c55c9c256214316d1f600ae",
+      "bytes": 480
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.Parties.IntegrationTests-tests.xml",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.Parties.IntegrationTests-tests.xml",
+      "sha256": "8eee31ddf970c409ac193b4ef7ed08e6d5a627b6c058ab3de0cdb399678357a9",
+      "bytes": 8392
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/eventstore-version.log",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/eventstore-version.log",
+      "sha256": "22bd2201e7361e26de85ab784f26e3c0baa21d5701d03548abd40d10258c4105",
+      "bytes": 8
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/eventstore-version.stderr.log",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/eventstore-version.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025/local-evidence.json",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/local-evidence.json",
+      "sha256": "52e70180407f3d2465e835d8b539823725c510d67c3aae0cb9f699e874d7c5b6",
+      "bytes": 1721
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025-live/live-gate.txt",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-live-missing/live-gate.txt",
+      "sha256": "b60753bd1e52b607eb2f91bdc4cb3bbd67b760c8a87814215fb91ceb2cd9bdfd",
+      "bytes": 364
+    },
+    {
+      "source": "/tmp/ext-parties-1-owner-delivery-20261025-live-present/live-gate.txt",
+      "retained": "_bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-live-present/live-gate.txt",
+      "sha256": "98954a20c6675bf848cb35e575a5db2cc536e55c7c72d6b85cd39f6aecbaea33",
+      "bytes": 281
+    }
+  ]
+}

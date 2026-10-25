@@ -33,9 +33,11 @@ public sealed class PartySdkCrossInstanceErasureTests
 {
     private const string StoreName = "statestore";
     private static readonly DateTimeOffset s_now = new(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
+    // This fixture owns the complete synthetic store, including any private SDK recovery state.
     private static readonly IOptions<PartySdkReadModelOptions> s_options = Options.Create(new PartySdkReadModelOptions
     {
         ReadModelStateStoreName = StoreName,
+        HistoricalPrivateRecoveryReconciliationAttested = true,
         FreshnessAgingSeconds = 30,
         FreshnessStaleSeconds = 300,
     });

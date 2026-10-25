@@ -100,3 +100,32 @@ unresolved delivery recovers the original decision and performs no new write
 when the facts already agree. Conditional writes and large-delivery parts use
 bounded deterministic identities. A later resolved delivery replaces failed
 facts and advances Detail and Processing together.
+
+Generation staging measures complete canonical manifests, including base64 values
+and scope overhead, within the 512-KiB/32-operation group budget. Before any group
+is written, `IReadModelBatchStore.ValidateBatch` preflights every group against the
+owning store's effective execution limits. Dapr and in-memory SDK stores apply
+those same limits during execution; custom stores with lower configured limits
+must implement this additive preflight contract as well.
+
+PII-bearing retained canonical batches opt into SDK `DiscoverableRecovery`.
+The SDK enrolls content-free scope evidence before storing private preparation
+bytes. The source-capable eraser closes that aggregate's recovery admission,
+retires registered preparations, then reloads and redacts canonical state.
+It reopens admission only after the coordinated tombstone batch succeeds.
+Retired manifest keys hold permanent content-free sentinels so paused create-only
+installers cannot recreate private bytes. A failed retirement keeps the erasure
+obligation and admission fence intact.
+
+This qualification covers enrolled preparations. Before cutover, a qualified
+owner must reconcile private recovery histories from older unregistered writers
+and drain those writers. An empty new directory does not prove their historical
+absence. Matching published SDK adoption and deployed cutover remain separate
+from these source controls.
+
+Source erasure checks
+`Parties:Projections:HistoricalPrivateRecoveryReconciliationAttested` before any
+mutation. It defaults to false. Only an operator who has qualified the selected
+store's older private recovery history and drained older writers may enable
+that attestation. Tests explicitly attest only their complete synthetic stores;
+the application never derives this authority from an empty recovery directory.

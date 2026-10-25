@@ -1,0 +1,25 @@
+{
+  "command": "pwsh -NoProfile -File eng/verify-ext-parties-1.ps1 -Mode Local -EventStoreRoot /home/administrator/projects/hexalith/eventstore -PlatformRoot /home/administrator/projects/hexalith/platform -EvidenceDirectory /tmp/ext-parties-1-owner-recovery-20261025-r1",
+  "workingDirectory": "/home/administrator/projects/hexalith/parties",
+  "exitCode": 1,
+  "stoppedAt": "Hexalith.Parties.Contracts.Tests",
+  "passedLanes": 6,
+  "passingTestsInCompletedLanes": 1079,
+  "stoppedLane": {
+    "total": 29,
+    "passed": 28,
+    "failed": 1,
+    "skipped": 0,
+    "notRun": 0
+  },
+  "failingTest": "ContractsPublicApiSnapshotTests.PublicContractSurface_MatchesCheckedInSnapshot",
+  "cause": "Checked-in snapshot omits existing ProcessingActivityPage and GetProcessingRecords public types. No removals found in actual-vs-snapshot diff. Snapshot was not updated; this concurrent GDPR/API work is outside owner delivery.",
+  "eventStoreFixtureRecovery": {
+    "serverTotal": 450,
+    "serverFailures": 0,
+    "historicalServerFailures": 4
+  },
+  "qualification": false,
+  "available": false,
+  "bypassed": false
+}

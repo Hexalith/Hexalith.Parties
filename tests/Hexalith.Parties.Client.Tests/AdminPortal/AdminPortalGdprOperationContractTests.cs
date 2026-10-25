@@ -474,16 +474,43 @@ public sealed class AdminPortalGdprOperationContractTests
     [Fact]
     public async Task GetProcessingRecordsPageAsyncPreservesProtectedContinuationAndBoundedEnvelope()
     {
+        ProcessingActivityRecord[] expected = [
+            new() { TenantId = "tenant-a", PartyId = "party-1", SequenceNumber = 10, Timestamp = DateTimeOffset.UnixEpoch, EventType = "PartyCreated", Summary = "Party created." },
+            new() { TenantId = "tenant-a", PartyId = "party-1", SequenceNumber = 11, Timestamp = DateTimeOffset.UnixEpoch, EventType = "ConsentRecorded", Summary = "Consent recorded." }
+        ];
         var handler = new RecordingHandler(HttpStatusCode.OK,
-            """{"payload":[],"metadata":{"paging":{"pageSize":17,"nextCursor":"protected-next","totalCount":80,"hasMore":true}}}""", "application/json");
+            JsonSerializer.Serialize(new { payload = expected, metadata = new { paging = new { pageSize = 17, nextCursor = "protected-next", totalCount = 80, hasMore = true } } }, s_jsonOptions), "application/json");
         var client = CreateHttpClient(handler);
         ProcessingActivityPage page = await client.GetProcessingRecordsPageAsync("party-1", 17, "protected-prior", CancellationToken.None);
+        page.Items.ShouldBe(expected);
         page.NextCursor.ShouldBe("protected-next");
         page.TotalCount.ShouldBe(80);
         using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
         body.RootElement.GetProperty("paging").GetProperty("pageSize").GetInt32().ShouldBe(17);
         body.RootElement.GetProperty("paging").GetProperty("cursor").GetString().ShouldBe("protected-prior");
         body.RootElement.GetProperty("queryType").GetString().ShouldBe("GetProcessingRecords");
+    }
+
+    [Theory]
+    [InlineData("oversized")]
+    [InlineData("unknown-has-more")]
+    [InlineData("terminal-cursor")]
+    [InlineData("empty-continuation")]
+    [InlineData("missing-cursor")]
+    [InlineData("repeated-cursor")]
+    [InlineData("unordered")]
+    public async Task GetProcessingRecordsPageAsyncRejectsMalformedSuccessEnvelopes(string defect)
+    {
+        var records = Enumerable.Range(1, defect == "oversized" ? 3 : 2).Select(sequence => new ProcessingActivityRecord
+            { TenantId = "tenant-a", PartyId = "party-1", SequenceNumber = sequence, Timestamp = DateTimeOffset.UnixEpoch, EventType = "PartyUpdated", Summary = "Party updated." }).ToArray();
+        if (defect == "empty-continuation") records = [];
+        if (defect == "unordered") Array.Reverse(records);
+        bool? more = defect == "unknown-has-more" ? null : defect != "terminal-cursor";
+        string? next = defect == "missing-cursor" ? null : defect == "repeated-cursor" ? "prior" : "next";
+        var handler = new RecordingHandler(HttpStatusCode.OK,
+            JsonSerializer.Serialize(new { payload = records, metadata = new { paging = new { pageSize = 2, nextCursor = next, totalCount = 80, hasMore = more } } }, s_jsonOptions), "application/json");
+        await Should.ThrowAsync<InvalidOperationException>(() => CreateHttpClient(handler)
+            .GetProcessingRecordsPageAsync("party-1", 2, "prior", CancellationToken.None));
     }
 
     [Fact]

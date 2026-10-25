@@ -1,0 +1,95 @@
+[
+  {
+    "XmlLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "TestLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "Project": "Hexalith.EventStore.Contracts.Tests",
+    "Matrix": "Shared source contract validation",
+    "Classes": [
+      "*StreamReadPageValidatorTests",
+      "*RetainedIdentityHistoryValidatorTests",
+      "*RecoverableAnchoredStateTests"
+    ],
+    "BuildLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.EventStore.Contracts.Tests-build.log",
+    "Summary": "   Hexalith.EventStore.Contracts.Tests  Total: 37, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.237s"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.EventStore.Client.Tests-tests.xml",
+    "TestLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.EventStore.Client.Tests-tests.log",
+    "Project": "Hexalith.EventStore.Client.Tests",
+    "Matrix": "Shared complete source/isolation/discovery",
+    "Classes": [
+      "*AuthoritativeEventStreamReaderTests",
+      "*EventStoreGatewayClientTests",
+      "*EventStoreGatewayClientStreamTests",
+      "*RetainedIdentityHistoryReaderTests",
+      "*SourceNamespaceSnapshotReaderTests",
+      "*SourcePublicationNamespaceTests",
+      "*SourcePublicationFeedTests",
+      "*SourcePublicationDispatcherTests",
+      "*DaprSourcePublicationIndexStoreTests",
+      "*DirectoryAtomicAppendTests"
+    ],
+    "BuildLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.EventStore.Client.Tests-build.log",
+    "Summary": "   Hexalith.EventStore.Client.Tests  Total: 381, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 2.418s"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.EventStore.Server.Tests-tests.xml",
+    "TestLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.EventStore.Server.Tests-tests.log",
+    "Project": "Hexalith.EventStore.Server.Tests",
+    "Matrix": "Isolation/actor/history/technical owner authority",
+    "Classes": [
+      "*IdentityAdmissionTests",
+      "*ActorRegistryTests",
+      "*IdentityGatewayDenialTests",
+      "*CommandsControllerTrustedExtensionTests",
+      "*QueriesControllerTests",
+      "*StreamsControllerTests",
+      "*RetainedIdentityHistorySourceReaderTests",
+      "*ExpiredIdentityHistorySourceTests",
+      "*DirectoryMigrationBoundaryTests",
+      "*InteractionOccurrenceRegistryActorTests",
+      "*DeletionConsumptionActorTests",
+      "*GuardedStateTransactionTests",
+      "*GovernanceScopeGuardTests",
+      "*AggregateActorPublicationRegistrationTests"
+    ],
+    "BuildLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.EventStore.Server.Tests-build.log",
+    "Summary": "   Hexalith.EventStore.Server.Tests  Total: 450, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 5.498s"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.EventStore.PayloadProtection.Tests-tests.xml",
+    "TestLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.EventStore.PayloadProtection.Tests-tests.log",
+    "Project": "Hexalith.EventStore.PayloadProtection.Tests",
+    "Matrix": "Exact occurrence derivation/protection and post-decrypt withdrawal",
+    "Classes": [
+      "*InteractionOccurrenceKeyDerivationTests",
+      "*InteractionOccurrenceProtectorTests"
+    ],
+    "BuildLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.EventStore.PayloadProtection.Tests-build.log",
+    "Summary": "   Hexalith.EventStore.PayloadProtection.Tests  Total: 35, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.520s"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.Platform.Identity.Tests-tests.xml",
+    "TestLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.Platform.Identity.Tests-tests.log",
+    "Project": "Hexalith.Platform.Identity.Tests",
+    "Matrix": "Global registry/bootstrap",
+    "Classes": [
+      "*PlatformIdentityAdmissionTests"
+    ],
+    "BuildLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.Platform.Identity.Tests-build.log",
+    "Summary": "   Hexalith.Platform.Identity.Tests  Total: 5, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.259s"
+  },
+  {
+    "XmlLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.Platform.Custody.Tests-tests.xml",
+    "TestLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.Platform.Custody.Tests-tests.log",
+    "Project": "Hexalith.Platform.Custody.Tests",
+    "Matrix": "Custody prerequisites/policy/lifecycle/expiry/denial",
+    "Classes": [
+      "*CustodyPrerequisiteTests",
+      "*IdentityHistoryCleanupTests",
+      "*IdentityHistoryCustodyPolicyTests"
+    ],
+    "BuildLog": "/tmp/ext-parties-1-owner-recovery-20261025-r1/Hexalith.Platform.Custody.Tests-build.log",
+    "Summary": "   Hexalith.Platform.Custody.Tests  Total: 171, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 20.226s"
+  }
+]

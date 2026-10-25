@@ -88,7 +88,20 @@ public sealed partial class PartyDetailSdkProjectionHandler
         if (processing.Value is not null && request.Events.All(item => item.SequenceNumber <= oldestCheckpoint))
             return DomainProjectionHandlerResult.AlreadyCompleted();
         bool migrating = prior.BucketGeneration is null;
-        string generation = prior.BucketGeneration ?? Generation(dispatchId + ":" + processing.ETag);
+        // Both staging and canonical publication bind the same immutable observed snapshot.
+        // A competing inline append therefore selects a new manifest identity on retry.
+        if (migrating || failure is not null)
+            scope = scope with { BatchId = (failure is null ? "migration-" : "audit-")
+                + Generation(System.Text.Json.JsonSerializer.Serialize(new[] { dispatchId, detail.ETag, processing.ETag })) };
+        string generation = prior.BucketGeneration ?? Generation(scope.BatchId);
+        try
+        {
+            PartyProcessingBucketValidation.ValidateCoverage(prior);
+        }
+        catch (InvalidOperationException error)
+        {
+            return DeliveryFailure(error.Message);
+        }
         var reads = new Dictionary<long, ReadModelEntry<PartyProcessingBucket>>();
         if (!migrating)
         {
@@ -100,6 +113,17 @@ public sealed partial class PartyDetailSdkProjectionHandler
                 if (entry.Value is null && prior.FirstBucket <= id && id <= prior.LastBucket)
                 {
                     return DeliveryFailure("processing-bucket-unavailable");
+                }
+                if (entry.Value is not null)
+                {
+                    try
+                    {
+                        PartyProcessingBucketValidation.ValidateBucket(entry.Value, prior, request.TenantId, request.AggregateId, id);
+                    }
+                    catch (InvalidOperationException error)
+                    {
+                        return DeliveryFailure(error.Message);
+                    }
                 }
                 reads.Add(id, entry);
             }
@@ -121,10 +145,6 @@ public sealed partial class PartyDetailSdkProjectionHandler
         if (failure is not null && processing.Value is not null && folded.Records.SequenceEqual(loaded)
             && folded.ErasureSequenceNumber == prior.ErasureSequenceNumber)
             return DeliveryFailure(failure);
-        // Conditional manifests are immutable. A changed authoritative snapshot gets a distinct,
-        // bounded identity; pending envelopes are recovered before these ETags are observed.
-        if (failure is not null)
-            scope = scope with { BatchId = "audit-" + Generation(dispatchId + ":" + detail.ETag + ":" + processing.ETag) };
         PartyDetailSdkReadModel nextDetail = failure is null ? Fold(request, detail.Value) : detail.Value ?? new();
         long total = migrating ? folded.Records.Count : prior.RecordCount + folded.Records.Count - loaded.Count;
         PartyProcessingSdkReadModel metadata = ToBucketMetadata(folded, generation, folded.Records, total);
@@ -148,7 +168,13 @@ public sealed partial class PartyDetailSdkProjectionHandler
                 operations.Add(operation.WithConcurrency(Concurrency(reads[id].ETag)));
             }
         }
-        ReadModelBatchResult saved = await batchStore.ExecuteAsync(new ReadModelBatch(scope, operations) { RetainManifestForRecovery = true }, token).ConfigureAwait(false);
+        ReadModelBatchResult saved = await batchStore.ExecuteAsync(new ReadModelBatch(scope, operations)
+        {
+            RetainManifestForRecovery = true,
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+            DiscoverableRecovery = true,
+#endif
+        }, token).ConfigureAwait(false);
         return saved.IsSuccess && failure is not null ? DeliveryFailure(failure) : ReadModelBatchProjectionResultMapper.Map(saved);
     }
 

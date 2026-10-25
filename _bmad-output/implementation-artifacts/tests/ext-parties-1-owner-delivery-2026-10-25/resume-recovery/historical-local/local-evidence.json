@@ -1,0 +1,35 @@
+[
+  {
+    "Classes": [
+      "*StreamReadPageValidatorTests",
+      "*RetainedIdentityHistoryValidatorTests",
+      "*RecoverableAnchoredStateTests"
+    ],
+    "TestLog": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Contracts.Tests-tests.log",
+    "Project": "Hexalith.EventStore.Contracts.Tests",
+    "BuildLog": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Contracts.Tests-build.log",
+    "XmlLog": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Contracts.Tests-tests.xml",
+    "Matrix": "Shared source contract validation",
+    "Summary": "   Hexalith.EventStore.Contracts.Tests  Total: 37, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 0.388s"
+  },
+  {
+    "Classes": [
+      "*AuthoritativeEventStreamReaderTests",
+      "*EventStoreGatewayClientTests",
+      "*EventStoreGatewayClientStreamTests",
+      "*RetainedIdentityHistoryReaderTests",
+      "*SourceNamespaceSnapshotReaderTests",
+      "*SourcePublicationNamespaceTests",
+      "*SourcePublicationFeedTests",
+      "*SourcePublicationDispatcherTests",
+      "*DaprSourcePublicationIndexStoreTests",
+      "*DirectoryAtomicAppendTests"
+    ],
+    "TestLog": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Client.Tests-tests.log",
+    "Project": "Hexalith.EventStore.Client.Tests",
+    "BuildLog": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Client.Tests-build.log",
+    "XmlLog": "/tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Client.Tests-tests.xml",
+    "Matrix": "Shared complete source/isolation/discovery",
+    "Summary": "   Hexalith.EventStore.Client.Tests  Total: 381, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 4.091s"
+  }
+]

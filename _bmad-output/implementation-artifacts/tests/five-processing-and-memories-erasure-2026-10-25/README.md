@@ -1,33 +1,13 @@
 # Five processing and Memories erasure controls
 
-The approved implementation restores the complete KEEP snapshot before applying
-the 23 review corrections. The frozen spec and its approved baseline remain
-unchanged. Review [the compact receipt](review1-verification.json) against the
-original baseline ranges; concurrent external sweep/pushall commits captured
-implementation files while this child worked. The child made no Git mutations.
+The final implementation-verification snapshot is [review2-verification.json](review2-verification.json), with [owned files](review2-owned-files.json) and its historical [exact commands](review2-rerun.sh). For a new checkout use [the portable wrapper](rerun-affected.sh) and [environment bootstrap](rerun-environment.md). The [review1 receipt](review1-verification.json) and its ownership hashes remain historical evidence. Original approved baselines are preserved; concurrent user sweep/pushall commits recorded intermediate task work. Review uses the complete task ranges rather than HEAD-only deltas.
 
-The source lane executes recoverable bounded processing audit batches, repeated
-unresolved delivery and eventual resolution, 512-byte dispatch identities, Detail
-catch-up, malformed/truncated paging coverage and mid-read revision changes.
-Full and streamed SDK rebuild paths reject malformed promotion plans before
-staging and preserve structured storage outcomes.
+Current passing lanes: Parties source projection/query recovery 887/887; source projections 461 total with one package-only skip; package projections 461 total with two generation-source skips; package client 340/340; EventStore Client 2,151 total with two existing skips; dispatcher/catalog 62/62; staged-only replay 3/3; focused Memories package NL server 38/38; real RedisSearch/FalkorDB/Dapr 70/70 with zero skips; CI 455/455; immutable publisher 150/150. Warning and code-whitespace guards pass.
 
-The real native RedisSearch/FalkorDB/Dapr lane executes 69 controls with zero
-skips, including all retained migration/rebuild/erasure restart and survivor
-controls, JSON-only legacy retries through actual persisted NL output, canonical
-unit deletion during retry, dead-cap enforcement, missing-TAG uncertainty and
-content-bearing historical activity purge with late completion and recreation.
-The durable class runs through the maintained nightly IntegrationSlow lane using
-its own sidecar and the collection-owned Redis resource, without optional skips.
+The native lane includes actual worker scheduling with sentinel registry content: persisted workflow input/history excludes the sentinel while NL output and vector reach Redis. Erasure during description prevents a later embedding call. It also retains content-bearing legacy activity purge, late completion/recreation, fenced migration/deletion, dead-cap enforcement, JSON-only legacy retries, unrelated survivors and missing-TAG coverage uncertainty. These durable controls run in the maintained IntegrationSlow lane through an owned sidecar.
 
-CI passes 455 controls and the immutable publisher suite passes 150. A new actual
-SDK dual-RID local OCI archive passes the exact published validator for both
-created labels across linux/amd64 and linux/arm64. This is local archive evidence,
-not release publication or deployment evidence.
+The exact published executor and validator bytes, canonical created-label positive/negative controls and actual dual-RID local OCI archive proof remain in the historical receipt. Archive proof is local validation, not release publication.
 
-Package/Release server tests pass with one pre-existing opt-in submodule-mutation
-skip. Projection source/package capability skips are explicit in the receipt.
-The package client suite passes 333 controls. The remaining full source client
-restore is blocked by HXW006 in the selected FrontComposer Shell reference
-metadata; the exact command and log are retained in the receipt. Package versions
-and catalogs are unchanged. Owner review and Git publication belong to the parent.
+Known broader blockers remain explicit: source client restore/build hits FrontComposer HXW006; the broad DomainService suite requires unavailable nested Tenants subject evidence; broad Memories Server package tests have one unrelated telemetry close-out wording mismatch (3,056 total, one failed, one existing opt-in skip). The final affected lanes above pass. An initial expanded native run timed out on unchanged index readiness; the isolated retry and complete final run passed without weakening checks. Earlier Parties full-suite identity/status fitness drift is historical and does not grant new release-floor approval.
+
+Bucket generation support is source-only until matching EventStore packages are published/adopted. Package/catalog versions are unchanged. Legacy inventory completeness requires a qualified owner’s explicit exact-key reconciliation; fixtures attest only their synthetic inventories. Legacy workflow erasure defaults to refusing mutation without qualified scheduler quiescence. Legacy binary replay and pre-existing tenant-wide retry cleanup are deferred in the spec/ledger. No deployed migration/deletion, release dispatch or deployment was performed. Parent independent review and Git publication are pending.

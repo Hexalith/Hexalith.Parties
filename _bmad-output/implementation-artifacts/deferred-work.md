@@ -1820,3 +1820,23 @@ implementation_2026_10_25: Both deletion paths now share bounded exact-key/nativ
 verification_2026_10_25: `tests/five-processing-and-memories-erasure-2026-10-25/`; source receipt remains separate from package/deployment qualification.
 
 review1_2026_10_25: Review-1 native TAG queries retain discovered obligations without certifying historical coverage. Missing-TAG and unknown legacy coverage require explicit qualified owner reconciliation; old automatic legacy-complete markers are rejected. Modern exact provenance remains supported. Synthetic fixture owners reconcile only their own known inventories; this grants no production completeness. Final executed evidence: `tests/five-processing-and-memories-erasure-2026-10-25/review1-verification.json`.
+
+- source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
+  summary: Qualify deterministic replay of the original content-bearing NL retry workflow under upgraded workers (medium, unverified).
+  evidence: Review R2-B5; suspend an actual original workflow in description or embedding, upgrade the registered worker, and verify terminal/retry behavior plus retained-history erasure. The new worker path is content-free; the replay defect itself has not been reproduced.
+
+- source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
+  summary: Tenant deletion must purge existing live/dead NL retry payloads and scoped workflow histories (high, pre-existing).
+  evidence: Review R2-B7; approved Memories baseline cdd73d7 DeleteTenantDataKeysActivity already omits retry queues/payload hashes and RetryWorkflowErasure. Verify physical absence and unrelated-tenant survival through the tenant workflow.
+
+- source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
+  summary: Qualify malformed historical NL retry payload addressing (medium, pre-existing).
+  evidence: Review R3-B4; Baseline cdd73d7 accepts payload MemoryUnitId differing from its hash field/member; current writers use exact addressing. Corrupt or older malformed layouts need explicit reconciliation and erasure qualification.
+
+- source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
+  summary: Reconcile pre-tombstone orphan legacy NL hashes before namespace activation (medium, pre-existing).
+  evidence: Review R3-B5; Baseline migration copies valid legacy hashes without syntactic unit existence. Current tombstones fence known erasures; no qualification of unknown historical orphan owners is inferred.
+
+- source_spec: `spec-five-processing-and-memories-erasure-deferred-items.md`
+  summary: Correct named-argument casing in the concurrent identity-history test helper (medium, external work).
+  evidence: Review R3-E4; The untracked tests/Hexalith.Parties.IntegrationTests/Identity/TestOnlyIdentityHistoryCustody.cs uses pending/destroyed/acknowledged against UnitStatus Pending/Destroyed/Acknowledged. Excluded from this build and preserved for its active owner.

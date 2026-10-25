@@ -1,0 +1,678 @@
+{
+  "observedAtUtc": "2026-10-25T11:31:03.147692+00:00",
+  "checksPassed": 167,
+  "checks": [
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Client.Tests-build.log",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Client.Tests-build.log",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Client.Tests-tests.log",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Client.Tests-tests.log",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Client.Tests-tests.xml",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Client.Tests-tests.xml",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Contracts.Tests-build.log",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Contracts.Tests-build.log",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Contracts.Tests-tests.log",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Contracts.Tests-tests.log",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Contracts.Tests-tests.xml",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Server.Tests-build.log",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Server.Tests-build.log",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Server.Tests-tests.log",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Server.Tests-tests.log",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/Hexalith.EventStore.Server.Tests-tests.xml",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.EventStore.Server.Tests-tests.xml",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/Hexalith.Parties.IntegrationTests-build.log",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.Parties.IntegrationTests-build.log",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/Hexalith.Parties.IntegrationTests-tests.log",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.Parties.IntegrationTests-tests.log",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/Hexalith.Parties.IntegrationTests-tests.xml",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/Hexalith.Parties.IntegrationTests-tests.xml",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/eventstore-version.log",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/eventstore-version.log",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/eventstore-version.stderr.log",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/eventstore-version.stderr.log",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025/local-evidence.json",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-local/local-evidence.json",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025-live/live-gate.txt",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-live-missing/live-gate.txt",
+      "passed": true
+    },
+    {
+      "check": "historical original /tmp/ext-parties-1-owner-delivery-20261025-live-present/live-gate.txt",
+      "passed": true
+    },
+    {
+      "check": "historical retained _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/historical-live-present/live-gate.txt",
+      "passed": true
+    },
+    {
+      "check": "XML totals historical-local/Hexalith.EventStore.Server.Tests-tests.xml",
+      "passed": true
+    },
+    {
+      "check": "XML totals recovery-local/Hexalith.EventStore.Server.Tests-tests.xml",
+      "passed": true
+    },
+    {
+      "check": "XML totals recovery-local/Hexalith.Parties.Contracts.Tests-tests.xml",
+      "passed": true
+    },
+    {
+      "check": "XML totals recovery-local/focused-persisted-tests.xml",
+      "passed": true
+    },
+    {
+      "check": "all four original middleware cases recovered",
+      "passed": true
+    },
+    {
+      "check": "selected retained source eng/verify-ext-parties-1.ps1",
+      "passed": true
+    },
+    {
+      "check": "selected source still matches eng/verify-ext-parties-1.ps1",
+      "passed": true
+    },
+    {
+      "check": "selected retained source src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs",
+      "passed": true
+    },
+    {
+      "check": "selected source still matches src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs",
+      "passed": true
+    },
+    {
+      "check": "selected retained source src/Hexalith.Parties/Domain/PartyDomainProcessor.cs",
+      "passed": true
+    },
+    {
+      "check": "selected source still matches src/Hexalith.Parties/Domain/PartyDomainProcessor.cs",
+      "passed": true
+    },
+    {
+      "check": "selected retained source src/Hexalith.Parties/Domain/PartyAggregate.Identity.cs",
+      "passed": true
+    },
+    {
+      "check": "selected source still matches src/Hexalith.Parties/Domain/PartyAggregate.Identity.cs",
+      "passed": true
+    },
+    {
+      "check": "selected retained source src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs",
+      "passed": true
+    },
+    {
+      "check": "selected source still matches src/Hexalith.Parties/Queries/PartyIdentityQueryService.cs",
+      "passed": true
+    },
+    {
+      "check": "selected retained source src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs",
+      "passed": true
+    },
+    {
+      "check": "selected source still matches src/Hexalith.Parties/Queries/RetainedHumanActorHistoryFold.cs",
+      "passed": true
+    },
+    {
+      "check": "selected retained source _bmad-output/implementation-artifacts/spec-ext-parties-1-owner-delivery.md",
+      "passed": true
+    },
+    {
+      "check": "selected retained source _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/replacement-acceptance-packet.json",
+      "passed": true
+    },
+    {
+      "check": "selected source still matches _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/replacement-acceptance-packet.json",
+      "passed": true
+    },
+    {
+      "check": "selected retained source tests/Hexalith.Parties.IntegrationTests/Identity/MutableUtcClock.cs",
+      "passed": true
+    },
+    {
+      "check": "selected source still matches tests/Hexalith.Parties.IntegrationTests/Identity/MutableUtcClock.cs",
+      "passed": true
+    },
+    {
+      "check": "selected retained source tests/Hexalith.Parties.IntegrationTests/Identity/PartyIdentityPersistedVerifierTests.cs",
+      "passed": true
+    },
+    {
+      "check": "selected source still matches tests/Hexalith.Parties.IntegrationTests/Identity/PartyIdentityPersistedVerifierTests.cs",
+      "passed": true
+    },
+    {
+      "check": "selected retained source tests/Hexalith.Parties.IntegrationTests/Identity/PersistedPartyEvent.cs",
+      "passed": true
+    },
+    {
+      "check": "selected source still matches tests/Hexalith.Parties.IntegrationTests/Identity/PersistedPartyEvent.cs",
+      "passed": true
+    },
+    {
+      "check": "selected retained source tests/Hexalith.Parties.IntegrationTests/Identity/PersistedPartyIdentityDirectory.cs",
+      "passed": true
+    },
+    {
+      "check": "selected source still matches tests/Hexalith.Parties.IntegrationTests/Identity/PersistedPartyIdentityDirectory.cs",
+      "passed": true
+    },
+    {
+      "check": "selected retained source tests/Hexalith.Parties.IntegrationTests/Identity/PersistedPartyIdentitySource.cs",
+      "passed": true
+    },
+    {
+      "check": "selected source still matches tests/Hexalith.Parties.IntegrationTests/Identity/PersistedPartyIdentitySource.cs",
+      "passed": true
+    },
+    {
+      "check": "selected retained source tests/Hexalith.Parties.IntegrationTests/Identity/TestOnlyIdentityHistoryCustody.cs",
+      "passed": true
+    },
+    {
+      "check": "selected source still matches tests/Hexalith.Parties.IntegrationTests/Identity/TestOnlyIdentityHistoryCustody.cs",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.Commons.UniqueIds.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Client.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Contracts.Tests.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.DomainService.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Server.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.ServiceDefaults.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Contracts.Tests/debug/Hexalith.EventStore.Testing.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.Commons.UniqueIds.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Admin.Abstractions.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.TestContracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.Tests.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Client.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.DomainService.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Gateway.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Server.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.ServiceDefaults.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.Testing.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Client.Tests/debug/Hexalith.EventStore.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.Commons.UniqueIds.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Admin.Abstractions.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Client.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.DomainService.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Gateway.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Sample.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Sample.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Server.Tests.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Server.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.ServiceDefaults.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.Testing.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.EventStore.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.McpCli.Abstractions.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.Server.Tests/debug/Hexalith.Tenants.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.PayloadProtection.Tests/debug/Hexalith.Commons.UniqueIds.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.PayloadProtection.Tests/debug/Hexalith.EventStore.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.PayloadProtection.Tests/debug/Hexalith.EventStore.PayloadProtection.Tests.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.EventStore.PayloadProtection.Tests/debug/Hexalith.EventStore.PayloadProtection.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.Commons.UniqueIds.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.EventStore.Admin.Abstractions.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.EventStore.Client.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.EventStore.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.EventStore.DomainService.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.EventStore.Gateway.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.EventStore.Server.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.EventStore.ServiceDefaults.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.Platform.Identity.Tests.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Identity.Tests/debug/Hexalith.Platform.Identity.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.Commons.UniqueIds.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.EventStore.Client.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.EventStore.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.EventStore.DomainService.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.EventStore.Server.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.EventStore.ServiceDefaults.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.EventStore.Testing.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.Platform.Custody.Tests.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Platform.Custody.Tests/debug/Hexalith.Platform.Custody.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Commons.Http.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Commons.UniqueIds.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.EventStore.Client.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.EventStore.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.FrontComposer.Contracts.UI.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.FrontComposer.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.FrontComposer.Shell.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.McpCli.Abstractions.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.AdminPortal.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.Client.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.Contracts.Tests.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Parties.Testing.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Tenants.Client.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.Contracts.Tests/debug/Hexalith.Tenants.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Commons.Http.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Commons.UniqueIds.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Commons.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.EventStore.Aspire.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.EventStore.Client.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.EventStore.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.EventStore.DomainService.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.EventStore.Server.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.EventStore.ServiceDefaults.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.McpCli.Abstractions.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Memories.Client.Rest.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Memories.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.AppHost.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.Authentication.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.IntegrationTests.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.Projections.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.Security.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.Testing.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Tenants.Client.dll",
+      "passed": true
+    },
+    {
+      "check": "local artifact /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Tenants.Contracts.dll",
+      "passed": true
+    },
+    {
+      "check": "qualification stayed unavailable",
+      "passed": true
+    },
+    {
+      "check": "no invented installed hashes",
+      "passed": true
+    },
+    {
+      "check": "no invented date or qualification command",
+      "passed": true
+    },
+    {
+      "check": "Agents register unchanged",
+      "passed": true
+    },
+    {
+      "check": "Platform decision-packet unchanged",
+      "passed": true
+    },
+    {
+      "check": "Platform command-bindings unchanged",
+      "passed": true
+    }
+  ],
+  "completeDelivery": false,
+  "localLaneExitCode": 1,
+  "focusedLocalPasses": 11,
+  "available": false
+}

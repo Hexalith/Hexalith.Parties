@@ -34,8 +34,9 @@ namespace Hexalith.Parties.Tests.Search;
 public sealed class PartySearchErasureFenceTests
 {
     private const string StoreName = "statestore";
+    // This fixture owns the complete synthetic store, including any private SDK recovery state.
     private static readonly IOptions<PartySdkReadModelOptions> s_options = Options.Create(
-        new PartySdkReadModelOptions { ReadModelStateStoreName = StoreName });
+        new PartySdkReadModelOptions { ReadModelStateStoreName = StoreName, HistoricalPrivateRecoveryReconciliationAttested = true });
 
     /// <summary>Covers live persistence and rebuild removal windows before a stale handoff.</summary>
     /// <param name="rebuild">Whether to resume shared-rebuild completion.</param>

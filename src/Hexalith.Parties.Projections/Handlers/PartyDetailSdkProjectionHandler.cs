@@ -220,6 +220,7 @@ public sealed partial class PartyDetailSdkProjectionHandler(
             ? ReadModelBatchConcurrency.Match(processingEtag)
             : ReadModelBatchConcurrency.CreateOnly;
         if ((current?.Value?.LastSequenceNumber ?? long.MinValue) > candidate.LastSequenceNumber
+            || (currentProcessing?.Value?.LastSequenceNumber ?? long.MinValue) > processingCandidate.LastSequenceNumber
             || current?.Value?.ErasureSequenceNumber is not null && candidate.ErasureSequenceNumber is null
             || currentProcessing?.Value?.ErasureSequenceNumber is not null && processingCandidate.ErasureSequenceNumber is null)
         {
@@ -233,7 +234,7 @@ public sealed partial class PartyDetailSdkProjectionHandler(
             PartyProcessingSdkReadModel metadata = ToBucketMetadata(processingCandidate, generation, processingCandidate.Records, processingCandidate.Records.Count);
             return new DomainProjectionRebuildPlan(storeName,
                 [ReadModelBatchOperation.Write(key, candidate, concurrency), ReadModelBatchOperation.Write(processingKey, metadata, processingConcurrency)])
-            { StagedOperations = staged };
+            { StagedOperations = staged, DiscoverableRecovery = true };
         }
 #endif
         return new DomainProjectionRebuildPlan(
@@ -244,7 +245,12 @@ public sealed partial class PartyDetailSdkProjectionHandler(
                     processingKey,
                     processingCandidate,
                     processingConcurrency),
-            ]);
+            ])
+        {
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+            DiscoverableRecovery = true,
+#endif
+        };
     }
 
     /// <summary>

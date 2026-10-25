@@ -19,7 +19,7 @@
   <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Hexalith.Parties' and '$(HexalithEventStoreFromSource)' == 'true'">
     <DefineConstants>$(DefineConstants);HEXALITH_EVENTSTORE_SEMANTIC_QUERY_FAILURES</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="('$(MSBuildProjectName)' == 'Hexalith.Parties.Projections' or '$(MSBuildProjectName)' == 'Hexalith.Parties.Tests') and '$(HexalithEventStoreFromSource)' == 'true'">
+  <PropertyGroup Condition="('$(MSBuildProjectName)' == 'Hexalith.Parties.Projections' or '$(MSBuildProjectName)' == 'Hexalith.Parties.Projections.Tests' or '$(MSBuildProjectName)' == 'Hexalith.Parties.Tests') and '$(HexalithEventStoreFromSource)' == 'true'">
     <DefineConstants>$(DefineConstants);HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Hexalith.FrontComposer.Shell'">

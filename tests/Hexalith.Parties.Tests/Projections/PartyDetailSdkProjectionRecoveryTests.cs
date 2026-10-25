@@ -27,8 +27,9 @@ public sealed class PartyDetailSdkProjectionRecoveryTests
     private const string StoreName = "statestore";
     private static readonly string s_detailKey = PartySdkReadModelAddresses.Detail("tenant-a", "party-1");
     private static readonly string s_processingKey = PartySdkReadModelAddresses.Processing("tenant-a", "party-1");
+    // This fixture owns the complete synthetic store, including any private SDK recovery state.
     private static readonly IOptions<PartySdkReadModelOptions> s_options =
-        Options.Create(new PartySdkReadModelOptions { ReadModelStateStoreName = StoreName });
+        Options.Create(new PartySdkReadModelOptions { ReadModelStateStoreName = StoreName, HistoricalPrivateRecoveryReconciliationAttested = true });
 
     /// <summary>Verifies repeated unresolved deliveries retain coordinated slots and recover when supported.</summary>
     /// <param name="dispatchId">The supported redelivery identity.</param>
@@ -263,6 +264,43 @@ public sealed class PartyDetailSdkProjectionRecoveryTests
             store.Snapshot<PartyProcessingSdkReadModel>(StoreName, s_processingKey)!.LastSequenceNumber.ShouldBe(2);
             await AssertCompactedAsync(store);
         }
+    }
+
+    /// <summary>Resumes the original recoverable empty-v1 manifest without adding discovery metadata to its fixed identity.</summary>
+    /// <param name="phase">The original SDK preparation phase to interrupt.</param>
+    [Theory]
+    [InlineData(ReadModelBatchPhase.MarkerPrepared)]
+    [InlineData(ReadModelBatchPhase.AfterInstallOperation)]
+    public async Task OriginalRecoverableEmptyV1ManifestResumesWithUnchangedFingerprintAsync(ReadModelBatchPhase phase)
+    {
+        var token = TestContext.Current.CancellationToken;
+        var store = new InMemoryReadModelStore();
+        var scope = new ReadModelBatchScope(StoreName, "tenant-a", "party", "party-1", PartyProjectionNames.Detail + ".initialization", "empty-v1");
+        scope = scope with { BatchId = "initialize-" + scope.ComputeScopeHash() };
+        // This is the original pre-discovery public SDK contract. Keep the existing literal
+        // empty-v1 model fixtures below unchanged; the permanent initialization identity is reused.
+        var original = new ReadModelBatch(scope,
+            [ReadModelBatchOperation.Write(s_detailKey, new PartyDetailSdkReadModel(), ReadModelBatchConcurrency.CreateOnly),
+             ReadModelBatchOperation.Write(s_processingKey, new PartyProcessingSdkReadModel(), ReadModelBatchConcurrency.CreateOnly)])
+             { RetainManifestForRecovery = true };
+        store.BatchFaultHook = (current, ordinal, _) => (current == phase && (phase != ReadModelBatchPhase.AfterInstallOperation || ordinal == 0))
+            || current == ReadModelBatchPhase.Reconcile ? throw new IOException("old empty-v1 preparation interrupted") : Task.CompletedTask;
+        (await store.ExecuteAsync(original, token)).IsSuccess.ShouldBeFalse();
+        JsonObject prepared = store.Snapshot<JsonObject>(StoreName, scope.ComputeMarkerKey()).ShouldNotBeNull();
+        string fingerprint = prepared["fp"]!.GetValue<string>();
+        byte[] bytes = Convert.FromBase64String(prepared["manifest"]!.GetValue<string>());
+        using (JsonDocument manifest = JsonDocument.Parse(bytes))
+        {
+            manifest.RootElement.GetProperty("recoverable").GetBoolean().ShouldBeTrue();
+            manifest.RootElement.TryGetProperty("discoverable", out _).ShouldBeFalse();
+        }
+        store.BatchFaultHook = null;
+        (await Handler(store).ProjectAsync(Request(supported: false), "new-delivery", token)).ReasonCode.ShouldBe("unresolved-or-unsupported-event");
+        store.Snapshot<JsonObject>(StoreName, scope.ComputeMarkerKey())!["fp"]!.GetValue<string>().ShouldBe(fingerprint);
+        (await store.ExecuteAsync(original, token)).Status.ShouldBe(ReadModelBatchStatus.AlreadyCompleted);
+        (await Handler(store).ProjectAsync(Request(supported: true), "supported-delivery", token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        store.Snapshot<JsonObject>(StoreName, scope.ComputeMarkerKey())!["fp"]!.GetValue<string>().ShouldBe(fingerprint);
+        await AssertSupportedAsync(store);
     }
 
     /// <summary>Pins the persisted empty-v1 payload format across future model changes.</summary>
