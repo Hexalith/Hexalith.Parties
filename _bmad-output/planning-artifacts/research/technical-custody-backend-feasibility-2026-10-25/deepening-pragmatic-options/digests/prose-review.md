@@ -1,0 +1,1 @@
+Prose review: 2026-10-25. Applied three corrections: describe candidates as unverified rather than conclusively disproved; replace unmeasured cheapest-reversibility claim with preserving flexibility; use manages availability. Citation review correction also applied: existing or managed service rather than unsupported commercial-support assertion.

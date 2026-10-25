@@ -19,6 +19,12 @@ context:
 
 **Approach (user-directed resume, 2026-10-25):** Finish the Parties-owned delivery and replace refusal-only Live with complete authenticated persisted P-01–P-10 qualification. Bind real actor authority, retained-history custody, all-copy expiry, nonrollback restore and successor continuity. Return reviewed canonical source containing the delivery, a coordinated dependency target set, explicit owner integration date, exact executable command and actual installed hashes. Local test custody cannot substitute for those bindings. Execution requires acceptance of the exact target first.
 
+**Decisions (owner answers, 2026-10-25):**
+1. Installation: none — stop before Live.
+2. Integration date: unresolved — do not invent one.
+
+Both answers are absent. Stop before Live. Do not correct the reviewed local-proof limitations. Keep Live pending until the accepted target, installed hashes, and a new owner date exist. The local P-01–P-10 lane and the historical Local exit 1 are not Available.
+
 ## Boundaries & Constraints
 
 **Always:** Preserve Branch B: the provisioned Party stays Organization-typed and is verified by immutable tenant and Party id. Retain human-binding history for 365 fixed days from original `binding-effective-at` under `party-actor-retention-v1` / `party-actor-history-v1`, with exclusive expiry (`now < ExpiresAt`). Reuse the existing processor, query, fold, and custody seams. Preserve historical failures and all recovery evidence. Distinguish observed source commits, reviewed delivery commits, accepted dependency targets and actual installed hashes.
@@ -38,10 +44,9 @@ context:
 
 </frozen-after-approval>
 
-## Open Questions
+## Current custody direction — 2026-10-25
 
-1. Where is the owner-approved real installation and executable B01–B15 binding packet? Supply its public configuration/plan/trust hashes, scoped credential references, all-copy inventory, independent current authority, restore/fault targets and approved actor-free successor producer. Reuse an existing qualified installation if one exists; otherwise its owning implementation and qualification must be delivered before this lane can be completed. The October 18 form still has 661 null paths and 165 command-binding null paths. No replacement was found in October 25 source/installation records or supplied during this resume.
-2. What new integration date does the accountable owner commit to for the complete replacement? The missed `2026-10-08` date cannot be reused as a new commitment. A source observation date cannot stand in for this decision.
+Following the user's instruction to apply the [feasibility recommendation](../../../platform/docs/implementation/ext-parties-1-custody-direction-2026-10-25.md), stop the custom Luna/FM path and further production backend implementation under the unchanged contract. Preserve existing source and local evidence; retain the host-supplied refusal behavior and pending Live work. OpenBao is a conditional candidate after an explicit guarantee amendment, not a replacement production provider. Q1–Q7, D01–D04, F1 and B01–B15 retain their obligations and unresolved bindings. No contract, target, operator, resource or delivery date is accepted here; the frozen intent and Agents register remain unchanged.
 
 ## Code Map
 
@@ -66,11 +71,12 @@ context:
 - Given reviewed canonical source containing the delivery, when the replacement packet is submitted, then it names its coordinated immutable target set, new owner integration date, exact executable command and actual installed hashes. Local evidence does not change the accepted register or Available status.
 
 **Remaining execution:**
-- [ ] Platform/EventStore owner source and both actual owning hosts — implement and install qualified custody, independent current actor/lifecycle authority, original binding/revocation mapping, protected snapshots and independently admitted retained reads after the open owner inputs are resolved.
-- [ ] `eng/verify-ext-parties-1.ps1` and approved installed owner executors — implement the complete Live matrix, exact target/acceptance/hash guards, retained attempt/recovery evidence, restore and fault controls, and independent persisted assertions.
-- [ ] `tests/Hexalith.Parties.IntegrationTests/Identity/` — correct the reviewed local proof limitations without promoting test custody into installed qualification.
-- [ ] Replacement acceptance packet — bind canonical delivery/dependency commits containing the implementation, new explicit date, exact command and actual installed hashes, then obtain exact-target acceptance before qualification.
-- [x] Original Local prerequisite lane — rerun unchanged against the latest EventStore fixture correction; retain its historical failure, current recovery and next blocker separately.
+- [ ] Stopped. Both owner answers are absent: installation is `none — stop before Live`, and the integration date is `unresolved — do not invent one`. Do not execute Live, do not edit `tests/Hexalith.Parties.IntegrationTests/Identity/`, and do not present the local P-01–P-10 lane or the historical Local exit 1 as Available.
+- [ ] Platform/EventStore owner source and both actual owning hosts — remain blocked until an owner-approved B01–B15 packet path exists. Do not invent a custody backend, trust anchor, or credential.
+- [ ] `eng/verify-ext-parties-1.ps1` and approved installed owner executors — Live stays pending until the accepted target, installed hashes, and a new owner date exist.
+- [ ] `tests/Hexalith.Parties.IntegrationTests/Identity/` — local-proof corrections stay unstarted on this stop. Test custody stays out of production DI and is not installed qualification.
+- [ ] Replacement acceptance packet — keep the date unresolved. Do not invent a commitment, and do not change the Agents register.
+- [x] Original Local prerequisite lane — rerun unchanged against the latest EventStore fixture correction; retain its historical failure, current recovery and next blocker separately. The historical Local exit 1 is not Available.
 
 ## Implementation Notes
 
@@ -84,6 +90,7 @@ context:
 
 - No change to the approved intent. Status stays `in-progress`. Live is not Available.
 - 2026-10-25 resume: the user explicitly replaced the local-only scope with complete real installed P-01–P-10 delivery. Review found the local proof limitations above. Updated approach, command map and acceptance prevent presenting local test custody, source HEAD observations or historical refusal commands as that delivery. KEEP Branch B, immutable identity, original 365-day exclusive expiry, host-supplied seam refusal and every prior evidence artifact. No code changes from this resume needed reverting; pre-existing user work was preserved. Open real installation/date inputs prevent ready-for-dev; status returns to draft. Full review evidence is retained in `tests/ext-parties-1-owner-delivery-2026-10-25/resume-recovery/review-triage.json`.
+- 2026-10-25 owner answers: Installation is `none — stop before Live`. Integration date is `unresolved — do not invent one`. Open Questions removed. No Identity test edits and no Live run. Branch B, immutable tenant/Party identity, and 365 fixed days from `binding-effective-at` with exclusive expiry stay in force. The Agents register, production DI, and the test custody double were not changed. The local P-01–P-10 lane and the historical Local exit 1 stay unavailable. Status stays `draft`.
 
 ## Review Triage Log
 

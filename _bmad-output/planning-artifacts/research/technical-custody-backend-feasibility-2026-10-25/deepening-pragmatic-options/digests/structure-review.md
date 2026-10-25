@@ -1,0 +1,1 @@
+Structure review: 2026-10-25. Reviewed draft: 2,491 words. Preserve recommendation-first order, common mechanism, four how/pros/cons/verdict comparisons, and explicit distinction between strict no-go and conditional preference. No cuts, merges or moves recommended.

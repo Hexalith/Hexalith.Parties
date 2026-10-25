@@ -6,6 +6,13 @@ param(
 $ErrorActionPreference = 'Stop'
 $callerDirectory = (Get-Location).ProviderPath
 $EvidenceDirectory = [IO.Path]::GetFullPath($EvidenceDirectory, $callerDirectory)
+# An attempt owns a fresh directory and a permanent, atomically created marker.
+# Directory creation alone does not exclude a synchronized competing attempt.
+if (Test-Path -LiteralPath $EvidenceDirectory) { throw "Evidence directory already exists: $EvidenceDirectory" }
+New-Item -ItemType Directory -Path $EvidenceDirectory -ErrorAction Stop | Out-Null
+$attempt = [IO.File]::Open((Join-Path $EvidenceDirectory '.ext-parties-1-attempt'), [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+$attempt.Dispose()
+
 $DependencyRegisterPath = [IO.Path]::GetFullPath($DependencyRegisterPath, $callerDirectory)
 $required = @('EXT_PARTIES_GATEWAY_URL', 'EXT_PARTIES_READER_HEADERS_JSON', 'EXT_PARTIES_TARGET_SHA', 'EXT_PARTIES_COMPATIBILITY_RECEIPT',
     'EXT_PARTIES_TENANT_A', 'EXT_PARTIES_HISTORY_PARTY_ID', 'EXT_PARTIES_HISTORY_ACTOR_ID',
@@ -312,6 +319,5 @@ $evidence = @{ qualification='ReadinessOnly'; requestedTargetSha=$env:EXT_PARTIE
     checks=@('complete-original-position-source-partition', 'exact-action-time-actor-and-version', 'original-binding-source-position', 'current-identity-ineligible');
     sourceHead=$history.sourcePosition; bindingSourcePosition=$history.bindingSourcePosition;
     incomplete=@('P-01-P-10-installed-matrix', 'independent-erasure-certification', 'persisted-restart-restore', 'failure-injection', 'production-custody-destruction-and-copy-cleanup') }
-New-Item -ItemType Directory -Path $EvidenceDirectory -Force | Out-Null
 $evidence | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $EvidenceDirectory 'live-readiness.json')
 Write-Host 'Authenticated retained-history readiness probes passed for the owner-provided fixture. Erasure certification and complete Live qualification remain unavailable.'

@@ -1,0 +1,7 @@
+# Practical option deepening
+
+User requests how each proposed solution works, pros, cons and final pragmatic recommendation. Deepen the existing completed research; preserve original report, digests, evidence and working-tree files. Add this comparison as a new companion. Prior contract and no-go finding remain authoritative context; no approval to relax requirements, deploy, retrieve credentials, contact vendors or buy resources.
+
+Compare four approaches: existing OpenBao Transit, Azure Managed HSM with and without Secure Key Release, Google Cloud KMS/HSM, custom paired Luna FMs. Distinguish the hard contract gate from preferences: simplicity/operational fit first, recoverability second, cost/lock-in third. No numerical scoring can rescue failure of a hard guarantee. Explain a conditional smaller ordinary-retention design only as requiring explicit contract amendment; keep Branch B, immutable identity and original +31,536,000 seconds exclusive cutoff fixed. Do not suggest epoch/day buckets that move individual deadlines.
+
+Bounded primary-source follow-up: approximately 4-6 sources per option, reuse existing evidence instead of redoing feasibility. Two delegated focused research tasks, no new implementation. Price drivers only unless a supported current exact figure materially changes recommendation. Final source and editorial checks required by the invoked skill. User's explicit instruction authorizes this scope without another plan gate.

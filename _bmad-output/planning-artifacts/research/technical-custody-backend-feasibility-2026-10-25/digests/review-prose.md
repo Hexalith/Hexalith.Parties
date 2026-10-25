@@ -1,0 +1,3 @@
+# Prose review and disposition
+
+Fresh prose lens followed the structure findings and preserved the expert voice, contract terminology, three-guarantee table and findings-then-decisions order. Four recommended corrections were applied: identify the all-copy destruction proof explicitly; say owners accept/reject the data-loss risk rather than decide its technical consequence; clarify that later boot purge fails the requirement; replace awkward wording about reviewed vendor sources. No facts or scope changed. Review metric: 2,874 words before final small corrections. Both editorial passes requested no cuts.

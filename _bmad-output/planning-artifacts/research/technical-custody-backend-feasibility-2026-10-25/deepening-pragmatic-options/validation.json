@@ -1,0 +1,130 @@
+{
+  "documentation_only": true,
+  "checks": [
+    {
+      "command": [
+        "uv",
+        "run",
+        ".agents/skills/bmad-deep-recon/scripts/recon_kit.py",
+        "citations",
+        "_bmad-output/planning-artifacts/research/technical-custody-backend-feasibility-2026-10-25/deepening-pragmatic-options/research.md"
+      ],
+      "exit_code": 0,
+      "result": {
+        "markers": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        ],
+        "appendix_rows": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        ],
+        "dangling_markers": [],
+        "orphaned_rows": [],
+        "ok": true
+      }
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        ".agents/skills/bmad-deep-recon/scripts/recon_kit.py",
+        "tally",
+        "_bmad-output/planning-artifacts/research/technical-custody-backend-feasibility-2026-10-25/.memlog.md"
+      ],
+      "exit_code": 0,
+      "result": {
+        "entries": 18,
+        "by_type": {
+          "claim": 8,
+          "decision": 3,
+          "event": 4,
+          "source": 3
+        },
+        "claims": {
+          "unverified": 4,
+          "verified": 4
+        },
+        "claims_total": 8
+      }
+    }
+  ],
+  "local_links": [
+    {
+      "target": "../research.md",
+      "exists": true
+    },
+    {
+      "target": "digests/",
+      "exists": true
+    },
+    {
+      "target": "source-staleness.json",
+      "exists": true
+    },
+    {
+      "target": "claims-undated.json",
+      "exists": true
+    },
+    {
+      "target": "../source-staleness.json",
+      "exists": true
+    },
+    {
+      "target": "digests/citation-verification.md",
+      "exists": true
+    },
+    {
+      "target": "validation.json",
+      "exists": true
+    },
+    {
+      "target": "preservation-result.json",
+      "exists": true
+    }
+  ],
+  "preservation": {
+    "captured_files": 26,
+    "unchanged": 26,
+    "changed": [],
+    "missing": [],
+    "scope": "Existing prior research except append-only memlog and captured pre-existing changed/untracked Parties files at the start of this deepening. No claim about unrelated untracked filesystem changes."
+  },
+  "markdown_format": "UTF-8, CRLF, final newline, no trailing whitespace",
+  "claim_tally_scope": "Cumulative run ledger, including original research; not a count of qualified backend guarantees",
+  "functional_tests": "Not run: documentation-only research; cannot establish Available",
+  "source_staleness_exit_code": 1,
+  "source_staleness_result": "Seven older update/effective dates flagged; see source-staleness.json. No tool execution error."
+}

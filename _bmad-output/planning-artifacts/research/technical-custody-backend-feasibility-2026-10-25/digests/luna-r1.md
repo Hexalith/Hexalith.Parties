@@ -1,0 +1,61 @@
+# Thales Luna PCIe HSM 7 / FM feasibility digest
+
+Research date / accessed date: 2026-10-25. Status: two rounds complete, 12 web-tool calls; eight evidence sources maximum in either round. Only official vendor technical documentation is evidence. The proposed design is a hypothesis, not evidence. No vendor contact or physical testing occurred.
+
+Research epistemics applied verbatim:
+
+1. Never conclude from training data alone. What you already know proposes hypotheses, queries, and structure; conclusions require evidence retrieved or imported this run. A claim you cannot evidence is stated as an unverified belief or not at all.
+2. The research firewall. Project context — briefs, PRDs, code, memory, {workflow.persistent_facts} — shapes what to ask, never what is true. It is inadmissible as evidence: every claim in a research artifact traces to a digest or import file with a source. Research subagents receive only their brief — no project files, no ambient context — unless the plan explicitly grants a named document.
+
+## Decision
+
+**Do not qualify Luna PCIe HSM 7 as meeting autonomous, irreversible, per-unit destruction exactly at an immutable deadline through loss of host/device power.** Retrieved documentation establishes useful custom-code, memory, and time APIs, but does not establish that guarantee. This is an evidence-based no-go for the claimed guarantee, not proof that a special vendor-engineered implementation is impossible. [L1–L5]
+
+## Source registry
+
+All publishers: Thales Group. Dates below are the document's own “Last Updated” timestamp, not an independently established original publication date; original publication dates are undated/unavailable.
+
+| ID | Official source | Last updated | Accessed | Confidence |
+|---|---|---|---|---|
+| L1 | [Luna PCIe HSM 7 FM SDK Guide](https://thalesdocs.com/gphsm/luna/7/docs/pci/Content/PDF_PCI/FM%20SDK%20Programming%20Guide.pdf) | 2026-10-19 | 2026-10-25 | High, current vendor technical reference |
+| L2 | [Replacing the Luna PCIe HSM 7 Battery](https://thalesdocs.com/gphsm/luna/7/docs/pci/Content/install/pci_hw_install/battery_replace.htm) | 2026-07-08 | 2026-10-25 | High, explicit hardware procedure |
+| L3 | [Partition Capabilities and Policies](https://thalesdocs.com/gphsm/luna/7/docs/pci/Content/admin_partition/policies/partition_capabilities_and_policies.htm) | 2026-10-16 | 2026-10-25 | High, explicit policy semantics |
+| L4 | [FM Deployment Constraints](https://thalesdocs.com/gphsm/luna/7/docs/pci/Content/admin_hsm/fms/constraints.htm) | 2026-07-17 | 2026-10-25 | High for explicit statements; rollback statement conflicts with L11 |
+| L5 | [hsm time](https://thalesdocs.com/gphsm/luna/7/docs/pci/Content/lunacm/commands/hsm/hsm_time.htm) | 2024-12-13 | 2026-10-25 | High, command reference |
+| L6 | [hsm time sync](https://thalesdocs.com/gphsm/luna/7/docs/pci/Content/lunacm/commands/hsm/hsm_time_sync.htm) | 2024-12-13 | 2026-10-25 | High, command reference |
+| L7 | [Version Dependencies by Feature](https://thalesdocs.com/gphsm/luna/7/docs/pci/Content/CRN/Luna/version_dependencies.htm) | 2026-06-12 | 2026-10-25 | High, vendor version matrix |
+| L8 | [SafeNet PCI-E HSM Product Overview, release 6.2](https://thalesdocs.com/gphsm/luna/6.2/docs/pci/Content/PDF_PCI/Product%20Overview.pdf) | Published/released 2015-12-18, initial revision A | 2026-10-25 | High for historical K6; publisher Gemalto NV/SafeNet, hosted by Thales |
+| L9 | [CKM_AES_GCM](https://thalesdocs.com/gphsm/luna/7/docs/pci/Content/sdk/mechanisms/CKM_AES_GCM.htm) | 2026-06-18 | 2026-10-25 | High, mechanism reference |
+| L10 | [Universal Cloning](https://thalesdocs.com/gphsm/luna/7/docs/pci/Content/admin_partition/key_cloning/universal_cloning_for_luna-hsm.htm) | 2026-07-23 | 2026-10-25 | High, inter-HSM migration reference |
+| L11 | [Rolling Back the Luna HSM Firmware](https://thalesdocs.com/gphsm/luna/7/docs/pci/Content/admin_hsm/updates/fw_rollback.htm) | 2025-06-11 | 2026-10-25 | High for explicit statement; conflicts with L4 wording |
+
+## Documented facts
+
+- **FM storage and execution:** L1 pp.16–18,23–24,101–102 distinguishes 4 MB persistent, tamper-protected SMFS from approximately 100 MB `malloc()` RAM; FMs run single-threaded. SMFS keys are outside Cryptoki visibility; FM authors implement their lifecycle. The guide describes restoring normal-memory keys from SMFS during initialization and withholding FM control until SMFS activation. `time.h` includes `time`, `clock`, `gettime`; high-resolution timers measure intervals. Native PKCS#11 calls are available inside FMs. Loading the same FM ID replaces its existing module. **Confidence: high for features; no documented offline scheduler or monotonic clock guarantee.** [L1]
+- **Battery distinction:** The card's 3.6 V battery preserves cryptographic material when host power fails. Below 2.5 V the HSM tampers; without replacement, keys are eventually lost when RAM loses power. Battery replacement requires temporary power to avoid erasure; removing the card triggers tamper, and policy 40 can destroy its partition/roles. The page promises neither timed erasure nor its precision. **Confidence: high.** [L2]
+- **Standard expiry is insufficient:** Partition policy 39 enforces start/end attributes for **encrypt, sign, wrap**; default is off, ignoring these attributes. The cited list does not establish decrypt/unwrap prohibition, key deletion, second-level deadlines, or immutability. Policies 4/5 separately control symmetric-key cloning and wrapping; cloning is on by default, needed for backup/HA; wrapping is on by default. A key's claimed “nonexportable” status therefore requires precise attribute/policy and FM-path analysis. **Confidence: high for stated scope/defaults; missing guarantees remain unverified.** [L3]
+- **FM deployment/maintenance:** Enabling policy 50 destroys existing keys/partitions and permanently changes HSM-wide configuration. Luna Client HA does not handle FM-specific functions. A custom FM needs its own FIPS validation for overall compliance. FM-generated/derived keys have `always-sensitive` and `never-extractable` false. SMFS backups need application functions; FM-enabled partition backup is supported with specified Backup HSM firmware. **Confidence: high.** [L4]
+- **Time can be synchronized:** `hsm time` displays/synchronizes HSM time to host time on firmware 7.8.0+/client 10.3.0+. This reference does not establish rollback restrictions. **Confidence: high.** [L5]
+- **Clock authority/precision:** The HSM SO can manually synchronize HSM to current host time. Daily automatic synchronization requires clocks within three seconds; manual sync accommodates larger differences. No retrieved statement says time cannot move backward, or specifies a clock-failure secure-erasure action. **Confidence: high for documented sync; immutable time unverified.** [L6]
+- **Version boundary:** FMs require FM-ready hardware, firmware 7.4.0 and client 7.4. AES-GCM wrap/unwrap starts with firmware 7.7.2. The matrix says firmware 7.8.0 was withdrawn/replaced by 7.8.1. Exact purchased hardware and pinned firmware/client matter. **Confidence: high.** [L7]
+- **Historical K6 distinction:** Release 6.2 identifies battery power for RTC/NVRAM, and a tamper/decommission header that erases KEK/cached data; removing external power closes sessions and loses volatile data. This is an older hardware generation, not evidence that current FMs run without main power or implement deadline erasure. **Confidence: high for K6 facts; no cross-generation equivalence inferred.** [L8 p.23]
+- **In-device AEAD building block:** Current Luna documents AES-GCM encrypt/decrypt and, from firmware 7.7.2, wrap/unwrap, with AAD, authentication tag, and IV rules. The page documents native cryptography, not a completed two-HSM autonomous-expiry protocol. **Confidence: high for primitives.** [L9]
+- **Inter-device operation:** Universal Cloning securely migrates keys among Luna form factors. Matching cloning domains authorize migration; CPv4 requires initialized HSM time and supports V0 object cloning/V1 SMK cloning. This documents root replication, not a native two-independent-root service or a generic confidential FM-to-FM channel. **Confidence: high for migration; absence of the proposed integrated service remains an evidence gap.** [L10]
+- **Firmware rollback conflict:** L11 says rollback zeroizes the HSM and is entirely unavailable after FMs were ever enabled. L4 instead specifies a permanent block on rollback below 7.4.0, followed by wording that attempts after policy 50 fail. Treat the precise allowed rollback set as unresolved for the selected firmware. Neither statement establishes anti-rollback for custom FM images or every historical root copy. **Confidence: high that documentation differs; vendor confirmation required.** [L4,L11]
+
+## Inferences and evidence gaps
+
+- **Inference, medium confidence:** Ordinary FM RAM with no persistent root copy can trade survival of reset/power loss for earlier key loss; it is not evidence of deletion exactly at deadline. Battery-backed key preservation is a different property. Confirm the actual RAM power domain and fault behavior. [L1,L2]
+- **Unverified design hypothesis:** Nested wrapping can transport an encrypted inner DEK blob through a host between two HSMs; a confidential direct physical link is not necessarily required. The final DEK could remain inside the inner HSM for payload AEAD. Correctness still requires unit/deadline binding, nonce/replay controls, carefully restricted FM responses, and confirmation that the selected primitives work through the intended FM interface. This composition is an architectural inference, not a vendor-certified service. [L1,L9,L10]
+- **Missing written vendor confirmation:** Exact CPU/RTC/tamper/memory power domains; battery-powered FM scheduling; immutable/monotonic time and bounded drift; clock-stop/rollback/low-battery action; exact-time secure erasure and remanence; firmware/FM downgrade controls; restore immunity; unit-selective deletion; root-copy/export paths and pair protocol behavior. No such confirmation was obtained.
+- **Missing physical qualification:** Loss of all external power, battery faults/low voltage, RTC stop/rollback, reset at the deadline, concurrent operations, firmware/FM replacement, fault-induced maintenance, and proof that no historical clone/backup/intermediate can recover the DEK.
+
+## Proposed operating model assessment
+
+Dedicated original pairs, no root backups, and separate replacement pairs while draining for up to 365 days are **unverified architectural mitigations**. Draining avoids migrating old roots but leaves original units dependent on original hardware, battery, time, code and maintenance behavior for the full interval. A 2-of-2 dependency permanently loses every affected unit if either root is lost; loss of one card's volatile root set therefore loses the entire cohort dependent on that set. If one root is shared among units with different deadlines, its destruction also affects all dependent units; selective expiry needs independent per-unit roots or another justified mechanism. These are design consequences, not vendor guarantees.
+
+**Decisive recommendation:** Reject this backend for a contractual claim of exact autonomous immutable-deadline destruction on present evidence. A prototype may investigate the FM/AEAD building blocks, but procurement qualification requires written, firmware-specific vendor answers on the gaps above and destructive physical testing. Earlier loss of volatile roots does not establish the required exact-deadline behavior. The 365-day drain and dedicated pair arrangement do not close the clock/offline-execution gap or remove permanent cohort-loss exposure during maintenance.
+
+## Search boundary and remaining uncertainty
+
+Round 1 evidence: L1–L5 (additional index, FM overview and preface pages only located the main reference). Round 2 evidence: L1, L4, L6–L11. No more rounds performed. Searches explicitly targeted FM timer/clock behavior, clock rollback, CKA_END_DATE, AES-GCM, K6 batteries, firmware rollback and cloning. Failure to locate a guarantee is reported as missing public evidence, not proof that no vendor-private or future capability exists. No project documents were read or used as truth.

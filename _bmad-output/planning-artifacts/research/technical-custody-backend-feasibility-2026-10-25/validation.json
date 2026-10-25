@@ -1,0 +1,120 @@
+{
+  "citation-check.json": {
+    "command": [
+      "uv",
+      "run",
+      ".agents/skills/bmad-deep-recon/scripts/recon_kit.py",
+      "citations",
+      "_bmad-output/planning-artifacts/research/technical-custody-backend-feasibility-2026-10-25/research.md"
+    ],
+    "exitCode": 0,
+    "result": {
+      "markers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "appendix_rows": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "dangling_markers": [],
+      "orphaned_rows": [],
+      "ok": true
+    }
+  },
+  "claim-tally.json": {
+    "command": [
+      "uv",
+      "run",
+      ".agents/skills/bmad-deep-recon/scripts/recon_kit.py",
+      "tally",
+      "_bmad-output/planning-artifacts/research/technical-custody-backend-feasibility-2026-10-25/.memlog.md"
+    ],
+    "exitCode": 0,
+    "result": {
+      "entries": 10,
+      "by_type": {
+        "claim": 6,
+        "decision": 1,
+        "event": 1,
+        "source": 2
+      },
+      "claims": {
+        "unverified": 3,
+        "verified": 3
+      },
+      "claims_total": 6
+    }
+  },
+  "preservation": {
+    "files": 295,
+    "changed": [],
+    "passed": true
+  },
+  "ownerDecisionCoverage": {
+    "required": [
+      "Q1",
+      "Q2",
+      "Q3",
+      "Q4",
+      "Q5",
+      "Q6",
+      "Q7",
+      "D01",
+      "D02",
+      "D03",
+      "D04",
+      "F1"
+    ],
+    "missing": []
+  },
+  "localLinks": {
+    "missing": []
+  },
+  "whitespace": {
+    "trailingWhitespaceLines": []
+  },
+  "limits": {
+    "functionalTestsRun": false,
+    "physicalQualificationRun": false,
+    "deployments": 0,
+    "credentialsRetrieved": 0,
+    "vendorContacts": 0,
+    "gitMutations": 0,
+    "availableEstablished": false
+  }
+}

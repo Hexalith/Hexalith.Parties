@@ -1,0 +1,27 @@
+[
+  {
+    "claim": "autonomous timed destruction through power/clock failures",
+    "class": "timed-destruction",
+    "pub_date": null
+  },
+  {
+    "claim": "ordinary-process plaintext expiry",
+    "class": "execution-and-copy-lifetime",
+    "pub_date": null
+  },
+  {
+    "claim": "restorable backup caveat",
+    "class": "backup-restorability",
+    "pub_date": null
+  },
+  {
+    "claim": "preservation of unrelated units",
+    "class": "unit-isolation",
+    "pub_date": null
+  },
+  {
+    "claim": "fully matching alternative",
+    "class": "alternative-conformance",
+    "pub_date": null
+  }
+]

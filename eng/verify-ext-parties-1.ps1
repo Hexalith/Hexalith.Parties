@@ -17,13 +17,18 @@ $EvidenceDirectory = [System.IO.Path]::GetFullPath($EvidenceDirectory, $callerDi
 $DependencyRegisterPath = [System.IO.Path]::GetFullPath($DependencyRegisterPath, $callerDirectory)
 if (-not [string]::IsNullOrWhiteSpace($ArtifactsDirectory)) { $ArtifactsDirectory = [System.IO.Path]::GetFullPath($ArtifactsDirectory, $callerDirectory) }
 if (-not [string]::IsNullOrWhiteSpace($MemoriesRoot)) { $MemoriesRoot = [System.IO.Path]::GetFullPath($MemoriesRoot, $callerDirectory) }
-New-Item -ItemType Directory -Path $EvidenceDirectory -Force | Out-Null
-
 if ($Mode -eq 'LiveReadiness') {
     & pwsh -NoProfile -File (Join-Path $PSScriptRoot 'verify-ext-parties-history-readiness.ps1') -EvidenceDirectory $EvidenceDirectory -DependencyRegisterPath $DependencyRegisterPath
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     exit 0
 }
+
+# An attempt owns a fresh directory and a permanent, atomically created marker.
+# Directory creation alone does not exclude a synchronized competing attempt.
+if (Test-Path -LiteralPath $EvidenceDirectory) { throw "Evidence directory already exists: $EvidenceDirectory" }
+New-Item -ItemType Directory -Path $EvidenceDirectory -ErrorAction Stop | Out-Null
+$attempt = [IO.File]::Open((Join-Path $EvidenceDirectory '.ext-parties-1-attempt'), [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+$attempt.Dispose()
 
 if ($Mode -eq 'Live') {
     $required = @('EXT_PARTIES_GATEWAY_URL', 'EXT_PARTIES_TENANT_A', 'EXT_PARTIES_TENANT_B',

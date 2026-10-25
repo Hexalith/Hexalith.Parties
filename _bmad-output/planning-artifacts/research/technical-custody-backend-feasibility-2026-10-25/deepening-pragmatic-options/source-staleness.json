@@ -1,0 +1,104 @@
+{
+  "today": "2026-10-25",
+  "claims": [
+    {
+      "claim": "Source [4] revision; recheck exact service/model/version applicability before selection",
+      "class": "version/compatibility",
+      "pub_date": "2026-10-14",
+      "date_basis": "publisher displayed update, initial publication unspecified",
+      "recheck": "2026-11-14",
+      "stale": false
+    },
+    {
+      "claim": "Source [6] revision; recheck exact service/model/version applicability before selection",
+      "class": "version/compatibility",
+      "pub_date": "2026-05-22",
+      "date_basis": "publisher displayed update, initial publication unspecified",
+      "recheck": "2026-06-22",
+      "stale": true
+    },
+    {
+      "claim": "Source [7] revision; recheck exact service/model/version applicability before selection",
+      "class": "version/compatibility",
+      "pub_date": "2026-10-22",
+      "date_basis": "publisher displayed update, initial publication unspecified",
+      "recheck": "2026-11-22",
+      "stale": false
+    },
+    {
+      "claim": "Source [8] revision; recheck exact service/model/version applicability before selection",
+      "class": "version/compatibility",
+      "pub_date": "2026-09-09",
+      "date_basis": "publisher displayed update, initial publication unspecified",
+      "recheck": "2026-10-09",
+      "stale": true
+    },
+    {
+      "claim": "Source [9] revision; recheck exact service/model/version applicability before selection",
+      "class": "version/compatibility",
+      "pub_date": "2026-04-30",
+      "date_basis": "publisher displayed update, initial publication unspecified",
+      "recheck": "2026-05-30",
+      "stale": true
+    },
+    {
+      "claim": "Source [11] revision; recheck exact service/model/version applicability before selection",
+      "class": "version/compatibility",
+      "pub_date": "2026-10-20",
+      "date_basis": "publisher displayed update, initial publication unspecified",
+      "recheck": "2026-11-20",
+      "stale": false
+    },
+    {
+      "claim": "Source [13] revision; recheck exact service/model/version applicability before selection",
+      "class": "version/compatibility",
+      "pub_date": "2026-10-22",
+      "date_basis": "publisher displayed update, initial publication unspecified",
+      "recheck": "2026-11-22",
+      "stale": false
+    },
+    {
+      "claim": "Source [14] revision; recheck exact service/model/version applicability before selection",
+      "class": "version/compatibility",
+      "pub_date": "2026-10-19",
+      "date_basis": "publisher displayed update, initial publication unspecified",
+      "recheck": "2026-11-19",
+      "stale": false
+    },
+    {
+      "claim": "Source [15] revision; recheck exact service/model/version applicability before selection",
+      "class": "version/compatibility",
+      "pub_date": "2026-07-17",
+      "date_basis": "publisher displayed update, initial publication unspecified",
+      "recheck": "2026-08-17",
+      "stale": true
+    },
+    {
+      "claim": "Source [16] revision; recheck exact service/model/version applicability before selection",
+      "class": "version/compatibility",
+      "pub_date": "2026-06-18",
+      "date_basis": "publisher displayed update, initial publication unspecified",
+      "recheck": "2026-07-18",
+      "stale": true
+    },
+    {
+      "claim": "Source [17] revision; recheck exact service/model/version applicability before selection",
+      "class": "version/compatibility",
+      "pub_date": "2026-07-08",
+      "date_basis": "publisher displayed update, initial publication unspecified",
+      "recheck": "2026-08-08",
+      "stale": true
+    },
+    {
+      "claim": "Source [12] pricing-model freshness; no numeric quote asserted",
+      "class": "pricing",
+      "pub_date": "2025-03-17",
+      "date_basis": "effective date displayed by page, publication unspecified",
+      "recheck": "2025-06-17",
+      "stale": true
+    }
+  ],
+  "stale_count": 7,
+  "earliest_recheck": "2025-06-17",
+  "no_window_classes": []
+}
