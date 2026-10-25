@@ -1,0 +1,194 @@
+{
+  "created_utc": "2026-10-25T09:32:48.760607+00:00",
+  "approved_baselines": {
+    "parties": "1ef274ea0471643d83f924147e85ac8326cf6a47",
+    "eventstore": "749767072b8c2ea2abc8a23540ca65471d078c49",
+    "memories": "cdd73d7361f67781a523f63f04853491a687f426"
+  },
+  "observed_heads": {
+    "parties": "a2b3a080a2434a0243677933fdfc5c31564173b8",
+    "eventstore": "84111ae3e69c2bc905b262bd693f77b5ab88d506",
+    "memories": "277bfc4e4b36ecfbf6bb9bad1971a246fcd9696d"
+  },
+  "git_note": "Concurrent external sweep/pushall commits captured implementation; the implementation child did not stage, commit, push or invoke pushall. Review the complete approved baseline ranges.",
+  "checks": [
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive1-parties-focused-tests.log",
+      "sha256": "c3d9d29d2eca0e5299897e41eb971b77009216bd074fe56dfc8023203cd5ce65",
+      "results": {
+        "total": 879,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive1-Projections-source-tests.log",
+      "sha256": "7b78ff1161b6abdf53147d651dffcb77dec359d557b75ff8750184cfa6ae8ae9",
+      "results": {
+        "total": 461,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 1
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive1-Projections-release-tests.log",
+      "sha256": "43763a89b3f1dac01700628efd01ba4d160340b499f1e32129b525c67970a498",
+      "results": {
+        "total": 461,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 2
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive1-Client-release-tests.log",
+      "sha256": "89eb9641c8dc4ce22baf182f6bd7d13367a58125e74d3d714f7e5566c407e40c",
+      "results": {
+        "total": 333,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive1-eventstore-dispatcher-tests.log",
+      "sha256": "2b61f5a851cc2a5ee747f6d23210da5e0726bfd2e85c92b64e2d8d86612c2426",
+      "results": {
+        "total": 52,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive1-eventstore-batch-tests.log",
+      "sha256": "b6f45db26c26c6a5b43aa95b730195c26c0aa1bf058861b165be4422c7987278",
+      "results": {
+        "total": 29,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive1-memories-server-focused-tests.log",
+      "sha256": "d4aa68a41a842eb7f0a4746ae99f0bee4c4f4a3e00a8518f325aaab75c0dc671",
+      "results": {
+        "total": 70,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive1-memories-release-tests.log",
+      "sha256": "e9b3c4bcfce021668d4d232af80cdd6dcf51e36689e5411c622478bf81d2b20e",
+      "results": {
+        "total": 3056,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 1
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive1-memories-runtime-final.log",
+      "sha256": "a8757123603bffaccbe019b51122b60ae2c134b00c4c305ec1a1d22c140ac85b",
+      "results": {
+        "total": 69,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive1-ci-tests.log",
+      "sha256": "2385bee69e8dee3b1f0a49351b3dbfd7285f8747d4abcbf8dcccf81ec81c1627",
+      "results": {
+        "total": 455,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive1-publisher-tests.log",
+      "sha256": "b5cc1628c80e0b19bf55a4ec4268ef71207c28354f1662f320e85b99e1694f08",
+      "results": {
+        "total": 150,
+        "failed": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "published_pins": {
+    "published_executor": "11a3a79cfac4bba9548c6364a17a01ee9b561370",
+    "validator_sha256": "1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c",
+    "source": "https://raw.githubusercontent.com/Hexalith/Hexalith.Builds/11a3a79cfac4bba9548c6364a17a01ee9b561370/Github/publish-containers/oci_registry_validator.py",
+    "published_and_local_bytes_match": true
+  },
+  "oci_proof": {
+    "result": "pass",
+    "index_digest": "sha256:cd7c4b0976ebf19028977bac6ff6b14eb8153196c950e51fa9d7a8f9e434a296",
+    "raw_index_sha256": "cd7c4b0976ebf19028977bac6ff6b14eb8153196c950e51fa9d7a8f9e434a296",
+    "index_size": 493,
+    "media_type": "application/vnd.oci.image.index.v1+json",
+    "platforms": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "children": [
+      {
+        "platform": "linux/amd64",
+        "digest": "sha256:e93db3244c6e036199ef4d00091136df7467dbc87b43d8aa3e99bb6b5898f70d",
+        "size": 1235,
+        "media_type": "application/vnd.oci.image.manifest.v1+json",
+        "config_digest": "sha256:5453074334bf19b9fc888240e4603637a2be2be6ea42c4d60f056a9c23bacb0c",
+        "config_size": 3989,
+        "config_media_type": "application/vnd.oci.image.config.v1+json",
+        "provenance_labels": {
+          "org.opencontainers.image.source": "https://github.com/Hexalith/Hexalith.Parties",
+          "org.opencontainers.image.url": "https://github.com/Hexalith/Hexalith.Parties/releases/tag/v1.2.3",
+          "org.opencontainers.image.documentation": "https://github.com/Hexalith/Hexalith.Parties/blob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/README.md",
+          "org.opencontainers.image.revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "org.opencontainers.image.version": "1.2.3",
+          "org.opencontainers.image.created": "2024-02-29T23:59:59Z",
+          "org.opencontainers.artifact.created": "2024-02-29T23:59:59Z"
+        }
+      },
+      {
+        "platform": "linux/arm64",
+        "digest": "sha256:bb427727068e8a7c82997295d21fe6fdf419835016b347807236b2f935df41e6",
+        "size": 1235,
+        "media_type": "application/vnd.oci.image.manifest.v1+json",
+        "config_digest": "sha256:8bb2c1a59e0442fd7b254a08daa32d8172cab47246ebda584d657b67ac1136cd",
+        "config_size": 3989,
+        "config_media_type": "application/vnd.oci.image.config.v1+json",
+        "provenance_labels": {
+          "org.opencontainers.image.source": "https://github.com/Hexalith/Hexalith.Parties",
+          "org.opencontainers.image.url": "https://github.com/Hexalith/Hexalith.Parties/releases/tag/v1.2.3",
+          "org.opencontainers.image.documentation": "https://github.com/Hexalith/Hexalith.Parties/blob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/README.md",
+          "org.opencontainers.image.revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "org.opencontainers.image.version": "1.2.3",
+          "org.opencontainers.image.created": "2024-02-29T23:59:59Z",
+          "org.opencontainers.artifact.created": "2024-02-29T23:59:59Z"
+        }
+      }
+    ],
+    "archive_sha256": "1360a8e0bc68feb393946291a444c8e4443e54c49e222280dafd8bd7317befe5",
+    "publication": "local archive only"
+  },
+  "source_client_blocker": {
+    "command": "source /tmp/parties-five-processing-20261025/source-env.sh; dotnet restore tests/Hexalith.Parties.Client.Tests/Hexalith.Parties.Client.Tests.csproj -p:Configuration=Debug -m:1",
+    "result": "HXW006: retained FrontComposer.Shell ProjectReference AdditionalProperties cannot override mapped configuration",
+    "log": "/tmp/parties-five-processing-20261025/rederive1-Client-source-restore.log"
+  },
+  "limitations": [
+    "Generation support is source-only until matching EventStore packages are published and adopted; selected package versions are unchanged.",
+    "Legacy semantic coverage is unknown by default. Only explicit qualified owner inventory may grant legacy-owner-reconciled-v1 provenance. Local fixtures attest their own exact synthetic inventories only.",
+    "Legacy workflow erasure retains default scheduler-quiescence refusal; no production opt-in, migration, deletion, deployment or release dispatch was executed.",
+    "Full source Memories suite initially found the pre-existing package-assets-only assertion; focused source controls and full package/Release results above are authoritative.",
+    "Aspire baseline remains the prior blocked healthy-topology result recorded in the spec; isolated start/stop does not prove full topology health."
+  ]
+}
