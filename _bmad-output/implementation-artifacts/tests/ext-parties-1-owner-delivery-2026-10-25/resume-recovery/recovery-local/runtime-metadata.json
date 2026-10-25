@@ -1,0 +1,18 @@
+{
+  "observedAtUtc": "2026-10-25T11:21:36.763111+00:00",
+  "argv": [
+    "kubectl",
+    "--request-timeout=10s",
+    "get",
+    "deployments,statefulsets,daemonsets,pods",
+    "--all-namespaces",
+    "-o",
+    "json"
+  ],
+  "exitCode": 0,
+  "qualification": false,
+  "scope": "read-only workload metadata; no credential or Secret values requested",
+  "workloadsObserved": 172,
+  "partiesMatches": [],
+  "limitation": "No Parties-name match does not exclude installations under unrelated names or an undisclosed context."
+}

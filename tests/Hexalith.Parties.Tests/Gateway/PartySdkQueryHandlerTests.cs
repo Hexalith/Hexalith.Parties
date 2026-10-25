@@ -35,6 +35,7 @@ public sealed class PartySdkQueryHandlerTests
 
     [Theory]
     [InlineData("continue")]
+    [InlineData("long-user")]
     [InlineData("tenant")]
     [InlineData("party")]
     [InlineData("user")]
@@ -58,6 +59,7 @@ public sealed class PartySdkQueryHandlerTests
                 .Returns(new ReadModelEntry<PartyProcessingBucket>(new PartyProcessingBucket { Records = group.ToArray() }, "bucket"));
         var service = CreateService(store);
         QueryEnvelope envelope = CreateDetailEnvelope("GetProcessingRecords");
+        if (scenario == "long-user") envelope = envelope with { UserId = new string('u', 8192) };
         QueryResult complete = await service.GetProcessingRecordsAsync(envelope, token);
         complete.Success.ShouldBeTrue();
         complete.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.Length.ShouldBe(80);
@@ -79,9 +81,27 @@ public sealed class PartySdkQueryHandlerTests
         };
         if (scenario == "revision") revision = "revision-b";
         QueryResult continued = await service.GetProcessingRecordsAsync(next, token);
-        continued.Success.ShouldBe(scenario == "continue");
+        continued.Success.ShouldBe(scenario is "continue" or "long-user");
         if (continued.Success)
-            continued.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.First().SequenceNumber.ShouldBe(18);
+        {
+            var all = first.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.ToList();
+            QueryResult page = continued;
+            while (true)
+            {
+                all.AddRange(page.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!);
+                if (page.Metadata!.Paging!.HasMore == false)
+                {
+                    page.Metadata.Paging.NextCursor.ShouldBeNull();
+                    page.Metadata.Paging.TotalCount.ShouldBe(80);
+                    break;
+                }
+                string continuation = page.Metadata.Paging.NextCursor.ShouldNotBeNull();
+                continuation.Length.ShouldBeLessThanOrEqualTo(QueryPolicyLimits.MaxCursorLength);
+                page = await service.GetProcessingRecordsAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 17, Cursor: continuation) }, token);
+                page.Success.ShouldBeTrue();
+            }
+            all.Select(record => record.SequenceNumber).ShouldBe(Enumerable.Range(1, 80).Select(number => (long)number));
+        }
     }
 
     [Theory]

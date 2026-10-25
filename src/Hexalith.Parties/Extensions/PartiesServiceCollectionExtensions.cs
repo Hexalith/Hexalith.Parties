@@ -90,14 +90,16 @@ public static class PartiesServiceCollectionExtensions {
         // Keep the Parties-specific compatibility behavior here until EventStore owns
         // validation, protected-state redaction, and erasure-status hooks.
         // The SDK prefers the async route, so both contracts must retain the wrapper.
-        _ = services.AddKeyedScoped<IDomainProcessor, PartyDomainProcessor>(PartyDomain);
-        _ = services.AddKeyedScoped<IAsyncDomainProcessor, PartyDomainProcessor>(PartyDomain);
+        // Custody is not registered here. A missing host registration stays null and
+        // binding writes fail closed.
+        _ = services.AddKeyedScoped<IDomainProcessor>(PartyDomain, (provider, _) => CreatePartyDomainProcessor(provider));
+        _ = services.AddKeyedScoped<IAsyncDomainProcessor>(PartyDomain, (provider, _) => CreatePartyDomainProcessor(provider));
         foreach (string domainKey in PartyDomainCaseVariants())
         {
             if (!string.Equals(domainKey, PartyDomain, StringComparison.Ordinal))
             {
-                _ = services.AddKeyedScoped<IDomainProcessor, PartyDomainProcessor>(domainKey);
-                _ = services.AddKeyedScoped<IAsyncDomainProcessor, PartyDomainProcessor>(domainKey);
+                _ = services.AddKeyedScoped<IDomainProcessor>(domainKey, (provider, _) => CreatePartyDomainProcessor(provider));
+                _ = services.AddKeyedScoped<IAsyncDomainProcessor>(domainKey, (provider, _) => CreatePartyDomainProcessor(provider));
             }
         }
 
@@ -195,7 +197,16 @@ public static class PartiesServiceCollectionExtensions {
             provider.GetService<IEventStoreGatewayClient>() is { } gateway
                 ? new AuthoritativeEventStreamReader(gateway, provider.GetRequiredService<TimeProvider>())
                 : new UnavailableIdentityStreamReader());
-        services.AddScoped<PartyIdentityQueryService>();
+        // Retained-history reads and custody come only from the host. AddParties does not
+        // register a provider. Missing registrations resolve as null and authoritative
+        // history fails closed.
+        services.AddScoped(provider => new PartyIdentityQueryService(
+            provider.GetRequiredService<IPartyIdentityAuthority>(),
+            provider.GetRequiredService<TimeProvider>(),
+            provider.GetService<IAuthoritativeEventStreamReader>(),
+            provider.GetService<IIdentityHistoryCustody>(),
+            provider.GetService<IRetainedIdentityHistoryReader>(),
+            provider.GetService<IOptionsMonitor<PartyIdentityOptions>>()));
         _ = services.AddScoped<PartySdkQueryService>();
         _ = services.AddSingleton<PartyPayloadProtectionService>();
         _ = services.AddSingleton<EventStorePartyPayloadProtectionAdapter>();
@@ -416,6 +427,18 @@ public static class PartiesServiceCollectionExtensions {
 
         return services;
     }
+
+    private static PartyDomainProcessor CreatePartyDomainProcessor(IServiceProvider provider)
+        => new(
+            provider.GetRequiredService<IEventPayloadProtectionService>(),
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<ILogger<PartyDomainProcessor>>(),
+            provider.GetService<IPartyErasureRecordStore>(),
+            provider.GetService<PartyErasureOrchestrator>(),
+            provider.GetService<IHttpContextAccessor>(),
+            provider.GetService<IPartyIdentityAuthority>(),
+            provider.GetService<IIdentityHistoryCustody>(),
+            provider.GetService<IOptionsMonitor<PartyIdentityOptions>>());
 
     private static IEnumerable<string> PartyDomainCaseVariants()
     {

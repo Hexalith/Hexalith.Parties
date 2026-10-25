@@ -11,7 +11,7 @@ public sealed partial class PartySdkQueryService
     private async Task<QueryResult> ReadProcessingPageAsync(QueryEnvelope query, string party, PartyProcessingSdkReadModel model,
         string? etag, bool degraded, CancellationToken token)
     {
-        ValidateProcessingCoverage(model);
+        PartyProcessingBucketValidation.ValidateCoverage(model);
         int size = query.Paging!.PageSize ?? 20;
         if (size is < 1 or > 100 || query.Paging.Offset is not null and not 0)
         {
@@ -20,7 +20,7 @@ public sealed partial class PartySdkQueryService
         string scope = QueryCursorScope.Create().Add("tenant", query.TenantId).Add("party", party).Add("user", query.UserId)
                     .Add("page-size", size.ToString(CultureInfo.InvariantCulture)).Add("revision", etag)
                     .Add("generation", model.BucketGeneration).Build();
-        if (string.IsNullOrEmpty(etag) || !cursorCodec.TryDecode(query.Paging.Cursor, query.QueryType, scope, out string? position, out _))
+        if (string.IsNullOrEmpty(etag) || !TryDecodeCursor(query, scope, out string? position, out _))
         {
             return QueryResult.Failure(QueryAdapterFailureReason.InvalidPage);
         }
@@ -46,7 +46,7 @@ public sealed partial class PartySdkQueryService
         await VerifyProcessingRevisionAsync(query.TenantId, party, model, etag, token).ConfigureAwait(false);
         bool more = records.Count > size;
         var items = records.Take(size).ToArray();
-        string? next = more ? cursorCodec.Encode(query.QueryType, scope, items[^1].SequenceNumber.ToString(CultureInfo.InvariantCulture)) : null;
+        string? next = more ? cursorCodec.Encode(query.QueryType, CompactCursorScope(scope), items[^1].SequenceNumber.ToString(CultureInfo.InvariantCulture)) : null;
         return Success(items, "party-processing-records", model, etag, timeProvider.GetUtcNow(), degraded,
             new QueryPagingMetadata(size, NextCursor: next, TotalCount: model.BucketGeneration is null ? model.Records.Count : model.RecordCount, HasMore: more));
     }
@@ -58,7 +58,7 @@ public sealed partial class PartySdkQueryService
         {
             return model.Records;
         }
-        ValidateProcessingCoverage(model);
+        PartyProcessingBucketValidation.ValidateCoverage(model);
         var records = new List<ProcessingActivityRecord>();
         if (model.FirstBucket is { } first && model.LastBucket is { } last)
         {
@@ -80,34 +80,8 @@ public sealed partial class PartySdkQueryService
         var read = await readModelStore.GetAsync<PartyProcessingBucket>(StoreName,
             PartySdkReadModelAddresses.ProcessingBucket(tenant, party, model.BucketGeneration!, bucket), token).ConfigureAwait(false);
         PartyProcessingBucket value = read.Value ?? throw new InvalidOperationException("processing-bucket-unavailable");
-        if (value.Records.Count > PartyProcessingBucket.Capacity || value.Records.Any(record => record.TenantId != tenant || record.PartyId != party
-            || PartyProcessingBucket.Number(record.SequenceNumber) != bucket)
-            || value.Records.Select(record => record.SequenceNumber).Distinct().Count() != value.Records.Count
-            || !value.Records.Select(record => record.SequenceNumber).SequenceEqual(value.Records.Select(record => record.SequenceNumber).Order()))
-        {
-            throw new InvalidOperationException("processing-bucket-invalid");
-        }
-        long first = Math.Max(model.FirstRecordSequenceNumber!.Value, checked(bucket * PartyProcessingBucket.Capacity));
-        long baseSequence = checked(bucket * PartyProcessingBucket.Capacity);
-        long last = Math.Min(model.LastRecordSequenceNumber!.Value, baseSequence + Math.Min(PartyProcessingBucket.Capacity - 1, long.MaxValue - baseSequence));
-        if (value.Records.Count != last - first + 1 || value.Records.Count == 0
-            || value.Records[0].SequenceNumber != first || value.Records[^1].SequenceNumber != last
-            || !value.Records.Select(record => record.SequenceNumber).SequenceEqual(Enumerable.Range(0, value.Records.Count).Select(offset => first + offset)))
-            throw new InvalidOperationException("processing-history-incomplete");
+        PartyProcessingBucketValidation.ValidateBucket(value, model, tenant, party, bucket);
         return value;
-    }
-
-    private static void ValidateProcessingCoverage(PartyProcessingSdkReadModel model)
-    {
-        if (model.BucketGeneration is null) return;
-        bool empty = model.RecordCount == 0 && model.FirstBucket is null && model.LastBucket is null
-            && model.FirstRecordSequenceNumber is null && model.LastRecordSequenceNumber is null;
-        bool complete = model.RecordCount > 0 && model.FirstRecordSequenceNumber is >= 0
-            && model.LastRecordSequenceNumber >= model.FirstRecordSequenceNumber
-            && model.LastRecordSequenceNumber - model.FirstRecordSequenceNumber == model.RecordCount - 1
-            && model.FirstBucket == PartyProcessingBucket.Number(model.FirstRecordSequenceNumber.Value)
-            && model.LastBucket == PartyProcessingBucket.Number(model.LastRecordSequenceNumber!.Value);
-        if (!empty && !complete) throw new InvalidOperationException("processing-history-incomplete");
     }
 
     private async Task VerifyProcessingRevisionAsync(string tenant, string party, PartyProcessingSdkReadModel model, string? etag, CancellationToken token)

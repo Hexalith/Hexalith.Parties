@@ -1,0 +1,211 @@
+{
+  "schemaVersion": 1,
+  "recordId": "EXT-PARTIES-1",
+  "observedAtUtc": "2026-10-25T11:27:45.665828+00:00",
+  "disposition": "IncompleteOwnerDeliveryAwaitingRealBindings",
+  "accepted": false,
+  "available": false,
+  "liveQualified": false,
+  "completeReplacementPacket": false,
+  "branch": "B",
+  "immutableIdentityPreserved": true,
+  "policy": {
+    "id": "party-actor-retention-v1",
+    "purpose": "party-actor-history-v1",
+    "retentionSeconds": 31536000,
+    "trigger": "original-binding-effective-at",
+    "releaseRule": "now < ExpiresAt"
+  },
+  "acceptedRegisterTargetUnchanged": "56cb4401c4179d431385ad3d931fefa402e4fc5a",
+  "reviewedCanonicalDeliveryTarget": null,
+  "targetIntegrationDate": null,
+  "qualifyingLiveCommand": null,
+  "coordinatedSourceObservations": {
+    "parties": {
+      "root": "/home/administrator/projects/hexalith/parties",
+      "head": "9c116910f9d712b82ae27ceb1946605d76c8a451",
+      "branch": "main",
+      "status": "M Directory.Build.targets\nMM _bmad-output/implementation-artifacts/deferred-work.md\n M _bmad-output/implementation-artifacts/spec-five-processing-and-memories-erasure-deferred-items.md\n M _bmad-output/implementation-artifacts/tests/five-processing-and-memories-erasure-2026-10-25/README.md\nA  _bmad-output/implementation-artifacts/tests/five-processing-and-memories-erasure-2026-10-25/review1-owned-files.json\n M docs/gdpr-processing-activity-records.md\n M eng/verify-ext-parties-1.ps1\n M references/Hexalith.EventStore\n M references/Hexalith.Memories\n M src/Hexalith.Parties.Client/AdminPortal/HttpAdminPortalGdprClient.cs\n M src/Hexalith.Parties.Projections/Configuration/PartySdkReadModelOptions.cs\n M src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.ProcessingBuckets.cs\n M src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs\n M src/Hexalith.Parties.Projections/Services/PartySdkReadModelEraser.cs\n M src/Hexalith.Parties/Extensions/PartiesServiceCollectionExtensions.cs\n M src/Hexalith.Parties/Queries/PartySdkQueryService.ProcessingBuckets.cs\n M tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalGdprOperationContractTests.cs\n M tests/Hexalith.Parties.Projections.Tests/Handlers/PartySdkProjectionHandlerTests.cs\n M tests/Hexalith.Parties.Tests/Gateway/PartySdkCrossInstanceErasureTests.cs\nMM tests/Hexalith.Parties.Tests/Gateway/PartySdkQueryHandlerTests.cs\n M tests/Hexalith.Parties.Tests/Projections/PartyDetailSdkProjectionRecoveryTests.cs\n M tests/Hexalith.Parties.Tests/Projections/PartyProcessingGenerationRecoveryTests.cs\n M tests/Hexalith.Parties.Tests/Search/PartySearchErasureFenceTests.cs\n?? _bmad-output/implementation-artifacts/spec-ext-parties-1-owner-delivery.md\n?? _bmad-output/implementation-artifacts/tests/ext-parties-1-owner-delivery-2026-10-25/\n?? _bmad-output/implementation-artifacts/tests/five-processing-and-memories-erasure-2026-10-25/rerun-affected.sh\n?? _bmad-output/implementation-artifacts/tests/five-processing-and-memories-erasure-2026-10-25/rerun-environment.md\n?? _bmad-output/implementation-artifacts/tests/five-processing-and-memories-erasure-2026-10-25/review2-owned-files.json\n?? _bmad-output/implementation-artifacts/tests/five-processing-and-memories-erasure-2026-10-25/review2-rerun.sh\n?? _bmad-output/implementation-artifacts/tests/five-processing-and-memories-erasure-2026-10-25/review2-verification.json\n?? src/Hexalith.Parties.Projections/Models/PartyProcessingBucketValidation.cs\n?? tests/Hexalith.Parties.IntegrationTests/Identity/",
+      "originMain": "9c116910f9d712b82ae27ceb1946605d76c8a451"
+    },
+    "eventStore": {
+      "root": "/home/administrator/projects/hexalith/eventstore",
+      "head": "7012502bc094484eb2d4687badb98cb3b5e52b73",
+      "branch": "main",
+      "status": "M _bmad-output/implementation-artifacts/spec-ext-protection-1-owner-delivery.md",
+      "originMain": "7012502bc094484eb2d4687badb98cb3b5e52b73"
+    },
+    "platform": {
+      "root": "/home/administrator/projects/hexalith/platform",
+      "head": "90aef9ac3e813d9cae5b16d68ca5e326ce0fb599",
+      "branch": "main",
+      "status": "M references/Hexalith.Builds\n?? _bmad-output/implementation-artifacts/evidence/2-5/final-workflow-review-20261025/\n?? _bmad-output/implementation-artifacts/spec-5-4-shared-target-completion.md\n?? docs/implementation/story-5-4-shared-target-completion-2026-10-25/",
+      "originMain": "90aef9ac3e813d9cae5b16d68ca5e326ce0fb599"
+    }
+  },
+  "observationsAreAcceptedDependencyTargets": false,
+  "installedHashes": {
+    "configurationSha256": null,
+    "planSha256": null,
+    "actorAuthorityAnchorSha256": null,
+    "custodyAnchorSha256": null,
+    "sourceAdmissionAnchorSha256": null,
+    "observerAnchorSha256": null,
+    "restoreTargetSha256": null,
+    "failureInjectionTargetSha256": null,
+    "successorProofProfileSha256": null
+  },
+  "installedHashReason": "No approved installed Parties input bundle or history custody implementation found or supplied. Local source and DLL digests are separately labelled and cannot fill installed fields.",
+  "localRun": {
+    "command": "pwsh -NoProfile -File eng/verify-ext-parties-1.ps1 -Mode Local -EventStoreRoot /home/administrator/projects/hexalith/eventstore -PlatformRoot /home/administrator/projects/hexalith/platform -EvidenceDirectory /tmp/ext-parties-1-owner-recovery-20261025-r1",
+    "workingDirectory": "/home/administrator/projects/hexalith/parties",
+    "exitCode": 1,
+    "stoppedAt": "Hexalith.Parties.Contracts.Tests",
+    "passedLanes": 6,
+    "passingTestsInCompletedLanes": 1079,
+    "stoppedLane": {
+      "total": 29,
+      "passed": 28,
+      "failed": 1,
+      "skipped": 0,
+      "notRun": 0
+    },
+    "failingTest": "ContractsPublicApiSnapshotTests.PublicContractSurface_MatchesCheckedInSnapshot",
+    "cause": "Checked-in snapshot omits existing ProcessingActivityPage and GetProcessingRecords public types. No removals found in actual-vs-snapshot diff. Snapshot was not updated; this concurrent GDPR/API work is outside owner delivery.",
+    "eventStoreFixtureRecovery": {
+      "serverTotal": 450,
+      "serverFailures": 0,
+      "historicalServerFailures": 4
+    },
+    "qualification": false,
+    "available": false,
+    "bypassed": false
+  },
+  "focusedLocalRun": {
+    "buildExitCode": 0,
+    "testExitCode": 0,
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "notRun": 0,
+    "qualifiesInstalledMatrix": false,
+    "buildCommand": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj -c Debug --artifacts-path /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts -p:UseHexalithProjectReferences=true -p:UseNuGetDeps=false -p:HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore -p:HexalithCommonsRoot=/home/administrator/projects/hexalith/parties/references/Hexalith.Commons -p:HexalithMemoriesRoot=/tmp/ext-parties-1-owner-recovery-20261025-r1/optional-memories-package-mode -p:NuGetAudit=false -p:HexalithEventStoreVersion=3.127.0 -m:1",
+    "testCommand": "dotnet /tmp/ext-parties-1-owner-recovery-20261025-r1/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.IntegrationTests.dll -class '*PartyIdentityPersistedVerifierTests' -result-xml /tmp/ext-parties-1-owner-recovery-20261025-r1/focused-persisted-tests.xml"
+  },
+  "xmlReceipts": [
+    {
+      "file": "recovery-local/Hexalith.EventStore.Client.Tests-tests.xml",
+      "total": 381,
+      "results": {
+        "Pass": 381,
+        "Fail": 0,
+        "Skip": 0
+      },
+      "failures": []
+    },
+    {
+      "file": "recovery-local/Hexalith.EventStore.Contracts.Tests-tests.xml",
+      "total": 37,
+      "results": {
+        "Pass": 37,
+        "Fail": 0,
+        "Skip": 0
+      },
+      "failures": []
+    },
+    {
+      "file": "recovery-local/Hexalith.EventStore.PayloadProtection.Tests-tests.xml",
+      "total": 35,
+      "results": {
+        "Pass": 35,
+        "Fail": 0,
+        "Skip": 0
+      },
+      "failures": []
+    },
+    {
+      "file": "recovery-local/Hexalith.EventStore.Server.Tests-tests.xml",
+      "total": 450,
+      "results": {
+        "Pass": 450,
+        "Fail": 0,
+        "Skip": 0
+      },
+      "failures": []
+    },
+    {
+      "file": "recovery-local/Hexalith.Parties.Contracts.Tests-tests.xml",
+      "total": 29,
+      "results": {
+        "Pass": 28,
+        "Fail": 1,
+        "Skip": 0
+      },
+      "failures": [
+        "Hexalith.Parties.Contracts.Tests.Package.ContractsPublicApiSnapshotTests.PublicContractSurface_MatchesCheckedInSnapshot"
+      ]
+    },
+    {
+      "file": "recovery-local/Hexalith.Platform.Custody.Tests-tests.xml",
+      "total": 171,
+      "results": {
+        "Pass": 171,
+        "Fail": 0,
+        "Skip": 0
+      },
+      "failures": []
+    },
+    {
+      "file": "recovery-local/Hexalith.Platform.Identity.Tests-tests.xml",
+      "total": 5,
+      "results": {
+        "Pass": 5,
+        "Fail": 0,
+        "Skip": 0
+      },
+      "failures": []
+    },
+    {
+      "file": "recovery-local/focused-persisted-tests.xml",
+      "total": 11,
+      "results": {
+        "Pass": 11,
+        "Fail": 0,
+        "Skip": 0
+      },
+      "failures": []
+    }
+  ],
+  "unresolvedPrerequisites": {
+    "decisionNullPaths": 661,
+    "commandBindingNullPaths": 165,
+    "bindingIds": [
+      "B01",
+      "B02",
+      "B03",
+      "B04",
+      "B05",
+      "B06",
+      "B07",
+      "B08",
+      "B09",
+      "B10",
+      "B11",
+      "B12",
+      "B13",
+      "B14",
+      "B15"
+    ],
+    "requiredOwnerInputs": [
+      "Approved real history backend/key hierarchy and all-copy inventory C01-C16",
+      "Independent current actor/lifecycle/time/epoch authority outside the restore cut",
+      "Exact original binding/revocation mapping and host source admission",
+      "Authenticated restore/fault/lost-ack executors, targets and independent observers",
+      "Approved actor-free successor certificate producer/profile",
+      "Complete accepted canonical source/dependency targets, installed hashes, new integration date and executable qualification command"
+    ]
+  },
+  "noLiveOrConsumerExecution": true,
+  "noGitMutation": true,
+  "runtimeMetadata": "recovery-local/runtime-metadata.json"
+}

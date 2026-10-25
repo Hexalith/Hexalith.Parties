@@ -1,0 +1,113 @@
+{
+  "reviewedDiff": "reviewed-initial.diff",
+  "findingFloor": "min(floor(sqrt(669211 / 1000) + 1), 10) = 10",
+  "layers": [
+    "blind-hunter",
+    "edge-case-hunter",
+    "verification-gap"
+  ],
+  "allLayersCompleted": true,
+  "rows": [
+    {
+      "id": "BH-01",
+      "verdict": "medium",
+      "route": "bad_spec",
+      "evidence": "UnprotectEventAsync/Open decrypts while key.bin exists without checking clock or persisted lifecycle; CanReadAsync denies at expiry only later. This invalidates an inference of cryptographic expiry from query denial. Test-only, not production custody."
+    },
+    {
+      "id": "BH-02",
+      "verdict": "medium",
+      "route": "bad_spec",
+      "evidence": "The test custody ignores AggregateIdentity and Seal uses no owner/event-type authenticated data. It cannot verify tenant-bound custody or reject foreign evidence at that seam."
+    },
+    {
+      "id": "BH-03",
+      "verdict": "medium",
+      "route": "bad_spec",
+      "evidence": "AdmitAsync creates key.bin when absent and writes Pending=false/Destroyed=false even for a retired unit. The new random key does not decrypt old ciphertext, but retirement and identity cannot be claimed irreversible."
+    },
+    {
+      "id": "BH-04",
+      "verdict": "medium",
+      "route": "bad_spec",
+      "evidence": "DestroyExpiredAsync wipes keys/copy files before writing Pending. The retained source accepts !IsPending plus unreadable markers, so a crash before status persistence can mint a terminal certificate without acknowledged destruction. No production crash guarantee is shown."
+    },
+    {
+      "id": "BH-05",
+      "verdict": "medium",
+      "route": "bad_spec",
+      "evidence": "P09 uses a second Established with expected version zero at start+30 days while observation remains start. Future-time/duplicate-establishment rejection prevents this fixture isolating overlap handling."
+    },
+    {
+      "id": "BH-06",
+      "verdict": "medium",
+      "route": "bad_spec",
+      "evidence": "Lane.Dispatch calls Source.CommandState before processor admission; that disk read is absent from authoritative/retained counters. P04 does not prove denial before every protected source lookup."
+    },
+    {
+      "id": "BH-07",
+      "verdict": "medium",
+      "route": "bad_spec",
+      "evidence": "Lane.Build replaces IEventPayloadProtectionService with a substitute and Commit calls custody directly. The local lane does not exercise the production payload adapter-to-custody route."
+    },
+    {
+      "id": "BH-08",
+      "verdict": "medium",
+      "route": "bad_spec",
+      "evidence": "ProtectSnapshotAsync returns its input and CommandState supplies a snapshot-free tail. Named copy files do not test actual snapshot, cache or backup replay/destruction."
+    },
+    {
+      "id": "BH-09",
+      "verdict": "medium",
+      "route": "bad_spec",
+      "evidence": "Retained ReadAsync ignores ReadFault and Restamp refreshes observation/certificate times. Current-source fault tests cannot establish historical stale/future/gap/outage rejection."
+    },
+    {
+      "id": "BH-10",
+      "verdict": "medium",
+      "route": "bad_spec",
+      "evidence": "The original packet pins HEAD while the test/DI implementation is uncommitted. This resume now retains selected source snapshots, diff, XML/build receipts and 95 local DLL hashes; these improve local attribution but do not supply a complete canonical or installed target."
+    },
+    {
+      "id": "EC-01",
+      "verdict": "medium",
+      "route": "bad_spec",
+      "evidence": "Duplicate root cause of BH-01: at exclusive expiry a remaining key still permits Open to decrypt. Both findings are retained individually; no installed cryptographic-expiry claim is accepted."
+    },
+    {
+      "id": "VG-01",
+      "verdict": "medium",
+      "route": "defer",
+      "evidence": "Pre-verified concurrent GDPR gap: ErasureRetiresSdkPrivateCanonicalManifestAfterCrashBeforeFirstParticipantAsync constructs DiscoverableRecovery=true itself; no erasure case covers a handler-generated pre-marker manifest. Preserve those unrelated changes; return to their owner."
+    },
+    {
+      "id": "VG-02",
+      "verdict": "medium",
+      "route": "defer",
+      "evidence": "Pre-verified concurrent GDPR gap: the processing-page HTTP malformed-envelope cases have matching tenants/parties, so removing the foreign-record guards would leave them passing. Preserve those unrelated changes; return to their owner."
+    }
+  ],
+  "groups": {
+    "testCustodyAndLocalProof": [
+      "BH-01",
+      "BH-02",
+      "BH-03",
+      "BH-04",
+      "BH-05",
+      "BH-06",
+      "BH-07",
+      "BH-08",
+      "BH-09",
+      "EC-01"
+    ],
+    "sourceAttribution": [
+      "BH-10"
+    ],
+    "concurrentGdprWork": [
+      "VG-01",
+      "VG-02"
+    ]
+  },
+  "disposition": "Delivery remains incomplete. User-directed scope supersedes the old local-only intent. Loop back to owner input resolution; no pre-existing user code is reverted. No production implementation was made in this resume.",
+  "deferredLedgerPreserved": "The shared deferred-work.md has staged/unstaged concurrent user changes and was not edited; the two out-of-scope findings remain individually recorded here and in the spec."
+}

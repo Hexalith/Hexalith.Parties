@@ -1,0 +1,91 @@
+{
+  "created_utc": "2026-10-25T10:22:19.965564+00:00",
+  "files": [
+    {
+      "owner": "parties",
+      "path": "src/Hexalith.Parties.Client/AdminPortal/HttpAdminPortalGdprClient.cs",
+      "sha256": "805a3c88eff08f666b9e94eefb22d6130334e44df79f8579056e313122c8fa71"
+    },
+    {
+      "owner": "parties",
+      "path": "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.ProcessingBuckets.cs",
+      "sha256": "3f873ec17f81ea8af02d81f40307fe41fa389bf703be568c330cd8216ee28a38"
+    },
+    {
+      "owner": "parties",
+      "path": "src/Hexalith.Parties.Projections/Handlers/PartyDetailSdkProjectionHandler.cs",
+      "sha256": "fbca567d47e60a630994884860224ab595dcdb5d4a97b4d6f11d8ef4c40c1f56"
+    },
+    {
+      "owner": "parties",
+      "path": "src/Hexalith.Parties.Projections/Models/PartyProcessingBucketValidation.cs",
+      "sha256": "7dea677b915d72242318ba82c6c863ec2549b87e6a62e6c97f204ed3921d58c2"
+    },
+    {
+      "owner": "parties",
+      "path": "src/Hexalith.Parties/Queries/PartySdkQueryService.ProcessingBuckets.cs",
+      "sha256": "421dd210d2f104c1725e44403854f46d408979c665197f2ff375684cda9f20c4"
+    },
+    {
+      "owner": "parties",
+      "path": "tests/Hexalith.Parties.Client.Tests/AdminPortal/AdminPortalGdprOperationContractTests.cs",
+      "sha256": "2e287e9dda8d177e20721dafffdaabe1d9ae1a72f0fabd5fd3857dd3c6a74d57"
+    },
+    {
+      "owner": "parties",
+      "path": "tests/Hexalith.Parties.Tests/Projections/PartyProcessingGenerationRecoveryTests.cs",
+      "sha256": "4a0e669856c410172603bfbebc3ae979b769be318417ba5b62b15dc3c48db00a"
+    },
+    {
+      "owner": "eventstore",
+      "path": "src/Hexalith.EventStore.Client/Projections/DaprReadModelStore.cs",
+      "sha256": "a437923f89464dd23ae0f0c0d6ae3fd6b04b57730596d09eab6d0bb0b831fcfa"
+    },
+    {
+      "owner": "eventstore",
+      "path": "src/Hexalith.EventStore.Client/Projections/IReadModelBatchStore.cs",
+      "sha256": "df7fdec4a45ad5c9e103afb63e39ee32dae22c90fe56315946173fc7ab72de81"
+    },
+    {
+      "owner": "eventstore",
+      "path": "src/Hexalith.EventStore.Client/Projections/ReadModelGenerationStaging.cs",
+      "sha256": "043e1fec14df88e1a20a2e6e69bea1e28df022dc3dc01f6ab30557eceab91fde"
+    },
+    {
+      "owner": "eventstore",
+      "path": "src/Hexalith.EventStore.DomainService/DomainProjectionDispatcher.cs",
+      "sha256": "41041c9fdc7c0644e4f01f2a140c28a1b791c935d90f0272a8b9011936e020ee"
+    },
+    {
+      "owner": "eventstore",
+      "path": "src/Hexalith.EventStore.Testing/Fakes/InMemoryReadModelStore.cs",
+      "sha256": "fcb529addccbf13a4fe973c3f63bf02c093c15372ed5776546066bfd65e83dcb"
+    },
+    {
+      "owner": "eventstore",
+      "path": "tests/Hexalith.EventStore.Client.Tests/Projections/ReadModelBatchStoreTests.cs",
+      "sha256": "e4b9bc1f6f46be68efde9019592bb3aac6f532a9d298069bd1d1c0daf51a394b"
+    },
+    {
+      "owner": "eventstore",
+      "path": "tests/Hexalith.EventStore.DomainService.Tests/DomainProjectionDispatcherV2Tests.cs",
+      "sha256": "107ae17a2553753ab49316e85c5f28497714a800962f9002557849d38bb82637"
+    },
+    {
+      "owner": "memories",
+      "path": "src/Hexalith.Memories.Server/NaturalLanguage/RetryNaturalLanguageEmbeddingActivity.cs",
+      "sha256": "7d29cf1b78f3f46d7f41ea0acb1a02d1a6a45d54b8c6268daa68a43f79bdeb5b"
+    },
+    {
+      "owner": "memories",
+      "path": "tests/Hexalith.Memories.IntegrationTests/Ingestion/NaturalLanguageErasureIntegrationTests.cs",
+      "sha256": "01db3ac70afc70c7bac3ffc1a2a853fd36e747b9225293589c5fd6e7c93eee68"
+    },
+    {
+      "owner": "memories",
+      "path": "tests/Hexalith.Memories.IntegrationTests/Ingestion/RetryWorkflowErasureIntegrationTests.cs",
+      "sha256": "f9f143c9caa5bc8e2dd94caa8d0ee511e0799912a431d95ec850e5e5e043e0ef"
+    }
+  ],
+  "excluded": "All concurrent user edits, the extra owner-delivery spec, PartiesServiceCollectionExtensions.cs, gateway discovery/identity work, and parent-owned ledger/spec/receipts are excluded."
+}

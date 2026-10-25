@@ -69,7 +69,8 @@ $lanes = @(
     @{ Root=$PartiesRoot; Project='Hexalith.Parties.Tests'; Classes=@('*PartyIdentityAdmissionTests', '*PartyIdentityQueryHandlerTests', '*PartyIdentityRetentionConfigurationTests', '*PartyDomainProcessorValidationTests', '*PartySdkQueryHandlerTests', '*PartiesProcessEndpointTests', '*PartiesDomainServiceSecurityTests'); Matrix='Current identity/history/isolation' },
     @{ Root=$PartiesRoot; Project='Hexalith.Parties.Security.Tests'; Classes=@('*IdentityHistoryProtectionTests', '*PartyPayloadProtectionServiceTests'); Matrix='Custody separation/denial' },
     @{ Root=$PartiesRoot; Project='Hexalith.Parties.Client.Tests'; Classes=@('*HttpPartiesIdentityClientTests', '*HttpPartiesCommandClientTests', '*HttpPartiesQueryClientTests', '*DependencyInjectionTests'); Matrix='Isolation/compatibility' },
-    @{ Root=$PartiesRoot; Project='Hexalith.Parties.UI.Tests'; Classes=@('*IdentityBindingBoundaryTests', '*IdentityBindingProvisioningServiceTests', '*PartyIdClaimResolverTests', '*SelfScopedPartiesClientTests'); Matrix='Consumer compatibility' }
+    @{ Root=$PartiesRoot; Project='Hexalith.Parties.UI.Tests'; Classes=@('*IdentityBindingBoundaryTests', '*IdentityBindingProvisioningServiceTests', '*PartyIdClaimResolverTests', '*SelfScopedPartiesClientTests'); Matrix='Consumer compatibility' },
+    @{ Root=$PartiesRoot; Project='Hexalith.Parties.IntegrationTests'; Classes=@('*PartyIdentityPersistedVerifierTests'); Matrix='Authenticated persisted P-01-P-10 owner lane' }
 )
 $manifest = @()
 foreach ($lane in $lanes) {

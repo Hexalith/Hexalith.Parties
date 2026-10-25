@@ -1,0 +1,222 @@
+{
+  "created_utc": "2026-10-25T10:24:45.158151+00:00",
+  "implementation_owned_files": "/tmp/parties-five-processing-20261025/rederive2-owned-files.json",
+  "executable_commands": "/tmp/parties-five-processing-20261025/rederive2-rerun.sh",
+  "kept_foundations": [
+    "/tmp/parties-five-processing-20261025/rederive-1",
+    "/tmp/parties-five-processing-20261025/rederive-2"
+  ],
+  "checks": [
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-parties-build.log",
+      "sha256": "54382267826c4839abda040c08c2d4bc9fc1a1ee6fff9c0f708b825036e05195",
+      "build": "passed"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-parties-focused-tests.log",
+      "sha256": "acbf125f3de267463156492ffa7b24fe91bc1f7b8672120064980bbe3080172d",
+      "results": {
+        "total": 887,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-projections-source-build.log",
+      "sha256": "3124df1e9130d2f946713f6c1c2bde4ef07b659a51fd97370ae122353eba385e",
+      "build": "passed"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-projections-source-tests.log",
+      "sha256": "22b0f3e23104e8736ceec048453f7fa64130265df924a30940982438a2f5fedc",
+      "results": {
+        "total": 461,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 1
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-projections-release-build.log",
+      "sha256": "d0c5ac5cf56dfc40e2d3c329c9eab9403fe6d419ddb02bdb22fc3a561c90cc19",
+      "build": "passed"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-projections-release-tests.log",
+      "sha256": "460c4c8dc8deb18af7e66061ec60fee4371782bac79786f86d090cce44607b19",
+      "results": {
+        "total": 461,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 2
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-client-release-build.log",
+      "sha256": "e94eff11f84252bd87b2a6c1d8c9e4f9a98fddb1a883cd9685dad796a234de44",
+      "build": "passed"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-client-release-tests.log",
+      "sha256": "96c397cd87871c2443d1914be8e5df958fdeb8e28829fec29fbfe00744ad2553",
+      "results": {
+        "total": 340,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-eventstore-client-build.log",
+      "sha256": "13a7065457746bb624e3414b731adf5a85ba47becfc9a2440024ef0dafc16a27",
+      "build": "passed"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-eventstore-client-all-tests.log",
+      "sha256": "7068c79da414130671bbba5f9c9bf425b38f917e401d6e04aa345b6e9fdd0e81",
+      "results": {
+        "total": 2151,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 2
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-eventstore-batch-tests.log",
+      "sha256": "afe77cc68b39fec38d1245234b5817e3efaffbe1a2aa055b3bc7557675b3431c",
+      "results": {
+        "total": 37,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-eventstore-domain-final-build.log",
+      "sha256": "fe7aa91af1e27ba07c834932767761ad3eeb7a8903744d718c337796178672eb",
+      "build": "passed"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-eventstore-dispatcher-tests.log",
+      "sha256": "e0dd72eaabd43fc6945041564e5e7a6ce78b155fb76163b8283e60efab3e2a13",
+      "results": {
+        "total": 62,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-eventstore-replay-tests.log",
+      "sha256": "6a8f00528b0d23262352a455321e3f0af94de9ee388efb8bb1a0d836c1de74d2",
+      "results": {
+        "total": 3,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-memories-integration-build.log",
+      "sha256": "93a939599d79beacc18292e5c030427bc4fd8b5bf178c19f4e1355dcf766fcfd",
+      "build": "passed"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-memories-runtime-final.log",
+      "sha256": "e01a6c1eb0933b82d99657f71d8395a5a5e6d05ed0227a918b71840ec7b4d968",
+      "results": {
+        "total": 70,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-memories-release-build.log",
+      "sha256": "9e364637cf676b5437ec74d0b1f92b305b678e59cc40c9306dd73947c3a7b08d",
+      "build": "passed"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-memories-release-focused-tests.log",
+      "sha256": "d370231a5c93960472b1ce6206b2abf6c6dfe087f86e8b32b313018e42320d7c",
+      "results": {
+        "total": 38,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-publisher-tests.log",
+      "sha256": "960fe9fe0b5c8026423a2247733c3a65c8abada2f0bfae823e348a66b437160b",
+      "unittest_results": {
+        "total": 150,
+        "failed": 0
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-no-warning-overrides.log",
+      "sha256": "03b89bfdf713a81128c57b8c157a8d477817949a20635ce07e10427740e99604"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-eventstore-whitespace.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-memories-whitespace.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-parties-code-whitespace.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-memories-release-tests.log",
+      "sha256": "cb34690b552a1ffdebab320ab132a442097dd8ff4d219c698abcd8c031c22cdd",
+      "results": {
+        "total": 3056,
+        "errors": 0,
+        "failed": 1,
+        "skipped": 1
+      }
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-client-build.log",
+      "sha256": "3a83300f483e8246310646bcf05ddfbc1fcebf845da2f2bf1ba8940b346d8018",
+      "build": "failed"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-eventstore-domain-all-tests.log",
+      "sha256": "f22a11b3daf20f86c6afe674771ae1c86e9233d7e5e86d47aed17718a56c6a95"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-eventstore-domain-all-stop.txt",
+      "sha256": "1febfdca262e765726722a0942cfe99aad8db6dafafab3241a78b043b732ecea"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-ci-build.log",
+      "sha256": "60d4e5ada172254978db90b62e28665d31e979cba4cbbf1f2e95d11b5432b977",
+      "build": "passed"
+    },
+    {
+      "log": "/tmp/parties-five-processing-20261025/rederive2-ci-tests.log",
+      "sha256": "b77db94dfb06fff171022a79cdc71be6f21e5ab2010cd2f98dc3436511013ebb",
+      "results": {
+        "total": 455,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "limitations": [
+    "No task staging, commits, pushes, dependency/catalog version changes, nested initialization, deployment, production migration/erasure or release dispatch was performed.",
+    "Parent owns final graph documentation, independent review and Git publication; concurrent user changes are excluded from the implementation ownership manifest.",
+    "Client source graph is blocked by unchanged FrontComposer.Shell retained ProjectReference AdditionalProperties (HXW006). Client package/Release checks passed.",
+    "Full Memories Server package/Release suite has one unrelated AccessTelemetryA41CloseOutTests wording mismatch and one existing opt-in submodule-mutating skip; affected NL server lane passed 38/38 and actual native lane passed 70/70.",
+    "Full DomainService broad pre-correction run was stopped after unrelated missing nested Tenants subject evidence; the staged-only registration regression it exposed was corrected and all final focused dispatcher/catalog/replay checks passed. No full-suite pass is claimed.",
+    "Initial expanded native lane hit an unchanged index readiness timeout under concurrent workload; exact isolated retry and final complete 70-control run passed without weakening the gate.",
+    "Published package generation support/adoption and deferred R2-B5 legacy binary replay / R2-B7 tenant-wide retry erasure remain explicitly outside closure."
+  ]
+}

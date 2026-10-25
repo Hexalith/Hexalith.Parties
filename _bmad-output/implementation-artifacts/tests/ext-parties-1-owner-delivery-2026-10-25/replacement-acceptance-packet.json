@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "recordId": "EXT-PARTIES-1",
+  "preparedAtUtc": "2026-10-25T10:50:00Z",
+  "disposition": "proposed-coordination",
+  "accepted": false,
+  "available": false,
+  "liveQualified": false,
+  "localPersistedEvidenceIsAvailable": false,
+  "registerTargetNotReplaced": "56cb4401c4179d431385ad3d931fefa402e4fc5a",
+  "registerFields": {
+    "Owner": "Project owner (user declaration 2026-10-07), acting as Parties Maintainer",
+    "Repository": "Hexalith.Parties",
+    "RequiredArtifact": "Selected V1 branch: Branch B. Branch A: a public AI Party type and an authorization contract permitting only the Agents Service Principal to create hexa's deterministic provisioned Party under that type. Branch B: Parties Maintainer and Product formally accept the existing Organization-typed provisioned Party as the V1 launch contract, verified everywhere by its immutable deterministic id and never by type. Both branches require create-only AD-2 provisioning, idempotent exact retries, typed conflict for divergent identity/type requests, mandatory tenant scope, no tenant-role creation or replacement, and no Party PII in public results. The record must name the selected branch; absence of that decision is Uncommitted. Independently of the selected identity branch, Parties exposes a tenant-scoped authoritative resolution by PartyId returning stable Party classification (Human, Organization, or AI), active/liveness state, evidence position and observed instant, plus typed missing, ambiguous, stale, denied, and unavailable outcomes. For every human Party, the same seam also returns one stable non-PII AuthenticatedHumanActorId, HumanActorBindingVersion, validity interval, and queryable binding history sufficient to reproduce the identity in force at an action; it returns typed missing, ambiguous, stale, and overlapping-history outcomes. AD-8 uses both classification and binding at predefined-approver configuration and every runtime approver resolution; non-human Parties can never be Approvers, and a human command carrying a Party must bind to the same authenticated actor id.",
+    "TargetVersionOrCommit": "56cb4401c4179d431385ad3d931fefa402e4fc5a",
+    "TargetIntegrationDate": null,
+    "CompatibilityContractAndVerificationCommand": "Contract: for the selected branch, create and resolve exactly one deterministic tenant-scoped provisioned Party for hexa under the Agents Service Principal; verify immutable identity by id on every path and additionally verify AI type only for Branch A; reject tenant-role creation, cross-tenant access, divergent replay, and replacement; return typed safe outcomes without Party PII; resolve approver candidates to fresh authoritative human-type and active/liveness evidence; resolve each human Party to its stable AuthenticatedHumanActorId and binding version; reproduce the binding in force for a historical instant; and reject missing, stale, ambiguous, overlapping, or actor-mismatched bindings with typed fail-closed outcomes. Register command, not replaced and not accepted by this packet: test \"$(git -C ../parties rev-parse HEAD)\" = \"56cb4401c4179d431385ad3d931fefa402e4fc5a\" && test -z \"$(git -C ../parties status --porcelain)\" && pwsh -NoProfile -File ../parties/eng/verify-ext-parties-1.ps1 -Mode Live -EventStoreRoot ../eventstore -PlatformRoot ../platform -EvidenceDirectory /tmp/ext-parties-1-live.",
+    "RequiredEvidenceLevel": "Levels 4 and 5",
+    "AcceptedStatus": "proposed",
+    "ConsumingStories": "RQ-1; Stories 5.2, 5.4, 5.5, 6.1, 6.6, 7.1-7.5, 8.1-8.4, and 8.8 directly or conditionally consume identity or human Party/liveness/binding evidence. Story 6.1 directly verifies the caller and provisioned Agent Party and executes FR-8 membership step 10; Story 5.5's consumption remains conditional on the Product-selected recorder scope; Story 8.4 consumes the Release-Operator review branch. Branch-B-compatible identity-by-id portions may be developed where applicable, but no consumer may cite that work or any human actor-binding seam as launch evidence while this record is Uncommitted"
+  },
+  "fieldNotes": {
+    "AcceptedStatus": "proposed, not accepted. The Agents register still records Committed. This packet does not copy that status and does not edit the register.",
+    "TargetIntegrationDate": "unresolved owner field. The register value 2026-10-08 is historical, was not met, and is not accepted here.",
+    "TargetVersionOrCommit": "Remains 56cb4401c4179d431385ad3d931fefa402e4fc5a. Proposed coordination commits below do not replace it."
+  },
+  "executableLiveCommand": {
+    "command": "pwsh -NoProfile -File eng/verify-ext-parties-1.ps1 -Mode Live -EvidenceDirectory /tmp/ext-parties-1-owner-delivery-20261025-live",
+    "label": "fail-closed gate, proposed, not acceptance, not qualification",
+    "observedExitCode": 1
+  },
+  "proposedCoordination": {
+    "label": "proposed coordination, not acceptance",
+    "acceptance": false,
+    "replacesRegisterTarget": false,
+    "parties": {
+      "root": "/home/administrator/projects/hexalith/parties",
+      "commit": "9c116910f9d712b82ae27ceb1946605d76c8a451"
+    },
+    "eventStore": {
+      "root": "/home/administrator/projects/hexalith/eventstore",
+      "commit": "d41a3c55a684491d02f61c5ea98e0f74332b5d4d",
+      "resolvedHexalithEventStoreVersion": "3.127.0"
+    },
+    "platform": {
+      "root": "/home/administrator/projects/hexalith/platform",
+      "commit": "90f33a59164d0dcfc21fb688f28651afa4d3df4b",
+      "checkoutAtAbortedLocalScriptStart": "f045ac70d107bad32a1c1d2463f8e0f6fe7353cd",
+      "note": "The aborted Local script never compiled Platform. HEAD moved from f045ac70d107bad32a1c1d2463f8e0f6fe7353cd to 90f33a59164d0dcfc21fb688f28651afa4d3df4b at 2026-10-25T11:40:19+0100, before that script exited and before the persisted owner class was executed. The pin is the checkout present for the persisted-class evidence."
+    },
+    "uncommittedWorkIsNotACommitId": true
+  },
+  "remainingInstallationInputs": [
+    {
+      "id": "Q1",
+      "decision": "Custody backend",
+      "status": "unresolved",
+      "acceptedAt": null,
+      "requiredOutcome": "Select a qualified existing backend/key hierarchy and show per-original-unit irreversible destruction of every generation, including historical immutable key backups. Reject soft delete, TTL, tombstones and merely denied reads."
+    },
+    {
+      "id": "Q2",
+      "decision": "Surviving authority",
+      "status": "unresolved",
+      "acceptedAt": null,
+      "requiredOutcome": "Name the independent authority outside the EventStore/OpenBao/ciphertext restore cut; writers, fence/reissue procedure, authenticated time source, skew and currentness bounds."
+    },
+    {
+      "id": "Q3",
+      "decision": "Inventory and operators",
+      "status": "unresolved",
+      "acceptedAt": null,
+      "requiredOutcome": "Close C01-C16 with real locations/generations or authenticated absence; durable work and original receipts, owner-approved targets and independent probes; define receipt minimization and retention."
+    },
+    {
+      "id": "Q4",
+      "decision": "Hard expiry during failures",
+      "status": "unresolved",
+      "acceptedAt": null,
+      "requiredOutcome": "Name cleanup, escalation and renewal operators; approve bounded retries, outage and receipt-completion limits and prove cryptographic expiry during outage. The five-second library wait is not an expiry SLA."
+    },
+    {
+      "id": "Q5",
+      "decision": "Original binding and revocation mapping",
+      "status": "unresolved",
+      "acceptedAt": null,
+      "requiredOutcome": "Approve collision/idempotency identity and exact original-binding lookup for establish/rebind/revoke. Revocation effectiveAt cannot create a later deadline for predecessor actor evidence; SDK AdmitAsync lacks binding/logical ID."
+    },
+    {
+      "id": "Q6",
+      "decision": "Host composition and source admission",
+      "status": "unresolved",
+      "acceptedAt": null,
+      "requiredOutcome": "Approve package/bootstrap path in both actual owning hosts, Party snapshot codec and payload adapter, retained-source reader and independent source admission; no no-op/local-dev fallback."
+    },
+    {
+      "id": "Q7",
+      "decision": "Erasure and retained metadata",
+      "status": "unresolved",
+      "acceptedAt": null,
+      "requiredOutcome": "Preserve immediate profile ineligibility and independently bounded actor history; decide all key/backup erasure boundaries and minimal content-free anchor/receipt/continuation retention. Reconcile ordinary backup-key retention with hard actor-purpose expiry."
+    },
+    {
+      "id": "D01",
+      "decision": "Deployment and registry",
+      "status": "unresolved",
+      "acceptedAt": null,
+      "requiredOutcome": "Supply both exact environment bindings and release/enrollment records; registry issuer, authoritative deployment and two explicitly approved tenants. No existing target established."
+    },
+    {
+      "id": "D02",
+      "decision": "Credentials and renewal",
+      "status": "unresolved",
+      "acceptedAt": null,
+      "requiredOutcome": "Supply credential references, only-writer policies, renewal owners and procedures for every role. Generic shared bootstrap and recovery credentials are ineligible substitutes."
+    },
+    {
+      "id": "D03",
+      "decision": "Restore target",
+      "status": "unresolved",
+      "acceptedAt": null,
+      "requiredOutcome": "Supply exact isolated target, immutable cut, authority reconciliation/epoch hooks, independent observer, outage approval, cleanup scope and verified disposal bound. No target selected."
+    },
+    {
+      "id": "D04",
+      "decision": "Failure injection",
+      "status": "unresolved",
+      "acceptedAt": null,
+      "requiredOutcome": "Supply exact workload UIDs and faults for admission/copy/destruction/receipt commit and lost acknowledgement; operator/observer credentials, duration, abort, cleanup and rollback. 6.1 rollout faults alone do not cover custody failure probes."
+    },
+    {
+      "id": "F1",
+      "decision": "Actor-free successor continuity",
+      "status": "unresolved",
+      "acceptedAt": null,
+      "requiredOutcome": "Approve proof producer/schema/version/scope/positions/epochs/currentness and erasure classification that proves complete unique successor versions/intervals without retaining expired predecessor actor/provenance/logical evidence. Current strict fold stays closed until accepted."
+    }
+  ],
+  "f2ReplacementAcceptance": {
+    "id": "F2",
+    "decision": "Replacement implementation and qualification acceptance",
+    "status": "unresolved",
+    "acceptedAt": null,
+    "requiredOutcome": "After decisions, implementation and installed probes exist, accept immutable source/package/image targets, integration date, exact complete Live command and all P-01-P-10 evidence. Keep status Committed until that owner-accepted command passes from clean exact checkouts.",
+    "closedByThisPacket": false
+  },
+  "liveEnvironmentVariables": [
+    "EXT_PARTIES_GATEWAY_URL",
+    "EXT_PARTIES_TENANT_A",
+    "EXT_PARTIES_TENANT_B",
+    "EXT_PARTIES_PROVISIONER_CREDENTIAL",
+    "EXT_PARTIES_IDENTITY_WRITER_CREDENTIAL",
+    "EXT_PARTIES_READER_CREDENTIAL",
+    "EXT_PARTIES_POLICY_ID",
+    "EXT_PARTIES_RETENTION",
+    "EXT_PARTIES_EXPIRY_TRIGGER",
+    "EXT_PARTIES_CUSTODY_TARGET",
+    "EXT_PARTIES_RESTORE_TARGET",
+    "EXT_PARTIES_FAILURE_INJECTION_TARGET"
+  ],
+  "evidence": {
+    "persistedOwnerClass": {
+      "command": "dotnet /tmp/ext-parties-1-owner-delivery-20261025/artifacts/bin/Hexalith.Parties.IntegrationTests/debug/Hexalith.Parties.IntegrationTests.dll -class *PartyIdentityPersistedVerifierTests -result-xml /tmp/ext-parties-1-owner-delivery-20261025/Hexalith.Parties.IntegrationTests-tests.xml",
+      "buildFlags": "Debug, UseHexalithProjectReferences=true, UseNuGetDeps=false, HexalithEventStoreRoot=/home/administrator/projects/hexalith/eventstore, HexalithEventStoreVersion=3.127.0, NuGetAudit=false",
+      "exitCode": 0,
+      "summary": "Total: 11, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 1.112s",
+      "xmlResults": "11 Pass",
+      "productionProviderRegistered": false,
+      "isAvailable": false
+    },
+    "fullLocalScript": {
+      "command": "pwsh -NoProfile -File eng/verify-ext-parties-1.ps1 -Mode Local -EventStoreRoot /home/administrator/projects/hexalith/eventstore -PlatformRoot /home/administrator/projects/hexalith/platform -EvidenceDirectory /tmp/ext-parties-1-owner-delivery-20261025",
+      "exitCode": 1,
+      "stoppedAt": "Hexalith.EventStore.Server.Tests",
+      "summary": "Total: 450, Errors: 0, Failed: 4, Skipped: 0, Not Run: 0, Time: 5.811s",
+      "failingTests": "StreamsControllerTests.NativeHeadGatewayCrossesRealWorkloadMiddlewareWithJwtBindingsOrExactSignedProof (head 0/5, jwtBindings true/false): observation should not be null",
+      "bypassed": false,
+      "persistedClassReached": false
+    },
+    "liveWithoutVariables": {
+      "evidence": "/tmp/ext-parties-1-owner-delivery-20261025-live/live-gate.txt",
+      "exitCode": 1,
+      "result": "Missing live inputs: EXT_PARTIES_GATEWAY_URL, EXT_PARTIES_TENANT_A, EXT_PARTIES_TENANT_B, EXT_PARTIES_PROVISIONER_CREDENTIAL, EXT_PARTIES_IDENTITY_WRITER_CREDENTIAL, EXT_PARTIES_READER_CREDENTIAL, EXT_PARTIES_POLICY_ID, EXT_PARTIES_RETENTION, EXT_PARTIES_EXPIRY_TRIGGER, EXT_PARTIES_CUSTODY_TARGET, EXT_PARTIES_RESTORE_TARGET, EXT_PARTIES_FAILURE_INJECTION_TARGET",
+      "qualification": false
+    },
+    "liveWithAllTwelveVariables": {
+      "evidence": "/tmp/ext-parties-1-owner-delivery-20261025-live-present/live-gate.txt",
+      "exitCode": 1,
+      "result": "Live qualification remains blocked: production custody/policy and complete authenticated P-01-P-10 persisted-state/restart/restore/failure-injection lanes are not installed. The purpose-scoped history contract and LiveReadiness read probes do not establish complete qualification.",
+      "qualification": false
+    }
+  }
+}

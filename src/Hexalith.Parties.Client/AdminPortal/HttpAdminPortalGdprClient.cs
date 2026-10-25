@@ -211,7 +211,12 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         QueryPagingMetadata? paging = document.RootElement.TryGetProperty("metadata", out JsonElement metadata)
             && metadata.TryGetProperty("paging", out JsonElement pagingElement)
             ? pagingElement.Deserialize<QueryPagingMetadata>(HttpPartiesCommandClient.JsonOptions) : null;
-        if (paging is null || paging.PageSize != pageSize || paging.HasMore == true && string.IsNullOrEmpty(paging.NextCursor))
+        if (paging is null || paging.PageSize != pageSize || records.Length > pageSize || paging.HasMore is null
+            || paging.HasMore == true && (records.Length == 0 || string.IsNullOrWhiteSpace(paging.NextCursor) || paging.NextCursor == cursor)
+            || paging.HasMore == false && paging.NextCursor is not null
+            || paging.TotalCount is < 0 || paging.TotalCount < records.Length
+            || records.Any(record => record is null || record.SequenceNumber < 0 || record.PartyId != partyId || record.TenantId != _options.Tenant)
+            || !records.Select(record => record.SequenceNumber).SequenceEqual(records.Select(record => record.SequenceNumber).Distinct().Order()))
             throw new InvalidOperationException("Processing-history paging metadata is incomplete.");
         return new(records, paging.NextCursor, paging.TotalCount);
     }
