@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using Hexalith.EventStore.Client.Security;
 using Hexalith.EventStore.Client.Gateway;
 using Hexalith.EventStore.Client.Streams;
@@ -9,6 +11,7 @@ using FluentValidation;
 using Hexalith.EventStore.Client.Handlers;
 using Hexalith.EventStore.Client.Registration;
 using Hexalith.EventStore.DomainService;
+using Hexalith.EventStore.Contracts.Projections;
 using Hexalith.EventStore.Contracts.Security;
 using Hexalith.Memories.Client.Rest;
 using Hexalith.Parties.Authorization;
@@ -415,7 +418,12 @@ public static class PartiesServiceCollectionExtensions {
         // FluentValidation (assembly scanning — no explicit validator registration)
         _ = services.AddValidatorsFromAssemblyContaining<CreatePartyValidator>();
 
-        _ = services.ConfigureHttpJsonOptions(options => PartiesJsonOptions.ApplyTo(options.SerializerOptions));
+        _ = services.ConfigureHttpJsonOptions(options =>
+        {
+            PartiesJsonOptions.ApplyTo(options.SerializerOptions);
+            // SDK projection outcomes use numeric protocol values; domain payload enums stay strings.
+            options.SerializerOptions.Converters.Insert(0, new JsonNumberEnumConverter<ProjectionDispatchStatus>());
+        });
 
         return services;
     }
