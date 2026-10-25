@@ -34,4 +34,7 @@ public interface IAdminPortalGdprClient
     Task<AdminPortalExportDownload> ExportPartyDataAsync(string partyId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<ProcessingActivityRecord>> GetProcessingRecordsAsync(string partyId, CancellationToken cancellationToken);
+    /// <summary>Reads a bounded page; a cursor is bound to caller, party, tenant, size and projection revision.</summary>
+    Task<ProcessingActivityPage> GetProcessingRecordsPageAsync(string partyId, int pageSize, string? cursor, CancellationToken cancellationToken)
+        => throw new NotSupportedException("This client does not support protected processing-history pages.");
 }

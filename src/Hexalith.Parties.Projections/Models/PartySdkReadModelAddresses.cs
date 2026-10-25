@@ -41,6 +41,15 @@ public static class PartySdkReadModelAddresses
     public static string Processing(string tenantId, string partyId)
         => Build(tenantId, PartyProjectionNames.Detail, partyId, ProcessingSlot);
 
+    /// <summary>Builds an aggregate-owned, generation-scoped processing bucket address.</summary>
+    public static string ProcessingBucket(string tenantId, string partyId, string generation, long bucket)
+    {
+        ValidateSegment(generation, nameof(generation));
+        ArgumentOutOfRangeException.ThrowIfNegative(bucket);
+        return Build(tenantId, PartyProjectionNames.Detail, partyId,
+            ProcessingSlot + "." + generation + "." + bucket.ToString(System.Globalization.CultureInfo.InvariantCulture));
+    }
+
     private static string Build(string tenantId, string projection, string aggregateId, string slot)
     {
         ValidateSegment(tenantId, nameof(tenantId));

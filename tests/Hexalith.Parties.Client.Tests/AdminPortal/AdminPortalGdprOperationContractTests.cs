@@ -472,6 +472,21 @@ public sealed class AdminPortalGdprOperationContractTests
     }
 
     [Fact]
+    public async Task GetProcessingRecordsPageAsyncPreservesProtectedContinuationAndBoundedEnvelope()
+    {
+        var handler = new RecordingHandler(HttpStatusCode.OK,
+            """{"payload":[],"metadata":{"paging":{"pageSize":17,"nextCursor":"protected-next","totalCount":80,"hasMore":true}}}""", "application/json");
+        var client = CreateHttpClient(handler);
+        ProcessingActivityPage page = await client.GetProcessingRecordsPageAsync("party-1", 17, "protected-prior", CancellationToken.None);
+        page.NextCursor.ShouldBe("protected-next");
+        page.TotalCount.ShouldBe(80);
+        using JsonDocument body = JsonDocument.Parse(handler.LastRequestBody.ShouldNotBeNull());
+        body.RootElement.GetProperty("paging").GetProperty("pageSize").GetInt32().ShouldBe(17);
+        body.RootElement.GetProperty("paging").GetProperty("cursor").GetString().ShouldBe("protected-prior");
+        body.RootElement.GetProperty("queryType").GetString().ShouldBe("GetProcessingRecords");
+    }
+
+    [Fact]
     public async Task GetProcessingRecordsAsync_UsesAuthoritativeProcessingRecordsQueryAsync()
     {
         ProcessingActivityRecord[] records =

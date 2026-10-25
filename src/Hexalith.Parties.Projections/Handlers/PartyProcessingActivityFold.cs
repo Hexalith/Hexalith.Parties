@@ -28,6 +28,11 @@ internal static class PartyProcessingActivityFold
         ILogger? logger = null)
     {
         var records = new List<ProcessingActivityRecord>(current?.Records ?? []);
+        var recordIndexes = new Dictionary<long, int>();
+        for (int index = 0; index < records.Count; index++)
+        {
+            recordIndexes.Add(records[index].SequenceNumber, index);
+        }
         long lastSequence = current?.LastSequenceNumber ?? long.MinValue;
         long? erasureSequence = current?.ErasureSequenceNumber;
         DateTimeOffset? erasedAt = current?.ErasedAt;
@@ -55,7 +60,7 @@ internal static class PartyProcessingActivityFold
                         ? "Redacted"
                         : "Failed";
 
-            int existingRecordIndex = records.FindIndex(record => record.SequenceNumber == @event.SequenceNumber);
+            int existingRecordIndex = recordIndexes.TryGetValue(@event.SequenceNumber, out int found) ? found : -1;
             ProcessingActivityRecord derivedRecord = CreateRecord(request, @event, payload, outcome);
             if (existingRecordIndex >= 0)
             {
@@ -71,6 +76,7 @@ internal static class PartyProcessingActivityFold
             }
             else if (erasureSequence is null)
             {
+                recordIndexes.Add(@event.SequenceNumber, records.Count);
                 records.Add(derivedRecord);
             }
 
@@ -95,7 +101,7 @@ internal static class PartyProcessingActivityFold
             projectedAt = PartySdkProjectionFold.ProjectedAt([@event], projectedAt);
         }
 
-        return new PartyProcessingSdkReadModel
+        return (current ?? new PartyProcessingSdkReadModel()) with
         {
             Records = records,
             LastSequenceNumber = lastSequence,

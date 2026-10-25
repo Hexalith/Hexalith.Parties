@@ -79,7 +79,8 @@ public sealed partial class PartySdkQueryService(
             DateTimeOffset now = timeProvider.GetUtcNow();
             ProjectionFreshnessMetadata freshness = ToPartiesFreshness(read.Value, now, degraded);
             PartyDetail detail = stored with { Freshness = freshness };
-            IReadOnlyList<ProcessingActivityRecord> records = processing.Value?.Records ?? [];
+            IReadOnlyList<ProcessingActivityRecord> records = await ReadAllProcessingRecordsAsync(query.TenantId, partyId,
+                processing.Value ?? new PartyProcessingSdkReadModel(), processing.ETag, cancellationToken).ConfigureAwait(false);
             bool unavailable = string.IsNullOrWhiteSpace(detail.DisplayName) || string.IsNullOrWhiteSpace(detail.SortName);
             var package = new PartyDataPortabilityPackage
             {
@@ -141,8 +142,11 @@ public sealed partial class PartySdkQueryService(
                 cancellationToken).ConfigureAwait(false);
             degraded |= detailDegraded;
             PartyProcessingSdkReadModel model = read.Value ?? new PartyProcessingSdkReadModel();
+            if (query.Paging is not null)
+                return await ReadProcessingPageAsync(query, partyId, model, read.ETag, degraded, cancellationToken).ConfigureAwait(false);
+            IReadOnlyList<ProcessingActivityRecord> records = await ReadAllProcessingRecordsAsync(query.TenantId, partyId, model, read.ETag, cancellationToken).ConfigureAwait(false);
             return Success(
-                model.Records,
+                records,
                 "party-processing-records",
                 model,
                 read.ETag,

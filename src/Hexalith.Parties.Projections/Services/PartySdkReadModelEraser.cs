@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
+using System.Text.Json;
 
 using Hexalith.EventStore.Client.Projections;
+using Hexalith.EventStore.Contracts.Projections;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Handlers;
 using Hexalith.Parties.Projections.Models;
@@ -53,14 +55,32 @@ public sealed class PartySdkReadModelEraser(
                 .GetAsync<PartyIndexSdkReadModel>(storeName, indexKey, cancellationToken)
                 .ConfigureAwait(false);
 
+            var scope = new ReadModelBatchScope(
+                storeName, tenantId, "party", partyId, "party-erasure", $"{invocationId}-{attempt}");
+            PartyProcessingSdkReadModel retainedProcessing = ResetProcessingCheckpoint(processing.Value, cleanupAt);
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+            if (retainedProcessing.BucketGeneration is null && retainedProcessing.Records.Count > PartyProcessingBucket.Capacity)
+            {
+                // Article 30 retention must not force an oversized erasure batch. Immutable
+                // buckets remain non-authoritative until the coordinated tombstone publication.
+                string generation = PartyDetailSdkProjectionHandler.Generation(
+                    JsonSerializer.Serialize(new[] { tenantId, partyId, processing.ETag }));
+                // The observed legacy ETag keeps immutable staging identities stable across
+                // application restarts; the canonical erasure attempt still has its own ID.
+                ReadModelBatchScope generationScope = scope with
+                {
+                    BatchId = "legacy-audit-" + generation
+                };
+                var request = new ProjectionRequest(tenantId, "party", partyId, []);
+                await ReadModelGenerationStaging.StageAsync(batchStore, generationScope,
+                    PartyDetailSdkProjectionHandler.BucketOperations(request, generation, retainedProcessing.Records),
+                    cancellationToken).ConfigureAwait(false);
+                retainedProcessing = PartyDetailSdkProjectionHandler.ToBucketMetadata(retainedProcessing, generation,
+                    retainedProcessing.Records, retainedProcessing.Records.Count);
+            }
+#endif
             var batch = new ReadModelBatch(
-                new ReadModelBatchScope(
-                    storeName,
-                    tenantId,
-                    "party",
-                    partyId,
-                    "party-erasure",
-                    $"{invocationId}-{attempt}"),
+                scope,
                 [
                     ReadModelBatchOperation.Write(
                         detailKey,
@@ -68,7 +88,7 @@ public sealed class PartySdkReadModelEraser(
                         Concurrency(detail.ETag)),
                     ReadModelBatchOperation.Write(
                         processingKey,
-                        ResetProcessingCheckpoint(processing.Value, cleanupAt),
+                        retainedProcessing,
                         Concurrency(processing.ETag)),
                     ReadModelBatchOperation.Write(
                         indexKey,
@@ -108,7 +128,11 @@ public sealed class PartySdkReadModelEraser(
         return new PartyDetailSdkReadModel
         {
             Detail = PartyDetailProjectionHandler.ApplyErasure(partyId, current?.Detail) is { } redacted
-                ? redacted with { ErasedAt = effectiveAt, LastModifiedAt = effectiveAt }
+                ? redacted with
+                {
+                    ErasedAt = effectiveAt,
+                    LastModifiedAt = effectiveAt
+                }
                 : null,
             ErasureLifecycle = current?.ErasureLifecycle,
             LastSequenceNumber = current?.LastSequenceNumber ?? long.MinValue,
@@ -127,7 +151,7 @@ public sealed class PartySdkReadModelEraser(
     {
         DateTimeOffset requestedAt = cleanupAt ?? DateTimeOffset.UtcNow;
         DateTimeOffset effectiveAt = current?.ErasedAt ?? requestedAt;
-        return new PartyProcessingSdkReadModel
+        return (current ?? new PartyProcessingSdkReadModel()) with
         {
             Records = current?.Records ?? [],
             LastSequenceNumber = current?.LastSequenceNumber ?? long.MinValue,

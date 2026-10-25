@@ -339,6 +339,10 @@ reason: `PartyProcessingSdkReadModel.Records` grows unbounded — one ever-growi
 status: open
 decision: 2026-09-06 Paged bucketed model — Partition records into bounded state buckets and add cursor-paged reads with an explicit compatibility and migration path.
 
+implementation_2026_10_25: Fixed-capacity inline/bucket storage, pure rebuild generation plans, bounded SDK staging, revision-scoped cursor reads and complete compatibility exports are implemented. Source projection/query controls pass. Matching SDK package publication/adoption and deployed writer drain remain separate gates; owner review/publication is pending.
+verification_2026_10_25: `tests/five-processing-and-memories-erasure-2026-10-25/`; source receipt remains separate from package/deployment qualification.
+
+
 ### DW-51: Resolve projection-handler performance and validation-coupling debt
 
 status: done 2026-10-21
@@ -762,6 +766,10 @@ verification_2026_10_24: `tests/five-memories-inventory-and-publication-2026-10-
 
 review_loop_1_2026_10_24: Re-executed the unchanged immutable publisher controls (150/150), Parties CI/OCI readers (455/455), and canonical-created positive/negative controls. Exact executor/validator pins and authoritative NuGet-404 behavior remain preserved; no release was dispatched. Evidence: `tests/five-memories-inventory-and-publication-2026-10-24/review1-verification.json`; prior same-day counts above remain historical.
   review_loop_2_2026_10_24: The immutable published executor and validator pins, canonical created-label fixtures and executable negative mutations are preserved. The loop2 receipt reruns the reader/CI/publisher controls without releasing or deploying.
+
+implementation_2026_10_25: Published immutable executor 11a3a79cfac4bba9548c6364a17a01ee9b561370 was fetched read-only; its validator SHA-256 matches 1913f75bdf39c494c5723bca5c04fcb2e6dc0474ad2d86c22e63aae96b9e850c. The unchanged owner publisher suite passes 150 tests. Current CI prerequisite restoration and final review remain in the batch receipt; no release was dispatched.
+verification_2026_10_25: `tests/five-processing-and-memories-erasure-2026-10-25/`; source receipt remains separate from package/deployment qualification.
+
 
 ### DW-108: Align diagnostic source gitlinks to the published nuget.org tags selected by the Builds catalog.
 
@@ -1768,6 +1776,9 @@ severity: medium
   summary: Fence legacy natural-language migration and erase both NL namespaces.
   evidence: Pre-existing canonical-only deletion and the unfenced RedisNaturalLanguageNamespaceMigrator can retain or recreate legacy NL rows; verify the actual migrator, both namespaces, deletion races, restart and unrelated survivors. No production legacy migration is authorized by this batch.
 
+implementation_2026_10_25: Atomic unit/source-fenced legacy copy/retirement and both-namespace deletion are implemented in Memories. Real native RedisSearch/FalkorDB race, recreation and survivor controls pass; final owner review/publication is pending.
+verification_2026_10_25: `tests/five-processing-and-memories-erasure-2026-10-25/`; source receipt remains separate from package/deployment qualification.
+
 
 ### DW-197: Qualify erasure of natural-language retry payloads and delayed retry work
 
@@ -1779,6 +1790,9 @@ severity: medium
   summary: Qualify erasure of natural-language retry payloads and delayed retry work.
   evidence: Pre-existing live/dead NL retry registries retain queued raw JSON outside the workflow claim-check ledger; qualify actual registry/worker payload erasure and delayed retries across restart. No production legacy migration is authorized by this batch.
 
+implementation_2026_10_25: Retry admission/requeue/overflow and exact-unit modern/legacy live/dead purge are fenced. New workflow inputs contain no raw content; an actual Dapr legacy raw-input history purge and worker recreation control passes with physical Redis key absence. Missing workflow cleanup capability fails explicitly. New IDs preserve tenant/unit boundaries; stored scope is checked before mutation. Matching legacy history fails closed until the owner explicitly qualifies scheduler quiescence, while foreign or ambiguous scope is never mutated. Final owner review/publication is pending.
+verification_2026_10_25: `tests/five-processing-and-memories-erasure-2026-10-25/`; source receipt remains separate from package/deployment qualification.
+
 
 ### DW-198: Bound legacy semantic deletion discovery without full Redis keyspace scans
 
@@ -1789,3 +1803,6 @@ severity: medium
 - source_spec: `_bmad-output/implementation-artifacts/spec-five-memories-inventory-and-publication-deferred-items.md`
   summary: Bound legacy semantic deletion discovery without full Redis keyspace scans.
   evidence: FindSemanticKeysAsync retains its pre-existing complete KeysAsync scan; verify bounded exact-unit discovery or explicit owner reconciliation with sparse databases, exact scope and cancellation. No production legacy migration is authorized by this batch.
+
+implementation_2026_10_25: Both deletion paths now share bounded exact-key/native-index discovery with scoped key and index coverage validation. Missing legacy coverage requires explicit reconciliation. Sparse-keyspace/cancellation controls pass; broader refresh compatibility verification and owner review/publication remain pending.
+verification_2026_10_25: `tests/five-processing-and-memories-erasure-2026-10-25/`; source receipt remains separate from package/deployment qualification.

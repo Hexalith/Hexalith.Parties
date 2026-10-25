@@ -34,6 +34,94 @@ public sealed class PartySdkQueryHandlerTests
     private static readonly DateTimeOffset s_now = new(2026, 8, 1, 12, 0, 0, TimeSpan.Zero);
 
     [Theory]
+    [InlineData("continue")]
+    [InlineData("tenant")]
+    [InlineData("party")]
+    [InlineData("user")]
+    [InlineData("page-size")]
+    [InlineData("revision")]
+    public async Task ProcessingBucketPagesProtectScopeAndCompatibilityReadsRemainCompleteAsync(string scenario)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        var records = Enumerable.Range(1, 80).Select(sequence => new ProcessingActivityRecord { SequenceNumber = sequence,
+            PartyId = "party-1", TenantId = "tenant-a", EventType = "PartyDeactivated", Timestamp = s_now, Summary = "Party deactivated." }).ToArray();
+        var model = new PartyProcessingSdkReadModel { BucketGeneration = "generation", FirstBucket = 0, LastBucket = 2,
+            FirstRecordSequenceNumber = 1, LastRecordSequenceNumber = 80, RecordCount = 80, LastSequenceNumber = 80, ProjectionVersion = "80", ProjectedAt = s_now };
+        string revision = "revision-a";
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail"));
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(_ => new ReadModelEntry<PartyProcessingSdkReadModel>(model, revision));
+        foreach (var group in records.GroupBy(record => PartyProcessingBucket.Number(record.SequenceNumber)))
+            store.GetAsync<PartyProcessingBucket>("statestore", PartySdkReadModelAddresses.ProcessingBucket("tenant-a", "party-1", "generation", group.Key), token)
+                .Returns(new ReadModelEntry<PartyProcessingBucket>(new PartyProcessingBucket { Records = group.ToArray() }, "bucket"));
+        var service = CreateService(store);
+        QueryEnvelope envelope = CreateDetailEnvelope("GetProcessingRecords");
+        QueryResult complete = await service.GetProcessingRecordsAsync(envelope, token);
+        complete.Success.ShouldBeTrue();
+        complete.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.Length.ShouldBe(80);
+        QueryResult exported = await service.ExportPartyDataAsync(envelope with { QueryType = "ExportPartyData" }, token);
+        exported.Success.ShouldBeTrue();
+        exported.GetPayload().Deserialize<PartyDataPortabilityPackage>(PartiesJsonOptions.Default)!.ProcessingRecords.Count.ShouldBe(80);
+        QueryResult first = await service.GetProcessingRecordsAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 17) }, token);
+        first.Success.ShouldBeTrue();
+        first.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.Length.ShouldBe(17);
+        string cursor = first.Metadata!.Paging!.NextCursor.ShouldNotBeNull();
+        var next = envelope with { Paging = new QueryPagingOptions(PageSize: 17, Cursor: cursor) };
+        next = scenario switch
+        {
+            "tenant" => next with { TenantId = "tenant-b" },
+            "party" => next with { AggregateId = "party-2", EntityId = "party-2" },
+            "user" => next with { UserId = "different-user" },
+            "page-size" => next with { Paging = new QueryPagingOptions(PageSize: 18, Cursor: cursor) },
+            _ => next,
+        };
+        if (scenario == "revision") revision = "revision-b";
+        QueryResult continued = await service.GetProcessingRecordsAsync(next, token);
+        continued.Success.ShouldBe(scenario == "continue");
+        if (continued.Success)
+            continued.GetPayload().Deserialize<ProcessingActivityRecord[]>(PartiesJsonOptions.Default)!.First().SequenceNumber.ShouldBe(18);
+    }
+
+    [Theory]
+    [InlineData("missing-bounds", false)]
+    [InlineData("reversed-bounds", false)]
+    [InlineData("empty-bucket", false)]
+    [InlineData("truncated-bucket", false)]
+    [InlineData("missing-bucket", false)]
+    [InlineData("revision-during-read", false)]
+    [InlineData("revision-during-read", true)]
+    public async Task ProcessingReadsRejectBrokenCoverageAndMidReadRevisionChangesAsync(string defect, bool export)
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        var records = Enumerable.Range(1, 40).Select(sequence => new ProcessingActivityRecord { SequenceNumber = sequence,
+            PartyId = "party-1", TenantId = "tenant-a", EventType = "PartyDeactivated", Timestamp = s_now, Summary = "Party deactivated." }).ToArray();
+        var model = new PartyProcessingSdkReadModel { BucketGeneration = "generation", FirstBucket = 0, LastBucket = 1,
+            FirstRecordSequenceNumber = 1, LastRecordSequenceNumber = 40, RecordCount = 40, LastSequenceNumber = 40, ProjectedAt = s_now };
+        if (defect == "missing-bounds") model = model with { FirstBucket = null, LastBucket = null };
+        if (defect == "reversed-bounds") model = model with { FirstBucket = 2, LastBucket = 0 };
+        string revision = "before";
+        IReadModelStore store = Substitute.For<IReadModelStore>();
+        store.GetAsync<PartyDetailSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(new PartyDetailSdkReadModel { Detail = Detail("party-1") }, "detail"));
+        store.GetAsync<PartyProcessingSdkReadModel>("statestore", Arg.Any<string>(), token)
+            .Returns(_ => new ReadModelEntry<PartyProcessingSdkReadModel>(model, revision));
+        foreach (var group in records.GroupBy(record => PartyProcessingBucket.Number(record.SequenceNumber)))
+        {
+            var retained = defect == "empty-bucket" ? [] : defect == "truncated-bucket" ? group.Skip(1).ToArray() : group.ToArray();
+            store.GetAsync<PartyProcessingBucket>("statestore", PartySdkReadModelAddresses.ProcessingBucket("tenant-a", "party-1", "generation", group.Key), token)
+                .Returns(_ => { if (defect == "revision-during-read") revision = "after";
+                    return new ReadModelEntry<PartyProcessingBucket>(defect == "missing-bucket" ? null : new PartyProcessingBucket { Records = retained }, "bucket"); });
+        }
+        var service = CreateService(store);
+        QueryEnvelope envelope = CreateDetailEnvelope(export ? "ExportPartyData" : "GetProcessingRecords");
+        QueryResult result = export ? await service.ExportPartyDataAsync(envelope, token)
+            : await service.GetProcessingRecordsAsync(envelope with { Paging = new QueryPagingOptions(PageSize: 10) }, token);
+        result.Success.ShouldBeFalse();
+    }
+
+    [Theory]
     [InlineData(false, "continue")]
     [InlineData(false, "tamper")]
     [InlineData(false, "user")]

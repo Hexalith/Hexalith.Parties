@@ -193,6 +193,29 @@ public sealed class HttpAdminPortalGdprClient : IAdminPortalGdprClient
         return records;
     }
 
+    /// <inheritdoc/>
+    public async Task<ProcessingActivityPage> GetProcessingRecordsPageAsync(string partyId, int pageSize, string? cursor, CancellationToken cancellationToken)
+    {
+        ValidateAggregateId(partyId);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(pageSize, 100);
+        var request = new SubmitQueryRequest(Tenant: _options.Tenant, Domain: PartyDomain, AggregateId: partyId,
+            QueryType: "GetProcessingRecords", ProjectionType: PartyProjectionNames.Detail,
+            Payload: JsonSerializer.SerializeToElement(new PartyQueryPayload(partyId), HttpPartiesCommandClient.JsonOptions),
+            EntityId: partyId, ProjectionActorType: "PartyDetailProjectionQueryActor") { Paging = new QueryPagingOptions(PageSize: pageSize, Cursor: cursor) };
+        using HttpResponseMessage response = await _httpClient.PostAsJsonAsync(QueryGatewayPath, request, HttpPartiesCommandClient.JsonOptions, cancellationToken).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode) await ThrowQueryErrorAsync(response, cancellationToken).ConfigureAwait(false);
+        using JsonDocument document = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false), cancellationToken: cancellationToken).ConfigureAwait(false);
+        var records = document.RootElement.GetProperty("payload").Deserialize<ProcessingActivityRecord[]>(HttpPartiesCommandClient.JsonOptions)
+            ?? throw new InvalidOperationException("Processing-history payload is missing.");
+        QueryPagingMetadata? paging = document.RootElement.TryGetProperty("metadata", out JsonElement metadata)
+            && metadata.TryGetProperty("paging", out JsonElement pagingElement)
+            ? pagingElement.Deserialize<QueryPagingMetadata>(HttpPartiesCommandClient.JsonOptions) : null;
+        if (paging is null || paging.PageSize != pageSize || paging.HasMore == true && string.IsNullOrEmpty(paging.NextCursor))
+            throw new InvalidOperationException("Processing-history paging metadata is incomplete.");
+        return new(records, paging.NextCursor, paging.TotalCount);
+    }
+
     private async Task<AdminPortalGdprCommandResult> PostCommandAsync<TCommand>(
         string aggregateId,
         TCommand command,

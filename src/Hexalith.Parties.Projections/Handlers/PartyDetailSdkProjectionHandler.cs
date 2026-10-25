@@ -18,7 +18,7 @@ namespace Hexalith.Parties.Projections.Handlers;
 /// <summary>
 /// Persists the canonical aggregate-owned Party detail and processing-activity read models.
 /// </summary>
-public sealed class PartyDetailSdkProjectionHandler(
+public sealed partial class PartyDetailSdkProjectionHandler(
     IReadModelStore readModelStore,
     IReadModelBatchStore batchStore,
     IOptions<PartySdkReadModelOptions> options,
@@ -44,7 +44,7 @@ public sealed class PartyDetailSdkProjectionHandler(
 
     public DomainProjectionRebuildSemantics RebuildSemantics => DomainProjectionRebuildSemantics.FullReplay;
 
-    public async Task<DomainProjectionHandlerResult> ProjectAsync(
+    private async Task<DomainProjectionHandlerResult> ProjectInlineAsync(
         ProjectionRequest request,
         string dispatchId,
         CancellationToken cancellationToken)
@@ -90,6 +90,15 @@ public sealed class PartyDetailSdkProjectionHandler(
         {
             return DeliveryFailure(ProjectionRebuildRequiredReason);
         }
+
+#if !HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+        if (currentProcessing.Value?.BucketGeneration is not null)
+            return DeliveryFailure("processing-bucket-writer-requires-published-sdk-generation-support");
+#else
+        if (currentProcessing.Value?.BucketGeneration is not null
+            || (currentProcessing.Value?.Records.Count ?? 0) + request.Events.Length > PartyProcessingBucket.Capacity)
+            return await ProjectBucketsAsync(request, dispatchId, cancellationToken).ConfigureAwait(false);
+#endif
 
         long oldestCheckpoint = Math.Min(
             current.Value?.LastSequenceNumber ?? long.MinValue,
@@ -210,6 +219,23 @@ public sealed class PartyDetailSdkProjectionHandler(
         ReadModelBatchConcurrency processingConcurrency = currentProcessing?.ETag is { Length: > 0 } processingEtag
             ? ReadModelBatchConcurrency.Match(processingEtag)
             : ReadModelBatchConcurrency.CreateOnly;
+        if ((current?.Value?.LastSequenceNumber ?? long.MinValue) > candidate.LastSequenceNumber
+            || current?.Value?.ErasureSequenceNumber is not null && candidate.ErasureSequenceNumber is null
+            || currentProcessing?.Value?.ErasureSequenceNumber is not null && processingCandidate.ErasureSequenceNumber is null)
+        {
+            throw new InvalidOperationException("processing-rebuild-would-replace-newer-authority");
+        }
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+        if (processingCandidate.Records.Count > PartyProcessingBucket.Capacity)
+        {
+            string generation = Generation(operationId);
+            ReadModelBatchOperation[] staged = BucketOperations(request, generation, processingCandidate.Records);
+            PartyProcessingSdkReadModel metadata = ToBucketMetadata(processingCandidate, generation, processingCandidate.Records, processingCandidate.Records.Count);
+            return new DomainProjectionRebuildPlan(storeName,
+                [ReadModelBatchOperation.Write(key, candidate, concurrency), ReadModelBatchOperation.Write(processingKey, metadata, processingConcurrency)])
+            { StagedOperations = staged };
+        }
+#endif
         return new DomainProjectionRebuildPlan(
             storeName,
             [

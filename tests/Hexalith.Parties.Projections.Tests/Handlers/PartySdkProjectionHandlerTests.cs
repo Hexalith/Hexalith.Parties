@@ -44,6 +44,104 @@ public sealed class PartySdkProjectionHandlerTests
     private static readonly IOptions<PartySdkReadModelOptions> s_options =
         Options.Create(new PartySdkReadModelOptions { ReadModelStateStoreName = "statestore" });
 
+    [Fact]
+    public async Task LargeUnresolvedDeliveryRetainsEveryFactAndRejectsConflictingDuplicateAcrossChunksAsync()
+    {
+        if (typeof(DomainProjectionRebuildPlan).GetProperty("StagedOperations") is null)
+            Assert.Skip("Requires generation-capable source SDK; published compatibility is qualified separately.");
+        var store = new InMemoryReadModelBatchStore();
+        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        ProjectionRequest history = CreateRequest() with { Events = [CreateRequest().Events[0],
+            .. Enumerable.Range(2, 127).Select(sequence => Event(new PartyDeactivated(), sequence, DateTimeOffset.UnixEpoch.AddSeconds(sequence)))] };
+        var unresolved = history.Events.ToArray();
+        unresolved[64] = unresolved[64] with { EventTypeName = "FuturePartyEvent" };
+        var token = TestContext.Current.CancellationToken;
+        (await handler.ProjectAsync(history with { Events = unresolved.Reverse().ToArray() }, "large-audit", token)).Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        string key = PartySdkReadModelAddresses.Processing(history.TenantId, history.AggregateId);
+        var audited = store.Deserialize<PartyProcessingSdkReadModel>(key);
+        audited.RecordCount.ShouldBe(128);
+        audited.LastSequenceNumber.ShouldBe(long.MinValue);
+        (await handler.ProjectAsync(history, "resolve-large-audit", token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        var resolved = store.Deserialize<PartyProcessingSdkReadModel>(key);
+        resolved.LastSequenceNumber.ShouldBe(128);
+        resolved.RecordCount.ShouldBe(128);
+        var bucket = store.Deserialize<PartyProcessingBucket>(PartySdkReadModelAddresses.ProcessingBucket(history.TenantId, history.AggregateId,
+            resolved.BucketGeneration!, PartyProcessingBucket.Number(65)));
+        bucket.Records.Single(record => record.SequenceNumber == 65).Outcome.ShouldBe("Succeeded");
+        var conflicting = Event(new PartyReactivated(), 64, DateTimeOffset.UnixEpoch.AddSeconds(64));
+        (await handler.ProjectAsync(history with { Events = [.. history.Events.Reverse(), conflicting] }, "conflicting-large", token))
+            .Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        JsonSerializer.Serialize(store.Deserialize<PartyProcessingSdkReadModel>(key), s_canonicalJsonOptions)
+            .ShouldBe(JsonSerializer.Serialize(resolved, s_canonicalJsonOptions));
+    }
+
+    [Fact]
+    public async Task PublishedSdkPreservesLargeLegacyLiveAndRebuildCompatibilityAsync()
+    {
+        if (typeof(DomainProjectionRebuildPlan).GetProperty("StagedOperations") is not null)
+            Assert.Skip("Runs against the unchanged published SDK package; source generation behavior has its separate control.");
+        var store = new InMemoryReadModelBatchStore();
+        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        ProjectionRequest history = CreateRequest() with { Events = [CreateRequest().Events[0],
+            .. Enumerable.Range(2, 199).Select(sequence => Event(new PartyDeactivated(), sequence, DateTimeOffset.UnixEpoch.AddSeconds(sequence)))] };
+        var token = TestContext.Current.CancellationToken;
+        (await handler.ProjectAsync(history, "published-large-live", token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        var processing = store.Deserialize<PartyProcessingSdkReadModel>(PartySdkReadModelAddresses.Processing(history.TenantId, history.AggregateId));
+        processing.Records.Count.ShouldBe(200);
+        processing.LastSequenceNumber.ShouldBe(200);
+        processing.BucketGeneration.ShouldBeNull();
+        DomainProjectionRebuildPlan plan = await handler.PrepareRebuildAsync(history, "published-large-rebuild", token);
+        var rebuilt = JsonSerializer.Deserialize<PartyProcessingSdkReadModel>(plan.Operations.Single(operation =>
+            operation.Key == PartySdkReadModelAddresses.Processing(history.TenantId, history.AggregateId)).CanonicalValue.Span, s_canonicalJsonOptions)!;
+        rebuilt.Records.Count.ShouldBe(200);
+        rebuilt.LastSequenceNumber.ShouldBe(200);
+    }
+
+    [Fact]
+    public async Task RetainedProcessingHistoryUsesBoundedBucketsAndPureLargeRebuildAsync()
+    {
+        if (typeof(DomainProjectionRebuildPlan).GetProperty("StagedOperations") is null)
+            Assert.Skip("Requires published SDK generation support; source evidence does not qualify package adoption.");
+        CancellationToken token = TestContext.Current.CancellationToken;
+        var store = new InMemoryReadModelBatchStore();
+        var handler = new PartyDetailSdkProjectionHandler(store, store, s_options);
+        ProjectionRequest history = CreateRequest() with { Events = [CreateRequest().Events[0],
+            .. Enumerable.Range(2, 5000).Select(sequence => Event(new PartyDeactivated(), sequence, DateTimeOffset.UnixEpoch.AddSeconds(sequence)))] };
+        // Deliver the complete large history in reverse order with a duplicate across
+        // the original input chunk boundaries. Chunking must preserve the fold's global order.
+        history = history with { Events = [.. history.Events.Reverse(), history.Events[^1]] };
+        (await handler.ProjectAsync(history, "large-live", token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        string key = PartySdkReadModelAddresses.Processing(history.TenantId, history.AggregateId);
+        var metadata = store.Deserialize<PartyProcessingSdkReadModel>(key);
+        metadata.Records.ShouldBeEmpty();
+        metadata.RecordCount.ShouldBe(5001);
+        JsonSerializer.SerializeToUtf8Bytes(metadata).Length.ShouldBeLessThan(2048);
+        List<ProcessingActivityRecord> records = [];
+        for (long number = metadata.FirstBucket!.Value; number <= metadata.LastBucket!.Value; number++)
+        {
+            var bucket = store.Deserialize<PartyProcessingBucket>(PartySdkReadModelAddresses.ProcessingBucket(history.TenantId, history.AggregateId, metadata.BucketGeneration!, number));
+            bucket.Records.Count.ShouldBeLessThanOrEqualTo(PartyProcessingBucket.Capacity);
+            records.AddRange(bucket.Records);
+        }
+        records.Select(record => record.SequenceNumber).ShouldBe(Enumerable.Range(1, 5001).Select(sequence => (long)sequence));
+        (await handler.ProjectAsync(history, "large-duplicate", token)).Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        DomainProjectionRebuildPlan plan = await handler.PrepareRebuildAsync(history, "large-rebuild", token);
+        plan.Operations.Count.ShouldBe(2);
+#if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
+        plan.StagedOperations.Count.ShouldBeGreaterThan(100);
+        plan.StagedOperations.All(operation => operation.CanonicalValue.Length < 64 * 1024).ShouldBeTrue();
+#endif
+        store.Deserialize<PartyProcessingSdkReadModel>(key).BucketGeneration.ShouldBe(metadata.BucketGeneration);
+        var unresolved = Event(new PartyReactivated(), 5002, DateTimeOffset.UnixEpoch.AddSeconds(5002)) with { EventTypeName = "FuturePartyEvent" };
+        (await handler.ProjectAsync(history with { Events = [unresolved] }, "large-unresolved", token)).Status.ShouldBe(ProjectionDispatchStatus.Retryable);
+        var retry = Event(new PartyReactivated(), 5002, DateTimeOffset.UnixEpoch.AddSeconds(5002));
+        (await handler.ProjectAsync(history with { Events = [retry] }, "large-resolved", token)).Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        var final = store.Deserialize<PartyProcessingSdkReadModel>(key);
+        final.RecordCount.ShouldBe(5002);
+        var last = store.Deserialize<PartyProcessingBucket>(PartySdkReadModelAddresses.ProcessingBucket(history.TenantId, history.AggregateId, final.BucketGeneration!, PartyProcessingBucket.Number(5002)));
+        last.Records.Single(record => record.SequenceNumber == 5002).Outcome.ShouldBe("Succeeded");
+    }
+
     [Theory]
     [InlineData("ContactChannelAdded", false)]
     [InlineData("ContactChannelAdded", true)]

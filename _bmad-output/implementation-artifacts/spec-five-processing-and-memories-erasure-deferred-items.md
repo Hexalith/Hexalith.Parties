@@ -4,7 +4,7 @@ type: 'bugfix'
 created: '2026-10-25'
 status: 'in-progress'
 route: 'dispatch'
-review_loop_iteration: 0
+review_loop_iteration: 1
 baseline_commit: '1ef274ea0471643d83f924147e85ac8326cf6a47'
 context: []
 ---
@@ -64,7 +64,25 @@ Paths below are Parties-relative; `M` means `references/Hexalith.Memories/`.
 - Given large or interrupted histories, when SDK stores reload, then values/work groups remain bounded and compatibility outputs agree with replay.
 - Given erasure races, when real adapters restart old work, then scoped payloads remain absent and unrelated data survives.
 
+
+## Review-driven re-derivation requirements
+
+Preserve the frozen intent. These findings expose missing implementation requirements; no product intent question remains. Complete all accepted corrections coherently:
+
+- Make bounded unresolved audit writes idempotent and recoverable through the actual SDK protocol for the same dispatch ID, pending envelopes, repeated unresolved delivery and eventual resolution. Preserve Detail/Processing checkpoint coordination, validate duplicate deliveries before acknowledgement, and derive bounded deterministic chunk identities.
+- Give paged history a bounded integrity contract that rejects malformed header boundaries and missing/truncated retained coverage without scanning all history on each page. Preserve complete legacy/export behavior and final revision revalidation; execute mid-read revision mutations for both APIs.
+- Never infer complete legacy semantic-key coverage from an optional TAG query. Missing-TAG legacy keys must remain obligations or force explicit qualified owner reconciliation; unknown historical coverage must default incomplete. Keep bounded discovery, modern exact provenance, cancellation, scope, index schema/readiness and FAIL-timeout checks.
+- Preserve live JSON-only legacy retry processing by an atomic, fenced compatibility path. Restore canonical-unit existence admission before expensive work and before publication, without propagating raw content through workflow history. Enforce dead caps after valid moves. Execute a successful admitted retry with real persisted NL output and unchanged unrelated data.
+- Validate complete canonical promotion/ownership before staging any generation. Preserve structured retryable/indeterminate outcomes for staging storage failures in every dispatcher path. Execute malformed-plan rejection with zero staging writes and storage-fault outcome tests.
+- Repair incomplete canonical NL targets safely or report explicit owner reconciliation; never silently complete a migration that stranded valid legacy content.
+- Qualify actual content-bearing legacy activity history and late completion after termination/purge/restart, beyond the existing synthetic timer control. Keep cross-tenant scope validation, collision-safe modern IDs, foreign survival and default quiescence refusal.
+- Wire durable-history controls into a maintained automated integration lane with required trait and owned Redis/Dapr resources; that lane must execute the assertions without optional skips. Keep bootstrap and cleanup scoped to owned resources and use existing technical test support where applicable.
+
+KEEP the complete reviewed implementation snapshot at `/tmp/parties-five-processing-20261025/rederive-1/`. Its manifest records every owned file and exact baseline. Restore its positive implementation as the foundation, then re-derive the deficient paths above rather than replacing working behavior. Preserve fixed-capacity buckets, the seven executed real-protocol migration/rebuild/erasure restart and competing-writer tests, bounded eraser staging identity, source/package compatibility and empty-v1 canonical bytes; preserve all 49 real backend controls, new scoped workflow IDs and explicit legacy quiescence opt-in, modern publication fences/provenance, strict native checks, immutable publisher pins and actual dual-RID OCI proof. Keep existing public signatures compatible, package/catalog versions unchanged, all original positive tests, and truthful prior receipts. Parent owns review and Git publication; no nested submodules, new build workflow, production migration, deployment or release dispatch.
+
 ## Implementation Notes
+
+Phase-3 audit: parent read all three repository diffs, including untracked code/tests. The matrix follow-up executes migration/rebuild/erasure restart and competing authority cases through the serialized SDK batch protocol and public dispatcher. Parent independently reran all seven cases: 7 passed, zero skips. Source/package and operator-quiescence boundaries remain explicit. Review/publication items in the final task are pending the remaining workflow steps.
 
 Approved by the user on 2026-10-25: approve and continue. The parent owns this already-rendered BMAD workflow, review, commits and pushes. The implementation child implements this spec directly, sequentially; do not invoke another build workflow or spawn additional agents. Read applicable owning-repository guidance before changes. Parent owns final independent verification and Git publication.
 
@@ -76,7 +94,35 @@ The build renderer ran exactly once. Establish an isolated Aspire baseline befor
 
 ## Spec Change Log
 
+2026-10-25 review loop 1: B1/B2/B4/B6/E6/V2 require coherent retry, integrity, historical-coverage and automated-verification changes. Added the requirements and KEEP snapshot above to prevent non-idempotent audits, silent partial history, unproved legacy absence and unexecuted durable-history coverage. All 23 findings retain individual triage rows; accepted direct corrections are included in re-derivation. Frozen intent is unchanged.
+
 ## Review Triage Log
+
+| Finding | Verdict | Route | Evidence |
+|---|---|---|---|
+| B1 | high | bad_spec | Repeated unresolved audit delivery reuses a committed batch ID with fresh ETags; the changed manifest conflicts and fails instead of remaining retryable. Qualify identical dispatch retries through the real SDK protocol. |
+| B2 | high | bad_spec | Large audit-only delivery bypasses canonical pending-batch recovery. Pending envelopes can lose reproducible conditional ETags before the next audit attempt. |
+| B3 | medium | patch | Valid transactional overflow moves leave removableMembers empty, so dead-queue trimming is skipped. Repeated valid enqueue can exceed the configured dead cap. |
+| B4 | medium | bad_spec | Dequeue accepts JSON-only legacy members, while ReadCurrentAsync reads only modern hash payloads. Valid legacy retries therefore lose their content and can exhaust attempts without indexing. |
+| B5 | high | patch | The new activity removed the existing syntactic-unit existence checks; registry presence and tombstone absence do not prove a canonical unit exists, and the indexing activity itself does not require that hash. |
+| B6 | high | bad_spec | Paged reads can report successful completion for positive-count metadata with absent bounds or truncated/empty buckets. Complete reads check counts, but paging lacks an equivalent bounded integrity proof. |
+| B7 | medium | patch | A valid legacy hash with an incomplete existing canonical target returns zero without repair or explicit failure; MigrateAsync discards that result and can report migration completion. |
+| B8 | medium | patch | Both dispatcher paths stage durable generation values before constructing/validating the combined canonical batch and binding guarded ownership. Invalid combined plans can write before rejection. |
+| B9 | medium | patch | Generation storage failures throw InvalidOperationException from preparation outside the rebuild execution handler, escaping the per-route outcome protocol. |
+| B10 | medium | patch | The retained-history test proves synthetic input/timer purge, not content-bearing legacy activities and late completions. Add an actual paused legacy activity and persisted-state restart control. |
+| E1 | medium | patch | Unresolved auditing can leave Processing ahead of Detail. The bucket early acknowledgement checks Processing alone, so a redelivered valid prefix can leave Detail stale. |
+| E2 | medium | patch | The same early return acknowledges below-checkpoint conflicting duplicates before the established duplicate validation runs. |
+| E3 | medium | patch | Appending a part suffix can exceed the 512-byte SDK batch identity limit for an otherwise valid dispatch ID. Derive bounded deterministic part IDs. |
+| E4 | high | bad_spec | Positive retained count with missing/reversed bucket bounds produces a successful empty final page; this is the metadata form of B6. |
+| E5 | medium | bad_spec | Legacy JSON-only queue records cannot be resolved by the modern-only content lookup; same root cause as B4. |
+| E6 | high | bad_spec | A scoped legacy chunk without the optional memoryUnitId TAG is omitted by native search although its key is valid. Index readiness/failure counters do not prove field coverage; sealing completeness can certify deletion while content survives. |
+| E7 | high | patch | Canonical-unit absence with surviving queued content can create orphan NL output; same missing authoritative guards as B5. |
+| E8 | medium | patch | An incomplete existing canonical target is silently skipped by the new migration script; same root cause as B7. |
+| E9 | medium | patch | Valid-only overflow bypasses dead-cap enforcement and can eventually reach the 100,000-member erasure refusal; same root cause as B3. |
+| V1 | medium | patch | Pre-verified gap: no executed admitted-record test traverses the new activity through actual NL persistence; substituting its Indexed result would miss a removed index call. |
+| V2 | medium | bad_spec | Pre-verified gap: durable-history controls lack the integration trait and depend on an endpoint supplied by neither normal CI nor nightly. A maintained automated owned runtime lane must require actual execution without skips. |
+| V3 | medium | patch | Pre-verified gap: tests change revision before the next request, not during bucket loading. Add paging and complete-export failures when the final metadata ETag changes mid-read. |
+| V4 | medium | patch | Verified other finding: valid overflow never reaches the existing dead trim call; same root cause as B3 and E9. |
 
 ## Verification
 
