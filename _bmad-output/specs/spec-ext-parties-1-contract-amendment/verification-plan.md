@@ -21,3 +21,67 @@ Shortened synthetic intervals may exercise boundaries on an isolated owner-appro
 The October 25 reconciliation remains effective: zero complete changed commitments ready; four Story 5.4 dependencies Committed and unavailable, protection Uncommitted. Preserve OQ-5.4-1, 192.168.1.30, trusted-envelope bounds 300/30/600/86400/604800, independent approval authority and Dapr-only custody. This amendment’s proposed numeric bounds are actor-history-specific and do not replace those envelope bounds. Keep the retained qualification order and all historical failures. No original attempt/journal may be reset.
 
 Static validation for this draft checks exact Before quotations, local companion links, unique CAP IDs with intent/success, full Q1–Q7/D01–D04/F1/F2/B01–B15 mapping, unapproved labels and protected file/index bytes. Results and precise scope are in validation-final.json; validation.json preserves the initial drift-detecting result. All named governing sources match their captured hashes. Concurrent Git activity changed the index and five pre-existing files (including removal of three probe files); it also committed draft files while this task was in progress. This task issued no Git mutation and did not restore or overwrite that concurrent work. Global workspace preservation is therefore not claimed. This is document validation, not backend or installed qualification.
+
+## Build review — 2026-10-25
+
+The preceding account and original validation reports describe the drafting
+session. The separate [build receipt](validation-build.json) checks this review
+packet from Parties HEAD `9ee857b11ebcd13d44644be7c04c4ea6da5fdc44`.
+The blank line separating the owner-decision table header from its rows was
+removed; the five decisions now render as table rows. Their text is unchanged.
+
+The build checks rendered table structure with `markdown-it-py` in CommonMark
+mode with tables enabled, exact Before excerpts with line endings normalized,
+all sixteen source SHA-256 values, local links and all twenty-eight crosswalk
+IDs. It also records the unchanged proposal status, ledger fields and original
+receipts. The receipt identifies the checked packet bytes and preservation
+scope. Independent document review supplements these mechanical checks; neither
+establishes backend feasibility, owner acceptance or installed qualification.
+
+The [archived checker and baseline](validation-build-support.zip) retain the
+full validation code and captured preservation hashes. Run its `validate.py`
+from the Parties repository root after extracting both files into a temporary
+directory. It emits a new JSON report to stdout and writes no files. Revision
+and index preservation checks compare the original pre-commit baseline and
+deliberately fail after that baseline changes; they are historical observations,
+not a reusable CI gate. Source hashes and recorded sibling repository revisions
+identify the exact governing inputs, including whether they match committed
+bytes. Unrelated sibling worktree changes are outside that source claim.
+
+The checker requires Python 3.9+, `markdown-it-py==3.0.0` and `PyYAML==6.0.3`.
+For example, run it in an isolated environment with
+`uv run --with markdown-it-py==3.0.0 --with PyYAML==6.0.3 python /path/to/extracted/validate.py`.
+The table-only command below needs `markdown-it-py`; the same `uv run` prefix
+can replace `python3` when that package is absent. Run it from the repository
+root:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+from markdown_it import MarkdownIt
+
+path = Path('_bmad-output/specs/spec-ext-parties-1-contract-amendment/owner-decisions.md')
+tokens = MarkdownIt('commonmark').enable('table').parse(path.read_text(encoding='utf-8'))
+table = 0
+rows = []
+for token in tokens:
+    if token.type == 'table_open':
+        table += 1
+    elif token.type == 'table_close' and table == 1:
+        break
+    elif table == 1 and token.type == 'tr_open':
+        rows.append([])
+    elif table == 1 and token.type == 'inline':
+        rows[-1].append(token.content)
+assert [row[0] for row in rows] == ['No.', '1', '2', '3', '4', '5'], rows
+assert rows[0] == ['No.', 'Owner decision', 'Accountable roles', 'Exact unresolved decision and consequence', 'Original mapping'], rows[0]
+assert all(len(row) == 5 and all(cell.strip() for cell in row) for row in rows), rows
+print('PASS: header and five owner decisions, each with five cells')
+PY
+```
+
+Expected: `PASS: header and five owner decisions, each with five cells` and
+exit 0. Missing rows, wrong IDs or empty cells raise an assertion failure. This focused
+command does not regenerate the build receipt or repeat its other checks.
+All five decisions remain unresolved and the amendment remains
+`proposed-unapproved`.

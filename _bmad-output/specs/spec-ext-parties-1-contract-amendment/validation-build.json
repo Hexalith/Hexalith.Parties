@@ -1,0 +1,410 @@
+{
+  "status": "passed",
+  "purpose": "Static review-artifact build validation only; no amendment approval, backend feasibility or runtime/installed qualification.",
+  "checked_at_utc": "2026-10-25T21:01:06.289895+00:00",
+  "baseline_revision": "9ee857b11ebcd13d44644be7c04c4ea6da5fdc44",
+  "validation_command": "python3 /tmp/ext-parties-amendment-build-7yft7d8x/validate.py",
+  "archived_support": "validation-build-support.zip (validate.py and baseline.json)",
+  "command_scope": "Run the archived checker from the Parties repository root; it reads sources and emits JSON to stdout without writing files. Historical revision/index preservation checks deliberately fail after that baseline changes. This is an archived document check, not runtime tooling.",
+  "parser": {
+    "package": "markdown-it-py",
+    "version": "3.0.0",
+    "preset": "commonmark",
+    "enabled_rule": "table"
+  },
+  "packet_sha256": {
+    "validation.json": "9afffe438004e34ff844e8749160296908f96511a39ac00d788012c5dd2769e4",
+    "source-manifest.json": "d019a95a3ef8904aff7c7755ae4d9b2d37f4f8db5fe1f576dbd93bad7a58f09f",
+    "validation-build-support.zip": "0b7af54ec0505a03be7d7c3acaef98790889c5ab4686b6805ae7c109c550d003",
+    "clause-diff.md": "bd43978bdba457642c05b48b6bf56a3a38c044ff189a797d4ceba1c5a465aa46",
+    "validation-final.json": "afa1d319a56ddd73a66abdce55f4aa87ece0315a2d6f75d0b1446ffc64def6cd",
+    "owner-decisions.md": "7e77549570502894a83aee0a66c61d35666781c5f67927277aab68e92bfdf88c",
+    "SPEC.md": "2ba54cd15bc9fdd99be09cfeff8e378098ebff33308b89fc4a65336b00e58387",
+    "verification-plan.md": "50c7bb27b8e4f8f094e408d32b35174352290e67282d3509648bb2986e6f3769",
+    ".memlog.md": "dadfe54792f2ec41b6a3eee9ba0cd3fa828ba70b02f2e50c5215e1423a237081"
+  },
+  "checks": [
+    {
+      "name": "sixteen_governing_source_hashes",
+      "passed": true,
+      "detail": [
+        {
+          "id": "direction",
+          "sha256": "e733c85418706644372312f37640e9df2310fe05f5d7e7a53154892c7a60db3a"
+        },
+        {
+          "id": "research",
+          "sha256": "d7cba48e46f1281c44dbdc64caa199fd841450f8a78cde2173a190e86ebe4233"
+        },
+        {
+          "id": "comparison",
+          "sha256": "9c87d94325f3de47964e09ae27c6a0437c9ca6da30a590a4ab2938dd86ba88b5"
+        },
+        {
+          "id": "register",
+          "sha256": "5bf35ac2857664c0589966a10944cd66278af85242c7c1f08e31ae29aa40e8a2"
+        },
+        {
+          "id": "identity",
+          "sha256": "59699c8318d2ced61dd994fce5c20055fe87f48365415c65969b69b37790d0cd"
+        },
+        {
+          "id": "acceptance",
+          "sha256": "9d6a1288a611f6902e90e22c31fac9589a5a18d2d1692d9641d1ada57a91fc76"
+        },
+        {
+          "id": "retention",
+          "sha256": "a46f6b5d9e9574f1553b9e735f27d072e4b013a6fe07f9b2eb99d48348f8d6c7"
+        },
+        {
+          "id": "reconciliation",
+          "sha256": "509c32f6111a0b9e454ed9cac0ba990be79e35476e3acc8f7f15f568b5dede9a"
+        },
+        {
+          "id": "identity_audit",
+          "sha256": "d122c2e6d29d356f830eada844d0819e7de1b7b4918f22c9f408fb98bf182449"
+        },
+        {
+          "id": "lifecycle",
+          "sha256": "b027373de02776d38bb80a6bd5e9c135fbdfd171667196f7287dd1467df0f479"
+        },
+        {
+          "id": "custody_spec",
+          "sha256": "b5eb9132d00bf582d2dbab2f051d411d9106b2aecedf30d36a2576de0f177b0c"
+        },
+        {
+          "id": "implementation",
+          "sha256": "54ff435a10ecfb67dea00e54489546fabac95e11f9b976a8d4831a4334389928"
+        },
+        {
+          "id": "tests",
+          "sha256": "49c86a648bfb87e719f0a018019db3da70a5d1035947f71dab928bced7e19e7f"
+        },
+        {
+          "id": "proposal",
+          "sha256": "e4ac6f6c72a3dd5f73e5e6dd971b6fe27505d1dd10280742db7717cb82f39037"
+        },
+        {
+          "id": "commands",
+          "sha256": "4dd6740ad39c474f0d3352d69a8b73e122d6d846e47b363a508621a36eccff43"
+        },
+        {
+          "id": "ledger",
+          "sha256": "a8496d20f44b0c0511de4e17a988db4f3ec9dc7330b5e8e37380b5c2277e42ad"
+        }
+      ]
+    },
+    {
+      "name": "sibling_source_revision_provenance",
+      "passed": true,
+      "detail": [
+        {
+          "repository": "../agents",
+          "revision": "9001c896ff24c47065fafccba7f02191cd7b65fd",
+          "sources": [
+            {
+              "id": "register",
+              "path": "_bmad-output/planning-artifacts/external-dependency-register.md",
+              "matches_committed_bytes": true
+            },
+            {
+              "id": "identity",
+              "path": "_bmad-output/specs/spec-story-5-4-dependency-unblock/parties-identity-contract.md",
+              "matches_committed_bytes": true
+            },
+            {
+              "id": "acceptance",
+              "path": "_bmad-output/specs/spec-story-5-4-dependency-unblock/evidence-and-acceptance.md",
+              "matches_committed_bytes": true
+            },
+            {
+              "id": "retention",
+              "path": "_bmad-output/implementation-artifacts/story-5-4-retention-custody-proposal-2026-10-06.md",
+              "matches_committed_bytes": true
+            },
+            {
+              "id": "reconciliation",
+              "path": "_bmad-output/implementation-artifacts/story-5-4-dependency-reconciliation-2026-10-25.md",
+              "matches_committed_bytes": true
+            },
+            {
+              "id": "identity_audit",
+              "path": "_bmad-output/implementation-artifacts/tests/story-5-4-reconciliation-2026-10-25/identity-owner-packets.md",
+              "matches_committed_bytes": true
+            }
+          ],
+          "scope": "Named governing files only; unrelated worktree changes are excluded."
+        },
+        {
+          "repository": "../platform",
+          "revision": "51ea5deca1cbb70d1df0483766db8072b76cc348",
+          "sources": [
+            {
+              "id": "direction",
+              "path": "docs/implementation/ext-parties-1-custody-direction-2026-10-25.md",
+              "matches_committed_bytes": true
+            },
+            {
+              "id": "lifecycle",
+              "path": "_bmad-output/specs/spec-production-actor-history-custody/lifecycle-contract.md",
+              "matches_committed_bytes": true
+            },
+            {
+              "id": "custody_spec",
+              "path": "_bmad-output/specs/spec-production-actor-history-custody/SPEC.md",
+              "matches_committed_bytes": true
+            },
+            {
+              "id": "implementation",
+              "path": "_bmad-output/specs/spec-production-actor-history-custody/implementation-plan.md",
+              "matches_committed_bytes": true
+            },
+            {
+              "id": "tests",
+              "path": "_bmad-output/specs/spec-production-actor-history-custody/test-plan.md",
+              "matches_committed_bytes": true
+            },
+            {
+              "id": "proposal",
+              "path": "docs/implementation/ext-parties-1-custody-proposal-2026-10-25/PROPOSAL.md",
+              "matches_committed_bytes": true
+            },
+            {
+              "id": "commands",
+              "path": "docs/implementation/ext-parties-1-custody-proposal-2026-10-25/COMMANDS.md",
+              "matches_committed_bytes": true
+            },
+            {
+              "id": "ledger",
+              "path": "docs/implementation/ext-parties-1-custody-proposal-2026-10-25/decision-and-binding-ledger.json",
+              "matches_committed_bytes": true
+            }
+          ],
+          "scope": "Named governing files only; unrelated worktree changes are excluded."
+        }
+      ]
+    },
+    {
+      "name": "six_before_after_clause_pairs",
+      "passed": true,
+      "detail": [
+        "A-01",
+        "A-02",
+        "A-03",
+        "A-04",
+        "A-05",
+        "A-06"
+      ]
+    },
+    {
+      "name": "ten_exact_before_excerpts",
+      "passed": true,
+      "detail": [
+        {
+          "clause": "A-01",
+          "source": "retention",
+          "matched": true,
+          "normalized_excerpt_sha256": "82b7792b871f0ad9f4dc4ea3cd26262fd860403f521b097b4a159310bd105618"
+        },
+        {
+          "clause": "A-02",
+          "source": "lifecycle",
+          "matched": true,
+          "normalized_excerpt_sha256": "2ca85b134a4829cf345f20ec72d4c3e1adfa6f5ad3203e58b5b800f7ef3df304"
+        },
+        {
+          "clause": "A-02",
+          "source": "lifecycle",
+          "matched": true,
+          "normalized_excerpt_sha256": "b08ca6932a3bfe5f682a38ff4cda07e89577408f4fc3cab3adbe61c994158470"
+        },
+        {
+          "clause": "A-03",
+          "source": "direction",
+          "matched": true,
+          "normalized_excerpt_sha256": "035c1f300fcdaa58af2fae9f4bd0d951ee2ec95b8ad3f06978549f6380c526e1"
+        },
+        {
+          "clause": "A-03",
+          "source": "proposal",
+          "matched": true,
+          "normalized_excerpt_sha256": "3190e2a6c2eb4fdb0bf09ea8a22e3dc356e9cc0fed2f024316df61476a4e32d6"
+        },
+        {
+          "clause": "A-04",
+          "source": "retention",
+          "matched": true,
+          "normalized_excerpt_sha256": "7b5cb9ce7ef7e7653d42123fb2692ec1c833f8c2d8ec901433e7a9fa15f2901e"
+        },
+        {
+          "clause": "A-05",
+          "source": "lifecycle",
+          "matched": true,
+          "normalized_excerpt_sha256": "f51183e805fb986df68fbd25d6bfafca484ba5fc52df579c928e63bba02adfd4"
+        },
+        {
+          "clause": "A-05",
+          "source": "lifecycle",
+          "matched": true,
+          "normalized_excerpt_sha256": "76b5ad295134776d34c473b5eb28daf006c667894882ec0f877f4439db2d474e"
+        },
+        {
+          "clause": "A-05",
+          "source": "custody_spec",
+          "matched": true,
+          "normalized_excerpt_sha256": "b271f9726c53e0b08eda924515f08d978bfcd368a575ccc537e2c673492e331f"
+        },
+        {
+          "clause": "A-06",
+          "source": "register",
+          "matched": true,
+          "normalized_excerpt_sha256": "3e2fe3e3d5ae55833840c6626d5d12a37ed9c475a7569d5b096f32134d1b5f3d"
+        }
+      ]
+    },
+    {
+      "name": "five_rendered_owner_decisions",
+      "passed": true,
+      "detail": {
+        "rows_including_header": 6,
+        "body_ids": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ]
+      }
+    },
+    {
+      "name": "twenty_eight_rendered_crosswalk_ids",
+      "passed": true,
+      "detail": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q4",
+        "Q5",
+        "Q6",
+        "Q7",
+        "D01",
+        "D02",
+        "D03",
+        "D04",
+        "F1",
+        "F2",
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08",
+        "B09",
+        "B10",
+        "B11",
+        "B12",
+        "B13",
+        "B14",
+        "B15"
+      ]
+    },
+    {
+      "name": "unresolved_ledger_preserved",
+      "passed": true,
+      "detail": {
+        "ownerAccepted": false,
+        "available": false,
+        "liveQualified": false,
+        "acceptedReplacementIntegrationDate": null,
+        "decision_null_paths": 661,
+        "binding_null_paths": 165
+      }
+    },
+    {
+      "name": "proposal_status_and_capabilities",
+      "passed": true,
+      "detail": {
+        "status": "proposed-unapproved",
+        "capabilities": [
+          "CAP-1",
+          "CAP-2",
+          "CAP-3"
+        ]
+      }
+    },
+    {
+      "name": "sixteen_declared_companions",
+      "passed": true,
+      "detail": {
+        "count": 16,
+        "missing": []
+      }
+    },
+    {
+      "name": "local_links",
+      "passed": true,
+      "detail": {
+        "checked": 19,
+        "missing": []
+      }
+    },
+    {
+      "name": "historical_packet_bytes_preserved",
+      "passed": true,
+      "detail": {
+        "checked": [
+          "SPEC.md",
+          ".memlog.md",
+          "clause-diff.md",
+          "source-manifest.json",
+          "validation.json",
+          "validation-final.json"
+        ],
+        "changed": []
+      }
+    },
+    {
+      "name": "owner_decision_text_unchanged",
+      "passed": true,
+      "detail": "Only the blank line between the header delimiter and row 1 was removed."
+    },
+    {
+      "name": "tracked_preservation_since_build_baseline",
+      "passed": true,
+      "detail": {
+        "captured_files": 6944,
+        "authorized_edits": [
+          "_bmad-output/specs/spec-ext-parties-1-contract-amendment/owner-decisions.md",
+          "_bmad-output/specs/spec-ext-parties-1-contract-amendment/verification-plan.md"
+        ],
+        "unexpected_changes": [],
+        "scope": "Previously tracked non-reference files readable as files; excludes submodules, untracked/ignored files, unlisted sibling files and remote installations."
+      }
+    },
+    {
+      "name": "git_revision_and_index_preserved_since_build_baseline",
+      "passed": true,
+      "detail": {
+        "head": "9ee857b11ebcd13d44644be7c04c4ea6da5fdc44",
+        "index_sha256": "c89a63096188141444797b04f0eed5502b6936f65c6b85191c7b350dc783f88b"
+      }
+    },
+    {
+      "name": "scoped_git_whitespace",
+      "passed": true,
+      "detail": {
+        "command": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --check -- _bmad-output/specs/spec-ext-parties-1-contract-amendment",
+        "exit": 0,
+        "output": ""
+      }
+    }
+  ],
+  "semantic_review": "Independent investigator checked A-01\u2013A-06 against cited local sources and found the table rendering defect; no concrete clause contradiction was identified. Workflow review is recorded separately in the build spec.",
+  "limits": [
+    "Checks preserve the named historical reports; they do not turn earlier workspace drift into a pass.",
+    "No funding, resources, operators, accepted replacement target/date or availability is supplied.",
+    "Static structure, source quotation and hash checks do not prove completeness or backend physical guarantees."
+  ]
+}
