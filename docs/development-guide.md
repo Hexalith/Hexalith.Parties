@@ -328,6 +328,14 @@ existing defaults (`statestore`, 30 seconds and 300 seconds). Explicit invalid
 values in the Parties section fail options validation rather than falling back.
 The state key scheme and persisted read models are unchanged.
 
+When another developer topology advertises the same original Dapr app IDs, the
+explicit `PARTIES_MTLS_ISOLATED_IDENTITIES=true` runtime opt-in selects the existing
+fixture's suffixed identities and private namespace. Gateway and ACL controls
+assert actual metadata and target those configured identities. Their receipt
+qualifies that isolated configuration, while original-name discovery collisions
+remain separately recorded. Worker observation snapshots declared host and planned
+sidecar names before startup so later model expansion cannot fault ownership tracking.
+
 SDK handlers use `PartyDetailQueryTypes` and `PartyIndexQueryTypes`. The obsolete
 `PartyDetailProjectionQueryActor` and `PartyIndexProjectionQueryActor` constants
 remain compatible aliases. Historical gateway routing names and query types stay
@@ -368,19 +376,43 @@ The fresh pinned-tool source run also qualifies the service Debug build and all
 multi-target mapping validation (`MSB4044`, missing `AssetsFile`) before fixture
 compilation. See the [source receipt](../_bmad-output/implementation-artifacts/tests/five-sdk-runtime-deferred-items-2026-10-22/source-qualification.json); no source selector or validation gate was bypassed.
 
-### Query vocabulary and historical batch receipts
+### Published SDK query vocabulary and recovery
 
-Source-mapped Parties builds consume EventStore's semantic `QueryExecutionFailure`
-and `ReadModelUnavailable` aliases through `PartySdkQueryFailureReason`, preserving
-the exact historical wire/HTTP values. The retained 3.127.0 package graph uses the
-same bridge with legacy constants until separately published aliases are adopted;
-source proof does not establish package publication.
+The default package graph selects EventStore `3.128.0`, whose package repository
+revision is `c5d1c280d8c1c1a207cd159d817f614e93c93130`. Source selection remains
+owned by the pinned module tool. `PartySdkQueryFailureReason` binds directly to
+published `QueryExecutionFailure` and `ReadModelUnavailable` constants, retaining
+the exact historical wire values and gateway HTTP behavior.
 
-In the selected owner source, committed ordinary batches treat their receipt as a
-historical decision. Recovery and terminal verification preserve later ordinary
-writes, deletes and erasure tombstones; they retain foreign-envelope and
-guarded-owner uncertainty. The retained 3.127.0 package does not contain this fix;
-its default package-mode recovery closure remains open pending matching owner
-publication and consumer adoption. Normal
-batches do not retain personal-data manifests. This does not close legacy normal
-batch compaction, migration or authoritative inventory debts.
+Committed ordinary batches treat their receipt as a historical decision. Recovery
+preserves later ordinary writes, deletes and erasure tombstones, while foreign
+or uncertain ownership remains retryable. The published nonexpiring recovery
+capability compacts original non-retained Detail/Processing batches before the
+next tail needs writable ETags; it resumes interrupted recovery without retaining
+personal-data manifests. The eight previously source-only legacy/tombstone
+controls now run in package mode.
+
+Upgrading package consumers to `3.128.0` also activates the bounded-generation
+erasure guard that previously ran only in source mode. With the default-false
+`Parties:Projections:HistoricalPrivateRecoveryReconciliationAttested`, erasure
+now refuses before mutation with `sdk-historical-private-recovery-reconciliation-required`.
+Before package rollout, the operator must drain older writers and reconcile all
+historical private recovery material in the selected store. Set the attestation
+only after that reconciliation is independently established; an empty new recovery
+directory is insufficient. Package adoption supplies neither this attestation nor
+writer-drain proof. DW-50 and the independent migration, inventory and deployment gates remain
+open. Retained rollback hosts, selectors and ACLs remain available.
+
+The retained AppHost resolves the non-packable Memories Server project by path.
+Its selected registration replaces explicit JWT algorithm lists, so RS256/ES256
+configuration excludes initialized HS256 defaults. Absent lists retain historical
+defaults, and empty/blank lists fail startup. Domain options retain reload
+notifications; changing the selected bearer policy requires host restart.
+Registered Server token controls and source equivalence with released `2.29.15`
+(`38128624763c313238904c30aaeb88eb4fd9a6d0`) qualify this project-host policy;
+changing a client package cannot prove it. Sidecar token publication, container
+publication and deployment remain independent. Memories refresh/inventory APIs
+absent from that release are outside this batch.
+
+See the [2026-10-26 receipts](../_bmad-output/implementation-artifacts/tests/five-published-sdk-and-runtime-closure-2026-10-26/README.md)
+for actual resolved package identities, executed results and remaining gates.

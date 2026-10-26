@@ -38,10 +38,12 @@ public sealed class EventStoreGatewayE2ETests
     public async Task AuthenticatedCreate_ProjectsDetailsAndPersistsMatchingEventEnvelopesAsync()
     {
         RequireRuntimeProfile();
-        var fixture = new PartiesAspireTopologyFixture(completeMtlsProfile: true);
+        var fixture = new PartiesAspireTopologyFixture(completeMtlsProfile: true,
+            isolatedIdentities: string.Equals(Environment.GetEnvironmentVariable("PARTIES_MTLS_ISOLATED_IDENTITIES"), "true", StringComparison.OrdinalIgnoreCase));
         await using var lifetime = fixture.ConfigureAwait(true);
         await fixture.InitializeAsync(TestContext.Current.CancellationToken);
         fixture.IsAvailable.ShouldBeTrue(fixture.UnavailableReason);
+        Console.WriteLine($"Runtime identity profile: namespace={fixture.Session.Namespace}; suffix={fixture.Session.AppIdSuffix}");
         await CreateAndVerifyAsync(fixture, UniqueIdHelper.GenerateSortableUniqueStringId(), "Synthetic first", TestContext.Current.CancellationToken);
     }
 

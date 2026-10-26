@@ -25,7 +25,6 @@ public sealed class EpicEightClosureFitnessTests
 
     private static readonly string[] ExpectedDeferrals =
     [
-        "8.6-residual-review-debt",
         "8.7-data-protection-extraction",
         "8.8-runtime-boundary-cleanup",
         "8.9-frontcomposer-ui-consolidation",

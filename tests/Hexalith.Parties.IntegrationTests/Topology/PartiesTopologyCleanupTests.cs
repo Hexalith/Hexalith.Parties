@@ -28,6 +28,42 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 [Collection("Non-parallel")]
 public sealed class PartiesTopologyCleanupTests
 {
+    [Fact]
+    public async Task WorkerObservation_RetainsPlannedSidecarCustodyAcrossModelMutation()
+    {
+        if (!OperatingSystem.IsLinux()) { Assert.Skip("Linux inherited worker custody control."); }
+        var fixture = new PartiesAspireTopologyFixture();
+        await using var fixtureLifetime = fixture.ConfigureAwait(true);
+        await WithControlledWorkerAsync(async child =>
+        {
+            int workerId = int.Parse((await child.StandardError.ReadLineAsync(TestContext.Current.CancellationToken).ConfigureAwait(true))!, CultureInfo.InvariantCulture);
+            long started = PartiesAspireTopologyFixture.ReadWorkerStartIdentity(workerId)!.Value;
+            IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(new DistributedApplicationOptions { DisableDashboard = true });
+            IResourceBuilder<ExecutableResource> host = builder.AddExecutable("planned-app", "unused", ".").WithDaprSidecar();
+            string cliName = host.Resource.Annotations.OfType<DaprSidecarAnnotation>().Single().Sidecar.Name + "-cli";
+            DistributedApplication application = builder.Build();
+            await using var applicationLifetime = application.ConfigureAwait(true);
+            fixture.CaptureOwnedWorkers(application);
+
+            // Aspire creates its launcher after the declared graph is observed. Retain its
+            // notification identity even while the live resource list changes around it.
+            IResourceBuilder<ExecutableResource> cli = builder.AddResource(new ExecutableResource(cliName, "unused", "."));
+            await application.ResourceNotifications.PublishUpdateAsync(cli.Resource, snapshot => snapshot with
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.Running, null),
+                Properties = [new ResourcePropertySnapshot("executable.pid", workerId)],
+            }).ConfigureAwait(true);
+            builder.Resources.Remove(host.Resource);
+            builder.Resources.Remove(cli.Resource);
+            fixture.CaptureOwnedWorkers(application);
+            var captured = typeof(PartiesAspireTopologyFixture).GetField("_ownedWorkers", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(fixture).ShouldBeOfType<ConcurrentDictionary<int, long>>();
+            captured.ShouldContainKey(workerId);
+            captured[workerId].ShouldBe(started);
+            PartiesAspireTopologyFixture.IsWorkerRunning(workerId, started).ShouldBeTrue();
+        }, fixture).ConfigureAwait(true);
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("stop")]
@@ -602,7 +638,9 @@ public sealed class PartiesTopologyCleanupTests
                 }
             },
             prepareCiBootstrap: true,
-            completeMtlsProfile: true);
+            completeMtlsProfile: true,
+            session: PartiesTopologySession.Create(isolatedIdentities: string.Equals(
+                Environment.GetEnvironmentVariable("PARTIES_MTLS_ISOLATED_IDENTITIES"), "true", StringComparison.OrdinalIgnoreCase)));
         fixture.ObserveQuiescenceAsync = async (_, token) =>
         {
             foreach ((int id, long started) in workers)

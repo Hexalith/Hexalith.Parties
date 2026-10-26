@@ -1,0 +1,26 @@
+{
+  "schema": "hexalith.parties.final-artifact-manifest.v1",
+  "baselineCommit": "463ad1bf14701f0622b68af4352e07941d1a7969",
+  "filesSha256": {
+    "README.md": "b944a7e3faa37d7140fb982787d79a64130cf47ff42d670b0adb9ea31f8e26cd",
+    "baseline-observation.json": "f00a9f20f8e1c473f3497559dc377fc25319f42be142fb09c457a25810274e5d",
+    "cleanup.json": "16523e690286a24e60a6df2e5d1b03853b3c5e197c88be3b5e53b404e34a9d50",
+    "closure-reconciliation.json": "68985705415eceba0630f4e5584ecaffd27b639bdf118e0cf038dc5cc928b3b7",
+    "commitlint-initial-candidate.json": "ef268159064ee4e6c44d44553ae28188b4d3ebd04abef929d9af505fd3b3bb5e",
+    "commitlint.json": "bdb3545f53e1f91aa4cde1dc8f7ee079735005cb52e1b475becca02922727c43",
+    "executed-assembly-hashes.json": "31ce7926d4bd265f68f1b1de527ad80463c3013d3f72147825663126c0c5ad7a",
+    "initial-failures.json": "fe1b9628c7064b2076fe13ede4d666ba8f7b1de8c2026c7c97d159b651a323f7",
+    "legacy-3.127.0/LegacyCapture.csproj.template": "b362abf30b85f3132fb4ad324d4ac88d7094a56a5faa0b59683ba4f113887ab1",
+    "legacy-3.127.0/Program.cs": "33b1fa68fa0e12cac41895fe4547cdb1db34dfcc5e89d01b58fa1f37717b9174",
+    "legacy-3.127.0/README.md": "e828f1fc453a421c3b79b28562f2e44983e3b45f5cb701f9d11d73892c4876c7",
+    "legacy-3.127.0/persisted-state.json": "ae83b871fafcec967f0f57b029d25f25765e28336351dea34ec2abd7f7c3dc10",
+    "legacy-3.127.0/provenance.json": "4c347e5fc809dbe56ac49e2927f720fde4e5c76ff2404e973d9123e7f6bfaf3f",
+    "matrix-audit.json": "ac1feef7365f691587c5d7d007ab8fc25d1ac6128e3777f853085bc3a02ebfac",
+    "memories-server-policy-provenance.json": "fa4200d5452f8e25a9b33b673b39fd3c8dce753833b504b198541328c40912b9",
+    "package-provenance.json": "73e590c28cffc26f6521ce913aee752662c83899359526722e6b95a6fffe7a26",
+    "parent-final-verification.json": "2f4c9ffe4004d1aa482ce88b46945de30c107697f249155f588fcc4c3427f379",
+    "review-triage.json": "625898c3a5ac135e921259c3abca2634cf655405ca1843d8d7ed33004ea96648",
+    "review1-verification.json": "db8a697c616e5b62b4ecf754fc132910c41e25bccd9eba08ec07e196792ee75d",
+    "validation.json": "d1bbdce0fa7db7121dd4416a3e15f667dc03f08e3bee3a7872954b1ba4740e8a"
+  }
+}

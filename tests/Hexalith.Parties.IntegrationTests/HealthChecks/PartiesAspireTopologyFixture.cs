@@ -72,6 +72,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     private readonly ConcurrentDictionary<int, long> _ownedWorkers = [];
     private CancellationTokenSource? _workerObservationCancellation;
     private Task? _workerObservation;
+    private string[]? _workerResourceNames;
     private readonly HashSet<string> _stoppedWorkerNames = new(StringComparer.Ordinal);
     private bool _workersQuiesced;
     private bool _startupScheduled;
@@ -193,6 +194,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
             InitializationPhase = "create-builder";
             _builder = await _createBuilder(Session, cts.Token).ConfigureAwait(false);
 
+            PartiesMtlsProfile.ConfigureInternalGrpcEndpoints(_builder, Session);
             _redis = PartiesTestRedis.Configure(_builder);
             if (_completeMtlsProfile)
             {
@@ -553,6 +555,7 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
                     _workerObservation = null;
                 }
                 _ownedWorkers.Clear();
+                _workerResourceNames = null;
             },
             async () =>
             {
@@ -567,7 +570,10 @@ public class PartiesAspireTopologyFixture : IAsyncLifetime
     internal void CaptureOwnedWorkers(DistributedApplication application)
     {
         DistributedApplicationModel model = application.Services.GetRequiredService<DistributedApplicationModel>();
-        string[] names = model.Resources.Select(resource => resource.Name)
+        // The first observation runs synchronously in BeforeStartEvent, before workers
+        // launch. Keep declared names and planned Dapr CLI names while Aspire adds its
+        // generated resources; enumerating that live collection on later ticks races startup.
+        string[] names = _workerResourceNames ??= model.Resources.Select(resource => resource.Name)
             .Concat(model.Resources.SelectMany(resource => resource.Annotations.OfType<DaprSidecarAnnotation>())
                 .Select(sidecar => sidecar.Sidecar.Name + "-cli"))
             .Distinct(StringComparer.Ordinal).ToArray();

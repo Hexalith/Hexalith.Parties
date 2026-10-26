@@ -179,6 +179,16 @@ PARTIES_MTLS_TOPOLOGY_TESTS=true dotnet \
   -class Hexalith.Parties.IntegrationTests.Topology.PartiesTopologyIsolationTests
 ```
 
+If another local topology advertises the same original Dapr app identities, add
+`PARTIES_MTLS_ISOLATED_IDENTITIES=true` to that command. The selected gateway and
+ACL controls then use the existing fixture's suffixed literal app IDs and private
+namespace, assert their actual sidecar metadata, and invoke those exact targets.
+Deny-default policies are remapped by the existing isolation profile; permitted
+200 responses and Dapr-specific PermissionDenied 403s remain required. This
+qualifies the configured isolated topology. Fixed internal sidecar sockets are declared as
+proxyless TCP endpoints before DCP allocates dynamic proxy listeners. An original-name collision remains
+separate evidence; the default profile and production ACL bytes are unchanged.
+
 The gateway case asserts an authenticated projected detail with current freshness
 and independently deserializes exact Redis actor metadata/event keys derived from
 `AggregateIdentity`, without scans. The ACL cases require Dapr's policy-denial
@@ -467,9 +477,9 @@ producer startup validators. App authentication/secret-reference assertions,
 operator-supplied sidecar startup and actual sidecar publication are separate
 proofs. The selected Toolkit's full SDK manifest emits `memories-dapr` as `dapr.v0`
 without either token binding on all three target graphs. Positive sidecar secret
-emission remains an upstream qualification gate. The selected producer binder
-also appends initialized algorithms, so caller RS256/ES256 entries do not prove
-an asymmetric-only policy. Actual controls check authenticated Dapr outbound
+emission remains an upstream qualification gate. At the time of that receipt the producer binder
+appended initialized algorithms, so those caller entries did not prove
+an asymmetric-only policy; current project-host qualification is recorded below. Actual controls check authenticated Dapr outbound
 health, app-id metadata, missing/wrong-token 401s and stopped-sidecar rejection.
 Startup does not qualify publication, deployment, Parties bearer forwarding or search.
 
@@ -522,8 +532,8 @@ already-selected bearer policy requires host restart.
 EventStore's pending-batch controls test committed nonexpiring legacy compaction, recovery
 interruption/restart, writable next-tail ETags, superseding bytes and refusal of unsupported
 metadata. Generic recovery refuses relative-TTL v1 candidates; only the explicit caller
-capability can attest nonexpiring originals. Parties' corresponding source-only integration
-controls remain skipped in package mode until a matching SDK is published and adopted.
+capability can attest nonexpiring originals. At that receipt, Parties' corresponding integration
+controls were source-only; current published qualification is recorded below.
 
 `IdentityHistoryProtectionTests` checks strict modeled snapshot restoration and preserves the
 raw serialized-history guard. `PartyDomainProcessorValidationTests` exercises actual
@@ -595,3 +605,26 @@ Review-loop 3 (2026-10-24): every late materialization of a publication-managed 
 Admission uses the existing authorization bound of 128 tenant characters, 4096 source characters, and 512 case/workflow/candidate/predecessor characters, rejecting control characters before preparation or durable admission. Accepted boundary identities are read through the actual public SDK. Superseded refresh compensation records its deleted output for independent terminal proof; mutation receipt reads use one bounded multi-get. Graph publication overlap returns retryable 503 with error telemetry, and raw cleanup inventory reads retain the configured total HTTP deadline through body completion. The original public constructor signatures remain available, with production DI choosing the tenant-aware adapters.
 
 Unknown historic coverage remains incomplete. DW-196, DW-197 and DW-198 retain the pre-existing legacy NL migration, queued NL retry erasure and sparse-keyspace deletion-discovery follow-ups. Matching package publication/adoption, deployment of the workload topology and production qualification remain separate gates. Earlier receipts are historical after these corrections; final loop3 results are recorded in the bounded batch receipt.
+
+## Published SDK and Server algorithm qualification (2026-10-26)
+
+EventStore `3.128.0` supplies the semantic query aliases and nonexpiring recovery
+capability in the default package build. Run the built service assembly with
+`-class Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests`,
+`-class Hexalith.Parties.Tests.Gateway.PartySdkQueryHandlerTests` and
+`-class Hexalith.Parties.Tests.Gateway.PartySdkCrossInstanceErasureTests`.
+The four legacy compaction and four newer-tombstone controls now execute without
+source-mode prerequisites. Actual resolved packages and their repository revision
+are retained in the [bounded receipt](../_bmad-output/implementation-artifacts/tests/five-published-sdk-and-runtime-closure-2026-10-26/README.md).
+
+The selected AppHost resolves Memories Server as a non-packable project. Build
+`references/Hexalith.Memories/tests/Hexalith.Memories.Server.Tests` in Debug, then
+invoke its built assembly with
+`-class Hexalith.Memories.Server.Tests.Authentication.ServerRegisteredAlgorithmPolicyTests`.
+These eight registered controls assert effective named bearer algorithms, signed
+RS256/ES256 acceptance, HS256 rejection, absent defaults, programmatic setup,
+reload behavior and invalid startup. The receipt compares the selected actual
+registration, policy and test/factory sources with released `2.29.15`. Client
+package selection is separate from this Server policy. Independent sidecar token
+publication, containers/deployment, historical recovery reconciliation and the
+existing migration/inventory gates remain open.

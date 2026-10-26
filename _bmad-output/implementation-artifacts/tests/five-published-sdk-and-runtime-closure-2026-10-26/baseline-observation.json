@@ -1,0 +1,15 @@
+{
+  "schema": "hexalith.parties.prechange-apphost-observation.v1",
+  "startCommand": "aspire start --non-interactive --isolated --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+  "startExitCode": 0,
+  "inspectionCommand": "aspire describe --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj --format Json",
+  "resourceStates": {
+    "Waiting": 10,
+    "NotStarted": 2,
+    "Running": 4
+  },
+  "note": "Startup observation only; waiting resources are not a healthy topology qualification. No source edits preceded this exact AppHost start/inspection/stop.",
+  "stopCommand": "aspire stop --non-interactive --apphost src/Hexalith.Parties.AppHost/Hexalith.Parties.AppHost.csproj",
+  "stopExitCode": 0,
+  "unrelatedUserTopologyStopped": false
+}

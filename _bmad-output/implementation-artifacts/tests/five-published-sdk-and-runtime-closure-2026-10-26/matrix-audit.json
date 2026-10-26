@@ -1,0 +1,112 @@
+{
+  "reviewer": "parent",
+  "baselineCommit": "463ad1bf14701f0622b68af4352e07941d1a7969",
+  "checks": [
+    "Historical initial parent audit verified17 tracked-file and4 assembly hashes; those observations remain bound to the initial candidate.",
+    "Review1 loads and hashes the actual projection and EventStore Client assemblies during imported-state execution; full current parent audit follows focused handoff."
+  ],
+  "matrix": [
+    {
+      "scenario": "SDK query failure",
+      "coveringTests": [
+        "ProcessingFirstPageWithoutRevisionAuthorityReturnsReadModelUnavailableAsync",
+        "DetailHandler_StateStoreFailureRejectsAndEvictsPersonalLastKnownDataAsync"
+      ],
+      "executedReceipt": "controls-final",
+      "executedResult": {
+        "total": 963,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "verdict": "covered and passed"
+    },
+    {
+      "scenario": "Interrupted committed batch",
+      "coveringTests": [
+        "NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes",
+        "NormalCommittedBatchRetryPreservesNewerOrdinaryWriteOrDelete",
+        "RecoveryFailureStaysRetryableAndDoesNotCreateMissingHistoricalSlotsAsync"
+      ],
+      "executedReceipt": "review1-verification.json#commands.recovery",
+      "executedResult": {
+        "total": 61,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "verdict": "covered and passed",
+      "specificCoverage": "12 ordinary-write/physical-delete cases across AfterCommit(-1), BeforeCompaction(0,1), AfterCompaction(0,1), BeforeReceipt(-1), asserting the exact requested phase/ordinal was reached and deleted detail remains absent; tombstone controls are retained."
+    },
+    {
+      "scenario": "Legacy compaction",
+      "coveringTests": [
+        "CommittedLegacyDeliveryRecoversBeforeNextTailAndPreservesNewerErasureBytes",
+        "Published3127BytesRecoverBeforeNextTailAsync"
+      ],
+      "executedReceipt": "review1-verification.json#commands.recovery",
+      "executedResult": {
+        "total": 61,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "verdict": "covered and passed",
+      "specificCoverage": "Two branches import independently generated, pinned published3.127.0 marker/envelope bytes, including serialized recreation after interrupted recovery and successful next-tail writes; existing4 legacy interleavings remain."
+    },
+    {
+      "scenario": "Runtime projection and ACL",
+      "coveringTests": [
+        "AuthenticatedCreate_ProjectsDetailsAndPersistsMatchingEventEnvelopesAsync",
+        "CompleteProfile_AllEightSidecarsRespondAndPartiesInvokesTenantsReadiness"
+      ],
+      "executedReceipt": "runtime-isolated",
+      "executedResult": {
+        "total": 3,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "verdict": "covered and passed"
+    },
+    {
+      "scenario": "Explicit JWT policy",
+      "coveringTests": [
+        "RegisteredExplicitAlgorithmsAcceptOnlySelectedAsymmetricTokens",
+        "RegisteredInvalidExplicitAlgorithmsFailValidation",
+        "RegisteredExplicitEmptyJsonAlgorithmArrayFailsValidation"
+      ],
+      "executedReceipt": "memories-algorithms",
+      "executedResult": {
+        "total": 8,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "verdict": "covered and passed"
+    }
+  ],
+  "limitations": "Full selected Memories suite has five unrelated owner evidence failures; targeted policy cases pass. Runtime proof uses explicitly configured isolated identities.",
+  "review1Receipt": "review1-verification.json",
+  "review1RuntimeFollowup": {
+    "executedReceipt": "review1-verification.json#commands.runtime",
+    "executedResult": {
+      "total": 5,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "notRun": 0
+    },
+    "coveringTests": [
+      "LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync(normal,canceled,failed,cleanup-failed)",
+      "ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync"
+    ],
+    "proof": "Actual fixed endpoint declarations,4 live shutdown modes and2 simultaneously live isolated sessions with persisted/cross-call/survivor outcomes; no test skip substitutes."
+  },
+  "parentFinalReceipt": "parent-final-verification.json"
+}

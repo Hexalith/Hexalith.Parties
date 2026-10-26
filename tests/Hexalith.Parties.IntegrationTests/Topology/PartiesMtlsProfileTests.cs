@@ -18,6 +18,32 @@ namespace Hexalith.Parties.IntegrationTests.Topology;
 [Collection("Non-parallel")]
 public sealed class PartiesMtlsProfileTests
 {
+    [Fact]
+    public void InternalGrpcListeners_AreDeclaredProxylessBeforeDynamicEndpointAllocation()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        PartiesTopologySession session = PartiesTopologySession.Create(isolatedIdentities: true);
+        foreach (string name in session.InternalGrpcPorts.Keys.Append("memories-domain-service"))
+        {
+            builder.Resources.Add(new ProjectResource(name));
+        }
+        builder.Resources.Add(new ProjectResource("unrelated-project"));
+        PartiesMtlsProfile.ConfigureInternalGrpcEndpoints(builder, session);
+        foreach (ProjectResource project in builder.Resources.OfType<ProjectResource>())
+        {
+            EndpointAnnotation[] endpoints = project.Annotations.OfType<EndpointAnnotation>().ToArray();
+            if (project.Name == "unrelated-project") { endpoints.ShouldBeEmpty(); continue; }
+            int expected = project.Name == "memories-domain-service"
+                ? session.MemoriesDomainInternalGrpcPort : session.InternalGrpcPorts[project.Name];
+            EndpointAnnotation endpoint = endpoints.ShouldHaveSingleItem();
+            endpoint.Name.ShouldBe("fixture-dapr-internal");
+            endpoint.Port.ShouldBe(expected);
+            endpoint.TargetPort.ShouldBe(expected);
+            endpoint.IsProxied.ShouldBeFalse();
+            endpoint.UriScheme.ShouldBe("tcp");
+        }
+    }
+
     [Theory]
     [InlineData("+PONG\r\n", HealthStatus.Healthy)]
     [InlineData("-LOADING Redis is loading data\r\n", HealthStatus.Unhealthy)]

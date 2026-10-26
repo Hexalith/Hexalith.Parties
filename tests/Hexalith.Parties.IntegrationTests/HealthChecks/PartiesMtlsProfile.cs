@@ -11,6 +11,26 @@ namespace Hexalith.Parties.IntegrationTests.HealthChecks;
 /// <summary>Supplies disposable backing services needed only by the complete mTLS qualification.</summary>
 internal static class PartiesMtlsProfile
 {
+    /// <summary>Declares sidecar-owned fixed listeners before DCP allocates dynamic proxy ports.</summary>
+    /// <param name="builder">The owned application model.</param>
+    /// <param name="session">The exact session whose sidecars bind these listeners.</param>
+    internal static void ConfigureInternalGrpcEndpoints(IDistributedApplicationBuilder builder, PartiesTopologySession session)
+    {
+        foreach (ProjectResource project in builder.Resources.OfType<ProjectResource>())
+        {
+            int port;
+            if (!session.InternalGrpcPorts.TryGetValue(project.Name, out port))
+            {
+                if (project.Name != "memories-domain-service") { continue; }
+                port = session.MemoriesDomainInternalGrpcPort;
+            }
+            // The process that binds this socket is the project's daprd sidecar. A
+            // proxyless declaration keeps DCP from taking it for another resource.
+            _ = builder.CreateResourceBuilder(project).WithEndpoint(
+                port: port, targetPort: port, scheme: "tcp", name: "fixture-dapr-internal", isProxied: false);
+        }
+    }
+
     /// <summary>Routes Memories' direct connections to session-owned databases without persistent volumes.</summary>
     internal static void ConfigureOptionalDependencies(IDistributedApplicationBuilder builder)
     {

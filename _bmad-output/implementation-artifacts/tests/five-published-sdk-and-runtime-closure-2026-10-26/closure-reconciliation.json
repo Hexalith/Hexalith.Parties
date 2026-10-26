@@ -1,0 +1,76 @@
+{
+  "schema": "hexalith.parties.dw96.closure-reconciliation.v1",
+  "baselineCommit": "463ad1bf14701f0622b68af4352e07941d1a7969",
+  "origin": "Parent final full service suite discovered an obsolete expected-open deferral after DW-96 closure.",
+  "correction": "Remove only8.6-residual-review-debt from the exact expected-open set. All four remaining accepted umbrellas, the directional unchecked-Story8.6 guard and blocked8.7/8.8/8.9 assertions remain unchanged.",
+  "dependentCorrection": "Requested focused class exposed stale current spine rowsI2/I7/I9/I10 owned only by completed8.6 debt. Parent authorized minimal four-row/current-note reconciliation. The validator is unchanged; Executable identifies guards for retained behavior. DW-50 writer drain/reconciliation, DW-82, DW-168 and independent migration/publication/deployment gates remain open.",
+  "sourceSha256": {
+    "tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs": "33e1d7977b9daf8c6f506c027d18d5203769303ab21a8e9d240c23196dae355b",
+    "_bmad-output/planning-artifacts/architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md": "f21128451a8103775aae0ec386c7187598c1440f3206383eceb94ea71408e225"
+  },
+  "build": {
+    "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release -m:1 --no-restore -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+    "exitCode": 0,
+    "warnings": 0,
+    "errors": 0,
+    "rawLogSha256": "bb0edde931d823ac735b5e8b9781d3b468944b6654bc1cc04ea9e1a660f6714a"
+  },
+  "focusedTests": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests",
+    "exitCode": 0,
+    "result": {
+      "total": 72,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "notRun": 0
+    },
+    "elapsedSeconds": 4.006,
+    "rawLogSha256": "5155a0839d8446242345ada05473aebe777abb5e20494e3a492e3baa63e34452",
+    "executedTestAssemblySha256": "374f69a267e57e05a239261c52b70c7f6f8163c913deb1cd034a80caf3108758"
+  },
+  "supersededFocusedAttempt": {
+    "result": {
+      "total": 72,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failedTest": "InvariantMapCoversI1ThroughI15WithExecutableOrDeferredEvidence",
+    "reason": "Current spine rows still named completed8.6 umbrella as their sole accepted Deferred owner.",
+    "rawLogSha256": "8ae320278b7b63ac8a96d576827db9dce0c14a765dd27cbd5f3e3bd94cda7aae"
+  },
+  "verificationScope": "Only the requested changed-file class ran. Parent owns final full validation and final assembly/manifest refresh.",
+  "priorClosureSourceSha256": {
+    "tests/Hexalith.Parties.Tests/FitnessTests/EpicEightClosureFitnessTests.cs": "33e1d7977b9daf8c6f506c027d18d5203769303ab21a8e9d240c23196dae355b",
+    "_bmad-output/planning-artifacts/architecture/epic-8-domain-focus-2026-07-06/ARCHITECTURE-SPINE.md": "8c9764d7a8c67ba7e517c3e0fb38ffa6093ed653dd2093689ea8e65739e22a18"
+  },
+  "priorClosureFocusedTests": {
+    "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.FitnessTests.EpicEightClosureFitnessTests",
+    "exitCode": 0,
+    "result": {
+      "total": 72,
+      "errors": 0,
+      "failed": 0,
+      "skipped": 0,
+      "notRun": 0
+    },
+    "elapsedSeconds": 4.972,
+    "rawLogSha256": "1930bd84c966bc805755990930ad75dfc25ae2ae96943d13a72a2d86e3fa6120",
+    "executedTestAssemblySha256": "374f69a267e57e05a239261c52b70c7f6f8163c913deb1cd034a80caf3108758"
+  },
+  "currentMapFollowup": {
+    "editedRows": [
+      "I1",
+      "I1a",
+      "I3",
+      "I7"
+    ],
+    "I1": "Actual configured runtime ACL proof is completed under DW-96, with environment orchestration/deployment qualification retained under the external owner.",
+    "I1a": "Completed DW-96 host/gateway/ACL proof must be requalified against a successor topology under I20 and open8.8/external owners; all existing retirement and parity gates remain.",
+    "I3": "Host/gateway/ACL switch-back and release-recovery rollback seams stay with the remaining open owners; no retained seam is retired.",
+    "I7": "DW-82 correctly names authoritative inventory.",
+    "preserved": "Unrelated historic/UI rows, four open umbrellas, all approval/retirement/rollback/parity gates and the fitness validator remain unchanged.",
+    "focusedClassResult": "72passed,0failed,0skipped",
+    "verificationScope": "Document-only follow-up; no wider tests or rebuild."
+  }
+}

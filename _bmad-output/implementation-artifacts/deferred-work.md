@@ -387,13 +387,16 @@ origin: migrated from legacy ledger ("Deferred from: code review of 8-6-projecti
 location: PartySdkQueryService failure vocabulary
 source_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md`
 reason: PartySdkQueryService still returns actor-era failure reasons on the SDK path, which misleads operators after AC8 actor deletion.
-status: open
+status: done 2026-10-26
 decision: 2026-09-07 Compatible canonical aliases — Add semantic SDK and read-model aliases in EventStore.Contracts while preserving legacy wire values. Switch Parties source and tests to the aliases and retain old constants as obsolete compatible members.
 
 resolution: EventStore provides semantic QueryExecutionFailure, ReadModelUnavailable and ResponseMismatch constants with unchanged historical wire values; legacy members remain compatible and obsolete. Compiled owner consumers and qualified Parties source consumers adopt semantic names. A narrow Parties bridge keeps the user-selected 3.127.0 package graph buildable until matching package publication.
 verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/final-verification.json` records reviewed owner publication/adoption and current results. Original candidate and pre-review receipts remain historical; matching published aliases are still absent from the selected 3.127.0 package.
-remaining_gate: Matching published EventStore aliases and package consumer adoption are not established by source proof.
+historical_remaining_gate_2026_10_23: Matching published EventStore aliases and package consumer adoption are not established by source proof.
 closure_state_2026_10_23: Independent source review, owner main publication and root adoption are complete. EventStore owner 596de60e140da779f170279a822ded010070d774 supplies the aliases; user-selected package 3.127.0 still requires the legacy bridge, so matching package adoption stays open.
+
+resolution_2026_10_26: Adopted published EventStore 3.128.0 (repository c5d1c280d8c1c1a207cd159d817f614e93c93130). Parties binds semantic published constants directly; package query/gateway compatibility controls retain historical wire values. This supersedes the former 3.127.0 package prerequisite; historical source receipts remain attached to their original revisions.
+verification_2026_10_26: `tests/five-published-sdk-and-runtime-closure-2026-10-26/`
 
 ### DW-57: Move PartyEventTypeResolver out of the retired Actors folder
 
@@ -677,7 +680,11 @@ archived: 2026-10-13
 origin: migrated from legacy ledger ("Story 8.10 accepted Epic 8 closure deferrals — 2026-08-18"), 2026-09-06
 location: Story 8.6 spec and runnable Parties/EventStore topology
 reason: deferral_id: `8.6-residual-review-debt` authored_by_spec: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md` owner: `Amelia (Parties Developer) + Murat (Test Architect) + Hexalith.EventStore SDK owners where producer/runtime proof is required` exit_proof: `Resolve or explicitly supersede every unchecked [Review][Defer] item in Story 8.6; in particular, exercise SDK handler discovery through an authenticated projected query and enforce the deny-default EventStore-only DAPR ACL in a runnable topology before removing retained host or ACL rollback seams.` rollback: `Keep the completed 8.6 SDK handlers and exact ACL as the production path, retain source/package selection plus the Parties AppHost and gateway topology as switch-back and diagnostic surfaces, and do not delete further host, query, projection, or ACL compatibility seams until the corresponding deferred proof passes.` evidence: `_bmad-output/implementation-artifacts/8-6-projection-and-query-sdk-migration.md and _bmad-output/implementation-artifacts/deferred-work.md record the unchecked review deferrals and their detailed evidence; sprint-status.yaml keeps 8.6 done because these are accepted non-blocking residual debts, not unimplemented acceptance tasks.`
-status: open
+status: done 2026-10-26
+
+reconciliation_2026_10_26: All six historical Story 8.6 checkboxes are resolved against DW-30/32/33/53/51 or explicitly superseded by open DW-50. The current published package runtime passes authenticated projected-query and independently persisted stream verification. Existing isolated fixture identities/private namespaces qualify actual configured sidecar metadata, permitted 200 calls and all six Dapr-specific PermissionDenied 403 caller/verb/path controls, with all three selected runtime cases executed and zero skips. Original-name attempts collided with the user's non-mTLS discovery entries and remain historical failures; the passing receipt qualifies the explicitly configured isolated topology, not simultaneous original-name coexistence. Production ACL bytes, original default mode and every rollback seam remain intact.
+resolution_2026_10_26: Scope of the residual umbrella is resolved or explicitly superseded. DCP now owns every fixed internal sidecar endpoint in the fixture graph before dynamic proxy allocation, and worker observation retains immutable planned names across model expansion. Complete Integration and focused custody controls pass; all fifteen failed/prior/final runtime sessions have no remaining owned workers, containers, networks or private directories. DW-50 and independent migration/deployment gates remain open.
+verification_2026_10_26: `tests/five-published-sdk-and-runtime-closure-2026-10-26/`; exact runtime command sets both PARTIES_MTLS_TOPOLOGY_TESTS=true and PARTIES_MTLS_ISOLATED_IDENTITIES=true. Original-name, observer-race and port-allocation failures are preserved separately.
 
 ### DW-97: Complete Story 8.7 data-protection extraction
 
@@ -1513,11 +1520,14 @@ archived: 2026-10-21
   summary: Make EventStore unguarded batch reconciliation preserve newer canonical writes, including erasure tombstones.
   evidence: A real SDK InMemoryReadModelStore fault at BeforeReceipt after newer sequence-5 Detail/Processing erasure tombstones persist makes CompactAndCompleteAsync restore the older initialization candidate. The six-case candidate reproduction passed five cases and failed this interleaving; candidate source/logs/XML are retained in /tmp/dw-163-validation. EventStore owns this persistence guarantee; the Parties candidate was withdrawn and DW-163 stays open.
 
-  status: open
+  status: done 2026-10-26
   resolution: Published owner main 596de60e140da779f170279a822ded010070d774 preserves superseding ordinary state and finishes owned retained anchors before verification. Complete Client suite passes 2,116 cases with zero failures and two environment skips; mapped Parties source controls pass 999/999 including all four erasure-tombstone interleavings.
-  remaining_gate: User-selected package 3.127.0 does not contain the recovery fix; its package closure stays open pending matching publication/adoption. The following legacy normal-batch compaction debt is unchanged.
+  historical_remaining_gate_2026_10_23: User-selected package 3.127.0 does not contain the recovery fix; its package closure stays open pending matching publication/adoption. The following legacy normal-batch compaction debt is unchanged.
   verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/final-verification.json`; earlier original-candidate and pre-review records remain historical.
   implementation_2026_10_23: Source review, owner publication and root adoption are complete. User-selected published SDK 3.127.0 demonstrably still overwrites newer state; matching publication/adoption remains an open prerequisite.
+
+  resolution_2026_10_26: Published EventStore 3.128.0 contains owner 596de60e140da779f170279a822ded010070d774 and is adopted by the actual package consumer graph. All four newer-erasure interleavings execute and preserve serialized canonical state. This supersedes the 3.127.0 publication/adoption prerequisite; foreign and uncertain ownership remains retryable and no retained rollback seam is removed.
+  verification_2026_10_26: `tests/five-published-sdk-and-runtime-closure-2026-10-26/`
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-166-versioned-memories-cleanup.md`
   summary: Reconcile current dependency source observations and the unchanged release gitlink fitness constants with the already-committed Builds selection.
@@ -1527,13 +1537,16 @@ archived: 2026-10-21
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-163-coordinated-unresolved-projection.md`
   summary: Complete legacy non-retained normal-batch compaction before a subsequent projection tail needs writable ETags.
-  status: open
+  status: done 2026-10-26
   implementation_2026_10_23: EventStore adds a caller-attested nonexpiring legacy recovery capability using original committed marker/envelopes, conditional writes and content-free final anchors. Generic callers still refuse unknown v1 retention. Parties source selection uses it only for known nonexpiring detail/processing writers; package 3.127.0 publication/adoption and source qualification remain distinct gates.
   verification_2026_10_23: tests/five-recovery-integration-2026-10-23/validation.json; independent review and final publication are parent-owned.
   evidence: The baseline PartyDetailSdkProjectionHandler from 6b0641829b68d22656fb173eec6578c65e8e91f0, compiled against the actual 3.125.1 package graph, returns Indeterminate after an injected AfterCommit failure, AlreadyCompleted on original redelivery, then Retryable/projection_partial_retry for a subsequent supported tail while its committed envelopes remain uncompacted. Replaying the exact original SDK batch compacts them. This predates DW-163 and the approved fix preserves normal batching; do not repair it by retaining payload-bearing manifests without owner-supported erasure/recovery guarantees. Reproduction uses that tracked baseline handler with ReadModelBatchPhase.AfterCommit fault injection in the existing SDK fake.
 
   resolution_2026_10_23: Reviewed EventStore da50f853b6c2c37193e9b1a8819858778d48d0f3 is published and adopted at a9f4edb5a8a769e36499063b5b88413af01a7bd0. Source recovery, mixed deletes, conditional races and next-tail writes pass. Matching published SDK adoption remains open because package 3.127.0 is unchanged.
   final_verification: `tests/five-recovery-integration-2026-10-23/final-verification.json`.
+
+  resolution_2026_10_26: Published EventStore 3.128.0 contains owner da50f853b6c2c37193e9b1a8819858778d48d0f3 and is adopted. All four legacy controls execute in package mode, including interruption/restart, erasure preservation, compacted ETags and successful next-tail progress without payload retention. This supersedes the earlier package prerequisite; DW-50 writer drain, historical reconciliation and migration gates remain open.
+  verification_2026_10_26: `tests/five-published-sdk-and-runtime-closure-2026-10-26/`
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-67-central-consumer-support-versions.md`
   summary: Normalize NuGet versions consistently before validating support artifact filenames and nuspec versions.
@@ -1755,12 +1768,15 @@ archived: 2026-10-21
   summary: Replace initialized Memories algorithm defaults when explicit JWT algorithms are configured before qualifying an asymmetric-only policy.
   evidence: Independent blind and edge review probes against the selected producer options with the .NET 10 binder produce HS256,RS256,ES256,RS256,ES256 after RS256/ES256 configuration. The initialized collection and binding contract predate this caller change; app environment entries do not establish effective options. Require owner-supported replacement semantics and effective JwtBearerOptions verification; the Memories publication entry remains open.
 
-  status: open
+  status: done 2026-10-26
   resolution: Owner registration replaces explicitly configured algorithm lists while retaining BindConfiguration reload notifications, absent defaults, programmatic initialization and the public init-only setter signature. Effective named JwtBearerOptions and real signed RS256/ES256 acceptance with HS256 rejection pass; blank and empty JSON lists fail startup.
-  remaining_gate: Matching Memories package publication/adoption and the separate Dapr sidecar secret-token publisher gate remain open.
+  historical_remaining_gate_2026_10_23: Matching Memories package publication/adoption and the separate Dapr sidecar secret-token publisher gate remain open.
   verification: `tests/five-owner-config-and-recovery-deferred-items-2026-10-23/final-verification.json`; earlier original-candidate and pre-review records remain historical.
   implementation_2026_10_23: Reviewed server source is published in Memories main 4190ec6549dd83bcaaf268e7bb723dcff8f7286b and adopted at root 79768d1f2b7071db6fa49bffbfe179a43a00baa7. Eight registered authentication controls pass; matching package and independent publisher gates remain open.
   review_correction_2026_10_23: Domain-option reload notifications remain, but the named bearer policy retains its startup selection and requires restart for policy changes. Registered programmatic configuration is verified through public initialization and the registered options callbacks; MCP binding remains deferred separately.
+
+  resolution_2026_10_26: The actual AppHost resolves non-packable Memories Server by project path at selected 39be000902254c4717df6726bfcc3ea927b26b70. Eight registered Server controls pass without skips: effective selected algorithms replace defaults, signed RS256/ES256 pass, HS256 fails and empty/blank lists fail startup. The actual registration slice and policy/test/factory sources are byte-identical to released 2.29.15 source 38128624763c313238904c30aaeb88eb4fd9a6d0. This explicit project-host/released-source proof supersedes the stale client-package-only prerequisite. The separate sidecar token publisher entry, container/deployment and refresh/inventory gates remain open; no client upgrade or producer change was needed.
+  verification_2026_10_26: `tests/five-published-sdk-and-runtime-closure-2026-10-26/`
 
 - source_spec: `spec-five-publish-and-process-safety-deferred-items.md`
   summary: Deliver supported Dapr sidecar secret-token emission through the selected SDK/target publisher before qualifying Memories publish authentication.

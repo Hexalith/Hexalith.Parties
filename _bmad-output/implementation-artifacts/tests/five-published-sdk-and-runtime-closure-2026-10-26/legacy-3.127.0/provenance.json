@@ -1,0 +1,42 @@
+{
+  "sdkVersion": "3.127.0",
+  "oldStoreExportedCount": 3,
+  "capture": "AfterCommit fault and Reconcile fault; non-retained old SDK committed marker and both physical pending envelopes.",
+  "independentInputs": "Literal pre-generation canonical JSON; no Parties writer/current SDK/producer project references.",
+  "generatorFiles": {
+    "Program.cs": "33b1fa68fa0e12cac41895fe4547cdb1db34dfcc5e89d01b58fa1f37717b9174",
+    "LegacyCapture.csproj.template": "b362abf30b85f3132fb4ad324d4ac88d7094a56a5faa0b59683ba4f113887ab1"
+  },
+  "resolvedPackages": {
+    "Hexalith.EventStore.Client/3.127.0": "package",
+    "Hexalith.EventStore.Contracts/3.127.0": "package",
+    "Hexalith.EventStore.DomainService/3.127.0": "package",
+    "Hexalith.EventStore.Server/3.127.0": "package",
+    "Hexalith.EventStore.ServiceDefaults/3.127.0": "package",
+    "Hexalith.EventStore.Testing/3.127.0": "package"
+  },
+  "packages": {
+    "hexalith.eventstore.client": {
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore",
+        "commit": "e1d8b17160202761ab5c9606cafbcf4d1a4b92c3"
+      },
+      "nupkgSha512": "1JVKveOjilDBpHc5uHmtV2tObgrbQQYGOkVkRxvdNjXi0zBGksJXzqaZcSUBCbR+76ul+D/fdwAPssh2j/kkSg=="
+    },
+    "hexalith.eventstore.testing": {
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore",
+        "commit": "e1d8b17160202761ab5c9606cafbcf4d1a4b92c3"
+      },
+      "nupkgSha512": "EesWgBzI6sOC5jAFNqbr1kb4IW5MKps7JVBSSI2LSbuzOCV0laTEuUK5B0xL5zOpe9QdMpU6Q8hCUFyRloeslw=="
+    }
+  },
+  "snapshotSha256": "ae83b871fafcec967f0f57b029d25f25765e28336351dea34ec2abd7f7c3dc10",
+  "generationCommand": "dotnet run --project ${SCRATCH}/LegacyCapture.csproj -c Release -p:NuGetAudit=false -- ${EVIDENCE}/persisted-state.json",
+  "exitCode": 0,
+  "reproducedByteIdentically": true,
+  "reproductionSha256": "ae83b871fafcec967f0f57b029d25f25765e28336351dea34ec2abd7f7c3dc10",
+  "reproductionExitCode": 0
+}

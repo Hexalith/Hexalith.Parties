@@ -1,0 +1,14 @@
+{
+  "command": [
+    "node_modules/.bin/commitlint",
+    "--edit",
+    "/tmp/parties-published-sdk-commit-d28e23ci.txt",
+    "--verbose"
+  ],
+  "message_file": "/tmp/parties-published-sdk-commit-d28e23ci.txt",
+  "message": "fix!: qualify published sdk recovery and runtime\n\nAdopt EventStore 3.128.0 and execute package recovery controls.\nQualify isolated projection and ACL flows, reconcile residual\ndeferrals, and verify the registered Memories algorithm policy.\n\nBREAKING CHANGE: Package-mode read-model erasure now requires verified\nhistorical recovery reconciliation and the\nParties:Projections:HistoricalPrivateRecoveryReconciliationAttested\nsetting before cleanup can complete.\n",
+  "exit_code": 0,
+  "stdout": "\u29d7   --- input ---\nfix!: qualify published sdk recovery and runtime\n\nAdopt EventStore 3.128.0 and execute package recovery controls.\nQualify isolated projection and ACL flows, reconcile residual\ndeferrals, and verify the registered Memories algorithm policy.\n\nBREAKING CHANGE: Package-mode read-model erasure now requires verified\nhistorical recovery reconciliation and the\nParties:Projections:HistoricalPrivateRecoveryReconciliationAttested\nsetting before cleanup can complete.\n\u2714   found 0 problems, 0 warnings\n",
+  "stderr": "",
+  "cli_version": "@commitlint/cli@21.2.2"
+}

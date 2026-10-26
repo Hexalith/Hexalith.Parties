@@ -1,0 +1,102 @@
+{
+  "schema": "hexalith.parties.published-sdk.review1.v1",
+  "baselineCommit": "463ad1bf14701f0622b68af4352e07941d1a7969",
+  "stage": "Only changed-file/requested focused tests run here; parent owns subsequent complete verification.",
+  "commands": {
+    "recoveryBuild": {
+      "command": "dotnet build tests/Hexalith.Parties.Tests/Hexalith.Parties.Tests.csproj -c Release -m:1 --no-restore -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "rawLogSha256": "c1a3619b141b981d4a366d407a1358597205ff41676acb4c6a8e84bcd90929c7",
+      "exitCode": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "integrationBuild": {
+      "command": "dotnet build tests/Hexalith.Parties.IntegrationTests/Hexalith.Parties.IntegrationTests.csproj -c Release -m:1 --no-restore -p:NuGetAudit=false -p:MinVerVersionOverride=1.0.0",
+      "rawLogSha256": "b9f949469e2f01eacbecf2e2d36a24bc07d079bf0a1fdadd5c60d37e002221bd",
+      "exitCode": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    "recovery": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests",
+      "rawLogSha256": "58736832b9aefe9cb4654ebd00c8a05a49192a82b472f4fbc65b3abb4f6d9ef7",
+      "exitCode": 0,
+      "result": {
+        "total": 61,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "elapsedSeconds": 0.506
+    },
+    "matrix": {
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -method '*FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph'",
+      "rawLogSha256": "041e08b474b0c7908d79676dfe2d34eaa023f56400deca9fc100b1749eb0ae10",
+      "exitCode": 0,
+      "result": {
+        "total": 1,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "elapsedSeconds": 36.363
+    },
+    "runtime": {
+      "command": "PARTIES_MTLS_TOPOLOGY_TESTS=true PARTIES_MTLS_ISOLATED_IDENTITIES=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -method '*LiveShutdown_NormalCanceledAndFailedStartupStopsOwnedWorkersWithinObservationDeadlineAsync' -method '*ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync'",
+      "rawLogSha256": "c199e6757db0b327662b1a34ed74f65d760625868dd2fed4ee02fc77095e01ed",
+      "exitCode": 0,
+      "result": {
+        "total": 5,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "elapsedSeconds": 352.558
+    }
+  },
+  "historicalCapture": "legacy-3.127.0/provenance.json; exact oldSDK bytes reproduce identically in standalone scratch",
+  "recoveryCoverage": {
+    "pinned3127Import": 2,
+    "ordinaryWriteOrPhysicalDelete": 12,
+    "ordinaryBoundaries": "AfterCommit(-1),BeforeCompaction(0,1),AfterCompaction(0,1),BeforeReceipt(-1); requested phase/ordinal is asserted before superseding write/delete",
+    "deletedSlot": "detail; physical TryEraseAsync succeeds and absence remains after original batch completion and redelivery"
+  },
+  "runtimeCoverage": {
+    "lifecycleModes": [
+      "normal",
+      "canceled",
+      "failed",
+      "cleanup-failed"
+    ],
+    "concurrentControl": "ConcurrentSessions_IsolateStreamsRejectCrossCallsAndSurvivePeerDisposalAsync",
+    "proof": "Both live sessions persist independent counter streams and distinct state, reject cross-session calls, and the survivor retains authenticated UI/query/persistence behavior after peer disposal.",
+    "sourceSha256": "6950b4a19e8f19b14f355a727577c1884bbfe0e962903d82c1dcbf5b2085bda2",
+    "ownedSessions": [
+      "08a3c0a61bcc",
+      "277a741b4808",
+      "41722339b541",
+      "6656eb74adc7",
+      "a060d44e5248",
+      "c140fd58dc35"
+    ],
+    "lifecycleObservations": [
+      "Live cleanup normal: 17 workers exited, 3 backing containers removed; host shutdown budget 30s; observed cleanup 35.761s.",
+      "Live cleanup canceled: 16 workers exited, 3 backing containers removed; host shutdown budget 30s; observed cleanup 17.269s.",
+      "Live cleanup failed: 14 workers exited, 3 backing containers removed; host shutdown budget 30s; observed cleanup 16.439s.",
+      "Live cleanup cleanup-failed: 17 workers exited, 3 backing containers removed; host shutdown budget 30s; observed cleanup 6.746s."
+    ]
+  },
+  "datedObservation": {
+    "rootRevision": "463ad1bf14701f0622b68af4352e07941d1a7969",
+    "dependencyRevisionSource": "Each full revision is resolved exclusively from that immutable root gitlink tree; describe/rev-parse use that full object. Current HEAD diagnostics are separately labeled.",
+    "exactSnippetExecuted": true,
+    "commandOutputSha256": "093cadced32c33e2c9f055666184afd0625c9ca80841469155a7d5e0e909a857"
+  },
+  "supersededLocalAttempts": {
+    "combinedClassAndDifferentMethodFilter": "Executed0 tests; superseded by separate recovery61 and matrix1 invocations.",
+    "firstIndependentCaptureInput": "Import tests rejected missing required displayName/sortName; generator canonical inputs corrected, both3.127 output generations match byte-identically and all61 controls pass."
+  }
+}

@@ -28,28 +28,32 @@ public sealed class PartiesMtlsTopologyTests
             Assert.Skip("Set PARTIES_MTLS_TOPOLOGY_TESTS=true to require the complete disposable mTLS topology.");
         }
 
-        var fixture = new PartiesAspireTopologyFixture(completeMtlsProfile: true);
+        var fixture = new PartiesAspireTopologyFixture(completeMtlsProfile: true,
+            isolatedIdentities: string.Equals(Environment.GetEnvironmentVariable("PARTIES_MTLS_ISOLATED_IDENTITIES"), "true", StringComparison.OrdinalIgnoreCase));
         await using var lifetime = fixture.ConfigureAwait(true);
         await fixture.InitializeAsync(TestContext.Current.CancellationToken);
         fixture.IsAvailable.ShouldBeTrue(fixture.UnavailableReason);
+        Console.WriteLine($"Runtime identity profile: namespace={fixture.Session.Namespace}; suffix={fixture.Session.AppIdSuffix}");
         foreach (string appId in PartiesAspireTopologyFixture.CompleteSidecarIds)
         {
             using HttpClient sidecar = fixture.CreateSidecarClient(appId);
             using JsonDocument metadata = (await sidecar.GetFromJsonAsync<JsonDocument>("/v1.0/metadata", TestContext.Current.CancellationToken))!;
-            metadata.RootElement.GetProperty("id").GetString().ShouldBe(appId);
-            Console.WriteLine($"Runtime metadata verified: {appId}");
+            metadata.RootElement.GetProperty("id").GetString().ShouldBe(fixture.Session.AppId(appId));
+            Console.WriteLine($"Runtime metadata verified: {fixture.Session.AppId(appId)}");
         }
 
         using HttpClient partiesSidecar = fixture.CreateSidecarClient("parties");
         using HttpResponseMessage readiness = await partiesSidecar.GetAsync(
-            "/v1.0/invoke/tenants/method/ready", TestContext.Current.CancellationToken);
-        readiness.StatusCode.ShouldBe(HttpStatusCode.OK);
+            $"/v1.0/invoke/{fixture.Session.AppId("tenants")}/method/ready", TestContext.Current.CancellationToken);
+        readiness.StatusCode.ShouldBe(HttpStatusCode.OK,
+            await readiness.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Console.WriteLine("Runtime Parties-to-Tenants GET /ready: 200 through existing ACL");
 
         using HttpClient adminUiSidecar = fixture.CreateSidecarClient("eventstore-admin-ui");
         using HttpResponseMessage adminHealth = await adminUiSidecar.GetAsync(
-            "/v1.0/invoke/eventstore-admin/method/health", TestContext.Current.CancellationToken);
-        adminHealth.StatusCode.ShouldBe(HttpStatusCode.OK);
+            $"/v1.0/invoke/{fixture.Session.AppId("eventstore-admin")}/method/health", TestContext.Current.CancellationToken);
+        adminHealth.StatusCode.ShouldBe(HttpStatusCode.OK,
+            await adminHealth.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Console.WriteLine("Runtime admin UI-to-admin server GET /health: 200 through existing ACL");
 
         // Require the sidecar's policy diagnostic: an application 401/403 is insufficient.
@@ -64,17 +68,19 @@ public sealed class PartiesMtlsTopologyTests
         })
         {
             using HttpClient callerSidecar = fixture.CreateSidecarClient(caller);
-            using var request = new HttpRequestMessage(verb, $"/v1.0/invoke/{target}/method/{path}");
+            using var request = new HttpRequestMessage(verb, $"/v1.0/invoke/{fixture.Session.AppId(target)}/method/{path}");
             using HttpResponseMessage denied = await callerSidecar.SendAsync(request, TestContext.Current.CancellationToken);
-            denied.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+            denied.StatusCode.ShouldBe(HttpStatusCode.Forbidden,
+                $"{fixture.Session.AppId(caller)} {verb.Method} {fixture.Session.AppId(target)}/{path}: "
+                + await denied.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
             using JsonDocument evidence = JsonDocument.Parse(await denied.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
             evidence.RootElement.GetProperty("errorCode").GetString().ShouldBe("ERR_DIRECT_INVOKE");
             string diagnostic = evidence.RootElement.GetProperty("message").GetString()!;
             diagnostic.ShouldContain("PermissionDenied");
             diagnostic.ShouldContain("access control policy has denied access");
-            Console.WriteLine($"Dapr denied {caller} {verb.Method} {target}/{path}: {diagnostic}");
+            Console.WriteLine($"Dapr denied {fixture.Session.AppId(caller)} {verb.Method} {fixture.Session.AppId(target)}/{path}: {diagnostic}");
         }
-        Console.WriteLine("Original identity ACLs rejected forbidden caller, verb and path combinations at Dapr");
+        Console.WriteLine("Configured identity ACLs rejected forbidden caller, verb and path combinations at Dapr");
 
         foreach (string? token in new string?[] { null, "invalid-test-channel-token" })
         {

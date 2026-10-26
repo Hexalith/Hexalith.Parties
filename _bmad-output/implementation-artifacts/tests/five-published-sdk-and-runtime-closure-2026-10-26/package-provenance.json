@@ -1,0 +1,196 @@
+{
+  "schema": "hexalith.parties.published-sdk.provenance.v1",
+  "baselineCommit": "463ad1bf14701f0622b68af4352e07941d1a7969",
+  "sourceSelections": {
+    "references/Hexalith.EventStore": {
+      "gitlink": "1b404e7fbcdbb5604418f04025d16756436cec24",
+      "checkout": "1b404e7fbcdbb5604418f04025d16756436cec24",
+      "describe": "v3.128.0-2-g1b404e7f",
+      "status": ""
+    },
+    "references/Hexalith.Memories": {
+      "gitlink": "39be000902254c4717df6726bfcc3ea927b26b70",
+      "checkout": "39be000902254c4717df6726bfcc3ea927b26b70",
+      "describe": "v2.29.15-30-g39be0009",
+      "status": ""
+    },
+    "references/Hexalith.FrontComposer": {
+      "gitlink": "9c4166e4b7cb45e2512e2b6db887a071f35ce244",
+      "checkout": "9c4166e4b7cb45e2512e2b6db887a071f35ce244",
+      "describe": "v4.7.0-106-g9c4166e4",
+      "status": ""
+    },
+    "references/Hexalith.Tenants": {
+      "gitlink": "692c17b27d94677a3a4d065330d150b262cdb570",
+      "checkout": "692c17b27d94677a3a4d065330d150b262cdb570",
+      "describe": "v5.10.1-56-g692c17b2",
+      "status": ""
+    },
+    "references/Hexalith.AI.Tools": {
+      "gitlink": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "checkout": "3f194e17174994d308ec84af9ee2b5aa68674d0d",
+      "describe": "3f194e17",
+      "status": ""
+    },
+    "references/Hexalith.Commons": {
+      "gitlink": "1663028fb6d9f46a0bf17919edeb21bb99be1587",
+      "checkout": "1663028fb6d9f46a0bf17919edeb21bb99be1587",
+      "describe": "v2.30.3-4-g1663028f",
+      "status": ""
+    },
+    "references/Hexalith.Builds": {
+      "gitlink": "db897eac9f2819220b32d237109d7255218b46a9",
+      "checkout": "db897eac9f2819220b32d237109d7255218b46a9",
+      "describe": "v4.38.0-14-gdb897eac",
+      "status": ""
+    },
+    "references/Hexalith.PolymorphicSerializations": {
+      "gitlink": "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
+      "checkout": "221ac4592ba908ae7661ba1fa9e2d1fcc23baee0",
+      "describe": "v1.19.5",
+      "status": ""
+    },
+    "references/Hexalith.McpCli": {
+      "gitlink": "dc282889e624a4c990faa3f005ad7eaa8db7a473",
+      "checkout": "dc282889e624a4c990faa3f005ad7eaa8db7a473",
+      "describe": "v1.0.0-76-gdc282889",
+      "status": ""
+    },
+    "references/Hexalith.Platform": {
+      "gitlink": "8d61addebff5bb2f0af81b3e373d2d31a3a774a2",
+      "checkout": "8d61addebff5bb2f0af81b3e373d2d31a3a774a2",
+      "describe": "8d61adde",
+      "status": ""
+    }
+  },
+  "projects": {
+    "tests/Hexalith.Parties.Tests/obj/project.assets.json": {
+      "sha256": "f9ae430edd983ab94f564b3de0216c40bc784a1318c6d78a18ab20ed03f75a56",
+      "resolved": {
+        "Hexalith.EventStore.Admin.Abstractions/3.128.0": "package",
+        "Hexalith.EventStore.Client/3.128.0": "package",
+        "Hexalith.EventStore.Contracts/3.128.0": "package",
+        "Hexalith.EventStore.DomainService/3.128.0": "package",
+        "Hexalith.EventStore.Gateway/3.128.0": "package",
+        "Hexalith.EventStore.Server/3.128.0": "package",
+        "Hexalith.EventStore.ServiceDefaults/3.128.0": "package",
+        "Hexalith.EventStore.Testing/3.128.0": "package",
+        "Hexalith.Memories.Client.Rest/2.29.9": "package",
+        "Hexalith.Memories.Contracts/2.29.9": "package"
+      }
+    },
+    "tests/Hexalith.Parties.IntegrationTests/obj/project.assets.json": {
+      "sha256": "288fad6e6062fdeb88dcaca6d281dce858024e678ff6777900cd5d2430531251",
+      "resolved": {
+        "Hexalith.EventStore.Aspire/3.128.0": "package",
+        "Hexalith.EventStore.Client/3.128.0": "package",
+        "Hexalith.EventStore.Contracts/3.128.0": "package",
+        "Hexalith.EventStore.DomainService/3.128.0": "package",
+        "Hexalith.EventStore.Server/3.128.0": "package",
+        "Hexalith.EventStore.ServiceDefaults/3.128.0": "package",
+        "Hexalith.Memories.Client.Rest/2.29.9": "package",
+        "Hexalith.Memories.Contracts/2.29.9": "package"
+      }
+    },
+    "src/Hexalith.Parties.Projections/obj/project.assets.json": {
+      "sha256": "5229d78c56e6ee1708f00e68d1e6c22d9a143e9f71c6bc4b3326eca043c4d5e0",
+      "resolved": {
+        "Hexalith.EventStore.Client/3.128.0": "package",
+        "Hexalith.EventStore.Contracts/3.128.0": "package",
+        "Hexalith.EventStore.DomainService/3.128.0": "package",
+        "Hexalith.EventStore.ServiceDefaults/3.128.0": "package"
+      }
+    }
+  },
+  "packages": {
+    "Hexalith.EventStore.Admin.Abstractions/3.128.0": {
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore",
+        "commit": "c5d1c280d8c1c1a207cd159d817f614e93c93130"
+      },
+      "nuspecSha256": "94a1cd6ccc8944d3e86507e2b5bd45772229e6da973b4edb78ba8ab9a98db190",
+      "nupkgSha512": "vLGAe1yWPqnbNp/O6cZK/pQHSUPRIw5i7EVWrj3eaF+UGZhR2IYQKWY26TDWHeLfr7M4fk9IgVle+dCTm5jEiA=="
+    },
+    "Hexalith.EventStore.Client/3.128.0": {
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore",
+        "commit": "c5d1c280d8c1c1a207cd159d817f614e93c93130"
+      },
+      "nuspecSha256": "5ef5c44dcc3571375ee5e20f62fd188ea623b087a2a97af9445e7bde28f24a2d",
+      "nupkgSha512": "OSYXtZeRMP1rphG414D33g9D4FKRV06CKz+X3g1kk+ULa9DsGgYdQpO77FH89iipd0WhXA2R1wPwdCSBt+Xjuw=="
+    },
+    "Hexalith.EventStore.Contracts/3.128.0": {
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore",
+        "commit": "c5d1c280d8c1c1a207cd159d817f614e93c93130"
+      },
+      "nuspecSha256": "7f68a6dc3f1251ad819e3722b509b5a3b79887342c137ac06f0a2234f407bc34",
+      "nupkgSha512": "wg30Y+IoHFDhafTGVoP+OF674dQ3/SNU9ad388qfrqqOjWT4CDHEVpMZPB6o4UPmdiBI9qM+uhwURF/bDVCDgw=="
+    },
+    "Hexalith.EventStore.DomainService/3.128.0": {
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore",
+        "commit": "c5d1c280d8c1c1a207cd159d817f614e93c93130"
+      },
+      "nuspecSha256": "a344976d60e979a4abf73586661522a3fb0440406ffa40a9fe4c5c3ac4540d4b",
+      "nupkgSha512": "Tm4nioNx645CYfokwSFHuRmmhKkZEjecmQPas5r+602KZt6E8wwzoe+pFujblzaHBNLfArhBeh0QkP52GQuLLA=="
+    },
+    "Hexalith.EventStore.Gateway/3.128.0": {
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore",
+        "commit": "c5d1c280d8c1c1a207cd159d817f614e93c93130"
+      },
+      "nuspecSha256": "2409d2c5630c9dbdcac67b6cb0c0e9ce21ac790163dee9c987332c5aca334e50",
+      "nupkgSha512": "SOK1wY7/vTELr96Ky4ca/44EJpE+E+aV7Ks2K+h0AX3Fn1cnkOzBU5fgVou5Z2pA1fcxRiDr60NOF4XYa1b8IQ=="
+    },
+    "Hexalith.EventStore.Server/3.128.0": {
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore",
+        "commit": "c5d1c280d8c1c1a207cd159d817f614e93c93130"
+      },
+      "nuspecSha256": "1d0bf890257fe0236efebbf5a3850e991816a307899837b1df659b5ae5a25e44",
+      "nupkgSha512": "dIFpjj07Nycrlc+AsXauvD4gyMR7wDdOFcmsrXjsYLnSJV7Mmh2lfHogBteC48iLe8RrdCEplE3tqe/ApbtR3w=="
+    },
+    "Hexalith.EventStore.ServiceDefaults/3.128.0": {
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore",
+        "commit": "c5d1c280d8c1c1a207cd159d817f614e93c93130"
+      },
+      "nuspecSha256": "b8d385cf3da067296aa3865ac1148a53e904ae3ca145668ccb6943c32f1684ec",
+      "nupkgSha512": "G07zUyQ/XQ8WTGvi4bDrDhABbnC5NxMVvB2C3pesDf7eq6iVfk8IvtmNw22YALgvqqSb2zbFVK07TLDMLovIxw=="
+    },
+    "Hexalith.EventStore.Testing/3.128.0": {
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore",
+        "commit": "c5d1c280d8c1c1a207cd159d817f614e93c93130"
+      },
+      "nuspecSha256": "0f1786f000f82d2267f2b7b257c48961e54a57197324b56725a2eeb0a3323aba",
+      "nupkgSha512": "yqweqAVBUgSBT/Sxjb4rXw9LLUI6vGi87GHd1gEyOPrZhfvTU+L78KGdvz0wcSPeb07EuTWRzbninYg60VvLEg=="
+    },
+    "Hexalith.EventStore.Aspire/3.128.0": {
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hexalith/Hexalith.EventStore",
+        "commit": "c5d1c280d8c1c1a207cd159d817f614e93c93130"
+      },
+      "nuspecSha256": "36d376bab8683eaf72702f4df328b3e4ae839c5b0e06892bb6ae6fd9ab5a06bc",
+      "nupkgSha512": "r6FfeTF9PY/E3395dthalopH2DpLTIRJzc3Ezgv7uHj0CjU7FZISaFfV8UdAFfoaebFPS5FDq+GBXNbwy8S7rw=="
+    }
+  },
+  "publishedEventStore": {
+    "version": "3.128.0",
+    "repositoryRevision": "c5d1c280d8c1c1a207cd159d817f614e93c93130",
+    "containsFixes": {
+      "596de60e140da779f170279a822ded010070d774": true,
+      "da50f853b6c2c37193e9b1a8819858778d48d0f3": true
+    }
+  }
+}

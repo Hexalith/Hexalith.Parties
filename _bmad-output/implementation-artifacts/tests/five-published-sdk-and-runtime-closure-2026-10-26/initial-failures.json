@@ -1,0 +1,186 @@
+{
+  "schema": "hexalith.parties.published-sdk.initial-failures.v1",
+  "note": "Historical unsuccessful attempts, preserved separately from final configured-profile qualification. No assertion was weakened and no user runtime was stopped.",
+  "attempts": [
+    {
+      "id": "focused",
+      "rawLogSha256": "98d3ce48b1c5a964fa3c3223fa2a0d1df8a4528126b21e781393ecc35d4549a4",
+      "failures": [
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.Matrix_ValidationEvidenceCommandsAreReproducible",
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceSelectionsMatchCurrentGitReceipts(dependency: \"McpCli\")",
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.NonConsumedSourceSelectionsMatchCurrentGitReceipts(dependency: \"Platform\")",
+        "Hexalith.Parties.Tests.FitnessTests.PlatformApiPrerequisitesTests.FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph"
+      ],
+      "result": {
+        "total": 1074,
+        "errors": 0,
+        "failed": 4,
+        "skipped": 0,
+        "notRun": 0
+      }
+    },
+    {
+      "id": "service-suite",
+      "rawLogSha256": "89e6e1076b6176d17357d53be13b2f5a77b393fe44825039d2fe41ccdb49572d",
+      "failures": [
+        "Hexalith.Parties.Tests.Projections.ProjectionPlatformAdapterTests.AddParties_CanceledSdkReadModelCleanupRethrowsInsteadOfFailedAsync",
+        "Hexalith.Parties.Tests.Projections.ProjectionPlatformAdapterTests.AddParties_ErasureCleanupDelegatesInvokeRealEraserAndCacheEvictionWithCorrectKeysAsync"
+      ],
+      "result": {
+        "total": 2766,
+        "errors": 0,
+        "failed": 2,
+        "skipped": 4,
+        "notRun": 0
+      }
+    },
+    {
+      "id": "runtime",
+      "rawLogSha256": "87d76cfb2d4175d8d9d66c5e8b579648960010ee6a8d996965ce634bb92df67c",
+      "failures": [
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests.CompleteProfile_AllEightSidecarsRespondAndPartiesInvokesTenantsReadiness"
+      ],
+      "result": {
+        "total": 3,
+        "errors": 0,
+        "failed": 1,
+        "skipped": 0,
+        "notRun": 0
+      }
+    },
+    {
+      "id": "runtime-rerun",
+      "rawLogSha256": "759f9bdb69850716aef18457c8f35ca2b4facbcf0f25787845539006f8a35dbe",
+      "failures": [
+        "Hexalith.Parties.IntegrationTests.Gateway.EventStoreGatewayE2ETests.AuthenticatedCreate_ProjectsDetailsAndPersistsMatchingEventEnvelopesAsync",
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests.CompleteProfile_AllEightSidecarsRespondAndPartiesInvokesTenantsReadiness"
+      ],
+      "result": {
+        "total": 3,
+        "errors": 0,
+        "failed": 2,
+        "skipped": 0,
+        "notRun": 0
+      }
+    },
+    {
+      "id": "runtime-diagnostic",
+      "rawLogSha256": "4b5b0c693951644a3614d2061898b76d81d6f6ada96084a4b626a242f8aaf882",
+      "failures": [
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests.CompleteProfile_AllEightSidecarsRespondAndPartiesInvokesTenantsReadiness"
+      ],
+      "result": {
+        "total": 1,
+        "errors": 0,
+        "failed": 1,
+        "skipped": 0,
+        "notRun": 0
+      }
+    },
+    {
+      "id": "runtime-acl-diagnostic",
+      "rawLogSha256": "cd7371a6092f50fad3686d9bc92b2e4330b7285e5fb6e8559ed19841a8740ced",
+      "failures": [
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests.CompleteProfile_AllEightSidecarsRespondAndPartiesInvokesTenantsReadiness"
+      ],
+      "result": {
+        "total": 1,
+        "errors": 0,
+        "failed": 1,
+        "skipped": 0,
+        "notRun": 0
+      }
+    },
+    {
+      "id": "runtime-isolated",
+      "rawLogSha256": "04a9ec89216c1d99aac3a0f12fcbd5113b86f8069687382b61d24973756dcff6",
+      "result": {
+        "total": 3,
+        "errors": 0,
+        "failed": 1,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "failures": [
+        "Hexalith.Parties.IntegrationTests.Gateway.EventStoreGatewayE2ETests.AuthenticatedCreate_ProjectsDetailsAndPersistsMatchingEventEnvelopesAsync"
+      ],
+      "note": "All configured ACL controls passed; gateway fixture failed disposal because the background worker observer enumerated a concurrently mutated Aspire resource list. Fixed using immutable declared/planned worker names and actual marked-worker regression."
+    },
+    {
+      "id": "runtime-isolated-final",
+      "rawLogSha256": "966f8a5b715a75144bb9168bbce548a7ea59ef80ceff8e5a1127c1e0401fa594",
+      "result": {
+        "total": 3,
+        "errors": 0,
+        "failed": 0,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "failures": [],
+      "note": "Earlier retry against the prior observer binary; superseded by final rebuilt-source runtime receipt."
+    },
+    {
+      "id": "runtime-verified",
+      "command": "PARTIES_MTLS_TOPOLOGY_TESTS=true PARTIES_MTLS_ISOLATED_IDENTITIES=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests -class Hexalith.Parties.IntegrationTests.Gateway.EventStoreGatewayE2ETests",
+      "rawLogSha256": "d0b97ea689db28e66b6ec2b342232b1741623b0c48c76c4f38c4210f5048ac1c",
+      "result": {
+        "total": 3,
+        "errors": 0,
+        "failed": 1,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "elapsedSeconds": 306.126,
+      "exitCode": 1,
+      "failures": [
+        "Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests.CompleteProfile_AllEightSidecarsRespondAndPartiesInvokesTenantsReadiness"
+      ],
+      "skips": [],
+      "note": "First source with observer fix: gateway passes; ACL fixture sidecar internal port46241 was claimed before daprd bound it, causing healthz timeout."
+    },
+    {
+      "id": "runtime-final",
+      "command": "PARTIES_MTLS_TOPOLOGY_TESTS=true PARTIES_MTLS_ISOLATED_IDENTITIES=true dotnet tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll -class Hexalith.Parties.IntegrationTests.Topology.PartiesMtlsTopologyTests -class Hexalith.Parties.IntegrationTests.Gateway.EventStoreGatewayE2ETests",
+      "rawLogSha256": "98e05fb7ccfa4516607c3d28d03156db3d990c83440c70d6c356e29add53b457",
+      "result": {
+        "total": 3,
+        "errors": 0,
+        "failed": 1,
+        "skipped": 0,
+        "notRun": 0
+      },
+      "elapsedSeconds": 307.898,
+      "exitCode": 1,
+      "failures": [
+        "Hexalith.Parties.IntegrationTests.Gateway.EventStoreGatewayE2ETests.AuthenticatedCreate_ProjectsDetailsAndPersistsMatchingEventEnvelopesAsync"
+      ],
+      "skips": [],
+      "note": "Second pre-endpoint-fix attempt: DCP itself held admin internal43011, preventing daprd startup. Fixed by explicit proxyless internal endpoints before dynamic allocation."
+    },
+    {
+      "id": "review1-combined-class-and-different-method-filter",
+      "command": "dotnet tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll -class Hexalith.Parties.Tests.Projections.PartyDetailSdkProjectionRecoveryTests -method '*FinalDependencyReceiptsMatchTheSelectedPackageAndSourceGraph'",
+      "exitCode": 0,
+      "result": {
+        "total": 0
+      },
+      "rawLogSha256": "2ecb9d36489c1ffbc8e030f4aa04ad074e9770fd9c082e341019ae37575615a8",
+      "verdict": "unsuccessful/unqualified: different class/method filters intersect; replaced with separate61-case recovery class and1-case matrix method runs."
+    }
+  ],
+  "triage": {
+    "focused": "Initial current-observation parsing included both current and historical source tables; adjusted boundary to the first historical heading. Live owner Story 8.5 changed to review; exact structural assertion and current matrix command now match, leaving historical approvals untouched.",
+    "service-suite": "Two cleanup fixtures lacked newly published recovery capability and synthetic reconciliation attestation. Fixtures now model explicit retired-empty scope with selected SDK contract; production default-false guard remains unchanged.",
+    "runtime-original-identities": "Dapr ERR_DIRECT_INVOKE after3 retries includes TLS handshake failure: tls: first record does not look like a TLS handshake. A separate user Tenants AppHost advertises same original identities in default namespace through non-mTLS sidecars. A follow-up full runtime uses existing suffixed identities/private namespace and actual remapped ACLs; original-name failure is not relabeled as pass.",
+    "memories-suite": "Unchanged owner evidence tests: expired OpenBao C7 waiver on2026-10-26; three stale EventStore3.127.0/project-reference expectations; changed AccessTelemetry closeout prose. Authentication controls pass; external proofs and owner source debt remain open."
+  },
+  "externalDaprAppIds": [
+    "eventstore",
+    "eventstore-admin",
+    "eventstore-admin-ui",
+    "memories",
+    "sample",
+    "tenants",
+    "tenants-api"
+  ]
+}

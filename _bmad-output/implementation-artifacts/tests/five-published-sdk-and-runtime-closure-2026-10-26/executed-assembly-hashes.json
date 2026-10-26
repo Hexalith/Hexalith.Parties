@@ -1,0 +1,46 @@
+{
+  "baselineCommit": "463ad1bf14701f0622b68af4352e07941d1a7969",
+  "priorImplementationReceipt": {
+    "baselineCommit": "463ad1bf14701f0622b68af4352e07941d1a7969",
+    "runtimeLog": "runtime-endpoints",
+    "executedFileHashes": {
+      "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll": "28708e186f01a7fe016b36777d2eedebd00df666feefb83dadd586166d1144a6",
+      "src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll": "92077d7de4883297a891060b05ba4f3f8a4aa24c279f7450915302dae98c7c8c",
+      "src/Hexalith.Parties/bin/Release/net10.0/Hexalith.Parties.dll": "595f9effb29bbb4a3c87d832451794ac312cb1cbf201723b1e5cdb67931a0c26",
+      "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll": "5945afc4a3c2c4613b2b05046938de89f8b3c143dfda79699d5eaceca7a23005"
+    }
+  },
+  "review1Execution": {
+    "test": "Published3127BytesRecoverBeforeNextTailAsync (both imported-state branches)",
+    "rawTestLogSha256": "58736832b9aefe9cb4654ebd00c8a05a49192a82b472f4fbc65b3abb4f6d9ef7",
+    "loadedAssemblyIdentitiesAndSha256": {
+      "Hexalith.Parties.Projections, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "f3fbae92acfad6c39f8964a702cdbfe612e59023b694c75cffb73812d96aa2fd",
+      "Hexalith.EventStore.Client, Version=3.128.0.0, Culture=neutral, PublicKeyToken=null": "536b2f694a9358683494cb09836097ba0aa01667949d0199882bb423f3e4bd1e"
+    },
+    "selectedClientPackage": {
+      "id": "Hexalith.EventStore.Client",
+      "version": "3.128.0",
+      "repositoryRevision": "c5d1c280d8c1c1a207cd159d817f614e93c93130",
+      "cacheAssemblySha256": "536b2f694a9358683494cb09836097ba0aa01667949d0199882bb423f3e4bd1e",
+      "testOutputMatchesPackageBytes": true
+    }
+  },
+  "executedFileHashes": {
+    "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll": "8f5c7bd5617a1683c4567c7bdd055ebef3852178577cb928fc26cc513e7c923b",
+    "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll": "370865cff0feecff6b4009b8218f05689339732e15e2af7ce3dad3e9d7f80216",
+    "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Projections.dll": "f3fbae92acfad6c39f8964a702cdbfe612e59023b694c75cffb73812d96aa2fd",
+    "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.EventStore.Client.dll": "536b2f694a9358683494cb09836097ba0aa01667949d0199882bb423f3e4bd1e",
+    "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.EventStore.Testing.dll": "30ed68891e0e6ba4fe86e87d9601d0ea78b94dcde3688a27c8c10148dbee9058",
+    "src/Hexalith.Parties.Projections/bin/Release/net10.0/Hexalith.Parties.Projections.dll": "f3fbae92acfad6c39f8964a702cdbfe612e59023b694c75cffb73812d96aa2fd"
+  },
+  "runtimeReceipt": "review1-verification.json; all5 requested actual lifecycle/concurrent cases pass",
+  "parentFinalReceipt": "parent-final-verification.json",
+  "parentFinalExecutedOutputs": {
+    "tests/Hexalith.Parties.Tests/bin/Release/net10.0/Hexalith.Parties.Tests.dll": "374f69a267e57e05a239261c52b70c7f6f8163c913deb1cd034a80caf3108758",
+    "tests/Hexalith.Parties.IntegrationTests/bin/Release/net10.0/Hexalith.Parties.IntegrationTests.dll": "370865cff0feecff6b4009b8218f05689339732e15e2af7ce3dad3e9d7f80216",
+    "src/Hexalith.Parties.Projections/bin/Release/net10.0/Hexalith.Parties.Projections.dll": "f3fbae92acfad6c39f8964a702cdbfe612e59023b694c75cffb73812d96aa2fd",
+    "src/Hexalith.Parties/bin/Release/net10.0/Hexalith.Parties.Projections.dll": "f3fbae92acfad6c39f8964a702cdbfe612e59023b694c75cffb73812d96aa2fd",
+    "src/Hexalith.Parties/bin/Release/net10.0/Hexalith.EventStore.Client.dll": "536b2f694a9358683494cb09836097ba0aa01667949d0199882bb423f3e4bd1e",
+    "src/Hexalith.Parties.AppHost/bin/Release/net10.0/Hexalith.Parties.AppHost.dll": "92077d7de4883297a891060b05ba4f3f8a4aa24c279f7450915302dae98c7c8c"
+  }
+}

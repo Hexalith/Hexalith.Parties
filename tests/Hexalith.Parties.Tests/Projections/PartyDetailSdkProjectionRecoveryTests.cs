@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -8,6 +9,7 @@ using Hexalith.EventStore.Testing.Fakes;
 using Hexalith.Parties.Contracts;
 using Hexalith.Parties.Contracts.Events;
 using Hexalith.Parties.Contracts.ValueObjects;
+using Hexalith.Parties.Tests.FitnessTests;
 using Hexalith.Parties.Projections.Configuration;
 using Hexalith.Parties.Projections.Handlers;
 using Hexalith.Parties.Projections.Models;
@@ -165,7 +167,7 @@ public sealed class PartyDetailSdkProjectionRecoveryTests
         {
             (await store.GetAsync<PartyDetailSdkReadModel>(StoreName, s_detailKey, TestContext.Current.CancellationToken)).Value!.LastSequenceNumber.ShouldBe(1);
 #if HEXALITH_EVENTSTORE_NONEXPIRING_RECOVERY
-            // Source recovery has already compacted the original decision before checkpoint reads.
+            // Published SDK recovery has already compacted the original decision before checkpoint reads.
             await AssertCompactedAsync(store);
             (await store.ExecuteAsync(original, TestContext.Current.CancellationToken)).Status.ShouldBe(ReadModelBatchStatus.AlreadyCompleted);
 #else
@@ -219,11 +221,6 @@ public sealed class PartyDetailSdkProjectionRecoveryTests
     [InlineData(true, true)]
     public async Task CommittedLegacyDeliveryRecoversBeforeNextTailAndPreservesNewerErasureBytes(bool erased, bool interruptedRecovery)
     {
-        Assert.SkipUnless(typeof(PartyDetailSdkProjectionRecoveryTests).Assembly
-            .GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false)
-            .OfType<System.Reflection.AssemblyMetadataAttribute>()
-            .Any(attribute => attribute.Key == "HexalithSourceMappingMode" && attribute.Value == "source"),
-            "Requires pinned-tool source qualification; EventStore 3.127.0 has no nonexpiring legacy recovery capability.");
         var store = new InMemoryReadModelStore();
         var batches = new List<ReadModelBatch>();
         PartyDetailSdkProjectionHandler handler = Handler(store, batches);
@@ -264,6 +261,60 @@ public sealed class PartyDetailSdkProjectionRecoveryTests
             store.Snapshot<PartyProcessingSdkReadModel>(StoreName, s_processingKey)!.LastSequenceNumber.ShouldBe(2);
             await AssertCompactedAsync(store);
         }
+    }
+
+    /// <summary>Imports exact bytes captured by published 3.127.0 and advances a subsequent tail.</summary>
+    /// <param name="interruptRecovery">Whether to recreate storage after recovery's terminal receipt.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Published3127BytesRecoverBeforeNextTailAsync(bool interruptRecovery)
+    {
+        foreach (System.Reflection.Assembly assembly in new[] { typeof(PartyDetailSdkProjectionHandler).Assembly, typeof(ReadModelBatch).Assembly })
+        {
+            string digest = Convert.ToHexStringLower(SHA256.HashData(await File.ReadAllBytesAsync(assembly.Location, TestContext.Current.CancellationToken)));
+            Console.WriteLine($"Bound implementation {assembly.GetName().FullName}; sha256={digest}");
+        }
+        string path = Path.Combine(RepositoryRoot.Locate(), "_bmad-output", "implementation-artifacts", "tests",
+            "five-published-sdk-and-runtime-closure-2026-10-26", "legacy-3.127.0", "persisted-state.json");
+        JsonObject fixture = JsonNode.Parse(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))!.AsObject();
+        fixture["sdkVersion"]!.GetValue<string>().ShouldBe("3.127.0");
+        Dictionary<string, byte[]> original = fixture["entries"]!.AsObject().ToDictionary(
+            pair => pair.Key, pair => Convert.FromBase64String(pair.Value!.GetValue<string>()), StringComparer.Ordinal);
+        original.Count.ShouldBe(fixture["stateCount"]!.GetValue<int>());
+        var store = new InMemoryReadModelStore();
+        store.ImportRawSnapshot(StoreName, original);
+        foreach (var pair in original) { store.SnapshotRaw(StoreName, pair.Key).ShouldBe(pair.Value); }
+        store.HasPendingEnvelope(StoreName, s_detailKey).ShouldBeTrue();
+        store.HasPendingEnvelope(StoreName, s_processingKey).ShouldBeTrue();
+        if (interruptRecovery)
+        {
+            bool reached = false;
+            store.BatchFaultHook = (phase, _, _) =>
+            {
+                if (phase != ReadModelBatchPhase.RecoveryReceiptWritten) { return Task.CompletedTask; }
+                reached = true;
+                throw new IOException("imported legacy recovery interrupted after receipt");
+            };
+            (await Handler(store).ProjectAsync(Request(supported: true), "imported", TestContext.Current.CancellationToken))
+                .ReasonCode.ShouldBe("projection-recovery-incomplete");
+            reached.ShouldBeTrue();
+            IReadOnlyDictionary<string, byte[]> interrupted = store.SnapshotRawEntries(StoreName);
+            store = new InMemoryReadModelStore();
+            store.ImportRawSnapshot(StoreName, interrupted);
+        }
+        (await Handler(store).ProjectAsync(Request(supported: true), "imported", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.AlreadyCompleted);
+        await AssertSupportedAsync(store);
+        JsonObject receipt = store.Snapshot<JsonObject>(StoreName, fixture["markerKey"]!.GetValue<string>())!;
+        receipt.ContainsKey("manifest").ShouldBeFalse();
+        receipt.ContainsKey("manifestKey").ShouldBeFalse();
+        ProjectionRequest tail = new("tenant-a", "party", "party-1", [Event(new PartyDeactivated(), 2)]);
+        (await Handler(store).ProjectAsync(tail, "imported-tail", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        store.Snapshot<PartyDetailSdkReadModel>(StoreName, s_detailKey)!.LastSequenceNumber.ShouldBe(2);
+        store.Snapshot<PartyProcessingSdkReadModel>(StoreName, s_processingKey)!.LastSequenceNumber.ShouldBe(2);
+        await AssertCompactedAsync(store);
     }
 
     /// <summary>Resumes the original recoverable empty-v1 manifest without adding discovery metadata to its fixed identity.</summary>
@@ -717,11 +768,6 @@ public sealed class PartyDetailSdkProjectionRecoveryTests
     [InlineData(ReadModelBatchPhase.BeforeReceipt)]
     public async Task NormalCommittedBatchRetryPreservesNewerErasureTombstoneBytes(ReadModelBatchPhase interruption)
     {
-        Assert.SkipUnless(typeof(PartyDetailSdkProjectionRecoveryTests).Assembly
-                .GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false)
-                .OfType<System.Reflection.AssemblyMetadataAttribute>()
-                .Any(attribute => attribute.Key == "HexalithSourceMappingMode" && attribute.Value == "source"),
-            "Requires a qualified pinned-tool-generated source-mode build. Published EventStore 3.127.0 lacks this recovery fix; its package gate remains open.");
         var store = new InMemoryReadModelStore();
         var batches = new List<ReadModelBatch>();
         PartyDetailSdkProjectionHandler handler = Handler(store, batches);
@@ -749,6 +795,75 @@ public sealed class PartyDetailSdkProjectionRecoveryTests
         store.SnapshotRaw(StoreName, s_processingKey).ShouldBe(processing);
         JsonObject receipt = store.Snapshot<JsonObject>(StoreName, original.Scope.ComputeMarkerKey())!;
         receipt.ContainsKey("manifest").ShouldBeFalse(); receipt.ContainsKey("manifestKey").ShouldBeFalse();
+    }
+
+    /// <summary>Committed recovery preserves later canonical writes or physical deletion at each participant boundary.</summary>
+    /// <param name="interruption">The committed batch phase to interrupt.</param>
+    /// <param name="ordinal">The exact participant ordinal, or -1 for a batch-wide phase.</param>
+    /// <param name="physicalDelete">Whether the later ordinary writer physically removes the detail slot.</param>
+    [Theory]
+    [InlineData(ReadModelBatchPhase.AfterCommit, -1, false)]
+    [InlineData(ReadModelBatchPhase.AfterCommit, -1, true)]
+    [InlineData(ReadModelBatchPhase.BeforeCompaction, 0, false)]
+    [InlineData(ReadModelBatchPhase.BeforeCompaction, 0, true)]
+    [InlineData(ReadModelBatchPhase.BeforeCompaction, 1, false)]
+    [InlineData(ReadModelBatchPhase.BeforeCompaction, 1, true)]
+    [InlineData(ReadModelBatchPhase.AfterCompaction, 0, false)]
+    [InlineData(ReadModelBatchPhase.AfterCompaction, 0, true)]
+    [InlineData(ReadModelBatchPhase.AfterCompaction, 1, false)]
+    [InlineData(ReadModelBatchPhase.AfterCompaction, 1, true)]
+    [InlineData(ReadModelBatchPhase.BeforeReceipt, -1, false)]
+    [InlineData(ReadModelBatchPhase.BeforeReceipt, -1, true)]
+    public async Task NormalCommittedBatchRetryPreservesNewerOrdinaryWriteOrDelete(ReadModelBatchPhase interruption, int ordinal, bool physicalDelete)
+    {
+        var store = new InMemoryReadModelStore();
+        var batches = new List<ReadModelBatch>();
+        ProjectionRequest request = Request(supported: true);
+        (ReadModelBatchPhase Phase, int Ordinal)? observed = null;
+        store.BatchFaultHook = (phase, operation, _) =>
+        {
+            if (phase == interruption && operation == ordinal)
+            {
+                observed = (phase, operation);
+                throw new IOException("ordinary projection interrupted at requested participant");
+            }
+            return phase == ReadModelBatchPhase.Reconcile
+                ? throw new IOException("automatic recovery remains interrupted") : Task.CompletedTask;
+        };
+        (await Handler(store, batches).ProjectAsync(request, "original", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Indeterminate);
+        observed.HasValue.ShouldBeTrue();
+        observed.GetValueOrDefault().ShouldBe((interruption, ordinal));
+        ReadModelBatch original = batches.ShouldHaveSingleItem();
+        original.RetainManifestForRecovery.ShouldBeFalse();
+        store.BatchFaultHook = null;
+
+        var newerStore = new InMemoryReadModelStore();
+        (await Handler(newerStore).ProjectAsync(request, "newer", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        ProjectionRequest tail = new("tenant-a", "party", "party-1", [Event(new PartyDeactivated(), 2)]);
+        (await Handler(newerStore).ProjectAsync(tail, "tail", TestContext.Current.CancellationToken))
+            .Status.ShouldBe(ProjectionDispatchStatus.Completed);
+        await store.SaveAsync(StoreName, s_detailKey, newerStore.Snapshot<PartyDetailSdkReadModel>(StoreName, s_detailKey)!, TestContext.Current.CancellationToken);
+        await store.SaveAsync(StoreName, s_processingKey, newerStore.Snapshot<PartyProcessingSdkReadModel>(StoreName, s_processingKey)!, TestContext.Current.CancellationToken);
+        if (physicalDelete)
+        {
+            string etag = (await store.GetAsync<PartyDetailSdkReadModel>(StoreName, s_detailKey, TestContext.Current.CancellationToken)).ETag!;
+            (await store.TryEraseAsync(StoreName, s_detailKey, etag, TestContext.Current.CancellationToken)).ShouldBeTrue();
+            store.SnapshotRaw(StoreName, s_detailKey).ShouldBeNull();
+        }
+        byte[]? detail = store.SnapshotRaw(StoreName, s_detailKey);
+        byte[] processing = store.SnapshotRaw(StoreName, s_processingKey)!;
+        if (!physicalDelete) { store.Snapshot<PartyDetailSdkReadModel>(StoreName, s_detailKey)!.LastSequenceNumber.ShouldBe(2); }
+        store.Snapshot<PartyProcessingSdkReadModel>(StoreName, s_processingKey)!.LastSequenceNumber.ShouldBe(2);
+
+        (await store.ExecuteAsync(original, TestContext.Current.CancellationToken)).IsSuccess.ShouldBeTrue();
+        (await store.ExecuteAsync(original, TestContext.Current.CancellationToken)).Status.ShouldBe(ReadModelBatchStatus.AlreadyCompleted);
+        store.SnapshotRaw(StoreName, s_detailKey).ShouldBe(detail);
+        store.SnapshotRaw(StoreName, s_processingKey).ShouldBe(processing);
+        JsonObject receipt = store.Snapshot<JsonObject>(StoreName, original.Scope.ComputeMarkerKey())!;
+        receipt.ContainsKey("manifest").ShouldBeFalse();
+        receipt.ContainsKey("manifestKey").ShouldBeFalse();
     }
 
     private static PartyDetailSdkProjectionHandler Handler(InMemoryReadModelStore store, List<ReadModelBatch>? batches = null)

@@ -67,6 +67,8 @@ public sealed class ProjectionPlatformAdapterTests
                 ["Authentication:JwtBearer:RequireHttpsMetadata"] = "false",
                 ["Tenants:PubSubName"] = "pubsub",
                 ["Tenants:TopicName"] = "system.tenants.events",
+                // These cleanup controls attest their synthetic empty recovery scope.
+                ["Parties:Projections:HistoricalPrivateRecoveryReconciliationAttested"] = "true",
                 ["EventStore:Projections:ReadModelStateStoreName"] = " ",
                 ["EventStore:Projections:FreshnessAgingSeconds"] = "30",
                 ["EventStore:Projections:FreshnessStaleSeconds"] = "10",
@@ -102,7 +104,10 @@ public sealed class ProjectionPlatformAdapterTests
         DateTimeOffset now = DateTimeOffset.UnixEpoch.AddYears(60);
         TimeProvider clock = Substitute.For<TimeProvider>();
         clock.GetUtcNow().Returns(_ => now);
-        IReadModelStore readModelStore = Substitute.For<IReadModelStore>();
+        IReadModelStore readModelStore = Substitute.For<IReadModelStore, IReadModelRecoveryScopeStore>();
+        ((IReadModelRecoveryScopeStore)readModelStore).RetireRecoveryScopeAsync(
+            Arg.Any<ReadModelBatchScope>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelPendingBatchRecoveryResult(true));
         IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
         readModelStore.GetAsync<PartyDetailSdkReadModel>("statestore", PartySdkReadModelAddresses.Detail(tenantId, partyId), Arg.Any<CancellationToken>())
             .Returns(new ReadModelEntry<PartyDetailSdkReadModel>(null, null));
@@ -199,7 +204,10 @@ public sealed class ProjectionPlatformAdapterTests
         DateTimeOffset now = DateTimeOffset.UnixEpoch.AddYears(60);
         TimeProvider clock = Substitute.For<TimeProvider>();
         clock.GetUtcNow().Returns(_ => now);
-        IReadModelStore readModelStore = Substitute.For<IReadModelStore>();
+        IReadModelStore readModelStore = Substitute.For<IReadModelStore, IReadModelRecoveryScopeStore>();
+        ((IReadModelRecoveryScopeStore)readModelStore).RetireRecoveryScopeAsync(
+            Arg.Any<ReadModelBatchScope>(), Arg.Any<CancellationToken>())
+            .Returns(new ReadModelPendingBatchRecoveryResult(true));
         IReadModelBatchStore batchStore = Substitute.For<IReadModelBatchStore>();
         readModelStore.GetAsync<PartyDetailSdkReadModel>(
                 "statestore", PartySdkReadModelAddresses.Detail(tenantId, partyId), Arg.Any<CancellationToken>())
@@ -330,6 +338,8 @@ public sealed class ProjectionPlatformAdapterTests
                 ["Authentication:JwtBearer:RequireHttpsMetadata"] = "false",
                 ["Tenants:PubSubName"] = "pubsub",
                 ["Tenants:TopicName"] = "system.tenants.events",
+                // These cleanup controls attest their synthetic empty recovery scope.
+                ["Parties:Projections:HistoricalPrivateRecoveryReconciliationAttested"] = "true",
             })
             .Build();
         var services = new ServiceCollection();

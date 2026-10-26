@@ -1,0 +1,119 @@
+{
+  "retainedFailedSession": {
+    "session": "4117fc7284ce",
+    "cause": "Worker observer live resource-list enumeration failed during startup; test host exit removed app/backing resources but retained private control plane.",
+    "workerQuiescence": "No non-supervisor process command line or environment refers to exact owned session; no task backing containers remain.",
+    "cleanupCommand": "DAPR_MTLS_SESSION_ID=4117fc7284ce DAPR_MTLS_NAMESPACE=parties-4117fc7284ce DAPR_MTLS_CERTIFICATE_DIRECTORY=${TEMP}/hexalith-parties-topology-4117fc7284ce/certificates bash scripts/aspire-start-mtls.sh --cleanup-only",
+    "cleanupExitCode": 0,
+    "ownershipVerification": "Existing script verifies exact image, dedicated credential mount and empty owned labeled network before removal.",
+    "remainingContainers": [],
+    "remainingNetworks": [],
+    "sessionDirectoryRemoved": true,
+    "userSessionStopped": false
+  },
+  "finalAudit": {
+    "sessionsFromAllRuntimeAttempts": [
+      "1e61ca1d5ef5",
+      "34e7f7c79fe7",
+      "3752bc56f804",
+      "3cbd01f45a62",
+      "4117fc7284ce",
+      "47f8635c1807",
+      "51b12dab7290",
+      "76b3f8a7ea2e",
+      "7b2bebca6f41",
+      "8cddd835d1b9",
+      "a7d7db3e0eed",
+      "b1fa57f0ca55",
+      "f50643ec30df",
+      "f566f9175c1b",
+      "fa99fea10919"
+    ],
+    "remainingOwnedContainers": [],
+    "remainingOwnedNetworks": [],
+    "remainingSessionDirectories": [],
+    "remainingSessionProcesses": [],
+    "unrelatedUserTopologyStopped": false,
+    "note": "Checks include all failed, prior-binary and final-source runtime sessions. Exact container IDs observed in task logs are compared to current complete Docker inventory; namespace/session references are checked in process command lines and environments."
+  },
+  "review1Audit": {
+    "sessions": [
+      "08a3c0a61bcc",
+      "277a741b4808",
+      "41722339b541",
+      "6656eb74adc7",
+      "a060d44e5248",
+      "c140fd58dc35"
+    ],
+    "allRecordedRuntimeSessions": [
+      "08a3c0a61bcc",
+      "1e61ca1d5ef5",
+      "277a741b4808",
+      "34e7f7c79fe7",
+      "3752bc56f804",
+      "3cbd01f45a62",
+      "4117fc7284ce",
+      "41722339b541",
+      "47f8635c1807",
+      "51b12dab7290",
+      "6656eb74adc7",
+      "76b3f8a7ea2e",
+      "7b2bebca6f41",
+      "8cddd835d1b9",
+      "a060d44e5248",
+      "a7d7db3e0eed",
+      "b1fa57f0ca55",
+      "c140fd58dc35",
+      "f50643ec30df",
+      "f566f9175c1b",
+      "fa99fea10919"
+    ],
+    "remainingOwnedContainers": [],
+    "remainingOwnedNetworks": [],
+    "remainingSessionDirectories": [],
+    "remainingSessionProcesses": [],
+    "unrelatedUserTopologyStopped": false,
+    "liveLifecycleEvidence": [
+      "Live cleanup normal: 17 workers exited, 3 backing containers removed; host shutdown budget 30s; observed cleanup 35.761s.",
+      "Live cleanup canceled: 16 workers exited, 3 backing containers removed; host shutdown budget 30s; observed cleanup 17.269s.",
+      "Live cleanup failed: 14 workers exited, 3 backing containers removed; host shutdown budget 30s; observed cleanup 16.439s.",
+      "Live cleanup cleanup-failed: 17 workers exited, 3 backing containers removed; host shutdown budget 30s; observed cleanup 6.746s."
+    ]
+  },
+  "parentFinalAudit": {
+    "sessions": [
+      "08a3c0a61bcc",
+      "1e61ca1d5ef5",
+      "277a741b4808",
+      "34e7f7c79fe7",
+      "3752bc56f804",
+      "3cbd01f45a62",
+      "4117fc7284ce",
+      "41722339b541",
+      "47f8635c1807",
+      "51b12dab7290",
+      "5dc7c5e4657d",
+      "6656eb74adc7",
+      "76b3f8a7ea2e",
+      "7b2bebca6f41",
+      "85400722ed99",
+      "8cddd835d1b9",
+      "a060d44e5248",
+      "a7d7db3e0eed",
+      "b1fa57f0ca55",
+      "c140fd58dc35",
+      "f50643ec30df",
+      "f566f9175c1b",
+      "fa99fea10919"
+    ],
+    "additionalRuntimeSessions": [
+      "5dc7c5e4657d",
+      "85400722ed99"
+    ],
+    "remainingOwnedControllerContainers": [],
+    "remainingOwnedNetworks": [],
+    "remainingOwnedDirectories": [],
+    "remainingOwnedProcesses": [],
+    "unrelatedUserTopologyStopped": false
+  }
+}

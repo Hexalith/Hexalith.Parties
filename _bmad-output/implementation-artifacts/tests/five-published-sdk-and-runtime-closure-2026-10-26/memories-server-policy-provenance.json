@@ -1,0 +1,69 @@
+{
+  "schema": "hexalith.parties.memories-server-policy.v1",
+  "selectedSource": "39be000902254c4717df6726bfcc3ea927b26b70",
+  "releasedSource": "38128624763c313238904c30aaeb88eb4fd9a6d0",
+  "releaseTag": "v2.29.15",
+  "hostKind": "Project; Server IsPackable=false; client package is not Server-policy evidence",
+  "actualAppHostProject": "src/Hexalith.Parties.AppHost/Program.cs",
+  "resolvedServerProject": "references/Hexalith.Memories/src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj",
+  "sourceEquivalence": [
+    {
+      "path": "src/Hexalith.Memories.Server/Authentication/MemoriesServerAuthenticationOptions.cs",
+      "selectedSha256": "aeb60c101f64568f021f3f151325717dad8c0afa071633764acbce724f268472",
+      "releasedSha256": "aeb60c101f64568f021f3f151325717dad8c0afa071633764acbce724f268472",
+      "identical": true
+    },
+    {
+      "path": "src/Hexalith.Memories.Server/Authentication/ConfigureServerJwtBearerOptions.cs",
+      "selectedSha256": "2984ce3231fc00edb09f79a049974d59322a71fe24e00cf3e6015ee2a4160367",
+      "releasedSha256": "2984ce3231fc00edb09f79a049974d59322a71fe24e00cf3e6015ee2a4160367",
+      "identical": true
+    },
+    {
+      "path": "src/Hexalith.Memories.Server/Authentication/ValidateServerAuthenticationOptions.cs",
+      "selectedSha256": "6a170cbce1d20797976cef4cf4a1fe490fa0bfca2c3ea8c0350925c16aa90721",
+      "releasedSha256": "6a170cbce1d20797976cef4cf4a1fe490fa0bfca2c3ea8c0350925c16aa90721",
+      "identical": true
+    },
+    {
+      "path": "tests/Hexalith.Memories.Server.Tests/Authentication/ServerRegisteredAlgorithmPolicyTests.cs",
+      "selectedSha256": "732f8253645d09f0277e52df76d46022a8ef347c080a3ad6a17d63d79fd6e431",
+      "releasedSha256": "732f8253645d09f0277e52df76d46022a8ef347c080a3ad6a17d63d79fd6e431",
+      "identical": true
+    },
+    {
+      "path": "tests/Hexalith.Memories.Server.Tests/Authentication/ProgrammaticServerAuthenticationOptionsFactory.cs",
+      "selectedSha256": "a6f851af0c147332d5bb5c4b86611eb7ad8e94630b9561b0007c2b5db05eeb74",
+      "releasedSha256": "a6f851af0c147332d5bb5c4b86611eb7ad8e94630b9561b0007c2b5db05eeb74",
+      "identical": true
+    },
+    {
+      "path": "tests/Hexalith.Memories.Server.Tests/EventStoreIntegration/EventStoreWebAppFactory.cs",
+      "selectedSha256": "84e89ebca51876d73bc42e26beeaa6b07a3cdf08e9d968669654d1fecfe594af",
+      "releasedSha256": "84e89ebca51876d73bc42e26beeaa6b07a3cdf08e9d968669654d1fecfe594af",
+      "identical": true
+    }
+  ],
+  "registeredAuthenticationSlice": {
+    "path": "src/Hexalith.Memories.Server/Hosting/MemoriesServerServiceCollectionExtensions.cs",
+    "start": "builder.Services.AddOptions<MemoriesServerAuthenticationOptions>()",
+    "endBefore": "builder.Services.AddHttpContextAccessor()",
+    "selectedSha256": "a59b2ab3806d50301bbb50b3bdbf1002ab52345229b6b816d24be6e70f1cdb70",
+    "releasedSha256": "a59b2ab3806d50301bbb50b3bdbf1002ab52345229b6b816d24be6e70f1cdb70",
+    "identical": true
+  },
+  "executedAssemblies": {
+    "src/Hexalith.Memories.Server/bin/Debug/net10.0/Hexalith.Memories.Server.dll": {
+      "sha256": "37f05c4e29f5d734ae21f76c47d7e5c05aa64a4535d1428418d6414657055621"
+    },
+    "tests/Hexalith.Memories.Server.Tests/bin/Debug/net10.0/Hexalith.Memories.Server.Tests.dll": {
+      "sha256": "d50db3ef247efa4214067061179fcd1a518538405e1c91f97b7c1ad92355adb8"
+    }
+  },
+  "observedRuntimeProjectLaunch": {
+    "command": "dotnet run --project ${REPO}/references/Hexalith.Memories/src/Hexalith.Memories.Server/Hexalith.Memories.Server.csproj --configuration Release --no-launch-profile",
+    "sourceReceipt": "original runtime attempt1; line846 and line6331 of private runtime log",
+    "note": "Actual runtime and owner Debug controls select the same project-owned registration; the policy files and registration slice are exact release-source matches."
+  },
+  "evaluatedIsPackable": "false"
+}

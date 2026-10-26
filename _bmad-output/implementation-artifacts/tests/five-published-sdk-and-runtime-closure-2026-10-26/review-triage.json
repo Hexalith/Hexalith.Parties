@@ -1,0 +1,83 @@
+{
+  "layers": {
+    "blind-hunter": 10,
+    "edge-case-hunter": 0,
+    "verification-gap": 0
+  },
+  "findings": [
+    {
+      "id": "BH-1",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "The package symbol now reaches the default-false erasure guard. The existing unchanged-byte guard test proves refusal; the upgrade guide must identify this as newly active for package upgrades and state the reconciliation prerequisite.",
+      "resolution": "verified and addressed; see review1-verification.json and parent-final-verification.json"
+    },
+    {
+      "id": "BH-2",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "The legacy test currently creates rows with3.128.0, so it does not independently bind compatibility to actual3.127.0 serialized rows. Add pinned historical writer bytes and an import/recovery control.",
+      "resolution": "verified and addressed; see review1-verification.json and parent-final-verification.json"
+    },
+    {
+      "id": "BH-3",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "The ordinary-write hook ignores ordinal, leaving the second participant compaction boundary unqualified. Add explicit second-participant cases.",
+      "resolution": "verified and addressed; see review1-verification.json and parent-final-verification.json"
+    },
+    {
+      "id": "BH-4",
+      "verdict": "low",
+      "route": "patch",
+      "evidence": "Indeterminate alone does not identify the injected fault. Record and assert that the requested phase/ordinal was reached.",
+      "resolution": "verified and addressed; see review1-verification.json and parent-final-verification.json"
+    },
+    {
+      "id": "BH-5",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "The guide claims preservation of later deletes while the selected matrix only exercises writes and tombstones. Add a physical later-delete control at the same committed completion boundaries.",
+      "resolution": "verified and addressed; see review1-verification.json and parent-final-verification.json"
+    },
+    {
+      "id": "BH-6",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "The fixture observer and endpoint declarations changed startup/disposal behavior; four existing real startup/cancellation/failure/retry controls remained skipped. Execute them with the supported isolated session option, preserving original default behavior.",
+      "resolution": "verified and addressed; see review1-verification.json and parent-final-verification.json"
+    },
+    {
+      "id": "BH-7",
+      "verdict": "medium",
+      "route": "patch",
+      "evidence": "Endpoint bookkeeping changed for every session; the existing real two-session survivor/disposal control was not executed. Run it against the changed fixture.",
+      "resolution": "verified and addressed; see review1-verification.json and parent-final-verification.json"
+    },
+    {
+      "id": "BH-8",
+      "verdict": "low",
+      "route": "reject",
+      "evidence": "The missing combined-list test is an additional coverage improvement. Registration directly replaces the entire IConfiguration Get<string[]>() result without a list-length branch, and actual signed RS256/ES256 replacement/HS256 rejection controls pass. No combined-list failure is demonstrated; adding a separate owner test/build surface for this negligible unobserved defect is disproportionate.",
+      "resolution": "rejected as disproportionate low coverage suggestion"
+    },
+    {
+      "id": "BH-9",
+      "verdict": "low",
+      "route": "patch",
+      "evidence": "Record the actual projection assembly and selected EventStore Client binary identity/hash; these implement the newly enabled behavior and were omitted from the explicit executed-assembly receipt.",
+      "resolution": "verified and addressed; see review1-verification.json and parent-final-verification.json"
+    },
+    {
+      "id": "BH-10",
+      "verdict": "low",
+      "route": "patch",
+      "evidence": "Moving HEAD commands cannot reproduce a dated selection after source updates. Pin reproduction to the recorded canonical revisions and keep moving-HEAD commands clearly labeled diagnostics.",
+      "resolution": "verified and addressed; see review1-verification.json and parent-final-verification.json"
+    }
+  ],
+  "parentCorrections": [
+    "Expected-open DW96 removed after actual closure",
+    "Current invariant-map proof and successor/rollback ownership reconciled without relaxing validator"
+  ]
+}
