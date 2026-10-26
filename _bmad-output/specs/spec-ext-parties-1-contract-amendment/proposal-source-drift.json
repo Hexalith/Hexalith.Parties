@@ -1,0 +1,7 @@
+{
+  "path": "../../../../platform/src/Hexalith.Platform.Secrets.Runtime/CustodyLifecycleClient.cs",
+  "initialSha256": "783af1059f579af2ed59f2271cab1c5e22c8bfe9e8a7d9d7b7dc85a9f3dbc317",
+  "reinspectedSha256": "260e08da76dad9b389c46cccf03229c59dd6d68802fd3bfce1279e3dfe9f6b24",
+  "disposition": "Concurrent owner edit preserved; not modified by this task. Initial byte-preservation check remains failed for this file. Current Dapr-only current-authorized exact-original execute/lookup boundary still matches brownfield summary. Current source includes complete wrap-registration original lookup overloads and manifest denial propagation; neither implements actor-history V2.",
+  "scope": "No global workspace preservation claim; approved clause/approval and other selected inputs checked independently."
+}

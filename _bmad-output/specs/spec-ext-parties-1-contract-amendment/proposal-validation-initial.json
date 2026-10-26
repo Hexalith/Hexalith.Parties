@@ -1,0 +1,255 @@
+{
+  "checkedAtUtc": "2026-10-26T07:08:46.066197+00:00",
+  "status": "failed",
+  "checkCount": 35,
+  "failedChecks": [
+    "scope excludes invented backend, bindings and date",
+    "selected protected source and historical artifact bytes preserved"
+  ],
+  "checks": [
+    {
+      "name": "proposal remains unaccepted and not implementation-ready",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "eight unique stable capability IDs",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "CAP-1 intent and success",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "CAP-2 intent and success",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "CAP-3 intent and success",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "CAP-4 intent and success",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "CAP-5 intent and success",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "CAP-6 intent and success",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "CAP-7 intent and success",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "CAP-8 intent and success",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "five kernel fields present",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "diagrams absent from kernel",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "original companions retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "six proposed companions discoverable",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "all companions exist",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "operational metadata excluded from companions",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "local Markdown links resolve",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "all six companions render tables",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "20 unique amendment test rows",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "all 10 complete identity rows",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "ten remaining owner decisions",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "all 16 inventory classes",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "20 changes have owning repository rows",
+      "passed": true,
+      "detail": [
+        "ES-1",
+        "ES-2",
+        "ES-3",
+        "ES-4",
+        "PL-1",
+        "PL-2",
+        "PL-3",
+        "PL-4",
+        "PL-5",
+        "PL-6",
+        "PA-1",
+        "PA-2",
+        "PA-3",
+        "PA-4",
+        "PA-5",
+        "PA-6",
+        "AG-1",
+        "CV-1",
+        "BU-1",
+        "MC-1"
+      ]
+    },
+    {
+      "name": "approved clauses all referenced",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "required semantic states explicit",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "legacy strict rejection and separate API/proof types explicit",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "approved original expiry and bounds retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "historical accepted target/date and qualification gates retained",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "scope excludes invented backend, bindings and date",
+      "passed": false,
+      "detail": null
+    },
+    {
+      "name": "approved clause bytes preserved",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "selected protected source and historical artifact bytes preserved",
+      "passed": false,
+      "detail": {
+        "count": 83,
+        "drift": [
+          "../../../../platform/src/Hexalith.Platform.Secrets.Runtime/CustodyLifecycleClient.cs"
+        ],
+        "scope": "Selected pre-existing amendment packet, source contracts, governing documents and source observations; not global workspace preservation or installed qualification."
+      }
+    },
+    {
+      "name": "prior canonical memlog entries retained in order",
+      "passed": true,
+      "detail": "memlog.py updates descriptive updated metadata; canonical entry history is append-only"
+    },
+    {
+      "name": "new memlog records capability IDs and review choices",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "new rendered documents obey EditorConfig whitespace and CRLF",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "CRLF-aware tracked Git whitespace check",
+      "passed": true,
+      "detail": {
+        "command": [
+          "git",
+          "-c",
+          "core.whitespace=cr-at-eol",
+          "diff",
+          "--check"
+        ],
+        "exitCode": 0,
+        "output": ""
+      }
+    }
+  ],
+  "renderedTableRows": {
+    "brownfield.md": 18,
+    "compatibility-contract.md": 34,
+    "api-schemas.md": 45,
+    "implementation-plan.md": 21,
+    "acceptance-tests.md": 32,
+    "readiness-decisions.md": 28
+  },
+  "outputHashes": {
+    "SPEC.md": "f4dd12540a9dec17de3b2b7a240ff7d7e89795820b3218e43d1591aa99617db4",
+    ".memlog.md": "1e4bb3e837387027f189d55f6442a38afd8740d04f476f72293ec8b160224443",
+    "brownfield.md": "96726d8f1435222494e17a506915fc74fb91209987f177b311a4c0433819887f",
+    "compatibility-contract.md": "64a3dbf1027a1057a01d2a9df6e190bdcf7399bffca0d8d7201eaec8ce842da8",
+    "api-schemas.md": "88368dada2e038e702093bb0012c0ea735e00d2798a7ec9905f4f76475d8d9d5",
+    "implementation-plan.md": "356df1b4661ca3cea85a2e993560986c5854c45795d464237f70806cfc293fad",
+    "acceptance-tests.md": "9bf036dc7b3217e26855dcd3da7f6229b136831988551a9907928d1c9439a34c",
+    "readiness-decisions.md": "37daa86263423c47e1a1635ff948fc975efd699faae4b8781d0582a527039e25",
+    "proposal-input-manifest.json": "53827667ce323c74c657a4d01223eea10f9d238bec2516b32b3a643071274e37",
+    "validate-proposal.py": "e4c9fd3ba9a2468c85bf656f87c43012c2fb4dbeb13b438f95ac3d10a645500e"
+  },
+  "scope": "Selected pre-existing amendment packet, source contracts, governing documents and source observations; not global workspace preservation or installed qualification.",
+  "nonQualifying": {
+    "runtimeTestsRun": false,
+    "installedOwnerCommandsRun": false,
+    "backendSelected": false,
+    "replacementAccepted": false,
+    "implementationReady": false
+  },
+  "diagnostics": [
+    "Raw git diff --check exited 2 on repository-required CRLF; its CR-only trailing-whitespace diagnostics are resolved by the read-only core.whitespace=cr-at-eol override. No tracked configuration was changed."
+  ],
+  "reproduce": "uv run _bmad-output/specs/spec-ext-parties-1-contract-amendment/validate-proposal.py"
+}
