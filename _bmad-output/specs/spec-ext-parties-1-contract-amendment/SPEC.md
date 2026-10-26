@@ -1,8 +1,11 @@
 ---
 id: SPEC-ext-parties-1-contract-amendment
-status: proposed-unapproved
+status: text-approved
 created: 2026-10-25
+approval_scope: amendment-text-only
+approval_record: approval.md
 companions:
+  - approval.md
   - clause-diff.md
   - owner-decisions.md
   - verification-plan.md
@@ -22,9 +25,9 @@ companions:
 sources: []
 ---
 
-# EXT-PARTIES-1 contract amendment for review
+# EXT-PARTIES-1 contract amendment — text approved
 
-**UNAPPROVED.** This spec defines a review artifact only. It does not supersede the governing contract, authorize implementation or establish availability. Read clause-diff.md and owner-decisions.md for the exact proposed obligations and remaining decisions; adopted companions retain the complete identity and qualification context.
+**TEXT APPROVED — 2026-10-25.** The user approved the complete A-01–A-06 amendment text. [The approval record](approval.md) binds that approval to the reviewed revision and exact clause bytes. It completes the user text-approval step; complete replacement acceptance, operational bindings and installed qualification remain pending under A-06. The governing contract and availability record are unchanged. `clause-diff.md`, `owner-decisions.md` and existing validation reports retain their historical drafting labels; the approval record supplies the current approval status without rewriting that evidence.
 
 ## Why
 
@@ -46,28 +49,28 @@ The October 25 direction stops the unverified Luna/FM path under the strict cust
 
 - Preserve Branch B/Organization, immutable tenant/Party identity and the complete P1–P4/P-01–P-10 contract; Organization identity grants no human approver authority.
 - Preserve party-actor-retention-v1 / party-actor-history-v1 and E = original binding-effective-at + exactly 31,536,000 seconds, with exclusive expiry and no predecessor renewal.
-- Every new bound and exclusion is unapproved. The candidate separates service authorization at E, online destruction by E+900 seconds, durable-copy destruction by E+2,592,000 seconds and explicitly unbounded inaccessible-holder physical retention.
+- The bounds and exclusions are approved as amendment text, with operational acceptance and qualification still pending. The candidate separates service authorization at E, online destruction by E+900 seconds, durable-copy destruction by E+2,592,000 seconds and explicitly unbounded inaccessible-holder physical retention.
 - Preserve unrelated live units, independent nonrollback authority, original-unit mapping, both owning hosts/holders, F1, erasure boundaries and Dapr infrastructure ownership. No strict capability flag may silently attest the weakened guarantee.
 - Keep accepted target/status/date, original evidence and ledger nulls unchanged; material adoption needs complete renewed acceptance and installed exact-target qualification.
 
 ## Non-goals
 
-- Applying the amendment; selecting or qualifying a backend; assigning principals or accepting risk; funding/procurement/vendor contact/resource reservation; implementation, deployment or runtime qualification.
+- Applying a replacement commitment; selecting or qualifying a backend; assigning principals or supplying other owners' operational risk sign-offs; funding/procurement/vendor contact/resource reservation; implementation, deployment or runtime qualification.
 - Changing any accepted identity, duration/trigger, unrelated custody contract, OQ-5.4-1 gate or historical evidence.
 
 ## Success signal
 
-A reviewer can identify every changed guarantee, its exact Before/After text, finite bounds and explicit non-guarantees, then route every original unresolved item into five owner decisions without inferring approval or availability.
+A reviewer can identify every changed guarantee, its exact Before/After text, finite bounds and explicit non-guarantees, then route every remaining item into five owner decisions while distinguishing recorded text approval from operational acceptance and availability.
 
 ## Assumptions
 
-- The candidate numeric bounds are engineering review choices, not measured vendor capability or accepted risk. No route is presumed able to meet them.
-- A controlled service authorization point is distinguishable from physical delivery and retention in already-released memory; owners must explicitly accept that boundary.
+- The numeric bounds are approved proposal terms, not measured vendor capability or complete operational risk acceptance. No route is presumed able to meet them.
+- The approved text distinguishes a controlled service authorization point from physical delivery and retention in already-released memory; remaining owner-specific acceptance is recorded separately from this user approval.
 
 ## Open Questions
 
 - Decision 1: funding cap, engineering allocation and assessment timebox/review date.
 - Decision 2: exact resources, independent authority/time and recovery bindings.
 - Decision 3: real operators, copy owners, credential references and receipt minimization/retention.
-- Decision 4: acceptance of bounds/residual exposure, availability/data loss and failure/drill envelope.
-- Decision 5: complete amended scope/compatibility and eventual exact replacement target, command and delivery date.
+- Decision 4: remaining operational/privacy acceptance of bounds and residual exposure, actual availability/data loss and failure/drill envelope.
+- Decision 5: versioned compatibility representation, remaining mapping/holder/F1 obligations and complete replacement acceptance with exact target, command and delivery date; the user text-approval step is complete.
